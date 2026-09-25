@@ -21,21 +21,20 @@ no hacen nada y el trazo sale mal).
 Desde la raíz de `axi-client`:
 
 ```bash
-# Con playwright y sharp instalados en el repo
-node scripts/email-welcome/render.mjs
-
-# En este equipo, con los paquetes de otro checkout
 PW_PATH=/home/davela/dev/kodecol/node_modules/playwright \
   node scripts/email-welcome/render.mjs
 
 # Solo algunas piezas
-node scripts/email-welcome/render.mjs hero kit
+PW_PATH=… node scripts/email-welcome/render.mjs hero kit
 ```
 
+- **playwright no es dependencia de axi-client, a propósito**: añadirla al lock pone en riesgo el
+  `npm ci` del despliegue para un script que se corre a mano. El script la carga SOLO desde `PW_PATH`
+  y, sin ella, falla con este mismo mensaje. Si no tienes otro checkout con playwright, instálalo
+  fuera del repo (`mkdir /tmp/pw && cd /tmp/pw && npm i playwright && npx playwright install chromium`)
+  y usa `PW_PATH=/tmp/pw/node_modules/playwright`. Nunca `npm install` dentro de axi-client.
 - Chromium pinta cada lienzo (`#c`, 600 px de ancho) a 2x; sharp lo pasa a JPEG con calidad 84,
   mozjpeg y croma 4:4:4 (sin submuestreo el texto coral no se emborrona).
-- `playwright` está en `devDependencies`. Si el navegador no está descargado:
-  `node <ruta a playwright>/cli.js install chromium`.
 - `sharp` llega con `next`. Si no se resuelve, se indica su ruta con `SHARP_PATH`
   (por ejemplo `/home/davela/dev/axi/axi-server/node_modules/sharp`).
 - Revisa las cinco imágenes antes de commitear: el correo las sirve desde

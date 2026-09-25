@@ -9,12 +9,13 @@
 // sharp solo se usa aquí para comprimir el PNG que ya pintó el navegador.
 //
 // Uso (desde la raíz de axi-client):
-//   node scripts/email-welcome/render.mjs            # las cinco piezas
-//   node scripts/email-welcome/render.mjs hero kit   # solo esas
+//   PW_PATH=… node scripts/email-welcome/render.mjs            # las cinco piezas
+//   PW_PATH=… node scripts/email-welcome/render.mjs hero kit   # solo esas
 //
 // Variables:
-//   PW_PATH     ruta al paquete playwright si no está instalado en este repo
-//               (p. ej. /home/davela/dev/kodecol/node_modules/playwright)
+//   PW_PATH     OBLIGATORIA: ruta al paquete playwright de otro checkout
+//               (p. ej. /home/davela/dev/kodecol/node_modules/playwright); no es
+//               dependencia de axi-client a propósito
 //   SHARP_PATH  ruta al paquete sharp si no se resuelve desde este repo
 //               (p. ej. /home/davela/dev/axi/axi-server/node_modules/sharp)
 import { createRequire } from "node:module";
@@ -30,16 +31,40 @@ const SRC_DIR = path.join(here, "src");
 const OUT_DIR = path.resolve(here, "..", "..", "public", "images", "email", "welcome");
 const JPEG = { quality: 84, mozjpeg: true, chromaSubsampling: "4:4:4" };
 
-/** Carga un paquete por la ruta de la variable, o por la resolución normal del repo. */
-function load(envVar, pkg) {
-  const target = process.env[envVar] || pkg;
+/**
+ * playwright NO es dependencia del repo (meterla en el lock arriesga el `npm ci`
+ * del despliegue): se carga SOLO desde la ruta de `PW_PATH`. sharp llega con
+ * `next`; `SHARP_PATH` lo sustituye si no se resuelve.
+ */
+async function loadPlaywright() {
+  const target = process.env.PW_PATH;
+  if (!target) {
+    throw new Error(
+      [
+        "Falta PW_PATH: la ruta al paquete playwright de otro checkout.",
+        "  PW_PATH=/home/davela/dev/kodecol/node_modules/playwright node scripts/email-welcome/render.mjs",
+        "Si no tienes ninguno: instala playwright FUERA de este repo (p. ej. en /tmp/pw con",
+        "  npm i playwright && npx playwright install chromium) y apunta PW_PATH a /tmp/pw/node_modules/playwright.",
+      ].join("\n"),
+    );
+  }
+  try {
+    const mod = await import(pathToFileURL(require.resolve(target)).href);
+    return mod.chromium ? mod : mod.default;
+  } catch (error) {
+    throw new Error(`No se pudo cargar playwright desde PW_PATH=${target}: ${error.message}`);
+  }
+}
+
+function loadSharp() {
+  const target = process.env.SHARP_PATH || "sharp";
   try {
     return require(target);
   } catch (error) {
-    console.error(
-      `No se pudo cargar «${pkg}» (${target}). Instálalo en el repo o indica su ruta en ${envVar}.`,
+    throw new Error(
+      `No se pudo cargar sharp (${target}). Indica su ruta en SHARP_PATH, p. ej. ` +
+        `/home/davela/dev/axi/axi-server/node_modules/sharp. ${error.message}`,
     );
-    throw error;
   }
 }
 
@@ -51,8 +76,8 @@ async function main() {
   }
   const list = requested.length ? requested : PIECES;
 
-  const { chromium } = load("PW_PATH", "playwright");
-  const sharp = load("SHARP_PATH", "sharp");
+  const { chromium } = await loadPlaywright();
+  const sharp = loadSharp();
 
   await mkdir(OUT_DIR, { recursive: true });
   const browser = await chromium.launch();
