@@ -13,6 +13,7 @@ import { TrialStatusChip } from "@/modules/companies/ui/components/TrialStatusCh
 import { TrialCountdownBanner } from "@/modules/companies/ui/components/TrialCountdownBanner";
 import { DunningBanner } from "@/modules/billing/ui/DunningBanner";
 import { COMMERCIAL_BREADCRUMBS } from "@/modules/commercial/public";
+import { SupportSessionBar } from "@/modules/support-access/ui/SupportSessionBar";
 
 /** Las migas que conocen los módulos (rutas sin página y segmentos dinámicos). */
 const BREADCRUMBS = [COMMERCIAL_BREADCRUMBS];
@@ -85,6 +86,8 @@ export default async function PrivateLayout({
             pasando por detrás del glass al scrollear (DESIGN §5.1) y el banner
             no necesita conocer la altura del header para colocarse debajo. */}
         <div className="sticky top-0 z-40 shrink-0">
+          {/* Solo en una pestaña de soporte (MeDto.support_session): la barra del admin. */}
+          <SupportSessionBar />
           {/* La campana monta el realtime de notificaciones para todo el panel;
               el chip de trial es permanente */}
           <PrivateHeader actions={<><TrialStatusChip /><NotificationBell /></>} breadcrumbs={BREADCRUMBS} />
