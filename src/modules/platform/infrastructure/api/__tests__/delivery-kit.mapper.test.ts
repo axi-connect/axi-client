@@ -6,6 +6,7 @@ const KIT: WelcomeKitPreviewWire = {
   kit_version: 1,
   business_name: "Panadería La Espiga",
   owner_first_name: "Andrés",
+  owner_name: "Andrés Gómez",
   login_email: "hola@laespiga.co",
   panel_url: "https://app.axi-connect.co",
   password_reset_url: "https://app.axi-connect.co/auth/olvide-contrasena",
