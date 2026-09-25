@@ -12,8 +12,14 @@ import { Button } from '@/shared/components/ui/button'
 import { loginSchema, type LoginFormValues } from "./schema"
 import { useRouter, useSearchParams } from "next/navigation"
 import { API_ERROR_CODES } from "@/core/api/problem"
+import { safeInternalNext } from "@/core/lib/safe-next"
 import { LoginError } from "@/core/providers/auth-provider"
 import { Form, FormControl, FormField, FormItem } from "@/shared/components/ui/form"
+
+/** A dónde entra el panel tras el login: una ruta interna del mismo origen, fuera de /auth. */
+export function loginNext(raw: string | null): string {
+  return safeInternalNext(raw, { fallback: "/dashboard", blockedPrefixes: ["/auth", "/api"] })
+}
 
 /** Mensajes por `code` RFC 7807 del backend. */
 function loginErrorMessage(error: LoginError): string {
@@ -74,8 +80,9 @@ export default function LoginForm() {
         // El splash cubre la navegación completa (layout público → privado);
         // AppReadySignal en el layout privado dispara su salida animada.
         splash.start()
-        const next = search.get("next") || "/dashboard"
-        router.replace(next)
+        // Solo una ruta interna, y nunca de vuelta a /auth (QA H3-1: open
+        // redirect y `javascript:`).
+        router.replace(loginNext(search.get("next")))
       } catch (e: unknown) {
         if (e instanceof LoginError) {
           if (e.code === API_ERROR_CODES.ambiguousCompany) setNeedsCompanyNit(true)
