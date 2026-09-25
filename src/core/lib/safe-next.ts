@@ -64,6 +64,9 @@ export function safeInternalNext(next: string | null | undefined, options: SafeN
     return fallback;
   }
   if (decoded.startsWith("//") || decoded.startsWith("/\\")) return fallback;
+  // Tampoco controles ni saltos codificados (`/%09/evil.com`, `/%0a…`): el
+  // login los llevaba a un 404 interno en vez de al panel (QA H4-1).
+  if (/[\u0000-\u001f\u007f]/.test(decoded)) return fallback;
 
   if (options.blockedPrefixes?.some((prefix) => matchesPrefix(pathname, prefix))) return fallback;
   if (options.allowedPrefixes && !options.allowedPrefixes.some((prefix) => matchesPrefix(pathname, prefix))) {

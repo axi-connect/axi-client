@@ -17,6 +17,10 @@ const HOSTILE_NEXTS = [
   "/\n/evil.com",
   " /dashboard",
   "evil.com",
+  "/%09/evil.com",
+  "/%0a/evil.com",
+  "/%0D%0A/evil.com",
+  "/crm/%00",
 ]
 
 describe("safeInternalNext", () => {
