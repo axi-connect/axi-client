@@ -23,5 +23,5 @@ const kitHand = Shadows_Into_Light({
 })
 
 export default function WelcomeKitLayout({ children }: { children: React.ReactNode }) {
-  return <main className={`${kitPoppins.variable} ${kitHand.variable} ${s.page}`}>{children}</main>
+  return <main className={`welcome-kit ${kitPoppins.variable} ${kitHand.variable} ${s.page}`}>{children}</main>
 }

@@ -4,8 +4,8 @@ import s from "../welcome-kit.module.css"
 
 /** Trazo del conector entre días: el primero (hoy → mañana), coral y continuo. */
 const LINE = {
-  lead: { stroke: "#FB7185", dash: "none" },
-  dotted: { stroke: "rgba(250,250,250,.35)", dash: "3 8" },
+  lead: { stroke: "var(--kit-coral)", dash: "none" },
+  dotted: { stroke: "color-mix(in srgb, var(--kit-text) 35%, transparent)", dash: "3 8" },
 } as const
 
 /** 04 · 03 · Tu semana de prueba: los ocho días y el cupo de conversaciones. */
@@ -91,15 +91,15 @@ function DayNode({ node }: { node: KitDay["node"] }) {
     case "now":
       return (
         <>
-          <circle cx="16" cy="16" r="13" fill="none" stroke="#FB7185" strokeWidth="2" opacity=".45"></circle>
-          <circle cx="16" cy="16" r="7" fill="#FB7185"></circle>
+          <circle cx="16" cy="16" r="13" fill="none" stroke="var(--kit-coral)" strokeWidth="2" opacity=".45"></circle>
+          <circle cx="16" cy="16" r="7" fill="var(--kit-coral)"></circle>
         </>
       )
     case "meet":
-      return <circle cx="16" cy="16" r="8" fill="#FB7185" fillOpacity=".5" stroke="#FB7185" strokeWidth="2"></circle>
+      return <circle cx="16" cy="16" r="8" fill="var(--kit-coral)" fillOpacity=".5" stroke="var(--kit-coral)" strokeWidth="2"></circle>
     case "end":
-      return <circle cx="16" cy="16" r="9" fill="#FBBF24"></circle>
+      return <circle cx="16" cy="16" r="9" fill="var(--kit-amber)"></circle>
     default:
-      return <circle cx="16" cy="16" r="6" fill="#0A0A0A" stroke="rgba(250,250,250,.5)" strokeWidth="2"></circle>
+      return <circle cx="16" cy="16" r="6" fill="var(--kit-bg)" stroke="color-mix(in srgb, var(--kit-text) 50%, transparent)" strokeWidth="2"></circle>
   }
 }

@@ -4,40 +4,24 @@
  * Es una pieza de marca FIJA en oscuro, recreada píxel a píxel del paquete de
  * diseño (`welcome-kit-handoff/reference/kit.html`): no sigue el tema claro u
  * oscuro del panel, igual que un folleto impreso no cambia con la luz del
- * cuarto. Por eso su paleta vive aquí, en un solo lugar y con nombre, y no en
- * los tokens semánticos de `globals.css`. Las ilustraciones SVG llevan los
- * colores en sus atributos, copiados tal cual del paquete.
+ * cuarto. Su paleta son tokens propios `--kit-*` en `globals.css`, con alcance
+ * de la clase `.welcome-kit` (la regla del repo: ningún hex fuera de ahí); este
+ * archivo solo compone con ellos. Las ilustraciones SVG también los usan.
  *
  * Fuentes: Nexa sale del layout raíz (`--font-nexa`); Poppins con el peso 300 y
  * Shadows Into Light las monta solo esta ruta (`app/bienvenida/layout.tsx`).
  */
 
 .page {
-  --wk-bg: #0a0a0a;
-  --wk-cover: #07061a;
-  --wk-text: #fafafa;
-  --wk-soft: #e4e4e7;
-  --wk-body: #d4d4d8;
-  --wk-muted: #a1a1aa;
-  --wk-subtle: #71717a;
-  --wk-coral: #fb7185;
-  --wk-coral-hover: #fda4af;
-  --wk-violet: #a78bfa;
-  --wk-violet-soft: #c4b5fd;
-  --wk-violet-strong: #8b6cf0;
-  --wk-amber: #fbbf24;
-  --wk-rule: rgba(255, 255, 255, 0.12);
-  --wk-track-off: #27272a;
-  --wk-window: #0f0e17;
-  --wk-field: #17151f;
-  --wk-nexa: var(--font-nexa), var(--font-kit-poppins), sans-serif;
-  --wk-hand: var(--font-kit-hand), cursive;
+  /* La paleta (--kit-*) vive en globals.css, bajo `.welcome-kit`. */
+  --kit-nexa: var(--font-nexa), var(--font-kit-poppins), sans-serif;
+  --kit-hand: var(--font-kit-hand), cursive;
 
   min-height: 100vh;
   min-height: 100dvh;
-  background: var(--wk-bg);
+  background: var(--kit-bg);
   font-family: var(--font-kit-poppins), var(--font-poppins), sans-serif;
-  color: var(--wk-text);
+  color: var(--kit-text);
 }
 
 .page *,
@@ -49,22 +33,22 @@
 }
 
 .page ::selection {
-  background: rgba(251, 113, 133, 0.35);
+  background: color-mix(in srgb, var(--kit-coral) 35%, transparent);
 }
 
 .page a {
-  color: var(--wk-coral);
+  color: var(--kit-coral);
   text-decoration: none;
   border-radius: 4px;
   transition: color 150ms ease;
 }
 
 .page a:hover {
-  color: var(--wk-coral-hover);
+  color: var(--kit-coral-hover);
 }
 
 .page a:focus-visible {
-  outline: 2px solid var(--wk-coral);
+  outline: 2px solid var(--kit-coral);
   outline-offset: 4px;
 }
 
@@ -72,7 +56,7 @@
    conservan su `fontFamily` del paquete, pero con next/font el nombre real de la
    familia va con hash: esta regla es la que la resuelve. */
 .page svg text {
-  font-family: var(--wk-hand);
+  font-family: var(--kit-hand);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -84,10 +68,10 @@
 .kit {
   max-width: 900px;
   margin: 0 auto;
-  background-color: var(--wk-bg);
-  background-image: radial-gradient(rgba(255, 255, 255, 0.075) 1px, transparent 1.3px);
+  background-color: var(--kit-bg);
+  background-image: radial-gradient(color-mix(in srgb, var(--kit-white) 7.5%, transparent) 1px, transparent 1.3px);
   background-size: 22px 22px;
-  color: var(--wk-text);
+  color: var(--kit-text);
   overflow: hidden;
   position: relative;
 }
@@ -99,26 +83,26 @@
 /* ---------- Tipografía compartida ---------- */
 
 .nexa {
-  font-family: var(--wk-nexa);
+  font-family: var(--kit-nexa);
   font-weight: 800;
 }
 
 .hand {
-  font-family: var(--wk-hand);
+  font-family: var(--kit-hand);
   display: block;
 }
 
 .kicker {
   font-size: 12px;
   font-weight: 500;
-  color: var(--wk-coral);
+  color: var(--kit-coral);
   letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 
 .h2 {
   margin: 0;
-  font-family: var(--wk-nexa);
+  font-family: var(--kit-nexa);
   font-weight: 800;
   font-size: clamp(32px, 6vw, 46px);
   line-height: 1.04;
@@ -128,7 +112,7 @@
 
 .h3 {
   margin: 0;
-  font-family: var(--wk-nexa);
+  font-family: var(--kit-nexa);
   font-weight: 800;
   font-size: clamp(22px, 3.6vw, 26px);
   line-height: 1.15;
@@ -136,7 +120,7 @@
 }
 
 .strong {
-  color: var(--wk-text);
+  color: var(--kit-text);
   font-weight: 600;
 }
 
@@ -178,14 +162,14 @@
 .cover {
   position: relative;
   overflow: hidden;
-  background: var(--wk-cover);
+  background: var(--kit-cover);
   padding-top: clamp(56px, 11vw, 96px);
 }
 
 .coverGlow {
   position: absolute;
   inset: 0;
-  background: radial-gradient(90% 60% at 50% 0%, #1b1540 0%, #0c0a22 55%, #07061a 100%);
+  background: radial-gradient(90% 60% at 50% 0%, var(--kit-cover-top) 0%, var(--kit-cover-mid) 55%, var(--kit-cover) 100%);
 }
 
 .coverTitle {
@@ -202,22 +186,22 @@
   font-weight: 500;
   letter-spacing: 0.32em;
   text-transform: uppercase;
-  color: var(--wk-violet-soft);
+  color: var(--kit-violet-soft);
   padding-left: 0.32em;
 }
 
 .coverWordmark {
-  font-family: var(--wk-nexa);
+  font-family: var(--kit-nexa);
   font-weight: 800;
   font-size: clamp(52px, 13vw, 118px);
   line-height: 1.05;
   letter-spacing: -0.035em;
   white-space: nowrap;
-  background: linear-gradient(180deg, #ffffff 0%, #ede9fe 45%, #a78bfa 100%);
+  background: linear-gradient(180deg, var(--kit-white) 0%, var(--kit-violet-mist) 45%, var(--kit-violet) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 0 28px rgba(139, 108, 240, 0.45));
+  filter: drop-shadow(0 0 28px color-mix(in srgb, var(--kit-violet-strong) 45%, transparent));
 }
 
 .stageWrap {
@@ -246,7 +230,7 @@
   right: 0;
   bottom: 0;
   height: 40%;
-  background: linear-gradient(180deg, rgba(10, 10, 10, 0), var(--wk-bg));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--kit-bg) 0%, transparent), var(--kit-bg));
   pointer-events: none;
   z-index: 3;
 }
@@ -259,7 +243,7 @@
   height: 620px;
   margin-left: -600px;
   border-radius: 50%;
-  background: radial-gradient(closest-side, rgba(139, 108, 240, 0.75), rgba(109, 78, 214, 0.35) 45%, rgba(91, 61, 184, 0) 100%);
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--kit-violet-strong) 75%, transparent), color-mix(in srgb, var(--kit-violet-deep) 35%, transparent) 45%, color-mix(in srgb, var(--kit-violet-night) 0%, transparent) 100%);
   filter: blur(40px);
 }
 
@@ -271,7 +255,7 @@
   height: 300px;
   margin-left: -350px;
   border-radius: 50%;
-  background: radial-gradient(closest-side, rgba(196, 181, 253, 0.45), rgba(196, 181, 253, 0));
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--kit-violet-soft) 45%, transparent), color-mix(in srgb, var(--kit-violet-soft) 0%, transparent));
   filter: blur(40px);
 }
 
@@ -282,16 +266,16 @@
   width: 560px;
   height: 520px;
   border-radius: 14px;
-  background: var(--wk-window);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(0, 0, 0, 0.4);
+  background: var(--kit-window);
+  border: 1px solid color-mix(in srgb, var(--kit-white) 10%, transparent);
+  box-shadow: 0 30px 80px color-mix(in srgb, var(--kit-black) 60%, transparent), 0 0 0 1px color-mix(in srgb, var(--kit-black) 40%, transparent);
   display: grid;
   grid-template-columns: 120px minmax(0, 1fr);
   overflow: hidden;
 }
 
 .windowNav {
-  border-right: 1px solid rgba(255, 255, 255, 0.07);
+  border-right: 1px solid color-mix(in srgb, var(--kit-white) 7%, transparent);
   padding: 14px 12px;
   display: flex;
   flex-direction: column;
@@ -302,10 +286,10 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-family: var(--wk-nexa);
+  font-family: var(--kit-nexa);
   font-weight: 800;
   font-size: 11px;
-  color: var(--wk-text);
+  color: var(--kit-text);
 }
 
 .windowMenu {
@@ -317,13 +301,13 @@
 .windowMenu span {
   font-size: 10px;
   padding: 6px 8px;
-  color: var(--wk-muted);
+  color: var(--kit-muted);
 }
 
 .windowMenu .windowMenuActive {
   border-radius: 6px;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--wk-text);
+  background: color-mix(in srgb, var(--kit-white) 6%, transparent);
+  color: var(--kit-text);
 }
 
 .windowBody {
@@ -334,10 +318,10 @@
 }
 
 .windowTitle {
-  font-family: var(--wk-nexa);
+  font-family: var(--kit-nexa);
   font-weight: 800;
   font-size: 22px;
-  color: var(--wk-text);
+  color: var(--kit-text);
   letter-spacing: -0.02em;
 }
 
@@ -347,10 +331,10 @@
   gap: 8px;
   padding: 8px 10px;
   border-radius: 6px;
-  background: rgba(139, 108, 240, 0.12);
-  border: 1px solid rgba(139, 108, 240, 0.3);
+  background: color-mix(in srgb, var(--kit-violet-strong) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--kit-violet-strong) 30%, transparent);
   font-size: 10px;
-  color: var(--wk-violet-soft);
+  color: var(--kit-violet-soft);
 }
 
 .steps {
@@ -366,7 +350,7 @@
   gap: 6px;
   flex: 1;
   font-size: 9px;
-  color: var(--wk-soft);
+  color: var(--kit-soft);
 }
 
 .stepDot {
@@ -381,24 +365,24 @@
 }
 
 .stepDone {
-  background: var(--wk-violet-strong);
-  color: #ffffff;
+  background: var(--kit-violet-strong);
+  color: var(--kit-white);
 }
 
 .stepCurrent {
-  background: rgba(139, 108, 240, 0.2);
-  color: var(--wk-violet-soft);
-  box-shadow: inset 0 0 0 1.5px var(--wk-violet-strong);
+  background: color-mix(in srgb, var(--kit-violet-strong) 20%, transparent);
+  color: var(--kit-violet-soft);
+  box-shadow: inset 0 0 0 1.5px var(--kit-violet-strong);
 }
 
 .stepTodo {
-  background: var(--wk-field);
-  color: var(--wk-subtle);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  background: var(--kit-field);
+  color: var(--kit-subtle);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--kit-white) 10%, transparent);
 }
 
 .stepTodoLabel {
-  color: var(--wk-subtle);
+  color: var(--kit-subtle);
 }
 
 .windowLead {
@@ -410,12 +394,12 @@
 .windowLead strong {
   font-size: 14px;
   font-weight: 600;
-  color: var(--wk-text);
+  color: var(--kit-text);
 }
 
 .windowLead span {
   font-size: 10px;
-  color: var(--wk-subtle);
+  color: var(--kit-subtle);
 }
 
 .fields {
@@ -429,19 +413,19 @@
   flex-direction: column;
   gap: 6px;
   font-size: 10px;
-  color: var(--wk-muted);
+  color: var(--kit-muted);
 }
 
 .fieldBox {
   height: 30px;
   border-radius: 6px;
-  background: var(--wk-field);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--kit-field);
+  border: 1px solid color-mix(in srgb, var(--kit-white) 8%, transparent);
   display: flex;
   align-items: center;
   padding: 0 10px;
   font-size: 11px;
-  color: var(--wk-soft);
+  color: var(--kit-soft);
   white-space: nowrap;
   overflow: hidden;
 }
@@ -449,8 +433,8 @@
 .floatCard {
   position: absolute;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+  border: 1px solid color-mix(in srgb, var(--kit-white) 12%, transparent);
+  box-shadow: 0 24px 60px color-mix(in srgb, var(--kit-black) 60%, transparent);
   padding: 14px 16px;
   display: flex;
   flex-direction: column;
@@ -460,7 +444,7 @@
   left: 40px;
   top: 340px;
   width: 260px;
-  background: rgba(20, 18, 32, 0.92);
+  background: color-mix(in srgb, var(--kit-card) 92%, transparent);
   gap: 10px;
 }
 
@@ -474,7 +458,7 @@
 .catalogFile {
   font-size: 11px;
   font-weight: 600;
-  color: var(--wk-text);
+  color: var(--kit-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -482,20 +466,20 @@
 
 .tiny {
   font-size: 10px;
-  color: var(--wk-muted);
+  color: var(--kit-muted);
   white-space: nowrap;
 }
 
 .catalogNote {
   font-size: 10px;
   line-height: 1.5;
-  color: var(--wk-muted);
+  color: var(--kit-muted);
 }
 
 .progress {
   height: 5px;
   border-radius: 9999px;
-  background: var(--wk-track-off);
+  background: var(--kit-track-off);
   overflow: hidden;
 }
 
@@ -503,37 +487,37 @@
   display: block;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, #8b6cf0, #c4b5fd);
+  background: linear-gradient(90deg, var(--kit-violet-strong), var(--kit-violet-soft));
 }
 
 .catalogFoot {
   display: flex;
   justify-content: space-between;
   font-size: 10px;
-  color: var(--wk-muted);
+  color: var(--kit-muted);
 }
 
 .catalogFoot span:first-child {
-  color: var(--wk-violet-soft);
+  color: var(--kit-violet-soft);
 }
 
 .paymentsCard {
   left: 620px;
   top: 360px;
   width: 270px;
-  background: rgba(20, 18, 32, 0.94);
+  background: color-mix(in srgb, var(--kit-card) 94%, transparent);
   gap: 4px;
 }
 
 .paymentsTitle {
   font-size: 12px;
   font-weight: 600;
-  color: var(--wk-text);
+  color: var(--kit-text);
 }
 
 .paymentsNote {
   font-size: 10px;
-  color: var(--wk-subtle);
+  color: var(--kit-subtle);
   padding-bottom: 4px;
 }
 
@@ -542,21 +526,21 @@
   align-items: center;
   justify-content: space-between;
   padding: 9px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid color-mix(in srgb, var(--kit-white) 6%, transparent);
   font-size: 11px;
-  color: var(--wk-soft);
+  color: var(--kit-soft);
 }
 
 .toggle {
   width: 28px;
   height: 16px;
   border-radius: 9999px;
-  background: var(--wk-track-off);
+  background: var(--kit-track-off);
   position: relative;
 }
 
 .toggle[data-on="true"] {
-  background: var(--wk-violet-strong);
+  background: var(--kit-violet-strong);
 }
 
 .toggle span {
@@ -566,7 +550,7 @@
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--kit-white);
 }
 
 .toggle[data-on="true"] span {
@@ -594,7 +578,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  font-family: var(--wk-nexa);
+  font-family: var(--kit-nexa);
   font-weight: 800;
   font-size: 21px;
   letter-spacing: -0.01em;
@@ -603,7 +587,7 @@
 .brandTag {
   font-size: 12px;
   font-weight: 500;
-  color: var(--wk-muted);
+  color: var(--kit-muted);
   letter-spacing: 0.18em;
   text-transform: uppercase;
 }
@@ -616,14 +600,14 @@
 
 .dayZero {
   font-size: 26px;
-  color: var(--wk-amber);
+  color: var(--kit-amber);
   transform: rotate(-2deg);
   transform-origin: left;
 }
 
 .h1 {
   margin: 0;
-  font-family: var(--wk-nexa);
+  font-family: var(--kit-nexa);
   font-weight: 800;
   font-size: clamp(42px, 8.6vw, 76px);
   line-height: 0.98;
@@ -637,7 +621,7 @@
   font-size: clamp(16px, 2.2vw, 18px);
   line-height: 1.65;
   font-weight: 300;
-  color: var(--wk-body);
+  color: var(--kit-body);
   max-width: 540px;
   text-wrap: pretty;
 }
@@ -647,9 +631,9 @@
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 1px;
   margin: 0;
-  background: var(--wk-rule);
-  border-top: 1px solid var(--wk-rule);
-  border-bottom: 1px solid var(--wk-rule);
+  background: var(--kit-rule);
+  border-top: 1px solid var(--kit-rule);
+  border-bottom: 1px solid var(--kit-rule);
 }
 
 .fact {
@@ -657,7 +641,7 @@
   flex-direction: column;
   gap: 6px;
   padding: 20px 16px;
-  background: var(--wk-bg);
+  background: var(--kit-bg);
 }
 
 .fact:first-child {
@@ -666,7 +650,7 @@
 
 .fact dt {
   font-size: 12px;
-  color: var(--wk-muted);
+  color: var(--kit-muted);
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -718,7 +702,7 @@
 .cardBody {
   font-size: 14px;
   line-height: 1.6;
-  color: var(--wk-muted);
+  color: var(--kit-muted);
   text-wrap: pretty;
   margin: 0;
 }
@@ -727,7 +711,7 @@
   margin: 0;
   font-size: 17px;
   line-height: 1.6;
-  color: var(--wk-body);
+  color: var(--kit-body);
   max-width: 560px;
   text-wrap: pretty;
 }
@@ -770,7 +754,7 @@
   display: flex;
   flex-direction: column;
   margin: 0;
-  border-top: 1px solid var(--wk-rule);
+  border-top: 1px solid var(--kit-rule);
 }
 
 .row {
@@ -779,12 +763,12 @@
   flex-wrap: wrap;
   gap: 4px 16px;
   padding: 14px 0;
-  border-bottom: 1px solid var(--wk-rule);
+  border-bottom: 1px solid var(--kit-rule);
 }
 
 .row dt {
   font-size: 14px;
-  color: var(--wk-muted);
+  color: var(--kit-muted);
 }
 
 .row dd {
@@ -795,14 +779,14 @@
 }
 
 .row dd a {
-  color: var(--wk-text);
+  color: var(--kit-text);
 }
 
 .note {
   margin: 0;
   font-size: 14px;
   line-height: 1.65;
-  color: var(--wk-muted);
+  color: var(--kit-muted);
   text-wrap: pretty;
 }
 
@@ -810,13 +794,13 @@
   margin: 0;
   font-size: 15px;
   line-height: 1.65;
-  color: var(--wk-body);
+  color: var(--kit-body);
   text-wrap: pretty;
 }
 
 .fineprint {
   font-size: 12px;
-  color: var(--wk-subtle);
+  color: var(--kit-subtle);
 }
 
 /* ---------- 04 · Tu semana ---------- */
@@ -833,7 +817,7 @@
   margin: 0;
   font-size: 16px;
   line-height: 1.65;
-  color: var(--wk-body);
+  color: var(--kit-body);
   max-width: 560px;
   text-wrap: pretty;
 }
@@ -862,13 +846,13 @@
 
 .dayNumber span:first-child {
   font-size: 11px;
-  color: var(--wk-subtle);
+  color: var(--kit-subtle);
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
 .dayNumber span:last-child {
-  font-family: var(--wk-nexa);
+  font-family: var(--kit-nexa);
   font-weight: 800;
   font-size: 26px;
   line-height: 1;
@@ -922,13 +906,13 @@
 .dayBody {
   font-size: 14px;
   line-height: 1.5;
-  color: var(--wk-muted);
+  color: var(--kit-muted);
   text-wrap: pretty;
 }
 
 .dayTag {
   font-size: 22px;
-  color: var(--wk-coral);
+  color: var(--kit-coral);
   transform: rotate(-3deg);
   transform-origin: left;
   white-space: nowrap;
@@ -939,16 +923,16 @@
   flex-wrap: wrap;
   gap: 16px 28px;
   align-items: center;
-  border-top: 1px solid var(--wk-rule);
+  border-top: 1px solid var(--kit-rule);
   padding-top: 28px;
 }
 
 .quotaNumber {
-  font-family: var(--wk-nexa);
+  font-family: var(--kit-nexa);
   font-weight: 800;
   font-size: 64px;
   line-height: 0.9;
-  color: var(--wk-coral);
+  color: var(--kit-coral);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.03em;
 }
@@ -957,7 +941,7 @@
   margin: 0;
   font-size: 15px;
   line-height: 1.65;
-  color: var(--wk-body);
+  color: var(--kit-body);
   max-width: 520px;
   flex: 1 1 260px;
   text-wrap: pretty;
@@ -993,7 +977,7 @@
 
 .planMeta {
   font-size: 14px;
-  color: var(--wk-muted);
+  color: var(--kit-muted);
 }
 
 .price {
@@ -1014,7 +998,7 @@
 }
 
 .priceAmount {
-  font-family: var(--wk-nexa);
+  font-family: var(--kit-nexa);
   font-weight: 800;
   font-size: clamp(40px, 8vw, 48px);
   line-height: 1;
@@ -1026,7 +1010,7 @@
 
 .pricePeriod {
   font-size: 15px;
-  color: var(--wk-muted);
+  color: var(--kit-muted);
   position: relative;
   margin-left: 28px;
   white-space: nowrap;
@@ -1042,7 +1026,7 @@
 .listPriceAmount {
   position: relative;
   font-size: 15px;
-  color: var(--wk-muted);
+  color: var(--kit-muted);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1060,12 +1044,12 @@
 
 .listPriceLabel {
   font-size: 13px;
-  color: var(--wk-subtle);
+  color: var(--kit-subtle);
 }
 
 .founder {
   font-size: 23px;
-  color: var(--wk-amber);
+  color: var(--kit-amber);
   margin-top: 14px;
   transform: rotate(-2deg);
   transform-origin: left;
@@ -1076,12 +1060,12 @@
   justify-content: space-between;
   gap: 16px;
   padding: 16px 0;
-  border-bottom: 1px solid var(--wk-rule);
+  border-bottom: 1px solid var(--kit-rule);
 }
 
 .planRow dt {
   font-size: 14px;
-  color: var(--wk-muted);
+  color: var(--kit-muted);
 }
 
 .planRow dd {
@@ -1101,7 +1085,7 @@
 
 .savedH3 {
   margin: 0;
-  font-family: var(--wk-nexa);
+  font-family: var(--kit-nexa);
   font-weight: 800;
   font-size: 24px;
   letter-spacing: -0.02em;
@@ -1111,7 +1095,7 @@
   margin: 0;
   font-size: 15px;
   line-height: 1.7;
-  color: var(--wk-body);
+  color: var(--kit-body);
   text-wrap: pretty;
 }
 
@@ -1130,7 +1114,7 @@
   justify-content: space-between;
   gap: 32px;
   align-items: flex-end;
-  border-top: 1px solid var(--wk-rule);
+  border-top: 1px solid var(--kit-rule);
   padding-top: 40px;
 }
 
@@ -1142,13 +1126,13 @@
 
 .signatureName > span:not(.hand) {
   font-size: 14px;
-  color: var(--wk-muted);
+  color: var(--kit-muted);
 }
 
 .advisorHand {
   font-size: 48px;
   line-height: 1;
-  color: var(--wk-text);
+  color: var(--kit-text);
   transform: rotate(-3deg);
   transform-origin: left;
 }
@@ -1161,16 +1145,16 @@
 
 .whatsappLabel {
   font-size: 12px;
-  color: var(--wk-muted);
+  color: var(--kit-muted);
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
 .whatsappNumber {
-  font-family: var(--wk-nexa);
+  font-family: var(--kit-nexa);
   font-weight: 800;
   font-size: clamp(22px, 4.4vw, 28px);
-  color: var(--wk-coral);
+  color: var(--kit-coral);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
   white-space: nowrap;
@@ -1188,15 +1172,15 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  font-family: var(--wk-nexa);
+  font-family: var(--kit-nexa);
   font-weight: 800;
   font-size: 15px;
-  color: var(--wk-muted);
+  color: var(--kit-muted);
 }
 
 .footerTag {
   font-size: 12px;
-  color: var(--wk-subtle);
+  color: var(--kit-subtle);
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
@@ -1213,12 +1197,12 @@
   gap: 24px;
   padding: 48px 20px;
   text-align: center;
-  background: radial-gradient(90% 60% at 50% 0%, #1b1540 0%, #0c0a22 55%, #07061a 100%);
+  background: radial-gradient(90% 60% at 50% 0%, var(--kit-cover-top) 0%, var(--kit-cover-mid) 55%, var(--kit-cover) 100%);
 }
 
 .goneTitle {
   margin: 0;
-  font-family: var(--wk-nexa);
+  font-family: var(--kit-nexa);
   font-weight: 800;
   font-size: clamp(32px, 7vw, 48px);
   line-height: 1.04;
@@ -1231,7 +1215,7 @@
   margin: 0;
   font-size: 16px;
   line-height: 1.65;
-  color: var(--wk-body);
+  color: var(--kit-body);
   max-width: 440px;
   text-wrap: pretty;
 }
@@ -1243,17 +1227,17 @@
   min-height: 48px;
   padding: 0 24px;
   border-radius: 9999px;
-  background: #f4f4f5;
-  color: #09090b;
+  background: var(--kit-pill);
+  color: var(--kit-pill-ink);
   font-size: 15px;
   font-weight: 600;
 }
 
 .page .cta:hover {
-  color: #09090b;
-  background: #ffffff;
+  color: var(--kit-pill-ink);
+  background: var(--kit-white);
 }
 
 .ctaArrow {
-  color: #e65759;
+  color: var(--kit-coral-ink);
 }
