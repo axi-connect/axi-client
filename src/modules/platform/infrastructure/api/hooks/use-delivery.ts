@@ -53,6 +53,8 @@ export function useDeliveryContext(tenantId: string) {
     queryKey: platformKeys.delivery.context(tenantId),
     queryFn: ({ signal }) => deliveryApi.context(tenantId, signal),
     staleTime: 30_000,
+    // Al volver de la pestaña de soporte (H2-5), los bloqueos resueltos se van.
+    refetchOnWindowFocus: "always",
   });
 }
 
@@ -95,6 +97,7 @@ export function useDeliveryPreview(
     enabled: debounced !== null,
     placeholderData: keepPreviousData,
     staleTime: 60_000,
+    refetchOnWindowFocus: "always",
     retry: false,
   });
   const settling = useMemo(

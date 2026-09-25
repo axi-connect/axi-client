@@ -159,8 +159,6 @@ const BLOCKER_GROUP: Readonly<Record<string, CheckGroup>> = {
   calls_missing: "calls",
   calls_out_of_trial: "calls",
   owner_missing: "mail",
-  cc_includes_owner: "mail",
-  cc_too_many: "mail",
   agent_missing: "kit",
   agent_name_too_long: "kit",
   business_name_too_long: "kit",
@@ -191,6 +189,27 @@ export const CONFIRMABLE_BLOCKERS: ReadonlySet<string> = new Set(["trial_shorten
 /** Bloqueos que impiden reiniciar la prueba (el interruptor se apaga). */
 export const NO_RESTART_BLOCKERS: ReadonlySet<string> = new Set(["enterprise", "suspended_other", "already_paying"]);
 
+/**
+ * Pantalla del panel del tenant donde se resuelve cada bloqueo con
+ * `action.kind = 'support'` (H2-5): la pestaña de soporte entra directo ahí.
+ */
+export const SUPPORT_TARGET_PATHS: Readonly<Record<string, string>> = {
+  agent: "/admin/agents",
+  payment_methods: "/settings/payments",
+  schedule: "/settings/company",
+  catalog: "/catalog/products",
+  company: "/settings/company",
+};
+
+export function supportTargetPath(target: string): string {
+  return SUPPORT_TARGET_PATHS[target] ?? "/dashboard";
+}
+
+/** El motivo que precarga el diálogo de soporte desde un bloqueo. */
+export function supportReasonFor(message: string): string {
+  return `Dejar lista la cuenta para la entrega: ${message}`;
+}
+
 export type DeliveryIssue = {
   /** `confirm`: bloqueo que se levanta confirmando al enviar (`CONFIRMABLE_BLOCKERS`). */
   kind: "blocker" | "warning" | "confirm";
@@ -201,6 +220,8 @@ export type DeliveryIssue = {
   /** Campo del formulario al que apunta el aviso (`call_day2_at`), si lo hay. */
   field: string | null;
   fix: { label: string; href: string } | null;
+  /** Se resuelve entrando como soporte a esta pantalla del panel (H2-5). */
+  support: { target: string; next: string } | null;
 };
 
 function stepOf(group: CheckGroup): DeliveryStepId {
@@ -209,7 +230,7 @@ function stepOf(group: CheckGroup): DeliveryStepId {
 
 export function deliveryIssues(
   tenantId: string,
-  blockers: readonly { code: string; message: string }[],
+  blockers: readonly { code: string; message: string; action?: { kind: string; target: string } | null }[],
   warnings: readonly { code: string; message: string; field?: string }[],
 ): DeliveryIssue[] {
   const out: DeliveryIssue[] = [];
@@ -225,6 +246,10 @@ export function deliveryIssues(
       step: stepOf(group),
       field: null,
       fix: fix ? { label: fix.label, href: fix.path(tenantId) } : null,
+      support:
+        blocker.action?.kind === "support"
+          ? { target: blocker.action.target, next: supportTargetPath(blocker.action.target) }
+          : null,
     });
   }
   for (const warning of warnings) {
@@ -237,6 +262,7 @@ export function deliveryIssues(
       step: stepOf(group),
       field: warning.field ?? null,
       fix: null,
+      support: null,
     });
   }
   return out;
@@ -439,6 +465,64 @@ export function inviteExpiresAt(attempts: readonly AttemptLike[]): string | null
   const owner = latestOwnerAttempt(attempts);
   if (owner?.sent_at == null) return null;
   return new Date(new Date(owner.sent_at).getTime() + INVITE_TTL_HOURS * 3_600_000).toISOString();
+}
+
+export type RecipientStatus = "pending" | "sent" | "failed" | "skipped";
+
+export type DeliveryRecipient = {
+  role: "owner" | "cc";
+  /** Enmascarado por el servidor («ca***@axi-connect.co»). */
+  email: string;
+  status: RecipientStatus;
+  error: string | null;
+};
+
+type RecipientAttempt = {
+  attempt: number;
+  audience: "owner" | "team";
+  recipient_masked: string;
+  status: RecipientStatus;
+  error: string | null;
+};
+
+/**
+ * El estado REAL de cada destinatario (H2-4): el servidor anota un intento por
+ * destinatario, así que vale el del último intento de cada audiencia (un
+ * reenvío repite a todos). Sin intentos todavía (entrega recién confirmada), el
+ * dueño y la copia salen «en cola».
+ */
+export function deliveryRecipients(
+  delivery: { cc: readonly string[]; attempts: readonly RecipientAttempt[] },
+  ownerEmail: string | null,
+): DeliveryRecipient[] {
+  const latest = (audience: "owner" | "team") => {
+    const rows = delivery.attempts.filter((attempt) => attempt.audience === audience);
+    const last = rows.reduce((max, attempt) => Math.max(max, attempt.attempt), 0);
+    return rows.filter((attempt) => attempt.attempt === last);
+  };
+  const owner = latest("owner");
+  const team = latest("team");
+  const out: DeliveryRecipient[] = [];
+  if (owner.length > 0) {
+    for (const row of owner) {
+      out.push({ role: "owner", email: row.recipient_masked, status: row.status, error: row.error });
+    }
+  } else {
+    out.push({ role: "owner", email: ownerEmail ?? "El dueño de la cuenta", status: "pending", error: null });
+  }
+  if (team.length > 0) {
+    for (const row of team) {
+      out.push({ role: "cc", email: row.recipient_masked, status: row.status, error: row.error });
+    }
+  } else {
+    for (const email of delivery.cc) out.push({ role: "cc", email, status: "pending", error: null });
+  }
+  return out;
+}
+
+/** ¿Algún correo de la copia no salió? (el texto de «enviado» no puede decir que sí). */
+export function teamCopyFailed(recipients: readonly DeliveryRecipient[]): boolean {
+  return recipients.some((recipient) => recipient.role === "cc" && recipient.status === "failed");
 }
 
 /** «re_8f2c…»: el id del proveedor, corto para la ficha (el completo va al copiar). */

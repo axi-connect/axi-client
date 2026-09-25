@@ -4,8 +4,12 @@ import { BrandMark } from "@/shared/components/ui/brand-mark"
 import type { KitView } from "../../domain/kit-view"
 import s from "../welcome-kit.module.css"
 
-/** Ancho de diseño del escenario: por debajo de él, se encoge entero. */
-const STAGE_DESIGN_WIDTH = 720
+/**
+ * Ancho real del escenario (900×502). Se escala para CABER entero en el ancho
+ * del kit: con el diseño a 720, a 390 px el escenario medía 488 y los mosaicos
+ * del catálogo y los pagos se salían del marco del teléfono (QA H2-8).
+ */
+const STAGE_WIDTH = 900
 const STAGE_HEIGHT = 502
 
 const STEPS: { n: number; label: string; state: "done" | "current" | "todo" }[] = [
@@ -18,9 +22,9 @@ const STEPS: { n: number; label: string; state: "done" | "current" | "todo" }[] 
 
 const STEP_CLASS = { done: s.stepDone, current: s.stepCurrent, todo: s.stepTodo }
 
-/** Escala del escenario para un ancho de kit: 1 hasta 720 px, proporcional por debajo. */
+/** Escala del escenario para un ancho de kit: 1 desde 900 px, proporcional por debajo. */
 export function stageScale(width: number): number {
-  return Math.min(1, width / STAGE_DESIGN_WIDTH)
+  return Math.min(1, width / STAGE_WIDTH)
 }
 
 /**

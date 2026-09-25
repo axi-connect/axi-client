@@ -41,14 +41,16 @@ import {
   restartShortensTrial,
   stepOfField,
   summarizeChecks,
+  supportReasonFor,
   timeZoneLabel,
   warningFor,
+  zonedInputToIso,
   type DeliveryIssue,
   type DeliveryStepId,
 } from "../../../domain/delivery";
 import { canSendDelivery } from "../../../domain/platform-role";
 import { usePlatformRole } from "../../../infrastructure/auth/use-platform-role";
-import { calendarDaysUntil } from "@/modules/welcome-kit/domain/formatters";
+import { calendarDaysUntil, formatClockTime, formatInstant } from "@/modules/welcome-kit/domain/formatters";
 import { kitDataFromPreview } from "../../../infrastructure/api/delivery-kit.mapper";
 import type {
   DeliveryContextWire,
@@ -61,6 +63,7 @@ import {
   useDeliveryPreview,
   useOfferQuote,
 } from "../../../infrastructure/api/hooks/use-delivery";
+import { SupportSessionDialog } from "../tenants/SupportSessionDialog";
 import { DeliveryPreviewPanel } from "./DeliveryPreviewPanel";
 import { buildDeliveryFields } from "./delivery-fields";
 import {
@@ -77,6 +80,36 @@ import {
 } from "./delivery-form.config";
 
 const FORM_ID = "delivery-form";
+
+/**
+ * El valor de un `datetime-local` escrito en es-CO («lun 28 sep · 10:00 a. m.»):
+ * el campo nativo se pinta con el idioma del navegador (09/28/2026 en inglés,
+ * QA H2-7), así que debajo va siempre la lectura en la voz de axi.
+ */
+/** 422 `delivery/cc_invalid` → el mensaje que se pinta en el campo «Copia a tu equipo». */
+function ccInvalidMessage(error: unknown): string | null {
+  if (!isHttpError(error) || !error.is("delivery/cc_invalid")) return null;
+  const details = (error.problem?.details ?? {}) as { field?: unknown; reason?: unknown };
+  const index = typeof details.field === "string" ? /^cc\[(\d+)\]$/.exec(details.field)?.[1] : undefined;
+  const which = index !== undefined ? `El correo n.º ${Number(index) + 1} de la copia` : "La copia al equipo";
+  switch (details.reason) {
+    case "format":
+      return `${which} no parece un correo. Revísalo.`;
+    case "duplicate":
+      return `${which} está repetido.`;
+    case "owner":
+      return "El correo del dueño no va en la copia: ya recibe el suyo, con su enlace.";
+    case "too_many":
+      return "La copia admite hasta 10 correos.";
+    default:
+      return `${which} no es válido.`;
+  }
+}
+
+function localEcho(local: string, timeZone: string): string | null {
+  const iso = zonedInputToIso(local, timeZone);
+  return iso ? formatInstant(iso, timeZone) : null;
+}
 const SENDER = "Axi Connect <welcome@axi-connect.co>";
 
 // ------------------------------------------------------------------ borrador local
@@ -224,7 +257,16 @@ function ReviewRow({ ok, children }: { ok: boolean; children: React.ReactNode })
   );
 }
 
-function IssueList({ issues, onGo }: { issues: readonly DeliveryIssue[]; onGo: (step: DeliveryStepId) => void }) {
+function IssueList({
+  issues,
+  onGo,
+  onSupport,
+}: {
+  issues: readonly DeliveryIssue[];
+  onGo: (step: DeliveryStepId) => void;
+  /** Abre «Entrar como soporte» con el motivo y la pantalla del bloqueo (H2-5). */
+  onSupport?: (issue: DeliveryIssue) => void;
+}) {
   const blockers = issues.filter((issue) => issue.kind === "blocker");
   if (blockers.length === 0) return null;
   return (
@@ -236,7 +278,15 @@ function IssueList({ issues, onGo }: { issues: readonly DeliveryIssue[]; onGo: (
             <AlertTriangle aria-hidden="true" className="mt-0.5 size-3.5 shrink-0 text-warning" />
             <span className="min-w-0">
               {issue.message}.{" "}
-              {issue.fix ? (
+              {issue.support && onSupport ? (
+                <button
+                  type="button"
+                  onClick={() => onSupport(issue)}
+                  className="font-medium underline underline-offset-2"
+                >
+                  Configurar como soporte
+                </button>
+              ) : issue.fix ? (
                 <Link href={issue.fix.href} className="font-medium underline underline-offset-2">
                   {issue.fix.label}
                 </Link>
@@ -272,6 +322,7 @@ export function DeliveryWorkspace({
   resumable: DeliveryDetailWire | null;
 }) {
   const { showAlert, showModal } = useAlert();
+  const [supportIssue, setSupportIssue] = useState<DeliveryIssue | null>(null);
   const tz = context.tenant.timezone;
   const storageKey = deliveryDraftStorageKey(tenantId);
 
@@ -355,6 +406,9 @@ export function DeliveryWorkspace({
     .filter(Boolean)
     .join(" · ");
   const restartDisabled = context.blockers.some((blocker) => NO_RESTART_BLOCKERS.has(blocker.code));
+  // El bloqueo que impide la prueba, del servidor (vista previa o contexto).
+  const trialBlocker =
+    (preview.data?.blockers ?? context.blockers).find((blocker) => NO_RESTART_BLOCKERS.has(blocker.code)) ?? null;
 
   const fields = useMemo(
     () =>
@@ -363,19 +417,26 @@ export function DeliveryWorkspace({
         catalog,
         ownerEmail: context.owner?.email ?? null,
         restartRangeLabel,
+        echo: {
+          session_date: values.session_date ? formatZonedDay(`${values.session_date}T12:00:00Z`, "UTC") : null,
+          call_day2_at: localEcho(values.call_day2_at, tz),
+          call_day5_at: localEcho(values.call_day5_at, tz),
+          digest_time: /^\d{2}:\d{2}$/.test(values.digest_time) ? formatClockTime(values.digest_time) : null,
+        },
         restartDisabled,
         warnings: {
           call_day2_at: warningFor(issues, "call_day2_at"),
           call_day5_at: warningFor(issues, "call_day5_at"),
         },
       }),
-    [step, catalog, context.owner, restartRangeLabel, restartDisabled, issues],
+    [step, catalog, context.owner, restartRangeLabel, restartDisabled, issues, values, tz],
   );
 
   // ------------------------------------------------ enviar
   const create = useCreateDelivery(tenantId);
   const role = usePlatformRole();
   const roleAllowed = canSendDelivery(role);
+  const canEnterSupport = role !== "billing_ops";
   const previewReady = preview.upToDate;
   const canSend = roleAllowed && previewReady && blockerCount === 0 && !create.isPending;
 
@@ -403,6 +464,12 @@ export function DeliveryWorkspace({
       });
     } catch (error) {
       // La clave NO cambia: reintentar completa lo que faltó (N3).
+      const ccProblem = ccInvalidMessage(error);
+      if (ccProblem) {
+        form.setError("cc", { type: "server", message: ccProblem });
+        setStep("mail");
+        return;
+      }
       if (applyServerValidation(error, form)) {
         const first = isHttpError(error) ? error.validationIssues[0]?.path?.map(String).join(".") : undefined;
         if (first) setStep(stepOfField(first));
@@ -480,8 +547,12 @@ export function DeliveryWorkspace({
           <PriceBox quote={quoteData} loading={quote.isFetching} error={quote.error} period={values.offer.billing_period} />
         ) : null}
         {step === "trial" ? (
-          <Callout tone={shortens ? "warn" : "neutral"} icon={shortens ? AlertTriangle : Info}>
-            {!values.restart_trial ? (
+          <Callout tone={shortens || trialBlocker ? "warn" : "neutral"} icon={shortens || trialBlocker ? AlertTriangle : Info}>
+            {trialBlocker ? (
+              // El estado REAL del tenant (suspendido, enterprise, ya paga): no
+              // «la prueba arranca hoy» cuando no puede arrancar (QA H2-9).
+              `${trialBlocker.message}.`
+            ) : !values.restart_trial ? (
               "Sin reinicio: la prueba sigue como está y las dos citas tienen que caer dentro de ella."
             ) : context.trial.trial_ends_at ? (
               <>
@@ -529,7 +600,7 @@ export function DeliveryWorkspace({
         </ReviewRow>
         <ReviewRow ok={checks.find((c) => c.id === "kit")?.state !== "blocked"}>
           {preview.data
-            ? `Agente «${preview.data.kit_data.agent.name ?? "sin nombre"}» · ${preview.data.kit_data.catalog.product_count} productos · ${preview.data.kit_data.payment_methods.length} medios de pago${preview.data.kit_data.team_hours ? " · horario cargado" : ""}`
+            ? `Agente «${preview.data.kit_data.agent.name ?? "sin nombre"}» · ${preview.data.kit_data.catalog.product_count} productos · ${preview.data.kit_data.payment_methods.length} medios de pago · ${preview.data.kit_data.team_hours ? `horario ${preview.data.kit_data.team_hours}` : "sin horario"}`
             : context.agent
               ? `Agente «${context.agent.name}»`
               : "Sin agente"}
@@ -541,16 +612,53 @@ export function DeliveryWorkspace({
             : "por definir"}
         </ReviewRow>
         <ReviewRow ok={checks.find((c) => c.id === "mail")?.state !== "blocked"}>
-          Para {owner?.email ?? "—"} · CC: {values.cc.length} · firma {values.advisor.name.trim().split(/\s+/)[0] || "—"}
+          Para {owner?.email ?? "—"} · firma {values.advisor.name.trim().split(/\s+/)[0] || "—"}
+          <br />
+          {/* Las direcciones, no un número: lo que se envía se ve (QA H2-3). */}
+          Copia: {values.cc.length > 0 ? values.cc.join(", ") : "sin copia al equipo"}
         </ReviewRow>
       </ul>
-      <IssueList issues={issues} onGo={setStep} />
+      <IssueList issues={issues} onGo={setStep} onSupport={canEnterSupport ? setSupportIssue : undefined} />
       <p className="text-sm text-muted-foreground">
         Al enviar: se guarda la oferta, se reinicia la prueba, se emite el enlace de un solo uso, se crea el kit y se
         encolan dos correos, uno al dueño y una copia sin enlace al equipo. Si algo falla, reintentar completa lo que
         faltó y nunca manda dos invitaciones.
       </p>
     </div>
+  );
+
+  const checkList = (
+    <ul className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1 text-xs" aria-label="Qué falta">
+        {checks.map((check) => (
+          <li key={check.id}>
+            <button
+              type="button"
+              onClick={() => setStep(check.step)}
+              className={cn(
+                "inline-flex items-center gap-1 rounded-full font-medium focus-visible:outline-2 focus-visible:outline-ring",
+                check.state === "ok" ? "text-success" : check.state === "warn" ? "text-warning" : "text-destructive",
+              )}
+            >
+              <span aria-hidden="true" className="size-1.5 rounded-full bg-current" />
+              {check.label}
+              <span className="sr-only">
+                {check.state === "ok" ? ": listo" : check.state === "warn" ? ": con un aviso" : ": por resolver"}
+              </span>
+            </button>
+          </li>
+        ))}
+        {blockerCount > 0 ? (
+          <li>
+            <button
+              type="button"
+              onClick={() => setStep("review")}
+              className="font-medium underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-ring"
+            >
+              Revisa el paso 4
+            </button>
+          </li>
+        ) : null}
+      </ul>
   );
 
   // ------------------------------------------------ render
@@ -594,12 +702,15 @@ export function DeliveryWorkspace({
       <div className="grid items-start gap-6 lg:grid-cols-2">
         <section aria-label="Pasos de la entrega" className="min-w-0 rounded-2xl border bg-card p-4 sm:p-5">
           <Tabs value={step} onValueChange={(next) => isDeliveryStep(next) && setStep(next)} className="gap-5">
-            <TabsList aria-label="Pasos" surface="inline" className="w-full">
+            {/* `boxed` y no `pill`: la pastilla animada solo se mueve en horizontal y
+                la fila de pasos tiene que poder partirse en dos (a 1440 px se cortaba
+                «Revisar y enviar», QA H2-8). */}
+            <TabsList aria-label="Pasos" variant="boxed" className="h-auto w-full flex-wrap gap-1">
               {DELIVERY_STEPS.map((item, index) => {
                 const isBlocked = blocked.has(item.id);
                 const done = !isBlocked && item.id !== "review" && previewReady;
                 return (
-                  <TabsTrigger key={item.id} value={item.id}>
+                  <TabsTrigger key={item.id} value={item.id} className="h-8 min-w-fit">
                     <span
                       aria-hidden="true"
                       className={cn(
@@ -658,41 +769,25 @@ export function DeliveryWorkspace({
 
       <footer
         aria-label="Estado del envío"
-        className="sticky bottom-0 z-10 -mx-1 flex flex-wrap items-center gap-3 rounded-2xl border bg-background/95 px-4 py-3 shadow-[var(--shadow-float)] backdrop-blur"
+        className="sticky bottom-0 z-10 -mx-1 flex flex-wrap items-center gap-2 rounded-2xl border bg-background/95 px-3 py-2 shadow-[var(--shadow-float)] backdrop-blur sm:gap-3 sm:px-4 sm:py-3"
       >
-        <ul className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1 text-xs" aria-label="Qué falta">
-          {checks.map((check) => (
-            <li key={check.id}>
-              <button
-                type="button"
-                onClick={() => setStep(check.step)}
-                className={cn(
-                  "inline-flex items-center gap-1 rounded-full font-medium focus-visible:outline-2 focus-visible:outline-ring",
-                  check.state === "ok" ? "text-success" : check.state === "warn" ? "text-warning" : "text-destructive",
-                )}
-              >
-                <span aria-hidden="true" className="size-1.5 rounded-full bg-current" />
-                {check.label}
-                <span className="sr-only">
-                  {check.state === "ok" ? ": listo" : check.state === "warn" ? ": con un aviso" : ": por resolver"}
-                </span>
-              </button>
-            </li>
-          ))}
-          {blockerCount > 0 ? (
-            <li>
-              <button
-                type="button"
-                onClick={() => setStep("review")}
-                className="font-medium underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-ring"
-              >
-                Revisa el paso 4
-              </button>
-            </li>
-          ) : null}
-        </ul>
+        {/* Escritorio: la fila de puntos. Celular: un resumen plegable, para que la
+            barra fija no se coma la pantalla (QA H2-8). */}
+        <div className="hidden min-w-0 flex-1 sm:block">{checkList}</div>
+        <details className="min-w-0 flex-1 text-xs sm:hidden">
+          <summary className="cursor-pointer font-medium">
+            {blockerCount === 0 ? "Todo listo" : blockerCount === 1 ? "1 cosa por resolver" : `${blockerCount} cosas por resolver`}
+          </summary>
+          <div className="mt-2 space-y-2">
+            {checkList}
+            <Button type="button" variant="ghost" size="sm" onClick={saveDraft}>
+              <Save aria-hidden="true" />
+              Guardar borrador
+            </Button>
+          </div>
+        </details>
         <div className="flex flex-wrap items-center gap-2">
-          <Button type="button" variant="ghost" onClick={saveDraft}>
+          <Button type="button" variant="ghost" onClick={saveDraft} className="hidden sm:inline-flex">
             <Save aria-hidden="true" />
             Guardar borrador
           </Button>
@@ -718,6 +813,18 @@ export function DeliveryWorkspace({
           </span>
         </div>
       </footer>
+
+      {supportIssue ? (
+        <SupportSessionDialog
+          open
+          onOpenChange={(open) => {
+            if (!open) setSupportIssue(null);
+          }}
+          tenant={{ id: tenantId, name: context.tenant.name }}
+          initialReason={supportReasonFor(supportIssue.message)}
+          next={supportIssue.support?.next}
+        />
+      ) : null}
     </div>
   );
 }

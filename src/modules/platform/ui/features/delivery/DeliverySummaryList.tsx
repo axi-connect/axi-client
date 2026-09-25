@@ -1,9 +1,11 @@
 "use client";
 
-import { Check, Copy } from "lucide-react";
+import { Check, Copy, X } from "lucide-react";
 import { formatDayTime } from "../../../domain/dates";
 import {
   DELIVERY_STATUS_LABELS,
+  deliveryRecipients,
+  type RecipientStatus,
   formatZonedDay,
   inviteExpiresAt,
   latestOwnerAttempt,
@@ -19,6 +21,20 @@ const STATUS_TONE: Record<DeliveryDetailWire["status"], string> = {
   sent: "text-success",
   failed: "text-destructive",
 };
+
+const RECIPIENT_STATUS_LABELS: Record<RecipientStatus, string> = {
+  sent: "enviado",
+  failed: "no salió",
+  pending: "en cola",
+  skipped: "omitido",
+};
+
+/** Un solo indicador por destinatario: ✓ enviado, ✗ no salió, · en cola u omitido. */
+function RecipientMark({ status }: { status: RecipientStatus }) {
+  if (status === "sent") return <Check aria-hidden="true" className="size-3.5 shrink-0 translate-y-0.5 text-success" />;
+  if (status === "failed") return <X aria-hidden="true" className="size-3.5 shrink-0 translate-y-0.5 text-destructive" />;
+  return <span aria-hidden="true" className="inline-block size-1.5 shrink-0 -translate-y-0.5 rounded-full bg-muted-foreground" />;
+}
 
 function Row({ label, children, hint }: { label: string; children: React.ReactNode; hint?: React.ReactNode }) {
   return (
@@ -53,6 +69,7 @@ export function DeliverySummaryList({
   const sentAt = owner?.sent_at ?? delivery.created_at;
   const inviteEnds = inviteExpiresAt(delivery.attempts);
   const messageId = owner?.provider_message_id ?? null;
+  const recipients = deliveryRecipients(delivery, ownerEmail ?? null);
 
   return (
     <dl className="divide-y divide-border">
@@ -92,11 +109,25 @@ export function DeliverySummaryList({
             <br />
             Día 5: {formatDayTime(delivery.call_day5_at, tz)}
           </Row>
-          <Row label="Para" hint={delivery.cc.length > 0 ? `Copia: ${delivery.cc.join(", ")}` : "Sin copia al equipo"}>
-            {ownerEmail ?? "El dueño de la cuenta"}
-          </Row>
         </>
       )}
+      <Row label="Destinatarios">
+        <ul className="space-y-1">
+          {recipients.map((recipient) => (
+            <li key={`${recipient.role}-${recipient.email}`} className="flex flex-wrap items-baseline gap-x-1.5">
+              <RecipientMark status={recipient.status} />
+              <span className="min-w-0 break-all">{recipient.email}</span>
+              <span className="text-xs text-muted-foreground">
+                {recipient.role === "owner" ? "· dueño, con el enlace" : "· copia sin enlace"}
+                {" · "}
+                {RECIPIENT_STATUS_LABELS[recipient.status]}
+                {recipient.status === "failed" && recipient.error ? `: ${recipient.error}` : ""}
+              </span>
+            </li>
+          ))}
+          {delivery.cc.length === 0 ? <li className="text-xs text-muted-foreground">Sin copia al equipo</li> : null}
+        </ul>
+      </Row>
       <Row label="Id del mensaje">
         {messageId ? (
           <button

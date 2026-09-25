@@ -131,7 +131,19 @@ export type DeliveryFieldsInput = {
   /** La prueba no admite reinicio (enterprise o suspendida por otra causa). */
   restartDisabled: boolean;
   warnings: { call_day2_at: string | null; call_day5_at: string | null };
+  /** La lectura es-CO de lo escrito en cada campo de fecha u hora (QA H2-7). */
+  echo: {
+    session_date: string | null;
+    call_day2_at: string | null;
+    call_day5_at: string | null;
+    digest_time: string | null;
+  };
 };
+
+/** «Día 0 · jue 24 sep»: la ayuda y, si hay valor, cómo se lee en es-CO. */
+function withEcho(hint: string, echo: string | null): string {
+  return echo ? `${echo} · ${hint}` : hint;
+}
 
 function percentLabel(bps: number): string {
   return `${(bps / 100).toLocaleString("es-CO", { maximumFractionDigits: 1 })} %`;
@@ -215,25 +227,29 @@ export function buildDeliveryFields(input: DeliveryFieldsInput): FieldConfig<Del
     createInputField<DeliveryFormValues>("session_date", {
       inputKind: "date",
       label: "Sesión de puesta en marcha",
-      description: "Día 0",
+      description: withEcho("Día 0", input.echo.session_date),
       isVisible: on("trial"),
     }),
     createInputField<DeliveryFormValues>("digest_time", {
       inputKind: "time",
       label: "Resumen de cada mañana",
-      description: "Lo cumple la consola de Cuentas",
+      description: withEcho("Lo cumple la consola de Cuentas", input.echo.digest_time),
       isVisible: on("trial"),
     }),
     createInputField<DeliveryFormValues>("call_day2_at", {
       inputKind: "datetime-local",
       label: "Día 2 · llamada de 10 min",
-      description: <CallHint warning={input.warnings.call_day2_at} fallback="Va en el correo como .ics" />,
+      description: (
+        <CallHint warning={input.warnings.call_day2_at ? withEcho(input.warnings.call_day2_at, input.echo.call_day2_at) : null} fallback={withEcho("Va en el correo como .ics", input.echo.call_day2_at)} />
+      ),
       isVisible: on("trial"),
     }),
     createInputField<DeliveryFormValues>("call_day5_at", {
       inputKind: "datetime-local",
       label: "Día 5 · reunión de 15 min",
-      description: <CallHint warning={input.warnings.call_day5_at} fallback="Va en el correo como .ics" />,
+      description: (
+        <CallHint warning={input.warnings.call_day5_at ? withEcho(input.warnings.call_day5_at, input.echo.call_day5_at) : null} fallback={withEcho("Va en el correo como .ics", input.echo.call_day5_at)} />
+      ),
       isVisible: on("trial"),
     }),
 

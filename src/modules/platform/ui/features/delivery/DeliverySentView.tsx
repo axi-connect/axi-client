@@ -4,6 +4,7 @@ import Link from "next/link";
 import { CircleAlert, MailCheck } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Callout } from "@/shared/components/ui/callout";
+import { deliveryRecipients, teamCopyFailed } from "../../../domain/delivery";
 import type { DeliveryDetailWire } from "../../../infrastructure/api/delivery.dto";
 import { DeliverySummaryList } from "./DeliverySummaryList";
 import { ResendDeliveryButton } from "./ResendDeliveryButton";
@@ -19,6 +20,13 @@ export function DeliverySentView({
   ownerEmail: string | null;
 }) {
   const failed = delivery.status === "failed";
+  const recipients = deliveryRecipients(delivery, ownerEmail);
+  const copyFailed = teamCopyFailed(recipients);
+  const hasCopy = delivery.cc.length > 0;
+  const ownerSent = recipients.find((recipient) => recipient.role === "owner")?.status === "sent";
+  const ownerLine = ownerSent
+    ? "El dueño recibió su correo con el enlace para crear la contraseña"
+    : "El correo del dueño, con el enlace para crear la contraseña, va en camino";
   return (
     <section aria-labelledby="delivery-sent-title" className="max-w-3xl space-y-4 rounded-2xl border bg-card p-4 sm:p-6">
       <header className="flex items-start gap-3">
@@ -34,7 +42,11 @@ export function DeliverySentView({
           <p className="text-sm text-muted-foreground">
             {failed
               ? "La entrega quedó hecha (oferta, prueba y kit); lo que falló es el correo. Reenviar lo intenta de nuevo."
-              : "El dueño recibió su correo con el enlace para crear la contraseña, y tu equipo, la copia sin enlace."}
+              : copyFailed
+                ? `${ownerLine}. La copia al equipo no salió: mira el motivo abajo.`
+                : hasCopy
+                  ? `${ownerLine}; la copia sin enlace al equipo sale aparte.`
+                  : `${ownerLine}.`}
           </p>
         </div>
       </header>

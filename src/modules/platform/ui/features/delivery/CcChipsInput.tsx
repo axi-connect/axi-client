@@ -26,6 +26,9 @@ export function CcChipsInput({
 }) {
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
+  // Lo que se convirtió en chip al salir del campo, dicho en voz alta: un correo
+  // a medio escribir no puede irse en la copia sin que se vea (QA H2-3).
+  const [notice, setNotice] = useState<string | null>(null);
   const generatedId = useId();
   const inputId = id ?? generatedId;
   const errorId = `${inputId}-error`;
@@ -95,6 +98,7 @@ export function CcChipsInput({
           onChange={(event) => {
             setDraft(event.target.value);
             if (error) setError(null);
+            if (notice) setNotice(null);
           }}
           onKeyDown={(event) => {
             if (event.key === "Enter" || event.key === "," || event.key === ";") {
@@ -107,7 +111,12 @@ export function CcChipsInput({
             }
           }}
           onBlur={() => {
-            if (draft.trim() !== "" && add(draft)) setDraft("");
+            if (draft.trim() === "") return;
+            const pending = draft.trim();
+            if (add(draft)) {
+              setDraft("");
+              setNotice(`Se agregó ${pending} a la copia. Quítalo con la × si no va.`);
+            }
           }}
           onPaste={(event) => {
             const text = event.clipboardData.getData("text");
@@ -122,6 +131,10 @@ export function CcChipsInput({
       {error ? (
         <p id={errorId} role="alert" className="text-xs text-destructive">
           {error}
+        </p>
+      ) : notice ? (
+        <p role="status" className="text-xs text-muted-foreground">
+          {notice}
         </p>
       ) : null}
     </div>

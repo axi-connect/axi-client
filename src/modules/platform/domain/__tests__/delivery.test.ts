@@ -99,7 +99,6 @@ describe("bloqueos y avisos", () => {
   const blockers = [
     { code: "offer_not_quoted", message: "Cotiza la oferta" },
     { code: "payment_methods_missing", message: "Configura un medio de pago" },
-    { code: "cc_includes_owner", message: "El dueño no va en copia" },
     { code: "owner_missing", message: "Sin dueño" },
     { code: "codigo_nuevo_del_servidor", message: "Algo nuevo" },
   ];
@@ -110,7 +109,7 @@ describe("bloqueos y avisos", () => {
     const byCode = Object.fromEntries(issues.map((issue) => [issue.code, issue]));
     expect(byCode.offer_not_quoted).toMatchObject({ kind: "blocker", group: "offer", step: "offer" });
     expect(byCode.payment_methods_missing).toMatchObject({ group: "kit", step: "review", fix: null });
-    expect(byCode.cc_includes_owner).toMatchObject({ group: "mail", step: "mail" });
+    expect(byCode.owner_missing).toMatchObject({ group: "mail", step: "mail" });
     expect(byCode.owner_missing.fix).toEqual({ label: "Ver usuarios", href: "/platform/tenants/t-1/users" });
     // Un código que el cliente no conoce no se pierde: cae en «Datos del kit».
     expect(byCode.codigo_nuevo_del_servidor).toMatchObject({ kind: "blocker", group: "kit" });
@@ -207,5 +206,90 @@ describe("entrega enviada", () => {
 describe("fechas de /platform con el formateador del kit (QA-5)", () => {
   it("nunca «sept»", () => {
     expect(formatTrialRange("2026-09-24T05:00:00Z", "2026-10-02T04:59:59Z", BOGOTA)).not.toContain("sept")
+  })
+})
+
+describe("destinatarios reales (QA H2-4)", () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { deliveryRecipients, teamCopyFailed } = require("../delivery") as typeof import("../delivery")
+  const row = (attempt: number, audience: "owner" | "team", recipient: string, status: "sent" | "failed" | "pending", error: string | null = null) => ({
+    attempt,
+    audience,
+    recipient_masked: recipient,
+    status,
+    error,
+  })
+
+  it("un intento por destinatario: el dueño y cada correo de la copia con su resultado y su motivo", () => {
+    const recipients = deliveryRecipients(
+      {
+        cc: ["camila@axi-connect.co", "roto@resend.de"],
+        attempts: [
+          row(1, "owner", "ho***@laespiga.co", "sent"),
+          row(1, "team", "ca***@axi-connect.co", "sent"),
+          row(1, "team", "ro***@resend.de", "failed", "dominio no verificado"),
+        ],
+      },
+      "hola@laespiga.co",
+    )
+    expect(recipients).toEqual([
+      { role: "owner", email: "ho***@laespiga.co", status: "sent", error: null },
+      { role: "cc", email: "ca***@axi-connect.co", status: "sent", error: null },
+      { role: "cc", email: "ro***@resend.de", status: "failed", error: "dominio no verificado" },
+    ])
+    expect(teamCopyFailed(recipients)).toBe(true)
+  })
+
+  it("manda el último intento de cada audiencia (un reenvío)", () => {
+    const recipients = deliveryRecipients(
+      {
+        cc: ["camila@axi-connect.co"],
+        attempts: [
+          row(1, "owner", "ho***@laespiga.co", "failed", "x"),
+          row(1, "team", "ca***@axi-connect.co", "failed", "x"),
+          row(2, "owner", "ho***@laespiga.co", "sent"),
+          row(2, "team", "ca***@axi-connect.co", "sent"),
+        ],
+      },
+      null,
+    )
+    expect(recipients.map((r) => r.status)).toEqual(["sent", "sent"])
+    expect(teamCopyFailed(recipients)).toBe(false)
+  })
+
+  it("sin intentos todavía, el dueño y la copia salen en cola", () => {
+    const recipients = deliveryRecipients({ cc: ["camila@axi-connect.co"], attempts: [] }, "hola@laespiga.co")
+    expect(recipients).toEqual([
+      { role: "owner", email: "hola@laespiga.co", status: "pending", error: null },
+      { role: "cc", email: "camila@axi-connect.co", status: "pending", error: null },
+    ])
+  })
+})
+
+describe("bloqueos que se resuelven como soporte (QA H2-5)", () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { supportReasonFor } = require("../delivery") as typeof import("../delivery")
+  it("llevan la pantalla del panel donde se arreglan", () => {
+    const issues = deliveryIssues(
+      "t-1",
+      [
+        { code: "agent_missing", message: "Sin agente", action: { kind: "support", target: "agent" } },
+        { code: "payment_methods_missing", message: "Sin pagos", action: { kind: "support", target: "payment_methods" } },
+        { code: "offer_not_quoted", message: "Cotiza" },
+        { code: "business_name_too_long", message: "Nombre largo", action: { kind: "support", target: "company" } },
+        { code: "x", message: "?", action: { kind: "support", target: "desconocido" } },
+      ],
+      [],
+    )
+    expect(issues.map((issue) => issue.support?.next ?? null)).toEqual([
+      "/admin/agents",
+      "/settings/payments",
+      null,
+      "/settings/company",
+      "/dashboard",
+    ])
+    expect(supportReasonFor("El tenant no tiene un agente activo")).toBe(
+      "Dejar lista la cuenta para la entrega: El tenant no tiene un agente activo",
+    )
   })
 })

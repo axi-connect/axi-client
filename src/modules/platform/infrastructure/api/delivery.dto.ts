@@ -15,8 +15,10 @@ export type BillingPeriod = OfferSelectionWire["billing_period"];
 
 type ContextDto = Schemas["DeliveryContextDto"];
 
+/** Un bloqueo; si se resuelve en el panel del tenant, trae `action: { kind: 'support', target }`. */
 export type BlockerWire = ContextDto["blockers"][number];
 export type BlockerCode = BlockerWire["code"];
+export type SupportTarget = NonNullable<BlockerWire["action"]>["target"];
 
 export type WarningWire = Schemas["DeliveryPreviewDto"]["warnings"][number];
 
@@ -26,6 +28,7 @@ export type DeliverySummaryWire = NonNullable<ContextDto["latest_delivery"]>;
 export type AdvisorWire = DeliverySummaryWire["advisor"];
 export type DeliveryStatus = DeliverySummaryWire["status"];
 
+/** Cada intento es por destinatario (`recipient_masked`); `team_failures` cuenta los de la copia que fallaron. */
 export type DeliveryDetailWire = NonNullable<Schemas["DeliveryResponseDto"]["delivery"]>;
 export type DeliveryAttemptWire = DeliveryDetailWire["attempts"][number];
 export type DeliveryResponseWire = { delivery: DeliveryDetailWire | null };
