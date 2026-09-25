@@ -147,7 +147,7 @@ export function Composer({ disabled, disabledReason, pending, capUsd, dailyCapUs
         </p>
       )}
       <p className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
-        <span>Enter envía · Shift+Enter salta de línea. Pipeline real: lote de mensajes, tools, botones y medios como en WhatsApp; cada turno se cobra a plataforma.</span>
+        {!disabled && <span>Enter envía · Shift+Enter salta de línea. Pipeline real: lote de mensajes, tools, botones y medios como en WhatsApp; cada turno se cobra a plataforma.</span>}
         <span className="tabular-nums">
           tope {formatUsd(capUsd)} · diario {formatUsd(dailyCapUsd)}
         </span>

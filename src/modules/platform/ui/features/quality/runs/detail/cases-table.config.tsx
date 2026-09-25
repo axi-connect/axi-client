@@ -124,7 +124,7 @@ export function buildCaseColumns(runId: string): ColumnDef<CaseRow>[] {
       searchable: false,
       minWidth: 100,
       cell: ({ row }) => (
-        <MetricCell tone={scoreTone(row.original.judge_score)}>
+        <MetricCell appearance="dot" tone={scoreTone(row.original.judge_score)}>
           {formatScore(row.original.judge_score)}
         </MetricCell>
       ),

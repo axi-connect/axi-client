@@ -14,6 +14,7 @@ import { Check, CircleSlash, MessageSquareWarning, SkipForward, Trash2 } from "l
 import { cn } from "@/core/lib/utils";
 import { Button } from "@/shared/components/ui/button";
 import {
+  LABEL_STATUS_LABELS,
   parseIntentExpected,
   parseIntentInput,
   parseIntentSuggested,
@@ -130,6 +131,8 @@ export function LabelPanel({ kind, companyId, item, pending, onDecide, onDelete 
     function onKey(event: KeyboardEvent) {
       const target = event.target as HTMLElement | null;
       if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) return;
+      // Enter sobre un botón o enlace enfocado lo activa a ÉL, no «Guardar» (QA quality-premium)
+      if (event.key === "Enter" && target && (target.tagName === "BUTTON" || target.tagName === "A")) return;
       if (pending) return;
       if (event.key === "Enter") {
         event.preventDefault();
@@ -207,7 +210,7 @@ export function LabelPanel({ kind, companyId, item, pending, onDecide, onDelete 
             </dd>
             <dt className="text-muted-foreground">Estado</dt>
             <dd>
-              {item.label_status}
+              {LABEL_STATUS_LABELS[item.label_status]}
               {item.labeled_by ? ` · por ${item.labeled_by}` : ""}
             </dd>
           </dl>
@@ -241,15 +244,15 @@ export function LabelPanel({ kind, companyId, item, pending, onDecide, onDelete 
                           <span className="grid size-8 place-items-center rounded-xl bg-muted font-mono text-xs text-muted-foreground">{index + 1}</span>
                           <span className="min-w-0 space-y-1">
                             <span className="block truncate font-medium">{product.name || product.sku}</span>
-                            <span className="flex min-w-0 items-center gap-2.5 text-xs text-muted-foreground">
-                              <span className="truncate font-mono">{product.sku}</span>
-                              {extra && (
-                                <>
-                                  <Meter value={extra.score} className="w-20 shrink-0" />
-                                  <span className="shrink-0 font-medium text-foreground tabular-nums">{extra.score.toFixed(2)}</span>
-                                </>
-                              )}
+                            <span className="block truncate font-mono text-xs text-muted-foreground" title={product.sku}>
+                              {product.sku}
                             </span>
+                            {extra && (
+                              <span className="flex items-center gap-2.5 text-xs">
+                                <Meter value={extra.score} className="max-w-28 flex-1" />
+                                <span className="shrink-0 font-medium tabular-nums">{extra.score.toFixed(2)}</span>
+                              </span>
+                            )}
                           </span>
                           <span
                             aria-hidden="true"
@@ -294,18 +297,18 @@ export function LabelPanel({ kind, companyId, item, pending, onDecide, onDelete 
       </div>
 
       {/* ---- barra de acción: la isla de tinta de esta pantalla */}
-      <div className="relative isolate mt-auto flex flex-wrap items-center gap-3 overflow-hidden rounded-2xl bg-foreground px-4 py-3 text-background dark:border dark:border-border dark:bg-secondary dark:text-foreground">
+      <div className="relative isolate mt-auto flex flex-wrap items-center gap-3 overflow-hidden rounded-2xl bg-foreground px-4 py-3 text-background dark:border dark:border-border dark:bg-card dark:text-foreground">
         <span
           aria-hidden="true"
           className="pointer-events-none absolute -top-28 -left-20 -z-10 size-60 rounded-full bg-[radial-gradient(circle,color-mix(in_oklab,var(--axi-brand)_40%,transparent),transparent_70%)]"
         />
-        <span className="min-w-0 flex-1">
+        <span className="min-w-0 basis-full xl:basis-auto xl:flex-1">
           <span className="block text-[11px] opacity-70">Etiqueta esperada</span>
           <span className="block truncate font-mono text-sm" aria-live="polite">
             {labelText}
           </span>
         </span>
-        <span className="flex flex-wrap items-center gap-2">
+        <span className="flex flex-wrap items-center gap-2 xl:ml-auto">
           <Button variant="secondary" size="sm" onClick={() => onDecide({ status: "skipped" })} disabled={pending}>
             <SkipForward aria-hidden="true" />
             Omitir

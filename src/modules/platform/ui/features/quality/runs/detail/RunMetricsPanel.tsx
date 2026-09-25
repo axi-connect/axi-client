@@ -50,12 +50,12 @@ export function RunMetricsPanel({ run }: { run: RunDetail }) {
       <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
         <Metric label="Turnos totales">{metrics.turns_total ?? "—"}</Metric>
         <Metric label="Latencia p50">
-          <MetricCell tone={latencyTone(metrics.reply_e2e_p50_ms)}>
+          <MetricCell appearance="dot" tone={latencyTone(metrics.reply_e2e_p50_ms)}>
             {formatLatency(metrics.reply_e2e_p50_ms)}
           </MetricCell>
         </Metric>
         <Metric label="Latencia p95">
-          <MetricCell tone={latencyTone(metrics.reply_e2e_p95_ms)}>
+          <MetricCell appearance="dot" tone={latencyTone(metrics.reply_e2e_p95_ms)}>
             {formatLatency(metrics.reply_e2e_p95_ms)}
           </MetricCell>
         </Metric>

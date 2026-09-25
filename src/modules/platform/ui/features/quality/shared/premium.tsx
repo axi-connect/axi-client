@@ -19,8 +19,11 @@ export function QualityTile({
   children,
   className,
   as: Tag = "section",
+  wrapLabel = false,
 }: {
   label: React.ReactNode;
+  /** La etiqueta larga baja a una segunda línea en vez de truncarse. */
+  wrapLabel?: boolean;
   aside?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
@@ -29,7 +32,10 @@ export function QualityTile({
   return (
     <Tag className={cn("flex min-w-0 flex-col gap-3 rounded-3xl border border-border bg-card p-5", className)}>
       <header className="flex min-h-6 items-center justify-between gap-2">
-        <h3 className="truncate font-sans text-xs font-normal text-muted-foreground" title={typeof label === "string" ? label : undefined}>
+        <h3
+          className={cn("font-sans text-xs font-normal text-muted-foreground", wrapLabel ? "leading-relaxed" : "truncate")}
+          title={typeof label === "string" ? label : undefined}
+        >
           {label}
         </h3>
         {aside}

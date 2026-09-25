@@ -81,7 +81,7 @@ export function SessionChat({ session, onEnd, ending }: SessionChatProps) {
             <span className="whitespace-nowrap">canal simulador</span> · <span className="whitespace-nowrap">cobrado a plataforma</span>
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex basis-full flex-wrap items-center gap-2.5">
           <QualityStatus status={sessionStatusKey(session)} />
           {session.agent_state === "escalated" && <QualityStatus status="blocked" />}
           <span className="inline-flex items-center gap-2 text-xs text-muted-foreground tabular-nums" title={AGENT_STATE_LABELS[session.agent_state]}>
@@ -104,7 +104,7 @@ export function SessionChat({ session, onEnd, ending }: SessionChatProps) {
       {session.agent_state === "escalated" && active && (
         <Alert variant="warning" className="mx-3 mt-2">
           <AlertDescription>
-            La conversación pasó a un operador humano: el agente ya no responde. Puedes seguir escribiendo (irá a la cola humana) o finalizar la sesión.
+            La conversación pasó a un humano: el agente ya no responde y ningún operador lo verá, porque lo simulado no entra al inbox del tenant. Finaliza la sesión para revisar el resultado.
           </AlertDescription>
         </Alert>
       )}

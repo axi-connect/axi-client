@@ -189,7 +189,7 @@ export function ProbeResultsPanel({ run }: { run: RunDetail }) {
           </span>
           <span className="flex items-center gap-3">
             {run.dataset && (
-              <Link href={`/platform/quality/datasets/${run.dataset.id}`} prefetch={false} className="font-medium text-foreground underline-offset-4 hover:underline">
+              <Link href={`/platform/quality/datasets/${run.dataset.id}`} prefetch={false} className="inline-flex min-h-6 items-center font-medium text-foreground underline-offset-4 hover:underline">
                 Abrir el dataset
               </Link>
             )}

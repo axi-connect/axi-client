@@ -107,7 +107,7 @@ export function ProbeSummaryCards({ run }: { run: RunDetail }) {
 
   return (
     <div className="grid gap-4 lg:max-xl:grid-cols-2 xl:max-[1399px]:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)] min-[1400px]:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_300px]">
-      <QualityTile label={main.label} as="article" className="p-6 lg:max-xl:col-span-2 xl:row-span-2">
+      <QualityTile label={main.label} wrapLabel as="article" className="p-6 lg:max-xl:col-span-2 xl:row-span-2">
         <BigFigure value={formatRatio(main.value)} size="xl" />
         <p className="text-sm text-muted-foreground tabular-nums">{main.hint}</p>
         <div className="mt-auto space-y-2 pt-4">

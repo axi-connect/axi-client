@@ -57,6 +57,10 @@ export function RunsView() {
   });
 
   const runs = useMemo(() => data?.data ?? [], [data]);
+  // La isla «En curso» mira todas las ejecuciones, no la página ni los filtros (QA Q1)
+  const runningQuery = useRunsQuery({ status: "running", page: 1, pageSize: 1 });
+  const pendingQuery = useRunsQuery({ status: "pending", page: 1, pageSize: 1 });
+  const live = runningQuery.data?.data[0] ?? pendingQuery.data?.data[0] ?? null;
   const total = data?.meta.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const hasFilters = tenantFilter !== ALL_TENANTS || kindFilter !== ALL || statusFilter !== ALL;
@@ -156,7 +160,7 @@ export function RunsView() {
         />
       ) : (
         <div className={cn("space-y-4 transition-opacity", isPlaceholderData && "opacity-60")} aria-busy={isPlaceholderData}>
-          <RunsOverview runs={runs} total={total} />
+          <RunsOverview runs={runs} total={total} live={live} />
           <RunsTable runs={runs} />
           <div className="flex items-center justify-between gap-2">
             <p className="text-sm text-muted-foreground tabular-nums">

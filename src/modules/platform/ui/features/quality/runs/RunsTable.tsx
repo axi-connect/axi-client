@@ -106,7 +106,7 @@ export function RunsTable({ runs }: { runs: RunListItem[] }) {
                   )}
                 </TableCell>
                 <TableCell className="text-right">
-                  <MetricCell tone={scoreTone(run.avg_judge_score)}>
+                  <MetricCell appearance="dot" tone={scoreTone(run.avg_judge_score)}>
                     {formatScore(run.avg_judge_score)}
                   </MetricCell>
                 </TableCell>

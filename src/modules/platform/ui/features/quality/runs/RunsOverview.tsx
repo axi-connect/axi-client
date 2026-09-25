@@ -2,7 +2,8 @@
 
 /**
  * Cabecera viva de «Ejecuciones» (quality_premium_plan F4): la isla muestra la
- * ejecución en curso más reciente, caso por caso; al lado, tres cifras de la
+ * ejecución en curso más reciente DE TODAS (consulta propia, sin los filtros ni
+ * la página de la tabla: QA Q1), caso por caso; al lado, tres cifras de la
  * página cargada. El endpoint no trae agregados globales, así que las cifras
  * dicen de qué salen («en esta página») en vez de inventar un «últimos 7 días».
  */
@@ -32,8 +33,7 @@ const SEGMENT_CLASS: Record<string, string> = {
   pending: "bg-background/20 dark:bg-foreground/15",
 };
 
-export function RunsOverview({ runs, total }: { runs: RunListItem[]; total: number }) {
-  const live = runs.find((run) => isRunCancelable(run.status)) ?? null;
+export function RunsOverview({ runs, total, live }: { runs: RunListItem[]; total: number; live: RunListItem | null }) {
   const passed = runs.reduce((sum, run) => sum + run.cases_passed, 0);
   const settled = runs.reduce((sum, run) => sum + run.cases_passed + run.cases_failed + run.cases_blocked, 0);
   const spend = runs.reduce((sum, run) => sum + (run.spend_usd ?? 0), 0);
@@ -127,7 +127,7 @@ function LivePanel({ run }: { run: RunListItem | null }) {
         <Link
           href={`/platform/quality/runs/${run.id}`}
           prefetch={false}
-          className="inline-flex items-center gap-1 font-medium whitespace-nowrap underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          className="inline-flex min-h-6 items-center gap-1 font-medium whitespace-nowrap underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
         >
           Ver en vivo
           <ArrowRight aria-hidden="true" className="size-3.5" />

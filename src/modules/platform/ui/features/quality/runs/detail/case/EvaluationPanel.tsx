@@ -34,7 +34,7 @@ export function EvaluationPanel({ evaluation }: { evaluation: CaseDetail["evalua
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
-        <MetricCell tone={scoreTone(evaluation.overall_score)} className="text-lg font-semibold">
+        <MetricCell appearance="dot" tone={scoreTone(evaluation.overall_score)} className="text-lg font-semibold">
           {formatScore(evaluation.overall_score)}
           <span className="text-xs font-normal text-muted-foreground">/100</span>
         </MetricCell>
@@ -55,7 +55,7 @@ export function EvaluationPanel({ evaluation }: { evaluation: CaseDetail["evalua
             <div key={key} className="flex items-baseline justify-between gap-2 rounded-lg bg-muted/40 px-2.5 py-1.5">
               <dt className="text-xs text-muted-foreground">{label}</dt>
               <dd>
-                <MetricCell tone={scoreTone(value)}>{formatScore(value)}</MetricCell>
+                <MetricCell appearance="dot" tone={scoreTone(value)}>{formatScore(value)}</MetricCell>
               </dd>
             </div>
           );

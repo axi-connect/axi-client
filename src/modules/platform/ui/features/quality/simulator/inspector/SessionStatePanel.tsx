@@ -13,6 +13,7 @@ import { Button } from "@/shared/components/ui/button";
 import {
   END_REASON_LABELS,
   formatUsd,
+  sessionStatusKey,
   spendPercent,
   type SessionDetail,
 } from "../../../../../domain/quality-sessions";
@@ -50,7 +51,7 @@ function nowCopy(session: SessionDetail): { title: string; detail: string } {
     case "thinking":
       return { title: `${agent} está escribiendo`, detail: "Tu mensaje ya entró al pipeline real; la respuesta aparece en el chat." };
     case "escalated":
-      return { title: "Pasó a un humano", detail: "El agente ya no responde: lo que escribas va a la cola humana del tenant." };
+      return { title: "Pasó a un humano", detail: "El agente ya no responde y ningún operador lo verá: lo simulado no entra al inbox del tenant. Finaliza la sesión." };
     case "closed":
       return { title: "El agente cerró la conversación", detail: "Finaliza la sesión para liberar el cupo y revisar el resultado." };
     default:
@@ -107,7 +108,7 @@ export function SessionStatePanel({ session, onEnd, onPurge, ending }: SessionSt
 
       <section aria-label="Conversación">
         <Row label="Sesión">
-          <QualityStatus status={active ? "running" : session.ended_reason === "operator" || session.ended_reason === "closed_by_agent" ? "completed" : "canceled"} />
+          <QualityStatus status={sessionStatusKey(session)} />
         </Row>
         <Row label="Modo">{modeLabel}</Row>
         <Row label="Estado">{session.conversation?.status ?? "—"}</Row>

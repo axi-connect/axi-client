@@ -37,10 +37,11 @@ type ItemsRailProps = {
   onPageChange: (page: number) => void;
 };
 
+// Cortas: las cuatro caben en el rail de 320 px (QA Q4); el nombre completo va en el vacío.
 const FILTERS: { value: LabelStatus; label: string }[] = [
-  { value: "unlabeled", label: "Sin etiquetar" },
-  { value: "labeled", label: "Etiquetados" },
-  { value: "disputed", label: "Disputados" },
+  { value: "unlabeled", label: "Pendientes" },
+  { value: "labeled", label: "Listos" },
+  { value: "disputed", label: "Dudas" },
   { value: "skipped", label: "Omitidos" },
 ];
 
@@ -56,6 +57,7 @@ export function ItemsRail({ kind, name, remaining, labeledCount, itemsCount, fil
           <Meter value={itemsCount === 0 ? 0 : labeledCount / itemsCount} label="Ítems etiquetados" />
           <p className="text-xs text-muted-foreground tabular-nums">{remaining} por etiquetar</p>
         </div>
+        <div className="-mx-1 overflow-x-auto px-1">
         <SegmentedControl
           value={filter}
           onValueChange={onFilterChange}
@@ -63,8 +65,9 @@ export function ItemsRail({ kind, name, remaining, labeledCount, itemsCount, fil
           size="sm"
           surface="inline"
           items={FILTERS}
-          className="max-w-full"
+          className="w-max"
         />
+        </div>
       </div>
       <ol className="min-h-0 flex-1 space-y-0.5 overflow-y-auto px-2 pb-2">
         {loading && (
