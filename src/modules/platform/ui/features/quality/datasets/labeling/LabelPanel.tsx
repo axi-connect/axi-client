@@ -12,6 +12,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Check, CircleSlash, MessageSquareWarning, SkipForward, Trash2 } from "lucide-react";
 import { cn } from "@/core/lib/utils";
+import { Island } from "@/shared/components/features/island";
 import { Button } from "@/shared/components/ui/button";
 import {
   LABEL_STATUS_LABELS,
@@ -297,11 +298,7 @@ export function LabelPanel({ kind, companyId, item, pending, onDecide, onDelete 
       </div>
 
       {/* ---- barra de acción: la isla de tinta de esta pantalla */}
-      <div className="relative isolate mt-auto flex flex-wrap items-center gap-3 overflow-hidden rounded-2xl bg-foreground px-4 py-3 text-background dark:border dark:border-border dark:bg-card dark:text-foreground">
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute -top-28 -left-20 -z-10 size-60 rounded-full bg-[radial-gradient(circle,color-mix(in_oklab,var(--axi-brand)_40%,transparent),transparent_70%)]"
-        />
+      <Island material="ink" className="mt-auto flex flex-wrap items-center gap-3 rounded-2xl px-4 py-3 [--island-glow-at:10%_0%] [--island-glow-mix:30%]">
         <span className="min-w-0 basis-full xl:basis-auto xl:flex-1">
           <span className="block text-[11px] opacity-70">Etiqueta esperada</span>
           <span className="block truncate font-mono text-sm" aria-live="polite">
@@ -309,17 +306,17 @@ export function LabelPanel({ kind, companyId, item, pending, onDecide, onDelete 
           </span>
         </span>
         <span className="flex flex-wrap items-center gap-2 xl:ml-auto">
-          <Button variant="secondary" size="sm" onClick={() => onDecide({ status: "skipped" })} disabled={pending}>
+          <Button variant="glass" size="sm" onClick={() => onDecide({ status: "skipped" })} disabled={pending}>
             <SkipForward aria-hidden="true" />
             Omitir
             <kbd className="rounded bg-foreground/10 px-1 font-mono text-[10px]">S</kbd>
           </Button>
-          <Button variant="secondary" size="sm" onClick={() => onDecide({ status: "disputed" })} disabled={pending}>
+          <Button variant="glass" size="sm" onClick={() => onDecide({ status: "disputed" })} disabled={pending}>
             <MessageSquareWarning aria-hidden="true" />
             Disputar
             <kbd className="rounded bg-foreground/10 px-1 font-mono text-[10px]">D</kbd>
           </Button>
-          <Button variant="secondary" size="icon" className="size-8" onClick={onDelete} disabled={pending} aria-label="Quitar el ítem del dataset">
+          <Button variant="glass" size="icon" className="size-8" onClick={onDelete} disabled={pending} aria-label="Quitar el ítem del dataset">
             <Trash2 aria-hidden="true" />
           </Button>
           <Button onClick={save} disabled={!canSave || pending}>
@@ -328,7 +325,7 @@ export function LabelPanel({ kind, companyId, item, pending, onDecide, onDelete 
             <kbd className="rounded bg-primary-foreground/20 px-1 font-mono text-[10px]">↵</kbd>
           </Button>
         </span>
-      </div>
+      </Island>
     </section>
   );
 }

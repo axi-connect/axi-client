@@ -27,10 +27,10 @@ function caseSegments(run: Pick<RunListItem, "cases_passed" | "cases_failed" | "
 }
 
 const SEGMENT_CLASS: Record<string, string> = {
-  passed: "bg-background dark:bg-foreground",
+  passed: "bg-foreground",
   failed: "bg-destructive",
   blocked: "bg-warning",
-  pending: "bg-background/20 dark:bg-foreground/15",
+  pending: "bg-foreground/20",
 };
 
 export function RunsOverview({ runs, total, live }: { runs: RunListItem[]; total: number; live: RunListItem | null }) {
@@ -76,7 +76,7 @@ function LivePanel({ run }: { run: RunListItem | null }) {
         <p className="font-heading text-2xl leading-tight font-bold tracking-tight">Nada corriendo</p>
         <p className="text-sm opacity-80">Lanza una ejecución de QA, estrés o un probe contra un tenant.</p>
         <div className="mt-auto pt-2">
-          <Button asChild variant="secondary">
+          <Button asChild variant="contrast">
             <Link href="/platform/quality/runs/new" prefetch={false}>
               <Plus aria-hidden="true" />
               Nueva ejecución
@@ -111,9 +111,9 @@ function LivePanel({ run }: { run: RunListItem | null }) {
           ))}
         </div>
       ) : (
-        <span aria-hidden="true" className="block h-2 overflow-hidden rounded-full bg-background/20 dark:bg-foreground/15">
+        <span aria-hidden="true" className="block h-2 overflow-hidden rounded-full bg-foreground/20">
           <span
-            className="block h-full rounded-full bg-background dark:bg-foreground"
+            className="block h-full rounded-full bg-foreground"
             style={{ width: `${run.cases_total === 0 ? 0 : (done / run.cases_total) * 100}%` }}
           />
         </span>

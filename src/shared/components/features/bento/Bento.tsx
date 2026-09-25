@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/core/lib/utils";
+import { Island, type IslandLook } from "@/shared/components/features/island";
 
 /**
  * Piezas del bento de resumen (DESIGN-SYSTEM §9.5). Una ficha es UN tema:
@@ -94,35 +95,27 @@ export function BentoLink({ href, children, className }: { href: string; childre
 }
 
 /**
- * La isla de tinta: UNA por pantalla, para lo más accionable. En claro es
- * tinta (`bg-foreground`); en oscuro, tarjeta elevada con borde (una isla
- * blanca sobre negro grita). El brillo coral va detrás del contenido. Sus
- * botones son `variant="secondary"`.
+ * La isla de tinta: UNA por pantalla, para lo más accionable (§9.5). Su
+ * material (tinta o cristal blanco o negro) y su brillo salen de
+ * `ISLAND_DEFAULTS`; una isla distinta lo pide con `material`, `tone` o
+ * `glow`. Lo de dentro usa los tokens de siempre: la isla redefine el esquema
+ * en su subárbol. Sus botones son `variant="contrast"`.
  */
 export function InkIsland({
   label,
   children,
   className,
-}: {
+  ...look
+}: IslandLook & {
   /** Nombre de la región para el lector de pantalla. */
   label: string;
   children: React.ReactNode;
   className?: string;
 }) {
   return (
-    <section
-      aria-label={label}
-      className={cn(
-        "relative isolate flex min-w-0 flex-col gap-2 overflow-hidden rounded-3xl bg-foreground p-6 text-background dark:border dark:border-border dark:bg-card dark:text-foreground",
-        className,
-      )}
-    >
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute -top-24 -right-24 -z-10 size-80 rounded-full bg-[radial-gradient(circle,color-mix(in_oklab,var(--axi-brand)_45%,transparent),transparent_70%)]"
-      />
+    <Island as="section" aria-label={label} {...look} className={cn("flex min-w-0 flex-col gap-2 p-6", className)}>
       {children}
-    </section>
+    </Island>
   );
 }
 
