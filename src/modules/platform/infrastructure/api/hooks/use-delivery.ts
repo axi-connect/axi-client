@@ -27,6 +27,11 @@ export const DELIVERY_PREVIEW_DEBOUNCE_MS = 700;
 export const OFFER_QUOTE_DEBOUNCE_MS = 400;
 /** Mientras el correo está en cola, la entrega se refresca sola. */
 export const DELIVERY_QUEUED_POLL_MS = 5_000;
+/**
+ * Enviada y el dueño aún sin contraseña: la ficha y «Bienvenida enviada» se
+ * enteran solas de que la creó. Más espaciado que la cola: puede tardar horas.
+ */
+export const DELIVERY_PASSWORD_POLL_MS = 30_000;
 
 /**
  * El valor, pero solo cuando lleva `delayMs` sin cambiar. Compara por
@@ -63,13 +68,25 @@ function isQueued(payload: DeliveryResponseWire | undefined): boolean {
   return status === "committed" || status === "mail_queued";
 }
 
+function awaitsPassword(payload: DeliveryResponseWire | undefined): boolean {
+  const delivery = payload?.delivery;
+  return delivery?.status === "sent" && delivery.password_set_at === null;
+}
+
+/** Cada cuánto se refresca la última entrega; false = no hace falta. */
+export function latestDeliveryPollMs(payload: DeliveryResponseWire | undefined): number | false {
+  if (isQueued(payload)) return DELIVERY_QUEUED_POLL_MS;
+  if (awaitsPassword(payload)) return DELIVERY_PASSWORD_POLL_MS;
+  return false;
+}
+
 /** La última entrega con sus intentos (la tarjeta de la ficha y el estado «enviado»). */
 export function useLatestDelivery(tenantId: string) {
   return useQuery({
     queryKey: platformKeys.delivery.latest(tenantId),
     queryFn: ({ signal }) => deliveryApi.latest(tenantId, signal),
     staleTime: 15_000,
-    refetchInterval: (query) => (isQueued(query.state.data) ? DELIVERY_QUEUED_POLL_MS : false),
+    refetchInterval: (query) => latestDeliveryPollMs(query.state.data),
   });
 }
 

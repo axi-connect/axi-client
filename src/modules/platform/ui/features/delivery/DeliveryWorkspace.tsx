@@ -49,7 +49,7 @@ import {
 } from "../../../domain/delivery";
 import { canSendDelivery } from "../../../domain/platform-role";
 import { usePlatformRole } from "../../../infrastructure/auth/use-platform-role";
-import { calendarDaysUntil, formatClockTime, formatInstant, formatInstantTime } from "@/modules/welcome-kit/domain/formatters";
+import { calendarDaysUntil, endSentence, formatClockTime, formatInstant, formatInstantTime } from "@/modules/welcome-kit/domain/formatters";
 import { kitDataFromPreview } from "../../../infrastructure/api/delivery-kit.mapper";
 import type {
   DeliveryContextWire,
@@ -779,7 +779,7 @@ export function DeliveryWorkspace({
         <Alert variant="warning">
           <History aria-hidden="true" />
           <AlertDescription>
-            Hay una entrega a medias del {formatDayTime(resumable.created_at, tz)}. Al enviar se retoma con la misma
+            {endSentence(`Hay una entrega a medias del ${formatDayTime(resumable.created_at, tz)}`)} Al enviar se retoma con la misma
             clave: completa lo que faltó y nunca manda dos invitaciones.
           </AlertDescription>
         </Alert>
@@ -788,7 +788,7 @@ export function DeliveryWorkspace({
         <Alert>
           <Save aria-hidden="true" />
           <AlertDescription className="flex flex-wrap items-center justify-between gap-2">
-            <span>Retomaste tu borrador del {formatDayTime(stored.saved_at, tz)}.</span>
+            <span>{endSentence(`Retomaste tu borrador del ${formatDayTime(stored.saved_at, tz)}`)}</span>
             <Button type="button" variant="ghost" size="sm" onClick={discardDraft}>
               Descartar borrador
             </Button>

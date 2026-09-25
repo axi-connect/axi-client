@@ -62,7 +62,12 @@ export function DeliveryPage({ tenantId }: { tenantId: string }) {
     return (
       <div className="space-y-3">
         {back}
-        <DeliverySentView tenantId={tenantId} delivery={delivery} ownerEmail={context.data.owner?.email ?? null} />
+        <DeliverySentView
+          tenantId={tenantId}
+          delivery={delivery}
+          owner={{ name: context.data.owner?.name ?? null, email: context.data.owner?.email ?? null }}
+          businessName={context.data.tenant.name}
+        />
       </div>
     );
   }
