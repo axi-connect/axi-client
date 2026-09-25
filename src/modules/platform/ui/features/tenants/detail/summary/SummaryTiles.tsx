@@ -11,7 +11,6 @@ import { ArrowRight, CalendarPlus, Check, Copy } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { formatMoney } from "@/core/lib/format";
 import { Button } from "@/shared/components/ui/button";
-import { countryByCode } from "../../../../../domain/catalogs";
 import { formatDayTime, formatShortDate } from "../../../../../domain/dates";
 import {
   DELIVERY_STATUS_LABELS,
@@ -23,7 +22,6 @@ import {
 } from "../../../../../domain/delivery";
 import { countdownParts, elapsedLabel, type NextMilestone } from "../../../../../domain/trial-journey";
 import type { DeliveryContextWire, DeliveryDetailWire } from "../../../../../infrastructure/api/delivery.dto";
-import type { TenantListItem } from "../../../../../domain/tenant";
 import { useCopy } from "../../../../hooks/use-copy";
 import { ResendDeliveryButton } from "../../../delivery/ResendDeliveryButton";
 import { downloadCallsIcs } from "../../../delivery/download-calls";
@@ -168,10 +166,9 @@ export function OfferTile({
       <SummaryTile label="Al terminar la prueba">
         <p className="text-sm font-medium">Sin oferta guardada</p>
         <p className="text-sm text-muted-foreground">La oferta se guarda al enviar la bienvenida.</p>
-        <Link href={entregaHref} className="mt-auto inline-flex items-center gap-1 text-sm font-medium text-brand">
+        <TileLink href={entregaHref} className="mt-auto">
           Preparar entrega
-          <ArrowRight aria-hidden="true" className="size-3.5" />
-        </Link>
+        </TileLink>
       </SummaryTile>
     );
   }
@@ -212,54 +209,19 @@ export function OfferTile({
   );
 }
 
-// ------------------------------------------------------------------ equipo e identificación
-
-export function TeamTile({ tenant }: { tenant: TenantListItem }) {
+/** Enlace de una ficha: foreground + flecha, subrayado al pasar (AA a 12–14 px, A4). */
+export function TileLink({ href, children, className }: { href: string; children: React.ReactNode; className?: string }) {
   return (
-    <SummaryTile
-      label="Equipo"
-      aside={
-        <Link href={`/platform/tenants/${tenant.id}/users`} className="text-xs font-medium text-brand">
-          Ver usuarios
-        </Link>
-      }
+    <Link
+      href={href}
+      className={cn(
+        "inline-flex min-h-6 w-fit items-center gap-1 rounded-md text-sm font-medium underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+        className,
+      )}
     >
-      <BigFigure value={String(tenant.users_count)} unit={tenant.users_count === 1 ? "usuario" : "usuarios"} />
-      <p className="mt-auto text-sm text-muted-foreground">Cliente desde el {formatShortDate(tenant.created_at)}</p>
-    </SummaryTile>
-  );
-}
-
-export function IdentityTile({ tenant }: { tenant: TenantListItem }) {
-  const { copied, copy } = useCopy();
-  const country = countryByCode(tenant.country_code)?.name ?? tenant.country_code;
-  return (
-    <SummaryTile label="Identificación">
-      <dl className="grid gap-2 text-sm">
-        <div className="flex items-center justify-between gap-3">
-          <dt className="text-muted-foreground">NIT</dt>
-          <dd className="font-mono tabular-nums">{tenant.nit}</dd>
-        </div>
-        <div className="flex items-center justify-between gap-3">
-          <dt className="text-muted-foreground">Sede</dt>
-          <dd className="truncate">{tenant.city ? `${tenant.city}, ${country}` : country}</dd>
-        </div>
-        <div className="flex items-center justify-between gap-3">
-          <dt className="text-muted-foreground">ID</dt>
-          <dd>
-            <button
-              type="button"
-              onClick={() => void copy(tenant.id)}
-              aria-label={`Copiar id ${tenant.id}`}
-              className="inline-flex items-center gap-1.5 rounded-md font-mono text-xs text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
-            >
-              {tenant.id.slice(0, 8)}…
-              {copied ? <Check aria-hidden="true" className="size-3.5 text-success" /> : <Copy aria-hidden="true" className="size-3.5" />}
-            </button>
-          </dd>
-        </div>
-      </dl>
-    </SummaryTile>
+      {children}
+      <ArrowRight aria-hidden="true" className="size-3.5" />
+    </Link>
   );
 }
 
@@ -287,7 +249,7 @@ export function WelcomeTile({
 
   if (!delivery) {
     return (
-      <SummaryTile label="Bienvenida" className="md:col-span-2">
+      <SummaryTile label="Bienvenida" className="md:col-span-2 xl:col-span-3 min-[1400px]:col-span-2">
         <p className="text-sm font-medium">Aún sin entregar</p>
         <p className="text-sm text-muted-foreground">
           La prueba de 7 días arranca cuando le envías la bienvenida: oferta, citas y el enlace para su contraseña.
@@ -311,15 +273,23 @@ export function WelcomeTile({
   return (
     <SummaryTile
       label="Bienvenida"
-      className="md:col-span-2"
+      className="md:col-span-2 xl:col-span-3 min-[1400px]:col-span-2"
       aside={<StatePill tone={DELIVERY_TONE[delivery.status]}>{DELIVERY_STATUS_LABELS[delivery.status]}</StatePill>}
     >
       <dl className="divide-y divide-border text-sm">
         <div className="flex flex-col gap-0.5 py-2.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
           <dt className="shrink-0 text-muted-foreground">{dispatched ? "Enviada" : "Empezada"}</dt>
+          {/* Piezas que no se parten: en el celular la línea se corta entre ellas. */}
           <dd className="min-w-0 sm:truncate sm:text-right">
-            {formatDayTime(owner?.sent_at ?? delivery.created_at, delivery.trial_tz)} · por {delivery.advisor.name}
-            {owner && owner.attempt > 1 ? ` · intento ${owner.attempt}` : ""}
+            <span className="whitespace-nowrap">{formatDayTime(owner?.sent_at ?? delivery.created_at, delivery.trial_tz)}</span>
+            {"\u00a0· "}
+            <span className="whitespace-nowrap">por {delivery.advisor.name}</span>
+            {owner && owner.attempt > 1 ? (
+              <>
+                {"\u00a0· "}
+                <span className="whitespace-nowrap">intento {owner.attempt}</span>
+              </>
+            ) : null}
           </dd>
         </div>
         <div className="flex flex-col gap-0.5 py-2.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
@@ -341,7 +311,7 @@ export function WelcomeTile({
                 type="button"
                 onClick={() => void copy(messageId)}
                 aria-label={`Copiar el id del mensaje ${messageId}`}
-                className="inline-flex items-center gap-1.5 rounded-md font-mono text-xs text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+                className="inline-flex h-6 items-center gap-1.5 rounded-md px-1 font-mono text-xs text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
               >
                 {shortMessageId(messageId)}
                 {copied ? <Check aria-hidden="true" className="size-3.5 text-success" /> : <Copy aria-hidden="true" className="size-3.5" />}
@@ -428,12 +398,12 @@ export function NextStepCard({
     body = (
       <>
         <Kicker>Lo próximo</Kicker>
-        <p className="font-heading text-2xl leading-tight font-bold tracking-tight">{milestone.title}</p>
+        <p className="font-heading text-2xl leading-tight font-bold tracking-tight text-balance">{milestone.title}</p>
         <p className="text-sm opacity-80">
           {formatDayTime(milestone.at, tz)}
           {milestone.minutes ? ` · ${milestone.minutes} min` : ""}
         </p>
-        <div className="flex flex-1 flex-col items-center justify-center gap-1 py-6 text-center" aria-live="polite">
+        <div className="flex flex-1 flex-col items-center justify-center gap-1 py-6 text-center">
           <p className="font-heading leading-none font-bold whitespace-nowrap tabular-nums">
             <span className="text-5xl">{parts.major}</span>
             {parts.minor ? <span className="ml-2 text-2xl opacity-70">{parts.minor}</span> : null}
@@ -477,7 +447,7 @@ export function NextStepCard({
   return (
     <section
       aria-label="Lo próximo"
-      className="relative isolate flex min-h-80 min-w-0 flex-col gap-2 overflow-hidden rounded-3xl bg-foreground p-6 text-background xl:col-start-3 xl:row-span-3 xl:row-start-1 min-[1400px]:col-start-4 min-[1400px]:row-span-2 dark:border dark:border-border dark:bg-card dark:text-foreground"
+      className="relative isolate flex min-h-80 min-w-0 flex-col gap-2 overflow-hidden rounded-3xl bg-foreground p-6 text-background md:col-span-2 xl:col-span-1 xl:col-start-3 xl:row-span-2 xl:row-start-1 min-[1400px]:col-start-4 dark:border dark:border-border dark:bg-card dark:text-foreground"
     >
       <span
         aria-hidden="true"

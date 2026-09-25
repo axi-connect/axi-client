@@ -152,7 +152,8 @@ function percentLabel(bps: number): string {
 export function buildDeliveryFields(input: DeliveryFieldsInput): FieldConfig<DeliveryFormValues>[] {
   const { step, catalog } = input;
   const on = (target: DeliveryStepId) => () => step === target;
-  const full = { base: 1, md: 2 } as const;
+  // Una columna desde lg: ahí la vista previa va al lado y dos columnas no caben (A3).
+  const full = { base: 1, md: 2, lg: 1 } as const;
 
   const promotionOptions = [
     ...(catalog.promotion

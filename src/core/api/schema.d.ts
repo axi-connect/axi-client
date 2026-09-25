@@ -7428,6 +7428,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/platform/tenants/{id}/delivery/trial-progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformTenantDeliveryController_trialProgress_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/public/welcome/{token}": {
         parameters: {
             query?: never;
@@ -19345,6 +19361,33 @@ export interface components {
             /** @enum {string} */
             status: "draft" | "committed" | "mail_queued" | "sent" | "failed";
             attempt: number;
+        };
+        TrialProgressDto: {
+            trial_usage: {
+                /** Format: date-time */
+                starts_at: string;
+                /** Format: date-time */
+                ends_at: string;
+                timezone: string;
+                allowance: number | null;
+                used: number;
+                by_day: {
+                    /** Format: date */
+                    date: string;
+                    count: number;
+                }[];
+            } | null;
+            setup: {
+                steps: {
+                    /** @enum {string} */
+                    code: "niche" | "business_hours" | "catalog" | "agents" | "whatsapp";
+                    /** @enum {string} */
+                    status: "pending" | "done" | "skipped";
+                }[];
+                closed: number;
+                total: number;
+                completed: boolean;
+            };
         };
         DeliveryResponseDto: {
             delivery: {
@@ -33362,6 +33405,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DeliveryResentDto"];
+                };
+            };
+        };
+    };
+    PlatformTenantDeliveryController_trialProgress_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrialProgressDto"];
                 };
             };
         };

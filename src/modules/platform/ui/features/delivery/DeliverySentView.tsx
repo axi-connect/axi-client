@@ -15,8 +15,9 @@ import { civilDateIn, endSentence, formatInstantTime, formatWeekdayDate } from "
 import { formatDayTime } from "../../../domain/dates";
 import { deliveryTimeline, type TimelineState } from "../../../domain/delivery-timeline";
 import { inviteExpiresAt, shortMessageId, latestOwnerAttempt } from "../../../domain/delivery";
-import { CALL_DAY2_MINUTES, CALL_DAY5_MINUTES } from "../../../domain/trial-journey";
+import { CALL_DAY2_MINUTES, CALL_DAY2_TITLE, CALL_DAY5_MINUTES, CALL_DAY5_TITLE } from "../../../domain/trial-journey";
 import type { DeliveryDetailWire } from "../../../infrastructure/api/delivery.dto";
+import { latestDeliveryPollMs } from "../../../infrastructure/api/hooks/use-delivery";
 import { downloadCallsIcs } from "./download-calls";
 import { ResendDeliveryButton } from "./ResendDeliveryButton";
 
@@ -92,7 +93,8 @@ export function DeliverySentView({
   const tz = delivery.trial_tz;
   const failed = delivery.status === "failed";
   const items = deliveryTimeline(delivery, owner);
-  const waiting = items.some((item) => item.state === "waiting" || item.state === "active");
+  // «Se actualiza solo» solo si de verdad se está refrescando (A12).
+  const polling = latestDeliveryPollMs({ delivery }) !== false;
   const firstName = owner.name?.trim().split(/\s+/)[0] || "el dueño";
   const inviteEnds = inviteExpiresAt(delivery.attempts);
   const messageId = latestOwnerAttempt(delivery.attempts)?.provider_message_id ?? null;
@@ -130,7 +132,7 @@ export function DeliverySentView({
         <div className="rounded-3xl border border-border bg-card p-5 sm:p-6">
           <div className="mb-4 flex items-center justify-between gap-2">
             <h3 className="font-sans text-xs font-normal text-muted-foreground">Qué pasó</h3>
-            {waiting ? (
+            {polling ? (
               <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
                 <span aria-hidden="true" className="size-1.5 rounded-full bg-success motion-safe:animate-pulse" />
                 Se actualiza solo
@@ -195,8 +197,8 @@ export function DeliverySentView({
             Lo que sigue
           </h3>
           <ul className="space-y-3">
-            <CallRow at={delivery.call_day2_at} title="Llamada del día 2" minutes={CALL_DAY2_MINUTES} timeZone={tz} />
-            <CallRow at={delivery.call_day5_at} title="Reunión del día 5" minutes={CALL_DAY5_MINUTES} timeZone={tz} />
+            <CallRow at={delivery.call_day2_at} title={CALL_DAY2_TITLE} minutes={CALL_DAY2_MINUTES} timeZone={tz} />
+            <CallRow at={delivery.call_day5_at} title={CALL_DAY5_TITLE} minutes={CALL_DAY5_MINUTES} timeZone={tz} />
           </ul>
           <Button type="button" variant="outline" className="w-full" onClick={() => downloadCallsIcs(delivery, businessName)}>
             <CalendarPlus aria-hidden="true" />

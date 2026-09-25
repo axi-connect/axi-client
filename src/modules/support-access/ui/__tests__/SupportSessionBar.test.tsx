@@ -26,7 +26,7 @@ describe("SupportSessionBar", () => {
   it("bajo soporte: «Soporte · negocio · quedan N min · Salir»", () => {
     user = { support_session: { tenant_name: "Panadería La Espiga", expires_at: new Date(Date.now() + 58 * 60_000 - 5_000).toISOString() } }
     render(<SupportSessionBar />)
-    expect(screen.getByRole("region", { name: "Sesión de soporte" })).toHaveTextContent("Soporte · Panadería La Espiga · quedan 58 min")
+    expect(screen.getByRole("region", { name: "Sesión de soporte" })).toHaveTextContent("Soporte · quedan 58 min · Panadería La Espiga")
     expect(screen.getByRole("button", { name: "Salir" })).toBeInTheDocument()
   })
 

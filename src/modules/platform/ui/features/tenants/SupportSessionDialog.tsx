@@ -135,7 +135,13 @@ function QuickReasons() {
 }
 
 const CAN = ["Ver todo el panel", "Configurar agente y catálogo", "Crear el primer medio de pago"] as const;
-const CANNOT = ["Tocar usuarios ni contraseñas", "Editar o borrar medios de pago", "Exportar datos o borrar la cuenta"] as const;
+const CANNOT = [
+  "Tocar usuarios ni contraseñas",
+  "Escribir a sus clientes",
+  "Editar o borrar medios de pago",
+  "Tocar su suscripción o facturación",
+  "Exportar datos o borrar la cuenta",
+] as const;
 
 function SupportScope() {
   return (

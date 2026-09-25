@@ -11,6 +11,7 @@ import type {
   DeliveryPreviewWire,
   DeliveryResponseWire,
   OfferSelectionWire,
+  TrialProgressWire,
 } from "./delivery.dto";
 
 const path = (id: string) => ({ params: { path: { id } } });
@@ -26,6 +27,15 @@ export const deliveryApi = {
 
   async latest(tenantId: string, signal?: AbortSignal): Promise<DeliveryResponseWire> {
     const { data } = await platformClient.GET("/api/v1/platform/tenants/{id}/delivery", {
+      ...path(tenantId),
+      signal,
+    });
+    return data!;
+  },
+
+  /** Uso de la prueba por día y pasos de la puesta en marcha (la ficha, F6). */
+  async trialProgress(tenantId: string, signal?: AbortSignal): Promise<TrialProgressWire> {
+    const { data } = await platformClient.GET("/api/v1/platform/tenants/{id}/delivery/trial-progress", {
       ...path(tenantId),
       signal,
     });

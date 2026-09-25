@@ -1,5 +1,5 @@
 import { buildIcs } from "../../../domain/calendar-ics";
-import { CALL_DAY2_MINUTES, CALL_DAY5_MINUTES } from "../../../domain/trial-journey";
+import { CALL_DAY2_MINUTES, CALL_DAY2_TITLE, CALL_DAY5_MINUTES, CALL_DAY5_TITLE } from "../../../domain/trial-journey";
 
 type CallsSource = {
   id: string;
@@ -16,14 +16,14 @@ export function downloadCallsIcs(delivery: CallsSource, businessName: string): v
   const ics = buildIcs([
     {
       uid: `${delivery.id}-day2@axi-connect.co`,
-      title: `Llamada del día 2 · ${businessName}`,
+      title: `${CALL_DAY2_TITLE} · ${businessName}`,
       startsAt: delivery.call_day2_at,
       minutes: CALL_DAY2_MINUTES,
       description: "Seguimiento de la prueba de Axi Connect.",
     },
     {
       uid: `${delivery.id}-day5@axi-connect.co`,
-      title: `Reunión del día 5 · ${businessName}`,
+      title: `${CALL_DAY5_TITLE} · ${businessName}`,
       startsAt: delivery.call_day5_at,
       minutes: CALL_DAY5_MINUTES,
       description: "Resultados de la prueba de Axi Connect.",

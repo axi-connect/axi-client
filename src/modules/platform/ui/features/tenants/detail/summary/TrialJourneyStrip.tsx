@@ -56,7 +56,7 @@ export function TrialJourneyStrip({
       </div>
 
       <div className="-mx-1 min-w-0 flex-1 overflow-x-auto px-1 pb-1">
-        <ol className="relative grid min-w-[640px] grid-cols-8" aria-label="Días de la prueba">
+        <ol className="relative grid min-w-[680px] grid-cols-8" aria-label="Días de la prueba">
           {/* Riel y tramo recorrido, del centro del día 0 al centro del día 7. */}
           <span aria-hidden="true" className="absolute top-5 right-[6.25%] left-[6.25%] h-0.5 rounded-full bg-border" />
           <span
@@ -65,13 +65,14 @@ export function TrialJourneyStrip({
             style={{ width: `calc(87.5% * ${progress})` }}
           />
           {journey.days.map((day) => {
-            const Icon = day.milestone ? MILESTONE_ICON[day.milestone.kind] : null;
+            const first = day.milestones[0] ?? null;
+            const Icon = first ? MILESTONE_ICON[first.kind] : null;
             const isToday = day.state === "today";
             return (
               <li
                 key={day.index}
                 aria-current={isToday ? "date" : undefined}
-                className="relative flex flex-col items-center gap-1.5 text-center whitespace-nowrap"
+                className="relative flex min-w-0 flex-col items-center gap-1.5 px-1 text-center"
               >
                 <span
                   aria-hidden="true"
@@ -92,10 +93,22 @@ export function TrialJourneyStrip({
                     <span className="size-2 rounded-full bg-border" />
                   )}
                 </span>
-                <span className={cn("text-xs", day.milestone || isToday ? "font-semibold" : "text-muted-foreground")}>
+                <span className={cn("text-xs whitespace-nowrap", first || isToday ? "font-semibold" : "text-muted-foreground")}>
                   {isToday ? `Hoy · día ${day.index}` : `Día ${day.index}`}
                 </span>
-                <span className="min-h-4 text-xs text-muted-foreground">{day.milestone?.label ?? ""}</span>
+                {/* Tipo arriba y hora debajo: dos hitos en días seguidos no se montan (A1). */}
+                <span className="flex min-h-8 w-full flex-col items-center gap-1">
+                  {day.milestones.map((milestone) => (
+                    <span key={milestone.kind} className="flex w-full flex-col items-center leading-tight">
+                      <span className="max-w-full text-xs break-words text-muted-foreground">{milestone.title}</span>
+                      {milestone.detail ? (
+                        <span className="max-w-full text-[11px] break-words text-muted-foreground tabular-nums">
+                          {milestone.detail}
+                        </span>
+                      ) : null}
+                    </span>
+                  ))}
+                </span>
               </li>
             );
           })}

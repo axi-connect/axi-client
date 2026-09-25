@@ -29,7 +29,7 @@ export function PasswordChecklist() {
   ]
 
   return (
-    <div id="password-rules" className="space-y-3" aria-live="polite">
+    <div className="space-y-3">
       <div className="flex gap-1.5" aria-hidden="true">
         {[1, 2, 3].map((step) => (
           <span
@@ -41,7 +41,11 @@ export function PasswordChecklist() {
           />
         ))}
       </div>
-      <p className="sr-only">Fuerza de la contraseña: {strength.label}</p>
+      {/* Solo esto se anuncia, y solo cambia cuando una regla cambia de estado:
+          el conteo «van N» se ve pero no se lee a cada tecla (A6). */}
+      <p className="sr-only" aria-live="polite">
+        {`Contraseña ${strength.label}. Cumple ${rules.filter((rule) => rule.ok).length} de ${rules.length}.`}
+      </p>
       <ul className="space-y-1.5">
         {rules.map((rule) => (
           <li key={rule.id} className="flex items-start gap-2 text-sm">
@@ -56,7 +60,12 @@ export function PasswordChecklist() {
             </span>
             <span className={rule.ok ? "text-foreground" : "text-muted-foreground"}>
               {rule.label}
-              {rule.detail ? <span className="tabular-nums"> · {rule.detail}</span> : null}
+              {rule.detail ? (
+                <span aria-hidden="true" className="tabular-nums">
+                  {" "}
+                  · {rule.detail}
+                </span>
+              ) : null}
               <span className="sr-only">{rule.ok ? ": cumplido" : ": pendiente"}</span>
             </span>
           </li>

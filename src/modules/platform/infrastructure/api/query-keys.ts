@@ -31,6 +31,7 @@ export const platformKeys = {
     all: (tenantId: string) => ["platform", "delivery", tenantId] as const,
     context: (tenantId: string) => [...platformKeys.delivery.all(tenantId), "context"] as const,
     latest: (tenantId: string) => [...platformKeys.delivery.all(tenantId), "latest"] as const,
+    trialProgress: (tenantId: string) => [...platformKeys.delivery.all(tenantId), "trial-progress"] as const,
     preview: (tenantId: string, draft: unknown) =>
       [...platformKeys.delivery.all(tenantId), "preview", draft] as const,
     offerQuote: (tenantId: string, selection: unknown) =>

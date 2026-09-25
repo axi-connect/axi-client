@@ -14,19 +14,32 @@ import { civilDateIn, formatInstantTime } from "@/modules/welcome-kit/domain/for
 export const CALL_DAY2_MINUTES = 10;
 export const CALL_DAY5_MINUTES = 15;
 
+/**
+ * Los nombres de las dos citas, sin número de día: la del «día 2» cae el lunes
+ * si la entrega fue un viernes, y «del día 2» contradecía el recorrido (A5).
+ */
+export const CALL_DAY2_TITLE = "Llamada de seguimiento";
+export const CALL_DAY5_TITLE = "Reunión de resultados";
+
 /** Los días del recorrido: del 0 (la entrega) al 7 (decide). */
 export const TRIAL_JOURNEY_DAYS = 8;
 
 export type JourneyMilestoneKind = "delivery" | "digest" | "call" | "meeting" | "decide";
 
-export type JourneyMilestone = { kind: JourneyMilestoneKind; label: string };
+/**
+ * Un hito del recorrido. `title` es el tipo («Llamada») y `detail` la hora u
+ * otra precisión: se pintan en dos líneas cortas para que dos hitos en días
+ * seguidos no se monten (auditoría A1).
+ */
+export type JourneyMilestone = { kind: JourneyMilestoneKind; title: string; detail: string | null };
 
 export type JourneyDayState = "done" | "today" | "upcoming";
 
 export type JourneyDay = {
   index: number;
   state: JourneyDayState;
-  milestone: JourneyMilestone | null;
+  /** En orden de importancia; dos hitos el mismo día se muestran los dos. */
+  milestones: JourneyMilestone[];
 };
 
 export type TrialJourneyInput = {
@@ -63,27 +76,30 @@ export function journeyDayOf(startsAt: string, iso: string, timeZone: string): n
 export function trialJourney(input: TrialJourneyInput, now: Date = new Date()): TrialJourney {
   const { startsAt, timeZone } = input;
   const today = journeyDayOf(startsAt, now.toISOString(), timeZone);
-  const milestones = new Map<number, JourneyMilestone>();
+  const milestones = new Map<number, JourneyMilestone[]>();
   const place = (index: number | null, milestone: JourneyMilestone) => {
-    if (index === null || index < 0 || index >= TRIAL_JOURNEY_DAYS || milestones.has(index)) return;
-    milestones.set(index, milestone);
+    if (index === null || index < 0 || index >= TRIAL_JOURNEY_DAYS) return;
+    milestones.set(index, [...(milestones.get(index) ?? []), milestone]);
   };
-  place(0, { kind: "delivery", label: "Entrega" });
+  place(0, { kind: "delivery", title: "Entrega", detail: null });
   place(journeyDayOf(startsAt, input.callDay2At, timeZone), {
     kind: "call",
-    label: `Llamada ${formatInstantTime(input.callDay2At, timeZone)}`,
+    title: "Llamada",
+    detail: formatInstantTime(input.callDay2At, timeZone),
   });
   place(journeyDayOf(startsAt, input.callDay5At, timeZone), {
     kind: "meeting",
-    label: `Reunión ${formatInstantTime(input.callDay5At, timeZone)}`,
+    title: "Reunión",
+    detail: formatInstantTime(input.callDay5At, timeZone),
   });
-  place(TRIAL_JOURNEY_DAYS - 1, { kind: "decide", label: "Decide" });
-  place(1, { kind: "digest", label: "1.er resumen" });
+  place(TRIAL_JOURNEY_DAYS - 1, { kind: "decide", title: "Decide", detail: null });
+  // El primer resumen de la mañana solo se nombra si el día 1 no tiene una cita.
+  if (!milestones.has(1)) place(1, { kind: "digest", title: "1.er resumen", detail: null });
 
   const days: JourneyDay[] = Array.from({ length: TRIAL_JOURNEY_DAYS }, (_, index) => ({
     index,
     state: today === null || index > today ? "upcoming" : index === today ? "today" : "done",
-    milestone: milestones.get(index) ?? null,
+    milestones: milestones.get(index) ?? [],
   }));
 
   const inRange = today !== null && today >= 0 && today < TRIAL_JOURNEY_DAYS;
@@ -107,8 +123,8 @@ export type NextMilestone = {
 /** La primera cita (o el cierre de la prueba) que aún no pasó. */
 export function nextMilestone(input: TrialJourneyInput, now: Date = new Date()): NextMilestone | null {
   const candidates: NextMilestone[] = [
-    { kind: "call", title: "Llamada del día 2", at: input.callDay2At, minutes: CALL_DAY2_MINUTES },
-    { kind: "meeting", title: "Reunión del día 5", at: input.callDay5At, minutes: CALL_DAY5_MINUTES },
+    { kind: "call", title: CALL_DAY2_TITLE, at: input.callDay2At, minutes: CALL_DAY2_MINUTES },
+    { kind: "meeting", title: CALL_DAY5_TITLE, at: input.callDay5At, minutes: CALL_DAY5_MINUTES },
     { kind: "decide", title: "Termina la prueba", at: input.endsAt, minutes: null },
   ];
   return (

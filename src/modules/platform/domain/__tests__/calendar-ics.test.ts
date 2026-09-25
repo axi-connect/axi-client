@@ -1,4 +1,4 @@
-import { buildIcs } from "../calendar-ics";
+import { buildIcs, foldLine } from "../calendar-ics";
 
 describe("buildIcs", () => {
   const now = new Date("2026-09-25T06:00:00Z");
@@ -27,5 +27,23 @@ describe("buildIcs", () => {
     );
     expect(ics).toContain("SUMMARY:Café\\, pan\\; y más");
     expect(ics).toContain("DESCRIPTION:Línea 1\\nLínea 2 \\\\ fin");
+  });
+});
+
+describe("foldLine", () => {
+  it("pliega a 75 octetos contando bytes UTF-8, sin partir caracteres", () => {
+    const line = `SUMMARY:${"ñ".repeat(60)}`; // 8 + 120 bytes
+    const folded = foldLine(line).split("\r\n");
+    const bytes = (text: string) => Buffer.byteLength(text, "utf8");
+    expect(folded.length).toBeGreaterThan(1);
+    expect(bytes(folded[0]!)).toBeLessThanOrEqual(75);
+    for (const rest of folded.slice(1)) {
+      expect(rest.startsWith(" ")).toBe(true);
+      expect(bytes(rest)).toBeLessThanOrEqual(75);
+    }
+    expect(folded.map((part, i) => (i === 0 ? part : part.slice(1))).join("")).toBe(line);
+  });
+  it("una línea corta queda igual", () => {
+    expect(foldLine("VERSION:2.0")).toBe("VERSION:2.0");
   });
 });

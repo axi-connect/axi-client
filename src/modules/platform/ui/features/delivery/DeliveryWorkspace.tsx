@@ -1,19 +1,20 @@
 "use client";
 
 /**
- * «Preparar entrega»: el formulario por pasos a la izquierda, la vista previa
- * en vivo fija a la derecha (debajo en el celular) y la barra de abajo con lo
- * que falta, «Guardar borrador» y «Enviar bienvenida».
+ * «Preparar entrega» (entrega_premium_plan.md, F2): los pasos llegan
+ * precargados y plegados en su resumen (StepCard, uno abierto a la vez), la
+ * vista previa en vivo fija a la derecha (debajo en el celular), «Antes de
+ * enviar» siempre a la vista y la barra de envío flotante con qué falta y
+ * «Enviar bienvenida». El borrador se guarda solo en este navegador.
  *
- * Los pasos son pestañas, no un asistente: se salta a cualquiera. Un solo
- * `DynamicForm` cubre los cuatro (cada campo sabe su paso), así que nada se
- * pierde al cambiar de pestaña. Lo que decide si se puede enviar son los
+ * Un solo `DynamicForm` cubre los pasos (cada campo sabe el suyo), así que
+ * nada se pierde al abrir otro. Lo que decide si se puede enviar son los
  * bloqueos del servidor; la validación local solo cuida los formatos.
  */
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useFormContext, useFormState, useWatch, type UseFormReturn } from "react-hook-form";
-import { AlertTriangle, Check, History, Info, LoaderCircle, Lock, Save, Send } from "lucide-react";
+import { AlertTriangle, Check, History, Info, LoaderCircle, Lock, PencilLine, Save, Send } from "lucide-react";
 import { isHttpError } from "@/core/api/problem";
 import { applyServerValidation, errorMessage } from "@/core/lib/error-messages";
 import { formatMoney } from "@/core/lib/format";
@@ -35,6 +36,7 @@ import {
   deliveryIssues,
   formatTrialRange,
   formatZonedDay,
+  missingSummary,
   needsConfirmation,
   NO_RESTART_BLOCKERS,
   restartShortensTrial,
@@ -65,12 +67,11 @@ import {
 import { SupportSessionDialog } from "../tenants/SupportSessionDialog";
 import { DeliveryPreviewPanel } from "./DeliveryPreviewPanel";
 import { buildDeliveryFields } from "./delivery-fields";
+import { clearStoredDraft, readStoredDraft, useStoredDraft } from "./use-stored-draft";
 import {
   deliveryFormSchema,
   formValuesFromContext,
-  parseStoredDeliveryDraft,
   PREVIEW_ADVISOR_PLACEHOLDER,
-  serializeDeliveryDraft,
   toDeliveryDraft,
   toOfferSelection,
   toPreviewDraft,
@@ -80,8 +81,7 @@ import {
 
 const FORM_ID = "delivery-form";
 
-/** Pausa tras el último cambio antes de guardar el borrador en este navegador. */
-const DRAFT_AUTOSAVE_MS = 800;
+
 
 /**
  * El valor de un `datetime-local` escrito en es-CO («lun 28 sep · 10:00 a. m.»):
@@ -113,34 +113,6 @@ function localEcho(local: string, timeZone: string): string | null {
   return iso ? formatInstant(iso, timeZone) : null;
 }
 const SENDER = "Axi Connect <welcome@axi-connect.co>";
-
-// ------------------------------------------------------------------ borrador local
-
-function readStoredDraft(key: string): StoredDeliveryDraft | null {
-  try {
-    return parseStoredDeliveryDraft(window.localStorage.getItem(key));
-  } catch {
-    // Sin acceso al almacenamiento (modo privado, bloqueado): no hay borrador.
-    return null;
-  }
-}
-
-function writeStoredDraft(key: string, values: DeliveryFormValues): boolean {
-  try {
-    window.localStorage.setItem(key, serializeDeliveryDraft(values, new Date()));
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function clearStoredDraft(key: string): void {
-  try {
-    window.localStorage.removeItem(key);
-  } catch {
-    // Nada que limpiar si el almacenamiento no está disponible.
-  }
-}
 
 // ------------------------------------------------------------------ observador del formulario
 
@@ -248,7 +220,8 @@ function ReadonlyField({ id, label, value, hint }: { id: string; label: string; 
 
 /**
  * Un resumen en piezas separadas por «·»: cada pieza no se parte, así la línea
- * se corta entre piezas y nunca a mitad de una fecha o un monto.
+ * se corta entre piezas y nunca a mitad de una fecha o un monto. En el celular
+ * las piezas se apilan, una por línea, sin separador (DESIGN-SYSTEM §9.5).
  */
 function SummaryParts({ parts }: { parts: readonly React.ReactNode[] }) {
   const shown = parts.filter((part) => part !== null && part !== undefined && part !== "");
@@ -256,8 +229,8 @@ function SummaryParts({ parts }: { parts: readonly React.ReactNode[] }) {
     <>
       {shown.map((part, index) => (
         <Fragment key={index}>
-          {index > 0 ? "\u00a0· " : null}
-          <span className="whitespace-nowrap">{part}</span>
+          {index > 0 ? <span className="hidden sm:inline">{"\u00a0· "}</span> : null}
+          <span className="block sm:inline sm:whitespace-nowrap">{part}</span>
         </Fragment>
       ))}
     </>
@@ -293,7 +266,7 @@ function StepCard({
         onClick={onToggle}
         aria-expanded={open}
         aria-controls={panelId}
-        className="flex w-full items-center gap-4 rounded-3xl px-5 py-4 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        className="flex w-full items-center gap-3 rounded-3xl px-4 py-4 sm:gap-4 sm:px-5 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
       >
         <span
           aria-hidden="true"
@@ -311,12 +284,18 @@ function StepCard({
             {title}
             {state === "blocked" ? <span className="sr-only"> (por resolver)</span> : null}
           </span>
-          {open ? null : <span className="mt-0.5 block text-sm text-pretty text-muted-foreground">{summary}</span>}
+          {open ? null : (
+            <span className="mt-0.5 block text-[13px] text-pretty text-muted-foreground sm:text-sm">{summary}</span>
+          )}
         </span>
-        <span className="shrink-0 rounded-lg px-2 py-1 text-sm font-medium">{open ? "Listo" : "Editar"}</span>
+        {/* En el celular, «Editar» es un icono: el resumen necesita ese ancho. */}
+        <span className="flex shrink-0 items-center gap-1.5 rounded-lg py-1 text-sm font-medium sm:px-2">
+          {open ? <Check aria-hidden="true" className="size-4 sm:hidden" /> : <PencilLine aria-hidden="true" className="size-4 sm:hidden" />}
+          <span className="sr-only sm:not-sr-only">{open ? "Listo" : "Editar"}</span>
+        </span>
       </button>
       {open ? (
-        <div id={panelId} className="space-y-5 px-5 pb-5 sm:pl-[4.25rem]">
+        <div id={panelId} className="space-y-5 px-5 pb-5 sm:pl-[4.25rem] lg:pl-5 [&_input]:min-w-0">
           {children}
         </div>
       ) : null}
@@ -404,15 +383,17 @@ export function DeliveryWorkspace({
   const tz = context.tenant.timezone;
   const storageKey = deliveryDraftStorageKey(tenantId);
 
-  const [stored, setStored] = useState<StoredDeliveryDraft | null>(() => readStoredDraft(storageKey));
+  const [initialDraft] = useState<StoredDeliveryDraft | null>(() => readStoredDraft(storageKey));
   const [defaults, setDefaults] = useState<DeliveryFormValues>(
-    () => stored?.values ?? formValuesFromContext(context, catalog),
+    () => initialDraft?.values ?? formValuesFromContext(context, catalog),
   );
   const [values, setValues] = useState<DeliveryFormValues>(defaults);
   // Todo llega precargado del contexto: los pasos arrancan plegados en su
   // resumen y se abre el que haga falta (un bloqueo, un error al enviar).
   const [step, setStep] = useState<DeliveryStepId>("review");
-  const [savedAt, setSavedAt] = useState<string | null>(stored?.saved_at ?? null);
+  const draft = useStoredDraft({ storageKey, values, baseline: defaults, initial: initialDraft });
+  const stored = draft.resumed;
+  const savedAt = draft.savedAt;
 
   // Una clave por intento, estable al reintentar; la de la entrega a medias si la hay.
   const [attemptKey] = useState(() => createAttemptKeyHolder());
@@ -587,28 +568,10 @@ export function DeliveryWorkspace({
     });
   }
 
-  // El borrador se guarda solo, en este navegador, una pausa después de cada
-  // cambio (antes era un botón). Lo que llega del contexto no cuenta como cambio.
-  const savedJson = useRef(JSON.stringify(defaults));
-  useEffect(() => {
-    const json = JSON.stringify(values);
-    if (json === savedJson.current) return;
-    const timer = setTimeout(() => {
-      if (writeStoredDraft(storageKey, values)) {
-        savedJson.current = json;
-        setSavedAt(new Date().toISOString());
-      }
-    }, DRAFT_AUTOSAVE_MS);
-    return () => clearTimeout(timer);
-  }, [values, storageKey]);
-
   function discardDraft() {
-    clearStoredDraft(storageKey);
-    setStored(null);
-    setSavedAt(null);
     const fresh = formValuesFromContext(context, catalog);
+    draft.discard(fresh);
     lastValuesJson.current = JSON.stringify(fresh);
-    savedJson.current = JSON.stringify(fresh);
     setDefaults(fresh);
     setValues(fresh);
   }
@@ -672,8 +635,15 @@ export function DeliveryWorkspace({
   };
 
   // ------------------------------------------------ resúmenes de los pasos plegados
-  const stepState = (id: DeliveryStepId): "done" | "blocked" | "pending" =>
-    blocked.has(id) ? "blocked" : previewReady ? "done" : "pending";
+  // Mientras la vista previa revalida (cada tecla), cada paso conserva su último
+  // estado conocido: sin esto saltaba de ✓ al número y de vuelta (A11).
+  const lastStepStates = useRef<Partial<Record<DeliveryStepId, "done" | "blocked" | "pending">>>({});
+  const stepState = (id: DeliveryStepId): "done" | "blocked" | "pending" => {
+    if (!previewReady) return lastStepStates.current[id] ?? "pending";
+    const state = blocked.has(id) ? "blocked" : "done";
+    lastStepStates.current[id] = state;
+    return state;
+  };
   const firstName = values.advisor.name.trim().split(/\s+/)[0] ?? "";
   const calls = [
     localEcho(values.call_day2_at, tz) ? `Día 2: ${localEcho(values.call_day2_at, tz)}` : null,
@@ -722,7 +692,6 @@ export function DeliveryWorkspace({
 
   // ------------------------------------------------ la barra de envío
   const readyGroups = checks.filter((check) => check.state !== "blocked").length;
-  const missing = checks.filter((check) => check.state === "blocked").map((check) => check.label.toLowerCase());
   const dockTitle = canSend
     ? "Lista para enviar"
     : !roleAllowed
@@ -736,7 +705,7 @@ export function DeliveryWorkspace({
       ? "Tu rol puede revisar la entrega, pero no enviarla."
       : !previewReady
         ? "Esperando la vista previa del correo."
-        : `Falta: ${missing.join(", ")}`;
+        : `Falta ${missingSummary(issues)}`;
 
   // ------------------------------------------------ render
   const currentTrialEnds = context.trial.trial_ends_at;
@@ -803,7 +772,7 @@ export function DeliveryWorkspace({
           defaultValues={defaults}
           fields={fields}
           mode="onBlur"
-          columns={{ base: 1, md: 2 }}
+          columns={{ base: 1, md: 2, lg: 1 }}
           renderFieldsWrapper={(grid) => (
             <div aria-label="Pasos de la entrega" role="group" className="min-w-0 space-y-3">
               {DELIVERY_STEPS.filter((item) => item.id !== "review").map((item, index) => {
@@ -872,19 +841,19 @@ export function DeliveryWorkspace({
               {readyGroups}/{checks.length}
             </span>
           </div>
-          <ul className="flex gap-1" aria-label="Qué falta">
+          <ul className="-my-2 flex gap-1" aria-label="Qué falta">
             {checks.map((check) => (
               <li key={check.id} className="flex-1">
                 <button
                   type="button"
                   onClick={() => setStep(check.step)}
                   title={check.label}
-                  className="block h-1.5 w-full rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
+                  className="flex h-6 w-full items-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
                 >
                   <span
                     aria-hidden="true"
                     className={cn(
-                      "block h-full rounded-full",
+                      "block h-1.5 w-full rounded-full",
                       check.state === "ok" ? "bg-current" : check.state === "warn" ? "bg-warning" : "bg-current/20",
                     )}
                   />

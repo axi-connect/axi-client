@@ -46,3 +46,7 @@ export type DeliveryPreviewWire = Schemas["DeliveryPreviewDto"];
 
 export type DeliveryAcceptedWire = Schemas["DeliveryAcceptedDto"];
 export type DeliveryResentWire = Schemas["DeliveryResentDto"];
+
+/** `GET …/delivery/trial-progress`: conversaciones de la prueba por día local y la puesta en marcha. */
+export type TrialProgressWire = Schemas["TrialProgressDto"];
+export type SetupStepCode = TrialProgressWire["setup"]["steps"][number]["code"];

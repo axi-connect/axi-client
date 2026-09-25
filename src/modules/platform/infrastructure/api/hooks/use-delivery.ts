@@ -12,6 +12,7 @@
  */
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
+import { isHttpError } from "@/core/api/problem";
 import { deliveryApi } from "../delivery-api";
 import type {
   CreateDeliveryWire,
@@ -87,6 +88,21 @@ export function useLatestDelivery(tenantId: string) {
     queryFn: ({ signal }) => deliveryApi.latest(tenantId, signal),
     staleTime: 15_000,
     refetchInterval: (query) => latestDeliveryPollMs(query.state.data),
+  });
+}
+
+/**
+ * Uso de la prueba y puesta en marcha de la ficha. Cambia despacio (una
+ * conversación nueva, un paso cerrado): un minuto de frescura basta.
+ */
+export function useTrialProgress(tenantId: string, { enabled = true }: { enabled?: boolean } = {}) {
+  return useQuery({
+    queryKey: platformKeys.delivery.trialProgress(tenantId),
+    queryFn: ({ signal }) => deliveryApi.trialProgress(tenantId, signal),
+    staleTime: 60_000,
+    enabled,
+    // Un 403 (rol sin acceso) no mejora reintentando.
+    retry: (count, error) => !(isHttpError(error) && error.status === 403) && count < 2,
   });
 }
 

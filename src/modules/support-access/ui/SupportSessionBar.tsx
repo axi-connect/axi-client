@@ -94,12 +94,15 @@ export function SupportSessionBar() {
       <div className="flex h-8 max-w-full min-w-0 items-center gap-2.5 rounded-full bg-foreground py-1 pr-1 pl-3 text-xs text-background shadow-[var(--shadow-float)] dark:border dark:border-border dark:bg-card dark:text-foreground">
         <LifeBuoy aria-hidden="true" className="size-3.5 shrink-0" />
         {readonly ? <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-warning" /> : null}
+        {/* Lo que no puede cortarse va primero (el tiempo, el solo lectura); el
+            nombre del negocio, al final, es lo que trunca a 360 px (A17). */}
         <p className="min-w-0 truncate">
-          <span className="font-semibold">Soporte</span> · {session.tenant_name} ·{" "}
-          {readonly ? <span className="font-medium">solo lectura, sin tiempo real · </span> : null}
+          <span className="font-semibold">Soporte</span> ·{" "}
           <span className="tabular-nums" aria-live="polite">
             quedan {left} min
-          </span>
+          </span>{" "}
+          · {readonly ? <span className="font-medium">solo lectura, sin tiempo real · </span> : null}
+          {session.tenant_name}
         </p>
         <button
           type="button"

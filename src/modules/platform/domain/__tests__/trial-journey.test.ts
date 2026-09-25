@@ -21,13 +21,35 @@ describe("trialJourney", () => {
     ]);
   });
 
-  it("pone cada cita en el día de su fecha, con su hora", () => {
+  it("pone cada cita en el día de su fecha, en dos líneas: tipo y hora", () => {
     const journey = trialJourney(input, new Date("2026-09-26T15:00:00Z"));
-    const labels = journey.days.map((day) => day.milestone?.label ?? null);
-    // La llamada del «día 2» cae el lunes 28 = día 3 del recorrido: se pinta donde cae.
+    const labels = journey.days.map((day) => day.milestones.map((m) => [m.title, m.detail]));
+    // La llamada «del día 2» cae el lunes 28 = día 3 del recorrido: se pinta donde cae.
     expect(labels).toEqual([
-      "Entrega", "1.er resumen", null, "Llamada 10:00 a. m.", null, "Reunión 3:30 p. m.", null, "Decide",
+      [["Entrega", null]],
+      [["1.er resumen", null]],
+      [],
+      [["Llamada", "10:00 a. m."]],
+      [],
+      [["Reunión", "3:30 p. m."]],
+      [],
+      [["Decide", null]],
     ]);
+  });
+
+  it("días seguidos y dos hitos el mismo día: ninguno se pierde (A1)", () => {
+    // Entrega un lunes: llamada el martes (día 1) y reunión el miércoles (día 2)… y otra cita el día 2.
+    const monday = {
+      startsAt: "2026-09-28T13:00:00Z",
+      endsAt: "2026-10-06T04:59:00Z",
+      timeZone: BOGOTA,
+      callDay2At: "2026-09-29T15:00:00Z",
+      callDay5At: "2026-09-29T20:00:00Z",
+    };
+    const journey = trialJourney(monday, new Date("2026-09-28T15:00:00Z"));
+    expect(journey.days[1]?.milestones.map((m) => m.kind)).toEqual(["call", "meeting"]);
+    // El día 1 ya tiene cita: no se nombra el resumen para no montar tres etiquetas.
+    expect(journey.days[1]?.milestones.some((m) => m.kind === "digest")).toBe(false);
   });
 
   it("antes de empezar no hay hoy; después del día 7, terminó", () => {
@@ -40,8 +62,8 @@ describe("trialJourney", () => {
 
   it("una cita fuera de los 8 días no se pinta ni pisa otro hito", () => {
     const journey = trialJourney({ ...input, callDay5At: "2026-10-10T15:00:00Z" }, new Date("2026-09-26T15:00:00Z"));
-    expect(journey.days.some((day) => day.milestone?.kind === "meeting")).toBe(false);
-    expect(journey.days[7]?.milestone?.kind).toBe("decide");
+    expect(journey.days.some((day) => day.milestones.some((m) => m.kind === "meeting"))).toBe(false);
+    expect(journey.days[7]?.milestones[0]?.kind).toBe("decide");
   });
 });
 

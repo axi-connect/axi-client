@@ -268,6 +268,36 @@ export function deliveryIssues(
   return out;
 }
 
+/** Cómo nombra la barra de envío cada bloqueo: lo que falta, no el grupo (A2). */
+const BLOCKER_SHORT: Readonly<Record<string, string>> = {
+  offer_not_quoted: "la oferta",
+  enterprise: "revisar la prueba",
+  suspended_other: "revisar la prueba",
+  already_paying: "revisar la prueba",
+  trial_required: "revisar la prueba",
+  calls_missing: "las citas",
+  calls_out_of_trial: "citas dentro de la prueba",
+  owner_missing: "el dueño",
+  advisor_incomplete: "la firma",
+  agent_missing: "un agente activo",
+  agent_name_too_long: "un nombre de agente más corto",
+  business_name_too_long: "un nombre de negocio más corto",
+  payment_methods_missing: "un medio de pago",
+};
+
+/** «un agente activo y un medio de pago»: los bloqueos, sin repetir, en español. */
+export function missingSummary(issues: readonly DeliveryIssue[]): string {
+  const names = [
+    ...new Set(
+      issues
+        .filter((issue) => issue.kind === "blocker")
+        .map((issue) => BLOCKER_SHORT[issue.code] ?? CHECK_GROUPS.find((group) => group.id === issue.group)?.label.toLowerCase() ?? issue.code),
+    ),
+  ];
+  if (names.length <= 1) return names[0] ?? "";
+  return `${names.slice(0, -1).join(", ")} y ${names.at(-1)}`;
+}
+
 export type CheckState = "ok" | "warn" | "blocked";
 
 export type CheckSummary = { id: CheckGroup; label: string; step: DeliveryStepId; state: CheckState };

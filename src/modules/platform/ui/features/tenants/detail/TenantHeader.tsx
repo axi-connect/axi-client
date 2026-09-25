@@ -10,7 +10,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowLeft, Check, LifeBuoy, LoaderCircle, PackageCheck, PencilLine, X } from "lucide-react";
+import { ArrowLeft, Check, Copy, LifeBuoy, LoaderCircle, PackageCheck, PencilLine, X } from "lucide-react";
 import { useAlert } from "@/core/providers/alert-provider";
 import { errorMessage } from "@/core/lib/error-messages";
 import { formatShortDate } from "../../../../domain/dates";
@@ -22,6 +22,7 @@ import { EmptyState } from "../../../components/EmptyState";
 import { ProblemAlert } from "../../../components/ProblemAlert";
 import { StatusBadge } from "../../../components/StatusBadge";
 import { TenantRowActions } from "../TenantRowActions";
+import { useCopy } from "../../../hooks/use-copy";
 import { SupportSessionDialog } from "../SupportSessionDialog";
 import { isDispatchedDelivery } from "../../../../domain/delivery";
 import { useLatestDelivery } from "../../../../infrastructure/api/hooks/use-delivery";
@@ -108,6 +109,7 @@ export function TenantHeader({ tenantId }: { tenantId: string }) {
   const latest = useLatestDelivery(tenantId);
   const canEnterSupport = usePlatformRole() !== "billing_ops";
   const [supportOpen, setSupportOpen] = useState(false);
+  const { copied, copy } = useCopy();
   // La ficha mostraba la contraseña del dueño que dejaba el alta: si queda
   // algo de una pestaña vieja, se borra sin mostrarse.
   useEffect(() => clearLegacyOwnerCredentials(), []);
@@ -149,21 +151,48 @@ export function TenantHeader({ tenantId }: { tenantId: string }) {
     .map((word) => word[0]?.toUpperCase() ?? "")
     .join("");
 
+  // La acción principal depende de la entrega: mientras carga no se pinta nada
+  // (un hueco del mismo alto), para no mostrar «Preparar entrega» y cambiarlo (A9).
+  let mainAction: React.ReactNode = null;
+  if (!onDeliveryPage) {
+    if (latest.isPending) {
+      mainAction = <Skeleton aria-hidden="true" className="h-9 w-44 rounded-md" />;
+    } else if (dispatched) {
+      mainAction = canEnterSupport ? (
+        <Button type="button" variant="outline" onClick={() => setSupportOpen(true)}>
+          <LifeBuoy aria-hidden="true" />
+          Entrar como soporte
+        </Button>
+      ) : null;
+    } else {
+      mainAction = (
+        <Button asChild>
+          <Link href={deliveryHref}>
+            <PackageCheck aria-hidden="true" />
+            Preparar entrega
+          </Link>
+        </Button>
+      );
+    }
+  }
+
   return (
-    <header className="flex flex-wrap items-center justify-between gap-4">
-      <div className="flex min-w-0 max-w-full items-center gap-4">
+    // En el celular: nombre y ⋮ en la primera fila, la acción principal debajo a
+    // lo ancho; desde sm, todo en una fila (A14).
+    <header className="flex flex-wrap items-center gap-x-4 gap-y-3">
+      <div className="flex min-w-0 flex-1 items-center gap-4">
         <span
           aria-hidden="true"
           className="hidden size-14 shrink-0 items-center justify-center rounded-2xl bg-foreground font-heading text-xl font-bold text-background sm:flex dark:border dark:border-border dark:bg-card dark:text-foreground"
         >
           {initials}
         </span>
-        <div className="min-w-0 space-y-1">
+        <div className="min-w-0 flex-1 space-y-1">
           <div className="flex min-w-0 flex-wrap items-center gap-3">
             <InlineNameEditor tenantId={tenant.id} name={tenant.name} />
             <StatusBadge status={tenant.status} />
           </div>
-          <p className="flex flex-wrap gap-x-1.5 text-sm text-muted-foreground [&>span]:whitespace-nowrap">
+          <p className="flex flex-wrap items-center gap-x-1.5 text-sm text-muted-foreground [&>span]:whitespace-nowrap">
             <span>
               NIT <span className="font-mono tabular-nums">{tenant.nit}</span>
             </span>
@@ -171,25 +200,23 @@ export function TenantHeader({ tenantId }: { tenantId: string }) {
             <span>· {tenant.country_code}</span>
             <span>· {tenant.users_count === 1 ? "1 usuario" : `${tenant.users_count} usuarios`}</span>
             <span>· creada el {formatShortDate(tenant.created_at)}</span>
+            <span className="inline-flex items-center gap-1.5">
+              ·
+              <button
+                type="button"
+                onClick={() => void copy(tenant.id)}
+                aria-label={`Copiar id ${tenant.id}`}
+                className="inline-flex h-6 items-center gap-1 rounded-md px-1 font-mono text-xs transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+              >
+                {tenant.id.slice(0, 8)}…
+                {copied ? <Check aria-hidden="true" className="size-3.5 text-success" /> : <Copy aria-hidden="true" className="size-3.5" />}
+              </button>
+            </span>
           </p>
         </div>
       </div>
-      <div className="flex items-center gap-2">
-        {onDeliveryPage ? null : dispatched ? (
-          canEnterSupport ? (
-            <Button type="button" variant="outline" onClick={() => setSupportOpen(true)}>
-              <LifeBuoy aria-hidden="true" />
-              Entrar como soporte
-            </Button>
-          ) : null
-        ) : (
-          <Button asChild>
-            <Link href={deliveryHref}>
-              <PackageCheck aria-hidden="true" />
-              Preparar entrega
-            </Link>
-          </Button>
-        )}
+      {mainAction ? <div className="order-last w-full sm:order-none sm:w-auto [&>*]:w-full sm:[&>*]:w-auto">{mainAction}</div> : null}
+      <div className="shrink-0 self-start sm:self-center">
         <TenantRowActions tenant={tenant} showViewAction={false} />
       </div>
       {supportOpen ? (
