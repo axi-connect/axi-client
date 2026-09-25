@@ -24,15 +24,51 @@ const LABELS: Record<string, string> = {
 	"meta-templates": "Plantillas de Meta",
 	"opt-outs": "Bajas",
 	"new": "Nueva",
+	// Método comercial: /comercial, /comercial/meta, /comercial/acciones/:id,
+	// /comercial/resultados/:key (Q20: salía «comercial» en minúscula). Las
+	// migas de sus rutas dinámicas llegan por `breadcrumbs` (V6).
+	"comercial": "Comercial",
+	"meta": "Meta",
+	"acciones": "Acciones",
+	"resultados": "Resultados",
+}
+
+/**
+ * Lo que un módulo sabe de sus migas y el header no (V6). Son DATOS, no
+ * funciones: el layout que lo pasa es de servidor. Llega desde la capa app
+ * (shared no importa de modules, arquitectura §3.3).
+ */
+export type BreadcrumbConfig = {
+	/** Rutas sin page.tsx propia: su miga se pinta sin enlace (enlazarla era un 404). */
+	unlinked?: readonly string[]
+	/** Etiqueta del segmento hijo de una ruta: `{ "/x/resultados": { sales: "Ventas", "*": "Resultado" } }`. */
+	children?: Readonly<Record<string, Readonly<Record<string, string>>>>
+}
+
+type Crumb = { href: string; label: string; linked: boolean }
+
+/** Las migas de un pathname: etiqueta legible y si la ruta tiene página. */
+export function buildCrumbs(pathname: string, config: readonly BreadcrumbConfig[] = []): Crumb[] {
+	const parts = pathname.split("/").filter(Boolean)
+	const unlinked = new Set(config.flatMap((entry) => entry.unlinked ?? []))
+	return parts.map((seg, idx) => {
+		const href = "/" + parts.slice(0, idx + 1).join("/")
+		const parent = "/" + parts.slice(0, idx).join("/")
+		const childLabels = config.map((entry) => entry.children?.[parent]).find((labels) => labels !== undefined)
+		const label = childLabels?.[seg] ?? childLabels?.["*"] ?? LABELS[seg] ?? seg
+		return { href, label, linked: !unlinked.has(href) }
+	})
 }
 
 type PrivateHeaderProps = {
 	/** Acciones de la derecha (p.ej. la campana de notificaciones). Se inyectan
 	    desde la capa app: shared no puede importar de modules (arquitectura §3.3). */
 	actions?: React.ReactNode
+	/** Migas que conocen los módulos (rutas sin página, segmentos dinámicos). */
+	breadcrumbs?: readonly BreadcrumbConfig[]
 }
 
-export function PrivateHeader({ actions }: PrivateHeaderProps) {
+export function PrivateHeader({ actions, breadcrumbs }: PrivateHeaderProps) {
 	const pathname = usePathname()
 	const { state, isMobile } = useSidebar()
 	// Este trigger NO es redundante con el botón de la cabecera del sidebar: en
@@ -43,11 +79,7 @@ export function PrivateHeader({ actions }: PrivateHeaderProps) {
 		: state === "collapsed"
 			? "Expandir menú"
 			: "Colapsar menú"
-	const parts = pathname.split("/").filter(Boolean)
-	const crumbs = parts.map((seg, idx) => {
-		const href = "/" + parts.slice(0, idx + 1).join("/")
-		return { href, label: LABELS[seg] || seg }
-	})
+	const crumbs = buildCrumbs(pathname, breadcrumbs)
 
 	return (
 		// El glass ocupa todo el ancho; el contenido del header se centra con el
@@ -81,6 +113,8 @@ export function PrivateHeader({ actions }: PrivateHeaderProps) {
 								<ChevronRight className={cn("h-4 w-4", isLast && "hidden sm:block")} />
 								{isLast ? (
 									<span className="truncate text-foreground">{c.label}</span>
+								) : !c.linked ? (
+									<span>{c.label}</span>
 								) : (
 									<Link prefetch={false} href={c.href} className="hover:text-foreground transition-colors">{c.label}</Link>
 								)}

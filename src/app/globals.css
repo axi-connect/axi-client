@@ -2159,6 +2159,26 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   background: color-mix(in srgb, var(--foreground) 9%, transparent);
 }
 
+/* Acción de una fila que aparece al pasar el ratón o al enfocar algo dentro
+   de su `.reveal-group` («Deshacer», «Cambiar»). Solo se esconde donde HAY
+   ratón: en táctil no existe el hover y esconderla la dejaría inalcanzable.
+   Es una clase propia y no `.group` de Tailwind a propósito: `.group` la
+   lleva media app y cualquier ancestro con ella dispararía la acción. La
+   fila es el `.reveal-group` más cercano; no se anidan. */
+@media (hover: hover) {
+  .reveal-group .hover-reveal {
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+  .reveal-group:hover .hover-reveal,
+  .reveal-group:focus-within .hover-reveal,
+  .hover-reveal:focus-visible,
+  .hover-reveal[aria-expanded="true"],
+  .hover-reveal:has([aria-expanded="true"]) {
+    opacity: 1;
+  }
+}
+
 /* «Está escribiendo»: tres puntos. Indicador ligado a un turno del servidor
    (§6): el nodo existe mientras el turno dura. */
 .assistant-dots > i {

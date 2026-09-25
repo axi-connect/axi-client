@@ -11,14 +11,14 @@ import {
 } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { formatMoney } from "@/core/lib/format";
-import { MetricTile } from "@/modules/dashboard/ui/components/MetricTile";
+import { MetricTile } from "@/modules/dashboard/public";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/shared/components/ui/tooltip";
 import type { FunnelDTO } from "@/modules/analytics/domain/analytics";
-import { CountUpValue } from "./CountUpValue";
+import { CountUpValue } from "@/shared/components/features/count-up";
 
 const percent = (value: number) => `${value.toLocaleString("es-CO")} %`;
 

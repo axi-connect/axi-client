@@ -5,7 +5,7 @@ import {
   addDaysToKey,
   todayKey,
   type DayKey,
-} from "@/modules/scheduling/domain/business-time";
+} from "@/core/lib/business-time";
 import {
   rangeCovers,
   rangeForView,

@@ -3,7 +3,7 @@
 import { formatMoney } from "@/core/lib/format";
 import { DashboardCard } from "@/modules/dashboard/ui/components/MetricTile";
 import { CardEmpty } from "@/shared/components/features/card-empty";
-import { CHART_COLORS } from "@/modules/dashboard/ui/components/charts/chart-theme";
+import { CHART_COLORS } from "@/shared/components/features/charts/chart-theme";
 import type { Section } from "@/modules/dashboard/infrastructure/stores/dashboard.store";
 import type { TopProductsDTO } from "@/modules/dashboard/domain/dashboard";
 

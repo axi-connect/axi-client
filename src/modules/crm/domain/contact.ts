@@ -62,6 +62,7 @@ export const TIMELINE_SOURCES: readonly TimelineSource[] = [
   "orders",
   "conversations",
   "appointments",
+  "lifecycle",
 ];
 
 export const TIMELINE_SOURCE_LABELS: Record<TimelineSource, string> = {
@@ -70,6 +71,7 @@ export const TIMELINE_SOURCE_LABELS: Record<TimelineSource, string> = {
   orders: "Pedidos",
   conversations: "Conversaciones",
   appointments: "Citas",
+  lifecycle: "Ciclo de vida",
 };
 
 export const DUPLICATE_REASON_LABELS: Record<DuplicatePairDTO["reason"], string> = {

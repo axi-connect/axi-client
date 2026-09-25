@@ -19,7 +19,7 @@ import {
   todayKey as computeTodayKey,
   weekDays,
   type DayKey,
-} from "@/modules/scheduling/domain/business-time";
+} from "@/core/lib/business-time";
 import { useCompanySchedule } from "@/modules/scheduling/infrastructure/hooks/use-company-schedule";
 import { useCalendarStore } from "@/modules/scheduling/infrastructure/stores/calendar.store";
 import { CalendarSkeleton } from "./components/calendar/CalendarSkeleton";

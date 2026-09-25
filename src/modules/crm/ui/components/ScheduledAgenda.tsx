@@ -8,7 +8,7 @@ import { StatusBadge } from "@/shared/components/features/status-badge";
 import { Button } from "@/shared/components/ui/button";
 import type { ActivityDTO } from "@/modules/crm/domain/activity";
 import { TASK_BADGE_KEY, taskBadgeMap, taskDisplayState } from "@/modules/crm/domain/task-execution";
-import { businessDayKey, minutesIntoDay, todayKey, addDaysToKey, type DayKey } from "@/modules/scheduling/public";
+import { businessDayKey, minutesIntoDay, todayKey, addDaysToKey, type DayKey } from "@/core/lib/business-time";
 
 /**
  * «Programados» (F2): lo que el agente va a hacer, día por día, en la zona del

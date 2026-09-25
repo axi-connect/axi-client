@@ -8,6 +8,8 @@ import { StaggerIn } from "@/modules/analytics/ui/components/StaggerIn";
 import { EmptyState } from "@/shared/components/features/empty-state";
 import { KpiHeroRow } from "./KpiHeroRow";
 import { FunnelCard } from "./FunnelCard";
+import { PipelineFlowCard } from "./PipelineFlowCard";
+import { StageRatesCard } from "./StageRatesCard";
 import { TrendCard } from "./TrendCard";
 import { GroupBreakdownCard } from "./GroupBreakdownCard";
 import { VoiceCard } from "./VoiceCard";
@@ -68,11 +70,20 @@ export function ConversionTab({ onGoToQuality }: { onGoToQuality?: () => void })
         />
       </StaggerIn>
 
+      {/* Método comercial (F7): las tasas con las que se traza la ruta y el
+          recorrido por etapa, del MISMO fetch del embudo. */}
       <StaggerIn index={2}>
-        <TrendCard section={funnel} onRetry={() => void loadConversion()} />
+        <div className="grid gap-6 lg:grid-cols-2">
+          <StageRatesCard section={funnel} onRetry={() => void loadConversion()} />
+          <PipelineFlowCard section={funnel} onRetry={() => void loadConversion()} />
+        </div>
       </StaggerIn>
 
       <StaggerIn index={3}>
+        <TrendCard section={funnel} onRetry={() => void loadConversion()} />
+      </StaggerIn>
+
+      <StaggerIn index={4}>
         <GroupBreakdownCard
           groupBy={groupBy}
           section={groups[groupBy]}
@@ -82,7 +93,7 @@ export function ConversionTab({ onGoToQuality }: { onGoToQuality?: () => void })
         />
       </StaggerIn>
 
-      <StaggerIn index={4}>
+      <StaggerIn index={5}>
         <VoiceCard section={voice} onRetry={() => void loadVoice()} />
       </StaggerIn>
     </div>

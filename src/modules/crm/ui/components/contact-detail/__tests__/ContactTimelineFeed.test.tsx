@@ -7,6 +7,24 @@ jest.mock("@/modules/crm/infrastructure/services/contacts-service.adapter", () =
   getContactTimeline: jest.fn(),
 }));
 
+const revertStageChange = jest.fn();
+jest.mock("@/modules/crm/infrastructure/services/journey-service.adapter", () => ({
+  revertStageChange: (...args: unknown[]) => revertStageChange(...args),
+}));
+
+type ModalAction = { label: string; onClick?: () => void };
+let lastModal: { title?: string; description?: string; actions?: ModalAction[] } | null = null;
+const showAlert = jest.fn();
+jest.mock("@/core/providers/alert-provider", () => ({
+  useAlert: () => ({
+    showAlert,
+    closeModal: jest.fn(),
+    showModal: (config: { title?: string; description?: string; actions?: ModalAction[] }) => {
+      lastModal = config;
+    },
+  }),
+}));
+
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { getContactTimeline } = require("@/modules/crm/infrastructure/services/contacts-service.adapter") as {
   getContactTimeline: jest.Mock;
@@ -31,7 +49,31 @@ function page(data: TimelineEntryDTO[], nextCursor?: string): CursorPage<Timelin
 
 beforeEach(() => {
   getContactTimeline.mockReset();
+  revertStageChange.mockReset();
+  showAlert.mockReset();
+  lastModal = null;
 });
+
+/** Un `stage_changed` tal como lo emite `GET /crm/contacts/:id/timeline` (F4). */
+function stageChanged(payload: Record<string, unknown> = {}, id = "ev1"): TimelineEntryDTO {
+  return entry({
+    id,
+    source: "deals",
+    type: "deal_stage_changed",
+    title: "Oportunidad · Plan facial",
+    subtitle: "Cita → Propuesta",
+    payload: {
+      deal_id: "d1",
+      event_id: id,
+      actor_type: "system",
+      from_kind: "meeting",
+      to_kind: "proposal",
+      from_stage_name: "Cita agendada",
+      to_stage_name: "Propuesta",
+      ...payload,
+    },
+  });
+}
 
 describe("ContactTimelineFeed", () => {
   it("compone entidad — novedad y la línea de fuente", async () => {
@@ -75,6 +117,7 @@ describe("ContactTimelineFeed", () => {
       "orders",
       "conversations",
       "appointments",
+      "lifecycle",
     ]);
 
     fireEvent.click(screen.getByRole("button", { name: "Pedidos" }));
@@ -82,12 +125,12 @@ describe("ContactTimelineFeed", () => {
     expect(getContactTimeline.mock.calls[1][1].sources).not.toContain("orders");
   });
 
-  it("nunca deja las cinco fuentes desactivadas", async () => {
+  it("nunca deja las seis fuentes desactivadas", async () => {
     getContactTimeline.mockResolvedValue(page([]));
     render(<ContactTimelineFeed contactId="c1" />);
     await waitFor(() => expect(getContactTimeline).toHaveBeenCalled());
 
-    for (const label of ["Actividades", "Oportunidades", "Pedidos", "Conversaciones", "Citas"]) {
+    for (const label of ["Actividades", "Oportunidades", "Pedidos", "Conversaciones", "Citas", "Ciclo de vida"]) {
       fireEvent.click(screen.getByRole("button", { name: label }));
     }
 
@@ -141,5 +184,166 @@ describe("ContactTimelineFeed", () => {
     expect(
       await screen.findByText("Sin eventos para las fuentes seleccionadas."),
     ).toBeInTheDocument();
+  });
+});
+
+describe("ContactTimelineFeed — recorrido (F4)", () => {
+  it("un paso movido por la IA se cuenta con la razón, en violeta y con el chip IA", async () => {
+    getContactTimeline.mockResolvedValue(
+      page([stageChanged({ actor_type: "ai_agent", reason: "Pidió la cotización" })]),
+    );
+    const { container } = render(<ContactTimelineFeed contactId="c1" />);
+
+    expect(await screen.findByText("Pasó a Propuesta")).toBeInTheDocument();
+    expect(screen.getByText(/agente IA · «Pidió la cotización»/)).toBeInTheDocument();
+    expect(screen.getByText("IA")).toBeInTheDocument();
+    expect(container.querySelector(".bg-accent-violet\\/12")).not.toBeNull();
+  });
+
+  it("un paso por regla se cuenta neutro con el nombre de la regla", async () => {
+    getContactTimeline.mockResolvedValue(
+      page([stageChanged({ actor_type: "system", rule_code: "appointment_booked", to_stage_name: "Cita agendada" })]),
+    );
+    const { container } = render(<ContactTimelineFeed contactId="c1" />);
+
+    expect(await screen.findByText("Pasó a Cita agendada")).toBeInTheDocument();
+    expect(screen.getByText(/regla: cita agendada/)).toBeInTheDocument();
+    expect(container.querySelector(".bg-accent-violet\\/12")).toBeNull();
+    expect(screen.queryByText("IA")).not.toBeInTheDocument();
+  });
+
+  it("sin nombre de etapa cae al tipo; un paso deshecho y un cambio de ciclo de vida tienen su frase", async () => {
+    getContactTimeline.mockResolvedValue(
+      page([
+        stageChanged({ to_stage_name: undefined }, "a"),
+        entry({
+          id: "b",
+          source: "deals",
+          type: "deal_stage_reverted",
+          title: "Oportunidad · Plan facial",
+          payload: { deal_id: "d1", reverted_event_id: "a", from_stage_name: "Propuesta", to_stage_name: "Cita agendada" },
+        }),
+        entry({
+          id: "c",
+          source: "lifecycle",
+          type: "lifecycle_changed",
+          title: "Ciclo de vida",
+          payload: { from_stage: "prospect", to_stage: "lead", source_event: "order.created", reason: null },
+        }),
+      ]),
+    );
+    render(<ContactTimelineFeed contactId="c1" />);
+
+    expect(await screen.findByText("Pasó a Propuesta")).toBeInTheDocument();
+    expect(screen.getByText("Se deshizo el paso a Propuesta")).toBeInTheDocument();
+    expect(screen.getByText("Prospecto → Lead")).toBeInTheDocument();
+    expect(screen.getByText("(pedido creado)")).toBeInTheDocument();
+    expect(screen.getByText(/^Ciclo de vida ·/)).toBeInTheDocument();
+  });
+
+  it("«Deshacer» solo con permiso, solo en cambios de etapa y nunca en uno ya deshecho", async () => {
+    const entries = [
+      stageChanged({}, "fresh"),
+      stageChanged({}, "undone"),
+      entry({
+        id: "rev",
+        source: "deals",
+        type: "deal_stage_reverted",
+        title: "Oportunidad · Plan facial",
+        payload: { deal_id: "d1", reverted_event_id: "undone", from_stage_name: "Propuesta" },
+      }),
+      entry({ id: "o", source: "orders", title: "Pedido #1" }),
+    ];
+    getContactTimeline.mockResolvedValue(page(entries));
+    const { unmount } = render(<ContactTimelineFeed contactId="c1" />);
+    await screen.findByText("Pedido #1");
+    expect(screen.queryByRole("button", { name: "Deshacer" })).not.toBeInTheDocument();
+    unmount();
+
+    getContactTimeline.mockResolvedValue(page(entries));
+    render(<ContactTimelineFeed contactId="c1" canRevert />);
+    await screen.findByText("Pedido #1");
+    expect(screen.getAllByRole("button", { name: "Deshacer" })).toHaveLength(1);
+  });
+
+  it("sin Deshacer si la regla fue el pago o una etapa borrada, si el servidor lo veta, o si la oportunidad ya cerró", async () => {
+    getContactTimeline.mockResolvedValue(
+      page([
+        entry({ id: "won", source: "deals", type: "deal_won", title: "Oportunidad · Cerrada", payload: { deal_id: "closed" } }),
+        stageChanged({ deal_id: "closed" }, "on-closed"),
+        stageChanged({ rule_code: "paid" }, "paid"),
+        stageChanged({ rule_code: "stage_deleted" }, "deleted"),
+        stageChanged({ revertible: false }, "vetoed"),
+        stageChanged({ rule_code: "appointment_booked" }, "ok"),
+      ]),
+    );
+    render(<ContactTimelineFeed contactId="c1" canRevert />);
+
+    await waitFor(() => expect(screen.getAllByRole("listitem")).toHaveLength(6));
+    expect(screen.getAllByRole("button", { name: "Deshacer" })).toHaveLength(1);
+  });
+
+  it("si el servidor manda `revertible`, manda él: sin heurísticas propias", async () => {
+    getContactTimeline.mockResolvedValue(
+      page([
+        stageChanged({ revertible: true, rule_code: "paid" }, "server-yes"),
+        stageChanged({ revertible: false, rule_code: "appointment_booked" }, "server-no"),
+      ]),
+    );
+    render(<ContactTimelineFeed contactId="c1" canRevert />);
+    await waitFor(() => expect(screen.getAllByRole("listitem")).toHaveLength(2));
+    expect(screen.getAllByRole("button", { name: "Deshacer" })).toHaveLength(1);
+  });
+
+  it("una oportunidad reabierta después de cerrar vuelve a admitir Deshacer", async () => {
+    getContactTimeline.mockResolvedValue(
+      page([
+        entry({ id: "re", source: "deals", type: "deal_reopened", title: "Oportunidad · X", payload: { deal_id: "d1" } }),
+        entry({ id: "lost", source: "deals", type: "deal_lost", title: "Oportunidad · X", payload: { deal_id: "d1" } }),
+        stageChanged({}, "sc"),
+      ]),
+    );
+    render(<ContactTimelineFeed contactId="c1" canRevert />);
+    await waitFor(() => expect(screen.getAllByRole("listitem")).toHaveLength(3));
+    expect(screen.getAllByRole("button", { name: "Deshacer" })).toHaveLength(1);
+  });
+
+  it("deshacer confirma en un modal, llama al servidor y avisa al resto de la ficha", async () => {
+    getContactTimeline.mockResolvedValue(
+      page([stageChanged({ actor_type: "ai_agent", reason: "Pidió cotización" })]),
+    );
+    revertStageChange.mockResolvedValue(undefined);
+    const changed = jest.fn();
+    window.addEventListener("crm:journey:changed", changed);
+    render(<ContactTimelineFeed contactId="c1" canRevert />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Deshacer" }));
+    expect(lastModal?.title).toBe("¿Deshacer el paso a Propuesta?");
+    // La copia dice a dónde vuelve.
+    expect(lastModal?.description).toMatch(/vuelve a Cita agendada/);
+    const action = lastModal?.actions?.find((entry) => entry.label === "Deshacer");
+    action?.onClick?.();
+    // Doble clic: la segunda pulsación no vuelve a llamar al servidor.
+    action?.onClick?.();
+
+    await waitFor(() => expect(revertStageChange).toHaveBeenCalledWith("d1", "ev1"));
+    expect(revertStageChange).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(changed).toHaveBeenCalled());
+    expect((changed.mock.calls[0][0] as CustomEvent).detail).toEqual({ contactId: "c1", dealId: "d1" });
+    // El aviso recarga el historial desde la primera página.
+    await waitFor(() => expect(getContactTimeline.mock.calls.length).toBeGreaterThanOrEqual(2));
+    // Recargado, el foco vuelve al historial, no a <body> (Q15).
+    await waitFor(() => expect(screen.getByRole("region", { name: "Historial" })).toHaveFocus());
+    window.removeEventListener("crm:journey:changed", changed);
+  });
+
+  it("si deshacer falla, el foco no se mueve al historial (el botón sigue ahí)", async () => {
+    getContactTimeline.mockResolvedValue(page([stageChanged({ actor_type: "ai_agent" })]));
+    revertStageChange.mockRejectedValue(new Error("409"));
+    render(<ContactTimelineFeed contactId="c1" canRevert />);
+    fireEvent.click(await screen.findByRole("button", { name: "Deshacer" }));
+    lastModal?.actions?.find((entry) => entry.label === "Deshacer")?.onClick?.();
+    await waitFor(() => expect(showAlert).toHaveBeenCalledWith(expect.objectContaining({ tone: "error" })));
+    expect(screen.getByRole("region", { name: "Historial" })).not.toHaveFocus();
   });
 });

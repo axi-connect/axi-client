@@ -35,6 +35,13 @@ const mockState = {
   newThread: jest.fn(),
 };
 
+// El chip «Meta · N %» del briefing sale del slice comercial: aquí no hay meta.
+jest.mock("@/modules/commercial/public", () => ({
+  useGoalChip: () => null,
+  isCommercialProposal: (proposal: { source: string }) => proposal.source === "commercial",
+  commercialProposalHref: (id: string) => `/comercial/acciones/${id}`,
+}));
+
 jest.mock("@/modules/cmo/infrastructure/stores/cmo.store", () => ({
   useCmoStore: (selector: (state: typeof mockState) => unknown) => selector(mockState),
 }));

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useWatch, type Control } from "react-hook-form";
 import { Input } from "@/shared/components/ui/input";
 import { Switch } from "@/shared/components/ui/switch";
-import type { DayKey } from "@/modules/scheduling/domain/business-time";
+import type { DayKey } from "@/core/lib/business-time";
 import { AvailabilityPanel } from "../../components/AvailabilityPanel";
 import type { AppointmentFormValues } from "../config/appointment.config";
 
