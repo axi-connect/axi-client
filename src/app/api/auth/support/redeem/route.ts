@@ -4,6 +4,7 @@ import { API_ERROR_CODES } from "@/core/api/problem";
 import type { Schemas } from "@/core/api/types";
 import { http } from "@/core/services/http";
 import {
+  bffProblem,
   forwardedForHeaders,
   invalidBodyResponse,
   problemResponse,
@@ -35,21 +36,12 @@ export async function POST(req: NextRequest) {
   }
   const platformToken = req.headers.get(SUPPORT_PLATFORM_TOKEN_HEADER);
   if (!platformToken) {
-    return NextResponse.json(
-      { code: API_ERROR_CODES.unauthorized, message: "Abre la sesión de soporte desde la consola de plataforma" },
-      { status: 401 },
-    );
+    return bffProblem(401, API_ERROR_CODES.unauthorized, "Abre la sesión de soporte desde la consola de plataforma");
   }
 
   const store = await cookies();
   if (hasTenantSession(store)) {
-    return NextResponse.json(
-      {
-        code: API_ERROR_CODES.supportSessionConflict,
-        message: "Ya tienes una sesión de cliente abierta en este navegador",
-      },
-      { status: 409 },
-    );
+    return bffProblem(409, API_ERROR_CODES.supportSessionConflict, "Ya tienes una sesión de cliente abierta en este navegador");
   }
 
   try {

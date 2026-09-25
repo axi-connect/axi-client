@@ -8,6 +8,8 @@ import { PasswordShell } from "@/modules/password/ui/components/PasswordShell"
 import { Button } from "@/shared/components/ui/button"
 import {
   readHandoffCode,
+  readHandoffNext,
+  safeSupportNext,
   redeemFailure,
   REDEEM_FAILURE_COPY,
   type RedeemFailure,
@@ -51,6 +53,7 @@ export function SupportRedeemFlow() {
       return
     }
     const code = readHandoffCode(hash)
+    const next = safeSupportNext(readHandoffNext(hash), window.location.origin)
     if (hash) window.history.replaceState(window.history.state, "", `${pathname}${search}`)
     if (!code) {
       setState({ step: "failed", reason: "missing" })
@@ -63,7 +66,8 @@ export function SupportRedeemFlow() {
     }
     void redeemSupportCode(code, platformToken).then((result) => {
       if (result.ok) {
-        window.location.replace(result.redirect)
+        // A la pantalla pedida (solo si pasó la lista blanca), o al panel.
+        window.location.replace(next)
         return
       }
       setState({ step: "failed", reason: redeemFailure(result.status, result.code) })

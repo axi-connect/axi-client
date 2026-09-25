@@ -10,7 +10,7 @@
  * pone la dirección. Si falla, esa pestaña en blanco se cierra. El diálogo no
  * se cierra solo (keepOpen): se cierra al abrir la sesión.
  */
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useFormContext, useWatch, type UseFormReturn } from "react-hook-form";
 import { ExternalLink, LoaderCircle, ShieldCheck } from "lucide-react";
 import { isHttpError, API_ERROR_CODES } from "@/core/api/problem";
@@ -52,10 +52,11 @@ const FIELDS = [
     autoComplete: "off",
   }),
   createInputField<SupportSessionFormValues>("minutes", {
-    inputKind: "number",
+    inputKind: "text",
     label: "Duración (min)",
+    // Sin min/max nativos: el tope lo dice Zod en español, no el navegador en inglés.
     description: `De ${SUPPORT_MIN_MINUTES} a ${SUPPORT_MAX_MINUTES} minutos`,
-    inputProps: { min: SUPPORT_MIN_MINUTES, max: SUPPORT_MAX_MINUTES, step: 5 },
+    inputProps: { inputMode: "numeric" },
   }),
   createInputField<SupportSessionFormValues>("password", {
     inputKind: "password",
@@ -78,14 +79,24 @@ export function SupportSessionDialog({
   open,
   onOpenChange,
   tenant,
+  initialReason,
+  next,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   tenant: Pick<TenantListItem, "id" | "name">;
+  /** Motivo precargado (desde un bloqueo de «Preparar entrega»). */
+  initialReason?: string;
+  /** Pantalla del panel a la que entra la pestaña tras el canje (lista blanca en /auth/soporte). */
+  next?: string;
 }) {
   const { showAlert } = useAlert();
   const issue = useIssueSupportSession(tenant.id);
-  const valuesRef = useRef<SupportSessionFormValues>(defaultSupportSessionValues);
+  const initialValues = useMemo(
+    () => ({ ...defaultSupportSessionValues, reason: initialReason ?? "" }),
+    [initialReason],
+  );
+  const valuesRef = useRef<SupportSessionFormValues>(initialValues);
   const popupRef = useRef<Window | null>(null);
   const [blockedUrl, setBlockedUrl] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -109,7 +120,7 @@ export function SupportSessionDialog({
   async function submit(values: SupportSessionFormValues, form: UseFormReturn<SupportSessionFormValues>) {
     try {
       const issued = await issue.mutateAsync(toIssueSupportSessionDTO(values));
-      const url = supportTabUrl(issued.handoff_code);
+      const url = supportTabUrl(issued.handoff_code, next);
       const popup = popupRef.current;
       popupRef.current = null;
       if (popup && !popup.closed) {
@@ -184,7 +195,7 @@ export function SupportSessionDialog({
             <DynamicForm<SupportSessionFormValues>
               id={FORM_ID}
               schema={supportSessionSchema}
-              defaultValues={defaultSupportSessionValues}
+              defaultValues={initialValues}
               fields={FIELDS}
               onSubmit={submit}
               renderFieldsWrapper={(grid) => (

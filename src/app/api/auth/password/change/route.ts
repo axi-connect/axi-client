@@ -4,6 +4,7 @@ import { http } from "@/core/services/http";
 import { API_ERROR_CODES, isHttpError } from "@/core/api/problem";
 import { refreshSession, setSessionCookies } from "@/shared/auth/auth.handlers";
 import {
+  bffProblem,
   forwardedForHeaders,
   invalidBodyResponse,
   problemResponse,
@@ -38,16 +39,10 @@ export async function POST(req: NextRequest) {
   // Soporte no cambia la contraseña del dueño, y este BFF escribiría las
   // cookies del CLIENTE con la sesión reemitida: se corta aquí.
   if (readSupportToken(store)) {
-    return NextResponse.json(
-      { code: API_ERROR_CODES.supportActionForbidden, message: "No disponible en soporte" },
-      { status: 403 },
-    );
+    return bffProblem(403, API_ERROR_CODES.supportActionForbidden, "No disponible en soporte");
   }
   if (!store.get(COOKIE_NAMES.accessToken) && !store.get(COOKIE_NAMES.refreshToken)) {
-    return NextResponse.json(
-      { code: API_ERROR_CODES.unauthorized, message: "Sesión no iniciada" },
-      { status: 401 },
-    );
+    return bffProblem(401, API_ERROR_CODES.unauthorized, "Sesión no iniciada");
   }
 
   // La IP del visitante: el throttle de intentos del servidor es por IP y
@@ -61,7 +56,7 @@ export async function POST(req: NextRequest) {
 
     const refreshed = await refreshSession(store);
     if (!refreshed.ok) {
-      return NextResponse.json({ code: refreshed.code }, { status: refreshed.status });
+      return bffProblem(refreshed.status, refreshed.code, "Tu sesión expiró. Vuelve a iniciar sesión");
     }
     try {
       tokens = await http.post<AuthTokens>("/auth/password/change", payload, {

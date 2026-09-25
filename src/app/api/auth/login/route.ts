@@ -4,7 +4,7 @@ import { http } from "@/core/services/http";
 import { isHttpError } from "@/core/api/problem";
 import { setSessionCookies } from "@/shared/auth/auth.handlers";
 import type { AuthTokens, LoginPayload } from "@/shared/auth/auth.types";
-import { forwardedForHeaders } from "@/shared/auth/bff-response";
+import { bffProblem, forwardedForHeaders } from "@/shared/auth/bff-response";
 
 /**
  * POST /api/auth/login — autentica contra el backend y persiste la sesión
@@ -17,10 +17,7 @@ export async function POST(req: NextRequest) {
   try {
     payload = (await req.json()) as LoginPayload;
   } catch {
-    return NextResponse.json(
-      { code: "validation/failed", message: "Cuerpo de petición inválido" },
-      { status: 400 },
-    );
+    return bffProblem(400, "validation/failed", "Cuerpo de petición inválido");
   }
 
   try {
@@ -38,18 +35,8 @@ export async function POST(req: NextRequest) {
       if (error.retryAfterSeconds !== undefined) {
         headers.set("Retry-After", String(error.retryAfterSeconds));
       }
-      return NextResponse.json(
-        {
-          code: error.code,
-          message: error.message,
-          errors: error.validationIssues,
-        },
-        { status: error.status, headers },
-      );
+      return bffProblem(error.status, error.code, error.message, { errors: error.validationIssues, headers });
     }
-    return NextResponse.json(
-      { code: "client/network", message: "No fue posible contactar al servidor" },
-      { status: 503 },
-    );
+    return bffProblem(503, "client/network", "No fue posible contactar al servidor");
   }
 }

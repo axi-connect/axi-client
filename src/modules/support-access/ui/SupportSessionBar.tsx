@@ -1,15 +1,17 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { LifeBuoy, LoaderCircle, LogOut } from "lucide-react"
 
 import { API_ERROR_CODES, SUPPORT_ENDED_PATH, SUPPORT_SESSION_EVENT } from "@/core/api/problem"
 import { useAlert } from "@/core/providers/alert-provider"
+import { socketManager } from "@/core/realtime/socket-manager"
 import { useSession } from "@/shared/auth/auth.hooks"
 import { minutesLeft, SUPPORT_FORBIDDEN_COPY, SUPPORT_READONLY_COPY } from "../domain/support-access"
 import { endSupportSession } from "../infrastructure/support-access.service"
 
 const TICK_MS = 15_000
+
 
 /**
  * Barra fina del admin en la pestaña de soporte: «Soporte · {negocio} · quedan
@@ -27,6 +29,7 @@ export function SupportSessionBar() {
   const { showAlert } = useAlert()
   const [now, setNow] = useState(() => Date.now())
   const [leaving, setLeaving] = useState(false)
+  const [readonlySignal, setReadonlySignal] = useState(false)
 
   const leave = useCallback(async () => {
     setLeaving(true)
@@ -50,7 +53,7 @@ export function SupportSessionBar() {
       if (code === API_ERROR_CODES.supportActionForbidden) {
         showAlert({ tone: "warning", ...SUPPORT_FORBIDDEN_COPY, autoCloseMs: 6000 })
       } else if (code === API_ERROR_CODES.supportReadonlySuspended) {
-        showAlert({ tone: "warning", ...SUPPORT_READONLY_COPY, autoCloseMs: 8000 })
+        setReadonlySignal(true)
       } else if (code === API_ERROR_CODES.supportSessionEnded) {
         window.location.replace(SUPPORT_ENDED_PATH)
       }
@@ -58,6 +61,19 @@ export function SupportSessionBar() {
     window.addEventListener(SUPPORT_SESSION_EVENT, onSignal)
     return () => window.removeEventListener(SUPPORT_SESSION_EVENT, onSignal)
   }, [session, showAlert])
+
+  // Solo lectura (N7): lo dice el servidor en /auth/me o lo dijo el socket
+  // ANTES de que la barra montara (el connect_error llega primero, QA H2-2).
+  const readonly =
+    session?.company_suspended === true ||
+    (session !== null && readonlySignal) ||
+    (session !== null && socketManager.getLastConnectErrorCode() === API_ERROR_CODES.supportReadonlySuspended)
+  const warnedReadonly = useRef(false)
+  useEffect(() => {
+    if (!readonly || warnedReadonly.current) return
+    warnedReadonly.current = true
+    showAlert({ tone: "warning", ...SUPPORT_READONLY_COPY, autoCloseMs: 8000 })
+  }, [readonly, showAlert])
 
   const left = session ? minutesLeft(session.expires_at, now) : null
 
@@ -76,6 +92,7 @@ export function SupportSessionBar() {
       <LifeBuoy aria-hidden="true" className="size-3.5 shrink-0" />
       <p className="min-w-0 flex-1 truncate">
         <span className="font-semibold">Soporte</span> · {session.tenant_name} ·{" "}
+        {readonly ? <span className="font-medium">solo lectura, sin tiempo real · </span> : null}
         <span className="tabular-nums" aria-live="polite">
           quedan {left} min
         </span>

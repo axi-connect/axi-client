@@ -17,6 +17,11 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   [API_ERROR_CODES.companySuspended]: "La empresa está suspendida. Contacta a soporte",
   [API_ERROR_CODES.trialExpired]: "Tu prueba gratuita terminó. Contáctanos para activar tu plan",
   [API_ERROR_CODES.permissionDenied]: "No tienes permiso para realizar esta acción",
+  // Acceso de soporte: el mismo texto del aviso de la barra, así el aviso de la
+  // página y el de la barra son UNO (notify deduplica por texto).
+  [API_ERROR_CODES.supportActionForbidden]:
+    "Los usuarios, la facturación y los pagos no se pueden cambiar desde una sesión de soporte.",
+  [API_ERROR_CODES.supportSessionEnded]: "La sesión de soporte terminó",
   [API_ERROR_CODES.capabilityNotGranted]: "Tu plan no incluye esta función. Puedes ampliarlo desde Facturación",
   [API_ERROR_CODES.usageLimitExceeded]: "Alcanzaste el límite de uso del plan",
   [API_ERROR_CODES.outsideServiceWindow]: "Fuera de la ventana de 24 h de WhatsApp: se requiere plantilla",

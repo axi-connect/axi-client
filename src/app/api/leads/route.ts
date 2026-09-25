@@ -1,3 +1,4 @@
+import { bffProblem } from "@/shared/auth/bff-response";
 import { NextResponse, type NextRequest } from "next/server";
 import { http } from "@/core/services/http";
 import { isHttpError } from "@/core/api/problem";
@@ -20,10 +21,7 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json(
-      { code: "validation/failed", message: "Cuerpo de petición inválido" },
-      { status: 400 },
-    );
+    return bffProblem(400, "validation/failed", "Cuerpo de petición inválido");
   }
 
   try {
@@ -35,14 +33,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(created, { status: 201 });
   } catch (error) {
     if (isHttpError(error)) {
-      return NextResponse.json(
-        { code: error.code, message: error.message, errors: error.validationIssues },
-        { status: error.status },
-      );
+      return bffProblem(error.status, error.code, error.message, { errors: error.validationIssues });
     }
-    return NextResponse.json(
-      { code: "client/network", message: "No fue posible contactar al servidor" },
-      { status: 503 },
-    );
+    return bffProblem(503, "client/network", "No fue posible contactar al servidor");
   }
 }

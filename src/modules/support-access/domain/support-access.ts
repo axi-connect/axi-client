@@ -12,6 +12,53 @@ export function readHandoffCode(hash: string): string | null {
   return /^[A-Za-z0-9_-]{32,128}$/.test(code) ? code : null;
 }
 
+/**
+ * Pantallas del panel a las que puede entrar la pestaña de soporte tras el
+ * canje (`#code=…&next=/ruta`). Solo prefijos internos conocidos: lo demás cae
+ * en el panel de inicio. Es la defensa contra el open redirect.
+ */
+export const SUPPORT_NEXT_PREFIXES = [
+  "/dashboard",
+  "/admin/agents",
+  "/settings/company",
+  "/settings/payments",
+  "/catalog",
+  "/scheduling",
+  "/workspace",
+  "/crm",
+  "/orders",
+] as const
+
+export const SUPPORT_DEFAULT_NEXT = "/dashboard"
+
+/**
+ * `next` del hash → una ruta interna segura, o `/dashboard`. Exige que empiece
+ * por `/` y no por `//` ni `/\`, sin esquema; que resuelta contra el origen
+ * siga en el MISMO origen; y que su ruta esté en la lista blanca.
+ */
+export function safeSupportNext(next: string | null | undefined, origin: string): string {
+  if (typeof next !== "string" || next === "") return SUPPORT_DEFAULT_NEXT
+  if (!next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\")) return SUPPORT_DEFAULT_NEXT
+  if (/[\\\u0000-\u001f]/.test(next)) return SUPPORT_DEFAULT_NEXT
+  let url: URL
+  try {
+    url = new URL(next, origin)
+  } catch {
+    return SUPPORT_DEFAULT_NEXT
+  }
+  if (url.origin !== new URL(origin).origin) return SUPPORT_DEFAULT_NEXT
+  const allowed = SUPPORT_NEXT_PREFIXES.some(
+    (prefix) => url.pathname === prefix || url.pathname.startsWith(`${prefix}/`),
+  )
+  return allowed ? `${url.pathname}${url.search}` : SUPPORT_DEFAULT_NEXT
+}
+
+/** El `next` que viene junto al código en el `#`. */
+export function readHandoffNext(hash: string): string | null {
+  const raw = hash.startsWith("#") ? hash.slice(1) : hash
+  return raw ? new URLSearchParams(raw).get("next") : null
+}
+
 /** Minutos que quedan, redondeados hacia arriba (58:10 → «quedan 59 min»). 0 = terminó. */
 export function minutesLeft(expiresAt: string, now: number = Date.now()): number {
   const ms = new Date(expiresAt).getTime() - now;

@@ -17,11 +17,38 @@ export async function readJsonBody<T>(req: NextRequest): Promise<T | null> {
   }
 }
 
-export function invalidBodyResponse(): NextResponse {
+/**
+ * Un error PROPIO del BFF, con la misma forma que los del backend (RFC 7807,
+ * `application/problem+json`): `parseHttpError` del cliente lee `code` y
+ * `detail`. Sin `title`/`detail`, el aviso caía al texto del estado HTTP
+ * («Forbidden», QA H2-1). Lleva también `message` para quien lo leía así
+ * (el login y el alta).
+ */
+export function bffProblem(
+  status: number,
+  code: string,
+  detail: string,
+  extra: { errors?: unknown; details?: Record<string, unknown>; headers?: HeadersInit } = {},
+): NextResponse {
+  const headers = new Headers(extra.headers);
+  headers.set("Content-Type", "application/problem+json");
   return NextResponse.json(
-    { code: "validation/failed", message: "Cuerpo de petición inválido" },
-    { status: 400 },
+    {
+      type: "about:blank",
+      title: detail,
+      status,
+      code,
+      detail,
+      message: detail,
+      ...(extra.errors !== undefined ? { errors: extra.errors } : {}),
+      ...(extra.details !== undefined ? { details: extra.details } : {}),
+    },
+    { status, headers },
   );
+}
+
+export function invalidBodyResponse(): NextResponse {
+  return bffProblem(400, "validation/failed", "Cuerpo de petición inválido");
 }
 
 /**
@@ -38,10 +65,7 @@ export function problemResponse(error: unknown): NextResponse {
     const body = error.problem ?? { code: error.code, message: error.message, status: error.status };
     return NextResponse.json(body, { status: error.status, headers });
   }
-  return NextResponse.json(
-    { code: "client/network", message: "No fue posible contactar al servidor" },
-    { status: 503 },
-  );
+  return bffProblem(503, "client/network", "No fue posible contactar al servidor");
 }
 
 /**

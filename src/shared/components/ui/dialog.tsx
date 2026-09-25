@@ -69,9 +69,17 @@ function DialogContent({
         onPointerDownOutside={(e) => e.preventDefault()}
         {...props}
       >
-        <AnimatePresence>
+        {/*
+          El hijo DIRECTO de `Content asChild` tiene que ser el elemento del DOM:
+          el `Slot` de Radix le pasa `role="dialog"`, `aria-modal`, `aria-labelledby`
+          y la ref del foco. Envuelto en `AnimatePresence` (que no pinta nada) esos
+          atributos se perdían y ningún diálogo era un diálogo para el lector de
+          pantalla (QA H2-11). La salida animada tampoco corría: Radix desmonta el
+          contenido al cerrar, con `AnimatePresence` dentro.
+        */}
           <motion.div
             data-slot="dialog-content"
+            aria-modal="true"
             className={cn(
               "glass-overlay bg-background fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl border p-8 sm:max-w-lg max-h-[calc(100vh-3rem)] overflow-y-auto overscroll-contain touch-pan-y sidebar-scroll",
               className
@@ -93,7 +101,6 @@ function DialogContent({
               </DialogPrimitive.Close>
             )}
           </motion.div>
-        </AnimatePresence>
       </DialogPrimitive.Content>
     </DialogPortal>
   )

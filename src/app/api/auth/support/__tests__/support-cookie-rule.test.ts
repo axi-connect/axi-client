@@ -195,7 +195,10 @@ describe("otras rutas de tenant bajo soporte", () => {
       }),
     )
     expect(res.status).toBe(403)
-    expect((await res.json()).code).toBe("auth/support_action_forbidden")
+    // problem+json con detail: el aviso dice «No disponible en soporte», no «Forbidden» (QA H2-1)
+    expect(res.headers.get("content-type")).toContain("application/problem+json")
+    const problem = await res.json()
+    expect(problem).toMatchObject({ code: "auth/support_action_forbidden", status: 403, detail: "No disponible en soporte", title: "No disponible en soporte" })
     expect(postMock).not.toHaveBeenCalled()
   })
 

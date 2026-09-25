@@ -21,14 +21,20 @@ const KIND_ICONS: Record<PaymentMethodKind, LucideIcon> = {
 };
 
 /** Una fila de la lista: tipo, nombre, número enmascarado, titular y chips de estado. */
+/** Bajo soporte, el servidor solo deja CREAR el primer medio de cobro (editar o borrar: 403). */
+export const SUPPORT_PAYMENTS_NOTE = "En soporte solo se puede dar de alta el primer medio de cobro";
+
 export function PaymentMethodCard({
   method,
   onEdit,
   onDelete,
+  locked = false,
 }: {
   method: PaymentMethodDTO;
   onEdit: (method: PaymentMethodDTO) => void;
   onDelete: (method: PaymentMethodDTO) => void;
+  /** Sesión de soporte: editar y borrar no están permitidos (solo dar de alta el primero). */
+  locked?: boolean;
 }) {
   const Icon = KIND_ICONS[method.kind];
   const masked = maskAccountNumber(method.account_number, method.kind);
@@ -61,10 +67,26 @@ export function PaymentMethodCard({
         {method.instructions ? <p className="mt-2 text-xs text-muted-foreground">{method.instructions}</p> : null}
       </div>
       <div className="flex gap-1">
-        <Button type="button" variant="ghost" size="icon" aria-label={`Editar ${method.label}`} onClick={() => onEdit(method)}>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          aria-label={`Editar ${method.label}`}
+          onClick={() => onEdit(method)}
+          disabled={locked}
+          title={locked ? SUPPORT_PAYMENTS_NOTE : undefined}
+        >
           <Pencil className="size-4" aria-hidden />
         </Button>
-        <Button type="button" variant="ghost" size="icon" aria-label={`Eliminar ${method.label}`} onClick={() => onDelete(method)}>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          aria-label={`Eliminar ${method.label}`}
+          onClick={() => onDelete(method)}
+          disabled={locked}
+          title={locked ? SUPPORT_PAYMENTS_NOTE : undefined}
+        >
           <Trash2 className="size-4" aria-hidden />
         </Button>
       </div>

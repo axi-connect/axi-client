@@ -2,8 +2,8 @@
 
 /**
  * O11: la actividad de UNA sesión de soporte (una fila `support.*` por
- * request) en una sola fila expandible: «Sesión de soporte · N pantallas · M
- * cambios». Abierta, cada request con su método, ruta y status; nunca el body.
+ * request) en una sola fila expandible: «Sesión de soporte · N peticiones · M
+ * cambios» (cuenta peticiones de lectura, no pantallas). Abierta, cada request con su método, ruta y status; nunca el body.
  */
 import { useState } from "react";
 import { ChevronRight, LifeBuoy } from "lucide-react";
@@ -55,7 +55,7 @@ export function SupportActivityRow({
         <RelativeDate iso={occurredAt} className="w-24 shrink-0 text-xs text-muted-foreground" />
         <span className="inline-flex items-center gap-1.5">
           <LifeBuoy aria-hidden="true" className="size-3.5 text-accent-violet" />
-          Sesión de soporte · {plural(screens, "pantalla", "pantallas")} · {plural(changes, "cambio", "cambios")}
+          Sesión de soporte · {plural(screens, "petición", "peticiones")} · {plural(changes, "cambio", "cambios")}
           {failed > 0 ? ` · ${plural(failed, "rechazado", "rechazados")}` : ""}
         </span>
         <Badge variant="outline" className="ml-auto border-accent-violet/40 bg-accent-violet/10 text-accent-violet">

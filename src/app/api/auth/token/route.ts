@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { bffProblem } from "@/shared/auth/bff-response";
 import { NextResponse } from "next/server";
 import {
   getAccessTokenExpiry,
@@ -25,7 +26,7 @@ export async function GET() {
     const supportExpiresAt = getAccessTokenExpiry(supportToken);
     if (supportExpiresAt === null || supportExpiresAt <= Date.now()) {
       clearSupportCookie(store);
-      return NextResponse.json({ code: API_ERROR_CODES.supportSessionEnded }, { status: 401 });
+      return bffProblem(401, API_ERROR_CODES.supportSessionEnded, "La sesión de soporte terminó");
     }
     return NextResponse.json<WsTokenResponse>({ token: supportToken, expires_at: supportExpiresAt });
   }
@@ -39,7 +40,7 @@ export async function GET() {
   if (needsRefresh) {
     const result = await refreshSession(store);
     if (!result.ok) {
-      return NextResponse.json({ code: result.code }, { status: 401 });
+      return bffProblem(401, result.code, "Tu sesión expiró. Vuelve a iniciar sesión");
     }
     token = result.tokens.access_token;
     expiresAt = getAccessTokenExpiry(token) ?? Date.now() + result.tokens.expires_in * 1000;

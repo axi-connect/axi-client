@@ -32,3 +32,31 @@ describe("redeemFailure", () => {
     expect(redeemFailure(503, "client/network")).toBe("unavailable")
   })
 })
+
+describe("safeSupportNext: el next de /auth/soporte (open redirect)", () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { safeSupportNext, readHandoffNext } = require("../support-access") as typeof import("../support-access")
+  const ORIGIN = "https://app.axi-connect.co"
+
+  it.each(["//evil.com", "https://evil.com", "/\\evil.com", "javascript:alert(1)", "/%2F%2Fevil.com", "http:/evil.com", "/\tevil.com", "", null, "/auth/login", "/platform/tenants", "/dashboardx", " /dashboard"])(
+    "«%s» cae en /dashboard",
+    (next) => {
+      expect(safeSupportNext(next as string | null, ORIGIN)).toBe("/dashboard")
+    },
+  )
+
+  it.each([
+    ["/admin/agents", "/admin/agents"],
+    ["/settings/payments", "/settings/payments"],
+    ["/settings/company", "/settings/company"],
+    ["/catalog/products?q=1", "/catalog/products?q=1"],
+    ["/dashboard", "/dashboard"],
+  ])("«%s» es una pantalla del panel: %s", (next, expected) => {
+    expect(safeSupportNext(next, ORIGIN)).toBe(expected)
+  })
+
+  it("lee el next que viaja junto al código en el #", () => {
+    expect(readHandoffNext("#code=abc&next=%2Fadmin%2Fagents")).toBe("/admin/agents")
+    expect(readHandoffNext("#code=abc")).toBeNull()
+  })
+})

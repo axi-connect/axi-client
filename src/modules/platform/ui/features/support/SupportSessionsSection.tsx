@@ -71,7 +71,7 @@ function SessionRow({ session, tenantId }: { session: SupportSession; tenantId: 
         <p className="text-sm">
           <span className="font-medium">{who}</span>
           {" · "}
-          {formatSupportDuration(session.duration_s)} · {plural(session.request_count, "pantalla", "pantallas")} ·{" "}
+          {formatSupportDuration(session.duration_s)} · {plural(session.request_count, "petición", "peticiones")} ·{" "}
           {plural(session.changes_count, "cambio", "cambios")}
         </p>
         <p className="truncate text-xs text-muted-foreground" title={session.reason}>

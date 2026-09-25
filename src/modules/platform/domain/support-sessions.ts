@@ -14,9 +14,15 @@ export const SUPPORT_MAX_MINUTES = 60;
 export const SUPPORT_DEFAULT_MINUTES = 60;
 export const SUPPORT_REASON_MIN = 20;
 
-/** La pestaña de soporte: el código viaja en el `#`, nunca en la query. */
-export function supportTabUrl(handoffCode: string): string {
-  return `/auth/soporte#code=${encodeURIComponent(handoffCode)}`;
+/**
+ * La pestaña de soporte: el código viaja en el `#`, nunca en la query. `next`
+ * es la pantalla del panel a la que entra; `/auth/soporte` la vuelve a filtrar
+ * con su lista blanca.
+ */
+export function supportTabUrl(handoffCode: string, next?: string): string {
+  const params = new URLSearchParams({ code: handoffCode });
+  if (next) params.set("next", next);
+  return `/auth/soporte#${params.toString()}`;
 }
 
 export const SUPPORT_STATUS_LABELS: Record<SupportSession["status"], string> = {

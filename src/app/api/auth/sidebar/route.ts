@@ -1,3 +1,4 @@
+import { bffProblem } from "@/shared/auth/bff-response";
 import { NextResponse } from "next/server";
 import { http } from "@/core/services/http";
 import { isHttpError } from "@/core/api/problem";
@@ -15,9 +16,6 @@ export async function GET() {
     return NextResponse.json(navigation.data);
   } catch (error) {
     const status = isHttpError(error) ? error.status : 500;
-    return NextResponse.json(
-      { code: isHttpError(error) ? error.code : "client/network", message: "No fue posible cargar la navegación" },
-      { status },
-    );
+    return bffProblem(status, isHttpError(error) ? error.code : "client/network", "No fue posible cargar la navegación");
   }
 }

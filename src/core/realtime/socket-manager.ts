@@ -72,6 +72,17 @@ class SocketManager {
    */
   private halted = false;
 
+  /**
+   * El último código de rechazo del handshake (`auth/support_readonly_suspended`).
+   * Se guarda porque el `connect_error` llega antes de que monte quien lo
+   * explica (la barra de soporte): al montar, lo lee de aquí.
+   */
+  private lastConnectErrorCode: string | null = null;
+
+  getLastConnectErrorCode(): string | null {
+    return this.lastConnectErrorCode;
+  }
+
   halt(): void {
     this.halted = true;
     this.disconnectAll();
@@ -79,6 +90,7 @@ class SocketManager {
 
   reset(): void {
     this.halted = false;
+    this.lastConnectErrorCode = null;
   }
 
   /** Devuelve (creando si es necesario) el socket del namespace, ya conectando. */
@@ -126,6 +138,7 @@ class SocketManager {
       // tiempo real a propósito. Reintentar solo martillearía el server; se
       // corta y la barra de soporte lo explica.
       if (error?.data?.code === API_ERROR_CODES.supportReadonlySuspended) {
+        this.lastConnectErrorCode = API_ERROR_CODES.supportReadonlySuspended;
         this.halt();
         if (typeof window !== "undefined") {
           window.dispatchEvent(new CustomEvent(SUPPORT_SESSION_EVENT, { detail: error.data.code }));
