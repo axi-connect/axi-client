@@ -40,7 +40,12 @@ describe("SetPasswordFlow", () => {
   })
 
   it("con el enlace vivo pide la contraseña, la guarda y confirma", async () => {
-    inspect.mockResolvedValue({ purpose: "invite", email_masked: "an***@laespiga.co", expires_at: "2026-10-01T20:40:00Z" })
+    inspect.mockResolvedValue({
+      purpose: "invite",
+      email_masked: "an***@laespiga.co",
+      expires_at: "2026-10-01T20:40:00Z",
+      business_name: "Panadería La Espiga",
+    })
     setPassword.mockResolvedValue(undefined)
     render(<SetPasswordFlow purpose="invite" />)
 
@@ -48,6 +53,7 @@ describe("SetPasswordFlow", () => {
     expect(inspect).toHaveBeenCalledWith(TOKEN)
     expect(window.location.hash).toBe("")
     expect(screen.getByText(/vence el/)).toHaveTextContent("jue 1 oct · 3:40 p. m.")
+    expect(screen.getByText("Es la llave de tu panel de Panadería La Espiga. Solo tú la vas a conocer.")).toBeInTheDocument()
 
     fireEvent.change(screen.getByLabelText("Contraseña nueva"), { target: { value: "una frase larga" } })
     fireEvent.change(screen.getByLabelText("Repítela"), { target: { value: "una frase larga" } })
@@ -59,7 +65,7 @@ describe("SetPasswordFlow", () => {
   })
 
   it("rechaza una contraseña de menos de 12 caracteres sin llamar al servidor", async () => {
-    inspect.mockResolvedValue({ purpose: "invite", email_masked: "a***@x.co", expires_at: "2026-10-01T20:40:00Z" })
+    inspect.mockResolvedValue({ purpose: "invite", email_masked: "a***@x.co", expires_at: "2026-10-01T20:40:00Z", business_name: "X" })
     render(<SetPasswordFlow purpose="invite" />)
     const field = await screen.findByLabelText("Contraseña nueva")
     fireEvent.change(field, { target: { value: "corta" } })
@@ -68,8 +74,8 @@ describe("SetPasswordFlow", () => {
     expect(setPassword).not.toHaveBeenCalled()
   })
 
-  it("un enlace vencido ofrece pedir uno nuevo", async () => {
-    inspect.mockRejectedValue(tokenGone())
+  it.each(["expired", "revoked"])("un enlace %s ofrece pedir uno nuevo", async (reason) => {
+    inspect.mockRejectedValue(tokenGone(reason))
     render(<SetPasswordFlow purpose="invite" />)
     expect(await screen.findByRole("heading", { name: "Este enlace ya venció" })).toBeInTheDocument()
     expect(screen.getByText(/dura 72 horas/)).toBeInTheDocument()

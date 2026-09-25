@@ -129,6 +129,7 @@ export function SetPasswordFlow({ purpose }: { purpose: PasswordPurpose }) {
     purpose === "invite"
       ? {
           title: "Crea tu contraseña",
+          // Sin `info` (inspect falló por red) no hay nombre: la frase sale sin él.
           text: info?.business_name
             ? `Es la llave de tu panel de ${info.business_name}. Solo tú la vas a conocer.`
             : "Es la llave de tu panel. Solo tú la vas a conocer.",

@@ -18,7 +18,6 @@ describe("readTokenFromHash", () => {
 describe("invalidLinkReason", () => {
   it("solo dice «ya se usó» cuando el servidor lo afirma", () => {
     expect(invalidLinkReason({ reason: "consumed" })).toBe("used")
-    expect(invalidLinkReason({ reason: "used" })).toBe("used")
   })
 
   it("en cualquier otro caso asume vencido, que ofrece pedir un enlace nuevo", () => {

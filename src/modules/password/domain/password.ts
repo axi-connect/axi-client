@@ -16,16 +16,21 @@ export type PasswordPurpose = "invite" | "reset"
 
 /**
  * TEMPORAL hasta schema.d.ts — sustituir por el DTO de
- * `POST /auth/password/token/inspect`. `business_name` NO está en el contrato:
- * si el servidor lo añade, el título de «Crea tu contraseña» lo usa; si no, la
- * frase sale sin él.
+ * `POST /auth/password/token/inspect` (contrato confirmado por el servidor:
+ * `{ purpose, email_masked, expires_at, business_name }`).
  */
 export type PasswordTokenInfo = {
   purpose: PasswordPurpose
   email_masked: string
   expires_at: string
-  business_name?: string | null
+  business_name: string
 }
+
+/**
+ * TEMPORAL hasta schema.d.ts — `details.reason` del 410
+ * `auth/password_token_invalid`.
+ */
+export type PasswordTokenInvalidReason = "expired" | "consumed" | "revoked"
 
 /** Cuánto vive cada enlace, en palabras (copy-v2 §5: «72 horas», «1 hora»). */
 export const TOKEN_LIFETIME_LABEL: Record<PasswordPurpose, string> = {
@@ -37,15 +42,15 @@ export const TOKEN_LIFETIME_LABEL: Record<PasswordPurpose, string> = {
 export type InvalidLinkReason = "expired" | "used"
 
 /**
- * El servidor responde 410 `auth/password_token_invalid` con un solo código
- * para vencido, usado o revocado (no revela más). Si trae `details.reason`
- * («consumed»/«used»), la pantalla dice «ya se usó»; en cualquier otro caso
- * dice «venció», que es el que ofrece la salida útil: pedir un enlace nuevo.
+ * El servidor responde 410 `auth/password_token_invalid` con
+ * `details.reason: 'expired' | 'consumed' | 'revoked'`. «consumed» dice «ya se
+ * usó»; «expired» y «revoked» (reenviar invalida el anterior) dicen «venció»,
+ * que ofrece la salida útil: pedir un enlace nuevo. Sin `reason`, también.
  */
 export function invalidLinkReason(details: unknown): InvalidLinkReason {
   const reason =
     typeof details === "object" && details !== null ? (details as { reason?: unknown }).reason : undefined
-  return reason === "consumed" || reason === "used" ? "used" : "expired"
+  return reason === ("consumed" satisfies PasswordTokenInvalidReason) ? "used" : "expired"
 }
 
 /**
