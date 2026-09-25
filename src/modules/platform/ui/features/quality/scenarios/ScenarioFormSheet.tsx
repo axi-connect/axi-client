@@ -34,7 +34,7 @@ import {
 } from "../../../../infrastructure/api/hooks/use-quality-scenarios";
 import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import { droppedCriterionText, type ScenarioDraft } from "../../../../domain/quality-capabilities";
-import { StatusBadge } from "../../../components/StatusBadge";
+import { QualityStatus } from "../shared/premium";
 import { AttachmentsEditor } from "./AttachmentsEditor";
 import { CriteriaEditor } from "./CriteriaEditor";
 import { CriteriaList } from "./CriteriaList";
@@ -295,7 +295,7 @@ function ScenarioReadView({
     <div className="space-y-5">
       <div className="flex flex-wrap items-center gap-2">
         <span className="font-mono text-xs text-muted-foreground">{scenario.code}</span>
-        <StatusBadge status={scenario.status} />
+        <QualityStatus status={scenario.status} />
         {scenario.is_system && (
           <Badge variant="outline" className="border-accent-violet/40 bg-accent-violet/10 text-accent-violet">
             Sistema

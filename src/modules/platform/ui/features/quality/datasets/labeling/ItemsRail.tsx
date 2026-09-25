@@ -18,7 +18,7 @@ import {
   type DatasetKind,
   type LabelStatus,
 } from "../../../../../domain/quality-datasets";
-import { StatusBadge } from "../../../../components/StatusBadge";
+import { QualityStatus } from "../../shared/premium";
 
 type ItemsRailProps = {
   kind: DatasetKind;
@@ -96,7 +96,7 @@ export function ItemsRail({ kind, name, remaining, filter, onFilterChange, items
                   <span className="block truncate font-medium">{itemTitle(kind, item)}</span>
                   <span className="block truncate text-xs text-muted-foreground">{itemSubtitle(kind, item)}</span>
                 </span>
-                <StatusBadge status={labelStatusKey(item.label_status)} />
+                <QualityStatus status={labelStatusKey(item.label_status)} />
               </button>
             </li>
           );

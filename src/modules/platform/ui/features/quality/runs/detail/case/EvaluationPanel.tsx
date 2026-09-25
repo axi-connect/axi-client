@@ -3,12 +3,12 @@
  * de alucinación, resumen e issues por severidad. `evaluation` es null hasta
  * que el juez corre (o para siempre si el case se purgó/bloqueó).
  */
-import { cn } from "@/core/lib/utils";
 import { Badge } from "@/shared/components/ui/badge";
 import type { CaseDetail } from "../../../../../../domain/quality-runs";
 import { scoreTone } from "../../../../../../domain/thresholds";
 import { formatScore } from "../../../../analytics/analytics-format";
 import { MetricCell } from "../../../../analytics/MetricCell";
+import { TonePill, type QualityTone } from "../../../shared/premium";
 
 const SUB_SCORES: { key: keyof NonNullable<CaseDetail["evaluation"]>; label: string }[] = [
   { key: "score_accuracy", label: "Precisión" },
@@ -17,13 +17,13 @@ const SUB_SCORES: { key: keyof NonNullable<CaseDetail["evaluation"]>; label: str
   { key: "score_tone", label: "Tono" },
 ];
 
-const SEVERITY_CLASSES: Record<string, string> = {
-  high: "border-destructive/40 bg-destructive/10 text-destructive",
-  critical: "border-destructive/40 bg-destructive/10 text-destructive",
-  major: "border-destructive/40 bg-destructive/10 text-destructive",
-  medium: "border-warning/40 bg-warning/10 text-warning",
-  minor: "border-warning/40 bg-warning/10 text-warning",
-  low: "border-border bg-muted text-muted-foreground",
+const SEVERITY_TONE: Record<string, QualityTone> = {
+  high: "destructive",
+  critical: "destructive",
+  major: "destructive",
+  medium: "warning",
+  minor: "warning",
+  low: "neutral",
 };
 
 export function EvaluationPanel({ evaluation }: { evaluation: CaseDetail["evaluation"] }) {
@@ -44,9 +44,7 @@ export function EvaluationPanel({ evaluation }: { evaluation: CaseDetail["evalua
           </Badge>
         )}
         {evaluation.hallucination_severity && evaluation.hallucination_severity !== "none" && (
-          <Badge variant="outline" className="border-destructive/40 bg-destructive/10 text-destructive">
-            Alucinación: {evaluation.hallucination_severity}
-          </Badge>
+          <TonePill tone="destructive">Alucinación: {evaluation.hallucination_severity}</TonePill>
         )}
       </div>
 
@@ -70,12 +68,7 @@ export function EvaluationPanel({ evaluation }: { evaluation: CaseDetail["evalua
         <ul className="space-y-1.5">
           {evaluation.issues.map((issue, index) => (
             <li key={`${issue.code}-${index}`} className="flex items-start gap-2 text-sm">
-              <Badge
-                variant="outline"
-                className={cn("shrink-0", SEVERITY_CLASSES[issue.severity] ?? SEVERITY_CLASSES.low)}
-              >
-                {issue.severity}
-              </Badge>
+              <TonePill tone={SEVERITY_TONE[issue.severity] ?? "neutral"}>{issue.severity}</TonePill>
               <span className="min-w-0">
                 <span className="font-mono text-xs text-muted-foreground">{issue.code}</span>
                 <span className="block text-sm">{issue.detail}</span>

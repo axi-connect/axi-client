@@ -21,7 +21,7 @@ import type { RunListItem } from "../../../../domain/quality-runs";
 import { scoreTone } from "../../../../domain/thresholds";
 import { formatScore } from "../../analytics/analytics-format";
 import { MetricCell } from "../../analytics/MetricCell";
-import { StatusBadge } from "../../../components/StatusBadge";
+import { QualityStatus } from "../shared/premium";
 import { RunRowActions } from "./RunRowActions";
 import { aiModeLabel, formatSpendUsd, runKindBadgeClass, runKindLabel, runScopeLabel } from "./runs-format";
 
@@ -79,7 +79,7 @@ export function RunsTable({ runs }: { runs: RunListItem[] }) {
                 </TableCell>
                 <TableCell className="max-w-48 truncate font-mono text-xs">{runScopeLabel(run)}</TableCell>
                 <TableCell>
-                  <StatusBadge status={run.status} />
+                  <QualityStatus status={run.status} />
                 </TableCell>
                 <TableCell className="text-right tabular-nums">
                   {settled === 0 && run.cases_total === 0 ? (

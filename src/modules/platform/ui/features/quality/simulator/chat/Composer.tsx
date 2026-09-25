@@ -72,9 +72,9 @@ export function Composer({ disabled, disabledReason, pending, capUsd, dailyCapUs
   };
 
   return (
-    <div className="space-y-2 border-t border-border/60 px-3 py-2.5">
+    <div className="space-y-2 border-t border-border px-4 pt-3 pb-3.5">
       {previewing ? (
-        <div className="flex items-center gap-2 rounded-xl border border-border bg-secondary/60 px-3 py-2">
+        <div className="flex items-center gap-2 rounded-2xl border border-border bg-secondary px-3 py-2">
           <Mic aria-hidden="true" className="size-4 text-brand" />
           <span className="text-sm">Nota de voz · {formatSeconds(recorder.recording?.duration_ms ?? 0)}</span>
           <audio controls preload="metadata" src={recorder.recording?.object_url} className="h-8 max-w-[14rem] flex-1">
@@ -89,8 +89,8 @@ export function Composer({ disabled, disabledReason, pending, capUsd, dailyCapUs
           </Button>
         </div>
       ) : (
-        <div className="flex items-end gap-2">
-          <div className="flex items-center gap-0.5 text-muted-foreground">
+        <div className="flex items-end gap-1.5 rounded-2xl border border-input bg-card p-1.5 transition-[box-shadow,border-color] has-[textarea:focus-visible]:border-ring has-[textarea:focus-visible]:ring-[3px] has-[textarea:focus-visible]:ring-ring/50">
+          <div className="flex h-10 items-center gap-0.5 text-muted-foreground">
             <input ref={fileInputRef} type="file" accept={IMAGE_ACCEPT} className="hidden" onChange={pickImage} aria-label="Elegir imagen" />
             <Button type="button" variant="ghost" size="icon" className="size-8" disabled={disabled || pending || recording} onClick={() => fileInputRef.current?.click()} aria-label="Adjuntar imagen">
               <ImageIcon aria-hidden="true" />
@@ -114,7 +114,7 @@ export function Composer({ disabled, disabledReason, pending, capUsd, dailyCapUs
             </Button>
           </div>
           {recording ? (
-            <p className="flex h-11 flex-1 items-center gap-2 rounded-md border border-destructive/40 px-3 text-sm" aria-live="polite">
+            <p className="flex h-10 flex-1 items-center gap-2 px-2 text-sm" aria-live="polite">
               <span className="size-2 animate-pulse rounded-full bg-destructive motion-reduce:animate-none" aria-hidden="true" />
               Grabando… {formatSeconds(recorder.elapsedMs)}
             </p>
@@ -132,11 +132,11 @@ export function Composer({ disabled, disabledReason, pending, capUsd, dailyCapUs
               disabled={disabled}
               placeholder={disabled ? disabledReason ?? "La sesión no acepta mensajes" : "Escribe como el cliente… (Enter envía, Shift+Enter salto)"}
               rows={1}
-              className="min-h-11 max-h-40 flex-1 resize-none"
+              className="max-h-40 min-h-10 flex-1 resize-none border-0 bg-transparent px-2 shadow-none focus-visible:ring-0 dark:bg-transparent"
               aria-label="Mensaje del cliente simulado"
             />
           )}
-          <Button type="button" size="icon" onClick={send} disabled={!canSend || recording} aria-label="Enviar">
+          <Button type="button" size="icon" className="size-10 rounded-xl" onClick={send} disabled={!canSend || recording} aria-label="Enviar">
             <SendHorizontal aria-hidden="true" />
           </Button>
         </div>
@@ -147,9 +147,7 @@ export function Composer({ disabled, disabledReason, pending, capUsd, dailyCapUs
         </p>
       )}
       <p className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
-        <span>
-          Entra por el pipeline real: batching, tools, botones y medios como en WhatsApp. Cada turno se cobra a plataforma.
-        </span>
+        <span>Pipeline real: lote de mensajes, tools, botones y medios como en WhatsApp. Cada turno se cobra a plataforma.</span>
         <span className="tabular-nums">
           tope {formatUsd(capUsd)} · diario {formatUsd(dailyCapUsd)}
         </span>

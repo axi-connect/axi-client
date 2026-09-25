@@ -30,7 +30,7 @@ import {
 import { useCapabilitiesQuery } from "../../../../infrastructure/api/hooks/use-quality-capabilities";
 import { EmptyState } from "../../../components/EmptyState";
 import { ProblemAlert } from "../../../components/ProblemAlert";
-import { StatusBadge } from "../../../components/StatusBadge";
+import { QualityStatus } from "../shared/premium";
 import { TenantSelect } from "../../../components/TenantSelect";
 
 export function CapabilitiesView() {
@@ -110,7 +110,7 @@ export function CapabilitiesView() {
                       <span className="block truncate text-xs text-muted-foreground">{capability.description}</span>
                     </TableCell>
                     <TableCell>
-                      <StatusBadge status={CAPABILITY_STATUS_KEY[capability.status]} />
+                      <QualityStatus status={CAPABILITY_STATUS_KEY[capability.status]} />
                     </TableCell>
                     <TableCell className="tabular-nums">{capabilityMetricText(capability)}</TableCell>
                     <TableCell className="text-right tabular-nums text-muted-foreground">{capabilitySampleText(capability)}</TableCell>

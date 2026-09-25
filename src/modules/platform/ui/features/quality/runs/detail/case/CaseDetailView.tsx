@@ -13,7 +13,7 @@ import { isCaseSettled } from "../../../../../../domain/quality-runs";
 import { useRunCaseQuery } from "../../../../../../infrastructure/api/hooks/use-quality-runs";
 import { EmptyState } from "../../../../../components/EmptyState";
 import { ProblemAlert } from "../../../../../components/ProblemAlert";
-import { StatusBadge } from "../../../../../components/StatusBadge";
+import { QualityStatus } from "../../../shared/premium";
 import { ConvertToScenarioButton } from "../../../shared/ConvertToScenarioButton";
 import { FailureReasonBadge } from "../FailureReasonBadge";
 import { ChecksPanel } from "./ChecksPanel";
@@ -65,7 +65,7 @@ export function CaseDetailView({ runId, caseId }: { runId: string; caseId: strin
               "Conversación sintética"
             )}
           </h2>
-          <StatusBadge status={runCase.status} />
+          <QualityStatus status={runCase.status} />
           <FailureReasonBadge reason={runCase.failure_reason} />
           <span className="text-xs text-muted-foreground tabular-nums">
             {runCase.turns_used} {runCase.turns_used === 1 ? "turno" : "turnos"}

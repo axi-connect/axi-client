@@ -30,7 +30,7 @@ import {
 import { ConfirmTyped } from "../../../../components/ConfirmTyped";
 import { EmptyState } from "../../../../components/EmptyState";
 import { ProblemAlert } from "../../../../components/ProblemAlert";
-import { StatusBadge } from "../../../../components/StatusBadge";
+import { QualityStatus } from "../../shared/premium";
 import { aiModeLabel, runKindBadgeClass, runKindLabel, runScopeLabel } from "../runs-format";
 import { DATASET_KIND_LABELS, type DatasetKind } from "../../../../../domain/quality-datasets";
 import { ProbeResultsPanel } from "./ProbeResultsPanel";
@@ -111,7 +111,7 @@ export function RunDetailView({ runId }: { runId: string }) {
               </Badge>
               {mode && <span className="text-xs text-muted-foreground">{mode}</span>}
               <h2 className="text-xl font-semibold tracking-tight">{run.company_name}</h2>
-              <StatusBadge status={run.status} />
+              <QualityStatus status={run.status} />
             </div>
             <p className="text-sm text-muted-foreground">
               {run.kind === "probe"

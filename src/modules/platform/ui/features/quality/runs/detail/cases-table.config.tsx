@@ -16,7 +16,7 @@ import {
 import { scoreTone } from "../../../../../domain/thresholds";
 import { formatScore } from "../../../analytics/analytics-format";
 import { MetricCell } from "../../../analytics/MetricCell";
-import { StatusBadge } from "../../../../components/StatusBadge";
+import { QualityStatus } from "../../shared/premium";
 import { FailureReasonBadge } from "./FailureReasonBadge";
 
 /** Fila plana para la tabla (solo primitivos — contrato del DataTable). */
@@ -76,7 +76,7 @@ export function buildCaseColumns(runId: string): ColumnDef<CaseRow>[] {
       searchable: false,
       alwaysVisible: true,
       minWidth: 110,
-      cell: ({ row }) => <StatusBadge status={row.original.status} />,
+      cell: ({ row }) => <QualityStatus status={row.original.status} />,
     },
     {
       accessorKey: "turns_used",
