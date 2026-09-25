@@ -8,7 +8,7 @@
  * (`validateCriteriaSet`, espejo del backend). Los criterios `unknown` se
  * muestran bloqueados con aviso de que se excluirán al guardar.
  */
-import { Plus, TriangleAlert, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import {
@@ -36,6 +36,7 @@ import {
   type StageKind,
   type SuccessCriterion,
 } from "../../../../domain/quality";
+import { TonePill } from "../shared/premium";
 
 type CriteriaEditorProps = {
   value: SuccessCriterion[];
@@ -103,72 +104,92 @@ export function CriteriaEditor({ value, onChange, disabled = false }: CriteriaEd
     onChange(value.filter((_, i) => i !== index));
   }
 
+  // Agrupado por familia para leerlo como una lista de reglas (premium F6); el
+  // orden del arreglo no cambia: cada fila conserva su índice real.
+  const indexed = value.map((criterion, index) => ({ criterion, index }));
+  const unknown = indexed.filter(({ criterion }) => criterion.kind === "unknown");
+  const groups = CRITERION_FAMILIES.map((family) => ({
+    family,
+    rows: indexed.filter(
+      ({ criterion }) => criterion.kind !== "unknown" && CRITERION_KINDS.find((kind) => kind.value === criterion.kind)?.family === family,
+    ),
+  })).filter((group) => group.rows.length > 0);
+
   return (
-    <div className="space-y-2">
-      <ul className="space-y-2">
-        {value.map((criterion, index) => (
-          <li
-            key={index}
-            className="space-y-2 rounded-xl border border-border bg-muted/30 p-3"
-          >
-            {criterion.kind === "unknown" ? (
-              <div className="flex items-center justify-between gap-2 text-sm">
-                <span className="flex items-center gap-2 text-warning">
-                  <TriangleAlert aria-hidden="true" className="size-4 shrink-0" />
-                  {criterionLabel(criterion)} — se excluirá al guardar
-                </span>
-                {!disabled && (
-                  <RemoveButton index={index} onRemove={removeAt} />
-                )}
-              </div>
-            ) : (
-              <>
-                <div className="flex items-center gap-2">
-                  <Select
-                    value={criterion.kind}
-                    onValueChange={(kind) => updateAt(index, blankCriterion(kind as KnownKind))}
+    <div className="space-y-3">
+      {unknown.length > 0 && (
+        <ul className="space-y-2">
+          {unknown.map(({ criterion, index }) => (
+            <li key={index} className="flex items-center justify-between gap-2 rounded-2xl bg-muted px-3 py-2.5 text-sm">
+              <span className="flex min-w-0 items-center gap-2">
+                <TonePill tone="warning">ilegible</TonePill>
+                <span className="min-w-0 truncate">{criterionLabel(criterion)} — se excluirá al guardar</span>
+              </span>
+              {!disabled && <RemoveButton index={index} onRemove={removeAt} />}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {groups.map((group) => (
+        <section key={group.family} aria-label={group.family} className="space-y-2">
+          <p className="flex items-center justify-between text-[11px] font-medium tracking-[0.08em] text-muted-foreground uppercase">
+            <span>{group.family}</span>
+            <span className="tabular-nums">{group.rows.length}</span>
+          </p>
+          <ul className="space-y-2">
+            {group.rows.map(({ criterion, index }) => {
+              if (criterion.kind === "unknown") return null;
+              const meta = CRITERION_KINDS.find((kind) => kind.value === criterion.kind);
+              return (
+                <li key={index} className="space-y-2.5 rounded-2xl bg-muted p-3">
+                  <div className="flex flex-wrap items-start gap-2">
+                    <span className="min-w-48 flex-1">
+                      <span className="block text-sm font-medium">{meta?.description ?? criterionLabel(criterion)}</span>
+                      <span className="block truncate font-mono text-[11px] text-muted-foreground">{criterion.kind}</span>
+                    </span>
+                    <Select
+                      value={criterion.kind}
+                      onValueChange={(kind) => updateAt(index, blankCriterion(kind as KnownKind))}
+                      disabled={disabled}
+                    >
+                      <SelectTrigger size="sm" className="w-44 shrink-0 bg-card" aria-label={`Tipo del criterio ${index + 1}`}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CRITERION_FAMILIES.map((family) => (
+                          <SelectGroup key={family}>
+                            <SelectLabel>{family}</SelectLabel>
+                            {CRITERION_KINDS.filter((kind) => kind.family === family).map((kind) => (
+                              <SelectItem key={kind.value} value={kind.value}>
+                                {kind.label}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {!disabled && <RemoveButton index={index} onRemove={removeAt} />}
+                  </div>
+
+                  <CriterionFields
+                    criterion={criterion}
+                    index={index}
                     disabled={disabled}
-                  >
-                    <SelectTrigger className="w-full sm:w-64" aria-label={`Tipo del criterio ${index + 1}`}>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CRITERION_FAMILIES.map((family) => (
-                        <SelectGroup key={family}>
-                          <SelectLabel>{family}</SelectLabel>
-                          {CRITERION_KINDS.filter((kind) => kind.family === family).map((kind) => (
-                            <SelectItem key={kind.value} value={kind.value}>
-                              {kind.label}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {!disabled && <RemoveButton index={index} onRemove={removeAt} />}
-                </div>
-
-                <p className="text-xs text-muted-foreground">
-                  {CRITERION_KINDS.find((kind) => kind.value === criterion.kind)?.description}
-                </p>
-
-                <CriterionFields
-                  criterion={criterion}
-                  index={index}
-                  disabled={disabled}
-                  onChange={(next) => updateAt(index, next)}
-                />
-              </>
-            )}
-          </li>
-        ))}
-      </ul>
+                    onChange={(next) => updateAt(index, next)}
+                  />
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ))}
 
       {!disabled && (
         <Button
           type="button"
           variant="outline"
-          size="sm"
+          className="w-full border-dashed"
           onClick={() => onChange([...value, blankCriterion("order_created")])}
           disabled={value.length >= MAX_CRITERIA}
         >
