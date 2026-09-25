@@ -103,9 +103,9 @@ export function ProbeResultsPanel({ run }: { run: RunDetail }) {
 
   return (
     <div className="space-y-4">
-      <section className="space-y-3 rounded-2xl border border-border bg-background">
-        <div className="flex flex-wrap items-center justify-between gap-2 px-4 pt-4">
-          <h3 className="text-base font-semibold">Resultados por ítem</h3>
+      <section className="min-w-0 space-y-3 overflow-hidden rounded-3xl border border-border bg-card">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-5 pt-5">
+          <h3 className="text-lg font-bold">Resultados por ítem</h3>
           <SegmentedControl
             value={onlyMisses}
             onValueChange={(value) => {
@@ -114,6 +114,7 @@ export function ProbeResultsPanel({ run }: { run: RunDetail }) {
             }}
             label="Filtro de resultados"
             size="sm"
+            surface="inline"
             items={[
               { value: "misses" as const, label: "Solo fallos" },
               { value: "all" as const, label: "Todos" },
@@ -121,15 +122,15 @@ export function ProbeResultsPanel({ run }: { run: RunDetail }) {
           />
         </div>
         {results.isPending ? (
-          <div className="px-4 pb-4">
+          <div className="px-5 pb-5">
             <TableSkeleton rows={4} />
           </div>
         ) : results.isError ? (
-          <div className="px-4 pb-4">
+          <div className="px-5 pb-5">
             <ProblemAlert error={results.error} onRetry={() => void results.refetch()} />
           </div>
         ) : rows.length === 0 ? (
-          <p className="px-4 pb-4 text-sm text-muted-foreground">
+          <p className="px-5 pb-5 text-sm text-muted-foreground">
             {onlyMisses === "misses" ? "Sin fallos: todos los ítems acertaron." : "Sin resultados (¿el dataset se eliminó?)."}
           </p>
         ) : (
@@ -181,14 +182,14 @@ export function ProbeResultsPanel({ run }: { run: RunDetail }) {
             </Table>
           </div>
         )}
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 px-4 py-2.5 text-xs text-muted-foreground">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border px-5 py-3 text-xs text-muted-foreground">
           <span className="tabular-nums">
             {total} {onlyMisses === "misses" ? (total === 1 ? "fallo" : "fallos") : total === 1 ? "ítem" : "ítems"}
             {metrics ? ` de ${metrics.items}` : ""} · cada fallo puede volver al dataset con la etiqueta corregida
           </span>
           <span className="flex items-center gap-3">
             {run.dataset && (
-              <Link href={`/platform/quality/datasets/${run.dataset.id}`} prefetch={false} className="underline underline-offset-2">
+              <Link href={`/platform/quality/datasets/${run.dataset.id}`} prefetch={false} className="inline-flex min-h-6 items-center font-medium text-foreground underline-offset-4 hover:underline">
                 Abrir el dataset
               </Link>
             )}
@@ -198,7 +199,7 @@ export function ProbeResultsPanel({ run }: { run: RunDetail }) {
       </section>
 
       {metrics?.probe_kind === "recognition" && (
-        <section className="grid gap-4 rounded-2xl border border-border bg-background p-4 lg:grid-cols-2">
+        <section className="grid min-w-0 gap-6 rounded-3xl border border-border bg-card p-5 lg:grid-cols-2">
           <div className="space-y-2">
             <h4 className="text-sm font-semibold">Calibración por confianza</h4>
             <Table>
@@ -214,7 +215,7 @@ export function ProbeResultsPanel({ run }: { run: RunDetail }) {
                 {metrics.calibration.map((row) => (
                   <TableRow key={row.confidence}>
                     <TableCell>{row.confidence === "high" ? "alta" : row.confidence === "medium" ? "media" : row.confidence === "low" ? "baja" : "sin candidatos"}</TableCell>
-                    <TableCell className="text-right tabular-nums text-success">{row.hits}</TableCell>
+                    <TableCell className="text-right tabular-nums">{row.hits}</TableCell>
                     <TableCell className={cn("text-right tabular-nums", row.misses > 0 && row.confidence === "high" && "text-destructive")}>{row.misses}</TableCell>
                     <TableCell className="text-right tabular-nums">{formatRatio(row.mean_top_score)}</TableCell>
                   </TableRow>
@@ -243,7 +244,7 @@ export function ProbeResultsPanel({ run }: { run: RunDetail }) {
       )}
 
       {metrics?.probe_kind === "intent" && metrics.confusion.length > 0 && (
-        <section className="space-y-2 rounded-2xl border border-border bg-background p-4">
+        <section className="min-w-0 space-y-2 rounded-3xl border border-border bg-card p-5">
           <h4 className="text-sm font-semibold">Matriz de confusión</h4>
           <ul className="grid gap-1 text-sm sm:grid-cols-2">
             {metrics.confusion.map((row) => (

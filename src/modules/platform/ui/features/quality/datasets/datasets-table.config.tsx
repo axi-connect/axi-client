@@ -15,7 +15,7 @@ import {
   type DatasetKind,
   type DatasetListItem,
 } from "../../../../domain/quality-datasets";
-import { StatusBadge } from "../../../components/StatusBadge";
+import { QualityStatus } from "../shared/premium";
 import { DatasetRowActions } from "./DatasetRowActions";
 
 export type DatasetRow = {
@@ -132,7 +132,7 @@ export function buildDatasetColumns(handlers: {
       header: "Estado",
       searchable: false,
       minWidth: 100,
-      cell: ({ row }) => <StatusBadge status={row.original.status} />,
+      cell: ({ row }) => <QualityStatus status={row.original.status} />,
     },
     {
       id: "actions",

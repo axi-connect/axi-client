@@ -8,7 +8,7 @@ import type { ColumnDef } from "@/shared/components/features/data-table";
 import { Badge } from "@/shared/components/ui/badge";
 import { RelativeDate } from "@/shared/components/ui/relative-date";
 import type { Scenario, ScenarioListItem } from "../../../../domain/quality";
-import { StatusBadge } from "../../../components/StatusBadge";
+import { QualityStatus } from "../shared/premium";
 import { ScenarioRowActions } from "./ScenarioRowActions";
 
 /** Fila plana para la tabla (solo primitivos — contrato del DataTable). */
@@ -93,7 +93,7 @@ export function buildScenarioColumns(handlers: {
       searchable: false,
       alwaysVisible: true,
       minWidth: 110,
-      cell: ({ row }) => <StatusBadge status={row.original.status} />,
+      cell: ({ row }) => <QualityStatus status={row.original.status} />,
     },
     {
       accessorKey: "updated_at",

@@ -15,21 +15,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/shared/components/ui/table";
-import { Badge } from "@/shared/components/ui/badge";
 import { RelativeDate } from "@/shared/components/ui/relative-date";
 import type { RunListItem } from "../../../../domain/quality-runs";
 import { scoreTone } from "../../../../domain/thresholds";
 import { formatScore } from "../../analytics/analytics-format";
 import { MetricCell } from "../../analytics/MetricCell";
-import { StatusBadge } from "../../../components/StatusBadge";
+import { Meter, QualityStatus, ToneDot } from "../shared/premium";
+import { RunKindChip } from "./RunKindChip";
 import { RunRowActions } from "./RunRowActions";
-import { aiModeLabel, formatSpendUsd, runKindBadgeClass, runKindLabel, runScopeLabel } from "./runs-format";
+import { aiModeLabel, formatSpendUsd, runScopeLabel } from "./runs-format";
 
 export function RunsTable({ runs }: { runs: RunListItem[] }) {
   const router = useRouter();
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-border bg-background">
+    <div className="overflow-x-auto rounded-3xl border border-border bg-card">
       <Table>
         <TableHeader>
           <TableRow>
@@ -38,7 +38,7 @@ export function RunsTable({ runs }: { runs: RunListItem[] }) {
             <TableHead>Agente</TableHead>
             <TableHead>Alcance</TableHead>
             <TableHead>Estado</TableHead>
-            <TableHead className="text-right">Resultado</TableHead>
+            <TableHead>Resultado</TableHead>
             <TableHead className="text-right">Score juez</TableHead>
             <TableHead className="text-right">Gasto</TableHead>
             <TableHead>Creada</TableHead>
@@ -58,9 +58,7 @@ export function RunsTable({ runs }: { runs: RunListItem[] }) {
               >
                 <TableCell>
                   <span className="flex items-center gap-1.5">
-                    <Badge variant="outline" className={runKindBadgeClass(run.kind)}>
-                      {runKindLabel(run.kind)}
-                    </Badge>
+                    <RunKindChip kind={run.kind} />
                     {mode && <span className="text-xs text-muted-foreground">{mode}</span>}
                   </span>
                 </TableCell>
@@ -77,28 +75,38 @@ export function RunsTable({ runs }: { runs: RunListItem[] }) {
                     <span className="text-muted-foreground">—</span>
                   )}
                 </TableCell>
-                <TableCell className="max-w-48 truncate font-mono text-xs">{runScopeLabel(run)}</TableCell>
+                <TableCell className="max-w-40 truncate font-mono text-xs" title={runScopeLabel(run)}>{runScopeLabel(run)}</TableCell>
                 <TableCell>
-                  <StatusBadge status={run.status} />
+                  <QualityStatus status={run.status} />
                 </TableCell>
-                <TableCell className="text-right tabular-nums">
+                <TableCell className="min-w-40 tabular-nums">
                   {settled === 0 && run.cases_total === 0 ? (
                     <span className="text-muted-foreground">—</span>
                   ) : (
-                    <span className="whitespace-nowrap">
-                      <span className="text-success">{run.cases_passed}✓</span>{" "}
-                      <span className={run.cases_failed > 0 ? "text-destructive" : "text-muted-foreground"}>
-                        {run.cases_failed}✗
+                    <span className="flex flex-col gap-1.5">
+                      <span className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5">
+                        <span className="whitespace-nowrap">
+                          <span className="font-medium">{run.cases_passed}</span> de {run.cases_total} {run.kind === "probe" ? "aciertos" : "aprobados"}
+                        </span>
+                        {run.cases_failed > 0 && (
+                          <span className="inline-flex items-center gap-1 text-muted-foreground" title={run.kind === "probe" ? "Fallos" : "Casos fallidos"}>
+                            <ToneDot tone="destructive" />
+                            {run.cases_failed}
+                          </span>
+                        )}
+                        {run.cases_blocked > 0 && (
+                          <span className="inline-flex items-center gap-1 text-muted-foreground" title="Casos bloqueados">
+                            <ToneDot tone="warning" />
+                            {run.cases_blocked}
+                          </span>
+                        )}
                       </span>
-                      {run.cases_blocked > 0 && (
-                        <span className="text-warning"> {run.cases_blocked}⊘</span>
-                      )}
-                      <span className="text-muted-foreground"> / {run.cases_total}</span>
+                      <Meter value={run.cases_total === 0 ? 0 : run.cases_passed / run.cases_total} />
                     </span>
                   )}
                 </TableCell>
                 <TableCell className="text-right">
-                  <MetricCell tone={scoreTone(run.avg_judge_score)}>
+                  <MetricCell appearance="dot" tone={scoreTone(run.avg_judge_score)}>
                     {formatScore(run.avg_judge_score)}
                   </MetricCell>
                 </TableCell>
@@ -109,7 +117,7 @@ export function RunsTable({ runs }: { runs: RunListItem[] }) {
                   {formatSpendUsd(run.spend_usd)}
                 </TableCell>
                 <TableCell>
-                  <RelativeDate iso={run.created_at} className="text-muted-foreground" />
+                  <RelativeDate iso={run.created_at} className="whitespace-nowrap text-muted-foreground" />
                 </TableCell>
                 {/* Las acciones no deben disparar la navegación de la fila. */}
                 <TableCell className="w-10" onClick={(e) => e.stopPropagation()}>

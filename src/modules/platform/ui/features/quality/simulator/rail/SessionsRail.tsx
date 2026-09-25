@@ -14,7 +14,7 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import { formatUsd, sessionStatusKey, sessionStatusLabel } from "../../../../../domain/quality-sessions";
 import { useSessionsQuery } from "../../../../../infrastructure/api/hooks/use-quality-sessions";
 import { ProblemAlert } from "../../../../components/ProblemAlert";
-import { StatusBadge } from "../../../../components/StatusBadge";
+import { QualityStatus } from "../../shared/premium";
 import { ALL_TENANTS, TenantSelect } from "../../../../components/TenantSelect";
 
 type SessionsRailProps = {
@@ -33,9 +33,9 @@ export function SessionsRail({ currentId, tenantFilter, onTenantFilterChange }: 
   const sessions = sessionsQuery.data?.data ?? [];
 
   return (
-    <aside className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-border bg-background" aria-label="Mis sesiones">
-      <div className="flex items-center justify-between gap-2 border-b border-border/60 px-3.5 py-3">
-        <h2 className="text-sm font-medium">Mis sesiones</h2>
+    <aside className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-3xl border border-border bg-card" aria-label="Mis sesiones">
+      <div className="flex items-center justify-between gap-2 px-4 pt-4 pb-3">
+        <h2 className="text-base font-bold">Mis sesiones</h2>
         <Button asChild size="sm" variant="outline">
           <Link href="/platform/quality/simulator" prefetch={false}>
             <Plus aria-hidden="true" />
@@ -43,7 +43,7 @@ export function SessionsRail({ currentId, tenantFilter, onTenantFilterChange }: 
           </Link>
         </Button>
       </div>
-      <div className="border-b border-border/60 px-2.5 py-2">
+      <div className="px-3 pb-2">
         <TenantSelect
           value={tenantFilter}
           onValueChange={onTenantFilterChange}
@@ -53,7 +53,7 @@ export function SessionsRail({ currentId, tenantFilter, onTenantFilterChange }: 
         />
       </div>
 
-      <ol className="min-h-0 flex-1 overflow-y-auto">
+      <ol className="min-h-0 flex-1 space-y-0.5 overflow-y-auto px-2 pb-2">
         {sessionsQuery.isPending && (
           <li className="space-y-2 p-3">
             <Skeleton className="h-10 w-full rounded-xl" />
@@ -83,7 +83,7 @@ export function SessionsRail({ currentId, tenantFilter, onTenantFilterChange }: 
                 prefetch={false}
                 aria-current={active ? "true" : undefined}
                 className={cn(
-                  "flex flex-col gap-0.5 border-b border-border/60 px-3.5 py-2.5 text-sm transition-colors hover:bg-secondary",
+                  "flex flex-col gap-1.5 rounded-2xl px-3 py-2.5 text-sm transition-colors hover:bg-secondary",
                   active && "bg-accent hover:bg-accent",
                 )}
               >
@@ -92,7 +92,7 @@ export function SessionsRail({ currentId, tenantFilter, onTenantFilterChange }: 
                     {session.company_name}
                     {session.agent ? ` · ${session.agent.name}` : ""}
                   </span>
-                  <StatusBadge status={sessionStatusKey(session)} />
+                  <QualityStatus status={sessionStatusKey(session)} />
                 </span>
                 <span className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
                   <span className="truncate">{session.status === "active" ? session.agent?.model ?? "" : sessionStatusLabel(session)}</span>

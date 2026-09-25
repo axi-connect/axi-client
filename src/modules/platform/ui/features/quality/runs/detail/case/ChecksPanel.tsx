@@ -35,7 +35,7 @@ export function ChecksPanel({ checks }: { checks: unknown }) {
               <X aria-label="Fallido" className="mt-0.5 size-4 shrink-0 text-destructive" />
             )}
             <span className="min-w-0">
-              <span className={invalid ? "text-warning" : undefined}>
+              <span className={invalid ? "font-medium" : undefined}>
                 {invalid ? "Criterios ilegibles" : KIND_LABELS[check.kind] ?? check.kind}
               </span>
               {check.detail && (

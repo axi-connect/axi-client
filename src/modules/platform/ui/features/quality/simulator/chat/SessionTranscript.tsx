@@ -55,7 +55,7 @@ export function SessionTranscript({ session, transcript, canTap, onTap, pendingT
   );
 
   return (
-    <div ref={containerRef} className="min-h-0 flex-1 overflow-y-auto bg-secondary/45 p-4">
+    <div ref={containerRef} className="min-h-0 flex-1 overflow-y-auto p-4">
       {transcript.length === 0 && session.agent_state !== "thinking" && (
         <p className="mx-auto max-w-sm rounded-full border border-border bg-background px-3 py-1 text-center text-xs text-muted-foreground">
           Sesión creada · agente fijado: {pinnedName}. Escribe como lo haría el cliente.
@@ -134,7 +134,7 @@ export function SessionTranscript({ session, transcript, canTap, onTap, pendingT
                           disabled={!tappable || busy}
                           onClick={() => onTap(option, message.interactive?.options ?? [])}
                           className={cn(
-                            "flex h-8.5 w-full items-center justify-between gap-2 rounded-[10px] border border-border bg-background px-3 text-left text-sm font-medium transition-colors",
+                            "flex h-9 w-full items-center justify-between gap-2 rounded-xl border border-border bg-card px-3 text-left text-sm font-medium transition-colors",
                             tappable && !busy && "hover:bg-secondary active:scale-[.98]",
                             !tappable && "opacity-60",
                             picked && "border-brand bg-accent",

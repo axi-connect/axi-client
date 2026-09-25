@@ -7,10 +7,9 @@
  * un aviso sobre el compositor en vez de en un toast que se pierde.
  */
 import { useState } from "react";
-import { Bot, CircleDollarSign, Square } from "lucide-react";
+import { Bot, Square } from "lucide-react";
 import { isHttpError } from "@/core/api/problem";
 import { errorMessage } from "@/core/lib/error-messages";
-import { cn } from "@/core/lib/utils";
 import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -29,7 +28,7 @@ import {
   useSendSessionMedia,
   useSendSessionMessage,
 } from "../../../../../infrastructure/api/hooks/use-quality-sessions";
-import { StatusBadge } from "../../../../components/StatusBadge";
+import { Meter, QualityStatus } from "../../shared/premium";
 import { Composer } from "./Composer";
 import { SessionTranscript } from "./SessionTranscript";
 
@@ -67,30 +66,29 @@ export function SessionChat({ session, onEnd, ending }: SessionChatProps) {
   };
 
   return (
-    <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-background" aria-label="Conversación del simulacro">
-      <header className="flex flex-wrap items-center gap-2.5 border-b border-border/60 px-3.5 py-2.5">
-        <Bot aria-hidden="true" className="size-4.5 text-muted-foreground" />
-        <div className="min-w-0 leading-tight">
-          <p className="truncate text-sm font-medium">
+    <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-3xl border border-border bg-card" aria-label="Conversación del simulacro">
+      <header className="flex flex-wrap items-center gap-3 border-b border-border px-4 py-3.5">
+        <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-foreground text-background dark:border dark:border-border dark:bg-secondary dark:text-foreground">
+          <Bot className="size-5" />
+        </span>
+        <div className="min-w-0 flex-1 leading-tight">
+          <p className="truncate text-sm font-semibold">
             {session.company_name}
             {session.agent ? ` · ${session.agent.name}` : ""}
           </p>
           <p className="truncate text-xs text-muted-foreground">
-            {session.agent ? `${session.agent.model} · ${session.agent.provider}` : "—"} · canal simulador · cobrado a plataforma
+            {session.agent ? <span className="whitespace-nowrap">{session.agent.model}</span> : "—"} ·{" "}
+            <span className="whitespace-nowrap">canal simulador</span> · <span className="whitespace-nowrap">cobrado a plataforma</span>
           </p>
         </div>
-        <div className="ml-auto flex flex-wrap items-center gap-2">
-          <StatusBadge status={sessionStatusKey(session)} />
-          {session.agent_state === "escalated" && <StatusBadge status="blocked" />}
-          <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground tabular-nums" title={AGENT_STATE_LABELS[session.agent_state]}>
-            <CircleDollarSign aria-hidden="true" className="size-3.5" />
-            {formatUsd(session.spend.spent_usd ?? 0)} / {formatUsd(session.spend.cap_usd)}
-            <span className="h-2 w-16 overflow-hidden rounded-full border border-border/60 bg-secondary" role="progressbar" aria-valuenow={pct ?? 0} aria-valuemin={0} aria-valuemax={100} aria-label="Gasto de la sesión">
-              <span
-                className={cn("block h-full rounded-full", (pct ?? 0) >= 80 ? "bg-warning" : "bg-accent-violet")}
-                style={{ width: `${pct ?? 0}%` }}
-              />
+        <div className="flex basis-full flex-wrap items-center gap-2.5">
+          <QualityStatus status={sessionStatusKey(session)} />
+          {session.agent_state === "escalated" && <QualityStatus status="blocked" />}
+          <span className="inline-flex items-center gap-2 text-xs text-muted-foreground tabular-nums" title={AGENT_STATE_LABELS[session.agent_state]}>
+            <span className="whitespace-nowrap">
+              <span className="font-medium text-foreground">{formatUsd(session.spend.spent_usd ?? 0)}</span> de {formatUsd(session.spend.cap_usd)}
             </span>
+            <Meter value={(pct ?? 0) / 100} tone={(pct ?? 0) >= 80 ? "warning" : "default"} label="Gasto de la sesión" className="w-16" />
           </span>
           {active && (
             <Button variant="outline" size="sm" onClick={onEnd} disabled={ending}>
@@ -106,7 +104,7 @@ export function SessionChat({ session, onEnd, ending }: SessionChatProps) {
       {session.agent_state === "escalated" && active && (
         <Alert variant="warning" className="mx-3 mt-2">
           <AlertDescription>
-            La conversación pasó a un operador humano: el agente ya no responde. Puedes seguir escribiendo (irá a la cola humana) o finalizar la sesión.
+            La conversación pasó a un humano: el agente ya no responde y ningún operador lo verá, porque lo simulado no entra al inbox del tenant. Finaliza la sesión para revisar el resultado.
           </AlertDescription>
         </Alert>
       )}

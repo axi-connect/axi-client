@@ -18,12 +18,14 @@ import {
   type DatasetKind,
   type LabelStatus,
 } from "../../../../../domain/quality-datasets";
-import { StatusBadge } from "../../../../components/StatusBadge";
+import { BigFigure, Meter, QualityStatus } from "../../shared/premium";
 
 type ItemsRailProps = {
   kind: DatasetKind;
   name: string;
   remaining: number;
+  labeledCount: number;
+  itemsCount: number;
   filter: LabelStatus;
   onFilterChange: (status: LabelStatus) => void;
   items: DatasetItem[];
@@ -35,31 +37,39 @@ type ItemsRailProps = {
   onPageChange: (page: number) => void;
 };
 
+// Cortas: las cuatro caben en el rail de 320 px (QA Q4); el nombre completo va en el vacío.
 const FILTERS: { value: LabelStatus; label: string }[] = [
-  { value: "unlabeled", label: "Sin etiquetar" },
-  { value: "labeled", label: "Etiquetados" },
-  { value: "disputed", label: "Disputados" },
+  { value: "unlabeled", label: "Pendientes" },
+  { value: "labeled", label: "Listos" },
+  { value: "disputed", label: "Dudas" },
   { value: "skipped", label: "Omitidos" },
 ];
 
-export function ItemsRail({ kind, name, remaining, filter, onFilterChange, items, loading, currentId, onSelect, page, totalPages, onPageChange }: ItemsRailProps) {
+export function ItemsRail({ kind, name, remaining, labeledCount, itemsCount, filter, onFilterChange, items, loading, currentId, onSelect, page, totalPages, onPageChange }: ItemsRailProps) {
   return (
-    <aside className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-border bg-background" aria-label="Ítems del dataset">
-      <div className="space-y-2 border-b border-border/60 px-3 py-2.5">
-        <div className="flex items-center justify-between gap-2">
-          <h2 className="truncate text-sm font-medium">{name}</h2>
-          <span className="shrink-0 text-xs text-muted-foreground tabular-nums">{remaining} por etiquetar</span>
+    <aside className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-3xl border border-border bg-card" aria-label="Ítems del dataset">
+      <div className="space-y-3 px-4 pt-4 pb-3">
+        <div className="space-y-2">
+          <p className="truncate text-xs text-muted-foreground" title={name}>
+            {name}
+          </p>
+          <BigFigure value={labeledCount} unit={`de ${itemsCount} etiquetados`} size="md" />
+          <Meter value={itemsCount === 0 ? 0 : labeledCount / itemsCount} label="Ítems etiquetados" />
+          <p className="text-xs text-muted-foreground tabular-nums">{remaining} por etiquetar</p>
         </div>
+        <div className="-mx-1 overflow-x-auto px-1">
         <SegmentedControl
           value={filter}
           onValueChange={onFilterChange}
           label="Estado de etiqueta"
           size="sm"
+          surface="inline"
           items={FILTERS}
-          className="max-w-full"
+          className="w-max"
         />
+        </div>
       </div>
-      <ol className="min-h-0 flex-1 overflow-y-auto">
+      <ol className="min-h-0 flex-1 space-y-0.5 overflow-y-auto px-2 pb-2">
         {loading && (
           <li className="space-y-2 p-3">
             <Skeleton className="h-12 w-full rounded-xl" />
@@ -80,15 +90,15 @@ export function ItemsRail({ kind, name, remaining, filter, onFilterChange, items
                 onClick={() => onSelect(item.id)}
                 aria-current={current ? "true" : undefined}
                 className={cn(
-                  "grid w-full grid-cols-[2.5rem_minmax(0,1fr)_auto] items-center gap-2.5 border-b border-border/60 px-3 py-2 text-left text-sm transition-colors hover:bg-secondary/60",
+                  "grid w-full grid-cols-[2.75rem_minmax(0,1fr)_auto] items-center gap-3 rounded-2xl px-2.5 py-2 text-left text-sm transition-colors hover:bg-secondary",
                   current && "bg-accent",
                 )}
               >
                 {kind === "recognition" && item.image_url ? (
                   // eslint-disable-next-line @next/next/no-img-element -- URL presignada efímera
-                  <img src={item.image_url} alt="" className="size-10 rounded-lg object-cover" loading="lazy" />
+                  <img src={item.image_url} alt="" className="size-11 rounded-xl object-cover" loading="lazy" />
                 ) : (
-                  <span className="grid size-10 place-items-center rounded-lg bg-secondary font-mono text-[10px] text-muted-foreground">
+                  <span className="grid size-11 place-items-center rounded-xl bg-secondary font-mono text-[10px] text-muted-foreground">
                     {item.id.slice(-4)}
                   </span>
                 )}
@@ -96,14 +106,14 @@ export function ItemsRail({ kind, name, remaining, filter, onFilterChange, items
                   <span className="block truncate font-medium">{itemTitle(kind, item)}</span>
                   <span className="block truncate text-xs text-muted-foreground">{itemSubtitle(kind, item)}</span>
                 </span>
-                <StatusBadge status={labelStatusKey(item.label_status)} />
+                <QualityStatus status={labelStatusKey(item.label_status)} />
               </button>
             </li>
           );
         })}
       </ol>
       {totalPages > 1 && (
-        <div className="border-t border-border/60 px-2 py-1.5">
+        <div className="border-t border-border px-2 py-1.5">
           <BasicPagination totalPages={totalPages} page={page} onPageChange={onPageChange} />
         </div>
       )}

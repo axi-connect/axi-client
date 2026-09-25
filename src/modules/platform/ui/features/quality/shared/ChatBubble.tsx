@@ -50,8 +50,8 @@ export function ChatBubble({ side, sender, body, createdAt, status, children, cl
     <li className={cn("flex", isAgent ? "justify-end" : "justify-start")}>
       <div
         className={cn(
-          "max-w-[85%] min-w-0 rounded-2xl px-3.5 py-2.5",
-          isAgent ? "rounded-br-md bg-accent" : "rounded-bl-md border border-border bg-background",
+          "max-w-[85%] min-w-0 rounded-[18px] px-3.5 py-2.5",
+          isAgent ? "rounded-br-md bg-accent" : "rounded-bl-md bg-muted",
           className,
         )}
       >

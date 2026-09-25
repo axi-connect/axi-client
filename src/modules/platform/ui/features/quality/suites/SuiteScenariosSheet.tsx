@@ -49,7 +49,7 @@ import {
   useSuiteQuery,
 } from "../../../../infrastructure/api/hooks/use-quality-suites";
 import { ProblemAlert } from "../../../components/ProblemAlert";
-import { StatusBadge } from "../../../components/StatusBadge";
+import { QualityStatus } from "../shared/premium";
 import {
   addSuiteScenario,
   removeSuiteScenario,
@@ -473,7 +473,7 @@ function ScenarioRow({
 
       <ScenarioIdentity code={item.code} name={item.name} />
 
-      {item.status === "archived" && <StatusBadge status="archived" className="shrink-0" />}
+      {item.status === "archived" && <QualityStatus status="archived" className="shrink-0" />}
 
       {!readOnly && (
         <div className="flex shrink-0 items-center">

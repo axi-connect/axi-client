@@ -143,10 +143,16 @@ export function LabelingWorkbench({ datasetId }: { datasetId: string }) {
         </Link>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-xl font-semibold tracking-tight">{dataset.name}</h2>
+            <h2 className="text-2xl font-bold tracking-tight">{dataset.name}</h2>
             <p className="text-sm text-muted-foreground">
-              {dataset.company_name} · {DATASET_KIND_LABELS[dataset.kind]} · {dataset.labeled_count} de {dataset.items_count} etiquetados
-              {metric ? ` · último probe ${metric.label} ${metric.value}` : ""}
+              <span className="whitespace-nowrap">{dataset.company_name}</span> ·{" "}
+              <span className="whitespace-nowrap">{DATASET_KIND_LABELS[dataset.kind]}</span>
+              {metric && (
+                <>
+                  {" "}
+                  · <span className="whitespace-nowrap">último probe {metric.label} {metric.value}</span>
+                </>
+              )}
             </p>
             <p className="text-xs text-muted-foreground" aria-live="polite">
               {importing
@@ -196,11 +202,13 @@ export function LabelingWorkbench({ datasetId }: { datasetId: string }) {
           }
         />
       ) : (
-        <div className="grid min-h-[560px] gap-4 lg:grid-cols-[300px_minmax(0,1fr)]">
+        <div className="grid min-h-[560px] gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
           <ItemsRail
             kind={dataset.kind}
             name={dataset.name}
             remaining={remaining}
+            labeledCount={dataset.labeled_count}
+            itemsCount={dataset.items_count}
             filter={filter}
             onFilterChange={(status) => {
               setFilter(status);
@@ -229,7 +237,7 @@ export function LabelingWorkbench({ datasetId }: { datasetId: string }) {
               onDelete={remove}
             />
           ) : (
-            <div className="grid place-items-center rounded-2xl border border-dashed border-border p-8 text-sm text-muted-foreground">
+            <div className="grid place-items-center rounded-3xl border border-dashed border-border p-8 text-sm text-muted-foreground">
               {itemsQuery.isPending ? "Cargando ítems…" : "Nada que etiquetar en este estado."}
             </div>
           )}
