@@ -189,6 +189,11 @@ export async function parseHttpError(res: Response): Promise<HttpError> {
           detail: body.detail,
           trace_id: body.trace_id,
           errors: body.errors,
+          // QA-1: la extensión `details` (scope, reason, upgrade_hint…) se
+          // perdía aquí y todo consumidor de `problem.details` veía undefined
+          ...(typeof body.details === "object" && body.details !== null && !Array.isArray(body.details)
+            ? { details: body.details }
+            : {}),
         };
       }
     }

@@ -7,6 +7,7 @@
  * usa `alertProgressPct` y el paso se bloquea si excede los 3600 s.
  */
 import { useMemo } from "react";
+import Link from "next/link";
 import { TriangleAlert } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { Button } from "@/shared/components/ui/button";
@@ -28,6 +29,17 @@ import {
   type RunKind,
 } from "../../../../../domain/quality-runs";
 import { alertProgressPct } from "../../../../../domain/thresholds";
+import {
+  DATASET_KIND_HINTS,
+  DATASET_KIND_LABELS,
+  DATASET_KINDS,
+  PROBE_K_MAX,
+  PROBE_MAX_ITEMS,
+  PROBE_SPEND_CAP_MAX,
+  probePaysLlm,
+  type DatasetKind,
+} from "../../../../../domain/quality-datasets";
+import { useDatasetsQuery } from "../../../../../infrastructure/api/hooks/use-quality-datasets";
 import { useScenariosQuery } from "../../../../../infrastructure/api/hooks/use-quality-scenarios";
 import { useSuitesQuery } from "../../../../../infrastructure/api/hooks/use-quality-suites";
 import {
@@ -40,17 +52,163 @@ import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 
 type ConfigStepProps = {
   values: RunConfigValues;
+  /** Tenant elegido en el paso 1: los datasets del probe son de ese tenant. */
+  companyId: string | null;
   onChange: (values: RunConfigValues) => void;
   onBack: () => void;
   onNext: () => void;
 };
+
+/**
+ * Configuración del probe (F4): capacidad → dataset del tenant de esa
+ * capacidad (solo con ítems etiquetados) → k, límite y tope (obligatorio
+ * cuando la capacidad paga LLM). La estimación dice cuántos ítems corren y
+ * si cuesta.
+ */
+function ProbeConfig({
+  values,
+  companyId,
+  patch,
+}: {
+  values: RunConfigValues;
+  companyId: string | null;
+  patch: (partial: Partial<RunConfigValues>) => void;
+}) {
+  const datasetsQuery = useDatasetsQuery({
+    companyId: companyId ?? undefined,
+    kind: values.probeKind,
+    status: "active",
+    page: 1,
+    pageSize: 100,
+  });
+  const datasets = datasetsQuery.data?.data ?? [];
+  const chosen = datasets.find((dataset) => dataset.id === values.datasetId) ?? null;
+  const paysLlm = probePaysLlm(values.probeKind);
+  const itemsToRun = chosen ? Math.min(chosen.labeled_count, values.limitItems ?? PROBE_MAX_ITEMS) : 0;
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-1.5">
+        <Label>Capacidad *</Label>
+        <Select
+          value={values.probeKind}
+          onValueChange={(probeKind) => patch({ probeKind: probeKind as DatasetKind, datasetId: null })}
+        >
+          <SelectTrigger className="w-full" aria-label="Capacidad a probar">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {DATASET_KINDS.map((kind) => (
+              <SelectItem key={kind} value={kind}>
+                {DATASET_KIND_LABELS[kind]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground">{DATASET_KIND_HINTS[values.probeKind]}</p>
+      </div>
+
+      <div className="space-y-1.5">
+        <Label>Dataset *</Label>
+        <Select
+          value={values.datasetId ?? ""}
+          onValueChange={(datasetId) => patch({ datasetId })}
+          disabled={!companyId || datasetsQuery.isPending}
+        >
+          <SelectTrigger className="w-full" aria-label="Dataset a probar">
+            <SelectValue
+              placeholder={
+                !companyId ? "Elige el tenant en el paso 1" : datasetsQuery.isPending ? "Cargando datasets…" : "Elige el dataset"
+              }
+            />
+          </SelectTrigger>
+          <SelectContent>
+            {datasets.map((dataset) => (
+              <SelectItem key={dataset.id} value={dataset.id} disabled={dataset.labeled_count === 0}>
+                {dataset.name}{" "}
+                <span className="text-muted-foreground">
+                  · {dataset.items_count} ítems ({dataset.labeled_count} etiquetados)
+                </span>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground">
+          Solo se prueban los ítems etiquetados.{" "}
+          {companyId && !datasetsQuery.isPending && datasets.length === 0 && (
+            <Link href="/platform/quality/datasets" prefetch={false} className="underline underline-offset-2">
+              Este tenant no tiene datasets de esta capacidad: créalo.
+            </Link>
+          )}
+        </p>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <div className="space-y-1.5">
+          <Label htmlFor="probe-k">k (top-k)</Label>
+          <Input
+            id="probe-k"
+            type="number"
+            min={1}
+            max={PROBE_K_MAX}
+            value={values.k}
+            onChange={(e) => patch({ k: toInt(e.target.value) })}
+            disabled={values.probeKind !== "catalog_search"}
+          />
+          <p className="text-xs text-muted-foreground">
+            {values.probeKind === "catalog_search" ? "Coincide con lo que la tool muestra al cliente." : "Solo aplica a la búsqueda."}
+          </p>
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="probe-limit">Límite de ítems</Label>
+          <Input
+            id="probe-limit"
+            type="number"
+            min={1}
+            max={PROBE_MAX_ITEMS}
+            value={values.limitItems ?? ""}
+            placeholder={chosen ? String(Math.min(chosen.labeled_count, PROBE_MAX_ITEMS)) : "todos"}
+            onChange={(e) => patch({ limitItems: e.target.value === "" ? null : toInt(e.target.value) })}
+          />
+          <p className="text-xs text-muted-foreground">Máx. {PROBE_MAX_ITEMS} por corrida.</p>
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="probe-cap">Tope de gasto (USD)</Label>
+          <Input
+            id="probe-cap"
+            type="number"
+            min={0.5}
+            max={PROBE_SPEND_CAP_MAX}
+            step={0.5}
+            value={paysLlm ? values.probeSpendCapUsd : ""}
+            placeholder={paysLlm ? "" : "—"}
+            disabled={!paysLlm}
+            onChange={(e) => patch({ probeSpendCapUsd: Number(e.target.value) || 0 })}
+          />
+          <p className="text-xs text-muted-foreground">
+            {paysLlm ? "Visión o clasificador por ítem: obligatorio." : "La búsqueda no llama a ningún LLM: cuesta US$ 0."}
+          </p>
+        </div>
+      </div>
+
+      <Alert variant="info">
+        <AlertDescription>
+          <strong>Estimación:</strong>{" "}
+          {chosen
+            ? `${itemsToRun} ítems · ${paysLlm ? "1 llamada LLM por ítem, topada" : "~35 ms cada uno · 0 llamadas LLM"}. Toma el lock de corridas del tenant mientras corre.`
+            : "elige un dataset para ver cuántos ítems correrán."}
+        </AlertDescription>
+      </Alert>
+    </div>
+  );
+}
 
 function toInt(raw: string, fallback = 0): number {
   const value = Number(raw);
   return raw === "" || !Number.isFinite(value) ? fallback : value;
 }
 
-export function ConfigStep({ values, onChange, onBack, onNext }: ConfigStepProps) {
+export function ConfigStep({ values, companyId, onChange, onBack, onNext }: ConfigStepProps) {
   const suitesQuery = useSuitesQuery({ status: "active", page: 1, pageSize: 100 });
   const scenariosQuery = useScenariosQuery(
     { status: "active", page: 1, pageSize: 100 },
@@ -86,10 +244,13 @@ export function ConfigStep({ values, onChange, onBack, onNext }: ConfigStepProps
         items={[
           { value: "qa" as RunKind, label: "QA — escenarios con juez" },
           { value: "stress" as RunKind, label: "Estrés — carga sintética" },
+          { value: "probe" as RunKind, label: "Probe — capacidad × dataset" },
         ]}
       />
 
-      {values.kind === "qa" ? (
+      {values.kind === "probe" ? (
+        <ProbeConfig values={values} companyId={companyId} patch={patch} />
+      ) : values.kind === "qa" ? (
         <div className="space-y-4">
           <fieldset className="space-y-2">
             <legend className="text-sm font-medium">Alcance</legend>

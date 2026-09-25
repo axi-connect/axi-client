@@ -15,6 +15,9 @@ export const platformKeys = {
     limits: (id: string) => [...platformKeys.tenants.all, id, "limits"] as const,
     database: (id: string) => [...platformKeys.tenants.all, id, "database"] as const,
     features: (id: string) => [...platformKeys.tenants.all, id, "features"] as const,
+    /** Agentes IA del tenant (herramientas de calidad: wizard y simulacro). */
+    agents: (id: string, status?: string) =>
+      [...platformKeys.tenants.all, id, "agents", status ?? "all"] as const,
     voice: (id: string) => [...platformKeys.tenants.all, id, "voice"] as const,
     migrations: (id: string) => [...platformKeys.tenants.all, id, "migrations"] as const,
   },
@@ -110,6 +113,33 @@ export const platformKeys = {
       detail: (id: string) => [...platformKeys.quality.runs.all, id] as const,
       case: (runId: string, caseId: string) =>
         [...platformKeys.quality.runs.all, runId, "cases", caseId] as const,
+    },
+    // Simulacro interactivo (upgrade F1): sesiones = runs kind interactive
+    // con su propio read-side. El detalle se pollea; la traza se refresca al
+    // crecer el transcript.
+    // Datasets etiquetados + probes (upgrade F4)
+    datasets: {
+      all: ["platform", "quality", "datasets"] as const,
+      list: (filters?: Record<string, unknown>) =>
+        [...platformKeys.quality.datasets.all, "list", filters ?? {}] as const,
+      detail: (id: string) => [...platformKeys.quality.datasets.all, id] as const,
+      items: (id: string, filters?: Record<string, unknown>) =>
+        [...platformKeys.quality.datasets.all, id, "items", filters ?? {}] as const,
+    },
+    capabilities: (companyId: string) => ["platform", "quality", "capabilities", companyId] as const,
+    probeResults: (runId: string, filters?: Record<string, unknown>) =>
+      [...platformKeys.quality.runs.all, runId, "probe-results", filters ?? {}] as const,
+    tenantLookup: {
+      catalog: (companyId: string, q: string) =>
+        ["platform", "quality", "tenants", companyId, "catalog", q] as const,
+      intentions: (companyId: string) => ["platform", "quality", "tenants", companyId, "intentions"] as const,
+    },
+    sessions: {
+      all: ["platform", "quality", "sessions"] as const,
+      list: (filters?: Record<string, unknown>) =>
+        [...platformKeys.quality.sessions.all, "list", filters ?? {}] as const,
+      detail: (id: string) => [...platformKeys.quality.sessions.all, id] as const,
+      trace: (id: string) => [...platformKeys.quality.sessions.all, id, "trace"] as const,
     },
     debug: {
       all: ["platform", "quality", "debug"] as const,

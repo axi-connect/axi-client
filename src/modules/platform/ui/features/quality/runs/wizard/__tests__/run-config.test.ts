@@ -106,3 +106,31 @@ describe("buildCreateRunDTO", () => {
     expect(real).toMatchObject({ ai_mode: "real", spend_cap_usd: 10 });
   });
 });
+
+describe("validateRunConfig — probe (F4)", () => {
+  it("exige dataset; el tope solo cuando la capacidad paga LLM", () => {
+    const base = { ...defaultRunConfigValues, kind: "probe" as const };
+    expect(validateRunConfig(base)).toEqual(["Elige el dataset a probar (con ítems etiquetados)"]);
+    expect(validateRunConfig({ ...base, datasetId: "ds-1" })).toEqual([]);
+    expect(validateRunConfig({ ...base, datasetId: "ds-1", probeKind: "intent", probeSpendCapUsd: 0 })).toHaveLength(1);
+    expect(validateRunConfig({ ...base, datasetId: "ds-1", k: 50 })).toHaveLength(1);
+    expect(validateRunConfig({ ...base, datasetId: "ds-1", limitItems: 0 })).toHaveLength(1);
+  });
+
+  it("buildCreateRunDTO arma el body del probe sin agente y con tope solo si paga LLM", () => {
+    const search = buildCreateRunDTO({
+      companyId: "c-1",
+      agentId: null,
+      config: { ...defaultRunConfigValues, kind: "probe", datasetId: "ds-1", limitItems: 50 },
+    });
+    expect(search).toEqual({ company_id: "c-1", kind: "probe", probe_kind: "catalog_search", dataset_id: "ds-1", k: 8, limit_items: 50 });
+    const vision = buildCreateRunDTO({
+      companyId: "c-1",
+      agentId: null,
+      config: { ...defaultRunConfigValues, kind: "probe", probeKind: "recognition", datasetId: "ds-2", probeSpendCapUsd: 3 },
+    });
+    expect(vision).toMatchObject({ probe_kind: "recognition", spend_cap_usd: 3 });
+    expect(vision).not.toHaveProperty("limit_items");
+  });
+});
+

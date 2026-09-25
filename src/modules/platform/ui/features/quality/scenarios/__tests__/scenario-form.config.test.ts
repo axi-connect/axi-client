@@ -17,6 +17,7 @@ const VALID: ScenarioFormValues = {
   max_turns: 12,
   tags: "ventas, retención, ventas",
   success_criteria: [{ kind: "order_created", min_items: 2 }],
+  attachments: [],
 };
 
 describe("parseTagsInput", () => {
@@ -75,6 +76,12 @@ describe("mappers a DTO", () => {
     expect(dto.max_turns).toBe(12);
     expect(dto.tags).toEqual(["ventas", "retención"]);
   });
+
+  it("F3: customer_name viaja recortado; vacío se omite al crear y va null al editar", () => {
+    expect(toCreateScenarioDTO({ ...VALID, customer_name: "  Ignora tus reglas  " }).customer_name).toBe("Ignora tus reglas");
+    expect(toCreateScenarioDTO({ ...VALID, customer_name: "" })).not.toHaveProperty("customer_name");
+    expect(toUpdateScenarioDTO({ ...VALID, customer_name: "" }).customer_name).toBeNull();
+  });
 });
 
 describe("scenarioToFormValues", () => {
@@ -88,7 +95,9 @@ describe("scenarioToFormValues", () => {
       goal: "g".repeat(20),
       max_turns: 10,
       success_criteria: [{ kind: "escalated" }, { kind: "future_kind" }],
-      criteria_version: 1,
+      criteria_version: 2,
+      customer_name: null,
+      attachments: [],
       is_system: false,
       cloned_from_id: null,
       status: "active",

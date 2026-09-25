@@ -9,6 +9,7 @@ import Link from "next/link";
 import { TriangleAlert } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { STRESS_BUDGET_S } from "../../../../../domain/quality-runs";
+import { DATASET_KIND_LABELS, probePaysLlm } from "../../../../../domain/quality-datasets";
 import { configOccupancySeconds, type RunConfigValues } from "./run-config";
 
 export type SubmitErrorInfo = {
@@ -24,6 +25,8 @@ type ReviewStepProps = {
   agentName: string;
   values: RunConfigValues;
   suiteName: string | null;
+  /** F4: nombre del dataset elegido (probe). */
+  datasetName?: string | null;
   submitError: SubmitErrorInfo;
   pending: boolean;
   onBack: () => void;
@@ -45,6 +48,7 @@ export function ReviewStep({
   agentName,
   values,
   suiteName,
+  datasetName = null,
   submitError,
   pending,
   onBack,
@@ -57,9 +61,19 @@ export function ReviewStep({
     <div className="space-y-5">
       <dl className="divide-y divide-border rounded-xl border border-border px-4 py-1">
         <Row label="Tenant">{companyName}</Row>
-        <Row label="Agente objetivo">{agentName}</Row>
-        <Row label="Tipo">{values.kind === "qa" ? "QA — escenarios con juez" : "Estrés — carga sintética"}</Row>
-        {values.kind === "qa" ? (
+        {values.kind !== "probe" && <Row label="Agente objetivo">{agentName}</Row>}
+        <Row label="Tipo">
+          {values.kind === "qa" ? "QA — escenarios con juez" : values.kind === "stress" ? "Estrés — carga sintética" : "Probe — capacidad contra dataset"}
+        </Row>
+        {values.kind === "probe" ? (
+          <>
+            <Row label="Capacidad">{DATASET_KIND_LABELS[values.probeKind]}</Row>
+            <Row label="Dataset">{datasetName ?? "—"}</Row>
+            <Row label="k (top-k)">{values.k}</Row>
+            <Row label="Ítems">{values.limitItems === null ? "todos los etiquetados" : values.limitItems}</Row>
+            <Row label="Tope de gasto">{probePaysLlm(values.probeKind) ? `${values.probeSpendCapUsd} USD` : "US$ 0 (sin LLM)"}</Row>
+          </>
+        ) : values.kind === "qa" ? (
           <>
             <Row label="Alcance">
               {values.qaMode === "suite"
@@ -86,8 +100,9 @@ export function ReviewStep({
       </dl>
 
       <p className="text-xs text-muted-foreground">
-        Los datos generados son sintéticos, quedan marcados como simulados y puedes purgarlos al terminar
-        (retención automática de 14 días). El consumo de IA se factura a plataforma, nunca al tenant.
+        {values.kind === "probe"
+          ? "Un probe no abre conversaciones: ejercita la capacidad ítem a ítem contra el dataset y guarda un resultado por ítem. El consumo de IA (si lo hay) se factura a plataforma."
+          : "Los datos generados son sintéticos, quedan marcados como simulados y puedes purgarlos al terminar (retención automática de 14 días). El consumo de IA se factura a plataforma, nunca al tenant."}
       </p>
 
       {submitError && (

@@ -23,7 +23,7 @@ import { formatScore } from "../../analytics/analytics-format";
 import { MetricCell } from "../../analytics/MetricCell";
 import { StatusBadge } from "../../../components/StatusBadge";
 import { RunRowActions } from "./RunRowActions";
-import { aiModeLabel, formatSpendUsd, runKindLabel, runScopeLabel } from "./runs-format";
+import { aiModeLabel, formatSpendUsd, runKindBadgeClass, runKindLabel, runScopeLabel } from "./runs-format";
 
 export function RunsTable({ runs }: { runs: RunListItem[] }) {
   const router = useRouter();
@@ -58,14 +58,7 @@ export function RunsTable({ runs }: { runs: RunListItem[] }) {
               >
                 <TableCell>
                   <span className="flex items-center gap-1.5">
-                    <Badge
-                      variant="outline"
-                      className={
-                        run.kind === "stress"
-                          ? "border-accent-amber/40 bg-accent-amber/10 text-accent-amber"
-                          : "border-border text-muted-foreground"
-                      }
-                    >
+                    <Badge variant="outline" className={runKindBadgeClass(run.kind)}>
                       {runKindLabel(run.kind)}
                     </Badge>
                     {mode && <span className="text-xs text-muted-foreground">{mode}</span>}

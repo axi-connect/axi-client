@@ -79,11 +79,14 @@ if (!('IntersectionObserver' in globalThis)) {
   } as unknown as typeof globalThis.IntersectionObserver
 }
 
-// Radix las usa para el foco y el scroll dentro de los overlays.
-Element.prototype.scrollIntoView ??= function scrollIntoView() {}
-Element.prototype.releasePointerCapture ??= function releasePointerCapture() {}
-Element.prototype.hasPointerCapture ??= function hasPointerCapture() {
-  return false
+// Radix las usa para el foco y el scroll dentro de los overlays. Con guarda:
+// los tests que corren en `@jest-environment node` no tienen `Element`.
+if (typeof Element !== "undefined") {
+  Element.prototype.scrollIntoView ??= function scrollIntoView() {}
+  Element.prototype.releasePointerCapture ??= function releasePointerCapture() {}
+  Element.prototype.hasPointerCapture ??= function hasPointerCapture() {
+    return false
+  }
 }
 
 /**

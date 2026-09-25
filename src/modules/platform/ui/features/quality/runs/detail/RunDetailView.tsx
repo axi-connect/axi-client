@@ -31,7 +31,10 @@ import { ConfirmTyped } from "../../../../components/ConfirmTyped";
 import { EmptyState } from "../../../../components/EmptyState";
 import { ProblemAlert } from "../../../../components/ProblemAlert";
 import { StatusBadge } from "../../../../components/StatusBadge";
-import { aiModeLabel, runKindLabel, runScopeLabel } from "../runs-format";
+import { aiModeLabel, runKindBadgeClass, runKindLabel, runScopeLabel } from "../runs-format";
+import { DATASET_KIND_LABELS, type DatasetKind } from "../../../../../domain/quality-datasets";
+import { ProbeResultsPanel } from "./ProbeResultsPanel";
+import { ProbeSummaryCards } from "./ProbeSummaryCards";
 import { buildCaseColumns, toCaseRow } from "./cases-table.config";
 import { RunMetricsPanel } from "./RunMetricsPanel";
 import { RunSummaryCards } from "./RunSummaryCards";
@@ -103,14 +106,7 @@ export function RunDetailView({ runId }: { runId: string }) {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="space-y-1.5">
             <div className="flex flex-wrap items-center gap-2">
-              <Badge
-                variant="outline"
-                className={
-                  run.kind === "stress"
-                    ? "border-accent-amber/40 bg-accent-amber/10 text-accent-amber"
-                    : "border-border text-muted-foreground"
-                }
-              >
+              <Badge variant="outline" className={runKindBadgeClass(run.kind)}>
                 {runKindLabel(run.kind)}
               </Badge>
               {mode && <span className="text-xs text-muted-foreground">{mode}</span>}
@@ -118,9 +114,11 @@ export function RunDetailView({ runId }: { runId: string }) {
               <StatusBadge status={run.status} />
             </div>
             <p className="text-sm text-muted-foreground">
-              {run.target_agent
-                ? `Agente: ${run.target_agent.name} · ${run.target_agent.model} · ${run.target_agent.provider}`
-                : "Agente: —"}
+              {run.kind === "probe"
+                ? `Dataset: ${run.dataset?.name ?? "—"} · ${run.dataset ? DATASET_KIND_LABELS[run.dataset.kind as DatasetKind] : ""}`
+                : run.target_agent
+                  ? `Agente: ${run.target_agent.name} · ${run.target_agent.model} · ${run.target_agent.provider}`
+                  : "Agente: —"}
               {run.suite && (
                 <>
                   {" "}
@@ -166,9 +164,19 @@ export function RunDetailView({ runId }: { runId: string }) {
         )}
       </div>
 
-      <RunSummaryCards run={run} />
-      <RunMetricsPanel run={run} />
+      {run.kind === "probe" ? (
+        <>
+          <ProbeSummaryCards run={run} />
+          <ProbeResultsPanel run={run} />
+        </>
+      ) : (
+        <>
+          <RunSummaryCards run={run} />
+          <RunMetricsPanel run={run} />
+        </>
+      )}
 
+      {run.kind !== "probe" && (
       <section className="space-y-3">
         <h3 className="text-base font-semibold">Casos</h3>
         {rows.length === 0 ? (
@@ -188,6 +196,7 @@ export function RunDetailView({ runId }: { runId: string }) {
           />
         )}
       </section>
+      )}
 
       <Modal
         open={cancelOpen}

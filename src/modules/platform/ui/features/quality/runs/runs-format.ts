@@ -13,7 +13,14 @@ const USD = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 3,
 });
 
-export function runScopeLabel(run: Pick<RunListItem, "kind" | "suite" | "params" | "cases_total">): string {
+export function runScopeLabel(
+  run: Pick<RunListItem, "kind" | "suite" | "params" | "cases_total"> & { dataset?: RunListItem["dataset"] },
+): string {
+  if (run.kind === "probe") {
+    const params = parseRunParams(run.params);
+    const name = run.dataset?.name ?? "dataset";
+    return params.k === null ? `${name} · ${run.cases_total} ítems` : `${name} · k=${params.k}`;
+  }
   if (run.kind === "stress") {
     const params = parseRunParams(run.params);
     if (params.conversations !== null && params.turns_per_conversation !== null) {
@@ -32,7 +39,17 @@ export function formatSpendUsd(spend: number | null): string {
 }
 
 export function runKindLabel(kind: RunListItem["kind"]): string {
-  return kind === "stress" ? "Estrés" : "QA";
+  if (kind === "stress") return "Estrés";
+  if (kind === "probe") return "Probe";
+  if (kind === "interactive") return "Simulacro";
+  return "QA";
+}
+
+/** Clases del badge de tipo (QA neutro, estrés ámbar, probe violeta). */
+export function runKindBadgeClass(kind: RunListItem["kind"]): string {
+  if (kind === "stress") return "border-accent-amber/40 bg-accent-amber/10 text-accent-amber";
+  if (kind === "probe") return "border-accent-violet/40 bg-accent-violet/10 text-accent-violet";
+  return "border-border text-muted-foreground";
 }
 
 export function aiModeLabel(aiMode: RunListItem["ai_mode"]): string | null {

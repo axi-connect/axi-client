@@ -144,3 +144,35 @@ export function usePurgeRun() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: platformKeys.quality.runs.all }),
   });
 }
+
+/** F4: resultados por ítem de una corrida probe (paginados; «solo fallos» por defecto). */
+export function useProbeResultsQuery(
+  runId: string,
+  filters: { onlyMisses: boolean; page: number; pageSize: number },
+  opts?: { enabled?: boolean },
+) {
+  return useQuery({
+    enabled: opts?.enabled ?? true,
+    queryKey: platformKeys.quality.probeResults(runId, {
+      only_misses: filters.onlyMisses,
+      page: filters.page,
+      page_size: filters.pageSize,
+    }),
+    queryFn: async () => {
+      const { data } = await platformClient.GET("/api/v1/platform/quality/runs/{id}/probe-results", {
+        params: {
+          path: { id: runId },
+          query: {
+            only_misses: filters.onlyMisses ? ("true" as const) : ("false" as const),
+            page: filters.page,
+            page_size: filters.pageSize,
+          },
+        },
+      });
+      return data!;
+    },
+    staleTime: 30_000,
+    placeholderData: keepPreviousData,
+  });
+}
+

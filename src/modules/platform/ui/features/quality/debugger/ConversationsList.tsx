@@ -13,14 +13,17 @@ import {
   conversationStatusLabel,
   type DebugConversation,
 } from "../../../../domain/quality-debug";
+import { ConvertToScenarioButton } from "../shared/ConvertToScenarioButton";
 import { SimulatedBadge } from "./ContactsList";
 
 type ConversationsListProps = {
+  /** F5: tenant de las conversaciones (para «Convertir en escenario»). */
+  companyId: string;
   conversations: DebugConversation[];
   onDownload: (conversation: DebugConversation) => void;
 };
 
-export function ConversationsList({ conversations, onDownload }: ConversationsListProps) {
+export function ConversationsList({ companyId, conversations, onDownload }: ConversationsListProps) {
   return (
     <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-background">
       {conversations.map((conversation) => (
@@ -46,10 +49,13 @@ export function ConversationsList({ conversations, onDownload }: ConversationsLi
             ) : (
               <span />
             )}
-            <Button size="sm" variant="outline" onClick={() => onDownload(conversation)}>
-              <Download aria-hidden="true" />
-              Descargar reporte
-            </Button>
+            <span className="flex flex-wrap items-center gap-1.5">
+              <ConvertToScenarioButton companyId={companyId} conversationId={conversation.id} />
+              <Button size="sm" variant="outline" onClick={() => onDownload(conversation)}>
+                <Download aria-hidden="true" />
+                Descargar reporte
+              </Button>
+            </span>
           </div>
         </li>
       ))}

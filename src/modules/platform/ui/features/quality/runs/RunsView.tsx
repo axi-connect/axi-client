@@ -87,6 +87,7 @@ export function RunsView() {
               <SelectItem value={ALL}>Todo tipo</SelectItem>
               <SelectItem value="qa">QA</SelectItem>
               <SelectItem value="stress">Estrés</SelectItem>
+              <SelectItem value="probe">Probe</SelectItem>
             </SelectContent>
           </Select>
 

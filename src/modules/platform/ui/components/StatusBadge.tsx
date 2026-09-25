@@ -49,6 +49,11 @@ const STATUS_MAP: StatusMap = {
   canceled: { label: "Cancelada", tone: "neutral" },
   purged: { label: "Purgada", tone: "neutral" },
   archived: { label: "Archivado", tone: "neutral" },
+  // Capacidades del agente (quality F5)
+  cap_pass: { label: "Aprobada", tone: "success" },
+  cap_warn: { label: "En alerta", tone: "warning" },
+  cap_fail: { label: "Fallida", tone: "destructive" },
+  cap_untested: { label: "Sin probar", tone: "neutral" },
 };
 
 type StatusBadgeProps = {

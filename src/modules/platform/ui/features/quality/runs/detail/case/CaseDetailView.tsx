@@ -14,6 +14,7 @@ import { useRunCaseQuery } from "../../../../../../infrastructure/api/hooks/use-
 import { EmptyState } from "../../../../../components/EmptyState";
 import { ProblemAlert } from "../../../../../components/ProblemAlert";
 import { StatusBadge } from "../../../../../components/StatusBadge";
+import { ConvertToScenarioButton } from "../../../shared/ConvertToScenarioButton";
 import { FailureReasonBadge } from "../FailureReasonBadge";
 import { ChecksPanel } from "./ChecksPanel";
 import { EvaluationPanel } from "./EvaluationPanel";
@@ -73,6 +74,9 @@ export function CaseDetailView({ runId, caseId }: { runId: string; caseId: strin
 
         {runCase.scenario_goal && (
           <p className="text-sm text-muted-foreground">Objetivo: {runCase.scenario_goal}</p>
+        )}
+        {runCase.conversation_id && !runCase.purged && !live && (
+          <ConvertToScenarioButton companyId={runCase.company_id} conversationId={runCase.conversation_id} />
         )}
       </div>
 
