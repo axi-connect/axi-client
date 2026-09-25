@@ -2,7 +2,12 @@
 
 import { isPublicPath } from "@/core/config/routes"
 import { socketManager } from "@/core/realtime/socket-manager"
-import { API_ERROR_CODES, COMPANY_SUSPENDED_EVENT, isSuspensionCode } from "@/core/api/problem"
+import {
+  API_ERROR_CODES,
+  COMPANY_SUSPENDED_EVENT,
+  isSuspensionCode,
+  SUPPORT_ENDED_PATH,
+} from "@/core/api/problem"
 import { CompanySuspendedScreen } from "@/core/providers/company-suspended-screen"
 import type { AuthUser, LoginPayload, SessionResponse, SignupPayload, SignupResult } from "@/shared/auth/auth.types"
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
@@ -105,6 +110,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (json.isAuthenticated && json.user) {
         setUser(json.user)
         setStatus("authenticated")
+      } else if (json.code === API_ERROR_CODES.supportSessionEnded) {
+        // Pestaña de soporte con la sesión terminada: nunca al login del cliente.
+        setUser(null)
+        setStatus("unauthenticated")
+        window.location.href = SUPPORT_ENDED_PATH
       } else if (isSuspensionCode(json.code)) {
         // Nunca al login: también respondería 403 (loop de mensajes confusos).
         markSuspended(json.code)

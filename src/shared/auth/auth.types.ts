@@ -50,7 +50,19 @@ export type WsTokenResponse = {
 export const COOKIE_NAMES = {
   accessToken: "accessToken",
   refreshToken: "refreshToken",
+  /**
+   * Acceso de soporte (entrega F3): el JWT del dueño con claims de soporte,
+   * SIN refresh. Si existe, manda sobre `accessToken` en toda ruta de tenant
+   * y jamás se refresca (`shared/auth/support-session.ts`).
+   */
+  supportAccessToken: "supportAccessToken",
 } as const;
+
+/**
+ * Cabecera con la que `/auth/soporte` manda el token de plataforma al BFF de
+ * canje: vive en el `sessionStorage` de la consola y el BFF no puede leerlo.
+ */
+export const SUPPORT_PLATFORM_TOKEN_HEADER = "X-Platform-Token";
 
 /** Vida del refresh token en el backend (JWT_REFRESH_TTL_DAYS = 14). */
 export const REFRESH_TOKEN_MAX_AGE_SECONDS = 60 * 60 * 24 * 14;

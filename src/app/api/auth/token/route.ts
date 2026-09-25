@@ -5,6 +5,8 @@ import {
   refreshSession,
 } from "@/shared/auth/auth.handlers";
 import { COOKIE_NAMES, type WsTokenResponse } from "@/shared/auth/auth.types";
+import { API_ERROR_CODES } from "@/core/api/problem";
+import { clearSupportCookie, readSupportToken } from "@/shared/auth/support-session";
 
 /**
  * GET /api/auth/token — devuelve el access token crudo SOLO para el
@@ -16,6 +18,18 @@ const MIN_REMAINING_MS = 60_000;
 
 export async function GET() {
   const store = await cookies();
+
+  // Acceso de soporte: su token tal cual, sin refresh. Vencido, la sesión terminó.
+  const supportToken = readSupportToken(store);
+  if (supportToken) {
+    const supportExpiresAt = getAccessTokenExpiry(supportToken);
+    if (supportExpiresAt === null || supportExpiresAt <= Date.now()) {
+      clearSupportCookie(store);
+      return NextResponse.json({ code: API_ERROR_CODES.supportSessionEnded }, { status: 401 });
+    }
+    return NextResponse.json<WsTokenResponse>({ token: supportToken, expires_at: supportExpiresAt });
+  }
+
   let token = store.get(COOKIE_NAMES.accessToken)?.value ?? null;
   let expiresAt = token ? getAccessTokenExpiry(token) : null;
 

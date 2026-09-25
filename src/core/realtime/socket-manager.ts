@@ -2,6 +2,7 @@
 
 import { io, type Socket } from "socket.io-client";
 import { WS_BASE_URL } from "@/core/config/env";
+import { API_ERROR_CODES, SUPPORT_SESSION_EVENT } from "@/core/api/problem";
 import {
   REALTIME_NAMESPACES,
   type ClientEventsOf,
@@ -120,7 +121,17 @@ class SocketManager {
     socket.on("connect", () => {
       connection.retryAttempt = 0;
     });
-    socket.on("connect_error", () => {
+    socket.on("connect_error", (error: Error & { data?: { code?: unknown } }) => {
+      // Soporte sobre una cuenta suspendida (N7): el backend no deja entrar al
+      // tiempo real a propósito. Reintentar solo martillearía el server; se
+      // corta y la barra de soporte lo explica.
+      if (error?.data?.code === API_ERROR_CODES.supportReadonlySuspended) {
+        this.halt();
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent(SUPPORT_SESSION_EVENT, { detail: error.data.code }));
+        }
+        return;
+      }
       this.handleConnectError(namespace, connection);
     });
 

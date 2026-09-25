@@ -139,7 +139,7 @@ const nextConfig: NextConfig = {
           { key: "X-Robots-Tag", value: "noindex, nofollow" },
         ],
       },
-      ...["/auth/crear-contrasena", "/auth/restablecer", "/auth/olvide-contrasena"].map((source) => ({
+      ...["/auth/crear-contrasena", "/auth/restablecer", "/auth/olvide-contrasena", "/auth/soporte"].map((source) => ({
         source,
         headers: [{ key: "Referrer-Policy", value: "no-referrer" }],
       })),

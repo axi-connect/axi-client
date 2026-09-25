@@ -10,6 +10,7 @@ import {
   readJsonBody,
 } from "@/shared/auth/bff-response";
 import { COOKIE_NAMES, type AuthTokens } from "@/shared/auth/auth.types";
+import { readSupportToken } from "@/shared/auth/support-session";
 
 type ChangeBody = { current_password: string; new_password: string };
 
@@ -34,6 +35,14 @@ export async function POST(req: NextRequest) {
   const payload: ChangeBody = { current_password: body.current_password, new_password: body.new_password };
 
   const store = await cookies();
+  // Soporte no cambia la contraseña del dueño, y este BFF escribiría las
+  // cookies del CLIENTE con la sesión reemitida: se corta aquí.
+  if (readSupportToken(store)) {
+    return NextResponse.json(
+      { code: API_ERROR_CODES.supportActionForbidden, message: "No disponible en soporte" },
+      { status: 403 },
+    );
+  }
   if (!store.get(COOKIE_NAMES.accessToken) && !store.get(COOKIE_NAMES.refreshToken)) {
     return NextResponse.json(
       { code: API_ERROR_CODES.unauthorized, message: "Sesión no iniciada" },

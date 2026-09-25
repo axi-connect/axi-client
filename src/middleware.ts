@@ -7,8 +7,10 @@ export function middleware(req: NextRequest) {
 
   const access = req.cookies.get("accessToken")?.value
   const refresh = req.cookies.get("refreshToken")?.value
+  // Acceso de soporte (entrega F3): su cookie también es una sesión válida.
+  const support = req.cookies.get("supportAccessToken")?.value
 
-  if (!access && !refresh) {
+  if (!access && !refresh && !support) {
     const url = req.nextUrl.clone()
     url.pathname = "/auth/login"
     url.searchParams.set("next", pathname)

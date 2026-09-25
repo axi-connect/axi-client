@@ -7,6 +7,7 @@ import {
 } from "@/shared/auth/auth.handlers";
 import { COOKIE_NAMES } from "@/shared/auth/auth.types";
 import { forwardedForHeaders } from "@/shared/auth/bff-response";
+import { clearSupportCookie, readSupportToken } from "@/shared/auth/support-session";
 import { API_ERROR_CODES, isSuspensionCode } from "@/core/api/problem";
 
 export const runtime = "nodejs";
@@ -17,6 +18,9 @@ export const runtime = "nodejs";
  * - Inyecta `Authorization: Bearer` desde la cookie HttpOnly (el browser nunca ve el token).
  * - Refresh proactivo si el access expira en ≤60s, y retry-once reactivo ante un 401
  *   del backend (token revocado por `token_version`, denylist, etc.).
+ * - Acceso de soporte: si hay `supportAccessToken`, ESE es el Bearer, sin
+ *   refresh jamás; un 401 borra solo esa cookie y responde
+ *   `auth/support_session_ended` (la pestaña va a `/auth/soporte?fin=1`).
  * - Reenvía `X-Forwarded-For`/`X-Real-IP` del visitante (throttle por IP del backend).
  * - Devuelve status y body del backend verbatim, preservando `content-type`
  *   (incluido `application/problem+json`) y `Retry-After`.
@@ -76,11 +80,45 @@ function suspensionMessage(code: string | undefined): string {
     : "La empresa está suspendida";
 }
 
+/** Sesión de soporte: un solo intento con su token, sin refresh (regla de `support-session.ts`). */
+async function proxySupport(
+  req: NextRequest,
+  store: Awaited<ReturnType<typeof cookies>>,
+  token: string,
+  targetUrl: string,
+  requestBody: ArrayBuffer | undefined,
+): Promise<NextResponse> {
+  try {
+    const backendRes = await fetch(targetUrl, {
+      method: req.method,
+      headers: buildForwardHeaders(req, token),
+      body: requestBody,
+      cache: "no-store",
+    });
+    if (backendRes.status === 401) {
+      clearSupportCookie(store);
+      return NextResponse.json(
+        { code: API_ERROR_CODES.supportSessionEnded, message: "La sesión de soporte terminó" },
+        { status: 401 },
+      );
+    }
+    return buildResponse(backendRes, await backendRes.arrayBuffer());
+  } catch {
+    return NextResponse.json(
+      { code: "client/network", message: "No fue posible contactar al backend" },
+      { status: 502 },
+    );
+  }
+}
+
 async function proxy(req: NextRequest): Promise<NextResponse> {
   const store = await cookies();
   const targetUrl = buildTargetUrl(req);
   // El body solo puede leerse una vez: se retiene para el posible reintento.
   const requestBody = ["GET", "HEAD"].includes(req.method) ? undefined : await req.arrayBuffer();
+
+  const supportToken = readSupportToken(store);
+  if (supportToken) return proxySupport(req, store, supportToken, targetUrl, requestBody);
 
   let token = store.get(COOKIE_NAMES.accessToken)?.value ?? null;
 

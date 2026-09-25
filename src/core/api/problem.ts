@@ -48,6 +48,18 @@ export const API_ERROR_CODES = {
   /** Throttle de intentos de contraseña (429, con `Retry-After`). No cierra la sesión. */
   tooManyAttempts: "auth/too_many_attempts",
   permissionDenied: "rbac/permission_denied",
+  // Acceso de soporte (entrega F3)
+  /** Acción bloqueada en una sesión de soporte (403): toast «No disponible en soporte». */
+  supportActionForbidden: "auth/support_action_forbidden",
+  /** WS de soporte sobre una cuenta suspendida: solo lectura y sin tiempo real. */
+  supportReadonlySuspended: "auth/support_readonly_suspended",
+  supportReauthFailed: "auth/support_reauth_failed",
+  supportReauthLocked: "auth/support_reauth_locked",
+  supportHandoffInvalid: "auth/support_handoff_invalid",
+  /** Propio del BFF: la cookie de soporte venció o la revocaron (401 bajo soporte). */
+  supportSessionEnded: "auth/support_session_ended",
+  /** Propio del BFF: hay una sesión de cliente en el navegador; el canje no la toca. */
+  supportSessionConflict: "auth/support_session_conflict",
   /** El rol lo permite pero el PLAN no lo incluye; `details.upgrade_hint.path` lleva a ampliarlo. */
   capabilityNotGranted: "entitlements/capability_not_granted",
   usageLimitExceeded: "usage/limit_exceeded",
@@ -94,6 +106,17 @@ export type ApiErrorCode = (typeof API_ERROR_CODES)[keyof typeof API_ERROR_CODES
  * Convención `familia:acción:estado` (architecture §9).
  */
 export const COMPANY_SUSPENDED_EVENT = "auth:company:suspended";
+
+/**
+ * CustomEvent del DOM de una sesión de soporte: lo despacha el `HttpClient`
+ * ante `auth/support_action_forbidden` o `auth/support_session_ended`, y lo
+ * escucha la barra de soporte (solo existe bajo la cookie de soporte). El
+ * `detail` lleva el code.
+ */
+export const SUPPORT_SESSION_EVENT = "auth:support:signal";
+
+/** A dónde va la pestaña de soporte cuando la sesión termina. */
+export const SUPPORT_ENDED_PATH = "/auth/soporte?fin=1";
 
 /**
  * ¿El code corresponde a un bloqueo total de la empresa (F15)? El trial vencido
