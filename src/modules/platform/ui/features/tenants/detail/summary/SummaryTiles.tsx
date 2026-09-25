@@ -286,8 +286,8 @@ export function WelcomeTile({
 // ------------------------------------------------------------------ lo próximo
 
 /**
- * La isla de tinta del Resumen: la próxima cita con su cuenta atrás. En oscuro
- * es una tarjeta elevada con borde (una isla blanca sobre negro gritaría).
+ * La isla del Resumen (§9.5.1): la próxima cita con su cuenta atrás. Su
+ * material sale de `ISLAND_DEFAULTS`; los botones son `contrast`.
  */
 export function NextStepCard({
   tenantId,

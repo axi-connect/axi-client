@@ -25,11 +25,11 @@ const buttonVariants = cva(
         // El botón fuerte DENTRO de una isla (§9.5.1): el color del texto de la
         // superficie como fondo. Blanco sobre tinta, tinta sobre cristal blanco.
         contrast:
-          "bg-foreground text-background shadow-xs hover:bg-foreground/90",
+          "bg-foreground text-background shadow-xs hover:bg-foreground/90 focus-visible:ring-foreground/50",
         // El botón líquido (§9.5.1): cristal con canto cónico. Para la acción
         // secundaria DENTRO de una isla, junto a un `contrast`. Su aspecto
         // vive en `.glass-control` (globals.css, bloque ISLAS).
-        glass: "glass-control rounded-full",
+        glass: "glass-control rounded-full focus-visible:ring-foreground/50",
         ghost:
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",
@@ -41,6 +41,8 @@ const buttonVariants = cva(
         icon: "size-9",
       },
     },
+    // Los tamaños traen `rounded-md`: el cristal es SIEMPRE píldora.
+    compoundVariants: [{ variant: "glass", class: "rounded-full" }],
     defaultVariants: {
       variant: "default",
       size: "default",

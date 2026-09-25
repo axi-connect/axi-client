@@ -675,7 +675,7 @@ es un **material** del sistema.
 |---|---|---|
 | Cristal blanco (`glass` + `light`) | **Por defecto** para toda isla de contenido («Lo próximo», «Axi propone», «Así queda tu mes») | Vidrio esmerilado casi blanco, canto de luz, reflejo arriba, halo suave con violeta. Texto en tinta |
 | Cristal negro (`glass` + `dark`) | Una isla que tiene que mandar sobre un fondo claro muy cargado | Humo oscuro translúcido con el mismo canto, reflejo y halo |
-| Tinta (`ink`) | **Barras de acción pegadas abajo** (`ActionDock`, la barra de Aprobar / Rechazar) y paneles de marca (crear contraseña) | Plano oscuro con brillo opcional |
+| Tinta (`ink`) | **Barras de acción** (la de envío de Preparar entrega, la de etiquetar en Calidad, la de Aprobar / Rechazar) y paneles de marca (crear contraseña) | Plano oscuro con brillo opcional |
 
 **Dónde vive cada cosa (cambiar el efecto = tocar un solo sitio):**
 
@@ -691,22 +691,29 @@ es un **material** del sistema.
   - Lo que va dentro se escribe con los tokens de siempre: `text-muted-foreground`, `bg-muted`, `border-border`,
     `StatePill` y `Button variant="contrast"`, que es el botón fuerte (blanco sobre tinta, tinta sobre cristal
     blanco).
-  - **Dentro de una isla no se usan `text-background` ni variantes `dark:`**, porque el tema de la página no es el
-    de la isla.
+  - **Dentro de una isla no se usa `text-background`** (el color invertido a mano). La variante `dark:` sí vale:
+    aplica en el tema oscuro y dentro de una superficie oscura (`@custom-variant dark` incluye `.surface-dark *`),
+    así que los primitivos que la traen se ven igual en una isla de tinta que en la página oscura.
   - En tema oscuro la superficie clara toma el esquema oscuro (una isla blanca sobre negro grita).
-  - Una superficie oscura en tema claro conserva la **marca**: el CTA coral, con texto blanco.
+  - Una superficie oscura en tema claro conserva la **marca**: el CTA coral, con texto blanco. El texto del CTA es
+    `--axi-on-brand` (heredado de la página); los estados usan `--axi-on-color` del esquema de la isla, que pasa AA
+    sobre sus colores.
 
 **El canto líquido y el botón de cristal** (tomado de un liquid glass de referencia que aportó el dueño, reescrito
 sin `<style>` por render y con `color-mix` en lugar de `oklch(from …)`):
 
 - El canto del cristal es un **cónico con dos brillos en esquinas opuestas** sobre un filo tenue.
-  - Su ángulo es una propiedad registrada (`@property --island-rim-angle`), así que al pasar el ratón gira con
-    transición.
+  - Es estático: una isla no es clicable, así que no reacciona al ratón.
   - El cuerpo lleva sombras internas de grosor (oscura arriba, clara abajo) y la luz es una franja diagonal que se
-    desplaza. Todo se desactiva con `prefers-reduced-motion`.
+    queda quieta.
 - `Button variant="glass"` (`.glass-control`) es el **botón líquido**, con la misma receta a escala de control.
   - Es la acción secundaria dentro de una isla, junto a un `contrast` («Ver el detalle» junto a «Aprobar»).
-  - Toma la superficie en la que vive. En táctil el canto no gira.
+  - Su canto gira al pasar el ratón (`@property --glass-control-angle`); en táctil y con `prefers-reduced-motion`
+    no gira.
+  - Toma la superficie en la que vive y no lleva `backdrop-filter` propio: lo da el cristal de la isla.
+  - Siempre es píldora, también en `sm`, `lg` e `icon` (`compoundVariants`).
+  - `contrast` y `glass` llevan el anillo de foco en el color del texto de la superficie
+    (`focus-visible:ring-foreground/50`): el coral no contrasta sobre una isla.
 
 **API.**
 
@@ -722,13 +729,15 @@ sin `<style>` por render y con `color-mix` en lugar de `oklch(from …)`):
 
 - Sin JS ni estado, así que sirve en Server Components.
 - Sin nodos extra: el brillo es una capa del `background`; el canto (máscara) y el reflejo son pseudo-elementos.
-- El `backdrop-filter` solo existe en el cristal, y hay una isla por pantalla. No se anima ninguna propiedad de la
-  isla.
+- El `backdrop-filter` (20 px) solo existe en el cuerpo del cristal, y hay una isla por pantalla. La isla no se
+  anima; el único movimiento es el canto del botón de cristal al pasar el ratón.
 
 **Accesibilidad.**
 
-- El cuerpo del cristal es lo bastante opaco (blanco 58–82 %, negro 90–94 %) para que el texto apagado pase 4,5:1.
-- Sin `backdrop-filter`, o con `prefers-reduced-transparency: reduce`, el cuerpo pasa a opaco.
+- El cuerpo del cristal es lo bastante opaco (blanco 62–82 %, negro 90–92 %) para que el texto apagado pase 4,5:1
+  (auditoría: 6,0–6,6:1 sobre el blanco y unos 5:1 en el pico del brillo del negro).
+- Sin `backdrop-filter`, o con `prefers-reduced-transparency: reduce`, el cuerpo (y el botón de cristal) pasa a
+  opaco.
 - El canto y el reflejo no llevan información.
 
 ### 9.6 Recorridos y líneas de tiempo
@@ -769,7 +778,7 @@ Para un formulario de varios pasos que llega precargado (Preparar entrega):
 - **«Antes de enviar» siempre a la vista**: cada bloqueo en una fila con su acción debajo
   del texto (no al lado: a 555 px de columna el texto se partía en tres líneas), o un
   `<Alert variant="success">` cuando no hay nada.
-- **Barra de acción** (`ActionDock`): `Island as="footer" material="ink"` (§9.5.1: las barras van siempre en tinta) `sticky bottom-3`, `rounded-full` desde
+- **Barra de acción** (en `DeliveryWorkspace`): `Island as="footer" material="ink"` (§9.5.1: las barras van siempre en tinta) `sticky bottom-3`, `rounded-full` desde
   `sm`. Lleva el estado en una palabra («Casi lista», «Lista para enviar»), los tramos de
   progreso —uno por grupo de la revisión, cada uno es un botón de **24 px de alto** con la
   barra de 6 px dentro, que lleva a su paso, con su estado en `sr-only`—, **qué falta

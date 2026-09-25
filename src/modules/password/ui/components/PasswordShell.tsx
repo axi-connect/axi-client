@@ -55,7 +55,7 @@ export function PasswordShell({
           <Island
             as="aside"
             material="ink"
-            className="border-border dark:bg-muted rounded-none p-6 [--island-glow-at:0%_100%] sm:p-10 lg:border-r lg:p-12"
+            className="border-border dark:bg-muted rounded-none dark:outline-none p-6 [--island-glow-at:0%_100%] sm:p-10 lg:border-r lg:p-12"
           >
             {aside}
           </Island>
