@@ -8,6 +8,7 @@
  * lo mande nunca al servidor ni en el `Referer`.
  */
 import type { Schemas } from "@/core/api/types"
+import { endSentence, formatInstant } from "@/modules/welcome-kit/domain/formatters"
 
 /** Política D4: de 12 a 128 caracteres (el copy decía 8; manda la decisión). */
 export const PASSWORD_MIN_LENGTH = 12
@@ -57,23 +58,19 @@ export function readTokenFromHash(hash: string): string | null {
   return /^[A-Za-z0-9_.~-]{16,512}$/.test(token) ? token : null
 }
 
-const WEEKDAYS = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"]
-const MONTHS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"]
-/** Colombia no tiene horario de verano: UTC−5 todo el año. */
-const BOGOTA_OFFSET_MS = -5 * 60 * 60 * 1000
+/** Hora de Colombia: la del correo de bienvenida y la del dueño. */
+const BOGOTA = "America/Bogota"
 
 /**
  * Fecha y hora de vencimiento es-CO en hora de Colombia: «jue 1 oct · 3:40 p. m.»
- * (formato de `password_link_expires_at`, copy-v2 §5). Sin `Intl`: la salida de
- * ICU cambia entre entornos. Devuelve cadena vacía si la fecha no es válida.
+ * (formato de `password_link_expires_at`, copy-v2 §5), con el formateador del
+ * kit: meses sin punto («sep», nunca «sept»). Cadena vacía si no es válida.
  */
 export function formatExpiresAt(iso: string): string {
-  const ms = Date.parse(iso)
-  if (Number.isNaN(ms)) return ""
-  const d = new Date(ms + BOGOTA_OFFSET_MS)
-  const hours = d.getUTCHours()
-  const minutes = String(d.getUTCMinutes()).padStart(2, "0")
-  const h12 = hours % 12 === 0 ? 12 : hours % 12
-  const suffix = hours < 12 ? "a. m." : "p. m."
-  return `${WEEKDAYS[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} · ${h12}:${minutes} ${suffix}`
+  return formatInstant(iso, BOGOTA)
+}
+
+/** «Este enlace sirve una vez y vence el jue 1 oct · 3:40 p. m.» sin el «..» del final. */
+export function expiresSentence(expiresAt: string): string {
+  return endSentence(`Este enlace sirve una vez y vence el ${expiresAt}`)
 }

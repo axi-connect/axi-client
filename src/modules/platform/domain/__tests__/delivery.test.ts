@@ -203,3 +203,9 @@ describe("entrega enviada", () => {
     expect(shortMessageId("re_1")).toBe("re_1");
   });
 });
+
+describe("fechas de /platform con el formateador del kit (QA-5)", () => {
+  it("nunca «sept»", () => {
+    expect(formatTrialRange("2026-09-24T05:00:00Z", "2026-10-02T04:59:59Z", BOGOTA)).not.toContain("sept")
+  })
+})

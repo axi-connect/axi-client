@@ -3,7 +3,8 @@
  * que `PortfolioRow` aplana la factura; la acción resuelve la factura completa
  * vía `getInvoice`.
  */
-import { formatMoney, formatShortDate } from "@/core/lib/format";
+import { formatMoney } from "@/core/lib/format";
+import { formatShortDate } from "../../../domain/dates";
 import type { ColumnDef } from "@/shared/components/features/data-table";
 import { StatusBadge } from "@/shared/components/features/status-badge/StatusBadge";
 import { Button } from "@/shared/components/ui/button";

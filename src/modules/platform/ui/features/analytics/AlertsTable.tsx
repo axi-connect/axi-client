@@ -7,7 +7,7 @@
  */
 import { useRouter } from "next/navigation";
 import { cn } from "@/core/lib/utils";
-import { formatShortDate } from "@/core/lib/format";
+import { formatShortDate } from "../../../domain/dates";
 import {
   Table,
   TableBody,

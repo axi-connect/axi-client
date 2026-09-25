@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, Copy } from "lucide-react";
-import { formatDayTime } from "@/core/lib/format";
+import { formatDayTime } from "../../../domain/dates";
 import {
   DELIVERY_STATUS_LABELS,
   formatZonedDay,

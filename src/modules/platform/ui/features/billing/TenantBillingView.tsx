@@ -10,7 +10,8 @@
 import { useEffect, useState } from "react";
 import { CalendarClock, TriangleAlert } from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
-import { formatMoney, formatShortDate } from "@/core/lib/format";
+import { formatMoney } from "@/core/lib/format";
+import { formatShortDate } from "../../../domain/dates";
 import { useAlert } from "@/core/providers/alert-provider";
 import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert";
 import { Button } from "@/shared/components/ui/button";

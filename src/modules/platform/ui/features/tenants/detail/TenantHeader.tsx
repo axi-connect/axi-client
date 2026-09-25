@@ -13,7 +13,7 @@ import { usePathname } from "next/navigation";
 import { ArrowLeft, Check, LoaderCircle, PackageCheck, PencilLine, X } from "lucide-react";
 import { useAlert } from "@/core/providers/alert-provider";
 import { errorMessage } from "@/core/lib/error-messages";
-import { formatShortDate } from "@/core/lib/format";
+import { formatShortDate } from "../../../../domain/dates";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Skeleton } from "@/shared/components/ui/skeleton";

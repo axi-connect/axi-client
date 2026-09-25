@@ -103,3 +103,46 @@ describe("hora, nombres, teléfono y enlaces", () => {
     expect(panelHref("app.axi-connect.co")).toBe("https://app.axi-connect.co");
   });
 });
+
+describe("instantes es-CO (QA-5)", () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const f = require("../formatters") as typeof import("../formatters")
+  const BOGOTA = "America/Bogota"
+
+  it("septiembre es «sep», nunca «sept», y la hora «a. m.»/«p. m.» con espacios normales", () => {
+    expect(f.formatInstant("2026-09-18T14:00:00.000Z", BOGOTA)).toBe("vie 18 sep · 9:00 a. m.")
+    expect(f.formatInstant("2026-10-01T20:40:00Z", BOGOTA)).toBe("jue 1 oct · 3:40 p. m.")
+    expect(f.formatInstantDate("2026-09-12T15:00:00Z", BOGOTA)).toBe("12 sep 2026")
+    expect(f.formatInstantDateTime("2026-07-10T14:00:00Z", BOGOTA)).toBe("10 jul 2026, 9:00 a. m.")
+    expect(f.formatInstant("2026-09-18T14:00:00.000Z", BOGOTA)).not.toMatch(/[  ]/)
+  })
+
+  it("cambia de día con la zona y no rompe con una fecha inválida", () => {
+    expect(f.formatWeekdayDate("2026-09-15T04:00:00.000Z", BOGOTA)).toBe("lun 14 sep")
+    expect(f.formatInstant("no-es-fecha", BOGOTA)).toBe("")
+  })
+
+  it("endSentence cierra la frase sin punto doble", () => {
+    expect(f.endSentence("vence el jue 1 oct · 3:40 p. m.")).toBe("vence el jue 1 oct · 3:40 p. m.")
+    expect(f.endSentence("vence el jue 1 oct")).toBe("vence el jue 1 oct.")
+  })
+})
+
+describe("calendarDaysUntil (QA-8)", () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { calendarDaysUntil } = require("../formatters") as typeof import("../formatters")
+  const BOGOTA = "America/Bogota"
+  // Prueba de 7: arranca el jue 24 sep y vence el jue 1 oct a las 23:59:59 de Bogotá.
+  const ENDS = "2026-10-02T04:59:59Z"
+
+  it("el día 0 quedan 7, no 8", () => {
+    expect(calendarDaysUntil(ENDS, BOGOTA, new Date("2026-09-24T13:00:00Z"))).toBe(7)
+    // Ya de noche en Bogotá (UTC del día siguiente): sigue siendo el día 0.
+    expect(calendarDaysUntil(ENDS, BOGOTA, new Date("2026-09-25T03:30:00Z"))).toBe(7)
+  })
+
+  it("el día 7 quedan 0 («termina hoy») y después es negativo", () => {
+    expect(calendarDaysUntil(ENDS, BOGOTA, new Date("2026-10-01T15:00:00Z"))).toBe(0)
+    expect(calendarDaysUntil(ENDS, BOGOTA, new Date("2026-10-02T15:00:00Z"))).toBe(-1)
+  })
+})

@@ -9,7 +9,7 @@
 import { useState } from "react";
 import { Download, LifeBuoy, LoaderCircle, XCircle } from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
-import { formatDayTime } from "@/core/lib/format";
+import { formatDayTime } from "../../../domain/dates";
 import { useAlert } from "@/core/providers/alert-provider";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";

@@ -12,6 +12,8 @@
  * se pinta tal cual; aquí solo se decide dónde va cada uno.
  */
 
+import { formatInstantTime, formatWeekdayDate } from "@/modules/welcome-kit/domain/formatters";
+
 // ------------------------------------------------------------------ pasos
 
 export const DELIVERY_STEPS = [
@@ -351,34 +353,14 @@ export function zonedInputToIso(local: string, timeZone: string): string | null 
   return `${y}-${pad(mo)}-${pad(d)}T${pad(h)}:${pad(mi)}:00${sign}${pad(Math.floor(abs / 60))}:${pad(abs % 60)}`;
 }
 
-function plainSpaces(text: string): string {
-  return text.replace(/[  ]/g, " ");
-}
-
-/** «sáb 26 sep» en la zona del tenant. */
+/** «sáb 26 sep» en la zona del tenant (formateador es-CO del kit: «sep», nunca «sept»). */
 export function formatZonedDay(iso: string, timeZone: string): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "";
-  const parts = new Intl.DateTimeFormat("es-CO", {
-    timeZone,
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-  }).formatToParts(date);
-  const get = (type: Intl.DateTimeFormatPartTypes) =>
-    (parts.find((part) => part.type === type)?.value ?? "").replace(".", "");
-  // ICU reciente abrevia septiembre «sept»; la voz de axi (y el kit) dice «sep».
-  const month = get("month") === "sept" ? "sep" : get("month");
-  return plainSpaces(`${get("weekday")} ${get("day")} ${month}`);
+  return formatWeekdayDate(iso, timeZone);
 }
 
 /** «11:59 p. m.» en la zona del tenant. */
 export function formatZonedTime(iso: string, timeZone: string): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "";
-  return plainSpaces(
-    new Intl.DateTimeFormat("es-CO", { timeZone, hour: "numeric", minute: "2-digit", hour12: true }).format(date),
-  );
+  return formatInstantTime(iso, timeZone);
 }
 
 /** «jue 24 sep → jue 1 oct a las 11:59 p. m.» (la prueba que arrancaría hoy). */

@@ -20,7 +20,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { isHttpError } from "@/core/api/problem";
 import { errorMessage } from "@/core/lib/error-messages";
-import { formatMoney, formatShortDate, parseMoneyToCents } from "@/core/lib/format";
+import { formatMoney, parseMoneyToCents } from "@/core/lib/format";
+import { formatShortDate } from "../../../domain/dates";
 import { useAlert } from "@/core/providers/alert-provider";
 import { DetailSheet } from "@/shared/components/features/detail-sheet";
 import { TableSkeleton } from "@/shared/components/features/loading";

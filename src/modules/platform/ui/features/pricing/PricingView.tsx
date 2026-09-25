@@ -11,7 +11,7 @@ import { Mic, MoreVertical, PencilLine, Plus, TimerOff } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { useAlert } from "@/core/providers/alert-provider";
 import { errorMessage } from "@/core/lib/error-messages";
-import { formatShortDate } from "@/core/lib/format";
+import { formatShortDate } from "../../../domain/dates";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Modal } from "@/shared/components/ui/modal";

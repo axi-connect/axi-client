@@ -9,7 +9,7 @@
 import { useMemo, useState } from "react";
 import { Info, Plus, TriangleAlert } from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
-import { formatShortDate } from "@/core/lib/format";
+import { formatShortDate } from "../../../domain/dates";
 import { useAlert } from "@/core/providers/alert-provider";
 import { DetailSheet } from "@/shared/components/features/detail-sheet";
 import { TableSkeleton } from "@/shared/components/features/loading";

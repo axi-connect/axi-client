@@ -118,3 +118,89 @@ export function displayUrl(url: string): string {
 export function panelHref(url: string): string {
   return `https://${displayUrl(url)}`;
 }
+
+// ─── Instantes (ISO con hora) en una zona ───────────────────────────────────
+//
+// Las mismas reglas de arriba para fechas con hora: meses de `MONTHS_SHORT`
+// (sin punto, «sep» y no «sept»), «a. m.»/«p. m.» con espacios normales y
+// nunca un punto doble al cerrar la frase (`endSentence`). De `Intl` solo se
+// toman los NÚMEROS de la fecha en la zona pedida, que no varían entre motores.
+
+const WEEKDAYS_SHORT = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
+
+type InstantParts = { year: number; month: number; day: number; hour: number; minute: number; weekday: number };
+
+function instantParts(iso: string, timeZone?: string): InstantParts | null {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return null;
+  const parts = new Intl.DateTimeFormat("en-US", {
+    ...(timeZone ? { timeZone } : {}),
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    hourCycle: "h23",
+  }).formatToParts(date);
+  const get = (type: Intl.DateTimeFormatPartTypes) => Number(parts.find((part) => part.type === type)?.value ?? "0");
+  const [year, month, day] = [get("year"), get("month"), get("day")];
+  const weekday = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
+  return { year, month, day, hour: get("hour") % 24, minute: get("minute"), weekday };
+}
+
+/** La fecha civil (`YYYY-MM-DD`) de un instante en la zona pedida. */
+export function civilDateIn(iso: string, timeZone?: string): CivilDate | null {
+  const p = instantParts(iso, timeZone);
+  return p ? { year: p.year, month: p.month, day: p.day } : null;
+}
+
+/** «jue 1 oct». Cadena vacía si la fecha no es válida. */
+export function formatWeekdayDate(iso: string, timeZone?: string): string {
+  const p = instantParts(iso, timeZone);
+  return p ? `${WEEKDAYS_SHORT[p.weekday]} ${p.day} ${MONTHS_SHORT[p.month - 1]}` : "";
+}
+
+/** «3:40 p. m.». */
+export function formatInstantTime(iso: string, timeZone?: string): string {
+  const p = instantParts(iso, timeZone);
+  return p ? formatClockTime(`${p.hour}:${String(p.minute).padStart(2, "0")}`) : "";
+}
+
+/** «jue 1 oct · 3:40 p. m.». */
+export function formatInstant(iso: string, timeZone?: string): string {
+  const day = formatWeekdayDate(iso, timeZone);
+  return day ? `${day} · ${formatInstantTime(iso, timeZone)}` : "";
+}
+
+/** «12 sep 2026» (con año) o «12 sep». */
+export function formatInstantDate(iso: string, timeZone?: string, withYear = true): string {
+  const date = civilDateIn(iso, timeZone);
+  return date ? formatShortDate(date, withYear) : "";
+}
+
+/** «12 sep 2026, 9:00 a. m.». */
+export function formatInstantDateTime(iso: string, timeZone?: string): string {
+  const date = formatInstantDate(iso, timeZone);
+  return date ? `${date}, ${formatInstantTime(iso, timeZone)}` : "";
+}
+
+/** Cierra una frase con punto sin duplicarlo: «… 3:40 p. m.» no gana otro «.». */
+export function endSentence(text: string): string {
+  const trimmed = text.trimEnd();
+  return trimmed.endsWith(".") ? trimmed : `${trimmed}.`;
+}
+
+/**
+ * Días de CALENDARIO que faltan hasta el fin de la prueba, en la zona del
+ * tenant: la fecha local del fin menos la fecha local de hoy. Una prueba de 7
+ * días que vence el día 7 a las 23:59 da 7 el día 0 y 0 el día 7 («termina
+ * hoy»); negativo = ya terminó.
+ */
+export function calendarDaysUntil(endsAtIso: string, timeZone?: string, now: Date = new Date()): number | null {
+  const end = civilDateIn(endsAtIso, timeZone);
+  const today = civilDateIn(now.toISOString(), timeZone);
+  if (!end || !today) return null;
+  const endMs = Date.UTC(end.year, end.month - 1, end.day);
+  const todayMs = Date.UTC(today.year, today.month - 1, today.day);
+  return Math.round((endMs - todayMs) / 86_400_000);
+}
