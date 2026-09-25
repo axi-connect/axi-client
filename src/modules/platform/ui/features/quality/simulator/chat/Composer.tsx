@@ -130,7 +130,7 @@ export function Composer({ disabled, disabledReason, pending, capUsd, dailyCapUs
                 }
               }}
               disabled={disabled}
-              placeholder={disabled ? disabledReason ?? "La sesión no acepta mensajes" : "Escribe como el cliente… (Enter envía, Shift+Enter salto)"}
+              placeholder={disabled ? disabledReason ?? "La sesión no acepta mensajes" : "Escribe como el cliente…"}
               rows={1}
               className="max-h-40 min-h-10 flex-1 resize-none border-0 bg-transparent px-2 shadow-none focus-visible:ring-0 dark:bg-transparent"
               aria-label="Mensaje del cliente simulado"
@@ -147,7 +147,7 @@ export function Composer({ disabled, disabledReason, pending, capUsd, dailyCapUs
         </p>
       )}
       <p className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
-        <span>Pipeline real: lote de mensajes, tools, botones y medios como en WhatsApp. Cada turno se cobra a plataforma.</span>
+        <span>Enter envía · Shift+Enter salta de línea. Pipeline real: lote de mensajes, tools, botones y medios como en WhatsApp; cada turno se cobra a plataforma.</span>
         <span className="tabular-nums">
           tope {formatUsd(capUsd)} · diario {formatUsd(dailyCapUsd)}
         </span>

@@ -11,7 +11,7 @@ import { formatSpendUsd } from "../runs-format";
 export function RunSummaryCards({ run }: { run: RunDetail }) {
   const settled = run.cases_passed + run.cases_failed + run.cases_blocked;
   return (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 min-[1400px]:grid-cols-5">
+    <div className="grid grid-cols-2 gap-4 lg:max-[1399px]:grid-cols-3 min-[1400px]:grid-cols-5">
       <QualityTile label="Casos" as="article" className="col-span-2 lg:col-span-1">
         <BigFigure value={settled} unit={`de ${run.cases_total}`} />
         <Meter value={run.cases_total === 0 ? 0 : settled / run.cases_total} label="Casos asentados" className="mt-auto" />

@@ -22,7 +22,7 @@ type SessionInspectorProps = {
 export function SessionInspector({ session, transcriptLength, onEnd, onPurge, ending }: SessionInspectorProps) {
   const traceQuery = useSessionTraceQuery(session.id, transcriptLength);
   return (
-    <aside className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-3xl border border-border bg-card" aria-label="Inspector de la sesión">
+    <aside className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-3xl border border-border bg-card lg:col-span-2 xl:col-span-1" aria-label="Inspector de la sesión">
       <Tabs defaultValue="state" className="flex min-h-0 flex-1 flex-col">
         <div className="px-4 pt-4 pb-1">
           <TabsList surface="inline" className="w-full">

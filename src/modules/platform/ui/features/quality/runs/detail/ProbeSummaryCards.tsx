@@ -106,9 +106,10 @@ export function ProbeSummaryCards({ run }: { run: RunDetail }) {
   const misses = Math.max(0, metrics.items - metrics.hits);
 
   return (
-    <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)] min-[1400px]:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_300px]">
-      <QualityTile label={main.label} as="article" className="p-6 lg:col-span-2 xl:col-span-1 xl:row-span-2">
-        <BigFigure value={formatRatio(main.value)} unit={main.hint} size="xl" />
+    <div className="grid gap-4 lg:max-xl:grid-cols-2 xl:max-[1399px]:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)] min-[1400px]:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_300px]">
+      <QualityTile label={main.label} as="article" className="p-6 lg:max-xl:col-span-2 xl:row-span-2">
+        <BigFigure value={formatRatio(main.value)} size="xl" />
+        <p className="text-sm text-muted-foreground tabular-nums">{main.hint}</p>
         <div className="mt-auto space-y-2 pt-4">
           <Meter value={main.value} marks={[0.7, 0.9]} tone={ratioTone(main.value) === "success" ? "default" : ratioTone(main.value) === "warning" ? "warning" : "destructive"} label={`${main.label}: ${formatRatio(main.value)}`} />
           <p className="flex flex-wrap justify-between gap-2 text-xs text-muted-foreground">
@@ -128,7 +129,7 @@ export function ProbeSummaryCards({ run }: { run: RunDetail }) {
         </QualityTile>
       ))}
 
-      <InkPanel label="Siguiente paso" className="lg:col-span-2 xl:col-span-3 min-[1400px]:col-span-1 min-[1400px]:row-span-2 min-[1400px]:col-start-4 min-[1400px]:row-start-1">
+      <InkPanel label="Siguiente paso" className="lg:max-xl:col-span-2 xl:max-[1399px]:col-span-3 min-[1400px]:col-start-4 min-[1400px]:row-span-2 min-[1400px]:row-start-1">
         <Kicker>Siguiente paso</Kicker>
         <p className="font-heading text-2xl leading-tight font-bold tracking-tight">
           {misses === 0 ? "Sin fallos" : `${misses} ${misses === 1 ? "fallo" : "fallos"} por revisar`}

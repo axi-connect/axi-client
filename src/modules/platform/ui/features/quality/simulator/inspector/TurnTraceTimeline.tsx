@@ -60,7 +60,7 @@ export function TurnTraceTimeline({ trace, loading }: { trace: SessionTrace | un
       <div className="grid grid-cols-3 gap-2">
         <Counter label="Turnos" value={turns.length} />
         <Counter label="Tools" value={tools} />
-        <Counter label="Correcciones" value={nudges} />
+        <Counter label="Ajustes" value={nudges} />
       </div>
       <ol className="space-y-4">
         {trace.turns.map((entry, index) => {

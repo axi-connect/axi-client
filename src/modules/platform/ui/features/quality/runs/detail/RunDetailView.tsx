@@ -120,10 +120,10 @@ export function RunDetailView({ runId }: { runId: string }) {
               {run.suite && (
                 <>
                   {" "}
-                  · Suite: <span className="font-mono text-xs">{run.suite.code}</span>
+                  · <span className="whitespace-nowrap">Suite: <span className="font-mono text-xs">{run.suite.code}</span></span>
                 </>
               )}
-              {" "}· Alcance: <span className="font-mono text-xs">{runScopeLabel(run)}</span>
+              {" "}· <span className="whitespace-nowrap">Alcance: <span className="font-mono text-xs">{runScopeLabel(run)}</span></span>
             </p>
           </div>
 

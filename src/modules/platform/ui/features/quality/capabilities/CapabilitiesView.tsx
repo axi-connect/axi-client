@@ -17,6 +17,7 @@ import { RelativeDate } from "@/shared/components/ui/relative-date";
 import {
   CAPABILITY_STATUS_KEY,
   capabilityMetricText,
+  capabilityMetricValue,
   capabilitySampleText,
   countByStatus,
   groupCapabilities,
@@ -187,7 +188,7 @@ export function CapabilitiesView() {
               <span>Estado</span>
               <span>Métrica principal</span>
               <span>Muestra</span>
-              <span>Última evidencia</span>
+              <span>Evidencia</span>
               <span />
             </div>
 
@@ -295,11 +296,14 @@ function CapabilityRow({ capability }: { capability: Capability }) {
       <span>
         <QualityStatus status={CAPABILITY_STATUS_KEY[capability.status]} />
       </span>
-      <span className="flex min-w-0 items-center gap-3">
-        <span className="shrink-0 font-medium whitespace-nowrap tabular-nums">{capabilityMetricText(capability)}</span>
-        {capability.metric_value !== null && (
-          <Meter value={capability.metric_value} marks={[0.7, 0.9]} tone={METER_TONE[capability.status]} className="flex-1" />
-        )}
+      <span className="flex min-w-0 flex-col gap-1">
+        <span className="flex min-w-0 items-center gap-3">
+          <span className="shrink-0 font-medium whitespace-nowrap tabular-nums">{capabilityMetricValue(capability)}</span>
+          {capability.metric_value !== null && (
+            <Meter value={capability.metric_value} marks={[0.7, 0.9]} tone={METER_TONE[capability.status]} className="max-w-40 flex-1" />
+          )}
+        </span>
+        {capability.metric_label && <span className="truncate text-xs text-muted-foreground">{capability.metric_label}</span>}
       </span>
       <span className="whitespace-nowrap text-muted-foreground tabular-nums">{capabilitySampleText(capability)}</span>
       <span className="min-w-0 truncate text-muted-foreground">

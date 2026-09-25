@@ -35,7 +35,7 @@ export function SimulatorView({ sessionId = null }: { sessionId?: string | null 
       : undefined;
 
   return (
-    <div className="grid min-h-[620px] gap-4 lg:h-[calc(100dvh-16rem)] lg:grid-cols-[248px_minmax(0,1fr)_340px] xl:grid-cols-[256px_minmax(0,1fr)_360px]">
+    <div className="grid min-h-[620px] gap-4 lg:max-xl:grid-cols-[232px_minmax(0,1fr)] lg:max-xl:grid-rows-[640px_auto] xl:h-[calc(100dvh-16rem)] xl:max-[1399px]:grid-cols-[248px_minmax(0,1fr)_340px] xl:grid-rows-none min-[1400px]:grid-cols-[256px_minmax(0,1fr)_360px]">
       <SessionsRail currentId={sessionId} tenantFilter={tenantFilter} onTenantFilterChange={setTenantFilter} />
       {sessionId ? (
         <SessionColumns sessionId={sessionId} />
@@ -44,7 +44,7 @@ export function SimulatorView({ sessionId = null }: { sessionId?: string | null 
           <div className="flex min-h-0 min-w-0 items-start justify-center overflow-y-auto rounded-3xl border border-border bg-card p-4 lg:items-center">
             <NewSessionForm initial={initial} />
           </div>
-          <aside className="hidden overflow-hidden rounded-3xl border border-border bg-card lg:block" aria-label="Inspector de la sesión">
+          <aside className="hidden overflow-hidden rounded-3xl border border-border bg-card xl:block" aria-label="Inspector de la sesión">
             <EmptyState
               icon={Gauge}
               title="Sin sesión activa"

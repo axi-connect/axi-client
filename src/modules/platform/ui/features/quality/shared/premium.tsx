@@ -29,7 +29,9 @@ export function QualityTile({
   return (
     <Tag className={cn("flex min-w-0 flex-col gap-3 rounded-3xl border border-border bg-card p-5", className)}>
       <header className="flex min-h-6 items-center justify-between gap-2">
-        <h3 className="truncate font-sans text-xs font-normal text-muted-foreground">{label}</h3>
+        <h3 className="truncate font-sans text-xs font-normal text-muted-foreground" title={typeof label === "string" ? label : undefined}>
+          {label}
+        </h3>
         {aside}
       </header>
       {children}

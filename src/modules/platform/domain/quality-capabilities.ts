@@ -76,13 +76,18 @@ export function mostUrgentCapability<T extends Pick<Capability, "status" | "metr
   return null;
 }
 
+/** Solo la cifra: «0,91» (probe), «96 %» (checks/casos) o «—». */
+export function capabilityMetricValue(capability: Pick<Capability, "metric_value" | "source">): string {
+  if (capability.metric_value === null) return "—";
+  return capability.source === "probe"
+    ? capability.metric_value.toFixed(2).replace(".", ",")
+    : `${Math.round(capability.metric_value * 100)} %`;
+}
+
 /** «0,91 · Recall@k (probe)», «96 % · Checks aprobados» o «—». */
 export function capabilityMetricText(capability: Pick<Capability, "metric_label" | "metric_value" | "source">): string {
-  if (capability.metric_value === null) return "—";
-  const value =
-    capability.source === "probe"
-      ? capability.metric_value.toFixed(2).replace(".", ",")
-      : `${Math.round(capability.metric_value * 100)} %`;
+  const value = capabilityMetricValue(capability);
+  if (capability.metric_value === null) return value;
   return capability.metric_label ? `${value} · ${capability.metric_label}` : value;
 }
 

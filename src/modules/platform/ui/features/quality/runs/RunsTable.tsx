@@ -75,28 +75,28 @@ export function RunsTable({ runs }: { runs: RunListItem[] }) {
                     <span className="text-muted-foreground">—</span>
                   )}
                 </TableCell>
-                <TableCell className="max-w-48 truncate font-mono text-xs">{runScopeLabel(run)}</TableCell>
+                <TableCell className="max-w-40 truncate font-mono text-xs" title={runScopeLabel(run)}>{runScopeLabel(run)}</TableCell>
                 <TableCell>
                   <QualityStatus status={run.status} />
                 </TableCell>
-                <TableCell className="min-w-36 tabular-nums">
+                <TableCell className="min-w-40 tabular-nums">
                   {settled === 0 && run.cases_total === 0 ? (
                     <span className="text-muted-foreground">—</span>
                   ) : (
                     <span className="flex flex-col gap-1.5">
-                      <span className="whitespace-nowrap">
-                        <span className="font-medium">{run.cases_passed}</span> de {run.cases_total} aprobados
+                      <span className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5">
+                        <span className="whitespace-nowrap">
+                          <span className="font-medium">{run.cases_passed}</span> de {run.cases_total} {run.kind === "probe" ? "aciertos" : "aprobados"}
+                        </span>
                         {run.cases_failed > 0 && (
-                          <span className="inline-flex items-center gap-1 text-muted-foreground">
-                            {" "}
-                            · <ToneDot tone="destructive" />
+                          <span className="inline-flex items-center gap-1 text-muted-foreground" title={run.kind === "probe" ? "Fallos" : "Casos fallidos"}>
+                            <ToneDot tone="destructive" />
                             {run.cases_failed}
                           </span>
                         )}
                         {run.cases_blocked > 0 && (
-                          <span className="inline-flex items-center gap-1 text-muted-foreground">
-                            {" "}
-                            · <ToneDot tone="warning" />
+                          <span className="inline-flex items-center gap-1 text-muted-foreground" title="Casos bloqueados">
+                            <ToneDot tone="warning" />
                             {run.cases_blocked}
                           </span>
                         )}
@@ -117,7 +117,7 @@ export function RunsTable({ runs }: { runs: RunListItem[] }) {
                   {formatSpendUsd(run.spend_usd)}
                 </TableCell>
                 <TableCell>
-                  <RelativeDate iso={run.created_at} className="text-muted-foreground" />
+                  <RelativeDate iso={run.created_at} className="whitespace-nowrap text-muted-foreground" />
                 </TableCell>
                 {/* Las acciones no deben disparar la navegación de la fila. */}
                 <TableCell className="w-10" onClick={(e) => e.stopPropagation()}>
