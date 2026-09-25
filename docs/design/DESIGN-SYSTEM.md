@@ -614,6 +614,12 @@ quality u otras consolas). Mockup aprobado: `docs/design/mockups/entrega-bienven
 (canvas del dueño, 2026-09-25). Piezas en `shared/components/features/bento/` (`BentoTile`, `StatePill`,
 `BentoFigure`, `BentoLink`, `InkIsland`, `Kicker`); referencia viva: el Resumen del tenant
 (`modules/platform/ui/features/tenants/detail/TenantSummary.tsx`).
+La segunda consumidora es Calidad (`/platform/quality`, canvas `docs/design/mockups/quality-premium/`,
+plan `docs/plans/quality_premium_plan.md`): `features/quality/shared/premium.tsx` compone estas piezas —`InkPanel`
+es `InkIsland` con `p-5`, `Kicker` es el mismo— y añade la variante de consola (`QualityTile` con etiqueta que baja a
+dos líneas, `BigFigure` de `sm` a `xl`, `Meter` para el progreso lineal con marcas de umbral, `TonePill`/`ToneDot`).
+Los estados de una consola usan `StatusBadge appearance="dot"` y las cifras con semáforo `MetricCell appearance="dot"`:
+el tono en el punto, el texto en foreground.
 
 | Pieza | Regla |
 |---|---|

@@ -1,8 +1,9 @@
 /**
- * Piezas del lenguaje premium de Calidad (quality_premium_plan.md, F1). Mismo
- * vocabulario que `SummaryTile`/`StatePill` de la ficha del tenant
- * (feat/entrega-premium): cuando las dos ramas convivan en main, se unifican en
- * `shared/components/features`.
+ * Piezas del lenguaje premium de Calidad (quality_premium_plan.md, F1) sobre el
+ * bento del sistema de diseño (`shared/components/features/bento`, §9.5): la
+ * isla y el antetítulo son los compartidos; `QualityTile` y `BigFigure` son la
+ * variante de consola de `BentoTile`/`BentoFigure` (etiqueta que puede bajar a
+ * dos líneas, `as`, tamaños sm–xl y prefijo de moneda).
  *
  * - `QualityTile`: tarjeta de UN tema — etiqueta muted arriba, una cifra o frase
  *   principal y una línea secundaria. Sin sombra: separa el borde.
@@ -11,6 +12,7 @@
  * - `QualityStatus`: estado con el tono en el punto y el texto en foreground (AA).
  */
 import { cn } from "@/core/lib/utils";
+import { InkIsland, Kicker } from "@/shared/components/features/bento";
 import { StatusBadge } from "../../../components/StatusBadge";
 
 export function QualityTile({
@@ -75,47 +77,17 @@ export function BigFigure({
   );
 }
 
-/** Versalita de las islas y los grupos. */
-export function Kicker({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <p className={cn("text-[11px] font-medium tracking-[0.12em] uppercase opacity-70", className)}>{children}</p>;
-}
-
 /**
- * Isla de tinta. En claro es `foreground` sobre `background` invertido; en
- * oscuro, tarjeta elevada con borde (la tinta invertida deslumbra). El brillo
- * coral sale del primitivo de marca con `color-mix`, nunca de un hex.
+ * La isla de tinta de quality ES la `InkIsland` del sistema de diseño (§9.5);
+ * aquí solo se fija el padding denso de las consolas (p-5). `Kicker`, igual.
  */
-export function InkPanel({
-  children,
-  className,
-  label,
-  glow = "top-right",
-}: {
-  children: React.ReactNode;
-  className?: string;
-  /** Nombre accesible de la región. */
-  label: string;
-  glow?: "top-right" | "top-left" | "none";
-}) {
+export { Kicker };
+
+export function InkPanel({ children, className, label }: { children: React.ReactNode; className?: string; label: string }) {
   return (
-    <section
-      aria-label={label}
-      className={cn(
-        "relative isolate flex min-w-0 flex-col gap-2 overflow-hidden rounded-3xl bg-foreground p-5 text-background dark:border dark:border-border dark:bg-card dark:text-foreground",
-        className,
-      )}
-    >
-      {glow !== "none" && (
-        <span
-          aria-hidden="true"
-          className={cn(
-            "pointer-events-none absolute -top-24 -z-10 size-72 rounded-full bg-[radial-gradient(circle,color-mix(in_oklab,var(--axi-brand)_45%,transparent),transparent_70%)]",
-            glow === "top-right" ? "-right-24" : "-left-24",
-          )}
-        />
-      )}
+    <InkIsland label={label} className={cn("p-5", className)}>
       {children}
-    </section>
+    </InkIsland>
   );
 }
 
