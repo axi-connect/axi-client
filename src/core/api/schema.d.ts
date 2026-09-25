@@ -19181,6 +19181,7 @@ export interface components {
                 kit_version: number;
                 business_name: string;
                 owner_first_name: string;
+                owner_name: string;
                 login_email: string;
                 panel_url: string;
                 password_reset_url: string;
@@ -19374,6 +19375,7 @@ export interface components {
             kit_version: number;
             business_name: string;
             owner_first_name: string;
+            owner_name: string;
             login_email: string;
             panel_url: string;
             password_reset_url: string;
@@ -19854,6 +19856,15 @@ export interface operations {
             };
         };
         responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthTokensDto"];
+                };
+            };
+            /** @description Contraseña fijada sin sesión (empresa suspendida) */
             204: {
                 headers: {
                     [name: string]: unknown;
