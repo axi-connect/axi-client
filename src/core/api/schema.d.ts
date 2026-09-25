@@ -14598,6 +14598,11 @@ export interface components {
                     label: string;
                     domain: string;
                     kind: string;
+                    /** @description Variable válida que en una frase fija se rompe en algunos pedidos (p. ej. vacía sin anticipo). El editor avisa y propone `use_instead`. */
+                    caution: {
+                        reason: string;
+                        use_instead: string;
+                    } | null;
                 }[];
             }[];
             block_catalog: {

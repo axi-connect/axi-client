@@ -72,12 +72,31 @@ const type: DocumentTypeView = {
       label: "Número del documento",
       domain: "document",
       kind: "text",
+      caution: null,
     },
     {
       name: "contact_name",
       label: "Nombre del cliente",
       domain: "counterparty",
       kind: "text",
+      caution: null,
+    },
+    {
+      name: "deposit_amount",
+      label: "Abono para reservar",
+      domain: "schedule",
+      kind: "money",
+      caution: {
+        reason: "sale vacío en los pedidos sin anticipo",
+        use_instead: "payment_terms",
+      },
+    },
+    {
+      name: "payment_terms",
+      label: "Forma de pago (frase según el plan)",
+      domain: "schedule",
+      kind: "text",
+      caution: null,
     },
   ],
 };
@@ -284,6 +303,40 @@ describe("DocumentTemplateEditor", () => {
     // Y la hoja sigue ahí, con la barra encima: nunca desaparece
     expect(screen.getByTitle("Vista previa del documento")).toBeInTheDocument();
     expect(screen.getByText(/La hoja espera/)).toBeInTheDocument();
+  });
+
+  it("QA R3-05: una variable con cautela avisa qué usar en su lugar sin frenar la hoja ni guardar; la propuesta no avisa", async () => {
+    render(
+      <DocumentTemplateEditor
+        type={type}
+        catalog={catalog}
+        current={current}
+        onSaved={jest.fn()}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Título" }));
+    const field = screen.getByLabelText("Texto del título");
+    fireEvent.change(field, {
+      target: { value: "Se reserva con un abono de {{deposit_amount}}" },
+    });
+    await act(async () => {
+      jest.advanceTimersByTime(PREVIEW_DEBOUNCE_MS + 10);
+    });
+    const warning = screen
+      .getByText("Esta frase puede salir rota en algunos pedidos")
+      .closest('[role="alert"]');
+    expect(warning).toHaveTextContent(
+      "{{deposit_amount}} sale vacío en los pedidos sin anticipo: usa {{payment_terms}}",
+    );
+    expect(
+      screen.getByRole("button", { name: "Guardar plantilla" }),
+    ).toBeEnabled();
+    expect(screen.queryByText(/La hoja espera/)).toBeNull();
+
+    fireEvent.change(field, { target: { value: "{{payment_terms}}" } });
+    expect(
+      screen.queryByText("Esta frase puede salir rota en algunos pedidos"),
+    ).toBeNull();
   });
 
   it("cada cláusula tiene botones con nombre propio: dos «Quitar» iguales serían un defecto de accesibilidad", () => {

@@ -21,6 +21,7 @@ import {
   newBlockId,
   removeBlock,
   templateHash,
+  cautionedTemplateVariables,
   unknownTemplateVariables,
   updateBlock,
   type BlockCatalogView,
@@ -94,6 +95,10 @@ export function DocumentTemplateEditor({
 
   const unknown = useMemo(
     () => unknownTemplateVariables(template, type.variables),
+    [template, type.variables],
+  );
+  const cautioned = useMemo(
+    () => cautionedTemplateVariables(template, type.variables),
     [template, type.variables],
   );
   const preview = useTemplatePreview({
@@ -277,6 +282,25 @@ export function DocumentTemplateEditor({
               <AlertDescription>
                 La vista previa espera hasta que la corrijas; las variables
                 disponibles están bajo cada texto.
+              </AlertDescription>
+            </Alert>
+          )}
+          {cautioned.length > 0 && (
+            <Alert variant="warning">
+              <TriangleAlert aria-hidden="true" />
+              <AlertTitle>
+                Esta frase puede salir rota en algunos pedidos
+              </AlertTitle>
+              <AlertDescription>
+                <ul className="flex flex-col gap-0.5">
+                  {cautioned.map((one) => (
+                    <li key={one.name}>
+                      <code>{`{{${one.name}}}`}</code> {one.reason}: usa{" "}
+                      <code>{`{{${one.use_instead}}}`}</code>, que arma la frase
+                      según el plan de cada pedido.
+                    </li>
+                  ))}
+                </ul>
               </AlertDescription>
             </Alert>
           )}

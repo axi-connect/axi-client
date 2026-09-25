@@ -9,6 +9,7 @@ import {
   newBlockId,
   removeBlock,
   templateHash,
+  cautionedTemplateVariables,
   unknownTemplateVariables,
   updateBlock,
   type TemplateDocument,
@@ -21,8 +22,15 @@ const variables: TemplateVariableView[] = [
     label: "Nombre del cliente",
     domain: "counterparty",
     kind: "text",
+    caution: null,
   },
-  { name: "total", label: "Total", domain: "commerce", kind: "money" },
+  {
+    name: "total",
+    label: "Total",
+    domain: "commerce",
+    kind: "money",
+    caution: null,
+  },
 ];
 
 const template: TemplateDocument = {
@@ -58,6 +66,42 @@ describe("variables de plantilla", () => {
     ).toEqual(["total", "contact_name"]);
   });
 
+  it("QA R3-05: con cautela solo las que el servidor marcó, una vez cada una y con su propuesta", () => {
+    const cautious = [
+      ...variables,
+      {
+        name: "installments_count",
+        label: "Cuotas",
+        domain: "schedule",
+        kind: "int",
+        caution: {
+          reason: "con una sola cuota se lee «1 cuotas»",
+          use_instead: "payment_terms",
+        },
+      },
+    ];
+    const withCount: TemplateDocument = {
+      ...template,
+      blocks: [
+        ...template.blocks,
+        {
+          id: "x",
+          type: "paragraph",
+          text: "{{installments_count}} y {{installments_count}}",
+        },
+      ],
+    };
+    expect(cautionedTemplateVariables(withCount, cautious)).toEqual([
+      {
+        name: "installments_count",
+        reason: "con una sola cuota se lee «1 cuotas»",
+        use_instead: "payment_terms",
+      },
+    ]);
+    // Sin la variable frágil en el texto, nada que avisar
+    expect(cautionedTemplateVariables(template, cautious)).toEqual([]);
+  });
+
   it("solo son desconocidas las que el servidor NO mandó — la lista viene del wire", () => {
     expect(unknownTemplateVariables(template, variables)).toEqual([
       "document_number",
@@ -71,8 +115,9 @@ describe("variables de plantilla", () => {
           label: "",
           domain: "document",
           kind: "text",
+          caution: null,
         },
-        { name: "numero", label: "", domain: "x", kind: "text" },
+        { name: "numero", label: "", domain: "x", kind: "text", caution: null },
       ]),
     ).toEqual([]);
   });

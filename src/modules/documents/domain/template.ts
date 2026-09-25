@@ -101,6 +101,40 @@ export function unknownTemplateVariables(
   return unknown;
 }
 
+export interface CautionedVariable {
+  name: string;
+  reason: string;
+  use_instead: string;
+}
+
+/**
+ * Variables válidas que la plantilla usa y que el servidor marca con cautela
+ * (QA real R3-05: `deposit_amount` sale vacío sin anticipo, `installments_count`
+ * dice «1 cuotas»). La cautela viaja en el catálogo: el cliente no sabe qué
+ * variables son frágiles, solo lo pinta. No bloquea ni guardar ni la vista
+ * previa: la frase puede ser correcta para este negocio.
+ */
+export function cautionedTemplateVariables(
+  template: TemplateDocument,
+  available: readonly TemplateVariableView[],
+): CautionedVariable[] {
+  const byName = new Map(
+    available.map((variable) => [variable.name, variable]),
+  );
+  const found: CautionedVariable[] = [];
+  for (const block of template.blocks) {
+    for (const text of blockTexts(block)) {
+      for (const name of extractVariableNames(text)) {
+        const caution = byName.get(name)?.caution;
+        if (caution && !found.some((one) => one.name === name)) {
+          found.push({ name, ...caution });
+        }
+      }
+    }
+  }
+  return found;
+}
+
 /** Huella estable de la plantilla: si no cambia, la vista previa no se pide. */
 export function templateHash(template: TemplateDocument): string {
   return JSON.stringify(template);
