@@ -9,7 +9,7 @@
 import { cn } from "@/core/lib/utils";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import type { SetupStepCode, TrialProgressWire } from "../../../../../infrastructure/api/delivery.dto";
-import { SummaryTile, StatePill } from "./SummaryTiles";
+import { BentoTile as SummaryTile, StatePill } from "@/shared/components/features/bento";
 
 /** Cómo llama el panel del tenant a cada paso (OnboardingResumeBanner). */
 export const SETUP_STEP_LABELS: Record<SetupStepCode, string> = {

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Crea tu contraseña — celular</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&amp;family=Poppins:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Poppins,system-ui,sans-serif;color:#0B0B0E;background:#FFFFFF}
+a{color:#B8363A}a:hover{color:#8F2A2D}
+.d{font-family:Urbanist,Poppins,sans-serif}
+.fld{display:flex;flex-direction:column;gap:7px}
+.fld label{font-size:13px;font-weight:500;color:#3A3A40}
+.box{height:52px;border-radius:14px;border:1px solid rgba(0,0,0,.12);background:#FFFFFF;display:flex;align-items:center;padding:0 6px 0 16px;box-sizing:border-box}
+.box input{border:0;outline:0;flex-grow:1;font:16px Poppins,sans-serif;background:transparent;min-width:0}
+.eye{width:44px;height:44px;border-radius:10px;border:0;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#3A3A40}
+</style>
+</helmet>
+<div style="width:390px;height:844px;display:flex;flex-direction:column;overflow:hidden;background:#FFFFFF">
+  <section style="height:300px;flex-shrink:0;background:#0B0B0E;color:#F4F4F5;position:relative;overflow:hidden;padding:28px 24px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;border-radius:0 0 32px 32px">
+    <div style="position:absolute;right:-120px;bottom:-160px;width:380px;height:380px;border-radius:999px;background:radial-gradient(circle,rgba(209,63,66,.5),rgba(209,63,66,0) 68%)"></div>
+    <div style="position:relative;display:flex;align-items:center;gap:8px">
+      <svg width="24" height="24" viewBox="0 0 28 28" aria-hidden="true"><circle cx="11" cy="15" r="7.5" fill="none" stroke="#E65759" stroke-width="4"></circle><path d="M16 5 L25 24" stroke="#F2A93B" stroke-width="4" stroke-linecap="round"></path><path d="M25 5 L17 20" stroke="#8B70F5" stroke-width="4" stroke-linecap="round"></path></svg>
+      <span class="d" style="font-size:16px;font-weight:700">axi connect</span>
+    </div>
+    <div style="position:relative;display:flex;flex-direction:column;gap:10px">
+      <span style="font-size:11px;letter-spacing:.2em;color:#F08A8C;font-weight:600">DÍA 0 · HOY EMPIEZA</span>
+      <span class="d" style="font-size:32px;font-weight:800;line-height:1.05;letter-spacing:-.02em">Tu panel de Panadería La Espiga está listo.</span>
+    </div>
+  </section>
+  <form style="flex-grow:1;padding:28px 24px 24px;display:flex;flex-direction:column;gap:20px">
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <h1 class="d" style="margin:0;font-size:28px;font-weight:700;letter-spacing:-.02em">Crea tu contraseña</h1>
+      <span style="font-size:13.5px;color:#6B6B73">Para <strong style="color:#0B0B0E;font-weight:500">an***@la***.co</strong></span>
+    </div>
+    <div class="fld">
+      <label for="m1">Contraseña nueva</label>
+      <div class="box" style="border-color:#0B0B0E;box-shadow:0 0 0 4px rgba(11,11,14,.07)"><input id="m1" type="password" value="pan caliente cada mañana" autocomplete="new-password"><button type="button" class="eye" aria-label="Mostrar contraseña"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></div>
+      <div style="display:flex;gap:6px;margin-top:4px" aria-hidden="true"><span style="flex-grow:1;height:5px;border-radius:9px;background:#0B0B0E"></span><span style="flex-grow:1;height:5px;border-radius:9px;background:#0B0B0E"></span><span style="flex-grow:1;height:5px;border-radius:9px;background:#1F9D5B"></span></div>
+      <span style="font-size:12.5px;color:#1F6B45">Frase de 24 caracteres · muy buena</span>
+    </div>
+    <div class="fld">
+      <label for="m2">Repítela</label>
+      <div class="box"><input id="m2" type="password" value="pan caliente cada mañana" autocomplete="new-password"><span style="padding-right:12px;font-size:12.5px;color:#1F6B45">Coinciden</span></div>
+    </div>
+    <div style="flex-grow:1"></div>
+    <button type="button" style="height:56px;border-radius:999px;border:0;background:#D13F42;color:#FFFFFF;font:600 15.5px Poppins,sans-serif;cursor:pointer">Guardar y entrar a mi panel →</button>
+    <span style="font-size:12px;color:#6B6B73;text-align:center">Sirve una vez · vence el lun 28 sep, 2:58 a. m.</span>
+  </form>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

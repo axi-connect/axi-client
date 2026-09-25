@@ -7,8 +7,16 @@
  * se dice («Sin oferta guardada»), no se inventa.
  */
 import Link from "next/link";
-import { ArrowRight, CalendarPlus, Check, Copy } from "lucide-react";
-import { cn } from "@/core/lib/utils";
+import { CalendarPlus, Check, Copy } from "lucide-react";
+import {
+  BentoFigure,
+  BentoLink,
+  BentoTile,
+  InkIsland,
+  Kicker,
+  StatePill,
+  type StatePillTone,
+} from "@/shared/components/features/bento";
 import { formatMoney } from "@/core/lib/format";
 import { Button } from "@/shared/components/ui/button";
 import { formatDayTime, formatShortDate } from "../../../../../domain/dates";
@@ -26,57 +34,10 @@ import { useCopy } from "../../../../hooks/use-copy";
 import { ResendDeliveryButton } from "../../../delivery/ResendDeliveryButton";
 import { downloadCallsIcs } from "../../../delivery/download-calls";
 
-// ------------------------------------------------------------------ piezas comunes
-
-export function SummaryTile({
-  label,
-  aside,
-  children,
-  className,
-}: {
-  label: string;
-  aside?: React.ReactNode;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <section className={cn("flex min-w-0 flex-col gap-3 rounded-3xl border border-border bg-card p-5", className)}>
-      <header className="flex min-h-6 items-center justify-between gap-2">
-        <h2 className="truncate font-sans text-xs font-normal text-muted-foreground">{label}</h2>
-        {aside}
-      </header>
-      {children}
-    </section>
-  );
-}
-
-type Tone = "success" | "warning" | "destructive" | "neutral";
-
-const DOT: Record<Tone, string> = {
-  success: "bg-success",
-  warning: "bg-warning",
-  destructive: "bg-destructive",
-  neutral: "bg-muted-foreground",
-};
-
-/** Píldora de estado: el color va en el punto; el texto, en foreground (AA, §10). */
-export function StatePill({ tone, children }: { tone: Tone; children: React.ReactNode }) {
-  return (
-    <span className="inline-flex h-6 shrink-0 items-center gap-1.5 rounded-full bg-muted px-2.5 text-xs font-medium whitespace-nowrap">
-      <span aria-hidden="true" className={cn("size-1.5 rounded-full", DOT[tone])} />
-      {children}
-    </span>
-  );
-}
-
-function BigFigure({ value, unit }: { value: string; unit?: string }) {
-  return (
-    <p className="flex items-baseline gap-1.5 whitespace-nowrap">
-      <span className="font-heading text-4xl leading-none font-bold tracking-tight tabular-nums">{value}</span>
-      {unit ? <span className="text-sm text-muted-foreground">{unit}</span> : null}
-    </p>
-  );
-}
+// Las piezas del bento viven en shared/components/features/bento (DESIGN-SYSTEM §9.5).
+type Tone = StatePillTone;
+const SummaryTile = BentoTile;
+const BigFigure = BentoFigure;
 
 // ------------------------------------------------------------------ acceso de la dueña
 
@@ -166,9 +127,9 @@ export function OfferTile({
       <SummaryTile label="Al terminar la prueba">
         <p className="text-sm font-medium">Sin oferta guardada</p>
         <p className="text-sm text-muted-foreground">La oferta se guarda al enviar la bienvenida.</p>
-        <TileLink href={entregaHref} className="mt-auto">
+        <BentoLink href={entregaHref} className="mt-auto">
           Preparar entrega
-        </TileLink>
+        </BentoLink>
       </SummaryTile>
     );
   }
@@ -206,22 +167,6 @@ export function OfferTile({
         ) : null}
       </div>
     </SummaryTile>
-  );
-}
-
-/** Enlace de una ficha: foreground + flecha, subrayado al pasar (AA a 12–14 px, A4). */
-export function TileLink({ href, children, className }: { href: string; children: React.ReactNode; className?: string }) {
-  return (
-    <Link
-      href={href}
-      className={cn(
-        "inline-flex min-h-6 w-fit items-center gap-1 rounded-md text-sm font-medium underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-        className,
-      )}
-    >
-      {children}
-      <ArrowRight aria-hidden="true" className="size-3.5" />
-    </Link>
   );
 }
 
@@ -445,19 +390,12 @@ export function NextStepCard({
   }
 
   return (
-    <section
-      aria-label="Lo próximo"
-      className="relative isolate flex min-h-80 min-w-0 flex-col gap-2 overflow-hidden rounded-3xl bg-foreground p-6 text-background md:col-span-2 xl:col-span-1 xl:col-start-3 xl:row-span-2 xl:row-start-1 min-[1400px]:col-start-4 dark:border dark:border-border dark:bg-card dark:text-foreground"
+    <InkIsland
+      label="Lo próximo"
+      className="min-h-80 md:col-span-2 xl:col-span-1 xl:col-start-3 xl:row-span-2 xl:row-start-1 min-[1400px]:col-start-4"
     >
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute -top-24 -right-24 -z-10 size-80 rounded-full bg-[radial-gradient(circle,color-mix(in_oklab,var(--axi-brand)_45%,transparent),transparent_70%)]"
-      />
       {body}
-    </section>
+    </InkIsland>
   );
 }
 
-function Kicker({ children }: { children: React.ReactNode }) {
-  return <p className="text-[11px] font-medium tracking-[0.12em] uppercase opacity-70">{children}</p>;
-}

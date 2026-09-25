@@ -14,7 +14,7 @@
 | F3 | Bienvenida enviada | Línea de tiempo con la hora de cada paso y «esperando» hasta que la dueña crea su contraseña (se refresca solo); «Lo que sigue» con las dos citas en .ics; «Si no le llegó» | `GET …/delivery` (pasos, intentos con `sent_at`, `password_set_at`) |
 | F4 | Entrar como soporte + barra de soporte | Motivos rápidos, duración 15/30/60, recuadro «Puedes / No puedes»; barra con píldora y tiempo restante | Sin cambios de contrato |
 | F5 | Crea tu contraseña | Dos paneles en escritorio (marca + formulario), cabecera de marca en el celular, reglas de la contraseña que se cumplen mientras escribe | `inspect` (ya trae `business_name`) |
-| F6 | Tarjetas «Conversaciones de prueba» y «Puesta en marcha» de la ficha | Necesitan datos que la consola de plataforma NO expone hoy | Servidor: endpoint nuevo, se pide aparte |
+| F6 | Tarjetas «Conversaciones de prueba» y «Puesta en marcha» de la ficha | Barras por día local con el % del tope del plan trial; 5 pasos del recorrido. Ocultas para billing_ops (403) | Servidor `feat/entrega-premium` f671c2da: `GET …/delivery/trial-progress` (puerto `CONVERSATION_SERIES` en usage + `ONBOARDING_PROGRESS`) |
 
 ## Adaptaciones del mockup al sistema de diseño (docs/design/DESIGN-SYSTEM.md)
 
@@ -34,3 +34,15 @@
 ## Verjas por fase
 
 `npm run lint` acotado, `npm test -- --testPathPattern <zona>`, y al cerrar: `tsc` (heap manual) y `next build`, de una en una. Renderizar cada pantalla y medir desbordes antes de pasarla al auditor.
+
+## Estado
+
+| Commit | Qué |
+|---|---|
+| cliente 850f5cfc · dcceac73 · e13fab8c · deb40ea2 · 5f0ec85a | F1–F5 |
+| servidor f671c2da | endpoint de F6 (con test de integración: aislamiento y día local) |
+| cliente 62611d91 | correcciones de la auditoría A1–A17 (informe en `docs/qa/entrega-bienvenida/upgrade-design/` del monorepo) y fichas F6 |
+| cliente (siguiente) | piezas del bento a `shared/components/features/bento`; DESIGN-SYSTEM §9.5–§9.8 y §12, DESIGN §5.2.1 |
+
+El mockup aprobado se copió a `docs/design/mockups/entrega-bienvenida-premium/` (canvas del Design
+artifact: un `.dc.html` por pantalla).
