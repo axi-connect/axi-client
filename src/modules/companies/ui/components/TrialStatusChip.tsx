@@ -17,7 +17,7 @@ export function TrialStatusChip() {
   if (!active) return null
 
   const label =
-    daysLeft === 0 ? "Prueba: vence hoy" : daysLeft === 1 ? "Prueba: 1 día" : `Prueba: ${daysLeft} días`
+    daysLeft === 0 ? "Prueba: termina hoy" : daysLeft === 1 ? "Prueba: 1 día" : `Prueba: ${daysLeft} días`
 
   return (
     <span

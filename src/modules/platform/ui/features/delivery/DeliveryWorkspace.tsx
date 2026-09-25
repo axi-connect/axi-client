@@ -16,7 +16,8 @@ import { useFormContext, useFormState, useWatch, type UseFormReturn } from "reac
 import { AlertTriangle, Check, CircleAlert, History, Info, LoaderCircle, Lock, Save, Send } from "lucide-react";
 import { isHttpError } from "@/core/api/problem";
 import { applyServerValidation, errorMessage } from "@/core/lib/error-messages";
-import { formatDayTime, formatMoney } from "@/core/lib/format";
+import { formatMoney } from "@/core/lib/format";
+import { formatDayTime } from "../../../domain/dates";
 import { cn } from "@/core/lib/utils";
 import { useAlert } from "@/core/providers/alert-provider";
 import { DynamicForm } from "@/shared/components/features/dynamic-form";
@@ -47,6 +48,7 @@ import {
 } from "../../../domain/delivery";
 import { canSendDelivery } from "../../../domain/platform-role";
 import { usePlatformRole } from "../../../infrastructure/auth/use-platform-role";
+import { calendarDaysUntil } from "@/modules/welcome-kit/domain/formatters";
 import { kitDataFromPreview } from "../../../infrastructure/api/delivery-kit.mapper";
 import type {
   DeliveryContextWire,
@@ -553,9 +555,8 @@ export function DeliveryWorkspace({
 
   // ------------------------------------------------ render
   const currentTrialEnds = context.trial.trial_ends_at;
-  const daysLeft = currentTrialEnds
-    ? Math.max(0, Math.ceil((new Date(currentTrialEnds).getTime() - Date.now()) / 86_400_000))
-    : null;
+  // Días de calendario en la zona del tenant (QA-8), no bloques de 24 h.
+  const daysLeft = currentTrialEnds ? Math.max(0, calendarDaysUntil(currentTrialEnds, tz) ?? 0) : null;
 
   return (
     <div className="space-y-4 pb-4">
@@ -568,7 +569,7 @@ export function DeliveryWorkspace({
         </div>
         {daysLeft !== null && context.trial.status === "trial" ? (
           <Badge variant="outline" className="tabular-nums">
-            Prueba actual: {daysLeft === 0 ? "vence hoy" : `vence en ${daysLeft === 1 ? "1 día" : `${daysLeft} días`}`}
+            Prueba actual: {daysLeft === 0 ? "termina hoy" : `vence en ${daysLeft === 1 ? "1 día" : `${daysLeft} días`}`}
           </Badge>
         ) : null}
       </div>

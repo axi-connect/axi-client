@@ -15,6 +15,8 @@ import { useTenantQuery } from "../../../../infrastructure/api/hooks/use-tenants
 import { StatusBadge } from "../../../components/StatusBadge";
 import { useCopy } from "../../../hooks/use-copy";
 import { TenantDeliveryCard } from "../../delivery/TenantDeliveryCard";
+import { calendarDaysUntil } from "@/modules/welcome-kit/domain/formatters";
+import { formatShortDate } from "../../../../domain/dates";
 
 function SummaryCard({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -25,23 +27,32 @@ function SummaryCard({ label, children }: { label: string; children: React.React
   );
 }
 
-const DAY_MS = 24 * 60 * 60 * 1000;
+/** La lista de tenants no trae su zona; los clientes de hoy son de Colombia. */
+const TRIAL_TIMEZONE = "America/Bogota";
+
+/**
+ * Días de CALENDARIO hasta el fin de la prueba en la zona del tenant (QA-8):
+ * 7 el día 0, 0 el día 7 («termina hoy»). Exportado para el test.
+ */
+export function trialDaysLeftLabel(endsAtIso: string, now: Date = new Date()): string {
+  const days = Math.max(0, calendarDaysUntil(endsAtIso, TRIAL_TIMEZONE, now) ?? 0);
+  return days === 0 ? "termina hoy" : days === 1 ? "1 día" : `${days} días`;
+}
 
 /** Línea de vencimiento bajo el badge cuando hay trial acotado o vencido. */
 function TrialCountdown({ tenant }: { tenant: { status: string; trial_ends_at: string | null; status_reason: string | null } }) {
   const isExpired = tenant.status === "suspended" && tenant.status_reason === "trial_expired";
   if (!tenant.trial_ends_at || (tenant.status !== "trial" && !isExpired)) return null;
 
-  const endsAt = new Date(tenant.trial_ends_at);
-  const daysLeft = Math.max(0, Math.ceil((endsAt.getTime() - Date.now()) / DAY_MS));
-  const date = endsAt.toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric" });
+  const daysLeft = Math.max(0, calendarDaysUntil(tenant.trial_ends_at, TRIAL_TIMEZONE) ?? 0);
+  const date = formatShortDate(tenant.trial_ends_at, TRIAL_TIMEZONE);
   const ending = isExpired || daysLeft <= 2;
 
   return (
     <p className={`mt-2 text-xs tabular-nums ${ending ? "text-warning" : "text-muted-foreground"}`}>
       {isExpired
         ? `Prueba vencida el ${date}`
-        : `Prueba vence el ${date} · ${daysLeft === 1 ? "1 día" : `${daysLeft} días`}`}
+        : `Prueba vence el ${date} · ${trialDaysLeftLabel(tenant.trial_ends_at)}`}
     </p>
   );
 }

@@ -2,7 +2,13 @@ import { render, screen } from "@testing-library/react"
 import { TrialStatusChip } from "../TrialStatusChip"
 import type { CompanyDTO } from "@/modules/companies/domain/company"
 
-const DAY_MS = 24 * 60 * 60 * 1000
+/** Jueves 24 sep 2026, 8:00 a. m. en Bogotá. Los días se cuentan en calendario (QA-8). */
+const NOW = new Date("2026-09-24T13:00:00Z")
+/** Fin de la prueba: el día `YYYY-MM-DD` a las 23:59:59 de Bogotá. */
+const endOfBogotaDay = (date: string) => new Date(`${date}T23:59:59-05:00`).toISOString()
+
+beforeEach(() => jest.useFakeTimers({ now: NOW, advanceTimers: true }))
+afterEach(() => jest.useRealTimers())
 
 jest.mock("@/shared/auth/auth.hooks", () => ({
   useSession: () => ({ status: "authenticated", user: null }),
@@ -38,7 +44,7 @@ function company(over: Partial<CompanyDTO>): CompanyDTO {
 describe("TrialStatusChip", () => {
   it("muestra los días restantes de un trial vigente (tono neutro)", async () => {
     loadMyCompanyOnce.mockResolvedValue(
-      company({ trial_ends_at: new Date(Date.now() + 5 * DAY_MS + 60_000).toISOString() }),
+      company({ trial_ends_at: endOfBogotaDay("2026-09-30") }),
     )
     render(<TrialStatusChip />)
 
@@ -49,13 +55,25 @@ describe("TrialStatusChip", () => {
 
   it("escala a tono warning en los últimos 2 días", async () => {
     loadMyCompanyOnce.mockResolvedValue(
-      company({ trial_ends_at: new Date(Date.now() + 1 * DAY_MS + 60_000).toISOString() }),
+      company({ trial_ends_at: endOfBogotaDay("2026-09-26") }),
     )
     render(<TrialStatusChip />)
 
     const chip = await screen.findByTestId("trial-status-chip")
     expect(chip).toHaveTextContent("Prueba: 2 días")
     expect(chip.className).toContain("text-warning")
+  })
+
+  it("una prueba de 7 que vence el día 7 a las 23:59 muestra 7 el día 0, no 8", async () => {
+    loadMyCompanyOnce.mockResolvedValue(company({ trial_ends_at: endOfBogotaDay("2026-10-01") }))
+    render(<TrialStatusChip />)
+    expect(await screen.findByTestId("trial-status-chip")).toHaveTextContent("Prueba: 7 días")
+  })
+
+  it("el día 7 dice «termina hoy»", async () => {
+    loadMyCompanyOnce.mockResolvedValue(company({ trial_ends_at: endOfBogotaDay("2026-09-24") }))
+    render(<TrialStatusChip />)
+    expect(await screen.findByTestId("trial-status-chip")).toHaveTextContent("Prueba: termina hoy")
   })
 
   it("no renderiza nada si la empresa está activa o el trial no tiene fecha", async () => {
