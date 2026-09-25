@@ -105,3 +105,53 @@ describe("change", () => {
     expect(postMock).not.toHaveBeenCalled()
   })
 })
+
+describe("set (QA-6): la sesión nueva del dueño", () => {
+  const body = { token: "Zk3n0p-Qa_9sT2uV8wXyZ0123", new_password: "una frase larga" }
+
+  it("con AuthTokensDto escribe las dos cookies y responde session: true sin los tokens", async () => {
+    jar = new Map()
+    postMock.mockResolvedValue(TOKENS)
+    const res = await setPassword(request("set", body))
+    expect(res.status).toBe(200)
+    const json = await res.json()
+    expect(json).toEqual({ session: true })
+    expect(JSON.stringify(json)).not.toContain("new-access")
+    expect(jar.get("accessToken")?.value).toBe("new-access")
+    expect(jar.get("refreshToken")?.value).toBe("new-refresh")
+  })
+
+  it("con una sesión de soporte abierta no toca ninguna cookie", async () => {
+    jar = new Map([["supportAccessToken", { value: "soporte" }]])
+    postMock.mockResolvedValue(TOKENS)
+    const res = await setPassword(request("set", body))
+    expect(await res.json()).toEqual({ session: false })
+    expect(jar.get("accessToken")).toBeUndefined()
+    expect(jar.get("supportAccessToken")?.value).toBe("soporte")
+  })
+
+  it("un 204 (empresa suspendida o usuario no activo) deja session: false y no toca las cookies", async () => {
+    jar = new Map([["accessToken", { value: "old-access" }]])
+    postMock.mockResolvedValue(undefined)
+    const res = await setPassword(request("set", body))
+    expect(await res.json()).toEqual({ session: false })
+    expect(jar.get("accessToken")?.value).toBe("old-access")
+    expect(jar.has("refreshToken")).toBe(false)
+  })
+
+  it.each([
+    [410, "auth/password_token_invalid"],
+    [422, "validation/failed"],
+    [503, "internal/unexpected"],
+  ])("un error %i (%s) se reenvía y no toca las cookies existentes", async (status, code) => {
+    jar = new Map([
+      ["accessToken", { value: "old-access" }],
+      ["refreshToken", { value: "old-refresh" }],
+    ])
+    postMock.mockRejectedValue(httpError(status, code))
+    const res = await setPassword(request("set", body))
+    expect(res.status).toBe(status)
+    expect(jar.get("accessToken")?.value).toBe("old-access")
+    expect(jar.get("refreshToken")?.value).toBe("old-refresh")
+  })
+})

@@ -14,6 +14,7 @@ import { Button } from "@/shared/components/ui/button"
 import {
   PASSWORD_MIN_LENGTH,
   TOKEN_LIFETIME_LABEL,
+  expiresSentence,
   formatExpiresAt,
   invalidLinkReason,
   type InvalidLinkReason,
@@ -21,7 +22,12 @@ import {
   type PasswordTokenInfo,
 } from "../domain/password"
 import { useHashToken } from "../infrastructure/hooks/use-hash-token"
-import { inspectPasswordToken, setPasswordWithToken } from "../infrastructure/services/password-service.adapter"
+import {
+  enterLogin,
+  enterPanel,
+  inspectPasswordToken,
+  setPasswordWithToken,
+} from "../infrastructure/services/password-service.adapter"
 import { PasswordShell } from "./components/PasswordShell"
 import {
   buildSetPasswordFields,
@@ -34,7 +40,8 @@ type FlowState =
   | { step: "checking" }
   | { step: "form"; info: PasswordTokenInfo | null }
   | { step: "invalid"; reason: InvalidLinkReason }
-  | { step: "done" }
+  /** La sesión quedó abierta y la página va al panel (QA-6). */
+  | { step: "entering" }
 
 /**
  * Crear contraseña (invitación, `/auth/crear-contrasena`) y restablecerla
@@ -81,9 +88,18 @@ export function SetPasswordFlow({ purpose }: { purpose: PasswordPurpose }) {
     const token = tokenRef.current
     if (!token) return
     try {
-      await setPasswordWithToken(token, values.new_password)
+      const { session } = await setPasswordWithToken(token, values.new_password)
       tokenRef.current = null
-      setState({ step: "done" })
+      // «Guardar y entrar a mi panel» (QA-6): con la sesión abierta, directo.
+      if (session) {
+        setState({ step: "entering" })
+        enterPanel()
+        return
+      }
+      // Sin sesión (204: empresa suspendida o usuario no activo): al login,
+      // con el aviso de que la contraseña sí quedó.
+      setState({ step: "entering" })
+      enterLogin(purpose === "invite" ? "creada" : "cambiada")
     } catch (error) {
       if (isHttpError(error) && error.is(API_ERROR_CODES.passwordTokenInvalid)) {
         tokenRef.current = null
@@ -93,6 +109,15 @@ export function SetPasswordFlow({ purpose }: { purpose: PasswordPurpose }) {
       if (applyServerValidation(error, form)) return
       showAlert({ tone: "error", title: "No pudimos guardar tu contraseña", description: errorMessage(error) })
     }
+  }
+
+  if (state.step === "entering") {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center" role="status" aria-live="polite">
+        <LoaderCircle aria-hidden="true" className="text-muted-foreground size-6 animate-spin motion-reduce:animate-none" />
+        <span className="sr-only">Un momento…</span>
+      </div>
+    )
   }
 
   if (state.step === "checking") {
@@ -105,23 +130,6 @@ export function SetPasswordFlow({ purpose }: { purpose: PasswordPurpose }) {
   }
 
   if (state.step === "invalid") return <InvalidLink purpose={purpose} reason={state.reason} />
-
-  if (state.step === "done") {
-    const copy =
-      purpose === "invite"
-        ? {
-            title: "Listo, tu contraseña quedó creada",
-            text: "Ya puedes entrar a tu panel. Guárdala en el gestor de contraseñas de tu celular para no perderla.",
-          }
-        : { title: "Tu contraseña cambió", text: "Ya puedes entrar con la contraseña nueva." }
-    return (
-      <PasswordShell title={copy.title} description={copy.text}>
-        <Button asChild className="w-full">
-          <Link href="/auth/login">Entrar a mi panel</Link>
-        </Button>
-      </PasswordShell>
-    )
-  }
 
   const info = state.info
   const expiresAt = info ? formatExpiresAt(info.expires_at) : ""
@@ -150,9 +158,7 @@ export function SetPasswordFlow({ purpose }: { purpose: PasswordPurpose }) {
       description={copy.text}
       footer={
         expiresAt ? (
-          <p>
-            Este enlace sirve una vez y vence el <span className="tabular-nums">{expiresAt}</span>.
-          </p>
+          <p className="tabular-nums">{expiresSentence(expiresAt)}</p>
         ) : null
       }
     >

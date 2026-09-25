@@ -48,6 +48,13 @@ export default function LoginForm() {
   const [error, setError] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [needsCompanyNit, setNeedsCompanyNit] = useState(false)
+  // Viene de crear o restablecer la contraseña sin sesión abierta (QA-6).
+  const passwordNotice =
+    search.get("contrasena") === "creada"
+      ? "Tu contraseña quedó creada. Inicia sesión."
+      : search.get("contrasena") === "cambiada"
+        ? "Tu contraseña cambió. Inicia sesión."
+        : null
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -82,6 +89,11 @@ export default function LoginForm() {
 
   return (
     <div className="space-y-6 p-4 py-6 shadow sm:rounded-lg sm:p-6">
+      {passwordNotice ? (
+        <p role="status" className="rounded-lg border border-success/35 bg-success/5 px-3 py-2 text-sm">
+          {passwordNotice}
+        </p>
+      ) : null}
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
           <div>

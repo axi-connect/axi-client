@@ -33,9 +33,26 @@ export function inspectPasswordToken(token: string): Promise<PasswordTokenInfo> 
   return post<PasswordTokenInfo>("inspect", { token })
 }
 
-/** Consume el enlace y fija la contraseña (204). */
-export function setPasswordWithToken(token: string, newPassword: string): Promise<void> {
-  return post<void>("set", { token, new_password: newPassword })
+/**
+ * Consume el enlace y fija la contraseña. `session: true` = el BFF ya dejó la
+ * sesión del dueño abierta y se puede entrar al panel sin pasar por el login.
+ */
+export async function setPasswordWithToken(token: string, newPassword: string): Promise<{ session: boolean }> {
+  const result = await post<{ session?: unknown } | undefined>("set", { token, new_password: newPassword })
+  return { session: result?.session === true }
+}
+
+/** La ruta privada de inicio (la misma a la que lleva el login). */
+export const PANEL_HOME = "/dashboard"
+
+/** Navegación COMPLETA al panel: el AuthProvider hidrata con las cookies nuevas. */
+export function enterPanel(): void {
+  window.location.assign(PANEL_HOME)
+}
+
+/** El login con el aviso de éxito («Tu contraseña quedó creada. Inicia sesión.»). */
+export function enterLogin(reason: "creada" | "cambiada"): void {
+  window.location.assign(`/auth/login?contrasena=${reason}`)
 }
 
 /** Cambia la contraseña con la sesión abierta; el BFF renueva las cookies. */

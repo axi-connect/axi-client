@@ -3,6 +3,8 @@ import { fireEvent, render, screen } from "@testing-library/react"
 import { HttpError } from "@/core/api/problem"
 import { SetPasswordFlow } from "../SetPasswordFlow"
 import {
+  enterLogin,
+  enterPanel,
   inspectPasswordToken,
   setPasswordWithToken,
 } from "../../infrastructure/services/password-service.adapter"
@@ -10,6 +12,8 @@ import {
 jest.mock("../../infrastructure/services/password-service.adapter", () => ({
   inspectPasswordToken: jest.fn(),
   setPasswordWithToken: jest.fn(),
+  enterPanel: jest.fn(),
+  enterLogin: jest.fn(),
 }))
 const showAlert = jest.fn()
 jest.mock("@/core/providers/alert-provider", () => ({ useAlert: () => ({ showAlert }) }))
@@ -46,22 +50,38 @@ describe("SetPasswordFlow", () => {
       expires_at: "2026-10-01T20:40:00Z",
       business_name: "Panadería La Espiga",
     })
-    setPassword.mockResolvedValue(undefined)
+    setPassword.mockResolvedValue({ session: false })
     render(<SetPasswordFlow purpose="invite" />)
 
     expect(await screen.findByRole("heading", { name: "Crea tu contraseña" })).toBeInTheDocument()
     expect(inspect).toHaveBeenCalledWith(TOKEN)
     expect(window.location.hash).toBe("")
-    expect(screen.getByText(/vence el/)).toHaveTextContent("jue 1 oct · 3:40 p. m.")
+    expect(screen.getByText(/vence el/)).toHaveTextContent("Este enlace sirve una vez y vence el jue 1 oct · 3:40 p. m.")
+    expect(screen.getByText(/vence el/).textContent).not.toMatch(/\.\.$/)
     expect(screen.getByText("Es la llave de tu panel de Panadería La Espiga. Solo tú la vas a conocer.")).toBeInTheDocument()
 
     fireEvent.change(screen.getByLabelText("Contraseña nueva"), { target: { value: "una frase larga" } })
     fireEvent.change(screen.getByLabelText("Repítela"), { target: { value: "una frase larga" } })
     fireEvent.click(screen.getByRole("button", { name: "Guardar y entrar a mi panel" }))
 
-    expect(await screen.findByRole("heading", { name: "Listo, tu contraseña quedó creada" })).toBeInTheDocument()
+    // 204 del servidor (sin sesión): al login con «Tu contraseña quedó creada».
+    await screen.findByText("Un momento…")
     expect(setPassword).toHaveBeenCalledWith(TOKEN, "una frase larga")
-    expect(screen.getByRole("link", { name: "Entrar a mi panel" })).toHaveAttribute("href", "/auth/login")
+    expect(enterLogin).toHaveBeenCalledWith("creada")
+    expect(enterPanel).not.toHaveBeenCalled()
+  })
+
+  it("con la sesión que devuelve el servidor entra directo al panel, sin pasar por el login (QA-6)", async () => {
+    inspect.mockResolvedValue({ purpose: "invite", email_masked: "a***@x.co", expires_at: "2026-10-01T20:40:00Z", business_name: "X" })
+    setPassword.mockResolvedValue({ session: true })
+    render(<SetPasswordFlow purpose="invite" />)
+    fireEvent.change(await screen.findByLabelText("Contraseña nueva"), { target: { value: "una frase larga" } })
+    fireEvent.change(screen.getByLabelText("Repítela"), { target: { value: "una frase larga" } })
+    fireEvent.click(screen.getByRole("button", { name: "Guardar y entrar a mi panel" }))
+
+    await screen.findByText("Un momento…")
+    expect(enterPanel).toHaveBeenCalledTimes(1)
+    expect(enterLogin).not.toHaveBeenCalled()
   })
 
   it("rechaza una contraseña de menos de 12 caracteres sin llamar al servidor", async () => {
