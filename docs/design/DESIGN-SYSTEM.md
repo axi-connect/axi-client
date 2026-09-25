@@ -47,6 +47,9 @@ Capa 3 — CONSUMO                                   ← clases utilitarias en c
 | `--background` | `#FFFFFF` | `#0A0A0A` | Neutro base |
 | `--foreground` | `#171717` | `#EDEDED` | Neutro base |
 | `--axi-muted` | `#F4F4F5` | `#18181B` | Superficie atenuada |
+| `--axi-on-color` | `#FFFFFF` | `#0A0A0A` | Texto sobre los colores de estado (`--color-*-foreground` de success, warning, destructive, info) |
+| `--axi-on-brand` | = `--axi-on-color` | = `--axi-on-color` | Texto sobre la marca (`--color-primary-foreground`, el CTA coral). Lo declaran `:root`, `.surface-light` y todo `.dark`; `.surface-dark` no, así que una isla de tinta en tema claro hereda el blanco de la página (§9.5.1) |
+| `--axi-brand-day`, `--axi-brand-2-day` | `#E65759`, `#E02F2F` | (no cambian) | La marca del tema claro, con nombre propio: la isla oscura en tema claro la restaura (§9.5.1) |
 | `--toast-*` | tintas profundas | tintas brillantes | Píldora de avisos (§9.4). **Van al revés que el tema** porque la píldora es tinta invertida: en claro es oscura y lleva la paleta brillante |
 
 ### 2.2 Semánticos (capa 2) — mapa de uso

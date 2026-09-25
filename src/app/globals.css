@@ -125,6 +125,14 @@
   --axi-brand-2: var(--axi-brand-2-day);
 }
 
+/* Todo `.dark` recalcula el texto sobre la marca con SU on-color: la página
+   oscura y los envoltorios `dark theme-dark-island` de la landing (el CTA de
+   /productos). Va aparte a propósito: `.surface-dark` NO lo declara, así que en
+   tema claro hereda el blanco de la página (arriba). */
+.dark {
+  --axi-on-brand: var(--axi-on-color);
+}
+
 /* ============================================================================
    CAPA 2 — TOKENS SEMÁNTICOS (derivan de la capa 1; sin hex nuevos)
    Tailwind v4 genera las utilidades (bg-primary, text-brand, rounded-lg,
@@ -2331,8 +2339,10 @@ h1, h2, h3, h4, h5, h6, .font-heading {
    una isla por pantalla.
    ============================================================================ */
 
-/* Los ángulos del canto líquido se registran para poder transicionarlos: una
-   variable sin tipo salta de golpe. `inherits: false` los deja en su elemento. */
+/* Los ángulos del canto líquido, registrados. El del botón de cristal se
+   transiciona al pasar el ratón (una variable sin tipo saltaría de golpe); el de
+   la isla es estático, pero el `conic-gradient` lee su valor inicial.
+   `inherits: false` los deja en su elemento. */
 @property --island-rim-angle {
   syntax: "<angle>";
   inherits: false;
