@@ -272,7 +272,7 @@ function UrgentPanel({ urgent, anyTested }: { urgent: Capability | null; anyTest
       </p>
       {urgent.run_id && (
         <div className="mt-auto pt-2">
-          <Button asChild variant="secondary">
+          <Button asChild variant="contrast">
             <Link href={`/platform/quality/runs/${urgent.run_id}`} prefetch={false}>
               Ver la ejecución
               <ArrowRight aria-hidden="true" />

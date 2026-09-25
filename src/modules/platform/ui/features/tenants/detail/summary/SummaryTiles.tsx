@@ -331,7 +331,7 @@ export function NextStepCard({
           )}
         </ol>
         <div className="mt-auto">
-          <Button asChild variant="secondary" className="w-full">
+          <Button asChild variant="contrast" className="w-full">
             <Link href={href}>{delivery ? "Retomar la entrega" : "Preparar entrega"}</Link>
           </Button>
         </div>
@@ -362,11 +362,11 @@ export function NextStepCard({
               : "La cita ya va en su correo como .ics. Añádela también a tu calendario."}
           </p>
           {milestone.kind === "decide" ? (
-            <Button asChild variant="secondary" className="w-full">
+            <Button asChild variant="contrast" className="w-full">
               <Link href={`/platform/tenants/${tenantId}/billing`}>Ver facturación</Link>
             </Button>
           ) : (
-            <Button type="button" variant="secondary" className="w-full" onClick={() => downloadCallsIcs(delivery, businessName)}>
+            <Button type="button" variant="contrast" className="w-full" onClick={() => downloadCallsIcs(delivery, businessName)}>
               <CalendarPlus aria-hidden="true" />
               Añadir las citas a mi calendario
             </Button>
@@ -381,7 +381,7 @@ export function NextStepCard({
         <p className="font-heading text-2xl leading-tight font-bold tracking-tight">La prueba terminó</p>
         <p className="text-sm opacity-80">Revisa si pasó a cobro o si hay que acompañar la decisión.</p>
         <div className="mt-auto">
-          <Button asChild variant="secondary" className="w-full">
+          <Button asChild variant="contrast" className="w-full">
             <Link href={`/platform/tenants/${tenantId}/billing`}>Ver facturación</Link>
           </Button>
         </div>

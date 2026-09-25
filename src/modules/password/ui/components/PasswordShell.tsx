@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
+import { Island } from "@/shared/components/features/island"
 import { BrandMark } from "@/shared/components/ui/brand-mark"
 
 /**
@@ -51,13 +52,13 @@ export function PasswordShell({
     return (
       <div data-auth-wide className="w-full px-4 py-8 sm:px-0 sm:py-14">
         <div className="border-border bg-card grid overflow-hidden rounded-3xl border shadow-[var(--shadow-overlay)] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
-          <aside className="bg-foreground text-background dark:border-border dark:bg-muted dark:text-foreground relative isolate overflow-hidden p-6 sm:p-10 lg:border-r lg:p-12">
-            <span
-              aria-hidden="true"
-              className="pointer-events-none absolute -bottom-40 -left-32 -z-10 size-[28rem] rounded-full bg-[radial-gradient(circle,color-mix(in_oklab,var(--axi-brand)_42%,transparent),transparent_68%)]"
-            />
+          <Island
+            as="aside"
+            material="ink"
+            className="border-border dark:bg-muted rounded-none p-6 [--island-glow-at:0%_100%] sm:p-10 lg:border-r lg:p-12"
+          >
             {aside}
-          </aside>
+          </Island>
           <div className="flex flex-col justify-center gap-6 p-6 sm:p-10 lg:p-12">
             <header className="space-y-2">
               {heading}

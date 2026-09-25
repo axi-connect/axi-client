@@ -383,6 +383,7 @@ Reglas:
 - **Control de tema** (`ThemeToggle`, `shared/components/layout/theme-toggle.tsx`): toggle de 3 estados (light / dark / system) presente en `PrivateHeader`, footer del `AppSidebar`, `SiteHeader`, `SiteNavMobile` y el header y sidebar de `/platform`.
 - Todo componente nuevo se revisa en ambos temas antes de mergear; los tokens hacen el 95% del trabajo si no hay hex sueltos.
 - Evitar flash de tema: no leer `window`/tema en render de servidor; `suppressHydrationWarning` en `<html>` (ya aplicado).
+- **Superficies con esquema propio** (`.surface-dark`, `.surface-light`, §9.5.1): redefinen la capa 1 entera en su subárbol, como `.dark` en la página, sin repetir un solo valor (sus selectores van agrupados con `:root` y `.dark`). Es lo que usa la isla. A diferencia de `dark theme-dark-island`, no activan las variantes `dark:`: dentro de una superficie se escriben los tokens, no variantes.
 - **Re-derivación de tokens por alcance** (`.theme-dark-island`, `.signup-field`): un bloque puede redefinir los tokens semánticos (`--color-foreground`, `--color-muted-foreground`, `--color-border`, `--color-input`, `--color-ring`, `--color-primary(-foreground)`, `--color-secondary`, `--color-accent`, `--color-destructive`) **dentro de su propio alcance**, y todo primitivo que viva dentro adopta el material sin variantes ni hex en componentes. Es la forma de pintar un momento de marca (isla oscura de Fundadores, campo coral del registro) sin bifurcar componentes. Reglas: se aplica **una vez**, en el layout de la superficie; `--color-background` no se toca (el cristal se mezcla contra el fondo real y los overlays siguen siendo los de la app); el bloque declara como mucho **un** hex propio (`--sf-fg: #ffffff`, el texto sobre coral) y todo lo demás se deriva con `color-mix`; el bloque `.dark` del mismo alcance devuelve los tokens al tema (`--sf-fg: var(--foreground)`, destructivo al rojo). Cuando la marca cae sobre el campo, el isotipo conserva sus cintas y solo el wordmark toma el color del texto (`.signup-field .text-brand-wordmark`).
 - **Un alcance hermano puede definir solo el material, sin re-derivar** (`.flow-ground`, onboarding «Flow»): declara las mismas variables `--sf-*` que el campo, derivadas de `--foreground`/`--background`/`--axi-violet`, y deja los `--color-*` en paz. Es la segunda escena del mismo material: los primitivos siguen siendo los de la app (el CTA coral) y solo las piezas que hablan `--sf-*` (ruta, fichas, cristal) cambian de escenario. Conmuta con `.dark` gratis porque consume tokens que ya conmutan.
 - Imágenes/logos con variante por tema — **dos casos, según el logo**:
@@ -412,6 +413,7 @@ Los primitivos viven en `shared/components/ui/` (shadcn) y los features en `shar
 | Marca en una cabecera (isotipo + wordmark) | `BrandLockup` (`shared/components/ui/brand-lockup.tsx`) — RSC-compatible, `size="md"\|"sm"`; solo el isotipo → `BrandMark` (DESIGN.md §2.2) |
 | Celebración puntual (una ráfaga, no un loop) | `Confetti` + `brandCelebration` (`shared/components/ui/confetti.tsx`) — canvas-confetti en diferido, colores de `readBrandPaletteCss`, reduced-motion lo apaga; ver §6 |
 | Resumen «de un vistazo» (ficha de un tenant, tablero de un módulo) | `BentoTile` + `StatePill` + `BentoFigure` + `BentoLink` e `InkIsland` para lo próximo (`shared/components/features/bento`, §9.5) |
+| Superficie de lo más accionable, o una barra de acción pegada abajo | `Island` / `islandClassName` (`shared/components/features/island`, §9.5.1): tinta o cristal (blanco o negro), aspecto central en `ISLAND_DEFAULTS` |
 | Días de un recorrido o pasos de un proceso con hora | §9.6 (`TrialJourneyStrip`, `DeliverySentView`) |
 | Formulario largo que llega precargado | Pasos plegables + «Antes de enviar» + barra de acción (§9.7) |
 | Progreso hacia una meta (meta del mes, ritmo, proyección) | `RouteLine` (slice `commercial`, F3): una línea, tramo recorrido con gradiente de marca, marcador hueco «hoy» (donde deberías ir) y prolongación punteada de proyección; la cifra siempre con su procedencia (DESIGN.md §1, idea 4, y §7.1). Nunca anillos ni tiles de vanidad |
@@ -626,7 +628,7 @@ el tono en el punto, el texto en foreground.
 | `BentoTile` | **Un tema por ficha.** Etiqueta pequeña arriba (`text-xs text-muted-foreground`, Poppins aunque sea un `h2`: `font-sans font-normal`), un `aside` opcional a la derecha (una `StatePill` o un enlace), **una** cifra o frase principal y una línea secundaria. `rounded-3xl border-border bg-card p-5`, sin sombra (§4.3: contenido en página). |
 | `BentoFigure` | `font-heading text-4xl font-bold leading-none tracking-tight tabular-nums` + unidad en `text-sm text-muted-foreground` al lado (`12 min`, `128 usuarios`). Nunca una cifra sin unidad ni procedencia. |
 | `StatePill` | Estado de la ficha: `bg-muted` + **punto** del color del tono + texto en `foreground`. El color del estado vive en el punto, nunca en el texto (verde y ámbar como texto no pasan AA, §10). |
-| `InkIsland` | **Una sola por pantalla**, para lo más accionable («Lo próximo»). `bg-foreground text-background`; en oscuro `dark:bg-card dark:text-foreground dark:border` (una isla blanca sobre negro grita). Brillo coral opcional: `radial-gradient` con `color-mix(in oklab, var(--axi-brand) 45%, transparent)`, `-z-10` dentro de `isolate overflow-hidden`. Sus botones son `variant="secondary"`. |
+| `InkIsland` | **Una sola por pantalla**, para lo más accionable («Lo próximo»). Es una `Island` (§9.5.1): su material —tinta o cristal blanco o negro— y su brillo salen de `ISLAND_DEFAULTS`; una isla distinta lo pide con `material`, `tone` o `glow`. Lo de dentro usa los tokens de siempre (la isla redefine el esquema) y sus botones son `variant="contrast"`. |
 | Estado vacío | Dice qué pasa y qué hacer («Aún sin invitación · el enlace sale con la bienvenida»), con la acción si la hay. Nunca «—» a secas. |
 | `BentoLink` | Enlace de ficha: `foreground` + flecha + subrayado al pasar, objetivo de 24 px. **Nunca `text-brand` a 12–14 px** (3,58:1, no pasa AA). |
 | Acción principal | Cambia con el estado (sin entregar → «Preparar entrega»; entregado → «Entrar como soporte»). No se muestra lo que no aplica, y **mientras carga el dato que la decide no se pinta** (un hueco del mismo alto): mostrar una y cambiarla por otra es peor que esperar. |
@@ -662,6 +664,59 @@ grid gap-4 md:grid-cols-2 xl:grid-flow-dense xl:grid-cols-3
   apilan en dos líneas cortas.
 - Tras una hora formateada («a. m.») la frase se cierra con `endSentence`, nunca con un «.»
   literal (salía «a. m..»).
+
+### 9.5.1 La isla: tinta o cristal, en un solo lugar
+
+Aprobado por el dueño el 2026-09-25 (canvas del upgrade de Comercial, tablero 8; plan
+`docs/plans/island_surface_plan.md`). La isla de tinta deja de ser un `bg-foreground` pintado a mano en cada sitio:
+es un **material** del sistema.
+
+| Material | Cuándo | Aspecto |
+|---|---|---|
+| Cristal blanco (`glass` + `light`) | **Por defecto** para toda isla de contenido («Lo próximo», «Axi propone», «Así queda tu mes») | Vidrio esmerilado casi blanco, canto de luz, reflejo arriba, halo suave con violeta. Texto en tinta |
+| Cristal negro (`glass` + `dark`) | Una isla que tiene que mandar sobre un fondo claro muy cargado | Humo oscuro translúcido con el mismo canto, reflejo y halo |
+| Tinta (`ink`) | **Barras de acción pegadas abajo** (`ActionDock`, la barra de Aprobar / Rechazar) y paneles de marca (crear contraseña) | Plano oscuro con brillo opcional |
+
+**Dónde vive cada cosa (cambiar el efecto = tocar un solo sitio):**
+
+- **Aspecto**: bloque ISLAS de `globals.css`. `.island`, `.island-ink` y `.island-glass`, más los brillos
+  `.island-glow-brand` y `.island-glow-ai`, todos en `@layer components`, para que una utilidad de la vista (`p-5`,
+  `rounded-none`, `sm:rounded-full`) pueda ajustarlos. Los valores del cristal son variables `--glass-*` (cuerpo,
+  desenfoque, canto, reflejo, halo) y el tono oscuro las redefine.
+- **Quién usa qué**: `ISLAND_DEFAULTS` en `shared/components/features/island/Island.tsx`. Cambiar
+  `material: "glass"` por `"ink"` devuelve todas las islas a tinta; las que piden su material en la llamada (las
+  barras de acción) no se mueven.
+- **Esquema**: la isla es una **superficie con esquema propio**. `.surface-dark` y `.surface-light` redefinen los
+  primitivos del tema en su subárbol (la capa 1 agrupa esos selectores con `:root` y `.dark`, sin repetir valores).
+  - Lo que va dentro se escribe con los tokens de siempre: `text-muted-foreground`, `bg-muted`, `border-border`,
+    `StatePill` y `Button variant="contrast"`, que es el botón fuerte (blanco sobre tinta, tinta sobre cristal
+    blanco).
+  - **Dentro de una isla no se usan `text-background` ni variantes `dark:`**, porque el tema de la página no es el
+    de la isla.
+  - En tema oscuro la superficie clara toma el esquema oscuro (una isla blanca sobre negro grita).
+  - Una superficie oscura en tema claro conserva la **marca**: el CTA coral, con texto blanco.
+
+**API.**
+
+```tsx
+<InkIsland label="Lo próximo">…</InkIsland>                              // el aspecto por defecto
+<InkIsland label="Axi propone" glow="ai">…</InkIsland>                    // violeta: lo propone la IA
+<Island as="footer" material="ink" glow="none" className="sticky bottom-3 sm:rounded-full">…</Island>
+<form className={cn(islandClassName({ tone: "dark" }), "p-6")}>…</form>  // un elemento que ya existe
+```
+
+**Rendimiento.**
+
+- Sin JS ni estado, así que sirve en Server Components.
+- Sin nodos extra: el brillo es una capa del `background`; el canto (máscara) y el reflejo son pseudo-elementos.
+- El `backdrop-filter` solo existe en el cristal, y hay una isla por pantalla. No se anima ninguna propiedad de la
+  isla.
+
+**Accesibilidad.**
+
+- El cuerpo del cristal es lo bastante opaco (blanco 58–82 %, negro 90–94 %) para que el texto apagado pase 4,5:1.
+- Sin `backdrop-filter`, o con `prefers-reduced-transparency: reduce`, el cuerpo pasa a opaco.
+- El canto y el reflejo no llevan información.
 
 ### 9.6 Recorridos y líneas de tiempo
 
@@ -701,7 +756,7 @@ Para un formulario de varios pasos que llega precargado (Preparar entrega):
 - **«Antes de enviar» siempre a la vista**: cada bloqueo en una fila con su acción debajo
   del texto (no al lado: a 555 px de columna el texto se partía en tres líneas), o un
   `<Alert variant="success">` cuando no hay nada.
-- **Barra de acción** (`ActionDock`): isla de tinta `sticky bottom-3`, `rounded-full` desde
+- **Barra de acción** (`ActionDock`): `Island as="footer" material="ink"` (§9.5.1: las barras van siempre en tinta) `sticky bottom-3`, `rounded-full` desde
   `sm`. Lleva el estado en una palabra («Casi lista», «Lista para enviar»), los tramos de
   progreso —uno por grupo de la revisión, cada uno es un botón de **24 px de alto** con la
   barra de 6 px dentro, que lleva a su paso, con su estado en `sr-only`—, **qué falta

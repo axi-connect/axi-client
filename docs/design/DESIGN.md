@@ -154,7 +154,9 @@ Lenguaje de formas iOS: radios amplios y continuos.
 Las vistas «de un vistazo» (el Resumen de un tenant en `/platform`) se construyen como un
 tablero de iOS: fichas blancas de un solo tema —una etiqueta pequeña, una cifra grande en
 Nexa con su unidad, una línea que dice qué significa— y **una** isla de tinta con lo más
-accionable («Lo próximo»), con un brillo coral detrás. Nada de tiles de vanidad: cada ficha
+accionable («Lo próximo»), con un brillo coral detrás. La isla es un material del sistema
+(DESIGN-SYSTEM §9.5.1): **cristal blanco** por defecto, cristal negro o tinta. Las barras de
+acción pegadas abajo van siempre en **tinta**. Nada de tiles de vanidad: cada ficha
 dice qué sigue o de dónde sale su cifra. Receta técnica, rejilla y trampas en DESIGN-SYSTEM
 §9.5–§9.8; verificación visual obligatoria en §12. Mockup aprobado:
 `docs/design/mockups/entrega-bienvenida-premium/` (2026-09-25).
