@@ -130,12 +130,19 @@ const nextConfig: NextConfig = {
       // impide que un clic hacia fuera (el WhatsApp del asesor, una fuente, el
       // panel) lo arrastre en el `Referer`. Van DESPUÉS de la regla general a
       // propósito: cuando dos reglas fijan la misma cabecera, gana la última.
-      ...["/bienvenida/:path*", "/auth/crear-contrasena", "/auth/restablecer", "/auth/olvide-contrasena"].map(
-        (source) => ({
-          source,
-          headers: [{ key: "Referrer-Policy", value: "no-referrer" }],
-        }),
-      ),
+      // El kit además lleva `X-Robots-Tag`: el `<meta robots>` de la página no
+      // cubre a quien lee solo cabeceras, ni a una respuesta de error.
+      {
+        source: "/bienvenida/:path*",
+        headers: [
+          { key: "Referrer-Policy", value: "no-referrer" },
+          { key: "X-Robots-Tag", value: "noindex, nofollow" },
+        ],
+      },
+      ...["/auth/crear-contrasena", "/auth/restablecer", "/auth/olvide-contrasena"].map((source) => ({
+        source,
+        headers: [{ key: "Referrer-Policy", value: "no-referrer" }],
+      })),
     ];
   },
 

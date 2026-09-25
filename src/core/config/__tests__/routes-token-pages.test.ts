@@ -1,5 +1,6 @@
 import { isPublicPath } from "../routes";
 import { DISALLOWED_PREFIXES } from "@/core/seo/routes";
+import nextConfig from "../../../../next.config";
 
 /**
  * Las páginas de «Entrega y bienvenida» (entrega_bienvenida_plan.md, F4) las
@@ -25,5 +26,27 @@ describe("páginas públicas de la entrega", () => {
 
   it("no abre por coincidencia de prefijo rutas vecinas", () => {
     expect(isPublicPath("/bienvenidas")).toBe(false);
+  });
+});
+
+describe("cabeceras de las páginas con token (next.config.ts)", () => {
+  async function headersFor(source: string) {
+    const rules = (await nextConfig.headers?.()) ?? [];
+    return rules.find((r) => r.source === source)?.headers ?? [];
+  }
+
+  it("el kit lleva no-referrer y X-Robots-Tag noindex, nofollow", async () => {
+    expect(await headersFor("/bienvenida/:path*")).toEqual(
+      expect.arrayContaining([
+        { key: "Referrer-Policy", value: "no-referrer" },
+        { key: "X-Robots-Tag", value: "noindex, nofollow" },
+      ]),
+    );
+  });
+
+  it("las páginas de contraseña llevan no-referrer", async () => {
+    for (const source of ["/auth/crear-contrasena", "/auth/restablecer", "/auth/olvide-contrasena"]) {
+      expect(await headersFor(source)).toContainEqual({ key: "Referrer-Policy", value: "no-referrer" });
+    }
   });
 });
