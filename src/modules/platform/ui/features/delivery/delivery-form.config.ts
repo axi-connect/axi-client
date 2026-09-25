@@ -138,6 +138,8 @@ export function toDeliveryDraft(values: DeliveryFormValues, timeZone: string): D
       email: values.advisor.email.trim(),
     },
     cc: values.cc.map(normalizeEmail),
+    // Se confirma al enviar, en el diálogo del reinicio que acorta la prueba.
+    confirm_trial_shortening: false,
   };
 }
 

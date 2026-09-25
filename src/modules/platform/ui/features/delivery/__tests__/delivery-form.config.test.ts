@@ -118,6 +118,7 @@ describe("toDeliveryDraft", () => {
       digest_time: "07:30",
       advisor: { name: "Camila Restrepo", whatsapp_e164: "+573004821937", email: "camila@axi-connect.co" },
       cc: ["gestion@axi-connect.co"],
+      confirm_trial_shortening: false,
     });
   });
 

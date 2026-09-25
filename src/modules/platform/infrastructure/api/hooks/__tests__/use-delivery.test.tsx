@@ -37,6 +37,7 @@ function draft(name: string): DeliveryDraftWire {
     digest_time: "07:30",
     advisor: { name, whatsapp_e164: "+573004821937", email: "camila@axi-connect.co" },
     cc: [],
+    confirm_trial_shortening: false,
   };
 }
 

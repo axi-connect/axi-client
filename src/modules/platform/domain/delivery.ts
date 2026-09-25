@@ -153,6 +153,7 @@ const BLOCKER_GROUP: Readonly<Record<string, CheckGroup>> = {
   suspended_other: "trial",
   already_paying: "trial",
   trial_shortens: "trial",
+  trial_required: "trial",
   calls_missing: "calls",
   calls_out_of_trial: "calls",
   owner_missing: "mail",
@@ -431,8 +432,8 @@ export const DELIVERY_STATUS_LABELS: Readonly<Record<DeliveryStatusValue, string
 
 /**
  * Vida del enlace «Crea tu contraseña» (servidor: `authConfig.invite_ttl_hours`).
- * TEMPORAL hasta schema.d.ts: la entrega no expone el vencimiento de la
- * invitación, así que se deriva del último envío al dueño.
+ * El contrato de la entrega no expone el vencimiento de la invitación, así que
+ * se deriva del último envío al dueño. Si el servidor lo publica, se lee de ahí.
  */
 export const INVITE_TTL_HOURS = 72;
 

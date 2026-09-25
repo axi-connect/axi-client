@@ -140,8 +140,8 @@ describe("bloqueos y avisos", () => {
     expect(summarizeChecks(shortens).find((check) => check.id === "trial")?.state).toBe("warn");
   });
 
-  it("already_paying va a «Prueba» y sí bloquea", () => {
-    const [issue] = deliveryIssues("t-1", [{ code: "already_paying", message: "Ya paga" }], []);
+  it.each(["already_paying", "trial_required"])("%s va a «Prueba» y sí bloquea", (code) => {
+    const [issue] = deliveryIssues("t-1", [{ code, message: "…" }], []);
     expect(issue).toMatchObject({ kind: "blocker", group: "trial", step: "trial" });
   });
 

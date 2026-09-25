@@ -387,7 +387,7 @@ export function DeliveryWorkspace({
     try {
       await create.mutateAsync({
         ...draft,
-        ...(confirmShortening ? { confirm_trial_shortening: true } : {}),
+        confirm_trial_shortening: confirmShortening,
         idempotency_key: attemptKey.current(),
       });
       clearStoredDraft(storageKey);
