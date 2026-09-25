@@ -1,143 +1,118 @@
 "use client";
 
 /**
- * Tab Resumen: honesto con el contrato — muestra SOLO lo que trae la lista
- * (no hay GET by id ni agregados). Cards de estado + identificación +
- * siguientes pasos hacia los tabs de configuración.
+ * Tab Resumen (entrega_premium_plan.md, F1): el tenant en un vistazo, con lo
+ * que sirve en el día a día del asesor. Arriba, el recorrido de los 7 días con
+ * «hoy»; debajo, un bento de tarjetas de un tema cada una y, a la derecha, la
+ * isla de tinta con lo próximo que toca.
+ *
+ * Honesto con el contrato: pinta solo lo que traen la lista de tenants, la
+ * última entrega y el contexto de la entrega (la oferta). El uso de la prueba y
+ * la puesta en marcha no se muestran hasta que el servidor los exponga (F6).
  */
-import Link from "next/link";
-import { ArrowRight, Check, Copy } from "lucide-react";
-import { Button } from "@/shared/components/ui/button";
+import { useEffect, useMemo, useState } from "react";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { relativeTime } from "@/core/lib/relative-time";
-import { countryByCode } from "../../../../domain/catalogs";
+import { isDispatchedDelivery } from "../../../../domain/delivery";
+import { nextMilestone, trialJourney, type TrialJourneyInput } from "../../../../domain/trial-journey";
+import { useDeliveryContext, useLatestDelivery } from "../../../../infrastructure/api/hooks/use-delivery";
 import { useTenantQuery } from "../../../../infrastructure/api/hooks/use-tenants";
-import { StatusBadge } from "../../../components/StatusBadge";
-import { useCopy } from "../../../hooks/use-copy";
-import { TenantDeliveryCard } from "../../delivery/TenantDeliveryCard";
-import { calendarDaysUntil } from "@/modules/welcome-kit/domain/formatters";
-import { formatShortDate } from "../../../../domain/dates";
-
-function SummaryCard({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="rounded-2xl border border-border bg-background p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
-      <div className="mt-2 text-sm">{children}</div>
-    </div>
-  );
-}
+import {
+  IdentityTile,
+  NextStepCard,
+  OfferTile,
+  OwnerAccessTile,
+  TeamTile,
+  WelcomeTile,
+} from "./summary/SummaryTiles";
+import { TrialJourneyStrip } from "./summary/TrialJourneyStrip";
 
 /** La lista de tenants no trae su zona; los clientes de hoy son de Colombia. */
 const TRIAL_TIMEZONE = "America/Bogota";
 
-/**
- * Días de CALENDARIO hasta el fin de la prueba en la zona del tenant (QA-8):
- * 7 el día 0, 0 el día 7 («termina hoy»). Exportado para el test.
- */
-export function trialDaysLeftLabel(endsAtIso: string, now: Date = new Date()): string {
-  const days = Math.max(0, calendarDaysUntil(endsAtIso, TRIAL_TIMEZONE, now) ?? 0);
-  return days === 0 ? "termina hoy" : days === 1 ? "1 día" : `${days} días`;
+/** La cuenta atrás de «Lo próximo» se refresca cada minuto (no cada segundo: no es un reloj). */
+const NOW_TICK_MS = 60_000;
+
+function useNow(tickMs: number): Date {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), tickMs);
+    return () => clearInterval(timer);
+  }, [tickMs]);
+  return now;
 }
 
-/** Línea de vencimiento bajo el badge cuando hay trial acotado o vencido. */
-function TrialCountdown({ tenant }: { tenant: { status: string; trial_ends_at: string | null; status_reason: string | null } }) {
-  const isExpired = tenant.status === "suspended" && tenant.status_reason === "trial_expired";
-  if (!tenant.trial_ends_at || (tenant.status !== "trial" && !isExpired)) return null;
-
-  const daysLeft = Math.max(0, calendarDaysUntil(tenant.trial_ends_at, TRIAL_TIMEZONE) ?? 0);
-  const date = formatShortDate(tenant.trial_ends_at, TRIAL_TIMEZONE);
-  const ending = isExpired || daysLeft <= 2;
-
+function SummarySkeleton() {
   return (
-    <p className={`mt-2 text-xs tabular-nums ${ending ? "text-warning" : "text-muted-foreground"}`}>
-      {isExpired
-        ? `Prueba vencida el ${date}`
-        : `Prueba vence el ${date} · ${trialDaysLeftLabel(tenant.trial_ends_at)}`}
-    </p>
+    <div className="space-y-4" role="status" aria-label="Cargando resumen">
+      <Skeleton className="h-32 rounded-3xl" />
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-flow-dense xl:grid-cols-3 min-[1400px]:grid-cols-[repeat(3,minmax(0,1fr))_minmax(17rem,20rem)]">
+        <Skeleton className="h-48 rounded-3xl" />
+        <Skeleton className="h-48 rounded-3xl" />
+        <Skeleton className="h-48 rounded-3xl" />
+        <Skeleton className="h-48 rounded-3xl xl:col-start-3 xl:row-span-3 xl:row-start-1 xl:h-auto min-[1400px]:col-start-4 min-[1400px]:row-span-2" />
+        <Skeleton className="h-48 rounded-3xl md:col-span-2" />
+        <Skeleton className="h-48 rounded-3xl" />
+      </div>
+    </div>
   );
 }
 
 export function TenantSummary({ tenantId }: { tenantId: string }) {
   const { data: tenant, isPending } = useTenantQuery(tenantId);
-  const { copied, copy } = useCopy();
+  const latest = useLatestDelivery(tenantId);
+  const context = useDeliveryContext(tenantId);
+  const now = useNow(NOW_TICK_MS);
 
-  if (isPending) {
-    return (
-      <div className="grid gap-3 sm:grid-cols-3" role="status" aria-label="Cargando resumen">
-        <Skeleton className="h-24 rounded-2xl" />
-        <Skeleton className="h-24 rounded-2xl" />
-        <Skeleton className="h-24 rounded-2xl" />
-      </div>
-    );
-  }
+  const delivery = latest.data?.delivery ?? null;
+  const journeyInput: TrialJourneyInput | null = useMemo(() => {
+    if (!delivery || !isDispatchedDelivery(delivery) || !delivery.trial_starts_at || !delivery.trial_ends_at) return null;
+    return {
+      startsAt: delivery.trial_starts_at,
+      endsAt: delivery.trial_ends_at,
+      timeZone: delivery.trial_tz,
+      callDay2At: delivery.call_day2_at,
+      callDay5At: delivery.call_day5_at,
+    };
+  }, [delivery]);
+
+  if (isPending || latest.isPending) return <SummarySkeleton />;
 
   // El estado "no encontrado"/error lo cubre el header del layout.
   if (!tenant) return null;
 
-  const base = `/platform/tenants/${tenant.id}`;
+  const journey = journeyInput ? trialJourney(journeyInput, now) : null;
+  const milestone = journeyInput ? nextMilestone(journeyInput, now) : null;
+  const timeZone = context.data?.tenant.timezone ?? delivery?.trial_tz ?? TRIAL_TIMEZONE;
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-3">
-        <SummaryCard label="Estado">
-          <StatusBadge status={tenant.status} />
-          <TrialCountdown tenant={tenant} />
-        </SummaryCard>
-        <SummaryCard label="Usuarios">
-          <p className="text-2xl font-semibold tabular-nums">{tenant.users_count}</p>
-        </SummaryCard>
-        <SummaryCard label="Antigüedad">
-          <p className="text-2xl font-semibold">{relativeTime(tenant.created_at)}</p>
-        </SummaryCard>
-      </div>
+      {journey && journeyInput ? (
+        <TrialJourneyStrip
+          journey={journey}
+          startsAt={journeyInput.startsAt}
+          endsAt={journeyInput.endsAt}
+          timeZone={journeyInput.timeZone}
+        />
+      ) : null}
 
-      <TenantDeliveryCard tenantId={tenant.id} />
-
-      <SummaryCard label="Identificación">
-        <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
-          <div className="flex justify-between gap-3 sm:block">
-            <dt className="text-muted-foreground">NIT</dt>
-            <dd className="font-mono tabular-nums">{tenant.nit}</dd>
-          </div>
-          <div className="flex justify-between gap-3 sm:block">
-            <dt className="text-muted-foreground">País</dt>
-            <dd>{countryByCode(tenant.country_code)?.name ?? tenant.country_code}</dd>
-          </div>
-          <div className="flex justify-between gap-3 sm:block">
-            <dt className="text-muted-foreground">Ciudad</dt>
-            <dd>{tenant.city ?? "—"}</dd>
-          </div>
-          <div className="flex justify-between gap-3 sm:block">
-            <dt className="text-muted-foreground">ID</dt>
-            <dd>
-              <button
-                type="button"
-                onClick={() => void copy(tenant.id)}
-                aria-label={`Copiar id ${tenant.id}`}
-                className="inline-flex items-center gap-1 font-mono text-xs text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
-              >
-                {tenant.id.slice(0, 8)}…
-                {copied ? <Check aria-hidden="true" className="size-3 text-success" /> : <Copy aria-hidden="true" className="size-3" />}
-              </button>
-            </dd>
-          </div>
-        </dl>
-      </SummaryCard>
-
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm text-muted-foreground">Siguientes pasos:</span>
-        <Button asChild variant="outline" size="sm">
-          <Link href={`${base}/plan`}>
-            Asignar plan
-            <ArrowRight aria-hidden="true" />
-          </Link>
-        </Button>
-        <Button asChild variant="outline" size="sm">
-          <Link href={`${base}/database`}>
-            Configurar base de datos
-            <ArrowRight aria-hidden="true" />
-          </Link>
-        </Button>
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-flow-dense xl:grid-cols-3 min-[1400px]:grid-cols-[repeat(3,minmax(0,1fr))_minmax(17rem,20rem)]">
+        <OwnerAccessTile delivery={delivery} ownerEmail={context.data?.owner?.email ?? null} />
+        <OfferTile
+          offer={context.data?.offer}
+          trialEndsAt={delivery?.trial_ends_at ?? tenant.trial_ends_at}
+          timeZone={timeZone}
+          entregaHref={`/platform/tenants/${tenant.id}/entrega`}
+        />
+        <TeamTile tenant={tenant} />
+        <NextStepCard
+          tenantId={tenant.id}
+          businessName={tenant.name}
+          delivery={delivery}
+          milestone={milestone}
+          now={now}
+        />
+        <WelcomeTile tenantId={tenant.id} delivery={delivery} ownerEmail={context.data?.owner?.email ?? null} />
+        <IdentityTile tenant={tenant} />
       </div>
     </div>
   );

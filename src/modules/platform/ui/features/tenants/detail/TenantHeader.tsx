@@ -10,7 +10,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowLeft, Check, LoaderCircle, PackageCheck, PencilLine, X } from "lucide-react";
+import { ArrowLeft, Check, LifeBuoy, LoaderCircle, PackageCheck, PencilLine, X } from "lucide-react";
 import { useAlert } from "@/core/providers/alert-provider";
 import { errorMessage } from "@/core/lib/error-messages";
 import { formatShortDate } from "../../../../domain/dates";
@@ -22,6 +22,10 @@ import { EmptyState } from "../../../components/EmptyState";
 import { ProblemAlert } from "../../../components/ProblemAlert";
 import { StatusBadge } from "../../../components/StatusBadge";
 import { TenantRowActions } from "../TenantRowActions";
+import { SupportSessionDialog } from "../SupportSessionDialog";
+import { isDispatchedDelivery } from "../../../../domain/delivery";
+import { useLatestDelivery } from "../../../../infrastructure/api/hooks/use-delivery";
+import { usePlatformRole } from "../../../../infrastructure/auth/use-platform-role";
 import { clearLegacyOwnerCredentials } from "../../../../domain/tenant";
 import { Building2 } from "lucide-react";
 
@@ -101,6 +105,9 @@ export function TenantHeader({ tenantId }: { tenantId: string }) {
   const pathname = usePathname();
   const deliveryHref = `/platform/tenants/${tenantId}/entrega`;
   const onDeliveryPage = pathname === deliveryHref;
+  const latest = useLatestDelivery(tenantId);
+  const canEnterSupport = usePlatformRole() !== "billing_ops";
+  const [supportOpen, setSupportOpen] = useState(false);
   // La ficha mostraba la contraseña del dueño que dejaba el alta: si queda
   // algo de una pestaña vieja, se borra sin mostrarse.
   useEffect(() => clearLegacyOwnerCredentials(), []);
@@ -134,22 +141,48 @@ export function TenantHeader({ tenantId }: { tenantId: string }) {
     );
   }
 
+  const dispatched = isDispatchedDelivery(latest.data?.delivery);
+  const initials = tenant.name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0]?.toUpperCase() ?? "")
+    .join("");
+
   return (
-    <header className="flex flex-wrap items-start justify-between gap-3">
-      <div className="min-w-0 max-w-full space-y-1">
-        <div className="flex min-w-0 flex-wrap items-center gap-3">
-          <InlineNameEditor tenantId={tenant.id} name={tenant.name} />
-          <StatusBadge status={tenant.status} />
+    <header className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex min-w-0 max-w-full items-center gap-4">
+        <span
+          aria-hidden="true"
+          className="hidden size-14 shrink-0 items-center justify-center rounded-2xl bg-foreground font-heading text-xl font-bold text-background sm:flex dark:border dark:border-border dark:bg-card dark:text-foreground"
+        >
+          {initials}
+        </span>
+        <div className="min-w-0 space-y-1">
+          <div className="flex min-w-0 flex-wrap items-center gap-3">
+            <InlineNameEditor tenantId={tenant.id} name={tenant.name} />
+            <StatusBadge status={tenant.status} />
+          </div>
+          <p className="flex flex-wrap gap-x-1.5 text-sm text-muted-foreground [&>span]:whitespace-nowrap">
+            <span>
+              NIT <span className="font-mono tabular-nums">{tenant.nit}</span>
+            </span>
+            {tenant.city ? <span>· {tenant.city}</span> : null}
+            <span>· {tenant.country_code}</span>
+            <span>· {tenant.users_count === 1 ? "1 usuario" : `${tenant.users_count} usuarios`}</span>
+            <span>· creada el {formatShortDate(tenant.created_at)}</span>
+          </p>
         </div>
-        <p className="text-sm text-muted-foreground">
-          NIT <span className="font-mono tabular-nums">{tenant.nit}</span>
-          {tenant.city ? ` · ${tenant.city}` : ""} · {tenant.country_code} ·{" "}
-          {tenant.users_count === 1 ? "1 usuario" : `${tenant.users_count} usuarios`} · creada el{" "}
-          {formatShortDate(tenant.created_at)}
-        </p>
       </div>
       <div className="flex items-center gap-2">
-        {onDeliveryPage ? null : (
+        {onDeliveryPage ? null : dispatched ? (
+          canEnterSupport ? (
+            <Button type="button" variant="outline" onClick={() => setSupportOpen(true)}>
+              <LifeBuoy aria-hidden="true" />
+              Entrar como soporte
+            </Button>
+          ) : null
+        ) : (
           <Button asChild>
             <Link href={deliveryHref}>
               <PackageCheck aria-hidden="true" />
@@ -159,6 +192,15 @@ export function TenantHeader({ tenantId }: { tenantId: string }) {
         )}
         <TenantRowActions tenant={tenant} showViewAction={false} />
       </div>
+      {supportOpen ? (
+        <SupportSessionDialog
+          open
+          onOpenChange={(open) => {
+            if (!open) setSupportOpen(false);
+          }}
+          tenant={{ id: tenant.id, name: tenant.name }}
+        />
+      ) : null}
     </header>
   );
 }
