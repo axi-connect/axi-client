@@ -3,7 +3,12 @@ import { NextResponse, type NextRequest } from "next/server";
 import { http } from "@/core/services/http";
 import { API_ERROR_CODES, isHttpError } from "@/core/api/problem";
 import { refreshSession, setSessionCookies } from "@/shared/auth/auth.handlers";
-import { invalidBodyResponse, problemResponse, readJsonBody } from "@/shared/auth/bff-response";
+import {
+  forwardedForHeaders,
+  invalidBodyResponse,
+  problemResponse,
+  readJsonBody,
+} from "@/shared/auth/bff-response";
 import { COOKIE_NAMES, type AuthTokens } from "@/shared/auth/auth.types";
 
 type ChangeBody = { current_password: string; new_password: string };
@@ -17,7 +22,8 @@ type ChangeBody = { current_password: string; new_password: string };
  *
  * Una contraseña actual equivocada es 422 `auth/current_password_invalid`,
  * no 401, justamente para que este BFF NO borre la sesión: se reenvía tal cual
- * y las cookies no se tocan. Solo un 401 real (access vencido) pasa por
+ * y las cookies no se tocan. Lo mismo un 429 `auth/too_many_attempts`: se
+ * reenvía con su `Retry-After` y la sesión sigue. Solo un 401 real (access vencido) pasa por
  * `refreshSession` —el existente, sin cambios— y se reintenta una vez.
  */
 export async function POST(req: NextRequest) {
@@ -35,9 +41,12 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // La IP del visitante: el throttle de intentos del servidor es por IP y
+  // cuenta; sin ella, todos los intentos saldrían de la IP de Next.
+  const forwarded = forwardedForHeaders(req);
   let tokens: AuthTokens;
   try {
-    tokens = await http.post<AuthTokens>("/auth/password/change", payload);
+    tokens = await http.post<AuthTokens>("/auth/password/change", payload, { headers: forwarded });
   } catch (error) {
     if (!isHttpError(error) || error.status !== 401) return problemResponse(error);
 
@@ -47,7 +56,7 @@ export async function POST(req: NextRequest) {
     }
     try {
       tokens = await http.post<AuthTokens>("/auth/password/change", payload, {
-        headers: { Authorization: `Bearer ${refreshed.tokens.access_token}` },
+        headers: { ...forwarded, Authorization: `Bearer ${refreshed.tokens.access_token}` },
       });
     } catch (retryError) {
       return problemResponse(retryError);

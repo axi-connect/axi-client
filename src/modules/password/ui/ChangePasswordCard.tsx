@@ -17,6 +17,8 @@ import {
   type ChangePasswordValues,
 } from "./forms/config/password.config"
 
+export const TOO_MANY_ATTEMPTS = "Demasiados intentos. Espera unos minutos e inténtalo de nuevo."
+
 /**
  * «Cambiar contraseña» con la sesión abierta. Una contraseña actual
  * equivocada llega como 422 `auth/current_password_invalid` y se pinta en su
@@ -37,6 +39,11 @@ export function ChangePasswordCard() {
       if (isHttpError(error) && error.is(API_ERROR_CODES.currentPasswordInvalid)) {
         form.setError("current_password", { type: "server", message: "La contraseña actual no coincide" })
         form.setFocus("current_password")
+        return
+      }
+      if (isHttpError(error) && (error.is(API_ERROR_CODES.tooManyAttempts) || error.status === 429)) {
+        // La sesión sigue abierta: el BFF no toca las cookies ante un 429.
+        showAlert({ tone: "warning", title: TOO_MANY_ATTEMPTS })
         return
       }
       if (applyServerValidation(error, form)) return

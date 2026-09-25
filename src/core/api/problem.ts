@@ -45,6 +45,8 @@ export const API_ERROR_CODES = {
   passwordTokenInvalid: "auth/password_token_invalid",
   /** «Cambiar contraseña»: la actual no coincide. Es 422 y no 401 para que el BFF no borre la sesión. */
   currentPasswordInvalid: "auth/current_password_invalid",
+  /** Throttle de intentos de contraseña (429, con `Retry-After`). No cierra la sesión. */
+  tooManyAttempts: "auth/too_many_attempts",
   permissionDenied: "rbac/permission_denied",
   /** El rol lo permite pero el PLAN no lo incluye; `details.upgrade_hint.path` lleva a ampliarlo. */
   capabilityNotGranted: "entitlements/capability_not_granted",

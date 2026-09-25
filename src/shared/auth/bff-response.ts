@@ -50,7 +50,21 @@ export function problemResponse(error: unknown): NextResponse {
  * por IP de los endpoints públicos de contraseña contaría a todo el mundo
  * junto. El backend decide si la cree (su `trust proxy`).
  */
-export function forwardedForHeaders(req: NextRequest): Record<string, string> {
-  const forwarded = req.headers.get("x-forwarded-for") ?? req.headers.get("x-real-ip");
-  return forwarded ? { "X-Forwarded-For": forwarded } : {};
+export function forwardedForHeaders(req: Pick<NextRequest, "headers">): Record<string, string> {
+  return clientIpHeaders(req.headers);
+}
+
+/**
+ * Lo mismo desde cualquier `Headers` (p. ej. `headers()` de un RSC): reenvía
+ * `X-Forwarded-For` y `X-Real-IP` tal como llegaron del proxy de entrada. Si
+ * solo hay `x-real-ip`, también sirve de `X-Forwarded-For`.
+ */
+export function clientIpHeaders(source: Pick<Headers, "get">): Record<string, string> {
+  const out: Record<string, string> = {};
+  const forwardedFor = source.get("x-forwarded-for");
+  const realIp = source.get("x-real-ip");
+  if (forwardedFor) out["X-Forwarded-For"] = forwardedFor;
+  else if (realIp) out["X-Forwarded-For"] = realIp;
+  if (realIp) out["X-Real-IP"] = realIp;
+  return out;
 }
