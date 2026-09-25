@@ -14,6 +14,32 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 const DialogOpenContext = React.createContext<boolean | null>(null)
 
 /**
+ * El último elemento que recibió el foco FUERA de un diálogo: a él vuelve el
+ * foco al cerrar. Un solo oyente para toda la app, en fase de captura para
+ * verlo antes de que un FocusScope lo mueva.
+ */
+let lastFocusOutsideDialogs: HTMLElement | null = null
+let trackerInstalled = false
+
+function ensureFocusTracker(): void {
+  if (trackerInstalled || typeof document === "undefined") return
+  trackerInstalled = true
+  if (document.activeElement instanceof HTMLElement && document.activeElement !== document.body) {
+    lastFocusOutsideDialogs = document.activeElement
+  }
+  document.addEventListener(
+    "focusin",
+    (event) => {
+      const target = event.target
+      if (!(target instanceof HTMLElement)) return
+      if (target.closest('[data-slot="dialog-content"], [role="dialog"], [role="alertdialog"]')) return
+      lastFocusOutsideDialogs = target
+    },
+    true,
+  )
+}
+
+/**
  * Raíz del diálogo. Siempre controla el `open` de Radix (el suyo o uno propio
  * si el llamador no lo pasa) para que el contenido sepa cuándo animar la salida.
  */
@@ -91,22 +117,25 @@ function DialogContent({
 }) {
   const open = React.useContext(DialogOpenContext)
   /*
-    Al cerrar, el foco vuelve a quien lo tenía al abrir (QA H3-2). Radix solo lo
+    Al cerrar, el foco vuelve a quien abrió el diálogo (QA H3-2). Radix solo lo
     devuelve a un `DialogTrigger`, y casi todos los diálogos del panel se abren
-    controlados (desde un menú, un botón con estado): sin esto, el foco caía en
-    <body>. Se guarda en un layout effect, antes de que el FocusScope lo mueva.
+    controlados (desde un menú, un botón con estado). Capturar
+    `document.activeElement` en un efecto del contenido NO sirve: en modo
+    estricto el efecto corre dos veces y la segunda ya ve el foco DENTRO del
+    diálogo. Por eso el disparador es el último elemento enfocado FUERA de
+    cualquier diálogo (`lastFocusOutsideDialogs`), fijado al abrir.
   */
   const returnFocusRef = React.useRef<HTMLElement | null>(null)
   React.useLayoutEffect(() => {
-    if (open !== false && typeof document !== "undefined") {
-      returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
-    }
+    ensureFocusTracker()
+    if (open !== false) returnFocusRef.current = lastFocusOutsideDialogs
   }, [open])
 
   const handleCloseAutoFocus = (event: Event) => {
     onCloseAutoFocus?.(event)
     if (event.defaultPrevented) return
     const target = returnFocusRef.current
+    // Si el disparador ya no existe (un ítem de menú), Radix hace lo suyo.
     if (target && target.isConnected && target !== document.body) {
       event.preventDefault()
       target.focus()
