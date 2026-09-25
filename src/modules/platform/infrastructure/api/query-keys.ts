@@ -22,6 +22,20 @@ export const platformKeys = {
     migrations: (id: string) => [...platformKeys.tenants.all, id, "migrations"] as const,
   },
 
+  // «Preparar entrega» (entrega_bienvenida_plan.md, F4). Cuelga del tenant:
+  // invalidar la entrega no toca la lista. Las vistas previas llevan el
+  // borrador en la key: cada borrador distinto es una consulta distinta.
+  delivery: {
+    all: (tenantId: string) => ["platform", "delivery", tenantId] as const,
+    context: (tenantId: string) => [...platformKeys.delivery.all(tenantId), "context"] as const,
+    latest: (tenantId: string) => [...platformKeys.delivery.all(tenantId), "latest"] as const,
+    preview: (tenantId: string, draft: unknown) =>
+      [...platformKeys.delivery.all(tenantId), "preview", draft] as const,
+    offerQuote: (tenantId: string, selection: unknown) =>
+      [...platformKeys.delivery.all(tenantId), "offer-quote", selection] as const,
+    offerCatalog: () => ["platform", "offer-catalog"] as const,
+  },
+
   plans: {
     all: ["platform", "plans"] as const,
     list: () => [...platformKeys.plans.all, "list"] as const,

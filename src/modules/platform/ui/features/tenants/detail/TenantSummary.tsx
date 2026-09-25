@@ -14,6 +14,7 @@ import { countryByCode } from "../../../../domain/catalogs";
 import { useTenantQuery } from "../../../../infrastructure/api/hooks/use-tenants";
 import { StatusBadge } from "../../../components/StatusBadge";
 import { useCopy } from "../../../hooks/use-copy";
+import { TenantDeliveryCard } from "../../delivery/TenantDeliveryCard";
 
 function SummaryCard({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -78,6 +79,8 @@ export function TenantSummary({ tenantId }: { tenantId: string }) {
           <p className="text-2xl font-semibold">{relativeTime(tenant.created_at)}</p>
         </SummaryCard>
       </div>
+
+      <TenantDeliveryCard tenantId={tenant.id} />
 
       <SummaryCard label="Identificación">
         <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">

@@ -3,12 +3,14 @@
 /**
  * Header persistente del detalle (vive en el layout, no se re-monta entre
  * tabs): nombre editable inline (PATCH {name} → re-fetch), StatusBadge,
- * metadatos y las mismas acciones Suspender/Reactivar de la fila
- * (`TenantRowActions` reutilizado — un solo flujo de suspensión).
+ * metadatos, el botón principal «Preparar entrega» y las mismas acciones de
+ * la fila en ⋮ (`TenantRowActions` reutilizado — un solo flujo de suspensión;
+ * extender la prueba sigue ahí).
  */
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Check, LoaderCircle, PencilLine, X } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { ArrowLeft, Check, LoaderCircle, PackageCheck, PencilLine, X } from "lucide-react";
 import { useAlert } from "@/core/providers/alert-provider";
 import { errorMessage } from "@/core/lib/error-messages";
 import { formatShortDate } from "@/core/lib/format";
@@ -91,6 +93,9 @@ function InlineNameEditor({ tenantId, name }: { tenantId: string; name: string }
 
 export function TenantHeader({ tenantId }: { tenantId: string }) {
   const { data: tenant, isPending, isError, error, refetch } = useTenantQuery(tenantId);
+  const pathname = usePathname();
+  const deliveryHref = `/platform/tenants/${tenantId}/entrega`;
+  const onDeliveryPage = pathname === deliveryHref;
 
   if (isPending) {
     return (
@@ -135,7 +140,17 @@ export function TenantHeader({ tenantId }: { tenantId: string }) {
           {formatShortDate(tenant.created_at)}
         </p>
       </div>
-      <TenantRowActions tenant={tenant} showViewAction={false} />
+      <div className="flex items-center gap-2">
+        {onDeliveryPage ? null : (
+          <Button asChild>
+            <Link href={deliveryHref}>
+              <PackageCheck aria-hidden="true" />
+              Preparar entrega
+            </Link>
+          </Button>
+        )}
+        <TenantRowActions tenant={tenant} showViewAction={false} />
+      </div>
     </header>
   );
 }
