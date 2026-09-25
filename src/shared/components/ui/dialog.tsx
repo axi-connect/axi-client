@@ -19,7 +19,32 @@ const DialogOpenContext = React.createContext<boolean | null>(null)
  * verlo antes de que un FocusScope lo mueva.
  */
 let lastFocusOutsideDialogs: HTMLElement | null = null
+/**
+ * El último botón que abrió un menú (`aria-haspopup="menu"`): respaldo cuando
+ * el diálogo se abrió desde un ítem que ya se desmontó (QA H5-1, «⋮ → Eliminar»).
+ */
+let lastMenuTrigger: HTMLElement | null = null
 let trackerInstalled = false
+
+/** Dentro de un diálogo: nunca es el disparador. */
+const DIALOG_SELECTOR = '[data-slot="dialog-content"], [role="dialog"], [role="alertdialog"]'
+/** Dentro de un menú o una lista: efímero, se desmonta al elegir; se ignora. */
+const EPHEMERAL_SELECTOR = '[role="menu"], [role="menuitem"], [role="listbox"]'
+const MENU_TRIGGER_SELECTOR = '[aria-haspopup="menu"]'
+
+function rememberMenuTrigger(target: EventTarget | null): void {
+  if (!(target instanceof Element)) return
+  const trigger = target.closest(MENU_TRIGGER_SELECTOR)
+  if (trigger instanceof HTMLElement && !trigger.closest(DIALOG_SELECTOR)) lastMenuTrigger = trigger
+}
+
+/** A quién devolver el foco al cerrar: el disparador, o el trigger del menú si aquel se desmontó. */
+function focusReturnTarget(remembered: HTMLElement | null): HTMLElement | null {
+  if (remembered && remembered.isConnected && remembered !== document.body) return remembered
+  if (lastMenuTrigger && lastMenuTrigger.isConnected) return lastMenuTrigger
+  const expanded = document.querySelector(`${MENU_TRIGGER_SELECTOR}[aria-expanded]`)
+  return expanded instanceof HTMLElement ? expanded : null
+}
 
 function ensureFocusTracker(): void {
   if (trackerInstalled || typeof document === "undefined") return
@@ -32,11 +57,15 @@ function ensureFocusTracker(): void {
     (event) => {
       const target = event.target
       if (!(target instanceof HTMLElement)) return
-      if (target.closest('[data-slot="dialog-content"], [role="dialog"], [role="alertdialog"]')) return
+      rememberMenuTrigger(target)
+      if (target.closest(DIALOG_SELECTOR) || target.closest(EPHEMERAL_SELECTOR)) return
       lastFocusOutsideDialogs = target
     },
     true,
   )
+  // Un clic en el trigger no siempre lo enfoca (Safari): se registra igual.
+  document.addEventListener("pointerdown", (event) => rememberMenuTrigger(event.target), true)
+  document.addEventListener("mousedown", (event) => rememberMenuTrigger(event.target), true)
 }
 
 /**
@@ -134,9 +163,10 @@ function DialogContent({
   const handleCloseAutoFocus = (event: Event) => {
     onCloseAutoFocus?.(event)
     if (event.defaultPrevented) return
-    const target = returnFocusRef.current
-    // Si el disparador ya no existe (un ítem de menú), Radix hace lo suyo.
-    if (target && target.isConnected && target !== document.body) {
+    // El disparador; si se desmontó (un ítem de menú), el trigger del menú;
+    // si tampoco hay, Radix hace lo suyo.
+    const target = focusReturnTarget(returnFocusRef.current)
+    if (target) {
       event.preventDefault()
       target.focus()
     }
