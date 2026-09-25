@@ -4,6 +4,7 @@ import { http } from "@/core/services/http";
 import { isHttpError } from "@/core/api/problem";
 import { setSessionCookies } from "@/shared/auth/auth.handlers";
 import type { AuthTokens, LoginPayload } from "@/shared/auth/auth.types";
+import { forwardedForHeaders } from "@/shared/auth/bff-response";
 
 /**
  * POST /api/auth/login — autentica contra el backend y persiste la sesión
@@ -23,7 +24,12 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const tokens = await http.post<AuthTokens>("/auth/login", payload, { authenticate: false });
+    // La IP del visitante: el throttle del login es por IP y, sin ella, el
+    // backend vería la del servidor de Next para todo el mundo.
+    const tokens = await http.post<AuthTokens>("/auth/login", payload, {
+      authenticate: false,
+      headers: forwardedForHeaders(req),
+    });
     setSessionCookies(await cookies(), tokens);
     return NextResponse.json({ success: true });
   } catch (error) {

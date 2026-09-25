@@ -6,6 +6,7 @@ import {
   refreshSession,
 } from "@/shared/auth/auth.handlers";
 import { COOKIE_NAMES } from "@/shared/auth/auth.types";
+import { forwardedForHeaders } from "@/shared/auth/bff-response";
 import { API_ERROR_CODES, isSuspensionCode } from "@/core/api/problem";
 
 export const runtime = "nodejs";
@@ -16,6 +17,7 @@ export const runtime = "nodejs";
  * - Inyecta `Authorization: Bearer` desde la cookie HttpOnly (el browser nunca ve el token).
  * - Refresh proactivo si el access expira en ≤60s, y retry-once reactivo ante un 401
  *   del backend (token revocado por `token_version`, denylist, etc.).
+ * - Reenvía `X-Forwarded-For`/`X-Real-IP` del visitante (throttle por IP del backend).
  * - Devuelve status y body del backend verbatim, preservando `content-type`
  *   (incluido `application/problem+json`) y `Retry-After`.
  */
@@ -46,6 +48,11 @@ function buildForwardHeaders(req: NextRequest, token: string | null): Headers {
   for (const name of FORWARDED_REQUEST_HEADERS) {
     const value = req.headers.get(name);
     if (value) headers.set(name, value);
+  }
+  // La IP del visitante: sin ella, el throttle por IP del backend ve la del
+  // servidor de Next y cuenta a todos los usuarios como uno solo.
+  for (const [name, value] of Object.entries(forwardedForHeaders(req))) {
+    headers.set(name, value);
   }
   if (token) headers.set("authorization", `Bearer ${token}`);
   return headers;
