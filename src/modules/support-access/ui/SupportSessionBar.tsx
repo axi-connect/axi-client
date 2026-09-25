@@ -14,7 +14,7 @@ const TICK_MS = 15_000
 
 
 /**
- * Barra fina del admin en la pestaña de soporte: «Soporte · {negocio} · quedan
+ * Barra del admin en la pestaña de soporte (una píldora de tinta centrada): «Soporte · {negocio} · quedan
  * N min · Salir». Solo existe si `MeDto.support_session` viene, y eso solo pasa
  * bajo la cookie de soporte: la sesión normal del cliente no lo trae, así que
  * el dueño y su equipo nunca la ven.
@@ -84,28 +84,33 @@ export function SupportSessionBar() {
   if (!session || left === null) return null
 
   return (
+    // Una franja fina con la píldora de tinta al centro: se ve sin tapar nada del
+    // panel (sigue en el flujo, no flota encima del header).
     <div
       role="region"
       aria-label="Sesión de soporte"
-      className="bg-foreground text-background flex h-8 shrink-0 items-center gap-2 px-3 text-xs sm:px-4"
+      className="flex shrink-0 justify-center border-b border-border/60 bg-background px-3 py-1.5"
     >
-      <LifeBuoy aria-hidden="true" className="size-3.5 shrink-0" />
-      <p className="min-w-0 flex-1 truncate">
-        <span className="font-semibold">Soporte</span> · {session.tenant_name} ·{" "}
-        {readonly ? <span className="font-medium">solo lectura, sin tiempo real · </span> : null}
-        <span className="tabular-nums" aria-live="polite">
-          quedan {left} min
-        </span>
-      </p>
-      <button
-        type="button"
-        onClick={() => void leave()}
-        disabled={leaving}
-        className="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 font-medium underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-current disabled:opacity-70"
-      >
-        {leaving ? <LoaderCircle aria-hidden="true" className="size-3 animate-spin" /> : <LogOut aria-hidden="true" className="size-3" />}
-        Salir
-      </button>
+      <div className="flex h-8 max-w-full min-w-0 items-center gap-2.5 rounded-full bg-foreground py-1 pr-1 pl-3 text-xs text-background shadow-[var(--shadow-float)] dark:border dark:border-border dark:bg-card dark:text-foreground">
+        <LifeBuoy aria-hidden="true" className="size-3.5 shrink-0" />
+        {readonly ? <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-warning" /> : null}
+        <p className="min-w-0 truncate">
+          <span className="font-semibold">Soporte</span> · {session.tenant_name} ·{" "}
+          {readonly ? <span className="font-medium">solo lectura, sin tiempo real · </span> : null}
+          <span className="tabular-nums" aria-live="polite">
+            quedan {left} min
+          </span>
+        </p>
+        <button
+          type="button"
+          onClick={() => void leave()}
+          disabled={leaving}
+          className="inline-flex h-6 shrink-0 items-center gap-1 rounded-full bg-background px-2.5 font-semibold text-foreground transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current disabled:opacity-70 dark:bg-foreground dark:text-background"
+        >
+          {leaving ? <LoaderCircle aria-hidden="true" className="size-3 animate-spin" /> : <LogOut aria-hidden="true" className="size-3" />}
+          Salir
+        </button>
+      </div>
     </div>
   )
 }

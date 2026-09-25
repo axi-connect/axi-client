@@ -11,12 +11,14 @@
  * se cierra solo (keepOpen): se cierra al abrir la sesión.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useFormContext, useWatch, type UseFormReturn } from "react-hook-form";
-import { ExternalLink, LoaderCircle, ShieldCheck } from "lucide-react";
+import { useController, useFormContext, useWatch, type Control, type UseFormReturn } from "react-hook-form";
+import { Check, ExternalLink, LoaderCircle, ShieldCheck, X } from "lucide-react";
 import { isHttpError, API_ERROR_CODES } from "@/core/api/problem";
 import { applyServerValidation, errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
-import { createInputField, DynamicForm } from "@/shared/components/features/dynamic-form";
+import { createCustomField, createInputField, DynamicForm } from "@/shared/components/features/dynamic-form";
+import { cn } from "@/core/lib/utils";
+import { SegmentedControl } from "@/shared/components/ui/segmented";
 import { Button } from "@/shared/components/ui/button";
 import { Callout } from "@/shared/components/ui/callout";
 import {
@@ -27,7 +29,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/components/ui/dialog";
-import { SUPPORT_MAX_MINUTES, SUPPORT_MIN_MINUTES, supportTabUrl } from "../../../domain/support-sessions";
+import { supportTabUrl } from "../../../domain/support-sessions";
 import type { TenantListItem } from "../../../domain/tenant";
 import { useIssueSupportSession } from "../../../infrastructure/api/hooks/use-support-sessions";
 import {
@@ -39,6 +41,30 @@ import {
 
 const FORM_ID = "support-session-form";
 
+const DURATION_ITEMS = [
+  { value: "15", label: "15 min" },
+  { value: "30", label: "30 min" },
+  { value: "60", label: "60 min" },
+] as const;
+
+type DurationValue = (typeof DURATION_ITEMS)[number]["value"];
+
+function DurationField({ control }: { control: Control<SupportSessionFormValues> }) {
+  const { field } = useController({ control, name: "minutes" });
+  const value = DURATION_ITEMS.find((item) => item.value === field.value)?.value ?? "60";
+  return (
+    <SegmentedControl
+      label="Duración de la sesión"
+      size="sm"
+      surface="inline"
+      value={value}
+      onValueChange={(next: DurationValue) => field.onChange(next)}
+      items={DURATION_ITEMS}
+      className="w-full [&>*]:flex-1"
+    />
+  );
+}
+
 const FIELDS = [
   createInputField<SupportSessionFormValues>("reason", {
     inputKind: "textarea",
@@ -46,26 +72,105 @@ const FIELDS = [
     placeholder: "El agente no cotiza los combos desde ayer; reviso el catálogo.",
     colSpan: { base: 1, md: 2 },
   }),
+  createCustomField<SupportSessionFormValues>("minutes", ({ control }) => <DurationField control={control} />, {
+    label: "Duración",
+  }),
   createInputField<SupportSessionFormValues>("ticket_ref", {
     label: "Ticket (opcional)",
     placeholder: "SUP-1234",
     autoComplete: "off",
   }),
-  createInputField<SupportSessionFormValues>("minutes", {
-    inputKind: "text",
-    label: "Duración (min)",
-    // Sin min/max nativos: el tope lo dice Zod en español, no el navegador en inglés.
-    description: `De ${SUPPORT_MIN_MINUTES} a ${SUPPORT_MAX_MINUTES} minutos`,
-    inputProps: { inputMode: "numeric" },
-  }),
   createInputField<SupportSessionFormValues>("password", {
     inputKind: "password",
-    label: "Tu contraseña",
+    label: "Confirma con tu contraseña",
     autoComplete: "current-password",
     description: "Mientras no exista el doble factor, pedimos tu contraseña otra vez.",
     colSpan: { base: 1, md: 2 },
   }),
 ];
+
+/** Motivos frecuentes: un toque escribe el comienzo y el admin completa el detalle. */
+const QUICK_REASONS = [
+  { label: "Catálogo", text: "Reviso el catálogo: " },
+  { label: "Agente", text: "Reviso la configuración del agente: " },
+  { label: "Pagos", text: "Configuro el primer medio de pago: " },
+  { label: "WhatsApp", text: "Reviso el canal de WhatsApp: " },
+] as const;
+
+function QuickReasons() {
+  const { control, setValue, setFocus } = useFormContext<SupportSessionFormValues>();
+  const reason = useWatch({ control, name: "reason" }) ?? "";
+  return (
+    <div className="space-y-2">
+      <p id="support-quick-reasons" className="text-sm font-medium">
+        ¿Qué vas a revisar?
+      </p>
+      <div role="group" aria-labelledby="support-quick-reasons" className="flex flex-wrap gap-2">
+        {QUICK_REASONS.map((item) => {
+          const active = reason.startsWith(item.text);
+          return (
+            <button
+              key={item.label}
+              type="button"
+              aria-pressed={active}
+              onClick={() => {
+                // Si ya había un motivo de otro atajo, se cambia el comienzo y se conserva el detalle.
+                const current = QUICK_REASONS.find((other) => reason.startsWith(other.text));
+                const detail = current ? reason.slice(current.text.length) : reason;
+                setValue("reason", `${item.text}${detail}`, { shouldDirty: true });
+                setFocus("reason");
+              }}
+              className={cn(
+                "h-9 rounded-full border px-3.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                active ? "border-foreground bg-foreground text-background" : "border-border bg-background hover:bg-accent",
+              )}
+            >
+              {item.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+const CAN = ["Ver todo el panel", "Configurar agente y catálogo", "Crear el primer medio de pago"] as const;
+const CANNOT = ["Tocar usuarios ni contraseñas", "Editar o borrar medios de pago", "Exportar datos o borrar la cuenta"] as const;
+
+function SupportScope() {
+  return (
+    <div className="space-y-3 rounded-2xl bg-muted/60 p-4">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <p className="text-xs font-semibold tracking-wide uppercase">Puedes</p>
+          <ul className="space-y-1.5">
+            {CAN.map((item) => (
+              <li key={item} className="flex items-start gap-2 text-sm">
+                <Check aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-success" />
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="space-y-2">
+          <p className="text-xs font-semibold tracking-wide uppercase">No puedes</p>
+          <ul className="space-y-1.5">
+            {CANNOT.map((item) => (
+              <li key={item} className="flex items-start gap-2 text-sm">
+                <X aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-destructive" />
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+      <p className="flex items-start gap-2 text-xs text-muted-foreground">
+        <ShieldCheck aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
+        Queda registrado: tu nombre, el motivo, la duración y cada pantalla que abras.
+      </p>
+    </div>
+  );
+}
 
 /** Sube los valores del formulario al diálogo (para saber, en el clic, si abrir la pestaña). */
 function ValuesObserver({ onValues }: { onValues: (values: SupportSessionFormValues) => void }) {
@@ -162,11 +267,12 @@ export function SupportSessionDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Entrar como soporte a «{tenant.name}»</DialogTitle>
           <DialogDescription>
-            Entras a la cuenta para depurar sin conocer la contraseña de nadie. El cliente no ve ningún aviso.
+            Entras sin conocer la contraseña de nadie. El cliente no ve ningún aviso; tu nombre y cada pantalla quedan en
+            la auditoría.
           </DialogDescription>
         </DialogHeader>
 
@@ -200,15 +306,13 @@ export function SupportSessionDialog({
               onSubmit={submit}
               renderFieldsWrapper={(grid) => (
                 <>
+                  <QuickReasons />
                   {grid}
                   <ValuesObserver onValues={onValues} />
                 </>
               )}
             />
-            <Callout tone="neutral" icon={ShieldCheck}>
-              Queda registrado: tu nombre, el motivo, la duración y cada pantalla que abras. Dura como máximo{" "}
-              {SUPPORT_MAX_MINUTES} minutos y no permite cambiar usuarios, credenciales, pagos ni borrar la cuenta.
-            </Callout>
+            <SupportScope />
             {formError ? (
               <p role="alert" className="text-sm text-destructive">
                 {formError}
