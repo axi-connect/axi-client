@@ -1,0 +1,132 @@
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+import { cn } from "@/core/lib/utils";
+
+/**
+ * Piezas del bento de resumen (DESIGN-SYSTEM §9.5). Una ficha es UN tema:
+ * etiqueta arriba, un `aside` opcional (una `StatePill` o un `BentoLink`), una
+ * cifra o frase principal y una línea secundaria. La ficha no decide su lugar
+ * en la rejilla: lo decide la vista con `className` (col-span, anclas).
+ *
+ * Diferencia con `StatTile` (features/stat-tile): aquel es el KPI denso de
+ * una fila de métricas; esto es la ficha de un tablero «de un vistazo».
+ */
+export function BentoTile({
+  label,
+  aside,
+  children,
+  className,
+}: {
+  label: string;
+  aside?: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <section className={cn("flex min-w-0 flex-col gap-3 rounded-3xl border border-border bg-card p-5", className)}>
+      <header className="flex min-h-6 items-center justify-between gap-2">
+        {/* Un h2 en Poppins: la etiqueta es pequeña, no un titular (§3.2). */}
+        <h2 className="truncate font-sans text-xs font-normal text-muted-foreground">{label}</h2>
+        {aside}
+      </header>
+      {children}
+    </section>
+  );
+}
+
+export type StatePillTone = "success" | "warning" | "destructive" | "neutral";
+
+const DOT: Record<StatePillTone, string> = {
+  success: "bg-success",
+  warning: "bg-warning",
+  destructive: "bg-destructive",
+  neutral: "bg-muted-foreground",
+};
+
+/**
+ * Estado de una ficha: `bg-muted` + punto del color + texto en foreground.
+ * El color vive en el punto, nunca en el texto (verde y ámbar como texto no
+ * pasan AA a 12 px, §10). Sustituye a los badges tintados en las fichas.
+ */
+export function StatePill({ tone, children }: { tone: StatePillTone; children: React.ReactNode }) {
+  return (
+    <span className="inline-flex h-6 shrink-0 items-center gap-1.5 rounded-full bg-muted px-2.5 text-xs font-medium whitespace-nowrap">
+      <span aria-hidden="true" className={cn("size-1.5 rounded-full", DOT[tone])} />
+      {children}
+    </span>
+  );
+}
+
+/** La cifra de la ficha: Nexa grande, tabular, con su unidad al lado. Nunca una cifra sin unidad. */
+export function BentoFigure({ value, unit, size = "lg" }: { value: string; unit?: string; size?: "lg" | "md" }) {
+  return (
+    <p className="flex items-baseline gap-1.5 whitespace-nowrap">
+      <span
+        className={cn(
+          "font-heading leading-none font-bold tracking-tight tabular-nums",
+          size === "lg" ? "text-4xl" : "text-3xl",
+        )}
+      >
+        {value}
+      </span>
+      {unit ? <span className="text-sm text-muted-foreground">{unit}</span> : null}
+    </p>
+  );
+}
+
+/**
+ * Enlace de una ficha: foreground + flecha, subrayado al pasar, objetivo de
+ * 24 px. No `text-brand`: el coral a 12–14 px da 3,58:1 y no pasa AA.
+ */
+export function BentoLink({ href, children, className }: { href: string; children: React.ReactNode; className?: string }) {
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "inline-flex min-h-6 w-fit items-center gap-1 rounded-md text-sm font-medium underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+        className,
+      )}
+    >
+      {children}
+      <ArrowRight aria-hidden="true" className="size-3.5" />
+    </Link>
+  );
+}
+
+/**
+ * La isla de tinta: UNA por pantalla, para lo más accionable. En claro es
+ * tinta (`bg-foreground`); en oscuro, tarjeta elevada con borde (una isla
+ * blanca sobre negro grita). El brillo coral va detrás del contenido. Sus
+ * botones son `variant="secondary"`.
+ */
+export function InkIsland({
+  label,
+  children,
+  className,
+}: {
+  /** Nombre de la región para el lector de pantalla. */
+  label: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <section
+      aria-label={label}
+      className={cn(
+        "relative isolate flex min-w-0 flex-col gap-2 overflow-hidden rounded-3xl bg-foreground p-6 text-background dark:border dark:border-border dark:bg-card dark:text-foreground",
+        className,
+      )}
+    >
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-24 -right-24 -z-10 size-80 rounded-full bg-[radial-gradient(circle,color-mix(in_oklab,var(--axi-brand)_45%,transparent),transparent_70%)]"
+      />
+      {children}
+    </section>
+  );
+}
+
+/** El antetítulo de una isla o un panel de marca: versalitas pequeñas con tracking amplio. */
+export function Kicker({ children }: { children: React.ReactNode }) {
+  return <p className="text-[11px] font-medium tracking-[0.12em] uppercase opacity-70">{children}</p>;
+}

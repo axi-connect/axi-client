@@ -70,8 +70,9 @@ export function ReviewStep({
 
       <ReviewRow label="Propietario" step={1} onEdit={onEdit}>
         <p className="font-medium">{owner.name}</p>
-        <p className="text-muted-foreground">
-          {owner.email} · contraseña <span className="font-mono">••••••••</span>
+        <p className="text-muted-foreground">{owner.email}</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          El dueño crea su propia contraseña con el enlace de la bienvenida; nadie más la conoce.
         </p>
       </ReviewRow>
 

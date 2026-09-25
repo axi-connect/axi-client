@@ -6,6 +6,7 @@
  */
 import Link from "next/link";
 import { ChevronRight, TriangleAlert } from "lucide-react";
+import { cn } from "@/core/lib/utils";
 import type { ColumnDef } from "@/shared/components/features/data-table";
 import { RelativeDate } from "@/shared/components/ui/relative-date";
 import {
@@ -16,7 +17,7 @@ import {
 import { scoreTone } from "../../../../../domain/thresholds";
 import { formatScore } from "../../../analytics/analytics-format";
 import { MetricCell } from "../../../analytics/MetricCell";
-import { StatusBadge } from "../../../../components/StatusBadge";
+import { QualityStatus } from "../../shared/premium";
 import { FailureReasonBadge } from "./FailureReasonBadge";
 
 /** Fila plana para la tabla (solo primitivos — contrato del DataTable). */
@@ -76,7 +77,7 @@ export function buildCaseColumns(runId: string): ColumnDef<CaseRow>[] {
       searchable: false,
       alwaysVisible: true,
       minWidth: 110,
-      cell: ({ row }) => <StatusBadge status={row.original.status} />,
+      cell: ({ row }) => <QualityStatus status={row.original.status} />,
     },
     {
       accessorKey: "turns_used",
@@ -97,12 +98,13 @@ export function buildCaseColumns(runId: string): ColumnDef<CaseRow>[] {
         return (
           <span className="inline-flex items-center gap-1 tabular-nums">
             <span
-              className={
-                row.original.checks_passed === row.original.checks_total
-                  ? "text-success"
-                  : "text-destructive font-medium"
-              }
-            >
+              aria-hidden="true"
+              className={cn(
+                "size-1.5 shrink-0 rounded-full",
+                row.original.checks_passed === row.original.checks_total ? "bg-success" : "bg-destructive",
+              )}
+            />
+            <span className={row.original.checks_passed === row.original.checks_total ? undefined : "font-medium"}>
               {row.original.checks_passed}/{row.original.checks_total}
             </span>
             {row.original.has_invalid_criteria && (
@@ -122,7 +124,7 @@ export function buildCaseColumns(runId: string): ColumnDef<CaseRow>[] {
       searchable: false,
       minWidth: 100,
       cell: ({ row }) => (
-        <MetricCell tone={scoreTone(row.original.judge_score)}>
+        <MetricCell appearance="dot" tone={scoreTone(row.original.judge_score)}>
           {formatScore(row.original.judge_score)}
         </MetricCell>
       ),

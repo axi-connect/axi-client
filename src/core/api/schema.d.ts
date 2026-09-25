@@ -100,6 +100,102 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/password/forgot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthController_forgot_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/password/token/inspect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthController_inspectPasswordToken_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/password/set": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthController_setPassword_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/password/change": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthController_changePassword_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/support/redeem": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthSupportController_redeem_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/support/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthSupportController_end_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/rbac/permissions": {
         parameters: {
             query?: never;
@@ -450,6 +546,70 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["UsersController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/users/{id}/invitation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["UsersController_resendInvitation_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/support-sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformSupportSessionsController_list_v1"];
+        put?: never;
+        post: operations["PlatformSupportSessionsController_issue_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/support-sessions/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformSupportSessionsController_exportCsv_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/support-sessions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["PlatformSupportSessionsController_revoke_v1"];
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/platform/channels/health": {
@@ -7508,6 +7668,166 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/platform/tenants/{id}/offer/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformTenantOfferController_preview_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/offer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformTenantOfferController_current_v1"];
+        put: operations["PlatformTenantOfferController_save_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/offer-catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformOfferCatalogController_catalog_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/delivery/context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformTenantDeliveryController_context_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/delivery/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformTenantDeliveryController_preview_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/delivery": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformTenantDeliveryController_latest_v1"];
+        put?: never;
+        post: operations["PlatformTenantDeliveryController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/delivery/{deliveryId}/resend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformTenantDeliveryController_resend_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/delivery/trial-progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformTenantDeliveryController_trialProgress_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/welcome/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PublicWelcomeController_view_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/welcome/{token}/calls/{file}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PublicWelcomeController_calendar_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -7551,6 +7871,53 @@ export interface components {
                 name: string;
             };
             permissions: string[];
+            support_session?: {
+                /** Format: date-time */
+                expires_at: string;
+                tenant_name: string;
+                company_suspended: boolean;
+            };
+        };
+        ForgotPasswordDto: {
+            /** Format: email */
+            email: string;
+        };
+        InspectPasswordTokenDto: {
+            token: string;
+        };
+        PasswordTokenInfoDto: {
+            /** @enum {string} */
+            purpose: "invite" | "reset";
+            email_masked: string;
+            business_name: string;
+            /** Format: date-time */
+            expires_at: string;
+        };
+        SetPasswordDto: {
+            token: string;
+            new_password: string;
+        };
+        ChangePasswordDto: {
+            current_password: string;
+            new_password: string;
+        };
+        RedeemSupportSessionDto: {
+            code: string;
+        };
+        SupportAccessTokensDto: {
+            access_token: string;
+            /** @enum {string} */
+            token_type: "Bearer";
+            expires_in: number;
+            /** Format: date-time */
+            expires_at: string;
+            /** Format: uuid */
+            session_id: string;
+        };
+        EndedSupportSessionDto: {
+            /** Format: uuid */
+            session_id: string;
+            already_ended: boolean;
         };
         PermissionListDto: {
             data: {
@@ -7977,6 +8344,47 @@ export interface components {
             status?: "active" | "disabled";
             password?: string;
         };
+        IssueSupportSessionDto: {
+            reason: string;
+            ticket_ref?: string;
+            minutes: number;
+            password: string;
+        };
+        IssuedSupportSessionDto: {
+            /** Format: uuid */
+            session_id: string;
+            handoff_code: string;
+            expires_in: number;
+        };
+        SupportSessionListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                platform_user: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    email: string;
+                } | null;
+                reason: string;
+                ticket_ref: string | null;
+                /** @enum {string} */
+                status: "pending" | "active" | "ended" | "revoked" | "expired";
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                redeemed_at: string | null;
+                /** Format: date-time */
+                expires_at: string;
+                /** Format: date-time */
+                ended_at: string | null;
+                /** @enum {string|null} */
+                end_reason: "ended" | "revoked" | "expired" | null;
+                duration_s: number | null;
+                request_count: number;
+                changes_count: number;
+            }[];
+        };
         PlatformChannelHealthListDto: {
             data: {
                 /** Format: uuid */
@@ -8084,7 +8492,7 @@ export interface components {
                 name: string;
                 /** Format: email */
                 email: string;
-                password: string;
+                password?: string;
             };
             plan_code?: string;
         };
@@ -8093,6 +8501,8 @@ export interface components {
             id: string;
             /** Format: uuid */
             owner_user_id: string;
+            owner_invited: boolean;
+            invitation_pending: boolean;
         };
         UpdateTenantDto: {
             name?: string;
@@ -8115,10 +8525,20 @@ export interface components {
         StartTrialDto: {
             /** @default 7 */
             days: number;
+            /**
+             * @default extend
+             * @enum {string}
+             */
+            mode: "extend" | "restart";
         };
         TrialStartedDto: {
             /** Format: date-time */
             trial_ends_at: string;
+            /** Format: date-time */
+            trial_starts_at: string;
+            timezone: string;
+            /** @enum {string} */
+            mode: "extend" | "restart";
         };
         UpdateTenantIntegrationsDto: {
             /** @enum {string|null} */
@@ -20678,6 +21098,579 @@ export interface components {
                 where: string;
             }[];
         };
+        OfferSelectionDto: {
+            package_code?: string;
+            module_codes?: string[];
+            volume_tier_code?: string;
+            promotion_code?: string;
+            /** @enum {string} */
+            billing_period: "monthly" | "annual";
+        };
+        OfferQuoteDto: {
+            plan_name: string;
+            volume_tier_label: string | null;
+            list_amount_cents: number;
+            amount_cents: number;
+            promotion_name: string | null;
+            currency: string;
+            /** Format: date-time */
+            valid_until: string;
+        };
+        TenantOfferResponseDto: {
+            offer: {
+                plan_name: string;
+                volume_tier_label: string | null;
+                list_amount_cents: number;
+                amount_cents: number;
+                promotion_name: string | null;
+                currency: string;
+                /** Format: date-time */
+                valid_until: string;
+                /** @enum {string} */
+                kind: "package" | "module";
+                plan_codes: string[];
+                volume_tier_code: string | null;
+                /** @enum {string} */
+                billing_period: "monthly" | "annual";
+                promotion_code: string | null;
+                /** Format: date-time */
+                quoted_at: string | null;
+            } | null;
+        };
+        OfferCatalogDto: {
+            currency: string;
+            default_tier: string | null;
+            packages: {
+                code: string;
+                name: string;
+                description: string | null;
+            }[];
+            modules: {
+                code: string;
+                name: string;
+                description: string | null;
+            }[];
+            tiers: {
+                code: string;
+                label: string;
+                conversations: number;
+            }[];
+            promotion: {
+                code: string;
+                name: string;
+                percent_bps: number;
+                /** Format: date-time */
+                ends_at: string | null;
+            } | null;
+        };
+        DeliveryContextDto: {
+            tenant: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                timezone: string;
+                /** @enum {string} */
+                status: "active" | "trial" | "suspended";
+                /** Format: date-time */
+                trial_ends_at: string | null;
+            };
+            owner: {
+                /** Format: uuid */
+                user_id: string;
+                name: string;
+                email: string;
+                status: string;
+            } | null;
+            agent: {
+                name: string;
+                tone: string | null;
+            } | null;
+            offer: {
+                plan_name: string;
+                volume_tier_label: string | null;
+                list_amount_cents: number;
+                amount_cents: number;
+                promotion_name: string | null;
+                currency: string;
+                /** Format: date-time */
+                valid_until: string;
+                /** @enum {string} */
+                kind: "package" | "module";
+                plan_codes: string[];
+                volume_tier_code: string | null;
+                /** @enum {string} */
+                billing_period: "monthly" | "annual";
+                promotion_code: string | null;
+                /** Format: date-time */
+                quoted_at: string | null;
+            } | null;
+            trial: {
+                /** @enum {string} */
+                status: "active" | "trial" | "suspended";
+                /** Format: date-time */
+                trial_ends_at: string | null;
+                restart_preview: {
+                    /** Format: date-time */
+                    starts_at: string;
+                    /** Format: date-time */
+                    ends_at: string;
+                    timezone: string;
+                };
+            };
+            suggested: {
+                /** Format: date */
+                session_date: string;
+                call_day2: {
+                    /** Format: date-time */
+                    at: string;
+                    warning: string | null;
+                };
+                call_day5: {
+                    /** Format: date-time */
+                    at: string;
+                    warning: string | null;
+                };
+                digest_time: string;
+            };
+            advisor_suggestion: {
+                name: string;
+                whatsapp_e164: string;
+                email: string;
+            } | null;
+            latest_delivery: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                status: "draft" | "committed" | "mail_queued" | "sent" | "failed";
+                idempotency_key: string;
+                /** Format: date-time */
+                created_at: string;
+                sent_by: string;
+                /** Format: date-time */
+                trial_starts_at: string | null;
+                /** Format: date-time */
+                trial_ends_at: string | null;
+                trial_tz: string;
+                /** Format: date */
+                session_date: string;
+                /** Format: date-time */
+                call_day2_at: string;
+                /** Format: date-time */
+                call_day5_at: string;
+                digest_time: string;
+                advisor: {
+                    name: string;
+                    whatsapp_e164: string;
+                    email: string;
+                };
+                cc: string[];
+                /** Format: date-time */
+                kit_expires_at: string | null;
+                /** Format: date-time */
+                password_set_at: string | null;
+                steps: {
+                    offer: boolean;
+                    trial: boolean;
+                    invite: boolean;
+                    kit: boolean;
+                    committed: boolean;
+                };
+                attempts: {
+                    attempt: number;
+                    /** @enum {string} */
+                    audience: "owner" | "team";
+                    recipient: string;
+                    recipient_masked: string;
+                    /** @enum {string} */
+                    status: "pending" | "sent" | "failed" | "skipped";
+                    provider_message_id: string | null;
+                    error: string | null;
+                    /** Format: date-time */
+                    sent_at: string | null;
+                }[];
+                team_failures: number;
+            } | null;
+            blockers: {
+                /** @enum {string} */
+                code: "owner_missing" | "agent_missing" | "agent_name_too_long" | "business_name_too_long" | "payment_methods_missing" | "calls_missing" | "calls_out_of_trial" | "offer_not_quoted" | "enterprise" | "suspended_other" | "already_paying" | "trial_shortens" | "trial_required";
+                message: string;
+                action?: {
+                    /** @enum {string} */
+                    kind: "support";
+                    /** @enum {string} */
+                    target: "agent" | "payment_methods" | "schedule" | "catalog" | "company";
+                };
+            }[];
+        };
+        DeliveryDraftDto: {
+            offer: {
+                package_code?: string;
+                module_codes?: string[];
+                volume_tier_code?: string;
+                promotion_code?: string;
+                /** @enum {string} */
+                billing_period: "monthly" | "annual";
+            };
+            /** @default true */
+            restart_trial: boolean;
+            /** @default false */
+            confirm_trial_shortening: boolean;
+            /** Format: date */
+            session_date: string;
+            /** Format: date-time */
+            call_day2_at: string;
+            /** Format: date-time */
+            call_day5_at: string;
+            /** @default 07:30 */
+            digest_time: string;
+            advisor: {
+                name: string;
+                whatsapp_e164: string;
+                /** Format: email */
+                email: string;
+            };
+            /** @default [] */
+            cc: string[];
+        };
+        DeliveryPreviewDto: {
+            blockers: {
+                /** @enum {string} */
+                code: "owner_missing" | "agent_missing" | "agent_name_too_long" | "business_name_too_long" | "payment_methods_missing" | "calls_missing" | "calls_out_of_trial" | "offer_not_quoted" | "enterprise" | "suspended_other" | "already_paying" | "trial_shortens" | "trial_required";
+                message: string;
+                action?: {
+                    /** @enum {string} */
+                    kind: "support";
+                    /** @enum {string} */
+                    target: "agent" | "payment_methods" | "schedule" | "catalog" | "company";
+                };
+            }[];
+            warnings: {
+                /** @enum {string} */
+                code: "call_on_weekend";
+                /** @enum {string} */
+                field: "call_day2_at" | "call_day5_at";
+                message: string;
+            }[];
+            kit_data: {
+                kit_version: number;
+                business_name: string;
+                owner_first_name: string;
+                owner_name: string;
+                login_email: string;
+                panel_url: string;
+                password_reset_url: string;
+                agent: {
+                    name: string | null;
+                    tone: string | null;
+                    tone_label: string | null;
+                };
+                team_hours: string | null;
+                payment_methods: {
+                    kind: string;
+                    label: string;
+                }[];
+                payment_methods_joined: string;
+                catalog: {
+                    product_count: number;
+                };
+                trial: {
+                    /** Format: date-time */
+                    starts_at: string;
+                    /** Format: date-time */
+                    ends_at: string;
+                    timezone: string;
+                    /** Format: date */
+                    start_date: string;
+                    /** Format: date */
+                    day7_date: string;
+                    range_label: string;
+                    day7_label: string;
+                    conversations: number | null;
+                };
+                session: {
+                    /** Format: date */
+                    date: string;
+                    date_label: string;
+                };
+                calls: {
+                    day2: {
+                        /** @enum {string} */
+                        day: "day2" | "day5";
+                        /** Format: date-time */
+                        at: string;
+                        date_label: string;
+                        time_label: string;
+                        duration_min: number;
+                        /** @enum {string} */
+                        kind: "llamada" | "reunión";
+                        title: string;
+                    };
+                    day5: {
+                        /** @enum {string} */
+                        day: "day2" | "day5";
+                        /** Format: date-time */
+                        at: string;
+                        date_label: string;
+                        time_label: string;
+                        duration_min: number;
+                        /** @enum {string} */
+                        kind: "llamada" | "reunión";
+                        title: string;
+                    };
+                };
+                digest: {
+                    time: string;
+                    time_label: string;
+                };
+                advisor: {
+                    name: string;
+                    first_name: string;
+                    whatsapp_e164: string;
+                    whatsapp_display: string;
+                    whatsapp_url: string;
+                };
+                plan: {
+                    name: string;
+                    volume_tier_label: string | null;
+                    /** @enum {string} */
+                    interval: "monthly" | "annual";
+                    amount_cents: number;
+                    list_amount_cents: number;
+                    currency: string;
+                    price_label: string;
+                    list_price_label: string;
+                    promotion_name: string | null;
+                    /** Format: date-time */
+                    valid_until: string | null;
+                } | null;
+                pays_with: string[];
+            };
+            email_html_owner: string;
+            email_html_team: string;
+            subject: string;
+        };
+        CreateDeliveryDto: {
+            offer: {
+                package_code?: string;
+                module_codes?: string[];
+                volume_tier_code?: string;
+                promotion_code?: string;
+                /** @enum {string} */
+                billing_period: "monthly" | "annual";
+            };
+            /** @default true */
+            restart_trial: boolean;
+            /** @default false */
+            confirm_trial_shortening: boolean;
+            /** Format: date */
+            session_date: string;
+            /** Format: date-time */
+            call_day2_at: string;
+            /** Format: date-time */
+            call_day5_at: string;
+            /** @default 07:30 */
+            digest_time: string;
+            advisor: {
+                name: string;
+                whatsapp_e164: string;
+                /** Format: email */
+                email: string;
+            };
+            /** @default [] */
+            cc: string[];
+            idempotency_key: string;
+        };
+        DeliveryAcceptedDto: {
+            /** Format: uuid */
+            delivery_id: string;
+            /** @enum {string} */
+            status: "draft" | "committed" | "mail_queued" | "sent" | "failed";
+        };
+        DeliveryResentDto: {
+            /** Format: uuid */
+            delivery_id: string;
+            /** @enum {string} */
+            status: "draft" | "committed" | "mail_queued" | "sent" | "failed";
+            attempt: number;
+        };
+        TrialProgressDto: {
+            trial_usage: {
+                /** Format: date-time */
+                starts_at: string;
+                /** Format: date-time */
+                ends_at: string;
+                timezone: string;
+                allowance: number | null;
+                used: number;
+                by_day: {
+                    /** Format: date */
+                    date: string;
+                    count: number;
+                }[];
+            } | null;
+            setup: {
+                steps: {
+                    /** @enum {string} */
+                    code: "niche" | "business_hours" | "catalog" | "agents" | "whatsapp";
+                    /** @enum {string} */
+                    status: "pending" | "done" | "skipped";
+                }[];
+                closed: number;
+                total: number;
+                completed: boolean;
+            };
+        };
+        DeliveryResponseDto: {
+            delivery: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                status: "draft" | "committed" | "mail_queued" | "sent" | "failed";
+                idempotency_key: string;
+                /** Format: date-time */
+                created_at: string;
+                sent_by: string;
+                /** Format: date-time */
+                trial_starts_at: string | null;
+                /** Format: date-time */
+                trial_ends_at: string | null;
+                trial_tz: string;
+                /** Format: date */
+                session_date: string;
+                /** Format: date-time */
+                call_day2_at: string;
+                /** Format: date-time */
+                call_day5_at: string;
+                digest_time: string;
+                advisor: {
+                    name: string;
+                    whatsapp_e164: string;
+                    email: string;
+                };
+                cc: string[];
+                /** Format: date-time */
+                kit_expires_at: string | null;
+                /** Format: date-time */
+                password_set_at: string | null;
+                steps: {
+                    offer: boolean;
+                    trial: boolean;
+                    invite: boolean;
+                    kit: boolean;
+                    committed: boolean;
+                };
+                attempts: {
+                    attempt: number;
+                    /** @enum {string} */
+                    audience: "owner" | "team";
+                    recipient: string;
+                    recipient_masked: string;
+                    /** @enum {string} */
+                    status: "pending" | "sent" | "failed" | "skipped";
+                    provider_message_id: string | null;
+                    error: string | null;
+                    /** Format: date-time */
+                    sent_at: string | null;
+                }[];
+                team_failures: number;
+            } | null;
+        };
+        WelcomeKitDataDto: {
+            kit_version: number;
+            business_name: string;
+            owner_first_name: string;
+            owner_name: string;
+            login_email: string;
+            panel_url: string;
+            password_reset_url: string;
+            agent: {
+                name: string | null;
+                tone: string | null;
+                tone_label: string | null;
+            };
+            team_hours: string | null;
+            payment_methods: {
+                kind: string;
+                label: string;
+            }[];
+            payment_methods_joined: string;
+            catalog: {
+                product_count: number;
+            };
+            trial: {
+                /** Format: date-time */
+                starts_at: string;
+                /** Format: date-time */
+                ends_at: string;
+                timezone: string;
+                /** Format: date */
+                start_date: string;
+                /** Format: date */
+                day7_date: string;
+                range_label: string;
+                day7_label: string;
+                conversations: number | null;
+            };
+            session: {
+                /** Format: date */
+                date: string;
+                date_label: string;
+            };
+            calls: {
+                day2: {
+                    /** @enum {string} */
+                    day: "day2" | "day5";
+                    /** Format: date-time */
+                    at: string;
+                    date_label: string;
+                    time_label: string;
+                    duration_min: number;
+                    /** @enum {string} */
+                    kind: "llamada" | "reunión";
+                    title: string;
+                };
+                day5: {
+                    /** @enum {string} */
+                    day: "day2" | "day5";
+                    /** Format: date-time */
+                    at: string;
+                    date_label: string;
+                    time_label: string;
+                    duration_min: number;
+                    /** @enum {string} */
+                    kind: "llamada" | "reunión";
+                    title: string;
+                };
+            };
+            digest: {
+                time: string;
+                time_label: string;
+            };
+            advisor: {
+                name: string;
+                first_name: string;
+                whatsapp_e164: string;
+                whatsapp_display: string;
+                whatsapp_url: string;
+            };
+            plan: {
+                name: string;
+                volume_tier_label: string | null;
+                /** @enum {string} */
+                interval: "monthly" | "annual";
+                amount_cents: number;
+                list_amount_cents: number;
+                currency: string;
+                price_label: string;
+                list_price_label: string;
+                promotion_name: string | null;
+                /** Format: date-time */
+                valid_until: string | null;
+            } | null;
+            pays_with: string[];
+            /** Format: date-time */
+            kit_expires_at: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -21005,6 +21998,149 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MeDto"];
+                };
+            };
+        };
+    };
+    AuthController_forgot_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ForgotPasswordDto"];
+            };
+        };
+        responses: {
+            /** @description Solicitud recibida (no revela si la cuenta existe) */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_inspectPasswordToken_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InspectPasswordTokenDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordTokenInfoDto"];
+                };
+            };
+        };
+    };
+    AuthController_setPassword_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetPasswordDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthTokensDto"];
+                };
+            };
+            /** @description Contraseña fijada sin sesión (empresa suspendida) */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_changePassword_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangePasswordDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthTokensDto"];
+                };
+            };
+        };
+    };
+    AuthSupportController_redeem_v1: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Token de plataforma */
+                "X-Platform-Token": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RedeemSupportSessionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupportAccessTokensDto"];
+                };
+            };
+        };
+    };
+    AuthSupportController_end_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EndedSupportSessionDto"];
                 };
             };
         };
@@ -21625,6 +22761,115 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    UsersController_resendInvitation_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Invitación encolada */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformSupportSessionsController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupportSessionListDto"];
+                };
+            };
+        };
+    };
+    PlatformSupportSessionsController_issue_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IssueSupportSessionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssuedSupportSessionDto"];
+                };
+            };
+        };
+    };
+    PlatformSupportSessionsController_exportCsv_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description CSV del registro de sesiones de soporte */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": string;
+                };
+            };
+        };
+    };
+    PlatformSupportSessionsController_revoke_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EndedSupportSessionDto"];
+                };
             };
         };
     };
@@ -34712,6 +35957,275 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApplyOutcomeDto"];
+                };
+            };
+        };
+    };
+    PlatformTenantOfferController_preview_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OfferSelectionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfferQuoteDto"];
+                };
+            };
+        };
+    };
+    PlatformTenantOfferController_current_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenantOfferResponseDto"];
+                };
+            };
+        };
+    };
+    PlatformTenantOfferController_save_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OfferSelectionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfferQuoteDto"];
+                };
+            };
+        };
+    };
+    PlatformOfferCatalogController_catalog_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfferCatalogDto"];
+                };
+            };
+        };
+    };
+    PlatformTenantDeliveryController_context_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeliveryContextDto"];
+                };
+            };
+        };
+    };
+    PlatformTenantDeliveryController_preview_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeliveryDraftDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeliveryPreviewDto"];
+                };
+            };
+        };
+    };
+    PlatformTenantDeliveryController_latest_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeliveryResponseDto"];
+                };
+            };
+        };
+    };
+    PlatformTenantDeliveryController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateDeliveryDto"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeliveryAcceptedDto"];
+                };
+            };
+        };
+    };
+    PlatformTenantDeliveryController_resend_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                deliveryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeliveryResentDto"];
+                };
+            };
+        };
+    };
+    PlatformTenantDeliveryController_trialProgress_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrialProgressDto"];
+                };
+            };
+        };
+    };
+    PublicWelcomeController_view_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WelcomeKitDataDto"];
+                };
+            };
+        };
+    };
+    PublicWelcomeController_calendar_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+                file: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Calendario iCalendar (RFC 5545) de la cita */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/calendar": string;
                 };
             };
         };

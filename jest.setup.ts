@@ -80,7 +80,8 @@ if (!('IntersectionObserver' in globalThis)) {
 }
 
 // Radix las usa para el foco y el scroll dentro de los overlays. Con guarda:
-// los tests que corren en `@jest-environment node` no tienen `Element`.
+// los tests de route handlers corren en `@jest-environment node` (NextRequest
+// necesita el `Request` de Node, que jsdom no trae) y ahí no hay `Element`.
 if (typeof Element !== "undefined") {
   Element.prototype.scrollIntoView ??= function scrollIntoView() {}
   Element.prototype.releasePointerCapture ??= function releasePointerCapture() {}

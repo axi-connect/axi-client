@@ -40,14 +40,16 @@ export function canStartTrial(tenant: Pick<TenantListItem, "status" | "status_re
 export type TenantUser = Schemas["TenantUsersDto"]["data"][number];
 
 /**
- * Clave de `sessionStorage` con las credenciales del owner recién creado.
- * Vida efímera: el banner del detalle las lee UNA vez y las borra
- * ("se muestran una sola vez" — nunca persisten más allá de ese render).
+ * Clave VIEJA de `sessionStorage` donde el alta dejaba la contraseña del dueño
+ * para pasarla a mano (E1 lo prohíbe). Ya no se escribe; solo se borra lo que
+ * haya quedado en una pestaña abierta antes del cambio.
  */
-export const PENDING_CREDENTIALS_KEY = "axi.platform.pending_credentials";
+export const LEGACY_PENDING_CREDENTIALS_KEY = "axi.platform.pending_credentials";
 
-export type PendingOwnerCredentials = {
-  tenant_id: string;
-  email: string;
-  password: string;
-};
+export function clearLegacyOwnerCredentials(): void {
+  try {
+    window.sessionStorage.removeItem(LEGACY_PENDING_CREDENTIALS_KEY);
+  } catch {
+    // Sin almacenamiento disponible no hay nada que borrar.
+  }
+}

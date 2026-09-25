@@ -1,12 +1,13 @@
 /**
  * Chips de solo lectura de los criterios de éxito. Se reutiliza en el sheet
  * de ver escenario, el detalle de suite y (F4) junto a los checks del case.
- * Los `unknown` (criteria_version vieja o kind nuevo) se pintan en ámbar sin
- * inventar semántica.
+ * Los `unknown` (criteria_version vieja o kind nuevo) llevan punto ámbar sin
+ * inventar semántica (texto en foreground: AA).
  */
 import { cn } from "@/core/lib/utils";
 import { Badge } from "@/shared/components/ui/badge";
 import { criterionLabel, type SuccessCriterion } from "../../../../domain/quality";
+import { TonePill } from "../shared/premium";
 
 type CriteriaListProps = {
   criteria: SuccessCriterion[];
@@ -21,16 +22,13 @@ export function CriteriaList({ criteria, className }: CriteriaListProps) {
     <ul className={cn("flex flex-wrap gap-1.5", className)}>
       {criteria.map((criterion, index) => (
         <li key={index}>
-          <Badge
-            variant="outline"
-            className={cn(
-              criterion.kind === "unknown"
-                ? "border-warning/40 bg-warning/10 text-warning"
-                : "border-border bg-muted/50 text-foreground",
-            )}
-          >
-            {criterionLabel(criterion)}
-          </Badge>
+          {criterion.kind === "unknown" ? (
+            <TonePill tone="warning">{criterionLabel(criterion)}</TonePill>
+          ) : (
+            <Badge variant="outline" className="border-border bg-muted/50 text-foreground">
+              {criterionLabel(criterion)}
+            </Badge>
+          )}
         </li>
       ))}
     </ul>

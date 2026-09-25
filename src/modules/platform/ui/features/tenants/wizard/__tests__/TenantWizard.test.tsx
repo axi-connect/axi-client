@@ -3,8 +3,9 @@ import { HttpError } from "@/core/api/problem";
 import { TenantWizard } from "../TenantWizard";
 
 const replace = jest.fn();
+const push = jest.fn();
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ replace, push: jest.fn() }),
+  useRouter: () => ({ replace, push }),
 }));
 
 const showAlert = jest.fn();
@@ -37,7 +38,6 @@ async function fillCompanyStep(name = "Acme Corp", nit = "900123456") {
 async function fillOwnerStep() {
   fireEvent.change(screen.getByLabelText(/nombre \*/i), { target: { value: "Ana Ruiz" } });
   fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "ana@acme.co" } });
-  fireEvent.change(screen.getByLabelText(/contraseña/i, { selector: "input" }), { target: { value: "SuperSecreta123!" } });
   fireEvent.click(screen.getByRole("button", { name: /siguiente/i }));
   await waitFor(() => expect(screen.getByRole("radiogroup", { name: /plan comercial/i })).toBeInTheDocument(), WAIT);
 }
@@ -82,19 +82,50 @@ describe("TenantWizard", () => {
     expect(replace).not.toHaveBeenCalled();
   });
 
-  it("alta exitosa: guarda credenciales efímeras y redirige al detalle", async () => {
-    mutateAsync.mockResolvedValueOnce({ id: "t-9", owner_user_id: "u-1" });
+  it("el paso del dueño no pide contraseña", async () => {
+    render(<TenantWizard />);
+    await fillCompanyStep();
+    expect(screen.queryByLabelText(/contraseña/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /generar/i })).not.toBeInTheDocument();
+  });
+
+  it("alta exitosa: payload sin contraseña, nada en sessionStorage, a la ficha con «Preparar entrega»", async () => {
+    mutateAsync.mockResolvedValueOnce({ id: "t-9", owner_user_id: "u-1", owner_invited: true, invitation_pending: true });
     render(<TenantWizard />);
     await fillCompanyStep();
     await fillOwnerStep();
     fireEvent.click(screen.getByRole("button", { name: /siguiente/i }));
     await waitFor(() => expect(screen.getByRole("button", { name: /crear tenant/i })).toBeInTheDocument(), WAIT);
+    expect(
+      screen.getByText("El dueño crea su propia contraseña con el enlace de la bienvenida; nadie más la conoce."),
+    ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /crear tenant/i }));
 
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/platform/tenants/t-9"), WAIT);
-    const stored = JSON.parse(window.sessionStorage.getItem("axi.platform.pending_credentials") ?? "{}");
-    expect(stored).toMatchObject({ tenant_id: "t-9", email: "ana@acme.co", password: "SuperSecreta123!" });
-    expect(showAlert).toHaveBeenCalledWith(expect.objectContaining({ tone: "success" }));
+    const body = mutateAsync.mock.calls[0][0];
+    expect(body.owner).toEqual({ name: "Ana Ruiz", email: "ana@acme.co" });
+    expect(JSON.stringify(body)).not.toContain("password");
+    expect(window.sessionStorage.getItem("axi.platform.pending_credentials")).toBeNull();
+    expect(window.sessionStorage.length).toBe(0);
+
+    const alert = showAlert.mock.calls[0][0];
+    expect(alert).toMatchObject({
+      tone: "success",
+      title: "Cuenta creada",
+      description: "El dueño recibe su acceso al cierre de la sesión, con la bienvenida.",
+    });
+    expect(alert.actions[0].label).toBe("Preparar entrega");
+    alert.actions[0].onClick();
+    expect(push).toHaveBeenCalledWith("/platform/tenants/t-9/entrega");
+  });
+
+  it("borra la contraseña que haya dejado la versión vieja del alta", () => {
+    window.sessionStorage.setItem(
+      "axi.platform.pending_credentials",
+      JSON.stringify({ tenant_id: "t-1", email: "a@b.co", password: "vieja" }),
+    );
+    render(<TenantWizard />);
+    expect(window.sessionStorage.getItem("axi.platform.pending_credentials")).toBeNull();
   });
 });

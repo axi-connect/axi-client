@@ -2,7 +2,7 @@
 
 /**
  * Menú ⋮ de una fila de tenant: Ver detalle · Iniciar/Extender prueba ·
- * Suspender/Reactivar. La prueba se oculta en suspensiones manuales (espejo
+ * Entrar como soporte · Suspender/Reactivar. La prueba se oculta en suspensiones manuales (espejo
  * del 409 `platform/trial_not_allowed` del backend).
  * Suspender = ConfirmTyped (bloquea el login de todo el tenant);
  * Reactivar = Modal simple compartido. Tras mutar, invalidate → re-fetch
@@ -11,7 +11,7 @@
  */
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, MoreVertical, PauseCircle, PlayCircle, Sparkles } from "lucide-react";
+import { Eye, LifeBuoy, MoreVertical, PauseCircle, PlayCircle, Sparkles } from "lucide-react";
 import { useAlert } from "@/core/providers/alert-provider";
 import { errorMessage } from "@/core/lib/error-messages";
 import { Modal } from "@/shared/components/ui/modal";
@@ -25,7 +25,9 @@ import {
 import { canStartTrial, type TenantListItem } from "../../../domain/tenant";
 import { useUpdateTenant } from "../../../infrastructure/api/hooks/use-tenants";
 import { ConfirmTyped } from "../../components/ConfirmTyped";
+import { usePlatformRole } from "../../../infrastructure/auth/use-platform-role";
 import { StartTrialDialog } from "./StartTrialDialog";
+import { SupportSessionDialog } from "./SupportSessionDialog";
 
 type TenantRowActionsProps = {
   tenant: TenantListItem;
@@ -40,6 +42,9 @@ export function TenantRowActions({ tenant, showViewAction = true }: TenantRowAct
   const [suspendOpen, setSuspendOpen] = useState(false);
   const [reactivateOpen, setReactivateOpen] = useState(false);
   const [trialOpen, setTrialOpen] = useState(false);
+  const [supportOpen, setSupportOpen] = useState(false);
+  // billing_ops no entra al panel de un cliente (el servidor lo niega igual).
+  const canEnterSupport = usePlatformRole() !== "billing_ops";
   const isSuspended = tenant.status === "suspended";
   const trialAllowed = canStartTrial(tenant);
   const trialLabel = tenant.status === "trial" ? "Extender prueba" : "Iniciar prueba";
@@ -75,7 +80,7 @@ export function TenantRowActions({ tenant, showViewAction = true }: TenantRowAct
             <MoreVertical aria-hidden="true" className="size-4" />
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-44">
+        <DropdownMenuContent align="end" className="w-52">
           {showViewAction && (
             <>
               <DropdownMenuItem
@@ -92,6 +97,12 @@ export function TenantRowActions({ tenant, showViewAction = true }: TenantRowAct
             <DropdownMenuItem className="flex items-center gap-2" onClick={() => setTrialOpen(true)}>
               <Sparkles aria-hidden="true" className="size-4" />
               {trialLabel}
+            </DropdownMenuItem>
+          )}
+          {canEnterSupport && (
+            <DropdownMenuItem className="flex items-center gap-2" onClick={() => setSupportOpen(true)}>
+              <LifeBuoy aria-hidden="true" className="size-4" />
+              Entrar como soporte
             </DropdownMenuItem>
           )}
           {isSuspended ? (
@@ -112,6 +123,7 @@ export function TenantRowActions({ tenant, showViewAction = true }: TenantRowAct
       </DropdownMenu>
 
       <StartTrialDialog open={trialOpen} onOpenChange={setTrialOpen} tenant={tenant} />
+      <SupportSessionDialog open={supportOpen} onOpenChange={setSupportOpen} tenant={tenant} />
 
       <ConfirmTyped
         open={suspendOpen}

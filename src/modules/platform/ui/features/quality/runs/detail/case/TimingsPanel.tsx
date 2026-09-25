@@ -34,7 +34,7 @@ export function TimingsPanel({ timings }: { timings: unknown }) {
               {timing.injected_at ? TIME.format(new Date(timing.injected_at)) : "—"}
             </td>
             <td className="py-1.5 text-right">
-              <MetricCell tone={latencyTone(timing.e2e_ms)}>{formatLatency(timing.e2e_ms)}</MetricCell>
+              <MetricCell appearance="dot" tone={latencyTone(timing.e2e_ms)}>{formatLatency(timing.e2e_ms)}</MetricCell>
             </td>
           </tr>
         ))}

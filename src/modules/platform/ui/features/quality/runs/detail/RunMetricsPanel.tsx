@@ -38,24 +38,24 @@ export function RunMetricsPanel({ run }: { run: RunDetail }) {
 
   if (!metrics) {
     return (
-      <p className="rounded-2xl border border-dashed border-border p-4 text-sm text-muted-foreground">
+      <p className="rounded-3xl border border-dashed border-border p-5 text-sm text-muted-foreground">
         Las métricas agregadas (latencias, throughput) estarán disponibles al finalizar la ejecución.
       </p>
     );
   }
 
   return (
-    <section className="space-y-3 rounded-2xl border border-border bg-background p-4">
-      <h3 className="text-base font-semibold">Métricas</h3>
+    <section className="min-w-0 space-y-4 rounded-3xl border border-border bg-card p-5">
+      <h3 className="text-lg font-bold">Métricas</h3>
       <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
         <Metric label="Turnos totales">{metrics.turns_total ?? "—"}</Metric>
         <Metric label="Latencia p50">
-          <MetricCell tone={latencyTone(metrics.reply_e2e_p50_ms)}>
+          <MetricCell appearance="dot" tone={latencyTone(metrics.reply_e2e_p50_ms)}>
             {formatLatency(metrics.reply_e2e_p50_ms)}
           </MetricCell>
         </Metric>
         <Metric label="Latencia p95">
-          <MetricCell tone={latencyTone(metrics.reply_e2e_p95_ms)}>
+          <MetricCell appearance="dot" tone={latencyTone(metrics.reply_e2e_p95_ms)}>
             {formatLatency(metrics.reply_e2e_p95_ms)}
           </MetricCell>
         </Metric>

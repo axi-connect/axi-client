@@ -59,8 +59,10 @@ const STATUS_MAP: StatusMap = {
 type StatusBadgeProps = {
   status: string;
   className?: string;
+  /** `dot`: tono solo en el punto y texto en foreground (AA). Quality lo usa siempre. */
+  appearance?: "tint" | "dot";
 };
 
-export function StatusBadge({ status, className }: StatusBadgeProps) {
-  return <SharedStatusBadge status={status} map={STATUS_MAP} className={className} />;
+export function StatusBadge({ status, className, appearance }: StatusBadgeProps) {
+  return <SharedStatusBadge status={status} map={STATUS_MAP} className={className} appearance={appearance} />;
 }

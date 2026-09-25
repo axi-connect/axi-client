@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 170" width="240" height="170"><style>text{font-family:"Shadows Into Light","Comic Sans MS",cursive}</style><defs>
+      <filter id="rough" x="-5%" y="-5%" width="110%" height="110%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="4" result="n"></feTurbulence>
+        <feDisplacementMap in="SourceGraphic" in2="n" scale="3.2" xChannelSelector="R" yChannelSelector="G"></feDisplacementMap>
+      </filter>
+      <filter id="glow" x="-10%" y="-10%" width="120%" height="120%">
+        <feGaussianBlur stdDeviation="2.2" result="b"></feGaussianBlur>
+        <feMerge><feMergeNode in="b"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge>
+      </filter>
+      <marker id="ahC" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="13" markerHeight="13" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1 1 L10 6 L1 11" fill="none" stroke="#FB7185" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></marker>
+      <marker id="ahV" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="13" markerHeight="13" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1 1 L10 6 L1 11" fill="none" stroke="#A78BFA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></marker>
+      <marker id="ahA" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="13" markerHeight="13" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1 1 L10 6 L1 11" fill="none" stroke="#FBBF24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></marker>
+    </defs>
+          <g filter="url(#glow)">
+            <g filter="url(#rough)" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="14" y="22" width="84" height="30" rx="15" stroke="#A78BFA"></rect>
+              <rect x="14" y="66" width="84" height="30" rx="15" fill="#FB7185" fill-opacity=".5" stroke="#FB7185"></rect>
+              <rect x="14" y="110" width="84" height="30" rx="15" stroke="#A78BFA"></rect>
+              <path d="M104 81 C 128 81, 138 76, 156 76" stroke="#FB7185" marker-end="url(#ahC)"></path>
+              <circle cx="190" cy="76" r="26" stroke="#FBBF24"></circle>
+              <path d="M178 76 L187 86 L204 66" stroke="#FBBF24" stroke-width="3"></path>
+            </g>
+            <text x="56" y="43" text-anchor="middle" fill="#A78BFA" font-family="Shadows Into Light" font-size="17">NEQUI</text>
+            <text x="56" y="87" text-anchor="middle" fill="#FFF1F2" font-family="Shadows Into Light" font-size="17">PSE</text>
+            <text x="56" y="131" text-anchor="middle" fill="#A78BFA" font-family="Shadows Into Light" font-size="17">TARJETA</text>
+            <text x="190" y="128" text-anchor="middle" fill="#FBBF24" font-family="Shadows Into Light" font-size="18">TU EQUIPO</text>
+            <text x="190" y="148" text-anchor="middle" fill="#FBBF24" font-family="Shadows Into Light" font-size="18">CONFIRMA</text>
+          </g>
+        </svg>

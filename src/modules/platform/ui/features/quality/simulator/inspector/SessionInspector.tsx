@@ -22,10 +22,10 @@ type SessionInspectorProps = {
 export function SessionInspector({ session, transcriptLength, onEnd, onPurge, ending }: SessionInspectorProps) {
   const traceQuery = useSessionTraceQuery(session.id, transcriptLength);
   return (
-    <aside className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-border bg-background" aria-label="Inspector de la sesión">
+    <aside className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-3xl border border-border bg-card lg:col-span-2 xl:col-span-1" aria-label="Inspector de la sesión">
       <Tabs defaultValue="state" className="flex min-h-0 flex-1 flex-col">
-        <div className="border-b border-border/60 px-2.5 py-2">
-          <TabsList className="w-full">
+        <div className="px-4 pt-4 pb-1">
+          <TabsList surface="inline" className="w-full">
             <TabsTrigger value="state" className="flex-1">
               <Gauge aria-hidden="true" />
               Estado
@@ -36,10 +36,10 @@ export function SessionInspector({ session, transcriptLength, onEnd, onPurge, en
             </TabsTrigger>
           </TabsList>
         </div>
-        <TabsContent value="state" className="min-h-0 flex-1 overflow-y-auto p-3.5">
+        <TabsContent value="state" className="min-h-0 flex-1 overflow-y-auto px-4 pt-2 pb-4">
           <SessionStatePanel session={session} onEnd={onEnd} onPurge={onPurge} ending={ending} />
         </TabsContent>
-        <TabsContent value="trace" className="min-h-0 flex-1 overflow-y-auto p-3.5">
+        <TabsContent value="trace" className="min-h-0 flex-1 overflow-y-auto px-4 pt-2 pb-4">
           <TurnTraceTimeline trace={traceQuery.data} loading={traceQuery.isPending} />
         </TabsContent>
       </Tabs>

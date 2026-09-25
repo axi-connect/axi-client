@@ -4,13 +4,19 @@ import { useEffect, useState } from "react"
 import { useSession } from "@/shared/auth/auth.hooks"
 import type { CompanyDTO } from "@/modules/companies/domain/company"
 import { loadMyCompanyOnce } from "@/modules/companies/infrastructure/services/company-cache"
+import { calendarDaysUntil } from "@/modules/welcome-kit/domain/formatters"
 
-const DAY_MS = 24 * 60 * 60 * 1000
+/** Zona si la empresa no trae la suya (los clientes de hoy son de Colombia). */
+const DEFAULT_TIMEZONE = "America/Bogota"
 
 export interface TrialStatus {
   /** true solo si la empresa está en trial CON fecha de vencimiento. */
   active: boolean
-  /** Días restantes (techo, mínimo 0). 0 = vence hoy. */
+  /**
+   * Días de CALENDARIO que faltan, en la zona del tenant: la fecha local del fin
+   * menos la de hoy (mínimo 0). Una prueba de 7 que vence el día 7 a las 23:59
+   * da 7 el día 0 y 0 («termina hoy») el día 7.
+   */
   daysLeft: number
   /** Vencimiento como Date (null si no hay trial acotado). */
   endsAt: Date | null
@@ -20,10 +26,14 @@ export interface TrialStatus {
 
 const NO_TRIAL: TrialStatus = { active: false, daysLeft: 0, endsAt: null, ending: false }
 
-function toStatus(company: CompanyDTO): TrialStatus {
+export function trialStatusFrom(
+  company: Pick<CompanyDTO, "status" | "trial_ends_at" | "timezone">,
+  now: Date = new Date(),
+): TrialStatus {
   if (company.status !== "trial" || !company.trial_ends_at) return NO_TRIAL
   const endsAt = new Date(company.trial_ends_at)
-  const daysLeft = Math.max(0, Math.ceil((endsAt.getTime() - Date.now()) / DAY_MS))
+  const days = calendarDaysUntil(company.trial_ends_at, company.timezone || DEFAULT_TIMEZONE, now)
+  const daysLeft = Math.max(0, days ?? 0)
   return { active: true, daysLeft, endsAt, ending: daysLeft <= 2 }
 }
 
@@ -41,7 +51,7 @@ export function useTrialStatus(): TrialStatus {
     if (status !== "authenticated") return
     let ignore = false
     loadMyCompanyOnce()
-      .then((company) => { if (!ignore) setTrial(toStatus(company)) })
+      .then((company) => { if (!ignore) setTrial(trialStatusFrom(company)) })
       .catch(() => { /* sin aviso: el shell no se rompe por esto */ })
     return () => { ignore = true }
   }, [status])

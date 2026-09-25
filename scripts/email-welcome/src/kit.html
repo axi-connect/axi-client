@@ -1,0 +1,43 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="base.css"><style>
+#c{height:440px;background:#0B0B0E}
+.spot{position:absolute;left:100px;top:-60px;width:400px;height:520px;background:radial-gradient(50% 60% at 50% 0%,rgba(196,181,253,.10),transparent 70%)}
+.bars i{position:absolute;top:-20px;bottom:120px;width:16px;border-radius:3px;background:linear-gradient(90deg,#1A1922,#34323F 45%,#141319)}
+.rail{position:absolute;left:130px;width:340px;top:356px;height:22px;border-radius:50%;background:radial-gradient(50% 50% at 50% 50%,rgba(0,0,0,.85),transparent 70%)}
+.rail2{position:absolute;left:0;right:0;top:372px;bottom:0;background:linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,0) 70%)}
+.glow{position:absolute;left:180px;top:60px;width:280px;height:280px;border-radius:50%;background:rgba(139,108,240,.20);filter:blur(80px)}
+.scene{position:absolute;left:176px;top:70px;width:250px;height:300px;perspective:900px}
+.book{position:absolute;inset:0;transform-style:preserve-3d;transform:rotateY(-24deg) rotateX(4deg) rotateZ(-5deg)}
+.spine{position:absolute;left:-18px;top:0;width:18px;height:300px;background:linear-gradient(90deg,#B9B6C6,#E6E3EE);transform:rotateY(-90deg);transform-origin:right}
+.cover{position:absolute;inset:0;border-radius:3px 8px 8px 3px;background:linear-gradient(135deg,#F7F6FB 0%,#E7E4F1 60%,#D6D2E4 100%);box-shadow:24px 30px 50px rgba(0,0,0,.7),inset -2px 0 0 rgba(0,0,0,.06);overflow:hidden}
+.stripes{position:absolute;left:22px;right:22px;top:22px;height:10px;display:flex;gap:3px}
+.stripes i{flex:1;border-radius:2px}
+.ct{position:absolute;left:22px;top:58px;font:800 29px/.98 Nexa;letter-spacing:-.04em;color:#15131F}
+.ct span{color:#8B6CF0}
+.cb{position:absolute;left:22px;bottom:20px;font:500 9px/1.4 Poppins;color:#6B6880;letter-spacing:.14em;text-transform:uppercase}
+.cb b{display:flex;align-items:center;gap:6px;font:800 13px Nexa;letter-spacing:-.01em;text-transform:none;color:#15131F;margin-bottom:6px}
+.cb b img{width:16px}
+.inside{position:absolute;inset:0;background:radial-gradient(90% 80% at 70% 30%,#8B6CF0 0%,#4C2FB0 45%,#1E1250 100%);clip-path:polygon(80% 0,100% 0,100% 100%,70% 100%,74% 91%,68% 83%,75% 74%,70% 65%,77% 56%,71% 47%,78% 38%,73% 29%,80% 20%,75% 10%)}
+.inside .it{position:absolute;left:79%;top:150px;font:800 14px/1.05 Nexa;color:#fff;letter-spacing:-.02em}
+.inside .it small{display:block;font:22px/1 Hand;color:#FBBF24;margin-top:8px;transform:rotate(-4deg)}
+.edge{position:absolute;inset:0;clip-path:polygon(78% 0,80% 0,75% 10%,80% 20%,73% 29%,78% 38%,71% 47%,77% 56%,70% 65%,75% 74%,68% 83%,74% 91%,70% 100%,67% 100%,71% 91%,65% 83%,72% 74%,67% 65%,74% 56%,68% 47%,75% 38%,70% 29%,77% 20%,72% 10%);background:linear-gradient(90deg,#FFFFFF,#DCD8E8);filter:drop-shadow(4px 0 4px rgba(0,0,0,.35))}
+.curl{position:absolute;left:58%;top:0;width:44%;height:100%;background:linear-gradient(100deg,rgba(255,255,255,.95),#E9E6F2 30%,#C9C5D8);clip-path:polygon(0 0,18% 0,8% 10%,14% 20%,6% 31%,13% 41%,5% 52%,11% 61%,3% 72%,9% 82%,2% 92%,6% 100%,0 100%);opacity:.0}
+.shine{position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.35) 45%,transparent 60%);mix-blend-mode:overlay}
+.tagk{position:absolute;right:40px;top:120px;font:24px/1 Hand;color:#FBBF24;transform:rotate(6deg)}
+.tagk svg{display:block;margin:4px 0 0 -30px}
+</style></head><body><div id="c">
+<div class="spot"></div>
+<div class="glow"></div>
+<div class="rail"></div><div class="rail2"></div>
+<div class="scene"><div class="book">
+ <div class="spine"></div>
+ <div class="cover">
+  <div class="stripes"><i style="background:#FB7185"></i><i style="background:#FB7185"></i><i style="background:#FBBF24"></i><i style="background:#FBBF24"></i><i style="background:#A78BFA"></i><i style="background:#8B6CF0"></i><i style="background:#8B6CF0"></i><i style="background:#FB7185"></i></div>
+  <div class="ct">Tu kit de<br><span>bienvenida</span></div>
+  <div class="cb"><b><img src="isologo-axi-connect.svg" alt="">axi connect</b>Tu semana de progreso</div>
+  <div class="inside"><div class="it">Día 0<br>→ Día 7</div></div>
+  <div class="edge"></div>
+  <div class="shine"></div>
+ </div>
+</div></div>
+<div class="tagk">todo en una página<svg width="60" height="40" viewBox="0 0 60 40" fill="none"><path d="M52 4 C 40 18, 26 26, 8 32 M8 32 L18 22 M8 32 L20 36" stroke="#FBBF24" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+</div></body></html>

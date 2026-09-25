@@ -36,6 +36,8 @@ const LABELS: Record<string, string> = {
   cases: "Casos",
   debugger: "Depurador",
   simulator: "Simulacro",
+  datasets: "Datasets",
+  capabilities: "Capacidades",
 };
 
 /** "new" es ambiguo por segmento: depende de qué colección cuelga. */

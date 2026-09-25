@@ -54,6 +54,8 @@ export const DISALLOWED_PREFIXES = [
   "/integrations/",
   // Pago sin sesión: la URL lleva un token de un solo recurso.
   "/pay/",
+  // Kit de bienvenida: la URL lleva el token del kit de un cliente.
+  "/bienvenida/",
   // Funnel de registro y onboarding: páginas de proceso, no de contenido.
   "/comenzar",
   "/onboarding",

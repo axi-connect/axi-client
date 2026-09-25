@@ -6,7 +6,7 @@ import type { ColumnDef } from "@/shared/components/features/data-table";
 import { Badge } from "@/shared/components/ui/badge";
 import { RelativeDate } from "@/shared/components/ui/relative-date";
 import type { SuiteListItem } from "../../../../domain/quality";
-import { StatusBadge } from "../../../components/StatusBadge";
+import { QualityStatus } from "../shared/premium";
 import { SuiteRowActions } from "./SuiteRowActions";
 
 /** Fila plana para la tabla. */
@@ -79,7 +79,7 @@ export function buildSuiteColumns(handlers: {
       searchable: false,
       alwaysVisible: true,
       minWidth: 110,
-      cell: ({ row }) => <StatusBadge status={row.original.status} />,
+      cell: ({ row }) => <QualityStatus status={row.original.status} />,
     },
     {
       accessorKey: "updated_at",

@@ -26,6 +26,8 @@ const HOSTILE = [
   "/\n/evil.com",
   " /dashboard",
   "evil.com",
+  "/%09/evil.com",
+  "/%0a/evil.com",
 ]
 
 describe("login: el next tras entrar (QA H3-1)", () => {

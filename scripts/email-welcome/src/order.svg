@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 170" width="240" height="170"><style>text{font-family:"Shadows Into Light","Comic Sans MS",cursive}</style><defs>
+      <filter id="rough" x="-5%" y="-5%" width="110%" height="110%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="4" result="n"></feTurbulence>
+        <feDisplacementMap in="SourceGraphic" in2="n" scale="3.2" xChannelSelector="R" yChannelSelector="G"></feDisplacementMap>
+      </filter>
+      <filter id="glow" x="-10%" y="-10%" width="120%" height="120%">
+        <feGaussianBlur stdDeviation="2.2" result="b"></feGaussianBlur>
+        <feMerge><feMergeNode in="b"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge>
+      </filter>
+      <marker id="ahC" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="13" markerHeight="13" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1 1 L10 6 L1 11" fill="none" stroke="#FB7185" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></marker>
+      <marker id="ahV" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="13" markerHeight="13" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1 1 L10 6 L1 11" fill="none" stroke="#A78BFA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></marker>
+      <marker id="ahA" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="13" markerHeight="13" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1 1 L10 6 L1 11" fill="none" stroke="#FBBF24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></marker>
+    </defs>
+          <g filter="url(#glow)">
+            <g filter="url(#rough)" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M40 10 H170 V132 L159 142 L148 132 L137 142 L126 132 L115 142 L104 132 L93 142 L82 132 L71 142 L60 132 L49 142 L40 132 Z" stroke="#A78BFA"></path>
+              <rect x="54" y="30" width="12" height="12" rx="2" stroke="#FBBF24"></rect><path d="M56 36 L60 40 L65 32" stroke="#FBBF24"></path><path d="M76 36 H150" stroke="#A78BFA" opacity=".7"></path>
+              <rect x="54" y="54" width="12" height="12" rx="2" stroke="#FBBF24"></rect><path d="M56 60 L60 64 L65 56" stroke="#FBBF24"></path><path d="M76 60 H140" stroke="#A78BFA" opacity=".7"></path>
+              <rect x="54" y="78" width="12" height="12" rx="2" stroke="#FBBF24"></rect><path d="M56 84 L60 88 L65 80" stroke="#FBBF24"></path><path d="M76 84 H146" stroke="#A78BFA" opacity=".7"></path>
+              <rect x="30" y="98" width="152" height="24" rx="6" fill="#FB7185" fill-opacity=".5" stroke="#FB7185"></rect>
+              <path d="M46 110 H96 M134 110 H166" stroke="#FFE4E6"></path>
+              <path d="M180 114 L194 148 L199 135 L212 131 Z" fill="#A78BFA" stroke="#A78BFA"></path>
+            </g>
+            <text x="110" y="166" text-anchor="middle" fill="#FBBF24" font-family="Shadows Into Light" font-size="18">LISTO PARA DESPACHAR</text>
+          </g>
+        </svg>

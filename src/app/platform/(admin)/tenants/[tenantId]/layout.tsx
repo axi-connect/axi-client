@@ -1,4 +1,3 @@
-import { OwnerCredentialsBanner } from "@/modules/platform/ui/features/tenants/detail/OwnerCredentialsBanner";
 import { TenantHeader } from "@/modules/platform/ui/features/tenants/detail/TenantHeader";
 import { TenantTabs } from "@/modules/platform/ui/features/tenants/detail/TenantTabs";
 
@@ -17,7 +16,6 @@ export default async function TenantDetailLayout({
 
   return (
     <div className="space-y-6">
-      <OwnerCredentialsBanner tenantId={tenantId} />
       <TenantHeader tenantId={tenantId} />
       <TenantTabs tenantId={tenantId} />
       {children}

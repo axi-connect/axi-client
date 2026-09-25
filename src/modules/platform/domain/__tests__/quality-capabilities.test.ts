@@ -3,6 +3,8 @@ import {
   capabilitySampleText,
   countByStatus,
   droppedCriterionText,
+  groupCapabilities,
+  mostUrgentCapability,
   sortCapabilities,
 } from "../quality-capabilities";
 
@@ -38,5 +40,32 @@ describe("tablero de capacidades (F5)", () => {
     expect(droppedCriterionText({ criterion: { kind: "delivery_set", method: "express" }, reason: "método no existe" })).toBe(
       '{"kind":"delivery_set","method":"express"} — método no existe',
     );
+  });
+});
+
+describe("familias y urgencia del tablero (premium F3)", () => {
+  const row = (code: string, status: "pass" | "warn" | "fail" | "untested", metric_value: number | null = null) => ({
+    code,
+    status,
+    label: code,
+    metric_value,
+  });
+
+  it("agrupa por familia, ordena dentro y manda lo desconocido a «Otras»", () => {
+    const groups = groupCapabilities([
+      row("security", "pass"),
+      row("closing", "warn"),
+      row("quote_order", "fail"),
+      row("brand_new", "untested"),
+      row("intent", "untested"),
+    ]);
+    expect(groups.map((group) => group.label)).toEqual(["Vender", "Entender y encontrar", "Cuidado", "Otras"]);
+    expect(groups[0].items.map((item) => item.code)).toEqual(["quote_order", "closing"]);
+  });
+
+  it("elige la fallida con peor cifra, luego la de alerta, o nada", () => {
+    expect(mostUrgentCapability([row("a", "fail", 0.6), row("b", "fail", 0.4), row("c", "warn", 0.1)])?.code).toBe("b");
+    expect(mostUrgentCapability([row("a", "warn", 0.85), row("b", "warn", 0.72), row("c", "pass", 1)])?.code).toBe("b");
+    expect(mostUrgentCapability([row("a", "pass", 1), row("b", "untested")])).toBeNull();
   });
 });

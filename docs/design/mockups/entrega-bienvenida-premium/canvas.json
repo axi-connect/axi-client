@@ -1,0 +1,85 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "Consola.dc.html": {
+      "h": 900,
+      "title": "5 · Consola del negocio en soporte",
+      "w": 1440,
+      "x": 3040,
+      "y": 1240
+    },
+    "Contrasena.dc.html": {
+      "h": 900,
+      "title": "6 · Crea tu contraseña — escritorio (interactivo)",
+      "w": 1440,
+      "x": 0,
+      "y": 2380,
+      "is_interactive": true
+    },
+    "ContrasenaMovil.dc.html": {
+      "h": 844,
+      "title": "7 · Crea tu contraseña — celular",
+      "w": 390,
+      "x": 1520,
+      "y": 2380
+    },
+    "Entrega.dc.html": {
+      "h": 1000,
+      "title": "2 · Preparar entrega — una sola columna",
+      "w": 1440,
+      "x": 1520,
+      "y": 0
+    },
+    "Enviada.dc.html": {
+      "h": 780,
+      "title": "3 · Bienvenida enviada — seguimiento en vivo",
+      "w": 1440,
+      "x": 0,
+      "y": 1240
+    },
+    "Main.dc.html": {
+      "h": 900,
+      "title": "1 · Ficha del tenant — Resumen vivo",
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "Soporte.dc.html": {
+      "h": 900,
+      "title": "4 · Entrar como soporte",
+      "w": 1440,
+      "x": 1520,
+      "y": 1240
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-09-25T15:00:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {
+    "t1": {
+      "kind": "title1",
+      "maxW": 2960,
+      "text": "Entrega y bienvenida · propuesta premium",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Entrega.dc.html",
+    "Enviada.dc.html",
+    "Soporte.dc.html",
+    "Consola.dc.html",
+    "Contrasena.dc.html",
+    "ContrasenaMovil.dc.html"
+  ],
+  "pages": [],
+  "title": "Entrega y bienvenida — upgrade premium"
+}

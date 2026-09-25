@@ -14,7 +14,8 @@ import {
   deletePaymentMethod,
   listPaymentMethods,
 } from "@/modules/payments/infrastructure/services/payment-methods-service.adapter";
-import { PaymentMethodCard } from "./PaymentMethodCard";
+import { useSession } from "@/shared/auth/auth.hooks";
+import { PaymentMethodCard, SUPPORT_PAYMENTS_NOTE } from "./PaymentMethodCard";
 import { PaymentMethodFormSheet } from "./PaymentMethodFormSheet";
 
 type LoadState =
@@ -32,6 +33,8 @@ type LoadState =
  * la URL directa existe.
  */
 export function PaymentMethodsTab() {
+  // Sesión de soporte (entrega F3): solo se puede dar de alta el primer medio.
+  const supportLocked = Boolean(useSession().user?.support_session);
   const { showAlert, showModal, closeModal } = useAlert();
   const [state, setState] = useState<LoadState>({ kind: "loading" });
   const [editing, setEditing] = useState<PaymentMethodDTO | null>(null);
@@ -118,11 +121,22 @@ export function PaymentMethodsTab() {
             Cuentas y formas de pago que la IA comparte al cobrar. Nunca inventa un número: usa exactamente lo que escribas aquí.
           </p>
         </div>
-        <Button type="button" className="rounded-full" onClick={openCreate}>
+        <Button
+          type="button"
+          className="rounded-full"
+          onClick={openCreate}
+          disabled={supportLocked && state.kind === "ready" && state.methods.length > 0}
+        >
           <Plus className="size-4" aria-hidden />
           Agregar medio de pago
         </Button>
       </div>
+
+      {supportLocked ? (
+        <p role="note" className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+          {SUPPORT_PAYMENTS_NOTE}.
+        </p>
+      ) : null}
 
       {state.kind === "loading" ? (
         <div className="space-y-3" role="status" aria-busy="true" aria-label="Cargando medios de pago">
@@ -147,7 +161,13 @@ export function PaymentMethodsTab() {
       ) : (
         <div className="grid gap-3">
           {state.methods.map((method) => (
-            <PaymentMethodCard key={method.id} method={method} onEdit={openEdit} onDelete={handleDelete} />
+            <PaymentMethodCard
+              key={method.id}
+              method={method}
+              onEdit={openEdit}
+              onDelete={handleDelete}
+              locked={supportLocked}
+            />
           ))}
         </div>
       )}

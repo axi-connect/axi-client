@@ -27,9 +27,11 @@ type AuditLogRowProps = {
   tenantName?: string | null;
   /** Oculta la columna tenant (tab del tenant: company_id fijado). */
   showTenant?: boolean;
+  /** Cómo se lee el actor (D2: «Soporte Axi · Camila»). Sin él, el actor_type crudo. */
+  actorLabel?: string;
 };
 
-export function AuditLogRow({ log, tenantName, showTenant = true }: AuditLogRowProps) {
+export function AuditLogRow({ log, tenantName, showTenant = true, actorLabel }: AuditLogRowProps) {
   const [expanded, setExpanded] = useState(false);
   const { copied, copy } = useCopy();
   const isRisk = RISK_ACTIONS.has(log.action);
@@ -53,8 +55,8 @@ export function AuditLogRow({ log, tenantName, showTenant = true }: AuditLogRowP
         />
         <RelativeDate iso={log.occurred_at} className="w-24 shrink-0 text-xs text-muted-foreground" />
         <span className={cn("font-mono text-xs", isRisk && "font-medium text-destructive")}>{log.action}</span>
-        <Badge variant="outline" className={cn("ml-auto", ACTOR_BADGE_CLASSES[ACTOR_TONES[log.actor_type]])}>
-          {log.actor_type}
+        <Badge variant="outline" className={cn("ml-auto", ACTOR_BADGE_CLASSES[ACTOR_TONES[log.actor_type] ?? "neutral"])}>
+          {actorLabel ?? log.actor_type}
         </Badge>
         {showTenant && (
           <span className="w-32 shrink-0 truncate text-right text-xs text-muted-foreground">

@@ -15,6 +15,7 @@ import {
   useUpdateCallAccount,
 } from "../../../infrastructure/api/hooks/use-call-provisioning";
 import { RotateTwilioCredentialsSheet } from "./TwilioCredentialsSheets";
+import { formatDayTime } from "../../../domain/dates";
 
 const STATUS_CLASSES: Record<CallAccountStatus, string> = {
   active: "border-success/40 bg-success/10 text-success",
@@ -81,12 +82,7 @@ export function CallAccountCard({ account }: { account: CallAccount }) {
           value={
             account.last_checked_at === null
               ? "nunca"
-              : new Date(account.last_checked_at).toLocaleString("es-CO", {
-                  day: "numeric",
-                  month: "short",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })
+              : formatDayTime(account.last_checked_at)
           }
         />
       </dl>

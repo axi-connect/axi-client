@@ -6,10 +6,15 @@
  */
 import { AudioLines, Database, Gauge, LayoutDashboard, Receipt, ScrollText, SlidersHorizontal, Users } from "lucide-react";
 
+import { usePathname } from "next/navigation";
 import { NavTabs, type NavTabItem } from "@/shared/components/layout/nav-tabs";
 
 export function TenantTabs({ tenantId }: { tenantId: string }) {
   const base = `/platform/tenants/${tenantId}`;
+  // «Preparar entrega» es un modo de trabajo con su propia barra de envío: sin
+  // las pestañas encima, la página respira y «Volver al resumen» es la salida.
+  const pathname = usePathname();
+  if (pathname === `${base}/entrega`) return null;
 
   const tabs: readonly NavTabItem[] = [
     // `exact`: «Resumen» vive en la base del detalle, así que por prefijo se

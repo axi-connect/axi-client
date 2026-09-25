@@ -134,6 +134,7 @@ Orden fijo para series de gráficos: `brand` → `violet` → `amber` → `info`
 | `--radius-md` | `12px` | **Controles: botones, inputs, selects** |
 | `--radius-lg` | `16px` | Cards, popovers, dropdowns |
 | `--radius-xl` | `20px` | Modales, sheets, superficies flotantes grandes |
+| `rounded-3xl` | `24px` | Fichas del bento, superficies de sección (resumen, pasos plegables, panel de marca) e islas de tinta (§9.5). Es la escala de Tailwind, no un token re-mapeado |
 | `--radius-full` | `9999px` | Badges, pills, avatares |
 
 *Estos tokens están re-mapeados en `@theme`: las clases `rounded-md`/`rounded-lg` de los primitivos shadcn ya adoptan los radios de marca sin tocar cada componente.*
@@ -410,6 +411,9 @@ Los primitivos viven en `shared/components/ui/` (shadcn) y los features en `shar
 | Fechas estilo mensajería (lista, separadores de día, hora de burbuja) | `core/lib/day-label.ts` (`formatConversationTime`, `formatDayLabel`, `formatClockTime`) |
 | Marca en una cabecera (isotipo + wordmark) | `BrandLockup` (`shared/components/ui/brand-lockup.tsx`) — RSC-compatible, `size="md"\|"sm"`; solo el isotipo → `BrandMark` (DESIGN.md §2.2) |
 | Celebración puntual (una ráfaga, no un loop) | `Confetti` + `brandCelebration` (`shared/components/ui/confetti.tsx`) — canvas-confetti en diferido, colores de `readBrandPaletteCss`, reduced-motion lo apaga; ver §6 |
+| Resumen «de un vistazo» (ficha de un tenant, tablero de un módulo) | `BentoTile` + `StatePill` + `BentoFigure` + `BentoLink` e `InkIsland` para lo próximo (`shared/components/features/bento`, §9.5) |
+| Días de un recorrido o pasos de un proceso con hora | §9.6 (`TrialJourneyStrip`, `DeliverySentView`) |
+| Formulario largo que llega precargado | Pasos plegables + «Antes de enviar» + barra de acción (§9.7) |
 | Progreso hacia una meta (meta del mes, ritmo, proyección) | `RouteLine` (slice `commercial`, F3): una línea, tramo recorrido con gradiente de marca, marcador hueco «hoy» (donde deberías ir) y prolongación punteada de proyección; la cifra siempre con su procedencia (DESIGN.md §1, idea 4, y §7.1). Nunca anillos ni tiles de vanidad |
 | Overlay navegable | Slot paralelo `@modal`/`@form` + ruta interceptada |
 | Navegación jerárquica en el sidebar | `NavItemNode` + `nav-tree` / `nav-active` (ver §9.2) |
@@ -603,6 +607,127 @@ duraciones a 0. Se descarta deslizando. Poppins 600 a 13 px en la píldora,
 
 ---
 
+### 9.5 Resúmenes en bento — fichas de un tema
+
+Patrón de las vistas «de un vistazo» (Resumen del tenant en `/platform`, y el que adopten
+quality u otras consolas). Mockup aprobado: `docs/design/mockups/entrega-bienvenida-premium/`
+(canvas del dueño, 2026-09-25). Piezas en `shared/components/features/bento/` (`BentoTile`, `StatePill`,
+`BentoFigure`, `BentoLink`, `InkIsland`, `Kicker`); referencia viva: el Resumen del tenant
+(`modules/platform/ui/features/tenants/detail/TenantSummary.tsx`).
+La segunda consumidora es Calidad (`/platform/quality`, canvas `docs/design/mockups/quality-premium/`,
+plan `docs/plans/quality_premium_plan.md`): `features/quality/shared/premium.tsx` compone estas piezas —`InkPanel`
+es `InkIsland` con `p-5`, `Kicker` es el mismo— y añade la variante de consola (`QualityTile` con etiqueta que baja a
+dos líneas, `BigFigure` de `sm` a `xl`, `Meter` para el progreso lineal con marcas de umbral, `TonePill`/`ToneDot`).
+Los estados de una consola usan `StatusBadge appearance="dot"` y las cifras con semáforo `MetricCell appearance="dot"`:
+el tono en el punto, el texto en foreground.
+
+| Pieza | Regla |
+|---|---|
+| `BentoTile` | **Un tema por ficha.** Etiqueta pequeña arriba (`text-xs text-muted-foreground`, Poppins aunque sea un `h2`: `font-sans font-normal`), un `aside` opcional a la derecha (una `StatePill` o un enlace), **una** cifra o frase principal y una línea secundaria. `rounded-3xl border-border bg-card p-5`, sin sombra (§4.3: contenido en página). |
+| `BentoFigure` | `font-heading text-4xl font-bold leading-none tracking-tight tabular-nums` + unidad en `text-sm text-muted-foreground` al lado (`12 min`, `128 usuarios`). Nunca una cifra sin unidad ni procedencia. |
+| `StatePill` | Estado de la ficha: `bg-muted` + **punto** del color del tono + texto en `foreground`. El color del estado vive en el punto, nunca en el texto (verde y ámbar como texto no pasan AA, §10). |
+| `InkIsland` | **Una sola por pantalla**, para lo más accionable («Lo próximo»). `bg-foreground text-background`; en oscuro `dark:bg-card dark:text-foreground dark:border` (una isla blanca sobre negro grita). Brillo coral opcional: `radial-gradient` con `color-mix(in oklab, var(--axi-brand) 45%, transparent)`, `-z-10` dentro de `isolate overflow-hidden`. Sus botones son `variant="secondary"`. |
+| Estado vacío | Dice qué pasa y qué hacer («Aún sin invitación · el enlace sale con la bienvenida»), con la acción si la hay. Nunca «—» a secas. |
+| `BentoLink` | Enlace de ficha: `foreground` + flecha + subrayado al pasar, objetivo de 24 px. **Nunca `text-brand` a 12–14 px** (3,58:1, no pasa AA). |
+| Acción principal | Cambia con el estado (sin entregar → «Preparar entrega»; entregado → «Entrar como soporte»). No se muestra lo que no aplica, y **mientras carga el dato que la decide no se pinta** (un hueco del mismo alto): mostrar una y cambiarla por otra es peor que esperar. |
+| Datos por rol | Una ficha cuyo endpoint un rol no puede leer (403) **no se pide ni se pinta** para ese rol; un error de lectura se dice en la ficha («No pudimos leer…»), nunca se confunde con un estado vacío. |
+
+**Rejilla.** El bento se dimensiona por el **ancho del contenido**, no del viewport: con el
+sidebar abierto, 1280 px de pantalla dejan ~976 px útiles. Reparto que no rompe:
+
+```
+grid gap-4 md:grid-cols-2 xl:grid-flow-dense xl:grid-cols-3
+  min-[1400px]:grid-cols-[repeat(3,minmax(0,1fr))_minmax(17rem,20rem)]
+```
+
+- Fichas de ~250 px o menos solo aguantan una cifra: por debajo de `min-[1400px]` no hay
+  cuatro columnas.
+- La isla se ancla (`xl:col-start-3 xl:row-start-1 xl:row-span-3`) y el resto fluye con
+  `grid-flow-dense`: sin huecos al cambiar de 3 a 4 columnas.
+- **Filas `auto` o `minmax(0,1fr)`, nunca en px fijos**: una fila de 176 px con una ficha
+  de 210 px de contenido fue el defecto que el dueño marcó en el primer mockup.
+- Todo hijo de un grid o de un flex que pueda tener texto largo lleva `min-w-0`; el grid de
+  una página con formulario lleva `[&>*]:min-w-0` (un `<form>` sin él empujó la página
+  321 px a 390).
+
+**Texto dentro de fichas estrechas.**
+
+- Etiquetas y cifras: `whitespace-nowrap`; si pueden crecer (correos, nombres), `truncate`
+  + `title` con el valor completo.
+- Descripciones: `text-pretty`, se permiten dos líneas.
+- Resúmenes en piezas «a · b · c» (`SummaryParts`): cada pieza en `whitespace-nowrap` y el
+  separador **fuera** de la pieza, pegado a la anterior con ` · `. Así la línea se corta
+  entre piezas, nunca a mitad de una fecha o un monto, y el «·» no queda solo en una línea.
+- Dos datos del mismo peso que no caben en una línea («Antes $ 259.900 · Primer cobro…») se
+  apilan en dos líneas cortas.
+- Tras una hora formateada («a. m.») la frase se cierra con `endSentence`, nunca con un «.»
+  literal (salía «a. m..»).
+
+### 9.6 Recorridos y líneas de tiempo
+
+- **Recorrido por días** (la prueba de 7 días, `TrialJourneyStrip`): una fila de nodos sobre un riel
+  (`bg-border`) con el tramo recorrido en tinta hasta «hoy». Pasado = círculo de tinta con
+  ✓; hoy = anillo `border-brand` + `ring-brand/15` + `aria-current="date"`; futuro con hito
+  = icono en círculo con borde; futuro sin hito = punto. **«Hoy» se calcula en la zona del
+  tenant**, no en UTC. Cada hito va en el día de su fecha real, con su etiqueta en **dos
+  líneas cortas** (tipo arriba, hora debajo, sin `nowrap`): con hitos en días seguidos, las
+  etiquetas de una línea se montaban. Dos hitos el mismo día se muestran los dos. Los
+  nombres de las citas no llevan número de día («Llamada de seguimiento», no «del día 2»),
+  porque la fecha real puede no coincidir con el número. En el celular la fila scrollea
+  dentro de sí misma (`min-w-[640px]` + `overflow-x-auto`).
+- **Línea de tiempo de un proceso** (una entrega, `DeliverySentView`): un paso por fila con su estado
+  (hecho / en curso / esperando / falló) y **la hora que registró el servidor**. Si el
+  contrato no trae la hora de un paso, el paso va sin hora: no se inventa. El paso que
+  espera a una persona pulsa (`motion-safe:animate-pulse`) y la vista se refresca sola
+  mientras espera (polling espaciado: no más de uno cada 30 s si puede tardar horas). «Se
+  actualiza solo» se muestra **solo si de verdad se refresca**.
+- Una cuenta atrás o un contador que cambia solo **no lleva `aria-live`**: se anunciaría cada
+  minuto.
+- Ninguno de los dos es un anillo de progreso: el progreso va en líneas y tramos (§9, RouteLine).
+
+### 9.7 Flujos largos: pasos plegables y barra de acción
+
+Para un formulario de varios pasos que llega precargado (Preparar entrega):
+
+- **Pasos plegables, no pestañas ni asistente.** Cada paso es una `StepCard`
+  (`modules/platform/ui/features/delivery/DeliveryWorkspace.tsx`): cabecera que
+  es un solo `<button aria-expanded aria-controls>` con el número o ✓ (o «!» si está
+  bloqueado), el título y, **cerrado, el resumen de lo elegido**. Uno abierto a la vez; se
+  abre el que tenga un bloqueo o un error al enviar. La revisión deja de ser un paso: los
+  resúmenes son la revisión. Mientras el servidor revalida, cada paso **conserva su último
+  estado** (no salta de ✓ al número con cada tecla). En el celular «Editar» es un icono con
+  su texto en `sr-only`. Con la vista previa al lado (`lg`), los campos van en **una
+  columna** y sin sangría: dos columnas no caben.
+- **«Antes de enviar» siempre a la vista**: cada bloqueo en una fila con su acción debajo
+  del texto (no al lado: a 555 px de columna el texto se partía en tres líneas), o un
+  `<Alert variant="success">` cuando no hay nada.
+- **Barra de acción** (`ActionDock`): isla de tinta `sticky bottom-3`, `rounded-full` desde
+  `sm`. Lleva el estado en una palabra («Casi lista», «Lista para enviar»), los tramos de
+  progreso —uno por grupo de la revisión, cada uno es un botón de **24 px de alto** con la
+  barra de 6 px dentro, que lleva a su paso, con su estado en `sr-only`—, **qué falta
+  nombrado** («Falta un agente activo y un medio de pago», no el nombre del grupo) y el CTA. El CTA «deshabilitado» usa
+  `aria-disabled` + `opacity-60` y explica por qué en `aria-describedby`.
+- **El borrador se guarda solo** (`useStoredDraft`, debounce ~800 ms) y la cabecera dice «Borrador guardado ·
+  10:42 a. m.». «Retomaste tu borrador» aparece solo al volver a entrar, no al escribir.
+- Un modo de trabajo así oculta la sub-navegación de la sección (las pestañas del tenant):
+  la salida es «Volver al resumen».
+
+### 9.8 Formularios de marca de una sola tarea (crear contraseña)
+
+- Dos paneles desde `lg`: panel de marca de tinta a la izquierda (logo, antetítulo con
+  tracking amplio, el titular con el nombre del negocio, una frase) y el formulario a la
+  derecha. En el celular el panel pasa a una cabecera de tinta y el logo se oculta (ya lo
+  lleva la cabecera del sitio).
+- El layout de `/auth` es angosto por defecto; una página se ensancha marcándose con
+  `data-auth-wide` (`has-[[data-auth-wide]]:sm:max-w-5xl`), sin tocar las demás.
+- Las reglas del campo se marcan **mientras se escribe** (lo obligatorio con su conteo, la
+  sugerencia y «las dos coinciden»), con una barra de tres tramos (`PasswordChecklist`). El color va en la barra y
+  en el icono; el texto sigue en `foreground`/`muted-foreground`. Al lector de pantalla solo
+  se le anuncia un resumen que **cambia cuando una regla cambia de estado** («Cumple 2 de
+  3»), nunca el conteo de caracteres a cada tecla.
+
+---
+
 ## 10. Accesibilidad (no negociable)
 
 - Contraste AA: 4.5:1 texto, 3:1 texto grande y componentes UI — verificado en light y dark.
@@ -628,4 +753,44 @@ duraciones a 0. Se descarta deslizando. Poppins 600 a 13 px en la píldora,
 - [ ] ¿Iconos lucide (salvo logos de terceros)?
 - [ ] ¿Destructivo usa `destructive`, nunca el coral?
 - [ ] ¿Los avisos en línea son `<Alert variant=…>` y no un `<p>`/`<div>` con `border-*/30 bg-*/5`?
+- [ ] ¿Se renderizó y midió a 390/768/1024/1280/1440 en claro y oscuro, con datos largos (§12)?
+- [ ] ¿Filas de grid en `auto`/`fr` (nunca px fijos) y `min-w-0` en los hijos de grid/flex con texto?
+- [ ] ¿Etiquetas y cifras en `nowrap`/`truncate`+`title`; resúmenes «a · b» que se cortan entre piezas?
+- [ ] ¿Objetivos de al menos 24 px (botones de copiar, tramos, enlaces de ficha)?
+- [ ] ¿Nada que cambie solo (cuenta atrás, conteo al escribir) anunciado con `aria-live`?
 - [ ] ¿Los avisos pasan por `showAlert`/`notify` y no por un componente propio? ¿El título cabe en la píldora (≤ 34 caracteres) y el detalle va en `description` (§9.4)?
+
+---
+
+## 12. Verificación visual — medir antes de entregar
+
+Lint, tsc, jest y `next build` no ven un texto que se sale de su caja (ver también la nota
+«Las verjas no ven CSS»). **Toda vista nueva o rediseñada se renderiza y se mide antes de
+pasarla a auditoría:**
+
+1. `next dev` del worktree en un puerto propio.
+2. Un arnés de Playwright que simula la API con `page.route` usando **respuestas reales**
+   (las que guarda el QA en `docs/qa/<plan>/logs`), fija el reloj (`page.clock.setFixedTime`)
+   para los estados que dependen del día, y recorre escenarios: normal, vacío, bloqueado,
+   datos largos (nombre de 40+, correo de 60+, montos de 8 cifras, varias copias).
+   Referencia: `docs/design/mockups/entrega-bienvenida-premium/arnes/` en el
+   monorepo (fuera de este repo); la auditoría usa el mismo arnés con más detectores
+   (solapes, objetivos de 24 px, contraste efectivo con opacidades heredadas).
+3. Anchos **390, 768, 1024, 1280 y 1440**, en **claro y oscuro**.
+4. El arnés reporta: objetivos táctiles de menos de 24 px, textos que se solapan, contraste
+   efectivo por debajo de AA, elementos fuera del viewport (sin contar los que viven en un scroller
+   o un `overflow-hidden`), hijos que se salen de un padre con fondo o borde, **textos cortos
+   o de botón partidos en dos líneas** (contando las líneas reales con `Range.getClientRects`)
+   y scroll horizontal del panel. Los truncados con `title` se revisan a mano.
+5. Se miran las capturas: el arnés encuentra desbordes; el ojo encuentra huecos, jerarquía y
+   ritmo.
+
+Falsos positivos conocidos: el contraste de un botón con `bg-brand-gradient` o con un fondo
+en `color-mix` (el detector no lee gradientes ni oklab y mide contra el fondo de detrás), los
+hijos de un scroller propio (pestañas, recorrido en el celular) y el solape con una barra
+flotante (`ActionDock`), que flota a propósito.
+
+Trampas del arnés: la sesión de plataforma simulada necesita una expiración cercana (un
+`setTimeout` de más de 24,8 días dispara al instante y abre el re-login); el `#token` de
+contraseña debe tener 16+ caracteres o la página muestra «enlace vencido»; los scripts de
+inicio deben ir en `try/catch` porque también corren en los iframes con `sandbox`.
