@@ -19132,6 +19132,7 @@ export interface components {
                     attempt: number;
                     /** @enum {string} */
                     audience: "owner" | "team";
+                    recipient: string;
                     recipient_masked: string;
                     /** @enum {string} */
                     status: "pending" | "sent" | "failed" | "skipped";
@@ -19388,6 +19389,7 @@ export interface components {
                     attempt: number;
                     /** @enum {string} */
                     audience: "owner" | "team";
+                    recipient: string;
                     recipient_masked: string;
                     /** @enum {string} */
                     status: "pending" | "sent" | "failed" | "skipped";
