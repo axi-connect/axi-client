@@ -238,6 +238,8 @@ describe("DocumentsList", () => {
     fireEvent.click(more[0]);
     const items = await screen.findAllByRole("menuitem");
     expect(items[0]).toHaveTextContent("Enviar");
+    expect(items[1]).toHaveTextContent("Con los datos de hoy, número nuevo");
+    expect(items[1]).not.toHaveTextContent("Mismos datos");
     expect(items.map((item) => item.textContent)).toEqual([
       expect.stringContaining("Enviar"),
       expect.stringContaining("Regenerar"),
@@ -496,6 +498,9 @@ describe("DocumentsList", () => {
     expect(
       screen.getByText(/El pedido cambió después de este papel/),
     ).toBeInTheDocument();
+    // Dueño 2026-09-24: regenerar trae los datos de hoy, no los mismos
+    expect(screen.getByText("los datos de hoy")).toBeInTheDocument();
+    expect(screen.queryByText("los mismos datos")).toBeNull();
     // Generando: ni Ver ni «…» — solo espera
     expect(screen.getAllByRole("button", { name: "Ver" })).toHaveLength(1);
 
