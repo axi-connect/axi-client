@@ -37,6 +37,10 @@ describe("superficies: el texto sobre la marca", () => {
     expect(block(".dark,\n.surface-dark,\n.dark .surface-light")).not.toContain("--axi-on-brand");
   });
 
+  it("la isla oscura en tema claro solo restaura la marca, no su texto", () => {
+    expect(block(":root:not(.dark) .surface-dark")).not.toContain("--axi-on-brand");
+  });
+
   it("el CTA usa --axi-on-brand, no --axi-on-color", () => {
     expect(css).toMatch(/--color-primary-foreground:\s*var\(--axi-on-brand\)/);
   });
