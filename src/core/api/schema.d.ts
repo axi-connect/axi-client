@@ -7507,6 +7507,7 @@ export interface components {
                 /** Format: date-time */
                 expires_at: string;
                 tenant_name: string;
+                company_suspended: boolean;
             };
         };
         ForgotPasswordDto: {
@@ -19127,11 +19128,30 @@ export interface components {
                     kit: boolean;
                     committed: boolean;
                 };
+                attempts: {
+                    attempt: number;
+                    /** @enum {string} */
+                    audience: "owner" | "team";
+                    recipient_masked: string;
+                    /** @enum {string} */
+                    status: "pending" | "sent" | "failed" | "skipped";
+                    provider_message_id: string | null;
+                    error: string | null;
+                    /** Format: date-time */
+                    sent_at: string | null;
+                }[];
+                team_failures: number;
             } | null;
             blockers: {
                 /** @enum {string} */
-                code: "owner_missing" | "agent_missing" | "agent_name_too_long" | "business_name_too_long" | "payment_methods_missing" | "calls_missing" | "calls_out_of_trial" | "offer_not_quoted" | "enterprise" | "suspended_other" | "cc_includes_owner" | "cc_too_many" | "already_paying" | "trial_shortens" | "trial_required";
+                code: "owner_missing" | "agent_missing" | "agent_name_too_long" | "business_name_too_long" | "payment_methods_missing" | "calls_missing" | "calls_out_of_trial" | "offer_not_quoted" | "enterprise" | "suspended_other" | "already_paying" | "trial_shortens" | "trial_required";
                 message: string;
+                action?: {
+                    /** @enum {string} */
+                    kind: "support";
+                    /** @enum {string} */
+                    target: "agent" | "payment_methods" | "schedule" | "catalog" | "company";
+                };
             }[];
         };
         DeliveryDraftDto: {
@@ -19167,8 +19187,14 @@ export interface components {
         DeliveryPreviewDto: {
             blockers: {
                 /** @enum {string} */
-                code: "owner_missing" | "agent_missing" | "agent_name_too_long" | "business_name_too_long" | "payment_methods_missing" | "calls_missing" | "calls_out_of_trial" | "offer_not_quoted" | "enterprise" | "suspended_other" | "cc_includes_owner" | "cc_too_many" | "already_paying" | "trial_shortens" | "trial_required";
+                code: "owner_missing" | "agent_missing" | "agent_name_too_long" | "business_name_too_long" | "payment_methods_missing" | "calls_missing" | "calls_out_of_trial" | "offer_not_quoted" | "enterprise" | "suspended_other" | "already_paying" | "trial_shortens" | "trial_required";
                 message: string;
+                action?: {
+                    /** @enum {string} */
+                    kind: "support";
+                    /** @enum {string} */
+                    target: "agent" | "payment_methods" | "schedule" | "catalog" | "company";
+                };
             }[];
             warnings: {
                 /** @enum {string} */
@@ -19362,6 +19388,7 @@ export interface components {
                     attempt: number;
                     /** @enum {string} */
                     audience: "owner" | "team";
+                    recipient_masked: string;
                     /** @enum {string} */
                     status: "pending" | "sent" | "failed" | "skipped";
                     provider_message_id: string | null;
@@ -19369,6 +19396,7 @@ export interface components {
                     /** Format: date-time */
                     sent_at: string | null;
                 }[];
+                team_failures: number;
             } | null;
         };
         WelcomeKitDataDto: {
