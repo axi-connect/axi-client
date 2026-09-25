@@ -1028,6 +1028,22 @@ export interface paths {
         patch: operations["QualityScenariosController_update_v1"];
         trace?: never;
     };
+    "/api/v1/platform/quality/scenarios/draft-from-conversation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["QualityScenariosController_draft_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/platform/quality/scenarios/{id}/clone": {
         parameters: {
             query?: never;
@@ -1124,6 +1140,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/platform/quality/runs/{id}/probe-results": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualityRunsController_probeResults_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/platform/quality/runs/{id}/cases/{caseId}": {
         parameters: {
             query?: never;
@@ -1166,6 +1198,246 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["QualityRunsController_purgeRun_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualitySessionsController_list_v1"];
+        put?: never;
+        post: operations["QualitySessionsController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/sessions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualitySessionsController_byId_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/sessions/{id}/trace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualitySessionsController_trace_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/sessions/{id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["QualitySessionsController_send_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/sessions/{id}/media": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["QualitySessionsController_sendMedia_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/sessions/{id}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["QualitySessionsController_end_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/datasets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualityDatasetsController_list_v1"];
+        put?: never;
+        post: operations["QualityDatasetsController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/datasets/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualityDatasetsController_byId_v1"];
+        put?: never;
+        post?: never;
+        delete: operations["QualityDatasetsController_remove_v1"];
+        options?: never;
+        head?: never;
+        patch: operations["QualityDatasetsController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/platform/quality/datasets/{id}/imports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["QualityDatasetsController_startImport_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/datasets/{id}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualityDatasetsController_items_v1"];
+        put?: never;
+        post: operations["QualityDatasetsController_addItem_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/datasets/{id}/items/{itemId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["QualityDatasetsController_removeItem_v1"];
+        options?: never;
+        head?: never;
+        patch: operations["QualityDatasetsController_labelItem_v1"];
+        trace?: never;
+    };
+    "/api/v1/platform/quality/datasets/{id}/items/{itemId}/image-url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualityDatasetsController_imageUrl_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/tenants/{companyId}/catalog/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualityTenantLookupController_catalogSearch_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/tenants/{companyId}/intentions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualityTenantLookupController_intentions_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/capabilities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualityCapabilitiesController_get_v1"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1455,6 +1727,22 @@ export interface paths {
         put: operations["PlatformTenantVoiceController_setCredential_v1"];
         post?: never;
         delete: operations["PlatformTenantVoiceController_removeCredential_v1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/agents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformTenantAgentsController_list_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -4244,150 +4532,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/collections/receivables": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["CollectionsController_list_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/collections/receivables/stats": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["CollectionsController_receivablesStats_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/collections/plans/by-order/{order_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["CollectionsController_byOrder_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/collections/plans/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["CollectionsController_detail_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch: operations["CollectionsController_update_v1"];
-        trace?: never;
-    };
-    "/api/v1/collections/plans/{id}/reminders": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["CollectionsController_reminderHistory_v1"];
-        put?: never;
-        post: operations["CollectionsController_sendReminder_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/collections/plans/{id}/schedule": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put: operations["CollectionsController_changeSchedule_v1"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/collections/plans/{id}/promises": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["CollectionsController_promise_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/collections/settings": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["CollectionsSettingsController_settings_v1"];
-        put: operations["CollectionsSettingsController_updateSettings_v1"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/collections/plans/preview": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["CollectionsSettingsController_preview_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/conversations": {
         parameters: {
             query?: never;
@@ -4622,6 +4766,150 @@ export interface paths {
         get: operations["ContactReachabilityController_reachabilityOf_v1"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/collections/receivables": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CollectionsController_list_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/collections/receivables/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CollectionsController_receivablesStats_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/collections/plans/by-order/{order_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CollectionsController_byOrder_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/collections/plans/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CollectionsController_detail_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["CollectionsController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/collections/plans/{id}/reminders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CollectionsController_reminderHistory_v1"];
+        put?: never;
+        post: operations["CollectionsController_sendReminder_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/collections/plans/{id}/schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["CollectionsController_changeSchedule_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/collections/plans/{id}/promises": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CollectionsController_promise_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/collections/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CollectionsSettingsController_settings_v1"];
+        put: operations["CollectionsSettingsController_updateSettings_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/collections/plans/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CollectionsSettingsController_preview_v1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -7220,294 +7508,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/platform/quality/sessions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["QualitySessionsController_list_v1"];
-        put?: never;
-        post: operations["QualitySessionsController_create_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/quality/sessions/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["QualitySessionsController_byId_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/quality/sessions/{id}/trace": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["QualitySessionsController_trace_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/quality/sessions/{id}/messages": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["QualitySessionsController_send_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/quality/sessions/{id}/end": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["QualitySessionsController_end_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/tenants/{id}/agents": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["PlatformTenantAgentsController_list_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/quality/sessions/{id}/media": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["QualitySessionsController_sendMedia_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/quality/runs/{id}/probe-results": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["QualityRunsController_probeResults_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/quality/datasets": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["QualityDatasetsController_list_v1"];
-        put?: never;
-        post: operations["QualityDatasetsController_create_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/quality/datasets/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["QualityDatasetsController_byId_v1"];
-        put?: never;
-        post?: never;
-        delete: operations["QualityDatasetsController_remove_v1"];
-        options?: never;
-        head?: never;
-        patch: operations["QualityDatasetsController_update_v1"];
-        trace?: never;
-    };
-    "/api/v1/platform/quality/datasets/{id}/imports": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["QualityDatasetsController_startImport_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/quality/datasets/{id}/items": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["QualityDatasetsController_items_v1"];
-        put?: never;
-        post: operations["QualityDatasetsController_addItem_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/quality/datasets/{id}/items/{itemId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete: operations["QualityDatasetsController_removeItem_v1"];
-        options?: never;
-        head?: never;
-        patch: operations["QualityDatasetsController_labelItem_v1"];
-        trace?: never;
-    };
-    "/api/v1/platform/quality/datasets/{id}/items/{itemId}/image-url": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["QualityDatasetsController_imageUrl_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/quality/tenants/{companyId}/catalog/search": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["QualityTenantLookupController_catalogSearch_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/quality/tenants/{companyId}/intentions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["QualityTenantLookupController_intentions_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/quality/scenarios/draft-from-conversation": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["QualityScenariosController_draft_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/quality/capabilities": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["QualityCapabilitiesController_get_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -8964,6 +8964,35 @@ export interface components {
                 when: "first_turn" | "sim_decides";
             }[];
         };
+        DraftQualityScenarioDto: {
+            /** Format: uuid */
+            company_id: string;
+            /** Format: uuid */
+            conversation_id: string;
+        };
+        QualityScenarioDraftDto: {
+            code: string;
+            name: string;
+            persona: string;
+            goal: string;
+            max_turns: number;
+            tags: string[];
+            success_criteria: {
+                [key: string]: unknown;
+            }[];
+            dropped: {
+                criterion: unknown;
+                reason: string;
+            }[];
+            source: {
+                /** Format: uuid */
+                company_id: string;
+                /** Format: uuid */
+                conversation_id: string;
+                messages: number;
+                outcome: string | null;
+            };
+        };
         CloneScenarioDto: {
             code: string;
             name?: string;
@@ -9310,6 +9339,34 @@ export interface components {
                 finished_at: string | null;
             }[];
         };
+        QualityProbeResultsPageDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                dataset_item_id: string;
+                input: {
+                    [key: string]: unknown;
+                };
+                image_url: string | null;
+                hit: boolean;
+                rank: number | null;
+                returned: unknown;
+                expected: unknown;
+                confidence: string | null;
+                top_score: number | null;
+                margin: number | null;
+                degraded: boolean | null;
+                method: string | null;
+                latency_ms: number;
+                error: string | null;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
         CaseDetailDto: {
             /** Format: uuid */
             id: string;
@@ -9386,6 +9443,461 @@ export interface components {
             turns_per_conversation?: number;
             mock_latency_ms?: number;
             spend_cap_usd?: number;
+        };
+        QualitySessionsPageDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                company_id: string;
+                company_name: string;
+                agent: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    model: string;
+                    provider: string;
+                } | null;
+                /** @enum {string} */
+                status: "active" | "ended";
+                /** @enum {string|null} */
+                ended_reason: "operator" | "idle_timeout" | "max_age" | "spend_cap" | "daily_spend_cap" | "closed_by_agent" | "failed" | null;
+                purged: boolean;
+                persona_note: string | null;
+                spend: {
+                    spent_usd: number | null;
+                    cap_usd: number;
+                };
+                operator_turns: number;
+                created_by: string;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                last_activity_at: string;
+                /** Format: date-time */
+                finished_at: string | null;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
+        QualitySessionDetailDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            company_id: string;
+            company_name: string;
+            agent: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                model: string;
+                provider: string;
+            } | null;
+            /** @enum {string} */
+            status: "active" | "ended";
+            /** @enum {string|null} */
+            ended_reason: "operator" | "idle_timeout" | "max_age" | "spend_cap" | "daily_spend_cap" | "closed_by_agent" | "failed" | null;
+            purged: boolean;
+            persona_note: string | null;
+            spend: {
+                spent_usd: number | null;
+                cap_usd: number;
+                daily_spent_usd: number | null;
+                daily_cap_usd: number;
+            };
+            operator_turns: number;
+            created_by: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            last_activity_at: string;
+            /** Format: date-time */
+            finished_at: string | null;
+            /** Format: uuid */
+            conversation_id: string | null;
+            external_id: string;
+            limits: {
+                idle_timeout_min: number;
+                max_age_min: number;
+            };
+            /** @enum {string} */
+            agent_state: "idle" | "thinking" | "escalated" | "closed";
+            conversation: {
+                mode: string;
+                status: string;
+                closed_reason: string | null;
+                intention: {
+                    code: string;
+                    confidence: number | null;
+                } | null;
+            } | null;
+            /** Format: uuid */
+            agent_of_last_turn: string | null;
+            agent_changed: boolean;
+            agents: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            }[];
+            /** @enum {string} */
+            transcript_mode: "full" | "delta";
+            transcript: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                direction: "inbound" | "outbound";
+                /** @enum {string} */
+                sender_type: "contact" | "ai_agent" | "user" | "system";
+                /** Format: uuid */
+                agent_id: string | null;
+                content_type: string;
+                body: string | null;
+                provider_message_id: string | null;
+                status: string;
+                /** Format: date-time */
+                created_at: string;
+                interactive: {
+                    body: string;
+                    options: {
+                        id: string;
+                        title: string;
+                        description?: string;
+                    }[];
+                } | null;
+                interactive_reply: {
+                    id: string;
+                    title: string;
+                    source: string;
+                } | null;
+                location: {
+                    latitude: number;
+                    longitude: number;
+                    name?: string;
+                    address?: string;
+                } | null;
+                recognition: {
+                    /** @enum {string} */
+                    status: "done" | "failed" | "skipped";
+                    skip_reason: string | null;
+                    error_reason: string | null;
+                    kind: string | null;
+                    description: string | null;
+                    top_score: number | null;
+                    margin: number | null;
+                    degraded: boolean;
+                    latency_ms: number | null;
+                    candidates: {
+                        sku: string;
+                        name: string;
+                        score: number;
+                        confidence: string;
+                    }[];
+                } | null;
+                transcription: {
+                    /** @enum {string} */
+                    status: "done" | "failed";
+                    text: string | null;
+                    error_reason: string | null;
+                    audio_seconds: number | null;
+                    latency_ms: number | null;
+                } | null;
+                attachments: {
+                    /** Format: uuid */
+                    id: string;
+                    filename: string;
+                    mime_type: string;
+                    size_bytes: number;
+                    url: string | null;
+                }[];
+            }[];
+        };
+        QualitySessionTraceDto: {
+            /** @enum {string} */
+            source: "redis" | "none";
+            turns: ({
+                /** @enum {string} */
+                kind: "agent_turn";
+                ts: string;
+                agent_id: string | null;
+                model: string | null;
+                provider: string | null;
+                intention: {
+                    code: string;
+                    confidence: number | null;
+                } | null;
+                duration_ms: number | null;
+                context_ms: number | null;
+                iterations: {
+                    finish_reason: string;
+                    assistant_text: string | null;
+                    tools: {
+                        name: string;
+                        args: string | null;
+                        ok: boolean | null;
+                        productive: boolean | null;
+                        unproductive_reason: string | null;
+                        duration_ms: number | null;
+                    }[];
+                    latency_ms: number | null;
+                    tokens: {
+                        input: number;
+                        output: number;
+                        cached: number | null;
+                    } | null;
+                    nudge_reason: string | null;
+                    unverified_prices: string[];
+                    final_no_tools: boolean;
+                }[];
+                replies: string[];
+                action: string;
+                escalate_reason: string | null;
+                close_reason: string | null;
+                bot_phrases: string[];
+                tokens_total: {
+                    input: number;
+                    output: number;
+                    cached: number;
+                };
+                error: string | null;
+                failed: boolean;
+            } | {
+                /** @enum {string} */
+                kind: "intent_classification";
+                ts: string;
+                result: {
+                    code: string;
+                    confidence: number;
+                } | null;
+                previous: {
+                    code: string | null;
+                    confidence: number | null;
+                };
+                applied: string;
+                duration_ms: number | null;
+            })[];
+        };
+        CreateQualitySessionDto: {
+            /** Format: uuid */
+            company_id: string;
+            /** Format: uuid */
+            agent_id: string;
+            persona_note?: string;
+            spend_cap_usd?: number;
+        };
+        SendQualitySessionMessageDto: {
+            /** @enum {string} */
+            kind: "text" | "tap" | "location";
+            body?: string;
+            option_id?: string;
+            title?: string;
+            /** @enum {string} */
+            source?: "button" | "list";
+            location?: {
+                latitude: number;
+                longitude: number;
+                name?: string;
+                address?: string;
+            };
+        };
+        QualitySessionMessageAcceptedDto: {
+            provider_message_id: string;
+        };
+        QualityDatasetsPageDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                company_id: string;
+                company_name: string;
+                /** @enum {string} */
+                kind: "catalog_search" | "recognition" | "intent";
+                name: string;
+                description: string | null;
+                /** @enum {string} */
+                status: "active" | "archived";
+                items_count: number;
+                labeled_count: number;
+                last_import: {
+                    scanned: number;
+                    imported: number;
+                    duplicated: number;
+                    discarded: number;
+                    /** Format: date-time */
+                    finished_at: string;
+                } | null;
+                last_run: {
+                    /** Format: uuid */
+                    run_id: string;
+                    /** Format: date-time */
+                    finished_at: string | null;
+                    metrics: unknown;
+                } | null;
+                created_by: string | null;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
+        QualityDatasetDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            company_id: string;
+            company_name: string;
+            /** @enum {string} */
+            kind: "catalog_search" | "recognition" | "intent";
+            name: string;
+            description: string | null;
+            /** @enum {string} */
+            status: "active" | "archived";
+            items_count: number;
+            labeled_count: number;
+            last_import: {
+                scanned: number;
+                imported: number;
+                duplicated: number;
+                discarded: number;
+                /** Format: date-time */
+                finished_at: string;
+            } | null;
+            last_run: {
+                /** Format: uuid */
+                run_id: string;
+                /** Format: date-time */
+                finished_at: string | null;
+                metrics: unknown;
+            } | null;
+            created_by: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        CreateQualityDatasetDto: {
+            /** Format: uuid */
+            company_id: string;
+            /** @enum {string} */
+            kind: "catalog_search" | "recognition" | "intent";
+            name: string;
+            description?: string | null;
+        };
+        UpdateQualityDatasetDto: {
+            name?: string;
+            description?: string | null;
+            /** @enum {string} */
+            status?: "active" | "archived";
+        };
+        ImportQualityDatasetDto: {
+            /** @default 30 */
+            days: number;
+            /** @default 200 */
+            limit: number;
+        };
+        QualityDatasetItemsPageDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                source: "trace" | "turn_metric" | "manual" | "ai";
+                input: {
+                    [key: string]: unknown;
+                };
+                suggested: {
+                    [key: string]: unknown;
+                } | null;
+                expected: {
+                    [key: string]: unknown;
+                } | null;
+                /** @enum {string} */
+                label_status: "unlabeled" | "labeled" | "disputed" | "skipped";
+                labeled_by: string | null;
+                /** Format: date-time */
+                labeled_at: string | null;
+                source_ref: {
+                    [key: string]: unknown;
+                } | null;
+                image_url: string | null;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
+        AddQualityDatasetItemDto: {
+            input: {
+                [key: string]: unknown;
+            };
+            expected?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        LabelQualityDatasetItemDto: {
+            /** @enum {string} */
+            status: "unlabeled" | "labeled" | "disputed" | "skipped";
+            expected?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        QualityDatasetImageUrlDto: {
+            url: string | null;
+        };
+        QualityTenantCatalogSearchDto: {
+            data: {
+                /** Format: uuid */
+                product_id: string;
+                sku: string;
+                name: string;
+                category_path: string | null;
+                price_cents: number;
+                currency: string;
+                has_image: boolean;
+                available: boolean;
+            }[];
+        };
+        QualityTenantIntentionsDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                code: string;
+                description: string;
+                type: string;
+                is_system: boolean;
+            }[];
+        };
+        QualityCapabilitiesDto: {
+            /** Format: uuid */
+            company_id: string;
+            company_name: string;
+            window_days: number;
+            runs_considered: number;
+            capabilities: {
+                code: string;
+                label: string;
+                description: string;
+                /** @enum {string} */
+                status: "untested" | "pass" | "warn" | "fail";
+                metric_label: string | null;
+                metric_value: number | null;
+                sample_size: number;
+                /** @enum {string|null} */
+                source: "probe" | "checks" | "cases" | null;
+                /** Format: uuid */
+                run_id: string | null;
+                /** Format: date-time */
+                evaluated_at: string | null;
+            }[];
         };
         DebugContactsDto: {
             data: {
@@ -9828,6 +10340,22 @@ export interface components {
         };
         SetTtsCredentialDto: {
             api_key: string;
+        };
+        PlatformTenantAgentsDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                /** @enum {string} */
+                status: "active" | "paused" | "draft";
+                provider: string;
+                model: string;
+                is_default: boolean;
+                intentions: {
+                    code: string;
+                    type: string;
+                }[];
+            }[];
         };
         IntentionListDto: {
             data: {
@@ -14456,311 +14984,6 @@ export interface components {
             stale: boolean;
             computed_at: string;
         };
-        ReceivablesListDto: {
-            data: {
-                /** Format: uuid */
-                plan_id: string;
-                /** Format: uuid */
-                order_id: string;
-                order_number: number | null;
-                /** Format: uuid */
-                contact_id: string;
-                contact_name: string;
-                /** Format: date */
-                service_date: string | null;
-                travelled: boolean;
-                currency: string;
-                total_cents: number;
-                paid_cents: number;
-                balance_cents: number;
-                overdue_cents: number;
-                /** Format: date */
-                next_due_at: string | null;
-                days_overdue: number;
-                /** @enum {string} */
-                bucket: "current" | "d1_30" | "d31_60" | "d61_90" | "d90_plus";
-                installments_total: number;
-                installments_paid: number;
-                /** Format: date */
-                active_promise_at: string | null;
-                last_promise: {
-                    /** Format: date */
-                    promised_at: string;
-                    /** @enum {string} */
-                    status: "pending" | "kept" | "broken" | "cancelled";
-                } | null;
-                /** Format: uuid */
-                assigned_user_id: string | null;
-                paused: boolean;
-                last_reminder: {
-                    /** Format: date-time */
-                    at: string;
-                    /** @enum {string} */
-                    status: "queued" | "sent" | "delivered" | "failed" | "skipped";
-                    /** @enum {string} */
-                    channel: "whatsapp" | "email";
-                    skip_reason: string | null;
-                } | null;
-            }[];
-            meta: {
-                total: number;
-                page: number;
-                page_size: number;
-            };
-        };
-        ReceivablesStatsDto: {
-            outstanding_cents: number;
-            overdue_cents: number;
-            travelled_cents: number;
-            promised_cents: number;
-            plans_active: number;
-            plans_overdue: number;
-            contacts_overdue: number;
-        };
-        PlanDetailDto: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            order_id: string;
-            order_number: number | null;
-            /** Format: uuid */
-            contact_id: string;
-            /** @enum {string} */
-            status: "active" | "settled" | "cancelled" | "on_hold";
-            currency: string;
-            total_cents: number;
-            paid_cents: number;
-            balance_cents: number;
-            deposit_cents: number;
-            /** Format: date */
-            service_date: string | null;
-            /** Format: date */
-            final_due_at: string | null;
-            /** @enum {string} */
-            final_due_source: "service_date" | "fallback" | "manual";
-            /** Format: date */
-            next_due_at: string | null;
-            /** Format: date */
-            active_promise_at: string | null;
-            /** Format: uuid */
-            assigned_user_id: string | null;
-            installments: {
-                /** Format: uuid */
-                id: string;
-                seq: number;
-                /** @enum {string} */
-                kind: "deposit" | "installment" | "balance";
-                /** Format: date */
-                due_at: string;
-                amount_cents: number;
-                paid_cents: number;
-                /** @enum {string} */
-                status: "pending" | "partially_paid" | "paid" | "overdue" | "waived";
-                /** Format: date-time */
-                paid_at: string | null;
-            }[];
-            promises: {
-                /** Format: uuid */
-                id: string;
-                /** Format: date */
-                promised_at: string;
-                amount_cents: number | null;
-                note: string | null;
-                /** @enum {string} */
-                status: "pending" | "kept" | "broken" | "cancelled";
-                /** Format: date-time */
-                created_at: string;
-                /** Format: date-time */
-                resolved_at: string | null;
-                /** Format: uuid */
-                created_by_user_id: string | null;
-            }[];
-            notes: {
-                /** Format: uuid */
-                id: string;
-                note: string;
-                /** Format: date-time */
-                created_at: string;
-                /** Format: uuid */
-                actor_user_id: string | null;
-            }[];
-            collapsed: boolean;
-            /** Format: date-time */
-            schedule_changed_at: string | null;
-        };
-        PlanRemindersDto: {
-            data: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                installment_id: string | null;
-                reminder_key: string;
-                /** @enum {string} */
-                channel: "whatsapp" | "email";
-                attempt: number;
-                /** @enum {string} */
-                status: "queued" | "sent" | "delivered" | "failed" | "skipped";
-                skip_reason: string | null;
-                error_code: string | null;
-                /** Format: date-time */
-                created_at: string;
-                /** Format: date-time */
-                resolved_at: string | null;
-            }[];
-        };
-        RescheduleRequestDto: {
-            installments: {
-                /** Format: date */
-                due_at: string;
-                amount_cents: number;
-            }[];
-        };
-        PlanActionResultDto: {
-            /** Format: uuid */
-            plan_id: string;
-        };
-        PromiseRequestDto: {
-            /** Format: date */
-            promised_at: string;
-            amount_cents?: number;
-            note?: string;
-        };
-        UpdatePlanRequestDto: {
-            /** Format: uuid */
-            assigned_user_id?: string | null;
-            /** @enum {string} */
-            status?: "active" | "on_hold";
-            note?: string;
-        };
-        ManualReminderDto: {
-            /** Format: uuid */
-            installment_id?: string;
-            /** @enum {string} */
-            channel: "whatsapp" | "email";
-            body?: string;
-        };
-        ReminderResultDto: {
-            /** Format: uuid */
-            plan_id: string;
-            /** @enum {string} */
-            outcome: "queued" | "skipped";
-        };
-        CollectionsSettingsDto: {
-            deposit_pct: number;
-            /** @enum {string} */
-            installments_strategy: "equal_monthly" | "single_balance" | "custom_count";
-            installments_count: number;
-            final_due_days_before_service: number;
-            min_days_between_installments: number;
-            fallback_term_days: number;
-            min_plan_total_cents: number;
-            grace_days: number;
-            reminder_days_before: number[];
-            overdue_reminder_days: number[];
-            reminder_channels: {
-                whatsapp: boolean;
-                email: boolean;
-            };
-            pause_on_promise: boolean;
-            templates: {
-                due_soon: {
-                    enabled: boolean;
-                    body: string;
-                };
-                due_today: {
-                    enabled: boolean;
-                    body: string;
-                };
-                overdue: {
-                    enabled: boolean;
-                    body: string;
-                };
-            };
-            /** @default {} */
-            hsm_templates: {
-                due_soon?: {
-                    name: string;
-                    language: string;
-                };
-                due_today?: {
-                    name: string;
-                    language: string;
-                };
-                overdue?: {
-                    name: string;
-                    language: string;
-                };
-            };
-            available_variables: string[];
-        };
-        CollectionsPolicyDto: {
-            deposit_pct: number;
-            /** @enum {string} */
-            installments_strategy: "equal_monthly" | "single_balance" | "custom_count";
-            installments_count: number;
-            final_due_days_before_service: number;
-            min_days_between_installments: number;
-            fallback_term_days: number;
-            min_plan_total_cents: number;
-            grace_days: number;
-            reminder_days_before: number[];
-            overdue_reminder_days: number[];
-            reminder_channels: {
-                whatsapp: boolean;
-                email: boolean;
-            };
-            pause_on_promise: boolean;
-            templates: {
-                due_soon: {
-                    enabled: boolean;
-                    body: string;
-                };
-                due_today: {
-                    enabled: boolean;
-                    body: string;
-                };
-                overdue: {
-                    enabled: boolean;
-                    body: string;
-                };
-            };
-            /** @default {} */
-            hsm_templates: {
-                due_soon?: {
-                    name: string;
-                    language: string;
-                };
-                due_today?: {
-                    name: string;
-                    language: string;
-                };
-                overdue?: {
-                    name: string;
-                    language: string;
-                };
-            };
-        };
-        PlanPreviewRequestDto: {
-            total_cents: number;
-            /** Format: date */
-            service_date?: string | null;
-        };
-        PlanPreviewDto: {
-            installments: {
-                seq: number;
-                /** @enum {string} */
-                kind: "deposit" | "installment" | "balance";
-                /** Format: date */
-                due_at: string;
-                amount_cents: number;
-            }[];
-            deposit_cents: number;
-            /** Format: date */
-            final_due_at: string;
-            /** @enum {string} */
-            final_due_source: "service_date" | "fallback";
-            collapsed: boolean;
-        };
         ConversationsListDto: {
             data: {
                 /** Format: uuid */
@@ -15077,6 +15300,311 @@ export interface components {
             last_inbound_at: string | null;
             window_hours: number | null;
             supports_templates: boolean;
+        };
+        ReceivablesListDto: {
+            data: {
+                /** Format: uuid */
+                plan_id: string;
+                /** Format: uuid */
+                order_id: string;
+                order_number: number | null;
+                /** Format: uuid */
+                contact_id: string;
+                contact_name: string;
+                /** Format: date */
+                service_date: string | null;
+                travelled: boolean;
+                currency: string;
+                total_cents: number;
+                paid_cents: number;
+                balance_cents: number;
+                overdue_cents: number;
+                /** Format: date */
+                next_due_at: string | null;
+                days_overdue: number;
+                /** @enum {string} */
+                bucket: "current" | "d1_30" | "d31_60" | "d61_90" | "d90_plus";
+                installments_total: number;
+                installments_paid: number;
+                /** Format: date */
+                active_promise_at: string | null;
+                last_promise: {
+                    /** Format: date */
+                    promised_at: string;
+                    /** @enum {string} */
+                    status: "pending" | "kept" | "broken" | "cancelled";
+                } | null;
+                /** Format: uuid */
+                assigned_user_id: string | null;
+                paused: boolean;
+                last_reminder: {
+                    /** Format: date-time */
+                    at: string;
+                    /** @enum {string} */
+                    status: "queued" | "sent" | "delivered" | "failed" | "skipped";
+                    /** @enum {string} */
+                    channel: "whatsapp" | "email";
+                    skip_reason: string | null;
+                } | null;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
+        ReceivablesStatsDto: {
+            outstanding_cents: number;
+            overdue_cents: number;
+            travelled_cents: number;
+            promised_cents: number;
+            plans_active: number;
+            plans_overdue: number;
+            contacts_overdue: number;
+        };
+        PlanDetailDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            order_id: string;
+            order_number: number | null;
+            /** Format: uuid */
+            contact_id: string;
+            /** @enum {string} */
+            status: "active" | "settled" | "cancelled" | "on_hold";
+            currency: string;
+            total_cents: number;
+            paid_cents: number;
+            balance_cents: number;
+            deposit_cents: number;
+            /** Format: date */
+            service_date: string | null;
+            /** Format: date */
+            final_due_at: string | null;
+            /** @enum {string} */
+            final_due_source: "service_date" | "fallback" | "manual";
+            /** Format: date */
+            next_due_at: string | null;
+            /** Format: date */
+            active_promise_at: string | null;
+            /** Format: uuid */
+            assigned_user_id: string | null;
+            installments: {
+                /** Format: uuid */
+                id: string;
+                seq: number;
+                /** @enum {string} */
+                kind: "deposit" | "installment" | "balance";
+                /** Format: date */
+                due_at: string;
+                amount_cents: number;
+                paid_cents: number;
+                /** @enum {string} */
+                status: "pending" | "partially_paid" | "paid" | "overdue" | "waived";
+                /** Format: date-time */
+                paid_at: string | null;
+            }[];
+            promises: {
+                /** Format: uuid */
+                id: string;
+                /** Format: date */
+                promised_at: string;
+                amount_cents: number | null;
+                note: string | null;
+                /** @enum {string} */
+                status: "pending" | "kept" | "broken" | "cancelled";
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                resolved_at: string | null;
+                /** Format: uuid */
+                created_by_user_id: string | null;
+            }[];
+            notes: {
+                /** Format: uuid */
+                id: string;
+                note: string;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: uuid */
+                actor_user_id: string | null;
+            }[];
+            collapsed: boolean;
+            /** Format: date-time */
+            schedule_changed_at: string | null;
+        };
+        PlanRemindersDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                installment_id: string | null;
+                reminder_key: string;
+                /** @enum {string} */
+                channel: "whatsapp" | "email";
+                attempt: number;
+                /** @enum {string} */
+                status: "queued" | "sent" | "delivered" | "failed" | "skipped";
+                skip_reason: string | null;
+                error_code: string | null;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                resolved_at: string | null;
+            }[];
+        };
+        RescheduleRequestDto: {
+            installments: {
+                /** Format: date */
+                due_at: string;
+                amount_cents: number;
+            }[];
+        };
+        PlanActionResultDto: {
+            /** Format: uuid */
+            plan_id: string;
+        };
+        PromiseRequestDto: {
+            /** Format: date */
+            promised_at: string;
+            amount_cents?: number;
+            note?: string;
+        };
+        UpdatePlanRequestDto: {
+            /** Format: uuid */
+            assigned_user_id?: string | null;
+            /** @enum {string} */
+            status?: "active" | "on_hold";
+            note?: string;
+        };
+        ManualReminderDto: {
+            /** Format: uuid */
+            installment_id?: string;
+            /** @enum {string} */
+            channel: "whatsapp" | "email";
+            body?: string;
+        };
+        ReminderResultDto: {
+            /** Format: uuid */
+            plan_id: string;
+            /** @enum {string} */
+            outcome: "queued" | "skipped";
+        };
+        CollectionsSettingsDto: {
+            deposit_pct: number;
+            /** @enum {string} */
+            installments_strategy: "equal_monthly" | "single_balance" | "custom_count";
+            installments_count: number;
+            final_due_days_before_service: number;
+            min_days_between_installments: number;
+            fallback_term_days: number;
+            min_plan_total_cents: number;
+            grace_days: number;
+            reminder_days_before: number[];
+            overdue_reminder_days: number[];
+            reminder_channels: {
+                whatsapp: boolean;
+                email: boolean;
+            };
+            pause_on_promise: boolean;
+            templates: {
+                due_soon: {
+                    enabled: boolean;
+                    body: string;
+                };
+                due_today: {
+                    enabled: boolean;
+                    body: string;
+                };
+                overdue: {
+                    enabled: boolean;
+                    body: string;
+                };
+            };
+            /** @default {} */
+            hsm_templates: {
+                due_soon?: {
+                    name: string;
+                    language: string;
+                };
+                due_today?: {
+                    name: string;
+                    language: string;
+                };
+                overdue?: {
+                    name: string;
+                    language: string;
+                };
+            };
+            available_variables: string[];
+        };
+        CollectionsPolicyDto: {
+            deposit_pct: number;
+            /** @enum {string} */
+            installments_strategy: "equal_monthly" | "single_balance" | "custom_count";
+            installments_count: number;
+            final_due_days_before_service: number;
+            min_days_between_installments: number;
+            fallback_term_days: number;
+            min_plan_total_cents: number;
+            grace_days: number;
+            reminder_days_before: number[];
+            overdue_reminder_days: number[];
+            reminder_channels: {
+                whatsapp: boolean;
+                email: boolean;
+            };
+            pause_on_promise: boolean;
+            templates: {
+                due_soon: {
+                    enabled: boolean;
+                    body: string;
+                };
+                due_today: {
+                    enabled: boolean;
+                    body: string;
+                };
+                overdue: {
+                    enabled: boolean;
+                    body: string;
+                };
+            };
+            /** @default {} */
+            hsm_templates: {
+                due_soon?: {
+                    name: string;
+                    language: string;
+                };
+                due_today?: {
+                    name: string;
+                    language: string;
+                };
+                overdue?: {
+                    name: string;
+                    language: string;
+                };
+            };
+        };
+        PlanPreviewRequestDto: {
+            total_cents: number;
+            /** Format: date */
+            service_date?: string | null;
+        };
+        PlanPreviewDto: {
+            installments: {
+                seq: number;
+                /** @enum {string} */
+                kind: "deposit" | "installment" | "balance";
+                /** Format: date */
+                due_at: string;
+                amount_cents: number;
+            }[];
+            deposit_cents: number;
+            /** Format: date */
+            final_due_at: string;
+            /** @enum {string} */
+            final_due_source: "service_date" | "fallback";
+            collapsed: boolean;
         };
         DocumentTypesDto: {
             types: {
@@ -20150,537 +20678,6 @@ export interface components {
                 where: string;
             }[];
         };
-    
-        QualitySessionsPageDto: {
-            data: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                company_id: string;
-                company_name: string;
-                agent: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                    model: string;
-                    provider: string;
-                } | null;
-                /** @enum {string} */
-                status: "active" | "ended";
-                /** @enum {string|null} */
-                ended_reason: "operator" | "idle_timeout" | "max_age" | "spend_cap" | "daily_spend_cap" | "closed_by_agent" | "failed" | null;
-                purged: boolean;
-                persona_note: string | null;
-                spend: {
-                    spent_usd: number | null;
-                    cap_usd: number;
-                };
-                operator_turns: number;
-                created_by: string;
-                /** Format: date-time */
-                created_at: string;
-                /** Format: date-time */
-                last_activity_at: string;
-                /** Format: date-time */
-                finished_at: string | null;
-            }[];
-            meta: {
-                total: number;
-                page: number;
-                page_size: number;
-            };
-        };
-        QualitySessionDetailDto: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            company_id: string;
-            company_name: string;
-            agent: {
-                /** Format: uuid */
-                id: string;
-                name: string;
-                model: string;
-                provider: string;
-            } | null;
-            /** @enum {string} */
-            status: "active" | "ended";
-            /** @enum {string|null} */
-            ended_reason: "operator" | "idle_timeout" | "max_age" | "spend_cap" | "daily_spend_cap" | "closed_by_agent" | "failed" | null;
-            purged: boolean;
-            persona_note: string | null;
-            spend: {
-                spent_usd: number | null;
-                cap_usd: number;
-                daily_spent_usd: number | null;
-                daily_cap_usd: number;
-            };
-            operator_turns: number;
-            created_by: string;
-            /** Format: date-time */
-            created_at: string;
-            /** Format: date-time */
-            last_activity_at: string;
-            /** Format: date-time */
-            finished_at: string | null;
-            /** Format: uuid */
-            conversation_id: string | null;
-            external_id: string;
-            limits: {
-                idle_timeout_min: number;
-                max_age_min: number;
-            };
-            /** @enum {string} */
-            agent_state: "idle" | "thinking" | "escalated" | "closed";
-            conversation: {
-                mode: string;
-                status: string;
-                closed_reason: string | null;
-                intention: {
-                    code: string;
-                    confidence: number | null;
-                } | null;
-            } | null;
-            /** Format: uuid */
-            agent_of_last_turn: string | null;
-            agent_changed: boolean;
-            agents: {
-                /** Format: uuid */
-                id: string;
-                name: string;
-            }[];
-            /** @enum {string} */
-            transcript_mode: "full" | "delta";
-            transcript: {
-                /** Format: uuid */
-                id: string;
-                /** @enum {string} */
-                direction: "inbound" | "outbound";
-                /** @enum {string} */
-                sender_type: "contact" | "ai_agent" | "user" | "system";
-                /** Format: uuid */
-                agent_id: string | null;
-                content_type: string;
-                body: string | null;
-                provider_message_id: string | null;
-                status: string;
-                /** Format: date-time */
-                created_at: string;
-                interactive: {
-                    body: string;
-                    options: {
-                        id: string;
-                        title: string;
-                        description?: string;
-                    }[];
-                } | null;
-                interactive_reply: {
-                    id: string;
-                    title: string;
-                    source: string;
-                } | null;
-                location: {
-                    latitude: number;
-                    longitude: number;
-                    name?: string;
-                    address?: string;
-                } | null;
-                recognition: {
-                    /** @enum {string} */
-                    status: "done" | "failed" | "skipped";
-                    skip_reason: string | null;
-                    error_reason: string | null;
-                    kind: string | null;
-                    description: string | null;
-                    top_score: number | null;
-                    margin: number | null;
-                    degraded: boolean;
-                    latency_ms: number | null;
-                    candidates: {
-                        sku: string;
-                        name: string;
-                        score: number;
-                        confidence: string;
-                    }[];
-                } | null;
-                transcription: {
-                    /** @enum {string} */
-                    status: "done" | "failed";
-                    text: string | null;
-                    error_reason: string | null;
-                    audio_seconds: number | null;
-                    latency_ms: number | null;
-                } | null;
-                attachments: {
-                    /** Format: uuid */
-                    id: string;
-                    filename: string;
-                    mime_type: string;
-                    size_bytes: number;
-                    url: string | null;
-                }[];
-            }[];
-        };
-        QualitySessionTraceDto: {
-            /** @enum {string} */
-            source: "redis" | "none";
-            turns: ({
-                /** @enum {string} */
-                kind: "agent_turn";
-                ts: string;
-                agent_id: string | null;
-                model: string | null;
-                provider: string | null;
-                intention: {
-                    code: string;
-                    confidence: number | null;
-                } | null;
-                duration_ms: number | null;
-                context_ms: number | null;
-                iterations: {
-                    finish_reason: string;
-                    assistant_text: string | null;
-                    tools: {
-                        name: string;
-                        args: string | null;
-                        ok: boolean | null;
-                        productive: boolean | null;
-                        unproductive_reason: string | null;
-                        duration_ms: number | null;
-                    }[];
-                    latency_ms: number | null;
-                    tokens: {
-                        input: number;
-                        output: number;
-                        cached: number | null;
-                    } | null;
-                    nudge_reason: string | null;
-                    unverified_prices: string[];
-                    final_no_tools: boolean;
-                }[];
-                replies: string[];
-                action: string;
-                escalate_reason: string | null;
-                close_reason: string | null;
-                bot_phrases: string[];
-                tokens_total: {
-                    input: number;
-                    output: number;
-                    cached: number;
-                };
-                error: string | null;
-                failed: boolean;
-            } | {
-                /** @enum {string} */
-                kind: "intent_classification";
-                ts: string;
-                result: {
-                    code: string;
-                    confidence: number;
-                } | null;
-                previous: {
-                    code: string | null;
-                    confidence: number | null;
-                };
-                applied: string;
-                duration_ms: number | null;
-            })[];
-        };
-        CreateQualitySessionDto: {
-            /** Format: uuid */
-            company_id: string;
-            /** Format: uuid */
-            agent_id: string;
-            persona_note?: string;
-            spend_cap_usd?: number;
-        };
-        SendQualitySessionMessageDto: {
-            /** @enum {string} */
-            kind: "text" | "tap" | "location";
-            body?: string;
-            option_id?: string;
-            title?: string;
-            /** @enum {string} */
-            source?: "button" | "list";
-            location?: {
-                latitude: number;
-                longitude: number;
-                name?: string;
-                address?: string;
-            };
-        };
-        QualitySessionMessageAcceptedDto: {
-            provider_message_id: string;
-        };
-        PlatformTenantAgentsDto: {
-            data: {
-                /** Format: uuid */
-                id: string;
-                name: string;
-                /** @enum {string} */
-                status: "active" | "paused" | "draft";
-                provider: string;
-                model: string;
-                is_default: boolean;
-                intentions: {
-                    code: string;
-                    type: string;
-                }[];
-            }[];
-        };
-    
-        QualityProbeResultsPageDto: {
-            data: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                dataset_item_id: string;
-                input: {
-                    [key: string]: unknown;
-                };
-                image_url: string | null;
-                hit: boolean;
-                rank: number | null;
-                returned: unknown;
-                expected: unknown;
-                confidence: string | null;
-                top_score: number | null;
-                margin: number | null;
-                degraded: boolean | null;
-                method: string | null;
-                latency_ms: number;
-                error: string | null;
-            }[];
-            meta: {
-                total: number;
-                page: number;
-                page_size: number;
-            };
-        };
-        QualityDatasetsPageDto: {
-            data: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                company_id: string;
-                company_name: string;
-                /** @enum {string} */
-                kind: "catalog_search" | "recognition" | "intent";
-                name: string;
-                description: string | null;
-                /** @enum {string} */
-                status: "active" | "archived";
-                items_count: number;
-                labeled_count: number;
-                last_import: {
-                    scanned: number;
-                    imported: number;
-                    duplicated: number;
-                    discarded: number;
-                    /** Format: date-time */
-                    finished_at: string;
-                } | null;
-                last_run: {
-                    /** Format: uuid */
-                    run_id: string;
-                    /** Format: date-time */
-                    finished_at: string | null;
-                    metrics: unknown;
-                } | null;
-                created_by: string | null;
-                /** Format: date-time */
-                created_at: string;
-                /** Format: date-time */
-                updated_at: string;
-            }[];
-            meta: {
-                total: number;
-                page: number;
-                page_size: number;
-            };
-        };
-        QualityDatasetDto: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            company_id: string;
-            company_name: string;
-            /** @enum {string} */
-            kind: "catalog_search" | "recognition" | "intent";
-            name: string;
-            description: string | null;
-            /** @enum {string} */
-            status: "active" | "archived";
-            items_count: number;
-            labeled_count: number;
-            last_import: {
-                scanned: number;
-                imported: number;
-                duplicated: number;
-                discarded: number;
-                /** Format: date-time */
-                finished_at: string;
-            } | null;
-            last_run: {
-                /** Format: uuid */
-                run_id: string;
-                /** Format: date-time */
-                finished_at: string | null;
-                metrics: unknown;
-            } | null;
-            created_by: string | null;
-            /** Format: date-time */
-            created_at: string;
-            /** Format: date-time */
-            updated_at: string;
-        };
-        CreateQualityDatasetDto: {
-            /** Format: uuid */
-            company_id: string;
-            /** @enum {string} */
-            kind: "catalog_search" | "recognition" | "intent";
-            name: string;
-            description?: string | null;
-        };
-        UpdateQualityDatasetDto: {
-            name?: string;
-            description?: string | null;
-            /** @enum {string} */
-            status?: "active" | "archived";
-        };
-        ImportQualityDatasetDto: {
-            /** @default 30 */
-            days: number;
-            /** @default 200 */
-            limit: number;
-        };
-        QualityDatasetItemsPageDto: {
-            data: {
-                /** Format: uuid */
-                id: string;
-                /** @enum {string} */
-                source: "trace" | "turn_metric" | "manual" | "ai";
-                input: {
-                    [key: string]: unknown;
-                };
-                suggested: {
-                    [key: string]: unknown;
-                } | null;
-                expected: {
-                    [key: string]: unknown;
-                } | null;
-                /** @enum {string} */
-                label_status: "unlabeled" | "labeled" | "disputed" | "skipped";
-                labeled_by: string | null;
-                /** Format: date-time */
-                labeled_at: string | null;
-                source_ref: {
-                    [key: string]: unknown;
-                } | null;
-                image_url: string | null;
-                /** Format: date-time */
-                created_at: string;
-            }[];
-            meta: {
-                total: number;
-                page: number;
-                page_size: number;
-            };
-        };
-        AddQualityDatasetItemDto: {
-            input: {
-                [key: string]: unknown;
-            };
-            expected?: {
-                [key: string]: unknown;
-            } | null;
-        };
-        LabelQualityDatasetItemDto: {
-            /** @enum {string} */
-            status: "unlabeled" | "labeled" | "disputed" | "skipped";
-            expected?: {
-                [key: string]: unknown;
-            } | null;
-        };
-        QualityDatasetImageUrlDto: {
-            url: string | null;
-        };
-        QualityTenantCatalogSearchDto: {
-            data: {
-                /** Format: uuid */
-                product_id: string;
-                sku: string;
-                name: string;
-                category_path: string | null;
-                price_cents: number;
-                currency: string;
-                has_image: boolean;
-                available: boolean;
-            }[];
-        };
-        QualityTenantIntentionsDto: {
-            data: {
-                /** Format: uuid */
-                id: string;
-                code: string;
-                description: string;
-                type: string;
-                is_system: boolean;
-            }[];
-        };
-    
-        DraftQualityScenarioDto: {
-            /** Format: uuid */
-            company_id: string;
-            /** Format: uuid */
-            conversation_id: string;
-        };
-        QualityScenarioDraftDto: {
-            code: string;
-            name: string;
-            persona: string;
-            goal: string;
-            max_turns: number;
-            tags: string[];
-            success_criteria: {
-                [key: string]: unknown;
-            }[];
-            dropped: {
-                criterion: unknown;
-                reason: string;
-            }[];
-            source: {
-                /** Format: uuid */
-                company_id: string;
-                /** Format: uuid */
-                conversation_id: string;
-                messages: number;
-                outcome: string | null;
-            };
-        };
-        QualityCapabilitiesDto: {
-            /** Format: uuid */
-            company_id: string;
-            company_name: string;
-            window_days: number;
-            runs_considered: number;
-            capabilities: {
-                code: string;
-                label: string;
-                description: string;
-                /** @enum {string} */
-                status: "untested" | "pass" | "warn" | "fail";
-                metric_label: string | null;
-                metric_value: number | null;
-                sample_size: number;
-                /** @enum {string|null} */
-                source: "probe" | "checks" | "cases" | null;
-                /** Format: uuid */
-                run_id: string | null;
-                /** Format: date-time */
-                evaluated_at: string | null;
-            }[];
-        };
     };
     responses: never;
     parameters: never;
@@ -22706,6 +22703,29 @@ export interface operations {
             };
         };
     };
+    QualityScenariosController_draft_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DraftQualityScenarioDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualityScenarioDraftDto"];
+                };
+            };
+        };
+    };
     QualityScenariosController_clone_v1: {
         parameters: {
             query?: never;
@@ -22914,6 +22934,31 @@ export interface operations {
             };
         };
     };
+    QualityRunsController_probeResults_v1: {
+        parameters: {
+            query?: {
+                only_misses?: "true" | "false";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualityProbeResultsPageDto"];
+                };
+            };
+        };
+    };
     QualityRunsController_caseDetail_v1: {
         parameters: {
             query?: never;
@@ -22971,6 +23016,489 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    QualitySessionsController_list_v1: {
+        parameters: {
+            query?: {
+                company_id?: string;
+                status?: "active" | "ended";
+                mine?: "true" | "false";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualitySessionsPageDto"];
+                };
+            };
+        };
+    };
+    QualitySessionsController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateQualitySessionDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedIdDto"];
+                };
+            };
+        };
+    };
+    QualitySessionsController_byId_v1: {
+        parameters: {
+            query?: {
+                after?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualitySessionDetailDto"];
+                };
+            };
+        };
+    };
+    QualitySessionsController_trace_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualitySessionTraceDto"];
+                };
+            };
+        };
+    };
+    QualitySessionsController_send_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendQualitySessionMessageDto"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualitySessionMessageAcceptedDto"];
+                };
+            };
+        };
+    };
+    QualitySessionsController_sendMedia_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                    caption?: string;
+                    /** @default false */
+                    voice_note?: boolean;
+                };
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualitySessionMessageAcceptedDto"];
+                };
+            };
+        };
+    };
+    QualitySessionsController_end_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    QualityDatasetsController_list_v1: {
+        parameters: {
+            query?: {
+                company_id?: string;
+                kind?: "catalog_search" | "recognition" | "intent";
+                status?: "active" | "archived";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualityDatasetsPageDto"];
+                };
+            };
+        };
+    };
+    QualityDatasetsController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateQualityDatasetDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedIdDto"];
+                };
+            };
+        };
+    };
+    QualityDatasetsController_byId_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualityDatasetDto"];
+                };
+            };
+        };
+    };
+    QualityDatasetsController_remove_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    QualityDatasetsController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateQualityDatasetDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    QualityDatasetsController_startImport_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportQualityDatasetDto"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    QualityDatasetsController_items_v1: {
+        parameters: {
+            query?: {
+                label_status?: "unlabeled" | "labeled" | "disputed" | "skipped";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualityDatasetItemsPageDto"];
+                };
+            };
+        };
+    };
+    QualityDatasetsController_addItem_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddQualityDatasetItemDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedIdDto"];
+                };
+            };
+        };
+    };
+    QualityDatasetsController_removeItem_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                itemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    QualityDatasetsController_labelItem_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                itemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LabelQualityDatasetItemDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    QualityDatasetsController_imageUrl_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                itemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualityDatasetImageUrlDto"];
+                };
+            };
+        };
+    };
+    QualityTenantLookupController_catalogSearch_v1: {
+        parameters: {
+            query: {
+                q: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualityTenantCatalogSearchDto"];
+                };
+            };
+        };
+    };
+    QualityTenantLookupController_intentions_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualityTenantIntentionsDto"];
+                };
+            };
+        };
+    };
+    QualityCapabilitiesController_get_v1: {
+        parameters: {
+            query: {
+                company_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualityCapabilitiesDto"];
+                };
             };
         };
     };
@@ -23488,6 +24016,29 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    PlatformTenantAgentsController_list_v1: {
+        parameters: {
+            query?: {
+                status?: "active" | "paused" | "draft";
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformTenantAgentsDto"];
+                };
             };
         };
     };
@@ -29223,279 +29774,6 @@ export interface operations {
             };
         };
     };
-    CollectionsController_list_v1: {
-        parameters: {
-            query?: {
-                bucket?: "current" | "d1_30" | "d31_60" | "d61_90" | "d90_plus" | "overdue";
-                travelled?: boolean;
-                assigned_user_id?: string;
-                q?: string;
-                page?: number;
-                page_size?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ReceivablesListDto"];
-                };
-            };
-        };
-    };
-    CollectionsController_receivablesStats_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ReceivablesStatsDto"];
-                };
-            };
-        };
-    };
-    CollectionsController_byOrder_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                order_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PlanDetailDto"];
-                };
-            };
-        };
-    };
-    CollectionsController_detail_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PlanDetailDto"];
-                };
-            };
-        };
-    };
-    CollectionsController_update_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdatePlanRequestDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PlanActionResultDto"];
-                };
-            };
-        };
-    };
-    CollectionsController_reminderHistory_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PlanRemindersDto"];
-                };
-            };
-        };
-    };
-    CollectionsController_sendReminder_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ManualReminderDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ReminderResultDto"];
-                };
-            };
-        };
-    };
-    CollectionsController_changeSchedule_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RescheduleRequestDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PlanActionResultDto"];
-                };
-            };
-        };
-    };
-    CollectionsController_promise_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PromiseRequestDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PlanActionResultDto"];
-                };
-            };
-        };
-    };
-    CollectionsSettingsController_settings_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CollectionsSettingsDto"];
-                };
-            };
-        };
-    };
-    CollectionsSettingsController_updateSettings_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CollectionsPolicyDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CollectionsPolicyDto"];
-                };
-            };
-        };
-    };
-    CollectionsSettingsController_preview_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PlanPreviewRequestDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PlanPreviewDto"];
-                };
-            };
-        };
-    };
     ConversationsController_list_v1: {
         parameters: {
             query?: {
@@ -29870,6 +30148,279 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ContactReachabilityDto"];
+                };
+            };
+        };
+    };
+    CollectionsController_list_v1: {
+        parameters: {
+            query?: {
+                bucket?: "current" | "d1_30" | "d31_60" | "d61_90" | "d90_plus" | "overdue";
+                travelled?: boolean;
+                assigned_user_id?: string;
+                q?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceivablesListDto"];
+                };
+            };
+        };
+    };
+    CollectionsController_receivablesStats_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceivablesStatsDto"];
+                };
+            };
+        };
+    };
+    CollectionsController_byOrder_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanDetailDto"];
+                };
+            };
+        };
+    };
+    CollectionsController_detail_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanDetailDto"];
+                };
+            };
+        };
+    };
+    CollectionsController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePlanRequestDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanActionResultDto"];
+                };
+            };
+        };
+    };
+    CollectionsController_reminderHistory_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanRemindersDto"];
+                };
+            };
+        };
+    };
+    CollectionsController_sendReminder_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ManualReminderDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReminderResultDto"];
+                };
+            };
+        };
+    };
+    CollectionsController_changeSchedule_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RescheduleRequestDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanActionResultDto"];
+                };
+            };
+        };
+    };
+    CollectionsController_promise_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PromiseRequestDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanActionResultDto"];
+                };
+            };
+        };
+    };
+    CollectionsSettingsController_settings_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CollectionsSettingsDto"];
+                };
+            };
+        };
+    };
+    CollectionsSettingsController_updateSettings_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CollectionsPolicyDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CollectionsPolicyDto"];
+                };
+            };
+        };
+    };
+    CollectionsSettingsController_preview_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlanPreviewRequestDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanPreviewDto"];
                 };
             };
         };
@@ -34161,560 +34712,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApplyOutcomeDto"];
-                };
-            };
-        };
-    };
-    QualitySessionsController_list_v1: {
-        parameters: {
-            query?: {
-                company_id?: string;
-                status?: "active" | "ended";
-                mine?: "true" | "false";
-                page?: number;
-                page_size?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["QualitySessionsPageDto"];
-                };
-            };
-        };
-    };
-    QualitySessionsController_create_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateQualitySessionDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CreatedIdDto"];
-                };
-            };
-        };
-    };
-    QualitySessionsController_byId_v1: {
-        parameters: {
-            query?: {
-                after?: string;
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["QualitySessionDetailDto"];
-                };
-            };
-        };
-    };
-    QualitySessionsController_trace_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["QualitySessionTraceDto"];
-                };
-            };
-        };
-    };
-    QualitySessionsController_send_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SendQualitySessionMessageDto"];
-            };
-        };
-        responses: {
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["QualitySessionMessageAcceptedDto"];
-                };
-            };
-        };
-    };
-    QualitySessionsController_end_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PlatformTenantAgentsController_list_v1: {
-        parameters: {
-            query?: {
-                status?: "active" | "paused" | "draft";
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PlatformTenantAgentsDto"];
-                };
-            };
-        };
-    };
-    QualitySessionsController_sendMedia_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": {
-                    /** Format: binary */
-                    file: string;
-                    caption?: string;
-                    /** @default false */
-                    voice_note?: boolean;
-                };
-            };
-        };
-        responses: {
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["QualitySessionMessageAcceptedDto"];
-                };
-            };
-        };
-    };
-    QualityRunsController_probeResults_v1: {
-        parameters: {
-            query?: {
-                only_misses?: "true" | "false";
-                page?: number;
-                page_size?: number;
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["QualityProbeResultsPageDto"];
-                };
-            };
-        };
-    };
-    QualityDatasetsController_list_v1: {
-        parameters: {
-            query?: {
-                company_id?: string;
-                kind?: "catalog_search" | "recognition" | "intent";
-                status?: "active" | "archived";
-                page?: number;
-                page_size?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["QualityDatasetsPageDto"];
-                };
-            };
-        };
-    };
-    QualityDatasetsController_create_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateQualityDatasetDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CreatedIdDto"];
-                };
-            };
-        };
-    };
-    QualityDatasetsController_byId_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["QualityDatasetDto"];
-                };
-            };
-        };
-    };
-    QualityDatasetsController_update_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateQualityDatasetDto"];
-            };
-        };
-        responses: {
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    QualityDatasetsController_remove_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    QualityDatasetsController_startImport_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ImportQualityDatasetDto"];
-            };
-        };
-        responses: {
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    QualityDatasetsController_items_v1: {
-        parameters: {
-            query?: {
-                label_status?: "unlabeled" | "labeled" | "disputed" | "skipped";
-                page?: number;
-                page_size?: number;
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["QualityDatasetItemsPageDto"];
-                };
-            };
-        };
-    };
-    QualityDatasetsController_addItem_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AddQualityDatasetItemDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CreatedIdDto"];
-                };
-            };
-        };
-    };
-    QualityDatasetsController_labelItem_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-                itemId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LabelQualityDatasetItemDto"];
-            };
-        };
-        responses: {
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    QualityDatasetsController_removeItem_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-                itemId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    QualityDatasetsController_imageUrl_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-                itemId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["QualityDatasetImageUrlDto"];
-                };
-            };
-        };
-    };
-    QualityTenantLookupController_catalogSearch_v1: {
-        parameters: {
-            query: {
-                q: string;
-                limit?: number;
-            };
-            header?: never;
-            path: {
-                companyId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["QualityTenantCatalogSearchDto"];
-                };
-            };
-        };
-    };
-    QualityTenantLookupController_intentions_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                companyId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["QualityTenantIntentionsDto"];
-                };
-            };
-        };
-    };
-    QualityScenariosController_draft_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DraftQualityScenarioDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["QualityScenarioDraftDto"];
-                };
-            };
-        };
-    };
-    QualityCapabilitiesController_get_v1: {
-        parameters: {
-            query: {
-                company_id: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["QualityCapabilitiesDto"];
                 };
             };
         };
