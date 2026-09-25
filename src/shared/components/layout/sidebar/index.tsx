@@ -3,7 +3,7 @@
 import { cn } from "@/core/lib/utils"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
-import { ChevronsUpDown, LogOut } from "lucide-react"
+import { ChevronsUpDown, KeyRound, LogOut } from "lucide-react"
 import NavItemNode from './components/nav-item'
 import { mapNavigation } from "./nav-tree"
 import { findActiveTrail } from "./nav-active"
@@ -249,6 +249,13 @@ export function AppSidebar({ identity, initialItems, defaultOpenCodes = [] }: Ap
                 <div className="truncate">{user.email ?? ""}</div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="flex items-center gap-2"
+                onClick={() => router.push("/cuenta")}
+              >
+                <KeyRound aria-hidden="true" className="size-4" />
+                Cambiar contraseña
+              </DropdownMenuItem>
               <DropdownMenuItem
                 className="flex items-center gap-2 text-destructive hover:text-destructive focus:text-destructive"
                 onClick={() => router.push("/auth/logout")}

@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useForm } from "react-hook-form"
 import { Eye, EyeOff, LoaderCircle } from "lucide-react"
 import { useState, useTransition } from "react"
@@ -110,6 +111,11 @@ export default function LoginForm() {
                   <Eye size={20} className="text-secondary" />
                 )}
               </button>
+            </div>
+            <div className="mt-2 text-right">
+              <Link href="/auth/olvide-contrasena" className="text-sm font-medium text-brand">
+                ¿Olvidaste tu contraseña?
+              </Link>
             </div>
           </div>
           {needsCompanyNit && (
