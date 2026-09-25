@@ -7,7 +7,7 @@
  * la fila en ⋮ (`TenantRowActions` reutilizado — un solo flujo de suspensión;
  * extender la prueba sigue ahí).
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowLeft, Check, LoaderCircle, PackageCheck, PencilLine, X } from "lucide-react";
@@ -22,6 +22,7 @@ import { EmptyState } from "../../../components/EmptyState";
 import { ProblemAlert } from "../../../components/ProblemAlert";
 import { StatusBadge } from "../../../components/StatusBadge";
 import { TenantRowActions } from "../TenantRowActions";
+import { clearLegacyOwnerCredentials } from "../../../../domain/tenant";
 import { Building2 } from "lucide-react";
 
 function InlineNameEditor({ tenantId, name }: { tenantId: string; name: string }) {
@@ -96,6 +97,9 @@ export function TenantHeader({ tenantId }: { tenantId: string }) {
   const pathname = usePathname();
   const deliveryHref = `/platform/tenants/${tenantId}/entrega`;
   const onDeliveryPage = pathname === deliveryHref;
+  // La ficha mostraba la contraseña del dueño que dejaba el alta: si queda
+  // algo de una pestaña vieja, se borra sin mostrarse.
+  useEffect(() => clearLegacyOwnerCredentials(), []);
 
   if (isPending) {
     return (
