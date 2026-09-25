@@ -32,18 +32,20 @@ export const TOKEN_LIFETIME_LABEL: Record<PasswordPurpose, string> = {
 }
 
 /** Por qué un enlace ya no sirve, en lo que la pantalla sabe decir. */
-export type InvalidLinkReason = "expired" | "used"
+export type InvalidLinkReason = "expired" | "used" | "replaced"
 
 /**
  * El servidor responde 410 `auth/password_token_invalid` con
  * `details.reason: 'expired' | 'consumed' | 'revoked'`. «consumed» dice «ya se
- * usó»; «expired» y «revoked» (reenviar invalida el anterior) dicen «venció»,
- * que ofrece la salida útil: pedir un enlace nuevo. Sin `reason`, también.
+ * usó»; «revoked» es que un reenvío lo reemplazó por uno más nuevo (QA H2-6),
+ * y «expired» o sin `reason`, «venció», con la salida de pedir otro.
  */
 export function invalidLinkReason(details: unknown): InvalidLinkReason {
   const reason =
     typeof details === "object" && details !== null ? (details as { reason?: unknown }).reason : undefined
-  return reason === ("consumed" satisfies PasswordTokenInvalidReason) ? "used" : "expired"
+  if (reason === ("consumed" satisfies PasswordTokenInvalidReason)) return "used"
+  if (reason === ("revoked" satisfies PasswordTokenInvalidReason)) return "replaced"
+  return "expired"
 }
 
 /**

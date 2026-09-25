@@ -22,7 +22,7 @@ describe("invalidLinkReason", () => {
 
   it("en cualquier otro caso asume vencido, que ofrece pedir un enlace nuevo", () => {
     expect(invalidLinkReason({ reason: "expired" })).toBe("expired")
-    expect(invalidLinkReason({ reason: "revoked" })).toBe("expired")
+    expect(invalidLinkReason({ reason: "revoked" })).toBe("replaced")
     expect(invalidLinkReason(undefined)).toBe("expired")
     expect(invalidLinkReason(null)).toBe("expired")
   })

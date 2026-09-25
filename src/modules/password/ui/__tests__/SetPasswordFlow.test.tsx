@@ -94,7 +94,15 @@ describe("SetPasswordFlow", () => {
     expect(setPassword).not.toHaveBeenCalled()
   })
 
-  it.each(["expired", "revoked"])("un enlace %s ofrece pedir uno nuevo", async (reason) => {
+  it("un enlace reemplazado por un reenvío lo dice, y no «venció» (QA H2-6)", async () => {
+    inspect.mockRejectedValue(tokenGone("revoked"))
+    render(<SetPasswordFlow purpose="invite" />)
+    expect(await screen.findByRole("heading", { name: "Este enlace se reemplazó" })).toBeInTheDocument()
+    expect(screen.getByText("Este enlace se reemplazó por uno más nuevo. Revisa tu correo más reciente.")).toBeInTheDocument()
+    expect(screen.queryByText(/venció/)).not.toBeInTheDocument()
+  })
+
+  it.each(["expired", undefined])("un enlace vencido (%s) ofrece pedir uno nuevo", async (reason) => {
     inspect.mockRejectedValue(tokenGone(reason))
     render(<SetPasswordFlow purpose="invite" />)
     expect(await screen.findByRole("heading", { name: "Este enlace ya venció" })).toBeInTheDocument()

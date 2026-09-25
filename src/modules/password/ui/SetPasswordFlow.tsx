@@ -222,6 +222,21 @@ function InvalidLink({ purpose, reason }: { purpose: PasswordPurpose; reason: In
     )
   }
 
+  if (reason === "replaced") {
+    return (
+      <PasswordShell
+        title="Este enlace se reemplazó"
+        description="Este enlace se reemplazó por uno más nuevo. Revisa tu correo más reciente."
+        focusOnMount
+        footer={
+          <Link href="/auth/olvide-contrasena" className="text-brand font-medium">
+            ¿No lo encuentras? Pide un enlace nuevo
+          </Link>
+        }
+      />
+    )
+  }
+
   return (
     <PasswordShell
       title="Este enlace ya venció"
