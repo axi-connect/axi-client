@@ -298,6 +298,13 @@ describe("PaymentPlanBlock · promesas, historial y nota (F4b)", () => {
       await screen.findByRole("heading", { name: /Anotar promesa de pago/ }),
     ).toBeInTheDocument();
     fireEvent.keyDown(document.body, { key: "Escape" });
+    // El diálogo anima su salida (main, QA H3-2): mientras sigue montado, su
+    // modal deja lo de fuera con aria-hidden.
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("heading", { name: /Anotar promesa de pago/ }),
+      ).toBeNull(),
+    );
     fireEvent.click(screen.getByRole("button", { name: "Reprogramar" }));
     expect(
       await screen.findByRole("heading", { name: /Reprogramar cuotas/ }),

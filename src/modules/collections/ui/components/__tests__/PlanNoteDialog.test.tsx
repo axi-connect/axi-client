@@ -31,7 +31,8 @@ describe("PlanNoteDialog: una pregunta, para el equipo", () => {
         onDone={onDone}
       />,
     );
-    const field = screen.getByLabelText("Nota del plan");
+    // El diálogo también se llama «Nota del plan» (su título): el campo es el textbox
+    const field = screen.getByRole("textbox", { name: "Nota del plan" });
     expect(field).toHaveValue("Cobra el 20");
     expect(screen.getByRole("button", { name: "Guardar nota" })).toBeDisabled();
     fireEvent.change(field, {
@@ -61,8 +62,9 @@ describe("PlanNoteDialog: una pregunta, para el equipo", () => {
         onOpenChange={jest.fn()}
       />,
     );
-    expect(screen.getByLabelText("Nota del plan")).toHaveValue("");
-    fireEvent.change(screen.getByLabelText("Nota del plan"), {
+    const field = screen.getByRole("textbox", { name: "Nota del plan" });
+    expect(field).toHaveValue("");
+    fireEvent.change(field, {
       target: { value: "   " },
     });
     expect(screen.getByRole("button", { name: "Guardar nota" })).toBeDisabled();

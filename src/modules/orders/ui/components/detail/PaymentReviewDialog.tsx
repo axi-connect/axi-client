@@ -162,6 +162,10 @@ export function PaymentReviewDialog({
             <div className="space-y-2">
               <Label htmlFor="review-amount">Monto verificado</Label>
               <PriceInput
+                // Otro pago es otra decisión: campo nuevo. PriceInput no pisa lo
+                // que muestra mientras tiene el foco, y el diálogo ya enfoca el
+                // monto al abrir, así que sin la key conservaba el importe viejo.
+                key={paymentId}
                 id="review-amount"
                 value={amountCents}
                 currency={currency}

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import type { OrderRow } from "@/modules/orders/domain/order";
 
@@ -141,8 +141,10 @@ describe("ReportPaymentDialog", () => {
     );
     // Sin abono, el saldo ES el total: la propuesta no cambia para quien cobra de una
     mockReport.mockClear();
+    // Un diálogo modal a la vez: el segundo esconde al primero del árbol accesible
+    cleanup();
     await open(order({ id: "ord-2" }));
-    fireEvent.click(screen.getAllByRole("button", { name: "Registrar pago" })[1]);
+    fireEvent.click(screen.getByRole("button", { name: "Registrar pago" }));
     await waitFor(() =>
       expect(mockReport).toHaveBeenCalledWith(
         "ord-2",

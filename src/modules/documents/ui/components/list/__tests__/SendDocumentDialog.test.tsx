@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 
 import { HttpError } from "@/core/api/problem";
 import type { DocumentSendOptionsDTO } from "@/modules/documents/domain/delivery";
@@ -371,14 +377,12 @@ describe("SendDocumentDialog: dice lo mismo que hará el motor", () => {
         },
       }),
     );
+    // Un diálogo modal a la vez: el segundo esconde al primero del árbol accesible
+    cleanup();
     open({ intent: { document: doc(), channel: "whatsapp" } });
-    await waitFor(() =>
-      expect(screen.getAllByRole("radio", { name: "WhatsApp" })).toHaveLength(
-        2,
-      ),
-    );
+    await screen.findByRole("radio", { name: "WhatsApp" });
     fireEvent.click(
-      screen.getAllByRole("button", { name: /Enviar por WhatsApp/ })[1],
+      screen.getByRole("button", { name: /Enviar por WhatsApp/ }),
     );
     await waitFor(() => expect(showAlert).toHaveBeenCalledTimes(2));
     const failure = showAlert.mock.calls[1]?.[0] as {
