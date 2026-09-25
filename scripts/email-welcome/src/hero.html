@@ -1,0 +1,25 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="base.css"><style>
+#c{height:560px;background:#0B0B0E}
+.light{position:absolute;inset:0;background:radial-gradient(50% 55% at 80% 0%,rgba(167,139,250,.14),transparent 75%)}
+.grain{position:absolute;inset:0;opacity:.035;mix-blend-mode:screen;-webkit-mask-image:radial-gradient(70% 70% at 70% 20%,#000 30%,transparent 80%)}
+.top{position:absolute;left:48px;right:48px;top:40px;display:flex;justify-content:space-between;align-items:center;padding-bottom:18px;border-bottom:1px solid rgba(255,255,255,.08)}
+.brand{display:flex;align-items:center;gap:9px;font:800 18px/1 Nexa;letter-spacing:-.02em;color:#F4F4F5}
+.brand img{width:22px;height:22px}
+.tag{font:500 11px/1 Poppins;letter-spacing:.22em;text-transform:uppercase;color:#71717A}
+.kick{position:absolute;left:48px;top:132px;display:flex;align-items:center;gap:12px;font:600 12px/1 Poppins;letter-spacing:.24em;text-transform:uppercase;color:#FB7185}
+.kick i{width:28px;height:1px;background:#FB7185;opacity:.7}
+h1{position:absolute;left:44px;top:168px;font:800 80px/.95 Nexa;letter-spacing:-.045em;color:#F4F4F5}
+h1 span{display:block;white-space:nowrap}
+h1 em{font-style:normal;color:#FB7185}
+.ar{display:inline-block;width:62px;height:3px;background:#F4F4F5;vertical-align:middle;margin-left:14px;position:relative;top:-8px;border-radius:2px}
+.ar::after{content:"";position:absolute;right:-2px;top:-7px;width:14px;height:14px;border-top:3px solid #F4F4F5;border-right:3px solid #F4F4F5;transform:rotate(45deg);border-radius:2px}
+.foot{position:absolute;left:48px;bottom:40px;display:flex;align-items:center;gap:10px;font:400 14px/1 Poppins;color:#A1A1AA}
+.foot i{width:7px;height:7px;border-radius:50%;background:#4ADE80;box-shadow:0 0 0 4px rgba(74,222,128,.12)}
+</style></head><body><div id="c">
+<div class="light"></div>
+<svg class="grain" width="600" height="560"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter><rect width="100%" height="100%" filter="url(#n)"/></svg>
+<div class="top"><div class="brand"><img src="isologo-axi-connect.svg" alt="">axi connect</div><div class="tag">Kit de bienvenida</div></div>
+<div class="kick"><i></i>Día 0 · hoy empieza</div>
+<h1><span>Hoy empieza</span><span>un negocio</span><span>que <em>vende</em><i class="ar"></i></span><span>sin detenerse.</span></h1>
+<div class="foot"><i></i>Tu agente ya está atendiendo</div>
+</div></body></html>

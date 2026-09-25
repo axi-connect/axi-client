@@ -72,6 +72,7 @@
     "jest-environment-jsdom": "^29.7.0",
     "jsdom": "^25.0.1",
     "openapi-typescript": "^7.13.0",
+    "playwright": "^1.62.0",
     "schema-dts": "^2.0.0",
     "tailwindcss": "^4",
     "ts-jest": "^29.2.5",
