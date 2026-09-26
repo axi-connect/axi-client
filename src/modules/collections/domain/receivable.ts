@@ -25,8 +25,6 @@ export type ReceivableSectionKey = "travelled" | "overdue" | "soon" | "current";
 export interface ReceivableSection {
   key: ReceivableSectionKey;
   title: string;
-  icon: "plane" | "circle-alert" | "calendar-clock" | "check";
-  tone: "destructive" | "warning" | "info" | "success";
   rows: ReceivableDTO[];
 }
 
@@ -36,18 +34,11 @@ export const DUE_SOON_DAYS = 7;
 const SECTION_ORDER: readonly {
   key: ReceivableSectionKey;
   title: string;
-  icon: ReceivableSection["icon"];
-  tone: ReceivableSection["tone"];
 }[] = [
-  {
-    key: "travelled",
-    title: "Ya viajaron y deben",
-    icon: "plane",
-    tone: "destructive",
-  },
-  { key: "overdue", title: "En mora", icon: "circle-alert", tone: "warning" },
-  { key: "soon", title: "Por vencer", icon: "calendar-clock", tone: "info" },
-  { key: "current", title: "Al día", icon: "check", tone: "success" },
+  { key: "travelled", title: "Ya viajaron y deben" },
+  { key: "overdue", title: "En mora" },
+  { key: "soon", title: "Por vencer" },
+  { key: "current", title: "Al día" },
 ];
 
 /**

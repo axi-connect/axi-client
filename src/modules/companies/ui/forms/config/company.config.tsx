@@ -1,9 +1,7 @@
 "use client"
 
-import Link from "next/link"
 import { z } from "zod"
 import type { CompanyDTO, UpdateCompanyDTO } from "@/modules/companies/domain/company"
-import { NICHES } from "@/modules/onboarding/public"
 import type { FieldConfig } from "@/shared/components/features/dynamic-form"
 import { createCustomField, createInputField } from "@/shared/components/features/dynamic-form"
 import { Label } from "@/shared/components/ui/label"
@@ -15,6 +13,7 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select"
 import { TIMEZONES, timezoneLabel } from "@/shared/data/countries"
+import { NichePicker } from "@/modules/companies/ui/components/settings/NichePicker"
 
 // Las zonas horarias salen del catálogo compartido (`shared/data/countries.ts`),
 // la misma fuente que el alta de tenants y el registro. Si la empresa trae una
@@ -51,39 +50,26 @@ export function companyToFormValues(company: CompanyDTO): CompanyFormValues {
   }
 }
 
-export function buildCompanyFormFields(): ReadonlyArray<FieldConfig<CompanyFormValues>> {
+/**
+ * `savedNiche`: el tipo de negocio guardado, para que la isla «Al guardar»
+ * diga «Así está hoy» hasta que se elija otro (Cobros premium P1).
+ */
+export function buildCompanyFormFields(savedNiche = ""): ReadonlyArray<FieldConfig<CompanyFormValues>> {
   return [
     createInputField<CompanyFormValues>("name", { label: "Nombre", placeholder: "Mi empresa S.A.S." }),
-    createCustomField<CompanyFormValues>("niche_code", ({ value, setValue, getError }) => {
-      const current = typeof value === "string" ? value : ""
-      const error = getError()
-      return (
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="company-niche">Tipo de negocio</Label>
-          <Select value={current} onValueChange={(next) => setValue("niche_code", next)}>
-            <SelectTrigger id="company-niche" className="w-full" aria-label="Tipo de negocio">
-              <SelectValue placeholder="Elige tu tipo de negocio" />
-            </SelectTrigger>
-            <SelectContent>
-              {NICHES.map((niche) => (
-                <SelectItem key={niche.code} value={niche.code}>
-                  {niche.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <p className="text-sm text-muted-foreground">
-            Define qué funciones tienen sentido para tu negocio: planes de pago, cobranza, moneda y documentos.
-            Ajusta cuáles usas en{" "}
-            <Link href="/settings/company/funciones" className="font-medium text-foreground underline-offset-4 hover:underline">
-              Funciones
-            </Link>
-            .
-          </p>
-          {error ? <p className="text-sm text-destructive">{error}</p> : null}
-        </div>
-      )
-    }),
+    createCustomField<CompanyFormValues>(
+      "niche_code",
+      ({ value, setValue, getError }) => (
+        <NichePicker
+          value={typeof value === "string" ? value : ""}
+          saved={savedNiche}
+          onChange={(next) => setValue("niche_code", next)}
+          error={getError()}
+        />
+      ),
+      // Ocupa la fila entera: las tarjetas y la isla «Al guardar» no caben en media.
+      { colSpan: { base: 1, md: 2 } },
+    ),
     createInputField<CompanyFormValues>("industry", {
       label: "Industria",
       placeholder: "Retail, salud, educación…",
@@ -124,7 +110,8 @@ export function buildCompanyFormFields(): ReadonlyArray<FieldConfig<CompanyFormV
       inputKind: "textarea",
       placeholder: "Qué hace tu empresa: la IA usa esta descripción como contexto.",
       description: "Máximo 500 caracteres.",
-      colSpan: { base: 2 },
+      // Ancho completo desde md; en el celular ya lo es (con base: 2 la rejilla se partía en dos a 390 px).
+      colSpan: { base: 1, md: 2 },
     }),
   ] as const
 }

@@ -1,25 +1,34 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Phone, PhoneCall, PhoneOutgoing, Target, Timer } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { PhoneOutgoing, RotateCcw } from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
-import { formatDuration } from "@/core/lib/format";
 import { useAuth } from "@/shared/auth/auth.hooks";
-import { EmptyState } from "@/shared/components/features/empty-state";
-import { StatTile } from "@/shared/components/features/stat-tile";
+import { BentoTile } from "@/shared/components/features/bento";
 import { Button } from "@/shared/components/ui/button";
-import { Progress } from "@/shared/components/ui/progress";
 import { SegmentedControl } from "@/shared/components/ui/segmented";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import type { CallsOverviewDTO, CallsOverviewGranularity } from "@/modules/calls/domain/call";
+import {
+  isLiveCallStatus,
+  type CallSessionRowDTO,
+  type CallsOverviewDTO,
+  type CallsOverviewGranularity,
+} from "@/modules/calls/domain/call";
 import { useCallsSocket } from "@/modules/calls/infrastructure/realtime/use-calls-socket";
-import { getCallsOverview } from "@/modules/calls/infrastructure/services/calls-service.adapter";
+import {
+  getCallsOverview,
+  listCallSessions,
+} from "@/modules/calls/infrastructure/services/calls-service.adapter";
 import { useLiveCallsStore } from "@/modules/calls/infrastructure/stores/live-calls.store";
 import { ActivityChart } from "@/modules/calls/ui/components/ActivityChart";
-import { LiveCallCard } from "@/modules/calls/ui/components/LiveCallCard";
+import { CallsPageHeader } from "@/modules/calls/ui/components/CallsPageHeader";
 import { TestCallDialog } from "@/modules/calls/ui/components/TestCallDialog";
-
-const CARD = "border-border shadow-float bg-background rounded-lg border p-5";
+import { CycleTile } from "@/modules/calls/ui/monitor/CycleTile";
+import { LiveNowTile } from "@/modules/calls/ui/monitor/LiveNowTile";
+import { MinutesTile } from "@/modules/calls/ui/monitor/MinutesTile";
+import { minutesOutlook } from "@/modules/calls/ui/monitor/monitor-copy";
+import { NextUpIsland } from "@/modules/calls/ui/monitor/NextUpIsland";
+import { RecentCallsTile } from "@/modules/calls/ui/monitor/RecentCallsTile";
 
 const GRANULARITIES: { value: CallsOverviewGranularity; label: string }[] = [
   { value: "day", label: "Hoy" },
@@ -27,19 +36,28 @@ const GRANULARITIES: { value: CallsOverviewGranularity; label: string }[] = [
   { value: "month", label: "30 días" },
 ];
 
+const RECENT_ROWS = 4;
+
 /**
- * Monitoreo (`/calls`): KPIs del ciclo con tendencia, gráfico de actividad y
- * las llamadas en curso en vivo (WS `call.*` → re-fetch de /sessions/live).
+ * Monitoreo (`/calls`, llamadas premium F5, canvas tablero 1): el bento del
+ * módulo. Arriba las llamadas en curso con su aura y la isla «Lo próximo»; el
+ * ciclo, la actividad, los minutos y lo último que terminó debajo. El WS del
+ * tenant (`call.*`) refresca la parrilla en vivo; cada tarjeta se une a la
+ * sala de su llamada para saber quién habla.
  */
 export function CallsMonitorView() {
   const { hasPermission } = useAuth();
   const canPlace = hasPermission("calls:place");
 
   const [overview, setOverview] = useState<CallsOverviewDTO | null>(null);
-  const [granularity, setGranularity] = useState<CallsOverviewGranularity>("week");
   const [overviewError, setOverviewError] = useState<string | null>(null);
+  const [granularity, setGranularity] = useState<CallsOverviewGranularity>("week");
+  const [callbacks, setCallbacks] = useState<{ total: number; names: string[] } | "error" | null>(null);
+  const [recent, setRecent] = useState<CallSessionRowDTO[] | null>(null);
+  const [recentError, setRecentError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [now, setNow] = useState(() => Date.now());
+  const [reloadKey, setReloadKey] = useState(0);
 
   useCallsSocket();
   const { calls, initialized, error: liveError, fetchLive } = useLiveCallsStore();
@@ -61,183 +79,137 @@ export function CallsMonitorView() {
     return () => {
       cancelled = true;
     };
-  }, [granularity]);
+  }, [granularity, reloadKey]);
 
-  // UN interval para todos los timers de las cards en curso
+  // Quién pidió que lo llamen en este ciclo (desenlace `callback_requested`).
+  const periodStart = overview?.period.start ?? null;
+  useEffect(() => {
+    if (periodStart === null) return;
+    let cancelled = false;
+    listCallSessions({ outcome: "callback_requested", from: periodStart, page: 1, page_size: 3 })
+      .then((page) => {
+        if (cancelled) return;
+        const names = page.data
+          .map((row) => row.contact?.name?.trim().split(/\s+/).slice(0, 2).join(" "))
+          .filter((name): name is string => name !== undefined && name !== "");
+        setCallbacks({ total: page.meta.total, names });
+      })
+      .catch(() => {
+        // Sin este dato la isla no puede decir «todo al día»: lo dice.
+        if (!cancelled) setCallbacks("error");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [periodStart, reloadKey]);
+
+  // Lo último que terminó; se re-consulta cuando cambia la parrilla en vivo
+  // (una llamada que cuelga sale de «en curso» y entra aquí).
+  const liveCount = calls.length;
+  const loadRecent = useCallback(() => {
+    setRecentError(null);
+    listCallSessions({ page: 1, page_size: RECENT_ROWS + 4 })
+      .then((page) =>
+        setRecent(page.data.filter((row) => !isLiveCallStatus(row.status)).slice(0, RECENT_ROWS)),
+      )
+      .catch((error: unknown) => setRecentError(errorMessage(error)));
+  }, []);
+  useEffect(() => {
+    loadRecent();
+  }, [loadRecent, liveCount, reloadKey]);
+
+  // UN intervalo para todos los relojes de las tarjetas en curso.
   useEffect(() => {
     if (calls.length === 0) return;
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(timer);
   }, [calls.length]);
 
-  const minutes = overview?.minutes ?? null;
-  const minutesPct =
-    minutes !== null && minutes.limit_seconds !== null && minutes.limit_seconds > 0
-      ? Math.min(100, (minutes.used_seconds / minutes.limit_seconds) * 100)
-      : null;
-  const paused = minutesPct !== null && minutesPct >= 100;
+  const outlook = overview === null ? null : minutesOutlook(overview.minutes, overview.period, now);
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-muted-foreground max-w-2xl text-sm">
-          Tu agente hace y contesta llamadas con su propia voz. Cada llamada queda grabada,
-          transcrita y resumida en la ficha del contacto.
-        </p>
-        {canPlace && (
-          <Button className="rounded-full" onClick={() => setDialogOpen(true)}>
-            <PhoneOutgoing className="size-4" aria-hidden />
-            Llamada de prueba
-          </Button>
+    <div className="flex flex-col gap-6">
+      <CallsPageHeader
+        kicker="Llamadas · en vivo"
+        title="Lo que tu agente logra al teléfono"
+        actions={
+          canPlace ? (
+            <Button className="rounded-full" onClick={() => setDialogOpen(true)}>
+              <PhoneOutgoing aria-hidden className="size-4" />
+              Llamada de prueba
+            </Button>
+          ) : undefined
+        }
+      />
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        <LiveNowTile
+          calls={calls}
+          initialized={initialized}
+          error={liveError}
+          onRetry={() => void fetchLive()}
+          now={now}
+          onTestCall={canPlace ? () => setDialogOpen(true) : null}
+          className="lg:col-span-2"
+        />
+
+        <NextUpIsland
+          unavailable={overviewError !== null || callbacks === "error"}
+          onRetry={() => setReloadKey((k) => k + 1)}
+          callbacks={callbacks === "error" ? null : callbacks}
+          failed={overview?.kpis.failed ?? null}
+          minutes={outlook}
+          className="lg:col-start-3 lg:row-span-2 lg:row-start-1"
+        />
+
+        {overviewError !== null ? (
+          <BentoTile label="Este ciclo" className="lg:col-span-2">
+            <div role="alert" className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+              No pudimos cargar las cifras del ciclo. {overviewError}
+              <Button variant="outline" size="sm" className="rounded-full" onClick={() => setReloadKey((k) => k + 1)}>
+                <RotateCcw aria-hidden className="size-3.5" /> Reintentar
+              </Button>
+            </div>
+          </BentoTile>
+        ) : overview === null ? (
+          <Skeleton className="h-[148px] rounded-3xl lg:col-span-2" />
+        ) : (
+          <CycleTile overview={overview} className="lg:col-span-2" />
         )}
-      </div>
 
-      {overview !== null && (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <StatTile
-            label="Llamadas este ciclo"
-            value={overview.kpis.total}
-            icon={PhoneCall}
-            hint={trendHint(overview.kpis.total, overview.previous.total)}
-          />
-          <StatTile
-            label="Contestadas"
-            value={overview.kpis.answered}
-            icon={Phone}
-            hint={trendHint(overview.kpis.answered, overview.previous.answered)}
-          />
-          <StatTile
-            label="Duración promedio"
-            value={
-              overview.kpis.avg_duration_seconds === null
-                ? null
-                : formatDuration(overview.kpis.avg_duration_seconds)
-            }
-            icon={Timer}
-            hint={trendHint(
-              overview.kpis.avg_duration_seconds,
-              overview.previous.avg_duration_seconds,
-            )}
-          />
-          <StatTile
-            label="Objetivo cumplido"
-            value={`${overview.kpis.goal_met_pct} %`}
-            icon={Target}
-            hint={`${overview.kpis.goal_met} llamadas lograron su objetivo`}
-          />
-        </div>
-      )}
+        <BentoTile
+          label="Actividad"
+          aside={
+            <SegmentedControl
+              value={granularity}
+              onValueChange={(value) => setGranularity(value as CallsOverviewGranularity)}
+              label="Ventana del gráfico"
+              size="sm"
+              surface="inline"
+              items={GRANULARITIES}
+            />
+          }
+          className="lg:col-span-2"
+        >
+          {overviewError !== null ? (
+            <p className="py-10 text-center text-sm text-muted-foreground">Sin datos de actividad por ahora.</p>
+          ) : overview === null ? (
+            <Skeleton className="h-44 w-full rounded-xl" />
+          ) : (
+            <ActivityChart series={overview.series} granularity={granularity} />
+          )}
+        </BentoTile>
 
-      <div className="grid items-start gap-5 xl:grid-cols-[1.4fr_0.6fr]">
-        <div className="flex flex-col gap-5">
-          <section className={CARD}>
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h2 className="text-sm font-semibold">Actividad de llamadas</h2>
-                <p className="text-muted-foreground text-xs">
-                  Volumen saliente y entrante en la ventana elegida.
-                </p>
-              </div>
-              <SegmentedControl
-                value={granularity}
-                onValueChange={(value) => setGranularity(value as CallsOverviewGranularity)}
-                label="Ventana del gráfico"
-                size="sm"
-                surface="inline"
-                items={GRANULARITIES}
-              />
-            </div>
-            {overviewError !== null ? (
-              <p className="text-muted-foreground py-10 text-center text-sm">{overviewError}</p>
-            ) : overview === null ? (
-              <Skeleton className="h-44 w-full rounded-lg" />
-            ) : (
-              <ActivityChart series={overview.series} granularity={granularity} />
-            )}
-          </section>
+        {outlook === null ? (
+          <Skeleton className="h-full min-h-[220px] rounded-3xl" />
+        ) : (
+          <MinutesTile outlook={outlook} />
+        )}
 
-          <section>
-            <div className="mb-3 flex items-baseline justify-between">
-              <h2 className="text-sm font-semibold">Llamadas en curso</h2>
-              <span className="text-muted-foreground text-xs tabular-nums">
-                {calls.length === 1 ? "1 activa" : `${calls.length} activas`}
-              </span>
-            </div>
-            {liveError !== null ? (
-              <div className="border-border bg-background rounded-lg border p-6 text-center" role="alert">
-                <p className="text-muted-foreground text-sm">{liveError}</p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-3 rounded-full"
-                  onClick={() => void fetchLive()}
-                >
-                  Reintentar
-                </Button>
-              </div>
-            ) : !initialized ? (
-              <div className="grid gap-3 md:grid-cols-2">
-                <Skeleton className="h-28 rounded-lg" />
-                <Skeleton className="h-28 rounded-lg" />
-              </div>
-            ) : calls.length === 0 ? (
-              <EmptyState
-                icon={Phone}
-                accent="violet"
-                title="Nadie está al teléfono"
-                description="Cuando tu agente esté en una llamada, la verás aquí en vivo — con acceso al transcript mientras conversa."
-              />
-            ) : (
-              <div className="grid gap-3 md:grid-cols-2">
-                {calls.map((call) => (
-                  <LiveCallCard key={call.id} call={call} now={now} />
-                ))}
-              </div>
-            )}
-          </section>
-        </div>
-
-        <aside className="flex flex-col gap-4">
-          <section className={`${CARD} border-l-accent-violet border-l-2`}>
-            <h2 className="text-accent-violet text-xs font-semibold tracking-wide uppercase">
-              Minutos del ciclo
-            </h2>
-            {minutes === null ? (
-              <Skeleton className="mt-3 h-10 w-full rounded" />
-            ) : (
-              <>
-                <p className="mt-2 flex items-baseline gap-1.5">
-                  <span className="text-2xl font-bold tabular-nums">
-                    {Math.round(minutes.used_seconds / 60)}
-                  </span>
-                  <span className="text-muted-foreground text-xs">
-                    {minutes.limit_seconds === null
-                      ? "min usados · sin tope"
-                      : `de ${Math.round(minutes.limit_seconds / 60)} min`}
-                  </span>
-                </p>
-                {minutesPct !== null && <Progress value={minutesPct} className="mt-2 h-1.5" />}
-                <p className="text-muted-foreground mt-2 text-xs">
-                  {paused
-                    ? "Cuota agotada: las llamadas están en pausa hasta el próximo ciclo. El chat sigue con normalidad."
-                    : "Al agotarse, las llamadas se pausan; el chat sigue con normalidad."}
-                </p>
-              </>
-            )}
-          </section>
-        </aside>
+        <RecentCallsTile rows={recent} error={recentError} onRetry={loadRecent} className="lg:col-span-3" />
       </div>
 
       <TestCallDialog open={dialogOpen} onOpenChange={setDialogOpen} />
     </div>
   );
-}
-
-/** «▲ 12.8 % vs ciclo anterior» — sin ciclo anterior no hay tendencia. */
-function trendHint(current: number | null, previous: number | null): string | undefined {
-  if (current === null || previous === null || previous === 0) return undefined;
-  const delta = ((current - previous) / previous) * 100;
-  if (!Number.isFinite(delta)) return undefined;
-  const arrow = delta >= 0 ? "▲" : "▼";
-  return `${arrow} ${Math.abs(delta).toFixed(1)} % vs ciclo anterior`;
 }

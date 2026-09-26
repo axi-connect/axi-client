@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Pagos · Moneda y TRM</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&amp;family=Poppins:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Poppins,system-ui,sans-serif;color:#0B0B0E;background:#F5F5F7}
+a{color:#0B0B0E}a:hover{color:#3A3A40}
+.d{font-family:Urbanist,Poppins,sans-serif}
+.nav{display:flex;align-items:center;gap:12px;height:36px;padding:0 12px;border-radius:10px;font-size:13.5px;color:#3A3A40;text-decoration:none}
+.nav-on{background:#FFFFFF;color:#0B0B0E;font-weight:500;box-shadow:0 1px 2px rgba(0,0,0,.06),0 0 0 1px rgba(0,0,0,.04)}
+.grp{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#6B6B73;padding:14px 12px 6px}
+.card{background:#FFFFFF;border-radius:24px;box-shadow:0 1px 0 rgba(0,0,0,.04),0 12px 32px -18px rgba(16,16,24,.18);border:1px solid rgba(0,0,0,.05)}
+.lbl{font-size:12px;color:#6B6B73;white-space:nowrap}
+.fig{font-family:Urbanist,Poppins,sans-serif;font-size:44px;font-weight:700;letter-spacing:-.03em;line-height:1;white-space:nowrap;font-variant-numeric:tabular-nums}
+.unit{font-size:13.5px;color:#6B6B73;white-space:nowrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:999px;font:500 14px Poppins,sans-serif;border:0;cursor:pointer;text-decoration:none}
+.btn-p{background:#D13F42;color:#FFFFFF;box-shadow:0 10px 24px -10px rgba(209,63,66,.55)}
+.btn-g{background:transparent;color:#0B0B0E}
+.icb{width:38px;height:38px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:#FFFFFF;border:1px solid rgba(0,0,0,.08);color:#0B0B0E;cursor:pointer}
+.tab{height:40px;padding:0 16px;border-radius:999px;font:500 13.5px Poppins,sans-serif;color:#3A3A40;display:inline-flex;align-items:center;text-decoration:none;white-space:nowrap}
+.tab-on{background:#0B0B0E;color:#FFFFFF}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:500;background:#F0F0F2;color:#0B0B0E;white-space:nowrap}
+.dot{width:6px;height:6px;border-radius:9px;flex-shrink:0}
+.srow{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:24px;padding:16px 0;border-top:1px solid rgba(0,0,0,.06)}
+.stitle{font-size:14px;font-weight:600}
+.shint{font-size:12.5px;color:#6B6B73;margin-top:2px;line-height:1.45}
+.stepper{display:flex;align-items:center;gap:4px;padding:4px;border-radius:999px;background:#F0F0F2}
+.stepb{width:36px;height:36px;border-radius:999px;border:0;background:#FFFFFF;box-shadow:0 1px 2px rgba(0,0,0,.08);font:600 18px Poppins,sans-serif;color:#0B0B0E;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.stepv{min-width:74px;text-align:center;font:600 15px Poppins,sans-serif;font-variant-numeric:tabular-nums}
+.sw{position:relative;width:48px;height:28px;border-radius:999px;border:0;cursor:pointer;flex-shrink:0;padding:0;transition:background .18s}
+.sw .knob{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:999px;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s cubic-bezier(.2,.8,.2,1)}
+.sw-on{background:#0B0B0E}.sw-on .knob{transform:translateX(20px)}
+.sw-off{background:#D4D4D8}
+.input{height:40px;border-radius:12px;border:1px solid rgba(0,0,0,.12);background:#FFFFFF;padding:0 12px;font:14px Poppins,sans-serif;color:#0B0B0E;box-sizing:border-box;font-variant-numeric:tabular-nums}
+.select{height:40px;border-radius:12px;border:1px solid rgba(0,0,0,.12);background:#FFFFFF;padding:0 12px;font:500 14px Poppins,sans-serif;color:#0B0B0E;display:inline-flex;align-items:center;gap:10px}
+.fact{display:flex;justify-content:space-between;gap:12px;font-size:12.5px;padding:9px 0;border-top:1px solid rgba(255,255,255,.10)}
+@media (prefers-reduced-motion: reduce){.sw,.sw .knob{transition:none}}
+.isl{position:relative;isolation:isolate;overflow:hidden;border-radius:24px}
+.isl-glass{color:#0B0B0E;background:var(--glow,none),linear-gradient(160deg,rgba(255,255,255,.82),rgba(246,243,254,.62));-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);box-shadow:inset 0 2px 2px rgba(11,11,14,.05),inset 0 -2px 2px rgba(255,255,255,.5),inset 0 0 1.6px 4px rgba(255,255,255,.2),inset 0 0 18px 2px rgba(255,255,255,.55),0 4px 2px -2px rgba(11,11,14,.14),0 30px 70px -34px rgba(16,16,24,.35),0 30px 80px -40px rgba(124,58,237,.35)}
+.isl-dark{color:#EDEDED;background:var(--glow,none),linear-gradient(160deg,rgba(38,38,42,.90),rgba(28,24,40,.92));-webkit-backdrop-filter:blur(20px) saturate(170%);backdrop-filter:blur(20px) saturate(170%);box-shadow:inset 0 2px 2px rgba(255,255,255,.10),inset 0 -2px 2px rgba(0,0,0,.35),inset 0 0 1.6px 4px rgba(255,255,255,.04),inset 0 0 14px 1px rgba(255,255,255,.08),0 40px 90px -36px rgba(124,58,237,.55),0 18px 50px -24px rgba(230,87,89,.45)}
+.isl-glass::before,.isl-dark::before{content:"";position:absolute;inset:0;z-index:1;padding:1.5px;border-radius:inherit;pointer-events:none;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.isl-glass::before{background:conic-gradient(from -75deg at 50% 50%,rgba(11,11,14,.32) 0%,transparent 6% 40%,rgba(11,11,14,.32) 50%,transparent 56% 94%,rgba(11,11,14,.32) 100%),linear-gradient(rgba(255,255,255,.85),rgba(255,255,255,.85))}
+.isl-dark::before{background:conic-gradient(from -75deg at 50% 50%,rgba(255,255,255,.7) 0%,transparent 6% 40%,rgba(255,255,255,.7) 50%,transparent 56% 94%,rgba(255,255,255,.7) 100%),linear-gradient(rgba(255,255,255,.12),rgba(255,255,255,.12))}
+.isl-glass::after,.isl-dark::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none}
+.isl-glass::after{background:linear-gradient(-45deg,transparent 0%,rgba(255,255,255,.55) 40% 46%,transparent 54%) 0 0/200% 200%,radial-gradient(60% 45% at 30% 0%,rgba(255,255,255,.9),transparent 70%)}
+.isl-dark::after{background:linear-gradient(-45deg,transparent 0%,rgba(255,255,255,.10) 40% 46%,transparent 54%) 0 0/200% 200%,radial-gradient(60% 45% at 30% 0%,rgba(255,255,255,.14),transparent 70%)}
+.isl-ink{color:#F4F4F5;background:var(--glow,none),#0B0B0E}
+.isl-glass.glow-brand{--glow:radial-gradient(circle 20rem at 90% 8%,rgba(230,87,89,.16),transparent 70%)}
+.isl-glass.glow-ai{--glow:radial-gradient(circle 22rem at 0% 0%,rgba(124,58,237,.16),transparent 70%),radial-gradient(circle 20rem at 100% 100%,rgba(230,87,89,.11),transparent 70%)}
+.isl-dark.glow-brand{--glow:radial-gradient(circle 20rem at 90% 8%,rgba(251,113,133,.26),transparent 70%)}
+.isl-dark.glow-ai{--glow:radial-gradient(circle 22rem at 0% 0%,rgba(167,139,250,.26),transparent 70%),radial-gradient(circle 20rem at 100% 100%,rgba(251,113,133,.18),transparent 70%)}
+.isl-ink.glow-brand{--glow:radial-gradient(circle 20rem at 90% 8%,rgba(230,87,89,.45),transparent 70%)}
+.btn-contrast{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:999px;font:500 14px Poppins,sans-serif;border:0;cursor:pointer;text-decoration:none;background:#0B0B0E;color:#FFFFFF}
+.isl-dark .btn-contrast,.isl-ink .btn-contrast{background:#F4F4F5;color:#0B0B0E}
+.btn-glass{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:999px;font:500 14px Poppins,sans-serif;border:0;cursor:pointer;text-decoration:none;position:relative;color:rgba(11,11,14,.92);background:linear-gradient(-75deg,rgba(255,255,255,.08),rgba(255,255,255,.5),rgba(255,255,255,.08));box-shadow:inset 0 2px 2px rgba(11,11,14,.05),inset 0 -2px 2px rgba(255,255,255,.5),0 4px 2px -2px rgba(11,11,14,.2),inset 0 0 1.6px 4px rgba(255,255,255,.2),0 0 0 1px rgba(11,11,14,.08)}
+.isl-dark .btn-glass{color:rgba(237,237,237,.92);background:linear-gradient(-75deg,rgba(255,255,255,.03),rgba(255,255,255,.10),rgba(255,255,255,.03));box-shadow:inset 0 2px 2px rgba(255,255,255,.08),inset 0 -2px 2px rgba(0,0,0,.3),0 0 0 1px rgba(255,255,255,.12)}
+.isl-glass .fact,.isl-glass .frow,.isl-glass .cal{border-top-color:rgba(11,11,14,.08)!important}
+.isl-glass .seg-on{background:#0B0B0E}.isl-glass .seg-off{background:rgba(11,11,14,.12)}
+.isl-glass .step{color:#3A3A40}.isl-glass .chk-on,.isl-glass .fdot-on{background:#0B0B0E;color:#FFFFFF}.isl-glass .chk-off,.isl-glass .fdot-off,.isl-glass .cn{border-color:rgba(11,11,14,.28)}
+.isl-glass .bub{background:#FFFFFF;box-shadow:0 1px 2px rgba(0,0,0,.06),0 0 0 1px rgba(11,11,14,.05)}.isl-glass .gap{border-color:rgba(11,11,14,.24);color:#6B6B73}.isl-glass .day{color:#6B6B73}
+@media (prefers-reduced-transparency: reduce){.isl-glass{background:#FFFFFF}.isl-dark{background:#1E1E22}}
+</style>
+</helmet>
+<div style="width:1440px;height:900px;display:flex;background:#F5F5F7;overflow:hidden;position:relative">
+  <aside style="width:248px;flex-shrink:0;padding:18px 14px;box-sizing:border-box;display:flex;flex-direction:column;gap:2px;border-right:1px solid rgba(0,0,0,.06);background:rgba(255,255,255,.6)">
+    <div style="display:flex;align-items:center;gap:10px;padding:4px 10px 16px">
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="11" cy="15" r="7.5" fill="none" stroke="#D13F42" stroke-width="4"></circle><path d="M16 5 L25 24" stroke="#F2A93B" stroke-width="4" stroke-linecap="round"></path><path d="M25 5 L17 20" stroke="#7B5CF0" stroke-width="4" stroke-linecap="round"></path></svg>
+      <div style="display:flex;flex-direction:column;gap:2px"><span class="d" style="font-weight:700;font-size:15px">Axi Connect</span><span style="font-size:11.5px;color:#6B6B73">JuanitoXpeditions</span></div>
+    </div>
+    <a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg>Inicio</a>
+    <a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"></path></svg>Inbox</a>
+    <a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="8" r="4"></circle><path d="M3 21a6 6 0 0 1 12 0"></path></svg>Contactos</a>
+    <div class="grp">Ventas</div>
+    <a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><path d="M3 6h18"></path></svg>Pedidos</a>
+    <a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2" y="5" width="20" height="14" rx="3"></rect><path d="M2 10h20M6 15h4"></path></svg>Cartera</a>
+    <a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3 3 8l9 5 9-5-9-5Z"></path><path d="m3 13 9 5 9-5"></path></svg>Catálogo</a>
+    <div class="grp">Configuración</div>
+    <a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 21V7l8-4 8 4v14"></path><path d="M9 21v-6h6v6"></path></svg>Mi empresa</a>
+    <a class="nav nav-on" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D13F42" stroke-width="1.7"><rect x="2" y="5" width="20" height="14" rx="3"></rect><path d="M2 10h20"></path></svg>Pagos</a>
+    <div style="flex-grow:1"></div>
+    <div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:14px;background:#FFFFFF;border:1px solid rgba(0,0,0,.05)">
+      <div style="width:32px;height:32px;border-radius:999px;background:#0B0B0E;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">JR</div>
+      <div style="display:flex;flex-direction:column"><span style="font-size:13px;font-weight:500">Juanita R.</span><span style="font-size:11.5px;color:#6B6B73">Dueña</span></div>
+    </div>
+  </aside>
+
+  <main style="flex-grow:1;display:flex;flex-direction:column;min-width:0">
+    <header style="height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 40px;flex-shrink:0">
+      <nav aria-label="Ruta" style="display:flex;gap:10px;font-size:13px;color:#6B6B73"><span>Pagos</span><span aria-hidden="true">/</span><span style="color:#0B0B0E;font-weight:500">Moneda y TRM</span></nav>
+      <div style="display:flex;gap:10px"><button class="icb" aria-label="Notificaciones"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path></svg></button><button class="icb" aria-label="Tema"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 14A8 8 0 1 1 10 4a6.5 6.5 0 0 0 10 10Z"></path></svg></button></div>
+    </header>
+
+    <div style="padding:4px 40px 32px;display:flex;flex-direction:column;gap:20px;flex-grow:1;min-height:0">
+      <section style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <h1 class="d" style="margin:0;font-size:38px;font-weight:700;letter-spacing:-.02em;line-height:1.1">Pagos</h1>
+          <p style="margin:0;font-size:13.5px;color:#6B6B73">{{subtitle}}</p>
+        </div>
+      </section>
+      <nav aria-label="Secciones de Pagos" style="display:flex;gap:4px;padding:4px;border-radius:999px;background:#FFFFFF;border:1px solid rgba(0,0,0,.06);align-self:flex-start">
+        <a class="tab" href="Medios.dc.html">Medios</a><a class="tab" href="#">Plan de pagos</a><a class="tab" href="#">Recordatorios</a><a class="tab tab-on" href="#" aria-current="page">Moneda y TRM</a><a class="tab" href="#">Documentos</a>
+      </nav>
+
+      <section style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr)) 336px;grid-template-rows:auto minmax(0,1fr);gap:16px;flex-grow:1;min-height:0">
+        <article class="card" style="padding:20px 22px;display:flex;flex-direction:column;gap:12px;min-width:0">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span class="lbl">TRM de hoy</span><span class="pill"><span class="dot" style="background:#1F9D5B"></span>Vigente · vie 25 sep</span></div>
+          <div style="display:flex;align-items:baseline;gap:6px"><span class="fig">$ 3.912,45</span></div>
+          <span style="font-size:12.5px;color:#3A3A40">Dólar a peso · Superfinanciera</span>
+        </article>
+        <article class="card" style="padding:20px 22px;display:flex;flex-direction:column;gap:12px;min-width:0">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span class="lbl">Tu tasa</span><span class="pill">{{rateTag}}</span></div>
+          <div style="display:flex;align-items:baseline;gap:6px"><span class="fig">$ {{effective}}</span></div>
+          <span style="font-size:12.5px;color:#3A3A40">{{rateLine}} · una salida de US$ 3.500 ≈ <strong style="font-weight:600;font-variant-numeric:tabular-nums">$ {{sample}}</strong></span>
+        </article>
+        <article class="isl isl-glass glow-ai" style="grid-column:3;grid-row:1 / span 2;padding:26px;display:flex;flex-direction:column;gap:18px">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <span style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6B6B73">Así cotiza el agente hoy</span>
+            <span class="d" style="font-size:26px;font-weight:700;line-height:1.15;letter-spacing:-.02em">{{islandTitle}}</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="align-self:flex-end;max-width:78%;padding:10px 14px;border-radius:18px 18px 6px 18px;background:rgba(11,11,14,.10);font-size:13px;line-height:1.45">¿Cuánto vale la Expedición Cocuy de noviembre?</div>
+            <div style="align-self:flex-start;max-width:88%;padding:12px 14px;border-radius:18px 18px 18px 6px;background:#0B0B0E;color:#F4F4F5;font-size:13px;line-height:1.5">{{bubble}}</div>
+          </div>
+          <div style="flex-grow:1"></div>
+          <div style="display:flex;flex-direction:column">
+            <div class="fact"><span style="color:#6B6B73">Tasa que usa</span><span style="font-variant-numeric:tabular-nums">{{factRate}}</span></div>
+            <div class="fact"><span style="color:#6B6B73">Se fija</span><span>al confirmar el pedido</span></div>
+            <div class="fact"><span style="color:#6B6B73">Cobra en</span><span>pesos colombianos</span></div>
+          </div>
+        </article>
+
+        <article class="card" style="grid-column:span 2;padding:6px 24px 4px;display:flex;flex-direction:column;min-width:0;min-height:0">
+          <div class="srow" style="border-top:0">
+            <div><div class="stitle">Ajuste sobre la TRM</div><div class="shint">Cubre la comisión de cambio. Se suma a la oficial; hasta 10 %.</div></div>
+            <div class="stepper" role="group" aria-label="Ajuste sobre la TRM">
+              <button class="stepb" aria-label="Bajar medio punto" onClick="{{minus}}">−</button>
+              <span class="stepv" aria-live="off">+{{spreadText}} %</span>
+              <button class="stepb" aria-label="Subir medio punto" onClick="{{plus}}">+</button>
+            </div>
+          </div>
+          <div class="srow">
+            <div><div class="stitle">Usar una tasa manual</div><div class="shint">Para cuando pactas la tasa con un proveedor. Reemplaza la TRM hasta la fecha que pongas.</div></div>
+            <button type="button" role="switch" aria-checked="{{manualChecked}}" aria-label="Usar una tasa manual" class="sw {{manualCls}}" onClick="{{toggleManual}}"><span class="knob"></span></button>
+          </div>
+          <sc-if value="{{manual}}" hint-placeholder-val="{{false}}">
+            <div style="display:flex;gap:12px;padding:0 0 16px">
+              <label style="display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:500;color:#3A3A40">Tasa<input class="input" value="3.950,00" style="width:150px"></label>
+              <label style="display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:500;color:#3A3A40">Vale hasta<input class="input" value="30 sep 2026" style="width:150px"></label>
+            </div>
+          </sc-if>
+          <div class="srow">
+            <div><div class="stitle">Decir el precio en pesos al cotizar</div><div class="shint">El agente da el valor en dólares y su equivalente aproximado en pesos.</div></div>
+            <button type="button" role="switch" aria-checked="{{copChecked}}" aria-label="Decir el precio en pesos al cotizar" class="sw {{copCls}}" onClick="{{toggleCop}}"><span class="knob"></span></button>
+          </div>
+          <div class="srow">
+            <div><div class="stitle">Moneda en la que cobras</div><div class="shint">El pedido se congela en esta moneda al confirmarse.</div></div>
+            <span class="select">COP · Peso colombiano<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"></path></svg></span>
+          </div>
+        </article>
+      </section>
+    </div>
+  </main>
+  <sc-if value="{{dirty}}" hint-placeholder-val="{{false}}">
+    <footer class="isl isl-ink glow-brand" role="region" aria-label="Cambios sin guardar" style="position:absolute;left:calc(248px + (100% - 248px) / 2);bottom:20px;transform:translateX(-50%);border-radius:999px;padding:8px 8px 8px 24px;display:flex;align-items:center;gap:18px;white-space:nowrap;box-shadow:0 20px 50px -20px rgba(11,11,14,.55)">
+      <span style="display:flex;flex-direction:column;gap:1px"><span style="font-size:13.5px;font-weight:600">Cambios sin guardar</span><span style="font-size:12px;color:#A1A1AA">{{dockDetail}}</span></span>
+      <span style="display:flex;gap:6px"><button class="btn" onClick="{{reset}}" style="background:transparent;color:#F4F4F5;border:1px solid rgba(255,255,255,.18)">Descartar</button><button class="btn btn-p">Guardar cambios</button></span>
+    </footer>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { spread: 1.5, manual: false, cop: true };
+  }
+  renderVals() {
+    const official = 3912.45;
+    const { spread, manual, cop } = this.state;
+    const rate = manual ? 3950 : official * (1 + spread / 100);
+    const r2 = (n) => n.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const r0 = (n) => Math.round(n).toLocaleString('es-CO');
+    const pct = (n) => n.toLocaleString('es-CO', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    const sample = r0(3500 * rate);
+    const dirty = spread !== 1.5 || manual || !cop;
+    return {
+      effective: r2(rate),
+      sample,
+      rateTag: manual ? 'Manual' : 'TRM + ' + pct(spread) + ' %',
+      rateLine: manual ? 'Manual hasta el 30 sep' : 'La oficial más tu ajuste',
+      spreadText: pct(spread),
+      islandTitle: cop ? 'Dólares y su equivalente en pesos' : 'Solo en dólares',
+      bubble: cop
+        ? 'La Expedición Cocuy sale en US$ 3.500 por persona, hoy unos $ ' + sample + '. El valor en pesos queda fijo cuando confirmas tu cupo.'
+        : 'La Expedición Cocuy sale en US$ 3.500 por persona. Cuando confirmes tu cupo te digo el valor exacto en pesos.',
+      factRate: manual ? '$ 3.950,00 · manual' : '$ ' + r2(rate) + ' · TRM + ' + pct(spread) + ' %',
+      manual,
+      manualChecked: manual ? 'true' : 'false',
+      manualCls: manual ? 'sw-on' : 'sw-off',
+      copChecked: cop ? 'true' : 'false',
+      copCls: cop ? 'sw-on' : 'sw-off',
+      dirty,
+
+      dockDetail: 'Se aplican a las cotizaciones que vienen',      notDirty: dirty ? 'false' : 'true',
+      saveOpacity: dirty ? '1' : '0.6',
+      subtitle: dirty ? 'Cambios sin guardar · se aplican a las cotizaciones que vienen' : 'Cómo cobras y cómo se lo explica el agente a tus clientes.',
+      minus: () => this.setState({ spread: Math.max(0, Math.round((spread - 0.5) * 10) / 10) }),
+      plus: () => this.setState({ spread: Math.min(10, Math.round((spread + 0.5) * 10) / 10) }),
+      toggleManual: () => this.setState({ manual: !manual }),
+      toggleCop: () => this.setState({ cop: !cop }),
+      reset: () => this.setState({ spread: 1.5, manual: false, cop: true })
+    };
+  }
+}
+</script>
+</body>
+</html>

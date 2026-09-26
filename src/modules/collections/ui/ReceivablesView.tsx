@@ -15,6 +15,8 @@ import {
   Wallet,
 } from "lucide-react";
 
+import { cn } from "@/core/lib/utils";
+
 import { API_ERROR_CODES, isHttpError } from "@/core/api/problem";
 import { formatMoney } from "@/core/lib/format";
 import { errorMessage } from "@/core/lib/error-messages";
@@ -33,6 +35,8 @@ import {
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { PromiseDialog } from "@/modules/collections/ui/components/PromiseDialog";
 import { ReceivableSectionList } from "@/modules/collections/ui/components/ReceivableSectionList";
+import { WriteFirstIsland } from "@/modules/collections/ui/components/WriteFirstIsland";
+import { writeFirst } from "@/modules/collections/domain/write-first";
 import { RescheduleDialog } from "@/modules/collections/ui/components/RescheduleDialog";
 import { SendReminderDialog } from "@/modules/collections/ui/components/SendReminderDialog";
 
@@ -48,12 +52,13 @@ const FILTERS: { key: Filter; label: string }[] = [
 ];
 
 /**
- * La cartera (F4 del programa Cobros).
+ * La cartera (F4 del programa Cobros; bento en Cobros premium P4).
  *
  * Abre con la respuesta y no con la tabla: cuánto te deben, cuánto está
  * vencido y cuánto de eso es de gente que ya viajó. La proporción la da una
- * barra fina, y los importes los dice la frase — una leyenda de colores sería
- * repetir lo que ya está escrito.
+ * barra, y los importes los dice la frase — una leyenda de colores sería
+ * repetir lo que ya está escrito. Al lado, la isla «Escribe primero a»: la
+ * primera fila del orden, contada como decisión.
  */
 export function ReceivablesView() {
   const [filter, setFilter] = useState<Filter>("todo");
@@ -142,10 +147,14 @@ export function ReceivablesView() {
   }, [load]);
 
   const sections = useMemo(() => groupReceivables(rows), [rows]);
+  const first = useMemo(
+    () => (loading || error !== null ? null : writeFirst(sections)),
+    [loading, error, sections],
+  );
 
   if (error?.blocked === true) {
     return (
-      <div className="mx-auto max-w-[1040px] px-10 py-10">
+      <div className="mx-auto max-w-[1280px] px-4 py-8 md:px-10 md:py-10">
         <EmptyState
           icon={Wallet}
           accent="muted"
@@ -157,124 +166,149 @@ export function ReceivablesView() {
   }
 
   return (
-    <div className="mx-auto flex max-w-[1040px] flex-col gap-[30px] px-6 py-10 md:px-10">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-[19px] font-semibold tracking-[-0.015em]">
-          Cartera
-        </h1>
-      </div>
-
-      {stats === null ? (
-        <Skeleton className="h-28 w-full max-w-[560px] rounded-2xl" />
-      ) : (
-        <Hero stats={stats} filter={filter} shown={total} />
-      )}
-
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <nav
-          aria-label="Filtro de cartera"
-          className="flex w-fit gap-0.5 rounded-full bg-secondary/60 p-0.5"
-        >
-          {FILTERS.map((option) => (
-            <button
-              key={option.key}
-              type="button"
-              aria-pressed={filter === option.key}
-              onClick={() => setFilter(option.key)}
-              className={`h-8 rounded-full px-3.5 text-[13px] font-medium transition-colors ${
-                filter === option.key
-                  ? "bg-accent text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {option.label}
-            </button>
-          ))}
-        </nav>
-        <label className="flex h-[34px] min-w-[230px] items-center gap-2 rounded-full bg-secondary px-3.5 text-[13px] text-muted-foreground">
-          <Search aria-hidden="true" className="size-[15px]" />
-          <span className="sr-only">Buscar cliente o pedido</span>
-          <input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Buscar cliente o pedido"
-            className="w-full bg-transparent text-foreground outline-none placeholder:text-muted-foreground"
-          />
-        </label>
-      </div>
-
-      {loading ? (
-        <div className="flex flex-col gap-3">
-          <Skeleton className="h-[72px] w-full rounded-[18px]" />
-          <Skeleton className="h-[72px] w-full rounded-[18px]" />
+    <div className="mx-auto flex max-w-[1280px] flex-col gap-6 px-4 py-8 md:px-10 md:py-10">
+      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <h1 className="font-heading text-3xl leading-tight font-bold tracking-tight md:text-4xl">
+            Cartera
+          </h1>
+          <p className="text-sm text-pretty text-muted-foreground">
+            Ordenada por a quién escribir primero, no por nombre ni por monto.
+          </p>
         </div>
-      ) : error !== null ? (
-        // Un fallo de red NO es «no te debe nadie». Es el mismo principio del
-        // 403, una rama más allá: se dice lo que pasó, no se disimula con una
-        // lista vacía que hace creer que la cartera está limpia.
-        <EmptyState
-          icon={TriangleAlert}
-          accent="amber"
-          variant="solid"
-          title="No se pudo cargar la cartera"
-          description={error.message}
-          action={
-            <Button variant="outline" onClick={() => void load()}>
-              Reintentar
-            </Button>
-          }
-        />
-      ) : sections.length === 0 ? (
-        <EmptyState
-          icon={Wallet}
-          accent="muted"
-          variant="solid"
-          title="No te debe nadie"
-          description="Cuando un pedido con plan de pagos quede con saldo, aparecerá aquí ordenado por a quién escribir primero."
-        />
-      ) : (
-        <>
-          <ReceivableSectionList
-            sections={sections}
+        <div className="flex w-full flex-wrap items-center gap-2.5 md:w-auto">
+          <label className="flex h-11 min-w-0 basis-full items-center gap-2 rounded-full border border-border bg-card px-4 text-[13px] text-muted-foreground sm:flex-1 sm:basis-auto md:w-[300px] md:flex-none">
+            <Search aria-hidden="true" className="size-4 shrink-0" />
+            <span className="sr-only">Buscar cliente o pedido</span>
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Buscar cliente o pedido"
+              className="h-full w-full min-w-0 bg-transparent text-foreground outline-none placeholder:text-muted-foreground"
+            />
+          </label>
+          <nav
+            aria-label="Filtro de cartera"
+            className="flex w-fit gap-0.5 rounded-full border border-border bg-card p-1"
+          >
+            {FILTERS.map((option) => (
+              <button
+                key={option.key}
+                type="button"
+                aria-pressed={filter === option.key}
+                onClick={() => setFilter(option.key)}
+                className={cn(
+                  "h-9 rounded-full px-3.5 text-[13px] font-medium whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                  filter === option.key
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {option.label}
+              </button>
+            ))}
+          </nav>
+        </div>
+      </div>
+
+      <div
+        className={cn(
+          "grid gap-4 [&>*]:min-w-0",
+          first !== null && "xl:grid-cols-[minmax(0,1fr)_minmax(17rem,21rem)]",
+        )}
+      >
+        {stats === null ? (
+          <Skeleton className="h-40 w-full rounded-3xl" />
+        ) : (
+          <Hero stats={stats} filter={filter} shown={total} />
+        )}
+
+        {first !== null ? (
+          <WriteFirstIsland
+            first={first}
             onWrite={setWriting}
             onPromise={canManage ? setPromising : undefined}
-            onReschedule={canManage ? setRescheduling : undefined}
+            className="xl:sticky xl:top-6 xl:col-start-2 xl:row-span-2 xl:row-start-1 xl:self-start"
           />
-          {rows.length < total ? (
-            <div className="mt-6 flex flex-col items-center gap-2">
-              <p className="text-[12.5px] text-muted-foreground tabular-nums">
-                Mostrando {rows.length} de {total}
-              </p>
-              <Button
-                variant="outline"
-                onClick={() => void loadMore()}
-                disabled={loadingMore}
-              >
-                Ver más
-              </Button>
-              {loadMoreError !== null ? (
-                <Alert variant="destructive" className="mt-2 max-w-md">
-                  <TriangleAlert aria-hidden="true" />
-                  <AlertTitle>
-                    No se pudo traer el resto de la cartera
-                  </AlertTitle>
-                  <AlertDescription>
-                    <span>
-                      {loadMoreError} La lista muestra solo lo que llegó.
-                    </span>
-                  </AlertDescription>
-                </Alert>
-              ) : null}
+        ) : null}
+
+        <div className="flex flex-col">
+          {loading ? (
+            <div className="flex flex-col gap-3">
+              <Skeleton className="h-[76px] w-full rounded-3xl" />
+              <Skeleton className="h-[76px] w-full rounded-3xl" />
             </div>
-          ) : null}
-        </>
-      )}
+          ) : error !== null ? (
+            // Un fallo de red NO es «no te debe nadie». Es el mismo principio del
+            // 403, una rama más allá: se dice lo que pasó, no se disimula con una
+            // lista vacía que hace creer que la cartera está limpia.
+            <EmptyState
+              icon={TriangleAlert}
+              accent="amber"
+              variant="solid"
+              title="No se pudo cargar la cartera"
+              description={error.message}
+              action={
+                <Button variant="outline" onClick={() => void load()}>
+                  Reintentar
+                </Button>
+              }
+            />
+          ) : sections.length === 0 ? (
+            <EmptyState
+              icon={Wallet}
+              accent="muted"
+              variant="solid"
+              title="No te debe nadie"
+              description="Cuando un pedido con plan de pagos quede con saldo, aparecerá aquí ordenado por a quién escribir primero."
+            />
+          ) : (
+            <>
+              <ReceivableSectionList
+                sections={sections}
+                onWrite={setWriting}
+                onPromise={canManage ? setPromising : undefined}
+                onReschedule={canManage ? setRescheduling : undefined}
+              />
+              {rows.length < total ? (
+                <div className="mt-6 flex flex-col items-center gap-2">
+                  <p className="text-[12.5px] text-muted-foreground tabular-nums">
+                    Mostrando {rows.length} de {total}
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={() => void loadMore()}
+                    disabled={loadingMore}
+                  >
+                    Ver más
+                  </Button>
+                  {loadMoreError !== null ? (
+                    <Alert variant="destructive" className="mt-2 max-w-md">
+                      <TriangleAlert aria-hidden="true" />
+                      <AlertTitle>
+                        No se pudo traer el resto de la cartera
+                      </AlertTitle>
+                      <AlertDescription>
+                        <span>
+                          {loadMoreError} La lista muestra solo lo que llegó.
+                        </span>
+                      </AlertDescription>
+                    </Alert>
+                  ) : null}
+                </div>
+              ) : null}
+            </>
+          )}
+        </div>
+      </div>
 
       <p className="max-w-[72ch] px-1 text-[12.5px] leading-relaxed text-muted-foreground">
         El orden no es alfabético ni por importe: es{" "}
-        <b className="font-medium text-foreground">a quién escribir primero</b>.
-        Y el saldo sale del pedido, no de una copia — si mañana cambia su total,
-        la cartera ya lo sabe.
+        <b className="font-medium whitespace-nowrap text-foreground">
+          a quién escribir primero
+        </b>
+        . Y el saldo sale del pedido, no de una copia — si mañana cambia su
+        total, la cartera ya lo sabe.
       </p>
 
       {writing === null ? null : (
@@ -317,7 +351,10 @@ export function ReceivablesView() {
   );
 }
 
-/** La respuesta antes que la tabla: una cifra, una barra fina y una frase. */
+/**
+ * La respuesta antes que la tabla, en una ficha: la cifra, la barra de lo
+ * vencido contra lo demás y la frase con los importes.
+ */
 function Hero({
   stats,
   filter,
@@ -335,7 +372,7 @@ function Hero({
       ? {
           lede: "Ya viajaron y deben",
           total: stats.travelled_cents,
-          bar: "var(--color-destructive)",
+          solid: true,
           say: (
             <>
               {shown === 1 ? "Un cliente" : `${String(shown)} clientes`}. El
@@ -348,7 +385,7 @@ function Hero({
         ? {
             lede: "Vencido",
             total: stats.overdue_cents,
-            bar: "var(--color-destructive)",
+            solid: true,
             say: (
               <>
                 De {shown === 1 ? "un pedido" : `${String(shown)} pedidos`},
@@ -363,7 +400,7 @@ function Hero({
         : {
             lede: "Te deben",
             total: stats.outstanding_cents,
-            bar: null,
+            solid: false,
             say: (
               <>
                 De {shown === 1 ? "un pedido" : `${String(shown)} pedidos`}.{" "}
@@ -406,35 +443,74 @@ function Hero({
             ),
           };
 
-  const currentPct =
+  const overduePct =
     stats.outstanding_cents <= 0
-      ? 100
-      : Math.max(
-          0,
-          ((stats.outstanding_cents - stats.overdue_cents) /
-            stats.outstanding_cents) *
-            100,
+      ? 0
+      : Math.min(
+          100,
+          Math.max(0, (stats.overdue_cents / stats.outstanding_cents) * 100),
         );
+  // Los conteos son de toda la cartera: con un filtro puesto contarían otra
+  // cosa que la cifra de arriba, así que solo acompañan a «Te deben».
+  const counts =
+    filter === "todo"
+      ? [
+          { label: "Pedidos en mora", value: stats.plans_overdue },
+          { label: "Clientes en mora", value: stats.contacts_overdue },
+        ]
+      : [];
 
   return (
-    <div>
-      <p className="text-[13px] text-muted-foreground">{view.lede}</p>
-      <p className="mt-1.5 font-headings text-[56px] leading-none tracking-[-0.03em] tabular-nums">
-        {formatMoney(view.total)}
-      </p>
+    <section
+      aria-label="Resumen de la cartera"
+      className="flex flex-col gap-4 rounded-3xl border border-border bg-card p-5 md:p-6"
+    >
+      <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
+        <div className="flex min-w-0 flex-col gap-2">
+          <p className="text-xs text-muted-foreground">{view.lede}</p>
+          <p className="font-heading text-4xl leading-none font-bold tracking-tight whitespace-nowrap tabular-nums md:text-5xl">
+            {formatMoney(view.total)}
+          </p>
+        </div>
+        {counts.length > 0 ? (
+          <dl className="flex gap-6 pb-1">
+            {counts.map((count) => (
+              <div key={count.label} className="flex flex-col gap-1">
+                <dt className="text-xs whitespace-nowrap text-muted-foreground">
+                  {count.label}
+                </dt>
+                <dd className="text-base font-semibold tabular-nums">
+                  {count.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        ) : null}
+      </div>
       <div
         role="img"
-        aria-label={`${String(Math.round(100 - currentPct))} por ciento de la cartera está vencida`}
-        className="mt-[18px] h-1 max-w-[560px] rounded-full"
-        style={{
-          background:
-            view.bar ??
-            `linear-gradient(90deg, var(--color-success) 0% ${currentPct}%, var(--color-destructive) ${currentPct}% 100%)`,
-        }}
-      />
-      <p className="mt-3 max-w-[62ch] text-[13.5px] leading-relaxed text-muted-foreground">
+        aria-label={`${String(Math.round(overduePct))} por ciento de la cartera está vencida`}
+        className="flex h-2 gap-0.5 overflow-hidden rounded-full bg-muted"
+      >
+        {view.solid ? (
+          <span className="h-full w-full bg-destructive" />
+        ) : (
+          <>
+            {overduePct > 0 ? (
+              <span
+                className="h-full bg-destructive"
+                style={{ width: `${String(overduePct)}%` }}
+              />
+            ) : null}
+            {overduePct < 100 ? (
+              <span className="h-full flex-1 bg-foreground" />
+            ) : null}
+          </>
+        )}
+      </div>
+      <p className="max-w-[72ch] text-[13.5px] leading-relaxed text-pretty text-muted-foreground">
         {view.say}
       </p>
-    </div>
+    </section>
   );
 }

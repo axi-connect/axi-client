@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>CRM · Estados de tareas</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&amp;family=Poppins:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#F5F5F7}
+.lt{--bg:#F5F5F7;--card:#FFFFFF;--fg:#0B0B0E;--fg2:#3A3A40;--mut:#6B6B73;--line:rgba(0,0,0,.07);--line2:rgba(0,0,0,.12);--chip:#F0F0F2;--brand:#D13F42;--sk:#ECECEF;--ai:#7C3AED}
+.frame{width:1440px;height:900px;background:var(--bg);color:var(--fg);font-family:Poppins,system-ui,sans-serif;box-sizing:border-box;padding:40px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:24px}
+.d{font-family:Urbanist,Poppins,sans-serif}
+.pane{display:flex;flex-direction:column;gap:12px;min-width:0;min-height:0}
+.cap{font-size:12px;font-weight:600;color:var(--fg2);white-space:nowrap}
+.cap span{font-weight:400;color:var(--mut)}
+.stage{flex-grow:1;border-radius:28px;background:var(--card);border:1px solid var(--line);padding:24px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px;min-height:0;overflow:hidden;align-items:center;justify-content:center;text-align:center}
+.txt{font-size:13px;color:var(--fg2);line-height:1.5;margin:0;max-width:320px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 18px;border-radius:999px;font:500 13.5px Poppins,sans-serif;border:1px solid var(--line2);background:var(--card);color:var(--fg);white-space:nowrap;cursor:pointer;text-decoration:none}
+.btn-p{background:var(--brand);color:#FFFFFF;border-color:var(--brand)}
+.sk{background:var(--sk);border-radius:12px;display:block}
+.aig{color:var(--ai)}
+</style>
+</helmet>
+<div class="frame lt">
+  <section class="pane"><div class="cap">A · Nada pendiente <span>bandeja mezclada</span></div><div class="stage"><h3 class="d" style="margin:0;font-size:21px;font-weight:700">Nada pendiente por aquí</h3><p class="txt">Cuando haya algo, aparece con su día y su hora. Hay dos formas de empezar.</p><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center"><a class="btn" href="#"><svg class="aig" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.8 5.4L19 10l-5.2 1.6L12 17l-1.8-5.4L5 10l5.2-1.6z"></path></svg>Programar seguimiento</a><a class="btn btn-p" href="#">Nueva tarea</a></div></div></section>
+  <section class="pane"><div class="cap">B · Sin resultados <span>de la búsqueda</span></div><div class="stage"><h3 class="d" style="margin:0;font-size:21px;font-weight:700">Nada coincide con «cartagena grupo»</h3><p class="txt">Se busca en el título y el objetivo de la tarea, y en el nombre, teléfono y correo del contacto.</p><button type="button" class="btn">Limpiar la búsqueda</button></div></section>
+  <section class="pane"><div class="cap">C · Filtro vacío <span>«vencidas» en cero</span></div><div class="stage"><h3 class="d" style="margin:0;font-size:21px;font-weight:700">Nada vencido</h3><p class="txt">Todo lo que tenía fecha se hizo a tiempo. Quita el filtro para ver el resto de la bandeja.</p><button type="button" class="btn">Ver todas</button></div></section>
+  <section class="pane"><div class="cap">D · Axi sin seguimientos <span>modo agente</span></div><div class="stage"><h3 class="d" style="margin:0;font-size:21px;font-weight:700">Ningún seguimiento programado</h3><p class="txt">Dile a Axi qué conseguir y él escribe o llama por ti, a la hora que digas.</p><a class="btn btn-p" href="#">Programar seguimiento</a></div></section>
+  <section class="pane"><div class="cap">E · No cargó la bandeja <span>error</span></div><div class="stage" role="alert"><h3 class="d" style="margin:0;font-size:21px;font-weight:700">No pudimos leer tus tareas</h3><p class="txt">Están a salvo. Revisa la conexión e inténtalo de nuevo.</p><button type="button" class="btn">Reintentar</button></div></section>
+  <section class="pane"><div class="cap">F · Cargando <span>la silueta de la bandeja</span></div><div class="stage" role="status" aria-label="Cargando tareas" style="align-items:stretch;justify-content:flex-start;text-align:left"><div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px"><span class="sk" style="height:64px;border-radius:16px"></span><span class="sk" style="height:64px;border-radius:16px"></span><span class="sk" style="height:64px;border-radius:16px"></span><span class="sk" style="height:64px;border-radius:16px"></span></div><span class="sk" style="height:12px;width:40%;margin-top:8px"></span><span class="sk" style="height:52px"></span><span class="sk" style="height:52px"></span><span class="sk" style="height:52px"></span></div></section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

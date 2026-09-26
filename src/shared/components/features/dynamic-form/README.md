@@ -46,7 +46,7 @@ Props (`DynamicFormProps<TValues>`):
 - `gap?: 1|2|3|4|5|6|7|8`: separación entre campos (clases seguras `gap-*`).
 - `className?: string`: clases extra del `<form>`.
 - `renderFieldsWrapper?: (children) => React.ReactNode`: wrapper opcional para la grilla.
-- `actions?: DynamicFormActions`: acciones por defecto o render custom de acciones.
+- `actions?: DynamicFormActions`: acciones por defecto o render custom de acciones. Con `{ render, bare: true }` lo que devuelve `render` queda como hijo directo del `<form>` (necesario para una barra `sticky` como `UnsavedChangesDock`).
 
 ### Tipos de campos
 ```ts

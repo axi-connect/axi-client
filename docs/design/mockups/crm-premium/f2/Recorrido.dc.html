@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>CRM · Recorrido del contacto</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&amp;family=Poppins:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#F5F5F7}
+.lt{--bg:#F5F5F7;--card:#FFFFFF;--fg:#0B0B0E;--fg2:#3A3A40;--mut:#6B6B73;--line:rgba(0,0,0,.07);--line2:rgba(0,0,0,.12);--chip:#F0F0F2;--brand:#D13F42;--acc:rgba(230,87,89,.12);--warn:#D97706;--ai:#7C3AED}
+.frame{width:1440px;height:900px;background:var(--bg);color:var(--fg);font-family:Poppins,system-ui,sans-serif;box-sizing:border-box;padding:48px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:auto auto;gap:28px 24px;align-content:start}
+.d{font-family:Urbanist,Poppins,sans-serif}
+.pane{display:flex;flex-direction:column;gap:12px;min-width:0}
+.cap{font-size:12px;font-weight:600;color:var(--fg2);white-space:nowrap}
+.cap span{font-weight:400;color:var(--mut)}
+.card{background:var(--card);border-radius:24px;border:1px solid var(--line);padding:20px 22px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.lbl{font-size:12px;color:var(--mut);white-space:nowrap}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:500;background:var(--chip);color:var(--fg);white-space:nowrap}
+.dot{width:6px;height:6px;border-radius:9px;flex-shrink:0;display:inline-block}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:38px;padding:0 16px;border-radius:999px;font:500 13px Poppins,sans-serif;border:1px solid var(--line2);background:var(--card);color:var(--fg);white-space:nowrap;cursor:pointer}
+.btn-p{background:var(--brand);color:#FFFFFF;border-color:var(--brand)}
+.ln{font-size:12.5px;color:var(--fg2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lnk{font-size:12.5px;font-weight:500;color:var(--fg);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line2);min-height:24px;display:inline-flex;align-items:center}
+.aig{color:var(--ai)}
+</style>
+</helmet>
+<div class="frame lt">
+  <section class="pane">
+    <div class="cap">Lo movió Axi <span>· se puede deshacer</span></div>
+    <article class="card">
+      <h2 class="lbl" style="margin:0;font-weight:400">Recorrido</h2>
+      <div style="display:flex;align-items:center;gap:10px"><span class="d" style="font-size:26px;font-weight:700;line-height:1">Calificado</span><span class="pill"><span class="dot" style="background:var(--warn)"></span>9 días · aguanta 7</span></div>
+      <span class="ln">Cancún todo incluido · 4 personas · $ 12.400.000</span>
+      <div style="display:flex;align-items:center;gap:8px;padding-top:8px;border-top:1px solid var(--line)"><span class="aig">✦</span><span class="ln" style="flex:1;min-width:0">La movió Axi · «pidió cotizar para 4 personas» · hace 9 d</span><a class="lnk" href="#">Deshacer</a></div>
+    </article>
+  </section>
+
+  <section class="pane" style="grid-column:span 2">
+    <div class="cap">Confirmar <span>· dice qué vuelve y qué se pausa</span></div>
+    <article class="card" role="dialog" aria-modal="true" aria-labelledby="undo-t" style="max-width:520px;padding:26px;gap:14px;box-shadow:0 40px 80px -40px rgba(0,0,0,.4)">
+      <h3 id="undo-t" class="d" style="margin:0;font-size:22px;font-weight:700">¿Deshacer el paso a Calificado?</h3>
+      <p style="margin:0;font-size:13.5px;line-height:1.55;color:var(--fg2)">La oportunidad vuelve a <strong style="font-weight:600">Contactado</strong> y el cambio queda en el historial.</p>
+      <div style="display:grid;grid-template-columns:18px minmax(0,1fr);gap:10px;padding:12px 14px;border-radius:16px;background:var(--chip);font-size:13px;line-height:1.45"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"></rect><rect x="14" y="5" width="4" height="14" rx="1"></rect></svg><span>Como lo movió Axi, <strong style="font-weight:600">Axi deja de mover esta oportunidad</strong> hasta que lo reanudes. Las reglas por hechos (un pedido, un pago) siguen funcionando.</span></div>
+      <div style="display:flex;justify-content:flex-end;gap:8px"><button type="button" class="btn">Cancelar</button><button type="button" class="btn btn-p">Deshacer</button></div>
+    </article>
+  </section>
+
+  <section class="pane">
+    <div class="cap">Axi en pausa <span>· después de deshacer</span></div>
+    <article class="card">
+      <h2 class="lbl" style="margin:0;font-weight:400">Recorrido</h2>
+      <div style="display:flex;align-items:center;gap:10px"><span class="d" style="font-size:26px;font-weight:700;line-height:1">Contactado</span><span class="pill"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"></rect><rect x="14" y="5" width="4" height="14" rx="1"></rect></svg>Axi no la mueve</span></div>
+      <span class="ln">Volvió aquí porque lo deshiciste tú · hace un momento</span>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:8px;border-top:1px solid var(--line)"><span class="ln" style="white-space:normal">Las reglas por hechos siguen moviéndola.</span><button type="button" class="btn">Reanudar a Axi</button></div>
+    </article>
+  </section>
+
+  <section class="pane">
+    <div class="cap">Sin recorrido <span>· todavía</span></div>
+    <article class="card">
+      <h2 class="lbl" style="margin:0;font-weight:400">Recorrido</h2>
+      <span class="d" style="font-size:20px;font-weight:700">Aún sin recorrido</span>
+      <span class="ln" style="white-space:normal">Empieza solo cuando pida precio en una conversación, o al crearle una oportunidad.</span>
+      <a class="lnk" href="#">Crear una oportunidad</a>
+    </article>
+  </section>
+
+  <section class="pane">
+    <div class="cap">Varias abiertas <span>· no se adivina cuál</span></div>
+    <article class="card">
+      <h2 class="lbl" style="margin:0;font-weight:400">Recorrido</h2>
+      <span class="d" style="font-size:20px;font-weight:700">2 oportunidades abiertas</span>
+      <span class="ln" style="white-space:normal">Cada una lleva su propio recorrido: síguelo desde el pipeline.</span>
+      <a class="lnk" href="#">Ver en el pipeline</a>
+    </article>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

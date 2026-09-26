@@ -31,9 +31,10 @@ export function SchedulesFields({
         {value.map((day) => (
           <div
             key={day.weekday}
-            className="flex items-center gap-4 rounded-lg border border-border px-3 py-2"
+            className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border border-border px-3 py-2"
           >
             <Switch
+              size="lg"
               checked={day.enabled}
               disabled={disabled}
               onCheckedChange={(checked: boolean) => updateDay(day.weekday, { enabled: checked })}
@@ -43,15 +44,16 @@ export function SchedulesFields({
             {day.enabled ? (
               /* flex-1 + min-w: los inputs de hora crecen según el formato del
                  locale (p.ej. "08:00 a. m." + icono de reloj); un ancho fijo
-                 corto recorta el valor. max-w acota en pantallas anchas. */
-              <div className="flex flex-1 items-center gap-2">
+                 corto recorta el valor. max-w acota en pantallas anchas. En el
+                 celular las horas bajan a su propia línea en vez de desbordar. */
+              <div className="flex min-w-0 basis-full items-center gap-2 sm:flex-1 sm:basis-auto">
                 <Input
                   type="time"
                   value={day.opens_at}
                   disabled={disabled}
                   classNameContainer=""
                   onChange={(e) => updateDay(day.weekday, { opens_at: e.target.value })}
-                  className="min-w-32 max-w-44 flex-1 tabular-nums"
+                  className="min-w-0 max-w-44 flex-1 tabular-nums sm:min-w-32"
                   aria-label="Hora de apertura"
                 />
                 <span className="text-sm text-muted-foreground">a</span>
@@ -61,7 +63,7 @@ export function SchedulesFields({
                   disabled={disabled}
                   classNameContainer=""
                   onChange={(e) => updateDay(day.weekday, { closes_at: e.target.value })}
-                  className="min-w-32 max-w-44 flex-1 tabular-nums"
+                  className="min-w-0 max-w-44 flex-1 tabular-nums sm:min-w-32"
                   aria-label="Hora de cierre"
                 />
               </div>

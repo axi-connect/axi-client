@@ -1,24 +1,21 @@
 "use client";
 
-import { useState } from "react";
-import { Lock, MessageCircle, Tag, TriangleAlert } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Minus, Plus, TriangleAlert } from "lucide-react";
 
-import { formatMoney, formatShortDate } from "@/core/lib/format";
+import { formatShortDate } from "@/core/lib/format";
 import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Switch } from "@/shared/components/ui/switch";
 import {
-  FX_SAMPLE_CENTS,
   localToday,
   manualRateExpired,
   MAX_SPREAD_BPS,
   percentToSpread,
-  sampleQuoteCents,
   spreadToPercent,
   type FxSettingsDTO,
-  type LatestFxRateDTO,
 } from "@/modules/payments/domain/fx-settings";
 
 const SETTLEMENT_CURRENCIES = [
@@ -27,16 +24,25 @@ const SETTLEMENT_CURRENCIES = [
   { code: "MXN", label: "MXN · Peso mexicano" },
 ];
 
+/** Paso del ajuste: medio punto, como se negocia una comisión de cambio. */
+const SPREAD_STEP = 0.5;
+
 function Row({ title, hint, control }: { title: string; hint: string; control: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-4 border-t border-border/50 py-3">
+    <div className="flex flex-col gap-3 border-t border-border/60 py-4 first-of-type:border-t-0 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
       <div className="min-w-0">
-        <p className="text-sm font-medium">{title}</p>
-        <p className="mt-0.5 max-w-[56ch] text-xs text-muted-foreground">{hint}</p>
+        <p className="text-sm font-semibold">{title}</p>
+        <p className="mt-0.5 max-w-[56ch] text-[13px] leading-relaxed text-muted-foreground">{hint}</p>
       </div>
-      {control}
+      <div className="shrink-0">{control}</div>
     </div>
   );
+}
+
+/** Lo que el agente dirá con el borrador actual, para la isla de la pestaña. */
+export interface FxDraft {
+  currency: string;
+  indicative: boolean;
 }
 
 /**
@@ -50,16 +56,16 @@ function Row({ title, hint, control }: { title: string; hint: string; control: R
  */
 export function FxSettingsForm({
   settings,
-  latest,
   saving,
   onSave,
+  onDraftChange,
   today = localToday(),
 }: {
   settings: FxSettingsDTO;
-  /** La tasa que manda HOY: de ella sale el ejemplo, para no contradecir a la tarjeta. */
-  latest: LatestFxRateDTO;
   saving: boolean;
   onSave: (next: FxSettingsDTO) => void;
+  /** El borrador en vivo: la isla «Así cotiza el agente» lo refleja antes de guardar. */
+  onDraftChange?: (draft: FxDraft) => void;
   /** YYYY-MM-DD local; inyectable en tests. */
   today?: string;
 }) {
@@ -71,6 +77,10 @@ export function FxSettingsForm({
   const [indicative, setIndicative] = useState(settings.show_indicative_quotes);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    onDraftChange?.({ currency, indicative });
+  }, [currency, indicative, onDraftChange]);
+
   // La manual guardada venció y sigue tal cual en el formulario: el servidor ya
   // cotiza con la oficial, y la pantalla tiene que decirlo (QA real, F2).
   const expiredNotice =
@@ -79,7 +89,13 @@ export function FxSettingsForm({
     manualUntil === settings.manual_rate?.valid_until
       ? settings.manual_rate.valid_until
       : null;
-  const sampleCents = sampleQuoteCents(latest);
+
+  const stepSpread = (direction: 1 | -1) => {
+    const current = percentToSpread(spread);
+    const base = current === null ? settings.spread_bps : current;
+    const next = Math.min(MAX_SPREAD_BPS, Math.max(0, base + direction * SPREAD_STEP * 100));
+    setSpread(spreadToPercent(next));
+  };
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -111,132 +127,121 @@ export function FxSettingsForm({
   };
 
   return (
-    <form className="rounded-2xl border border-border bg-card p-5 md:p-6" onSubmit={submit} aria-labelledby="fx-settings-title">
-      <div className="mb-4">
-        <h2 id="fx-settings-title" className="text-lg font-medium">
-          Ajustes de moneda
-        </h2>
-        <p className="mt-0.5 max-w-[70ch] text-sm text-muted-foreground">
-          Tu catálogo está en su moneda; aquí decides en cuál cobras y con qué tasa cotizas.
-        </p>
-      </div>
+    <form
+      className="flex min-w-0 flex-col rounded-3xl border border-border bg-card px-5 pt-2 pb-5 md:px-6"
+      onSubmit={submit}
+      aria-labelledby="fx-settings-title"
+    >
+      <h2 id="fx-settings-title" className="sr-only">
+        Ajustes de moneda
+      </h2>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="fx-settlement">Moneda en la que cobras</Label>
-          <select
-            id="fx-settlement"
-            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-            value={currency}
-            onChange={(event) => setCurrency(event.target.value)}
-          >
-            {SETTLEMENT_CURRENCIES.map((option) => (
-              <option key={option.code} value={option.code}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <p className="text-xs text-muted-foreground">
-            Se fija al confirmar el pedido: el total queda en esta moneda a la tasa de ese momento.
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="fx-spread">Ajuste sobre la TRM (%)</Label>
-          <Input
-            id="fx-spread"
-            inputMode="decimal"
-            className="tabular-nums"
-            value={spread}
-            onChange={(event) => setSpread(event.target.value)}
-          />
-          <p className="text-xs text-muted-foreground">
-            Hasta {spreadToPercent(MAX_SPREAD_BPS)} %. Cubre la comisión de cambio; se suma a la oficial.
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-2">
-        <Row
-          title="Usar una tasa manual"
-          hint="Cuando la oficial no te sirve (fuente caída, acuerdo especial). Vence sola."
-          control={<Switch checked={manualOn} onCheckedChange={setManualOn} aria-label="Usar una tasa manual" />}
-        />
-        {manualOn ? (
-          <div className="grid gap-4 py-2 sm:grid-cols-2">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="fx-manual-rate">Tasa manual</Label>
-              <Input
-                id="fx-manual-rate"
-                inputMode="decimal"
-                className="tabular-nums"
-                placeholder="3150,00"
-                value={manualRate}
-                onChange={(event) => setManualRate(event.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="fx-manual-until">Vigente hasta</Label>
-              <Input
-                id="fx-manual-until"
-                type="date"
-                value={manualUntil}
-                aria-invalid={expiredNotice !== null}
-                onChange={(event) => setManualUntil(event.target.value)}
-              />
-            </div>
-            {expiredNotice !== null ? (
-              // §9.4: un estado que dura es Alert en línea; el ámbar va al icono, no al texto.
-              <Alert variant="warning" role="status" className="sm:col-span-2">
-                <TriangleAlert aria-hidden="true" />
-                <AlertDescription>
-                  <span>
-                    Tu tasa manual venció el {formatShortDate(expiredNotice)}: hoy se cotiza con la oficial y
-                    el ajuste. Ponle una fecha nueva o apágala.
-                  </span>
-                </AlertDescription>
-              </Alert>
-            ) : null}
-          </div>
-        ) : null}
-        <Row
-          title="Mostrar el precio en pesos al cotizar"
-          hint={
-            sampleCents === null
-              ? "El agente muestra el equivalente en pesos a la tasa del día junto al precio. Indicativo hasta confirmar."
-              : `El agente dice «≈ ${formatMoney(sampleCents, "COP")} a la tasa de hoy» junto al precio de ${formatMoney(FX_SAMPLE_CENTS, "USD")}. Indicativo hasta confirmar.`
-          }
-          control={
-            <Switch
-              checked={indicative}
-              onCheckedChange={setIndicative}
-              aria-label="Mostrar el precio en pesos al cotizar"
+      <Row
+        title="Ajuste sobre la TRM"
+        hint={`Cubre la comisión de cambio. Se suma a la oficial; hasta ${spreadToPercent(MAX_SPREAD_BPS)} %.`}
+        control={
+          <div className="flex items-center gap-1 rounded-full bg-muted p-1" role="group" aria-label="Ajuste sobre la TRM">
+            <Button type="button" variant="ghost" size="icon" className="rounded-full bg-card" aria-label="Bajar medio punto" onClick={() => stepSpread(-1)}>
+              <Minus aria-hidden="true" />
+            </Button>
+            <Label htmlFor="fx-spread" className="sr-only">
+              Ajuste sobre la TRM (%)
+            </Label>
+            <Input
+              id="fx-spread"
+              inputMode="decimal"
+              className="h-9 w-20 border-0 bg-transparent text-center font-semibold tabular-nums shadow-none"
+              value={spread}
+              onChange={(event) => setSpread(event.target.value)}
             />
-          }
-        />
-      </div>
+            <Button type="button" variant="ghost" size="icon" className="rounded-full bg-card" aria-label="Subir medio punto" onClick={() => stepSpread(1)}>
+              <Plus aria-hidden="true" />
+            </Button>
+          </div>
+        }
+      />
 
-      {error ? <p className="mt-3 text-sm text-destructive">{error}</p> : null}
+      <Row
+        title="Usar una tasa manual"
+        hint="Cuando la oficial no te sirve (fuente caída, acuerdo especial). Vence sola."
+        control={<Switch size="lg" checked={manualOn} onCheckedChange={setManualOn} aria-label="Usar una tasa manual" />}
+      />
+      {manualOn ? (
+        <div className="grid gap-4 pb-4 sm:grid-cols-2">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="fx-manual-rate">Tasa manual</Label>
+            <Input
+              id="fx-manual-rate"
+              inputMode="decimal"
+              className="tabular-nums"
+              placeholder="3150,00"
+              value={manualRate}
+              onChange={(event) => setManualRate(event.target.value)}
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="fx-manual-until">Vigente hasta</Label>
+            <Input
+              id="fx-manual-until"
+              type="date"
+              value={manualUntil}
+              aria-invalid={expiredNotice !== null}
+              onChange={(event) => setManualUntil(event.target.value)}
+            />
+          </div>
+          {expiredNotice !== null ? (
+            // §9.4: un estado que dura es Alert en línea; el ámbar va al icono, no al texto.
+            <Alert variant="warning" role="status" className="sm:col-span-2">
+              <TriangleAlert aria-hidden="true" />
+              <AlertDescription>
+                <span>
+                  Tu tasa manual venció el {formatShortDate(expiredNotice)}: hoy se cotiza con la oficial y el ajuste.
+                  Ponle una fecha nueva o apágala.
+                </span>
+              </AlertDescription>
+            </Alert>
+          ) : null}
+        </div>
+      ) : null}
 
-      <div className="mt-4 flex justify-end">
+      <Row
+        title="Mostrar el precio en pesos al cotizar"
+        hint="El agente muestra el equivalente en pesos a la tasa del día junto al precio. Indicativo hasta confirmar."
+        control={
+          <Switch size="lg" checked={indicative} onCheckedChange={setIndicative} aria-label="Mostrar el precio en pesos al cotizar" />
+        }
+      />
+
+      <Row
+        title="Moneda en la que cobras"
+        hint="Se fija al confirmar el pedido: el total queda en esta moneda a la tasa de ese momento."
+        control={
+          <>
+            <Label htmlFor="fx-settlement" className="sr-only">
+              Moneda en la que cobras
+            </Label>
+            <select
+              id="fx-settlement"
+              className="h-10 rounded-xl border border-input bg-background px-3 text-sm font-medium"
+              value={currency}
+              onChange={(event) => setCurrency(event.target.value)}
+            >
+              {SETTLEMENT_CURRENCIES.map((option) => (
+                <option key={option.code} value={option.code}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </>
+        }
+      />
+
+      {error ? <p className="pt-1 text-sm text-destructive">{error}</p> : null}
+
+      <div className="flex justify-end border-t border-border/60 pt-4">
         <Button type="submit" disabled={saving}>
           {saving ? "Guardando…" : "Guardar cambios"}
         </Button>
-      </div>
-
-      <div className="mt-5 grid gap-3 border-t border-border/50 pt-4 sm:grid-cols-3">
-        {[
-          { icon: Tag, title: "Catálogo en su moneda.", text: "Los precios de tus salidas no cambian." },
-          { icon: MessageCircle, title: "Cotización indicativa.", text: "El agente muestra el equivalente a la tasa del día." },
-          { icon: Lock, title: "Se congela al confirmar.", text: "El total del pedido queda con la tasa de ese momento." },
-        ].map(({ icon: Icon, title, text }) => (
-          <div key={title} className="grid grid-cols-[20px_1fr] gap-2.5 rounded-xl border border-border bg-secondary p-3 text-sm">
-            <Icon aria-hidden="true" className="mt-0.5 size-[18px] text-muted-foreground" />
-            <p>
-              <strong className="font-medium">{title}</strong> {text}
-            </p>
-          </div>
-        ))}
       </div>
     </form>
   );

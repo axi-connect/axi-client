@@ -44,6 +44,9 @@ export type ContactRow = {
    */
   data_filled: number | null;
   data_total: number | null;
+  /** Canal por el que escribió por última vez (lienzo F2): `null` sin identidades. */
+  channel_kind: ContactChannelIdentity["channel_kind"] | null;
+  last_seen_at: string | null;
 };
 
 // ---------------------------------------------------------------------------
@@ -184,5 +187,22 @@ export function mapContactToRow(
     created_at: dto.created_at,
     data_filled: completeness?.filled ?? null,
     data_total: completeness?.total ?? null,
+    ...primaryChannel(dto.channel_identities),
   };
+}
+
+/**
+ * El canal que manda en la fila: el de la última vez que la persona escribió.
+ * Una identidad sin `last_seen_at` solo gana si no hay otra con fecha; sin
+ * identidades, «Sin canal».
+ */
+export function primaryChannel(
+  identities: readonly Pick<ContactChannelIdentity, "channel_kind" | "last_seen_at">[],
+): { channel_kind: ContactChannelIdentity["channel_kind"] | null; last_seen_at: string | null } {
+  let best: Pick<ContactChannelIdentity, "channel_kind" | "last_seen_at"> | null = null;
+  for (const identity of identities) {
+    if (best === null) best = identity;
+    else if (identity.last_seen_at !== null && (best.last_seen_at === null || identity.last_seen_at > best.last_seen_at)) best = identity;
+  }
+  return { channel_kind: best?.channel_kind ?? null, last_seen_at: best?.last_seen_at ?? null };
 }

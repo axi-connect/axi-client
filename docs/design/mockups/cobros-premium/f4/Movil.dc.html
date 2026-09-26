@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Cartera · celular</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&amp;family=Poppins:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Poppins,system-ui,sans-serif;color:#0B0B0E;background:#F5F5F7}
+a{color:#0B0B0E}
+.d{font-family:Urbanist,Poppins,sans-serif}
+.card{background:#FFFFFF;border-radius:24px;box-shadow:0 1px 0 rgba(0,0,0,.04),0 12px 32px -18px rgba(16,16,24,.18);border:1px solid rgba(0,0,0,.05)}
+.icb{width:40px;height:40px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:#FFFFFF;border:1px solid rgba(0,0,0,.08);color:#0B0B0E}
+.seg{height:36px;padding:0 12px;border-radius:999px;border:0;background:transparent;font:500 13px Poppins,sans-serif;color:#3A3A40;white-space:nowrap;flex-grow:1}
+.seg-on{background:#0B0B0E;color:#FFFFFF}
+.lbl{font-size:12px;color:#6B6B73}
+.row{display:grid;grid-template-columns:8px minmax(0,1fr) auto;gap:10px;align-items:start;padding:12px 0;border-top:1px solid rgba(0,0,0,.06)}
+.mdot{width:8px;height:8px;border-radius:999px;margin-top:6px}
+.pieces{display:flex;flex-wrap:wrap;column-gap:0;font-size:12px;color:#6B6B73}
+.pieces span{white-space:nowrap}
+.sec{font-size:12px;color:#6B6B73;padding:12px 0 2px;display:flex;justify-content:space-between}
+.sec b{color:#0B0B0E;font-weight:600}
+.isl{position:relative;isolation:isolate;overflow:hidden;border-radius:24px}
+.isl-glass{color:#0B0B0E;background:var(--glow,none),linear-gradient(160deg,rgba(255,255,255,.82),rgba(246,243,254,.62));-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);box-shadow:inset 0 2px 2px rgba(11,11,14,.05),inset 0 -2px 2px rgba(255,255,255,.5),inset 0 0 1.6px 4px rgba(255,255,255,.2),inset 0 0 18px 2px rgba(255,255,255,.55),0 4px 2px -2px rgba(11,11,14,.14),0 30px 70px -34px rgba(16,16,24,.35),0 30px 80px -40px rgba(124,58,237,.35)}
+.isl-dark{color:#EDEDED;background:var(--glow,none),linear-gradient(160deg,rgba(38,38,42,.90),rgba(28,24,40,.92));-webkit-backdrop-filter:blur(20px) saturate(170%);backdrop-filter:blur(20px) saturate(170%);box-shadow:inset 0 2px 2px rgba(255,255,255,.10),inset 0 -2px 2px rgba(0,0,0,.35),inset 0 0 1.6px 4px rgba(255,255,255,.04),inset 0 0 14px 1px rgba(255,255,255,.08),0 40px 90px -36px rgba(124,58,237,.55),0 18px 50px -24px rgba(230,87,89,.45)}
+.isl-glass::before,.isl-dark::before{content:"";position:absolute;inset:0;z-index:1;padding:1.5px;border-radius:inherit;pointer-events:none;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.isl-glass::before{background:conic-gradient(from -75deg at 50% 50%,rgba(11,11,14,.32) 0%,transparent 6% 40%,rgba(11,11,14,.32) 50%,transparent 56% 94%,rgba(11,11,14,.32) 100%),linear-gradient(rgba(255,255,255,.85),rgba(255,255,255,.85))}
+.isl-dark::before{background:conic-gradient(from -75deg at 50% 50%,rgba(255,255,255,.7) 0%,transparent 6% 40%,rgba(255,255,255,.7) 50%,transparent 56% 94%,rgba(255,255,255,.7) 100%),linear-gradient(rgba(255,255,255,.12),rgba(255,255,255,.12))}
+.isl-glass::after,.isl-dark::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none}
+.isl-glass::after{background:linear-gradient(-45deg,transparent 0%,rgba(255,255,255,.55) 40% 46%,transparent 54%) 0 0/200% 200%,radial-gradient(60% 45% at 30% 0%,rgba(255,255,255,.9),transparent 70%)}
+.isl-dark::after{background:linear-gradient(-45deg,transparent 0%,rgba(255,255,255,.10) 40% 46%,transparent 54%) 0 0/200% 200%,radial-gradient(60% 45% at 30% 0%,rgba(255,255,255,.14),transparent 70%)}
+.isl-ink{color:#F4F4F5;background:var(--glow,none),#0B0B0E}
+.isl-glass.glow-brand{--glow:radial-gradient(circle 20rem at 90% 8%,rgba(230,87,89,.16),transparent 70%)}
+.isl-glass.glow-ai{--glow:radial-gradient(circle 22rem at 0% 0%,rgba(124,58,237,.16),transparent 70%),radial-gradient(circle 20rem at 100% 100%,rgba(230,87,89,.11),transparent 70%)}
+.isl-dark.glow-brand{--glow:radial-gradient(circle 20rem at 90% 8%,rgba(251,113,133,.26),transparent 70%)}
+.isl-dark.glow-ai{--glow:radial-gradient(circle 22rem at 0% 0%,rgba(167,139,250,.26),transparent 70%),radial-gradient(circle 20rem at 100% 100%,rgba(251,113,133,.18),transparent 70%)}
+.isl-ink.glow-brand{--glow:radial-gradient(circle 20rem at 90% 8%,rgba(230,87,89,.45),transparent 70%)}
+.btn-contrast{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:999px;font:500 14px Poppins,sans-serif;border:0;cursor:pointer;text-decoration:none;background:#0B0B0E;color:#FFFFFF}
+.isl-dark .btn-contrast,.isl-ink .btn-contrast{background:#F4F4F5;color:#0B0B0E}
+.btn-glass{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:999px;font:500 14px Poppins,sans-serif;border:0;cursor:pointer;text-decoration:none;position:relative;color:rgba(11,11,14,.92);background:linear-gradient(-75deg,rgba(255,255,255,.08),rgba(255,255,255,.5),rgba(255,255,255,.08));box-shadow:inset 0 2px 2px rgba(11,11,14,.05),inset 0 -2px 2px rgba(255,255,255,.5),0 4px 2px -2px rgba(11,11,14,.2),inset 0 0 1.6px 4px rgba(255,255,255,.2),0 0 0 1px rgba(11,11,14,.08)}
+.isl-dark .btn-glass{color:rgba(237,237,237,.92);background:linear-gradient(-75deg,rgba(255,255,255,.03),rgba(255,255,255,.10),rgba(255,255,255,.03));box-shadow:inset 0 2px 2px rgba(255,255,255,.08),inset 0 -2px 2px rgba(0,0,0,.3),0 0 0 1px rgba(255,255,255,.12)}
+.isl-glass .fact,.isl-glass .frow,.isl-glass .cal{border-top-color:rgba(11,11,14,.08)!important}
+.isl-glass .seg-on{background:#0B0B0E}.isl-glass .seg-off{background:rgba(11,11,14,.12)}
+.isl-glass .step{color:#3A3A40}.isl-glass .chk-on,.isl-glass .fdot-on{background:#0B0B0E;color:#FFFFFF}.isl-glass .chk-off,.isl-glass .fdot-off,.isl-glass .cn{border-color:rgba(11,11,14,.28)}
+.isl-glass .bub{background:#FFFFFF;box-shadow:0 1px 2px rgba(0,0,0,.06),0 0 0 1px rgba(11,11,14,.05)}.isl-glass .gap{border-color:rgba(11,11,14,.24);color:#6B6B73}.isl-glass .day{color:#6B6B73}
+@media (prefers-reduced-transparency: reduce){.isl-glass{background:#FFFFFF}.isl-dark{background:#1E1E22}}
+</style>
+</helmet>
+<div style="width:390px;height:844px;background:#F5F5F7;overflow:hidden;display:flex;flex-direction:column">
+  <header style="height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;flex-shrink:0">
+    <button class="icb" aria-label="Abrir menú"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></button>
+    <span style="font-size:13px;font-weight:500">Cartera</span>
+    <button class="icb" aria-label="Buscar cliente o pedido"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg></button>
+  </header>
+  <div style="padding:4px 16px 24px;display:flex;flex-direction:column;gap:12px">
+    <div role="radiogroup" aria-label="Filtro de cartera" style="display:flex;gap:2px;padding:4px;border-radius:999px;background:#FFFFFF;border:1px solid rgba(0,0,0,.06)"><button class="seg seg-on" role="radio" aria-checked="true">Todo</button><button class="seg" role="radio" aria-checked="false">Ya viajaron</button><button class="seg" role="radio" aria-checked="false">En mora</button></div>
+
+    <article class="card" style="padding:16px 18px;display:flex;flex-direction:column;gap:8px">
+      <span class="lbl">Por cobrar</span>
+      <span class="d" style="font-size:38px;font-weight:700;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap">$ 56.171.770</span>
+      <div class="pieces"><span>6 clientes</span><span>&#160;·&#160;</span><span>$ 9.605.172 vencido</span></div>
+      <div style="display:flex;height:8px;border-radius:999px;overflow:hidden;gap:2px;background:#ECECEF"><span style="width:17%;background:#DC2626"></span><span style="width:17%;background:#D97706"></span><span style="width:66%;background:#0B0B0E"></span></div>
+    </article>
+
+    <article class="isl isl-glass glow-brand" style="padding:16px 18px;display:flex;align-items:center;gap:12px">
+      <div style="display:flex;flex-direction:column;gap:4px;flex-grow:1;min-width:0">
+        <span style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6B6B73">Escribe primero a</span>
+        <span style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Andrés Molina · $ 2.055.375</span>
+        <span style="font-size:12px;color:#6B6B73;white-space:nowrap">ya viajó · venció hace 6 días</span>
+      </div>
+      <a href="#" style="height:44px;padding:0 16px;border-radius:999px;background:#0B0B0E;color:#F4F4F5;display:flex;align-items:center;font-size:13.5px;font-weight:500;text-decoration:none;flex-shrink:0">Escribir</a>
+    </article>
+
+    <article class="card" style="padding:2px 16px 6px">
+      <div class="sec"><span><b>En mora</b> · 2</span></div>
+      <div class="row"><span class="mdot" style="background:#DC2626"></span><div style="display:flex;flex-direction:column;gap:3px;min-width:0"><span style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Marta León Villegas</span><div class="pieces"><span>#0039</span><span>&#160;·&#160;</span><span>sale el sáb 17 oct</span></div><span style="font-size:12.5px;color:#3A3A40;white-space:nowrap;display:inline-flex;align-items:center;gap:6px"><span style="width:6px;height:6px;border-radius:9px;background:#2563EB"></span>Prometió pagar el lun 28</span></div><span style="font-size:14px;font-weight:600;white-space:nowrap">$ 6.760.200</span></div>
+      <div class="row"><span class="mdot" style="background:#DC2626"></span><div style="display:flex;flex-direction:column;gap:3px;min-width:0"><span style="font-size:14px;font-weight:600">Luis Pardo</span><div class="pieces"><span>#0048</span><span>&#160;·&#160;</span><span>sale el sáb 14 nov</span></div><span style="font-size:12.5px;color:#3A3A40;white-space:nowrap">Anticipo vencido hace 3 días</span></div><span style="font-size:14px;font-weight:600;white-space:nowrap">$ 13.898.990</span></div>
+      <div class="sec"><span><b>Por vencer</b> · 1</span></div>
+      <div class="row"><span class="mdot" style="background:#D97706"></span><div style="display:flex;flex-direction:column;gap:3px;min-width:0"><span style="font-size:14px;font-weight:600">Pedro Nieto</span><div class="pieces"><span>#0044</span><span>&#160;·&#160;</span><span>sale el sáb 14 nov</span></div><span style="font-size:12.5px;color:#3A3A40;white-space:nowrap">Cuota vence el jue 1 oct</span></div><span style="font-size:14px;font-weight:600;white-space:nowrap">$ 9.269.326</span></div>
+    </article>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

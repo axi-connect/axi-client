@@ -93,6 +93,12 @@ export type DynamicFormActions =
     }
   | {
       render: (ctx: { submitting: boolean; dirty: boolean; invalid: boolean }) => React.ReactNode
+      /**
+       * Sin envoltorio: lo que devuelve `render` es hijo DIRECTO del `<form>`.
+       * Hace falta para una barra `sticky` (p. ej. `UnsavedChangesDock`): dentro
+       * de un contenedor de su misma altura no tiene recorrido y nunca se pega.
+       */
+      bare?: boolean
     }
 
 export type DynamicFormProps<TValues extends FieldValues> = {

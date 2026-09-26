@@ -6,7 +6,12 @@ import {
   AlertTitle,
 } from "@/shared/components/ui/alert";
 import { useCallback, useEffect, useState } from "react";
-import { ChevronRight, ShieldCheck, TriangleAlert } from "lucide-react";
+import {
+  ChevronLeft,
+  LoaderCircle,
+  ShieldCheck,
+  TriangleAlert,
+} from "lucide-react";
 
 import { API_ERROR_CODES, isHttpError } from "@/core/api/problem";
 import { errorMessage } from "@/core/lib/error-messages";
@@ -15,6 +20,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Switch } from "@/shared/components/ui/switch";
+import { InkIsland, Kicker } from "@/shared/components/features/bento";
 import { TemplateTextField } from "@/shared/components/features/template-text-field/TemplateTextField";
 import {
   MAX_TEMPLATE_BODY,
@@ -22,7 +28,9 @@ import {
   REMINDER_TEMPLATE_KEYS,
   REMINDER_TEMPLATE_LABELS,
   REMINDER_VARIABLE_LABELS,
+  previewSegments,
   renderReminderPreview,
+  SAMPLE_REMINDER_VARS,
   type CollectionsPolicyDTO,
   type CollectionsSettingsDTO,
   type ReminderTemplateKey,
@@ -39,7 +47,8 @@ import { ReminderThread } from "./ReminderThread";
 const MAX_OFFSETS = 6;
 
 /**
- * Cómo y cuándo le habla el negocio a quien le debe (F5 del programa Cobros).
+ * Cómo y cuándo le habla el negocio a quien le debe (F5 del programa Cobros;
+ * bento con la isla «Así le escribimos» en Cobros premium P5).
  *
  * Pestaña propia y no una sección de «Plan de pagos», y la razón es de fondo:
  * el plan de pagos es **el trato** —anticipo, cuotas, fechas— y cada pedido lo
@@ -120,7 +129,7 @@ export function RemindersTab() {
       </p>
     );
   }
-  if (policy === null) return <Skeleton className="h-64 w-full rounded-2xl" />;
+  if (policy === null) return <Skeleton className="h-64 w-full rounded-3xl" />;
 
   if (editing !== null) {
     return (
@@ -138,104 +147,117 @@ export function RemindersTab() {
   const channelsOff =
     !policy.reminder_channels.whatsapp && !policy.reminder_channels.email;
 
+  function patchTemplate(which: ReminderTemplateKey, enabled: boolean) {
+    if (policy === null) return;
+    patch({
+      templates: {
+        ...policy.templates,
+        [which]: { ...policy.templates[which], enabled },
+      },
+    });
+  }
+
   return (
-    <div className="grid items-start gap-9 lg:grid-cols-[minmax(0,1fr)_372px]">
-      <div>
-        <section>
-          <SectionTitle>Cuándo escribimos</SectionTitle>
-          <div className="overflow-hidden rounded-2xl border border-border bg-background">
-            <ReminderCadenceRow
-              first
-              label="Antes de vencer"
-              days={policy.reminder_days_before}
-              max={MAX_OFFSETS}
-              onChange={(reminder_days_before) =>
-                patch({
-                  reminder_days_before: [...reminder_days_before].sort(
-                    (a, b) => b - a,
-                  ),
-                })
-              }
-            />
-            <ReminderCadenceRow
-              label="Después de vencer"
-              days={policy.overdue_reminder_days}
-              max={MAX_OFFSETS}
-              onChange={(overdue_reminder_days) =>
-                patch({
-                  overdue_reminder_days: [...overdue_reminder_days].sort(
-                    (a, b) => a - b,
-                  ),
-                })
-              }
-            />
-            <SettingRow
-              label="Callar si el cliente promete pagar"
-              hint="Hasta la fecha que prometió"
-              control={
-                <Switch
-                  checked={policy.pause_on_promise}
-                  aria-label="Callar si el cliente promete pagar"
-                  onCheckedChange={(pause_on_promise) =>
-                    patch({ pause_on_promise })
-                  }
-                />
-              }
-            />
-          </div>
+    <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(20rem,26rem)] [&>*]:min-w-0">
+      <div className="flex flex-col gap-4">
+        <Card title="Cuándo escribimos">
+          <ReminderCadenceRow
+            label="Antes de vencer"
+            hint="Días antes de cada cuota; «el día» es el del vencimiento"
+            days={policy.reminder_days_before}
+            max={MAX_OFFSETS}
+            onChange={(reminder_days_before) =>
+              patch({
+                reminder_days_before: [...reminder_days_before].sort(
+                  (a, b) => b - a,
+                ),
+              })
+            }
+          />
+          <ReminderCadenceRow
+            label="Después de vencer"
+            hint="Días de mora, si no ha pagado"
+            days={policy.overdue_reminder_days}
+            max={MAX_OFFSETS}
+            onChange={(overdue_reminder_days) =>
+              patch({
+                overdue_reminder_days: [...overdue_reminder_days].sort(
+                  (a, b) => a - b,
+                ),
+              })
+            }
+          />
+          <SettingRow
+            label="Callar si el cliente promete pagar"
+            hint="Hasta la fecha que prometió; si pasa sin pago, vuelven solos"
+            control={
+              <Switch
+                size="lg"
+                checked={policy.pause_on_promise}
+                aria-label="Callar si el cliente promete pagar"
+                onCheckedChange={(pause_on_promise) =>
+                  patch({ pause_on_promise })
+                }
+              />
+            }
+          />
           <Note>
             Cada aviso sale{" "}
             <b className="font-medium text-foreground">una sola vez</b> y en su
             día exacto: «faltan 7 días» no se repite los siete días siguientes.
-            Un recordatorio diario deja de leerse justo antes de la fecha que
-            importa.
           </Note>
-        </section>
+        </Card>
 
-        <section className="mt-7">
-          <SectionTitle>Qué decimos</SectionTitle>
-          <div className="overflow-hidden rounded-2xl border border-border bg-background">
-            {REMINDER_TEMPLATE_KEYS.map((key, index) => (
-              <button
+        <Card title="Qué decimos">
+          {REMINDER_TEMPLATE_KEYS.map((key) => {
+            const label = REMINDER_TEMPLATE_LABELS[key].toLowerCase();
+            const template = policy.templates[key];
+            return (
+              <div
                 key={key}
-                type="button"
-                // «Antes de vencer» nombra dos filas de esta pantalla —cuándo
-                // se escribe y qué se dice—, así que el nombre accesible dice
-                // cuál de las dos es.
-                aria-label={`Editar el texto de ${REMINDER_TEMPLATE_LABELS[key].toLowerCase()}`}
-                onClick={() => setEditing(key)}
-                className={`relative grid min-h-[56px] w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-3 text-left transition-colors hover:bg-foreground/[0.03] ${
-                  index === 0
-                    ? ""
-                    : "before:absolute before:inset-x-4 before:top-0 before:h-px before:bg-border/60"
-                }`}
+                className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 border-t border-border/60 py-4 first-of-type:border-t-0 sm:grid-cols-[minmax(0,1fr)_auto_auto]"
               >
-                <span
-                  className={
-                    policy.templates[key].enabled ? "" : "text-muted-foreground"
-                  }
-                >
-                  <span className="block text-sm">
+                <div className="col-span-2 min-w-0 sm:col-span-1">
+                  <p
+                    className={`text-sm font-semibold ${template.enabled ? "" : "text-muted-foreground"}`}
+                  >
                     {REMINDER_TEMPLATE_LABELS[key]}
-                  </span>
-                  <span className="mt-0.5 block text-[12.5px] text-muted-foreground">
-                    {REMINDER_TEMPLATE_HINTS[key]}
-                  </span>
-                </span>
-                <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  {policy.templates[key].enabled ? (
-                    "Encendido"
-                  ) : (
-                    <b className="font-medium text-foreground">Apagado</b>
-                  )}
-                  <ChevronRight aria-hidden="true" className="size-4" />
-                </span>
-              </button>
-            ))}
-          </div>
+                  </p>
+                  <p
+                    className="mt-0.5 truncate text-[13px] text-muted-foreground"
+                    title={renderReminderPreview(template.body)}
+                  >
+                    {template.enabled
+                      ? `«${renderReminderPreview(template.body)}»`
+                      : REMINDER_TEMPLATE_HINTS[key]}
+                  </p>
+                </div>
+                {/* «Antes de vencer» nombra dos filas de esta pantalla —cuándo
+                    se escribe y qué se dice—, así que el nombre accesible dice
+                    cuál de las dos es. */}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="justify-self-start rounded-full px-3 sm:justify-self-auto"
+                  aria-label={`Editar el texto de ${label}`}
+                  onClick={() => setEditing(key)}
+                >
+                  Editar texto
+                </Button>
+                <Switch
+                  size="lg"
+                  checked={template.enabled}
+                  aria-label={`Enviar el aviso de ${label}`}
+                  onCheckedChange={(enabled) => patchTemplate(key, enabled)}
+                />
+              </div>
+            );
+          })}
           {policy.hsm_templates.overdue === undefined &&
-          policy.templates.overdue.enabled ? (
-            <Alert variant="warning" className="mt-3 rounded-2xl">
+          policy.templates.overdue.enabled &&
+          policy.reminder_channels.whatsapp ? (
+            <Alert variant="warning" className="mb-2 rounded-2xl">
               <TriangleAlert aria-hidden="true" />
               <AlertTitle>No hay plantilla aprobada para la mora</AlertTitle>
               <AlertDescription>
@@ -245,6 +267,15 @@ export function RemindersTab() {
                   escribir es justo el que hay que perseguir: sin ella, ese
                   aviso no sale.
                 </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-2 w-fit rounded-full"
+                  onClick={() => setEditing("overdue")}
+                >
+                  Elegir plantilla
+                </Button>
               </AlertDescription>
             </Alert>
           ) : null}
@@ -256,49 +287,48 @@ export function RemindersTab() {
             . El calendario de un cliente se pactó con él y no se toca; cómo le
             hablas, no lo pactaste con nadie.
           </Note>
-        </section>
+        </Card>
 
-        <section className="mt-7">
-          <SectionTitle>Por dónde</SectionTitle>
-          <div className="overflow-hidden rounded-2xl border border-border bg-background">
-            <SettingRow
-              first
-              label="WhatsApp"
-              control={
-                <Switch
-                  checked={policy.reminder_channels.whatsapp}
-                  aria-label="Avisar por WhatsApp"
-                  onCheckedChange={(whatsapp) =>
-                    patch({
-                      reminder_channels: {
-                        ...policy.reminder_channels,
-                        whatsapp,
-                      },
-                    })
-                  }
-                />
-              }
-            />
-            <SettingRow
-              label="Correo"
-              hint="Solo a quien tenga correo en su ficha"
-              control={
-                <Switch
-                  checked={policy.reminder_channels.email}
-                  aria-label="Avisar por correo"
-                  onCheckedChange={(email) =>
-                    patch({
-                      reminder_channels: { ...policy.reminder_channels, email },
-                    })
-                  }
-                />
-              }
-            />
-          </div>
-        </section>
+        <Card title="Por dónde">
+          <SettingRow
+            label="WhatsApp"
+            hint="Por el canal del pedido; fuera de las 24 h, con la plantilla aprobada"
+            control={
+              <Switch
+                size="lg"
+                checked={policy.reminder_channels.whatsapp}
+                aria-label="Avisar por WhatsApp"
+                onCheckedChange={(whatsapp) =>
+                  patch({
+                    reminder_channels: {
+                      ...policy.reminder_channels,
+                      whatsapp,
+                    },
+                  })
+                }
+              />
+            }
+          />
+          <SettingRow
+            label="Correo"
+            hint="Solo a quien tenga correo en su ficha"
+            control={
+              <Switch
+                size="lg"
+                checked={policy.reminder_channels.email}
+                aria-label="Avisar por correo"
+                onCheckedChange={(email) =>
+                  patch({
+                    reminder_channels: { ...policy.reminder_channels, email },
+                  })
+                }
+              />
+            }
+          />
+        </Card>
 
         {brokenTemplates.length > 0 ? (
-          <Alert variant="warning" className="mt-6">
+          <Alert variant="warning" className="rounded-2xl">
             <TriangleAlert aria-hidden="true" />
             <AlertDescription>
               <span>
@@ -318,21 +348,20 @@ export function RemindersTab() {
             </AlertDescription>
           </Alert>
         ) : null}
-        <div className="mt-6 flex justify-end">
+        <div className="flex justify-end">
           <Button
             onClick={() => void save()}
             disabled={saving || brokenTemplates.length > 0}
           >
+            {saving ? (
+              <LoaderCircle aria-hidden="true" className="animate-spin" />
+            ) : null}
             Guardar recordatorios
           </Button>
         </div>
       </div>
 
-      <ReminderThread
-        templates={policy.templates}
-        hasOverdueHsm={policy.hsm_templates.overdue !== undefined}
-        channelsOff={channelsOff}
-      />
+      <ReminderThread policy={policy} channelsOff={channelsOff} />
     </div>
   );
 }
@@ -340,8 +369,10 @@ export function RemindersTab() {
 /**
  * El texto de UN aviso, con su resultado al lado.
  *
- * El interruptor de encendido vive aquí y no en la lista: apagarlo no borra el
- * texto, así que la decisión y lo que se apaga tienen que verse juntos.
+ * El interruptor de encendido vive también aquí: apagarlo no borra el texto,
+ * así que la decisión y lo que se apaga tienen que verse juntos. La vista
+ * previa marca las variables que el servidor no sabe rellenar en vez de
+ * esconderlas: saldrían tal cual.
  */
 function TemplateEditor({
   which,
@@ -360,6 +391,7 @@ function TemplateEditor({
 }) {
   const template = policy.templates[which];
   const hsm = policy.hsm_templates[which];
+  const label = REMINDER_TEMPLATE_LABELS[which].toLowerCase();
   const unknown = unknownReminderVariables(
     template.body,
     policy.available_variables,
@@ -388,113 +420,129 @@ function TemplateEditor({
   }
 
   return (
-    <div className="grid items-start gap-9 lg:grid-cols-[minmax(0,1fr)_372px]">
-      <div>
+    <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(20rem,26rem)] [&>*]:min-w-0">
+      <div className="flex flex-col gap-4">
         <button
           type="button"
           onClick={onClose}
-          className="mb-4 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+          className="inline-flex min-h-6 w-fit items-center gap-1 rounded-md text-[13px] text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
         >
-          ← Recordatorios
+          <ChevronLeft aria-hidden="true" className="size-4" />
+          Recordatorios
         </button>
 
-        <SectionTitle>
-          El aviso de «{REMINDER_TEMPLATE_LABELS[which].toLowerCase()}»
-        </SectionTitle>
-        <div className="mb-3.5 overflow-hidden rounded-2xl border border-border bg-background">
+        <Card title={`El aviso de «${label}»`}>
           <SettingRow
-            first
             label="Enviar este aviso"
             hint="Apagarlo no borra el texto: deja de salir y queda dicho en el historial de cada plan"
             control={
               <Switch
+                size="lg"
                 checked={template.enabled}
-                aria-label={`Enviar el aviso de ${REMINDER_TEMPLATE_LABELS[which].toLowerCase()}`}
+                aria-label={`Enviar el aviso de ${label}`}
                 onCheckedChange={(enabled) => patchTemplate({ enabled })}
               />
             }
           />
-        </div>
-
-        <TemplateTextField
-          value={template.body}
-          onChange={(body) => patchTemplate({ body })}
-          variables={policy.available_variables}
-          labels={REMINDER_VARIABLE_LABELS}
-          maxLength={MAX_TEMPLATE_BODY}
-          label={`Texto del aviso de ${REMINDER_TEMPLATE_LABELS[which].toLowerCase()}`}
-          rows={6}
-          {...(unknown.length === 0
-            ? {}
-            : {
-                error: `El servidor no sabe rellenar ${unknown
-                  .map((name) => `{{${name}}}`)
-                  .join(", ")}: saldría tal cual en el WhatsApp del cliente.`,
-              })}
-        />
-
-        <section className="mt-7">
-          <SectionTitle>Fuera de la ventana de 24 horas</SectionTitle>
-          <div className="overflow-hidden rounded-2xl border border-border bg-background">
-            <SettingRow
-              first
-              label="Plantilla aprobada de Meta"
-              control={
-                <Input
-                  value={hsm?.name ?? ""}
-                  placeholder="cobro_recordatorio"
-                  aria-label="Nombre de la plantilla aprobada de Meta"
-                  onChange={(event) => patchHsm({ name: event.target.value })}
-                  className="h-8 w-[200px]"
-                />
-              }
-            />
-            <SettingRow
-              label="Idioma"
-              control={
-                <Input
-                  value={hsm?.language ?? "es"}
-                  aria-label="Idioma de la plantilla aprobada"
-                  onChange={(event) =>
-                    patchHsm({ language: event.target.value })
-                  }
-                  className="h-8 w-20"
-                />
-              }
+          <div className="border-t border-border/60 py-4">
+            <TemplateTextField
+              value={template.body}
+              onChange={(body) => patchTemplate({ body })}
+              variables={policy.available_variables}
+              labels={REMINDER_VARIABLE_LABELS}
+              maxLength={MAX_TEMPLATE_BODY}
+              label={`Texto del aviso de ${label}`}
+              rows={6}
+              {...(unknown.length === 0
+                ? {}
+                : {
+                    error: `El servidor no sabe rellenar ${unknown
+                      .map((name) => `{{${name}}}`)
+                      .join(
+                        ", ",
+                      )}: saldría tal cual en el WhatsApp del cliente.`,
+                  })}
             />
           </div>
+        </Card>
+
+        <Card title="Fuera de la ventana de 24 horas">
+          <SettingRow
+            label="Plantilla aprobada de Meta"
+            hint="El nombre exacto con el que Meta la aprobó"
+            control={
+              <Input
+                value={hsm?.name ?? ""}
+                placeholder="cobro_recordatorio"
+                aria-label="Nombre de la plantilla aprobada de Meta"
+                onChange={(event) => patchHsm({ name: event.target.value })}
+                className="h-9 w-full sm:w-[220px]"
+              />
+            }
+          />
+          <SettingRow
+            label="Idioma"
+            control={
+              <Input
+                value={hsm?.language ?? "es"}
+                aria-label="Idioma de la plantilla aprobada"
+                onChange={(event) => patchHsm({ language: event.target.value })}
+                className="h-9 w-20"
+              />
+            }
+          />
           <Note>
             WhatsApp solo deja escribir libremente durante 24 horas desde el
             último mensaje del cliente. Pasadas esas horas sale esta plantilla;
             sin ella, el aviso no sale.
           </Note>
-        </section>
+        </Card>
 
-        <div className="mt-6 flex justify-end gap-2">
+        <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={onClose}>
             Volver
           </Button>
           <Button onClick={onSave} disabled={saving || unknown.length > 0}>
+            {saving ? (
+              <LoaderCircle aria-hidden="true" className="animate-spin" />
+            ) : null}
             Guardar el texto
           </Button>
         </div>
       </div>
 
-      <aside className="rounded-[20px] border border-border bg-background p-5">
-        <p className="text-[12.5px] text-muted-foreground">Con los datos de</p>
-        <p className="mt-0.5 text-[15.5px] font-semibold tracking-[-0.01em]">
-          Laura Gómez · cuota 2 de 3
-        </p>
-        <div className="mt-5">
-          <p className="pb-3 text-center text-[11.5px] text-muted-foreground">
-            Así se verá
-          </p>
-          <p className="max-w-[88%] self-end rounded-[16px] rounded-br-[5px] bg-secondary px-3.5 py-2.5 text-[13px] leading-relaxed">
-            {renderReminderPreview(template.body)}
+      <InkIsland label="Así le llega" className="gap-4 xl:sticky xl:top-6">
+        <div className="flex flex-col gap-1.5">
+          <Kicker>Así le llega</Kicker>
+          <p className="font-heading text-xl leading-tight font-bold tracking-tight">
+            {SAMPLE_REMINDER_VARS.contact_name} · cuota{" "}
+            {SAMPLE_REMINDER_VARS.installment_seq} de{" "}
+            {SAMPLE_REMINDER_VARS.installments_count}
           </p>
         </div>
+        {template.enabled ? (
+          <p className="max-w-[92%] self-end rounded-[18px] rounded-br-[6px] bg-card px-3.5 py-2.5 text-[13px] leading-relaxed whitespace-pre-line shadow-sm">
+            {previewSegments(template.body, policy.available_variables).map(
+              (part, index) =>
+                part.unknown ? (
+                  <mark
+                    key={index}
+                    className="rounded bg-destructive/10 px-0.5 text-destructive underline decoration-wavy"
+                  >
+                    {part.text}
+                  </mark>
+                ) : (
+                  <span key={index}>{part.text}</span>
+                ),
+            )}
+          </p>
+        ) : (
+          <p className="rounded-2xl border border-dashed border-border px-3.5 py-2.5 text-[12.5px] leading-relaxed text-muted-foreground">
+            Este aviso está apagado: ese día no se escribe nada.
+          </p>
+        )}
         {hsm === undefined ? null : (
-          <p className="mt-4 flex items-start gap-2 text-[12.5px] leading-relaxed text-muted-foreground">
+          <p className="flex items-start gap-2 text-[12.5px] leading-relaxed text-muted-foreground">
             <ShieldCheck
               aria-hidden="true"
               className="mt-0.5 size-3.5 shrink-0"
@@ -506,34 +554,35 @@ function TemplateEditor({
             </span>
           </p>
         )}
-        <Note className="pt-4">
+        <p className="text-xs leading-relaxed text-muted-foreground">
           No es un ejemplo escrito a mano: es tu texto con las cifras de un
           pedido. Cambia una palabra y cambia aquí.
-        </Note>
-      </aside>
+        </p>
+      </InkIsland>
     </div>
   );
 }
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
+function Card({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
-    <p className="px-1 pb-2.5 text-[13px] font-medium text-muted-foreground">
+    <section className="rounded-3xl border border-border bg-card px-5 pb-1 md:px-6">
+      <h2 className="pt-5 pb-1 text-xs font-normal text-muted-foreground">
+        {title}
+      </h2>
       {children}
-    </p>
+    </section>
   );
 }
 
-function Note({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
+function Note({ children }: { children: React.ReactNode }) {
   return (
-    <p
-      className={`max-w-[62ch] px-1 pt-2.5 text-[12.5px] leading-relaxed text-muted-foreground ${className ?? ""}`}
-    >
+    <p className="max-w-[72ch] border-t border-border/60 py-3.5 text-[12.5px] leading-relaxed text-muted-foreground">
       {children}
     </p>
   );
@@ -543,30 +592,22 @@ function SettingRow({
   label,
   hint,
   control,
-  first,
 }: {
   label: string;
   hint?: string;
   control: React.ReactNode;
-  first?: boolean;
 }) {
   return (
-    <div
-      className={`relative grid min-h-[56px] grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-3 ${
-        first === true
-          ? ""
-          : "before:absolute before:inset-x-4 before:top-0 before:h-px before:bg-border/60"
-      }`}
-    >
-      <span>
-        <span className="block text-sm">{label}</span>
+    <div className="flex flex-col gap-3 border-t border-border/60 py-4 first-of-type:border-t-0 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+      <div className="min-w-0">
+        <p className="text-sm font-semibold">{label}</p>
         {hint === undefined ? null : (
-          <span className="mt-0.5 block text-[12.5px] text-muted-foreground">
+          <p className="mt-0.5 text-[13px] leading-relaxed text-muted-foreground">
             {hint}
-          </span>
+          </p>
         )}
-      </span>
-      {control}
+      </div>
+      <div className="shrink-0">{control}</div>
     </div>
   );
 }

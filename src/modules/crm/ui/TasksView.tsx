@@ -11,6 +11,8 @@ import { loadMyCompanyOnce } from "@/modules/companies/public";
 import { getAgentTaskSettings } from "@/modules/crm/infrastructure/services/agent-task-settings-service.adapter";
 import { ScheduledAgenda } from "@/modules/crm/ui/components/ScheduledAgenda";
 import { TaskDayList } from "@/modules/crm/ui/components/TaskDayList";
+import { TasksNextUpIsland } from "./components/TasksNextUpIsland";
+import { Skeleton } from "@/shared/components/ui/skeleton";
 import { TaskScoreboard } from "@/modules/crm/ui/components/TaskScoreboard";
 import { AgentDigestLine } from "@/modules/crm/ui/components/AgentDigestLine";
 import { SearchField } from "@/shared/components/ui/search-field";
@@ -181,13 +183,18 @@ export function TasksView() {
   ) : null;
 
   return (
-    <div className="mx-auto max-w-[70rem] space-y-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-semibold tracking-tight">Tareas</h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Lo que el equipo y los agentes tienen entre manos
-            {abbr === null ? "" : `, en hora del negocio (${abbr})`}.
+    <div className="mx-auto w-full min-w-0 max-w-[70rem] space-y-4">
+      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+        <div className="min-w-0 space-y-1.5">
+          <h1 className="font-heading text-3xl leading-tight font-bold tracking-tight md:text-4xl">Tareas</h1>
+          <p className="text-sm text-pretty text-muted-foreground">
+            <span className="whitespace-nowrap">Lo que el equipo y Axi tienen entre manos</span>
+            {abbr === null ? "" : (
+              <>
+                {" "}
+                · <span className="whitespace-nowrap">en hora del negocio ({abbr})</span>
+              </>
+            )}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -198,13 +205,27 @@ export function TasksView() {
         </div>
       </div>
 
-      {stats !== null && <TaskScoreboard stats={stats} executor={executor} />}
+      {/* El bento de la bandeja (lienzo CRM premium F3): el marcador —las
+          cifras son el filtro— y UNA isla con lo que no espera. Se dimensiona
+          por el ancho del contenido (`@container`, §9.5). */}
+      <div className="@container">
+        <div className="grid gap-4 @min-[46rem]:grid-cols-[minmax(0,1fr)_minmax(16rem,19rem)] [&>*]:min-w-0">
+          {stats !== null ? (
+            <div className="@container h-full min-w-0">
+              <TaskScoreboard stats={stats} executor={executor} />
+            </div>
+          ) : (
+            <Skeleton className="h-[116px] rounded-3xl" />
+          )}
+          <TasksNextUpIsland stats={stats} digest={digest} items={items} agentMode={executor === "agent"} />
+        </div>
+      </div>
 
       {/* La línea del agente. En la bandeja mezclada es un resumen de una
           línea que lleva al modo agente; en «Del agente», el parte completo. */}
-      {digest !== null && (
-        <AgentDigestLine digest={digest} variant={executor === "agent" ? "full" : "teaser"} />
-      )}
+      {/* En la bandeja mezclada, la línea breve que lleva al modo agente; en
+          el modo agente el parte completo vive en la isla. */}
+      {digest !== null && executor !== "agent" && <AgentDigestLine digest={digest} variant="teaser" />}
 
       {/* Una sola barra de trabajo. Antes eran tres filas de segmentados: el
           vencimiento y el desenlace del motor viven ahora en el marcador.
@@ -270,9 +291,12 @@ export function TasksView() {
           onInspect={setInspected}
         />
       ) : error !== null ? (
-        <div className="rounded-2xl border border-border bg-background p-8 text-center">
-          <p className="text-sm text-muted-foreground">{error}</p>
-          <Button variant="outline" className="mt-4 rounded-full" onClick={() => void fetch()}>
+        <div role="alert" className="flex flex-col items-center gap-4 rounded-3xl border border-border bg-card p-8 text-center">
+          <div className="max-w-sm space-y-1.5">
+            <p className="font-heading text-xl font-bold">No pudimos leer tus tareas</p>
+            <p className="text-sm text-pretty text-muted-foreground">{error}</p>
+          </div>
+          <Button variant="outline" className="rounded-full" onClick={() => void fetch()}>
             Reintentar
           </Button>
         </div>

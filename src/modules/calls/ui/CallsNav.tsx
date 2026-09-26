@@ -16,7 +16,8 @@ export function CallsNav() {
   return (
     <header className="border-border shrink-0 border-b px-4 py-2.5 md:px-6">
       <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-        <h1 className="font-heading text-lg font-bold tracking-tight">Llamadas</h1>
+        {/* No es un h1: el titular de cada vista es el suyo (premium F5). */}
+        <p className="font-heading text-lg font-bold tracking-tight">Llamadas</p>
         <NavTabs items={items} label="Secciones de llamadas" />
       </div>
     </header>

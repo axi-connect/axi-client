@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>CRM · Axi en la ficha</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&amp;family=Poppins:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#F5F5F7}
+.lt{--bg:#F5F5F7;--card:#FFFFFF;--fg:#0B0B0E;--fg2:#3A3A40;--mut:#6B6B73;--line:rgba(0,0,0,.07);--line2:rgba(0,0,0,.12);--chip:#F0F0F2;--acc:rgba(230,87,89,.12);--track:#ECECEF;--ok:#1F9D5B;--warn:#D97706;--ai:#7C3AED}
+.frame{width:1440px;height:900px;background:var(--bg);color:var(--fg);font-family:Poppins,system-ui,sans-serif;box-sizing:border-box;padding:48px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:minmax(0,1.25fr) minmax(0,1fr);gap:28px 24px}
+.d{font-family:Urbanist,Poppins,sans-serif}
+.pane{display:flex;flex-direction:column;gap:12px;min-width:0;min-height:0}
+.cap{font-size:12px;font-weight:600;color:var(--fg2);white-space:nowrap}
+.cap span{font-weight:400;color:var(--mut)}
+.card{background:var(--card);border-radius:24px;border:1px solid var(--line);padding:20px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.lbl{font-size:12px;color:var(--mut);white-space:nowrap}
+.seg{height:30px;padding:0 11px;border-radius:999px;font:500 12.5px Poppins,sans-serif;color:var(--mut);border:0;background:transparent;white-space:nowrap}
+.seg-on{background:var(--acc);color:var(--fg)}
+.pill{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 9px;border-radius:999px;font-size:11.5px;font-weight:500;background:var(--chip);color:var(--fg);white-space:nowrap}
+.dot{width:6px;height:6px;border-radius:9px;flex-shrink:0;display:inline-block}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:34px;padding:0 13px;border-radius:999px;font:500 12.5px Poppins,sans-serif;border:1px solid var(--line2);background:var(--card);color:var(--fg);white-space:nowrap;align-self:flex-start;cursor:pointer}
+.aig{color:var(--ai);flex-shrink:0}
+.sk{height:12px;border-radius:8px;background:var(--track)}
+.alert{display:grid;grid-template-columns:18px minmax(0,1fr);gap:10px;padding:12px 14px;border-radius:16px;border:1px solid var(--line2);font-size:13px;line-height:1.45}
+</style>
+</helmet>
+<div class="frame lt">
+  <section class="pane">
+    <div class="cap">Resumen <span>· lo que hay que saber antes de escribirle</span></div>
+    <article class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center"><h2 class="d" style="margin:0;font-size:18px;font-weight:700;display:flex;gap:8px;align-items:center"><svg class="aig" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l1.8 5.4L19 10l-5.2 1.6L12 17l-1.8-5.4L5 10l5.2-1.6z"></path></svg>Axi</h2><span class="lbl">usa IA del plan</span></div>
+      <div role="radiogroup" aria-label="Qué le pides a Axi" style="display:flex;gap:2px;padding:3px;border-radius:999px;border:1px solid var(--line);align-self:flex-start"><button type="button" role="radio" aria-checked="true" class="seg seg-on">Resumen</button><button type="button" role="radio" aria-checked="false" class="seg">Siguiente paso</button><button type="button" role="radio" aria-checked="false" class="seg">Borrador</button></div>
+      <p style="margin:0;font-size:14px;line-height:1.6">Viaja en familia (4) y compra Caribe. Pagó su último viaje a tiempo. Ahora cotiza Cancún para diciembre y lleva 9 días sin responder la propuesta.</p>
+      <ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--fg2)"><li>· Prefiere WhatsApp en la tarde</li><li>· Pregunta siempre por traslados</li><li>· Pidió club de niños en el hotel</li></ul>
+      <span class="pill" style="font-weight:400;color:var(--mut);margin-top:auto">Guardado hace 3 h · no gastó IA del plan</span>
+    </article>
+  </section>
+
+  <section class="pane">
+    <div class="cap">Siguiente paso <span>· con su porqué y cómo hacerlo</span></div>
+    <article class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center"><h2 class="d" style="margin:0;font-size:18px;font-weight:700;display:flex;gap:8px;align-items:center"><svg class="aig" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l1.8 5.4L19 10l-5.2 1.6L12 17l-1.8-5.4L5 10l5.2-1.6z"></path></svg>Axi</h2><span class="lbl">usa IA del plan</span></div>
+      <div role="radiogroup" aria-label="Qué le pides a Axi" style="display:flex;gap:2px;padding:3px;border-radius:999px;border:1px solid var(--line);align-self:flex-start"><button type="button" role="radio" aria-checked="false" class="seg">Resumen</button><button type="button" role="radio" aria-checked="true" class="seg seg-on">Siguiente paso</button><button type="button" role="radio" aria-checked="false" class="seg">Borrador</button></div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:15px;font-weight:600">Retomar la cotización de Cancún</span><span class="pill"><span class="dot" style="background:var(--warn)"></span>Urgencia media</span></div>
+      <p style="margin:0;font-size:13.5px;line-height:1.55;color:var(--fg2)">Lleva 9 días sin responder. En marzo cerró San Andrés después de un recordatorio con fechas concretas y el precio congelado.</p>
+      <button type="button" class="btn" style="margin-top:auto">Programar este seguimiento</button>
+      <span class="lbl" style="white-space:normal">Abre «Programar seguimiento» con el objetivo ya escrito. Nada sale sin que lo confirmes.</span>
+    </article>
+  </section>
+
+  <section class="pane">
+    <div class="cap">Borrador <span>· para pegar en el inbox</span></div>
+    <article class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center"><h2 class="d" style="margin:0;font-size:18px;font-weight:700;display:flex;gap:8px;align-items:center"><svg class="aig" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l1.8 5.4L19 10l-5.2 1.6L12 17l-1.8-5.4L5 10l5.2-1.6z"></path></svg>Axi</h2><span class="lbl">usa IA del plan</span></div>
+      <div role="radiogroup" aria-label="Qué le pides a Axi" style="display:flex;gap:2px;padding:3px;border-radius:999px;border:1px solid var(--line);align-self:flex-start"><button type="button" role="radio" aria-checked="false" class="seg">Resumen</button><button type="button" role="radio" aria-checked="false" class="seg">Siguiente paso</button><button type="button" role="radio" aria-checked="true" class="seg seg-on">Borrador</button></div>
+      <blockquote style="margin:0;padding:14px 16px;border-radius:18px;background:var(--chip);font-size:13.5px;line-height:1.55">Hola Sofía, ¿cómo vas? Te guardé la tarifa de Cancún para 4 del 20 al 27 de diciembre, con traslados y club de niños. ¿Quieres que la aseguremos esta semana?</blockquote>
+      <div style="display:flex;gap:8px;margin-top:auto"><button type="button" class="btn">Copiar borrador</button><button type="button" class="btn" disabled="" aria-describedby="regen-why" style="opacity:.55">Regenerar</button></div>
+      <span id="regen-why" class="lbl" style="white-space:normal">Recién generado: podrás pedir otro cuando pase una hora.</span>
+    </article>
+  </section>
+
+  <section class="pane">
+    <div class="cap">Pensando <span>· mientras responde</span></div>
+    <article class="card" role="status" aria-label="Axi está leyendo la relación">
+      <span style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mut)"><svg class="aig" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.8 5.4L19 10l-5.2 1.6L12 17l-1.8-5.4L5 10l5.2-1.6z"></path></svg>Axi está leyendo la relación…</span>
+      <span class="sk" style="width:100%"></span><span class="sk" style="width:86%"></span><span class="sk" style="width:62%"></span>
+    </article>
+  </section>
+
+  <section class="pane">
+    <div class="cap">Sin IA disponible <span>· el plan llegó a su límite</span></div>
+    <article class="card">
+      <div class="alert"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2"><path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3Z"></path><path d="M12 9v4M12 17h.01"></path></svg><span><strong style="font-weight:600">Tu plan ya usó la IA de este mes.</strong> Vuelve con el próximo ciclo, o amplíala desde Facturación.</span></div>
+      <a class="btn" href="#">Ver mi plan</a>
+    </article>
+  </section>
+
+  <section class="pane">
+    <div class="cap">Sin permiso <span>· el rol no usa el copiloto</span></div>
+    <article class="card" style="justify-content:center">
+      <span style="font-size:13px;color:var(--fg2);line-height:1.5">La ficha no pinta la tarjeta de Axi: el rol no tiene <code style="font-size:12px;background:var(--chip);padding:1px 6px;border-radius:6px">crm:copilot</code>. No se muestra una tarjeta vacía ni deshabilitada.</span>
+    </article>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

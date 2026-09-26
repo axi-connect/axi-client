@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Pedido · oscuro</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&amp;family=Poppins:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Poppins,system-ui,sans-serif;color:#EDEDED;background:#0A0A0A}
+.d{font-family:Urbanist,Poppins,sans-serif}
+.nav{display:flex;align-items:center;gap:12px;height:36px;padding:0 12px;border-radius:10px;font-size:13.5px;color:#C4C4CC;text-decoration:none}
+.nav-on{background:#18181B;color:#EDEDED;font-weight:500;box-shadow:0 0 0 1px rgba(255,255,255,.08)}
+.grp{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#A1A1AA;padding:14px 12px 6px}
+.card{background:#141416;border-radius:24px;border:1px solid rgba(255,255,255,.08)}
+.lbl{font-size:12px;color:#A1A1AA;white-space:nowrap}
+.fig{font-family:Urbanist,Poppins,sans-serif;font-weight:700;letter-spacing:-.03em;line-height:1;white-space:nowrap;font-variant-numeric:tabular-nums}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 20px;border-radius:999px;font:500 14px Poppins,sans-serif;border:0;text-decoration:none}
+.btn-s{background:#141416;color:#EDEDED;border:1px solid rgba(255,255,255,.14)}
+.btn-w{background:#EDEDED;color:#0A0A0A}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:500;background:rgba(255,255,255,.08);color:#EDEDED;white-space:nowrap}
+.dot{width:6px;height:6px;border-radius:9px;flex-shrink:0}
+.meter{display:flex;height:10px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.10);gap:2px}
+.prow{display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 0;border-top:1px solid rgba(255,255,255,.08)}
+.pic{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center}
+.ev{display:grid;grid-template-columns:14px minmax(0,1fr) auto;gap:12px;align-items:start;padding:9px 0}
+.evdot{width:10px;height:10px;border-radius:999px;margin-top:5px;border:2px solid #EDEDED;box-sizing:border-box}
+.fact{display:flex;justify-content:space-between;gap:12px;font-size:12.5px;padding:9px 0;border-top:1px solid rgba(255,255,255,.10)}
+.isl{position:relative;isolation:isolate;overflow:hidden;border-radius:24px}
+.isl-glass{color:#0B0B0E;background:var(--glow,none),linear-gradient(160deg,rgba(255,255,255,.82),rgba(246,243,254,.62));-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);box-shadow:inset 0 2px 2px rgba(11,11,14,.05),inset 0 -2px 2px rgba(255,255,255,.5),inset 0 0 1.6px 4px rgba(255,255,255,.2),inset 0 0 18px 2px rgba(255,255,255,.55),0 4px 2px -2px rgba(11,11,14,.14),0 30px 70px -34px rgba(16,16,24,.35),0 30px 80px -40px rgba(124,58,237,.35)}
+.isl-dark{color:#EDEDED;background:var(--glow,none),linear-gradient(160deg,rgba(38,38,42,.90),rgba(28,24,40,.92));-webkit-backdrop-filter:blur(20px) saturate(170%);backdrop-filter:blur(20px) saturate(170%);box-shadow:inset 0 2px 2px rgba(255,255,255,.10),inset 0 -2px 2px rgba(0,0,0,.35),inset 0 0 1.6px 4px rgba(255,255,255,.04),inset 0 0 14px 1px rgba(255,255,255,.08),0 40px 90px -36px rgba(124,58,237,.55),0 18px 50px -24px rgba(230,87,89,.45)}
+.isl-glass::before,.isl-dark::before{content:"";position:absolute;inset:0;z-index:1;padding:1.5px;border-radius:inherit;pointer-events:none;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.isl-glass::before{background:conic-gradient(from -75deg at 50% 50%,rgba(11,11,14,.32) 0%,transparent 6% 40%,rgba(11,11,14,.32) 50%,transparent 56% 94%,rgba(11,11,14,.32) 100%),linear-gradient(rgba(255,255,255,.85),rgba(255,255,255,.85))}
+.isl-dark::before{background:conic-gradient(from -75deg at 50% 50%,rgba(255,255,255,.7) 0%,transparent 6% 40%,rgba(255,255,255,.7) 50%,transparent 56% 94%,rgba(255,255,255,.7) 100%),linear-gradient(rgba(255,255,255,.12),rgba(255,255,255,.12))}
+.isl-glass::after,.isl-dark::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none}
+.isl-glass::after{background:linear-gradient(-45deg,transparent 0%,rgba(255,255,255,.55) 40% 46%,transparent 54%) 0 0/200% 200%,radial-gradient(60% 45% at 30% 0%,rgba(255,255,255,.9),transparent 70%)}
+.isl-dark::after{background:linear-gradient(-45deg,transparent 0%,rgba(255,255,255,.10) 40% 46%,transparent 54%) 0 0/200% 200%,radial-gradient(60% 45% at 30% 0%,rgba(255,255,255,.14),transparent 70%)}
+.isl-ink{color:#F4F4F5;background:var(--glow,none),#0B0B0E}
+.isl-glass.glow-brand{--glow:radial-gradient(circle 20rem at 90% 8%,rgba(230,87,89,.16),transparent 70%)}
+.isl-glass.glow-ai{--glow:radial-gradient(circle 22rem at 0% 0%,rgba(124,58,237,.16),transparent 70%),radial-gradient(circle 20rem at 100% 100%,rgba(230,87,89,.11),transparent 70%)}
+.isl-dark.glow-brand{--glow:radial-gradient(circle 20rem at 90% 8%,rgba(251,113,133,.26),transparent 70%)}
+.isl-dark.glow-ai{--glow:radial-gradient(circle 22rem at 0% 0%,rgba(167,139,250,.26),transparent 70%),radial-gradient(circle 20rem at 100% 100%,rgba(251,113,133,.18),transparent 70%)}
+.isl-ink.glow-brand{--glow:radial-gradient(circle 20rem at 90% 8%,rgba(230,87,89,.45),transparent 70%)}
+.btn-contrast{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:999px;font:500 14px Poppins,sans-serif;border:0;cursor:pointer;text-decoration:none;background:#0B0B0E;color:#FFFFFF}
+.isl-dark .btn-contrast,.isl-ink .btn-contrast{background:#F4F4F5;color:#0B0B0E}
+.btn-glass{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:999px;font:500 14px Poppins,sans-serif;border:0;cursor:pointer;text-decoration:none;position:relative;color:rgba(11,11,14,.92);background:linear-gradient(-75deg,rgba(255,255,255,.08),rgba(255,255,255,.5),rgba(255,255,255,.08));box-shadow:inset 0 2px 2px rgba(11,11,14,.05),inset 0 -2px 2px rgba(255,255,255,.5),0 4px 2px -2px rgba(11,11,14,.2),inset 0 0 1.6px 4px rgba(255,255,255,.2),0 0 0 1px rgba(11,11,14,.08)}
+.isl-dark .btn-glass{color:rgba(237,237,237,.92);background:linear-gradient(-75deg,rgba(255,255,255,.03),rgba(255,255,255,.10),rgba(255,255,255,.03));box-shadow:inset 0 2px 2px rgba(255,255,255,.08),inset 0 -2px 2px rgba(0,0,0,.3),0 0 0 1px rgba(255,255,255,.12)}
+.isl-glass .fact,.isl-glass .frow,.isl-glass .cal{border-top-color:rgba(11,11,14,.08)!important}
+.isl-glass .seg-on{background:#0B0B0E}.isl-glass .seg-off{background:rgba(11,11,14,.12)}
+.isl-glass .step{color:#3A3A40}.isl-glass .chk-on,.isl-glass .fdot-on{background:#0B0B0E;color:#FFFFFF}.isl-glass .chk-off,.isl-glass .fdot-off,.isl-glass .cn{border-color:rgba(11,11,14,.28)}
+.isl-glass .bub{background:#FFFFFF;box-shadow:0 1px 2px rgba(0,0,0,.06),0 0 0 1px rgba(11,11,14,.05)}.isl-glass .gap{border-color:rgba(11,11,14,.24);color:#6B6B73}.isl-glass .day{color:#6B6B73}
+@media (prefers-reduced-transparency: reduce){.isl-glass{background:#FFFFFF}.isl-dark{background:#1E1E22}}
+</style>
+</helmet>
+<div style="width:1440px;height:900px;display:flex;background:#0A0A0A;overflow:hidden">
+  <aside style="width:248px;flex-shrink:0;padding:18px 14px;box-sizing:border-box;display:flex;flex-direction:column;gap:2px;border-right:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.02)">
+    <div style="display:flex;align-items:center;gap:10px;padding:4px 10px 16px">
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="11" cy="15" r="7.5" fill="none" stroke="#FB7185" stroke-width="4"></circle><path d="M16 5 L25 24" stroke="#FBBF24" stroke-width="4" stroke-linecap="round"></path><path d="M25 5 L17 20" stroke="#A78BFA" stroke-width="4" stroke-linecap="round"></path></svg>
+      <div style="display:flex;flex-direction:column;gap:2px"><span class="d" style="font-weight:700;font-size:15px">Axi Connect</span><span style="font-size:11.5px;color:#A1A1AA">JuanitoXpeditions</span></div>
+    </div>
+    <a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg>Inicio</a>
+    <a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"></path></svg>Inbox</a>
+    <div class="grp">Ventas</div>
+    <a class="nav nav-on" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FB7185" stroke-width="1.7"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><path d="M3 6h18"></path></svg>Pedidos</a>
+    <a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2" y="5" width="20" height="14" rx="3"></rect><path d="M2 10h20M6 15h4"></path></svg>Cartera</a>
+  </aside>
+  <main style="flex-grow:1;display:flex;flex-direction:column;min-width:0">
+    <header style="height:60px;display:flex;align-items:center;padding:0 40px;flex-shrink:0">
+      <nav aria-label="Ruta" style="display:flex;gap:10px;font-size:13px;color:#A1A1AA"><span>Pedidos</span><span aria-hidden="true">/</span><span style="color:#EDEDED;font-weight:500">#0045 · Ana Gómez</span></nav>
+    </header>
+    <div style="padding:4px 40px 32px;display:flex;flex-direction:column;gap:20px;flex-grow:1;min-height:0">
+      <section style="display:flex;justify-content:space-between;align-items:center">
+        <div style="display:flex;align-items:center;gap:18px">
+          <div class="d" style="width:64px;height:64px;border-radius:20px;background:#EDEDED;color:#0A0A0A;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700">AG</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;align-items:center;gap:12px"><h1 class="d" style="margin:0;font-size:38px;font-weight:700;letter-spacing:-.02em;line-height:1.1">Pedido #0045</h1><span class="pill"><span class="dot" style="background:#4ADE80"></span>Confirmado</span><span class="pill">Anticipo 30 %</span></div>
+            <div style="font-size:13.5px;color:#A1A1AA">Ana Gómez · Expedición Cocuy, sáb 14 nov · 2 viajeros</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px"><a class="btn btn-s" href="#">Ver la conversación</a><a class="btn btn-s" href="#">Registrar un pago</a></div>
+      </section>
+      <section style="display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr) 336px;grid-template-rows:auto minmax(0,1fr);gap:16px;flex-grow:1;min-height:0">
+        <article class="card" style="padding:22px 24px;display:flex;flex-direction:column;gap:12px;min-width:0">
+          <div style="display:flex;justify-content:space-between;align-items:center"><span class="lbl">Falta por cobrar</span><span class="pill"><span class="dot" style="background:#EDEDED"></span>30 % cobrado</span></div>
+          <span class="fig" style="font-size:52px">$ 19.458.586</span>
+          <span style="font-size:12.5px;color:#D4D4D8">de $ 27.797.980 · <strong style="font-weight:600">$ 8.339.394</strong> cobrado · $ 5.000.000 por revisar</span>
+          <div class="meter"><span style="width:30%;background:#EDEDED"></span><span style="width:18%;background:repeating-linear-gradient(135deg,#71717A 0 4px,#3F3F46 4px 8px)"></span></div>
+        </article>
+        <article class="card" style="padding:22px 24px;display:flex;flex-direction:column;gap:12px;min-width:0">
+          <div style="display:flex;justify-content:space-between;align-items:center"><span class="lbl">Saldo vence</span><span class="pill">30 días antes</span></div>
+          <span class="fig" style="font-size:40px">mié 14 oct</span>
+          <span style="font-size:12.5px;color:#D4D4D8">faltan 19 días · la salida es el sáb 14 nov</span>
+        </article>
+        <article class="card" style="padding:14px 24px 8px;display:flex;flex-direction:column;min-width:0">
+          <span class="lbl" style="padding:6px 0">Pagos</span>
+          <div class="prow"><span class="pic" style="background:rgba(255,255,255,.08)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4D4D8" stroke-width="1.8"><rect x="6" y="2" width="12" height="20" rx="3"></rect></svg></span><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:14px;font-weight:600">Comprobante por revisar</span><span style="font-size:12px;color:#A1A1AA">Nequi · hoy 9:41 a. m.</span></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><span style="font-weight:600">$ 5.000.000</span><span class="pill" style="height:22px"><span class="dot" style="background:#FBBF24"></span>Por revisar</span></div></div>
+          <div class="prow"><span class="pic" style="background:#EDEDED"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0A0A0A" stroke-width="2.4"><path d="m5 12 5 5 9-10"></path></svg></span><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:14px;font-weight:600">Anticipo</span><span style="font-size:12px;color:#A1A1AA">Bancolombia · mar 22 sep</span></div><span style="font-weight:600">$ 8.339.394</span></div>
+        </article>
+        <article class="card" style="padding:14px 24px 8px;display:flex;flex-direction:column;min-width:0">
+          <span class="lbl" style="padding:6px 0">Lo que pasó</span>
+          <div class="ev"><span class="evdot"></span><div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:13.5px;font-weight:500">Llegó un comprobante</span><span style="font-size:12px;color:#A1A1AA">Ana dice que pagó $ 5.000.000</span></div><span style="font-size:12px;color:#A1A1AA">9:41 a. m.</span></div>
+          <div class="ev"><span class="evdot" style="background:#EDEDED"></span><div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:13.5px;font-weight:500">Anticipo verificado · $ 8.339.394</span><span style="font-size:12px;color:#A1A1AA">El contrato salió solo: CTR-2026-0120</span></div><span style="font-size:12px;color:#A1A1AA">22 sep</span></div>
+          <div class="ev"><span class="evdot" style="background:#EDEDED"></span><div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:13.5px;font-weight:500">Pedido confirmado</span><span style="font-size:12px;color:#A1A1AA">Total fijo a $ 3.971,14 por dólar</span></div><span style="font-size:12px;color:#A1A1AA">22 sep</span></div>
+        </article>
+        <article class="isl isl-dark glow-brand" style="grid-column:3;grid-row:1 / span 2;padding:26px;display:flex;flex-direction:column;gap:16px">
+          <span style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#A1A1AA">Lo próximo</span>
+          <span class="d" style="font-size:28px;font-weight:700;line-height:1.1">Llegó un comprobante</span>
+          <div aria-hidden="true" style="height:150px;border-radius:18px;background:#0F0F12;border:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;justify-content:flex-end;padding:14px;gap:6px"><span style="width:60%;height:8px;border-radius:9px;background:rgba(255,255,255,.14)"></span><span style="width:40%;height:8px;border-radius:9px;background:rgba(255,255,255,.10)"></span><span class="d" style="font-size:22px;font-weight:700;margin-top:6px">$ 5.000.000</span></div>
+          <div>
+            <div class="fact"><span style="color:#A1A1AA">Dice que pagó</span><span>$ 5.000.000</span></div>
+            <div class="fact"><span style="color:#A1A1AA">Por</span><span>Nequi · hoy 9:41 a. m.</span></div>
+            <div class="fact"><span style="color:#A1A1AA">Si es cierto, falta</span><span>$ 14.458.586</span></div>
+          </div>
+          <div style="flex-grow:1"></div>
+          <button class="btn btn-w" style="width:100%">Revisar el pago</button>
+        </article>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

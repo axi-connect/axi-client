@@ -8,3 +8,4 @@ export {
   type IslandProps,
   type IslandTone,
 } from "./Island";
+export { UnsavedChangesDock } from "./UnsavedChangesDock";

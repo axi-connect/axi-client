@@ -1,5 +1,6 @@
 "use client";
 
+import { StatePill } from "@/shared/components/features/bento";
 import { CalendarDays } from "lucide-react";
 
 import { formatMoney, formatShortDate } from "@/core/lib/format";
@@ -35,13 +36,15 @@ export function OrderBalanceBlock({ order }: { order: OrderDTO }) {
   const quote = useIndicativeQuote(order.currency, order.base === null && !settled);
 
   return (
-    <section aria-label="Cobro del pedido" className="rounded-2xl border border-border bg-background p-4">
-      <p className="text-xs text-muted-foreground">
-        {settled ? "Cobrado por completo" : "Falta por cobrar"}
-      </p>
-      <p
-        className={`mt-1 font-headings text-[34px] leading-none tracking-tight tabular-nums ${settled ? "text-success" : ""}`}
-      >
+    <section aria-label="Cobro del pedido" className="rounded-3xl border border-border bg-card p-5">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs text-muted-foreground">
+          {settled ? "Cobrado por completo" : "Falta por cobrar"}
+        </p>
+        {settled ? <StatePill tone="success">Al día</StatePill> : null}
+      </div>
+      {/* El color del estado vive en la píldora, no en la cifra (§9.5: verde como texto no pasa AA). */}
+      <p className="mt-2 font-heading text-4xl leading-none font-bold tracking-tight whitespace-nowrap tabular-nums">
         {formatMoney(settled ? order.total_cents : order.balance_cents, order.currency)}
       </p>
       <p className="mt-1.5 text-xs text-muted-foreground tabular-nums">
@@ -68,7 +71,7 @@ export function OrderBalanceBlock({ order }: { order: OrderDTO }) {
       <PaymentMeter order={order} className="mt-3.5" />
 
       {order.service_date !== null && days !== null ? (
-        <div className="mt-4 flex items-center gap-3 rounded-xl bg-secondary px-3.5 py-3">
+        <div className="mt-4 flex items-center gap-3 rounded-2xl bg-muted px-3.5 py-3">
           <CalendarDays aria-hidden="true" className="size-[18px] text-muted-foreground" />
           <div>
             <p className="text-sm font-medium">{serviceCountdown(days)}</p>

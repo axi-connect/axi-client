@@ -97,16 +97,16 @@ export function MergeDialog({
     return (
       <div
         className={cn(
-          "min-w-0 flex-1 rounded-xl border p-3",
-          role === "winner" ? "border-success/40 bg-success/5" : "border-border",
+          "min-w-0 flex-1 rounded-2xl border p-3.5",
+          role === "winner" ? "border-foreground/70 bg-card" : "border-border bg-muted/40",
         )}
       >
-        <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+        <p className="text-[11px] font-medium tracking-[0.12em] text-muted-foreground uppercase">
           {role === "winner" ? "Se conserva" : "Desaparece"}
         </p>
         <div className="mt-2 flex items-center gap-2">
-          <Avatar src={contact.avatar_url} alt={name} fallback={name} size={28} />
-          <p className="truncate text-sm font-semibold">{name}</p>
+          <Avatar src={contact.avatar_url} alt="" fallback={name} size={28} />
+          <p className="min-w-0 truncate text-sm font-semibold" title={name}>{name}</p>
         </div>
         <dl className="mt-3 space-y-1.5">
           {COMPARISON_ROWS.map((row) => {
@@ -117,12 +117,14 @@ export function MergeDialog({
               <div key={row.label} className="flex items-baseline justify-between gap-2 text-xs">
                 <dt className="shrink-0 text-muted-foreground">{row.label}</dt>
                 <dd
+                  title={value ?? undefined}
                   className={cn(
                     "min-w-0 truncate text-right",
+                    // El valor completo al pasar: un correo largo se trunca.
                     differs ? "font-medium text-foreground" : "text-muted-foreground",
                   )}
                 >
-                  {value ?? "—"}
+                  {value ?? "Sin dato"}
                 </dd>
               </div>
             );
@@ -138,24 +140,29 @@ export function MergeDialog({
       onOpenChange={onOpenChange}
       config={{
         title: "Fusionar contactos",
-        description: "Todo lo del perdedor (conversaciones, pedidos, deals, tags) se reasigna al ganador.",
+        description: "Conversaciones, pedidos, oportunidades y etiquetas de la ficha que desaparece pasan a la que se conserva.",
         className: "sm:max-w-xl",
+        // Sin la X de 16 px: «Cancelar» y Escape ya cierran (objetivo ≥ 24 px, §11).
+        showCloseButton: false,
         actions: [],
       }}
     >
       {!contacts || !winner || !loser ? (
         <FormSkeleton fields={4} />
       ) : (
-        <div className="space-y-4">
-          <div className="flex items-stretch gap-2">
+        // `min-w-0`: el cuerpo vive en la rejilla del diálogo, y un correo largo
+        // (que se trunca) imponía su ancho y sacaba la columna y el botón de la caja.
+        <div className="min-w-0 space-y-4">
+          <div className="flex min-w-0 flex-col items-stretch gap-2 sm:flex-row">
             {column(winner, "winner")}
-            <div className="flex flex-col items-center justify-center gap-1">
-              <ArrowLeft className="size-4 text-muted-foreground" aria-hidden />
+            <div className="flex items-center justify-center gap-1 sm:flex-col">
+              <ArrowLeft className="size-4 rotate-90 text-muted-foreground sm:rotate-0" aria-hidden />
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                aria-label="Invertir ganador y perdedor"
+                className="rounded-full"
+                aria-label="Invertir: conservar la otra ficha"
                 onClick={() => {
                   setWinnerSide((side) => (side === "a" ? "b" : "a"));
                   setConfirmation("");
@@ -167,17 +174,17 @@ export function MergeDialog({
             {column(loser, "loser")}
           </div>
 
-          <div className="flex items-start gap-2 rounded-xl border border-warning/40 bg-warning/8 p-3 text-sm">
-            <TriangleAlert className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden />
-            <p>
-              Esta acción es <strong>irreversible</strong>: “{loserName}” desaparecerá y todo su
-              historial pasará al ganador.
+          <div className="flex items-start gap-2.5 rounded-2xl border border-border p-3.5 text-sm">
+            <TriangleAlert className="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden />
+            <p className="min-w-0 text-pretty break-words">
+              <strong className="font-semibold">No se puede deshacer.</strong> La ficha de «{loserName}» deja de existir y
+              todo su historial pasa a la que se conserva.
             </p>
           </div>
 
           <div className="space-y-1.5">
             <label htmlFor="merge-confirmation" className="text-xs font-medium text-muted-foreground">
-              Escribe el nombre del perdedor para confirmar
+              Escribe «{loserName}» para confirmar
             </label>
             <Input
               id="merge-confirmation"
@@ -185,15 +192,17 @@ export function MergeDialog({
               onChange={(e) => setConfirmation(e.target.value)}
               placeholder={loserName}
               autoComplete="off"
+              className="h-11 rounded-xl"
             />
           </div>
 
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button variant="outline" className="rounded-full" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
             <Button
               variant="destructive"
+              className="rounded-full"
               disabled={!confirmed || merging}
               onClick={() => void handleMerge()}
             >

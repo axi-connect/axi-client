@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>CRM · Duplicados y fusión</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&amp;family=Poppins:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#F5F5F7}
+.lt{--bg:#F5F5F7;--card:#FFFFFF;--fg:#0B0B0E;--fg2:#3A3A40;--mut:#6B6B73;--line:rgba(0,0,0,.07);--line2:rgba(0,0,0,.12);--chip:#F0F0F2;--brand:#D13F42;--acc:rgba(230,87,89,.12);--track:#ECECEF;--warn:#D97706;--bad:#DC2626}
+.frame{width:1440px;height:900px;background:var(--bg);color:var(--fg);font-family:Poppins,system-ui,sans-serif;box-sizing:border-box;padding:40px 48px;display:grid;grid-template-columns:minmax(0,1fr) 560px;gap:28px;position:relative}
+.d{font-family:Urbanist,Poppins,sans-serif}
+.card{background:var(--card);border-radius:24px;border:1px solid var(--line);min-width:0}
+.lbl{font-size:12px;color:var(--mut);white-space:nowrap}
+.pill{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 9px;border-radius:999px;font-size:11.5px;font-weight:500;background:var(--chip);color:var(--fg);white-space:nowrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:36px;padding:0 14px;border-radius:999px;font:500 13px Poppins,sans-serif;border:1px solid var(--line2);background:var(--card);color:var(--fg);white-space:nowrap;cursor:pointer;text-decoration:none}
+.btn-del{background:var(--bad);color:#FFFFFF;border-color:var(--bad);height:42px;padding:0 20px;font-size:13.5px}
+.pair{display:grid;grid-template-columns:minmax(0,1fr) 150px auto;gap:18px;align-items:center;padding:14px 20px;border-top:1px solid var(--line)}
+.nm{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cmp{display:grid;grid-template-columns:110px minmax(0,1fr) minmax(0,1fr);gap:12px;padding:10px 0;border-top:1px solid var(--line);font-size:13px;align-items:center}
+.cmp span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.input{height:44px;border-radius:12px;border:1px solid var(--line2);padding:0 14px;font:14px Poppins,sans-serif;width:100%;box-sizing:border-box;outline:0}
+</style>
+</helmet>
+<div class="frame lt">
+  <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+    <a href="Main.dc.html" style="font-size:12.5px;color:var(--mut);text-decoration:none;display:inline-flex;align-items:center;gap:5px;min-height:24px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"></path></svg>Contactos</a>
+    <div><h1 class="d" style="margin:0;font-size:34px;font-weight:700;letter-spacing:-.02em">Posibles duplicados</h1><p style="margin:6px 0 0;font-size:13.5px;color:var(--mut)">3 parejas por correo exacto o nombre parecido. Fusionar deja una sola ficha con todo lo de las dos.</p></div>
+    <section class="card" style="overflow:hidden">
+      <div class="pair" style="border-top:0;background:var(--acc)"><div style="min-width:0"><div class="nm">Ana Gómez y Ana María Gómez</div><div class="lbl" style="margin-top:3px">ana.gomez@empresa-de-eventos.co · las dos</div></div><div style="display:flex;flex-direction:column;gap:5px"><span class="pill" style="align-self:flex-start">Correo exacto</span><div style="display:flex;align-items:center;gap:8px"><div aria-hidden="true" style="flex:1;height:6px;border-radius:999px;background:var(--track);overflow:hidden"><div style="width:96%;height:100%;background:var(--fg)"></div></div><span class="lbl" style="font-variant-numeric:tabular-nums">96 %</span></div></div><button type="button" class="btn" aria-current="true">Fusionar…</button></div>
+      <div class="pair"><div style="min-width:0"><div class="nm">Andrés Felipe Molina Restrepo y Andrés Molina</div><div class="lbl" style="margin-top:3px">+57 318 220 0915 · +57 318 220 0915</div></div><div style="display:flex;flex-direction:column;gap:5px"><span class="pill" style="align-self:flex-start">Nombre parecido</span><div style="display:flex;align-items:center;gap:8px"><div aria-hidden="true" style="flex:1;height:6px;border-radius:999px;background:var(--track);overflow:hidden"><div style="width:81%;height:100%;background:var(--fg)"></div></div><span class="lbl" style="font-variant-numeric:tabular-nums">81 %</span></div></div><button type="button" class="btn">Fusionar…</button></div>
+      <div class="pair"><div style="min-width:0"><div class="nm">Valentina Ríos y Valentina R.</div><div class="lbl" style="margin-top:3px">Pereira · sin correo en la segunda</div></div><div style="display:flex;flex-direction:column;gap:5px"><span class="pill" style="align-self:flex-start">Nombre parecido</span><div style="display:flex;align-items:center;gap:8px"><div aria-hidden="true" style="flex:1;height:6px;border-radius:999px;background:var(--track);overflow:hidden"><div style="width:64%;height:100%;background:var(--fg)"></div></div><span class="lbl" style="font-variant-numeric:tabular-nums">64 %</span></div></div><button type="button" class="btn">Fusionar…</button></div>
+    </section>
+    <p style="margin:0;font-size:12.5px;color:var(--mut)">Se detectan hasta 50 parejas por correo exacto o nombre similar. Nada se fusiona solo.</p>
+  </div>
+
+  <section class="card" role="dialog" aria-modal="true" aria-labelledby="mg-t" style="padding:26px;display:flex;flex-direction:column;gap:16px;align-self:start;box-shadow:0 50px 100px -40px rgba(0,0,0,.45)">
+    <div><h2 id="mg-t" class="d" style="margin:0;font-size:24px;font-weight:700">Fusionar contactos</h2><p style="margin:6px 0 0;font-size:13px;line-height:1.5;color:var(--fg2)">Conversaciones, pedidos, oportunidades y etiquetas de la ficha que desaparece pasan a la que se conserva.</p></div>
+    <div>
+      <div class="cmp" style="border-top:0;padding-top:0"><span></span><span class="lbl" style="font-weight:600;color:var(--fg)">Se conserva</span><span class="lbl">Desaparece</span></div>
+      <div class="cmp"><span class="lbl">Nombre</span><span style="font-weight:600">Ana María Gómez</span><span style="color:var(--mut)">Ana Gómez</span></div>
+      <div class="cmp"><span class="lbl">Teléfono</span><span style="font-weight:600">+57 301 776 0042</span><span style="color:var(--mut)">Sin teléfono</span></div>
+      <div class="cmp"><span class="lbl">Correo</span><span title="ana.gomez@empresa-de-eventos.co">ana.gomez@empresa-de-eventos.co</span><span style="color:var(--mut)" title="ana.gomez@empresa-de-eventos.co">ana.gomez@empresa-de-eventos.co</span></div>
+      <div class="cmp"><span class="lbl">Etapa</span><span style="font-weight:600">Lead</span><span style="color:var(--mut)">Prospecto</span></div>
+    </div>
+    <button type="button" class="btn" style="align-self:flex-start"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 16V4M3 8l4-4 4 4M17 8v12M21 16l-4 4-4-4"></path></svg>Invertir: conservar la otra</button>
+    <div style="display:grid;grid-template-columns:18px minmax(0,1fr);gap:10px;padding:12px 14px;border-radius:16px;border:1px solid var(--line2);font-size:13px;line-height:1.45"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2"><path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3Z"></path><path d="M12 9v4M12 17h.01"></path></svg><span><strong style="font-weight:600">No se puede deshacer.</strong> La ficha de Ana Gómez deja de existir.</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><label for="mg-c" class="lbl" style="color:var(--fg2);font-weight:500">Escribe «Ana Gómez» para confirmar</label><input id="mg-c" class="input" value="Ana Gómez"></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px"><button type="button" class="btn" style="height:42px;padding:0 20px">Cancelar</button><button type="button" class="btn btn-del">Fusionar contactos</button></div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

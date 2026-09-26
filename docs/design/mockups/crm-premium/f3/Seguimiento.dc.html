@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>CRM · Programar seguimiento</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&amp;family=Poppins:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#F5F5F7}
+.lt{--bg:#F5F5F7;--card:#FFFFFF;--fg:#0B0B0E;--fg2:#3A3A40;--mut:#6B6B73;--line:rgba(0,0,0,.07);--line2:rgba(0,0,0,.12);--chip:#F0F0F2;--brand:#D13F42;--acc:rgba(230,87,89,.12);--warn:#D97706;--ai:#7C3AED}
+a{color:inherit}
+.frame{width:1440px;height:1000px;background:rgba(10,10,12,.42);color:var(--fg);font-family:Poppins,system-ui,sans-serif;display:flex;align-items:center;justify-content:center}
+.d{font-family:Urbanist,Poppins,sans-serif}
+.dlg{width:1040px;background:var(--card);border-radius:28px;box-shadow:0 50px 100px -40px rgba(0,0,0,.55);display:grid;grid-template-columns:minmax(0,1fr) 380px;overflow:hidden}
+.lbl{font-size:12.5px;color:var(--fg2);font-weight:500}
+.hint{font-size:12px;color:var(--mut);line-height:1.45}
+.opt{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border-radius:16px;border:1px solid var(--line2);background:var(--card);text-align:left;cursor:pointer;font:inherit;color:inherit;min-width:0}
+.opt-on{border-color:var(--fg);box-shadow:0 0 0 1px var(--fg)}
+.chip{height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--line2);background:var(--card);font:500 12.5px Poppins,sans-serif;color:var(--fg2);cursor:pointer;white-space:nowrap}
+.chip-on{background:var(--acc);color:var(--fg);border-color:transparent}
+.field{height:44px;border-radius:12px;border:1px solid var(--line2);padding:0 14px;font:14px Poppins,sans-serif;color:var(--fg);display:flex;align-items:center;gap:8px;box-sizing:border-box}
+.ta{width:100%;box-sizing:border-box;min-height:86px;padding:12px 14px;border-radius:12px;border:1px solid var(--line2);font:13.5px/1.5 Poppins,sans-serif;color:var(--fg);resize:none;outline:0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:999px;font:500 14px Poppins,sans-serif;border:1px solid var(--line2);background:var(--card);color:var(--fg);cursor:pointer;white-space:nowrap}
+.btn-p{background:var(--brand);color:#FFFFFF;border-color:var(--brand)}
+.aig{color:var(--ai)}
+.isl{position:relative;isolation:isolate;overflow:hidden}
+.isl-glass{color:#0B0B0E;--mut:#5F5F68;--fg2:#3A3A40;background:radial-gradient(circle 22rem at 0% 0%,rgba(124,58,237,.18),transparent 70%),radial-gradient(circle 20rem at 100% 100%,rgba(230,87,89,.12),transparent 70%),linear-gradient(160deg,rgba(255,255,255,.88),rgba(246,243,254,.7));box-shadow:inset 1px 0 0 rgba(11,11,14,.06)}
+.bub{padding:12px 14px;border-radius:18px 18px 18px 6px;background:#FFFFFF;box-shadow:0 1px 2px rgba(0,0,0,.06),0 0 0 1px rgba(11,11,14,.05);font-size:13px;line-height:1.5}
+.var{padding:0 5px;border-radius:6px;background:rgba(124,58,237,.10);color:#5B21B6;font-weight:500}
+</style>
+</helmet>
+<div class="frame lt">
+  <section class="dlg" role="dialog" aria-modal="true" aria-labelledby="fu-t">
+    <div style="padding:28px 32px;display:flex;flex-direction:column;gap:18px;min-width:0">
+      <header style="display:flex;flex-direction:column;gap:6px">
+        <h2 id="fu-t" class="d" style="margin:0;font-size:26px;font-weight:700;display:flex;align-items:center;gap:10px"><svg class="aig" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.8 5.4L19 10l-5.2 1.6L12 17l-1.8-5.4L5 10l5.2-1.6z"></path></svg>Programar seguimiento</h2>
+        <p style="margin:0;font-size:13px;color:var(--mut)">Dile a Axi qué conseguir; él escribe o llama por ti, a la hora que digas.</p>
+      </header>
+
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
+        <div style="display:flex;flex-direction:column;gap:6px;min-width:0"><span class="lbl">Contacto</span><div class="field"><span style="width:24px;height:24px;border-radius:999px;background:var(--chip);font-size:10px;font-weight:600;display:inline-flex;align-items:center;justify-content:center">LP</span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Luis Pardo</span></div></div>
+        <div style="display:flex;flex-direction:column;gap:6px;min-width:0"><span class="lbl">Agente</span><div class="field" style="justify-content:space-between"><span>Axi</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"></path></svg></div></div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span id="fu-m" class="lbl">Cómo contacta</span>
+        <div role="radiogroup" aria-labelledby="fu-m" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+          <sc-for list="{{media}}" as="o" hint-placeholder-count="3"><button type="button" role="radio" aria-checked="{{o.checked}}" class="opt {{o.cls}}" onClick="{{o.pick}}"><span style="font-size:13.5px;font-weight:600">{{o.label}}</span><span class="hint">{{o.desc}}</span></button></sc-for>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <label for="fu-o" class="lbl">Objetivo · en tus palabras, no un guion</label>
+        <textarea id="fu-o" class="ta">Saber si revisó la propuesta de Cartagena con su jefe y resolverle dudas del precio por persona.</textarea>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span id="fu-w" class="lbl">Cuándo</span>
+        <div role="radiogroup" aria-labelledby="fu-w" style="display:flex;gap:6px;flex-wrap:wrap">
+          <sc-for list="{{whens}}" as="w" hint-placeholder-count="4"><button type="button" role="radio" aria-checked="{{w.checked}}" class="chip {{w.cls}}" onClick="{{w.pick}}">{{w.label}}</button></sc-for>
+        </div>
+      </div>
+
+      <div role="note" style="display:grid;grid-template-columns:18px minmax(0,1fr);gap:10px;padding:12px 14px;border-radius:16px;border:1px solid var(--line2);font-size:13px;line-height:1.45">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+        <span><strong style="font-weight:600">Pasaron más de 24 h desde su último mensaje.</strong> Para escribirle, Axi abre con una plantilla aprobada de Meta: <span style="font-weight:500">seguimiento_cotizacion</span>.</span>
+      </div>
+
+      <footer style="display:flex;justify-content:flex-end;gap:10px;margin-top:auto"><button type="button" class="btn">Cancelar</button><button type="button" class="btn btn-p">Programar seguimiento</button></footer>
+    </div>
+
+    <aside class="isl isl-glass" aria-label="Así lo hará Axi" style="padding:28px;display:flex;flex-direction:column;gap:14px">
+      <span style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);display:inline-flex;align-items:center;gap:6px"><svg class="aig" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.8 5.4L19 10l-5.2 1.6L12 17l-1.8-5.4L5 10l5.2-1.6z"></path></svg>Así lo hará Axi</span>
+      <p class="d" style="margin:0;font-size:22px;font-weight:700;line-height:1.25">{{headline}}</p>
+      <p style="margin:0;font-size:13px;line-height:1.55;color:var(--fg2)">{{detail}}</p>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">
+        <span style="font-size:11.5px;color:var(--mut)">Abre con la plantilla</span>
+        <div class="bub">Hola <span class="var">Luis</span>, te escribo de JuanitoXpeditions por la cotización de <span class="var">Cartagena · viaje de empresa</span>. ¿Tienes un momento para revisarla?</div>
+      </div>
+      <ul style="margin:auto 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;font-size:12.5px;color:var(--fg2)">
+        <li style="display:flex;gap:8px"><span aria-hidden="true">·</span>Se detiene si Luis responde o compra.</li>
+        <li style="display:flex;gap:8px"><span aria-hidden="true">·</span>Respeta el horario silencioso de 9:00 p. m. a 8:00 a. m.</li>
+        <li style="display:flex;gap:8px"><span aria-hidden="true">·</span>Cada intento queda en Ejecuciones con su motivo.</li>
+      </ul>
+    </aside>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { medium: 'message', when: 'tomorrow' };
+  }
+  renderVals() {
+    const st = this.state;
+    const M = [
+      ['message', 'Mensaje', 'Le escribe por WhatsApp y sigue el chat.'],
+      ['call', 'Llamada', 'Le llama con voz y conversa en vivo.'],
+      ['call_then_message', 'Llamada y, si no conecta, mensaje', 'Primero llama; si no contesta, le escribe.']
+    ];
+    const W = [['tomorrow', 'Mañana 9:00', 'vie 27 sep a las 9:00 a. m.'], ['three', 'En 3 días · lun 9:00', 'lun 29 sep a las 9:00 a. m.'], ['monday', 'Lunes 9:00', 'lun 29 sep a las 9:00 a. m.'], ['late', 'Hoy 10:00 p. m.', 'jue 26 sep a las 10:00 p. m.']];
+    const verb = { message: 'le escribirá', call: 'llamará', call_then_message: 'llamará y, si no conecta, le escribirá' }[st.medium];
+    const when = W.find((w) => w[0] === st.when);
+    const quiet = st.when === 'late';
+    return {
+      media: M.map(([k, label, desc]) => ({ label, desc, checked: st.medium === k ? 'true' : 'false', cls: st.medium === k ? 'opt-on' : '', pick: () => this.setState({ medium: k }) })),
+      whens: W.map(([k, label]) => ({ label, checked: st.when === k ? 'true' : 'false', cls: st.when === k ? 'chip-on' : '', pick: () => this.setState({ when: k }) })),
+      headline: 'Axi ' + verb + ' a Luis el ' + when[2],
+      detail: quiet ? 'Como cae en horario silencioso, saldrá a las 8:00 a. m. del viernes. Su objetivo: saber si revisó la propuesta con su jefe.' : 'Su objetivo: saber si revisó la propuesta con su jefe y resolverle dudas del precio por persona.'
+    };
+  }
+}
+</script>
+</body>
+</html>

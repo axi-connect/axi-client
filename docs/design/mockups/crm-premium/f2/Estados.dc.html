@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>CRM · Estados de contactos</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&amp;family=Poppins:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#F5F5F7}
+.lt{--bg:#F5F5F7;--card:#FFFFFF;--fg:#0B0B0E;--fg2:#3A3A40;--mut:#6B6B73;--line:rgba(0,0,0,.07);--line2:rgba(0,0,0,.12);--chip:#F0F0F2;--brand:#D13F42;--sk:#ECECEF}
+.frame{width:1440px;height:900px;background:var(--bg);color:var(--fg);font-family:Poppins,system-ui,sans-serif;box-sizing:border-box;padding:40px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:24px}
+.d{font-family:Urbanist,Poppins,sans-serif}
+.pane{display:flex;flex-direction:column;gap:12px;min-width:0;min-height:0}
+.cap{font-size:12px;font-weight:600;color:var(--fg2);white-space:nowrap}
+.cap span{font-weight:400;color:var(--mut)}
+.stage{flex-grow:1;border-radius:28px;background:var(--card);border:1px solid var(--line);padding:24px;box-sizing:border-box;display:flex;flex-direction:column;gap:14px;min-height:0;overflow:hidden}
+.center{align-items:center;justify-content:center;text-align:center}
+.txt{font-size:13px;color:var(--fg2);line-height:1.5;margin:0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 18px;border-radius:999px;font:500 13.5px Poppins,sans-serif;border:1px solid var(--line2);background:var(--card);color:var(--fg);white-space:nowrap;cursor:pointer;text-decoration:none}
+.btn-p{background:var(--brand);color:#FFFFFF;border-color:var(--brand)}
+.sk{background:var(--sk);border-radius:12px;display:block}
+@media (prefers-reduced-motion: no-preference){.sk{animation:p 1.6s ease-in-out infinite}}
+@keyframes p{50%{opacity:.55}}
+</style>
+</helmet>
+<div class="frame lt">
+  <section class="pane">
+    <div class="cap">A · Sin contactos <span>la primera vez</span></div>
+    <div class="stage center">
+      <div aria-hidden="true" style="display:flex">
+        <span class="d" style="width:52px;height:52px;border-radius:999px;background:var(--chip);display:flex;align-items:center;justify-content:center;font-weight:700;border:3px solid var(--card)">W</span>
+        <span class="d" style="width:52px;height:52px;border-radius:999px;background:var(--fg);color:var(--card);display:flex;align-items:center;justify-content:center;font-weight:700;margin-left:-14px;border:3px solid var(--card)">IG</span>
+        <span class="d" style="width:52px;height:52px;border-radius:999px;background:var(--chip);display:flex;align-items:center;justify-content:center;font-weight:700;margin-left:-14px;border:3px solid var(--card)">+</span>
+      </div>
+      <h3 class="d" style="margin:0;font-size:21px;font-weight:700">Aún no tienes contactos</h3>
+      <p class="txt" style="max-width:300px">Los de WhatsApp e Instagram se crean solos al escribirte. También puedes crearlos o importarlos.</p>
+      <div style="display:flex;gap:8px"><a class="btn btn-p" href="#">Nuevo contacto</a><a class="btn" href="#">Importar</a></div>
+    </div>
+  </section>
+
+  <section class="pane">
+    <div class="cap">B · Sin resultados <span>de la búsqueda</span></div>
+    <div class="stage center">
+      <h3 class="d" style="margin:0;font-size:21px;font-weight:700">Nada coincide con «pérez»</h3>
+      <p class="txt" style="max-width:300px">Se busca en el nombre, el teléfono y el correo. Con filtros activos: Etapa: Clientes · Etiqueta: Caribe.</p>
+      <button type="button" class="btn">Quitar los filtros</button>
+    </div>
+  </section>
+
+  <section class="pane">
+    <div class="cap">C · No cargó la lista <span>error</span></div>
+    <div class="stage center" role="alert">
+      <h3 class="d" style="margin:0;font-size:21px;font-weight:700">No pudimos leer tus contactos</h3>
+      <p class="txt" style="max-width:300px">Están a salvo. Revisa la conexión e inténtalo de nuevo.</p>
+      <button type="button" class="btn">Reintentar</button>
+    </div>
+  </section>
+
+  <section class="pane">
+    <div class="cap">D · Ficha cargando <span>la silueta de la ficha</span></div>
+    <div class="stage" role="status" aria-label="Cargando el contacto">
+      <div style="display:flex;gap:14px;align-items:center"><span class="sk" style="width:60px;height:60px;border-radius:20px"></span><div style="flex:1;display:flex;flex-direction:column;gap:8px"><span class="sk" style="height:20px;width:70%"></span><span class="sk" style="height:12px;width:45%"></span></div></div>
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px"><span class="sk" style="height:96px;border-radius:20px"></span><span class="sk" style="height:96px;border-radius:20px"></span><span class="sk" style="height:96px;border-radius:20px"></span></div>
+      <span class="sk" style="flex:1;border-radius:20px"></span>
+    </div>
+  </section>
+
+  <section class="pane">
+    <div class="cap">E · Una sección falló <span>el resto sigue</span></div>
+    <div class="stage" style="gap:12px">
+      <div style="border-radius:20px;border:1px solid var(--line);padding:16px 18px;display:flex;flex-direction:column;gap:8px"><span class="d" style="font-size:16px;font-weight:700">Historial</span><div role="alert" style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span class="txt">No pudimos leer el historial.</span><button type="button" class="btn" style="height:34px;padding:0 13px;font-size:12.5px">Reintentar</button></div></div>
+      <div style="border-radius:20px;border:1px solid var(--line);padding:16px 18px;display:flex;flex-direction:column;gap:6px"><span class="d" style="font-size:16px;font-weight:700">Oportunidades · 0</span><span class="txt">Sin oportunidades todavía. Axi las abre sola cuando detecta intención de compra.</span></div>
+    </div>
+  </section>
+
+  <section class="pane">
+    <div class="cap">F · Sin permiso <span>lo que el rol no lee, no se pinta</span></div>
+    <div class="stage" style="gap:12px">
+      <p class="txt">Sin permiso de pedidos, la ficha no muestra «Pedidos y documentos» ni la cifra «Con nosotros»: el bento se reacomoda con dos fichas.</p>
+      <p class="txt">Sin permiso de gestionar el CRM, «Responsable» se ve pero no se cambia, y «Deshacer» no aparece.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><span style="display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line2);font-size:13px;color:var(--mut)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Laura Méndez</span></div>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

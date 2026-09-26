@@ -45,7 +45,14 @@ export function TaskScoreboard({
     <div
       role="group"
       aria-label="Filtrar la bandeja"
-      className="grid grid-cols-2 gap-px overflow-clip rounded-xl border border-border bg-border sm:grid-cols-4"
+      // Cuatro columnas solo si caben (`@container`): en el modo agente las
+      // etiquetas son largas («esperando respuesta») y a un cuarto se cortaban.
+      // En el modo agente las etiquetas son más largas: 4 columnas desde 56 rem.
+      className={cn(
+        // `h-full` + filas `fr`: iguala el alto de la isla de al lado, sin hueco.
+        "grid h-full min-w-0 auto-rows-fr grid-cols-2 gap-1 rounded-3xl border border-border bg-card p-1.5",
+        executor === "agent" ? "@min-[56rem]:grid-cols-4" : "@min-[46rem]:grid-cols-4",
+      )}
     >
       {cells.map((cell) => (
         <KpiCell key={cell.key} cell={cell} />
@@ -66,27 +73,29 @@ function KpiCell({ cell }: { cell: Cell }) {
       className={cn(
         // `items-center` centra el icono contra el BLOQUE de los dos textos, no
         // contra la caja con su relleno.
-        "flex items-center gap-2.5 bg-background px-3.5 py-2.5 text-left transition-colors",
-        "focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
-        active ? "bg-accent" : "hover:bg-secondary",
+        "flex min-w-0 items-center gap-3 rounded-2xl px-3.5 py-3 text-left transition-colors md:px-4 md:py-3.5",
+        "focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none",
+        active ? "bg-accent" : "hover:bg-muted/60",
       )}
     >
       <span
         aria-hidden
         className={cn(
-          "grid size-8 shrink-0 place-items-center rounded-lg transition-colors",
-          active ? "bg-background/70 text-brand" : "bg-foreground/5",
+          // En un marcador angosto (celular) el icono cede su sitio a la etiqueta.
+          "hidden size-9 shrink-0 place-items-center rounded-xl transition-colors @min-[30rem]:grid md:size-10",
+          active ? "bg-card text-brand" : "bg-muted",
           alarm ? "text-destructive" : active ? null : "text-muted-foreground",
           value === 0 && !active && !alarm && "text-muted-foreground/60",
         )}
       >
         <Icon className="size-4" />
       </span>
-      <span className="flex min-w-0 flex-col items-start gap-0.5">
+      <span className="flex min-w-0 flex-col items-start gap-1">
+        {/* La cifra en Nexa, en foreground: el color del estado va en el
+            punto de la etiqueta (§9.5), no en el número. */}
         <span
           className={cn(
-            "text-[18px] leading-none font-semibold tracking-tight tabular-nums",
-            alarm && "text-destructive",
+            "font-heading text-2xl leading-none font-bold tracking-tight tabular-nums md:text-3xl",
             value === 0 && !alarm && "text-muted-foreground/60",
           )}
         >
@@ -94,11 +103,12 @@ function KpiCell({ cell }: { cell: Cell }) {
         </span>
         <span
           className={cn(
-            "text-[11px] leading-tight",
+            "inline-flex max-w-full min-w-0 items-start gap-1.5 text-xs leading-tight",
             active ? "text-foreground" : "text-muted-foreground",
           )}
         >
-          {label}
+          {alarm && <span aria-hidden className="mt-1 size-1.5 shrink-0 rounded-full bg-destructive" />}
+          <span className="whitespace-nowrap">{label}</span>
         </span>
       </span>
     </button>

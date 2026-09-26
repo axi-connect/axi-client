@@ -14,6 +14,7 @@ import type { ProductDTO, ProductVariantDTO, StockDTO } from "@/modules/catalog/
 import { deleteVariant } from "@/modules/catalog/infrastructure/services/product-service.adapter";
 import { VariantForm } from "@/modules/catalog/ui/forms/VariantForm";
 import { StockAdjustPopover } from "./StockAdjustPopover";
+import { DepartureCalendar, departureLabel } from "./DepartureCalendar";
 import {
   Table,
   TableBody,
@@ -104,7 +105,9 @@ export function VariantsTable({
     Object.entries(variant.attributes)
       .map(([code, value]) => {
         const axis = axes.find((a) => a.code === code);
-        return `${axis?.label ?? code}: ${String(value)}`;
+        // Una fecha se lee como fecha («sáb 14 nov»), no como 2026-11-14.
+        const shown = axis?.type === "date" && typeof value === "string" ? departureLabel(value) : String(value);
+        return `${axis?.label ?? code}: ${shown}`;
       })
       .join(" · ");
 
@@ -124,7 +127,9 @@ export function VariantsTable({
       </div>
       <Separator />
 
-      <div className="overflow-x-auto">
+      <DepartureCalendar variants={variants} isService={isService} />
+
+      <div className="sidebar-scroll overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>

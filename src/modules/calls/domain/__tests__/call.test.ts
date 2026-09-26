@@ -2,7 +2,11 @@ import {
   CALL_OUTCOME_MAP,
   CALL_STATUS_MAP,
   callResultBadge,
+  callResultPill,
+  confidenceLabel,
+  parseGoalAssessment,
   parseTurnLatency,
+  summaryWaitRemainingMs,
 } from "@/modules/calls/domain/call";
 
 describe("calls · mapas de estado", () => {
@@ -62,5 +66,52 @@ describe("parseTurnLatency", () => {
   it("payload sin latencia → null", () => {
     expect(parseTurnLatency({})).toBeNull();
     expect(parseTurnLatency(null)).toBeNull();
+  });
+});
+
+describe("calls · llamada terminada (premium F4)", () => {
+  it("el resultado como StatePill: cuatro tonos, info cae a neutro", () => {
+    expect(callResultPill({ status: "completed", outcome: "goal_met" })).toEqual({
+      label: "Objetivo cumplido",
+      tone: "success",
+    });
+    expect(callResultPill({ status: "completed", outcome: "callback_requested" }).tone).toBe("neutral");
+    expect(callResultPill({ status: "failed", outcome: null })).toEqual({ label: "Fallida", tone: "destructive" });
+  });
+
+  it("parseGoalAssessment toma el último veredicto y descarta payloads ilegibles", () => {
+    const at = "2026-09-26T14:15:00.000Z";
+    expect(
+      parseGoalAssessment([
+        { type: "goal_assessment", payload: { met: false, confidence: 0.4, reason: "viejo" }, created_at: at },
+        { type: "turn_completed", payload: {}, created_at: at },
+        { type: "goal_assessment", payload: { met: true, confidence: 0.92, reason: "aceptó el horario" }, created_at: at },
+      ]),
+    ).toEqual({ met: true, confidence: 0.92, reason: "aceptó el horario" });
+    expect(parseGoalAssessment([{ type: "goal_assessment", payload: { met: "sí" }, created_at: at }])).toBeNull();
+    expect(parseGoalAssessment([])).toBeNull();
+  });
+
+  it("la confianza del juez en palabras", () => {
+    expect(confidenceLabel(0.92)).toBe("confianza alta");
+    expect(confidenceLabel(0.6)).toBe("confianza media");
+    expect(confidenceLabel(0.2)).toBe("confianza baja");
+  });
+});
+
+describe("calls · espera del resumen (auditoría F4, P2)", () => {
+  const ended = "2026-09-26T14:14:13.000Z";
+  const talked = [{ seq: 1, role: "caller" as const, text: "Hola", at_ms: 0, spoken_at_ms: null, interrupted: false }];
+  const t0 = Date.parse(ended);
+
+  it("cuenta los 10 minutos desde que colgó y luego es 0", () => {
+    expect(summaryWaitRemainingMs({ summary: null, ended_at: ended, segments: talked }, t0 + 60_000)).toBe(540_000);
+    expect(summaryWaitRemainingMs({ summary: null, ended_at: ended, segments: talked }, t0 + 11 * 60_000)).toBe(0);
+  });
+
+  it("no se espera si ya hay resumen, si no colgó o si no hubo conversación", () => {
+    expect(summaryWaitRemainingMs({ summary: "Listo.", ended_at: ended, segments: talked }, t0)).toBe(0);
+    expect(summaryWaitRemainingMs({ summary: null, ended_at: null, segments: talked }, t0)).toBe(0);
+    expect(summaryWaitRemainingMs({ summary: null, ended_at: ended, segments: [] }, t0)).toBe(0);
   });
 });

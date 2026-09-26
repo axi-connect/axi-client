@@ -12,9 +12,10 @@ const PAD_Y = 12;
 /**
  * Gráfico de actividad del Monitoreo: dos series (salientes/entrantes) como
  * línea + área sobre un SVG propio — el repo no carga librerías de charts y
- * las de analytics son de barras. Los colores son tokens (violeta = acento
- * del módulo; azul semántico para la segunda serie — jamás violeta + ámbar
- * juntos, DESIGN §3.1). Cada cubeta lleva un <title> accesible.
+ * las de analytics son de barras. Los colores son tokens: coral para las
+ * salientes y violeta para las entrantes, la pareja del módulo (premium F5,
+ * jamás los tres acentos juntos, DESIGN §3.1). Cada cubeta lleva un <title>
+ * accesible.
  */
 export function ActivityChart({
   series,
@@ -28,7 +29,9 @@ export function ActivityChart({
     [series, granularity],
   );
 
-  const total = series.reduce((sum, bucket) => sum + bucket.inbound + bucket.outbound, 0);
+  const outboundTotal = series.reduce((sum, bucket) => sum + bucket.outbound, 0);
+  const inboundTotal = series.reduce((sum, bucket) => sum + bucket.inbound, 0);
+  const total = outboundTotal + inboundTotal;
   if (total === 0) {
     return (
       <p className="text-muted-foreground py-10 text-center text-sm">
@@ -41,12 +44,12 @@ export function ActivityChart({
     <div>
       <div className="text-muted-foreground mb-2 flex items-center gap-4 text-xs">
         <span className="flex items-center gap-1.5">
-          <i className="bg-accent-violet size-2 rounded-full" aria-hidden />
-          Salientes
+          <i className="bg-brand size-2 rounded-full" aria-hidden />
+          Salientes <b className="text-foreground font-semibold tabular-nums">{outboundTotal}</b>
         </span>
         <span className="flex items-center gap-1.5">
-          <i className="bg-info size-2 rounded-full" aria-hidden />
-          Entrantes
+          <i className="bg-accent-violet size-2 rounded-full" aria-hidden />
+          Entrantes <b className="text-foreground font-semibold tabular-nums">{inboundTotal}</b>
         </span>
       </div>
       <svg
@@ -56,19 +59,19 @@ export function ActivityChart({
         role="img"
         aria-label="Actividad de llamadas por franja"
       >
-        <path d={outboundArea} fill="var(--color-accent-violet)" opacity={0.12} />
-        <path d={inboundArea} fill="var(--color-info)" opacity={0.1} />
+        <path d={outboundArea} fill="var(--color-brand)" opacity={0.1} />
+        <path d={inboundArea} fill="var(--color-accent-violet)" opacity={0.1} />
         <path
           d={outboundPath}
           fill="none"
-          stroke="var(--color-accent-violet)"
+          stroke="var(--color-brand)"
           strokeWidth={2}
           vectorEffect="non-scaling-stroke"
         />
         <path
           d={inboundPath}
           fill="none"
-          stroke="var(--color-info)"
+          stroke="var(--color-accent-violet)"
           strokeWidth={2}
           vectorEffect="non-scaling-stroke"
         />

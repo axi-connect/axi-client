@@ -130,7 +130,7 @@ export function SearchField({
         placeholder={placeholder}
         aria-label={label}
         enterKeyHint="search"
-        className="min-w-0 flex-1 bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground md:text-sm [&::-webkit-search-cancel-button]:hidden"
+        className="min-w-0 flex-1 self-stretch bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground md:text-sm [&::-webkit-search-cancel-button]:hidden"
       />
       {local !== "" ? (
         <button

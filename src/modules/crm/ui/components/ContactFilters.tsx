@@ -98,7 +98,7 @@ export function ContactFilters({
             })
           }
         >
-          <SelectTrigger className="h-9 w-full sm:w-36" aria-label="Filtrar por etapa">
+          <SelectTrigger className="h-10 w-full rounded-full bg-card sm:w-auto sm:min-w-[11rem] [&>span]:truncate" aria-label="Filtrar por etapa">
             <SelectValue placeholder="Etapa" />
           </SelectTrigger>
           <SelectContent>
@@ -117,7 +117,7 @@ export function ContactFilters({
             onChange({ ...value, source: v === ALL ? undefined : (v as ContactSource) })
           }
         >
-          <SelectTrigger className="h-9 w-full sm:w-40" aria-label="Filtrar por fuente">
+          <SelectTrigger className="h-10 w-full rounded-full bg-card sm:w-auto sm:min-w-[11rem] [&>span]:truncate" aria-label="Filtrar por fuente">
             <SelectValue placeholder="Fuente" />
           </SelectTrigger>
           <SelectContent>

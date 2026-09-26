@@ -23,13 +23,13 @@ export function ContactTimeline({
   canRevert?: boolean;
 }) {
   return (
-    <section className="rounded-2xl border border-border bg-background p-4 md:p-6">
+    <section className="rounded-3xl border border-border bg-card p-5 md:p-6">
       <ContactTimelineFeed
         contactId={contactId}
         canRevert={canRevert}
         header={
-          <div className="flex items-center gap-2">
-            <h3 className="text-base font-semibold">Historial</h3>
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <h3 className="mr-auto font-heading text-lg font-bold">Historial</h3>
             {createActivityHref !== undefined && (
               <Button asChild variant="outline" size="sm" className="h-7 rounded-full text-xs">
                 <Link href={createActivityHref}>

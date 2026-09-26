@@ -88,7 +88,7 @@ export function TemplateTextField<V extends string>({
             type="button"
             title={labels[variable]}
             onClick={() => insert(variable)}
-            className="rounded-full border border-dashed border-input px-2 py-0.5 font-mono text-[0.6875rem] text-muted-foreground transition-colors hover:border-solid hover:border-primary hover:bg-accent hover:text-brand"
+            className="inline-flex min-h-6 items-center rounded-full border border-dashed border-input px-2 py-0.5 font-mono text-[0.6875rem] text-muted-foreground transition-colors hover:border-solid hover:border-primary hover:bg-accent hover:text-brand"
           >
             {`{{${variable}}}`}
           </button>
