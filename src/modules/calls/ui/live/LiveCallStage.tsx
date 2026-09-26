@@ -1,5 +1,6 @@
 "use client";
 
+import { useLayoutEffect, useRef, useState } from "react";
 import { Bot } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { Island } from "@/shared/components/features/island";
@@ -115,30 +116,71 @@ export function LiveCallStage({
   );
 }
 
+/** Líneas visibles de la frase: lo que no cabe se recorta por ARRIBA. */
+const PHRASE_MAX_LINES = 5;
+
+/**
+ * La frase que se está diciendo, palabra a palabra. Una respuesta larga no
+ * estira el escenario (hotfix 2026-09-26): la caja tiene un alto máximo de
+ * `PHRASE_MAX_LINES` líneas y la frase va anclada abajo, así que siempre se
+ * ve lo último que se dijo y lo anterior se desvanece por arriba. Completa
+ * queda en la conversación de al lado y en el historial.
+ */
 function Phrase({ phrase }: { phrase: StagePhrase }) {
   const { words, shown, done } = useWordReveal(phrase.text, { msPerWord: phrase.msPerWord });
   const said = words.slice(0, Math.max(0, shown - 1)).join(" ");
   const current = shown > 0 ? words[shown - 1] : "";
+  const boxRef = useRef<HTMLDivElement | null>(null);
+  const textRef = useRef<HTMLParagraphElement | null>(null);
+  const [clipped, setClipped] = useState(false);
+
+  // ¿Desborda? Solo entonces se pinta el desvanecido: una frase corta no se
+  // toca. La frase crece palabra a palabra, así que se re-mide al crecer.
+  useLayoutEffect(() => {
+    const box = boxRef.current;
+    const text = textRef.current;
+    if (box === null || text === null) return;
+    const measure = () => setClipped(text.offsetHeight > box.clientHeight + 1);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(text);
+    observer.observe(box);
+    return () => observer.disconnect();
+  }, [shown, phrase.text]);
+
   return (
-    <p
-      aria-hidden
+    <div
+      ref={boxRef}
+      data-clipped={clipped}
       className={cn(
-        "max-w-xl font-heading text-2xl leading-[1.15] font-bold tracking-tight text-balance text-foreground transition-opacity duration-300 sm:text-3xl lg:text-4xl",
-        phrase.role === "system" && "text-muted-foreground",
-        phrase.dim && "opacity-40",
+        // Mismo cuerpo que la frase para que `em` mida sus líneas.
+        "flex w-full max-w-xl flex-col justify-end overflow-hidden font-heading text-2xl leading-[1.15] sm:text-3xl lg:text-4xl",
+        "max-h-[calc(1.15em*var(--phrase-lines))]",
+        clipped && "[mask-image:linear-gradient(to_bottom,transparent,black_1.6em)]",
       )}
+      style={{ "--phrase-lines": PHRASE_MAX_LINES } as React.CSSProperties}
     >
-      {said}
-      {said !== "" && " "}
-      <span className={cn(!done && ROLE_TEXT[phrase.role])}>{current}</span>
-      {!done && (
-        <span
-          className={cn(
-            "ml-1 inline-block h-[0.86em] w-[3px] animate-pulse rounded-sm align-[-0.08em] motion-reduce:animate-none",
-            ROLE_CARET[phrase.role],
-          )}
-        />
-      )}
-    </p>
+      <p
+        ref={textRef}
+        aria-hidden
+        className={cn(
+          "shrink-0 font-bold tracking-tight text-balance text-foreground transition-opacity duration-300",
+          phrase.role === "system" && "text-muted-foreground",
+          phrase.dim && "opacity-40",
+        )}
+      >
+        {said}
+        {said !== "" && " "}
+        <span className={cn(!done && ROLE_TEXT[phrase.role])}>{current}</span>
+        {!done && (
+          <span
+            className={cn(
+              "ml-1 inline-block h-[0.86em] w-[3px] animate-pulse rounded-sm align-[-0.08em] motion-reduce:animate-none",
+              ROLE_CARET[phrase.role],
+            )}
+          />
+        )}
+      </p>
+    </div>
   );
 }
