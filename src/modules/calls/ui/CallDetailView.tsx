@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowDownLeft,
@@ -31,10 +31,15 @@ import {
   isLiveCallStatus,
   type CallSessionDetailDTO,
 } from "@/modules/calls/domain/call";
+import {
+  INITIAL_LIVE_CALL_PULSE,
+  liveCallPulseReducer,
+} from "@/modules/calls/domain/live-call";
 import { useRecordingUrl } from "@/modules/calls/infrastructure/hooks/use-recording-url";
 import { useLiveCall } from "@/modules/calls/infrastructure/realtime/use-live-call";
 import { getCallSession } from "@/modules/calls/infrastructure/services/calls-service.adapter";
 import { CallTranscript } from "@/modules/calls/ui/components/CallTranscript";
+import { LiveCallView } from "@/modules/calls/ui/live/LiveCallView";
 import { formatCallClock, formatCallCost } from "@/modules/calls/ui/lib/call-format";
 
 const CARD = "border-border shadow-float bg-background rounded-lg border p-5";
@@ -83,16 +88,22 @@ export function CallDetailView({ callId }: { callId: string }) {
     },
     [],
   );
-  const bottomRef = useRef<HTMLDivElement | null>(null);
-  const segmentCount = call?.segments.length ?? 0;
 
   // Transcript en vivo (F4-C): mientras la llamada siga viva, el room
   // `call_…` inserta los segmentos y cualquier cambio de estado re-consulta.
+  // Premium F3: el mismo room alimenta el pulso del aura (quién habla, la
+  // fase del agente y su texto mientras suena).
   const live = call !== null && isLiveCallStatus(call.status);
+  const [pulse, dispatchPulse] = useReducer(liveCallPulseReducer, INITIAL_LIVE_CALL_PULSE);
   useLiveCall({
     callSessionId: callId,
     enabled: live,
+    onSpeaker: (event) => dispatchPulse({ type: "speaker", speaker: event.speaker, state: event.state }),
+    onPhase: (event) => dispatchPulse({ type: "phase", phase: event.phase }),
+    onAgentText: (event) =>
+      dispatchPulse({ type: "agent_text", generation: event.generation, text: event.text }),
     onSegment: (segment) => {
+      dispatchPulse({ type: "segment", role: segment.role });
       setCall((prev) => {
         if (prev === null) return prev;
         if (prev.segments.some((existing) => existing.seq === segment.seq)) return prev;
@@ -115,11 +126,6 @@ export function CallDetailView({ callId }: { callId: string }) {
     onChanged: () => load(),
   });
 
-  // El transcript en vivo sigue al último turno sin que el usuario persiga el texto.
-  useEffect(() => {
-    if (live && segmentCount > 0) bottomRef.current?.scrollIntoView({ block: "nearest" });
-  }, [live, segmentCount]);
-
   if (call === null) {
     return (
       <div className="flex h-full items-center justify-center p-6">
@@ -127,6 +133,8 @@ export function CallDetailView({ callId }: { callId: string }) {
       </div>
     );
   }
+
+  if (live) return <LiveCallView call={call} pulse={pulse} />;
 
   const badge = callResultBadge(call);
   const outbound = call.direction === "outbound";
@@ -189,35 +197,22 @@ export function CallDetailView({ callId }: { callId: string }) {
 
           <section className={CARD}>
             <div className="mb-4 flex items-baseline justify-between gap-3">
-              <h2 className="flex items-center gap-2 text-sm font-semibold">
-                Transcript
-                {live && (
-                  <span className="bg-success/10 text-success inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium">
-                    <span className="bg-success size-1.5 animate-pulse rounded-full" aria-hidden />
-                    En vivo
-                  </span>
-                )}
-              </h2>
+              <h2 className="text-sm font-semibold">Transcript</h2>
               <p className="text-muted-foreground text-xs">
                 latencia por turno · toca el badge para ver el desglose
               </p>
             </div>
             {call.segments.length === 0 ? (
               <p className="text-muted-foreground text-sm">
-                {live
-                  ? "Esperando la conversación…"
-                  : "Esta llamada no tiene transcript (no hubo conversación con la IA)."}
+                Esta llamada no tiene transcript (no hubo conversación con la IA).
               </p>
             ) : (
-              <div aria-live={live ? "polite" : "off"}>
-                <CallTranscript
-                  segments={call.segments}
-                  events={call.events}
-                  agentName={call.ai_agent_name}
-                  contactName={call.contact?.name ?? null}
-                />
-                <div ref={bottomRef} aria-hidden />
-              </div>
+              <CallTranscript
+                segments={call.segments}
+                events={call.events}
+                agentName={call.ai_agent_name}
+                contactName={call.contact?.name ?? null}
+              />
             )}
           </section>
         </div>
