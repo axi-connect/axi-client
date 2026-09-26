@@ -1,4 +1,4 @@
-import { compactSegmentFilters, describeSegmentFilters, type SegmentFilters, type TagDTO } from "../segment";
+import { compactSegmentFilters, describeSegmentFilters, segmentFilterChips, type SegmentFilters, type TagDTO } from "../segment";
 
 const TAGS = [
   { id: "t1", name: "VIP" },
@@ -88,5 +88,25 @@ describe("compactSegmentFilters", () => {
   it("es idempotente", () => {
     const once = compactSegmentFilters({ city: " Bogotá ", lifecycle_stage: ["lead"] });
     expect(compactSegmentFilters(once)).toEqual(once);
+  });
+});
+
+describe("segmentFilterChips — los filtros en palabras de persona", () => {
+  it("un chip por filtro, en el orden del DSL, con las fechas como día", () => {
+    expect(
+      segmentFilterChips(
+        { lifecycle_stage: ["lead"], tag_ids: { any: ["t1", "x"] }, min_score: 0, created_after: "2026-01-01T00:00:00.000Z", has_open_deal: false },
+        TAGS,
+      ),
+    ).toEqual([
+      { label: "Etapa", value: "Lead" },
+      { label: "Alguna etiqueta", value: "VIP, Etiqueta borrada" },
+      { label: "Puntaje", value: "al menos 0" },
+      { label: "Creado desde", value: "1 de ene de 2026" },
+      { label: "Oportunidad", value: "sin ninguna abierta" },
+    ]);
+  });
+  it("sin filtros no hay chips (la vista dice «todos los contactos»)", () => {
+    expect(segmentFilterChips({}, TAGS)).toEqual([]);
   });
 });

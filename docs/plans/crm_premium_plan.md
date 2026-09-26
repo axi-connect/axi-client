@@ -179,6 +179,43 @@ Verjas:
 - `jest`: 492 suites / 3909 tests.
 - `next build`: OK.
 
-## 4. F4
+## 4. F4 · Configuración
 
-Configuración: se diseña después, con su lienzo y su aprobación antes de tocar código.
+Aprobado el 2026-09-26 («Aprobado mockup. procede con la implementación del F4»). Lienzo:
+https://claude.ai/artifact/2cCfarQi6QMmLpNhMAFP3t (11 artboards; fuentes en
+`docs/design/mockups/crm-premium/f4/`). Solo cliente: ningún endpoint nuevo; todo lo que pintan las islas sale de
+lo que ya devuelve el servidor.
+
+| Pieza | Queda |
+|---|---|
+| `settings/layout.tsx` | Cabecera Nexa como Tareas; raíz `mx-auto w-full min-w-0 max-w-[70rem]`; la pestaña «Imports» pasa a «Importar» |
+| ~~`domain/stage-weights.ts`~~ | Retirada: ver «Así pondera el tablero» abajo |
+| `PipelinesEditor` | Lista de pipelines en fichas; etapas como filas de rejilla (asa · color · nombre · probabilidad con − / + · «se enfría a los N días» · borrar). La probabilidad se edita con pasos de 5 y se guarda sola 600 ms después del último toque |
+| ~~`PipelineWeightIsland`~~ | **Retirada por la dueña el 2026-09-26** tras verla implementada («no me gustó, elimínala»). El tablero solo se sigue leyendo para decir cuántas oportunidades y cuánto valor tiene la etapa que se quiere borrar |
+| `domain/cadence-plan.ts` (nuevo) | Puro, con test: la cadencia de una etapa como frase + línea de tiempo (intento *i* a +i·espera; al agotarse, la acción real del motor). La espera ES la espera de respuesta del motor (`agent_tasks.service` usa `cadence_wait_hours` como `reply_wait_hours`) |
+| `JourneyEditor` / `JourneyStageRow` | Etapas en fichas `rounded-3xl`; rejilla `@container` con la isla a la derecha (debajo en estrecho) |
+| `JourneyCadenceIsland` (nuevo) | Isla `glow="ai"` «Así insiste Axi en {etapa}»: la etapa abierta; si no hay, la primera con cadencia |
+| `AgentTaskSettingsView` | Cabecera en dos: el interruptor (sigue siendo botón Apagar/Encender con confirmación: es el freno de una incidencia, no un campo) + isla «El día de Axi» con la barra de 24 h (silencio rayado); las 4 fichas en rejilla 2×2; la barra de guardar pasa a `UnsavedChangesDock` (tinta) dentro de un `<form>` |
+| `SequencesManager` | Fichas en rejilla 2 columnas con el camino de pasos (día + medio), `StatePill` Activa/Borrador, reglas de parada; plantillas en ficha punteada. El editor: pasos en línea de tiempo + isla `ai` «Así lo vive el contacto» (fechas reales de `lastStepAt`/offsets) |
+| `SegmentsManager` | Fichas con filtros en chips, conteo real (`listSegmentContacts` con `page_size: 1` → `meta.total`), acciones; el constructor queda en su ficha |
+| `TagsManager` | Tabla con barra de uso proporcional al que más contactos tiene; nombre truncado con `title`; alta en ficha lateral |
+| `ImportsManager` | Asistente en ficha y el historial al lado en ancho (debajo en estrecho), con estado en `StatePill` |
+
+Desviaciones del lienzo, a propósito:
+
+- «Cada etapa del Recorrido puede pedir menos, nunca más» (Tareas de agente) era FALSO: la cadencia de la etapa
+  sustituye a la política general, no la acota. La pista dice la verdad: «Las etapas con cadencia propia en
+  Recorrido usan la suya».
+- La espera entre intentos y el canal siguen en `Select` (7 y 3 opciones con textos largos: «Llamada y luego
+  mensaje» no cabe en un segmentado a 390 px); la línea de tiempo de la isla es la que da la lectura del lienzo.
+- El mapeo de columnas de Importar es el del asistente compartido con Contactos (`ContactImportWizard`): no se
+  duplica aquí.
+- El constructor de segmentos no dice «Ahora mismo N contactos»: no hay endpoint que cuente un filtro SIN guardar,
+  y el plan no abre endpoints. El conteo sí está en cada ficha guardada.
+- Las reglas de parada de la secuencia pierden el relleno coral: seleccionado se dice con el borde en foreground,
+  como la ficha de pipeline elegida («el dueño rechazó los rellenos de color dentro de los paneles»).
+- La casilla «Activa» del editor de secuencias pasa a `Switch`, con su etiqueta de 40 px como objetivo.
+
+Gates: `tsc`, `lint`, jest de `crm/`, render medido (§12) a 1440 / 1024 / 390 claro y oscuro con los detectores de
+F1–F3 (desborde, objetivo < 24 px, texto cortado sin elipsis, scroller sin la barra de marca, texto partido).
+

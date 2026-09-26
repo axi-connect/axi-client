@@ -1,4 +1,5 @@
 import {
+  agentDaySentence,
   DEFAULT_AGENT_TASK_SETTINGS,
   describeQuietHours,
   isQuietHour,
@@ -95,5 +96,29 @@ describe("validateAgentTaskSettings", () => {
     expect(
       validateAgentTaskSettings({ ...DEFAULT_AGENT_TASK_SETTINGS, daily_cap: 12.5 }).daily_cap,
     ).toBeDefined();
+  });
+});
+
+describe("agentDaySentence — la política en una frase", () => {
+  const base = {
+    enabled: true,
+    daily_cap: 40,
+    quiet_start_hour: 20,
+    quiet_end_hour: 7,
+    max_attempts: 3,
+    max_defer_hours: 72,
+    reply_wait_hours: 24,
+    call_daily_cap: 10,
+  };
+  it("trabaja en el complemento del silencio, con sus dos topes", () => {
+    expect(agentDaySentence(base)).toBe("Trabaja de 7:00 a.m. a 8:00 p.m., hasta 40 tareas y 10 llamadas al día.");
+  });
+  it("sin silencio trabaja a cualquier hora; en singular cuando toca", () => {
+    expect(agentDaySentence({ ...base, quiet_start_hour: 9, quiet_end_hour: 9, daily_cap: 1, call_daily_cap: 1 })).toBe(
+      "Trabaja a cualquier hora, hasta 1 tarea y 1 llamada al día.",
+    );
+  });
+  it("apagado no promete horario", () => {
+    expect(agentDaySentence({ ...base, enabled: false })).toBe("Hoy no trabaja: las tareas programadas esperan a que lo enciendas.");
   });
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   DndContext,
   KeyboardSensor,
@@ -16,15 +16,15 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Check, GripVertical, Plus, Star, Trash2 } from "lucide-react";
+import { Check, GripVertical, Minus, Plus, Star, Trash2 } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { isHttpError } from "@/core/api/problem";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
-import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Modal } from "@/shared/components/ui/modal";
+import { StatePill } from "@/shared/components/features/bento";
 import {
   Select,
   SelectContent,
@@ -33,12 +33,14 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { TableSkeleton } from "@/shared/components/features/loading";
-import type { PipelineDTO, PipelineStageDTO } from "@/modules/crm/domain/deal";
+import type { BoardDTO, PipelineDTO, PipelineStageDTO } from "@/modules/crm/domain/deal";
+import { formatMillions } from "@/core/lib/format";
 import {
   createPipeline,
   createStage,
   deletePipeline,
   deleteStage,
+  getBoard,
   listPipelines,
   reorderStages,
   updatePipeline,
@@ -48,7 +50,15 @@ import {
 type PendingStageDelete = { stage: PipelineStageDTO };
 type PendingPipelineDelete = { pipeline: PipelineDTO };
 
-/** Fila de etapa reordenable con edición inline (guarda al perder el foco). */
+/** Los − / + mueven la probabilidad de 5 en 5 y guardan solos al dejar de tocar. */
+const PROBABILITY_STEP = 5;
+const PROBABILITY_SAVE_DELAY_MS = 600;
+
+/**
+ * Fila de etapa reordenable con edición inline. Nombre y enfriamiento guardan
+ * al perder el foco; la probabilidad, además, con − / +: el PATCH sale 600 ms
+ * después del último toque, así cinco clics son un guardado y no cinco.
+ */
 function StageRow({
   stage,
   onPatch,
@@ -64,20 +74,43 @@ function StageRow({
   const [name, setName] = useState(stage.name);
   const [probability, setProbability] = useState(String(stage.probability_pct));
   const [rotting, setRotting] = useState(stage.rotting_days !== null ? String(stage.rotting_days) : "");
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setName(stage.name);
-    setProbability(String(stage.probability_pct));
+    // Con un guardado de probabilidad en espera, lo de la pantalla es lo último.
+    if (saveTimer.current === null) setProbability(String(stage.probability_pct));
     setRotting(stage.rotting_days !== null ? String(stage.rotting_days) : "");
   }, [stage]);
+
+  useEffect(() => () => {
+    if (saveTimer.current !== null) clearTimeout(saveTimer.current);
+  }, []);
+
+  const commitProbability = (value: number) => {
+    if (saveTimer.current !== null) clearTimeout(saveTimer.current);
+    saveTimer.current = null;
+    if (value !== stage.probability_pct) onPatch(stage.id, { probability_pct: value });
+  };
+
+  const step = (delta: number) => {
+    const current = Number(probability);
+    const base = Number.isFinite(current) ? current : stage.probability_pct;
+    const next = Math.min(100, Math.max(0, Math.round((base + delta) / PROBABILITY_STEP) * PROBABILITY_STEP));
+    setProbability(String(next));
+    if (saveTimer.current !== null) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => commitProbability(next), PROBABILITY_SAVE_DELAY_MS);
+  };
+
+  const probabilityValue = Number(probability);
 
   return (
     <li
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
-        "flex flex-wrap items-center gap-2 rounded-xl border border-border bg-background p-2.5",
-        isDragging && "z-10 opacity-70 shadow-float",
+        "grid grid-cols-[2.25rem_2.25rem_minmax(0,1fr)_2.25rem] items-center gap-x-2 gap-y-2 border-t border-border px-3 py-2.5 @min-[46rem]:grid-cols-[2.25rem_2.25rem_minmax(0,1fr)_auto_2.25rem] @min-[46rem]:px-4",
+        isDragging && "relative z-10 rounded-2xl bg-card opacity-80 shadow-float",
       )}
     >
       <button
@@ -85,18 +118,23 @@ function StageRow({
         {...attributes}
         {...listeners}
         aria-label={`Reordenar etapa ${stage.name}`}
-        className="cursor-grab touch-none text-muted-foreground hover:text-foreground active:cursor-grabbing"
+        className="grid size-9 cursor-grab touch-none place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground active:cursor-grabbing"
       >
         <GripVertical className="size-4" />
       </button>
 
-      <input
-        type="color"
-        value={stage.color ?? "#a1a1aa"}
-        onChange={(e) => onPatch(stage.id, { color: e.target.value })}
-        aria-label={`Color de ${stage.name}`}
-        className="size-7 shrink-0 cursor-pointer rounded-md border border-input bg-background p-0.5"
-      />
+      {/* El color como punto: el input nativo queda encima, invisible, y
+          abre el selector del sistema con el objetivo entero (36 px). */}
+      <label className="relative grid size-9 cursor-pointer place-items-center rounded-full hover:bg-muted">
+        <span aria-hidden className="size-3.5 rounded-full ring-1 ring-foreground/10" style={{ backgroundColor: stage.color ?? "#a1a1aa" }} />
+        <input
+          type="color"
+          value={stage.color ?? "#a1a1aa"}
+          onChange={(e) => onPatch(stage.id, { color: e.target.value })}
+          aria-label={`Color de ${stage.name}`}
+          className="absolute inset-0 cursor-pointer opacity-0"
+        />
+      </label>
 
       <Input
         value={name}
@@ -104,61 +142,84 @@ function StageRow({
         onBlur={() => {
           if (name.trim() && name !== stage.name) onPatch(stage.id, { name: name.trim() });
         }}
-        className="h-8 w-40 flex-1 sm:flex-none"
+        className="h-9 min-w-0 rounded-xl"
         aria-label="Nombre de la etapa"
+        title={name}
       />
-
-      <label className="flex items-center gap-1 text-xs text-muted-foreground">
-        prob.
-        <Input
-          inputMode="numeric"
-          value={probability}
-          onChange={(e) => setProbability(e.target.value)}
-          onBlur={() => {
-            const value = Number(probability);
-            if (Number.isFinite(value) && value >= 0 && value <= 100 && value !== stage.probability_pct) {
-              onPatch(stage.id, { probability_pct: value });
-            } else {
-              setProbability(String(stage.probability_pct));
-            }
-          }}
-          className="h-8 w-14 text-right tabular-nums"
-          aria-label={`Probabilidad de ${stage.name}`}
-        />
-        %
-      </label>
-
-      <label className="flex items-center gap-1 text-xs text-muted-foreground">
-        estanca a los
-        <Input
-          inputMode="numeric"
-          value={rotting}
-          placeholder="—"
-          onChange={(e) => setRotting(e.target.value)}
-          onBlur={() => {
-            const trimmed = rotting.trim();
-            const value = trimmed === "" ? null : Number(trimmed);
-            if (value === null || (Number.isFinite(value) && value >= 1 && value <= 365)) {
-              if (value !== stage.rotting_days) onPatch(stage.id, { rotting_days: value });
-            } else {
-              setRotting(stage.rotting_days !== null ? String(stage.rotting_days) : "");
-            }
-          }}
-          className="h-8 w-14 text-right tabular-nums"
-          aria-label={`Días de estancamiento de ${stage.name}`}
-        />
-        días
-      </label>
 
       <Button
         variant="ghost"
         size="icon"
-        className="ml-auto size-7 text-muted-foreground hover:text-destructive"
+        className="size-9 rounded-full text-muted-foreground hover:text-destructive @min-[46rem]:order-last"
         aria-label={`Eliminar etapa ${stage.name}`}
         onClick={() => onDelete(stage)}
       >
-        <Trash2 className="size-3.5" />
+        <Trash2 className="size-4" />
       </Button>
+
+      <div className="col-span-full flex flex-wrap items-center gap-x-4 gap-y-2 pl-[4.75rem] @min-[46rem]:col-span-1 @min-[46rem]:pl-0">
+        <div className="flex h-9 items-center overflow-hidden rounded-xl border border-input bg-background">
+          <button
+            type="button"
+            aria-label={`Bajar la probabilidad de ${stage.name}`}
+            disabled={probabilityValue <= 0}
+            onClick={() => step(-PROBABILITY_STEP)}
+            className="grid size-9 place-items-center text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-40"
+          >
+            <Minus className="size-3.5" aria-hidden />
+          </button>
+          <label className="flex h-9 items-center text-sm font-medium tabular-nums">
+            <span className="sr-only">Probabilidad de {stage.name}</span>
+            <input
+              inputMode="numeric"
+              value={probability}
+              onChange={(e) => setProbability(e.target.value)}
+              onBlur={() => {
+                const value = Number(probability);
+                if (Number.isFinite(value) && value >= 0 && value <= 100) {
+                  commitProbability(value);
+                } else {
+                  setProbability(String(stage.probability_pct));
+                }
+              }}
+              aria-label={`Probabilidad de ${stage.name}`}
+              className="w-9 bg-transparent text-right outline-none"
+            />
+            <span aria-hidden className="pr-1 pl-0.5 text-muted-foreground">%</span>
+          </label>
+          <button
+            type="button"
+            aria-label={`Subir la probabilidad de ${stage.name}`}
+            disabled={probabilityValue >= 100}
+            onClick={() => step(PROBABILITY_STEP)}
+            className="grid size-9 place-items-center text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-40"
+          >
+            <Plus className="size-3.5" aria-hidden />
+          </button>
+        </div>
+
+        <label className="flex items-center gap-1.5 text-xs whitespace-nowrap text-muted-foreground">
+          Se enfría a los
+          <Input
+            inputMode="numeric"
+            value={rotting}
+            placeholder="—"
+            onChange={(e) => setRotting(e.target.value)}
+            onBlur={() => {
+              const trimmed = rotting.trim();
+              const value = trimmed === "" ? null : Number(trimmed);
+              if (value === null || (Number.isFinite(value) && value >= 1 && value <= 365)) {
+                if (value !== stage.rotting_days) onPatch(stage.id, { rotting_days: value });
+              } else {
+                setRotting(stage.rotting_days !== null ? String(stage.rotting_days) : "");
+              }
+            }}
+            className="h-9 w-14 rounded-xl text-right tabular-nums"
+            aria-label={`Días de estancamiento de ${stage.name}`}
+          />
+          días
+        </label>
+      </div>
     </li>
   );
 }
@@ -177,6 +238,8 @@ export function PipelinesEditor() {
   const [stageDelete, setStageDelete] = useState<PendingStageDelete | null>(null);
   const [pipelineDelete, setPipelineDelete] = useState<PendingPipelineDelete | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  /** El tablero del pipeline elegido: cuántas oportunidades abiertas tiene cada etapa (para el aviso de borrar). */
+  const [board, setBoard] = useState<BoardDTO | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
@@ -184,6 +247,26 @@ export function PipelinesEditor() {
   );
 
   const selected = pipelines?.find((pipeline) => pipeline.id === selectedId) ?? null;
+
+  const loadBoard = (pipelineId: string) => {
+    getBoard(pipelineId)
+      .then((fresh) => setBoard(fresh.pipeline_id === pipelineId ? fresh : null))
+      .catch(() => setBoard(null));
+  };
+
+  useEffect(() => {
+    setBoard(null);
+    if (selectedId !== null) loadBoard(selectedId);
+  }, [selectedId]);
+
+  /** Las oportunidades abiertas de la etapa que se quiere borrar, si el tablero las sabe. */
+  const stageLoad = useMemo(() => {
+    if (stageDelete === null || board === null) return null;
+    const column = board.columns.find((item) => item.stage.id === stageDelete.stage.id);
+    if (column === undefined) return null;
+    const currency = column.deals[0]?.currency ?? "COP";
+    return { count: column.total_count, value: formatMillions(column.total_value_cents, currency) };
+  }, [stageDelete, board]);
 
   const load = async () => {
     try {
@@ -248,6 +331,7 @@ export function PipelinesEditor() {
     if (selected === null) return;
     try {
       applyPipeline(await deleteStage(selected.id, stage.id, moveTo));
+      loadBoard(selected.id);
       setStageDelete(null);
       setDeleteTarget(null);
       showAlert({ tone: "success", title: "Etapa eliminada" });
@@ -282,155 +366,173 @@ export function PipelinesEditor() {
   if (pipelines === null) return <TableSkeleton rows={5} showHeader={false} />;
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[260px_1fr]">
-      {/* Lista de pipelines */}
-      <div className="space-y-2">
-        <ul className="space-y-1.5">
-          {pipelines.map((pipeline) => (
-            <li key={pipeline.id}>
-              <button
-                type="button"
-                aria-pressed={pipeline.id === selectedId}
-                onClick={() => setSelectedId(pipeline.id)}
-                className={cn(
-                  "flex w-full items-center justify-between gap-2 rounded-xl border px-3 py-2 text-left text-sm transition-colors",
-                  pipeline.id === selectedId
-                    ? "border-primary/40 bg-accent font-medium"
-                    : "border-border hover:bg-accent/50",
-                )}
-              >
-                <span className="min-w-0 truncate">{pipeline.name}</span>
-                {pipeline.is_default && (
-                  <Badge variant="secondary" className="shrink-0 gap-1 text-[10px]">
-                    <Star className="size-2.5" aria-hidden /> default
-                  </Badge>
-                )}
-              </button>
-            </li>
-          ))}
-        </ul>
-
-        <form
-          className="flex items-center gap-1.5"
-          onSubmit={(e) => {
-            e.preventDefault();
-            const name = newPipelineName.trim();
-            if (!name) return;
-            createPipeline({ name })
-              .then((created) => {
-                setNewPipelineName("");
-                setPipelines((prev) => (prev === null ? prev : [...prev, created]));
-                setSelectedId(created.id);
-              })
-              .catch((err: unknown) =>
-                showAlert({ tone: "error", title: errorMessage(err, "No se pudo crear el pipeline") }),
-              );
-          }}
-        >
-          <Input
-            value={newPipelineName}
-            onChange={(e) => setNewPipelineName(e.target.value)}
-            placeholder="Nuevo pipeline…"
-            className="h-9"
-            aria-label="Nombre del nuevo pipeline"
-          />
-          <Button type="submit" size="icon" variant="outline" className="size-9 shrink-0" aria-label="Crear pipeline">
-            <Plus className="size-4" />
-          </Button>
-        </form>
-      </div>
-
-      {/* Etapas del pipeline seleccionado */}
-      {selected !== null && (
-        <div className="space-y-3 rounded-2xl border border-border bg-background p-4">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h3 className="text-base font-semibold">Etapas de “{selected.name}”</h3>
-            <div className="flex items-center gap-2">
-              {!selected.is_default && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="rounded-full"
-                  onClick={() => void run(() => updatePipeline(selected.id, { is_default: true }), "Ahora es el pipeline default")}
+    <div className="@container min-w-0">
+      <div className="grid min-w-0 gap-4 @min-[52rem]:grid-cols-[15rem_minmax(0,1fr)]">
+        {/* Lista de pipelines */}
+        <div className="min-w-0 space-y-2">
+          <p className="px-1 text-xs text-muted-foreground">
+            Pipelines · {pipelines.length}
+          </p>
+          <ul className="grid gap-2 @min-[34rem]:grid-cols-2 @min-[52rem]:grid-cols-1">
+            {pipelines.map((pipeline) => (
+              <li key={pipeline.id} className="min-w-0">
+                <button
+                  type="button"
+                  aria-pressed={pipeline.id === selectedId}
+                  onClick={() => setSelectedId(pipeline.id)}
+                  className={cn(
+                    "flex w-full min-w-0 flex-col gap-1 rounded-2xl border bg-card px-4 py-3 text-left transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none",
+                    pipeline.id === selectedId
+                      ? "border-foreground shadow-[0_0_0_1px_var(--foreground)]"
+                      : "border-border hover:bg-muted/50",
+                  )}
                 >
-                  <Star className="size-3.5" />
-                  Hacer default
-                </Button>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="rounded-full text-destructive hover:text-destructive"
-                onClick={() =>
-                  showModal({
-                    title: "Eliminar pipeline",
-                    description: `¿Eliminar “${selected.name}”? Si tiene oportunidades abiertas te pediremos a dónde moverlas.`,
-                    actions: [
-                      { label: "Cancelar", variant: "outline", asClose: true, id: "pl-del-cancel" },
-                      {
-                        label: "Eliminar",
-                        variant: "destructive",
-                        asClose: false,
-                        id: "pl-del-confirm",
-                        onClick: () => void handleDeletePipeline(selected),
-                      },
-                    ],
-                    className: "sm:max-w-md",
-                  })
-                }
-              >
-                <Trash2 className="size-3.5" />
-                Eliminar
-              </Button>
-            </div>
-          </div>
-
-          <DndContext sensors={sensors} onDragEnd={handleReorder}>
-            <SortableContext
-              items={selected.stages.map((stage) => stage.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              <ul className="space-y-2">
-                {selected.stages.map((stage) => (
-                  <StageRow
-                    key={stage.id}
-                    stage={stage}
-                    onPatch={(stageId, dto) =>
-                      void run(() => updateStage(selected.id, stageId, dto))
-                    }
-                    onDelete={(stage) => void handleDeleteStage(stage)}
-                  />
-                ))}
-              </ul>
-            </SortableContext>
-          </DndContext>
+                  <span className="flex min-w-0 items-center justify-between gap-2">
+                    <span className="min-w-0 truncate text-sm font-semibold" title={pipeline.name}>
+                      {pipeline.name}
+                    </span>
+                    {pipeline.is_default && <StatePill tone="neutral">Predeterminado</StatePill>}
+                  </span>
+                  <span className="text-xs text-muted-foreground tabular-nums">
+                    {pipeline.stages.length} {pipeline.stages.length === 1 ? "etapa" : "etapas"}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
 
           <form
             className="flex items-center gap-1.5"
             onSubmit={(e) => {
               e.preventDefault();
-              const name = newStageName.trim();
+              const name = newPipelineName.trim();
               if (!name) return;
-              void run(
-                () => createStage(selected.id, { name, probability_pct: 50 }),
-                "Etapa añadida al final",
-              ).then(() => setNewStageName(""));
+              createPipeline({ name })
+                .then((created) => {
+                  setNewPipelineName("");
+                  setPipelines((prev) => (prev === null ? prev : [...prev, created]));
+                  setSelectedId(created.id);
+                })
+                .catch((err: unknown) =>
+                  showAlert({ tone: "error", title: errorMessage(err, "No se pudo crear el pipeline") }),
+                );
             }}
           >
             <Input
-              value={newStageName}
-              onChange={(e) => setNewStageName(e.target.value)}
-              placeholder="Nueva etapa…"
-              className="h-9 max-w-60"
-              aria-label="Nombre de la nueva etapa"
+              value={newPipelineName}
+              onChange={(e) => setNewPipelineName(e.target.value)}
+              placeholder="Nuevo pipeline…"
+              className="h-9 rounded-xl"
+              aria-label="Nombre del nuevo pipeline"
             />
-            <Button type="submit" size="sm" variant="outline" className="rounded-full">
-              <Plus className="size-3.5" />
-              Añadir etapa
+            <Button type="submit" size="icon" variant="outline" className="size-9 shrink-0 rounded-full" aria-label="Crear pipeline">
+              <Plus className="size-4" />
             </Button>
           </form>
         </div>
-      )}
+
+        {/* Etapas del pipeline seleccionado */}
+        {selected !== null && (
+          <div className="min-w-0 space-y-4">
+            <section className="@container min-w-0 overflow-hidden rounded-3xl border border-border bg-card">
+              <header className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 pt-4 pb-3 @min-[46rem]:px-5">
+                <div className="min-w-0">
+                  <h2 className="truncate font-heading text-lg font-bold" title={selected.name}>
+                    Etapas de {selected.name}
+                  </h2>
+                  <p className="text-xs text-muted-foreground">Arrastra para ordenar · se guarda al salir de cada campo</p>
+                </div>
+                <div className="flex flex-wrap items-center gap-1">
+                  {!selected.is_default && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="rounded-full"
+                      onClick={() => void run(() => updatePipeline(selected.id, { is_default: true }), "Ahora es el pipeline predeterminado")}
+                    >
+                      <Star className="size-3.5" />
+                      Hacer predeterminado
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="rounded-full text-destructive hover:text-destructive"
+                    onClick={() =>
+                      showModal({
+                        title: "Eliminar pipeline",
+                        description: `¿Eliminar “${selected.name}”? Si tiene oportunidades abiertas te pediremos a dónde moverlas.`,
+                        actions: [
+                          { label: "Cancelar", variant: "outline", asClose: true, id: "pl-del-cancel" },
+                          {
+                            label: "Eliminar",
+                            variant: "destructive",
+                            asClose: false,
+                            id: "pl-del-confirm",
+                            onClick: () => void handleDeletePipeline(selected),
+                          },
+                        ],
+                        className: "sm:max-w-md",
+                      })
+                    }
+                  >
+                    <Trash2 className="size-3.5" />
+                    Eliminar
+                  </Button>
+                </div>
+              </header>
+
+              <DndContext sensors={sensors} onDragEnd={handleReorder}>
+                <SortableContext
+                  items={selected.stages.map((stage) => stage.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <ul>
+                    {selected.stages.map((stage) => (
+                      <StageRow
+                        key={stage.id}
+                        stage={stage}
+                        onPatch={(stageId, dto) =>
+                          void run(() => updateStage(selected.id, stageId, dto))
+                        }
+                        onDelete={(stage) => void handleDeleteStage(stage)}
+                      />
+                    ))}
+                  </ul>
+                </SortableContext>
+              </DndContext>
+
+              <form
+                className="flex items-center gap-1.5 border-t border-border px-4 py-3 @min-[46rem]:px-5"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const name = newStageName.trim();
+                  if (!name) return;
+                  void run(
+                    () => createStage(selected.id, { name, probability_pct: 50 }),
+                    "Etapa añadida al final",
+                  ).then(() => {
+                    setNewStageName("");
+                    loadBoard(selected.id);
+                  });
+                }}
+              >
+                <Input
+                  value={newStageName}
+                  onChange={(e) => setNewStageName(e.target.value)}
+                  placeholder="Nueva etapa…"
+                  className="h-9 max-w-72 rounded-xl"
+                  aria-label="Nombre de la nueva etapa"
+                />
+                <Button type="submit" size="sm" variant="outline" className="h-9 shrink-0 rounded-full">
+                  <Plus className="size-3.5" />
+                  Añadir etapa
+                </Button>
+              </form>
+            </section>
+          </div>
+        )}
+      </div>
 
       {/* 409 stage_in_use: elegir destino */}
       {stageDelete !== null && selected !== null && (
@@ -443,10 +545,14 @@ export function PipelinesEditor() {
             }
           }}
           config={{
-            title: "La etapa tiene oportunidades",
-            description: `Elige a qué etapa mover las oportunidades de “${stageDelete.stage.name}” antes de eliminarla.`,
+            title: `Eliminar «${stageDelete.stage.name}»`,
+            description:
+              stageLoad !== null && stageLoad.count > 0
+                ? `Tiene ${String(stageLoad.count)} ${stageLoad.count === 1 ? "oportunidad abierta" : "oportunidades abiertas"} por ${stageLoad.value}. No se borran: elige a qué etapa pasan.`
+                : `Tiene oportunidades. No se borran: elige a qué etapa pasan antes de eliminar «${stageDelete.stage.name}».`,
             className: "sm:max-w-md",
             actions: [],
+            showCloseButton: false,
           }}
         >
           <div className="space-y-4">
@@ -496,6 +602,7 @@ export function PipelinesEditor() {
             description: `Elige a qué pipeline mover las oportunidades de “${pipelineDelete.pipeline.name}”.`,
             className: "sm:max-w-md",
             actions: [],
+            showCloseButton: false,
           }}
         >
           <div className="space-y-4">
