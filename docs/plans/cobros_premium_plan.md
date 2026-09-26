@@ -198,3 +198,60 @@ codificar.
 - Nada nuevo del agente F6, WhatsApp Web para medios ni `delivered`.
 - El 422 repetido de `GET /attachment` (un bajo del auditor) se arregla en P3, porque toca el mismo rail: no pedir el
   comprobante si el pago no lo tiene. Lleva su test de los dos signos.
+
+## 9. Estado de la implementación (2026-09-26)
+
+Las cinco fases están implementadas en `hotfix/cobros-premium`. Los tests que ya existían en Cobros siguen verdes **sin
+tocarlos**; cada pieza nueva de lógica lleva su test de los dos signos.
+
+### Decisiones al implementar, contra el lienzo
+
+Todas salen de lo que el servidor entrega de verdad o de las reglas de §0.
+
+- **P4 · Cartera:**
+  - La isla «Escribe primero a» **no aparece si todos van al día**. No se promueve a alguien que no debe nada todavía.
+  - La cifra de la isla es **lo vencido** si lo hay, con «debe $ X en total» al lado; si no hay nada vencido, es el
+    saldo.
+  - Los conteos del resumen son «Pedidos en mora» y «Clientes en mora» (`ReceivablesStatsDto`) y solo acompañan a
+    «Te deben». Con un filtro puesto contarían otra cosa que la cifra.
+  - La barra tiene dos tramos, vencido y lo demás. El servidor no da «por vencer» como cifra.
+  - El total de cada sección se muestra solo si tiene más de una fila.
+- **P4 · Plan de pagos en el pedido:**
+  - Las tres cifras no se repiten, porque ya las dice el bloque de cobro que va justo encima.
+  - «Lo próximo» es isla **solo si el rail no muestra ya la del comprobante por revisar**; si la muestra, baja a ficha.
+    Hay una isla por pantalla.
+  - La acción de la isla es «Registrar el abono» y abre el diálogo del rail.
+  - La isla «Lo próximo» de P5 (historial de avisos) es esta misma. No se pinta una segunda.
+- **P4 · Registrar abono:** los atajos y el reparto aparecen solo con plan (lo pasa el rail); en el kanban el diálogo es
+  el de siempre. El reparto usa `allocationPreview`, que copia la regla `allocateFifo` del servidor (por `seq`, cada
+  cuota hasta lo que le falta).
+- **P4 · Política:**
+  - `POST /collections/plans/preview` calcula con la política **guardada**. Mientras haya cambios, la isla lo dice («guarda
+    para ver el de tus cambios») en vez de prometer que se mueve con el borrador.
+  - La venta de ejemplo pasa de $ 108.500 (un error de unidades) a $ 14.000.000.
+  - La fila «Qué dice el agente» del lienzo no se implementa: la frase era ilustrativa.
+- **P5 · Recordatorios:**
+  - El hilo se construye con la cadencia real (`reminderThread`), un mensaje por desfase y con la misma elección de
+    texto que el servidor. Antes eran tres mensajes fijos.
+  - «Guardar recordatorios» sigue siempre visible, igual que en Moneda (P2), y no va en una barra de tinta: los tests
+    existentes lo exigen presente y activo.
+- **P5 · Envío manual:** no hay `send-options` para recordatorios, así que las tarjetas de canal no dicen «escribió hace
+  2 h». Si el aviso no puede salir, el servidor responde `skipped` y el diálogo lo dice. El botón es «Enviar ahora por
+  WhatsApp/Correo».
+- **Arreglos que venían de la QA:**
+  - Una sola fila «Saldo final» tras reprogramar (`planInstallmentLabel`, cliente).
+  - Las piezas del subtítulo de la cartera no se parten a 390 px.
+  - No se pide `GET /attachment` si el pago no tiene comprobante (P3).
+
+### Fuera del hotfix, anotado
+
+- La X de cierre del `Dialog` global mide 16 px y su texto accesible está en inglés («Close»). Es de todos los diálogos
+  de la app: no se toca en un hotfix de Cobros.
+
+### Render
+
+- Arnés en `/root/axi/qa/premium/cobros-render.mjs`: `node cobros-render.mjs p1 … p5`.
+- Capturas e informes en `/root/axi/qa/premium/cobros/`.
+- Entorno:
+  - API `:3110` con la base `axi_render_cobros`;
+  - cliente `:3200`.

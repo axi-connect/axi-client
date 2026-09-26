@@ -6,7 +6,20 @@ import { cn } from "@/core/lib/utils";
 import type { ProductVariantDTO } from "@/modules/catalog/domain/product";
 
 const DAYS = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
-const MONTHS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+const MONTHS = [
+  "ene",
+  "feb",
+  "mar",
+  "abr",
+  "may",
+  "jun",
+  "jul",
+  "ago",
+  "sep",
+  "oct",
+  "nov",
+  "dic",
+];
 
 /** «sáb 14 nov»: la fecha de una salida como se dice en voz alta. */
 export function departureLabel(isoDate: string): string {
@@ -33,10 +46,16 @@ export interface Departure {
 }
 
 /** Las salidas de un producto: sus variantes con fecha, en orden de calendario. */
-export function departuresOf(variants: readonly ProductVariantDTO[], now: Date = new Date()): Departure[] {
+export function departuresOf(
+  variants: readonly ProductVariantDTO[],
+  now: Date = new Date(),
+): Departure[] {
   const today = localToday(now);
   return variants
-    .filter((variant): variant is ProductVariantDTO & { service_date: string } => typeof variant.service_date === "string")
+    .filter(
+      (variant): variant is ProductVariantDTO & { service_date: string } =>
+        typeof variant.service_date === "string",
+    )
     .map((variant) => ({
       id: variant.id,
       date: variant.service_date,
@@ -53,23 +72,38 @@ export function departuresOf(variants: readonly ProductVariantDTO[], now: Date =
  * marcado. Cada nodo dice su fecha y cuántos cupos quedan. En el celular la
  * fila se desplaza dentro de sí misma.
  */
-export function DepartureCalendar({ variants, now }: { variants: readonly ProductVariantDTO[]; now?: Date }) {
+export function DepartureCalendar({
+  variants,
+  now,
+}: {
+  variants: readonly ProductVariantDTO[];
+  now?: Date;
+}) {
   const departures = departuresOf(variants, now);
   if (departures.length === 0) return null;
   const pastCount = departures.filter((departure) => departure.past).length;
 
   return (
-    <section aria-label="Calendario de salidas" className="rounded-3xl border border-border bg-card px-5 py-4">
-      <div className="flex items-baseline justify-between gap-3 pb-3">
-        <p className="text-xs text-muted-foreground">Calendario de salidas</p>
+    <section
+      aria-label="Calendario de salidas"
+      className="rounded-3xl border border-border bg-card px-5 py-4"
+    >
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 pb-3">
+        <p className="text-xs whitespace-nowrap text-muted-foreground">
+          Calendario de salidas
+        </p>
         <p className="text-xs text-muted-foreground">
-          {departures.length - pastCount} por salir · {pastCount} {pastCount === 1 ? "ya salió" : "ya salieron"}
+          {departures.length - pastCount} por salir · {pastCount}{" "}
+          {pastCount === 1 ? "ya salió" : "ya salieron"}
         </p>
       </div>
       <div className="sidebar-scroll overflow-x-auto">
         <ol className="relative flex min-w-max gap-2 pb-1">
           {departures.map((departure, index) => (
-            <li key={departure.id} className="relative flex w-28 shrink-0 flex-col items-center gap-1.5 text-center">
+            <li
+              key={departure.id}
+              className="relative flex w-28 shrink-0 flex-col items-center gap-1.5 text-center"
+            >
               {index > 0 ? (
                 <span
                   aria-hidden="true"
@@ -89,9 +123,19 @@ export function DepartureCalendar({ variants, now }: { variants: readonly Produc
                       : "border border-border bg-card",
                 )}
               >
-                {departure.past ? <Check aria-hidden="true" className="size-4" strokeWidth={2.5} /> : departure.seatsLeft ?? "·"}
+                {departure.past ? (
+                  <Check
+                    aria-hidden="true"
+                    className="size-4"
+                    strokeWidth={2.5}
+                  />
+                ) : (
+                  (departure.seatsLeft ?? "·")
+                )}
               </span>
-              <span className="text-xs font-semibold whitespace-nowrap">{departure.label}</span>
+              <span className="text-xs font-semibold whitespace-nowrap">
+                {departure.label}
+              </span>
               <span className="text-xs whitespace-nowrap text-muted-foreground">
                 {departure.past
                   ? "ya salió"

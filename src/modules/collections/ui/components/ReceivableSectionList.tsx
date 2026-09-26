@@ -70,7 +70,7 @@ function Row({
   const promise = promiseLine(row);
   const menu = onPromise !== undefined || onReschedule !== undefined;
   return (
-    <div className="relative grid grid-cols-[0.5rem_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 py-4 transition-colors hover:bg-foreground/[0.02] focus-within:bg-foreground/[0.02] md:grid-cols-[0.5rem_2.25rem_minmax(0,1fr)_auto_auto] md:gap-x-4 [&+&]:border-t [&+&]:border-border/60">
+    <div className="relative grid grid-cols-[0.5rem_minmax(0,1fr)] items-center gap-x-3 gap-y-2.5 py-4 transition-colors hover:bg-foreground/[0.02] focus-within:bg-foreground/[0.02] md:grid-cols-[0.5rem_2.25rem_minmax(0,1fr)_auto_auto] md:gap-x-4 [&+&]:border-t [&+&]:border-border/60">
       <span
         aria-hidden="true"
         className={`size-2 self-start rounded-full md:self-center ${MONEY_DOT[sectionOf(row)]} mt-[7px] md:mt-0`}
@@ -84,7 +84,7 @@ function Row({
       <span className="min-w-0">
         <Link
           href={`/orders/${row.order_id}`}
-          className="block truncate text-[15px] font-semibold tracking-[-0.005em] after:absolute after:inset-0 after:content-['']"
+          className="block truncate text-[15px] leading-6 font-semibold tracking-[-0.005em] after:absolute after:inset-0 after:content-['']"
         >
           {row.contact_name}
         </Link>
@@ -147,107 +147,112 @@ function Row({
           {reminder.text}
         </span>
       </span>
-      <span className="self-start text-right md:self-center">
-        <span className="block text-[15px] font-semibold tracking-[-0.015em] whitespace-nowrap tabular-nums">
-          {formatMoney(row.balance_cents, row.currency)}
-        </span>
-        <span
-          className={`mt-0.5 block text-[12.5px] whitespace-nowrap tabular-nums ${late ? "text-destructive" : "text-muted-foreground"}`}
-        >
-          {due === "" ? (
-            <>
-              <Calendar
-                aria-hidden="true"
-                className="mr-1 inline size-3 align-[-2px]"
-              />
-              {row.next_due_at === null
-                ? "Sin cuota"
-                : formatShortDate(row.next_due_at)}
-            </>
-          ) : (
-            <>
-              {due}
-              {late &&
-              row.overdue_cents > 0 &&
-              row.overdue_cents < row.balance_cents ? (
-                // Lo vencido no siempre es todo lo que debe (QA F4-08): con la
-                // cuota 2 vencida y la 3 en noviembre, aquí va la 2.
-                <span className="text-muted-foreground">
-                  {" · "}
-                  {formatMoney(row.overdue_cents, row.currency)}
-                </span>
-              ) : null}
-            </>
-          )}
-        </span>
-      </span>
-      <span className="relative z-[1] col-span-2 col-start-2 flex items-center justify-end gap-1 md:col-span-1 md:col-start-auto">
-        <Button
-          variant="outline"
-          size="sm"
-          className="rounded-full"
-          onClick={() => onWrite(row)}
-        >
-          <Send aria-hidden="true" className="size-3.5" />
-          Escribir
-        </Button>
-        {menu ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-9 rounded-full text-muted-foreground"
-                aria-label={`Más acciones · ${row.contact_name}`}
-              >
-                <Ellipsis className="size-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-64 rounded-2xl p-1.5">
-              {onPromise !== undefined && row.active_promise_at === null ? (
-                <DropdownMenuItem
-                  className="flex items-start gap-3 rounded-xl px-3 py-2.5"
-                  onClick={() => onPromise(row)}
-                >
-                  <Handshake className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-                  <span>
-                    <span className="block text-sm font-medium">
-                      Anotar promesa de pago
-                    </span>
-                    <span className="block text-xs text-muted-foreground">
-                      Pausa los recordatorios hasta la fecha
-                    </span>
+      <span className="col-start-2 flex items-center justify-between gap-3 md:contents">
+        <span className="text-left md:self-center md:text-right">
+          <span className="block text-[15px] font-semibold tracking-[-0.015em] whitespace-nowrap tabular-nums">
+            {formatMoney(row.balance_cents, row.currency)}
+          </span>
+          <span
+            className={`mt-0.5 block text-[12.5px] whitespace-nowrap tabular-nums ${late ? "text-destructive" : "text-muted-foreground"}`}
+          >
+            {due === "" ? (
+              <>
+                <Calendar
+                  aria-hidden="true"
+                  className="mr-1 inline size-3 align-[-2px]"
+                />
+                {row.next_due_at === null
+                  ? "Sin cuota"
+                  : formatShortDate(row.next_due_at)}
+              </>
+            ) : (
+              <>
+                {due}
+                {late &&
+                row.overdue_cents > 0 &&
+                row.overdue_cents < row.balance_cents ? (
+                  // Lo vencido no siempre es todo lo que debe (QA F4-08): con la
+                  // cuota 2 vencida y la 3 en noviembre, aquí va la 2.
+                  <span className="text-muted-foreground">
+                    {" · "}
+                    {formatMoney(row.overdue_cents, row.currency)}
                   </span>
-                </DropdownMenuItem>
-              ) : null}
-              {onReschedule !== undefined ? (
-                <DropdownMenuItem
-                  className="flex items-start gap-3 rounded-xl px-3 py-2.5"
-                  onClick={() => onReschedule(row)}
+                ) : null}
+              </>
+            )}
+          </span>
+        </span>
+        <span className="relative z-[1] flex items-center justify-end gap-1">
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-full"
+            onClick={() => onWrite(row)}
+          >
+            <Send aria-hidden="true" className="size-3.5" />
+            Escribir
+          </Button>
+          {menu ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-9 rounded-full text-muted-foreground"
+                  aria-label={`Más acciones · ${row.contact_name}`}
                 >
-                  <CalendarClock className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-                  <span>
-                    <span className="block text-sm font-medium">
-                      Reprogramar cuotas
-                    </span>
-                    <span className="block text-xs text-muted-foreground">
-                      Solo lo pendiente; la suma tiene que cuadrar
-                    </span>
-                  </span>
-                </DropdownMenuItem>
-              ) : null}
-              <DropdownMenuSeparator />
-              <Link
-                role="menuitem"
-                href={`/orders/${row.order_id}`}
-                className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium hover:bg-accent focus:bg-accent focus:outline-none"
+                  <Ellipsis className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="w-64 rounded-2xl p-1.5"
               >
-                <ExternalLink className="size-4 shrink-0 text-muted-foreground" />
-                Abrir el pedido
-              </Link>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : null}
+                {onPromise !== undefined && row.active_promise_at === null ? (
+                  <DropdownMenuItem
+                    className="flex items-start gap-3 rounded-xl px-3 py-2.5"
+                    onClick={() => onPromise(row)}
+                  >
+                    <Handshake className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                    <span>
+                      <span className="block text-sm font-medium">
+                        Anotar promesa de pago
+                      </span>
+                      <span className="block text-xs text-muted-foreground">
+                        Pausa los recordatorios hasta la fecha
+                      </span>
+                    </span>
+                  </DropdownMenuItem>
+                ) : null}
+                {onReschedule !== undefined ? (
+                  <DropdownMenuItem
+                    className="flex items-start gap-3 rounded-xl px-3 py-2.5"
+                    onClick={() => onReschedule(row)}
+                  >
+                    <CalendarClock className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                    <span>
+                      <span className="block text-sm font-medium">
+                        Reprogramar cuotas
+                      </span>
+                      <span className="block text-xs text-muted-foreground">
+                        Solo lo pendiente; la suma tiene que cuadrar
+                      </span>
+                    </span>
+                  </DropdownMenuItem>
+                ) : null}
+                <DropdownMenuSeparator />
+                <Link
+                  role="menuitem"
+                  href={`/orders/${row.order_id}`}
+                  className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium hover:bg-accent focus:bg-accent focus:outline-none"
+                >
+                  <ExternalLink className="size-4 shrink-0 text-muted-foreground" />
+                  Abrir el pedido
+                </Link>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : null}
+        </span>
       </span>
     </div>
   );

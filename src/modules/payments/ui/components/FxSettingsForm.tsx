@@ -29,7 +29,7 @@ const SPREAD_STEP = 0.5;
 
 function Row({ title, hint, control }: { title: string; hint: string; control: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-3 border-t border-border/60 py-4 first:border-t-0 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+    <div className="flex flex-col gap-3 border-t border-border/60 py-4 first-of-type:border-t-0 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
       <div className="min-w-0">
         <p className="text-sm font-semibold">{title}</p>
         <p className="mt-0.5 max-w-[56ch] text-[13px] leading-relaxed text-muted-foreground">{hint}</p>

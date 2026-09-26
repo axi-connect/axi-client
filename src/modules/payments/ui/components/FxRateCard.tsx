@@ -51,10 +51,10 @@ export function FxRateCard({
     <>
       <section className={TILE} aria-labelledby="fx-rate-title">
         <header className="flex min-h-6 items-center justify-between gap-2">
-          <h2 id="fx-rate-title" className="font-sans text-xs font-normal text-muted-foreground">
+          <h2 id="fx-rate-title" className="shrink-0 font-sans text-xs font-normal whitespace-nowrap text-muted-foreground">
             TRM de hoy
           </h2>
-          <span className="flex items-center gap-1">
+          <span className="flex min-w-0 items-center gap-1">
             {official === null ? (
               <StatePill tone="neutral">Esperando la de hoy</StatePill>
             ) : notice === "stale" ? (

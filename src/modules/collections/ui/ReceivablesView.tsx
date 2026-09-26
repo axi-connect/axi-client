@@ -177,14 +177,14 @@ export function ReceivablesView() {
           </p>
         </div>
         <div className="flex w-full flex-wrap items-center gap-2.5 md:w-auto">
-          <label className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full border border-border bg-card px-4 text-[13px] text-muted-foreground md:w-[300px] md:flex-none">
+          <label className="flex h-11 min-w-0 basis-full items-center gap-2 rounded-full border border-border bg-card px-4 text-[13px] text-muted-foreground sm:flex-1 sm:basis-auto md:w-[300px] md:flex-none">
             <Search aria-hidden="true" className="size-4 shrink-0" />
             <span className="sr-only">Buscar cliente o pedido</span>
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Buscar cliente o pedido"
-              className="w-full min-w-0 bg-transparent text-foreground outline-none placeholder:text-muted-foreground"
+              className="h-full w-full min-w-0 bg-transparent text-foreground outline-none placeholder:text-muted-foreground"
             />
           </label>
           <nav
@@ -304,9 +304,11 @@ export function ReceivablesView() {
 
       <p className="max-w-[72ch] px-1 text-[12.5px] leading-relaxed text-muted-foreground">
         El orden no es alfabético ni por importe: es{" "}
-        <b className="font-medium text-foreground">a quién escribir primero</b>.
-        Y el saldo sale del pedido, no de una copia — si mañana cambia su total,
-        la cartera ya lo sabe.
+        <b className="font-medium whitespace-nowrap text-foreground">
+          a quién escribir primero
+        </b>
+        . Y el saldo sale del pedido, no de una copia — si mañana cambia su
+        total, la cartera ya lo sabe.
       </p>
 
       {writing === null ? null : (

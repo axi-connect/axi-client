@@ -77,7 +77,9 @@ describe("ReportPaymentDialog · atajos y reparto con plan (premium P4)", () => 
     ).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByText("reparto 30000000")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /^Todo · \$\s900\.000$/ }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /^Todo · \$\s900\.000$/ }),
+    );
     expect(
       screen.getByRole("button", { name: /^Todo · \$\s900\.000$/ }),
     ).toHaveAttribute("aria-pressed", "true");

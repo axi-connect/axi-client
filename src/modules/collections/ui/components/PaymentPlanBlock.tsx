@@ -571,9 +571,14 @@ function InstallmentRow({
       <div className="min-w-0">
         <p className="text-sm font-medium">{label}</p>
         <p className="mt-0.5 text-[12.5px] text-muted-foreground">
-          {paid && installment.paid_at !== null
-            ? `Pagada el ${formatShortDate(installment.paid_at)}`
-            : `Vence el ${formatShortDate(installment.due_at)}`}
+          {paid && installment.paid_at !== null ? "Pagada el " : "Vence el "}
+          <span className="whitespace-nowrap">
+            {formatShortDate(
+              paid && installment.paid_at !== null
+                ? installment.paid_at
+                : installment.due_at,
+            )}
+          </span>
           {!paid && installment.paid_cents > 0
             ? ` · abonó ${formatMoney(installment.paid_cents, currency)}`
             : null}

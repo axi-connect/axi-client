@@ -248,7 +248,7 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
         </header>
 
         {/* Cuerpo scrolleable */}
-        <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-4">
+        <div className="sidebar-scroll min-h-0 flex-1 space-y-5 overflow-y-auto p-4">
           {loading ? (
             <div className="space-y-3" role="status" aria-label="Cargando pedido">
               <Skeleton className="h-4 w-2/3" />

@@ -185,7 +185,7 @@ export function TenantFeaturesView({ tenantId }: { tenantId: string }) {
           {data.features.map((feature) => (
             <li
               key={feature.code}
-              className="grid gap-3 border-t border-border/60 py-4 lg:grid-cols-[minmax(0,1fr)_auto_auto] lg:items-center lg:gap-6"
+              className="grid gap-3 border-t border-border/60 py-4 xl:grid-cols-[minmax(0,1fr)_auto_auto] xl:items-center xl:gap-6"
             >
               <div className="flex min-w-0 flex-col gap-1.5">
                 <div className="flex flex-wrap items-center gap-2">
@@ -201,7 +201,7 @@ export function TenantFeaturesView({ tenantId }: { tenantId: string }) {
                   </span>
                 ) : null}
               </div>
-              <div className="overflow-x-auto">
+              <div className="sidebar-scroll overflow-x-auto">
                 <Ladder feature={feature} />
               </div>
               <SegmentedControl

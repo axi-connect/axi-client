@@ -122,7 +122,7 @@ export function OrderNotificationTemplatesForm() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-heading text-3xl font-bold tracking-tight">Notificaciones de pedidos</h1>
+        <h1 className="font-heading text-xl font-bold tracking-tight sm:text-3xl">Notificaciones de pedidos</h1>
         <p className="mt-1 max-w-[72ch] text-sm text-muted-foreground">
           Mensajes de WhatsApp que reciben tus clientes cuando su pedido cambia de estado. Sin plantilla encendida no sale
           nada.

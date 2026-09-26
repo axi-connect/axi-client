@@ -44,7 +44,9 @@ export function UnsavedChangesDock({
             Revisa los campos marcados antes de guardar.
           </span>
         ) : detail ? (
-          <span className="truncate text-xs text-muted-foreground">{detail}</span>
+          <span className="truncate text-xs text-muted-foreground">
+            {detail}
+          </span>
         ) : null}
       </span>
       <span className="flex shrink-0 gap-2">
@@ -60,7 +62,9 @@ export function UnsavedChangesDock({
             if (invalid || submitting) event.preventDefault();
           }}
         >
-          {submitting ? <LoaderCircle aria-hidden="true" className="animate-spin" /> : null}
+          {submitting ? (
+            <LoaderCircle aria-hidden="true" className="animate-spin" />
+          ) : null}
           {submitLabel}
         </Button>
       </span>

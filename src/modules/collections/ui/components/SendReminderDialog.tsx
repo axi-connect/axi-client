@@ -210,7 +210,7 @@ export function SendReminderDialog({
             <div
               role="radiogroup"
               aria-label="Por dónde"
-              className="grid gap-2.5 sm:grid-cols-2"
+              className="grid gap-2"
             >
               {CHANNELS.map((option) => {
                 const checked = channel === option.key;
@@ -223,7 +223,7 @@ export function SendReminderDialog({
                     aria-checked={checked}
                     onClick={() => setChannel(option.key)}
                     className={cn(
-                      "flex min-h-16 items-center gap-3 rounded-2xl border bg-card px-3.5 py-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                      "flex min-h-14 items-center gap-3 rounded-2xl border bg-card px-3.5 py-2.5 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
                       checked
                         ? "border-foreground ring-1 ring-foreground"
                         : "border-border hover:bg-accent",
@@ -239,7 +239,7 @@ export function SendReminderDialog({
                       <span className="text-sm font-semibold">
                         {REMINDER_CHANNEL_LABELS[option.key]}
                       </span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-xs text-pretty text-muted-foreground">
                         {option.hint}
                       </span>
                     </span>
@@ -291,7 +291,7 @@ const CHANNELS = [
     icon: MessageCircle,
     hint: "Por el chat del pedido; fuera de las 24 h, con la plantilla aprobada",
   },
-  { key: "email", icon: Mail, hint: "Si tiene correo en su ficha" },
+  { key: "email", icon: Mail, hint: "Al correo de su ficha" },
 ] as const satisfies readonly {
   key: ReminderChannel;
   icon: typeof Mail;
