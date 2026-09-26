@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { Badge } from "@/shared/components/ui/badge";
+import { StatePill, type StatePillTone } from "@/shared/components/features/bento";
 import { Avatar } from "@/shared/components/ui/avatar";
 import type { ColumnDef } from "@/shared/components/features/data-table";
 import type { Paginated } from "@/core/api/types";
 import type { ListQuery } from "@/shared/api/query";
 import { formatShortDate } from "@/core/lib/format";
+import { relativeTime } from "@/core/lib/relative-time";
+import { ChannelKindIcon } from "@/modules/channels/public";
 import { cn } from "@/core/lib/utils";
 import {
   mapContactToRow,
@@ -68,12 +70,19 @@ function DataCompletenessCell({ row }: { row: ContactRow }) {
   );
 }
 
-/** Tono suave por etapa (borde/fondo tenue, nunca fondo saturado). */
-const STAGE_BADGE_CLASSES: Record<ContactLifecycleStage, string> = {
-  prospect: "border-transparent bg-secondary text-secondary-foreground",
-  lead: "border-transparent bg-info/12 text-info",
-  customer: "border-transparent bg-success/12 text-success",
-  other: "border-border bg-transparent text-muted-foreground",
+/** El estado vive en el punto; el texto, en foreground (§9.5). */
+const STAGE_TONE: Record<ContactLifecycleStage, StatePillTone> = {
+  prospect: "neutral",
+  lead: "info",
+  customer: "success",
+  other: "neutral",
+};
+
+const CHANNEL_LABEL: Record<NonNullable<ContactRow["channel_kind"]>, string> = {
+  whatsapp_cloud: "WhatsApp",
+  whatsapp_web: "WhatsApp",
+  instagram_dm: "Instagram",
+  facebook_messenger: "Messenger",
 };
 
 export const contactColumns: ColumnDef<ContactRow>[] = [
@@ -85,14 +94,16 @@ export const contactColumns: ColumnDef<ContactRow>[] = [
     cell: ({ row }) => (
       <Link
         href={`/crm/contacts/${row.original.id}`}
-        className="group flex items-center gap-3 py-0.5"
+        className="group flex min-w-0 items-center gap-3 rounded-lg py-0.5 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
       >
-        <Avatar src={row.original.avatar_url} alt={row.original.full_name} fallback={row.original.full_name} />
-        <div className="min-w-0">
-          <p className="truncate font-medium transition-colors group-hover:text-brand">
+        <Avatar src={row.original.avatar_url} alt="" fallback={row.original.full_name} />
+        {/* Ancho máximo explícito: en una tabla, un texto sin saltos ensancha la
+            celda aunque se trunque (a 390 px la tabla medía 437). */}
+        <div className="max-w-[11rem] min-w-0 sm:max-w-[16rem] lg:max-w-[20rem]">
+          <p className="truncate font-semibold underline-offset-4 group-hover:underline" title={row.original.full_name}>
             {row.original.full_name}
           </p>
-          <p className="truncate text-xs text-muted-foreground">
+          <p className="truncate text-xs text-muted-foreground" title={row.original.phone ?? row.original.email ?? undefined}>
             {row.original.phone ?? row.original.email ?? "Sin datos de contacto"}
           </p>
         </div>
@@ -102,19 +113,35 @@ export const contactColumns: ColumnDef<ContactRow>[] = [
   {
     accessorKey: "lifecycle_stage",
     header: "Etapa",
-    alwaysVisible: true,
+    minWidth: 120,
     cell: ({ row }) => (
-      <Badge variant="outline" className={cn(STAGE_BADGE_CLASSES[row.original.lifecycle_stage])}>
+      <StatePill tone={STAGE_TONE[row.original.lifecycle_stage]}>
         {CONTACT_STAGE_LABELS[row.original.lifecycle_stage]}
-      </Badge>
+      </StatePill>
     ),
+  },
+  {
+    accessorKey: "last_seen_at",
+    header: "Canal",
+    minWidth: 140,
+    cell: ({ row }) =>
+      row.original.channel_kind === null ? (
+        <span className="text-sm text-muted-foreground">Sin canal</span>
+      ) : (
+        <span className="inline-flex items-center gap-2 text-sm whitespace-nowrap text-muted-foreground">
+          <ChannelKindIcon kind={row.original.channel_kind} className="size-4" aria-label={CHANNEL_LABEL[row.original.channel_kind]} />
+          {row.original.last_seen_at !== null ? relativeTime(row.original.last_seen_at) : CHANNEL_LABEL[row.original.channel_kind]}
+        </span>
+      ),
   },
   {
     accessorKey: "city",
     header: "Ciudad",
     minWidth: 100,
     cell: ({ row }) => (
-      <span className="text-sm text-muted-foreground">{row.original.city ?? "—"}</span>
+      <span className="block max-w-[10rem] truncate text-sm text-muted-foreground" title={row.original.city ?? undefined}>
+        {row.original.city ?? "Sin ciudad"}
+      </span>
     ),
   },
   {

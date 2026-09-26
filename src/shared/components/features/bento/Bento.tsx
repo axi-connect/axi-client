@@ -45,12 +45,14 @@ export function BentoTile({
   );
 }
 
-export type StatePillTone = "success" | "warning" | "destructive" | "neutral";
+export type StatePillTone = "success" | "warning" | "destructive" | "info" | "neutral";
 
 const DOT: Record<StatePillTone, string> = {
   success: "bg-success",
   warning: "bg-warning",
   destructive: "bg-destructive",
+  // Informativo, sin alarma (DESIGN §3.4): p. ej. la etapa «Lead» de un contacto.
+  info: "bg-info",
   neutral: "bg-muted-foreground",
 };
 

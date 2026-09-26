@@ -8,7 +8,7 @@ import { isHttpError } from "@/core/api/problem";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { useAuth } from "@/shared/auth/auth.hooks";
-import { Badge } from "@/shared/components/ui/badge";
+import { StatePill, type StatePillTone } from "@/shared/components/features/bento";
 import { Button } from "@/shared/components/ui/button";
 import {
   COPILOT_URGENCY_LABELS,
@@ -32,14 +32,14 @@ type CopilotResult =
 
 const TABS: Array<{ value: CopilotTab; label: string }> = [
   { value: "summary", label: "Resumen" },
-  { value: "action", label: "Siguiente acción" },
-  { value: "draft", label: "Borrador de seguimiento" },
+  { value: "action", label: "Siguiente paso" },
+  { value: "draft", label: "Borrador" },
 ];
 
-const URGENCY_CLASSES: Record<CopilotUrgency, string> = {
-  low: "border-transparent bg-secondary text-secondary-foreground",
-  medium: "border-transparent bg-info/12 text-info",
-  high: "border-transparent bg-warning/12 text-warning",
+const URGENCY_TONE: Record<CopilotUrgency, StatePillTone> = {
+  low: "neutral",
+  medium: "info",
+  high: "warning",
 };
 
 /**
@@ -75,7 +75,7 @@ export function CopilotPanel({ contactId }: { contactId: string }) {
             : `Demasiadas consultas de IA. Intenta de nuevo en ${err.retryAfterSeconds ?? 60} s`,
         });
       } else {
-        showAlert({ tone: "error", title: errorMessage(err, "El copiloto no pudo responder") });
+        showAlert({ tone: "error", title: errorMessage(err, "Axi no pudo responder") });
       }
     } finally {
       setLoading(null);
@@ -88,16 +88,17 @@ export function CopilotPanel({ contactId }: { contactId: string }) {
   };
 
   return (
-    <section className="rounded-2xl border border-accent-violet/30 bg-accent-violet/5 p-4 md:p-6">
+    // Tarjeta sólida (continuidad, F4–F9): el violeta vive solo en el icono de
+    // Axi. La isla de la ficha es «Lo próximo»; una por pantalla (§9.5).
+    <section className="rounded-3xl border border-border bg-card p-5 md:p-6" aria-labelledby={`copilot-${contactId}`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="flex items-center gap-1.5 text-base font-semibold">
+        <h3 id={`copilot-${contactId}`} className="flex items-center gap-2 font-heading text-lg font-bold">
           <Sparkles className="size-4 text-accent-violet" aria-hidden />
-          Copiloto
+          Axi
         </h3>
-        <span className="text-[11px] text-muted-foreground">usa IA del plan</span>
+        <span className="text-xs text-muted-foreground">usa IA del plan</span>
       </div>
-
-      <div className="mt-3 flex flex-wrap gap-1.5">
+      <div role="group" aria-label="Qué le pides a Axi" className="mt-3 inline-flex max-w-full flex-wrap gap-0.5 rounded-full border border-border p-0.5">
         {TABS.map((tab) => (
           <button
             key={tab.value}
@@ -106,10 +107,8 @@ export function CopilotPanel({ contactId }: { contactId: string }) {
             aria-pressed={result?.tab === tab.value}
             onClick={() => void generate(tab.value)}
             className={cn(
-              "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50",
-              result?.tab === tab.value
-                ? "border-accent-violet/50 bg-accent-violet/10 text-accent-violet"
-                : "border-border text-muted-foreground hover:text-foreground",
+              "h-8 rounded-full px-3 text-xs font-medium whitespace-nowrap transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none disabled:opacity-50",
+              result?.tab === tab.value ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground",
             )}
           >
             {tab.label}
@@ -119,9 +118,13 @@ export function CopilotPanel({ contactId }: { contactId: string }) {
 
       {loading !== null && (
         <div className="mt-4 space-y-2" role="status" aria-label="Generando con IA">
-          <div className="h-4 w-full animate-pulse rounded bg-accent-violet/15" />
-          <div className="h-4 w-4/5 animate-pulse rounded bg-accent-violet/15" />
-          <div className="h-4 w-3/5 animate-pulse rounded bg-accent-violet/15" />
+          <p className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Sparkles className="size-3.5 text-accent-violet" aria-hidden />
+            Axi está leyendo la relación…
+          </p>
+          <div className="h-3.5 w-full animate-pulse rounded-full bg-muted" />
+          <div className="h-3.5 w-4/5 animate-pulse rounded-full bg-muted" />
+          <div className="h-3.5 w-3/5 animate-pulse rounded-full bg-muted" />
         </div>
       )}
 
@@ -129,11 +132,14 @@ export function CopilotPanel({ contactId }: { contactId: string }) {
         <div className="mt-4 space-y-3 text-sm">
           {result.tab === "summary" && (
             <>
-              <p>{result.data.summary}</p>
+              <p className="leading-relaxed text-pretty break-words">{result.data.summary}</p>
               {result.data.highlights.length > 0 && (
-                <ul className="list-inside list-disc space-y-1 text-muted-foreground">
+                <ul className="space-y-1.5 text-[13px] text-muted-foreground">
                   {result.data.highlights.map((highlight, index) => (
-                    <li key={index}>{highlight}</li>
+                    <li key={index} className="grid grid-cols-[0.375rem_minmax(0,1fr)] gap-2.5 break-words">
+                      <span aria-hidden className="mt-2 size-1.5 rounded-full bg-border" />
+                      {highlight}
+                    </li>
                   ))}
                 </ul>
               )}
@@ -143,12 +149,12 @@ export function CopilotPanel({ contactId }: { contactId: string }) {
           {result.tab === "action" && (
             <>
               <div className="flex flex-wrap items-center gap-2">
-                <p className="font-medium">{result.data.action}</p>
-                <Badge variant="outline" className={cn(URGENCY_CLASSES[result.data.urgency])}>
-                  urgencia {COPILOT_URGENCY_LABELS[result.data.urgency].toLowerCase()}
-                </Badge>
+                <p className="min-w-0 font-medium text-pretty break-words">{result.data.action}</p>
+                <StatePill tone={URGENCY_TONE[result.data.urgency]}>
+                  Urgencia {COPILOT_URGENCY_LABELS[result.data.urgency].toLowerCase()}
+                </StatePill>
               </div>
-              <p className="text-muted-foreground">{result.data.rationale}</p>
+              <p className="text-pretty break-words text-muted-foreground">{result.data.rationale}</p>
               {/* F5: de consejo a acción en un clic. El botón PRE-RELLENA el
                   formulario de seguimiento; no programa nada por su cuenta —
                   una propuesta del modelo nunca abre sola una conversación con
@@ -156,7 +162,7 @@ export function CopilotPanel({ contactId }: { contactId: string }) {
               {result.data.proposal !== null && (
                 <Button variant="outline" size="sm" className="rounded-full" asChild>
                   <Link href={proposalHref(contactId, result.data.proposal)}>
-                    <Sparkles className="size-3.5" />
+                    <Sparkles className="size-3.5 text-accent-violet" aria-hidden />
                     Programar este seguimiento
                   </Link>
                 </Button>
@@ -166,7 +172,7 @@ export function CopilotPanel({ contactId }: { contactId: string }) {
 
           {result.tab === "draft" && (
             <>
-              <blockquote className="rounded-xl border border-accent-violet/20 bg-background p-3 italic">
+              <blockquote className="rounded-2xl bg-muted p-3.5 leading-relaxed text-pretty break-words">
                 {result.data.message}
               </blockquote>
               <Button
@@ -181,27 +187,31 @@ export function CopilotPanel({ contactId }: { contactId: string }) {
             </>
           )}
 
-          <div className="flex items-center gap-2 pt-1">
+          <div className="flex flex-wrap items-center gap-2 pt-1">
             {result.data.cached && (
-              <Badge variant="outline" className="border-border text-muted-foreground">
-                respuesta de caché — no consumió tokens
-              </Badge>
+              <span className="inline-flex h-6 items-center rounded-full bg-muted px-2.5 text-xs text-muted-foreground">
+                Guardado · no gastó IA del plan
+              </span>
             )}
             <Button
               variant="ghost"
               size="sm"
               className="h-7 rounded-full text-xs text-muted-foreground"
               disabled={!result.data.cached}
-              title={result.data.cached ? undefined : "Recién generada — espera a que expire la caché"}
+              aria-describedby={result.data.cached ? undefined : `copilot-regen-${contactId}`}
               onClick={() => void generate(result.tab)}
             >
-              <RotateCcw className="size-3" />
+              <RotateCcw className="size-3" aria-hidden />
               Regenerar
             </Button>
+            {!result.data.cached && (
+              <span id={`copilot-regen-${contactId}`} className="text-xs text-muted-foreground">
+                Recién generado: podrás pedir otro cuando expire.
+              </span>
+            )}
           </div>
         </div>
       )}
-
       {result === null && loading === null && (
         <p className="mt-4 text-sm text-muted-foreground">
           Resume la relación, sugiere el siguiente paso o redacta el mensaje de seguimiento por ti.
