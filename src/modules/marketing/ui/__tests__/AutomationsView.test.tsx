@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import type {
   AutomationDTO,
   AutomationMetricsDTO,
@@ -45,6 +45,11 @@ jest.mock("@/modules/marketing/infrastructure/services/automations-service.adapt
 }));
 jest.mock("@/modules/marketing/infrastructure/services/promotions-service.adapter", () => ({
   listPromotions: jest.fn(),
+}));
+
+const mockSettings = jest.fn();
+jest.mock("@/modules/marketing/infrastructure/services/settings-service.adapter", () => ({
+  getMarketingSettings: () => mockSettings(),
 }));
 
 /* eslint-disable @typescript-eslint/no-require-imports */
@@ -109,6 +114,7 @@ const SIN_DISPAROS = metrics({
 beforeEach(() => {
   jest.clearAllMocks();
   promoApi.listPromotions.mockResolvedValue([]);
+  mockSettings.mockResolvedValue({ daily_cap_per_contact: 2, cooldown_hours: 36, exclude_human_active: false });
 });
 
 afterEach(cleanup);
@@ -156,7 +162,17 @@ describe("reglas con actividad", () => {
   });
 
   it("muestra las métricas con el dinero formateado y el porqué de los omitidos", async () => {
-    expect(await screen.findByText("$ 3.940.000")).toBeInTheDocument();
+    // En la fila, en millones: la cifra se lee de un vistazo al lado de sus hermanas.
+    const row = within((await screen.findByRole("button", { name: "Carrito con cupón" })).closest("article")!);
+    expect(await row.findByText("$ 3,9 M")).toBeInTheDocument();
+    // Y el total de las reglas, al lado: 3,94 M + 0,58 M.
+    expect(screen.getByText("$ 4,5 M")).toBeInTheDocument();
+    // Lo que la tarjeta anterior ya decía y el rediseño no puede perder: cuántos compraron (no solo el %), los
+    // cupones de la regla, el total de omitidos y que la regla no ofrece descuento.
+    expect(row.getByText("31 pedidos")).toBeInTheDocument();
+    expect(row.getByText("118 cupones → 31")).toBeInTheDocument();
+    expect(row.getByText(/^14 omitidos:/)).toBeInTheDocument();
+    expect(row.getByText("Solo mensaje · sin descuento")).toBeInTheDocument();
     // El "por qué", no solo el número: si no, parece una avería.
     expect(
       await screen.findByText(/8 el contacto pidió no recibir promociones/i),
@@ -217,7 +233,8 @@ describe("reglas con actividad", () => {
   });
 
   it("bloquea deal_stalled sin plantilla de Meta y explica por qué antes del clic", () => {
-    expect(screen.getByText(/plantilla aprobada por Meta/)).toBeInTheDocument();
+    expect(screen.getByText(/solo se puede escribir con una plantilla de Meta/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Poner plantilla" })).toBeInTheDocument();
     expect(screen.getByRole("switch", { name: "Regla Rescate de negociación" })).toBeDisabled();
   });
 });
@@ -252,6 +269,20 @@ describe("llegando desde el chat de Axel", () => {
       expect.objectContaining({ title: "Esa regla ya no está" }),
     );
     expect(screen.queryByText("Editar regla")).not.toBeInTheDocument();
+  });
+});
+
+describe("lo que se promete al cliente", () => {
+  it("dice los límites que el tenant tiene en Ajustes, y no promete lo que no está encendido", async () => {
+    api.listAutomations.mockResolvedValue([rule()]);
+    api.getAutomationMetrics.mockResolvedValue(SIN_DISPAROS);
+    render(<AutomationsView />);
+
+    const guard = within((await screen.findByText("Cuidamos a tus clientes")).closest("section")!);
+    expect(await guard.findByText("2 al día")).toBeInTheDocument();
+    expect(guard.getByText("36 h")).toBeInTheDocument();
+    // `exclude_human_active: false`: decir que las reglas esperan sería mentir.
+    expect(guard.queryByText("las reglas esperan")).not.toBeInTheDocument();
   });
 });
 
@@ -306,7 +337,8 @@ describe("otros estados de la lista", () => {
     ]);
     render(<AutomationsView />);
 
-    fireEvent.click(await screen.findByRole("button", { name: /Editar/ }));
+    // El nombre de la regla abre su editor.
+    fireEvent.click(await screen.findByRole("button", { name: "Carrito con cupón" }));
 
     // Asignar una vencida crearía una regla que se salta sola con
     // `promotion_inactive` en cuanto se dispare.

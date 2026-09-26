@@ -121,24 +121,23 @@ describe("catálogo con promociones", () => {
   it("describe cada promoción con su parámetro, su código y sus cupones", () => {
     expect(screen.getByText(/25% de descuento/)).toBeInTheDocument();
     expect(screen.getByText(/Envío gratis · descuenta \$/)).toBeInTheDocument();
-    expect(screen.getAllByText(/Pedido mínimo \$/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/pedido mínimo \$/).length).toBeGreaterThan(0);
     expect(screen.getByText("VUELVE10")).toBeInTheDocument();
     // 118 emitidos − 31 canjeados. Se rotula "sin canjear", NO "vigentes": el
     // DTO no dice cuántos vencieron.
-    expect(screen.getAllByText("Cupones sin canjear").length).toBeGreaterThan(0);
-    expect(screen.getByText("87")).toBeInTheDocument();
+    expect(screen.getByText("87 cupones sin canjear")).toBeInTheDocument();
   });
 
   it("el filtro por defecto deja fuera lo apagado y lo vencido, y lo dice", () => {
     expect(screen.queryByText("Promo apagada")).not.toBeInTheDocument();
     expect(screen.queryByText("Regalo de julio")).not.toBeInTheDocument();
-    expect(screen.getByText("2 de 4")).toBeInTheDocument();
+    expect(screen.getByText(/^2 de 4 ·/)).toBeInTheDocument();
   });
 
   it("pone primero lo que está dando algo ahora y no pinta barras sin tope", () => {
     const names = screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent);
     expect(names).toEqual(["Vuelve y ahorra", "Envío gratis"]);
-    expect(screen.getByText("Sin tope de canjes")).toBeInTheDocument();
+    expect(screen.getByText(/sin tope/)).toBeInTheDocument();
     // La única barra es la de la promoción que sí tiene tope.
     expect(screen.getAllByRole("progressbar")).toHaveLength(1);
   });
@@ -159,17 +158,16 @@ describe("catálogo con promociones", () => {
   });
 
   it("apagar y eliminar piden confirmación antes de tocar nada", () => {
-    const menuButton = screen.getByLabelText("Más acciones de Vuelve y ahorra");
-    fireEvent.click(menuButton);
-    const menu = menuButton.parentElement!;
-
-    fireEvent.click(within(menu).getByText("Apagar promoción"));
+    // Apagar es el interruptor de la fila; confirmar sigue siendo obligatorio.
+    fireEvent.click(screen.getByRole("switch", { name: "Promoción Vuelve y ahorra" }));
     expect(showModal).toHaveBeenCalledWith(
       expect.objectContaining({ title: "¿Apagar «Vuelve y ahorra»?" }),
     );
     expect(api.updatePromotion).not.toHaveBeenCalled();
 
-    fireEvent.click(within(menu).getByText("Eliminar"));
+    // Eliminar vive en el menú, que se pinta fuera de la lista (portal).
+    fireEvent.click(screen.getByLabelText("Más acciones de Vuelve y ahorra"));
+    fireEvent.click(within(screen.getByRole("menu")).getByText("Eliminar"));
     expect(showModal).toHaveBeenLastCalledWith(
       expect.objectContaining({
         description: expect.stringContaining("canjes ya registrados se conservan"),
@@ -225,10 +223,14 @@ describe("con promociones espejadas de la tienda", () => {
     expect(screen.getAllByText("Se edita en la tienda")).toHaveLength(2);
     expect(screen.getByText(/20 % de descuento al comprar 2 o más productos/)).toBeInTheDocument();
     expect(screen.getByText("SAVAGE15")).toBeInTheDocument();
-    // Solo la local tiene Editar y menú; las espejadas, solo Canjes.
-    expect(screen.getAllByRole("button", { name: "Editar" })).toHaveLength(1);
-    expect(screen.getAllByLabelText(/Más acciones de/)).toHaveLength(1);
-    expect(screen.getAllByRole("button", { name: "Canjes" })).toHaveLength(3);
+    // Solo la local se enciende y apaga aquí; las espejadas no llevan interruptor.
+    expect(screen.getAllByRole("switch")).toHaveLength(1);
+    // Todas dejan ver sus canjes, pero una espejada no se edita ni se borra en axi.
+    fireEvent.click(screen.getByLabelText("Más acciones de Bienvenida"));
+    const menu = within(screen.getByRole("menu"));
+    expect(menu.getByText("Ver canjes")).toBeInTheDocument();
+    expect(menu.queryByText("Editar")).not.toBeInTheDocument();
+    expect(menu.queryByText("Eliminar")).not.toBeInTheDocument();
   });
 
   it("la local avisa de que no aplica a pedidos cobrados en la tienda, y el filtro Origen separa", async () => {
@@ -285,6 +287,22 @@ describe("llegando desde el chat de Axel", () => {
       expect.objectContaining({ title: "Esa promoción ya no está" }),
     );
     expect(screen.queryByText("Editar promoción")).not.toBeInTheDocument();
+  });
+});
+
+describe("llegando desde el Resumen", () => {
+  afterEach(() => {
+    mockParams = new URLSearchParams();
+  });
+
+  it("`?new=1` abre el editor vacío una vez y limpia el parámetro", async () => {
+    mockParams = new URLSearchParams("new=1");
+    api.listPromotions.mockResolvedValue([promo()]);
+    render(<PromotionsView />);
+
+    expect(await screen.findByText("Nueva promoción", { selector: "h2, [role=dialog] *" })).toBeInTheDocument();
+    // Recargar no debe volver a abrirlo: el parámetro se va de la URL.
+    expect(mockReplace).toHaveBeenCalledWith("/marketing/promotions", { scroll: false });
   });
 });
 
