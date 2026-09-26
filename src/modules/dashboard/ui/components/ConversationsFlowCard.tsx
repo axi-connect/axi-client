@@ -64,7 +64,10 @@ export function ConversationsFlowCard({
   onRetry: () => Promise<void>;
   className?: string;
 }) {
-  const label = `Conversaciones ${PERIOD_PHRASES[period]}`;
+  // Con dato, la etiqueta y el eje son los del DATO: al cambiar de período el anterior sigue a la vista hasta que
+  // llega el nuevo, y no puede llevar el nombre del nuevo (auditoría, P2-4).
+  const shown = section.data?.period ?? period;
+  const label = `Conversaciones ${PERIOD_PHRASES[shown]}`;
   if (section.status === "error") {
     return <TileError label={label} message={section.error ?? "No se pudo cargar el flujo."} onRetry={onRetry} className={className} />;
   }
@@ -74,7 +77,12 @@ export function ConversationsFlowCard({
   const hasData = stats.new_count > 0 || stats.resolved_count > 0 || stats.open_now > 0;
 
   return (
-    <BentoTile label={label} aside={<BentoLink href="/workspace/inbox">Inbox</BentoLink>} className={cn("gap-5", className)}>
+    <BentoTile
+      label={label}
+      aside={<BentoLink href="/workspace/inbox">Inbox</BentoLink>}
+      busy={section.status === "loading"}
+      className={cn("gap-5", className)}
+    >
       {hasData ? (
         <>
           <div className="grid grid-cols-3">
@@ -96,7 +104,7 @@ export function ConversationsFlowCard({
                 { key: "Nuevas", label: "Nuevas", color: CHART_COLORS.brand },
                 { key: "Resueltas", label: "Resueltas", color: "var(--color-foreground)", dashed: true, fill: false },
               ]}
-              formatX={(value) => formatBucket(value, period, timeZone)}
+              formatX={(value) => formatBucket(value, shown, timeZone)}
               height={160}
               yAxis={false}
             />

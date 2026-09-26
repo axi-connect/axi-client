@@ -65,6 +65,7 @@ export function UsagePanel({
     <BentoTile
       label={label}
       aside={cycle ? <span className="text-muted-foreground text-xs whitespace-nowrap">{cycle}</span> : undefined}
+      busy={section.status === "loading"}
       className={className}
     >
       {highlighted.length === 0 ? (

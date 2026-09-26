@@ -15,16 +15,26 @@ import { Island, type IslandLook } from "@/shared/components/features/island";
 export function BentoTile({
   label,
   aside,
+  busy = false,
   children,
   className,
 }: {
   label: string;
   aside?: React.ReactNode;
+  /** Recargando con el dato anterior a la vista: se atenúa y se anuncia ocupada (`aria-busy`), sin volver a la silueta. */
+  busy?: boolean;
   children: React.ReactNode;
   className?: string;
 }) {
   return (
-    <section className={cn("flex min-w-0 flex-col gap-3 rounded-3xl border border-border bg-card p-5", className)}>
+    <section
+      aria-busy={busy || undefined}
+      className={cn(
+        "flex min-w-0 flex-col gap-3 rounded-3xl border border-border bg-card p-5 transition-opacity duration-200",
+        busy && "opacity-60",
+        className,
+      )}
+    >
       <header className="flex min-h-6 items-center justify-between gap-2">
         {/* Un h2 en Poppins: la etiqueta es pequeña, no un titular (§3.2). */}
         <h2 className="truncate font-sans text-xs font-normal text-muted-foreground">{label}</h2>

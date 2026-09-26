@@ -71,7 +71,12 @@ export function SystemHealthPanel({
   }
 
   return (
-    <BentoTile label={label} aside={<StatePill tone={LEVEL_TONE[level]}>{summary(list, aiPaused)}</StatePill>} className={className}>
+    <BentoTile
+      label={label}
+      aside={<StatePill tone={LEVEL_TONE[level]}>{summary(list, aiPaused)}</StatePill>}
+      busy={channels.status === "loading"}
+      className={className}
+    >
       <ul className="divide-border divide-y">
         {list.map((channel) => (
           <li key={channel.id} className="flex min-w-0 items-center gap-3 py-3">

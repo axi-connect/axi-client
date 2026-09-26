@@ -26,7 +26,8 @@ export function TopProductsCard({
   onRetry: () => Promise<void>;
   className?: string;
 }) {
-  const label = `Lo más vendido ${PERIOD_PHRASES[period]}`;
+  // Con dato, el período del DATO (auditoría, P2-4).
+  const label = `Lo más vendido ${PERIOD_PHRASES[section.data?.period ?? period]}`;
   if (section.status === "error") {
     return <TileError label={label} message={section.error ?? "No se pudieron cargar los productos."} onRetry={onRetry} className={className} />;
   }
@@ -38,7 +39,7 @@ export function TopProductsCard({
 
   if (items.length === 0) {
     return (
-      <BentoTile label={label} aside={aside} className={className}>
+      <BentoTile label={label} aside={aside} busy={section.status === "loading"} className={className}>
         <p className="text-sm font-semibold">Aún sin ventas en este período</p>
         <p className="text-muted-foreground text-xs text-pretty">El ranking arranca con la primera, ordenado por unidades vendidas.</p>
       </BentoTile>
@@ -46,7 +47,7 @@ export function TopProductsCard({
   }
 
   return (
-    <BentoTile label={label} aside={aside} className={cn("gap-1", className)}>
+    <BentoTile label={label} aside={aside} busy={section.status === "loading"} className={cn("gap-1", className)}>
       <ol className="flex flex-col">
         {items.map((item, index) => (
           <li key={item.variant_id} className="flex flex-col gap-1.5 py-2 last:pb-0">

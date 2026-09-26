@@ -36,7 +36,8 @@ export function NewCustomersCard({
   onRetry: () => Promise<void>;
   className?: string;
 }) {
-  const label = `Clientes nuevos ${PERIOD_PHRASES[period]}`;
+  // Con dato, el período del DATO (auditoría, P2-4).
+  const label = `Clientes nuevos ${PERIOD_PHRASES[section.data?.period ?? period]}`;
   if (section.status === "error") {
     return <TileError label={label} message={section.error ?? "No se pudieron cargar los clientes."} onRetry={onRetry} className={className} />;
   }
@@ -46,7 +47,7 @@ export function NewCustomersCard({
   const aside = <BentoLink href="/crm/contacts">Contactos</BentoLink>;
   if (stats.new_count === 0) {
     return (
-      <BentoTile label={label} aside={aside} className={className}>
+      <BentoTile label={label} aside={aside} busy={section.status === "loading"} className={className}>
         <BentoFigure value="0" unit="contactos nuevos" />
         <p className="text-muted-foreground text-xs text-pretty">Cada persona que escriba por primera vez queda aquí como prospecto.</p>
       </BentoTile>
@@ -55,7 +56,7 @@ export function NewCustomersCard({
 
   const stages = STAGES.filter((stage) => stats.by_stage[stage.key] > 0);
   return (
-    <BentoTile label={label} aside={aside} className={cn("gap-3.5", className)}>
+    <BentoTile label={label} aside={aside} busy={section.status === "loading"} className={cn("gap-3.5", className)}>
       <BentoFigure value={formatInteger(stats.new_count)} unit={stats.new_count === 1 ? "contacto nuevo" : "contactos nuevos"} />
       <Sparkline values={stats.series.map((point) => point.count)} height={76} className="my-1" />
       <div aria-hidden="true" className="flex h-2 gap-[3px]">

@@ -107,7 +107,7 @@ export function NextUpIsland({
   const retry = () => onRetry(failed);
 
   if (onboarding.state === "pending" && !urgent) {
-    return <OnboardingIsland resume={onboarding} className={className} />;
+    return <OnboardingIsland resume={onboarding} failed={failed} onRetry={retry} className={className} />;
   }
 
   const aiLine = aiStatusLine(attention.data, usage.data);
@@ -146,6 +146,8 @@ export function NextUpIsland({
   }
 
   const actions = nextUpActions(items);
+  // Una columna común para las cifras: «1.234» en una fila no descuadra los títulos de las demás.
+  const countWidth = `${String(Math.max(2, ...items.map((item) => (item.count === null ? 0 : formatInteger(item.count).length))))}ch`;
   return (
     <InkIsland label="Lo próximo" className={cn("gap-1.5", className)}>
       <Kicker>Lo próximo</Kicker>
@@ -153,19 +155,11 @@ export function NextUpIsland({
       <ul className="divide-border divide-y">
         {items.slice(0, 4).map((item) => (
           <li key={item.key}>
-            <NextUpRow item={item} />
+            <NextUpRow item={item} countWidth={countWidth} />
           </li>
         ))}
       </ul>
-      {failed.length > 0 ? (
-        <div className="text-muted-foreground mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">
-          <span className="inline-flex items-center gap-1.5">
-            <AlertCircle aria-hidden="true" className="size-3.5 shrink-0" />
-            No pudimos leer {unreadSourcesPhrase(failed)}.
-          </span>
-          <RetryButton onRetry={retry} variant="glass" size="sm" />
-        </div>
-      ) : null}
+      <UnreadNotice failed={failed} onRetry={retry} />
       <div className="min-h-3 flex-1" />
       {aiLine ? (
         <p className="text-muted-foreground mb-2 flex items-center gap-2 text-xs">
@@ -181,6 +175,20 @@ export function NextUpIsland({
         ))}
       </div>
     </InkIsland>
+  );
+}
+
+/** Lo que la isla no pudo leer, bajo sus filas: no se calla, y deja reintentar solo eso. */
+function UnreadNotice({ failed, onRetry }: { failed: NextUpSource[]; onRetry: () => Promise<void> }) {
+  if (failed.length === 0) return null;
+  return (
+    <div className="text-muted-foreground mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">
+      <span className="inline-flex items-center gap-1.5">
+        <AlertCircle aria-hidden="true" className="size-3.5 shrink-0" />
+        No pudimos leer {unreadSourcesPhrase(failed)}.
+      </span>
+      <RetryButton onRetry={onRetry} variant="glass" size="sm" />
+    </div>
   );
 }
 
@@ -218,7 +226,7 @@ function calmSentence(perms: DashboardPerms, aiLine: string | null): string {
   return aiLine ? `${quiet} ${aiLine}; si alguna te necesita, aparece aquí.` : `${quiet} Si algo te necesita, aparece aquí.`;
 }
 
-function NextUpRow({ item }: { item: NextUpItem }) {
+function NextUpRow({ item, countWidth }: { item: NextUpItem; countWidth: string }) {
   const Icon = item.icon === "channel" ? Unplug : Pause;
   return (
     <Link
@@ -226,11 +234,19 @@ function NextUpRow({ item }: { item: NextUpItem }) {
       className="-mx-1.5 flex min-h-11 items-center gap-3.5 rounded-xl px-1.5 py-3.5 transition-colors hover:bg-foreground/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground/50"
     >
       {item.count !== null ? (
-        <span className="font-heading min-w-10 shrink-0 text-[1.75rem] leading-none font-extrabold tracking-tight tabular-nums">
+        <span
+          className="font-heading shrink-0 text-[1.75rem] leading-none font-extrabold tracking-tight tabular-nums"
+          style={{ minWidth: `max(2.5rem, ${countWidth})` }}
+        >
           {formatInteger(item.count)}
         </span>
       ) : (
-        <span aria-hidden="true" className="bg-foreground/6 relative flex size-10 shrink-0 items-center justify-center rounded-xl">
+        <span
+          aria-hidden="true"
+          // El mismo cuerpo que la cifra: así `ch` mide igual en las dos columnas.
+          className="bg-foreground/6 relative flex h-10 shrink-0 items-center justify-center rounded-xl text-[1.75rem]"
+          style={{ width: `max(2.5rem, ${countWidth})` }}
+        >
           <Icon className="size-4.5" />
           {item.tone !== "neutral" ? (
             <span className={cn("ring-background absolute -top-0.5 -right-0.5 size-2.5 rounded-full ring-2", DOT[item.tone])} />
@@ -255,9 +271,13 @@ function NextUpRow({ item }: { item: NextUpItem }) {
 /** El primer día: lo más accionable es terminar de configurar. */
 function OnboardingIsland({
   resume,
+  failed,
+  onRetry,
   className,
 }: {
   resume: Extract<OnboardingResume, { state: "pending" }>;
+  failed: NextUpSource[];
+  onRetry: () => Promise<void>;
   className?: string;
 }) {
   return (
@@ -292,6 +312,7 @@ function OnboardingIsland({
           );
         })}
       </ol>
+      <UnreadNotice failed={failed} onRetry={onRetry} />
       <div className="min-h-3 flex-1" />
       <div className="flex flex-wrap gap-2.5">
         <Button asChild variant="contrast" className={ACTION_CLASS}>

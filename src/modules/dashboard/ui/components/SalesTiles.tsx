@@ -39,9 +39,10 @@ export function SalesTiles({ section, onRetry }: { section: Section<OrderStatsDT
   const { kpis } = section.data;
   const phrase = PERIOD_PHRASES[kpis.period];
   const none = kpis.paid_orders === 0;
+  const busy = section.status === "loading";
   return (
     <>
-      <BentoTile label={`Vendido ${phrase}`} aside={<BentoLink href="/orders">Pedidos</BentoLink>}>
+      <BentoTile label={`Vendido ${phrase}`} aside={<BentoLink href="/orders">Pedidos</BentoLink>} busy={busy}>
         {/* La unidad baja de línea si no cabe: «1.234 pedidos pagados» no entra junto a la cifra en 300 px. */}
         <p className="flex flex-wrap items-baseline gap-x-1.5 gap-y-1">
           <span className="font-heading text-4xl leading-none font-bold tracking-tight whitespace-nowrap tabular-nums">
@@ -56,7 +57,7 @@ export function SalesTiles({ section, onRetry }: { section: Section<OrderStatsDT
           <span className="whitespace-nowrap">Solo lo pagado ·</span> <span className="whitespace-nowrap">{ordersToday(kpis.orders_today)}</span>
         </p>
       </BentoTile>
-      <BentoTile label={`Ticket promedio ${phrase}`}>
+      <BentoTile label={`Ticket promedio ${phrase}`} busy={busy}>
         {none ? (
           <>
             <p className="text-sm font-semibold">Aún sin ticket</p>
