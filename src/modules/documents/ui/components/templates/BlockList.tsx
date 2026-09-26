@@ -195,42 +195,6 @@ export function BlockList({
                   </Tag>
                 )}
               </div>
-              {isOpen && (
-                <div
-                  id={`block-editor-${block.id}`}
-                  className="mt-3 flex flex-col gap-3"
-                >
-                  <BlockEditor
-                    block={block}
-                    variables={variables}
-                    onChange={onChange}
-                  />
-                  {blocks.length > 2 && (
-                    <div className="flex gap-1">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 text-xs text-muted-foreground"
-                        disabled={index === 0}
-                        onClick={() => onMoveToEdge(block.id, "start")}
-                      >
-                        Mover al principio
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 text-xs text-muted-foreground"
-                        disabled={index === blocks.length - 1}
-                        onClick={() => onMoveToEdge(block.id, "end")}
-                      >
-                        Mover al final
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
             <div className="flex gap-0.5">
               <Button
@@ -268,6 +232,45 @@ export function BlockList({
                 </Button>
               )}
             </div>
+            {/* El editor abierto ocupa la fila entera en el celular: dentro de la
+                columna del nombre quedaba en ~120 px (QA R9-H2). Desde sm vuelve
+                bajo el nombre. */}
+            {isOpen && (
+              <div
+                id={`block-editor-${block.id}`}
+                className="col-span-full flex min-w-0 flex-col gap-3 sm:col-start-3"
+              >
+                <BlockEditor
+                  block={block}
+                  variables={variables}
+                  onChange={onChange}
+                />
+                {blocks.length > 2 && (
+                  <div className="flex gap-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs text-muted-foreground"
+                      disabled={index === 0}
+                      onClick={() => onMoveToEdge(block.id, "start")}
+                    >
+                      Mover al principio
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs text-muted-foreground"
+                      disabled={index === blocks.length - 1}
+                      onClick={() => onMoveToEdge(block.id, "end")}
+                    >
+                      Mover al final
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
           </li>
         );
       })}

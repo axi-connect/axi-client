@@ -133,4 +133,27 @@ describe("DocumentAutomationForm · emisión y envío automáticos se GUARDAN", 
       hsm_fallback: { name: "documento_listo", language: "es" },
     });
   });
+
+  it("QA R9-H1: el aviso de WhatsApp sin plantilla y la isla usan la MISMA regla (solo cuenta lo que sale solo)", async () => {
+    renderForm();
+    const warning = () => screen.queryByText(/por WhatsApp no saldrá el PDF/);
+    const gap = () => screen.queryByText(/falta la\s+plantilla de respaldo/);
+    // Contrato «Nunca solo» + WhatsApp del contrato encendido + sin plantilla: nada que avisar.
+    fireEvent.click(
+      screen.getByRole("switch", { name: "Contrato · WhatsApp" }),
+    );
+    await waitFor(() =>
+      expect(
+        screen.getByRole("switch", { name: "Contrato · WhatsApp" }),
+      ).toBeChecked(),
+    );
+    expect(warning()).toBeNull();
+    expect(gap()).toBeNull();
+    // El mismo interruptor con el contrato saliendo solo: avisan los dos.
+    fireEvent.click(
+      screen.getByRole("radio", { name: /Al confirmar el pedido/ }),
+    );
+    await waitFor(() => expect(warning()).not.toBeNull());
+    expect(gap()).not.toBeNull();
+  });
 });

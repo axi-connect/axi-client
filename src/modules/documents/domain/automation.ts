@@ -127,10 +127,28 @@ export function automationStory(
             : "Los dos papeles salen solos y le llegan sin que nadie los mande."
           : "Los dos papeles salen solos; uno le llega sin que nadie lo mande.";
 
-  const whatsappGap =
-    draft.hsm_name.trim() === "" &&
-    ((contractIssues && draft.send_contract_whatsapp) ||
-      (receiptIssues && draft.send_receipt_whatsapp));
+  return { summary, steps, whatsappGap: whatsappGapOf(draft) };
+}
 
-  return { summary, steps, whatsappGap };
+/**
+ * WhatsApp encendido para algo que SALE SOLO, sin plantilla de respaldo: fuera
+ * de las 24 h ese PDF no sale. Una sola regla para la isla y para el aviso de
+ * la ficha «Y se envía solo» (QA R9-H1): un interruptor de un papel que no sale
+ * solo no cuenta, porque el envío automático solo aplica a lo emitido solo.
+ */
+export function whatsappGapOf(
+  draft: Pick<
+    AutomationDraft,
+    | "contract_issue"
+    | "receipt_on_payment_verified"
+    | "send_contract_whatsapp"
+    | "send_receipt_whatsapp"
+    | "hsm_name"
+  >,
+): boolean {
+  return (
+    draft.hsm_name.trim() === "" &&
+    ((draft.contract_issue !== "never" && draft.send_contract_whatsapp) ||
+      (draft.receipt_on_payment_verified && draft.send_receipt_whatsapp))
+  );
 }

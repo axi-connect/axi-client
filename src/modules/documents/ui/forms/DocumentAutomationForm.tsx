@@ -26,7 +26,10 @@ import {
 } from "@/shared/components/ui/form";
 import { Input } from "@/shared/components/ui/input";
 import { Switch } from "@/shared/components/ui/switch";
-import { automationStory } from "@/modules/documents/domain/automation";
+import {
+  automationStory,
+  whatsappGapOf,
+} from "@/modules/documents/domain/automation";
 import type {
   DocumentTypeView,
   DocumentsSettingsDTO,
@@ -269,7 +272,14 @@ function SendTile({ control, set }: { control: Control<Values>; set: Setter }) {
       email: ["send_receipt_email", re],
     },
   ];
-  const noHsm = hsm.trim() === "" && (cw || rw);
+  // La MISMA regla que la isla (`whatsappGapOf`): una regla, un sitio.
+  const noHsm = whatsappGapOf({
+    contract_issue: issue,
+    receipt_on_payment_verified: receipt,
+    send_contract_whatsapp: cw,
+    send_receipt_whatsapp: rw,
+    hsm_name: hsm,
+  });
   return (
     <BentoTile
       label="Y se envía solo"
