@@ -44,12 +44,15 @@ export function DocumentsList({
   subject,
   subjectLabel,
   subjectUpdatedAt,
+  embedded = false,
   className,
 }: {
   subject: DocumentSubject;
   /** «la reserva JX-0042»: encabeza el menú «Emitir». */
   subjectLabel?: string;
   subjectUpdatedAt?: string | null;
+  /** Dentro de otra tarjeta (la ficha del contacto): sin marco propio. */
+  embedded?: boolean;
   className?: string;
 }) {
   const { hasPermission } = useAuth();
@@ -125,10 +128,22 @@ export function DocumentsList({
   }
 
   return (
-    <section aria-label="Documentos" className={cn("space-y-2.5", className)}>
-      <div className="flex items-center justify-between px-0.5">
-        <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+    // Premium P7: una ficha bento como las demás del rail; las filas viven
+    // dentro, sin marco propio.
+    <section
+      aria-label="Documentos"
+      className={cn(
+        "flex min-w-0 flex-col gap-1",
+        !embedded && "rounded-3xl border border-border bg-card px-5 pt-4 pb-1",
+        className,
+      )}
+    >
+      <div className="flex min-h-[30px] items-center justify-between gap-2">
+        <h3 className="text-xs font-normal text-muted-foreground">
           Documentos
+          {!state.loading && state.documents.length > 0 ? (
+            <span className="tabular-nums"> · {state.documents.length}</span>
+          ) : null}
         </h3>
         {canIssue && issueSubject !== null && types !== null ? (
           <IssueDocumentMenu
@@ -144,10 +159,10 @@ export function DocumentsList({
         ) : null}
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-border bg-background">
+      <div>
         {state.loading ? (
           <div
-            className="space-y-3 p-4"
+            className="space-y-3 py-3"
             role="status"
             aria-label="Cargando documentos"
           >
@@ -155,7 +170,7 @@ export function DocumentsList({
             <Skeleton className="h-9 w-4/5" />
           </div>
         ) : state.error === "failed" ? (
-          <div className="flex items-center justify-between gap-3 p-4 text-sm">
+          <div className="flex items-center justify-between gap-3 py-3 text-sm">
             <p className="text-muted-foreground">
               No se pudieron cargar los documentos.
             </p>
@@ -169,7 +184,7 @@ export function DocumentsList({
             </Button>
           </div>
         ) : state.documents.length === 0 ? (
-          <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-4 px-[18px] pt-[18px] pb-5">
+          <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-4 pt-2 pb-4">
             <span className="relative block h-[52px] w-[44px]">
               <PaperMark
                 typeCode="cuenta_cobro"
@@ -198,7 +213,7 @@ export function DocumentsList({
                     cuando quieras. El{" "}
                     <b className="font-medium text-foreground">recibo</b> puede
                     salir solo con cada pago verificado: se enciende en Mi
-                    empresa › Documentos.
+                    empresa › Documentos › Automáticos.
                   </>
                 ) : (
                   "El recibo puede salir solo con cada pago verificado."
@@ -223,7 +238,7 @@ export function DocumentsList({
                 />
               ))}
             </ul>
-            <p className="border-t border-border/50 px-4 py-2.5 text-xs leading-relaxed text-muted-foreground">
+            <p className="border-t border-border py-3 text-xs leading-relaxed text-muted-foreground">
               {canManage ? (
                 <>
                   Cada papel sale con los datos{" "}

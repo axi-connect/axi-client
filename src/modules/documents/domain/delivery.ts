@@ -1,4 +1,5 @@
 import type { Schemas } from "@/core/api/types";
+import { formatDayTime } from "@/core/lib/format";
 import { relativeTime } from "@/core/lib/relative-time";
 import {
   lowerFirst,
@@ -380,4 +381,70 @@ export function defaultChannel(
   if (enabled.whatsapp) return "whatsapp";
   if (enabled.email) return "email";
   return null;
+}
+
+/**
+ * Cuándo se cierra la ventana de conversación de WhatsApp: el último mensaje
+ * del cliente más `window_hours` (24 si el servidor no lo dice). `null` si no
+ * ha escrito o si esa hora ya pasó: el servidor manda sobre si está abierta
+ * (`window_open`), así que aquí solo se cuenta un cierre FUTURO.
+ */
+export function windowClosesAt(
+  lastInboundAt: string | null,
+  windowHours: number | null,
+  now: Date = new Date(),
+): Date | null {
+  if (lastInboundAt === null) return null;
+  const start = new Date(lastInboundAt).getTime();
+  if (Number.isNaN(start)) return null;
+  const closes = new Date(start + (windowHours ?? 24) * 3_600_000);
+  return closes.getTime() > now.getTime() ? closes : null;
+}
+
+export type SendFact = { label: string; value: string };
+
+/**
+ * El resumen del diálogo «Enviar» (Cobros premium P8): lo que le va a llegar
+ * por el canal elegido, en hechos, con la MISMA lectura del preflight que las
+ * tarjetas (`whatsappAvailability`). Sin preflight o sin canal que sirva, nada:
+ * el aviso de la plantilla que falta sigue siendo un `Alert`.
+ */
+export function sendFacts(
+  options: DocumentSendOptionsDTO,
+  channel: DeliveryChannel,
+  now: Date = new Date(),
+): SendFact[] {
+  if (channel === "email") {
+    return options.email.address_masked === null
+      ? []
+      : [{ label: "Por correo", value: "le llega el PDF adjunto" }];
+  }
+  const wa = options.whatsapp;
+  const availability = whatsappAvailability(options, false, now);
+  if (availability.mode === "open") {
+    const closes = windowClosesAt(wa.last_inbound_at, wa.window_hours, now);
+    return [
+      {
+        label: "Por WhatsApp",
+        value: "el PDF le llega al chat, con una línea que lo presenta",
+      },
+      {
+        label: "La ventana de 24 h",
+        value:
+          closes === null
+            ? "abierta"
+            : `abierta hasta el ${formatDayTime(closes.toISOString())}`,
+      },
+    ];
+  }
+  if (availability.mode === "hsm") {
+    return [
+      {
+        label: "Por WhatsApp",
+        value: `le llega la plantilla «${wa.hsm_name ?? ""}»`,
+      },
+      { label: "Y el PDF", value: "el PDF sale solo cuando responda" },
+    ];
+  }
+  return [];
 }

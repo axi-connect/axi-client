@@ -297,9 +297,14 @@ describe("DocumentTemplateEditor", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(
       "no existe en contrato",
     );
+    // Premium P6: la barra de tinta no deja guardar y dice por qué (aria-disabled
+    // para que la razón siga al alcance del lector).
     expect(
       screen.getByRole("button", { name: "Guardar plantilla" }),
-    ).toBeDisabled();
+    ).toHaveAttribute("aria-disabled", "true");
+    expect(
+      screen.getByRole("button", { name: "Guardar plantilla" }),
+    ).toHaveAccessibleDescription("Corrige {{numero_pedido}} para guardar.");
     // Y la hoja sigue ahí, con la barra encima: nunca desaparece
     expect(screen.getByTitle("Vista previa del documento")).toBeInTheDocument();
     expect(screen.getByText(/La hoja espera/)).toBeInTheDocument();

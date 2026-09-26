@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { FileText } from "lucide-react";
 
 import Link from "next/link";
 import { ShieldAlert } from "lucide-react";
@@ -30,8 +29,10 @@ import {
   listDocumentTemplates,
   listDocumentTypes,
 } from "@/modules/documents/infrastructure/services/documents-service.adapter";
+import { DocumentAutomationForm } from "./forms/DocumentAutomationForm";
 import { DocumentSettingsForm } from "./forms/DocumentSettingsForm";
 import {
+  AUTOMATION_TAB,
   DocumentKindTabs,
   SETTINGS_TAB,
 } from "./components/templates/DocumentKindTabs";
@@ -131,9 +132,9 @@ export function DocumentsTab() {
     return (
       <div role="status" aria-label="Cargando documentos" className="space-y-4">
         <Skeleton className="h-9 w-full max-w-2xl rounded-full" />
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,430px)_minmax(0,1fr)]">
-          <Skeleton className="h-96 rounded-2xl" />
-          <Skeleton className="h-[560px] rounded-2xl" />
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,460px)_minmax(0,1fr)]">
+          <Skeleton className="h-96 rounded-3xl" />
+          <Skeleton className="h-[560px] rounded-3xl" />
         </div>
       </div>
     );
@@ -171,31 +172,33 @@ export function DocumentsTab() {
     templates.find((template) => template.type_code === active) ?? null;
 
   return (
-    <section className="flex flex-col gap-5" aria-labelledby="documents-title">
-      <div>
-        <h2
-          id="documents-title"
-          className="flex items-center gap-2 text-lg font-medium"
-        >
-          <FileText aria-hidden="true" className="size-[18px]" />
-          Documentos
-        </h2>
-        <p className="mt-1 max-w-[70ch] text-sm text-muted-foreground">
-          El papel que tu negocio le da a sus clientes: contratos, cotizaciones,
-          recibos, estados de cuenta y cuentas de cobro. Lo que escribas aquí se
-          rellena con los datos reales al emitir; la hoja de vista previa es
-          exactamente lo que va a salir.
-        </p>
-      </div>
+    <section className="flex flex-col gap-4" aria-labelledby="documents-title">
+      {/* La pestaña de Mi empresa ya dice dónde estás; el título queda para el lector. */}
+      <h2 id="documents-title" className="sr-only">
+        Documentos
+      </h2>
 
       <DocumentKindTabs
         types={types.types}
+        customized={
+          new Set(
+            templates
+              .filter((template) => template.source === "tenant")
+              .map((template) => template.type_code),
+          )
+        }
         value={active}
         onChange={switchTo}
       />
 
       {active === SETTINGS_TAB ? (
         <DocumentSettingsForm
+          settings={settings}
+          types={types.types}
+          onSaved={(next) => setState({ ...state, settings: next })}
+        />
+      ) : active === AUTOMATION_TAB ? (
+        <DocumentAutomationForm
           settings={settings}
           types={types.types}
           onSaved={(next) => setState({ ...state, settings: next })}

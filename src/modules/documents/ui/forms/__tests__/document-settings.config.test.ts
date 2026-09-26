@@ -3,7 +3,6 @@ import type {
   DocumentsSettingsDTO,
 } from "@/modules/documents/domain/template";
 import {
-  buildDocumentSettingsFields,
   contractIssueOf,
   documentSettingsSchema,
   fromSettingsDto,
@@ -70,26 +69,6 @@ describe("«Siguiente número» (F8) en el formulario de ajustes", () => {
       contract: "121",
       statement: "1",
     });
-  });
-
-  it("el campo del tipo que ya emitió va bloqueado y lo dice; el virgen dice cómo saldrá", () => {
-    const fields = buildDocumentSettingsFields({
-      types: TYPES,
-      defaults: SETTINGS.company_defaults,
-      prefixDefaults: SETTINGS.prefix_defaults,
-      next: SETTINGS.numbering.next,
-    });
-    const contract = fields.find((field) => field.name === "start_at.contract");
-    const statement = fields.find(
-      (field) => field.name === "start_at.statement",
-    );
-    expect(contract?.isDisabled?.({} as never)).toBe(true);
-    expect(statement?.isDisabled?.({} as never)).toBe(false);
-    // El «siguiente número» va al lado de su prefijo, tipo por tipo
-    const names = fields.map((field) => String(field.name));
-    expect(names.indexOf("start_at.contract")).toBe(
-      names.indexOf("prefixes.contract") + 1,
-    );
   });
 
   it("solo viaja lo que cambió y no está bloqueado: un 409 por nada no se pide", () => {

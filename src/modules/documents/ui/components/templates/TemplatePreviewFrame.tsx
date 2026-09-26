@@ -10,6 +10,7 @@ import {
   ZoomOut,
 } from "lucide-react";
 
+import { cn } from "@/core/lib/utils";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import type { PreviewStatus } from "@/modules/documents/infrastructure/hooks/use-template-preview";
@@ -74,13 +75,18 @@ export function TemplatePreviewFrame({
   error,
   onRetry,
   title = "Vista previa del documento",
+  className,
 }: {
   html: string | null;
   status: PreviewStatus;
   error: string | null;
   onRetry: () => void;
   title?: string;
+  className?: string;
 }) {
+  // En el celular la hoja va primero y plegada: se ve que existe y cómo va,
+  // sin empujar los bloques una pantalla y media hacia abajo.
+  const [unfolded, setUnfolded] = useState(false);
   // null = «ajustar al ancho»; un número = el nivel que la persona eligió.
   const [choice, setChoice] = useState<number | null>(null);
   const frameRef = useRef<HTMLDivElement | null>(null);
@@ -122,19 +128,27 @@ export function TemplatePreviewFrame({
   );
 
   return (
-    <div className="flex flex-col gap-3 lg:sticky lg:top-6">
+    // La mesa (Cobros premium P6): la hoja sobre su propio fondo, con el estado
+    // y el zoom en la barra de arriba. El papel es blanco también en oscuro.
+    <div
+      className={cn(
+        "flex min-w-0 flex-col self-start overflow-hidden rounded-3xl border border-border bg-muted/60 lg:sticky lg:top-6",
+        className,
+      )}
+    >
       <div
-        className="flex items-center gap-2 px-1 text-xs text-muted-foreground"
+        className="flex items-center gap-2 px-4 pt-3.5 text-xs text-muted-foreground md:px-5"
         aria-live="polite"
       >
-        <StatusDot status={status} />
-        <span>{statusLabel(status)}</span>
-        <span aria-hidden="true">·</span>
+        <span className="inline-flex h-6 shrink-0 items-center gap-1.5 rounded-full bg-card px-2.5 font-medium text-foreground">
+          <StatusDot status={status} />
+          {statusLabel(status)}
+        </span>
         <span className="truncate">
-          Con los datos de una reserva de ejemplo
+          con los datos de una reserva de ejemplo
         </span>
         <div className="ml-auto flex items-center gap-0.5">
-          <span className="mr-1 tabular-nums">
+          <span className="mr-1 hidden whitespace-nowrap tabular-nums xl:inline">
             {choice === null
               ? "Ajustada al ancho"
               : `${String(Math.round(zoom * 100))} %`}
@@ -166,7 +180,10 @@ export function TemplatePreviewFrame({
 
       <div
         ref={frameRef}
-        className="relative flex justify-center overflow-x-auto overflow-y-hidden rounded-2xl border border-border bg-foreground/5 p-4 md:p-6"
+        className={cn(
+          "relative flex justify-center overflow-x-auto overflow-y-hidden p-4 md:p-6",
+          !unfolded && "max-lg:max-h-56",
+        )}
       >
         {srcDoc === null ? (
           <div
@@ -245,6 +262,17 @@ export function TemplatePreviewFrame({
             </div>
           </Overlay>
         )}
+      </div>
+      <div className="flex justify-center border-t border-border px-4 py-2.5 lg:hidden">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          aria-expanded={unfolded}
+          onClick={() => setUnfolded((value) => !value)}
+        >
+          {unfolded ? "Plegar la hoja" : "Ver la hoja completa"}
+        </Button>
       </div>
     </div>
   );

@@ -12,7 +12,8 @@ import {
   AlertDescription,
   AlertTitle,
 } from "@/shared/components/ui/alert";
-import { StatusBadge } from "@/shared/components/features/status-badge/StatusBadge";
+import { StatePill } from "@/shared/components/features/bento";
+import { UnsavedChangesDock } from "@/shared/components/features/island";
 import {
   appendBlock,
   moveBlock,
@@ -190,86 +191,84 @@ export function DocumentTemplateEditor({
       className: "sm:max-w-md",
     });
 
-  return (
-    <div className="flex flex-col gap-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2 text-sm">
-          {current.source === "tenant" ? (
-            <StatusBadge
-              status="tenant"
-              map={{
-                tenant: {
-                  label: `Tu versión ${String(current.version)}`,
-                  tone: "info",
-                },
-              }}
-              appearance="dot"
-            />
-          ) : (
-            <StatusBadge
-              status="system"
-              map={{ system: { label: "Modelo de Axi", tone: "neutral" } }}
-              appearance="dot"
-            />
-          )}
-          {dirty && (
-            <span className="text-xs text-muted-foreground">
-              · cambios sin guardar
-            </span>
-          )}
-          {current.source === "system" && !dirty && (
-            <span className="text-xs text-muted-foreground">
-              · edita lo que quieras: al guardar nace tu versión 1 y el modelo
-              de Axi sigue ahí para volver
-            </span>
-          )}
-        </div>
-        {current.source === "tenant" && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={confirmReset}
-            disabled={saving}
-          >
-            <RotateCcw aria-hidden="true" className="size-3.5" />
-            Restablecer al modelo de Axi
-          </Button>
-        )}
-      </div>
+  const nextVersion = current.source === "tenant" ? current.version + 1 : 1;
+  const meta = dirty
+    ? `Guardar crea tu versión ${String(nextVersion)}; lo ya emitido conserva la suya.`
+    : current.source === "tenant"
+      ? "Lo que ya se emitió conserva la versión con la que salió."
+      : "Edita lo que quieras: al guardar nace tu versión 1 y el modelo de Axi sigue ahí para volver.";
 
+  return (
+    <div className="flex flex-col gap-4">
       {/* Por debajo de lg la columna es minmax(0,1fr) y no `auto`: con `auto`
           tomaba el ancho mínimo de su contenido (453 px) y a 390 cortaba el
-          «Guardar plantilla» sin barra ni pista (QA real F7, móvil). */}
-      <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,430px)_minmax(0,1fr)]">
-        <div className="flex min-w-0 flex-col gap-3">
-          <p className="flex items-center gap-2 px-1 text-xs font-medium text-muted-foreground">
-            <Layers aria-hidden="true" className="size-3.5" />
-            Los bloques, en el orden en que se imprimen
-            <span className="ml-auto tabular-nums">
-              {template.blocks.length}
-            </span>
-          </p>
-          <BlockList
-            blocks={template.blocks}
-            type={type}
-            catalog={catalog}
-            variables={type.variables}
-            unknownVariables={unknown}
-            openId={openId}
-            onOpen={setOpenId}
-            onChange={patch}
-            onMove={(id, direction) =>
-              setTemplate((prev) => moveBlock(prev, id, direction))
-            }
-            onMoveToEdge={(id, edge) =>
-              setTemplate((prev) => moveBlockToEdge(prev, id, edge))
-            }
-            onRemove={(id) => setTemplate((prev) => removeBlock(prev, id))}
-          />
-          <div className="px-1">
-            <BlockPalette type={type} catalog={catalog} onAdd={add} />
+          contenido sin barra ni pista (QA real F7, móvil). */}
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,460px)_minmax(0,1fr)]">
+        <section
+          aria-label={`Bloques de ${type.label.toLowerCase()}`}
+          className="flex min-w-0 flex-col gap-4 rounded-3xl border border-border bg-card p-5 md:p-6"
+        >
+          <header className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 flex-col gap-1.5">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <h3 className="font-heading text-2xl leading-tight font-bold tracking-tight">
+                  {type.label}
+                </h3>
+                {current.source === "tenant" ? (
+                  <StatePill tone="info">
+                    Tu versión {current.version}
+                  </StatePill>
+                ) : (
+                  <StatePill tone="neutral">Modelo de Axi</StatePill>
+                )}
+              </div>
+              <p className="text-[12.5px] leading-relaxed text-muted-foreground">
+                {meta}
+              </p>
+            </div>
+            {current.source === "tenant" && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="shrink-0 text-muted-foreground"
+                onClick={confirmReset}
+                disabled={saving}
+              >
+                <RotateCcw aria-hidden="true" className="size-3.5" />
+                Restablecer
+                <span className="sr-only"> al modelo de Axi</span>
+              </Button>
+            )}
+          </header>
+
+          <div className="flex flex-col gap-1.5">
+            <p className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+              <span className="flex items-center gap-2">
+                <Layers aria-hidden="true" className="size-3.5" />
+                Los bloques, en el orden en que se imprimen
+              </span>
+              <span className="tabular-nums">{template.blocks.length}</span>
+            </p>
+            <BlockList
+              blocks={template.blocks}
+              type={type}
+              catalog={catalog}
+              variables={type.variables}
+              unknownVariables={unknown}
+              openId={openId}
+              onOpen={setOpenId}
+              onChange={patch}
+              onMove={(id, direction) =>
+                setTemplate((prev) => moveBlock(prev, id, direction))
+              }
+              onMoveToEdge={(id, edge) =>
+                setTemplate((prev) => moveBlockToEdge(prev, id, edge))
+              }
+              onRemove={(id) => setTemplate((prev) => removeBlock(prev, id))}
+            />
           </div>
+          <BlockPalette type={type} catalog={catalog} onAdd={add} />
 
           {unknown.length > 0 && (
             <Alert variant="warning">
@@ -311,50 +310,48 @@ export function DocumentTemplateEditor({
             </Alert>
           )}
 
-          <p className="px-1 text-xs leading-relaxed text-muted-foreground">
-            Lo que lleva{" "}
-            <strong className="font-medium text-foreground">
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            Lo que dice{" "}
+            <strong className="font-medium whitespace-nowrap text-foreground">
               «filas desde los datos»
             </strong>{" "}
-            se rellena con el pedido al emitir y{" "}
-            <strong className="font-medium text-foreground">
+            o{" "}
+            <strong className="font-medium whitespace-nowrap text-foreground">
               «solo si hay plan de pagos»
             </strong>{" "}
-            es lo que ese bloque es: desaparece solo en un documento de pago
-            único. Lo que sí decides tú es{" "}
-            <strong className="font-medium text-foreground">
+            lo decide cada pedido al emitir. Lo que decides tú es{" "}
+            <strong className="font-medium whitespace-nowrap text-foreground">
               cuándo aparece
             </strong>{" "}
-            un párrafo, unas cláusulas o unos pares: dentro de cada uno, en
-            «Cuándo aparece».
+            un párrafo, unas cláusulas o unos pares: dentro de cada uno.
           </p>
-
-          <div className="flex justify-end gap-2 pt-1">
-            <Button
-              type="button"
-              variant="ghost"
-              disabled={!dirty || saving}
-              onClick={() => setTemplate(current.template)}
-            >
-              Descartar cambios
-            </Button>
-            <Button
-              type="button"
-              disabled={!dirty || saving || unknown.length > 0}
-              onClick={() => void save()}
-            >
-              Guardar plantilla
-            </Button>
-          </div>
-        </div>
+        </section>
 
         <TemplatePreviewFrame
+          className="order-first lg:order-none"
           html={preview.html}
           status={preview.status}
           error={preview.error}
           onRetry={preview.retry}
         />
       </div>
+
+      {/* Una isla por pantalla: la barra de tinta es la única, y solo con cambios.
+          No es un <form>: un Enter en un campo del bloque no debe guardar. */}
+      <UnsavedChangesDock
+        dirty={dirty}
+        submitting={saving}
+        invalid={unknown.length > 0}
+        invalidReason={
+          unknown.length > 0
+            ? `Corrige ${unknown.map((name) => `{{${name}}}`).join(" ")} para guardar.`
+            : undefined
+        }
+        detail={meta}
+        submitLabel="Guardar plantilla"
+        onSave={() => void save()}
+        onDiscard={() => setTemplate(current.template)}
+      />
     </div>
   );
 }

@@ -35,7 +35,21 @@ import {
   isDocumentInFlight,
   type DocumentDTO,
 } from "@/modules/documents/domain/document";
+import {
+  StatePill,
+  type StatePillTone,
+} from "@/shared/components/features/bento";
 import { PaperMark } from "./PaperMark";
+
+const STATUS_PILL: Record<
+  ReturnType<typeof documentStatusTone>,
+  StatePillTone
+> = {
+  ok: "success",
+  busy: "info",
+  bad: "destructive",
+  off: "neutral",
+};
 
 /** Lo que el operador lee cuando un render falló, sin código de error a secas. */
 const FAILURE_REASONS: Record<string, string> = {
@@ -50,9 +64,10 @@ const FAILURE_REASONS: Record<string, string> = {
 /**
  * La fila es el asiento (F8 Cobros): el papelito, el nombre del papel y, debajo,
  * su número en mono, cuándo salió y cuántas páginas. Una fila, una acción —«Ver»
- * abre el PDF con URL firmada fresca—; lo demás vive en «…». Los estados se
- * leen sin fondo de color: barra fina al generar, motivo y «Reintentar» al
- * fallar (mismo número), «desactualizado» en ámbar con lo que pasó.
+ * abre el PDF con URL firmada fresca—; lo demás vive en «…». El estado que no
+ * es «listo» va junto al nombre como `StatePill` (premium P7): barra fina al
+ * generar, motivo y «Reintentar» al fallar (mismo número), «Desactualizado»
+ * con lo que pasó. Las salidas de una línea van en su propia fila.
  *
  * F9: la ENTREGA es una tercera línea por canal —un hecho, como texto con
  * tono: por dónde salió y cuándo, o por qué no—. «Enviar» va primero en «…»
@@ -103,15 +118,24 @@ export function DocumentRow({
   return (
     <li
       className={cn(
-        "relative grid grid-cols-[30px_minmax(0,1fr)_auto] items-center gap-x-3.5 gap-y-1 px-4 py-3",
-        "[&+&]:before:absolute [&+&]:before:top-0 [&+&]:before:right-0 [&+&]:before:left-[60px] [&+&]:before:h-px [&+&]:before:bg-border/50",
+        "relative grid grid-cols-[30px_minmax(0,1fr)_auto] items-center gap-x-3.5 gap-y-1 py-3",
+        "[&+&]:before:absolute [&+&]:before:top-0 [&+&]:before:right-0 [&+&]:before:left-[44px] [&+&]:before:h-px [&+&]:before:bg-border/60",
       )}
       data-status={document.status}
     >
       <PaperMark typeCode={document.type_code} tone={tone} />
       <div className={cn("min-w-0", gone && "opacity-60")}>
-        <p className="flex items-center gap-2 text-[14.5px] font-medium tracking-[-0.005em]">
+        {/* Premium P7: el estado va junto al nombre, con el punto de su tono
+            (§9.5: el color vive en el punto; el texto, en foreground). */}
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[14.5px] font-medium tracking-[-0.005em]">
           {document.type_label}
+          {document.status !== "rendered" ? (
+            <StatePill tone={STATUS_PILL[tone]}>
+              {DOCUMENT_STATUS_LABELS[document.status]}
+            </StatePill>
+          ) : outdated ? (
+            <StatePill tone="warning">Desactualizado</StatePill>
+          ) : null}
         </p>
         <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs text-muted-foreground tabular-nums">
           <span className="font-mono text-[12px] tracking-[0.01em] text-foreground/80">
@@ -130,29 +154,6 @@ export function DocumentRow({
                 {document.page_count}{" "}
                 {document.page_count === 1 ? "pág." : "págs."}
               </span>
-            </>
-          ) : null}
-          {document.status !== "rendered" ? (
-            <>
-              <span aria-hidden="true" className="opacity-45">
-                ·
-              </span>
-              <span
-                className={cn(
-                  "font-medium",
-                  tone === "busy" && "text-info",
-                  tone === "bad" && "text-destructive",
-                )}
-              >
-                {DOCUMENT_STATUS_LABELS[document.status]}
-              </span>
-            </>
-          ) : outdated ? (
-            <>
-              <span aria-hidden="true" className="opacity-45">
-                ·
-              </span>
-              <span className="font-medium text-warning">Desactualizado</span>
             </>
           ) : null}
         </p>
@@ -241,7 +242,7 @@ export function DocumentRow({
       </div>
 
       {document.status === "failed" ? (
-        <div className="col-start-2 col-end-4 mt-0.5 flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
+        <div className="col-start-2 col-end-4 mt-0.5 flex flex-wrap items-start gap-x-2 gap-y-2 text-xs leading-relaxed text-muted-foreground">
           <TriangleAlert
             aria-hidden="true"
             className="mt-0.5 size-3.5 shrink-0 text-destructive"
@@ -262,15 +263,18 @@ export function DocumentRow({
             )}
           </span>
           {canManage && canRetry(document) ? (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-[26px] shrink-0 rounded-full px-2.5 text-xs"
-              disabled={busy !== null}
-              onClick={() => void run("retry", () => onRetry(document.id))}
-            >
-              <RotateCcw className="size-3" /> Reintentar
-            </Button>
+            // En su propia fila: en los 380 px del rail no aprieta la razón.
+            <span className="basis-full pl-[22px]">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 rounded-full px-3 text-xs"
+                disabled={busy !== null}
+                onClick={() => void run("retry", () => onRetry(document.id))}
+              >
+                <RotateCcw className="size-3" /> Reintentar
+              </Button>
+            </span>
           ) : null}
         </div>
       ) : null}
@@ -354,7 +358,7 @@ function DeliveryLineRow({
       // §10: el ámbar como texto no llega a 4,5:1; el tono va en el glifo y el
       // hecho se lee en `foreground`. El rojo (4,8:1) sí puede quedarse en el texto.
       className={cn(
-        "col-start-2 col-end-4 mt-0.5 flex items-center gap-2 text-xs leading-relaxed text-muted-foreground tabular-nums",
+        "col-start-2 col-end-4 mt-0.5 flex flex-wrap items-start gap-x-2 gap-y-2 text-xs leading-relaxed text-muted-foreground tabular-nums",
         line.tone === "busy" && "text-info",
         line.tone === "bad" && "text-destructive",
         line.tone === "warn" && "text-foreground",
@@ -364,7 +368,7 @@ function DeliveryLineRow({
       <span
         aria-hidden="true"
         className={cn(
-          "grid size-[18px] shrink-0 place-items-center rounded-md bg-secondary",
+          "mt-px grid size-[18px] shrink-0 place-items-center rounded-md bg-secondary",
           line.tone === "busy" && "bg-info/12",
           line.tone === "bad" && "bg-destructive/10",
           line.tone === "warn" && "bg-warning/12",
@@ -375,7 +379,7 @@ function DeliveryLineRow({
       {line.tone === "busy" ? (
         <span
           aria-hidden="true"
-          className="size-[7px] shrink-0 rounded-full bg-info motion-safe:animate-pulse"
+          className="mt-[6px] size-[7px] shrink-0 rounded-full bg-info motion-safe:animate-pulse"
         />
       ) : null}
       <span className="min-w-0 flex-1">
@@ -402,22 +406,24 @@ function DeliveryLineRow({
         ) : null}
       </span>
       {onRetry !== undefined ? (
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-[26px] shrink-0 rounded-full px-2.5 text-xs text-foreground"
-          onClick={onRetry}
-        >
-          {line.retry === "email" ? (
-            <>
-              <Mail className="size-3" /> Enviar por correo
-            </>
-          ) : (
-            <>
-              <RotateCcw className="size-3" /> Reintentar
-            </>
-          )}
-        </Button>
+        <span className="basis-full pl-[26px]">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 rounded-full px-3 text-xs text-foreground"
+            onClick={onRetry}
+          >
+            {line.retry === "email" ? (
+              <>
+                <Mail className="size-3" /> Enviar por correo
+              </>
+            ) : (
+              <>
+                <RotateCcw className="size-3" /> Reintentar
+              </>
+            )}
+          </Button>
+        </span>
       ) : null}
     </p>
   );

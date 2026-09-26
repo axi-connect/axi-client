@@ -135,7 +135,8 @@ export function ContactOrdersDocumentsCard({
 
       <DocumentsList
         subject={{ kind: "contact", id: contactId }}
-        className="mt-4"
+        embedded
+        className="mt-4 border-t border-border pt-4"
       />
     </section>
   );

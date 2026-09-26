@@ -6,7 +6,6 @@ import {
   ChevronDown,
   ChevronRight,
   CircleCheck,
-  Info,
   LoaderCircle,
   Mail,
   MessageCircle,
@@ -15,6 +14,7 @@ import {
 } from "lucide-react";
 
 import { API_ERROR_CODES, isHttpError } from "@/core/api/problem";
+import { useRadioGroup } from "@/core/hooks/use-radio-group";
 import { errorMessage } from "@/core/lib/error-messages";
 import { formatShortDate } from "@/core/lib/format";
 import { cn } from "@/core/lib/utils";
@@ -36,6 +36,7 @@ import {
   CHANNEL_LABELS,
   defaultChannel,
   emailAvailability,
+  sendFacts,
   whatsappAvailability,
   type ChannelAvailability,
   type DeliveryChannel,
@@ -60,8 +61,8 @@ const TEMPLATES_PERMISSION = "document_templates:manage";
 const TEMPLATES_PATH = "/settings/company/documentos";
 
 /**
- * «Enviar» (F9 Cobros): dos tarjetas, una elección, y un aviso que dice lo
- * MISMO que hará el motor. El servidor calcula el preflight con las fuentes
+ * «Enviar» (F9 Cobros; premium P8): dos tarjetas apiladas, una elección, y un
+ * resumen de hechos que dice lo MISMO que hará el motor. El servidor calcula el preflight con las fuentes
  * con las que manda; aquí solo se leen sus cuatro ramas de WhatsApp (ventana
  * abierta, fuera con plantilla, fuera sin plantilla, sin canal) y si la ficha
  * tiene correo. La ficha es la única dirección de registro: sin correo allí
@@ -132,6 +133,21 @@ export function SendDocumentDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- se ancla al documento abierto
   }, [documentId]);
 
+  // Teclado del grupo (patrón ARIA): un tabulador y flechas entre los canales
+  // que sirven. Va antes del `return` temprano: es un hook.
+  const selectable = (["whatsapp", "email"] as const).filter(
+    (which) =>
+      optionsFailed ||
+      (options !== null &&
+        (which === "whatsapp"
+          ? whatsappAvailability(options, canConfigure).enabled
+          : emailAvailability(options).enabled)),
+  );
+  const radio = useRadioGroup(selectable, channel, (next) => {
+    setChannel(next);
+    setInlineError(null);
+  });
+
   if (intent === null) return null;
   const { document } = intent;
 
@@ -151,6 +167,8 @@ export function SendDocumentDialog({
       ? "El servidor lo revisa al enviar."
       : ((which === "whatsapp" ? whatsapp?.summary : email?.summary) ?? "");
   const contactName = options?.contact?.display_name ?? null;
+  const facts =
+    options === null || channel === null ? [] : sendFacts(options, channel);
   const canSubmit = channel !== null && !loading && !submitting;
 
   async function submit() {
@@ -209,10 +227,13 @@ export function SendDocumentDialog({
 
   return (
     <Dialog open onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[480px]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2.5">
-            <PaperMark typeCode={document.type_code} className="scale-90" />
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3.5 gap-y-0.5 text-left">
+          <PaperMark
+            typeCode={document.type_code}
+            className="row-span-2 mx-1 scale-110"
+          />
+          <DialogTitle className="font-heading text-2xl leading-tight font-bold tracking-tight">
             Enviar {document.type_label.toLowerCase()}
           </DialogTitle>
           <DialogDescription>
@@ -229,15 +250,11 @@ export function SendDocumentDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div
-          role="radiogroup"
-          aria-label="Por dónde"
-          className="grid gap-2.5 sm:grid-cols-2"
-        >
+        <div role="radiogroup" aria-label="Por dónde" className="grid gap-2">
           {loading ? (
             <>
-              <Skeleton className="h-[88px] rounded-2xl" />
-              <Skeleton className="h-[88px] rounded-2xl" />
+              <Skeleton className="h-[68px] rounded-2xl" />
+              <Skeleton className="h-[68px] rounded-2xl" />
             </>
           ) : (
             (["whatsapp", "email"] as const).map((which) => (
@@ -248,6 +265,7 @@ export function SendDocumentDialog({
                 disabled={!enabled(which)}
                 summary={summary(which)}
                 previous={previousSent(document, which)}
+                keyboard={selectable.includes(which) ? radio(which) : undefined}
                 onSelect={() => {
                   setChannel(which);
                   setInlineError(null);
@@ -257,8 +275,25 @@ export function SendDocumentDialog({
           )}
         </div>
 
-        {!loading && channel === "whatsapp" && whatsapp?.notice ? (
-          <Notice tone={whatsapp.notice.tone}>
+        {!loading && facts.length > 0 ? (
+          <dl className="m-0 rounded-2xl bg-secondary/60 px-4 py-1">
+            {facts.map((fact) => (
+              <div
+                key={fact.label}
+                className="flex flex-col gap-0.5 border-t border-border py-2.5 text-[13px] first:border-t-0 sm:flex-row sm:justify-between sm:gap-4"
+              >
+                <dt className="shrink-0 text-muted-foreground">{fact.label}</dt>
+                <dd className="sm:text-right">{fact.value}</dd>
+              </div>
+            ))}
+          </dl>
+        ) : null}
+
+        {!loading &&
+        channel === "whatsapp" &&
+        whatsapp?.notice &&
+        whatsapp.notice.tone === "warn" ? (
+          <Notice>
             {whatsapp.notice.text}
             {whatsapp.mode === "no_hsm" ? (
               whatsapp.notice.configureLink ? (
@@ -279,7 +314,7 @@ export function SendDocumentDialog({
           </Notice>
         ) : null}
         {!loading && channel === null && whatsapp?.mode === "no_hsm" ? (
-          <Notice tone="warn">
+          <Notice>
             {whatsapp.notice?.text}
             {whatsapp.notice?.configureLink ? (
               <>
@@ -300,7 +335,7 @@ export function SendDocumentDialog({
           <div className="flex flex-col gap-2">
             <button
               type="button"
-              className="inline-flex w-fit items-center gap-1.5 text-[13px] font-medium"
+              className="inline-flex min-h-6 w-fit items-center gap-1.5 text-[13px] font-medium"
               aria-expanded={otherEmail}
               onClick={() => setOtherEmail((value) => !value)}
             >
@@ -385,6 +420,7 @@ function ChannelCard({
   disabled,
   summary,
   previous,
+  keyboard,
   onSelect,
 }: {
   channel: DeliveryChannel;
@@ -392,6 +428,7 @@ function ChannelCard({
   disabled: boolean;
   summary: string;
   previous: string | null;
+  keyboard?: ReturnType<ReturnType<typeof useRadioGroup<DeliveryChannel>>>;
   onSelect: () => void;
 }) {
   const Icon = channel === "whatsapp" ? MessageCircle : Mail;
@@ -403,20 +440,16 @@ function ChannelCard({
       aria-checked={checked}
       aria-label={label}
       disabled={disabled}
+      {...keyboard}
       onClick={onSelect}
       className={cn(
-        "relative grid min-h-[88px] grid-cols-[34px_minmax(0,1fr)] items-start gap-3 rounded-2xl border border-border bg-background px-3.5 py-3.5 text-left transition-colors",
+        "relative grid grid-cols-[36px_minmax(0,1fr)_18px] items-center gap-3 rounded-2xl border border-border bg-background px-3.5 py-3 text-left transition-colors",
         "focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
         checked && "border-foreground ring-1 ring-foreground ring-inset",
         disabled && "bg-secondary/50 opacity-60",
       )}
     >
-      <span
-        className={cn(
-          "grid size-[34px] place-items-center rounded-[10px] bg-secondary text-foreground",
-          checked && "bg-foreground text-background",
-        )}
-      >
+      <span className="grid size-9 place-items-center rounded-xl bg-secondary text-foreground">
         <Icon className="size-[17px]" aria-hidden="true" />
       </span>
       <span className="min-w-0">
@@ -436,35 +469,30 @@ function ChannelCard({
           </span>
         ) : null}
       </span>
-      {checked ? (
-        <CircleCheck
-          aria-hidden="true"
-          className="absolute top-3 right-3 size-4 text-foreground"
-        />
-      ) : null}
+      <span
+        aria-hidden="true"
+        className={cn(
+          "grid size-[18px] place-items-center rounded-full border-[1.5px] border-border",
+          checked && "border-foreground",
+        )}
+      >
+        {checked ? (
+          <span className="size-2 rounded-full bg-foreground" />
+        ) : null}
+      </span>
     </button>
   );
 }
 
 /**
- * El aviso bajo las tarjetas es un ESTADO que dura mientras el diálogo está
- * abierto: `Alert` en línea con su variante (§9.4), color solo en el icono.
+ * El aviso de la plantilla que falta es un ESTADO que dura mientras el diálogo
+ * está abierto: `Alert` en línea (§9.4), color solo en el icono. Lo que sí va a
+ * pasar no es un aviso: son los hechos del resumen (`sendFacts`).
  */
-function Notice({
-  tone,
-  children,
-}: {
-  tone: "ok" | "info" | "warn";
-  children: React.ReactNode;
-}) {
-  const Icon =
-    tone === "ok" ? CircleCheck : tone === "warn" ? TriangleAlert : Info;
+function Notice({ children }: { children: React.ReactNode }) {
   return (
-    <Alert
-      variant={tone === "ok" ? "success" : tone === "warn" ? "warning" : "info"}
-      className="rounded-xl"
-    >
-      <Icon aria-hidden="true" />
+    <Alert variant="warning" className="rounded-xl">
+      <TriangleAlert aria-hidden="true" />
       <AlertDescription className="text-[13px] leading-relaxed">
         <span>{children}</span>
       </AlertDescription>

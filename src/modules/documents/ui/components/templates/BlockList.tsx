@@ -105,7 +105,9 @@ export function BlockList({
     blocks.filter((block) => block.type === blockType).length;
 
   return (
-    <ol className="overflow-hidden rounded-2xl border border-border bg-card">
+    // Dentro de la ficha del editor: sin marco propio, una raya entre filas y el
+    // número de orden de impresión delante (es una secuencia de verdad).
+    <ol className="border-y border-border/60">
       {blocks.map((block, index) => {
         const Icon = BLOCK_ICONS[block.type];
         const contract = contractOf(block.type);
@@ -118,12 +120,18 @@ export function BlockList({
         return (
           <li
             key={block.id}
-            className={`relative grid grid-cols-[34px_minmax(0,1fr)_auto] items-start gap-3 px-3.5 py-3 ${
+            className={`relative grid grid-cols-[20px_34px_minmax(0,1fr)_auto] items-start gap-3 px-2 py-3 ${
               index > 0
-                ? "before:absolute before:left-[58px] before:right-0 before:top-0 before:h-px before:bg-border/60"
+                ? "before:absolute before:left-10 before:right-0 before:top-0 before:h-px before:bg-border/60"
                 : ""
-            } ${isOpen ? "bg-secondary/50" : ""}`}
+            } ${isOpen ? "rounded-2xl bg-secondary/50" : ""}`}
           >
+            <span
+              aria-hidden="true"
+              className="pt-2.5 text-right font-mono text-[11px] text-muted-foreground tabular-nums"
+            >
+              {String(index + 1).padStart(2, "0")}
+            </span>
             <span
               aria-hidden="true"
               className={`grid size-[34px] place-items-center rounded-[10px] ${
@@ -137,7 +145,7 @@ export function BlockList({
             <div className="min-w-0">
               <button
                 type="button"
-                className="flex w-full flex-wrap items-center gap-2 text-left text-sm font-medium"
+                className="flex min-h-6 w-full flex-wrap items-center gap-2 text-left text-sm font-medium"
                 aria-expanded={isOpen}
                 aria-controls={`block-editor-${block.id}`}
                 onClick={() => onOpen(isOpen ? null : block.id)}
