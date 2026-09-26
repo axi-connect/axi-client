@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>CRM · Resumen de Axi</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&amp;family=Poppins:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#F5F5F7}
+.lt{--bg:#F5F5F7;--side:rgba(255,255,255,.6);--card:#FFFFFF;--fg:#0B0B0E;--fg2:#3A3A40;--mut:#6B6B73;--line:rgba(0,0,0,.06);--line2:rgba(0,0,0,.12);--col:rgba(0,0,0,.028);--chip:#F0F0F2;--ink:#0B0B0E;--onink:#FFFFFF;--brand:#D13F42;--onbrand:#FFFFFF;--ok:#1F9D5B;--warn:#D97706;--bad:#DC2626;--ai:#7C3AED}
+a{color:inherit}
+.app{width:1440px;height:900px;display:flex;background:var(--bg);color:var(--fg);overflow:hidden;font-family:Poppins,system-ui,sans-serif;position:relative}
+.d{font-family:Urbanist,Poppins,sans-serif}
+.side{width:248px;flex-shrink:0;border-right:1px solid var(--line);background:var(--side)}
+.ghost{background:var(--card);border-radius:18px;border:1px solid var(--line)}
+.col{display:flex;flex-direction:column;gap:10px;width:262px;flex-shrink:0;padding:12px;border-radius:24px;background:var(--col);box-sizing:border-box}
+.scrim{position:absolute;inset:0;background:rgba(10,10,12,.42);display:flex;align-items:center;justify-content:center}
+.dlg{width:620px;background:var(--card);border-radius:24px;box-shadow:0 50px 100px -40px rgba(0,0,0,.55),0 0 0 1px rgba(0,0,0,.06);padding:28px;box-sizing:border-box;display:flex;flex-direction:column;gap:18px}
+.lbl{font-size:12px;color:var(--mut);white-space:nowrap}
+.kick{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);white-space:nowrap;display:inline-flex;align-items:center;gap:8px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:999px;font:500 14px Poppins,sans-serif;border:0;cursor:pointer;text-decoration:none;white-space:nowrap;box-sizing:border-box}
+.btn-s{background:var(--card);color:var(--fg);border:1px solid var(--line2)}
+.btn-k{background:var(--ink);color:var(--onink)}
+.icb{width:36px;height:36px;border-radius:999px;border:1px solid var(--line2);background:var(--card);color:var(--fg);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;padding:0}
+.grp{display:flex;flex-direction:column;gap:2px;padding:16px 18px;border-radius:20px;border:1px solid var(--line)}
+.gh{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;margin-bottom:6px}
+.it{display:grid;grid-template-columns:6px minmax(0,1fr);gap:12px;align-items:start;padding:7px 0;font-size:13.5px;line-height:1.5;color:var(--fg2)}
+.it::before{content:"";width:6px;height:6px;border-radius:9px;background:var(--line2);margin-top:8px}
+.dot{width:6px;height:6px;border-radius:9px;flex-shrink:0;display:inline-block}
+.aig{color:var(--ai);flex-shrink:0}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:500;background:var(--chip);color:var(--fg);white-space:nowrap}
+</style>
+</helmet>
+<div class="app lt">
+  <aside class="side" aria-hidden="true"></aside>
+  <main style="flex-grow:1;display:flex;flex-direction:column;gap:16px;padding:18px 40px 28px;min-width:0" aria-hidden="true">
+    <div class="ghost" style="width:520px;height:44px;border-radius:999px"></div>
+    <div class="d" style="font-size:36px;font-weight:700;letter-spacing:-.02em;margin-top:6px">Pipeline</div>
+    <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) 300px;gap:16px"><div class="ghost" style="height:132px;border-radius:24px"></div><div class="ghost" style="height:132px;border-radius:24px"></div><div class="ghost" style="height:132px;border-radius:24px"></div><div class="ghost" style="height:132px;border-radius:24px"></div></div>
+    <div style="display:flex;gap:14px;flex-grow:1;overflow:hidden">
+      <div class="col"><div class="ghost" style="height:128px"></div><div class="ghost" style="height:128px"></div><div class="ghost" style="height:128px"></div></div>
+      <div class="col"><div class="ghost" style="height:128px"></div><div class="ghost" style="height:128px"></div><div class="ghost" style="height:128px"></div></div>
+      <div class="col"><div class="ghost" style="height:128px"></div><div class="ghost" style="height:128px"></div></div>
+      <div class="col"><div class="ghost" style="height:128px"></div><div class="ghost" style="height:128px"></div></div>
+      <div class="col"><div class="ghost" style="height:128px"></div></div>
+    </div>
+  </main>
+
+  <div class="scrim">
+    <section class="dlg" role="dialog" aria-modal="true" aria-labelledby="sum-t">
+      <header style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span class="kick"><svg class="aig" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.8 5.4L19 10l-5.2 1.6L12 17l-1.8-5.4L5 10l5.2-1.6z"></path></svg>Resumen de Axi</span>
+          <h2 id="sum-t" class="d" style="margin:0;font-size:26px;font-weight:700;letter-spacing:-.015em;line-height:1.15">Así va Ventas de viajes</h2>
+        </div>
+        <a class="icb" href="Main.dc.html" aria-label="Cerrar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"></path></svg></a>
+      </header>
+
+      <p style="margin:0;font-size:14.5px;line-height:1.6">Tienes 23 oportunidades abiertas por $ 96,4 M. La mitad del valor está en Calificado y Propuesta, y ahí es donde se están quedando quietas: tres llevan más días de los que aguanta su etapa.</p>
+
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
+        <div class="grp">
+          <div class="gh"><span class="dot" style="background:var(--warn)"></span>Lo que puede caerse</div>
+          <div class="it">Cartagena · viaje de empresa, 12 días sin respuesta después de la propuesta.</div>
+          <div class="it">Cancún todo incluido: pidió otra fecha y nadie le ha vuelto a cotizar.</div>
+          <div class="it">Dos propuestas vencen esta semana sin seguimiento agendado.</div>
+        </div>
+        <div class="grp">
+          <div class="gh"><span class="dot" style="background:var(--ok)"></span>Lo que puedes ganar</div>
+          <div class="it">Madrid y Lisboa está en Negociación y cierra el 28 sep: un último empujón.</div>
+          <div class="it">Axi abrió 3 esta semana desde el inbox; las 3 ya tienen valor.</div>
+          <div class="it">Los viajes en familia cierran en 14 días, más rápido que el resto.</div>
+        </div>
+      </div>
+
+      <footer style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding-top:4px">
+        <span class="pill"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>Guardado hace 2 h · no gastó IA del plan</span>
+        <div style="display:flex;gap:10px">
+          <a class="btn btn-s" href="Main.dc.html">Cerrar</a>
+          <a class="btn btn-k" href="Detalle.dc.html">Ver las que se enfrían</a>
+        </div>
+      </footer>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

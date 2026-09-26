@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -14,7 +14,9 @@ import {
 } from "@dnd-kit/core";
 import { useAlert } from "@/core/providers/alert-provider";
 import type { DealDTO } from "@/modules/crm/domain/deal";
+import { useActiveStages } from "@/modules/crm/infrastructure/hooks/use-active-stages";
 import { useBoardStore } from "@/modules/crm/infrastructure/stores/board.store";
+import { cn } from "@/core/lib/utils";
 import { DealCard, type DealCardAction } from "./DealCard";
 import { StageColumn } from "./StageColumn";
 
@@ -28,17 +30,17 @@ const COLUMN_PAGE_SIZE = 25;
  */
 export function PipelineBoard({
   canOperate,
+  selectedId,
   onCardAction,
 }: {
   canOperate: boolean;
+  /** La oportunidad abierta en el detalle (o null): se marca y se desliza a la vista. */
+  selectedId: string | null;
   onCardAction: (deal: DealDTO, action: DealCardAction) => void;
 }) {
   const { showAlert } = useAlert();
   const dealsById = useBoardStore((s) => s.dealsById);
   const columns = useBoardStore((s) => s.columns);
-  const stageOrder = useBoardStore((s) => s.stageOrder);
-  const pipelines = useBoardStore((s) => s.pipelines);
-  const pipelineId = useBoardStore((s) => s.pipelineId);
   const highlightId = useBoardStore((s) => s.highlightId);
   const fetchColumn = useBoardStore((s) => s.fetchColumn);
   const moveDeal = useBoardStore((s) => s.moveDeal);
@@ -53,12 +55,16 @@ export function PipelineBoard({
     useSensor(KeyboardSensor),
   );
 
-  const stages = useMemo(() => {
-    const pipeline = pipelines.find((p) => p.id === pipelineId);
-    return stageOrder
-      .map((stageId) => pipeline?.stages.find((stage) => stage.id === stageId))
-      .filter((stage): stage is NonNullable<typeof stage> => stage !== undefined);
-  }, [pipelines, pipelineId, stageOrder]);
+  const stages = useActiveStages();
+  const scrollerRef = useRef<HTMLDivElement>(null);
+
+  // Al abrir el detalle, la tarjeta abierta se desliza a la vista: el panel
+  // flota sobre la derecha del tablero y la taparía (lienzo F1, tablero 4).
+  useEffect(() => {
+    if (selectedId === null) return;
+    const card = scrollerRef.current?.querySelector<HTMLElement>(`[data-deal-id="${CSS.escape(selectedId)}"]`);
+    card?.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
+  }, [selectedId]);
 
   function handleDragStart(event: DragStartEvent) {
     setDragging(dealsById[String(event.active.id)] ?? null);
@@ -82,7 +88,20 @@ export function PipelineBoard({
       onDragEnd={handleDragEnd}
       onDragCancel={() => setDragging(null)}
     >
-      <div className="flex h-full min-h-0 snap-x gap-3 overflow-x-auto pb-1">
+      {/* El ÚNICO scroll horizontal del área, con la barra de marca de Axi. Con
+          el detalle abierto (lg) reserva a la derecha el ancho del panel, para
+          que la última columna pueda salir de debajo; `scroll-pr` hace que el
+          snap y el scrollIntoView respeten ese hueco. */}
+      <div
+        ref={scrollerRef}
+        role="region"
+        aria-label="Tablero del pipeline"
+        tabIndex={0}
+        className={cn(
+          "sidebar-scroll flex h-full min-h-0 snap-x gap-3 overflow-x-auto overflow-y-hidden overscroll-x-contain pb-2 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40 rounded-3xl",
+          selectedId !== null && "lg:scroll-pr-[29rem] lg:pr-[29rem]",
+        )}
+      >
         {stages.map((stage) => (
           <StageColumn
             key={stage.id}
@@ -93,6 +112,7 @@ export function PipelineBoard({
               .filter((deal): deal is DealDTO => deal !== undefined && deal.status === "open")}
             currency={currency}
             highlightId={highlightId}
+            selectedId={selectedId}
             canOperate={canOperate}
             dragActive={dragging !== null}
             onLoadMore={() => {
@@ -106,7 +126,7 @@ export function PipelineBoard({
 
       <DragOverlay dropAnimation={null}>
         {dragging !== null ? (
-          <div className="w-64 rotate-2 shadow-overlay">
+          <div className="w-[16rem] rotate-2 rounded-2xl shadow-overlay">
             <DealCard
               deal={dragging}
               rottingDays={null}

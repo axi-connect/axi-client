@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>CRM · Pipeline</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&amp;family=Poppins:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#F5F5F7}
+.lt{--bg:#F5F5F7;--side:rgba(255,255,255,.6);--card:#FFFFFF;--fg:#0B0B0E;--fg2:#3A3A40;--mut:#6B6B73;--faint:#A1A1AA;--line:rgba(0,0,0,.06);--line2:rgba(0,0,0,.12);--col:rgba(0,0,0,.028);--chip:#F0F0F2;--ink:#0B0B0E;--onink:#FFFFFF;--brand:#D13F42;--onbrand:#FFFFFF;--track:#ECECEF;--ok:#1F9D5B;--warn:#D97706;--info:#2563EB;--bad:#DC2626;--ai:#7C3AED;--sh:0 1px 0 rgba(0,0,0,.03),0 8px 20px -16px rgba(16,16,24,.25);--navon:#FFFFFF}
+.dk{--bg:#0A0A0A;--side:#0F0F11;--card:#141416;--fg:#EDEDED;--fg2:#C4C4CC;--mut:#A1A1AA;--faint:#71717A;--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.14);--col:rgba(255,255,255,.03);--chip:rgba(255,255,255,.08);--ink:#EDEDED;--onink:#0A0A0A;--brand:#FB7185;--onbrand:#1A0508;--track:rgba(255,255,255,.10);--ok:#4ADE80;--warn:#FBBF24;--info:#60A5FA;--bad:#F87171;--ai:#A78BFA;--sh:none;--navon:#18181B}
+a{color:inherit}
+.app{width:1440px;height:900px;display:flex;background:var(--bg);color:var(--fg);overflow:hidden;font-family:Poppins,system-ui,sans-serif;position:relative}
+.d{font-family:Urbanist,Poppins,sans-serif}
+.side{width:248px;flex-shrink:0;padding:18px 14px;box-sizing:border-box;display:flex;flex-direction:column;gap:2px;border-right:1px solid var(--line);background:var(--side)}
+.nav{display:flex;align-items:center;gap:12px;height:36px;padding:0 12px;border-radius:10px;font-size:13.5px;color:var(--fg2);text-decoration:none}
+.nav-on{background:var(--navon);color:var(--fg);font-weight:500;box-shadow:0 1px 2px rgba(0,0,0,.06),0 0 0 1px var(--line)}
+.grp{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);padding:14px 12px 6px}
+.card{background:var(--card);border-radius:24px;border:1px solid var(--line);box-shadow:var(--sh)}
+.lbl{font-size:12px;color:var(--mut);white-space:nowrap}
+.kick{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);white-space:nowrap}
+.fig{font-family:Urbanist,Poppins,sans-serif;font-weight:700;letter-spacing:-.03em;line-height:1;white-space:nowrap;font-variant-numeric:tabular-nums}
+.unit{font-size:13.5px;color:var(--mut);white-space:nowrap}
+.sub{font-size:12.5px;color:var(--fg2);line-height:1.45}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:999px;font:500 14px Poppins,sans-serif;border:0;cursor:pointer;text-decoration:none;white-space:nowrap;box-sizing:border-box}
+.btn-p{background:var(--brand);color:var(--onbrand)}
+.btn-s{background:var(--card);color:var(--fg);border:1px solid var(--line2)}
+.btn-bad{background:var(--card);color:var(--bad);border:1px solid var(--line2)}
+.btn-sm{height:36px;padding:0 14px;font-size:13px}
+.tabs{display:flex;gap:4px;padding:4px;border-radius:999px;background:var(--card);border:1px solid var(--line)}
+.tab{height:36px;padding:0 14px;border-radius:999px;font:500 13.5px Poppins,sans-serif;color:var(--fg2);display:inline-flex;align-items:center;gap:8px;text-decoration:none;white-space:nowrap;border:0;background:transparent;cursor:pointer}
+.tab-on{background:var(--ink);color:var(--onink)}
+.seg{height:32px;padding:0 12px;border-radius:999px;font:500 12.5px Poppins,sans-serif;color:var(--fg2);border:0;background:transparent;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.seg-on{background:var(--ink);color:var(--onink)}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:500;background:var(--chip);color:var(--fg);white-space:nowrap}
+.dot{width:6px;height:6px;border-radius:9px;flex-shrink:0;display:inline-block}
+.meter{display:flex;height:8px;border-radius:999px;overflow:hidden;background:var(--track);gap:2px}
+.icb{width:36px;height:36px;border-radius:999px;border:1px solid var(--line2);background:var(--card);color:var(--fg);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;padding:0}
+.board{display:flex;gap:14px;flex-grow:1;min-height:0;overflow:hidden}
+.col{display:flex;flex-direction:column;gap:10px;width:262px;flex-shrink:0;padding:12px;border-radius:24px;background:var(--col);box-sizing:border-box;min-height:0;overflow:hidden}
+.colh{display:flex;flex-direction:column;gap:3px;padding:4px 6px 4px}
+.colt{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;font-weight:600;white-space:nowrap}
+.cnt{font-size:12px;color:var(--mut);font-weight:500;font-variant-numeric:tabular-nums}
+.colv{font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums;white-space:nowrap}
+.dc{background:var(--card);border-radius:18px;border:1px solid var(--line);box-shadow:var(--sh);padding:13px 14px;display:flex;flex-direction:column;gap:9px;text-decoration:none;color:var(--fg);flex-shrink:0}
+.dc-on{box-shadow:0 0 0 2px var(--ink)}
+.ttl{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.who{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--fg2);min-width:0}
+.who span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.av{width:22px;height:22px;border-radius:999px;background:var(--chip);color:var(--fg);display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;min-width:0}
+.amt{font-family:Urbanist,Poppins,sans-serif;font-size:17px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.meta{font-size:11.5px;color:var(--mut);white-space:nowrap}
+.more{height:36px;border-radius:999px;border:1px dashed var(--line2);background:transparent;font:500 12.5px Poppins,sans-serif;color:var(--fg2);cursor:pointer;flex-shrink:0}
+.aig{color:var(--ai);flex-shrink:0}
+.isl{position:relative;isolation:isolate;overflow:hidden;border-radius:24px}
+.isl-glass{color:#0B0B0E;background:var(--glow,none),linear-gradient(160deg,rgba(255,255,255,.82),rgba(246,243,254,.62));-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);box-shadow:inset 0 2px 2px rgba(11,11,14,.05),inset 0 -2px 2px rgba(255,255,255,.5),inset 0 0 1.6px 4px rgba(255,255,255,.2),inset 0 0 18px 2px rgba(255,255,255,.55),0 4px 2px -2px rgba(11,11,14,.14),0 30px 70px -34px rgba(16,16,24,.35),0 30px 80px -40px rgba(124,58,237,.35)}
+.isl-dark{color:#EDEDED;background:var(--glow,none),linear-gradient(160deg,rgba(38,38,42,.90),rgba(28,24,40,.92));-webkit-backdrop-filter:blur(20px) saturate(170%);backdrop-filter:blur(20px) saturate(170%);box-shadow:inset 0 2px 2px rgba(255,255,255,.10),inset 0 -2px 2px rgba(0,0,0,.35),inset 0 0 1.6px 4px rgba(255,255,255,.04),inset 0 0 14px 1px rgba(255,255,255,.08),0 40px 90px -36px rgba(124,58,237,.55),0 18px 50px -24px rgba(230,87,89,.45)}
+.isl-glass::before,.isl-dark::before{content:"";position:absolute;inset:0;z-index:1;padding:1.5px;border-radius:inherit;pointer-events:none;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.isl-glass::before{background:conic-gradient(from -75deg at 50% 50%,rgba(11,11,14,.32) 0%,transparent 6% 40%,rgba(11,11,14,.32) 50%,transparent 56% 94%,rgba(11,11,14,.32) 100%),linear-gradient(rgba(255,255,255,.85),rgba(255,255,255,.85))}
+.isl-dark::before{background:conic-gradient(from -75deg at 50% 50%,rgba(255,255,255,.7) 0%,transparent 6% 40%,rgba(255,255,255,.7) 50%,transparent 56% 94%,rgba(255,255,255,.7) 100%),linear-gradient(rgba(255,255,255,.12),rgba(255,255,255,.12))}
+.isl-glass::after,.isl-dark::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none}
+.isl-glass::after{background:linear-gradient(-45deg,transparent 0%,rgba(255,255,255,.55) 40% 46%,transparent 54%) 0 0/200% 200%,radial-gradient(60% 45% at 30% 0%,rgba(255,255,255,.9),transparent 70%)}
+.isl-dark::after{background:linear-gradient(-45deg,transparent 0%,rgba(255,255,255,.10) 40% 46%,transparent 54%) 0 0/200% 200%,radial-gradient(60% 45% at 30% 0%,rgba(255,255,255,.14),transparent 70%)}
+.isl-ink{color:#F4F4F5;background:var(--glow,none),#0B0B0E}
+.isl-glass.glow-brand{--glow:radial-gradient(circle 20rem at 90% 8%,rgba(230,87,89,.16),transparent 70%)}
+.isl-glass.glow-ai{--glow:radial-gradient(circle 22rem at 0% 0%,rgba(124,58,237,.16),transparent 70%),radial-gradient(circle 20rem at 100% 100%,rgba(230,87,89,.11),transparent 70%)}
+.isl-dark.glow-brand{--glow:radial-gradient(circle 20rem at 90% 8%,rgba(251,113,133,.26),transparent 70%)}
+.isl-dark.glow-ai{--glow:radial-gradient(circle 22rem at 0% 0%,rgba(167,139,250,.26),transparent 70%),radial-gradient(circle 20rem at 100% 100%,rgba(251,113,133,.18),transparent 70%)}
+.isl-ink.glow-brand{--glow:radial-gradient(circle 20rem at 90% 8%,rgba(230,87,89,.45),transparent 70%)}
+.isl-glass{--mut:#5F5F68;--fg2:#3A3A40;--line:rgba(11,11,14,.08)}
+.isl-dark{--mut:#A1A1AA;--fg2:#D4D4D8;--line:rgba(255,255,255,.10)}
+.btn-contrast{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 18px;border-radius:999px;font:500 13.5px Poppins,sans-serif;border:0;cursor:pointer;text-decoration:none;background:#0B0B0E;color:#FFFFFF;white-space:nowrap}
+.isl-dark .btn-contrast,.isl-ink .btn-contrast{background:#F4F4F5;color:#0B0B0E}
+.btn-glass{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 18px;border-radius:999px;font:500 13.5px Poppins,sans-serif;border:0;cursor:pointer;text-decoration:none;position:relative;white-space:nowrap;color:rgba(11,11,14,.92);background:linear-gradient(-75deg,rgba(255,255,255,.08),rgba(255,255,255,.5),rgba(255,255,255,.08));box-shadow:inset 0 2px 2px rgba(11,11,14,.05),inset 0 -2px 2px rgba(255,255,255,.5),0 4px 2px -2px rgba(11,11,14,.2),inset 0 0 1.6px 4px rgba(255,255,255,.2),0 0 0 1px rgba(11,11,14,.08)}
+.isl-dark .btn-glass{color:rgba(237,237,237,.92);background:linear-gradient(-75deg,rgba(255,255,255,.03),rgba(255,255,255,.10),rgba(255,255,255,.03));box-shadow:inset 0 2px 2px rgba(255,255,255,.08),inset 0 -2px 2px rgba(0,0,0,.3),0 0 0 1px rgba(255,255,255,.12)}
+@media (prefers-reduced-transparency: reduce){.isl-glass{background:#FFFFFF}.isl-dark{background:#1E1E22}}
+</style>
+</helmet>
+<div class="app {{themeCls}}">
+  <aside class="side">
+    <div style="display:flex;align-items:center;gap:10px;padding:4px 10px 16px">
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="11" cy="15" r="7.5" fill="none" stroke="#D13F42" stroke-width="4"></circle><path d="M16 5 L25 24" stroke="#F2A93B" stroke-width="4" stroke-linecap="round"></path><path d="M25 5 L17 20" stroke="#7B5CF0" stroke-width="4" stroke-linecap="round"></path></svg>
+      <div style="display:flex;flex-direction:column;gap:2px"><span class="d" style="font-weight:700;font-size:15px">Axi Connect</span><span style="font-size:11.5px;color:var(--mut)">JuanitoXpeditions</span></div>
+    </div>
+    <a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg>Inicio</a>
+    <a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"></path></svg>Inbox</a>
+    <div class="grp">Ventas</div>
+    <a class="nav nav-on" href="#" aria-current="page"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D13F42" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="3"></rect><path d="M8 7v7M12 7v4M16 7v9"></path></svg>CRM</a>
+    <a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><path d="M3 6h18"></path></svg>Pedidos</a>
+    <a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2" y="5" width="20" height="14" rx="3"></rect><path d="M2 10h20M6 15h4"></path></svg>Cartera</a>
+    <a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3 3 8l9 5 9-5-9-5Z"></path><path d="m3 13 9 5 9-5"></path></svg>Catálogo</a>
+    <div class="grp">Configuración</div>
+    <a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2" y="5" width="20" height="14" rx="3"></rect><path d="M2 10h20"></path></svg>Pagos</a>
+  </aside>
+
+  <main style="flex-grow:1;display:flex;flex-direction:column;min-width:0;min-height:0">
+    <header style="height:64px;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 40px;flex-shrink:0">
+      <nav aria-label="Secciones del CRM" class="tabs">
+        <a class="tab" href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Contactos</a>
+        <a class="tab tab-on" href="#" aria-current="page"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="3"></rect><path d="M8 7v7M12 7v4M16 7v9"></path></svg>Pipeline</a>
+        <a class="tab" href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m3 17 2 2 4-4M3 7l2 2 4-4M13 6h8M13 12h8M13 18h8"></path></svg>Tareas</a>
+        <a class="tab" href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"></path></svg>Configuración</a>
+      </nav>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="lbl">Cierres de</span>
+        <div role="radiogroup" aria-label="Período de las métricas" class="tabs" style="padding:3px;gap:2px">
+          <sc-for list="{{periods}}" as="p" hint-placeholder-count="4"><button type="button" role="radio" aria-checked="{{p.checked}}" class="seg {{p.cls}}" onClick="{{p.pick}}">{{p.label}}</button></sc-for>
+        </div>
+      </div>
+    </header>
+
+    <div style="padding:0 40px 28px;display:flex;flex-direction:column;gap:16px;flex-grow:1;min-height:0">
+      <section style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px">
+        <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+          <div style="display:flex;align-items:center;gap:12px">
+            <h1 class="d" style="margin:0;font-size:36px;font-weight:700;letter-spacing:-.02em;line-height:1.1">Pipeline</h1>
+            <button type="button" class="btn btn-s btn-sm" aria-label="Cambiar de pipeline: Ventas de viajes">Ventas de viajes<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"></path></svg></button>
+          </div>
+          <p style="margin:0;font-size:13.5px;color:var(--mut)">23 oportunidades abiertas · $ 96,4 M en juego · arrastra una tarjeta para cambiarla de etapa</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div role="radiogroup" aria-label="Vista del pipeline" class="tabs" style="padding:3px;gap:2px">
+            <button type="button" role="radio" aria-checked="true" class="seg seg-on"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="2"></rect><rect x="14" y="3" width="7" height="7" rx="2"></rect><rect x="3" y="14" width="7" height="7" rx="2"></rect><rect x="14" y="14" width="7" height="7" rx="2"></rect></svg>Tablero</button>
+            <a href="Tabla.dc.html" role="radio" aria-checked="false" class="seg" style="text-decoration:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"></path></svg>Tabla</a>
+          </div>
+          <a class="btn btn-s" href="Resumen.dc.html"><svg class="aig" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l1.8 5.4L19 10l-5.2 1.6L12 17l-1.8-5.4L5 10l5.2-1.6z"></path><path d="M19 16v4M17 18h4"></path></svg>Resumen de Axi</a>
+          <a class="btn btn-p" href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>Nueva oportunidad</a>
+        </div>
+      </section>
+
+      <section style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) 300px;gap:16px;flex-shrink:0">
+        <article class="card" style="padding:18px 22px;display:flex;flex-direction:column;gap:12px;min-width:0">
+          <div class="row"><h2 class="lbl" style="margin:0;font-weight:400">Pronóstico ponderado</h2><span class="pill">23 abiertas</span></div>
+          <div style="display:flex;align-items:baseline;gap:8px"><span class="fig" style="font-size:38px">$ 36,0 M</span><span class="unit">de $ 96,4 M</span></div>
+          <div class="meter" aria-hidden="true"><span style="width:37%;background:var(--ink)"></span></div>
+          <span class="sub" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Valor × probabilidad de cada etapa</span>
+        </article>
+        <article class="card" style="padding:18px 22px;display:flex;flex-direction:column;gap:12px;min-width:0">
+          <div class="row"><h2 class="lbl" style="margin:0;font-weight:400">Ganadas · {{periodLabel}}</h2></div>
+          <div style="display:flex;align-items:baseline;gap:8px"><span class="fig" style="font-size:38px">{{wonCount}}</span><span class="unit">{{wonValue}}</span></div>
+          <span class="sub" style="margin-top:auto">{{cycle}}</span>
+        </article>
+        <article class="card" style="padding:18px 22px;display:flex;flex-direction:column;gap:12px;min-width:0">
+          <div class="row"><h2 class="lbl" style="margin:0;font-weight:400">Tasa de cierre · {{periodLabel}}</h2></div>
+          <div style="display:flex;align-items:baseline;gap:8px"><span class="fig" style="font-size:38px">{{rate}}</span><span class="unit">{{rateOf}}</span></div>
+          <span class="sub" style="margin-top:auto">{{rateLine}}</span>
+        </article>
+        <article class="isl {{islCls}} glow-brand" style="padding:18px 20px;display:flex;flex-direction:column;gap:8px;min-width:0" aria-label="Lo próximo">
+          <span class="kick">Lo próximo</span>
+          <div class="row" style="align-items:baseline"><span class="d" style="font-size:22px;font-weight:700;line-height:1.1;white-space:nowrap">3 se enfrían</span><span class="d" style="font-size:18px;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums">$ 26,7 M</span></div>
+          <span class="sub" style="color:var(--fg2)">Llevan más días de los que aguanta su etapa. La primera: Luis Pardo, 12 días en Propuesta.</span>
+          <a class="btn-contrast" href="Detalle.dc.html" style="margin-top:4px">Ver la primera<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+        </article>
+      </section>
+
+      <section class="board" aria-label="Tablero de Ventas de viajes">
+        <sc-for list="{{columns}}" as="c" hint-placeholder-count="5">
+          <section class="col" aria-label="Etapa {{c.name}}">
+            <header class="colh">
+              <div class="colt"><span style="display:inline-flex;align-items:center;gap:8px;min-width:0"><span class="dot" style="width:8px;height:8px;background:{{c.color}}"></span>{{c.name}}<span class="cnt">{{c.prob}}</span></span><span class="cnt">{{c.count}}</span></div>
+              <span class="colv">{{c.value}}</span>
+            </header>
+            <sc-for list="{{c.cards}}" as="k" hint-placeholder-count="3">
+              <a class="dc {{k.onCls}}" href="Detalle.dc.html" aria-label="{{k.title}}, {{k.who}}, {{k.amount}}">
+                <div class="row"><span class="ttl">{{k.title}}</span><sc-if value="{{k.ai}}" hint-placeholder-val="{{false}}"><svg class="aig" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l1.8 5.4L19 10l-5.2 1.6L12 17l-1.8-5.4L5 10l5.2-1.6z"></path></svg></sc-if></div>
+                <div class="who"><span class="av">{{k.ini}}</span><span>{{k.who}}</span></div>
+                <div class="row"><span class="amt">{{k.amount}}</span><span class="meta">{{k.close}}</span></div>
+                <div class="row">
+                  <sc-if value="{{k.stalled}}" hint-placeholder-val="{{false}}"><span class="pill" style="height:22px;font-size:11.5px"><span class="dot" style="background:var(--warn)"></span>{{k.stallText}}</span></sc-if>
+                  <sc-if value="{{k.paused}}" hint-placeholder-val="{{false}}"><span class="pill" style="height:22px;font-size:11.5px"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"></rect><rect x="14" y="5" width="4" height="14" rx="1"></rect></svg>Axi no la mueve</span></sc-if>
+                  <sc-if value="{{k.plain}}" hint-placeholder-val="{{true}}"><span class="meta">{{k.age}}</span></sc-if>
+                  <span class="av" title="Responsable: {{k.ownerName}}" style="width:20px;height:20px;font-size:9px;background:transparent;border:1px solid var(--line2)">{{k.owner}}</span>
+                </div>
+              </a>
+            </sc-for>
+            <sc-if value="{{c.hasMore}}" hint-placeholder-val="{{true}}"><button type="button" class="more">{{c.moreText}}</button></sc-if>
+          </section>
+        </sc-for>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"selected":{"editor":null,"default":""},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { period: '30d' };
+  }
+  renderVals() {
+    const dark = this.props.dark === true;
+    const selected = this.props.selected || '';
+    const P = {
+      today: { label: 'Hoy', won: '1', val: '$ 3,2 M', cycle: 'Ciclo medio de 21 días, de abrir a ganar', rate: '100 %', of: '1 de 1 cerrada', line: 'Con un solo cierre la tasa aún no dice mucho' },
+      '7d': { label: '7 días', won: '3', val: '$ 11,8 M', cycle: 'Ciclo medio de 19 días, de abrir a ganar', rate: '60 %', of: '3 de 5 cerradas', line: 'Ganas 6 de cada 10 que llegan a cerrarse' },
+      '30d': { label: '30 días', won: '7', val: '$ 31,5 M', cycle: 'Ciclo medio de 18 días, de abrir a ganar', rate: '41 %', of: '7 de 17 cerradas', line: 'Ganas 4 de cada 10 que llegan a cerrarse' },
+      '90d': { label: '90 días', won: '19', val: '$ 84,0 M', cycle: 'Ciclo medio de 20 días, de abrir a ganar', rate: '42 %', of: '19 de 45 cerradas', line: 'Ganas 4 de cada 10 que llegan a cerrarse' }
+    };
+    const cur = P[this.state.period];
+    const periods = ['today', '7d', '30d', '90d'].map((k) => ({
+      label: P[k].label,
+      checked: this.state.period === k ? 'true' : 'false',
+      cls: this.state.period === k ? 'seg-on' : '',
+      pick: () => this.setState({ period: k })
+    }));
+    const card = (id, title, who, ini, amount, close, age, owner, ownerName, extra) => {
+      const x = extra || {};
+      return {
+        id, title, who, ini, amount, close, age, owner, ownerName,
+        ai: !!x.ai, stalled: !!x.stall, stallText: x.stall || '', paused: !!x.paused,
+        plain: !x.stall && !x.paused,
+        onCls: selected === id ? 'dc-on' : ''
+      };
+    };
+    const columns = [
+      { name: 'Nuevo', prob: '10 %', color: '#A1A1AA', count: '5', value: '$ 21,3 M', hasMore: true, moreText: 'Ver 2 más', cards: [
+        card('d1', 'San Andrés · luna de miel', 'Camila Ortiz', 'CO', '$ 6.800.000', 'cierra 15 oct', 'Hoy en la etapa', 'LM', 'Laura Méndez', { ai: true }),
+        card('d2', 'Europa clásica · 15 días', 'Mateo Ruiz', 'MR', '$ 9.600.000', 'cierra 30 oct', '2 días en la etapa', 'LM', 'Laura Méndez', { ai: true }),
+        card('d3', 'Santa Marta · fin de semana', 'Paula Vega', 'PV', '$ 1.900.000', 'sin fecha', '3 días en la etapa', 'JR', 'Julián Rojas')
+      ] },
+      { name: 'Contactado', prob: '20 %', color: '#3B82F6', count: '4', value: '$ 18,9 M', hasMore: true, moreText: 'Ver 1 más', cards: [
+        card('d4', 'Punta Cana · familia de 5', 'Andrés Molina', 'AM', '$ 11.200.000', 'cierra 20 oct', '4 días en la etapa', 'JR', 'Julián Rojas'),
+        card('d5', 'Eje cafetero · 3 días', 'Valentina Ríos', 'VR', '$ 2.300.000', 'cierra 5 oct', '1 día en la etapa', 'LM', 'Laura Méndez', { paused: true }),
+        card('d6', 'Perú · Machu Picchu', 'Diego Salas', 'DS', '$ 5.400.000', 'cierra 12 oct', '', 'JR', 'Julián Rojas', { stall: '5 días quieta · aguanta 5' })
+      ] },
+      { name: 'Calificado', prob: '40 %', color: '#8B5CF6', count: '6', value: '$ 27,4 M', hasMore: true, moreText: 'Ver 3 más', cards: [
+        card('d7', 'Cancún todo incluido · 4 personas', 'Sofía Herrera Castañeda', 'SH', '$ 12.400.000', 'cierra 9 oct', '', 'LM', 'Laura Méndez', { stall: '9 días quieta · aguanta 7' }),
+        card('d8', 'Bogotá · viaje de incentivos', 'Carlos Ruiz', 'CR', '$ 8.300.000', 'cierra 18 oct', '2 días en la etapa', 'JR', 'Julián Rojas', { ai: true }),
+        card('d9', 'Cartagena · boda', 'Laura Pinzón', 'LP', '$ 6.700.000', 'cierra 1 nov', '3 días en la etapa', 'LM', 'Laura Méndez')
+      ] },
+      { name: 'Propuesta', prob: '60 %', color: '#F59E0B', count: '5', value: '$ 19,6 M', hasMore: true, moreText: 'Ver 2 más', cards: [
+        card('d10', 'Cartagena · viaje de empresa', 'Luis Pardo', 'LP', '$ 8.900.000', 'cierra 30 sep', '', 'LM', 'Laura Méndez', { stall: '12 días quieta · aguanta 10', ai: true }),
+        card('d11', 'Miami · compras', 'Natalia Ortega', 'NO', '$ 4.200.000', 'cierra 2 oct', '1 día en la etapa', 'JR', 'Julián Rojas'),
+        card('d12', 'Galápagos · crucero', 'Jorge Álvarez', 'JA', '$ 6.500.000', 'cierra 14 oct', '6 días en la etapa', 'LM', 'Laura Méndez')
+      ] },
+      { name: 'Negociación', prob: '80 %', color: '#10B981', count: '3', value: '$ 9,2 M', hasMore: false, moreText: '', cards: [
+        card('d13', 'Madrid y Lisboa', 'Ana Gómez', 'AG', '$ 5.100.000', 'cierra 28 sep', '2 días en la etapa', 'JR', 'Julián Rojas'),
+        card('d14', 'Capurganá · buceo', 'Tomás Mejía', 'TM', '$ 2.600.000', 'cierra 3 oct', '4 días en la etapa', 'LM', 'Laura Méndez'),
+        card('d15', 'Aruba · aniversario', 'Mariana Peña', 'MP', '$ 1.500.000', 'cierra 6 oct', '1 día en la etapa', 'JR', 'Julián Rojas')
+      ] }
+    ];
+    return {
+      themeCls: dark ? 'dk' : 'lt',
+      islCls: dark ? 'isl-dark' : 'isl-glass',
+      periods,
+      periodLabel: cur.label.toLowerCase(),
+      wonCount: cur.won, wonValue: cur.val, cycle: cur.cycle,
+      rate: cur.rate, rateOf: cur.of, rateLine: cur.line,
+      columns
+    };
+  }
+}
+</script>
+</body>
+</html>
