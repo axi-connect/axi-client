@@ -9,7 +9,7 @@
 > | Fase | Qué | Lienzo | Estado |
 > |---|---|---|---|
 > | F1 | La bandeja: shell del workspace, lista, vistas y el panel sin conversación («Tu día») | https://claude.ai/artifact/WrEnSotKFPTjsQsgjP3WMd | Aprobado el 2026-09-26, en implementación |
-> | F2 | La conversación: cabecera, hilo, eventos de handoff en el hilo, «Por qué está aquí», pie cerrado | — | — |
+> | F2 | La conversación: cabecera, hilo, eventos de handoff en el hilo, «Por qué está aquí», pie cerrado | https://claude.ai/artifact/C3eXTy2imH6Qv7eGRWMMgc | Lienzo publicado, por aprobar (con la D1) |
 > | F3 | Escribir y medios: composer, adjuntos, nota de voz, acciones rápidas, burbujas de media, visor | — | — |
 > | F4 | El contexto: rail y paneles (Contacto, Adjuntos, Historial, Llamadas) | — | — |
 >
@@ -269,6 +269,13 @@ Solo cliente.
   `returned_to_ai`, `sla_breached` y `status_changed`, y con ellos se invalida `events`. `note_added` y
   `priority_changed` no tienen evento WS. Por eso `events` de la conversación ACTIVA se relee al abrirla y con el tick de un minuto mientras la pestaña está visible (`visibilityState === "visible"`); en una pestaña oculta no se relee, y al volver a visible se relee en el acto (`visibilitychange`), sin esperar al tick. Un test lo fija: con reloj falso, abrir hace 1 petición, cada minuto visible suma 1 una pestaña oculta no suma ninguna y pasar de oculta a visible suma 1 de inmediato. Nadie debe leer esas dos líneas como en vivo. Un `conversation.event_added` genérico cerraría ese
   hueco.
+- **El motivo libre del handoff por herramienta se pierde.** El tool `human_handoff` recibe `args.reason` (la razón
+  que escribe el agente), pero el evento `escalated` guarda solo `reason: 'tool'`
+  (`conversation_processing.processor.ts`). La isla de F2 dice entonces «Axi decidió que esta la atienda el equipo».
+  Si el servidor guardara `detail: args.reason` en el payload, la isla contaría la razón real. Es un cambio pequeño
+  y opcional.
+- **`reopened` no lo emite nadie.** El tipo existe en el DTO, pero ningún caso de uso lo escribe, así que el pie de
+  una conversación cerrada no promete que «se reabre sola».
 - **La prioridad no se puede cambiar desde el cliente** (no hay endpoint), así que queda de solo lectura.
 - **La tarea anotada por Cobros** (el panel `orders` del rail, medios de WhatsApp Web y `delivered`) se contrasta con
   el código al abrir F3/F4. No se hereda sin verificarla.
