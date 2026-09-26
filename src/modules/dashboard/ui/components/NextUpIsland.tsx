@@ -233,28 +233,25 @@ function NextUpRow({ item, countWidth }: { item: NextUpItem; countWidth: string 
       href={item.href}
       className="-mx-1.5 flex min-h-11 items-center gap-3.5 rounded-xl px-1.5 py-3.5 transition-colors hover:bg-foreground/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground/50"
     >
-      {item.count !== null ? (
-        <span
-          className="font-heading shrink-0 text-[1.75rem] leading-none font-extrabold tracking-tight tabular-nums"
-          style={{ minWidth: `max(2.5rem, ${countWidth})` }}
-        >
-          {formatInteger(item.count)}
-        </span>
-      ) : (
-        <span
-          aria-hidden="true"
-          // El mismo cuerpo que la cifra: así `ch` mide igual en las dos columnas.
-          className="bg-foreground/6 relative flex h-10 shrink-0 items-center justify-center rounded-xl text-[1.75rem]"
-          style={{ width: `max(2.5rem, ${countWidth})` }}
-        >
-          <Icon className="size-4.5" />
-          {item.tone !== "neutral" ? (
-            <span className={cn("ring-background absolute -top-0.5 -right-0.5 size-2.5 rounded-full ring-2", DOT[item.tone])} />
-          ) : null}
-        </span>
-      )}
+      {/* La columna delantera: una sola medida para todas las filas, en el cuerpo de la cifra (Nexa 1.75rem), así
+          `ch` mide lo mismo con cifra que con icono. El icono va en su casilla fija de 2.5rem dentro de ella. */}
+      <span
+        className="font-heading flex shrink-0 items-center text-[1.75rem] leading-none font-extrabold tracking-tight tabular-nums"
+        style={{ width: `max(2.5rem, ${countWidth})` }}
+      >
+        {item.count !== null ? (
+          formatInteger(item.count)
+        ) : (
+          <span aria-hidden="true" className="bg-foreground/6 relative flex size-10 items-center justify-center rounded-xl">
+            <Icon className="size-4.5" />
+            {item.tone !== "neutral" ? (
+              <span className={cn("ring-background absolute -top-0.5 -right-0.5 size-2.5 rounded-full ring-2", DOT[item.tone])} />
+            ) : null}
+          </span>
+        )}
+      </span>
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="text-[0.9rem] font-semibold whitespace-nowrap">{item.title}</span>
+        <span className="text-[0.9rem] leading-snug font-semibold text-pretty">{item.title}</span>
         <span className="text-muted-foreground truncate text-xs" title={item.detail}>
           {item.detail}
         </span>

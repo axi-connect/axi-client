@@ -37,15 +37,15 @@ export function useDashboardRealtime(perms: DashboardPerms): { live: boolean } {
   const salesEvent = () => {
     if (!perms.orders) return;
     debounce("sales", () => {
-      void store.getState().refreshSales();
-      void store.getState().refreshTopProducts();
+      void store.getState().refreshSales({ silent: true });
+      void store.getState().refreshTopProducts({ silent: true });
     });
   };
   const conversationsEvent = () => {
     if (!perms.conversations) return;
     debounce("conversations", () => {
-      void store.getState().refreshAttention();
-      void store.getState().refreshConversations();
+      void store.getState().refreshAttention({ silent: true });
+      void store.getState().refreshConversations({ silent: true });
     });
   };
 

@@ -103,6 +103,16 @@ describe("dashboard.store — recargas sin volver a la silueta (auditoría P2-1)
     expect(useDashboardStore.getState().attention).toMatchObject({ status: "ready", data: { queued: 5 } });
   });
 
+  it("la recarga de un evento en vivo es silenciosa: con dato, no pasa por «cargando»", async () => {
+    await useDashboardStore.getState().load(ALL);
+    const seen: string[] = [];
+    const unsubscribe = useDashboardStore.subscribe((state) => seen.push(state.attention.status));
+    await useDashboardStore.getState().refreshAttention({ silent: true });
+    unsubscribe();
+    expect(seen).not.toContain("loading");
+    expect(useDashboardStore.getState().attention.status).toBe("ready");
+  });
+
   it("si la recarga falla, manda el error (no se queda el dato viejo como si fuera actual)", async () => {
     await useDashboardStore.getState().load(ALL);
     (getUsageSummary as jest.Mock).mockRejectedValueOnce(new Error("boom"));
