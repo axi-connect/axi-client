@@ -125,3 +125,19 @@ export function describeQuietHours(start: number, end: number): QuietHoursDescri
     text: `De ${formatHour(start)} a ${formatHour(end)}${suffix} — ${String(hours)} ${plural} en silencio.`,
   };
 }
+
+/**
+ * «El día del agente» (lienzo CRM premium F4 · Tareas de agente): la política
+ * entera en una frase. Las horas de trabajo son el complemento del silencio
+ * (el silencio va de `start` a `end`, así que trabaja de `end` a `start`).
+ */
+export function agentDaySentence(settings: AgentTaskSettings): string {
+  if (!settings.enabled) return "Hoy no trabaja: las tareas programadas esperan a que lo enciendas.";
+  const window =
+    settings.quiet_start_hour === settings.quiet_end_hour
+      ? "Trabaja a cualquier hora"
+      : `Trabaja de ${formatHour(settings.quiet_end_hour)} a ${formatHour(settings.quiet_start_hour)}`;
+  const tasks = settings.daily_cap === 1 ? "1 tarea" : `${String(settings.daily_cap)} tareas`;
+  const calls = settings.call_daily_cap === 1 ? "1 llamada" : `${String(settings.call_daily_cap)} llamadas`;
+  return `${window}, hasta ${tasks} y ${calls} al día.`;
+}

@@ -163,3 +163,35 @@ export function toUpsertDTO(input: {
     })),
   };
 }
+
+/**
+ * «Así lo vive el contacto» (lienzo CRM premium F4 · editar secuencia): la
+ * secuencia contada desde el otro lado, con las fechas de quien se inscriba
+ * en `from`. Solo la fecha: la hora la pone el horario de trabajo del motor.
+ */
+export function sequenceStory(
+  input: { steps: readonly DraftStep[]; stop_on_reply: boolean },
+  from: Date,
+): { headline: string; days: { when: string; channel: DraftStep["task_channel"]; objective: string }[] } | null {
+  if (input.steps.length === 0) return null;
+  const steps = [...input.steps].sort((a, b) => a.offset_hours - b.offset_hours);
+  const span = steps[steps.length - 1].offset_hours;
+  const spanText =
+    span < DAY_HOURS
+      ? `${String(span)} h`
+      : `${String(Math.round(span / DAY_HOURS))} ${Math.round(span / DAY_HOURS) === 1 ? "día" : "días"}`;
+  const count = steps.length === 1 ? "Un paso" : `${String(steps.length)} pasos en ${spanText}`;
+  const stop = input.stop_on_reply ? "Si responde en cualquiera, se detiene y el agente conversa." : "Sigue aunque responda.";
+  return {
+    headline: `${count}. ${stop}`,
+    days: steps.map((step) => ({
+      when: new Date(from.getTime() + step.offset_hours * HOUR_MS).toLocaleDateString("es-CO", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+      }),
+      channel: step.task_channel,
+      objective: step.objective.trim(),
+    })),
+  };
+}

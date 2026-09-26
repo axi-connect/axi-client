@@ -10,9 +10,10 @@ import { useAlert } from "@/core/providers/alert-provider";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { TableSkeleton } from "@/shared/components/features/loading";
+import { Skeleton } from "@/shared/components/ui/skeleton";
 import {
   compactSegmentFilters,
-  describeSegmentFilters,
+  segmentFilterChips,
   type SegmentContactDTO,
   type SegmentDTO,
   type SegmentFilters,
@@ -74,12 +75,12 @@ function SegmentBuilder({
   };
 
   return (
-    <div className="space-y-4 rounded-2xl border border-primary/30 bg-background p-4 md:p-6">
-      <h3 className="text-base font-semibold">
-        {segment !== null ? `Editar “${segment.name}”` : "Nuevo segmento"}
-      </h3>
+    <div className="@container space-y-4 rounded-3xl border border-border bg-card p-5">
+      <h2 className="truncate font-heading text-base font-bold">
+        {segment !== null ? `Editar «${segment.name}»` : "Nuevo segmento"}
+      </h2>
 
-      <div className="grid gap-3 md:grid-cols-2">
+      <div className="grid gap-3">
         <div className="space-y-1.5">
           <label htmlFor="seg-name" className="text-xs font-medium text-muted-foreground">Nombre</label>
           <Input id="seg-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Leads calientes" />
@@ -99,8 +100,8 @@ function SegmentBuilder({
       />
 
       <div className="flex justify-end gap-2">
-        <Button variant="outline" onClick={onCancel}>Cancelar</Button>
-        <Button disabled={saving} onClick={() => void handleSave()}>
+        <Button variant="ghost" className="rounded-full" onClick={onCancel}>Cancelar</Button>
+        <Button className="rounded-full" disabled={saving} onClick={() => void handleSave()}>
           {saving ? "Guardando…" : "Guardar segmento"}
         </Button>
       </div>
@@ -108,7 +109,11 @@ function SegmentBuilder({
   );
 }
 
-/** Card de segmento con vista previa expandible (`GET :id/contacts`). */
+/**
+ * Ficha de segmento (lienzo CRM premium F4): nombre y cuántos contactos cumple
+ * HOY (`GET :id/contacts` con una fila: basta el `meta.total`), los filtros en
+ * chips y lo que se hace con él. La vista previa de cinco sigue a un clic.
+ */
 function SegmentCard({
   segment,
   tags,
@@ -124,7 +129,21 @@ function SegmentCard({
   const { hasPermission } = useAuth();
   const canExport = hasPermission("contacts:export");
   const [expanded, setExpanded] = useState(false);
-  const [preview, setPreview] = useState<{ total: number; rows: SegmentContactDTO[] } | null>(null);
+  const [total, setTotal] = useState<number | null>(null);
+  const [preview, setPreview] = useState<SegmentContactDTO[] | null>(null);
+  const chips = segmentFilterChips(segment.filters as SegmentFilters, tags);
+
+  useEffect(() => {
+    let alive = true;
+    listSegmentContacts(segment.id, { page: 1, page_size: 1 })
+      .then((res) => {
+        if (alive) setTotal(res.meta.total);
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, [segment.id, segment.updated_at]);
 
   const handleExport = () => {
     window.open(exportContactsUrl({ segment_id: segment.id }), "_blank");
@@ -139,7 +158,10 @@ function SegmentCard({
     setExpanded(next);
     if (next && preview === null) {
       listSegmentContacts(segment.id, { page: 1, page_size: 5 })
-        .then((res) => setPreview({ total: res.meta.total, rows: res.data }))
+        .then((res) => {
+          setTotal(res.meta.total);
+          setPreview(res.data);
+        })
         .catch((err: unknown) => {
           showAlert({ tone: "error", title: errorMessage(err, "No se pudo ejecutar el segmento") });
           setExpanded(false);
@@ -148,72 +170,104 @@ function SegmentCard({
   };
 
   return (
-    <li className="rounded-2xl border border-border bg-background p-4">
-      <div className="flex flex-wrap items-start justify-between gap-2">
+    <li className="flex min-w-0 flex-col gap-3 rounded-3xl border border-border bg-card p-5">
+      <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold">{segment.name}</p>
+          <h3 className="truncate font-heading text-base font-bold" title={segment.name}>
+            {segment.name}
+          </h3>
           {segment.description && (
-            <p className="mt-0.5 text-xs text-muted-foreground">{segment.description}</p>
+            <p className="truncate text-xs text-muted-foreground" title={segment.description}>
+              {segment.description}
+            </p>
           )}
-          <p className="mt-1 text-xs text-muted-foreground">
-            {describeSegmentFilters(segment.filters as SegmentFilters, tags)}
-          </p>
         </div>
-        <div className="flex flex-wrap items-center gap-1">
-          {/* F4a: el segmento deja de ser solo una lista que se mira. Se
-              resuelve AL PROGRAMAR: los que entren después no reciben nada de
-              ese lote — para eso están las secuencias. */}
-          <BulkFollowUpButton
-            audience={{ source: "segment", segment_id: segment.id }}
-            audienceLabel={`Del segmento «${segment.name}»`}
-            label="Poner al agente a trabajar"
-            variant="outline"
-          />
-          <EnrollInSequenceButton audience={{ source: "segment", segment_id: segment.id }} />
-          {canExport && (
+        <div className="flex shrink-0 items-center gap-3">
+          <div className="flex items-baseline gap-1.5 whitespace-nowrap">
+            {total === null ? (
+              <Skeleton className="h-6 w-10 rounded-md" />
+            ) : (
+              <span className="font-heading text-2xl leading-none font-bold tabular-nums">{total}</span>
+            )}
+            <span className="text-xs text-muted-foreground">{total === 1 ? "contacto" : "contactos"}</span>
+          </div>
+          <span className="-mr-2 flex items-center">
+            {canExport && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-9 rounded-full"
+                aria-label={`Exportar ${segment.name} a CSV`}
+                onClick={handleExport}
+              >
+                <Download className="size-4" />
+              </Button>
+            )}
+            <Button variant="ghost" size="icon" className="size-9 rounded-full" aria-label={`Editar ${segment.name}`} onClick={onEdit}>
+              <Pencil className="size-4" />
+            </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="size-7"
-              aria-label={`Exportar ${segment.name} a CSV`}
-              onClick={handleExport}
+              className="size-9 rounded-full text-muted-foreground hover:text-destructive"
+              aria-label={`Eliminar ${segment.name}`}
+              onClick={onDelete}
             >
-              <Download className="size-3.5" />
+              <Trash2 className="size-4" />
             </Button>
-          )}
-          <Button variant="ghost" size="icon" className="size-7" aria-label={`Editar ${segment.name}`} onClick={onEdit}>
-            <Pencil className="size-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-7 text-muted-foreground hover:text-destructive"
-            aria-label={`Eliminar ${segment.name}`}
-            onClick={onDelete}
-          >
-            <Trash2 className="size-3.5" />
-          </Button>
+          </span>
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={togglePreview}
-        aria-expanded={expanded}
-        className="mt-2 flex items-center gap-1.5 text-xs font-medium text-brand transition-colors hover:opacity-80"
-      >
-        <Users className="size-3.5" aria-hidden />
-        {preview !== null ? `${preview.total} contactos` : "Ver contactos"}
-        <ChevronDown className={cn("size-3.5 transition-transform", expanded && "rotate-180")} aria-hidden />
-      </button>
+      <div className="flex min-w-0 flex-wrap gap-1.5">
+        {chips.length === 0 ? (
+          <span className="inline-flex h-7 items-center rounded-full border border-border px-3 text-xs text-muted-foreground">
+            Todos los contactos
+          </span>
+        ) : (
+          chips.map((chip) => (
+            <span
+              key={chip.label}
+              title={`${chip.label}: ${chip.value}`}
+              className="inline-flex h-7 max-w-full min-w-0 items-center gap-1 rounded-full border border-border px-3 text-xs"
+            >
+              <span className="shrink-0 text-muted-foreground">{chip.label}</span>
+              <span className="truncate font-medium">{chip.value}</span>
+            </span>
+          ))
+        )}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-1.5 border-t border-border pt-3">
+        {/* F4a: el segmento deja de ser solo una lista que se mira. Se
+            resuelve AL PROGRAMAR: los que entren después no reciben nada de
+            ese lote — para eso están las secuencias. */}
+        <BulkFollowUpButton
+          audience={{ source: "segment", segment_id: segment.id }}
+          audienceLabel={`Del segmento «${segment.name}»`}
+          label="Poner al agente a trabajar"
+          variant="outline"
+        />
+        <EnrollInSequenceButton audience={{ source: "segment", segment_id: segment.id }} />
+        <button
+          type="button"
+          onClick={togglePreview}
+          aria-expanded={expanded}
+          className="inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-medium hover:bg-muted"
+        >
+          <Users className="size-3.5" aria-hidden />
+          Ver contactos
+          <ChevronDown className={cn("size-3.5 transition-transform", expanded && "rotate-180")} aria-hidden />
+        </button>
+      </div>
 
       {expanded && preview !== null && (
-        <ul className="mt-2 divide-y divide-border rounded-xl border border-border">
-          {preview.rows.length === 0 ? (
-            <li className="px-3 py-2 text-xs text-muted-foreground">Ningún contacto cumple los filtros.</li>
+        <ul className="divide-y divide-border rounded-2xl border border-border">
+          {preview.length === 0 ? (
+            <li className="px-3 py-2.5 text-xs text-muted-foreground">Ningún contacto cumple los filtros.</li>
           ) : (
-            preview.rows.map((contact) => (
-              <li key={contact.id} className="flex items-center justify-between gap-2 px-3 py-2 text-xs">
+            preview.map((contact) => (
+              <li key={contact.id} className="flex min-w-0 items-center justify-between gap-2 px-3 py-2.5 text-xs">
                 <span className="min-w-0 truncate font-medium">{contact.full_name ?? contact.phone ?? contact.email ?? "Sin nombre"}</span>
                 <span className="shrink-0 text-muted-foreground">{contact.city ?? ""}</span>
               </li>
@@ -280,41 +334,58 @@ export function SegmentsManager() {
   if (segments === null) return <TableSkeleton rows={4} showHeader={false} />;
 
   return (
-    <div className="space-y-4">
-      {editing !== null ? (
-        <SegmentBuilder
-          segment={editing === "new" ? null : editing}
-          tags={tags}
-          onDone={() => {
-            setEditing(null);
-            load();
-          }}
-          onCancel={() => setEditing(null)}
-        />
-      ) : (
-        <Button variant="outline" className="rounded-full" onClick={() => setEditing("new")}>
-          <Plus className="size-4" />
-          Nuevo segmento
-        </Button>
-      )}
+    <div className="@container min-w-0">
+      <div className="grid min-w-0 items-start gap-4 @min-[60rem]:grid-cols-[minmax(0,1fr)_minmax(20rem,26rem)]">
+        <section className="min-w-0 space-y-3" aria-label="Segmentos">
+          <p className="px-1 text-xs text-muted-foreground">
+            {segments.length} {segments.length === 1 ? "segmento" : "segmentos"} · se recalculan solos cuando cambian los contactos
+          </p>
+          {segments.length === 0 ? (
+            <p className="rounded-3xl border border-dashed border-border px-5 py-8 text-center text-sm text-pretty text-muted-foreground">
+              Sin segmentos todavía. Un segmento guarda un filtro de contactos para ponerlo a trabajar, inscribirlo en una
+              secuencia o exportarlo.
+            </p>
+          ) : (
+            <ul className="space-y-3">
+              {segments.map((segment) => (
+                <SegmentCard
+                  key={segment.id}
+                  segment={segment}
+                  tags={tags}
+                  onEdit={() => setEditing(segment)}
+                  onDelete={() => handleDelete(segment)}
+                />
+              ))}
+            </ul>
+          )}
+        </section>
 
-      {segments.length === 0 && editing === null ? (
-        <p className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-          Sin segmentos todavía. Un segmento guarda un filtro de contactos para reutilizarlo y exportarlo.
-        </p>
-      ) : (
-        <ul className="space-y-3">
-          {segments.map((segment) => (
-            <SegmentCard
-              key={segment.id}
-              segment={segment}
+        <div className="min-w-0 @min-[60rem]:sticky @min-[60rem]:top-4">
+          {editing !== null ? (
+            <SegmentBuilder
+              key={editing === "new" ? "new" : editing.id}
+              segment={editing === "new" ? null : editing}
               tags={tags}
-              onEdit={() => setEditing(segment)}
-              onDelete={() => handleDelete(segment)}
+              onDone={() => {
+                setEditing(null);
+                load();
+              }}
+              onCancel={() => setEditing(null)}
             />
-          ))}
-        </ul>
-      )}
+          ) : (
+            <div className="flex flex-col items-start gap-3 rounded-3xl border border-dashed border-border p-5">
+              <h2 className="font-heading text-base font-bold">Nuevo segmento</h2>
+              <p className="text-sm text-pretty text-muted-foreground">
+                Elige quién entra con filtros; el segmento se mantiene al día solo.
+              </p>
+              <Button variant="outline" className="rounded-full" onClick={() => setEditing("new")}>
+                <Plus className="size-4" />
+                Nuevo segmento
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

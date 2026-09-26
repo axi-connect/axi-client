@@ -51,7 +51,7 @@ function FieldRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="grouped-row flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5 px-4 py-2.5">
+    <div className="grouped-row grid items-center gap-x-4 gap-y-1.5 px-4 py-2.5 @min-[34rem]:grid-cols-[minmax(0,1fr)_14rem] md:px-5">
       <div className="min-w-0 text-sm">
         <label htmlFor={htmlFor} className="block">
           {label}
@@ -62,7 +62,7 @@ function FieldRow({
           </p>
         )}
       </div>
-      <div className="w-full sm:w-56">{children}</div>
+      <div className="min-w-0">{children}</div>
     </div>
   );
 }
@@ -184,7 +184,7 @@ export function JourneyCadenceFields({
   const movesOn = movesOnCopy(stage, switches);
 
   return (
-    <div className="border-t border-border/70 bg-foreground/[0.02]">
+    <div className="@container border-t border-border/70 bg-foreground/[0.02]">
       {cadence === null ? (
         <div className="grouped-row flex flex-wrap items-center justify-between gap-3 px-4 py-2.5">
           <div className="text-sm">

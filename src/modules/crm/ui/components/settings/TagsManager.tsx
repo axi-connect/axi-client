@@ -22,10 +22,13 @@ import {
  */
 function TagRow({
   tag,
+  maxCount,
   onSaved,
   onDelete,
 }: {
   tag: TagDTO;
+  /** El que más contactos tiene: la barra es relativa a él. */
+  maxCount: number;
   onSaved: (tags: TagDTO[]) => void;
   onDelete: (tag: TagDTO) => void;
 }) {
@@ -42,15 +45,22 @@ function TagRow({
       );
   };
 
+  const color = tag.color ?? "#a1a1aa";
+  const share = maxCount > 0 ? tag.contact_count / maxCount : 0;
+
   return (
-    <li className="flex items-center gap-2.5 px-4 py-2.5">
-      <input
-        type="color"
-        value={tag.color ?? "#a1a1aa"}
-        onChange={(e) => patch({ color: e.target.value })}
-        aria-label={`Color de ${tag.name}`}
-        className="size-7 shrink-0 cursor-pointer rounded-md border border-input bg-background p-0.5"
-      />
+    <li className="grid grid-cols-[2.25rem_minmax(0,1fr)_2.25rem] items-center gap-x-2 gap-y-1.5 border-t border-border px-3 py-2 first:border-t-0 @min-[36rem]:grid-cols-[2.25rem_minmax(0,1fr)_minmax(8rem,14rem)_2.25rem] @min-[36rem]:px-4">
+      {/* El color como punto: el input nativo encima, invisible (objetivo de 36 px). */}
+      <label className="relative grid size-9 cursor-pointer place-items-center rounded-full hover:bg-muted">
+        <span aria-hidden className="size-3 rounded-full ring-1 ring-foreground/10" style={{ backgroundColor: color }} />
+        <input
+          type="color"
+          value={color}
+          onChange={(e) => patch({ color: e.target.value })}
+          aria-label={`Color de ${tag.name}`}
+          className="absolute inset-0 cursor-pointer opacity-0"
+        />
+      </label>
       <Input
         value={name}
         onChange={(e) => setName(e.target.value)}
@@ -60,21 +70,27 @@ function TagRow({
           else setName(tag.name);
         }}
         maxLength={40}
-        className="h-8 max-w-56"
+        title={name}
+        className="h-9 min-w-0 rounded-xl border-transparent bg-transparent shadow-none hover:border-input focus-visible:border-input"
         aria-label="Nombre de la etiqueta"
       />
-      <span className="text-xs text-muted-foreground tabular-nums">
-        {tag.contact_count} contacto{tag.contact_count === 1 ? "" : "s"}
-      </span>
       <Button
         variant="ghost"
         size="icon"
-        className="ml-auto size-7 text-muted-foreground hover:text-destructive"
+        className="size-9 rounded-full text-muted-foreground hover:text-destructive @min-[36rem]:order-last"
         aria-label={`Eliminar etiqueta ${tag.name}`}
         onClick={() => onDelete(tag)}
       >
-        <Trash2 className="size-3.5" />
+        <Trash2 className="size-4" />
       </Button>
+      <span className="col-span-full grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 pl-[2.75rem] @min-[36rem]:col-span-1 @min-[36rem]:pl-0">
+        <span aria-hidden className="h-2 overflow-hidden rounded-full bg-muted">
+          <span className="block h-full rounded-full" style={{ width: `${String(Math.round(share * 100))}%`, backgroundColor: color }} />
+        </span>
+        <span className="text-xs whitespace-nowrap text-muted-foreground tabular-nums">
+          {tag.contact_count} contacto{tag.contact_count === 1 ? "" : "s"}
+        </span>
+      </span>
     </li>
   );
 }
@@ -124,49 +140,66 @@ export function TagsManager() {
 
   if (tags === null) return <TableSkeleton rows={4} showHeader={false} />;
 
-  return (
-    <div className="space-y-3">
-      {tags.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-          Aún no hay etiquetas. Crea la primera para clasificar tus contactos.
-        </p>
-      ) : (
-        <ul className="divide-y divide-border rounded-2xl border border-border bg-background">
-          {tags.map((tag) => (
-            <TagRow key={tag.id} tag={tag} onSaved={setTags} onDelete={handleDelete} />
-          ))}
-        </ul>
-      )}
+  const maxCount = Math.max(0, ...tags.map((tag) => tag.contact_count));
+  const unused = tags.filter((tag) => tag.contact_count === 0).length;
 
-      <form
-        className="flex items-center gap-1.5"
-        onSubmit={(e) => {
-          e.preventDefault();
-          const name = newName.trim();
-          if (!name) return;
-          createTag({ name })
-            .then((fresh) => {
-              setTags(fresh);
-              setNewName("");
-            })
-            .catch((err: unknown) =>
-              showAlert({ tone: "error", title: errorMessage(err, "No se pudo crear la etiqueta") }),
-            );
-        }}
-      >
-        <Input
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
-          placeholder="Nueva etiqueta…"
-          maxLength={40}
-          className="h-9 max-w-60"
-          aria-label="Nombre de la nueva etiqueta"
-        />
-        <Button type="submit" size="sm" variant="outline" className="rounded-full">
-          <Plus className="size-3.5" />
-          Crear
-        </Button>
-      </form>
+  return (
+    <div className="@container min-w-0">
+      <div className="grid min-w-0 items-start gap-4 @min-[52rem]:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)]">
+        <section className="@container min-w-0 overflow-hidden rounded-3xl border border-border bg-card" aria-label="Etiquetas">
+          <header className="flex items-baseline justify-between gap-3 px-4 pt-4 pb-2 @min-[36rem]:px-5">
+            <h2 className="font-heading text-base font-bold">Etiquetas · {tags.length}</h2>
+            {unused > 0 && (
+              <span className="text-xs whitespace-nowrap text-muted-foreground">
+                {unused} sin usar
+              </span>
+            )}
+          </header>
+          {tags.length === 0 ? (
+            <p className="px-5 pt-2 pb-6 text-sm text-pretty text-muted-foreground">
+              Aún no hay etiquetas. Crea la primera para clasificar tus contactos.
+            </p>
+          ) : (
+            <ul className="border-t border-border">
+              {tags.map((tag) => (
+                <TagRow key={tag.id} tag={tag} maxCount={maxCount} onSaved={setTags} onDelete={handleDelete} />
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <form
+          className="flex min-w-0 flex-col gap-3 rounded-3xl border border-border bg-card p-5 @min-[52rem]:sticky @min-[52rem]:top-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const name = newName.trim();
+            if (!name) return;
+            createTag({ name })
+              .then((fresh) => {
+                setTags(fresh);
+                setNewName("");
+              })
+              .catch((err: unknown) =>
+                showAlert({ tone: "error", title: errorMessage(err, "No se pudo crear la etiqueta") }),
+              );
+          }}
+        >
+          <h2 className="font-heading text-base font-bold">Nueva etiqueta</h2>
+          <Input
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            placeholder="Semana Santa"
+            maxLength={40}
+            className="h-9 rounded-xl"
+            aria-label="Nombre de la nueva etiqueta"
+          />
+          <p className="text-xs text-pretty text-muted-foreground">El color se elige después, en su punto de la lista.</p>
+          <Button type="submit" size="sm" className="w-fit rounded-full">
+            <Plus className="size-3.5" />
+            Crear etiqueta
+          </Button>
+        </form>
+      </div>
     </div>
   );
 }

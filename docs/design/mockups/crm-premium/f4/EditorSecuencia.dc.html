@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>CRM · Configuración · Editar secuencia</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&amp;family=Poppins:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#F5F5F7}
+.lt{--bg:#F5F5F7;--side:#FFFFFF;--card:#FFFFFF;--fg:#0B0B0E;--fg2:#3A3A40;--mut:#6B6B73;--line:rgba(0,0,0,.07);--line2:rgba(0,0,0,.12);--chip:#F0F0F2;--brand:#D13F42;--onbrand:#FFFFFF;--acc:rgba(230,87,89,.12);--track:#ECECEF;--ok:#1F9D5B;--warn:#D97706;--bad:#DC2626;--ai:#7C3AED;--sh:0 1px 0 rgba(0,0,0,.03),0 8px 20px -16px rgba(16,16,24,.25)}
+.dk{--bg:#0A0A0A;--side:#0F0F11;--card:#141416;--fg:#EDEDED;--fg2:#C4C4CC;--mut:#A1A1AA;--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.14);--chip:rgba(255,255,255,.08);--brand:#FB7185;--onbrand:#1A0508;--acc:rgba(251,113,133,.16);--track:rgba(255,255,255,.10);--ok:#4ADE80;--warn:#FBBF24;--bad:#F87171;--ai:#A78BFA;--sh:none}
+a{color:inherit}
+.app{width:1440px;height:1000px;display:flex;background:var(--bg);color:var(--fg);overflow:hidden;font-family:Poppins,system-ui,sans-serif}
+.d{font-family:Urbanist,Poppins,sans-serif}
+.side{width:248px;flex-shrink:0;padding:14px 10px;box-sizing:border-box;display:flex;flex-direction:column;gap:2px;border-right:1px solid var(--line);background:var(--side)}
+.nav{display:flex;align-items:center;gap:10px;height:34px;padding:0 10px;border-radius:10px;font-size:13.5px;color:var(--fg2);text-decoration:none;white-space:nowrap}
+.nav-on{background:var(--acc);color:var(--fg);font-weight:500}
+.card{background:var(--card);border-radius:24px;border:1px solid var(--line);box-shadow:var(--sh)}
+.lbl{font-size:12px;color:var(--mut);white-space:nowrap}
+.kick{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);white-space:nowrap}
+.tabs{display:flex;gap:4px;padding:4px;border-radius:999px;background:var(--card);border:1px solid var(--line)}
+.tab{height:34px;padding:0 13px;border-radius:999px;font:500 13px Poppins,sans-serif;color:var(--mut);display:inline-flex;align-items:center;gap:7px;text-decoration:none;white-space:nowrap}
+.tab-on{background:var(--acc);color:var(--fg)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:38px;padding:0 16px;border-radius:999px;font:500 13px Poppins,sans-serif;border:1px solid var(--line2);background:var(--card);color:var(--fg);cursor:pointer;text-decoration:none;white-space:nowrap}
+.btn-g{border-color:transparent;background:transparent;color:var(--fg2)}
+.btn-bad{border-color:transparent;background:transparent;color:var(--bad)}
+.pill{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 9px;border-radius:999px;font-size:11.5px;font-weight:500;background:var(--chip);color:var(--fg);white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:9px;flex-shrink:0;display:inline-block}
+.pl{display:flex;flex-direction:column;gap:4px;padding:14px 16px;border-radius:18px;border:1px solid var(--line);background:var(--card);text-align:left;cursor:pointer;font:inherit;color:inherit;min-width:0}
+.pl-on{border-color:var(--fg);box-shadow:0 0 0 1px var(--fg)}
+.nm{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st{display:grid;grid-template-columns:24px 28px minmax(0,1fr) 150px 170px 36px;gap:12px;align-items:center;padding:10px 20px;border-top:1px solid var(--line)}
+.inp{height:38px;border-radius:12px;border:1px solid var(--line2);padding:0 12px;font:500 13.5px Poppins,sans-serif;color:var(--fg);background:var(--card);box-sizing:border-box;width:100%;min-width:0;display:flex;align-items:center}
+.step{display:inline-flex;align-items:center;height:38px;border-radius:12px;border:1px solid var(--line2);background:var(--card);overflow:hidden}
+.step button{width:36px;height:36px;border:0;background:transparent;color:var(--fg2);font:600 16px Poppins,sans-serif;cursor:pointer}
+.step span{min-width:62px;text-align:center;font:600 13.5px Poppins,sans-serif;font-variant-numeric:tabular-nums}
+.sel{height:38px;border-radius:12px;border:1px solid var(--line2);padding:0 12px;font:13px Poppins,sans-serif;color:var(--fg);display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--card);white-space:nowrap}
+.icb{width:36px;height:36px;border-radius:999px;border:0;background:transparent;color:var(--mut);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.bar{display:grid;grid-template-columns:110px minmax(0,1fr) 90px;gap:10px;align-items:center;font-size:12.5px}
+.track{height:8px;border-radius:999px;background:var(--track);overflow:hidden}
+.isl{position:relative;isolation:isolate;overflow:hidden;border-radius:24px}
+.isl-glass{color:#0B0B0E;--mut:#5F5F68;--fg2:#3A3A40;--track:rgba(11,11,14,.08);background:radial-gradient(circle 20rem at 90% 8%,rgba(230,87,89,.16),transparent 70%),linear-gradient(160deg,rgba(255,255,255,.82),rgba(246,243,254,.62));-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);box-shadow:inset 0 2px 2px rgba(11,11,14,.05),inset 0 -2px 2px rgba(255,255,255,.5),inset 0 0 18px 2px rgba(255,255,255,.55),0 4px 2px -2px rgba(11,11,14,.14),0 30px 70px -34px rgba(16,16,24,.35),0 30px 80px -40px rgba(124,58,237,.35)}
+.isl-dark{color:#EDEDED;--mut:#A1A1AA;--fg2:#D4D4D8;--track:rgba(255,255,255,.10);background:radial-gradient(circle 20rem at 90% 8%,rgba(251,113,133,.26),transparent 70%),linear-gradient(160deg,rgba(38,38,42,.90),rgba(28,24,40,.92));box-shadow:inset 0 2px 2px rgba(255,255,255,.10),inset 0 -2px 2px rgba(0,0,0,.35),0 40px 90px -36px rgba(124,58,237,.55),0 18px 50px -24px rgba(230,87,89,.45)}
+.isl-glass::before,.isl-dark::before{content:"";position:absolute;inset:0;z-index:1;padding:1.5px;border-radius:inherit;pointer-events:none;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.isl-glass::before{background:conic-gradient(from -75deg at 50% 50%,rgba(11,11,14,.32) 0%,transparent 6% 40%,rgba(11,11,14,.32) 50%,transparent 56% 94%,rgba(11,11,14,.32) 100%),linear-gradient(rgba(255,255,255,.85),rgba(255,255,255,.85))}
+.isl-dark::before{background:conic-gradient(from -75deg at 50% 50%,rgba(255,255,255,.7) 0%,transparent 6% 40%,rgba(255,255,255,.7) 50%,transparent 56% 94%,rgba(255,255,255,.7) 100%),linear-gradient(rgba(255,255,255,.12),rgba(255,255,255,.12))}
+@media (prefers-reduced-transparency: reduce){.isl-glass{background:#FFFFFF}.isl-dark{background:#1E1E22}}
+
+.seg{display:inline-flex;flex-wrap:wrap;gap:4px;padding:3px;border-radius:14px;background:var(--chip)}
+.sg{height:32px;padding:0 12px;border-radius:11px;border:0;background:transparent;font:500 12.5px Poppins,sans-serif;color:var(--fg2);cursor:pointer;white-space:nowrap}
+.sg-on{background:var(--card);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.08),0 0 0 1px var(--line2)}
+.tg{width:44px;height:26px;border-radius:999px;border:0;background:var(--track);position:relative;cursor:pointer;flex-shrink:0;padding:0}
+.tg::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:99px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .15s}
+.tg-on{background:var(--fg)}.tg-on::after{left:21px}
+.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center;padding:14px 0;border-top:1px solid var(--line)}
+.rt{font-size:13.5px;font-weight:500}.rs{font-size:12px;color:var(--mut);margin-top:2px;line-height:1.4}
+.ink{position:relative;isolation:isolate;overflow:hidden;border-radius:999px;color:#EDEDED;background:linear-gradient(160deg,rgba(28,28,32,.94),rgba(18,18,22,.96));box-shadow:inset 0 1px 1px rgba(255,255,255,.12),0 20px 40px -18px rgba(0,0,0,.5)}
+.btn-c{border:0;background:#FFFFFF;color:#0B0B0E}
+.btn-gl{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#EDEDED}
+.isl .btn-c{background:#0B0B0E;color:#FFFFFF}
+.isl-dark .btn-c{background:#FFFFFF;color:#0B0B0E}
+.isl .btn-gl{border:1px solid rgba(11,11,14,.14);background:rgba(255,255,255,.5);color:#0B0B0E}
+.ai{background:radial-gradient(circle 22rem at 88% 0%,rgba(124,58,237,.20),transparent 70%),radial-gradient(circle 16rem at 0% 100%,rgba(230,87,89,.12),transparent 70%),linear-gradient(160deg,rgba(255,255,255,.84),rgba(246,243,254,.66))}
+.tl{display:grid;grid-template-columns:64px 18px minmax(0,1fr);gap:0 12px}
+.tl-d{font-size:12px;color:var(--mut);padding-top:2px;white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}
+.tl-l{display:flex;flex-direction:column;align-items:center}
+.tl-n{width:12px;height:12px;border-radius:99px;border:2px solid currentColor;box-sizing:border-box;margin-top:4px;flex-shrink:0}
+.tl-v{width:2px;flex-grow:1;background:var(--track);margin:3px 0;min-height:16px}
+.tl-b{padding-bottom:14px;min-width:0}
+.th{font-size:12px;color:var(--mut);font-weight:500;text-align:left;padding:10px 16px;white-space:nowrap;border-bottom:1px solid var(--line)}
+.td{font-size:13px;padding:12px 16px;border-bottom:1px solid var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:0}
+table{border-collapse:collapse;width:100%;table-layout:fixed}
+.flt{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 6px 0 12px;border-radius:999px;border:1px solid var(--line2);font-size:12.5px;white-space:nowrap;background:var(--card);max-width:100%}
+.flt b{font-weight:600}
+.x{width:24px;height:24px;border-radius:99px;border:0;background:transparent;color:var(--mut);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0}
+.scr{overflow:auto;scrollbar-gutter:stable}
+.scr::-webkit-scrollbar{width:8px;height:8px}.scr::-webkit-scrollbar-thumb{background:var(--line2);border-radius:99px}.scr::-webkit-scrollbar-track{background:transparent}
+.fl{display:flex;align-items:flex-start;gap:0;min-width:0}
+.fs{display:flex;flex-direction:column;gap:6px;min-width:0;flex:1 1 0}
+.fs-top{display:flex;align-items:center;gap:0}
+.fs-n{width:30px;height:30px;border-radius:99px;display:flex;align-items:center;justify-content:center;background:var(--chip);flex-shrink:0}
+.sidebar-scroll::-webkit-scrollbar{width:6px;height:6px}.sidebar-scroll::-webkit-scrollbar-thumb{background:var(--line2);border-radius:99px}.sidebar-scroll::-webkit-scrollbar-track{background:transparent}
+.fs-line{height:2px;flex-grow:1;background:var(--track);margin:0 6px}
+</style>
+</helmet>
+<div class="app {{themeCls}}" style="height:1000px">
+  <aside class="side" aria-label="Menú principal">
+    <div style="display:flex;align-items:center;gap:10px;padding:4px 8px 14px">
+      <svg width="26" height="26" viewBox="0 0 28 28" aria-hidden="true"><circle cx="11" cy="15" r="7.5" fill="none" stroke="#D13F42" stroke-width="4"></circle><path d="M16 5 L25 24" stroke="#F2A93B" stroke-width="4" stroke-linecap="round"></path><path d="M25 5 L17 20" stroke="#7B5CF0" stroke-width="4" stroke-linecap="round"></path></svg>
+      <div style="display:flex;flex-direction:column;min-width:0"><span style="font-weight:600;font-size:13.5px">JuanitoXpeditions</span><span style="font-size:11.5px;color:var(--mut)">Owner</span></div>
+    </div>
+    <a class="nav" href="#">Dashboard</a><a class="nav" href="#">CMO</a><a class="nav nav-on" href="#" aria-current="page">CRM</a><a class="nav" href="#">Inbox</a><a class="nav" href="#">Agenda</a><a class="nav" href="#">Ventas</a><a class="nav" href="#">Comercial</a><a class="nav" href="#">Configuración</a>
+  </aside>
+  <main style="flex-grow:1;display:flex;flex-direction:column;min-width:0;min-height:0">
+    <header style="height:68px;display:flex;align-items:center;gap:20px;padding:0 32px;flex-shrink:0;border-bottom:1px solid var(--line)">
+      <span class="d" style="font-size:19px;font-weight:700">CRM</span>
+      <nav aria-label="Secciones del CRM" class="tabs"><a class="tab" href="#">Contactos</a><a class="tab" href="#">Pipeline</a><a class="tab" href="#">Tareas</a><a class="tab tab-on" href="#" aria-current="page">Configuración</a></nav>
+    </header>
+    <div style="padding:22px 32px 24px;display:flex;flex-direction:column;gap:16px;flex-grow:1;min-height:0;position:relative">
+      <div><h1 class="d" style="margin:0;font-size:36px;font-weight:700;letter-spacing:-.02em;line-height:1.05">Configuración</h1><p style="margin:6px 0 0;font-size:13.5px;color:var(--mut)">Cómo trabaja tu CRM: sus etapas, cuánto insiste Axi, a quién le habla y con qué datos.</p></div>
+      <nav aria-label="Secciones de configuración" class="tabs" style="align-self:flex-start"><a class="tab" href="Main.dc.html">Pipelines</a><a class="tab" href="Recorrido.dc.html">Recorrido</a><a class="tab" href="Etiquetas.dc.html">Etiquetas</a><a class="tab" href="Segmentos.dc.html">Segmentos</a><a class="tab" href="Importar.dc.html">Importar</a><a class="tab" href="TareasAgente.dc.html">Tareas de agente</a><a class="tab tab-on" href="#" aria-current="page">Secuencias</a></nav>
+      <section style="display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:16px;flex-grow:1;min-height:0">
+<div class="scr" style="display:flex;flex-direction:column;gap:14px;min-width:0;min-height:0;padding-right:4px">
+  <div style="display:flex;align-items:center;gap:10px"><a class="btn btn-g" href="Secuencias.dc.html" style="padding:0 10px">← Secuencias</a><span class="pill"><span class="dot" style="background:var(--ok)"></span>Activa · 38 inscritos</span></div>
+  <article class="card" style="padding:18px 20px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:12px">
+    <div><span class="lbl">Nombre</span><div class="inp" style="margin-top:6px">Post-captación</div></div>
+    <div><span class="lbl">Para qué es</span><div class="inp" style="margin-top:6px"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Primeras 72 horas después de que llega un lead de campaña</span></div></div>
+    <div style="grid-column:1/-1;display:flex;gap:24px;flex-wrap:wrap;padding-top:6px">
+      <span style="display:flex;align-items:center;gap:10px;font-size:13px"><button type="button" role="switch" aria-checked="true" aria-label="Para si responde" class="tg tg-on"></button>Para si responde</span>
+      <span style="display:flex;align-items:center;gap:10px;font-size:13px"><button type="button" role="switch" aria-checked="true" aria-label="Para si compra" class="tg tg-on"></button>Para si compra</span>
+    </div>
+  </article>
+  <div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><h2 class="d" style="margin:0;font-size:18px;font-weight:700">Pasos</h2><span class="lbl">El día cuenta desde la inscripción</span></div>
+  <div class="tl" style="grid-template-columns:72px 18px minmax(0,1fr)"><span class="tl-d" style="padding-top:18px">Día 0</span><span class="tl-l" style="color:#1F9D5B"><span class="tl-n" style="margin-top:22px"></span><span class="tl-v"></span></span>
+<div class="tl-b"><article class="card" style="border-radius:18px;padding:14px 16px;display:grid;grid-template-columns:150px 150px minmax(0,1fr) 36px;gap:10px;align-items:center">
+<div class="sel"><span style="display:flex;align-items:center;gap:8px"><span class="dot" style="background:#1F9D5B"></span>WhatsApp</span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"></path></svg></div>
+<div class="sel">Día 0<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"></path></svg></div>
+<div class="inp" title="Dar la bienvenida y preguntar para cuándo piensa viajar"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Dar la bienvenida y preguntar para cuándo piensa viajar</span></div>
+<button type="button" class="icb" aria-label="Quitar paso 1"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"></path></svg></button>
+<span class="lbl" style="grid-column:1/-1;overflow:hidden;text-overflow:ellipsis">Plantilla de Meta: bienvenida_campana_v2 · aprobada</span>
+</article></div></div>
+  <div class="tl" style="grid-template-columns:72px 18px minmax(0,1fr)"><span class="tl-d" style="padding-top:18px">Día 1</span><span class="tl-l" style="color:#1F9D5B"><span class="tl-n" style="margin-top:22px"></span><span class="tl-v"></span></span>
+<div class="tl-b"><article class="card" style="border-radius:18px;padding:14px 16px;display:grid;grid-template-columns:150px 150px minmax(0,1fr) 36px;gap:10px;align-items:center">
+<div class="sel"><span style="display:flex;align-items:center;gap:8px"><span class="dot" style="background:#1F9D5B"></span>WhatsApp</span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"></path></svg></div>
+<div class="sel">Día 1<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"></path></svg></div>
+<div class="inp" title="Resolver dudas sobre destinos y presupuesto"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Resolver dudas sobre destinos y presupuesto</span></div>
+<button type="button" class="icb" aria-label="Quitar paso 2"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"></path></svg></button>
+<span class="lbl" style="grid-column:1/-1;overflow:hidden;text-overflow:ellipsis">Dentro de la ventana de 24 h: sin plantilla</span>
+</article></div></div>
+  <div class="tl" style="grid-template-columns:72px 18px minmax(0,1fr)"><span class="tl-d" style="padding-top:18px">Día 3</span><span class="tl-l" style="color:#2563EB"><span class="tl-n" style="margin-top:22px"></span><span class="tl-v"></span></span>
+<div class="tl-b"><article class="card" style="border-radius:18px;padding:14px 16px;display:grid;grid-template-columns:150px 150px minmax(0,1fr) 36px;gap:10px;align-items:center">
+<div class="sel"><span style="display:flex;align-items:center;gap:8px"><span class="dot" style="background:#2563EB"></span>Llamada</span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"></path></svg></div>
+<div class="sel">Día 3<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"></path></svg></div>
+<div class="inp" title="Agendar una asesoría de 20 minutos con un asesor"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Agendar una asesoría de 20 minutos con un asesor</span></div>
+<button type="button" class="icb" aria-label="Quitar paso 3"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"></path></svg></button>
+<span class="lbl" style="grid-column:1/-1;overflow:hidden;text-overflow:ellipsis">Llamada del agente de voz · respeta el tope diario</span>
+</article></div></div>
+  <div class="tl" style="grid-template-columns:72px 18px minmax(0,1fr)"><span class="tl-d" style="padding-top:18px">Día 7</span><span class="tl-l" style="color:#D97706"><span class="tl-n" style="margin-top:22px"></span><span class="tl-v"></span></span>
+<div class="tl-b"><article class="card" style="border-radius:18px;padding:14px 16px;display:grid;grid-template-columns:150px 150px minmax(0,1fr) 36px;gap:10px;align-items:center">
+<div class="sel"><span style="display:flex;align-items:center;gap:8px"><span class="dot" style="background:#D97706"></span>Correo</span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"></path></svg></div>
+<div class="sel">Día 7<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"></path></svg></div>
+<div class="inp" title="Enviar el catálogo de temporada con los paquetes vigentes"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Enviar el catálogo de temporada con los paquetes vigentes</span></div>
+<button type="button" class="icb" aria-label="Quitar paso 4"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"></path></svg></button>
+<span class="lbl" style="grid-column:1/-1;overflow:hidden;text-overflow:ellipsis">Correo con la plantilla «Catálogo temporada alta»</span>
+</article></div></div>
+  <button type="button" class="btn" style="margin-left:102px">Añadir paso</button></div>
+</div>
+<aside class="isl {{islCls}} ai" style="padding:22px;display:flex;flex-direction:column;gap:14px;align-self:start" aria-label="Así lo vive el contacto">
+  <div style="display:flex;align-items:center;gap:10px"><span style="width:28px;height:28px;border-radius:99px;background:#0B0B0E;color:#fff;display:inline-flex;align-items:center;justify-content:center;font:700 12px Urbanist,sans-serif">A</span><span class="kick">Así lo vive el contacto</span></div>
+  <p class="d" style="margin:0;font-size:21px;font-weight:700;line-height:1.25">4 mensajes en 7 días, uno por cada motivo. Si responde en cualquiera, Axi deja la secuencia y conversa.</p>
+  <div style="display:flex;flex-direction:column;gap:8px;font-size:12.5px;line-height:1.45">
+    <div style="display:grid;grid-template-columns:52px minmax(0,1fr);gap:8px"><b>Lun</b><span>Le llega la bienvenida por WhatsApp a las 9 a. m.</span></div>
+    <div style="display:grid;grid-template-columns:52px minmax(0,1fr);gap:8px"><b>Mar</b><span>Axi retoma con sus dudas, si no las contó.</span></div>
+    <div style="display:grid;grid-template-columns:52px minmax(0,1fr);gap:8px"><b>Jue</b><span>Una llamada para agendar la asesoría.</span></div>
+    <div style="display:grid;grid-template-columns:52px minmax(0,1fr);gap:8px"><b>Lun</b><span>El catálogo por correo, como cierre.</span></div>
+  </div>
+  <p style="margin:0;font-size:12px;color:#5F5F68;border-top:1px solid rgba(11,11,14,.08);padding-top:12px">Ejemplo con inscripción un lunes. Nada sale en horario silencioso ni por encima del tope diario.</p>
+  <div style="display:flex;gap:8px"><button type="button" class="btn btn-c">Guardar cambios</button><button type="button" class="btn btn-gl">Pausar</button></div>
+</aside></section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() { const dark = this.props.dark === true; return { themeCls: dark ? 'dk' : 'lt', islCls: dark ? 'isl-dark' : 'isl-glass' }; }
+}
+</script>
+</body>
+</html>
