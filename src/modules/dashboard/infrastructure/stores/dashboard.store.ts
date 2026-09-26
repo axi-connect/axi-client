@@ -42,6 +42,14 @@ export interface DashboardPerms {
   channels: boolean;
 }
 
+/**
+ * `silent`: la recarga la dispara un evento en vivo, no el usuario. La ficha no se atenúa: el dato nuevo
+ * reemplaza al viejo cuando llega (con tráfico, atenuar en cada conversación sería un pulso constante).
+ */
+export interface RefreshOptions {
+  silent?: boolean;
+}
+
 interface DashboardState {
   period: DashboardPeriod;
   sales: Section<OrderStatsDTO>;
@@ -57,10 +65,14 @@ interface DashboardState {
   setPeriod: (period: DashboardPeriod, perms: DashboardPerms) => void;
   load: (perms: DashboardPerms) => Promise<void>;
   // Reducers de tiempo real (re-fetch selectivo)
-  refreshSales: () => Promise<void>;
-  refreshAttention: () => Promise<void>;
-  refreshConversations: () => Promise<void>;
-  refreshTopProducts: () => Promise<void>;
+  refreshSales: (opts?: RefreshOptions) => Promise<void>;
+  refreshAttention: (opts?: RefreshOptions) => Promise<void>;
+  refreshConversations: (opts?: RefreshOptions) => Promise<void>;
+  refreshTopProducts: (opts?: RefreshOptions) => Promise<void>;
+  // Reintento de una ficha que falló («Reintentar»)
+  refreshCustomers: () => Promise<void>;
+  refreshUsage: () => Promise<void>;
+  refreshChannels: () => Promise<void>;
   onChannelStatusChanged: (channelId: string, status: string) => void;
   onUsageUpdated: () => Promise<void>;
   onUsageAlert: (metric: string) => void;
@@ -76,12 +88,22 @@ const idle = <T>(): Section<T> => ({ status: "idle", data: null, error: null });
  * sección o actualiza en sitio (canales/consumo).
  */
 export const useDashboardStore = create<DashboardState>((set, get) => {
-  /** Ejecuta un fetch de sección envolviendo estado loading/ready/error. */
+  /**
+   * Ejecuta un fetch de sección envolviendo estado loading/ready/error. Al
+   * RECARGAR (período, evento en vivo, reintento) conserva el dato anterior
+   * mientras llega el nuevo: la ficha y la isla no vuelven a su silueta con
+   * cada conversación nueva (auditoría, P2-1). Si falla, el error manda.
+   */
   async function run<K extends keyof DashboardState>(
     key: K,
     fetcher: () => Promise<DashboardState[K] extends Section<infer T> ? T : never>,
+    { silent = false }: RefreshOptions = {},
   ): Promise<void> {
-    set({ [key]: { status: "loading", data: null, error: null } } as Partial<DashboardState>);
+    const previous = (get()[key] as Section<unknown>).data;
+    // Silenciosa y con dato: no se marca «cargando» (ni silueta ni atenuado).
+    if (!(silent && previous !== null)) {
+      set({ [key]: { status: "loading", data: previous, error: null } } as Partial<DashboardState>);
+    }
     try {
       const data = await fetcher();
       set({ [key]: { status: "ready", data, error: null } } as Partial<DashboardState>);
@@ -109,10 +131,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => {
       const tasks: Promise<void>[] = [];
       if (perms.orders) tasks.push(get().refreshSales(), get().refreshTopProducts());
       if (perms.conversations) tasks.push(get().refreshConversations());
-      if (perms.contacts)
-        tasks.push(
-          run("customers", () => getContactStats(period)),
-        );
+      if (perms.contacts) tasks.push(get().refreshCustomers());
       void Promise.all(tasks);
     },
 
@@ -139,17 +158,26 @@ export const useDashboardStore = create<DashboardState>((set, get) => {
       await Promise.all(tasks);
     },
 
-    refreshSales() {
-      return run("sales", () => getOrderStats(get().period));
+    refreshSales(opts) {
+      return run("sales", () => getOrderStats(get().period), opts);
     },
-    refreshAttention() {
-      return run("attention", () => getInboxCounts());
+    refreshAttention(opts) {
+      return run("attention", () => getInboxCounts(), opts);
     },
-    refreshConversations() {
-      return run("conversations", () => getConversationStats(get().period));
+    refreshConversations(opts) {
+      return run("conversations", () => getConversationStats(get().period), opts);
     },
-    refreshTopProducts() {
-      return run("topProducts", () => getTopProducts(get().period));
+    refreshTopProducts(opts) {
+      return run("topProducts", () => getTopProducts(get().period), opts);
+    },
+    refreshCustomers() {
+      return run("customers", () => getContactStats(get().period));
+    },
+    refreshUsage() {
+      return run("usage", () => getUsageSummary());
+    },
+    refreshChannels() {
+      return run("channels", async () => mapChannelsHealth(await getChannels()));
     },
 
     onChannelStatusChanged(channelId, status) {
@@ -171,7 +199,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => {
       // El summary lee Redis O(1); un re-fetch es barato y evita mantener
       // el acumulado por métrica en el cliente.
       if (get().usage.status === "idle") return Promise.resolve();
-      return run("usage", () => getUsageSummary());
+      return run("usage", () => getUsageSummary(), { silent: true });
     },
 
     onUsageAlert(metric) {

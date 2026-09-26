@@ -415,7 +415,7 @@ Los primitivos viven en `shared/components/ui/` (shadcn) y los features en `shar
 | Fechas estilo mensajería (lista, separadores de día, hora de burbuja) | `core/lib/day-label.ts` (`formatConversationTime`, `formatDayLabel`, `formatClockTime`) |
 | Marca en una cabecera (isotipo + wordmark) | `BrandLockup` (`shared/components/ui/brand-lockup.tsx`) — RSC-compatible, `size="md"\|"sm"`; solo el isotipo → `BrandMark` (DESIGN.md §2.2) |
 | Celebración puntual (una ráfaga, no un loop) | `Confetti` + `brandCelebration` (`shared/components/ui/confetti.tsx`) — canvas-confetti en diferido, colores de `readBrandPaletteCss`, reduced-motion lo apaga; ver §6 |
-| Resumen «de un vistazo» (ficha de un tenant, tablero de un módulo) | `BentoTile` + `StatePill` + `BentoFigure` + `BentoLink` e `InkIsland` para lo próximo (`shared/components/features/bento`, §9.5) |
+| Resumen «de un vistazo» (ficha de un tenant, tablero de un módulo) | `BentoTile` + `StatePill` + `BentoFigure` + `BentoLink` e `InkIsland` para lo próximo (`shared/components/features/bento`, §9.5); referencia de tablero con período y tiempo real: el Panel (`modules/dashboard`) |
 | Superficie de lo más accionable, o una barra de acción pegada abajo | `Island` / `islandClassName` (`shared/components/features/island`, §9.5.1): tinta o cristal (blanco o negro), aspecto central en `ISLAND_DEFAULTS` |
 | Días de un recorrido o pasos de un proceso con hora | §9.6 (`TrialJourneyStrip`, `DeliverySentView`) |
 | Formulario largo que llega precargado | Pasos plegables + «Antes de enviar» + barra de acción (§9.7) |
@@ -625,6 +625,23 @@ es `InkIsland` con `p-5`, `Kicker` es el mismo— y añade la variante de consol
 dos líneas, `BigFigure` de `sm` a `xl`, `Meter` para el progreso lineal con marcas de umbral, `TonePill`/`ToneDot`).
 Los estados de una consola usan `StatusBadge appearance="dot"` y las cifras con semáforo `MetricCell appearance="dot"`:
 el tono en el punto, el texto en foreground.
+
+La tercera es **el Panel del tenant** (`/dashboard`, canvas `docs/design/mockups/dashboard-premium/`, plan
+`docs/plans/dashboard_premium_plan.md`), la referencia de un tablero de módulo con período y tiempo real:
+
+- **La isla «Lo próximo»** (`dashboard/ui/components/NextUpIsland.tsx`) sale de un dominio puro
+  (`dashboard/domain/next-up.ts`): canal caído → IA en pausa → cola → asignadas → pagos por verificar, con la cifra al
+  frente de cada fila y dos acciones (la de la fila más grave en `contrast`, la siguiente distinta en `glass`). Sin
+  nada pendiente dice «Todo al día» con el brillo `ai`. El primer día pinta los pasos de la configuración que decide el
+  slice `onboarding` (`useOnboardingResume`): la isla absorbe el banner, no conviven dos cosas que mandan.
+- **La meta** (`GoalProgressBlock` de `commercial`) es la ficha grande (`xl:col-span-2`) con la frase de
+  `paceHeadline` y la `RouteLine` completa; el panel decide su sitio con `className`.
+- **Error por ficha** (`TileError`, «Reintentar» con la recarga de esa sección) y **silueta por ficha**
+  (`TileSkeleton`); un error nunca se pinta como un cero.
+- **Un solo gráfico con ejes** (Conversaciones, `AreaTrend yAxis={false}`: las cifras ya van escritas encima); la curva
+  de Clientes es un `Sparkline` SVG sin recharts. Coral y violeta: el ámbar no entra (DESIGN §3.1).
+- La hora del saludo y de la fecha se calcula **solo en el cliente** y en la zona del negocio (`company.timezone`): el
+  servidor no la conoce y un texto pintado con su reloj se queda al hidratar.
 
 | Pieza | Regla |
 |---|---|
