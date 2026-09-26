@@ -5,6 +5,7 @@ import {
   toUpsertDTO,
   validateSequence,
   type DraftStep,
+  sequenceStory,
 } from "../sequences";
 
 const NOW = new Date("2026-09-15T14:00:00.000Z");
@@ -102,5 +103,27 @@ describe("sequences — lo que viaja al backend", () => {
       [0, "message"],
       [48, "call"],
     ]);
+  });
+});
+
+describe("sequenceStory — la secuencia desde el contacto", () => {
+  const from = new Date("2026-09-28T09:00:00"); // lunes
+  const step = (offset_hours: number, task_channel: "message" | "call" = "message", objective = "x") => ({ offset_hours, task_channel, objective });
+
+  it("cuenta los pasos y el tramo, ordenados por día, con la fecha de quien entra hoy", () => {
+    const story = sequenceStory({ steps: [step(72, "call", "Agendar"), step(0, "message", " Bienvenida "), step(168)], stop_on_reply: true }, from);
+    expect(story?.headline).toBe("3 pasos en 7 días. Si responde en cualquiera, se detiene y el agente conversa.");
+    expect(story?.days.map((day) => [day.channel, day.objective])).toEqual([
+      ["message", "Bienvenida"],
+      ["call", "Agendar"],
+      ["message", "x"],
+    ]);
+    expect(story?.days[0].when).toMatch(/lun/);
+    expect(story?.days[1].when).toMatch(/jue/);
+  });
+
+  it("sin parar al responder lo dice; un paso en singular; sin pasos no hay historia", () => {
+    expect(sequenceStory({ steps: [step(4)], stop_on_reply: false }, from)?.headline).toBe("Un paso. Sigue aunque responda.");
+    expect(sequenceStory({ steps: [], stop_on_reply: true }, from)).toBeNull();
   });
 });

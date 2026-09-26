@@ -56,8 +56,8 @@ export function JourneyStageRow({
   const panelId = `journey-stage-${stage.stage_id}`;
 
   return (
-    <li className={cn("grouped-row reveal-group", expanded && "bg-foreground/[0.02]")}>
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 md:flex-nowrap">
+    <li className={cn("reveal-group min-w-0 overflow-hidden rounded-3xl border bg-card", expanded ? "border-foreground/25" : "border-border")}>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3.5 md:flex-nowrap md:px-5">
         <button
           type="button"
           aria-expanded={expanded}
@@ -67,7 +67,7 @@ export function JourneyStageRow({
           onClick={onToggle}
           className="min-w-0 flex-1 basis-full rounded-lg text-left focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none md:basis-auto"
         >
-          <span className="block text-[15px] font-medium">{stage.name}</span>
+          <span className="block truncate text-[15px] font-semibold" title={stage.name}>{stage.name}</span>
           <span className="block text-xs text-muted-foreground tabular-nums">
             {stage.stage_kind === "custom"
               ? "No se mueve sola ni entra en las tasas del recorrido"

@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>CRM · Configuración · Oscuro</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&amp;family=Poppins:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#F5F5F7}
+.lt{--bg:#F5F5F7;--side:#FFFFFF;--card:#FFFFFF;--fg:#0B0B0E;--fg2:#3A3A40;--mut:#6B6B73;--line:rgba(0,0,0,.07);--line2:rgba(0,0,0,.12);--chip:#F0F0F2;--brand:#D13F42;--onbrand:#FFFFFF;--acc:rgba(230,87,89,.12);--track:#ECECEF;--ok:#1F9D5B;--warn:#D97706;--bad:#DC2626;--ai:#7C3AED;--sh:0 1px 0 rgba(0,0,0,.03),0 8px 20px -16px rgba(16,16,24,.25)}
+.dk{--bg:#0A0A0A;--side:#0F0F11;--card:#141416;--fg:#EDEDED;--fg2:#C4C4CC;--mut:#A1A1AA;--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.14);--chip:rgba(255,255,255,.08);--brand:#FB7185;--onbrand:#1A0508;--acc:rgba(251,113,133,.16);--track:rgba(255,255,255,.10);--ok:#4ADE80;--warn:#FBBF24;--bad:#F87171;--ai:#A78BFA;--sh:none}
+a{color:inherit}
+.app{width:1440px;height:1000px;display:flex;background:var(--bg);color:var(--fg);overflow:hidden;font-family:Poppins,system-ui,sans-serif}
+.d{font-family:Urbanist,Poppins,sans-serif}
+.side{width:248px;flex-shrink:0;padding:14px 10px;box-sizing:border-box;display:flex;flex-direction:column;gap:2px;border-right:1px solid var(--line);background:var(--side)}
+.nav{display:flex;align-items:center;gap:10px;height:34px;padding:0 10px;border-radius:10px;font-size:13.5px;color:var(--fg2);text-decoration:none;white-space:nowrap}
+.nav-on{background:var(--acc);color:var(--fg);font-weight:500}
+.card{background:var(--card);border-radius:24px;border:1px solid var(--line);box-shadow:var(--sh)}
+.lbl{font-size:12px;color:var(--mut);white-space:nowrap}
+.kick{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);white-space:nowrap}
+.tabs{display:flex;gap:4px;padding:4px;border-radius:999px;background:var(--card);border:1px solid var(--line)}
+.tab{height:34px;padding:0 13px;border-radius:999px;font:500 13px Poppins,sans-serif;color:var(--mut);display:inline-flex;align-items:center;gap:7px;text-decoration:none;white-space:nowrap}
+.tab-on{background:var(--acc);color:var(--fg)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:38px;padding:0 16px;border-radius:999px;font:500 13px Poppins,sans-serif;border:1px solid var(--line2);background:var(--card);color:var(--fg);cursor:pointer;text-decoration:none;white-space:nowrap}
+.btn-g{border-color:transparent;background:transparent;color:var(--fg2)}
+.btn-bad{border-color:transparent;background:transparent;color:var(--bad)}
+.pill{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 9px;border-radius:999px;font-size:11.5px;font-weight:500;background:var(--chip);color:var(--fg);white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:9px;flex-shrink:0;display:inline-block}
+.pl{display:flex;flex-direction:column;gap:4px;padding:14px 16px;border-radius:18px;border:1px solid var(--line);background:var(--card);text-align:left;cursor:pointer;font:inherit;color:inherit;min-width:0}
+.pl-on{border-color:var(--fg);box-shadow:0 0 0 1px var(--fg)}
+.nm{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st{display:grid;grid-template-columns:24px 28px minmax(0,1fr) 150px 170px 36px;gap:12px;align-items:center;padding:10px 20px;border-top:1px solid var(--line)}
+.inp{height:38px;border-radius:12px;border:1px solid var(--line2);padding:0 12px;font:500 13.5px Poppins,sans-serif;color:var(--fg);background:var(--card);box-sizing:border-box;width:100%;min-width:0;display:flex;align-items:center}
+.step{display:inline-flex;align-items:center;height:38px;border-radius:12px;border:1px solid var(--line2);background:var(--card);overflow:hidden}
+.step button{width:36px;height:36px;border:0;background:transparent;color:var(--fg2);font:600 16px Poppins,sans-serif;cursor:pointer}
+.step span{min-width:62px;text-align:center;font:600 13.5px Poppins,sans-serif;font-variant-numeric:tabular-nums}
+.sel{height:38px;border-radius:12px;border:1px solid var(--line2);padding:0 12px;font:13px Poppins,sans-serif;color:var(--fg);display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--card);white-space:nowrap}
+.icb{width:36px;height:36px;border-radius:999px;border:0;background:transparent;color:var(--mut);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.bar{display:grid;grid-template-columns:110px minmax(0,1fr) 90px;gap:10px;align-items:center;font-size:12.5px}
+.track{height:8px;border-radius:999px;background:var(--track);overflow:hidden}
+.isl{position:relative;isolation:isolate;overflow:hidden;border-radius:24px}
+.isl-glass{color:#0B0B0E;--mut:#5F5F68;--fg2:#3A3A40;--track:rgba(11,11,14,.08);background:radial-gradient(circle 20rem at 90% 8%,rgba(230,87,89,.16),transparent 70%),linear-gradient(160deg,rgba(255,255,255,.82),rgba(246,243,254,.62));-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);box-shadow:inset 0 2px 2px rgba(11,11,14,.05),inset 0 -2px 2px rgba(255,255,255,.5),inset 0 0 18px 2px rgba(255,255,255,.55),0 4px 2px -2px rgba(11,11,14,.14),0 30px 70px -34px rgba(16,16,24,.35),0 30px 80px -40px rgba(124,58,237,.35)}
+.isl-dark{color:#EDEDED;--mut:#A1A1AA;--fg2:#D4D4D8;--track:rgba(255,255,255,.10);background:radial-gradient(circle 20rem at 90% 8%,rgba(251,113,133,.26),transparent 70%),linear-gradient(160deg,rgba(38,38,42,.90),rgba(28,24,40,.92));box-shadow:inset 0 2px 2px rgba(255,255,255,.10),inset 0 -2px 2px rgba(0,0,0,.35),0 40px 90px -36px rgba(124,58,237,.55),0 18px 50px -24px rgba(230,87,89,.45)}
+.isl-glass::before,.isl-dark::before{content:"";position:absolute;inset:0;z-index:1;padding:1.5px;border-radius:inherit;pointer-events:none;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.isl-glass::before{background:conic-gradient(from -75deg at 50% 50%,rgba(11,11,14,.32) 0%,transparent 6% 40%,rgba(11,11,14,.32) 50%,transparent 56% 94%,rgba(11,11,14,.32) 100%),linear-gradient(rgba(255,255,255,.85),rgba(255,255,255,.85))}
+.isl-dark::before{background:conic-gradient(from -75deg at 50% 50%,rgba(255,255,255,.7) 0%,transparent 6% 40%,rgba(255,255,255,.7) 50%,transparent 56% 94%,rgba(255,255,255,.7) 100%),linear-gradient(rgba(255,255,255,.12),rgba(255,255,255,.12))}
+@media (prefers-reduced-transparency: reduce){.isl-glass{background:#FFFFFF}.isl-dark{background:#1E1E22}}
+</style>
+</helmet>
+<div class="app {{themeCls}}">
+  <aside class="side" aria-label="Menú principal">
+    <div style="display:flex;align-items:center;gap:10px;padding:4px 8px 14px">
+      <svg width="26" height="26" viewBox="0 0 28 28" aria-hidden="true"><circle cx="11" cy="15" r="7.5" fill="none" stroke="#D13F42" stroke-width="4"></circle><path d="M16 5 L25 24" stroke="#F2A93B" stroke-width="4" stroke-linecap="round"></path><path d="M25 5 L17 20" stroke="#7B5CF0" stroke-width="4" stroke-linecap="round"></path></svg>
+      <div style="display:flex;flex-direction:column;min-width:0"><span style="font-weight:600;font-size:13.5px">JuanitoXpeditions</span><span style="font-size:11.5px;color:var(--mut)">Owner</span></div>
+    </div>
+    <a class="nav" href="#">Dashboard</a><a class="nav" href="#">CMO</a><a class="nav nav-on" href="#" aria-current="page">CRM</a><a class="nav" href="#">Inbox</a><a class="nav" href="#">Agenda</a><a class="nav" href="#">Ventas</a><a class="nav" href="#">Comercial</a><a class="nav" href="#">Configuración</a>
+  </aside>
+  <main style="flex-grow:1;display:flex;flex-direction:column;min-width:0;min-height:0">
+    <header style="height:68px;display:flex;align-items:center;gap:20px;padding:0 32px;flex-shrink:0;border-bottom:1px solid var(--line)">
+      <span class="d" style="font-size:19px;font-weight:700">CRM</span>
+      <nav aria-label="Secciones del CRM" class="tabs"><a class="tab" href="#">Contactos</a><a class="tab" href="#">Pipeline</a><a class="tab" href="#">Tareas</a><a class="tab tab-on" href="#" aria-current="page">Configuración</a></nav>
+    </header>
+    <div style="padding:22px 32px 24px;display:flex;flex-direction:column;gap:16px;flex-grow:1;min-height:0">
+      <div><h1 class="d" style="margin:0;font-size:36px;font-weight:700;letter-spacing:-.02em;line-height:1.05">Configuración</h1><p style="margin:6px 0 0;font-size:13.5px;color:var(--mut)">Cómo trabaja tu CRM: sus etapas, cuánto insiste Axi, a quién le habla y con qué datos.</p></div>
+      <nav aria-label="Secciones de configuración" class="tabs" style="align-self:flex-start"><a class="tab tab-on" href="#" aria-current="page">Pipelines</a><a class="tab" href="Recorrido.dc.html">Recorrido</a><a class="tab" href="Etiquetas.dc.html">Etiquetas</a><a class="tab" href="Segmentos.dc.html">Segmentos</a><a class="tab" href="Importar.dc.html">Importar</a><a class="tab" href="TareasAgente.dc.html">Tareas de agente</a><a class="tab" href="Secuencias.dc.html">Secuencias</a></nav>
+
+      <section style="display:grid;grid-template-columns:280px minmax(0,1fr);gap:16px;flex-grow:1;min-height:0">
+        <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+          <span class="lbl" style="padding:0 4px">Pipelines · 2</span>
+          <button type="button" class="pl pl-on" aria-pressed="true"><span style="display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0"><span class="nm">Ventas de viajes</span><span class="pill">Predeterminado</span></span><span class="lbl">6 etapas · 23 abiertas</span></button>
+          <button type="button" class="pl" aria-pressed="false"><span class="nm" title="Grupos corporativos e incentivos internacionales">Grupos corporativos e incentivos internacionales</span><span class="lbl">2 etapas · 0 abiertas</span></button>
+          <div style="display:flex;gap:8px"><div class="inp" style="color:var(--mut);font-weight:400">Nuevo pipeline…</div><button type="button" class="btn" aria-label="Crear pipeline" style="width:38px;padding:0">+</button></div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:16px;min-width:0;min-height:0">
+          <article class="card" style="overflow:hidden;min-width:0">
+            <header style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 20px 12px">
+              <div style="min-width:0"><h2 class="d" style="margin:0;font-size:19px;font-weight:700">Etapas de Ventas de viajes</h2><span class="lbl">Arrastra para ordenar · se guarda al salir de cada campo</span></div>
+              <div style="display:flex;gap:6px"><button type="button" class="btn btn-g">Hacer predeterminado</button><button type="button" class="btn btn-bad">Eliminar</button></div>
+            </header>
+            <div class="st" style="padding-top:6px;padding-bottom:6px;border-top:1px solid var(--line)"><span></span><span></span><span class="lbl">Nombre</span><span class="lbl">Probabilidad</span><span class="lbl">Se enfría a los</span><span></span></div>
+            <sc-for list="{{stages}}" as="s" hint-placeholder-count="6">
+              <div class="st">
+                <button type="button" class="icb" aria-label="Mover {{s.name}}" style="cursor:grab"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"></circle><circle cx="15" cy="6" r="1.6"></circle><circle cx="9" cy="12" r="1.6"></circle><circle cx="15" cy="12" r="1.6"></circle><circle cx="9" cy="18" r="1.6"></circle><circle cx="15" cy="18" r="1.6"></circle></svg></button>
+                <button type="button" class="icb" aria-label="Color de {{s.name}}"><span class="dot" style="width:14px;height:14px;background:{{s.color}}"></span></button>
+                <div class="inp">{{s.name}}</div>
+                <div class="step"><button type="button" aria-label="Bajar la probabilidad de {{s.name}}" onClick="{{s.down}}">−</button><span>{{s.prob}} %</span><button type="button" aria-label="Subir la probabilidad de {{s.name}}" onClick="{{s.up}}">+</button></div>
+                <div class="sel">{{s.rot}}<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"></path></svg></div>
+                <button type="button" class="icb" aria-label="Eliminar {{s.name}}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"></path></svg></button>
+              </div>
+            </sc-for>
+            <div style="display:flex;gap:8px;padding:12px 20px 16px;border-top:1px solid var(--line)"><div class="inp" style="max-width:320px;color:var(--mut);font-weight:400">Nueva etapa…</div><button type="button" class="btn">Añadir etapa</button></div>
+          </article>
+
+          <article class="isl {{islCls}}" style="padding:18px 22px;display:grid;grid-template-columns:260px minmax(0,1fr);gap:24px;align-items:center" aria-label="Así pondera el tablero">
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <span class="kick">Así pondera el tablero</span>
+              <span class="d" style="font-size:30px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums">{{weighted}}</span>
+              <span style="font-size:12.5px;color:var(--fg2);line-height:1.45">de $ 96,4 M abiertos. Cada etapa pesa su valor por su probabilidad.</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:7px">
+              <sc-for list="{{bars}}" as="b" hint-placeholder-count="6">
+                <div class="bar"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{b.name}}</span><span class="track"><span style="display:block;height:100%;border-radius:999px;background:currentColor;width:{{b.w}}"></span></span><span style="text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap">{{b.v}}</span></div>
+              </sc-for>
+            </div>
+          </article>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":true},"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { probs: [10, 20, 40, 60, 80, 90] };
+  }
+  renderVals() {
+    const dark = this.props.dark === true;
+    const base = [
+      ['Nuevo', '#A1A1AA', 21.3, 'Sin límite'],
+      ['Contactado', '#3B82F6', 18.9, '5 días'],
+      ['Calificado', '#8B5CF6', 27.4, '7 días'],
+      ['Propuesta', '#F59E0B', 19.6, '10 días'],
+      ['Negociación', '#10B981', 9.2, '7 días'],
+      ['Compromiso', '#0EA5E9', 0, 'Sin límite']
+    ];
+    const p = this.state.probs;
+    const set = (i, d) => () => { const next = p.slice(); next[i] = Math.max(0, Math.min(100, next[i] + d)); this.setState({ probs: next }); };
+    const stages = base.map(([name, color, , rot], i) => ({ name, color, rot, prob: String(p[i]), up: set(i, 5), down: set(i, -5) }));
+    const w = base.map(([, , v], i) => (v * p[i]) / 100);
+    const total = w.reduce((a, b) => a + b, 0);
+    const max = Math.max(1, ...w);
+    const fmt = (x) => '$ ' + x.toLocaleString('es-CO', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' M';
+    return {
+      themeCls: dark ? 'dk' : 'lt', islCls: dark ? 'isl-dark' : 'isl-glass',
+      stages, weighted: fmt(total),
+      bars: base.map(([name], i) => ({ name, v: w[i] > 0 ? fmt(w[i]) : 'Sin valor', w: Math.round((w[i] / max) * 100) + '%' }))
+    };
+  }
+}
+</script>
+</body>
+</html>

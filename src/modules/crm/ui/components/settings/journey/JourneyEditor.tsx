@@ -24,6 +24,7 @@ import {
   getJourney,
   putJourney,
 } from "@/modules/crm/infrastructure/services/journey-service.adapter";
+import { JourneyCadenceIsland } from "./JourneyCadenceIsland";
 import { JourneyExplainer } from "./JourneyExplainer";
 import type { StagePatch } from "./JourneyCadenceFields";
 import { JourneyStageRow } from "./JourneyStageRow";
@@ -207,7 +208,7 @@ export function JourneyEditor() {
 
   if (error !== null && journey === null) {
     return (
-      <div className="rounded-2xl border border-border bg-background p-6 text-center">
+      <div className="rounded-3xl border border-border bg-card p-6 text-center">
         <p className="text-sm text-muted-foreground">{error}</p>
         <Button variant="outline" size="sm" className="mt-3 rounded-full" onClick={() => void load()}>
           Reintentar
@@ -221,11 +222,14 @@ export function JourneyEditor() {
   const stages = [...journey.stages].sort((a, b) => a.position - b.position);
   const switches = readJourneySwitches(journey);
 
+  const islandStage =
+    stages.find((stage) => stage.stage_id === expanded) ?? stages.find((stage) => stage.cadence !== null) ?? null;
+
   return (
-    <div className="space-y-4">
-      <div>
-        <h3 className="text-lg font-semibold tracking-tight">El recorrido del cliente</h3>
-        <p className="text-sm text-muted-foreground">
+    <div className="@container min-w-0 space-y-4">
+      <div className="min-w-0">
+        <h2 className="font-heading text-lg font-bold">El recorrido del cliente</h2>
+        <p className="text-sm text-pretty text-muted-foreground">
           Qué etapas pasa un contacto, cuánto insistimos en cada una y cuándo la movemos solos.
         </p>
       </div>
@@ -241,35 +245,37 @@ export function JourneyEditor() {
         onApply={applyTemplate}
       />
 
-      <section className="rounded-2xl border border-border bg-background">
-        <div className="flex flex-wrap items-center justify-between gap-2 px-4 pt-3.5 pb-1">
-          <h4 className="text-[11.5px] font-semibold tracking-[0.08em] text-muted-foreground uppercase">
-            Etapas
-          </h4>
-          <span className="text-xs text-muted-foreground">Se guarda al salir de cada campo</span>
-        </div>
-        {stages.length === 0 ? (
-          <p className="px-4 pt-2 pb-4 text-sm text-muted-foreground">
-            El pipeline no tiene etapas. Créalas en Pipelines y vuelve aquí para darles tipo y cadencia.
-          </p>
-        ) : (
-          <ul className="grouped-list">
-            {stages.map((stage) => (
-              <JourneyStageRow
-                key={stage.stage_id}
-                stage={stage}
-                switches={switches}
-                takenKinds={takenKinds}
-                expanded={expanded === stage.stage_id}
-                busy={busyStages.has(stage.stage_id) || applying}
-                onToggle={() => setExpanded((prev) => (prev === stage.stage_id ? null : stage.stage_id))}
-                onPatch={(patch) => patchStage(stage.stage_id, patch)}
-                onKindChange={(kind) => changeKind(stage.stage_id, kind)}
-              />
-            ))}
-          </ul>
-        )}
-      </section>
+      <div className="grid min-w-0 items-start gap-4 @min-[56rem]:grid-cols-[minmax(0,1fr)_minmax(18rem,22rem)]">
+        <section className="min-w-0 space-y-2" aria-label="Etapas">
+          <div className="flex flex-wrap items-center justify-between gap-2 px-1">
+            <h3 className="text-xs text-muted-foreground">Etapas · {stages.length}</h3>
+            <span className="text-xs text-muted-foreground">Se guarda al salir de cada campo</span>
+          </div>
+          {stages.length === 0 ? (
+            <p className="rounded-3xl border border-dashed border-border px-5 py-6 text-sm text-pretty text-muted-foreground">
+              El pipeline no tiene etapas. Créalas en Pipelines y vuelve aquí para darles tipo y cadencia.
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {stages.map((stage) => (
+                <JourneyStageRow
+                  key={stage.stage_id}
+                  stage={stage}
+                  switches={switches}
+                  takenKinds={takenKinds}
+                  expanded={expanded === stage.stage_id}
+                  busy={busyStages.has(stage.stage_id) || applying}
+                  onToggle={() => setExpanded((prev) => (prev === stage.stage_id ? null : stage.stage_id))}
+                  onPatch={(patch) => patchStage(stage.stage_id, patch)}
+                  onKindChange={(kind) => changeKind(stage.stage_id, kind)}
+                />
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <JourneyCadenceIsland stage={islandStage} switches={switches} className="@min-[56rem]:sticky @min-[56rem]:top-4" />
+      </div>
 
       <p className="text-xs text-muted-foreground">
         Los recordatorios de la cita (24 h y 2 h antes) los manda{" "}

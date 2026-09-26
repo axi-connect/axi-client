@@ -72,6 +72,36 @@ export function describeSegmentFilters(filters: SegmentFilters, tags: TagDTO[]):
   return parts.length > 0 ? parts.join(" · ") : "sin filtros (todos los contactos)";
 }
 
+/**
+ * Los filtros de un segmento como chips «nombre · valor» (lienzo CRM premium
+ * F4 · Segmentos). Mismo DSL y mismo orden que `describeSegmentFilters`, pero
+ * en palabras de persona: la frase de arriba la comparte el asistente de
+ * campañas y se queda como está. Una fecha ISO se lee como día.
+ */
+export function segmentFilterChips(filters: SegmentFilters, tags: TagDTO[]): { label: string; value: string }[] {
+  const chips: { label: string; value: string }[] = [];
+  const day = (iso: string) => new Date(iso).toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+  const tagName = (id: string) => tags.find((tag) => tag.id === id)?.name ?? "Etiqueta borrada";
+  if (filters.lifecycle_stage?.length) {
+    chips.push({ label: "Etapa", value: filters.lifecycle_stage.map((s) => CONTACT_STAGE_LABELS[s]).join(", ") });
+  }
+  if (filters.source?.length) {
+    chips.push({ label: "Fuente", value: filters.source.map((s) => CONTACT_SOURCE_LABELS[s]).join(", ") });
+  }
+  if (filters.tag_ids?.any?.length) chips.push({ label: "Alguna etiqueta", value: filters.tag_ids.any.map(tagName).join(", ") });
+  if (filters.tag_ids?.all?.length) chips.push({ label: "Todas las etiquetas", value: filters.tag_ids.all.map(tagName).join(", ") });
+  if (filters.city) chips.push({ label: "Ciudad", value: filters.city });
+  if (filters.q) chips.push({ label: "Busca", value: `“${filters.q}”` });
+  if (filters.min_score !== undefined) chips.push({ label: "Puntaje", value: `al menos ${String(filters.min_score)}` });
+  if (filters.created_after) chips.push({ label: "Creado desde", value: day(filters.created_after) });
+  if (filters.created_before) chips.push({ label: "Creado hasta", value: day(filters.created_before) });
+  if (filters.has_open_deal !== undefined) {
+    chips.push({ label: "Oportunidad", value: filters.has_open_deal ? "con una abierta" : "sin ninguna abierta" });
+  }
+  if (filters.last_activity_before) chips.push({ label: "Sin actividad desde", value: day(filters.last_activity_before) });
+  return chips;
+}
+
 /** Elimina claves vacías para no mandar ruido al validador del backend. */
 export function compactSegmentFilters(filters: SegmentFilters): SegmentFilters {
   const out: SegmentFilters = {};
