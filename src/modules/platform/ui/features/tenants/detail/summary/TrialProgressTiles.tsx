@@ -11,7 +11,7 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import type { SetupStepCode, TrialProgressWire } from "../../../../../infrastructure/api/delivery.dto";
 import { BentoTile as SummaryTile, StatePill } from "@/shared/components/features/bento";
 
-/** Cómo llama el panel del tenant a cada paso (OnboardingResumeBanner). */
+/** Cómo llama el panel del tenant a cada paso (los pasos de la isla «Empieza por aquí» del Panel, `useOnboardingResume`). */
 export const SETUP_STEP_LABELS: Record<SetupStepCode, string> = {
   niche: "negocio",
   business_hours: "horario",

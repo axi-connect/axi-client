@@ -17,6 +17,8 @@ import { ConversationsFlowCard } from "@/modules/dashboard/ui/components/Convers
 import { NewCustomersCard } from "@/modules/dashboard/ui/components/NewCustomersCard";
 import { TopProductsCard } from "@/modules/dashboard/ui/components/TopProductsCard";
 import { GoalProgressBlock } from "@/modules/commercial/public";
+import { useMyCompany } from "@/modules/companies/public";
+import type { NextUpSource } from "@/modules/dashboard/domain/next-up";
 import { useEntitlements } from "@/shared/auth/entitlements.hooks";
 
 /**
@@ -69,6 +71,19 @@ export function DashboardView() {
   const refreshTopProducts = useDashboardStore((state) => state.refreshTopProducts);
   const refreshUsage = useDashboardStore((state) => state.refreshUsage);
   const refreshChannels = useDashboardStore((state) => state.refreshChannels);
+  const refreshAttention = useDashboardStore((state) => state.refreshAttention);
+  // Las fechas de las fichas (horas de «Hoy», ciclo del consumo) en la zona del negocio.
+  const timeZone = useMyCompany().company?.timezone || undefined;
+
+  const retryNextUp = async (failed: NextUpSource[]) => {
+    const refresh: Record<NextUpSource, () => Promise<void>> = {
+      attention: refreshAttention,
+      sales: refreshSales,
+      channels: refreshChannels,
+      usage: refreshUsage,
+    };
+    await Promise.all(failed.map((source) => refresh[source]()));
+  };
 
   useEffect(() => {
     void load(perms);
@@ -89,18 +104,19 @@ export function DashboardView() {
           sales={sales}
           channels={channels}
           usage={usage}
+          onRetry={retryNextUp}
           className={ISLAND}
         />
         {/* La meta del mes: autosuficiente; sin capacidad, permiso o meta que mostrar no pinta nada. */}
         <GoalProgressBlock className={WIDE} />
         {perms.orders && <SalesTiles section={sales} onRetry={refreshSales} />}
         {perms.conversations && (
-          <ConversationsFlowCard section={conversations} period={period} onRetry={refreshConversations} className={WIDE} />
+          <ConversationsFlowCard section={conversations} period={period} timeZone={timeZone} onRetry={refreshConversations} className={WIDE} />
         )}
         {perms.channels && <SystemHealthPanel channels={channels} usage={usage} onRetry={refreshChannels} />}
         {perms.contacts && <NewCustomersCard section={customers} period={period} onRetry={refreshCustomers} />}
         {perms.orders && <TopProductsCard section={topProducts} period={period} onRetry={refreshTopProducts} />}
-        {perms.usage && <UsagePanel section={usage} onRetry={refreshUsage} />}
+        {perms.usage && <UsagePanel section={usage} timeZone={timeZone} onRetry={refreshUsage} />}
       </div>
     </div>
   );

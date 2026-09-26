@@ -6,6 +6,7 @@
  */
 import type { InboxCountsDTO, OrderStatsDTO, UsageSummaryDTO } from "@/modules/dashboard/domain/dashboard";
 import type { ChannelHealth } from "@/modules/dashboard/domain/health";
+import { formatInteger } from "@/core/lib/commercial-units";
 
 export type NextUpTone = "destructive" | "warning" | "neutral";
 
@@ -97,7 +98,7 @@ export function nextUpItems({ attention, sales, channels, usage, kindLabel }: Ne
       tone: "neutral",
       count: attention.mine,
       title: attention.mine === 1 ? "asignada a ti" : "asignadas a ti",
-      detail: attention.unread_total > 0 ? `${String(attention.unread_total)} sin leer en todo el inbox` : "todo leído",
+      detail: attention.unread_total > 0 ? `${formatInteger(attention.unread_total)} sin leer en todo el inbox` : "todo leído",
       href: NEXT_UP_ROUTES.inbox,
       action: inbox,
       icon: null,
@@ -141,6 +142,27 @@ export function nextUpHeadline(items: NextUpItem[]): string {
 export function aiStatusLine(attention: InboxCountsDTO | null, usage: UsageSummaryDTO | null): string | null {
   if (!attention || usage?.ai_paused === true || attention.ai <= 0 || attention.all_open <= 0) return null;
   if (attention.all_open === 1) return "La IA atiende la única abierta";
-  if (attention.ai === attention.all_open) return `La IA atiende las ${String(attention.all_open)} abiertas`;
-  return `La IA atiende ${String(attention.ai)} de las ${String(attention.all_open)} abiertas`;
+  if (attention.ai === attention.all_open) return `La IA atiende las ${formatInteger(attention.all_open)} abiertas`;
+  return `La IA atiende ${formatInteger(attention.ai)} de las ${formatInteger(attention.all_open)} abiertas`;
+}
+
+/** Las fuentes que deciden la isla, dichas en una frase («No pudimos leer la cola del inbox»). */
+export const NEXT_UP_SOURCES = {
+  attention: "la cola del inbox",
+  sales: "los pagos por verificar",
+  channels: "el estado de los canales",
+  usage: "el estado de la IA",
+} as const;
+
+export type NextUpSource = keyof typeof NEXT_UP_SOURCES;
+
+/**
+ * «la cola del inbox y el estado de la IA». Una fuente que no se pudo leer NO
+ * es una fuente sin pendientes: la isla lo dice en vez de afirmar «Todo al
+ * día» (auditoría, P1-1).
+ */
+export function unreadSourcesPhrase(failed: readonly NextUpSource[]): string {
+  const labels = failed.map((source) => NEXT_UP_SOURCES[source]);
+  if (labels.length <= 1) return labels.join("");
+  return `${labels.slice(0, -1).join(", ")} y ${labels[labels.length - 1]}`;
 }

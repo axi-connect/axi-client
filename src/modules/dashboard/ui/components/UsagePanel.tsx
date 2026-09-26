@@ -10,18 +10,22 @@ import type { Section } from "@/modules/dashboard/infrastructure/stores/dashboar
 import { TileError, TileSkeleton, UsageMeter } from "@/modules/dashboard/ui/components/parts";
 import { BentoTile } from "@/shared/components/features/bento";
 
-/** «1 – 30 sep»: el ciclo de facturación, en corto. */
-function cycleLabel(start: string, end: string): string {
+/**
+ * «ciclo 1 – 30 sept»: el ciclo de facturación, en corto y en la zona del
+ * negocio. La ventana es `[inicio, fin)` (billing_cycle.port del servidor):
+ * un milisegundo antes del fin es el último día; los bordes son medianoches
+ * del negocio, que en UTC caen en otro día.
+ */
+export function cycleLabel(start: string, end: string, timeZone?: string): string {
   const s = new Date(start);
-  // La ventana es `[inicio, fin)` (billing_cycle.port del servidor): un milisegundo antes del fin es el
-  // último día. En la hora local: los bordes son medianoches del negocio, no de UTC.
   const e = new Date(new Date(end).getTime() - 1);
   if (Number.isNaN(s.getTime()) || Number.isNaN(e.getTime())) return "";
-  const month = (d: Date) => d.toLocaleDateString("es-CO", { month: "short" }).replace(".", "");
-  const sameMonth = s.getMonth() === e.getMonth();
-  return sameMonth
-    ? `ciclo ${String(s.getDate())} – ${String(e.getDate())} ${month(e)}`
-    : `ciclo ${String(s.getDate())} ${month(s)} – ${String(e.getDate())} ${month(e)}`;
+  const part = (d: Date, opts: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat("es-CO", { ...opts, timeZone }).format(d).replace(".", "");
+  const day = (d: Date) => part(d, { day: "numeric" });
+  const month = (d: Date) => part(d, { month: "short" });
+  return month(s) === month(e)
+    ? `ciclo ${day(s)} – ${day(e)} ${month(e)}`
+    : `ciclo ${day(s)} ${month(s)} – ${day(e)} ${month(e)}`;
 }
 
 /**
@@ -31,10 +35,12 @@ function cycleLabel(start: string, end: string): string {
  */
 export function UsagePanel({
   section,
+  timeZone,
   onRetry,
   className,
 }: {
   section: Section<UsageSummaryDTO>;
+  timeZone?: string;
   onRetry: () => Promise<void>;
   className?: string;
 }) {
@@ -52,7 +58,7 @@ export function UsagePanel({
       // tiene contratada (límite propio) o ya consumió en el ciclo
       (metric.metric === "tts_characters" && (metric.limit !== null || metric.used > 0)),
   );
-  const cycle = cycleLabel(summary.period_start, summary.period_end);
+  const cycle = cycleLabel(summary.period_start, summary.period_end, timeZone);
   const hasLimits = highlighted.some((metric) => metric.limit !== null);
 
   return (

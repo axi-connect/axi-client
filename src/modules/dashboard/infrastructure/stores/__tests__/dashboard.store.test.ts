@@ -16,7 +16,9 @@ jest.mock("@/modules/dashboard/infrastructure/services/dashboard-service.adapter
 import {
   getChannels,
   getContactStats,
+  getInboxCounts,
   getOrderStats,
+  getUsageSummary,
 } from "@/modules/dashboard/infrastructure/services/dashboard-service.adapter";
 
 const ALL: DashboardPerms = {
@@ -84,5 +86,37 @@ describe("dashboard.store — reducer WS de canales", () => {
   it("usage.alert guarda la métrica en alerta", () => {
     useDashboardStore.getState().onUsageAlert("ai_requests");
     expect(useDashboardStore.getState().usageAlertMetric).toBe("ai_requests");
+  });
+});
+
+describe("dashboard.store — recargas sin volver a la silueta (auditoría P2-1)", () => {
+  it("al recargar conserva el dato anterior hasta que llega el nuevo", async () => {
+    await useDashboardStore.getState().load(ALL);
+    let resolve: (value: unknown) => void = () => {};
+    (getInboxCounts as jest.Mock).mockImplementationOnce(() => new Promise((r) => { resolve = r; }));
+
+    const pendingRefresh = useDashboardStore.getState().refreshAttention();
+    expect(useDashboardStore.getState().attention).toMatchObject({ status: "loading", data: { queued: 0 } });
+
+    resolve({ queued: 5, mine: 0, ai: 0, all_open: 5, unread_total: 0 });
+    await pendingRefresh;
+    expect(useDashboardStore.getState().attention).toMatchObject({ status: "ready", data: { queued: 5 } });
+  });
+
+  it("si la recarga falla, manda el error (no se queda el dato viejo como si fuera actual)", async () => {
+    await useDashboardStore.getState().load(ALL);
+    (getUsageSummary as jest.Mock).mockRejectedValueOnce(new Error("boom"));
+    await useDashboardStore.getState().refreshUsage();
+    expect(useDashboardStore.getState().usage).toMatchObject({ status: "error", data: null });
+  });
+
+  it("reintenta clientes, consumo y canales por separado", async () => {
+    await useDashboardStore.getState().refreshCustomers();
+    await useDashboardStore.getState().refreshUsage();
+    await useDashboardStore.getState().refreshChannels();
+    expect(getContactStats).toHaveBeenCalledWith("7d");
+    expect(getUsageSummary).toHaveBeenCalledTimes(1);
+    expect(getChannels).toHaveBeenCalledTimes(1);
+    expect(useDashboardStore.getState().channels.data?.[0]).toMatchObject({ id: "ch-1", level: "ok" });
   });
 });

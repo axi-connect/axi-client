@@ -5,6 +5,7 @@ import { useSession } from "@/shared/auth/auth.hooks";
 import { Avatar } from "@/shared/components/ui/avatar";
 import { BrandMark } from "@/shared/components/ui/brand-mark";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import { formatInteger } from "@/core/lib/commercial-units";
 import { formatMillions } from "@/core/lib/format";
 import { useMyCompany } from "@/modules/companies/public";
 import { PeriodSelector } from "@/modules/dashboard/ui/components/PeriodSelector";
@@ -61,7 +62,7 @@ export function DashboardHeader({
 
   const status: string[] = [];
   if (attention.data && attention.data.queued > 0) {
-    status.push(`${String(attention.data.queued)} ${attention.data.queued === 1 ? "espera" : "esperan"} en cola`);
+    status.push(`${formatInteger(attention.data.queued)} ${attention.data.queued === 1 ? "espera" : "esperan"} en cola`);
   }
   if (sales.data && sales.data.kpis.sales_cents > 0) {
     status.push(`${formatMillions(sales.data.kpis.sales_cents, sales.data.kpis.currency)} vendidos ${PERIOD_PHRASES[sales.data.kpis.period]}`);
@@ -79,7 +80,7 @@ export function DashboardHeader({
             fallback={company.name}
             shape="square"
             size={60}
-            className="size-12 shrink-0 rounded-2xl shadow-[0_10px_24px_-12px_rgb(11_11_14/0.45)] sm:size-15 sm:rounded-[1.2rem]"
+            className="size-12 shrink-0 rounded-2xl shadow-md sm:size-15 sm:rounded-[1.2rem]"
           />
         ) : (
           <BrandMark className="size-12 shrink-0 sm:size-15" aria-label="Axi Connect" />

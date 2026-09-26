@@ -16,12 +16,13 @@ const AreaTrend = dynamic(
   { ssr: false, loading: () => <div className="bg-muted h-[160px] animate-pulse rounded-xl" /> },
 );
 
-function formatBucket(iso: string, period: DashboardPeriod): string {
+/** La marca del eje en la zona del negocio: «09 h» hoy, «23 sept» en días. */
+function formatBucket(iso: string, period: DashboardPeriod, timeZone?: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "";
   return period === "today"
-    ? `${date.toLocaleTimeString("es-CO", { hour: "2-digit", hourCycle: "h23" })} h`
-    : date.toLocaleDateString("es-CO", { day: "numeric", month: "short" });
+    ? `${date.toLocaleTimeString("es-CO", { hour: "2-digit", hourCycle: "h23", timeZone })} h`
+    : date.toLocaleDateString("es-CO", { day: "numeric", month: "short", timeZone });
 }
 
 function Figure({ label, short, value, unit, divided }: { label: string; short?: string; value: number; unit?: string; divided?: boolean }) {
@@ -53,11 +54,13 @@ function Figure({ label, short, value, unit, divided }: { label: string; short?:
 export function ConversationsFlowCard({
   section,
   period,
+  timeZone,
   onRetry,
   className,
 }: {
   section: Section<ConversationStatsDTO>;
   period: DashboardPeriod;
+  timeZone?: string;
   onRetry: () => Promise<void>;
   className?: string;
 }) {
@@ -93,7 +96,7 @@ export function ConversationsFlowCard({
                 { key: "Nuevas", label: "Nuevas", color: CHART_COLORS.brand },
                 { key: "Resueltas", label: "Resueltas", color: "var(--color-foreground)", dashed: true, fill: false },
               ]}
-              formatX={(value) => formatBucket(value, period)}
+              formatX={(value) => formatBucket(value, period, timeZone)}
               height={160}
               yAxis={false}
             />

@@ -1,4 +1,4 @@
-import { aiStatusLine, nextUpActions, nextUpHeadline, nextUpItems, type NextUpInput } from "../next-up";
+import { aiStatusLine, nextUpActions, nextUpHeadline, nextUpItems, unreadSourcesPhrase, type NextUpInput } from "../next-up";
 import type { InboxCountsDTO, OrderStatsDTO, UsageSummaryDTO } from "../dashboard";
 import type { ChannelHealth } from "../health";
 
@@ -40,6 +40,7 @@ describe("nextUpItems", () => {
       ["payments", 2, "pagos por verificar"],
     ]);
     expect(items[1].detail).toBe("9 sin leer en todo el inbox");
+    expect(nextUpItems(input({ attention: attention({ unread_total: 1234 }) }))[1].detail).toBe("1.234 sin leer en todo el inbox");
     expect(nextUpHeadline(items)).toBe("Esto te espera ahora");
   });
 
@@ -87,5 +88,13 @@ describe("aiStatusLine", () => {
     expect(aiStatusLine(attention(), usage(true))).toBeNull();
     expect(aiStatusLine(attention({ ai: 0 }), null)).toBeNull();
     expect(aiStatusLine(null, null)).toBeNull();
+  });
+});
+
+describe("unreadSourcesPhrase", () => {
+  it("nombra lo que no se pudo leer, en una frase", () => {
+    expect(unreadSourcesPhrase(["attention"])).toBe("la cola del inbox");
+    expect(unreadSourcesPhrase(["attention", "usage"])).toBe("la cola del inbox y el estado de la IA");
+    expect(unreadSourcesPhrase(["attention", "sales", "channels"])).toBe("la cola del inbox, los pagos por verificar y el estado de los canales");
   });
 });

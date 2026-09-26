@@ -12,6 +12,8 @@ jest.mock("@/modules/onboarding/public", () => ({ useOnboardingResume: () => moc
 const ALL: DashboardPerms = { orders: true, conversations: true, contacts: true, usage: true, channels: true };
 const ready = <T,>(data: T): Section<T> => ({ status: "ready", data, error: null });
 const loading = <T,>(): Section<T> => ({ status: "loading", data: null, error: null });
+const failed = <T,>(): Section<T> => ({ status: "error", data: null, error: "boom" });
+const onRetry = jest.fn().mockResolvedValue(undefined);
 
 const attention = (patch: Partial<InboxCountsDTO> = {}) =>
   ready<InboxCountsDTO>({ queued: 4, mine: 3, ai: 16, all_open: 23, unread_total: 9, ...patch });
@@ -22,11 +24,14 @@ const channels = (level: ChannelHealth["level"] = "ok") =>
 
 function renderIsland(patch: Partial<Parameters<typeof NextUpIsland>[0]> = {}) {
   return render(
-    <NextUpIsland perms={ALL} attention={attention()} sales={sales(2)} channels={channels()} usage={usage()} {...patch} />,
+    <NextUpIsland perms={ALL} attention={attention()} sales={sales(2)} channels={channels()} usage={usage()} onRetry={onRetry} {...patch} />,
   );
 }
 
-beforeEach(() => mockResume.mockReturnValue({ state: "hidden" }));
+beforeEach(() => {
+  mockResume.mockReturnValue({ state: "hidden" });
+  onRetry.mockClear();
+});
 
 describe("NextUpIsland", () => {
   it("mientras carga un dato que la decide, pinta su silueta y no una isla que luego cambie", () => {
@@ -77,5 +82,31 @@ describe("NextUpIsland", () => {
     renderIsland({ attention: attention({ queued: 0, mine: 0, ai: 12, all_open: 12 }), sales: sales(0) });
     expect(screen.getByRole("heading", { name: "Todo al día" })).toBeInTheDocument();
     expect(screen.getByText(/La IA atiende las 12 abiertas; si alguna te necesita, aparece aquí/)).toBeInTheDocument();
+  });
+
+  it("recargando con dato no vuelve a la silueta", () => {
+    renderIsland({ attention: { status: "loading", data: attention().data, error: null } });
+    expect(screen.queryByRole("status")).toBeNull();
+    expect(screen.getByRole("link", { name: /4 esperan en cola/i })).toBeInTheDocument();
+  });
+
+  it("si no pudo leer la cola, no dice «Todo al día»: lo dice y deja reintentar (auditoría P1-1)", async () => {
+    renderIsland({ attention: failed(), sales: sales(0) });
+    expect(screen.queryByRole("heading", { name: "Todo al día" })).toBeNull();
+    expect(screen.getByRole("heading", { name: "No pudimos revisar lo pendiente" })).toBeInTheDocument();
+    expect(screen.getByText(/No pudimos leer la cola del inbox/)).toBeInTheDocument();
+    screen.getByRole("button", { name: "Reintentar" }).click();
+    expect(onRetry).toHaveBeenCalledWith(["attention"]);
+  });
+
+  it("con filas y una fuente caída, pinta las filas y avisa de lo que no leyó", () => {
+    renderIsland({ usage: failed() });
+    expect(screen.getByRole("link", { name: /4 esperan en cola/i })).toBeInTheDocument();
+    expect(screen.getByText(/No pudimos leer el estado de la IA/)).toBeInTheDocument();
+  });
+
+  it("una cola de 4 cifras lleva separador de miles", () => {
+    renderIsland({ attention: attention({ queued: 1234 }) });
+    expect(screen.getByRole("link", { name: /1\.234 esperan en cola/i })).toBeInTheDocument();
   });
 });

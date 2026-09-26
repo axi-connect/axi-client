@@ -42,10 +42,15 @@ export function SalesTiles({ section, onRetry }: { section: Section<OrderStatsDT
   return (
     <>
       <BentoTile label={`Vendido ${phrase}`} aside={<BentoLink href="/orders">Pedidos</BentoLink>}>
-        <BentoFigure
-          value={formatMillions(kpis.sales_cents, kpis.currency)}
-          unit={none ? "aún sin pedidos pagados" : paidOrders(kpis.paid_orders)}
-        />
+        {/* La unidad baja de línea si no cabe: «1.234 pedidos pagados» no entra junto a la cifra en 300 px. */}
+        <p className="flex flex-wrap items-baseline gap-x-1.5 gap-y-1">
+          <span className="font-heading text-4xl leading-none font-bold tracking-tight whitespace-nowrap tabular-nums">
+            {formatMillions(kpis.sales_cents, kpis.currency)}
+          </span>
+          <span className="text-muted-foreground text-sm whitespace-nowrap">
+            {none ? "aún sin pedidos pagados" : paidOrders(kpis.paid_orders)}
+          </span>
+        </p>
         {/* Piezas enteras, el corte en el «·» (§9.5, SummaryParts). */}
         <p className="text-muted-foreground text-xs">
           <span className="whitespace-nowrap">Solo lo pagado ·</span> <span className="whitespace-nowrap">{ordersToday(kpis.orders_today)}</span>

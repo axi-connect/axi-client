@@ -80,12 +80,18 @@ const idle = <T>(): Section<T> => ({ status: "idle", data: null, error: null });
  * sección o actualiza en sitio (canales/consumo).
  */
 export const useDashboardStore = create<DashboardState>((set, get) => {
-  /** Ejecuta un fetch de sección envolviendo estado loading/ready/error. */
+  /**
+   * Ejecuta un fetch de sección envolviendo estado loading/ready/error. Al
+   * RECARGAR (período, evento en vivo, reintento) conserva el dato anterior
+   * mientras llega el nuevo: la ficha y la isla no vuelven a su silueta con
+   * cada conversación nueva (auditoría, P2-1). Si falla, el error manda.
+   */
   async function run<K extends keyof DashboardState>(
     key: K,
     fetcher: () => Promise<DashboardState[K] extends Section<infer T> ? T : never>,
   ): Promise<void> {
-    set({ [key]: { status: "loading", data: null, error: null } } as Partial<DashboardState>);
+    const previous = (get()[key] as Section<unknown>).data;
+    set({ [key]: { status: "loading", data: previous, error: null } } as Partial<DashboardState>);
     try {
       const data = await fetcher();
       set({ [key]: { status: "ready", data, error: null } } as Partial<DashboardState>);

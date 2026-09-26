@@ -68,5 +68,6 @@ export function useDashboardRealtime(perms: DashboardPerms): { live: boolean } {
     if (perms.channels) store.getState().onChannelStatusChanged(payload.channel_id, payload.status);
   });
 
-  return { live: connected };
+  // «En vivo» solo si este rol escucha algo del inbox (el socket de canales no mueve cifras).
+  return { live: connected && (perms.orders || perms.conversations || perms.usage) };
 }

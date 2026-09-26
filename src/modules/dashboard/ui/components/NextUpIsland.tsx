@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Check, ChevronRight, Pause, Sparkle, Unplug } from "lucide-react";
+import { useState } from "react";
+import { AlertCircle, Check, ChevronRight, LoaderCircle, Pause, Sparkle, Unplug } from "lucide-react";
 import { cn } from "@/core/lib/utils";
+import { formatInteger } from "@/core/lib/commercial-units";
 import { useOnboardingResume, type OnboardingResume } from "@/modules/onboarding/public";
 import {
   NEXT_UP_ROUTES,
@@ -10,7 +12,9 @@ import {
   nextUpActions,
   nextUpHeadline,
   nextUpItems,
+  unreadSourcesPhrase,
   type NextUpItem,
+  type NextUpSource,
 } from "@/modules/dashboard/domain/next-up";
 import type { DashboardPerms, Section } from "@/modules/dashboard/infrastructure/stores/dashboard.store";
 import { channelKindLabel, type ChannelHealth } from "@/modules/dashboard/domain/health";
@@ -41,6 +45,7 @@ export function NextUpIsland({
   sales,
   channels,
   usage,
+  onRetry,
   className,
 }: {
   perms: DashboardPerms;
@@ -48,6 +53,8 @@ export function NextUpIsland({
   sales: Section<OrderStatsDTO>;
   channels: Section<ChannelHealth[]>;
   usage: Section<UsageSummaryDTO>;
+  /** Vuelve a pedir las fuentes que fallaron. */
+  onRetry: (failed: NextUpSource[]) => Promise<void>;
   className?: string;
 }) {
   const onboarding = useOnboardingResume();
@@ -87,12 +94,38 @@ export function NextUpIsland({
     kindLabel: channelKindLabel,
   });
   const urgent = items.some((item) => item.tone === "destructive");
+  const failed = (
+    [
+      ["attention", perms.conversations, attention],
+      ["sales", perms.orders, sales],
+      ["channels", perms.channels, channels],
+      ["usage", perms.usage, usage],
+    ] as const
+  )
+    .filter(([, allowed, section]) => allowed && section.status === "error")
+    .map(([source]) => source as NextUpSource);
+  const retry = () => onRetry(failed);
 
   if (onboarding.state === "pending" && !urgent) {
     return <OnboardingIsland resume={onboarding} className={className} />;
   }
 
   const aiLine = aiStatusLine(attention.data, usage.data);
+
+  // Sin filas pero con una fuente que no se leyó: no se sabe si todo está al día.
+  if (items.length === 0 && failed.length > 0) {
+    return (
+      <InkIsland label="Lo próximo" className={cn("gap-2.5", className)}>
+        <Kicker>Lo próximo</Kicker>
+        <h2 className="font-heading text-2xl leading-tight font-bold tracking-tight text-balance">No pudimos revisar lo pendiente</h2>
+        <p className="text-muted-foreground text-sm leading-relaxed text-pretty">
+          No pudimos leer {unreadSourcesPhrase(failed)}. Hasta leerlo no damos por hecho que todo está al día.
+        </p>
+        <div className="min-h-3 flex-1" />
+        <RetryButton onRetry={retry} variant="contrast" />
+      </InkIsland>
+    );
+  }
 
   if (items.length === 0) {
     return (
@@ -124,6 +157,15 @@ export function NextUpIsland({
           </li>
         ))}
       </ul>
+      {failed.length > 0 ? (
+        <div className="text-muted-foreground mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">
+          <span className="inline-flex items-center gap-1.5">
+            <AlertCircle aria-hidden="true" className="size-3.5 shrink-0" />
+            No pudimos leer {unreadSourcesPhrase(failed)}.
+          </span>
+          <RetryButton onRetry={retry} variant="glass" size="sm" />
+        </div>
+      ) : null}
       <div className="min-h-3 flex-1" />
       {aiLine ? (
         <p className="text-muted-foreground mb-2 flex items-center gap-2 text-xs">
@@ -142,6 +184,34 @@ export function NextUpIsland({
   );
 }
 
+/** «Reintentar» con su estado de espera; vuelve a pedir solo lo que falló. */
+function RetryButton({
+  onRetry,
+  variant,
+  size,
+}: {
+  onRetry: () => Promise<void>;
+  variant: "contrast" | "glass";
+  size?: "sm";
+}) {
+  const [retrying, setRetrying] = useState(false);
+  return (
+    <Button
+      variant={variant}
+      size={size}
+      className={cn("w-fit rounded-full", size === "sm" ? "h-8 px-3.5" : "h-11 px-5")}
+      disabled={retrying}
+      onClick={() => {
+        setRetrying(true);
+        void onRetry().finally(() => setRetrying(false));
+      }}
+    >
+      {retrying ? <LoaderCircle aria-hidden="true" className="animate-spin" /> : null}
+      Reintentar
+    </Button>
+  );
+}
+
 function calmSentence(perms: DashboardPerms, aiLine: string | null): string {
   const quiet = perms.orders ? "Nadie espera en cola y no hay pagos por verificar." : "Nadie espera en cola.";
   if (!perms.conversations) return perms.orders ? "No hay pagos por verificar. Si algo te necesita, aparece aquí." : "Si algo te necesita, aparece aquí.";
@@ -156,8 +226,8 @@ function NextUpRow({ item }: { item: NextUpItem }) {
       className="-mx-1.5 flex min-h-11 items-center gap-3.5 rounded-xl px-1.5 py-3.5 transition-colors hover:bg-foreground/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground/50"
     >
       {item.count !== null ? (
-        <span className="font-heading w-10 shrink-0 text-[1.75rem] leading-none font-extrabold tracking-tight tabular-nums">
-          {item.count}
+        <span className="font-heading min-w-10 shrink-0 text-[1.75rem] leading-none font-extrabold tracking-tight tabular-nums">
+          {formatInteger(item.count)}
         </span>
       ) : (
         <span aria-hidden="true" className="bg-foreground/6 relative flex size-10 shrink-0 items-center justify-center rounded-xl">
