@@ -15,6 +15,13 @@ export const PERIOD_LABELS: Record<DashboardPeriod, string> = {
   "30d": "30 días",
 };
 
+/** El período dentro de una frase: «Vendido hoy», «Clientes nuevos en 7 días». */
+export const PERIOD_PHRASES: Record<DashboardPeriod, string> = {
+  today: "hoy",
+  "7d": "en 7 días",
+  "30d": "en 30 días",
+};
+
 /** Ventas — GET /orders/stats (`orders:read`). */
 export type OrderStatsDTO = Schemas["OrderStatsDto"];
 /** Atención — GET /inbox/counts (`conversations:read`). */

@@ -1,90 +1,82 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { DashboardCard } from "@/modules/dashboard/ui/components/MetricTile";
-import { CardEmpty } from "@/shared/components/features/card-empty";
-import { CHART_COLORS } from "@/shared/components/features/charts/chart-theme";
+import { cn } from "@/core/lib/utils";
+import { formatInteger } from "@/core/lib/commercial-units";
 import {
   CONTACT_STAGE_LABELS,
+  PERIOD_PHRASES,
   type ContactStatsDTO,
   type DashboardPeriod,
 } from "@/modules/dashboard/domain/dashboard";
 import type { Section } from "@/modules/dashboard/infrastructure/stores/dashboard.store";
+import { Sparkline, TileError, TileSkeleton } from "@/modules/dashboard/ui/components/parts";
+import { BentoFigure, BentoLink, BentoTile } from "@/shared/components/features/bento";
 
-const AreaTrend = dynamic(
-  () => import("@/shared/components/features/charts/AreaTrend").then((m) => m.AreaTrend),
-  { ssr: false, loading: () => <div className="h-[140px] animate-pulse rounded-xl bg-secondary" /> },
-);
+/**
+ * El reparto por etapa, en tinta y coral: el cliente (la etapa que vende) es
+ * el coral; el resto, tinta con más o menos peso. Sin ámbar: una vista no
+ * mezcla los tres acentos (DESIGN §3.1) y el violeta ya es la IA.
+ */
+const STAGES = [
+  { key: "prospect", swatch: "bg-foreground" },
+  { key: "lead", swatch: "bg-foreground/40" },
+  { key: "customer", swatch: "bg-brand" },
+  { key: "other", swatch: "bg-foreground/15" },
+] as const;
 
-function formatBucket(iso: string, period: DashboardPeriod): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "";
-  return period === "today"
-    ? date.toLocaleTimeString("es-CO", { hour: "2-digit" })
-    : date.toLocaleDateString("es-CO", { day: "2-digit", month: "short" });
-}
-
-/** Clientes nuevos (CRM) — GET /contacts/stats: serie de altas + reparto por etapa. */
+/** Clientes nuevos (CRM) — GET /contacts/stats: cuántos, cuándo y en qué etapa. */
 export function NewCustomersCard({
   section,
   period,
+  onRetry,
+  className,
 }: {
   section: Section<ContactStatsDTO>;
   period: DashboardPeriod;
+  onRetry: () => Promise<void>;
+  className?: string;
 }) {
-  if (section.status === "loading" || section.status === "idle") {
-    return (
-      <DashboardCard title="Clientes nuevos">
-        <div className="h-44 animate-pulse rounded-xl bg-secondary" role="status" aria-label="Cargando" />
-      </DashboardCard>
-    );
+  // Con dato, el período del DATO (auditoría, P2-4).
+  const label = `Clientes nuevos ${PERIOD_PHRASES[section.data?.period ?? period]}`;
+  if (section.status === "error") {
+    return <TileError label={label} message={section.error ?? "No se pudieron cargar los clientes."} onRetry={onRetry} className={className} />;
   }
-  if (section.status === "error" || section.data === null) {
-    return (
-      <DashboardCard title="Clientes nuevos">
-        <p className="text-sm text-muted-foreground">
-          {section.error ?? "No se pudieron cargar los clientes."}
-        </p>
-      </DashboardCard>
-    );
-  }
+  if (section.data === null) return <TileSkeleton label={label} lines={3} className={className} />;
 
   const stats = section.data;
-  const stages = Object.entries(stats.by_stage) as [
-    keyof typeof stats.by_stage,
-    number,
-  ][];
+  const aside = <BentoLink href="/crm/contacts">Contactos</BentoLink>;
+  if (stats.new_count === 0) {
+    return (
+      <BentoTile label={label} aside={aside} busy={section.status === "loading"} className={className}>
+        <BentoFigure value="0" unit="contactos nuevos" />
+        <p className="text-muted-foreground text-xs text-pretty">Cada persona que escriba por primera vez queda aquí como prospecto.</p>
+      </BentoTile>
+    );
+  }
 
+  const stages = STAGES.filter((stage) => stats.by_stage[stage.key] > 0);
   return (
-    <DashboardCard title="Clientes nuevos">
-      {stats.new_count > 0 ? (
-        <>
-          <AreaTrend
-            data={stats.series.map((point) => ({ bucket: point.bucket, Nuevos: point.count }))}
-            xKey="bucket"
-            series={[{ key: "Nuevos", label: "Nuevos", color: CHART_COLORS.amber }]}
-            formatX={(value) => formatBucket(value, period)}
-            height={140}
+    <BentoTile label={label} aside={aside} busy={section.status === "loading"} className={cn("gap-3.5", className)}>
+      <BentoFigure value={formatInteger(stats.new_count)} unit={stats.new_count === 1 ? "contacto nuevo" : "contactos nuevos"} />
+      <Sparkline values={stats.series.map((point) => point.count)} height={76} className="my-1" />
+      <div aria-hidden="true" className="flex h-2 gap-[3px]">
+        {stages.map((stage) => (
+          <span
+            key={stage.key}
+            className={cn("rounded-full", stage.swatch)}
+            style={{ width: `${String((stats.by_stage[stage.key] / stats.new_count) * 100)}%` }}
           />
-          <div className="mt-4 flex items-baseline gap-2">
-            <span className="text-2xl font-semibold tabular-nums">{stats.new_count}</span>
-            <span className="text-sm text-muted-foreground">nuevos en el período</span>
-          </div>
-          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-            {stages.map(([stage, count]) => (
-              <span key={stage}>
-                {CONTACT_STAGE_LABELS[stage]}{" "}
-                <span className="font-semibold tabular-nums text-foreground">{count}</span>
-              </span>
-            ))}
-          </div>
-        </>
-      ) : (
-        <CardEmpty
-          glyph="people"
-          message="Sin clientes nuevos en este período."
-        />
-      )}
-    </DashboardCard>
+        ))}
+      </div>
+      <ul className="text-muted-foreground flex flex-wrap gap-x-4 gap-y-1 text-xs">
+        {stages.map((stage) => (
+          <li key={stage.key} className="inline-flex items-center gap-1.5 whitespace-nowrap">
+            <span aria-hidden="true" className={cn("size-1.5 rounded-full", stage.swatch)} />
+            {CONTACT_STAGE_LABELS[stage.key]}
+            <b className="text-foreground font-semibold tabular-nums">{formatInteger(stats.by_stage[stage.key])}</b>
+          </li>
+        ))}
+      </ul>
+    </BentoTile>
   );
 }

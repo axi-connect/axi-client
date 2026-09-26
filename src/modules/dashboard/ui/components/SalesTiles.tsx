@@ -1,63 +1,76 @@
 "use client";
 
-import { BadgeAlert, Receipt, ShoppingCart, TrendingUp } from "lucide-react";
-import { formatMoney } from "@/core/lib/format";
-import { PERIOD_LABELS } from "@/modules/dashboard/domain/dashboard";
-import { MetricTile } from "@/modules/dashboard/ui/components/MetricTile";
+import { formatInteger } from "@/core/lib/commercial-units";
+import { formatMillions } from "@/core/lib/format";
+import { PERIOD_PHRASES, type OrderStatsDTO } from "@/modules/dashboard/domain/dashboard";
 import type { Section } from "@/modules/dashboard/infrastructure/stores/dashboard.store";
-import type { OrderStatsDTO } from "@/modules/dashboard/domain/dashboard";
+import { TileError, TileSkeleton } from "@/modules/dashboard/ui/components/parts";
+import { BentoFigure, BentoLink, BentoTile } from "@/shared/components/features/bento";
 
-function TilesSkeleton() {
-  return (
-    <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-      {Array.from({ length: 4 }, (_, i) => (
-        <div
-          key={i}
-          role="status"
-          aria-label="Cargando métricas de ventas"
-          className="h-[74px] animate-pulse rounded-2xl border border-border bg-secondary"
-        />
-      ))}
-    </div>
-  );
-}
+const paidOrders = (n: number): string => (n === 1 ? "1 pedido pagado" : `${formatInteger(n)} pedidos pagados`);
+const ordersToday = (n: number): string =>
+  n === 0 ? "hoy no ha entrado ningún pedido" : n === 1 ? "hoy entró 1 pedido" : `hoy entraron ${formatInteger(n)} pedidos`;
 
-/** ¿Cómo van mis ventas? — 4 KPIs desde GET /orders/stats. */
-export function SalesTiles({ section }: { section: Section<OrderStatsDTO> }) {
-  if (section.status === "loading" || section.status === "idle") return <TilesSkeleton />;
-  if (section.status === "error" || section.data === null) {
+/**
+ * ¿Cómo van mis ventas? — GET /orders/stats. Dos fichas de un tema cada una
+ * (§9.5): lo vendido y el ticket. Los pagos por verificar no van aquí: son
+ * accionables y viven en la isla «Lo próximo».
+ */
+export function SalesTiles({ section, onRetry }: { section: Section<OrderStatsDTO>; onRetry: () => Promise<void> }) {
+  if (section.status === "error") {
     return (
-      <div className="rounded-2xl border border-border bg-background p-4 text-sm text-muted-foreground">
-        {section.error ?? "No se pudieron cargar las ventas."}
-      </div>
+      <TileError
+        label="Ventas"
+        message={section.error ?? "No se pudieron cargar las ventas."}
+        onRetry={onRetry}
+        className="md:col-span-2"
+      />
+    );
+  }
+  if (section.data === null) {
+    return (
+      <>
+        <TileSkeleton label="Vendido" />
+        <TileSkeleton label="Ticket promedio" />
+      </>
     );
   }
 
   const { kpis } = section.data;
+  const phrase = PERIOD_PHRASES[kpis.period];
+  const none = kpis.paid_orders === 0;
+  const busy = section.status === "loading";
   return (
-    <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-      <MetricTile
-        label="Pedidos hoy"
-        value={String(kpis.orders_today)}
-        icon={<ShoppingCart aria-hidden className="size-5" />}
-      />
-      <MetricTile
-        label={`Ventas (${PERIOD_LABELS[kpis.period].toLowerCase()})`}
-        value={formatMoney(kpis.sales_cents, kpis.currency)}
-        icon={<TrendingUp aria-hidden className="size-5" />}
-        hint={`${kpis.paid_orders} pagados`}
-      />
-      <MetricTile
-        label="Ticket promedio"
-        value={formatMoney(kpis.average_ticket_cents, kpis.currency)}
-        icon={<Receipt aria-hidden className="size-5" />}
-      />
-      <MetricTile
-        label="Por verificar"
-        value={String(kpis.pending_verification)}
-        icon={<BadgeAlert aria-hidden className="size-5" />}
-        alert={kpis.pending_verification > 0}
-      />
-    </div>
+    <>
+      <BentoTile label={`Vendido ${phrase}`} aside={<BentoLink href="/orders">Pedidos</BentoLink>} busy={busy}>
+        {/* La unidad baja de línea si no cabe: «1.234 pedidos pagados» no entra junto a la cifra en 300 px. */}
+        <p className="flex flex-wrap items-baseline gap-x-1.5 gap-y-1">
+          <span className="font-heading text-4xl leading-none font-bold tracking-tight whitespace-nowrap tabular-nums">
+            {formatMillions(kpis.sales_cents, kpis.currency)}
+          </span>
+          <span className="text-muted-foreground text-sm whitespace-nowrap">
+            {none ? "aún sin pedidos pagados" : paidOrders(kpis.paid_orders)}
+          </span>
+        </p>
+        {/* Piezas enteras, el corte en el «·» (§9.5, SummaryParts). */}
+        <p className="text-muted-foreground text-xs">
+          <span className="whitespace-nowrap">Solo lo pagado ·</span> <span className="whitespace-nowrap">{ordersToday(kpis.orders_today)}</span>
+        </p>
+      </BentoTile>
+      <BentoTile label={`Ticket promedio ${phrase}`} busy={busy}>
+        {none ? (
+          <>
+            <p className="text-sm font-semibold">Aún sin ticket</p>
+            <p className="text-muted-foreground text-xs text-pretty">Aparece con el primer pedido pagado: lo vendido entre los pedidos pagados.</p>
+          </>
+        ) : (
+          <>
+            {/* En millones pasado el millón: un ticket de 9 cifras no cabe en una ficha de 300 px. */}
+            <BentoFigure value={formatMillions(kpis.average_ticket_cents, kpis.currency)} unit="por pedido" />
+            <p className="text-muted-foreground text-xs">Lo vendido entre {paidOrders(kpis.paid_orders)}</p>
+          </>
+        )}
+      </BentoTile>
+    </>
   );
 }

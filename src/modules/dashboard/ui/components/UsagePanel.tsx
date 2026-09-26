@@ -1,66 +1,54 @@
 "use client";
 
-import { cn } from "@/core/lib/utils";
-import { Progress } from "@/shared/components/ui/progress";
-import { DashboardCard } from "@/modules/dashboard/ui/components/MetricTile";
-import { CardEmpty } from "@/shared/components/features/card-empty";
+import { formatInteger } from "@/core/lib/commercial-units";
 import {
   HIGHLIGHTED_USAGE_METRICS,
   USAGE_METRIC_LABELS,
   type UsageSummaryDTO,
 } from "@/modules/dashboard/domain/dashboard";
 import type { Section } from "@/modules/dashboard/infrastructure/stores/dashboard.store";
+import { TileError, TileSkeleton, UsageMeter } from "@/modules/dashboard/ui/components/parts";
+import { BentoTile } from "@/shared/components/features/bento";
 
-function MetricBar({
-  label,
-  used,
-  limit,
-  pct,
-}: {
-  label: string;
-  used: number;
-  limit: number | null;
-  pct: number;
-}) {
-  return (
-    <li className="space-y-1.5">
-      <div className="flex items-center justify-between text-sm">
-        <span className="text-muted-foreground">{label}</span>
-        <span className="tabular-nums">
-          {used.toLocaleString("es-CO")}
-          {limit !== null && (
-            <span className="text-muted-foreground"> / {limit.toLocaleString("es-CO")}</span>
-          )}
-        </span>
-      </div>
-      {limit !== null && (
-        <Progress
-          value={Math.min(pct, 100)}
-          className={cn(pct >= 100 && "bg-destructive/20", pct >= 80 && pct < 100 && "bg-warning/25")}
-        />
-      )}
-    </li>
-  );
+/**
+ * «ciclo 1 – 30 sept»: el ciclo de facturación, en corto y en la zona del
+ * negocio. La ventana es `[inicio, fin)` (billing_cycle.port del servidor):
+ * un milisegundo antes del fin es el último día; los bordes son medianoches
+ * del negocio, que en UTC caen en otro día.
+ */
+export function cycleLabel(start: string, end: string, timeZone?: string): string {
+  const s = new Date(start);
+  const e = new Date(new Date(end).getTime() - 1);
+  if (Number.isNaN(s.getTime()) || Number.isNaN(e.getTime())) return "";
+  const part = (d: Date, opts: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat("es-CO", { ...opts, timeZone }).format(d).replace(".", "");
+  const day = (d: Date) => part(d, { day: "numeric" });
+  const month = (d: Date) => part(d, { month: "short" });
+  return month(s) === month(e)
+    ? `ciclo ${day(s)} – ${day(e)} ${month(e)}`
+    : `ciclo ${day(s)} ${month(s)} – ${day(e)} ${month(e)}`;
 }
 
-/** ¿Cuánto plan he consumido? — GET /usage/summary (billing_cycle). */
-export function UsagePanel({ section }: { section: Section<UsageSummaryDTO> }) {
-  if (section.status === "loading" || section.status === "idle") {
-    return (
-      <DashboardCard title="Consumo del plan">
-        <div className="h-32 animate-pulse rounded-xl bg-secondary" role="status" aria-label="Cargando" />
-      </DashboardCard>
-    );
+/**
+ * ¿Cuánto plan he consumido? — GET /usage/summary (ciclo de facturación: no
+ * cambia con el período). Una barra por métrica legible con la marca del
+ * 80 %; el tono se pone en la barra solo al pasarla. Abajo, el costo del ciclo.
+ */
+export function UsagePanel({
+  section,
+  timeZone,
+  onRetry,
+  className,
+}: {
+  section: Section<UsageSummaryDTO>;
+  timeZone?: string;
+  onRetry: () => Promise<void>;
+  className?: string;
+}) {
+  const label = "Consumo del plan";
+  if (section.status === "error") {
+    return <TileError label={label} message={section.error ?? "No se pudo cargar el consumo."} onRetry={onRetry} className={className} />;
   }
-  if (section.status === "error" || section.data === null) {
-    return (
-      <DashboardCard title="Consumo del plan">
-        <p className="text-sm text-muted-foreground">
-          {section.error ?? "No se pudo cargar el consumo."}
-        </p>
-      </DashboardCard>
-    );
-  }
+  if (section.data === null) return <TileSkeleton label={label} lines={3} className={className} />;
 
   const summary = section.data;
   const highlighted = summary.metrics.filter(
@@ -70,33 +58,50 @@ export function UsagePanel({ section }: { section: Section<UsageSummaryDTO> }) {
       // tiene contratada (límite propio) o ya consumió en el ciclo
       (metric.metric === "tts_characters" && (metric.limit !== null || metric.used > 0)),
   );
+  const cycle = cycleLabel(summary.period_start, summary.period_end, timeZone);
+  const hasLimits = highlighted.some((metric) => metric.limit !== null);
 
   return (
-    <DashboardCard title="Consumo del plan">
+    <BentoTile
+      label={label}
+      aside={cycle ? <span className="text-muted-foreground text-xs whitespace-nowrap">{cycle}</span> : undefined}
+      busy={section.status === "loading"}
+      className={className}
+    >
       {highlighted.length === 0 ? (
-        <CardEmpty
-          glyph="metrics"
-          message="Sin consumo registrado este ciclo."
-        />
+        <p className="text-muted-foreground text-sm text-pretty">Sin consumo registrado este ciclo.</p>
       ) : (
-        <ul className="space-y-4">
-          {highlighted.map((metric) => (
-            <MetricBar
-              key={metric.metric}
-              label={USAGE_METRIC_LABELS[metric.metric] ?? metric.metric}
-              used={metric.used}
-              limit={metric.limit?.value ?? null}
-              pct={metric.limit?.pct_used ?? 0}
-            />
-          ))}
+        <ul className="flex flex-col gap-4 pt-1">
+          {highlighted.map((metric) => {
+            const limit = metric.limit?.value ?? null;
+            return (
+              <li key={metric.metric} className="flex flex-col gap-2">
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="truncate text-sm">{USAGE_METRIC_LABELS[metric.metric] ?? metric.metric}</span>
+                  <span className="text-muted-foreground shrink-0 text-xs whitespace-nowrap tabular-nums">
+                    <b className="text-foreground font-semibold">{formatInteger(metric.used)}</b>
+                    {limit !== null ? ` de ${formatInteger(limit)}` : " · sin límite"}
+                  </span>
+                </div>
+                {limit !== null ? <UsageMeter pct={metric.limit?.pct_used ?? 0} /> : null}
+              </li>
+            );
+          })}
         </ul>
       )}
-      <div className="mt-4 flex items-center justify-between border-t border-border pt-3 text-sm">
-        <span className="text-muted-foreground">Costo del ciclo</span>
-        <span className="font-semibold tabular-nums">
-          ${summary.cost.used_usd.toFixed(2)} USD
+      {hasLimits ? (
+        <p className="text-muted-foreground flex items-center gap-2 text-xs">
+          <span aria-hidden="true" className="bg-foreground/35 h-3 w-0.5 rounded-full" />
+          La marca es el 80 % del límite
+        </p>
+      ) : null}
+      <div className="border-border mt-auto flex items-baseline justify-between gap-3 border-t pt-3.5">
+        <span className="text-muted-foreground text-sm">Costo del ciclo</span>
+        <span className="text-[0.95rem] font-semibold whitespace-nowrap tabular-nums">
+          $ {summary.cost.used_usd.toLocaleString("es-CO", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{" "}
+          <span className="text-muted-foreground text-xs font-normal">USD</span>
         </span>
       </div>
-    </DashboardCard>
+    </BentoTile>
   );
 }
