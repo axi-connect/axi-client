@@ -1,0 +1,22 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-09-25T23:40:00Z" },
+  "title": "Cobros premium · F3 El abono",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 1440, "h": 900, "title": "1 · Pedido — llega un comprobante, se verifica, baja el saldo (interactivo)", "is_interactive": true },
+    "Dialogos.dc.html": { "x": 1520, "y": 0, "w": 1440, "h": 900, "title": "2 · Verificar — sin monto, pago de más y rechazar" },
+    "Movil.dc.html": { "x": 3040, "y": 0, "w": 390, "h": 844, "title": "3 · Pedido — celular" },
+    "Oscuro.dc.html": { "x": 3510, "y": 0, "w": 1440, "h": 900, "title": "4 · Pedido — oscuro" },
+    "Tablero.dc.html": { "x": 0, "y": 1320, "w": 1440, "h": 900, "title": "5 · Pedidos — el cobro de cada tarjeta, sin columna nueva" },
+    "Pagado.dc.html": { "x": 1520, "y": 1320, "w": 1440, "h": 900, "title": "6 · Pedido — saldo cubierto" },
+    "Aviso.dc.html": { "x": 3040, "y": 1320, "w": 1440, "h": 900, "title": "7 · Avisos del pedido — el mensaje del abono" }
+  },
+  "order": ["Main.dc.html", "Dialogos.dc.html", "Movil.dc.html", "Oscuro.dc.html", "Tablero.dc.html", "Pagado.dc.html", "Aviso.dc.html"],
+  "notes": {
+    "rowA": { "x": 0, "y": -300, "text": "El pedido y su cobro", "kind": "title1", "maxW": 4950 },
+    "rowB": { "x": 0, "y": 1060, "text": "El tablero, el saldo cubierto y el aviso", "kind": "title1", "maxW": 4480 }
+  },
+  "designSystems": []
+}

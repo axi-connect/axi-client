@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Mi empresa · General</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&amp;family=Poppins:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Poppins,system-ui,sans-serif;color:#0B0B0E;background:#F5F5F7}
+a{color:#0B0B0E}a:hover{color:#3A3A40}
+.d{font-family:Urbanist,Poppins,sans-serif}
+.m{font-family:"Geist Mono",ui-monospace,monospace}
+.nav{display:flex;align-items:center;gap:12px;height:36px;padding:0 12px;border-radius:10px;font-size:13.5px;color:#3A3A40;text-decoration:none}
+.nav-on{background:#FFFFFF;color:#0B0B0E;font-weight:500;box-shadow:0 1px 2px rgba(0,0,0,.06),0 0 0 1px rgba(0,0,0,.04)}
+.grp{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#6B6B73;padding:14px 12px 6px}
+.card{background:#FFFFFF;border-radius:24px;box-shadow:0 1px 0 rgba(0,0,0,.04),0 12px 32px -18px rgba(16,16,24,.18);border:1px solid rgba(0,0,0,.05)}
+.lbl{font-size:12px;color:#6B6B73}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:999px;font:500 14px Poppins,sans-serif;border:0;cursor:pointer;text-decoration:none}
+.btn-p{background:#D13F42;color:#FFFFFF;box-shadow:0 10px 24px -10px rgba(209,63,66,.55)}
+.btn-g{background:transparent;color:#0B0B0E}
+.icb{width:38px;height:38px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:#FFFFFF;border:1px solid rgba(0,0,0,.08);color:#0B0B0E}
+.tab{height:40px;padding:0 18px;border-radius:999px;font:500 13.5px Poppins,sans-serif;color:#3A3A40;display:inline-flex;align-items:center;text-decoration:none}
+.tab-on{background:#0B0B0E;color:#FFFFFF}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field label{font-size:12.5px;font-weight:500;color:#3A3A40}
+.input{height:44px;border-radius:12px;border:1px solid rgba(0,0,0,.12);background:#FFFFFF;padding:0 14px;font:14px Poppins,sans-serif;color:#0B0B0E;box-sizing:border-box;width:100%}
+.niche{display:flex;align-items:center;gap:10px;min-height:48px;padding:0 14px;border-radius:14px;border:1px solid rgba(0,0,0,.10);background:#FFFFFF;font:500 13.5px Poppins,sans-serif;color:#0B0B0E;cursor:pointer;text-align:left}
+.niche-on{border-color:#0B0B0E;box-shadow:0 0 0 1px #0B0B0E}
+.radio{width:18px;height:18px;border-radius:999px;border:1.5px solid rgba(0,0,0,.28);flex-shrink:0;box-sizing:border-box;display:flex;align-items:center;justify-content:center}
+.radio-on{border-color:#0B0B0E}
+.radio-on::after{content:"";width:8px;height:8px;border-radius:9px;background:#0B0B0E}
+.frow{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid rgba(255,255,255,.08);font-size:13.5px}
+.fdot{width:22px;height:22px;border-radius:999px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.fdot-on{background:#F4F4F5;color:#0B0B0E}.fdot-off{border:1.5px solid rgba(255,255,255,.28)}
+.isl{position:relative;isolation:isolate;overflow:hidden;border-radius:24px}
+.isl-glass{color:#0B0B0E;background:var(--glow,none),linear-gradient(160deg,rgba(255,255,255,.82),rgba(246,243,254,.62));-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);box-shadow:inset 0 2px 2px rgba(11,11,14,.05),inset 0 -2px 2px rgba(255,255,255,.5),inset 0 0 1.6px 4px rgba(255,255,255,.2),inset 0 0 18px 2px rgba(255,255,255,.55),0 4px 2px -2px rgba(11,11,14,.14),0 30px 70px -34px rgba(16,16,24,.35),0 30px 80px -40px rgba(124,58,237,.35)}
+.isl-dark{color:#EDEDED;background:var(--glow,none),linear-gradient(160deg,rgba(38,38,42,.90),rgba(28,24,40,.92));-webkit-backdrop-filter:blur(20px) saturate(170%);backdrop-filter:blur(20px) saturate(170%);box-shadow:inset 0 2px 2px rgba(255,255,255,.10),inset 0 -2px 2px rgba(0,0,0,.35),inset 0 0 1.6px 4px rgba(255,255,255,.04),inset 0 0 14px 1px rgba(255,255,255,.08),0 40px 90px -36px rgba(124,58,237,.55),0 18px 50px -24px rgba(230,87,89,.45)}
+.isl-glass::before,.isl-dark::before{content:"";position:absolute;inset:0;z-index:1;padding:1.5px;border-radius:inherit;pointer-events:none;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.isl-glass::before{background:conic-gradient(from -75deg at 50% 50%,rgba(11,11,14,.32) 0%,transparent 6% 40%,rgba(11,11,14,.32) 50%,transparent 56% 94%,rgba(11,11,14,.32) 100%),linear-gradient(rgba(255,255,255,.85),rgba(255,255,255,.85))}
+.isl-dark::before{background:conic-gradient(from -75deg at 50% 50%,rgba(255,255,255,.7) 0%,transparent 6% 40%,rgba(255,255,255,.7) 50%,transparent 56% 94%,rgba(255,255,255,.7) 100%),linear-gradient(rgba(255,255,255,.12),rgba(255,255,255,.12))}
+.isl-glass::after,.isl-dark::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none}
+.isl-glass::after{background:linear-gradient(-45deg,transparent 0%,rgba(255,255,255,.55) 40% 46%,transparent 54%) 0 0/200% 200%,radial-gradient(60% 45% at 30% 0%,rgba(255,255,255,.9),transparent 70%)}
+.isl-dark::after{background:linear-gradient(-45deg,transparent 0%,rgba(255,255,255,.10) 40% 46%,transparent 54%) 0 0/200% 200%,radial-gradient(60% 45% at 30% 0%,rgba(255,255,255,.14),transparent 70%)}
+.isl-ink{color:#F4F4F5;background:var(--glow,none),#0B0B0E}
+.isl-glass.glow-brand{--glow:radial-gradient(circle 20rem at 90% 8%,rgba(230,87,89,.16),transparent 70%)}
+.isl-glass.glow-ai{--glow:radial-gradient(circle 22rem at 0% 0%,rgba(124,58,237,.16),transparent 70%),radial-gradient(circle 20rem at 100% 100%,rgba(230,87,89,.11),transparent 70%)}
+.isl-dark.glow-brand{--glow:radial-gradient(circle 20rem at 90% 8%,rgba(251,113,133,.26),transparent 70%)}
+.isl-dark.glow-ai{--glow:radial-gradient(circle 22rem at 0% 0%,rgba(167,139,250,.26),transparent 70%),radial-gradient(circle 20rem at 100% 100%,rgba(251,113,133,.18),transparent 70%)}
+.isl-ink.glow-brand{--glow:radial-gradient(circle 20rem at 90% 8%,rgba(230,87,89,.45),transparent 70%)}
+.btn-contrast{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:999px;font:500 14px Poppins,sans-serif;border:0;cursor:pointer;text-decoration:none;background:#0B0B0E;color:#FFFFFF}
+.isl-dark .btn-contrast,.isl-ink .btn-contrast{background:#F4F4F5;color:#0B0B0E}
+.btn-glass{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:999px;font:500 14px Poppins,sans-serif;border:0;cursor:pointer;text-decoration:none;position:relative;color:rgba(11,11,14,.92);background:linear-gradient(-75deg,rgba(255,255,255,.08),rgba(255,255,255,.5),rgba(255,255,255,.08));box-shadow:inset 0 2px 2px rgba(11,11,14,.05),inset 0 -2px 2px rgba(255,255,255,.5),0 4px 2px -2px rgba(11,11,14,.2),inset 0 0 1.6px 4px rgba(255,255,255,.2),0 0 0 1px rgba(11,11,14,.08)}
+.isl-dark .btn-glass{color:rgba(237,237,237,.92);background:linear-gradient(-75deg,rgba(255,255,255,.03),rgba(255,255,255,.10),rgba(255,255,255,.03));box-shadow:inset 0 2px 2px rgba(255,255,255,.08),inset 0 -2px 2px rgba(0,0,0,.3),0 0 0 1px rgba(255,255,255,.12)}
+.isl-glass .fact,.isl-glass .frow,.isl-glass .cal{border-top-color:rgba(11,11,14,.08)!important}
+.isl-glass .seg-on{background:#0B0B0E}.isl-glass .seg-off{background:rgba(11,11,14,.12)}
+.isl-glass .step{color:#3A3A40}.isl-glass .chk-on,.isl-glass .fdot-on{background:#0B0B0E;color:#FFFFFF}.isl-glass .chk-off,.isl-glass .fdot-off,.isl-glass .cn{border-color:rgba(11,11,14,.28)}
+.isl-glass .bub{background:#FFFFFF;box-shadow:0 1px 2px rgba(0,0,0,.06),0 0 0 1px rgba(11,11,14,.05)}.isl-glass .gap{border-color:rgba(11,11,14,.24);color:#6B6B73}.isl-glass .day{color:#6B6B73}
+@media (prefers-reduced-transparency: reduce){.isl-glass{background:#FFFFFF}.isl-dark{background:#1E1E22}}
+</style>
+</helmet>
+<div style="width:1440px;height:900px;display:flex;background:#F5F5F7;overflow:hidden;position:relative">
+  <aside style="width:248px;flex-shrink:0;padding:18px 14px;box-sizing:border-box;display:flex;flex-direction:column;gap:2px;border-right:1px solid rgba(0,0,0,.06);background:rgba(255,255,255,.6)">
+    <div style="display:flex;align-items:center;gap:10px;padding:4px 10px 16px">
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="11" cy="15" r="7.5" fill="none" stroke="#D13F42" stroke-width="4"></circle><path d="M16 5 L25 24" stroke="#F2A93B" stroke-width="4" stroke-linecap="round"></path><path d="M25 5 L17 20" stroke="#7B5CF0" stroke-width="4" stroke-linecap="round"></path></svg>
+      <div style="display:flex;flex-direction:column;gap:2px"><span class="d" style="font-weight:700;font-size:15px">Axi Connect</span><span style="font-size:11.5px;color:#6B6B73">JuanitoXpeditions</span></div>
+    </div>
+    <a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg>Inicio</a>
+    <a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"></path></svg>Inbox</a>
+    <a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="8" r="4"></circle><path d="M3 21a6 6 0 0 1 12 0"></path></svg>Contactos</a>
+    <div class="grp">Ventas</div>
+    <a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><path d="M3 6h18"></path></svg>Pedidos</a>
+    <a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2" y="5" width="20" height="14" rx="3"></rect><path d="M2 10h20M6 15h4"></path></svg>Cartera</a>
+    <a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3 3 8l9 5 9-5-9-5Z"></path><path d="m3 13 9 5 9-5"></path></svg>Catálogo</a>
+    <div class="grp">Configuración</div>
+    <a class="nav nav-on" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D13F42" stroke-width="1.7"><path d="M4 21V7l8-4 8 4v14"></path><path d="M9 21v-6h6v6"></path></svg>Mi empresa</a>
+    <a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2" y="5" width="20" height="14" rx="3"></rect><path d="M2 10h20"></path></svg>Pagos</a>
+    <div style="flex-grow:1"></div>
+    <div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:14px;background:#FFFFFF;border:1px solid rgba(0,0,0,.05)">
+      <div style="width:32px;height:32px;border-radius:999px;background:#0B0B0E;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">JR</div>
+      <div style="display:flex;flex-direction:column"><span style="font-size:13px;font-weight:500">Juanita R.</span><span style="font-size:11.5px;color:#6B6B73">Dueña</span></div>
+    </div>
+  </aside>
+
+  <main style="flex-grow:1;display:flex;flex-direction:column;min-width:0">
+    <header style="height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 40px;flex-shrink:0">
+      <nav aria-label="Ruta" style="display:flex;gap:10px;font-size:13px;color:#6B6B73"><span>Mi empresa</span><span aria-hidden="true">/</span><span style="color:#0B0B0E;font-weight:500">General</span></nav>
+      <div style="display:flex;gap:10px"><button class="icb" aria-label="Notificaciones"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path></svg></button><button class="icb" aria-label="Tema"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 14A8 8 0 1 1 10 4a6.5 6.5 0 0 0 10 10Z"></path></svg></button></div>
+    </header>
+
+    <div style="padding:4px 40px 32px;display:flex;flex-direction:column;gap:20px;flex-grow:1;min-height:0">
+      <section style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <h1 class="d" style="margin:0;font-size:38px;font-weight:700;letter-spacing:-.02em;line-height:1.1">Mi empresa</h1>
+          <p style="margin:0;font-size:13.5px;color:#6B6B73">{{dirtyText}}</p>
+        </div>
+      </section>
+      <nav aria-label="Secciones de Mi empresa" style="display:flex;gap:4px;padding:4px;border-radius:999px;background:#FFFFFF;border:1px solid rgba(0,0,0,.06);align-self:flex-start">
+        <a class="tab tab-on" href="#" aria-current="page">General</a><a class="tab" href="#">Sucursales</a><a class="tab" href="#">Documentos</a><a class="tab" href="Main.dc.html">Funciones</a>
+      </nav>
+
+      <section style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr) 336px;gap:16px;flex-grow:1;min-height:0">
+        <article class="card" style="padding:22px 24px;display:flex;flex-direction:column;gap:16px;min-width:0">
+          <span class="lbl">Datos del negocio</span>
+          <div class="field"><label for="g-name">Nombre comercial</label><input id="g-name" class="input" value="JuanitoXpeditions"></div>
+          <div class="field"><label for="g-legal">Razón social</label><input id="g-legal" class="input" value="Juanito Expediciones S.A.S."></div>
+          <div class="field"><label for="g-nit">NIT</label><input id="g-nit" class="input m" value="901.234.567-8"></div>
+          <div class="field"><label for="g-city">Ciudad</label><input id="g-city" class="input" value="Medellín"></div>
+        </article>
+
+        <article class="card" style="padding:22px 24px;display:flex;flex-direction:column;gap:14px;min-width:0">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <span class="lbl">Tipo de negocio</span>
+            <span class="d" style="font-size:26px;font-weight:700;letter-spacing:-.02em;line-height:1.1">{{currentLabel}}</span>
+            <span style="font-size:13px;color:#3A3A40">Decide qué funciones se te sugieren y cómo le habla el agente a tus clientes.</span>
+          </div>
+          <div role="radiogroup" aria-label="Tipo de negocio" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
+            <sc-for list="{{niches}}" as="n" hint-placeholder-count="9">
+              <button type="button" role="radio" aria-checked="{{n.checked}}" class="niche {{n.cls}}" onClick="{{n.pick}}"><span class="radio {{n.radioCls}}"></span><span style="min-width:0">{{n.label}}</span></button>
+            </sc-for>
+          </div>
+        </article>
+
+        <article class="isl isl-glass glow-brand" style="padding:26px;display:flex;flex-direction:column;gap:16px">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <span style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6B6B73">Al guardar</span>
+            <span class="d" style="font-size:28px;font-weight:700;line-height:1.1;letter-spacing:-.02em">{{islandTitle}}</span>
+            <span style="font-size:13.5px;color:#3A3A40;line-height:1.5">{{islandBody}}</span>
+          </div>
+          <div style="display:flex;flex-direction:column">
+            <sc-for list="{{preview}}" as="p" hint-placeholder-count="4">
+              <div class="frow">
+                <sc-if value="{{p.on}}" hint-placeholder-val="{{true}}"><span class="fdot fdot-on"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 12 5 5 9-10"></path></svg></span></sc-if>
+                <sc-if value="{{p.off}}" hint-placeholder-val="{{false}}"><span class="fdot fdot-off"></span></sc-if>
+                <span style="flex-grow:1;font-weight:500">{{p.label}}</span>
+                <span style="font-size:12px;color:#6B6B73">{{p.state}}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="flex-grow:1"></div>
+          <span style="font-size:12.5px;color:#6B6B73;line-height:1.5">Lo que ya encendiste o apagaste tú no cambia: el tipo de negocio solo sugiere.</span>
+        </article>
+      </section>
+    </div>
+  </main>
+  <sc-if value="{{dirty}}" hint-placeholder-val="{{false}}">
+    <footer class="isl isl-ink glow-brand" role="region" aria-label="Cambios sin guardar" style="position:absolute;left:calc(248px + (100% - 248px) / 2);bottom:20px;transform:translateX(-50%);border-radius:999px;padding:8px 8px 8px 24px;display:flex;align-items:center;gap:18px;white-space:nowrap;box-shadow:0 20px 50px -20px rgba(11,11,14,.55)">
+      <span style="display:flex;flex-direction:column;gap:1px"><span style="font-size:13.5px;font-weight:600">Cambios sin guardar</span><span style="font-size:12px;color:#A1A1AA">{{dockDetail}}</span></span>
+      <span style="display:flex;gap:6px"><button class="btn" onClick="{{reset}}" style="background:transparent;color:#F4F4F5;border:1px solid rgba(255,255,255,.18)">Descartar</button><button class="btn btn-p">Guardar cambios</button></span>
+    </footer>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { saved: 'hotels_tourism', picked: 'hotels_tourism' };
+  }
+  renderVals() {
+    const list = [
+      ['hotels_tourism', 'Hoteles y turismo'], ['restaurants', 'Restaurantes y comida'], ['retail_fashion', 'Retail y moda'],
+      ['health_beauty', 'Salud, belleza y citas'], ['real_estate', 'Inmobiliarias'], ['education', 'Educación y cursos'],
+      ['professional_services', 'Servicios profesionales'], ['b2b_distribution', 'Distribuidores B2B'], ['other', 'Otro tipo de negocio']
+    ];
+    const defaults = {
+      hotels_tourism: ['payment_plans', 'collections', 'fx_quotes', 'documents'],
+      education: ['payment_plans', 'collections', 'documents'],
+      real_estate: ['payment_plans', 'collections', 'documents'],
+      professional_services: ['documents']
+    };
+    const feats = [['payment_plans', 'Planes de pago'], ['collections', 'Cobranza'], ['fx_quotes', 'Precios en otra moneda'], ['documents', 'Documentos del cliente']];
+    const picked = this.state.picked;
+    const labelOf = (code) => list.find((n) => n[0] === code)[1];
+    const on = defaults[picked] || [];
+    const dirty = picked !== this.state.saved;
+    const niches = list.map(([code, label]) => ({
+      label,
+      checked: code === picked ? 'true' : 'false',
+      cls: code === picked ? 'niche-on' : '',
+      radioCls: code === picked ? 'radio-on' : '',
+      pick: () => this.setState({ picked: code })
+    }));
+    const preview = feats.map(([code, label]) => ({ label, on: on.includes(code), off: !on.includes(code), state: on.includes(code) ? 'se sugiere' : 'no se sugiere' }));
+    let islandTitle = on.length === 0 ? 'Sin funciones de cobro' : on.length + ' de 4 funciones sugeridas';
+    let islandBody = on.length === 0
+      ? labelOf(picked) + ' suele cobrar de contado: no se sugiere ninguna. Puedes encenderlas igual en Funciones.'
+      : 'Con ' + labelOf(picked) + ' se sugiere lo que ves abajo. El agente las explica apenas estén encendidas.';
+    if (!dirty) islandTitle = 'Así está hoy';
+    return {
+      niches, preview, islandTitle, islandBody, dirty,
+      dockDetail: 'Tipo de negocio: ' + labelOf(picked),
+      notDirty: dirty ? 'false' : 'true',
+      saveOpacity: dirty ? '1' : '0.6',
+      currentLabel: labelOf(picked),
+      dirtyText: dirty ? 'Cambios sin guardar · tipo de negocio' : 'Los datos con los que te conocen tus clientes y el agente.',
+      reset: () => this.setState({ picked: this.state.saved })
+    };
+  }
+}
+</script>
+</body>
+</html>
