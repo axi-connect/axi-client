@@ -23,6 +23,27 @@ const CHANNEL_STATUS_LEVEL: Record<string, HealthLevel> = {
   error: "critical",
 };
 
+/** Nombre corto del proveedor para frases del Panel («Instagram se desconectó»). */
+const CHANNEL_KIND_SHORT: Record<string, string> = {
+  whatsapp_cloud: "WhatsApp",
+  whatsapp_web: "WhatsApp Web",
+  instagram_dm: "Instagram",
+  facebook_messenger: "Messenger",
+};
+
+export function channelKindLabel(kind: string): string {
+  return CHANNEL_KIND_SHORT[kind] ?? kind;
+}
+
+/** Estado de un canal en palabras (la ficha de salud). */
+export const CHANNEL_STATUS_TEXT: Record<string, string> = {
+  connected: "Conectado",
+  connecting: "Conectando…",
+  pending_setup: "Sin configurar",
+  disconnected: "Desconectado",
+  error: "Con error",
+};
+
 export function channelLevel(status: string): HealthLevel {
   return CHANNEL_STATUS_LEVEL[status] ?? "warning";
 }

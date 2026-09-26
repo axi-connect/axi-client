@@ -11,9 +11,12 @@ import { useDashboardStore, type DashboardPerms } from "@/modules/dashboard/infr
  *   flujo; usage.updated → consumo; usage.alert → marca la métrica.
  * - `/channels`: channel.status_changed → actualiza el canal en sitio.
  * Solo se suscribe a lo que el rol puede ver (mismos permisos que el fetch).
+ *
+ * Devuelve `live`: el socket del inbox está conectado. La cabecera dice «En
+ * vivo» solo entonces (si no se refresca, no se promete — DESIGN-SYSTEM §9.6).
  */
-export function useDashboardRealtime(perms: DashboardPerms) {
-  const { socket: inbox } = useSocket("inbox");
+export function useDashboardRealtime(perms: DashboardPerms): { live: boolean } {
+  const { socket: inbox, connected } = useSocket("inbox");
   const { socket: channels } = useSocket("channels");
   const store = useDashboardStore;
 
@@ -64,4 +67,6 @@ export function useDashboardRealtime(perms: DashboardPerms) {
   useSocketEvent(channels, "channel.status_changed", (payload) => {
     if (perms.channels) store.getState().onChannelStatusChanged(payload.channel_id, payload.status);
   });
+
+  return { live: connected };
 }

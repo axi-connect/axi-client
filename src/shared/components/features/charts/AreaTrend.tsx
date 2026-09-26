@@ -41,6 +41,7 @@ export function AreaTrend({
   formatX,
   formatY,
   height = 180,
+  yAxis = true,
 }: {
   /** `null` = sin dato en ese punto (el trazo se corta, no cae a cero). */
   data: Array<Record<string, number | string | null>>;
@@ -49,13 +50,15 @@ export function AreaTrend({
   formatX?: (value: string) => string;
   formatY?: (value: number) => string;
   height?: number;
+  /** `false` = sin eje Y: las cifras ya van escritas encima del gráfico (el Panel). */
+  yAxis?: boolean;
 }) {
   const reduced = useReducedMotion();
   const gradientId = useId();
 
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <AreaChart data={data} margin={{ top: 4, right: 8, bottom: 0, left: -12 }}>
+      <AreaChart data={data} margin={{ top: 4, right: 8, bottom: 0, left: yAxis ? -12 : 8 }}>
         <defs>
           {series.map((entry, index) => (
             <linearGradient
@@ -89,6 +92,7 @@ export function AreaTrend({
           minTickGap={24}
         />
         <YAxis
+          hide={!yAxis}
           tick={{ fontSize: 11, fill: AXIS_COLOR }}
           tickLine={false}
           axisLine={false}

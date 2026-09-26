@@ -61,6 +61,10 @@ interface DashboardState {
   refreshAttention: () => Promise<void>;
   refreshConversations: () => Promise<void>;
   refreshTopProducts: () => Promise<void>;
+  // Reintento de una ficha que falló («Reintentar»)
+  refreshCustomers: () => Promise<void>;
+  refreshUsage: () => Promise<void>;
+  refreshChannels: () => Promise<void>;
   onChannelStatusChanged: (channelId: string, status: string) => void;
   onUsageUpdated: () => Promise<void>;
   onUsageAlert: (metric: string) => void;
@@ -109,10 +113,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => {
       const tasks: Promise<void>[] = [];
       if (perms.orders) tasks.push(get().refreshSales(), get().refreshTopProducts());
       if (perms.conversations) tasks.push(get().refreshConversations());
-      if (perms.contacts)
-        tasks.push(
-          run("customers", () => getContactStats(period)),
-        );
+      if (perms.contacts) tasks.push(get().refreshCustomers());
       void Promise.all(tasks);
     },
 
@@ -150,6 +151,15 @@ export const useDashboardStore = create<DashboardState>((set, get) => {
     },
     refreshTopProducts() {
       return run("topProducts", () => getTopProducts(get().period));
+    },
+    refreshCustomers() {
+      return run("customers", () => getContactStats(get().period));
+    },
+    refreshUsage() {
+      return run("usage", () => getUsageSummary());
+    },
+    refreshChannels() {
+      return run("channels", async () => mapChannelsHealth(await getChannels()));
     },
 
     onChannelStatusChanged(channelId, status) {

@@ -1,98 +1,139 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { DashboardCard } from "@/modules/dashboard/ui/components/MetricTile";
+import { cn } from "@/core/lib/utils";
+import { formatInteger } from "@/core/lib/commercial-units";
 import { CardEmpty } from "@/shared/components/features/card-empty";
+import { BentoLink, BentoTile } from "@/shared/components/features/bento";
 import { CHART_COLORS } from "@/shared/components/features/charts/chart-theme";
+import { PERIOD_PHRASES, type ConversationStatsDTO, type DashboardPeriod } from "@/modules/dashboard/domain/dashboard";
 import type { Section } from "@/modules/dashboard/infrastructure/stores/dashboard.store";
-import type { ConversationStatsDTO, DashboardPeriod } from "@/modules/dashboard/domain/dashboard";
+import { TileError, TileSkeleton } from "@/modules/dashboard/ui/components/parts";
 
 // Recharts solo en cliente: fuera del bundle inicial y sin SSR.
 const AreaTrend = dynamic(
   () => import("@/shared/components/features/charts/AreaTrend").then((m) => m.AreaTrend),
-  { ssr: false, loading: () => <div className="h-[180px] animate-pulse rounded-xl bg-secondary" /> },
+  { ssr: false, loading: () => <div className="bg-muted h-[160px] animate-pulse rounded-xl" /> },
 );
 
 function formatBucket(iso: string, period: DashboardPeriod): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "";
   return period === "today"
-    ? date.toLocaleTimeString("es-CO", { hour: "2-digit" })
-    : date.toLocaleDateString("es-CO", { day: "2-digit", month: "short" });
+    ? `${date.toLocaleTimeString("es-CO", { hour: "2-digit", hourCycle: "h23" })} h`
+    : date.toLocaleDateString("es-CO", { day: "numeric", month: "short" });
 }
 
-/** Flujo de conversaciones — GET /inbox/stats: serie nuevas/resueltas + IA/humano. */
+function Figure({ label, short, value, unit, divided }: { label: string; short?: string; value: number; unit?: string; divided?: boolean }) {
+  return (
+    <div className={cn("flex min-w-0 flex-col gap-1.5", divided && "border-border border-l pl-4 sm:pl-6")}>
+      <span className="text-muted-foreground truncate text-xs">
+        {short ? (
+          <>
+            <span className="sm:hidden">{short}</span>
+            <span className="hidden sm:inline">{label}</span>
+          </>
+        ) : (
+          label
+        )}
+      </span>
+      <p className="flex items-baseline gap-2 whitespace-nowrap">
+        <span className="font-heading text-3xl leading-none font-bold tracking-tight tabular-nums sm:text-4xl">{formatInteger(value)}</span>
+        {unit ? <span className="text-muted-foreground hidden truncate text-sm sm:inline">{unit}</span> : null}
+      </p>
+    </div>
+  );
+}
+
+/**
+ * Conversaciones — GET /inbox/stats: cuántas entraron, cuántas se
+ * resolvieron, cuántas siguen abiertas y quién las resolvió. Coral para las
+ * nuevas (la marca) y tinta punteada para las resueltas; el violeta es la IA.
+ */
 export function ConversationsFlowCard({
   section,
   period,
+  onRetry,
+  className,
 }: {
   section: Section<ConversationStatsDTO>;
   period: DashboardPeriod;
+  onRetry: () => Promise<void>;
+  className?: string;
 }) {
-  if (section.status === "loading" || section.status === "idle") {
-    return (
-      <DashboardCard title="Flujo de conversaciones">
-        <div className="h-52 animate-pulse rounded-xl bg-secondary" role="status" aria-label="Cargando" />
-      </DashboardCard>
-    );
+  const label = `Conversaciones ${PERIOD_PHRASES[period]}`;
+  if (section.status === "error") {
+    return <TileError label={label} message={section.error ?? "No se pudo cargar el flujo."} onRetry={onRetry} className={className} />;
   }
-  if (section.status === "error" || section.data === null) {
-    return (
-      <DashboardCard title="Flujo de conversaciones">
-        <p className="text-sm text-muted-foreground">
-          {section.error ?? "No se pudo cargar el flujo."}
-        </p>
-      </DashboardCard>
-    );
-  }
+  if (section.data === null) return <TileSkeleton label={label} lines={4} className={className} />;
 
   const stats = section.data;
-  const hasData = stats.new_count > 0 || stats.resolved_count > 0;
+  const hasData = stats.new_count > 0 || stats.resolved_count > 0 || stats.open_now > 0;
 
   return (
-    <DashboardCard title="Flujo de conversaciones">
+    <BentoTile label={label} aside={<BentoLink href="/workspace/inbox">Inbox</BentoLink>} className={cn("gap-5", className)}>
       {hasData ? (
         <>
-          <AreaTrend
-            data={stats.series.map((point) => ({
-              bucket: point.bucket,
-              Nuevas: point.new,
-              Resueltas: point.resolved,
-            }))}
-            xKey="bucket"
-            series={[
-              { key: "Nuevas", label: "Nuevas", color: CHART_COLORS.brand },
-              { key: "Resueltas", label: "Resueltas", color: CHART_COLORS.violet },
-            ]}
-            formatX={(value) => formatBucket(value, period)}
-          />
-          <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
-            <span>
-              <span className="font-semibold tabular-nums">{stats.new_count}</span>{" "}
-              <span className="text-muted-foreground">nuevas</span>
-            </span>
-            <span>
-              <span className="font-semibold tabular-nums">{stats.resolved_count}</span>{" "}
-              <span className="text-muted-foreground">resueltas</span>
-            </span>
-            <span className="ml-auto flex items-center gap-3 text-xs">
-              <span className="flex items-center gap-1">
-                <span className="size-2 rounded-full" style={{ background: CHART_COLORS.brand }} />
-                IA {stats.ai_resolved_pct}%
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="size-2 rounded-full" style={{ background: CHART_COLORS.violet }} />
-                Humano {stats.human_resolved_pct}%
-              </span>
-            </span>
+          <div className="grid grid-cols-3">
+            <Figure label="Nuevas" value={stats.new_count} />
+            <Figure label="Resueltas" value={stats.resolved_count} divided />
+            <Figure
+              label="Abiertas ahora"
+              short="Abiertas"
+              value={stats.open_now}
+              unit={stats.queued_now > 0 ? `${formatInteger(stats.queued_now)} en cola` : undefined}
+              divided
+            />
           </div>
+          <div className="flex flex-col gap-2">
+            <AreaTrend
+              data={stats.series.map((point) => ({ bucket: point.bucket, Nuevas: point.new, Resueltas: point.resolved }))}
+              xKey="bucket"
+              series={[
+                { key: "Nuevas", label: "Nuevas", color: CHART_COLORS.brand },
+                { key: "Resueltas", label: "Resueltas", color: "var(--color-foreground)", dashed: true, fill: false },
+              ]}
+              formatX={(value) => formatBucket(value, period)}
+              height={160}
+              yAxis={false}
+            />
+            <div className="text-muted-foreground flex gap-4 text-xs">
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                <span aria-hidden="true" className="bg-brand h-[3px] w-3.5 rounded-full" />
+                Nuevas
+              </span>
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                <span aria-hidden="true" className="border-foreground/60 w-3.5 border-t-2 border-dashed" />
+                Resueltas
+              </span>
+            </div>
+          </div>
+          {stats.resolved_count > 0 ? <WhoResolved ai={stats.ai_resolved_pct} human={stats.human_resolved_pct} /> : null}
         </>
       ) : (
-        <CardEmpty
-          glyph="conversation"
-          message="Aún no hay conversaciones en este período."
-        />
+        <CardEmpty glyph="conversation" message="Aún no hay conversaciones en este período. Llegan por tus canales conectados." />
       )}
-    </DashboardCard>
+    </BentoTile>
+  );
+}
+
+/** Quién resolvió: la IA (violeta) y el equipo, en una barra partida. */
+function WhoResolved({ ai, human }: { ai: number; human: number }) {
+  return (
+    <div className="border-border flex flex-col gap-2.5 border-t pt-4">
+      <div className="flex flex-wrap justify-between gap-x-3 gap-y-1 text-sm">
+        <span className="inline-flex items-center gap-2 whitespace-nowrap">
+          <span aria-hidden="true" className="bg-accent-violet size-2 rounded-full" />
+          La IA resolvió el <b className="font-semibold tabular-nums">{Math.round(ai)} %</b>
+        </span>
+        <span className="text-muted-foreground whitespace-nowrap">
+          tu equipo, el <b className="text-foreground font-semibold tabular-nums">{Math.round(human)} %</b>
+        </span>
+      </div>
+      <div aria-hidden="true" className="flex h-2 gap-[3px]">
+        <span className="from-accent-violet/70 to-accent-violet rounded-full bg-gradient-to-r" style={{ width: `${String(ai)}%` }} />
+        <span className="bg-foreground/20 flex-1 rounded-full" />
+      </div>
+    </div>
   );
 }
