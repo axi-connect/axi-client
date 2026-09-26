@@ -340,17 +340,24 @@ Hallazgos en `/root/axi/qa/premium/HALLAZGOS-P1-P5-codigo.md`.
 | Pieza | Queda |
 |---|---|
 | `DocumentsList` | Ficha bento (`rounded-3xl`, `bg-card`): «Documentos · N» + «Emitir»; filas sin marco propio; pie con borde fino. Vacío, error y cargando dentro de la misma ficha |
-| `DocumentRow` | El estado deja la línea del número y va como `StatePill` junto al nombre: Generando (info), No salió (destructive), Desactualizado (warning), Reemplazado (neutral). Las acciones de una línea («Reintentar», «Enviar por correo») bajan a su propia fila: en los 380 px del rail ya no aprietan el texto |
+| `DocumentRow` | El estado deja la línea del número y va como `StatePill` junto al nombre: con las etiquetas del dominio: Generando… (info), No se pudo generar (destructive), Desactualizado (warning) y Reemplazado (neutral). Las acciones de una línea («Reintentar», «Enviar por correo») bajan a su propia fila: en los 380 px del rail ya no aprietan el texto |
 
 ### P8 · Enviar y lo que sale solo
 
 | Pieza | Queda |
 |---|---|
 | `SendDocumentDialog` | Sólido. Cabecera con el papelito y el título en Nexa; canales apilados con glifo en cápsula y radio; el aviso de texto pasa a un resumen de hechos (`sendFacts`, puro): por WhatsApp qué le llega, la ventana de 24 h («abierta · cierra hoy a las 18:40», calculado de `last_inbound_at` + `window_hours` solo si cierra en el futuro), y fuera de ventana la plantilla y el PDF al responder. El caso sin plantilla sigue como `Alert` con «Configurar plantilla» |
-| `DocumentAutomationForm` (pestaña Automáticos) | «Cuándo sale el contrato» (tres opciones), el recibo con cada pago, «Y se envía solo» (tabla contrato/recibo × WhatsApp/correo) y la plantilla de respaldo con su interruptor. Isla «Lo que sale solo» (`automationStory`, puro): la reserva de ejemplo de principio a fin según el borrador, con el hueco punteado cuando WhatsApp está encendido sin plantilla. Barra de tinta |
+| `DocumentAutomationForm` (pestaña Automáticos) | «Cuándo sale el contrato» (tres opciones), el recibo con cada pago, «Y se envía solo» (tabla contrato/recibo × WhatsApp/correo) y la plantilla de respaldo (nombre e idioma, siempre a la vista: vacío = sin respaldo). Isla «Lo que sale solo» (`automationStory`, puro): la reserva de ejemplo de principio a fin según el borrador, con el hueco punteado cuando WhatsApp está encendido sin plantilla. Barra de tinta |
 
-**Desviaciones:** el diálogo no dice «Responde a …» ni el pie del correo: `send-options` no trae el correo del emisor.
-«Ya se envió por …» se queda en su tarjeta (no se repite en el resumen).
+**Desviaciones:**
+- El diálogo no dice «Responde a …» ni el pie del correo: `send-options` no trae el correo del emisor.
+- «Ya se envió por …» se queda en su tarjeta; no se repite en el resumen.
+- La plantilla de respaldo va sin el interruptor del lienzo: los datos solo tienen nombre e idioma, y vacío ya
+  significa «sin respaldo».
+- La isla cuenta «una reserva», sin nombre de cliente, porque el ejemplo no es un cliente real.
+- Las pestañas de tipo pierden el icono: con ocho pastillas no cabían a 1280.
+- «Configurar plantilla», en el diálogo, sigue llevando a Mi empresa › Documentos y no directo a la pestaña
+  Automáticos: las pestañas no están en la URL.
 
 ### Tests
 
