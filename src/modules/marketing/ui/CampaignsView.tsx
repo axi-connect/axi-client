@@ -13,15 +13,27 @@ import { usePaginatedList } from "@/shared/api/use-paginated-list";
 import { EmptyState } from "@/shared/components/features/empty-state";
 import { StatusBadge } from "@/shared/components/features/status-badge";
 import { TableSkeleton } from "@/shared/components/features/loading";
-import { PageHeader } from "@/shared/components/layout/page-header";
+import { MarketingHeader } from "@/modules/marketing/ui/components/MarketingHeader";
+import { LoadError, TableCard, TD, TH } from "@/modules/marketing/ui/components/premium";
 import { Button } from "@/shared/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/shared/components/ui/dropdown-menu";
 import BasicPagination from "@/shared/components/ui/pagination";
+import { SegmentedControl } from "@/shared/components/ui/segmented";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/components/ui/table";
 import type { CampaignDTO } from "@/modules/marketing/domain/campaign";
+import { campaignEditHref, toDuplicateCampaignDTO } from "@/modules/marketing/domain/campaign-draft";
 import {
   campaignAudienceLabel,
   CAMPAIGN_STATUS_MAP,
   canCancelCampaign,
   canDeleteCampaign,
+  canEditCampaign,
   canPauseCampaign,
   canResumeCampaign,
 } from "@/modules/marketing/domain/campaign-state";
@@ -32,6 +44,7 @@ import {
 } from "@/modules/marketing/domain/enums";
 import {
   cancelCampaign,
+  createCampaign,
   deleteCampaign,
   listCampaigns,
   pauseCampaign,
@@ -41,16 +54,47 @@ import {
 const PAGE_SIZE = 20;
 const ALL = "__all__";
 
-/** "8 ago, 9:00 a. m." — cuándo sale una campaña programada. */
-function formatScheduledAt(iso: string): string {
+/** "8 ago, 9:00 a. m." */
+function formatWhen(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleString("es-CO", {
-    day: "numeric",
-    month: "short",
-    hour: "numeric",
-    minute: "2-digit",
-  });
+  // Otro año, sin hora: «28 nov 2025» se lee de un vistazo; la hora de hace un año no le importa a nadie.
+  if (date.getFullYear() !== new Date().getFullYear()) {
+    return date.toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric" });
+  }
+  return date.toLocaleString("es-CO", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+}
+
+/** La fecha que importa según el estado: cuándo sale, cuándo salió o cuándo se creó. */
+export function campaignWhen(campaign: CampaignDTO): string {
+  switch (campaign.status) {
+    case "scheduled":
+      return campaign.scheduled_at ? `Sale el ${formatWhen(campaign.scheduled_at)}` : "Programada";
+    case "running":
+    case "paused":
+    case "completed":
+      return campaign.launched_at ? `Lanzada el ${formatWhen(campaign.launched_at)}` : "Lanzada";
+    case "cancelled":
+      return campaign.cancelled_at ? `Cancelada el ${formatShortDate(campaign.cancelled_at)}` : "Cancelada";
+    case "draft":
+      return `Creada el ${formatShortDate(campaign.created_at)}`;
+  }
+}
+
+/** La misma fecha en dos piezas, para la columna «Cuándo»: qué pasó (tenue) y la fecha, corta. */
+function campaignWhenParts(campaign: CampaignDTO): { verb: string; date: string | null } {
+  const at =
+    campaign.status === "scheduled"
+      ? campaign.scheduled_at
+      : campaign.status === "cancelled"
+        ? campaign.cancelled_at
+        : campaign.status === "draft"
+          ? campaign.created_at
+          : campaign.launched_at;
+  const verb = { scheduled: "Sale", running: "Lanzada", paused: "Lanzada", completed: "Lanzada", cancelled: "Cancelada", draft: "Creada" }[
+    campaign.status
+  ];
+  return { verb, date: at ? formatWhen(at) || null : null };
 }
 
 /**
@@ -60,6 +104,12 @@ function formatScheduledAt(iso: string): string {
  * una petición por campaña. El funnel vive en el detalle, que es donde se mira.
  * Las acciones se derivan de predicados puros del dominio, no de un `try/catch`
  * contra el backend — un botón que solo falla al pulsarlo es un botón que miente.
+ *
+ * Un borrador se RETOMA («Continuar») y cualquier campaña se DUPLICA como punto
+ * de partida (canvas 2026-09-26). La tabla es una tarjeta `@container`: las
+ * columnas aparecen según su ancho y, estrecha, el estado y la fecha suben a la
+ * primera columna. El menú de fila va con `portal`: dentro del scroller de la
+ * tabla quedaría recortado.
  */
 export function CampaignsView() {
   const { hasPermission } = useAuth();
@@ -123,9 +173,52 @@ export function CampaignsView() {
     });
   }
 
+  /** Duplicar: nace un borrador con la misma audiencia y el mismo mensaje, y se abre en el asistente. */
+  async function duplicate(campaign: CampaignDTO) {
+    try {
+      const copy = await createCampaign(toDuplicateCampaignDTO(campaign));
+      showAlert({ tone: "success", title: "Campaña duplicada", description: "Quedó como borrador: revísala antes de lanzarla." });
+      router.push(campaignEditHref(copy.id));
+    } catch (err) {
+      showAlert({ tone: "error", title: errorMessage(err, "No se pudo duplicar la campaña") });
+    }
+  }
+
+  const handlers = (campaign: CampaignDTO): RowHandlers => ({
+    onPause: () =>
+      runAction(campaign, pauseCampaign, {
+        title: `¿Pausar «${campaign.name}»?`,
+        description:
+          "Deja de enviar. Los mensajes ya despachados no se pueden recuperar, pero no saldrá ninguno más hasta que la reanudes.",
+        label: "Pausar",
+      }),
+    onResume: () =>
+      runAction(campaign, resumeCampaign, {
+        title: `¿Reanudar «${campaign.name}»?`,
+        description: "Se vuelven a encolar los destinatarios que quedaron pendientes.",
+        label: "Reanudar",
+      }),
+    onCancel: () =>
+      runAction(campaign, cancelCampaign, {
+        title: `¿Cancelar «${campaign.name}»?`,
+        description:
+          "Los destinatarios pendientes quedan descartados y no se puede deshacer. Lo ya enviado sigue enviado.",
+        label: "Cancelar campaña",
+        destructive: true,
+      }),
+    onDelete: () =>
+      runAction(campaign, deleteCampaign, {
+        title: `¿Eliminar «${campaign.name}»?`,
+        description: "Es un borrador: no se ha enviado nada.",
+        label: "Eliminar",
+        destructive: true,
+      }),
+    onDuplicate: () => void duplicate(campaign),
+  });
+
   return (
-    <div className="flex flex-col gap-8">
-      <PageHeader
+    <div className="flex min-w-0 flex-col gap-6">
+      <MarketingHeader
         title="Campañas"
         description="Envíos masivos a un segmento de tu base. Al lanzarlas, la audiencia y el contenido quedan congelados."
         actions={
@@ -141,28 +234,22 @@ export function CampaignsView() {
       />
 
       {(total > 0 || hasFilter) && (
-        <div className="flex flex-wrap items-center gap-2">
-          <label className="sr-only" htmlFor="c-status">
-            Filtrar por estado
-          </label>
-          <select
-            id="c-status"
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+          <SegmentedControl
             value={status}
-            onChange={(e) => {
-              setStatus(e.target.value as CampaignStatus | typeof ALL);
+            onValueChange={(next) => {
+              setStatus(next);
               // Un filtro nuevo empieza en la página 1: el hook no lo hace solo.
               setPage(1);
             }}
-            className="h-9 rounded-md border border-input bg-background px-2.5 text-sm"
-          >
-            <option value={ALL}>Todos los estados</option>
-            {CAMPAIGN_STATUS_ORDER.map((s) => (
-              <option key={s} value={s}>
-                {CAMPAIGN_STATUS_LABELS[s]}
-              </option>
-            ))}
-          </select>
-          <span className="text-xs tabular-nums text-muted-foreground">
+            label="Filtrar por estado"
+            size="sm"
+            items={[
+              { value: ALL, label: "Todas" },
+              ...CAMPAIGN_STATUS_ORDER.map((s) => ({ value: s, label: CAMPAIGN_STATUS_LABELS[s] })),
+            ]}
+          />
+          <span className="text-muted-foreground text-xs tabular-nums">
             {total.toLocaleString("es-CO")} {total === 1 ? "campaña" : "campañas"}
           </span>
         </div>
@@ -171,14 +258,7 @@ export function CampaignsView() {
       {loading && items.length === 0 ? (
         <TableSkeleton rows={5} />
       ) : error ? (
-        <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-destructive/35 bg-destructive/5 px-4 py-3">
-          <p className="flex-1 text-sm text-muted-foreground">
-            {errorMessage(error, "No pudimos cargar tus campañas")}
-          </p>
-          <Button size="sm" variant="outline" onClick={() => void refresh()}>
-            Reintentar
-          </Button>
-        </div>
+        <LoadError message={errorMessage(error, "No pudimos cargar tus campañas")} onRetry={refresh} />
       ) : items.length === 0 ? (
         <EmptyState
           glyph="ai"
@@ -208,107 +288,89 @@ export function CampaignsView() {
           }
         />
       ) : (
-        <>
-          <div className="overflow-x-auto rounded-2xl border border-border bg-background">
-            <table className="w-full text-sm">
-              <caption className="sr-only">Listado de campañas</caption>
-              <thead>
-                <tr className="border-b border-border/60 bg-foreground/[0.02]">
-                  <Th>Campaña</Th>
-                  <Th>Estado</Th>
-                  <Th className="text-right">Audiencia</Th>
-                  <Th>Programada</Th>
-                  <Th>Creada</Th>
-                  <Th>{""}</Th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((campaign) => (
-                  <tr key={campaign.id} className="border-b border-border/60 last:border-none">
-                    <td className="px-4 py-2.5">
-                      <Link
-                        href={`/marketing/campaigns/${campaign.id}`}
-                        className="font-medium hover:text-brand"
-                      >
-                        {campaign.name}
-                      </Link>
-                      <span className="block text-xs text-muted-foreground">
-                        {describeAudience(campaign)}
+        <TableCard>
+          <Table>
+            <caption className="sr-only">Listado de campañas</caption>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className={TH}>Campaña</TableHead>
+                <TableHead className={`${TH} hidden @2xl:table-cell`}>Estado</TableHead>
+                <TableHead className={`${TH} hidden text-right @5xl:table-cell`}>Audiencia</TableHead>
+                <TableHead className={`${TH} hidden @4xl:table-cell`}>Cuándo</TableHead>
+                <TableHead className={`${TH} hidden @md:table-cell`}>
+                  <span className="sr-only">Acciones</span>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {items.map((campaign) => (
+                <TableRow key={campaign.id}>
+                  <TableCell className={`${TD} whitespace-normal`}>
+                    <Link
+                      href={`/marketing/campaigns/${campaign.id}`}
+                      className="block max-w-[calc(100cqw-2.5rem)] truncate py-0.5 font-medium @md:max-w-[16rem] @4xl:max-w-[20rem] underline-offset-4 hover:underline"
+                      title={campaign.name}
+                    >
+                      {campaign.name}
+                    </Link>
+                    <span className="text-muted-foreground block max-w-[calc(100cqw-2.5rem)] text-xs text-pretty @md:max-w-[16rem] @4xl:max-w-[20rem]">
+                      {describeAudience(campaign)}
+                    </span>
+                    {/* Con la tabla estrecha, el estado y la fecha suben aquí. */}
+                    <span className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs @4xl:hidden">
+                      <span className="@2xl:hidden">
+                        <StatusBadge status={campaign.status} map={CAMPAIGN_STATUS_MAP} appearance="dot" />
                       </span>
-                    </td>
-                    <td className="px-4 py-2.5">
-                      <StatusBadge status={campaign.status} map={CAMPAIGN_STATUS_MAP} />
-                    </td>
-                    <td className="px-4 py-2.5 text-right tabular-nums">
-                      {campaignAudienceLabel(campaign) ?? (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-2.5 text-xs tabular-nums text-muted-foreground">
-                      {campaign.scheduled_at ? formatScheduledAt(campaign.scheduled_at) : "—"}
-                    </td>
-                    <td className="px-4 py-2.5 text-xs text-muted-foreground">
-                      {formatShortDate(campaign.created_at)}
-                    </td>
-                    <td className="px-4 py-2.5 text-right">
-                      {canManage && (
-                        <CampaignMenu
-                          campaign={campaign}
-                          onPause={() =>
-                            runAction(campaign, pauseCampaign, {
-                              title: `¿Pausar «${campaign.name}»?`,
-                              description:
-                                "Deja de enviar. Los mensajes ya despachados no se pueden recuperar, pero no saldrá ninguno más hasta que la reanudes.",
-                              label: "Pausar",
-                            })
-                          }
-                          onResume={() =>
-                            runAction(campaign, resumeCampaign, {
-                              title: `¿Reanudar «${campaign.name}»?`,
-                              description:
-                                "Se vuelven a encolar los destinatarios que quedaron pendientes.",
-                              label: "Reanudar",
-                            })
-                          }
-                          onCancel={() =>
-                            runAction(campaign, cancelCampaign, {
-                              title: `¿Cancelar «${campaign.name}»?`,
-                              description:
-                                "Los destinatarios pendientes quedan descartados y no se puede deshacer. Lo ya enviado sigue enviado.",
-                              label: "Cancelar campaña",
-                              destructive: true,
-                            })
-                          }
-                          onDelete={() =>
-                            runAction(campaign, deleteCampaign, {
-                              title: `¿Eliminar «${campaign.name}»?`,
-                              description: "Es un borrador: no se ha enviado nada.",
-                              label: "Eliminar",
-                              destructive: true,
-                            })
-                          }
-                          onEdit={() => router.push(`/marketing/campaigns/${campaign.id}`)}
-                        />
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-xs text-muted-foreground">
-              «Procesada» significa que todos los destinatarios se despacharon. La entrega se sigue
-              confirmando después: las cifras del detalle se mueven un rato más.
+                      <span className="text-muted-foreground whitespace-nowrap">{campaignWhen(campaign)}</span>
+                    </span>
+                    {canManage && (
+                      <div className="mt-2 @md:hidden">
+                        <RowActions campaign={campaign} {...handlers(campaign)} />
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell className={`${TD} hidden @2xl:table-cell`}>
+                    <StatusBadge status={campaign.status} map={CAMPAIGN_STATUS_MAP} appearance="dot" />
+                  </TableCell>
+                  <TableCell className={`${TD} hidden text-right tabular-nums @5xl:table-cell`}>
+                    {campaignAudienceLabel(campaign) ?? <span className="text-muted-foreground">al lanzar</span>}
+                  </TableCell>
+                  <TableCell className={`${TD} hidden @4xl:table-cell`}>
+                    <WhenCell campaign={campaign} />
+                  </TableCell>
+                  <TableCell className={`${TD} hidden text-right @md:table-cell`}>
+                    {canManage ? (
+                      <RowActions campaign={campaign} {...handlers(campaign)} />
+                    ) : (
+                      <Button size="sm" variant="outline" className="rounded-full" asChild>
+                        <Link href={`/marketing/campaigns/${campaign.id}`}>Ver</Link>
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          <div className="border-border flex flex-wrap items-center justify-between gap-3 border-t px-5 py-3">
+            <p className="text-muted-foreground text-xs text-pretty">
+              «Procesada» significa que todos los destinatarios se despacharon; la entrega se sigue confirmando un
+              rato después.
             </p>
-            {totalPages > 1 && (
-              <BasicPagination totalPages={totalPages} page={page} onPageChange={setPage} />
-            )}
+            {totalPages > 1 && <BasicPagination totalPages={totalPages} page={page} onPageChange={setPage} />}
           </div>
-        </>
+        </TableCard>
       )}
     </div>
+  );
+}
+
+function WhenCell({ campaign }: { campaign: CampaignDTO }) {
+  const { verb, date } = campaignWhenParts(campaign);
+  return (
+    <span className="flex flex-col whitespace-nowrap">
+      <span className="text-muted-foreground text-xs">{verb}</span>
+      <span className="text-sm tabular-nums">{date ?? "—"}</span>
+    </span>
   );
 }
 
@@ -327,73 +389,74 @@ function describeAudience(campaign: CampaignDTO): string {
   return `${audience} · ${content}`;
 }
 
-function CampaignMenu({
-  campaign,
-  onPause,
-  onResume,
-  onCancel,
-  onDelete,
-  onEdit,
-}: {
-  campaign: CampaignDTO;
+type RowHandlers = {
   onPause: () => void;
   onResume: () => void;
   onCancel: () => void;
   onDelete: () => void;
-  onEdit: () => void;
-}) {
-  const actions: Array<{ label: string; run: () => void; danger?: boolean }> = [];
-  if (canPauseCampaign(campaign.status)) actions.push({ label: "Pausar", run: onPause });
-  if (canResumeCampaign(campaign.status)) actions.push({ label: "Reanudar", run: onResume });
-  if (canCancelCampaign(campaign.status)) {
-    actions.push({ label: "Cancelar campaña", run: onCancel, danger: true });
-  }
-  if (canDeleteCampaign(campaign.status)) {
-    actions.push({ label: "Eliminar borrador", run: onDelete, danger: true });
-  }
+  onDuplicate: () => void;
+};
+
+/**
+ * La acción principal de la fila (la que cambia con el estado) y el menú con el
+ * resto. Un borrador se CONTINÚA; una programada se puede editar; el resto se
+ * ve. El menú va con `portal`: la tabla scrollea y en su sitio se recortaría.
+ */
+function RowActions({ campaign, onPause, onResume, onCancel, onDelete, onDuplicate }: { campaign: CampaignDTO } & RowHandlers) {
+  const draft = campaign.status === "draft";
+  const primary = draft
+    ? { label: "Continuar", href: campaignEditHref(campaign.id), variant: "contrast" as const }
+    : { label: "Ver", href: `/marketing/campaigns/${campaign.id}`, variant: "outline" as const };
+
+  const flow: Array<{ label: string; run: () => void }> = [];
+  if (!draft && canEditCampaign(campaign.status)) flow.push({ label: "Editar", run: () => undefined });
+  if (canPauseCampaign(campaign.status)) flow.push({ label: "Pausar", run: onPause });
+  if (canResumeCampaign(campaign.status)) flow.push({ label: "Reanudar", run: onResume });
+  const danger: Array<{ label: string; run: () => void }> = [];
+  if (canCancelCampaign(campaign.status)) danger.push({ label: "Cancelar campaña", run: onCancel });
+  if (canDeleteCampaign(campaign.status)) danger.push({ label: "Eliminar borrador", run: onDelete });
 
   return (
-    <div className="flex items-center justify-end gap-1.5">
-      <Button size="sm" variant="outline" onClick={onEdit}>
-        Ver
+    <div className="flex items-center gap-1 @md:justify-end">
+      <Button size="sm" variant={primary.variant} className="rounded-full" asChild>
+        <Link href={primary.href}>{primary.label}</Link>
       </Button>
-      {actions.length > 0 && (
-        <details className="relative">
-          <summary
-            className="inline-flex size-8 cursor-pointer list-none items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground [&::-webkit-details-marker]:hidden"
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
             aria-label={`Más acciones de ${campaign.name}`}
+            className="text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-ring inline-flex size-9 items-center justify-center rounded-full transition-colors focus-visible:outline-2"
           >
             <MoreHorizontal className="size-4" aria-hidden="true" />
-          </summary>
-          <div className="glass absolute right-0 z-10 mt-1 w-48 overflow-hidden rounded-lg p-1">
-            {actions.map((action) => (
-              <button
-                key={action.label}
-                type="button"
-                onClick={action.run}
-                className={
-                  action.danger
-                    ? "w-full rounded-md px-2.5 py-1.5 text-left text-sm text-destructive transition-colors hover:bg-destructive/10"
-                    : "w-full rounded-md px-2.5 py-1.5 text-left text-sm transition-colors hover:bg-accent"
-                }
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent portal align="end" className="w-52">
+          {flow.map((action) =>
+            action.label === "Editar" ? (
+              <Link
+                key="edit"
+                role="menuitem"
+                href={campaignEditHref(campaign.id)}
+                className="hover:bg-accent focus:bg-accent block w-full rounded-sm px-3 py-2 text-left text-sm outline-none"
               >
+                Editar
+              </Link>
+            ) : (
+              <DropdownMenuItem key={action.label} onClick={action.run}>
                 {action.label}
-              </button>
-            ))}
-          </div>
-        </details>
-      )}
+              </DropdownMenuItem>
+            ),
+          )}
+          <DropdownMenuItem onClick={onDuplicate}>Duplicar</DropdownMenuItem>
+          {danger.length > 0 && <DropdownMenuSeparator />}
+          {danger.map((action) => (
+            <DropdownMenuItem key={action.label} className="text-destructive" onClick={action.run}>
+              {action.label}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
-  );
-}
-
-function Th({ children, className }: { children: React.ReactNode; className?: string }) {
-  return (
-    <th
-      scope="col"
-      className={`px-4 py-2.5 text-left text-[0.6875rem] font-semibold uppercase tracking-wide text-muted-foreground ${className ?? ""}`}
-    >
-      {children}
-    </th>
   );
 }

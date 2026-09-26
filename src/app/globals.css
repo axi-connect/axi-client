@@ -1058,18 +1058,40 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   html, body { scroll-behavior: auto; }
 }
 
-/* -------- Scrollbar de marca (sidebar) -------- */
+/* -------- La barra de scroll de axi -------- */
 
-/* WebKit (Chrome, Edge, Safari) */
+/* Fina y con el degradado de marca, en los dos ejes. `.axi-scroll` es el nombre
+   del sistema (tablas, paneles, cualquier scroller propio); `.sidebar-scroll`
+   queda como alias de cuando solo la usaba el menú.
+
+   WebKit (Chrome, Edge, Safari) pinta el degradado con los pseudo-elementos. */
+.axi-scroll::-webkit-scrollbar,
 .sidebar-scroll::-webkit-scrollbar {
   width: 6px;
-  height: 10px;
+  height: 6px;
 }
 
+.axi-scroll::-webkit-scrollbar-track,
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.axi-scroll::-webkit-scrollbar-thumb,
 .sidebar-scroll::-webkit-scrollbar-thumb {
   background-image: radial-gradient(circle, var(--axi-brand), transparent);
   border-radius: 9999px;
   background-clip: content-box;
+}
+
+/* Firefox no tiene los pseudo-elementos: barra fina del color de marca. Solo
+   donde faltan, porque en Chrome ≥ 121 `scrollbar-width`/`scrollbar-color`
+   ganan a `::-webkit-scrollbar` y se perdería el degradado. */
+@supports not selector(::-webkit-scrollbar) {
+  .axi-scroll,
+  .sidebar-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, var(--axi-brand) 60%, transparent) transparent;
+  }
 }
 
 /* ==========================================================================

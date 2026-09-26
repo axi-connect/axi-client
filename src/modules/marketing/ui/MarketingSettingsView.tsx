@@ -1,14 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Info, ShieldCheck } from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
 import { cn } from "@/core/lib/utils";
 import { useAlert } from "@/core/providers/alert-provider";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { FormSkeleton } from "@/shared/components/features/loading";
 import { OptionsInput } from "@/shared/components/features/options-input";
+import { Island } from "@/shared/components/features/island";
 import { Button } from "@/shared/components/ui/button";
+import { Switch } from "@/shared/components/ui/switch";
+import { LoadError } from "@/modules/marketing/ui/components/premium";
 import {
   normalizeKeywords,
   SETTINGS_LIMITS,
@@ -93,14 +95,7 @@ export function MarketingSettingsView() {
   }
 
   if (loadError !== null) {
-    return (
-      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-destructive/35 bg-destructive/5 px-4 py-3">
-        <p className="flex-1 text-sm text-muted-foreground">{loadError}</p>
-        <Button size="sm" variant="outline" onClick={() => void load()}>
-          Reintentar
-        </Button>
-      </div>
-    );
+    return <LoadError message={loadError} onRetry={load} />;
   }
 
   if (settings === null) return <FormSkeleton fields={6} />;
@@ -109,7 +104,7 @@ export function MarketingSettingsView() {
   const hoursToCap = wwebHoursToDailyCap(settings.wweb);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex min-w-0 flex-col gap-4">
       <Card title="Cada cuánto puedes escribirle a alguien">
         <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
           <NumberField
@@ -141,23 +136,20 @@ export function MarketingSettingsView() {
           />
         </div>
 
-        <label className="mt-3.5 flex max-w-2xl cursor-pointer items-start gap-2.5 rounded-md border border-border px-3 py-2.5 transition-colors hover:bg-accent/60">
-          <input
-            type="checkbox"
-            className="mt-0.5 accent-primary"
-            checked={settings.exclude_human_active}
-            disabled={!canManage}
-            onChange={(e) => patch({ exclude_human_active: e.target.checked })}
-          />
-          <span>
-            <span className="block text-sm font-medium">
-              No interrumpir conversaciones que atiende un asesor
-            </span>
-            <span className="mt-0.5 block text-xs text-muted-foreground">
+        <div className="border-border mt-4 flex max-w-2xl items-center justify-between gap-4 rounded-2xl border px-4 py-3">
+          <label htmlFor="s-human" className="min-w-0">
+            <span className="block text-sm font-medium">No interrumpir conversaciones que atiende un asesor</span>
+            <span className="text-muted-foreground mt-0.5 block text-xs text-pretty">
               Si alguien de tu equipo está respondiendo, ninguna regla se mete en medio.
             </span>
-          </span>
-        </label>
+          </label>
+          <Switch
+            id="s-human"
+            checked={settings.exclude_human_active}
+            disabled={!canManage}
+            onCheckedChange={(checked) => patch({ exclude_human_active: checked })}
+          />
+        </div>
       </Card>
 
       <Card title="Bajas automáticas">
@@ -212,23 +204,8 @@ export function MarketingSettingsView() {
 
       <Card
         title="Protección de tu número de WhatsApp Web"
-        badge={
-          <span className="rounded-full border border-accent-amber/45 bg-accent-amber/10 px-2 py-0.5 text-xs font-medium text-accent-amber">
-            Anti-bloqueo
-          </span>
-        }
+        description="Límites conservadores a propósito: protegen tu número de bloqueos de Meta. Súbelos solo si sabes lo que haces."
       >
-        <p className="mb-3.5 flex gap-2.5 rounded-md border border-accent-amber/30 bg-accent-amber/[0.07] px-3 py-2.5 text-sm leading-relaxed text-muted-foreground">
-          <ShieldCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-accent-amber" />
-          <span>
-            Estos límites son conservadores a propósito:{" "}
-            <strong className="font-medium text-foreground">
-              protegen tu número de bloqueos de Meta
-            </strong>
-            . Súbelos solo si sabes lo que haces.
-          </span>
-        </p>
-
         <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
           <NumberField
             id="s-wweb-cap"
@@ -260,8 +237,7 @@ export function MarketingSettingsView() {
         </div>
 
         {/* Traduce tres números abstractos a lo que significan de verdad. */}
-        <p className="mt-3 flex gap-2.5 text-xs text-muted-foreground">
-          <Info aria-hidden="true" className="mt-0.5 size-3.5 shrink-0 text-info" />
+        <p className="text-muted-foreground mt-4 text-xs text-pretty">
           <span className="tabular-nums">
             A este ritmo saldrán unos <strong className="text-foreground">{perHour} mensajes por
             hora</strong> por canal, así que agotar el cupo diario de{" "}
@@ -270,18 +246,27 @@ export function MarketingSettingsView() {
         </p>
       </Card>
 
-      {canManage && (
-        <div className="flex items-center justify-end gap-2">
-          {dirty && (
-            <span className="mr-auto text-xs text-muted-foreground">Tienes cambios sin guardar</span>
-          )}
-          <Button variant="ghost" disabled={!dirty || saving} onClick={() => void load()}>
-            Descartar cambios
-          </Button>
-          <Button disabled={!dirty || saving} onClick={() => void handleSave()}>
-            {saving ? "Guardando…" : "Guardar configuración"}
-          </Button>
-        </div>
+      {/* Guardar en una barra de tinta pegada abajo (§9.5.1), solo cuando hay algo que guardar. */}
+      {canManage && dirty && (
+        <Island
+          as="footer"
+          material="ink"
+          role="region"
+          aria-label="Cambios sin guardar"
+          className="sticky bottom-3 z-10 flex flex-wrap items-center justify-between gap-3 rounded-3xl px-5 py-3 sm:rounded-full sm:py-2.5 sm:pr-2.5"
+        >
+          <p className="text-sm">
+            <span className="font-semibold">Tienes cambios sin guardar</span>
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="glass" disabled={saving} onClick={() => void load()}>
+              Descartar
+            </Button>
+            <Button variant="contrast" className="rounded-full" disabled={saving} onClick={() => void handleSave()}>
+              {saving ? "Guardando…" : "Guardar configuración"}
+            </Button>
+          </div>
+        </Island>
       )}
     </div>
   );
@@ -289,20 +274,20 @@ export function MarketingSettingsView() {
 
 function Card({
   title,
-  badge,
+  description,
   children,
 }: {
   title: string;
-  badge?: React.ReactNode;
+  description?: string;
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-border bg-background">
-      <header className="flex items-center justify-between gap-3 border-b border-border/60 px-5 py-3.5">
-        <h2 className="text-sm font-semibold">{title}</h2>
-        {badge}
+    <section className="border-border bg-card min-w-0 rounded-3xl border p-5 sm:p-6">
+      <header className="mb-4 flex flex-col gap-1">
+        <h2 className="font-heading text-lg font-bold tracking-tight">{title}</h2>
+        {description ? <p className="text-muted-foreground text-sm text-pretty">{description}</p> : null}
       </header>
-      <div className="p-5">{children}</div>
+      {children}
     </section>
   );
 }

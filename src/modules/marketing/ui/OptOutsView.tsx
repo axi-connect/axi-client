@@ -1,26 +1,31 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { ShieldCheck } from "lucide-react";
+import Link from "next/link";
 import { formatShortDate } from "@/core/lib/format";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import type { ListQuery } from "@/shared/api/query";
 import { usePaginatedList } from "@/shared/api/use-paginated-list";
+import { StatePill } from "@/shared/components/features/bento";
 import { EmptyState } from "@/shared/components/features/empty-state";
 import { TableSkeleton } from "@/shared/components/features/loading";
-import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import BasicPagination from "@/shared/components/ui/pagination";
+import { SegmentedControl } from "@/shared/components/ui/segmented";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/components/ui/table";
 import { OPT_OUT_SOURCE_LABELS } from "@/modules/marketing/domain/enums";
 import {
   listOptOuts,
   revokeOptOut,
   type OptOutDTO,
 } from "@/modules/marketing/infrastructure/services/opt-outs-service.adapter";
+import { LoadError, TableCard, TD, TH } from "@/modules/marketing/ui/components/premium";
 
 const PAGE_SIZE = 20;
+
+type Scope = "active" | "all";
 
 /**
  * Bajas: quién pidió no recibir promociones.
@@ -28,13 +33,17 @@ const PAGE_SIZE = 20;
  * Es el registro LEGAL del módulo, así que revocar no borra nada — la fila se
  * queda con su fecha de revocación. Este listado sí pagina en el backend, a
  * diferencia de promociones y reglas.
+ *
+ * En el celular la tabla deja solo el contacto y la acción: el motivo y la fecha
+ * suben a la primera columna, así que no hace falta scroll lateral.
  */
 export function OptOutsView() {
   const { hasPermission } = useAuth();
   const canManage = hasPermission("marketing:manage");
   const { showAlert, showModal, closeModal } = useAlert();
 
-  const [activeOnly, setActiveOnly] = useState(true);
+  const [scope, setScope] = useState<Scope>("active");
+  const activeOnly = scope === "active";
 
   const fetcher = useCallback(
     (params: ListQuery) =>
@@ -88,143 +97,128 @@ export function OptOutsView() {
     });
   }
 
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <label className="flex cursor-pointer items-center gap-2 rounded-md border border-border px-3 py-1.5 text-sm transition-colors hover:bg-accent/60">
-          <input
-            type="checkbox"
-            className="accent-primary"
-            checked={activeOnly}
-            onChange={(e) => {
-              setActiveOnly(e.target.checked);
-              setPage(1);
-            }}
-          />
-          Solo bajas activas
-        </label>
-        <span className="text-xs tabular-nums text-muted-foreground">
-          {total.toLocaleString("es-CO")} {total === 1 ? "registro" : "registros"}
+  /** «Volver a incluir» o, si ya se revocó, la marca con su fecha. Revocar NO borra: la fila sigue. */
+  function revokeControl(row: OptOutDTO) {
+    if (row.revoked_at !== null) {
+      return (
+        <span title={`Revocada el ${formatShortDate(row.revoked_at)}`}>
+          <StatePill tone="neutral">Revocada</StatePill>
         </span>
+      );
+    }
+    if (!canManage) return null;
+    return (
+      <Button size="sm" variant="outline" className="rounded-full" onClick={() => handleRevoke(row)}>
+        Volver a incluir
+      </Button>
+    );
+  }
+
+  return (
+    <div className="flex min-w-0 flex-col gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+        <SegmentedControl
+          value={scope}
+          onValueChange={(next) => {
+            setScope(next);
+            setPage(1);
+          }}
+          label="Qué bajas ver"
+          size="sm"
+          items={[
+            { value: "active", label: "Activas" },
+            { value: "all", label: "Todas" },
+          ]}
+        />
+        <p className="text-muted-foreground text-xs text-pretty">
+          <span className="tabular-nums">
+            {total.toLocaleString("es-CO")} {total === 1 ? "registro" : "registros"}
+          </span>{" "}
+          · nadie en esta lista recibe campañas ni recuperación
+        </p>
       </div>
 
       {loading && items.length === 0 ? (
         <TableSkeleton rows={5} />
       ) : error ? (
-        <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-destructive/35 bg-destructive/5 px-4 py-3">
-          <p className="flex-1 text-sm text-muted-foreground">
-            No pudimos cargar las bajas.
-          </p>
-          <Button size="sm" variant="outline" onClick={() => void refresh()}>
-            Reintentar
-          </Button>
-        </div>
+        <LoadError message="No pudimos cargar las bajas." onRetry={refresh} />
       ) : items.length === 0 ? (
         <EmptyState
           glyph="uptodate"
           title={activeOnly ? "Nadie se ha dado de baja" : "Sin registros de baja"}
-          description="Cuando un cliente escriba una de tus palabras de baja, aparecerá aquí y quedará fuera de toda audiencia."
+          description="Cuando un cliente escriba una de tus palabras de baja, aparecerá aquí y quedará fuera de toda audiencia. El historial se conserva aunque revoques una baja."
         />
       ) : (
-        <>
-          <div className="overflow-x-auto rounded-2xl border border-border bg-background">
-            <table className="w-full text-sm">
-              <caption className="sr-only">Contactos dados de baja</caption>
-              <thead>
-                <tr className="border-b border-border/60 bg-foreground/[0.02]">
-                  <Th>Contacto</Th>
-                  <Th>Motivo</Th>
-                  <Th>Cuándo</Th>
-                  <Th>Evidencia</Th>
-                  <Th>{""}</Th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((row) => {
-                  const revoked = row.revoked_at !== null;
-                  return (
-                    <tr key={row.id} className="border-b border-border/60 last:border-none">
-                      <td className="px-4 py-2.5">
-                        <span className="font-medium">
-                          {row.contact.full_name ?? "Sin nombre"}
-                        </span>
-                        {row.contact.phone && (
-                          <span className="block text-xs tabular-nums text-muted-foreground">
-                            {row.contact.phone}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-2.5 text-xs">
-                        {OPT_OUT_SOURCE_LABELS[row.source]}
-                        {row.keyword_text && (
-                          <span className="ml-1 font-mono text-muted-foreground">
-                            «{row.keyword_text}»
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-2.5 text-xs text-muted-foreground">
-                        {formatShortDate(row.created_at)}
-                      </td>
-                      <td className="px-4 py-2.5">
-                        {row.conversation_id ? (
-                          <Button size="sm" variant="ghost" asChild>
-                            <a href={`/workspace/inbox/${row.conversation_id}`}>Ver conversación</a>
-                          </Button>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">—</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-2.5 text-right">
-                        {revoked ? (
-                          // Revocar NO borra: la fila sigue, con su fecha.
-                          <Badge variant="outline" title={formatShortDate(row.revoked_at!)}>
-                            Revocada
-                          </Badge>
-                        ) : (
-                          canManage && (
-                            <Button size="sm" variant="outline" onClick={() => handleRevoke(row)}>
-                              Volver a incluir
-                            </Button>
-                          )
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
+        <TableCard>
+          <Table>
+            <caption className="sr-only">Contactos dados de baja</caption>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className={`${TH} @md:min-w-44`}>Contacto</TableHead>
+                <TableHead className={`${TH} hidden @xl:table-cell`}>Motivo</TableHead>
+                <TableHead className={`${TH} hidden @2xl:table-cell`}>Cuándo</TableHead>
+                <TableHead className={`${TH} hidden @4xl:table-cell`}>Evidencia</TableHead>
+                <TableHead className={`${TH} hidden @md:table-cell`}>
+                  <span className="sr-only">Estado</span>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {items.map((row) => {
+                return (
+                  <TableRow key={row.id}>
+                    <TableCell className={`${TD} whitespace-normal`}>
+                      <span className="block max-w-[16rem] truncate font-medium" title={row.contact.full_name ?? undefined}>
+                        {row.contact.full_name ?? "Sin nombre"}
+                      </span>
+                      {row.contact.phone && (
+                        <span className="text-muted-foreground block text-xs whitespace-nowrap tabular-nums">{row.contact.phone}</span>
+                      )}
+                      {/* Con la tabla estrecha, motivo y fecha van aquí: sin columnas que obliguen a desplazar. */}
+                      <span className="text-muted-foreground mt-1 flex flex-wrap gap-x-1 text-xs @2xl:hidden">
+                        <span className="whitespace-nowrap @xl:hidden">{OPT_OUT_SOURCE_LABELS[row.source]} ·</span>
+                        <span className="whitespace-nowrap">{formatShortDate(row.created_at)}</span>
+                      </span>
+                      {/* Con la tabla muy estrecha, la acción baja aquí: al lado del nombre no cabe. */}
+                      <div className="mt-2 @md:hidden">{revokeControl(row)}</div>
+                    </TableCell>
+                    <TableCell className={`${TD} hidden text-sm whitespace-normal @xl:table-cell`}>
+                      {OPT_OUT_SOURCE_LABELS[row.source]}
+                      {row.keyword_text && (
+                        <span className="text-muted-foreground ml-1 font-mono text-xs whitespace-nowrap">«{row.keyword_text}»</span>
+                      )}
+                    </TableCell>
+                    <TableCell className={`${TD} text-muted-foreground hidden text-sm @2xl:table-cell`}>
+                      {formatShortDate(row.created_at)}
+                    </TableCell>
+                    <TableCell className={`${TD} hidden @4xl:table-cell`}>
+                      {row.conversation_id ? (
+                        <Link
+                          href={`/workspace/inbox/${row.conversation_id}`}
+                          className="inline-flex min-h-6 items-center text-sm font-medium underline-offset-4 hover:underline"
+                        >
+                          Ver conversación
+                        </Link>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">Sin conversación</span>
+                      )}
+                    </TableCell>
+                    <TableCell className={`${TD} hidden text-right @md:table-cell`}>{revokeControl(row)}</TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
           {totalPages > 1 && (
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-xs tabular-nums text-muted-foreground">
+            <div className="border-border flex flex-wrap items-center justify-between gap-3 border-t px-5 py-3">
+              <p className="text-muted-foreground text-xs tabular-nums">
                 Página {page} de {totalPages}
               </p>
               <BasicPagination totalPages={totalPages} page={page} onPageChange={setPage} />
             </div>
           )}
-        </>
+        </TableCard>
       )}
-
-      <p className="flex gap-2.5 rounded-xl border border-info/25 bg-info/5 px-4 py-3 text-sm text-muted-foreground">
-        <ShieldCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-info" />
-        <span>
-          Quien está aquí queda fuera de{" "}
-          <strong className="font-medium text-foreground">toda</strong> audiencia: ninguna campaña
-          ni regla puede escribirle. El historial se conserva aunque revoques la baja.
-        </span>
-      </p>
     </div>
-  );
-}
-
-function Th({ children }: { children: React.ReactNode }) {
-  return (
-    <th
-      scope="col"
-      className="px-4 py-2.5 text-left text-[0.6875rem] font-semibold uppercase tracking-wide text-muted-foreground"
-    >
-      {children}
-    </th>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { MoreHorizontal, Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { useDeepLinkTarget } from "@/core/hooks/use-deep-link-target";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
@@ -9,9 +9,11 @@ import { useAuth } from "@/shared/auth/auth.hooks";
 import { EmptyState } from "@/shared/components/features/empty-state";
 import { TableSkeleton } from "@/shared/components/features/loading";
 import { DetailSheet } from "@/shared/components/features/detail-sheet";
-import { Badge } from "@/shared/components/ui/badge";
+import { StatePill } from "@/shared/components/features/bento";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
+import { Switch } from "@/shared/components/ui/switch";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/components/ui/table";
 import { TEMPLATE_KIND_LABELS } from "@/modules/marketing/domain/enums";
 import {
   describeTemplateContent,
@@ -30,9 +32,11 @@ import {
   updateTemplate,
 } from "@/modules/marketing/infrastructure/services/templates-service.adapter";
 import { MessageTemplateField } from "./components/MessageTemplateField";
+import { LoadError, TableCard, TD, TH } from "./components/premium";
 
 /**
- * Plantillas reutilizables del tenant.
+ * Mensajes: las plantillas reutilizables del tenant (textos propios; las de
+ * Meta viven en su propia pestaña).
  *
  * El alta desde aquí solo crea plantillas de TEXTO: `media` necesita el flujo de
  * subida de archivos y `hsm` es un enlace a una plantilla de Meta que se elige
@@ -113,133 +117,124 @@ export function TemplatesView() {
     });
   }
 
+  /** Editar y eliminar, en la fila y no en un menú: la tabla scrollea y un menú no portalizado se recortaría. */
+  function rowActions(template: TemplateDTO) {
+    return (
+      <div className="flex items-center gap-1 @md:justify-end">
+        <Button size="sm" variant="outline" className="rounded-full" onClick={() => setEditing({ template })}>
+          Editar
+        </Button>
+        <Button
+          size="icon"
+          variant="ghost"
+          className="text-muted-foreground hover:text-destructive size-9 rounded-full"
+          aria-label={`Eliminar ${template.name}`}
+          onClick={() => handleDelete(template)}
+        >
+          <Trash2 className="size-4" aria-hidden="true" />
+        </Button>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm text-muted-foreground">
-          Textos reutilizables para tus campañas y reglas.
-        </p>
+    <div className="flex min-w-0 flex-col gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-muted-foreground text-sm text-pretty">Textos reutilizables para tus campañas y reglas.</p>
         {canManage && (
-          <Button size="sm" onClick={() => setEditing({ template: null })}>
+          <Button size="sm" className="rounded-full" onClick={() => setEditing({ template: null })}>
             <Plus className="size-4" aria-hidden="true" />
-            Nueva plantilla
+            Nuevo mensaje
           </Button>
         )}
       </div>
 
       {error !== null ? (
-        <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-destructive/35 bg-destructive/5 px-4 py-3">
-          <p className="flex-1 text-sm text-muted-foreground">{error}</p>
-          <Button size="sm" variant="outline" onClick={() => void load()}>
-            Reintentar
-          </Button>
-        </div>
+        <LoadError message={error} onRetry={load} />
       ) : templates === null ? (
         <TableSkeleton rows={4} />
       ) : templates.length === 0 ? (
         <EmptyState
           glyph="conversation"
-          title="Aún no tienes plantillas"
+          title="Aún no tienes mensajes guardados"
           description="Guarda aquí los mensajes que repites, con variables como el nombre del cliente, y reutilízalos en campañas y reglas."
           action={
             canManage && (
               <Button onClick={() => setEditing({ template: null })}>
-                Crear mi primera plantilla
+                Crear mi primer mensaje
               </Button>
             )
           }
         />
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-border bg-background">
-          <table className="w-full text-sm">
-            <caption className="sr-only">Plantillas del tenant</caption>
-            <thead>
-              <tr className="border-b border-border/60 bg-foreground/[0.02]">
-                <Th>Nombre</Th>
-                <Th>Tipo</Th>
-                <Th>Contenido</Th>
-                <Th>Estado</Th>
-                <Th>{""}</Th>
-              </tr>
-            </thead>
-            <tbody>
+        <TableCard>
+          <Table>
+            <caption className="sr-only">Mensajes guardados</caption>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className={`${TH} @md:min-w-48`}>Nombre</TableHead>
+                <TableHead className={`${TH} hidden @xl:table-cell`}>Tipo</TableHead>
+                <TableHead className={`${TH} hidden @4xl:table-cell`}>Contenido</TableHead>
+                <TableHead className={`${TH} hidden @lg:table-cell`}>Estado</TableHead>
+                <TableHead className={`${TH} hidden @md:table-cell`}>
+                  <span className="sr-only">Acciones</span>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {sorted.map((template) => (
-                <tr key={template.id} className="border-b border-border/60 last:border-none">
-                  <td className="px-4 py-2.5 font-medium">{template.name}</td>
-                  <td className="px-4 py-2.5 text-xs text-muted-foreground">
+                <TableRow key={template.id}>
+                  <TableCell className={`${TD} whitespace-normal`}>
+                    <span className="block max-w-[14rem] truncate font-medium @4xl:max-w-[20rem]" title={template.name}>
+                      {template.name}
+                    </span>
+                    {/* Con la tabla estrecha, tipo y estado suben aquí: sin columnas que obliguen a desplazar. */}
+                    <span className="text-muted-foreground mt-0.5 flex flex-wrap gap-x-1 text-xs @xl:hidden">
+                      <span className="whitespace-nowrap">{TEMPLATE_KIND_LABELS[template.kind]}</span>
+                      <span className="whitespace-nowrap @lg:hidden">· {template.is_active ? "Activa" : "Apagada"}</span>
+                    </span>
+                    {/* Con la tabla muy estrecha, las acciones bajan aquí: al lado del nombre no caben. */}
+                    {canManage && <div className="mt-2 @md:hidden">{rowActions(template)}</div>}
+                  </TableCell>
+                  <TableCell className={`${TD} text-muted-foreground hidden text-sm @xl:table-cell`}>
                     {TEMPLATE_KIND_LABELS[template.kind]}
-                  </td>
-                  <td className="max-w-md px-4 py-2.5 text-xs text-muted-foreground">
+                  </TableCell>
+                  <TableCell className={`${TD} text-muted-foreground hidden max-w-md text-sm whitespace-normal @4xl:table-cell`}>
                     <span className="line-clamp-2">{describeTemplateContent(template)}</span>
-                  </td>
-                  <td className="px-4 py-2.5">
-                    {template.is_active ? (
-                      <Badge
-                        variant="outline"
-                        className="border-success/40 bg-success/10 text-success"
-                      >
-                        Activa
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline">Apagada</Badge>
-                    )}
-                  </td>
-                  <td className="px-4 py-2.5 text-right">
-                    {canManage && (
-                      <div className="flex items-center justify-end gap-1.5">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setEditing({ template })}
-                        >
-                          Editar
-                        </Button>
-                        <details className="relative">
-                          <summary
-                            className="inline-flex size-8 cursor-pointer list-none items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground [&::-webkit-details-marker]:hidden"
-                            aria-label={`Más acciones de ${template.name}`}
-                          >
-                            <MoreHorizontal className="size-4" aria-hidden="true" />
-                          </summary>
-                          <div className="glass absolute right-0 z-10 mt-1 w-44 overflow-hidden rounded-lg p-1">
-                            <button
-                              type="button"
-                              className="w-full rounded-md px-2.5 py-1.5 text-left text-sm text-destructive transition-colors hover:bg-destructive/10"
-                              onClick={() => handleDelete(template)}
-                            >
-                              Eliminar
-                            </button>
-                          </div>
-                        </details>
-                      </div>
-                    )}
-                  </td>
-                </tr>
+                  </TableCell>
+                  <TableCell className={`${TD} hidden @lg:table-cell`}>
+                    <StatePill tone={template.is_active ? "success" : "neutral"}>
+                      {template.is_active ? "Activa" : "Apagada"}
+                    </StatePill>
+                  </TableCell>
+                  <TableCell className={`${TD} hidden text-right @md:table-cell`}>
+                    {canManage && rowActions(template)}
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
+        </TableCard>
       )}
 
-      <div className="rounded-2xl border border-border bg-background p-5">
-        <h3 className="text-sm font-semibold">Variables disponibles</h3>
-        <div className="mt-2.5 flex flex-wrap gap-1.5">
+      <section className="border-border bg-card rounded-3xl border p-5">
+        <h2 className="text-muted-foreground font-sans text-xs font-normal">Variables disponibles</h2>
+        <div className="mt-3 flex flex-wrap gap-1.5">
           {TEMPLATE_VARIABLES.map((variable) => (
             <span
               key={variable}
               title={TEMPLATE_VARIABLE_LABELS[variable]}
-              className="rounded-full border border-input px-2 py-0.5 font-mono text-[0.6875rem] text-muted-foreground"
+              className="bg-muted rounded-lg px-2 py-1 font-mono text-xs"
             >
               {`{{${variable}}}`}
             </span>
           ))}
         </div>
-        <p className="mt-2.5 text-xs text-muted-foreground">
+        <p className="text-muted-foreground mt-3 text-xs text-pretty">
           Si una variable no tiene dato, se omite limpiamente: al cliente nunca le llega un{" "}
-          <span className="font-mono">{"{{…}}"}</span> sin rellenar. En campañas solo se rellenan
-          las tres primeras.
+          <span className="font-mono">{"{{…}}"}</span> sin rellenar. En campañas solo se rellenan las tres primeras.
         </p>
-      </div>
+      </section>
 
       <TemplateSheet
         state={editing}
@@ -338,7 +333,7 @@ function TemplateSheet({
       open={state !== null}
       onOpenChange={(open) => !open && onClose()}
       size="xl"
-      title={template ? "Editar plantilla" : "Nueva plantilla"}
+      title={template ? "Editar mensaje" : "Nuevo mensaje"}
       subtitle={
         isText
           ? "Un texto con variables que puedes reutilizar en campañas y reglas."
@@ -350,7 +345,7 @@ function TemplateSheet({
             Cancelar
           </Button>
           <Button disabled={!canSubmit || saving || !isText} onClick={() => void handleSave()}>
-            {saving ? "Guardando…" : template ? "Guardar cambios" : "Crear plantilla"}
+            {saving ? "Guardando…" : template ? "Guardar cambios" : "Crear mensaje"}
           </Button>
         </div>
       )}
@@ -389,27 +384,13 @@ function TemplateSheet({
           </p>
         )}
 
-        <label className="flex cursor-pointer items-center gap-2.5 rounded-md border border-border px-3 py-2.5 text-sm transition-colors hover:bg-accent/60">
-          <input
-            type="checkbox"
-            className="accent-primary"
-            checked={isActive}
-            onChange={(e) => setIsActive(e.target.checked)}
-          />
-          Disponible para elegir en campañas y reglas
-        </label>
+        <div className="border-border flex items-center justify-between gap-4 rounded-2xl border px-4 py-3">
+          <label htmlFor="tpl-active" className="text-sm">
+            Disponible para elegir en campañas y reglas
+          </label>
+          <Switch id="tpl-active" checked={isActive} onCheckedChange={setIsActive} />
+        </div>
       </div>
     </DetailSheet>
-  );
-}
-
-function Th({ children }: { children: React.ReactNode }) {
-  return (
-    <th
-      scope="col"
-      className="px-4 py-2.5 text-left text-[0.6875rem] font-semibold uppercase tracking-wide text-muted-foreground"
-    >
-      {children}
-    </th>
   );
 }

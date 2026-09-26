@@ -78,13 +78,14 @@ export function OptionsInput({
       {value.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {value.map((option) => (
-            <Badge key={option} variant="secondary" className="gap-1 rounded-full pr-1">
+            <Badge key={option} variant="secondary" className="gap-1 overflow-visible rounded-full pr-1">
               {option}
               {!disabled && (
                 <button
                   type="button"
                   aria-label={`Quitar opción ${option}`}
-                  className="rounded-full p-0.5 hover:bg-foreground/10"
+                  // `before`: zona de toque de 24 px (DS §10); la «x» se ve igual de pequeña.
+                  className="relative rounded-full p-0.5 before:absolute before:-inset-1 before:content-[''] hover:bg-foreground/10"
                   onClick={() => onChange(value.filter((existing) => existing !== option))}
                 >
                   <X className="h-3 w-3" />

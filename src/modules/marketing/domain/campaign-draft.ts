@@ -1,6 +1,6 @@
 import type { SegmentFilters } from "@/modules/crm/public";
 import { unresolvedHsmSlots, type HsmParamEntry } from "./hsm-params";
-import type { AudiencePreviewDTO, CreateCampaignDTO, UpdateCampaignDTO } from "./campaign";
+import type { AudiencePreviewDTO, CampaignDTO, CreateCampaignDTO, UpdateCampaignDTO } from "./campaign";
 
 /**
  * Estado del wizard de campaña, en TypeScript puro.
@@ -202,4 +202,66 @@ export function readAudienceEstimate(preview: AudiencePreviewDTO): AudienceEstim
     // Si la muestra cubrió a todos, la proyección coincide con el recuento.
     exact: sampleSize >= total,
   };
+}
+
+/**
+ * De vuelta: la campaña guardada → el estado del wizard, para RETOMAR un
+ * borrador (o editar una programada) donde se quedó. Antes un borrador no se
+ * podía reabrir: el detalle no tenía ni editar ni lanzar (canvas 2026-09-26).
+ *
+ * La fecha programada se lee en la hora local del navegador, que es en la que
+ * `scheduledAtISO` la escribió.
+ */
+export function fromCampaignDTO(campaign: CampaignDTO): CampaignDraft {
+  const audienceMode: AudienceMode =
+    campaign.segment_id !== null ? "segment" : campaign.audience_filters !== null ? "filters" : "all";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const at = campaign.scheduled_at === null ? null : new Date(campaign.scheduled_at);
+  const valid = at !== null && !Number.isNaN(at.getTime());
+  return {
+    name: campaign.name,
+    description: campaign.description ?? "",
+    audienceMode,
+    segmentId: campaign.segment_id,
+    filters: (campaign.audience_filters ?? {}) as SegmentFilters,
+    templateId: campaign.template?.id ?? null,
+    hsmChannelTemplateId: campaign.hsm_channel_template_id,
+    hsmParamMapping: (campaign.hsm_param_mapping ?? []).filter(isHsmParamEntry),
+    scheduledDate: valid ? `${at.getFullYear()}-${pad(at.getMonth() + 1)}-${pad(at.getDate())}` : "",
+    scheduledTime: valid ? `${pad(at.getHours())}:${pad(at.getMinutes())}` : "",
+  };
+}
+
+function isHsmParamEntry(value: unknown): value is HsmParamEntry {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as HsmParamEntry).index === "number" &&
+    typeof (value as HsmParamEntry).source === "string"
+  );
+}
+
+/** Dónde retomar: el primer paso que aún tiene algo pendiente; si no falta nada, la revisión. */
+export function resumeStep(draft: CampaignDraft): WizardStep {
+  return WIZARD_STEPS.find((step) => step !== "revision" && blockerForStep(step, draft) !== null) ?? "revision";
+}
+
+/**
+ * Duplicar: una campaña nueva en BORRADOR con la misma audiencia y el mismo
+ * mensaje. La fecha no se copia (una programación vieja saldría al instante) y
+ * el nombre dice que es una copia, para que no se confundan en la lista.
+ */
+export function toDuplicateCampaignDTO(campaign: CampaignDTO): CreateCampaignDTO {
+  const draft = fromCampaignDTO(campaign);
+  const update = toUpdateCampaignDTO({ ...draft, scheduledDate: "", scheduledTime: "" });
+  return {
+    ...update,
+    // El servidor acepta 80 caracteres: «Copia de » + un nombre largo no puede pasarse.
+    name: `Copia de ${campaign.name}`.slice(0, 80),
+  } as CreateCampaignDTO;
+}
+
+/** Dónde se retoma un borrador (o se edita una programada): el asistente, con la campaña cargada. */
+export function campaignEditHref(id: string): string {
+  return `/marketing/campaigns/new?campaign=${encodeURIComponent(id)}`;
 }

@@ -1,23 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import {
-  CircleDollarSign,
-  Hourglass,
-  Info,
-  Pencil,
-  Plus,
-  RefreshCw,
-  Trash2,
-  WandSparkles,
-} from "lucide-react";
+import { Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { EmptyState } from "@/shared/components/features/empty-state";
 import { StatusBadge } from "@/shared/components/features/status-badge";
 import { TableSkeleton } from "@/shared/components/features/loading";
+import { BentoFigure, BentoTile } from "@/shared/components/features/bento";
 import { Button } from "@/shared/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/components/ui/table";
 import { listChannels, type ChannelDTO } from "@/modules/channels/public";
 import { HSM_CATEGORY_LABELS } from "@/modules/marketing/domain/enums";
 import {
@@ -31,6 +25,7 @@ import {
   type HsmTemplateDTO,
 } from "@/modules/marketing/domain/template-catalog";
 import { CreateHsmTemplateModal } from "@/modules/marketing/ui/components/CreateHsmTemplateModal";
+import { LoadError, TableCard, TD, TH } from "@/modules/marketing/ui/components/premium";
 import {
   deleteHsmTemplate,
   listHsmTemplates,
@@ -209,62 +204,102 @@ export function MetaTemplatesView() {
   const usable = templates?.filter(isUsableForMarketing).length ?? 0;
   const openers = templates?.filter(isUsableAsOpening).length ?? 0;
 
+  /** Editar y borrar, en la fila: la tabla scrollea y un menú no portalizado se recortaría. */
+  function rowActions(template: HsmTemplateDTO) {
+    return (
+      <>
+                      <div className="flex items-center gap-1 @xl:justify-end">
+                        {/* El servidor dice si Meta deja editar y por qué no: aquí no se repite ninguna regla suya. */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="rounded-full"
+                          disabled={!template.editable}
+                          title={editHint(template)}
+                          onClick={() => setEditing(template)}
+                        >
+                          <Pencil aria-hidden className="size-3.5" />
+                          <span className="hidden sm:inline">Editar</span>
+                          <span className="sr-only sm:hidden">Editar {template.name}</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-muted-foreground hover:text-destructive size-9 rounded-full"
+                          aria-label={`Borrar ${template.name}`}
+                          disabled={template.approval_status === "disabled"}
+                          onClick={() => void confirmDelete(template)}
+                        >
+                          <Trash2 aria-hidden className="size-4" />
+                        </Button>
+                      </div>
+                      {!template.editable && template.edit_blocked_reason !== null && (
+                        <p className="text-muted-foreground mt-1 max-w-48 text-right text-xs text-pretty whitespace-normal">
+                          {editHint(template)}
+                        </p>
+                      )}
+      </>
+    );
+  }
+
+  const channelLabel = (channel: ChannelDTO) =>
+    `${channel.name}${channel.display_phone_number ? ` · ${channel.display_phone_number}` : ""}`;
+
   return (
-    <div className="flex flex-col gap-4">
-      {/* F2: qué son y qué cuestan, antes de la tabla. Es lo que un tenant
-          necesita entender para decidir crear una. */}
-      <div className="grid gap-2 sm:grid-cols-3">
-        <Step icon={WandSparkles} accent="text-accent-violet">
-          <strong className="font-medium text-foreground">Crea</strong> el texto con variables ({"{{1}}"}, {"{{2}}"}) y un ejemplo por cada una.
-        </Step>
-        <Step icon={Hourglass} accent="text-info">
-          <strong className="font-medium text-foreground">Meta revisa.</strong> Suele decidir en minutos; puede tardar hasta 48 h. Mientras haya alguna en revisión, esta pantalla se refresca sola.
-        </Step>
-        <Step icon={CircleDollarSign} accent="text-muted-foreground">
-          <strong className="font-medium text-foreground">Cuesta por mensaje entregado.</strong> Colombia: utility {formatTemplateCost("utility")} · marketing {formatTemplateCost("marketing")}.
-        </Step>
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <label className="sr-only" htmlFor="hsm-channel">
-          Canal
-        </label>
-        <select
-          id="hsm-channel"
-          value={channelId ?? ""}
-          onChange={(e) => setChannelId(e.target.value)}
-          className="h-9 min-w-56 rounded-md border border-input bg-background px-2.5 text-sm"
-        >
-          {channels.map((channel) => (
-            <option key={channel.id} value={channel.id}>
-              {channel.name}
-              {channel.display_phone_number ? ` · ${channel.display_phone_number}` : ""}
-            </option>
-          ))}
-        </select>
-
-        {templates !== null && (
-          <span className="text-xs tabular-nums text-muted-foreground">
-            {openers} para abrir seguimientos · {usable} para promociones
-          </span>
-        )}
-
-        <span className="flex-1" />
-
+    <div className="flex min-w-0 flex-col gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <p className="text-muted-foreground max-w-2xl text-sm text-pretty">
+          Pasadas 24 h desde el último mensaje del cliente, WhatsApp solo deja escribir con una plantilla aprobada por
+          Meta. Meta suele decidir en minutos (hasta 48 h); mientras haya alguna en revisión, esta pantalla se refresca
+          sola.
+        </p>
         {canManage && (
-          <>
-            <Button size="sm" variant="outline" disabled={syncing} onClick={() => void handleSync()}>
-              <RefreshCw
-                aria-hidden="true"
-                className={syncing ? "size-4 animate-spin" : "size-4"}
-              />
-              {syncing ? "Sincronizando…" : "Sincronizar"}
+          <div className="flex flex-wrap items-center gap-2">
+            <Button size="sm" variant="outline" className="rounded-full" disabled={syncing} onClick={() => void handleSync()}>
+              <RefreshCw aria-hidden="true" className={syncing ? "size-4 animate-spin" : "size-4"} />
+              {syncing ? "Sincronizando…" : "Sincronizar con Meta"}
             </Button>
-            <Button size="sm" disabled={channelId === null} onClick={() => setCreating(true)}>
+            <Button size="sm" className="rounded-full" disabled={channelId === null} onClick={() => setCreating(true)}>
               <Plus aria-hidden="true" className="size-4" />
               Nueva plantilla
             </Button>
-          </>
+          </div>
         )}
+      </div>
+
+      {/* Tres fichas de un tema (§9.5): de qué canal, cuántas sirven y cuánto cobra Meta. */}
+      <div className="grid gap-4 md:grid-cols-3 [&>*]:min-w-0">
+        <BentoTile label="Canal">
+          <Select value={channelId ?? ""} onValueChange={(value: string) => setChannelId(value)}>
+            <SelectTrigger
+              className="h-10 w-full min-w-0 rounded-xl *:data-[slot=select-value]:block *:data-[slot=select-value]:truncate"
+              aria-label="Canal de WhatsApp"
+              title={channels.find((channel) => channel.id === channelId) ? channelLabel(channels.find((channel) => channel.id === channelId)!) : undefined}
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {channels.map((channel) => (
+                <SelectItem key={channel.id} value={channel.id}>
+                  {channelLabel(channel)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </BentoTile>
+        <BentoTile label="Aprobadas">
+          <BentoFigure value={templates === null ? "…" : String(usable)} unit={usable === 1 ? "sirve para promociones" : "sirven para promociones"} />
+          <p className="text-muted-foreground text-xs">
+            {openers} {openers === 1 ? "abre" : "abren"} seguimientos del agente
+          </p>
+        </BentoTile>
+        <BentoTile label="Costo por mensaje entregado">
+          <BentoFigure value={formatTemplateCost("marketing")} size="md" />
+          <p className="text-muted-foreground flex flex-wrap gap-x-1 text-xs">
+            <span className="whitespace-nowrap">Marketing · utilidad {formatTemplateCost("utility")} ·</span>
+            <span className="whitespace-nowrap">tarifa de Colombia</span>
+          </p>
+        </BentoTile>
       </div>
 
       {channelId !== null && (
@@ -288,16 +323,7 @@ export function MetaTemplatesView() {
       )}
 
       {error !== null ? (
-        <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-destructive/35 bg-destructive/5 px-4 py-3">
-          <p className="flex-1 text-sm text-muted-foreground">{error}</p>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => channelId && void load(channelId)}
-          >
-            Reintentar
-          </Button>
-        </div>
+        <LoadError message={error} onRetry={() => (channelId ? load(channelId) : undefined)} />
       ) : templates === null ? (
         <TableSkeleton rows={4} />
       ) : templates.length === 0 ? (
@@ -316,50 +342,59 @@ export function MetaTemplatesView() {
           }
         />
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-border bg-background">
-          <table className="w-full text-sm">
+        <TableCard>
+          <Table>
             <caption className="sr-only">Plantillas de Meta del canal</caption>
-            <thead>
-              <tr className="border-b border-border/60 bg-foreground/[0.02]">
-                <Th>Plantilla</Th>
-                <Th>Contenido</Th>
-                <Th>Estado en Meta</Th>
-                <Th>Costo / msg (CO)</Th>
-                <Th>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className={`${TH} @md:min-w-44`}>Plantilla</TableHead>
+                <TableHead className={`${TH} hidden @6xl:table-cell`}>Contenido</TableHead>
+                <TableHead className={TH}>Estado en Meta</TableHead>
+                <TableHead className={`${TH} hidden text-right @3xl:table-cell`}>Costo</TableHead>
+                <TableHead className={`${TH} hidden @xl:table-cell`}>
                   <span className="sr-only">Acciones</span>
-                </Th>
-              </tr>
-            </thead>
-            <tbody>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {templates.map((template) => {
                 const reason = whyUnusable(template);
+                const variables = countTemplateVariables(template.body);
                 return (
-                  <tr key={template.id} className="border-b border-border/60 last:border-none">
-                    <td className="px-4 py-2.5 align-top">
-                      <div className="font-mono text-xs">{template.name}</div>
-                      <div className="mt-0.5 text-xs text-muted-foreground">
-                        {HSM_CATEGORY_LABELS[template.category]} · {template.language} ·{" "}
-                        {countTemplateVariables(template.body) === null
-                          ? "Meta no la aceptaría"
-                          : `${String(countTemplateVariables(template.body))} ${
-                              countTemplateVariables(template.body) === 1 ? "variable" : "variables"
-                            }`}
-                      </div>
-                    </td>
-                    <td className="max-w-md px-4 py-2.5 align-top text-xs text-muted-foreground">
+                  <TableRow
+                    key={template.id}
+                    className={template.approval_status === "rejected" ? "bg-destructive/[0.035]" : undefined}
+                  >
+                    <TableCell className={`${TD} align-top whitespace-normal`}>
+                      <span className="block max-w-[11rem] truncate font-mono text-[13px] @xl:max-w-[15rem]" title={template.name}>
+                        {template.name}
+                      </span>
+                      <span className="text-muted-foreground mt-0.5 flex flex-wrap gap-x-1 text-xs">
+                        <span className="whitespace-nowrap">
+                          {HSM_CATEGORY_LABELS[template.category]} · {template.language} ·
+                        </span>
+                        <span className="whitespace-nowrap">
+                          {variables === null
+                            ? "Meta no la aceptaría"
+                            : `${String(variables)} ${variables === 1 ? "variable" : "variables"}`}
+                        </span>
+                      </span>
+                      {/* Con la tabla estrecha, las acciones bajan aquí: al lado del estado no caben. */}
+                      <div className="mt-2 @xl:hidden">{rowActions(template)}</div>
+                    </TableCell>
+                    <TableCell className={`${TD} text-muted-foreground hidden max-w-sm align-top text-sm whitespace-normal @6xl:table-cell`}>
                       <span className="line-clamp-2">{template.body}</span>
-                    </td>
-                    <td className="px-4 py-2.5 align-top">
+                    </TableCell>
+                    <TableCell className={`${TD} max-w-xs align-top whitespace-normal`}>
                       <StatusBadge status={template.approval_status} map={HSM_STATUS_MAP} appearance="dot" />
                       {/* Qué implica el estado, en las palabras del operador. */}
-                      <p className="mt-1 text-xs text-muted-foreground">
+                      <p className="text-muted-foreground mt-1 text-xs text-pretty">
                         {template.approval_status === "pending"
                           ? "Meta suele decidir en minutos; puede tardar hasta 48 h."
                           : template.approval_status === "rejected"
                             ? // El motivo REAL de Meta si lo mandó, traducido cuando
-                              // viene como enum. La frase genérica decía qué hacer
-                              // pero no qué estaba mal, que es lo único que sirve
-                              // para corregirla.
+                              // viene como enum: la frase genérica decía qué hacer
+                              // pero no qué estaba mal.
                               (rejectionReasonLabel(template.rejected_reason) ??
                               "Corrige el texto y envíala como plantilla nueva: el nombre queda bloqueado 30 días.")
                             : template.approval_status === "paused"
@@ -368,94 +403,25 @@ export function MetaTemplatesView() {
                                 ? "Meta la deshabilitó por reportes repetidos o una violación de política."
                                 : (reason ?? "Sirve para abrir seguimientos del agente.")}
                       </p>
-                      {/* La calidad es el aviso PREVIO a que Meta la pause: se
-                          enseña solo cuando ya no es verde, que es cuando importa. */}
-                      {typeof template.quality_score === "string" &&
-                        template.quality_score.toUpperCase() !== "GREEN" && (
-                          <p className="mt-1 text-xs text-warning">
-                            Calidad {template.quality_score.toLowerCase()}: si baja más, Meta la
-                            pausa.
-                          </p>
-                        )}
-                    </td>
-                    <td className="px-4 py-2.5 align-top font-mono text-xs tabular-nums">
-                      {formatTemplateCost(template.category)}
-                    </td>
-                    <td className="px-4 py-2.5 align-top">
-                      <div className="flex items-center justify-end gap-1">
-                        {/* El servidor dice si Meta deja editar y por qué no:
-                            aquí no se repite ninguna regla suya. */}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          disabled={!template.editable}
-                          title={editHint(template)}
-                          onClick={() => setEditing(template)}
-                        >
-                          <Pencil aria-hidden className="size-3.5" />
-                          Editar
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          disabled={template.approval_status === "disabled"}
-                          onClick={() => void confirmDelete(template)}
-                        >
-                          <Trash2 aria-hidden className="size-3.5" />
-                          <span className="sr-only">Borrar</span>
-                        </Button>
-                      </div>
-                      {!template.editable && template.edit_blocked_reason !== null && (
-                        <p className="mt-1 text-right text-xs text-muted-foreground">
-                          {editHint(template)}
+                      {/* La calidad es el aviso PREVIO a que Meta la pause: solo cuando ya no es verde. */}
+                      {typeof template.quality_score === "string" && template.quality_score.toUpperCase() !== "GREEN" && (
+                        <p className="mt-1 text-xs text-pretty">
+                          Calidad {template.quality_score.toLowerCase()}: si baja más, Meta la pausa.
                         </p>
                       )}
-                    </td>
-                  </tr>
+                    </TableCell>
+                    <TableCell className={`${TD} hidden align-top text-right font-mono text-xs @3xl:table-cell`}>
+                      {formatTemplateCost(template.category)}
+                    </TableCell>
+                    <TableCell className={`${TD} hidden align-top @xl:table-cell`}>{rowActions(template)}</TableCell>
+                  </TableRow>
                 );
               })}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
+        </TableCard>
       )}
-
-      <p className="flex gap-2.5 rounded-xl border border-border px-4 py-3 text-sm text-muted-foreground">
-        <Info aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-info" />
-        <span>
-          El estado lo decide Meta y llega solo por su aviso; si sospechas que va atrasado, «Sincronizar» lo
-          trae al momento. Las de <strong className="font-medium text-foreground">utility</strong> aprobadas son
-          las que el agente usa para abrir seguimientos con contactos que llevan más de 24 h sin escribir.
-        </span>
-      </p>
     </div>
-  );
-}
-
-function Step({
-  icon: Icon,
-  accent,
-  children,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  accent: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex items-start gap-2 rounded-lg bg-secondary/70 px-3 py-2 text-xs text-muted-foreground">
-      <Icon aria-hidden="true" className={`mt-0.5 size-3.5 shrink-0 ${accent}`} />
-      <span>{children}</span>
-    </div>
-  );
-}
-
-function Th({ children }: { children: React.ReactNode }) {
-  return (
-    <th
-      scope="col"
-      className="px-4 py-2.5 text-left text-[0.6875rem] font-semibold uppercase tracking-wide text-muted-foreground"
-    >
-      {children}
-    </th>
   );
 }
 

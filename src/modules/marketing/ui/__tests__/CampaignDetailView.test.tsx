@@ -162,17 +162,24 @@ describe("campaña en curso", () => {
   });
 
   it("acumula las cifras del embudo en vez de leerlas crudas", async () => {
+    const path = within((await screen.findByText("El camino del mensaje")).closest("section")!);
+    const stage = (label: string) => within(path.getByText(label).closest("li")!);
     // 200 sent + 400 delivered + 300 read + 40 failed
-    expect(await screen.findByLabelText("Despachados: 940")).toBeInTheDocument();
+    expect(stage("Despachados").getByText("940")).toBeInTheDocument();
     // Quien leyó también recibió: 400 + 300
-    expect(screen.getByLabelText("Entregados: 700")).toBeInTheDocument();
-    expect(screen.getByLabelText("Compraron: 45")).toBeInTheDocument();
+    expect(stage("Entregados").getByText("700")).toBeInTheDocument();
+    expect(stage("Leídos").getByText("300")).toBeInTheDocument();
+    expect(stage("Compraron").getByText("45")).toBeInTheDocument();
+    // El avance cuenta lo procesado (omitidos incluidos): 1.200 de 1.200. No es «despachados».
+    const progress = within(screen.getByText("Avance del envío").closest("section")!);
+    expect(progress.getByText("1.200")).toBeInTheDocument();
+    expect(progress.getByText("300 no lo recibieron", { exact: false })).toBeInTheDocument();
   });
 
   it("explica cada silencio y deja fuera el anti-spam transitorio", async () => {
     // Dentro del panel: el mismo motivo aparece también en la fila de Carla.
     const panel = within(
-      (await screen.findByText(/No recibieron el mensaje/)).closest("section")!,
+      (await screen.findByText("No lo recibieron")).closest("section")!,
     );
     expect(panel.getByText("El contacto pidió no recibir promociones")).toBeInTheDocument();
     expect(panel.getByText("Pasaron más de 24 h y no había plantilla de Meta")).toBeInTheDocument();
@@ -184,7 +191,7 @@ describe("campaña en curso", () => {
     expect(screen.getByRole("button", { name: "Pausar" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Reanudar" })).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
+    fireEvent.click(screen.getByRole("button", { name: "Cancelar envío" }));
     expect(showModal).toHaveBeenCalledWith(
       expect.objectContaining({
         title: "¿Cancelar «Black Friday»?",
@@ -195,15 +202,17 @@ describe("campaña en curso", () => {
 
   it("muestra por destinatario el hito más avanzado y por qué falló", () => {
     const rowFor = (name: string) => within(screen.getByText(name).closest("tr")!);
-    expect(rowFor("Ana Pérez").getByText("Leyó")).toBeInTheDocument();
-    expect(rowFor("Carla Ruiz").getByText("El contacto pidió no recibir promociones")).toBeInTheDocument();
-    expect(rowFor("Diego Salas").getByText("channel_disconnected")).toBeInTheDocument();
+    expect(rowFor("Ana Pérez").getAllByText("Leyó").length).toBeGreaterThan(0);
+    expect(rowFor("Carla Ruiz").getAllByText("El contacto pidió no recibir promociones").length).toBeGreaterThan(0);
+    expect(rowFor("Diego Salas").getAllByText("channel_disconnected").length).toBeGreaterThan(0);
   });
 
   it("filtrar destinatarios vuelve a la página 1 y repregunta", async () => {
-    fireEvent.change(screen.getByLabelText("Filtrar destinatarios por estado"), {
-      target: { value: "skipped" },
-    });
+    fireEvent.click(
+      within(screen.getByRole("radiogroup", { name: "Filtrar destinatarios por estado" })).getByRole("radio", {
+        name: "Omitido",
+      }),
+    );
     await waitFor(() =>
       expect(api.listCampaignRecipients).toHaveBeenLastCalledWith(
         "c1",
@@ -271,13 +280,13 @@ describe("tiempo real dirigido", () => {
         simulated: false,
       });
     });
-    expect(await screen.findByText("Pausada")).toBeInTheDocument();
+    expect((await screen.findAllByText(/Pausada/)).length).toBeGreaterThan(0);
     expect(await screen.findByRole("button", { name: "Reanudar" })).toBeInTheDocument();
   });
 });
 
 describe("estados sin datos", () => {
-  it("un borrador dice por qué no hay destinatarios todavía", async () => {
+  it("un borrador dice que su audiencia se calcula al lanzar y no enseña cifras en cero", async () => {
     api.getCampaign.mockResolvedValue(campaign({ status: "draft", launched_at: null }));
     api.getCampaignStats.mockResolvedValue(
       stats({ audience_total: 0, sent: 0, delivered: 0, read: 0, failed: 0, skipped: 0, skipped_by_reason: {}, replies: 0, conversions: 0, revenue_cents: 0 }),
@@ -286,10 +295,14 @@ describe("estados sin datos", () => {
 
     render(<CampaignDetailView campaignId="c1" />);
 
-    expect(
-      await screen.findByText(/la audiencia se materializa al lanzar la campaña/),
-    ).toBeInTheDocument();
+    expect(await screen.findByText(/la audiencia no se congela/)).toBeInTheDocument();
+    // Sin lanzar no hay envío que pausar ni cancelar, ni cifras en cero que mirar.
     expect(screen.queryByRole("button", { name: "Pausar" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Cancelar envío" })).not.toBeInTheDocument();
+    expect(screen.queryByText("El camino del mensaje")).not.toBeInTheDocument();
+    // Un borrador no tiene avance: su audiencia se calcula al lanzar, y se retoma en el asistente.
+    expect(screen.getByText("Se calcula al lanzar")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Continuar" })).toHaveAttribute("href", "/marketing/campaigns/new?campaign=c1");
   });
 
   it("un fallo de carga se explica y se puede reintentar", async () => {
