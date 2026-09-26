@@ -75,7 +75,9 @@ export function PipelineView({ initialDealId }: { initialDealId?: string }) {
 
   return (
     <div className="relative flex h-full min-h-0">
-      <main className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-hidden p-4 md:gap-5 md:p-6">
+      {/* Scroll vertical con la barra de axi cuando no cabe (ventana baja): antes era `overflow-hidden`, y con el
+          resumen en bento encima el tablero se quedaba con la altura sobrante y su contenido se montaba encima. */}
+      <main className="axi-scroll flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-x-hidden overflow-y-auto p-4 md:gap-5 md:p-6">
         <PipelineHeader canOperate={canOperate} stats={stats} />
         <PipelineSummary
           stats={stats}
@@ -86,7 +88,10 @@ export function PipelineView({ initialDealId }: { initialDealId?: string }) {
           onOpenDeal={openDeal}
         />
 
-        <div className="min-h-0 flex-1">
+        {/* Altura mínima del tablero: sin ella, en una ventana baja se encogía por debajo de su contenido (el vacío y el
+            error centran el suyo y se desbordaban hacia arriba y hacia abajo sobre el resumen). Por debajo de esto, `main`
+            hace scroll. */}
+        <div className="min-h-96 flex-1">
           {view === "table" ? (
             <DealsTable onOpenDeal={openDeal} />
           ) : boardError !== null ? (
