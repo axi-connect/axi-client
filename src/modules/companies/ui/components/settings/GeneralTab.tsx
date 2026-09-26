@@ -82,6 +82,8 @@ export function GeneralTab() {
           onSubmit={handleSubmit}
           // La barra de tinta aparece al haber cambios (§9.5.1: las barras de acción van en tinta).
           actions={{
+            // Hijo directo del <form>: si no, el sticky no tiene recorrido (QA R8-H1).
+            bare: true,
             render: ({ submitting, dirty, invalid }) => (
               <UnsavedChangesDock dirty={dirty} submitting={submitting} invalid={invalid} />
             ),

@@ -112,7 +112,10 @@ export function DynamicForm<TValues extends FieldValues>(props: DynamicFormProps
     const dirty = formState.isDirty
     const invalid = !formState.isValid
     if (!actions) return null
-    if ("render" in actions) return <div className="flex items-center gap-2">{actions.render({ submitting, dirty, invalid })}</div>
+    if ("render" in actions) {
+      const rendered = actions.render({ submitting, dirty, invalid })
+      return actions.bare ? rendered : <div className="flex items-center gap-2">{rendered}</div>
+    }
     const { submitLabel = "Guardar", submitIcon, submitVariant = "default", submitSize = "default", showReset = false, resetLabel = "Restablecer" } = actions || {}
     return (
       <div className="flex flex-wrap items-center gap-2">
