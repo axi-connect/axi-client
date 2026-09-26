@@ -1,12 +1,15 @@
 "use client"
 
 import { cn } from "@/core/lib/utils"
-import { useState, useRef, useEffect, useContext, cloneElement, createContext } from "react"
+import { useState, useRef, useEffect, useLayoutEffect, useContext, cloneElement, createContext } from "react"
+import { createPortal } from "react-dom"
 
 type DropdownContextValue = {
   open: boolean
   setOpen: (v: boolean) => void
   rootRef: React.RefObject<HTMLDivElement>
+  /** El panel abierto. Con `portal` vive fuera de `rootRef`: el clic fuera tiene que mirar los dos. */
+  contentRef: React.MutableRefObject<HTMLDivElement | null>
 }
 
 const DropdownContext = createContext<DropdownContextValue | null>(null)
@@ -14,12 +17,14 @@ const DropdownContext = createContext<DropdownContextValue | null>(null)
 export function DropdownMenu({ children, className }: { children: React.ReactNode, className?: string }) {
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null as unknown as HTMLDivElement)
+  const contentRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     if (!open) return
     const onDocMouseDown = (e: MouseEvent) => {
       const root = rootRef.current
-      if (root && !root.contains(e.target as Node)) {
+      const target = e.target as Node
+      if (root && !root.contains(target) && !contentRef.current?.contains(target)) {
         setOpen(false)
       }
     }
@@ -35,7 +40,7 @@ export function DropdownMenu({ children, className }: { children: React.ReactNod
   }, [open])
 
   return (
-    <DropdownContext.Provider value={{ open, setOpen, rootRef }}>
+    <DropdownContext.Provider value={{ open, setOpen, rootRef, contentRef }}>
       <div ref={rootRef} className={cn("relative inline-flex", className)}>{children}</div>
     </DropdownContext.Provider>
   )
@@ -55,9 +60,51 @@ export function DropdownMenuTrigger({ asChild = false, children }: { asChild?: b
   return asChild ? cloneElement(children, triggerProps) : <button {...triggerProps}>{children}</button>
 }
 
-export function DropdownMenuContent({ className, align = "end", side = "bottom", children }: { className?: string; align?: "start" | "end"; side?: "top" | "bottom"; children: React.ReactNode }) {
+/**
+ * `portal`: el panel se pinta en `document.body` con posición fija junto al
+ * disparador. Lo necesita un menú que vive dentro de un scroller o de una
+ * tarjeta con `overflow-hidden` (una fila de `Table`, que trae su propio
+ * `overflow-x-auto`): en su sitio quedaría recortado. Se cierra al hacer scroll
+ * o redimensionar, en vez de quedarse flotando lejos de su fila. Opcional: los
+ * demás usos no cambian.
+ */
+export function DropdownMenuContent({
+  className,
+  align = "end",
+  side = "bottom",
+  portal = false,
+  children,
+}: {
+  className?: string
+  align?: "start" | "end"
+  side?: "top" | "bottom"
+  portal?: boolean
+  children: React.ReactNode
+}) {
   const ctx = useContext(DropdownContext)
   const contentRef = useRef<HTMLDivElement>(null)
+  const [fixed, setFixed] = useState<React.CSSProperties | null>(null)
+
+  useLayoutEffect(() => {
+    if (!portal || !ctx?.open) return
+    const place = () => {
+      const rect = ctx.rootRef.current?.getBoundingClientRect()
+      if (!rect) return
+      setFixed({
+        position: "fixed",
+        ...(side === "top" ? { bottom: window.innerHeight - rect.top + 8 } : { top: rect.bottom + 8 }),
+        ...(align === "end" ? { right: window.innerWidth - rect.right } : { left: rect.left }),
+      })
+    }
+    place()
+    const close = () => ctx.setOpen(false)
+    window.addEventListener("scroll", close, true)
+    window.addEventListener("resize", close)
+    return () => {
+      window.removeEventListener("scroll", close, true)
+      window.removeEventListener("resize", close)
+    }
+  }, [portal, ctx, side, align])
 
   // Focus first menu item when opening for keyboard navigation
   useEffect(() => {
@@ -122,15 +169,20 @@ export function DropdownMenuContent({ className, align = "end", side = "bottom",
     }
   }
 
-  return (
+  const panel = (
     <div
       role="menu"
-      ref={contentRef}
+      ref={(node) => {
+        contentRef.current = node
+        ctx.contentRef.current = node
+      }}
+      style={portal ? (fixed ?? { position: "fixed", visibility: "hidden" }) : undefined}
       className={cn(
-        "glass bg-background text-foreground border-border absolute z-50 min-w-40 rounded-lg border flex flex-col p-1",
+        "glass bg-background text-foreground border-border z-50 min-w-40 rounded-lg border flex flex-col p-1",
+        !portal && "absolute",
         // `top` para triggers pegados al borde inferior (footer del sidebar)
-        side === "top" ? "bottom-full mb-2" : "mt-2",
-        align === "end" ? "right-0" : "left-0",
+        !portal && (side === "top" ? "bottom-full mb-2" : "mt-2"),
+        !portal && (align === "end" ? "right-0" : "left-0"),
         className
       )}
       onKeyDown={handleKeyDown}
@@ -139,6 +191,8 @@ export function DropdownMenuContent({ className, align = "end", side = "bottom",
       {children}
     </div>
   )
+
+  return portal ? createPortal(panel, document.body) : panel
 }
 
 export function DropdownMenuItem({ className, onClick, children }: { className?: string; onClick?: () => void; children: React.ReactNode }) {

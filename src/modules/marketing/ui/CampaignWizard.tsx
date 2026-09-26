@@ -3,24 +3,15 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  AlertTriangle,
-  ArrowLeft,
-  CircleDollarSign,
-  Clock,
-  Gauge,
-  Info,
-  MessageSquare,
-  Users,
-} from "lucide-react";
+import { ArrowLeft, Check, Clock, MessageSquare } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { Button } from "@/shared/components/ui/button";
-import { Callout } from "@/shared/components/ui/callout";
 import { Input } from "@/shared/components/ui/input";
-import { StepIndicator } from "@/shared/components/ui/step-indicator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
+import { Island } from "@/shared/components/features/island";
 import { FormSkeleton } from "@/shared/components/features/loading";
 import {
   AudienceFilterBuilder,
@@ -36,6 +27,8 @@ import {
   blockerForStep,
   defaultScheduleSlot,
   EMPTY_DRAFT,
+  fromCampaignDTO,
+  resumeStep,
   isScheduleInThePast,
   readAudienceEstimate,
   scheduledAtISO,
@@ -54,10 +47,13 @@ import {
 import type { TemplateDTO } from "@/modules/marketing/domain/template-catalog";
 import {
   createCampaign,
+  getCampaign,
   launchCampaign,
   previewAudience,
   updateCampaign,
 } from "@/modules/marketing/infrastructure/services/campaigns-service.adapter";
+import { canEditCampaign } from "@/modules/marketing/domain/campaign-state";
+import { LoadError } from "@/modules/marketing/ui/components/premium";
 import {
   getMessagingWindow,
   listHsmTemplates,
@@ -76,8 +72,13 @@ import { bulkOpeningCost, formatUsd } from "@/modules/marketing/domain/template-
 import { listChannels } from "@/modules/channels/public";
 import { loadMyCompanyOnce } from "@/modules/companies/public";
 
-/** Las etiquetas en el orden del asistente, que es lo que pide `StepIndicator`. */
-const STEP_LABELS = WIZARD_STEPS.map((step) => WIZARD_STEP_LABELS[step]);
+/** El título de cada paso cuando está abierto (la pregunta que responde). */
+const STEP_QUESTIONS: Record<WizardStep, string> = {
+  audiencia: "¿A quién le hablas?",
+  contenido: "¿Qué les dices?",
+  programacion: "¿Cuándo sale?",
+  revision: "Antes de enviar",
+};
 
 /**
  * Wizard de creación de campaña.
@@ -86,8 +87,15 @@ const STEP_LABELS = WIZARD_STEPS.map((step) => WIZARD_STEP_LABELS[step]);
  * campaña que YA EXISTE. Por eso al salir del paso 1 se crea el BORRADOR — no
  * es un formulario en memoria que se envía al final. Lo bueno es que además
  * nada se pierde si el usuario se va a mitad: la campaña queda en borrador.
+ *
+ * `resumeId` RETOMA un borrador (o edita una programada) donde se quedó: antes
+ * un borrador no se podía reabrir. Una programada no se relanza: se guarda.
+ *
+ * Presentación (canvas 2026-09-26): los pasos hechos quedan plegados con su
+ * resumen y «Cambiar», el actual abierto, y la navegación en una barra de tinta
+ * pegada abajo (§9.7 y §9.5.1).
  */
-export function CampaignWizard() {
+export function CampaignWizard({ resumeId = null }: { resumeId?: string | null }) {
   const { hasPermission } = useAuth();
   const canManage = hasPermission("marketing:manage");
   const { showAlert, showModal, closeModal } = useAlert();
@@ -108,6 +116,38 @@ export function CampaignWizard() {
   const [companyName, setCompanyName] = useState("tu empresa");
   const [window_, setWindow] = useState<MessagingWindowDTO | null>(null);
   const [busy, setBusy] = useState(false);
+  /** Al retomar: `loading` hasta traer la campaña; `blocked` si ya no se puede editar. */
+  const [resume, setResume] = useState<{ state: "idle" | "loading" | "ready" | "blocked" | "error"; status?: CampaignDTO["status"]; error?: string }>(
+    resumeId ? { state: "loading" } : { state: "idle" },
+  );
+  const editingScheduled = resume.status === "scheduled";
+
+  const loadResume = useCallback(async () => {
+    if (!resumeId) return;
+    setResume({ state: "loading" });
+    try {
+      const campaign = await getCampaign(resumeId);
+      if (!canEditCampaign(campaign.status)) {
+        setResume({ state: "blocked", status: campaign.status });
+        return;
+      }
+      const loaded = fromCampaignDTO(campaign);
+      setCampaignId(campaign.id);
+      setDraft(loaded);
+      setStep(resumeStep(loaded));
+      setResume({ state: "ready", status: campaign.status });
+      // La estimación se pide aparte: si falla, el borrador igual se puede seguir editando.
+      void previewAudience(campaign.id)
+        .then((preview) => setEstimate(readAudienceEstimate(preview)))
+        .catch(() => undefined);
+    } catch (err) {
+      setResume({ state: "error", error: errorMessage(err, "No pudimos abrir esta campaña") });
+    }
+  }, [resumeId]);
+
+  useEffect(() => {
+    void loadResume();
+  }, [loadResume]);
 
   useEffect(() => {
     void Promise.all([
@@ -210,6 +250,20 @@ export function CampaignWizard() {
     }
   }
 
+  /** Una campaña programada no se relanza: se guardan los cambios y sigue programada. */
+  async function saveScheduled() {
+    if (campaignId === null) return;
+    setBusy(true);
+    try {
+      await updateCampaign(campaignId, toUpdateCampaignDTO(draft));
+      showAlert({ tone: "success", title: "Cambios guardados", description: "La campaña sigue programada." });
+      router.push(`/marketing/campaigns/${campaignId}`);
+    } catch (err) {
+      showAlert({ tone: "error", title: errorMessage(err, "No se pudieron guardar los cambios") });
+      setBusy(false);
+    }
+  }
+
   function confirmLaunch() {
     if (campaignId === null) return;
     const reach = estimate?.estimatedReach;
@@ -248,13 +302,44 @@ export function CampaignWizard() {
 
   if (!canManage) {
     return (
-      <p className="rounded-2xl border border-border bg-background px-4 py-6 text-sm text-muted-foreground">
-        Necesitas permisos de gestión de marketing para crear campañas.
-      </p>
+      <div className="flex flex-col gap-4">
+        <WizardBack />
+        <p className="border-border bg-card text-muted-foreground rounded-3xl border px-5 py-6 text-sm text-pretty">
+          Necesitas permisos de gestión de marketing para crear o editar campañas.
+        </p>
+      </div>
     );
   }
 
-  if (templates === null) return <FormSkeleton fields={5} />;
+  if (resume.state === "error") {
+    return (
+      <div className="flex flex-col gap-4">
+        <WizardBack />
+        <LoadError message={resume.error ?? "No pudimos abrir esta campaña"} onRetry={loadResume} />
+      </div>
+    );
+  }
+
+  if (resume.state === "blocked") {
+    return (
+      <div className="flex flex-col gap-4">
+        <WizardBack />
+        <div className="border-border bg-card flex flex-col items-start gap-3 rounded-3xl border p-6">
+          <p className="font-heading text-xl font-bold tracking-tight">Esta campaña ya salió</p>
+          <p className="text-muted-foreground text-sm text-pretty">
+            Al lanzarla se congelaron la audiencia y el mensaje. Puedes verla o duplicarla como punto de partida.
+          </p>
+          {resumeId ? (
+            <Button variant="outline" className="rounded-full" asChild>
+              <Link href={`/marketing/campaigns/${resumeId}`}>Ver la campaña</Link>
+            </Button>
+          ) : null}
+        </div>
+      </div>
+    );
+  }
+
+  if (templates === null || resume.state === "loading") return <FormSkeleton fields={5} />;
 
   const selectedTemplate = templates.find((t) => t.id === draft.templateId) ?? null;
   const selectedSegment = segments.find((s) => s.id === draft.segmentId) ?? null;
@@ -270,470 +355,565 @@ export function CampaignWizard() {
     selectedHsm === null || estimate === null
       ? null
       : messagingWindowNotice(estimate.estimatedReach, window_);
+  const scheduled = scheduledAtISO(draft);
+  const scheduleLabel =
+    scheduled === null
+      ? "Ahora mismo, en cuanto la lances"
+      : new Date(scheduled).toLocaleString("es-CO", { weekday: "long", day: "numeric", month: "long", hour: "numeric", minute: "2-digit" });
+
+  /** Lo que se decidió en cada paso, en una línea: el resumen de un paso plegado. */
+  const stepSummary: Record<WizardStep, string> = {
+    audiencia:
+      (draft.audienceMode === "all"
+        ? "Todos los contactos"
+        : draft.audienceMode === "segment"
+          ? selectedSegment
+            ? `Segmento «${selectedSegment.name}»`
+            : "Segmento sin elegir"
+          : "Filtros a medida") +
+      (estimate ? ` · ≈ ${estimate.estimatedReach.toLocaleString("es-CO")} personas` : ""),
+    contenido:
+      [selectedTemplate ? `«${selectedTemplate.name}»` : null, selectedHsm ? `plantilla de Meta «${selectedHsm.name}»` : null]
+        .filter(Boolean)
+        .join(" · ") || "Sin mensaje elegido",
+    programacion: scheduleLabel,
+    revision: "",
+  };
+
+  // El título ya dice «Nueva campaña» mientras no tenga nombre: el kicker dice dónde estás y en qué estado va.
+  const kicker = editingScheduled ? "Campañas · programada" : campaignId === null ? "Campañas · nueva" : "Campañas · borrador guardado";
 
   return (
-    <div className="flex flex-col gap-5">
-      <div>
-        <Button variant="ghost" size="sm" className="-ml-2 mb-1" asChild>
-          <Link href="/marketing/campaigns">
-            <ArrowLeft className="size-4" aria-hidden="true" />
-            Campañas
-          </Link>
-        </Button>
-        <h1 className="text-2xl font-semibold tracking-tight">Nueva campaña</h1>
-      </div>
+    <div className="flex min-w-0 flex-col gap-6">
+      <WizardBack />
+      <header className="flex min-w-0 flex-col gap-1.5">
+        <p className="text-muted-foreground text-[11px] font-semibold tracking-[0.14em] uppercase">{kicker}</p>
+        <h1 className="font-heading text-[1.9rem] leading-[1.05] font-bold tracking-tight text-balance break-words sm:text-[2.5rem]">
+          {draft.name.trim() || "Nueva campaña"}
+        </h1>
+      </header>
 
-      {/* El indicador es el compartido: este asistente tenía una copia propia
-          que pintaba «completado» en verde, contra la gramática de marca
-          (violeta) que ya seguían los otros seis consumidores. */}
-      <StepIndicator
-        steps={STEP_LABELS}
-        current={stepIndex}
-        onStepClick={(index) => setStep(WIZARD_STEPS[index])}
-        ariaLabel="Progreso de la campaña"
-      />
-
-      <section className="rounded-2xl border border-border bg-background p-5">
-        {step === "audiencia" && (
-          <div className="flex flex-col gap-4">
-            <h2 className="text-lg font-semibold tracking-tight">¿A quién le hablas?</h2>
-
-            <div className="grid gap-3 md:grid-cols-2">
-              <div className="space-y-1.5">
-                <label htmlFor="c-name" className="text-xs font-medium text-muted-foreground">
-                  Nombre de la campaña
-                </label>
-                <Input
-                  id="c-name"
-                  value={draft.name}
-                  onChange={(e) => patch({ name: e.target.value })}
-                  placeholder="Black Friday"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label htmlFor="c-desc" className="text-xs font-medium text-muted-foreground">
-                  Descripción (opcional)
-                </label>
-                <Input
-                  id="c-desc"
-                  value={draft.description}
-                  onChange={(e) => patch({ description: e.target.value })}
-                  placeholder="Para acordarte de qué se trataba"
-                />
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <AudienceOption
-                checked={draft.audienceMode === "all"}
-                onSelect={() => patch({ audienceMode: "all" })}
-                title="Todos los contactos"
-                description="Tu base completa, menos quienes pidieron no recibir promociones."
-              />
-
-              <AudienceOption
-                checked={draft.audienceMode === "segment"}
-                onSelect={() => patch({ audienceMode: "segment" })}
-                title="Un segmento guardado"
-                description="Reutiliza los segmentos que ya creaste en el CRM."
-              />
-              {draft.audienceMode === "segment" && (
-                <div className="ml-7 flex flex-col gap-1.5">
-                  {segments.length === 0 ? (
-                    <p className="text-xs text-muted-foreground">
-                      Todavía no tienes segmentos.{" "}
-                      <Link href="/crm/settings/segments" className="underline">
-                        Crear uno en el CRM
-                      </Link>{" "}
-                      o usa los filtros a medida de abajo.
-                    </p>
-                  ) : (
-                    <>
-                      <select
-                        aria-label="Segmento"
-                        value={draft.segmentId ?? ""}
-                        onChange={(e) => patch({ segmentId: e.target.value || null })}
-                        className="h-9 max-w-md rounded-md border border-input bg-background px-2.5 text-sm"
-                      >
-                        <option value="">Elige un segmento…</option>
-                        {segments.map((segment) => (
-                          <option key={segment.id} value={segment.id}>
-                            {segment.name}
-                          </option>
-                        ))}
-                      </select>
-                      {selectedSegment && (
-                        <p className="text-xs text-muted-foreground">
-                          {describeSegmentFilters(
-                            compactSegmentFilters(selectedSegment.filters as never),
-                            tags,
-                          )}
-                        </p>
-                      )}
-                    </>
-                  )}
-                </div>
-              )}
-
-              <AudienceOption
-                checked={draft.audienceMode === "filters"}
-                onSelect={() => patch({ audienceMode: "filters" })}
-                title="Filtros a medida"
-                description="Arma la audiencia con los mismos filtros de los segmentos del CRM."
-              />
-              {draft.audienceMode === "filters" && (
-                <div className="ml-7 rounded-xl border border-border bg-foreground/[0.02] p-4">
-                  <AudienceFilterBuilder
-                    value={draft.filters}
-                    onChange={(filters) => patch({ filters })}
-                    tags={tags}
-                    idPrefix="campaign"
-                  />
-                </div>
-              )}
-            </div>
-
-            {estimate !== null && <AudienceSummary estimate={estimate} onRecalculate={recalculate} busy={busy} />}
-
-            <p className="flex gap-2.5 rounded-xl border border-info/25 bg-info/5 px-4 py-3 text-sm text-muted-foreground">
-              <Info aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-info" />
-              <span>
-                Al continuar se guarda como{" "}
-                <strong className="font-medium text-foreground">borrador</strong>: es lo que nos
-                permite calcular tu audiencia real. Puedes editarla hasta que la lances.
-              </span>
-            </p>
-          </div>
-        )}
-
-        {step === "contenido" && (
-          <div className="flex flex-col gap-4">
-            <div>
-              <h2 className="text-lg font-semibold tracking-tight">¿Qué les dices?</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Son dos mensajes, no uno: el que ve quien te escribió hace poco y el que necesita
-                quien lleva más de 24 h en silencio.
-              </p>
-            </div>
-
-            <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
-              {/* Dentro de la ventana: el mensaje de siempre, texto libre. */}
-              <section className="overflow-clip rounded-xl border border-border">
-                <header className="flex items-center gap-2.5 border-b border-border bg-foreground/[0.025] px-3.5 py-2.5">
-                  <span className="grid size-7 shrink-0 place-items-center rounded-md bg-foreground/[0.06] text-muted-foreground">
-                    <MessageSquare aria-hidden="true" className="size-3.5" />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-sm font-semibold">A quien te escribió hace poco</span>
-                    <span className="block text-xs text-muted-foreground">
-                      Dentro de las 24 h · texto libre
+      <ol className="flex min-w-0 flex-col gap-3" aria-label="Pasos de la campaña">
+        {WIZARD_STEPS.map((current, index) => {
+          const done = index < stepIndex;
+          const open = current === step;
+          if (!open) {
+            return (
+              <li
+                key={current}
+                className={cn(
+                  "border-border bg-card flex min-w-0 items-center gap-4 rounded-3xl border px-5 py-4",
+                  !done && "opacity-60",
+                )}
+              >
+                <StepMark done={done} number={index + 1} />
+                <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <span className="text-sm font-semibold">{WIZARD_STEP_LABELS[current]}</span>
+                  {done && stepSummary[current] ? (
+                    <span className="text-muted-foreground truncate text-xs" title={stepSummary[current]}>
+                      {stepSummary[current]}
                     </span>
-                  </span>
-                </header>
-                <div className="flex flex-col gap-3 p-3.5">
-                  {templates.length === 0 ? (
-                    <p className="rounded-lg border border-dashed border-border px-3 py-4 text-sm text-muted-foreground">
-                      No tienes plantillas activas.{" "}
-                      <Link href="/marketing/settings/templates" className="underline">
-                        Crea una
-                      </Link>
-                      .
-                    </p>
-                  ) : (
-                    <>
-                      <select
-                        id="c-template"
-                        aria-label="Plantilla del tenant"
-                        value={draft.templateId ?? ""}
-                        onChange={(e) => patch({ templateId: e.target.value || null })}
-                        className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm"
-                      >
-                        <option value="">Elige una plantilla…</option>
-                        {templates.map((template) => (
-                          <option key={template.id} value={template.id}>
-                            {template.name}
-                          </option>
-                        ))}
-                      </select>
-                      <p className="text-xs text-muted-foreground">
-                        Se rellenan <span className="font-mono">{"{{first_name}}"}</span>,{" "}
-                        <span className="font-mono">{"{{contact_name}}"}</span> y{" "}
-                        <span className="font-mono">{"{{company_name}}"}</span>.
-                      </p>
-                      {selectedTemplate?.body ? (
-                        <div className="rounded-lg border border-border/60 bg-foreground/[0.03] p-3.5">
-                          <div className="max-w-[32ch] rounded-2xl rounded-bl-sm border border-border/60 bg-background px-3 py-2 text-sm leading-relaxed shadow-sm">
-                            {previewTemplate(selectedTemplate.body, CAMPAIGN_TEMPLATE_VARIABLES)}
-                          </div>
-                        </div>
-                      ) : null}
-                    </>
-                  )}
+                  ) : null}
                 </div>
-              </section>
+                {done ? (
+                  <Button variant="ghost" size="sm" className="rounded-full" disabled={busy} onClick={() => setStep(current)}>
+                    Cambiar
+                  </Button>
+                ) : null}
+              </li>
+            );
+          }
+          return (
+            <li key={current} aria-current="step" className="border-border bg-card @container min-w-0 rounded-3xl border p-5 sm:p-6">
+              <div className="mb-5 flex items-center gap-3">
+                <StepMark current number={index + 1} />
+                <h2 className="font-heading text-xl font-bold tracking-tight">{STEP_QUESTIONS[current]}</h2>
+              </div>
 
-              {/* Fuera de la ventana: solo cruza una plantilla aprobada de Meta. */}
-              <section className="overflow-clip rounded-xl border border-border">
-                <header className="flex items-center gap-2.5 border-b border-border bg-foreground/[0.025] px-3.5 py-2.5">
-                  <span className="grid size-7 shrink-0 place-items-center rounded-md bg-foreground/[0.06] text-muted-foreground">
-                    <Clock aria-hidden="true" className="size-3.5" />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-sm font-semibold">A quien lleva más de 24 h</span>
-                    <span className="block text-xs text-muted-foreground">
-                      Fuera de ventana · solo plantilla de Meta
-                    </span>
-                  </span>
-                </header>
-                <div className="flex flex-col gap-3 p-3.5">
-                  {cloudChannelId === null ? (
-                    <Callout tone="warn" icon={AlertTriangle}>
-                      Las plantillas de Meta viven en un número de{" "}
-                      <strong className="font-medium text-foreground">WhatsApp Cloud</strong>, y
-                      todavía no tienes ninguno conectado. La campaña puede salir igual: solo
-                      llegará a quien esté dentro de la ventana.{" "}
-                      <Link href="/settings/channels" className="underline">
-                        Conectar WhatsApp
-                      </Link>
-                    </Callout>
-                  ) : hsmTemplates === null ? (
-                    <p className="text-xs text-muted-foreground">Buscando tus plantillas…</p>
-                  ) : hsmTemplates.length === 0 ? (
-                    // Aquí vivía la franja ámbar que solo avisaba y enlazaba
-                    // fuera: ahora el aviso trae su propia salida.
-                    <Callout tone="warn" icon={AlertTriangle}>
-                      Meta solo deja abrir una conversación fría con una{" "}
-                      <strong className="font-medium text-foreground">plantilla aprobada</strong> de
-                      categoría marketing, y no tienes ninguna. Sin ella, esos contactos se omiten y
-                      lo verás en el detalle de la campaña.{" "}
-                      <Link href="/marketing/settings/meta-templates" className="underline">
-                        Crear una plantilla
-                      </Link>
-                    </Callout>
-                  ) : (
-                    <>
-                      {/* Con un solo número no hay nada que elegir y el selector
-                          sería ruido. Con varios SÍ hay que decirlo: la
-                          plantilla pertenece a uno solo, y Meta no la conoce en
-                          los demás. */}
-                      {cloudChannels.length > 1 && (
-                        <div className="space-y-1.5">
-                          <label
-                            htmlFor="c-cloud-channel"
-                            className="text-xs font-medium text-muted-foreground"
-                          >
-                            Número desde el que sale
-                          </label>
-                          <select
-                            id="c-cloud-channel"
-                            value={cloudChannelId ?? ""}
-                            onChange={(e) => {
-                              setCloudChannelId(e.target.value);
-                              patch({ hsmChannelTemplateId: null, hsmParamMapping: [] });
-                            }}
-                            className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm"
-                          >
-                            {cloudChannels.map((channel) => (
-                              <option key={channel.id} value={channel.id}>
-                                {channel.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      )}
-                      <HsmTemplatePicker
-                      templates={hsmTemplates}
-                      value={draft.hsmChannelTemplateId}
-                      onChange={(id) => patch({ hsmChannelTemplateId: id })}
-                      mapping={draft.hsmParamMapping}
-                      onMappingChange={(mapping) => patch({ hsmParamMapping: mapping })}
-                      sample={previewSample}
-                      recipients={estimate?.estimatedReach ?? null}
-                        emptyLabel="Sin plantilla · se omiten los que lleven más de 24 h"
+              {current === "audiencia" && (
+                <div className="flex flex-col gap-4">
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <div className="space-y-1.5">
+                      <label htmlFor="c-name" className="text-muted-foreground text-xs font-medium">
+                        Nombre de la campaña
+                      </label>
+                      <Input
+                        id="c-name"
+                        value={draft.name}
+                        onChange={(e) => patch({ name: e.target.value })}
+                        placeholder="Black Friday"
+                        maxLength={80}
                       />
-                    </>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label htmlFor="c-desc" className="text-muted-foreground text-xs font-medium">
+                        Descripción (opcional)
+                      </label>
+                      <Input
+                        id="c-desc"
+                        value={draft.description}
+                        onChange={(e) => patch({ description: e.target.value })}
+                        placeholder="Para acordarte de qué se trataba"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <AudienceOption
+                      checked={draft.audienceMode === "all"}
+                      onSelect={() => patch({ audienceMode: "all" })}
+                      title="Todos los contactos"
+                      description="Tu base completa, menos quienes pidieron no recibir promociones."
+                    />
+                    <AudienceOption
+                      checked={draft.audienceMode === "segment"}
+                      onSelect={() => patch({ audienceMode: "segment" })}
+                      title="Un segmento guardado"
+                      description="Reutiliza los segmentos que ya creaste en el CRM."
+                    />
+                    {draft.audienceMode === "segment" && (
+                      <div className="flex flex-col gap-1.5 pl-1 sm:ml-7">
+                        {segments.length === 0 ? (
+                          <p className="text-muted-foreground text-xs text-pretty">
+                            Todavía no tienes segmentos.{" "}
+                            <Link href="/crm/settings/segments" className="text-foreground font-medium underline underline-offset-4">
+                              Crear uno en el CRM
+                            </Link>{" "}
+                            o usa los filtros a medida de abajo.
+                          </p>
+                        ) : (
+                          <>
+                            <Select value={draft.segmentId ?? ""} onValueChange={(value: string) => patch({ segmentId: value || null })}>
+                              <SelectTrigger className="h-10 w-full max-w-md rounded-xl" aria-label="Segmento">
+                                <SelectValue placeholder="Elige un segmento…" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {segments.map((segment) => (
+                                  <SelectItem key={segment.id} value={segment.id}>
+                                    {segment.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            {selectedSegment && (
+                              <p className="text-muted-foreground text-xs text-pretty">
+                                {describeSegmentFilters(compactSegmentFilters(selectedSegment.filters as never), tags)}
+                              </p>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    )}
+                    <AudienceOption
+                      checked={draft.audienceMode === "filters"}
+                      onSelect={() => patch({ audienceMode: "filters" })}
+                      title="Filtros a medida"
+                      description="Arma la audiencia con los mismos filtros de los segmentos del CRM."
+                    />
+                    {draft.audienceMode === "filters" && (
+                      <div className="bg-muted/40 min-w-0 rounded-2xl p-4 sm:ml-7">
+                        <AudienceFilterBuilder
+                          value={draft.filters}
+                          onChange={(filters) => patch({ filters })}
+                          tags={tags}
+                          idPrefix="campaign"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {estimate !== null && <AudienceSummary estimate={estimate} onRecalculate={recalculate} busy={busy} />}
+
+                  <p className="text-muted-foreground text-xs text-pretty">
+                    Al continuar se guarda como borrador: es lo que nos permite calcular tu audiencia real. Puedes
+                    retomarla y editarla hasta que la lances.
+                  </p>
+                </div>
+              )}
+
+              {current === "contenido" && (
+                <div className="flex flex-col gap-4">
+                  <p className="text-muted-foreground -mt-2 text-sm text-pretty">
+                    Son dos mensajes, no uno: el que ve quien te escribió hace poco y el que necesita quien lleva más de
+                    24 h en silencio.
+                  </p>
+                  <div className="grid gap-4 @2xl:grid-cols-2 @2xl:items-start [&>*]:min-w-0">
+                    <MessageHalf
+                      icon={MessageSquare}
+                      title="A quien te escribió hace poco"
+                      subtitle="Dentro de las 24 h · texto libre"
+                    >
+                      {templates.length === 0 ? (
+                        <p className="text-muted-foreground text-sm text-pretty">
+                          No tienes mensajes guardados activos.{" "}
+                          <Link href="/marketing/settings/templates" className="text-foreground font-medium underline underline-offset-4">
+                            Crea uno
+                          </Link>
+                          .
+                        </p>
+                      ) : (
+                        <>
+                          <Select value={draft.templateId ?? ""} onValueChange={(value: string) => patch({ templateId: value || null })}>
+                            <SelectTrigger className="h-10 w-full rounded-xl" aria-label="Mensaje guardado">
+                              <SelectValue placeholder="Elige un mensaje…" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {templates.map((template) => (
+                                <SelectItem key={template.id} value={template.id}>
+                                  {template.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <p className="text-muted-foreground text-xs text-pretty">
+                            Se rellenan <span className="font-mono">{"{{first_name}}"}</span>,{" "}
+                            <span className="font-mono">{"{{contact_name}}"}</span> y{" "}
+                            <span className="font-mono">{"{{company_name}}"}</span>.
+                          </p>
+                          {selectedTemplate?.body ? (
+                            <Bubble>{previewTemplate(selectedTemplate.body, CAMPAIGN_TEMPLATE_VARIABLES)}</Bubble>
+                          ) : null}
+                        </>
+                      )}
+                    </MessageHalf>
+
+                    <MessageHalf icon={Clock} title="A quien lleva más de 24 h" subtitle="Fuera de ventana · solo plantilla de Meta">
+                      {cloudChannelId === null ? (
+                        <Notice>
+                          Las plantillas de Meta viven en un número de WhatsApp Cloud y todavía no tienes ninguno
+                          conectado. La campaña puede salir igual: solo llegará a quien esté dentro de la ventana.{" "}
+                          <Link href="/settings/channels" className="text-foreground font-medium underline underline-offset-4">
+                            Conectar WhatsApp
+                          </Link>
+                        </Notice>
+                      ) : hsmTemplates === null ? (
+                        <p className="text-muted-foreground text-xs">Buscando tus plantillas…</p>
+                      ) : hsmTemplates.length === 0 ? (
+                        <Notice>
+                          Meta solo deja abrir una conversación fría con una plantilla aprobada de categoría marketing, y
+                          no tienes ninguna. Sin ella, esos contactos se omiten y lo verás en el detalle de la campaña.{" "}
+                          <Link href="/marketing/settings/meta-templates" className="text-foreground font-medium underline underline-offset-4">
+                            Crear una plantilla
+                          </Link>
+                        </Notice>
+                      ) : (
+                        <>
+                          {/* Con un solo número no hay nada que elegir; con varios sí: la plantilla es de uno solo. */}
+                          {cloudChannels.length > 1 && (
+                            <div className="space-y-1.5">
+                              <span className="text-muted-foreground text-xs font-medium">Número desde el que sale</span>
+                              <Select
+                                value={cloudChannelId ?? ""}
+                                onValueChange={(value: string) => {
+                                  setCloudChannelId(value);
+                                  patch({ hsmChannelTemplateId: null, hsmParamMapping: [] });
+                                }}
+                              >
+                                <SelectTrigger className="h-10 w-full rounded-xl" aria-label="Número desde el que sale">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {cloudChannels.map((channel) => (
+                                    <SelectItem key={channel.id} value={channel.id}>
+                                      {channel.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
+                          <HsmTemplatePicker
+                            templates={hsmTemplates}
+                            value={draft.hsmChannelTemplateId}
+                            onChange={(id) => patch({ hsmChannelTemplateId: id })}
+                            mapping={draft.hsmParamMapping}
+                            onMappingChange={(mapping) => patch({ hsmParamMapping: mapping })}
+                            sample={previewSample}
+                            recipients={estimate?.estimatedReach ?? null}
+                            emptyLabel="Sin plantilla de Meta"
+                          />
+                        </>
+                      )}
+                    </MessageHalf>
+                  </div>
+                </div>
+              )}
+
+              {current === "programacion" && (
+                <div className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-2">
+                    <AudienceOption
+                      checked={draft.scheduledDate === ""}
+                      onSelect={() => patch({ scheduledDate: "", scheduledTime: "" })}
+                      title="Ahora mismo"
+                      description="Empieza a enviarse en cuanto la lances."
+                    />
+                    <AudienceOption
+                      checked={draft.scheduledDate !== ""}
+                      onSelect={() => {
+                        const slot = defaultScheduleSlot(new Date());
+                        patch({
+                          scheduledDate: draft.scheduledDate || slot.date,
+                          scheduledTime: draft.scheduledTime || slot.time,
+                        });
+                      }}
+                      title="Programar"
+                      description="Elige día y hora; la campaña sale sola."
+                    />
+                  </div>
+                  {draft.scheduledDate !== "" && (
+                    <div className="grid max-w-md gap-3 sm:ml-7 sm:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <label htmlFor="c-date" className="text-muted-foreground text-xs font-medium">
+                          Fecha
+                        </label>
+                        <Input id="c-date" type="date" value={draft.scheduledDate} onChange={(e) => patch({ scheduledDate: e.target.value })} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label htmlFor="c-time" className="text-muted-foreground text-xs font-medium">
+                          Hora
+                        </label>
+                        <Input id="c-time" type="time" value={draft.scheduledTime} onChange={(e) => patch({ scheduledTime: e.target.value })} />
+                      </div>
+                    </div>
                   )}
+                  {isScheduleInThePast(draft, new Date()) && <Notice>Esa fecha ya pasó: la campaña saldría en cuanto la lances.</Notice>}
+                  <p className="text-muted-foreground text-xs text-pretty">
+                    Los envíos salen a goteo para proteger tus canales: una campaña grande tarda un rato en completarse,
+                    y eso es deliberado.
+                  </p>
                 </div>
-              </section>
-            </div>
-          </div>
-        )}
-        {step === "programacion" && (
-          <div className="flex flex-col gap-4">
-            <h2 className="text-lg font-semibold tracking-tight">¿Cuándo sale?</h2>
+              )}
 
-            <div className="flex flex-col gap-2">
-              <AudienceOption
-                checked={draft.scheduledDate === ""}
-                onSelect={() => patch({ scheduledDate: "", scheduledTime: "" })}
-                title="Ahora mismo"
-                description="Empieza a enviarse en cuanto la lances."
-              />
-              <AudienceOption
-                checked={draft.scheduledDate !== ""}
-                onSelect={() => {
-                  const slot = defaultScheduleSlot(new Date());
-                  patch({
-                    scheduledDate: draft.scheduledDate || slot.date,
-                    scheduledTime: draft.scheduledTime || slot.time,
-                  });
-                }}
-                title="Programar"
-                description="Elige día y hora; la campaña sale sola."
-              />
-            </div>
-
-            {draft.scheduledDate !== "" && (
-              <div className="ml-7 grid max-w-md gap-3 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <label htmlFor="c-date" className="text-xs font-medium text-muted-foreground">
-                    Fecha
-                  </label>
-                  <input
-                    id="c-date"
-                    type="date"
-                    value={draft.scheduledDate}
-                    onChange={(e) => patch({ scheduledDate: e.target.value })}
-                    className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
-                  />
+              {current === "revision" && (
+                <div className="grid gap-5 @4xl:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] @4xl:items-start">
+                  <dl className="divide-border flex min-w-0 flex-col divide-y">
+                    <ReviewRow label="Audiencia">
+                      {estimate ? (
+                        <>
+                          <b className="font-semibold tabular-nums">≈ {estimate.estimatedReach.toLocaleString("es-CO")}</b> personas{" "}
+                          <span className="text-muted-foreground">· {stepSummary.audiencia.split(" · ")[0]}</span>
+                        </>
+                      ) : (
+                        <span className="text-muted-foreground">Sin calcular</span>
+                      )}
+                    </ReviewRow>
+                    <ReviewRow label="Cuándo sale">{scheduleLabel}</ReviewRow>
+                    <ReviewRow label="Cuánto cuesta">
+                      {hsmCost === null ? (
+                        <span className="text-muted-foreground">Sin plantilla de Meta: no hay costo por mensaje</span>
+                      ) : (
+                        <>
+                          <b className="font-heading text-xl font-bold tabular-nums">≈ {formatUsd(hsmCost.total_usd)}</b>{" "}
+                          <span className="text-muted-foreground">
+                            como mucho · solo por lo que Meta entregue
+                            {hsmCost.category === "marketing" ? " · plantilla de marketing, unas 25 veces más cara que una utility" : ""}
+                          </span>
+                        </>
+                      )}
+                    </ReviewRow>
+                    {windowNotice !== null && (
+                      <ReviewRow label="Tu cupo de Meta">
+                        <span className="flex flex-col gap-1.5">
+                          <span>
+                            Meta te deja abrir{" "}
+                            <b className="font-semibold tabular-nums">{windowNotice.limit.toLocaleString("es-CO")}</b> conversaciones
+                            nuevas cada 24 h, compartidas por todos tus números.
+                          </span>
+                          <Notice>
+                            Esta campaña saldrá repartida en {windowNotice.days} días: se reparte sola, no tienes que hacer nada.
+                          </Notice>
+                        </span>
+                      </ReviewRow>
+                    )}
+                    <ReviewRow label="Quién no lo recibe">
+                      <span className="text-muted-foreground">Las bajas y quien recibió algo tuyo hace muy poco (tus límites de Ajustes)</span>
+                    </ReviewRow>
+                  </dl>
+                  <div className="flex min-w-0 flex-col gap-3">
+                    <p className="text-muted-foreground text-xs">Así lo verá Laura, un contacto de ejemplo</p>
+                    <MessageHalf icon={MessageSquare} title="Dentro de 24 h" subtitle={selectedTemplate?.name ?? "Sin mensaje"}>
+                      {selectedTemplate?.body ? (
+                        <Bubble>{previewTemplate(selectedTemplate.body, CAMPAIGN_TEMPLATE_VARIABLES)}</Bubble>
+                      ) : (
+                        <p className="text-muted-foreground text-xs">Nada que enviar por aquí.</p>
+                      )}
+                    </MessageHalf>
+                    <MessageHalf icon={Clock} title="Fuera de 24 h" subtitle={selectedHsm?.name ?? "Se omiten los contactos fríos"}>
+                      {selectedHsm === null ? (
+                        <p className="text-muted-foreground text-xs">Nada que enviar por aquí.</p>
+                      ) : (
+                        <Bubble>
+                          {renderHsmPreview(selectedHsm.body, (index) => {
+                            const entry = draft.hsmParamMapping.find((row) => row.index === index);
+                            return entry === undefined ? null : hsmPreviewValue(entry.source, previewSample);
+                          }).map((segment, position) => (
+                            <span key={position} className={segment.variable ? "bg-brand/15 rounded px-1 font-medium" : undefined}>
+                              {segment.text}
+                            </span>
+                          ))}
+                        </Bubble>
+                      )}
+                    </MessageHalf>
+                  </div>
                 </div>
-                <div className="space-y-1.5">
-                  <label htmlFor="c-time" className="text-xs font-medium text-muted-foreground">
-                    Hora
-                  </label>
-                  <input
-                    id="c-time"
-                    type="time"
-                    value={draft.scheduledTime}
-                    onChange={(e) => patch({ scheduledTime: e.target.value })}
-                    className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
-                  />
-                </div>
-              </div>
-            )}
+              )}
+            </li>
+          );
+        })}
+      </ol>
 
-            {isScheduleInThePast(draft, new Date()) && (
-              <p className="flex gap-2.5 rounded-xl border border-warning/30 bg-warning/[0.07] px-4 py-3 text-sm text-muted-foreground">
-                <AlertTriangle aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-warning" />
-                <span>Esa fecha ya pasó: la campaña saldría en cuanto la lances.</span>
-              </p>
-            )}
-
-            <p className="text-xs text-muted-foreground">
-              Los envíos salen a goteo para proteger tus canales: una campaña grande tarda un rato en
-              completarse, y eso es deliberado.
-            </p>
-          </div>
-        )}
-
-        {step === "revision" && (
-          <div className="flex flex-col gap-4">
-            <h2 className="text-lg font-semibold tracking-tight">Revisa antes de lanzar</h2>
-
-            <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <Summary label="Campaña" value={draft.name.trim()} />
-              <Summary
-                label="Audiencia"
-                value={
-                  estimate
-                    ? `≈ ${estimate.estimatedReach.toLocaleString("es-CO")} personas`
-                    : "Sin calcular"
-                }
-              />
-              <Summary
-                label="Coste tope"
-                value={
-                  hsmCost === null
-                    ? "Sin plantilla de Meta"
-                    : `${formatUsd(hsmCost.total_usd)}`
-                }
-              />
-              <Summary
-                label="Salida"
-                value={draft.scheduledDate === "" ? "Ahora mismo" : `${draft.scheduledDate} ${draft.scheduledTime}`}
-              />
-            </dl>
-
-            {/* Los DOS mensajes, no uno: es lo que de verdad va a salir. */}
-            <div className="grid gap-3 lg:grid-cols-2">
-              <ReviewMessage
-                icon={MessageSquare}
-                title="Dentro de 24 h"
-                subtitle={selectedTemplate?.name ?? "Sin plantilla"}
-              >
-                {selectedTemplate?.body
-                  ? previewTemplate(selectedTemplate.body, CAMPAIGN_TEMPLATE_VARIABLES)
-                  : null}
-              </ReviewMessage>
-              <ReviewMessage
-                icon={Clock}
-                title="Fuera de 24 h"
-                subtitle={selectedHsm?.name ?? "Se omiten los contactos fríos"}
-              >
-                {selectedHsm === null
-                  ? null
-                  : renderHsmPreview(selectedHsm.body, (index) => {
-                      const entry = draft.hsmParamMapping.find((row) => row.index === index);
-                      return entry === undefined ? null : hsmPreviewValue(entry.source, previewSample);
-                    }).map((segment, position) => (
-                      <span
-                        key={position}
-                        className={segment.variable ? "rounded bg-primary/15 px-1 font-medium" : undefined}
-                      >
-                        {segment.text}
-                      </span>
-                    ))}
-              </ReviewMessage>
-            </div>
-
-            {windowNotice !== null && (
-              <Callout tone="warn" icon={Gauge}>
-                Meta te deja abrir{" "}
-                <strong className="font-medium text-foreground">
-                  {windowNotice.limit.toLocaleString("es-CO")} conversaciones nuevas cada 24 h
-                </strong>
-                , y ese cupo lo comparten todos tus números. Esta campaña{" "}
-                <strong className="font-medium text-foreground">
-                  saldrá repartida en {windowNotice.days} días
-                </strong>
-                : no tienes que hacer nada, se reparte sola. Mandarlo todo de golpe es lo que baja
-                el cupo, no lo que lo sube.
-              </Callout>
-            )}
-
-            {hsmCost !== null && hsmCost.category === "marketing" && (
-              <Callout tone="warn" icon={CircleDollarSign}>
-                Es una plantilla de <strong className="font-medium text-foreground">marketing</strong>,
-                unas 25 veces más cara que una utility. Como mucho{" "}
-                <strong className="font-medium text-foreground">{formatUsd(hsmCost.total_usd)}</strong>,
-                y solo por las que Meta entregue de verdad.
-              </Callout>
-            )}
-          </div>
-        )}
-      </section>
-
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
+      {/* La navegación del asistente en una barra de tinta pegada abajo (§9.7, §9.5.1). */}
+      <Island
+        as="footer"
+        material="ink"
+        role="region"
+        aria-label="Avanzar en la campaña"
+        className="sticky bottom-3 z-10 flex flex-wrap items-center justify-between gap-3 rounded-3xl px-5 py-3 sm:rounded-full sm:py-2.5 sm:pr-2.5"
+      >
+        <p className="min-w-0 text-sm text-pretty">
+          {step === "revision" ? (
+            <>
+              <span className="font-semibold">
+                {editingScheduled ? "Programada" : scheduled ? "Lista para salir" : "Lista para lanzar"}
+              </span>
+              <span className="text-muted-foreground">
+                {estimate ? (
+                  <>
+                    {" · "}
+                    <span className="whitespace-nowrap">≈ {estimate.estimatedReach.toLocaleString("es-CO")} personas</span>
+                  </>
+                ) : null}
+                {hsmCost ? (
+                  <>
+                    {" · "}
+                    <span className="whitespace-nowrap">≈ {formatUsd(hsmCost.total_usd)}</span>
+                  </>
+                ) : null}
+              </span>
+            </>
+          ) : blocker !== null ? (
+            <span className="text-muted-foreground">{blocker}</span>
+          ) : (
+            <span className="text-muted-foreground">
+              Paso {stepIndex + 1} de {WIZARD_STEPS.length} · se guarda como borrador al continuar
+            </span>
+          )}
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
           {stepIndex > 0 && (
-            <Button variant="ghost" disabled={busy} onClick={() => setStep(WIZARD_STEPS[stepIndex - 1])}>
+            <Button variant="glass" disabled={busy} onClick={() => setStep(WIZARD_STEPS[stepIndex - 1])}>
               Atrás
             </Button>
           )}
-          {blocker !== null && <span className="text-xs text-muted-foreground">{blocker}</span>}
+          {step === "revision" ? (
+            editingScheduled ? (
+              <Button variant="contrast" className="rounded-full" disabled={busy} onClick={() => void saveScheduled()}>
+                {busy ? "Guardando…" : "Guardar cambios"}
+              </Button>
+            ) : (
+              <Button variant="contrast" className="rounded-full" disabled={busy} onClick={confirmLaunch}>
+                {scheduled ? "Programar campaña" : "Lanzar campaña"}
+              </Button>
+            )
+          ) : (
+            <Button variant="contrast" className="rounded-full" disabled={blocker !== null || busy} onClick={() => void persistAndAdvance()}>
+              {busy ? "Guardando…" : "Continuar"}
+            </Button>
+          )}
         </div>
+      </Island>
+    </div>
+  );
+}
 
-        {step === "revision" ? (
-          <Button disabled={busy} onClick={confirmLaunch}>
-            {scheduledAtISO(draft) ? "Programar campaña" : "Lanzar campaña"}
-          </Button>
-        ) : (
-          <Button disabled={blocker !== null || busy} onClick={() => void persistAndAdvance()}>
-            {busy ? "Guardando…" : "Continuar"}
-          </Button>
-        )}
+function WizardBack() {
+  return (
+    <Link
+      href="/marketing/campaigns"
+      className="text-muted-foreground hover:text-foreground inline-flex min-h-6 w-fit items-center gap-1.5 text-sm underline-offset-4 hover:underline"
+    >
+      <ArrowLeft className="size-4" aria-hidden="true" />
+      Campañas
+    </Link>
+  );
+}
+
+/** La marca de un paso: ✓ si está hecho, el número con anillo coral si es el actual, el número tenue si falta. */
+function StepMark({ done = false, current = false, number }: { done?: boolean; current?: boolean; number: number }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
+        done && "bg-foreground text-background",
+        current && "ring-brand ring-2 ring-inset",
+        !done && !current && "text-muted-foreground ring-border ring-1 ring-inset",
+      )}
+    >
+      {done ? <Check className="size-3.5" strokeWidth={2.6} /> : number}
+    </span>
+  );
+}
+
+/** Un aviso: punto ámbar + texto en foreground. Sin caja tintada (el color va en el punto, DS §9.5). */
+function Notice({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="flex gap-2.5 text-sm text-pretty">
+      <span aria-hidden="true" className="bg-warning mt-[0.45em] size-2 shrink-0 rounded-full" />
+      <span className="min-w-0">{children}</span>
+    </p>
+  );
+}
+
+/** Una fila de «Antes de enviar»: etiqueta y valor. */
+function ReviewRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="grid gap-1 py-3.5 @lg:grid-cols-[9rem_minmax(0,1fr)] @lg:gap-4">
+      <dt className="text-muted-foreground text-xs @lg:pt-0.5">{label}</dt>
+      <dd className="min-w-0 text-sm text-pretty">{children}</dd>
+    </div>
+  );
+}
+
+/** El globo de un mensaje de WhatsApp, para la vista previa. */
+function Bubble({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="bg-muted/50 rounded-2xl p-3">
+      <div className="bg-card border-border max-w-[34ch] rounded-2xl rounded-bl-sm border px-3.5 py-2.5 text-sm leading-relaxed shadow-xs text-pretty">
+        {children}
       </div>
     </div>
+  );
+}
+
+/** Una de las dos mitades del envío: a quién va y con qué. */
+function MessageHalf({
+  icon: Icon,
+  title,
+  subtitle,
+  children,
+}: {
+  icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
+  title: string;
+  subtitle: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="border-border min-w-0 overflow-clip rounded-2xl border">
+      <header className="bg-muted/40 border-border flex items-center gap-2.5 border-b px-4 py-3">
+        <span className="bg-card grid size-8 shrink-0 place-items-center rounded-xl">
+          <Icon aria-hidden className="size-4" />
+        </span>
+        <span className="min-w-0">
+          <span className="block text-sm font-semibold">{title}</span>
+          <span className="text-muted-foreground block truncate text-xs" title={subtitle}>
+            {subtitle}
+          </span>
+        </span>
+      </header>
+      <div className="flex min-w-0 flex-col gap-3 p-4">{children}</div>
+    </section>
   );
 }
 
@@ -751,19 +931,14 @@ function AudienceOption({
   return (
     <label
       className={cn(
-        "flex cursor-pointer items-start gap-2.5 rounded-md border px-3 py-2.5 transition-colors",
-        checked ? "border-primary bg-accent" : "border-border hover:bg-accent/60",
+        "flex cursor-pointer items-start gap-3 rounded-2xl border px-4 py-3 transition-colors",
+        checked ? "border-foreground/40 bg-muted/50" : "border-border hover:bg-muted/40",
       )}
     >
-      <input
-        type="radio"
-        className="mt-0.5 accent-primary"
-        checked={checked}
-        onChange={onSelect}
-      />
-      <span>
+      <input type="radio" className="accent-foreground mt-1 size-4" checked={checked} onChange={onSelect} />
+      <span className="min-w-0">
         <span className="block text-sm font-medium">{title}</span>
-        <span className="mt-0.5 block text-xs text-muted-foreground">{description}</span>
+        <span className="text-muted-foreground mt-0.5 block text-xs text-pretty">{description}</span>
       </span>
     </label>
   );
@@ -784,67 +959,21 @@ function AudienceSummary({
   busy: boolean;
 }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-accent-amber/30 bg-accent-amber/[0.07] px-4 py-3.5">
-      <div>
-        <p className="text-base font-semibold tabular-nums">
-          <Users aria-hidden="true" className="mr-1.5 inline size-4 text-accent-amber" />
-          {estimate.total.toLocaleString("es-CO")} contactos · ≈{" "}
-          {estimate.estimatedReach.toLocaleString("es-CO")} recibirán el mensaje
+    <div className="border-border flex flex-wrap items-center justify-between gap-3 rounded-2xl border px-4 py-3.5">
+      <div className="min-w-0">
+        <p className="text-sm text-pretty">
+          <b className="font-heading text-xl font-bold tabular-nums">≈ {estimate.estimatedReach.toLocaleString("es-CO")}</b>{" "}
+          recibirán el mensaje <span className="text-muted-foreground">de {estimate.total.toLocaleString("es-CO")} contactos</span>
         </p>
-        <p className="mt-0.5 text-xs tabular-nums text-muted-foreground">
+        <p className="text-muted-foreground mt-0.5 text-xs text-pretty tabular-nums">
           {estimate.exact
             ? `${estimate.estimatedOptedOut.toLocaleString("es-CO")} pidieron no recibir promociones`
             : `≈ ${estimate.estimatedOptedOut.toLocaleString("es-CO")} pidieron no recibir promociones (estimado sobre una muestra de ${estimate.sampleSize.toLocaleString("es-CO")})`}
         </p>
       </div>
-      <Button size="sm" variant="outline" disabled={busy} onClick={onRecalculate}>
+      <Button size="sm" variant="outline" className="rounded-full" disabled={busy} onClick={onRecalculate}>
         Recalcular audiencia
       </Button>
     </div>
-  );
-}
-
-function Summary({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="mt-0.5 text-sm font-medium">{value}</dd>
-    </div>
-  );
-}
-
-/** Una de las dos mitades del envío, en la revisión: quién lo recibe y qué lee. */
-function ReviewMessage({
-  icon: Icon,
-  title,
-  subtitle,
-  children,
-}: {
-  icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
-  title: string;
-  subtitle: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="overflow-clip rounded-xl border border-border">
-      <header className="flex items-center gap-2.5 border-b border-border bg-foreground/[0.025] px-3.5 py-2.5">
-        <span className="grid size-7 shrink-0 place-items-center rounded-md bg-foreground/[0.06] text-muted-foreground">
-          <Icon aria-hidden className="size-3.5" />
-        </span>
-        <span className="min-w-0">
-          <span className="block text-sm font-semibold">{title}</span>
-          <span className="block truncate text-xs text-muted-foreground">{subtitle}</span>
-        </span>
-      </header>
-      <div className="p-3.5">
-        {children === null ? (
-          <p className="text-xs text-muted-foreground">Nada que enviar por aquí.</p>
-        ) : (
-          <div className="max-w-[32ch] rounded-2xl rounded-bl-sm border border-border/60 bg-background px-3 py-2 text-sm leading-relaxed shadow-sm">
-            {children}
-          </div>
-        )}
-      </div>
-    </section>
   );
 }

@@ -34,6 +34,7 @@ jest.mock("@/modules/marketing/infrastructure/services/campaigns-service.adapter
   updateCampaign: jest.fn(),
   previewAudience: jest.fn(),
   launchCampaign: jest.fn(),
+  getCampaign: jest.fn(),
 }));
 jest.mock("@/modules/marketing/infrastructure/services/templates-service.adapter", () => ({
   listTemplates: jest.fn(),
@@ -53,6 +54,7 @@ const api = require("@/modules/marketing/infrastructure/services/campaigns-servi
   updateCampaign: jest.Mock;
   previewAudience: jest.Mock;
   launchCampaign: jest.Mock;
+  getCampaign: jest.Mock;
 };
 const templatesApi = require("@/modules/marketing/infrastructure/services/templates-service.adapter") as {
   listTemplates: jest.Mock;
@@ -98,12 +100,18 @@ beforeEach(() => {
 
 afterEach(cleanup);
 
+/** Elige una opción de un `Select` (Radix): se abre con el teclado y se pulsa la opción. */
+async function pick(label: string, option: string) {
+  fireEvent.keyDown(await screen.findByRole("combobox", { name: label }), { key: "Enter" });
+  fireEvent.click(await screen.findByRole("option", { name: option }));
+}
+
 /** Rellena el paso 1 y avanza. Devuelve tras haberse creado el borrador. */
 async function fillAudienceAndAdvance() {
   fireEvent.change(await screen.findByLabelText("Nombre de la campaña"), {
     target: { value: "Black Friday" },
   });
-  fireEvent.change(screen.getByLabelText("Segmento"), { target: { value: "s1" } });
+  await pick("Segmento", "Clientes VIP");
   fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
   await waitFor(() => expect(api.createCampaign).toHaveBeenCalled());
 }
@@ -141,7 +149,8 @@ describe("paso 1 · audiencia", () => {
     // Se vuelve al paso 1 para ver el resumen ya calculado.
     fireEvent.click(await screen.findByRole("button", { name: "Atrás" }));
 
-    expect(await screen.findByText(/1.200 contactos · ≈ 1.000 recibirán/)).toBeInTheDocument();
+    expect(await screen.findByText("≈ 1.000")).toBeInTheDocument();
+    expect(screen.getByText(/de 1.200 contactos/)).toBeInTheDocument();
     expect(screen.getByText(/estimado sobre una muestra de 1.000/)).toBeInTheDocument();
   });
 });
@@ -154,11 +163,11 @@ describe("pasos 2 a 4", () => {
   });
 
   it("solo ofrece plantillas activas y previsualiza con las variables de campaña", async () => {
-    const select = screen.getByLabelText("Plantilla del tenant");
-    expect(screen.getByRole("option", { name: "Promo julio" })).toBeInTheDocument();
+    fireEvent.keyDown(screen.getByRole("combobox", { name: "Mensaje guardado" }), { key: "Enter" });
+    expect(await screen.findByRole("option", { name: "Promo julio" })).toBeInTheDocument();
     expect(screen.queryByRole("option", { name: "Inactiva" })).not.toBeInTheDocument();
 
-    fireEvent.change(select, { target: { value: "t1" } });
+    fireEvent.click(screen.getByRole("option", { name: "Promo julio" }));
     expect(await screen.findByText(/Hola Ana/)).toBeInTheDocument();
   });
 
@@ -178,7 +187,7 @@ describe("pasos 2 a 4", () => {
   });
 
   it("exige día y hora juntos en la programación", async () => {
-    fireEvent.change(screen.getByLabelText("Plantilla del tenant"), { target: { value: "t1" } });
+    await pick("Mensaje guardado", "Promo julio");
     fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
     await screen.findByText("¿Cuándo sale?");
 
@@ -190,11 +199,11 @@ describe("pasos 2 a 4", () => {
   });
 
   it("lanzar pide confirmación que dice a cuántas personas y que no se deshace", async () => {
-    fireEvent.change(screen.getByLabelText("Plantilla del tenant"), { target: { value: "t1" } });
+    await pick("Mensaje guardado", "Promo julio");
     fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
     await screen.findByText("¿Cuándo sale?");
     fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
-    await screen.findByText("Revisa antes de lanzar");
+    await screen.findByText("Antes de enviar");
 
     fireEvent.click(screen.getByRole("button", { name: "Lanzar campaña" }));
 
@@ -223,8 +232,7 @@ describe("paso 2 · con más de un número de WhatsApp", () => {
 
     // Meta no conoce la plantilla en los demás números: elegir mal significa
     // que el envío se omite con `hsm_channel_mismatch`.
-    const select = await screen.findByLabelText("Número desde el que sale");
-    fireEvent.change(select, { target: { value: "ch2" } });
+    await pick("Número desde el que sale", "Soporte");
 
     await waitFor(() =>
       expect(templatesApi.listHsmTemplates).toHaveBeenCalledWith({
@@ -239,7 +247,7 @@ describe("paso 2 · con más de un número de WhatsApp", () => {
     await fillAudienceAndAdvance();
     await screen.findByText("¿Qué les dices?");
 
-    expect(screen.queryByLabelText("Número desde el que sale")).not.toBeInTheDocument();
+    expect(screen.queryByRole("combobox", { name: "Número desde el que sale" })).not.toBeInTheDocument();
   });
 });
 
@@ -285,5 +293,60 @@ describe("paso 2 · cuando no se puede alcanzar a los contactos fríos", () => {
     // Meta solo entrega MARKETING fuera de ventana para una campaña: ofrecer
     // una utility sería ofrecer algo que se rechaza al lanzar.
     expect(await screen.findByRole("link", { name: "Crear una plantilla" })).toBeInTheDocument();
+  });
+});
+
+describe("retomar una campaña guardada", () => {
+  const saved = {
+    id: "c9",
+    name: "Retomada",
+    description: null,
+    status: "draft",
+    segment_id: "s1",
+    audience_filters: null,
+    template: { id: "t1", name: "Promo julio", kind: "text" },
+    hsm_channel_template_id: null,
+    hsm_param_mapping: null,
+    scheduled_at: null,
+    created_at: "2026-09-20T10:00:00.000Z",
+    updated_at: "2026-09-20T10:00:00.000Z",
+  };
+
+  it("un borrador completo abre en «Antes de enviar», con lo guardado", async () => {
+    api.getCampaign.mockResolvedValue(saved);
+    render(<CampaignWizard resumeId="c9" />);
+
+    expect(await screen.findByText("Antes de enviar")).toBeInTheDocument();
+    expect(api.getCampaign).toHaveBeenCalledWith("c9");
+    expect(screen.getByRole("heading", { level: 1, name: "Retomada" })).toBeInTheDocument();
+    // Retomar no crea otra campaña: guarda sobre la misma.
+    expect(api.createCampaign).not.toHaveBeenCalled();
+    await waitFor(() => expect(api.previewAudience).toHaveBeenCalledWith("c9"));
+  });
+
+  it("un borrador a medias abre en el primer paso que le falta", async () => {
+    api.getCampaign.mockResolvedValue({ ...saved, template: null });
+    render(<CampaignWizard resumeId="c9" />);
+
+    expect(await screen.findByText("¿Qué les dices?")).toBeInTheDocument();
+  });
+
+  it("una campaña que ya salió no se edita: lo dice y enlaza al detalle", async () => {
+    api.getCampaign.mockResolvedValue({ ...saved, status: "running" });
+    render(<CampaignWizard resumeId="c9" />);
+
+    expect(await screen.findByText("Esta campaña ya salió")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Ver la campaña" })).toHaveAttribute("href", "/marketing/campaigns/c9");
+  });
+
+  it("una programada se guarda sin relanzarla", async () => {
+    api.getCampaign.mockResolvedValue({ ...saved, status: "scheduled", scheduled_at: "2099-01-01T15:00:00.000Z" });
+    render(<CampaignWizard resumeId="c9" />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Guardar cambios" }));
+
+    await waitFor(() => expect(api.updateCampaign).toHaveBeenCalledWith("c9", expect.objectContaining({ name: "Retomada" })));
+    expect(api.launchCampaign).not.toHaveBeenCalled();
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/marketing/campaigns/c9"));
   });
 });

@@ -1,7 +1,11 @@
-import type { AudiencePreviewDTO } from "../campaign";
+import type { AudiencePreviewDTO, CampaignDTO } from "../campaign";
 import {
   blockerForStep,
+  campaignEditHref,
   EMPTY_DRAFT,
+  fromCampaignDTO,
+  resumeStep,
+  toDuplicateCampaignDTO,
   defaultScheduleSlot,
   isScheduleInThePast,
   readAudienceEstimate,
@@ -205,5 +209,64 @@ describe("readAudienceEstimate", () => {
     );
     expect(estimate.estimatedOptedOut).toBe(100);
     expect(estimate.estimatedReach).toBe(0);
+  });
+});
+
+describe("retomar y duplicar", () => {
+  function saved(over: Partial<CampaignDTO> = {}): CampaignDTO {
+    return {
+      id: "c9",
+      name: "Black Friday",
+      description: null,
+      status: "draft",
+      segment_id: null,
+      audience_filters: { lifecycle_stage: ["customer"] },
+      template: { id: "t1", name: "Promo", kind: "text" },
+      hsm_channel_template_id: "h1",
+      hsm_param_mapping: [{ index: 1, source: "contact_first_name" }, { basura: true }],
+      scheduled_at: null,
+      created_at: "2026-09-20T10:00:00.000Z",
+      updated_at: "2026-09-20T10:00:00.000Z",
+      ...over,
+    } as CampaignDTO;
+  }
+
+  it("reconstruye el borrador desde lo guardado, descartando un mapeo corrupto", () => {
+    const back = fromCampaignDTO(saved());
+    expect(back.audienceMode).toBe("filters");
+    expect(back.filters).toEqual({ lifecycle_stage: ["customer"] });
+    expect(back.templateId).toBe("t1");
+    expect(back.hsmParamMapping).toEqual([{ index: 1, source: "contact_first_name" }]);
+    expect(back.scheduledDate).toBe("");
+  });
+
+  it("deduce el modo de audiencia: segmento antes que filtros, y si no hay nada, todos", () => {
+    expect(fromCampaignDTO(saved({ segment_id: "s1" })).audienceMode).toBe("segment");
+    expect(fromCampaignDTO(saved({ audience_filters: null })).audienceMode).toBe("all");
+  });
+
+  it("devuelve la fecha programada en hora local, como la escribió el usuario", () => {
+    const at = new Date(2099, 0, 5, 9, 30);
+    const back = fromCampaignDTO(saved({ scheduled_at: at.toISOString() }));
+    expect(back.scheduledDate).toBe("2099-01-05");
+    expect(back.scheduledTime).toBe("09:30");
+  });
+
+  it("retoma en el primer paso que falta; completo, en la revisión", () => {
+    expect(resumeStep(fromCampaignDTO(saved()))).toBe("revision");
+    expect(resumeStep(fromCampaignDTO(saved({ template: null, hsm_channel_template_id: null })))).toBe("contenido");
+    expect(resumeStep(fromCampaignDTO(saved({ name: "" })))).toBe("audiencia");
+  });
+
+  it("duplicar no copia la fecha y el nombre cabe en los 80 del servidor", () => {
+    const copy = toDuplicateCampaignDTO(saved({ name: "x".repeat(80), scheduled_at: "2099-01-01T00:00:00.000Z" }));
+    expect(copy.name).toHaveLength(80);
+    expect(copy.name.startsWith("Copia de ")).toBe(true);
+    expect(copy.scheduled_at ?? null).toBeNull();
+    expect(copy.template_id).toBe("t1");
+  });
+
+  it("el enlace de edición escapa el id", () => {
+    expect(campaignEditHref("a b")).toBe("/marketing/campaigns/new?campaign=a%20b");
   });
 });

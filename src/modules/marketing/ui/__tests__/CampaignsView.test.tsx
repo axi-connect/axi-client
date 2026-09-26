@@ -17,8 +17,9 @@ jest.mock("@/core/providers/alert-provider", () => ({
   useAlert: () => ({ showAlert: jest.fn(), showModal, closeModal: jest.fn() }),
 }));
 
+const push = jest.fn();
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: jest.fn() }),
+  useRouter: () => ({ push }),
   usePathname: () => "/marketing/campaigns",
 }));
 
@@ -28,11 +29,13 @@ jest.mock("@/modules/marketing/infrastructure/services/campaigns-service.adapter
   resumeCampaign: jest.fn(),
   cancelCampaign: jest.fn(),
   deleteCampaign: jest.fn(),
+  createCampaign: jest.fn(),
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const api = require("@/modules/marketing/infrastructure/services/campaigns-service.adapter") as {
   listCampaigns: jest.Mock;
+  createCampaign: jest.Mock;
 };
 
 function campaign(over: Partial<CampaignDTO> = {}): CampaignDTO {
@@ -82,8 +85,19 @@ const MIXED: CampaignDTO[] = [
 beforeEach(() => jest.clearAllMocks());
 afterEach(cleanup);
 
-/** Todo se comprueba dentro de la fila: fuera hay un `select` con las mismas etiquetas. */
+/** Todo se comprueba dentro de la fila: fuera está el filtro con las mismas etiquetas. */
 const rowFor = (name: string) => within(screen.getByText(name).closest("tr")!);
+
+/**
+ * Abre el menú «Más acciones» de una fila. En jsdom no hay container queries:
+ * se pintan las dos copias de las acciones (la de móvil y la de escritorio);
+ * vale la primera. El menú va con `portal`, así que sus opciones viven en
+ * `document.body`, fuera de la fila.
+ */
+function openMenu(name: string) {
+  fireEvent.click(rowFor(name).getAllByRole("button", { name: `Más acciones de ${name}` })[0]);
+  return within(screen.getByRole("menu"));
+}
 
 describe("listado con campañas de todos los estados", () => {
   beforeEach(async () => {
@@ -93,52 +107,70 @@ describe("listado con campañas de todos los estados", () => {
   });
 
   it("nombra «Procesada» a lo despachado y explica por qué no es «Entregada»", () => {
-    expect(rowFor("Reactivación fríos").getByText("Procesada")).toBeInTheDocument();
+    expect(rowFor("Reactivación fríos").getAllByText("Procesada").length).toBeGreaterThan(0);
     expect(screen.queryByText("Completada")).not.toBeInTheDocument();
-    expect(screen.getByText(/La entrega se sigue confirmando después/)).toBeInTheDocument();
+    expect(screen.getByText(/la entrega se sigue confirmando/)).toBeInTheDocument();
   });
 
   it("dice de dónde sale cada audiencia y qué se manda", () => {
-    expect(
-      rowFor("Black Friday").getByText("segmento guardado · plantilla «Promo julio»"),
-    ).toBeInTheDocument();
-    expect(
-      rowFor("Lanzamiento agosto").getByText("filtros a medida · plantilla «Promo julio»"),
-    ).toBeInTheDocument();
-    expect(
-      rowFor("Prueba interna").getByText("todos los contactos · sin contenido"),
-    ).toBeInTheDocument();
+    expect(rowFor("Black Friday").getByText("segmento guardado · plantilla «Promo julio»")).toBeInTheDocument();
+    expect(rowFor("Lanzamiento agosto").getByText("filtros a medida · plantilla «Promo julio»")).toBeInTheDocument();
+    expect(rowFor("Prueba interna").getByText("todos los contactos · sin contenido")).toBeInTheDocument();
   });
 
-  it("muestra la fecha solo de la programada y un guion donde no hay dato", () => {
-    expect(rowFor("Lanzamiento agosto").getByText(/8 de ago/)).toBeInTheDocument();
-    // Borrador: ni audiencia ni programación.
-    expect(rowFor("Prueba interna").getAllByText("—")).toHaveLength(2);
+  it("dice cuándo sale la programada y que la audiencia de un borrador se calcula al lanzar", () => {
+    expect(rowFor("Lanzamiento agosto").getAllByText(/^Sale el 8/).length).toBeGreaterThan(0);
+    expect(rowFor("Prueba interna").getByText("al lanzar")).toBeInTheDocument();
+    expect(rowFor("Prueba interna").getAllByText(/^Creada el/).length).toBeGreaterThan(0);
+  });
+
+  it("un borrador se continúa en el asistente; el resto se ve", () => {
+    const [cont] = rowFor("Prueba interna").getAllByRole("link", { name: "Continuar" });
+    expect(cont).toHaveAttribute("href", "/marketing/campaigns/new?campaign=c5");
+    const [ver] = rowFor("Black Friday").getAllByRole("link", { name: "Ver" });
+    expect(ver).toHaveAttribute("href", "/marketing/campaigns/c1");
   });
 
   it("ofrece en cada fila solo las acciones que su estado permite", () => {
     // Enviando: se pausa y se cancela; no se borra.
-    expect(rowFor("Black Friday").getByText("Pausar")).toBeInTheDocument();
-    expect(rowFor("Black Friday").getByText("Cancelar campaña")).toBeInTheDocument();
-    expect(rowFor("Black Friday").queryByText("Eliminar borrador")).not.toBeInTheDocument();
+    let menu = openMenu("Black Friday");
+    expect(menu.getByText("Pausar")).toBeInTheDocument();
+    expect(menu.getByText("Cancelar campaña")).toBeInTheDocument();
+    expect(menu.queryByText("Eliminar borrador")).not.toBeInTheDocument();
+    expect(menu.queryByText("Editar")).not.toBeInTheDocument();
+    fireEvent.keyDown(screen.getByRole("menu"), { key: "Escape" });
+
+    // Programada: se edita en el asistente.
+    menu = openMenu("Lanzamiento agosto");
+    expect(menu.getByRole("menuitem", { name: "Editar" })).toHaveAttribute("href", "/marketing/campaigns/new?campaign=c3");
+    fireEvent.keyDown(screen.getByRole("menu"), { key: "Escape" });
 
     // Pausada: se reanuda.
-    expect(rowFor("Recordatorio julio").getByText("Reanudar")).toBeInTheDocument();
+    menu = openMenu("Recordatorio julio");
+    expect(menu.getByText("Reanudar")).toBeInTheDocument();
+    fireEvent.keyDown(screen.getByRole("menu"), { key: "Escape" });
 
-    // Borrador: solo se elimina, porque no ha salido nada.
-    expect(rowFor("Prueba interna").getByText("Eliminar borrador")).toBeInTheDocument();
-    expect(rowFor("Prueba interna").queryByText("Pausar")).not.toBeInTheDocument();
+    // Borrador: se elimina, porque no ha salido nada.
+    menu = openMenu("Prueba interna");
+    expect(menu.getByText("Eliminar borrador")).toBeInTheDocument();
+    expect(menu.queryByText("Pausar")).not.toBeInTheDocument();
+    fireEvent.keyDown(screen.getByRole("menu"), { key: "Escape" });
 
-    // Terminal: sin acciones de ciclo de vida.
-    expect(
-      rowFor("Reactivación fríos").queryByRole("button", { name: /Más acciones/ }),
-    ).not.toBeInTheDocument();
+    // Terminal: sin ciclo de vida, pero se puede duplicar.
+    menu = openMenu("Reactivación fríos");
+    expect(menu.getByText("Duplicar")).toBeInTheDocument();
+    expect(menu.queryByText("Pausar")).not.toBeInTheDocument();
+    expect(menu.queryByText("Cancelar campaña")).not.toBeInTheDocument();
+  });
+
+  it("el menú de fila se pinta fuera de la tabla, para que su scroll no lo recorte", () => {
+    openMenu("Black Friday");
+    expect(screen.getByRole("menu").closest("table")).toBeNull();
+    expect(screen.getByRole("menu").parentElement).toBe(document.body);
   });
 
   it("cancelar exige confirmación que avisa de que no se deshace", () => {
-    fireEvent.click(
-      within(screen.getByText("Black Friday").closest("tr")!).getByText("Cancelar campaña"),
-    );
+    fireEvent.click(openMenu("Black Friday").getByText("Cancelar campaña"));
 
     expect(showModal).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -148,13 +180,22 @@ describe("listado con campañas de todos los estados", () => {
     );
   });
 
+  it("duplicar crea un borrador sin programación y lo abre en el asistente", async () => {
+    api.createCampaign.mockResolvedValue({ id: "copia-1" });
+    fireEvent.click(openMenu("Lanzamiento agosto").getByText("Duplicar"));
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/marketing/campaigns/new?campaign=copia-1"));
+    const dto = api.createCampaign.mock.calls[0][0];
+    expect(dto.name).toBe("Copia de Lanzamiento agosto");
+    expect(dto.scheduled_at ?? null).toBeNull();
+    expect(dto.audience_filters).toEqual({ lifecycle_stage: ["customer"] });
+  });
+
   it("filtrar por estado vuelve a la página 1 y repregunta al backend", async () => {
-    fireEvent.change(screen.getByLabelText("Filtrar por estado"), { target: { value: "draft" } });
+    fireEvent.click(screen.getByRole("radio", { name: "Borrador" }));
 
     await waitFor(() =>
-      expect(api.listCampaigns).toHaveBeenLastCalledWith(
-        expect.objectContaining({ status: "draft", page: 1 }),
-      ),
+      expect(api.listCampaigns).toHaveBeenLastCalledWith(expect.objectContaining({ status: "draft", page: 1 })),
     );
   });
 });
@@ -173,7 +214,7 @@ describe("estados sin datos", () => {
     api.listCampaigns.mockRejectedValueOnce(new Error("Network request failed"));
     render(<CampaignsView />);
 
-    expect(await screen.findByText("No fue posible contactar al servidor")).toBeInTheDocument();
+    expect(await screen.findByText(/No fue posible contactar al servidor/)).toBeInTheDocument();
 
     api.listCampaigns.mockResolvedValue({ data: MIXED, meta: { total: 5 } });
     fireEvent.click(screen.getByRole("button", { name: "Reintentar" }));
