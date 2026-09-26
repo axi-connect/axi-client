@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { BadgeCheck, LoaderCircle, Mic2, Phone, RotateCcw } from "lucide-react";
+import { BadgeCheck, Mic2, Phone, RotateCcw } from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { DynamicForm } from "@/shared/components/features/dynamic-form";
 import { StatePill } from "@/shared/components/features/bento";
-import { Island } from "@/shared/components/features/island";
+import { UnsavedChangesDock } from "@/shared/components/features/island";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import type { CallsSettingsDTO, TenantCallNumberDTO } from "@/modules/calls/domain/call";
@@ -181,22 +181,18 @@ export function CallsSettingsView() {
               defaultValues={defaultValues}
               columns={{ base: 1, md: 2 }}
               actions={{
-                // Barra de acción en TINTA (§9.5.1), pegada abajo y solo con cambios.
-                render: ({ submitting, dirty }) =>
-                  canManage && (dirty || submitting) ? (
-                    <Island
-                      as="footer"
-                      material="ink"
-                      glow="none"
-                      className="sticky bottom-3 z-10 mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl py-2 pr-2 pl-5 sm:rounded-full"
-                    >
-                      <span className="text-sm">Tienes cambios sin guardar</span>
-                      <Button type="submit" disabled={submitting} className="rounded-full">
-                        {submitting && <LoaderCircle aria-hidden className="size-4 animate-spin" />}
-                        Guardar cambios
-                      </Button>
-                    </Island>
-                  ) : null,
+                // La barra compartida de «Cambios sin guardar» (Cobros premium): isla
+              // de tinta pegada abajo, solo con cambios; `bare` para que pegue.
+              bare: true,
+              render: ({ submitting, dirty, invalid }) =>
+                canManage ? (
+                  <UnsavedChangesDock
+                    dirty={dirty}
+                    submitting={submitting}
+                    invalid={invalid}
+                    detail="Aplica de inmediato a las llamadas nuevas."
+                  />
+                ) : null,
               }}
               onSubmit={async (values, form) => {
                 try {
