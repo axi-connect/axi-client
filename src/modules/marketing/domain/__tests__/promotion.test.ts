@@ -7,6 +7,7 @@ import {
   PROMOTION_STATE_FILTER_LABELS,
   isPromotionLive,
   promotionState,
+  promotionWhenNote,
   PROMOTION_KIND_PARAM,
   redemptionProgressPct,
   unredeemedCoupons,
@@ -238,5 +239,27 @@ describe("giftVariantLabel", () => {
     );
     expect(text).toBe("Producto de regalo · Camiseta básica · Talla M");
     expect(text).not.toContain("v-9");
+  });
+});
+
+describe("promotionWhenNote", () => {
+  const now = new Date(2026, 8, 23, 15, 0);
+  const at = (days: number, hour = 12) => new Date(2026, 8, 23 + days, hour, 0).toISOString();
+
+  it("dice lo que puede cambiar la decisión hoy: vence hoy o mañana, por día de calendario", () => {
+    expect(promotionWhenNote(promo({ ends_at: at(0, 23) }), now)).toBe("vence hoy");
+    expect(promotionWhenNote(promo({ ends_at: at(1, 1) }), now)).toBe("vence mañana");
+  });
+
+  it("si no vence pronto, la vigencia del cupón; si no la hay, hasta cuándo o sin fecha", () => {
+    expect(promotionWhenNote(promo({ ends_at: null, validity_hours: 72 }), now)).toBe("cupón válido 72 h");
+    expect(promotionWhenNote(promo({ ends_at: at(20), validity_hours: null }), now)).toMatch(/^hasta el /);
+    expect(promotionWhenNote(promo({ ends_at: null, validity_hours: null }), now)).toBe("sin fecha de fin");
+  });
+
+  it("programada, agotada y vencida dicen lo suyo", () => {
+    expect(promotionWhenNote(promo({ starts_at: at(8) }), now)).toMatch(/^empieza el /);
+    expect(promotionWhenNote(promo({ max_redemptions_total: 5, redemptions_count: 5 }), now)).toBe("llegó a su tope de canjes");
+    expect(promotionWhenNote(promo({ ends_at: at(-3) }), now)).toMatch(/^venció el /);
   });
 });

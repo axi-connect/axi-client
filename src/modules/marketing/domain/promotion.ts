@@ -187,3 +187,40 @@ export function promotionCodes(
   if (promotion.shared_code) return [promotion.shared_code];
   return promotion.external_codes;
 }
+
+/* ------------------------- La nota de vigencia (fila) ------------------------ */
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+const shortDay = (iso: string) => new Date(iso).toLocaleDateString("es-CO", { day: "numeric", month: "short" });
+
+/**
+ * La línea bajo el estado de una promoción: lo que hay que saber de su tiempo,
+ * en una frase. «vence mañana» pesa más que «cupón válido 72 h», que pesa más
+ * que «sin fecha de fin»: se dice lo que puede cambiar la decisión hoy.
+ */
+export function promotionWhenNote(promotion: PromotionDTO, now: Date): string {
+  const state = promotionState(promotion, now);
+  switch (state) {
+    case "off":
+      return promotion.ends_at !== null && isPromotionExpired(promotion, now)
+        ? `venció el ${shortDay(promotion.ends_at)}`
+        : "no emite cupones";
+    case "exhausted":
+      return "llegó a su tope de canjes";
+    case "expired":
+      return `venció el ${shortDay(promotion.ends_at as string)}`;
+    case "scheduled":
+      return `empieza el ${shortDay(promotion.starts_at)}`;
+    case "live": {
+      if (promotion.ends_at !== null) {
+        // Por día de calendario, no por horas: «vence mañana» a las 23:00 de hoy sería mentira.
+        const ends = new Date(promotion.ends_at);
+        if (ends.toDateString() === now.toDateString()) return "vence hoy";
+        if (ends.toDateString() === new Date(now.getTime() + DAY_MS).toDateString()) return "vence mañana";
+      }
+      if (promotion.validity_hours !== null) return `cupón válido ${String(promotion.validity_hours)} h`;
+      return promotion.ends_at !== null ? `hasta el ${shortDay(promotion.ends_at)}` : "sin fecha de fin";
+    }
+  }
+}

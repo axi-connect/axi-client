@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Clock, Plus, Search } from "lucide-react";
+import { Plus, Search } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useDeepLinkTarget } from "@/core/hooks/use-deep-link-target";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
@@ -12,6 +13,8 @@ import { TableSkeleton } from "@/shared/components/features/loading";
 import { MarketingHeader } from "@/modules/marketing/ui/components/MarketingHeader";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
+import { SegmentedControl } from "@/shared/components/ui/segmented";
+import { LoadError } from "@/modules/marketing/ui/components/premium";
 import {
   Select,
   SelectContent,
@@ -108,6 +111,18 @@ export function PromotionsView() {
      el filtro en «todas» a propósito — lo que Axel deja nace APAGADO, y con el
      filtro por defecto («activas») el dueño cerraría el panel y no vería la fila
      de la promoción que acaba de revisar. */
+  /* `?new=1` (desde el Resumen): abre el editor vacío una vez y limpia el parámetro,
+     para que recargar no lo vuelva a abrir. */
+  const params = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const wantsNew = params.get("new") === "1";
+  useEffect(() => {
+    if (!wantsNew || !canManage) return;
+    setEditing({ promotion: null });
+    router.replace(pathname, { scroll: false });
+  }, [wantsNew, canManage, router, pathname]);
+
   const deepLink = useDeepLinkTarget("promotion", promotions, {
     onFound: (promotion) => {
       setStateFilter("all");
@@ -237,91 +252,10 @@ export function PromotionsView() {
         }
       />
 
-      {!isEmpty && (
-        <div className="flex flex-wrap items-center gap-2">
-          <Select
-            value={stateFilter}
-            onValueChange={(v: string) => setStateFilter(v as PromotionStateFilter)}
-          >
-            <SelectTrigger className="h-9 w-auto min-w-36" aria-label="Filtrar por estado">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {(Object.keys(PROMOTION_STATE_FILTER_LABELS) as PromotionStateFilter[]).map((key) => (
-                <SelectItem key={key} value={key}>
-                  {PROMOTION_STATE_FILTER_LABELS[key]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={kindFilter}
-            onValueChange={(v: string) => setKindFilter(v as PromotionKind | typeof ALL)}
-          >
-            <SelectTrigger className="h-9 w-auto min-w-40" aria-label="Filtrar por tipo">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL}>Todos los tipos</SelectItem>
-              {PROMOTION_KIND_ORDER.map((kind) => (
-                <SelectItem key={kind} value={kind}>
-                  {PROMOTION_KIND_LABELS[kind]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {storeGovernsOrders && (
-            <Select
-              value={originFilter}
-              onValueChange={(v: string) => setOriginFilter(v as PromotionOriginFilter)}
-            >
-              <SelectTrigger className="h-9 w-auto min-w-40" aria-label="Filtrar por origen">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {(Object.keys(PROMOTION_ORIGIN_FILTER_LABELS) as PromotionOriginFilter[]).map((key) => (
-                  <SelectItem key={key} value={key}>
-                    {PROMOTION_ORIGIN_FILTER_LABELS[key]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-
-          <div className="relative min-w-44 flex-1 sm:max-w-72">
-            <Search
-              aria-hidden="true"
-              className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-            />
-            <label className="sr-only" htmlFor="promo-search">
-              Buscar promoción
-            </label>
-            <Input
-              id="promo-search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por nombre o código…"
-              className="h-9 pl-8"
-            />
-          </div>
-
-          <span className="text-xs tabular-nums text-muted-foreground">
-            {visible.length} de {promotions?.length ?? 0}
-          </span>
-        </div>
-      )}
-
       {loading && promotions === null ? (
         <TableSkeleton rows={4} />
       ) : error ? (
-        <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-destructive/35 bg-destructive/5 px-4 py-3">
-          <p className="flex-1 text-sm text-muted-foreground">{error}</p>
-          <Button size="sm" variant="outline" onClick={() => void load()}>
-            Reintentar
-          </Button>
-        </div>
+        <LoadError message={error} onRetry={() => void load()} />
       ) : isEmpty ? (
         <EmptyState
           glyph="money"
@@ -335,63 +269,117 @@ export function PromotionsView() {
             )
           }
         />
-      ) : visible.length === 0 ? (
-        // Vacío POR FILTROS ≠ vacío real: el mensaje y la acción son distintos.
-        <EmptyState
-          glyph="noresults"
-          variant="solid"
-          title={hasFilters ? "Ninguna promoción coincide" : "Nada que mostrar"}
-          description={
-            hasFilters
-              ? "Prueba con otro estado o tipo, o limpia la búsqueda."
-              : "Vuelve a cargar la lista para verlas."
-          }
-          action={
-            hasFilters ? (
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setStateFilter("all");
-                  setKindFilter(ALL);
-                  setOriginFilter("all");
-                  setSearch("");
-                }}
-              >
-                Limpiar filtros
-              </Button>
-            ) : (
-              <Button variant="outline" onClick={() => void load()}>
-                Recargar
-              </Button>
-            )
-          }
-        />
       ) : (
-        <div className="divide-y divide-border/60 overflow-hidden rounded-2xl border border-border bg-background">
-          {visible.map((promotion) => (
-            <PromotionCard
-              key={promotion.id}
-              promotion={promotion}
-              now={now}
-              canManage={canManage}
-              storeGovernsOrders={storeGovernsOrders}
-              onEdit={() => openEditor(promotion)}
-              onRedemptions={() => setRedemptionsOf(promotion)}
-              onToggle={() => handleToggle(promotion)}
-              onDelete={() => handleDelete(promotion)}
+        <section aria-label="Promociones" className="border-border bg-card @container min-w-0 overflow-hidden rounded-3xl border">
+          <div className="border-border flex flex-wrap items-center gap-3 border-b px-5 py-4">
+            <SegmentedControl
+              value={stateFilter}
+              onValueChange={setStateFilter}
+              label="Filtrar por estado"
+              size="sm"
+              items={(Object.keys(PROMOTION_STATE_FILTER_LABELS) as PromotionStateFilter[]).map((key) => ({
+                value: key,
+                label: PROMOTION_STATE_FILTER_LABELS[key],
+              }))}
             />
-          ))}
-        </div>
-      )}
+            <div className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-2">
+              <Select value={kindFilter} onValueChange={(v: string) => setKindFilter(v as PromotionKind | typeof ALL)}>
+                <SelectTrigger className="h-9 w-auto min-w-36 rounded-full" aria-label="Filtrar por tipo">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>Todos los tipos</SelectItem>
+                  {PROMOTION_KIND_ORDER.map((kind) => (
+                    <SelectItem key={kind} value={kind}>
+                      {PROMOTION_KIND_LABELS[kind]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {storeGovernsOrders && (
+                <Select value={originFilter} onValueChange={(v: string) => setOriginFilter(v as PromotionOriginFilter)}>
+                  <SelectTrigger className="h-9 w-auto min-w-36 rounded-full" aria-label="Filtrar por origen">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(Object.keys(PROMOTION_ORIGIN_FILTER_LABELS) as PromotionOriginFilter[]).map((key) => (
+                      <SelectItem key={key} value={key}>
+                        {PROMOTION_ORIGIN_FILTER_LABELS[key]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              <div className="relative w-full min-w-44 @xl:w-64">
+                <Search
+                  aria-hidden="true"
+                  className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
+                />
+                <label className="sr-only" htmlFor="promo-search">
+                  Buscar promoción
+                </label>
+                <Input
+                  id="promo-search"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Buscar por nombre o código"
+                  className="h-9 rounded-full pl-9"
+                />
+              </div>
+            </div>
+          </div>
 
-      <p className="flex gap-2.5 rounded-xl border border-accent-amber/30 bg-accent-amber/[0.07] px-4 py-3 text-sm text-muted-foreground">
-        <Clock aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-accent-amber" />
-        <span>
-          <strong className="font-medium text-foreground">Los cupones vencen de verdad.</strong>{" "}
-          Cuando pones una vigencia, el sistema rechaza el cupón pasada la hora — no es un adorno
-          del mensaje, es lo que hace que la gente compre hoy.
-        </span>
-      </p>
+          {visible.length === 0 ? (
+            // Vacío POR FILTROS ≠ vacío real: el mensaje y la acción son distintos.
+            <div className="flex flex-col items-center gap-3 px-6 py-12 text-center">
+              <p className="font-heading text-lg font-bold tracking-tight">
+                {hasFilters ? "Ninguna promoción coincide" : "Nada que mostrar"}
+              </p>
+              <p className="text-muted-foreground max-w-sm text-sm text-pretty">
+                {hasFilters ? "Prueba con otro estado o tipo, o limpia la búsqueda." : "Vuelve a cargar la lista para verlas."}
+              </p>
+              {hasFilters ? (
+                <Button
+                  variant="outline"
+                  className="rounded-full"
+                  onClick={() => {
+                    setStateFilter("all");
+                    setKindFilter(ALL);
+                    setOriginFilter("all");
+                    setSearch("");
+                  }}
+                >
+                  Limpiar filtros
+                </Button>
+              ) : (
+                <Button variant="outline" className="rounded-full" onClick={() => void load()}>
+                  Recargar
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="divide-border divide-y">
+              {visible.map((promotion) => (
+                <PromotionCard
+                  key={promotion.id}
+                  promotion={promotion}
+                  now={now}
+                  canManage={canManage}
+                  storeGovernsOrders={storeGovernsOrders}
+                  onEdit={() => openEditor(promotion)}
+                  onRedemptions={() => setRedemptionsOf(promotion)}
+                  onToggle={() => handleToggle(promotion)}
+                  onDelete={() => handleDelete(promotion)}
+                />
+              ))}
+            </div>
+          )}
+          <p className="border-border text-muted-foreground border-t px-5 py-3 text-xs text-pretty">
+            {visible.length.toLocaleString("es-CO")} de {(promotions?.length ?? 0).toLocaleString("es-CO")} · Los
+            cupones vencen de verdad: pasada la hora, el sistema los rechaza.
+          </p>
+        </section>
+      )}
 
       <DetailSheet
         open={editing !== null}

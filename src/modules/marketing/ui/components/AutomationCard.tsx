@@ -1,14 +1,15 @@
 "use client";
 
-import { AlertTriangle, MoreHorizontal, Trash2 } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 import { cn } from "@/core/lib/utils";
-import { formatMoney } from "@/core/lib/format";
-import { Badge } from "@/shared/components/ui/badge";
+import { formatMillions, formatMoney } from "@/core/lib/format";
 import { Button } from "@/shared/components/ui/button";
+import { Switch } from "@/shared/components/ui/switch";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/shared/components/ui/dropdown-menu";
 import type {
@@ -55,11 +56,14 @@ export function describeConditions(automation: AutomationDTO): string {
 }
 
 /**
- * Tarjeta de una regla de recuperación.
+ * Fila de una regla de recuperación dentro de la tarjeta de su disparador
+ * (canvas 2026-09-26): prioridad, nombre y cuándo escribe, sus cifras y el
+ * interruptor. La tarjeta es `@container`: estrecha, las cifras bajan bajo el
+ * nombre.
  *
- * Las métricas van SIEMPRE acompañadas del desglose de omitidos: un operador
- * que ve "14 omitidos" sin saber por qué asume que el módulo falla, cuando en
- * realidad es el anti-spam haciendo su trabajo.
+ * Las cifras van SIEMPRE acompañadas del motivo de los omitidos cuando los hay:
+ * un operador que ve «14 omitidos» sin saber por qué asume que el módulo falla,
+ * cuando en realidad es el anti-spam haciendo su trabajo.
  */
 export function AutomationCard({
   automation,
@@ -82,205 +86,131 @@ export function AutomationCard({
 }) {
   const enabled = automation.enabled;
   const blockedByHsm = !canEnableAutomation(automation);
+  const delegates = automation.action_kind === "agent_task";
   const skips = metrics ? skipReasonBreakdown(metrics.skipped_by_reason) : [];
+  // `delegated` llegó después: un servidor anterior no lo manda, y `undefined` convertiría la suma en NaN.
+  const delegated = metrics?.delegated ?? 0;
+  const fired = metrics !== null && metrics.sent + delegated + metrics.skipped > 0;
+  const code = automation.promotion ? automation.promotion.name : null;
+
+  const skipLine =
+    metrics === null
+      ? "Sus cifras no cargaron."
+      : !fired
+        ? "Nunca se ha disparado."
+        : skips.length > 0
+          ? `Omitidos: ${skips.map((skip) => `${String(skip.count)} ${skip.label.toLowerCase()}`).join(" · ")}`
+          : metrics.skipped > 0
+            ? // El desglose excluye los motivos transitorios (cooldown, cupo diario): decir «sin omisiones»
+              // con el contador en 3 sería contradecirse en la misma fila.
+              `Los ${String(metrics.skipped)} omitidos fueron por los límites anti-spam: esos contactos se reintentan.`
+            : null;
 
   return (
-    <article
-      className={cn(
-        "overflow-hidden rounded-2xl border border-border",
-        enabled ? "bg-background" : "bg-foreground/[0.015]",
-      )}
-    >
-      <div className="flex flex-wrap items-start gap-3 p-4">
-        <span className="inline-flex h-6.5 min-w-6.5 shrink-0 items-center justify-center rounded-md border border-border/60 bg-secondary px-1.5 text-xs font-semibold tabular-nums text-muted-foreground">
-          #{rank}
-        </span>
+    <article className="grid grid-cols-[1.5rem_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-3 py-4 @3xl:grid-cols-[1.5rem_minmax(0,1fr)_minmax(0,19rem)_auto] @3xl:gap-x-5">
+      <span className="text-muted-foreground self-start pt-1 text-sm tabular-nums" aria-label={`Prioridad ${String(rank)}`}>
+        {rank}
+      </span>
 
-        <div className="min-w-[11rem] flex-1">
-          <h3 className={cn("text-[0.9375rem] font-semibold", !enabled && "text-foreground/70")}>
-            {automation.name}
-          </h3>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            A los {describeDelay(automation.delay_minutes)} · {describeConditions(automation)}
-          </p>
-          {automation.promotion ? (
-            <Badge
-              variant="outline"
-              className="mt-2 border-accent-amber/45 bg-accent-amber/10 text-accent-amber"
-            >
-              {automation.promotion.name}
-            </Badge>
-          ) : (
-            <Badge variant="outline" className="mt-2">
-              Solo mensaje · sin descuento
-            </Badge>
-          )}
-        </div>
-
-        {canManage && (
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              role="switch"
-              aria-checked={enabled}
-              aria-label={`Regla ${automation.name}`}
-              disabled={blockedByHsm && !enabled}
-              onClick={onToggle}
-              className="inline-flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <span
-                className={cn(
-                  "relative h-5.5 w-9.5 shrink-0 rounded-full transition-colors",
-                  enabled ? "bg-success" : "bg-input",
-                )}
-              >
-                <span
-                  className={cn(
-                    "absolute left-[3px] top-[3px] size-4 rounded-full bg-background shadow-sm transition-transform",
-                    enabled && "translate-x-4",
-                  )}
-                />
-              </span>
-              <span
-                className={cn(
-                  "text-xs font-medium",
-                  enabled ? "text-success" : "text-muted-foreground",
-                )}
-              >
-                {enabled ? "Activa" : "Apagada"}
-              </span>
+      <div className="flex min-w-0 flex-col gap-1">
+        <h3 className={cn("font-heading text-[1.02rem] font-bold tracking-tight text-pretty", !enabled && !blockedByHsm && "text-foreground/70")}>
+          {canManage ? (
+            <button type="button" onClick={onEdit} className="min-h-6 text-left underline-offset-4 hover:underline">
+              {automation.name}
             </button>
-          </div>
+          ) : (
+            automation.name
+          )}
+        </h3>
+        {blockedByHsm ? (
+          <p className="flex gap-2 text-sm text-pretty">
+            <span aria-hidden="true" className="bg-warning mt-[0.45em] size-1.5 shrink-0 rounded-full" />
+            <span className="text-muted-foreground">Pasadas 24 h solo se puede escribir con una plantilla de Meta.</span>
+          </p>
+        ) : (
+          <p className="text-muted-foreground text-sm text-pretty">
+            A los {describeDelay(automation.delay_minutes)} · {delegates ? "la IA retoma con su objetivo" : describeConditions(automation)}
+          </p>
         )}
+        {code ? (
+          // La regla solo conoce el NOMBRE de su promoción (no el código): se dice qué ofrece, sin fingir un cupón.
+          <span className="bg-muted w-fit max-w-full truncate rounded-md px-2 py-0.5 text-xs font-medium" title={`Ofrece «${code}»`}>
+            Ofrece «{code}»
+          </span>
+        ) : null}
+        {skipLine ? <p className="text-muted-foreground text-xs text-pretty">{skipLine}</p> : null}
       </div>
 
-      {blockedByHsm && (
-        <p className="mx-4 mb-4 flex gap-2.5 rounded-md border border-warning/30 bg-warning/[0.07] px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">
-          <AlertTriangle aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-warning" />
-          <span>
-            Esta regla escribe días después del último mensaje del cliente, así que WhatsApp exige
-            una <strong className="font-medium text-foreground">plantilla aprobada por Meta</strong>.
-            Elige una para poder encenderla.
-            {canManage && (
-              <Button
-                size="sm"
-                variant="outline"
-                className="ml-2 h-6 px-2 text-xs"
-                onClick={onConfigureHsm}
-              >
-                Configurar
-              </Button>
-            )}
-          </span>
-        </p>
-      )}
-
-      {metrics && metrics.sent + metrics.skipped > 0 && (
-        <dl className="grid grid-cols-2 border-t border-border/60 bg-foreground/[0.015] sm:grid-cols-3 lg:grid-cols-5">
-          <Metric label="Enviados" value={metrics.sent.toLocaleString("es-CO")} />
-          <Metric label="Omitidos" value={metrics.skipped.toLocaleString("es-CO")} />
+      {blockedByHsm ? (
+        <div className="order-4 col-span-2 col-start-2 @3xl:order-none @3xl:col-span-1 @3xl:col-start-auto @3xl:justify-self-end">
+          {canManage ? (
+            <Button variant="contrast" size="sm" className="rounded-full" onClick={onConfigureHsm}>
+              Poner plantilla
+            </Button>
+          ) : null}
+        </div>
+      ) : (
+        <dl className="order-4 col-span-2 col-start-2 grid grid-cols-3 gap-4 @3xl:order-none @3xl:col-span-1 @3xl:col-start-auto">
           <Metric
-            label="Convirtieron"
-            value={metrics.converted.toLocaleString("es-CO")}
-            hint={
-              metrics.sent > 0
-                ? `${((metrics.converted / metrics.sent) * 100).toFixed(1).replace(".", ",")}%`
-                : undefined
+            label={delegates ? "Delegadas" : "Enviados"}
+            value={metrics ? (delegates ? delegated : metrics.sent).toLocaleString("es-CO") : "—"}
+          />
+          <Metric
+            label="Compraron"
+            value={
+              metrics && metrics.sent > 0
+                ? `${((metrics.converted / metrics.sent) * 100).toLocaleString("es-CO", { maximumFractionDigits: 1 })} %`
+                : "—"
             }
           />
           <Metric
             label="Recuperado"
-            value={formatMoney(metrics.attributed_revenue_cents)}
-            amber
-          />
-          <Metric
-            label="Cupones"
-            value={
-              metrics.coupons_issued > 0
-                ? `${metrics.coupons_issued} → ${metrics.coupons_redeemed}`
-                : "—"
-            }
+            value={metrics && metrics.attributed_revenue_cents > 0 ? formatMillions(metrics.attributed_revenue_cents) : "—"}
           />
         </dl>
       )}
 
-      <div className="flex flex-wrap items-center gap-2 border-t border-border/60 px-4 py-2.5">
-        <p className="min-w-[12rem] flex-1 text-xs text-muted-foreground">
-          {metrics === null
-            ? "Sus cifras no cargaron."
-            : metrics.sent + metrics.skipped === 0
-              ? "Nunca se ha disparado."
-              : skips.length > 0
-                ? `Omitidos: ${skips.map((s) => `${s.count} ${s.label.toLowerCase()}`).join(" · ")}`
-                : metrics.skipped > 0
-                  ? // El desglose excluye los motivos transitorios (cooldown, cupo
-                    // diario): decir "sin omisiones" con el contador en 3 sería
-                    // contradecirse en la misma fila.
-                    `Los ${metrics.skipped} omitidos fueron por los límites anti-spam: esos contactos se reintentan.`
-                  : "Sin omisiones."}
-        </p>
-        {canManage && (
+      <div className="flex items-center gap-1.5 self-start pt-0.5 @3xl:self-center">
+        {canManage ? (
           <>
-            <Button size="sm" variant="outline" onClick={onEdit}>
-              Editar
-            </Button>
-            {/* Abre HACIA ARRIBA a propósito. El disparador vive en la última fila
-                de una tarjeta con `overflow-hidden`, así que un panel desplegado
-                hacia abajo quedaba recortado ENTERO y "Eliminar regla" era
-                invisible: el menú se abría y no se veía nada. Hacia arriba cae
-                dentro de la caja de la tarjeta. El `<details>` que había antes
-                tampoco se cerraba al hacer clic fuera ni con Escape; el
-                DropdownMenu compartido sí, y trae navegación con flechas. */}
+            <Switch
+              checked={enabled}
+              disabled={blockedByHsm && !enabled}
+              onCheckedChange={onToggle}
+              aria-label={`Regla ${automation.name}`}
+            />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
                   aria-label={`Más acciones de ${automation.name}`}
-                  className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+                  className="text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-ring inline-flex size-9 items-center justify-center rounded-full transition-colors focus-visible:outline-2"
                 >
                   <MoreHorizontal className="size-4" aria-hidden="true" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" side="top" className="w-44">
-                <DropdownMenuItem
-                  className="flex items-center gap-2 text-destructive"
-                  onClick={onDelete}
-                >
-                  <Trash2 aria-hidden="true" className="size-4" />
+              <DropdownMenuContent portal align="end" className="w-44">
+                <DropdownMenuItem onClick={onEdit}>Editar</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="text-destructive" onClick={onDelete}>
                   Eliminar regla
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </>
+        ) : (
+          <span className="text-muted-foreground text-xs">{enabled ? "Encendida" : "Apagada"}</span>
         )}
       </div>
     </article>
   );
 }
 
-function Metric({
-  label,
-  value,
-  hint,
-  amber,
-}: {
-  label: string;
-  value: string;
-  hint?: string;
-  amber?: boolean;
-}) {
+function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="border-b border-r border-border/60 px-4 py-2.5 last:border-r-0">
-      <dt className="text-[0.6875rem] uppercase tracking-wide text-muted-foreground">{label}</dt>
-      <dd
-        className={cn(
-          "mt-0.5 text-base font-semibold tabular-nums",
-          amber && "text-accent-amber",
-        )}
-      >
-        {value}
-        {hint && <span className="ml-1 text-xs font-normal text-muted-foreground">{hint}</span>}
-      </dd>
+    <div className="flex min-w-0 flex-col gap-1">
+      <dt className="text-muted-foreground truncate text-xs">{label}</dt>
+      <dd className="font-heading text-lg leading-none font-bold tracking-tight whitespace-nowrap tabular-nums">{value}</dd>
     </div>
   );
 }

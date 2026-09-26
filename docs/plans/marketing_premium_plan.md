@@ -114,3 +114,42 @@ Cuatro fases, cada una con auditoría y despliegue propios:
 - Arnés propio: `docs/qa/marketing-premium-f2/arnes` (el de la fase 1 lo usa la auditoría). 12 escenarios de
   campañas × 5 anchos × 2 temas: lista (con datos, vacía, solo lectura, error), detalle (enviando, borrador,
   procesada) y asistente (nuevo, retomado en contenido, en revisión, programada, bloqueada).
+
+## Fase 3 — Recuperación, Promociones y Resumen (`feat/marketing-premium-f3`, sale de la fase 2 `a0cd8e8c`)
+
+### Resumen (`MarketingOverviewView`)
+
+- Bento en tres columnas (`md` 2, `xl` 3): «Recuperado por tus reglas» (cifra en millones, una barra ámbar por
+  disparador, mensajes / compraron después / cupones canjeados), «Campañas en curso» (barra de avance y, al lado,
+  respondieron · compraron · recuperado; una programada dice cuándo sale), y debajo «Recuperación en vivo»,
+  Promociones (activas y las dos primeras con su barra de canjes), Plantillas de Meta (aprobadas / en revisión /
+  rechazadas), Bajas y el Cupo de Meta de hoy.
+- «Lo próximo» es la ÚNICA isla (`MarketingNextUpIsland`, dominio puro `domain/next-up.ts`): plantilla rechazada →
+  regla que no puede enviar (enlaza a esa regla) → promoción que vence en 48 h o va por el 90 % → cupo de Meta bajo
+  el 10 % → borradores sin lanzar. Mismo contrato que la del Panel: silueta mientras una fuente que la decide no
+  respondió; sin filas pero con una fuente sin leer, «No pudimos revisar lo pendiente» en vez de «Todo en orden».
+- Cada tarjeta carga y falla por su cuenta («No pudimos leer …» + Reintentar en su sitio): se va la franja roja
+  global.
+- Store: `RecoveryTotals.byTrigger`, `drafts` (solo `meta.total` de los borradores) y `meta` (primer número Cloud:
+  plantillas por estado + cupo; `null` = sin número Cloud, que las tarjetas dicen como «Conectar WhatsApp»).
+- Captación queda para la fase 4 (su tarjeta entra con su slice).
+
+### Recuperación (`AutomationsView`)
+
+- Una tarjeta por disparador (icono, qué pasó para que salte, «Añadir regla») con las reglas en filas: prioridad,
+  nombre (abre el editor), cuándo escribe, la promoción que ofrece, enviados/delegadas · compraron % · recuperado,
+  el interruptor del sistema y el menú con `portal`. Una regla que exige plantilla de Meta lo dice con un punto ámbar
+  y «Poner plantilla».
+- A la derecha: lo recuperado por todas las reglas y «Cuidamos a tus clientes», que lee los límites REALES de Ajustes
+  (tope diario, enfriamiento, esperar si atiende una persona): no promete lo que el tenant no tiene encendido.
+
+### Promociones (`PromotionsView`, `PromotionCard`, `RedemptionsSheet`)
+
+- La barra de filtros vive dentro de la tarjeta: estado en `SegmentedControl`, tipo y origen en `Select`, búsqueda.
+- Fila: código(s), nombre, condiciones; canjes con barra ámbar y cupones sin canjear; `StatePill` con su nota de
+  vigencia (`promotionWhenNote`: vence hoy / mañana por día de calendario, cupón válido N h, empieza el…, llegó a su
+  tope); interruptor (solo las locales) y menú con Ver canjes / Editar / Eliminar. La espejada de la tienda lleva
+  la insignia de Shopify y «Se edita en la tienda», sin interruptor ni edición.
+- `?new=1` abre el editor vacío (lo usa «Nueva promoción» del Resumen) y limpia el parámetro.
+- Canjes: la cifra grande con su barra, tabla del sistema (Cupón, Cuándo, Pedido, Aplicado; un revertido es un
+  `StatePill`), y la nota de qué significa revertido.
