@@ -3,6 +3,7 @@
  * Fuente del contrato REST: Schemas["OrderDto"] (schema.d.ts generado).
  * Los eventos WS viven en core/realtime/events.ts (core no importa de modules).
  */
+import { formatShortDate } from "@/core/lib/format";
 import type { Schemas } from "@/core/api/types";
 import type { OrderRealtimeSummary, OrderStatus } from "@/core/realtime/events";
 
@@ -18,6 +19,61 @@ export type ConversationUsageDTO = Schemas["ConversationUsageDto"];
 
 export type OrderActorType = "user" | "ai_agent";
 export type PaymentStatus = OrderPaymentDTO["status"];
+
+/**
+ * F3 Cobros: cuánto del pedido está cobrado. NO sustituye al estado del
+ * pedido, lo acompaña: «reservado con abono» es `confirmed` + `partially_paid`,
+ * y por eso el tablero no gana una columna.
+ */
+export type PaymentState = OrderDTO["payment_state"];
+
+export const PAYMENT_STATE_LABELS: Record<PaymentState, string> = {
+  unpaid: "Sin pagos",
+  partially_paid: "Abonado",
+  paid: "Pagado",
+};
+
+/** Snapshot de la congelación: lo que costaba antes de fijar la moneda. */
+export type OrderBaseMoney = NonNullable<OrderDTO["base"]>;
+
+/**
+ * Progreso del cobro para el medidor: un tramo por PAGO verificado, del ancho
+ * de su importe, y el resto hueco. El porcentaje se calcula sobre el total,
+ * nunca sobre la suma de los tramos: un sobrepago no dibuja más del 100 %.
+ */
+export function paymentProgress(order: {
+  total_cents: number;
+  paid_cents: number;
+  payments?: readonly { status: PaymentStatus; amount_cents: number | null }[];
+}): { percent: number; segments: number[] } {
+  const total = order.total_cents;
+  if (total <= 0) return { percent: order.paid_cents > 0 ? 100 : 0, segments: [] };
+  const percent = Math.min(100, Math.round((order.paid_cents / total) * 100));
+  const verified = (order.payments ?? []).filter(
+    (payment) => payment.status === "verified" && payment.amount_cents !== null,
+  );
+  const segments = verified.map((payment) =>
+    Math.min(100, ((payment.amount_cents ?? 0) / total) * 100),
+  );
+  return { percent, segments: segments.length > 0 ? segments : percent > 0 ? [percent] : [] };
+}
+
+/**
+ * Días que faltan para la fecha del servicio; null si el pedido no tiene.
+ *
+ * Los dos extremos se miden en el día LOCAL de quien mira, nunca en el de UTC:
+ * en Bogotá, a partir de las 19:00 UTC ya va por el día siguiente y la cuenta
+ * atrás restaba uno de más («sale mañana» cuando faltaban dos), las últimas
+ * cinco horas de cada jornada. Mismo criterio que `formatShortDate`, que pinta
+ * la fecha justo debajo.
+ */
+export function daysUntilService(serviceDate: string | null, today = new Date()): number | null {
+  if (serviceDate === null) return null;
+  const target = new Date(`${serviceDate}T00:00:00`);
+  if (Number.isNaN(target.getTime())) return null;
+  const from = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  return Math.round((target.getTime() - from.getTime()) / 86_400_000);
+}
 
 export type ListOrdersParams = {
   status?: OrderStatus;
@@ -58,6 +114,12 @@ export type OrderRow = {
   /** Algún pago en `reported` pendiente de verificación humana */
   pending_payment: boolean;
   items_count: number;
+  /** F3 Cobros: cuánto lleva cobrado y cuánto falta. */
+  paid_cents: number;
+  balance_cents: number;
+  payment_state: PaymentState;
+  /** F2 Cobros: `YYYY-MM-DD` o null. */
+  service_date: string | null;
   created_at: string;
   /** Row hidratada solo desde un evento WS: se completa con re-fetch */
   partial?: boolean;
@@ -77,6 +139,10 @@ export function mapOrderToRow(dto: OrderDTO): OrderRow {
     has_payment_proof: dto.payments.some((payment) => payment.attachment_id !== null),
     pending_payment: dto.payments.some((payment) => payment.status === "reported"),
     items_count: dto.items.length,
+    paid_cents: dto.paid_cents,
+    balance_cents: dto.balance_cents,
+    payment_state: dto.payment_state,
+    service_date: dto.service_date,
     created_at: dto.created_at,
   };
 }
@@ -96,6 +162,12 @@ export function mapSummaryToRow(summary: OrderRealtimeSummary): OrderRow {
     has_payment_proof: false,
     pending_payment: false,
     items_count: 0,
+    // El resumen del evento no trae el cobro: la fila se completa con el
+    // re-fetch, y hasta entonces no se inventa un saldo.
+    paid_cents: 0,
+    balance_cents: summary.total_cents,
+    payment_state: "unpaid",
+    service_date: null,
     created_at: new Date().toISOString(),
     partial: true,
   };
@@ -179,4 +251,13 @@ function isRedactedAddress(address: Record<string, unknown>): boolean {
 function provinceName(code: string): string {
   const separator = code.indexOf("-");
   return separator === -1 ? code : code.slice(separator + 1);
+}
+
+/**
+ * La etiqueta de la variante como se lee: cuando la variante ES una fecha (una
+ * salida de expedición, D3), «2026-10-01» se escribe «01 de oct de 2026» como
+ * el resto de la pantalla (QA real F3). Cualquier otra etiqueta, tal cual.
+ */
+export function variantLabelText(label: string): string {
+  return /^\d{4}-\d{2}-\d{2}$/.test(label.trim()) ? formatShortDate(label.trim()) : label;
 }

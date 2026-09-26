@@ -356,6 +356,9 @@ class Kit:
     def __init__(self, name: str):
         self.name = name
         self.ic = Icons(S / f"{name}.lucide.json")
+        # CSS propio del mockup, encima del recetario común. Lo que sea de
+        # sistema (botones, badges, cards) va en BASE_CSS, no aquí.
+        self.extra_css = ""
 
     def btn(self, label: str, icon: str = "", cls: str = "", attrs: str = "") -> str:
         return f'<button class="btn {cls}" {attrs}>{self.ic(icon) if icon else ""}{label}</button>'
@@ -426,6 +429,7 @@ class Kit:
 <style>
 {faces}
 {css()}
+{self.extra_css}
 </style>
 </head>
 <body>
@@ -473,6 +477,7 @@ class Kit:
   <style>
     {face}
     {css()}
+    {self.extra_css}
     body {{ margin: 0; background: var(--background); }}
     a {{ color: inherit; }} a:hover {{ color: inherit; }}
   </style>

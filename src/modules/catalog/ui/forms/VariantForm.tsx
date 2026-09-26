@@ -1,5 +1,6 @@
 "use client";
 
+import { variantNamePlaceholder } from "@/modules/catalog/domain/product-type";
 import { useMemo, useState } from "react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
@@ -144,7 +145,7 @@ export function VariantForm({
             id="variant-name"
             value={name}
             maxLength={120}
-            placeholder="Roja · M (opcional)"
+            placeholder={variantNamePlaceholder(axes)}
             onChange={(e) => setName(e.target.value)}
           />
         </div>

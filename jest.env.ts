@@ -14,3 +14,12 @@ process.env.NEXT_PUBLIC_SALES_WHATSAPP ??= '573224970950'
 // `SITE_URL` se resuelve igual (y también lanza si falta), así que la suite
 // necesita un origen válido para cualquier test que toque metadata o SEO.
 process.env.NEXT_PUBLIC_APP_URL ??= 'https://axi-connect.co'
+
+// Zona horaria FIJA del negocio para toda la suite.
+//
+// Sin esto la zona la pone la máquina: en Bogotá una prueba de fechas mide una
+// cosa y en el runner de CI (UTC) mide otra, así que un corrimiento de día solo
+// se ve en una de las dos — o, peor, en ninguna, porque el caso se escribe a
+// una hora en la que ambas coinciden. Es la misma trampa que dejó pasar el
+// `daysUntilService` en UTC.
+process.env.TZ = 'America/Bogota'

@@ -1,0 +1,112 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+
+import { errorMessage } from "@/core/lib/error-messages";
+import { previewDocumentTemplate } from "@/modules/documents/infrastructure/services/documents-service.adapter";
+import {
+  templateHash,
+  type DocumentsSettingsDTO,
+  type TemplateDocument,
+} from "@/modules/documents/domain/template";
+
+export type PreviewStatus = "idle" | "loading" | "ready" | "error" | "blocked";
+
+export interface TemplatePreview {
+  /** El ÚLTIMO HTML bueno: nunca desaparece mientras se actualiza o falla. */
+  html: string | null;
+  status: PreviewStatus;
+  error: string | null;
+  retry: () => void;
+}
+
+export const PREVIEW_DEBOUNCE_MS = 500;
+
+/**
+ * La vista previa del documento, pedida al servidor con disciplina (F7 Cobros):
+ * debounce de 500 ms tras el último cambio, aborto de la petición en vuelo,
+ * salto si la plantilla no cambió (huella) y NINGUNA llamada mientras haya
+ * variables desconocidas (`blocked`): ese 422 ya lo conoce el cliente. La
+ * previa es la misma cadena que el PDF, así que lo que se ve es lo que sale.
+ */
+export function useTemplatePreview(input: {
+  type: string;
+  template: TemplateDocument | null;
+  issuer?: Partial<DocumentsSettingsDTO["issuer"]>;
+  blocked: boolean;
+  enabled: boolean;
+}): TemplatePreview {
+  const { type, template, issuer, blocked, enabled } = input;
+  const [html, setHtml] = useState<string | null>(null);
+  const [status, setStatus] = useState<PreviewStatus>("idle");
+  const [error, setError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
+  const lastHash = useRef<string | null>(null);
+  const controller = useRef<AbortController | null>(null);
+
+  const hash =
+    template === null
+      ? null
+      : `${type}|${templateHash(template)}|${JSON.stringify(issuer ?? null)}`;
+
+  // Lo que se ENVÍA va en una ref: el efecto no lo lee del render, así que la
+  // huella es la única dependencia y no hace falta silenciar al linter. Hoy la
+  // huella serializa la carga entera; si algún día se abaratara, esta ref
+  // seguiría mandando la plantilla actual y no una vieja.
+  const payload = useRef({ template, issuer });
+  payload.current = { template, issuer };
+
+  useEffect(() => {
+    if (!enabled || hash === null) return;
+    if (blocked) {
+      setStatus("blocked");
+      return;
+    }
+    // `lastHash` solo se escribe tras un render BUENO: si coincide, el HTML en
+    // memoria ya es este — se vuelve a «al día» sin pedir nada (p. ej. al
+    // corregir una variable dejando la plantilla como estaba).
+    if (hash === lastHash.current) {
+      setStatus("ready");
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      controller.current?.abort();
+      const own = new AbortController();
+      controller.current = own;
+      setStatus("loading");
+      const { template: body, issuer: who } = payload.current;
+      if (body === null) return;
+      previewDocumentTemplate(
+        type,
+        who === undefined
+          ? { template: body }
+          : { template: body, issuer: who },
+        own.signal,
+      )
+        .then((result) => {
+          if (own.signal.aborted) return;
+          lastHash.current = hash;
+          setHtml(result.html);
+          setError(null);
+          setStatus("ready");
+        })
+        .catch((cause: unknown) => {
+          if (own.signal.aborted) return;
+          lastHash.current = null;
+          setError(
+            errorMessage(cause, "No se pudo actualizar la vista previa"),
+          );
+          setStatus("error");
+        });
+    }, PREVIEW_DEBOUNCE_MS);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [hash, blocked, enabled, attempt, type]);
+
+  useEffect(() => () => controller.current?.abort(), []);
+
+  return { html, status, error, retry: () => setAttempt((value) => value + 1) };
+}

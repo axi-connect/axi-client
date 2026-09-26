@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/shared/components/ui/dropdown-menu";
 import { formatMoney, orderNumberLabel, type OrderRow } from "@/modules/orders/domain/order";
+import { PaymentMeter } from "@/modules/orders/ui/components/PaymentMeter";
 import { canTransition } from "@/modules/orders/domain/order-state";
 import { OrderOriginBadge } from "@/modules/orders/ui/components/OrderOriginBadge";
 
@@ -149,6 +150,20 @@ function OrderCardBase({ order, highlighted, canManage, dragDisabled, onAction }
         <p className="mt-2 text-base font-semibold tabular-nums">
           {formatMoney(order.total_cents, order.currency)}
         </p>
+
+        {/* F3 Cobros: un pedido con abono sigue siendo un pedido confirmado, así
+            que el cobro entra en la tarjeta y NO como columna del tablero. */}
+        {order.balance_cents > 0 && order.paid_cents > 0 ? (
+          <>
+            <PaymentMeter order={order} className="mt-2" />
+            <p className="mt-1.5 text-xs text-muted-foreground tabular-nums">
+              Falta{" "}
+              <span className="font-medium text-foreground">
+                {formatMoney(order.balance_cents, order.currency)}
+              </span>
+            </p>
+          </>
+        ) : null}
 
         <div className="mt-2 flex items-center justify-between gap-2">
           <OrderOriginBadge origin={order.created_by_type} />

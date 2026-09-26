@@ -64,15 +64,43 @@ const nextConfig: NextConfig = {
       // «Medios de pago» dejó de ser pestaña de Mi empresa y pasó al hub Pagos
       // de Ventas (F2 del programa Cobros). La URL vieja está compartida en
       // conversaciones y correos: redirige, no 404.
-      { source: "/settings/company/pagos", destination: "/settings/payments", permanent: true },
-      { source: "/workspace/channels/create", destination: "/settings/channels/connect", permanent: true },
+      {
+        source: "/settings/company/pagos",
+        destination: "/settings/payments",
+        permanent: true,
+      },
+      {
+        source: "/workspace/channels/create",
+        destination: "/settings/channels/connect",
+        permanent: true,
+      },
       // Estudio de agentes (2026-09-21): los modales @form pasaron a páginas y los characters desaparecieron
-      { source: "/admin/agents/create", destination: "/admin/agents/new", permanent: true },
-      { source: "/admin/agents/update/:id", destination: "/admin/agents/:id", permanent: true },
-      { source: "/admin/agents/characters/:path*", destination: "/admin/agents", permanent: true },
+      {
+        source: "/admin/agents/create",
+        destination: "/admin/agents/new",
+        permanent: true,
+      },
+      {
+        source: "/admin/agents/update/:id",
+        destination: "/admin/agents/:id",
+        permanent: true,
+      },
+      {
+        source: "/admin/agents/characters/:path*",
+        destination: "/admin/agents",
+        permanent: true,
+      },
       // Gobierno de la voz (2026-09-21): la pantalla del tenant murió; el interruptor y la llave son de /platform
-      { source: "/settings/voice", destination: "/admin/agents", permanent: true },
-      { source: "/workspace/channels/:id", destination: "/settings/channels/:id", permanent: true },
+      {
+        source: "/settings/voice",
+        destination: "/admin/agents",
+        permanent: true,
+      },
+      {
+        source: "/workspace/channels/:id",
+        destination: "/settings/channels/:id",
+        permanent: true,
+      },
     ];
   },
 
@@ -116,11 +144,30 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        // Las fuentes de marca que la VISTA PREVIA de documentos (F7 Cobros)
+        // carga dentro de un <iframe sandbox>: ese documento es de origen opaco
+        // y las fuentes son de las pocas cosas que el navegador somete a CORS
+        // aunque el CSS las permita. Sin esta cabecera el iframe cae en
+        // silencio a la fuente del sistema y la previa deja de parecerse al
+        // PDF. Son estáticos públicos e inmutables: no se relaja nada.
+        source: "/fonts/:path*",
+        headers: [
+          { key: "Access-Control-Allow-Origin", value: "*" },
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
         // Solo el panel privado: la capa pública no abre popups de Meta y no
         // necesita relajar nada.
         source: "/:path((?!api/).*)",
         headers: [
-          { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
+          {
+            key: "Cross-Origin-Opener-Policy",
+            value: "same-origin-allow-popups",
+          },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "X-Content-Type-Options", value: "nosniff" },
         ],

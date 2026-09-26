@@ -3172,6 +3172,70 @@ export interface paths {
         patch: operations["ShippingController_updateRate_v1"];
         trace?: never;
     };
+    "/api/v1/fx/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["FxController_settings_v1"];
+        put: operations["FxController_update_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/fx/rates/latest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["FxController_latest_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/fx/rates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformFxController_rates_v1"];
+        put?: never;
+        post: operations["PlatformFxController_setManual_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/fx/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformFxController_refresh_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/payment-methods": {
         parameters: {
             query?: never;
@@ -4868,30 +4932,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/fx/settings": {
+    "/api/v1/collections/receivables": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["FxController_settings_v1"];
-        put: operations["FxController_update_v1"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/fx/rates/latest": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["FxController_latest_v1"];
+        get: operations["CollectionsController_list_v1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4900,23 +4948,87 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/platform/fx/rates": {
+    "/api/v1/collections/receivables/stats": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["PlatformFxController_rates_v1"];
+        get: operations["CollectionsController_receivablesStats_v1"];
         put?: never;
-        post: operations["PlatformFxController_setManual_v1"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/platform/fx/refresh": {
+    "/api/v1/collections/plans/by-order/{order_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CollectionsController_byOrder_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/collections/plans/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CollectionsController_detail_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["CollectionsController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/collections/plans/{id}/reminders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CollectionsController_reminderHistory_v1"];
+        put?: never;
+        post: operations["CollectionsController_sendReminder_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/collections/plans/{id}/schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["CollectionsController_changeSchedule_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/collections/plans/{id}/promises": {
         parameters: {
             query?: never;
             header?: never;
@@ -4925,7 +5037,247 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["PlatformFxController_refresh_v1"];
+        post: operations["CollectionsController_promise_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/collections/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CollectionsSettingsController_settings_v1"];
+        put: operations["CollectionsSettingsController_updateSettings_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/collections/plans/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CollectionsSettingsController_preview_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/document-types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DocumentTypesController_types_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/document-templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DocumentTemplatesController_list_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/document-templates/{type}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DocumentTemplatesController_one_v1"];
+        put: operations["DocumentTemplatesController_update_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/document-templates/{type}/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DocumentTemplatesController_resetToSystem_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/document-templates/{type}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DocumentTemplatesController_preview_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DocumentsSettingsController_settings_v1"];
+        put: operations["DocumentsSettingsController_updateSettings_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DocumentsController_list_v1"];
+        put?: never;
+        post: operations["DocumentsController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DocumentsController_byId_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{id}/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DocumentsController_fileUrl_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{id}/regenerate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DocumentsController_regenerate_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DocumentsController_retry_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{id}/send-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DocumentsDeliveryController_sendOptions_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{id}/send": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DocumentsDeliveryController_sendDocument_v1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -11600,6 +11952,10 @@ export interface components {
                     enabled: boolean;
                     body: string;
                 };
+                payment_received: {
+                    enabled: boolean;
+                    body: string;
+                };
                 checkout_link: {
                     enabled: boolean;
                     body: string;
@@ -11629,6 +11985,10 @@ export interface components {
                     body: string;
                 };
                 payment_rejected: {
+                    enabled: boolean;
+                    body: string;
+                };
+                payment_received: {
                     enabled: boolean;
                     body: string;
                 };
@@ -11667,6 +12027,22 @@ export interface components {
                 shipping_state: "estimated" | "quoted" | null;
                 total_cents: number;
                 currency: string;
+                paid_cents: number;
+                balance_cents: number;
+                /** @enum {string} */
+                payment_state: "unpaid" | "partially_paid" | "paid";
+                base: {
+                    currency: string;
+                    subtotal_cents: number;
+                    total_cents: number;
+                    fx_rate: number;
+                    fx_source: string | null;
+                    /** Format: date-time */
+                    fx_at: string | null;
+                    fx_spread_bps: number | null;
+                    /** Format: date-time */
+                    frozen_at: string;
+                } | null;
                 /** Format: date */
                 service_date: string | null;
                 external_total_cents: number | null;
@@ -11730,6 +12106,9 @@ export interface components {
                     /** Format: uuid */
                     payment_method_id: string | null;
                     amount_cents: number | null;
+                    amount_assumed: boolean;
+                    base_amount_cents: number | null;
+                    fx_rate: number | null;
                     currency: string;
                     reference: string | null;
                     attachment_id: string | null;
@@ -11776,6 +12155,12 @@ export interface components {
                 fulfilled: number;
                 cancelled: number;
             };
+            counts_by_payment_state: {
+                unpaid: number;
+                partially_paid: number;
+                paid: number;
+            };
+            receivable_cents: number;
             kpis: {
                 /** @enum {string} */
                 period: "today" | "7d" | "30d";
@@ -11831,6 +12216,22 @@ export interface components {
             shipping_state: "estimated" | "quoted" | null;
             total_cents: number;
             currency: string;
+            paid_cents: number;
+            balance_cents: number;
+            /** @enum {string} */
+            payment_state: "unpaid" | "partially_paid" | "paid";
+            base: {
+                currency: string;
+                subtotal_cents: number;
+                total_cents: number;
+                fx_rate: number;
+                fx_source: string | null;
+                /** Format: date-time */
+                fx_at: string | null;
+                fx_spread_bps: number | null;
+                /** Format: date-time */
+                frozen_at: string;
+            } | null;
             /** Format: date */
             service_date: string | null;
             external_total_cents: number | null;
@@ -11894,6 +12295,9 @@ export interface components {
                 /** Format: uuid */
                 payment_method_id: string | null;
                 amount_cents: number | null;
+                amount_assumed: boolean;
+                base_amount_cents: number | null;
+                fx_rate: number | null;
                 currency: string;
                 reference: string | null;
                 attachment_id: string | null;
@@ -11929,7 +12333,7 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
-                type: "created" | "status_changed" | "payment_reported" | "payment_verified" | "payment_rejected" | "updated" | "customer_notified" | "customer_notification_skipped" | "customer_notification_failed";
+                type: "created" | "status_changed" | "payment_reported" | "payment_verified" | "payment_rejected" | "updated" | "customer_notified" | "customer_notification_skipped" | "customer_notification_failed" | "payment_state_changed" | "currency_frozen";
                 /** @enum {string} */
                 actor_type: "user" | "ai_agent" | "system";
                 /** Format: uuid */
@@ -12001,6 +12405,8 @@ export interface components {
             notes?: string;
             /** @default true */
             notify_customer: boolean;
+            amount_cents?: number;
+            accept_overpayment?: boolean;
         };
         OauthAuthorizeDto: {
             authorize_url: string;
@@ -12380,6 +12786,79 @@ export interface components {
             max_order_cents?: number | null;
             position?: number;
             is_active?: boolean;
+        };
+        FxSettingsDto: {
+            settlement_currency: string;
+            spread_bps: number;
+            manual_rate: {
+                rate: number;
+                /** Format: date */
+                valid_until: string;
+            } | null;
+            show_indicative_quotes: boolean;
+        };
+        LatestFxRateDto: {
+            official: {
+                base: string;
+                quote: string;
+                rate: number;
+                /** Format: date */
+                valid_from: string;
+                /** Format: date */
+                valid_to: string | null;
+                /** @enum {string} */
+                source: "superfinanciera" | "manual";
+                /** Format: date-time */
+                fetched_at: string;
+            } | null;
+            effective: {
+                base: string;
+                quote: string;
+                rate: number;
+                official_rate: number | null;
+                spread_bps: number;
+                /** @enum {string} */
+                source: "superfinanciera" | "manual" | "tenant_override";
+                /** Format: date */
+                valid_from: string;
+                stale: boolean;
+            } | null;
+        };
+        FxRatesListDto: {
+            data: {
+                base: string;
+                quote: string;
+                rate: number;
+                /** Format: date */
+                valid_from: string;
+                /** Format: date */
+                valid_to: string | null;
+                /** @enum {string} */
+                source: "superfinanciera" | "manual";
+                /** Format: date-time */
+                fetched_at: string;
+            }[];
+        };
+        SetManualRateDto: {
+            base: string;
+            quote: string;
+            rate: number;
+            /** Format: date */
+            valid_from: string;
+            note?: string;
+        };
+        FxRateDto: {
+            base: string;
+            quote: string;
+            rate: number;
+            /** Format: date */
+            valid_from: string;
+            /** Format: date */
+            valid_to: string | null;
+            /** @enum {string} */
+            source: "superfinanciera" | "manual";
+            /** Format: date-time */
+            fetched_at: string;
         };
         PaymentMethodsListDto: {
             data: {
@@ -15242,78 +15721,1730 @@ export interface components {
             window_hours: number | null;
             supports_templates: boolean;
         };
-        FxSettingsDto: {
-            settlement_currency: string;
-            spread_bps: number;
-            manual_rate: {
-                rate: number;
-                /** Format: date */
-                valid_until: string;
-            } | null;
-            show_indicative_quotes: boolean;
-        };
-        LatestFxRateDto: {
-            official: {
-                base: string;
-                quote: string;
-                rate: number;
-                /** Format: date */
-                valid_from: string;
-                /** Format: date */
-                valid_to: string | null;
-                /** @enum {string} */
-                source: "superfinanciera" | "manual";
-                /** Format: date-time */
-                fetched_at: string;
-            } | null;
-            effective: {
-                base: string;
-                quote: string;
-                rate: number;
-                official_rate: number | null;
-                spread_bps: number;
-                /** @enum {string} */
-                source: "superfinanciera" | "manual" | "tenant_override";
-                /** Format: date */
-                valid_from: string;
-                stale: boolean;
-            } | null;
-        };
-        FxRatesListDto: {
+        ReceivablesListDto: {
             data: {
-                base: string;
-                quote: string;
-                rate: number;
+                /** Format: uuid */
+                plan_id: string;
+                /** Format: uuid */
+                order_id: string;
+                order_number: number | null;
+                /** Format: uuid */
+                contact_id: string;
+                contact_name: string;
                 /** Format: date */
-                valid_from: string;
+                service_date: string | null;
+                travelled: boolean;
+                currency: string;
+                total_cents: number;
+                paid_cents: number;
+                balance_cents: number;
+                overdue_cents: number;
                 /** Format: date */
-                valid_to: string | null;
+                next_due_at: string | null;
+                days_overdue: number;
                 /** @enum {string} */
-                source: "superfinanciera" | "manual";
+                bucket: "current" | "d1_30" | "d31_60" | "d61_90" | "d90_plus";
+                installments_total: number;
+                installments_paid: number;
+                /** Format: date */
+                active_promise_at: string | null;
+                last_promise: {
+                    /** Format: date */
+                    promised_at: string;
+                    /** @enum {string} */
+                    status: "pending" | "kept" | "broken" | "cancelled";
+                } | null;
+                /** Format: uuid */
+                assigned_user_id: string | null;
+                paused: boolean;
+                last_reminder: {
+                    /** Format: date-time */
+                    at: string;
+                    /** @enum {string} */
+                    status: "queued" | "sent" | "delivered" | "failed" | "skipped";
+                    /** @enum {string} */
+                    channel: "whatsapp" | "email";
+                    skip_reason: string | null;
+                } | null;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
+        ReceivablesStatsDto: {
+            outstanding_cents: number;
+            overdue_cents: number;
+            travelled_cents: number;
+            promised_cents: number;
+            plans_active: number;
+            plans_overdue: number;
+            contacts_overdue: number;
+        };
+        PlanDetailDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            order_id: string;
+            order_number: number | null;
+            /** Format: uuid */
+            contact_id: string;
+            /** @enum {string} */
+            status: "active" | "settled" | "cancelled" | "on_hold";
+            currency: string;
+            total_cents: number;
+            paid_cents: number;
+            balance_cents: number;
+            deposit_cents: number;
+            /** Format: date */
+            service_date: string | null;
+            /** Format: date */
+            final_due_at: string | null;
+            /** @enum {string} */
+            final_due_source: "service_date" | "fallback" | "manual";
+            /** Format: date */
+            next_due_at: string | null;
+            /** Format: date */
+            active_promise_at: string | null;
+            /** Format: uuid */
+            assigned_user_id: string | null;
+            installments: {
+                /** Format: uuid */
+                id: string;
+                seq: number;
+                /** @enum {string} */
+                kind: "deposit" | "installment" | "balance";
+                /** Format: date */
+                due_at: string;
+                amount_cents: number;
+                paid_cents: number;
+                /** @enum {string} */
+                status: "pending" | "partially_paid" | "paid" | "overdue" | "waived";
                 /** Format: date-time */
-                fetched_at: string;
+                paid_at: string | null;
+            }[];
+            promises: {
+                /** Format: uuid */
+                id: string;
+                /** Format: date */
+                promised_at: string;
+                amount_cents: number | null;
+                note: string | null;
+                /** @enum {string} */
+                status: "pending" | "kept" | "broken" | "cancelled";
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                resolved_at: string | null;
+                /** Format: uuid */
+                created_by_user_id: string | null;
+            }[];
+            notes: {
+                /** Format: uuid */
+                id: string;
+                note: string;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: uuid */
+                actor_user_id: string | null;
+            }[];
+            collapsed: boolean;
+            /** Format: date-time */
+            schedule_changed_at: string | null;
+        };
+        PlanRemindersDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                installment_id: string | null;
+                reminder_key: string;
+                /** @enum {string} */
+                channel: "whatsapp" | "email";
+                attempt: number;
+                /** @enum {string} */
+                status: "queued" | "sent" | "delivered" | "failed" | "skipped";
+                skip_reason: string | null;
+                error_code: string | null;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                resolved_at: string | null;
             }[];
         };
-        SetManualRateDto: {
-            base: string;
-            quote: string;
-            rate: number;
+        RescheduleRequestDto: {
+            installments: {
+                /** Format: date */
+                due_at: string;
+                amount_cents: number;
+            }[];
+        };
+        PlanActionResultDto: {
+            /** Format: uuid */
+            plan_id: string;
+        };
+        PromiseRequestDto: {
             /** Format: date */
-            valid_from: string;
+            promised_at: string;
+            amount_cents?: number;
             note?: string;
         };
-        FxRateDto: {
-            base: string;
-            quote: string;
-            rate: number;
-            /** Format: date */
-            valid_from: string;
-            /** Format: date */
-            valid_to: string | null;
+        UpdatePlanRequestDto: {
+            /** Format: uuid */
+            assigned_user_id?: string | null;
             /** @enum {string} */
-            source: "superfinanciera" | "manual";
+            status?: "active" | "on_hold";
+            note?: string;
+        };
+        ManualReminderDto: {
+            /** Format: uuid */
+            installment_id?: string;
+            /** @enum {string} */
+            channel: "whatsapp" | "email";
+            body?: string;
+        };
+        ReminderResultDto: {
+            /** Format: uuid */
+            plan_id: string;
+            /** @enum {string} */
+            outcome: "queued" | "skipped";
+        };
+        CollectionsSettingsDto: {
+            deposit_pct: number;
+            /** @enum {string} */
+            installments_strategy: "equal_monthly" | "single_balance" | "custom_count";
+            installments_count: number;
+            final_due_days_before_service: number;
+            min_days_between_installments: number;
+            fallback_term_days: number;
+            min_plan_total_cents: number;
+            grace_days: number;
+            reminder_days_before: number[];
+            overdue_reminder_days: number[];
+            reminder_channels: {
+                whatsapp: boolean;
+                email: boolean;
+            };
+            pause_on_promise: boolean;
+            templates: {
+                due_soon: {
+                    enabled: boolean;
+                    body: string;
+                };
+                due_today: {
+                    enabled: boolean;
+                    body: string;
+                };
+                overdue: {
+                    enabled: boolean;
+                    body: string;
+                };
+            };
+            /** @default {} */
+            hsm_templates: {
+                due_soon?: {
+                    name: string;
+                    language: string;
+                };
+                due_today?: {
+                    name: string;
+                    language: string;
+                };
+                overdue?: {
+                    name: string;
+                    language: string;
+                };
+            };
+            available_variables: string[];
+        };
+        CollectionsPolicyDto: {
+            deposit_pct: number;
+            /** @enum {string} */
+            installments_strategy: "equal_monthly" | "single_balance" | "custom_count";
+            installments_count: number;
+            final_due_days_before_service: number;
+            min_days_between_installments: number;
+            fallback_term_days: number;
+            min_plan_total_cents: number;
+            grace_days: number;
+            reminder_days_before: number[];
+            overdue_reminder_days: number[];
+            reminder_channels: {
+                whatsapp: boolean;
+                email: boolean;
+            };
+            pause_on_promise: boolean;
+            templates: {
+                due_soon: {
+                    enabled: boolean;
+                    body: string;
+                };
+                due_today: {
+                    enabled: boolean;
+                    body: string;
+                };
+                overdue: {
+                    enabled: boolean;
+                    body: string;
+                };
+            };
+            /** @default {} */
+            hsm_templates: {
+                due_soon?: {
+                    name: string;
+                    language: string;
+                };
+                due_today?: {
+                    name: string;
+                    language: string;
+                };
+                overdue?: {
+                    name: string;
+                    language: string;
+                };
+            };
+        };
+        PlanPreviewRequestDto: {
+            total_cents: number;
+            /** Format: date */
+            service_date?: string | null;
+        };
+        PlanPreviewDto: {
+            installments: {
+                seq: number;
+                /** @enum {string} */
+                kind: "deposit" | "installment" | "balance";
+                /** Format: date */
+                due_at: string;
+                amount_cents: number;
+            }[];
+            deposit_cents: number;
+            /** Format: date */
+            final_due_at: string;
+            /** @enum {string} */
+            final_due_source: "service_date" | "fallback";
+            collapsed: boolean;
+        };
+        DocumentTypesDto: {
+            types: {
+                code: string;
+                label: string;
+                issuable: boolean;
+                /** @enum {string} */
+                issue_subject: "order" | "payment";
+                /** @enum {string} */
+                issue_policy: "once" | "many";
+                regenerable: boolean;
+                default_prefix: string;
+                data_domains: string[];
+                allowed_blocks: ("heading" | "paragraph" | "clauses" | "key_values" | "parties" | "line_items_table" | "totals" | "schedule_table" | "payment_summary" | "signatures" | "image" | "legal_notice" | "page_footer" | "divider" | "spacer")[];
+                required_blocks: ("heading" | "paragraph" | "clauses" | "key_values" | "parties" | "line_items_table" | "totals" | "schedule_table" | "payment_summary" | "signatures" | "image" | "legal_notice" | "page_footer" | "divider" | "spacer")[];
+                legal_notice: string | null;
+                variables: {
+                    name: string;
+                    label: string;
+                    domain: string;
+                    kind: string;
+                    /** @description Variable válida que en una frase fija se rompe en algunos pedidos (p. ej. vacía sin anticipo). El editor avisa y propone `use_instead`. */
+                    caution: {
+                        reason: string;
+                        use_instead: string;
+                    } | null;
+                }[];
+            }[];
+            block_catalog: {
+                /** @enum {string} */
+                type: "heading" | "paragraph" | "clauses" | "key_values" | "parties" | "line_items_table" | "totals" | "schedule_table" | "payment_summary" | "signatures" | "image" | "legal_notice" | "page_footer" | "divider" | "spacer";
+                label: string;
+                description: string;
+                consumes: string[];
+                /** @enum {string} */
+                repeat: "none" | "template" | "data";
+                supports_when: boolean;
+                editable: boolean;
+            }[];
+        };
+        DocumentTemplatesDto: {
+            templates: {
+                /** @enum {string} */
+                type_code: "contract" | "quote" | "proposal" | "receipt" | "statement" | "cuenta_cobro" | "commercial_invoice";
+                slug: string;
+                /** @enum {string} */
+                source: "system" | "tenant";
+                version: number;
+                template_version_id: string | null;
+                template: {
+                    /** @enum {number} */
+                    schema_version: 1;
+                    theme: {
+                        accent_color: string | null;
+                    };
+                    blocks: ({
+                        id: string;
+                        when?: {
+                            /** @enum {string} */
+                            path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                            /** @enum {string} */
+                            is: "present" | "absent";
+                        } | null;
+                        /** @enum {string} */
+                        type: "heading";
+                        text: string;
+                    } | {
+                        id: string;
+                        when?: {
+                            /** @enum {string} */
+                            path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                            /** @enum {string} */
+                            is: "present" | "absent";
+                        } | null;
+                        /** @enum {string} */
+                        type: "paragraph";
+                        text: string;
+                    } | {
+                        id: string;
+                        when?: {
+                            /** @enum {string} */
+                            path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                            /** @enum {string} */
+                            is: "present" | "absent";
+                        } | null;
+                        /** @enum {string} */
+                        type: "clauses";
+                        numbered: boolean;
+                        items: {
+                            title: string | null;
+                            body: string;
+                        }[];
+                    } | {
+                        id: string;
+                        when?: {
+                            /** @enum {string} */
+                            path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                            /** @enum {string} */
+                            is: "present" | "absent";
+                        } | null;
+                        /** @enum {string} */
+                        type: "key_values";
+                        pairs: {
+                            label: string;
+                            value: string;
+                        }[];
+                    } | {
+                        id: string;
+                        when?: {
+                            /** @enum {string} */
+                            path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                            /** @enum {string} */
+                            is: "present" | "absent";
+                        } | null;
+                        /** @enum {string} */
+                        type: "parties";
+                        /** @enum {string} */
+                        show: "issuer" | "counterparty" | "both";
+                        issuer_label: string;
+                        counterparty_label: string;
+                    } | {
+                        id: string;
+                        when?: {
+                            /** @enum {string} */
+                            path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                            /** @enum {string} */
+                            is: "present" | "absent";
+                        } | null;
+                        /** @enum {string} */
+                        type: "line_items_table";
+                        show_quantity: boolean;
+                        show_unit_price: boolean;
+                    } | {
+                        id: string;
+                        when?: {
+                            /** @enum {string} */
+                            path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                            /** @enum {string} */
+                            is: "present" | "absent";
+                        } | null;
+                        /** @enum {string} */
+                        type: "totals";
+                        show_dual_currency: boolean;
+                    } | {
+                        id: string;
+                        when?: {
+                            /** @enum {string} */
+                            path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                            /** @enum {string} */
+                            is: "present" | "absent";
+                        } | null;
+                        /** @enum {string} */
+                        type: "schedule_table";
+                        show_paid: boolean;
+                    } | {
+                        id: string;
+                        when?: {
+                            /** @enum {string} */
+                            path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                            /** @enum {string} */
+                            is: "present" | "absent";
+                        } | null;
+                        /** @enum {string} */
+                        type: "payment_summary";
+                    } | {
+                        id: string;
+                        when?: {
+                            /** @enum {string} */
+                            path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                            /** @enum {string} */
+                            is: "present" | "absent";
+                        } | null;
+                        /** @enum {string} */
+                        type: "signatures";
+                        issuer_label: string;
+                        counterparty_label: string;
+                        show_date: boolean;
+                    } | {
+                        id: string;
+                        when?: {
+                            /** @enum {string} */
+                            path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                            /** @enum {string} */
+                            is: "present" | "absent";
+                        } | null;
+                        /** @enum {string} */
+                        type: "image";
+                        /** @enum {string} */
+                        source: "issuer_logo";
+                        /** @enum {string} */
+                        align: "left" | "center" | "right";
+                    } | {
+                        id: string;
+                        when?: {
+                            /** @enum {string} */
+                            path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                            /** @enum {string} */
+                            is: "present" | "absent";
+                        } | null;
+                        /** @enum {string} */
+                        type: "legal_notice";
+                    } | {
+                        id: string;
+                        when?: {
+                            /** @enum {string} */
+                            path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                            /** @enum {string} */
+                            is: "present" | "absent";
+                        } | null;
+                        /** @enum {string} */
+                        type: "page_footer";
+                        text: string;
+                    } | {
+                        id: string;
+                        when?: {
+                            /** @enum {string} */
+                            path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                            /** @enum {string} */
+                            is: "present" | "absent";
+                        } | null;
+                        /** @enum {string} */
+                        type: "divider";
+                    } | {
+                        id: string;
+                        when?: {
+                            /** @enum {string} */
+                            path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                            /** @enum {string} */
+                            is: "present" | "absent";
+                        } | null;
+                        /** @enum {string} */
+                        type: "spacer";
+                        /** @enum {string} */
+                        size: "sm" | "md" | "lg";
+                    })[];
+                };
+                /** Format: date-time */
+                updated_at: string | null;
+            }[];
+        };
+        DocumentTemplateDto: {
+            /** @enum {string} */
+            type_code: "contract" | "quote" | "proposal" | "receipt" | "statement" | "cuenta_cobro" | "commercial_invoice";
+            slug: string;
+            /** @enum {string} */
+            source: "system" | "tenant";
+            version: number;
+            template_version_id: string | null;
+            template: {
+                /** @enum {number} */
+                schema_version: 1;
+                theme: {
+                    accent_color: string | null;
+                };
+                blocks: ({
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "heading";
+                    text: string;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "paragraph";
+                    text: string;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "clauses";
+                    numbered: boolean;
+                    items: {
+                        title: string | null;
+                        body: string;
+                    }[];
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "key_values";
+                    pairs: {
+                        label: string;
+                        value: string;
+                    }[];
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "parties";
+                    /** @enum {string} */
+                    show: "issuer" | "counterparty" | "both";
+                    issuer_label: string;
+                    counterparty_label: string;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "line_items_table";
+                    show_quantity: boolean;
+                    show_unit_price: boolean;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "totals";
+                    show_dual_currency: boolean;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "schedule_table";
+                    show_paid: boolean;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "payment_summary";
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "signatures";
+                    issuer_label: string;
+                    counterparty_label: string;
+                    show_date: boolean;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "image";
+                    /** @enum {string} */
+                    source: "issuer_logo";
+                    /** @enum {string} */
+                    align: "left" | "center" | "right";
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "legal_notice";
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "page_footer";
+                    text: string;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "divider";
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "spacer";
+                    /** @enum {string} */
+                    size: "sm" | "md" | "lg";
+                })[];
+            };
             /** Format: date-time */
-            fetched_at: string;
+            updated_at: string | null;
+        };
+        SaveDocumentTemplateDto: {
+            template: {
+                /** @enum {number} */
+                schema_version: 1;
+                theme: {
+                    accent_color: string | null;
+                };
+                blocks: ({
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "heading";
+                    text: string;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "paragraph";
+                    text: string;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "clauses";
+                    numbered: boolean;
+                    items: {
+                        title: string | null;
+                        body: string;
+                    }[];
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "key_values";
+                    pairs: {
+                        label: string;
+                        value: string;
+                    }[];
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "parties";
+                    /** @enum {string} */
+                    show: "issuer" | "counterparty" | "both";
+                    issuer_label: string;
+                    counterparty_label: string;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "line_items_table";
+                    show_quantity: boolean;
+                    show_unit_price: boolean;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "totals";
+                    show_dual_currency: boolean;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "schedule_table";
+                    show_paid: boolean;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "payment_summary";
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "signatures";
+                    issuer_label: string;
+                    counterparty_label: string;
+                    show_date: boolean;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "image";
+                    /** @enum {string} */
+                    source: "issuer_logo";
+                    /** @enum {string} */
+                    align: "left" | "center" | "right";
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "legal_notice";
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "page_footer";
+                    text: string;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "divider";
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "spacer";
+                    /** @enum {string} */
+                    size: "sm" | "md" | "lg";
+                })[];
+            };
+        };
+        PreviewDocumentTemplateDto: {
+            template?: {
+                /** @enum {number} */
+                schema_version: 1;
+                theme: {
+                    accent_color: string | null;
+                };
+                blocks: ({
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "heading";
+                    text: string;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "paragraph";
+                    text: string;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "clauses";
+                    numbered: boolean;
+                    items: {
+                        title: string | null;
+                        body: string;
+                    }[];
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "key_values";
+                    pairs: {
+                        label: string;
+                        value: string;
+                    }[];
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "parties";
+                    /** @enum {string} */
+                    show: "issuer" | "counterparty" | "both";
+                    issuer_label: string;
+                    counterparty_label: string;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "line_items_table";
+                    show_quantity: boolean;
+                    show_unit_price: boolean;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "totals";
+                    show_dual_currency: boolean;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "schedule_table";
+                    show_paid: boolean;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "payment_summary";
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "signatures";
+                    issuer_label: string;
+                    counterparty_label: string;
+                    show_date: boolean;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "image";
+                    /** @enum {string} */
+                    source: "issuer_logo";
+                    /** @enum {string} */
+                    align: "left" | "center" | "right";
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "legal_notice";
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "page_footer";
+                    text: string;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "divider";
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "spacer";
+                    /** @enum {string} */
+                    size: "sm" | "md" | "lg";
+                })[];
+            };
+            issuer?: {
+                legal_name?: string | null;
+                tax_id_label?: string;
+                address?: string | null;
+                city?: string | null;
+                phone?: string | null;
+                email?: string | null;
+                footer_note?: string | null;
+            };
+        };
+        DocumentPreviewDto: {
+            html: string;
+        };
+        DocumentsSettingsDto: {
+            issuer: {
+                legal_name: string | null;
+                tax_id_label: string;
+                address: string | null;
+                city: string | null;
+                phone: string | null;
+                email: string | null;
+                footer_note: string | null;
+            };
+            numbering: {
+                prefixes: {
+                    [key: string]: string;
+                };
+                next: {
+                    [key: string]: {
+                        next_value: number;
+                        started: boolean;
+                    };
+                };
+            };
+            auto_issue: {
+                contract_on_confirm: boolean;
+                contract_on_deposit_verified: boolean;
+                receipt_on_payment_verified: boolean;
+            };
+            auto_send: {
+                contract: {
+                    whatsapp: boolean;
+                    email: boolean;
+                };
+                receipt: {
+                    whatsapp: boolean;
+                    email: boolean;
+                };
+            };
+            hsm_fallback: {
+                name: string;
+                language: string;
+            } | null;
+            prefix_defaults: {
+                [key: string]: string;
+            };
+            company_defaults: {
+                name: string;
+                nit: string;
+                address: string | null;
+                city: string | null;
+            };
+        };
+        UpdateDocumentsSettingsDto: {
+            issuer: {
+                legal_name: string | null;
+                tax_id_label: string;
+                address: string | null;
+                city: string | null;
+                phone: string | null;
+                email: string | null;
+                footer_note: string | null;
+            };
+            numbering: {
+                prefixes: {
+                    [key: string]: string;
+                };
+                start_at?: {
+                    [key: string]: number;
+                };
+            };
+            auto_issue?: {
+                contract_on_confirm: boolean;
+                contract_on_deposit_verified: boolean;
+                receipt_on_payment_verified: boolean;
+            };
+            auto_send?: {
+                contract: {
+                    whatsapp: boolean;
+                    email: boolean;
+                };
+                receipt: {
+                    whatsapp: boolean;
+                    email: boolean;
+                };
+            };
+            hsm_fallback?: {
+                name: string;
+                language: string;
+            } | null;
+        };
+        IssueDocumentDto: {
+            /** @enum {string} */
+            type_code: "contract" | "quote" | "proposal" | "receipt" | "statement" | "cuenta_cobro" | "commercial_invoice";
+            subject: {
+                /** @enum {string} */
+                kind: "order" | "payment";
+                /** Format: uuid */
+                id: string;
+            };
+        };
+        IssueDocumentResultDto: {
+            document: {
+                id: string;
+                type_code: string;
+                type_label: string;
+                tracks_subject_changes: boolean;
+                /** @enum {string} */
+                status: "queued" | "rendering" | "rendered" | "failed" | "superseded";
+                number: string;
+                contact_id: string | null;
+                order_id: string | null;
+                payment_id: string | null;
+                /** @enum {string} */
+                template_source: "system" | "tenant";
+                template_version_id: string | null;
+                size_bytes: number | null;
+                page_count: number | null;
+                /** Format: date-time */
+                rendered_at: string | null;
+                error_code: string | null;
+                attempts: number;
+                /** @enum {string} */
+                issued_by: "user" | "system";
+                issued_by_user_id: string | null;
+                regenerated_from_id: string | null;
+                /** Format: date-time */
+                superseded_at: string | null;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+                last_delivery: {
+                    whatsapp: {
+                        id: string;
+                        /** @enum {string} */
+                        channel: "whatsapp" | "email";
+                        /** @enum {string} */
+                        status: "queued" | "sent" | "delivered" | "failed" | "skipped";
+                        skip_reason: string | null;
+                        error_code: string | null;
+                        content_kind: string | null;
+                        channel_kind: string | null;
+                        recipient_masked: string | null;
+                        attempt: number;
+                        /** @enum {string} */
+                        requested_by: "user" | "system";
+                        requested_by_user_id: string | null;
+                        /** Format: date-time */
+                        queued_at: string | null;
+                        /** Format: date-time */
+                        resolved_at: string | null;
+                        /** Format: date-time */
+                        created_at: string;
+                    } | null;
+                    email: {
+                        id: string;
+                        /** @enum {string} */
+                        channel: "whatsapp" | "email";
+                        /** @enum {string} */
+                        status: "queued" | "sent" | "delivered" | "failed" | "skipped";
+                        skip_reason: string | null;
+                        error_code: string | null;
+                        content_kind: string | null;
+                        channel_kind: string | null;
+                        recipient_masked: string | null;
+                        attempt: number;
+                        /** @enum {string} */
+                        requested_by: "user" | "system";
+                        requested_by_user_id: string | null;
+                        /** Format: date-time */
+                        queued_at: string | null;
+                        /** Format: date-time */
+                        resolved_at: string | null;
+                        /** Format: date-time */
+                        created_at: string;
+                    } | null;
+                };
+            };
+            deduplicated: boolean;
+        };
+        DocumentsListDto: {
+            data: {
+                id: string;
+                type_code: string;
+                type_label: string;
+                tracks_subject_changes: boolean;
+                /** @enum {string} */
+                status: "queued" | "rendering" | "rendered" | "failed" | "superseded";
+                number: string;
+                contact_id: string | null;
+                order_id: string | null;
+                payment_id: string | null;
+                /** @enum {string} */
+                template_source: "system" | "tenant";
+                template_version_id: string | null;
+                size_bytes: number | null;
+                page_count: number | null;
+                /** Format: date-time */
+                rendered_at: string | null;
+                error_code: string | null;
+                attempts: number;
+                /** @enum {string} */
+                issued_by: "user" | "system";
+                issued_by_user_id: string | null;
+                regenerated_from_id: string | null;
+                /** Format: date-time */
+                superseded_at: string | null;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+                last_delivery: {
+                    whatsapp: {
+                        id: string;
+                        /** @enum {string} */
+                        channel: "whatsapp" | "email";
+                        /** @enum {string} */
+                        status: "queued" | "sent" | "delivered" | "failed" | "skipped";
+                        skip_reason: string | null;
+                        error_code: string | null;
+                        content_kind: string | null;
+                        channel_kind: string | null;
+                        recipient_masked: string | null;
+                        attempt: number;
+                        /** @enum {string} */
+                        requested_by: "user" | "system";
+                        requested_by_user_id: string | null;
+                        /** Format: date-time */
+                        queued_at: string | null;
+                        /** Format: date-time */
+                        resolved_at: string | null;
+                        /** Format: date-time */
+                        created_at: string;
+                    } | null;
+                    email: {
+                        id: string;
+                        /** @enum {string} */
+                        channel: "whatsapp" | "email";
+                        /** @enum {string} */
+                        status: "queued" | "sent" | "delivered" | "failed" | "skipped";
+                        skip_reason: string | null;
+                        error_code: string | null;
+                        content_kind: string | null;
+                        channel_kind: string | null;
+                        recipient_masked: string | null;
+                        attempt: number;
+                        /** @enum {string} */
+                        requested_by: "user" | "system";
+                        requested_by_user_id: string | null;
+                        /** Format: date-time */
+                        queued_at: string | null;
+                        /** Format: date-time */
+                        resolved_at: string | null;
+                        /** Format: date-time */
+                        created_at: string;
+                    } | null;
+                };
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
+        DocumentDetailDto: {
+            id: string;
+            type_code: string;
+            type_label: string;
+            tracks_subject_changes: boolean;
+            /** @enum {string} */
+            status: "queued" | "rendering" | "rendered" | "failed" | "superseded";
+            number: string;
+            contact_id: string | null;
+            order_id: string | null;
+            payment_id: string | null;
+            /** @enum {string} */
+            template_source: "system" | "tenant";
+            template_version_id: string | null;
+            size_bytes: number | null;
+            page_count: number | null;
+            /** Format: date-time */
+            rendered_at: string | null;
+            error_code: string | null;
+            attempts: number;
+            /** @enum {string} */
+            issued_by: "user" | "system";
+            issued_by_user_id: string | null;
+            regenerated_from_id: string | null;
+            /** Format: date-time */
+            superseded_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            last_delivery: {
+                whatsapp: {
+                    id: string;
+                    /** @enum {string} */
+                    channel: "whatsapp" | "email";
+                    /** @enum {string} */
+                    status: "queued" | "sent" | "delivered" | "failed" | "skipped";
+                    skip_reason: string | null;
+                    error_code: string | null;
+                    content_kind: string | null;
+                    channel_kind: string | null;
+                    recipient_masked: string | null;
+                    attempt: number;
+                    /** @enum {string} */
+                    requested_by: "user" | "system";
+                    requested_by_user_id: string | null;
+                    /** Format: date-time */
+                    queued_at: string | null;
+                    /** Format: date-time */
+                    resolved_at: string | null;
+                    /** Format: date-time */
+                    created_at: string;
+                } | null;
+                email: {
+                    id: string;
+                    /** @enum {string} */
+                    channel: "whatsapp" | "email";
+                    /** @enum {string} */
+                    status: "queued" | "sent" | "delivered" | "failed" | "skipped";
+                    skip_reason: string | null;
+                    error_code: string | null;
+                    content_kind: string | null;
+                    channel_kind: string | null;
+                    recipient_masked: string | null;
+                    attempt: number;
+                    /** @enum {string} */
+                    requested_by: "user" | "system";
+                    requested_by_user_id: string | null;
+                    /** Format: date-time */
+                    queued_at: string | null;
+                    /** Format: date-time */
+                    resolved_at: string | null;
+                    /** Format: date-time */
+                    created_at: string;
+                } | null;
+            };
+            deliveries: {
+                id: string;
+                /** @enum {string} */
+                channel: "whatsapp" | "email";
+                /** @enum {string} */
+                status: "queued" | "sent" | "delivered" | "failed" | "skipped";
+                skip_reason: string | null;
+                error_code: string | null;
+                content_kind: string | null;
+                channel_kind: string | null;
+                recipient_masked: string | null;
+                attempt: number;
+                /** @enum {string} */
+                requested_by: "user" | "system";
+                requested_by_user_id: string | null;
+                /** Format: date-time */
+                queued_at: string | null;
+                /** Format: date-time */
+                resolved_at: string | null;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+        };
+        DocumentFileUrlDto: {
+            /** Format: uri */
+            url: string;
+            expires_in_seconds: number;
+        };
+        DocumentDto: {
+            id: string;
+            type_code: string;
+            type_label: string;
+            tracks_subject_changes: boolean;
+            /** @enum {string} */
+            status: "queued" | "rendering" | "rendered" | "failed" | "superseded";
+            number: string;
+            contact_id: string | null;
+            order_id: string | null;
+            payment_id: string | null;
+            /** @enum {string} */
+            template_source: "system" | "tenant";
+            template_version_id: string | null;
+            size_bytes: number | null;
+            page_count: number | null;
+            /** Format: date-time */
+            rendered_at: string | null;
+            error_code: string | null;
+            attempts: number;
+            /** @enum {string} */
+            issued_by: "user" | "system";
+            issued_by_user_id: string | null;
+            regenerated_from_id: string | null;
+            /** Format: date-time */
+            superseded_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            last_delivery: {
+                whatsapp: {
+                    id: string;
+                    /** @enum {string} */
+                    channel: "whatsapp" | "email";
+                    /** @enum {string} */
+                    status: "queued" | "sent" | "delivered" | "failed" | "skipped";
+                    skip_reason: string | null;
+                    error_code: string | null;
+                    content_kind: string | null;
+                    channel_kind: string | null;
+                    recipient_masked: string | null;
+                    attempt: number;
+                    /** @enum {string} */
+                    requested_by: "user" | "system";
+                    requested_by_user_id: string | null;
+                    /** Format: date-time */
+                    queued_at: string | null;
+                    /** Format: date-time */
+                    resolved_at: string | null;
+                    /** Format: date-time */
+                    created_at: string;
+                } | null;
+                email: {
+                    id: string;
+                    /** @enum {string} */
+                    channel: "whatsapp" | "email";
+                    /** @enum {string} */
+                    status: "queued" | "sent" | "delivered" | "failed" | "skipped";
+                    skip_reason: string | null;
+                    error_code: string | null;
+                    content_kind: string | null;
+                    channel_kind: string | null;
+                    recipient_masked: string | null;
+                    attempt: number;
+                    /** @enum {string} */
+                    requested_by: "user" | "system";
+                    requested_by_user_id: string | null;
+                    /** Format: date-time */
+                    queued_at: string | null;
+                    /** Format: date-time */
+                    resolved_at: string | null;
+                    /** Format: date-time */
+                    created_at: string;
+                } | null;
+            };
+        };
+        DocumentSendOptionsDto: {
+            contact: {
+                id: string;
+                display_name: string;
+            } | null;
+            whatsapp: {
+                reachable: boolean;
+                reason: string | null;
+                window_open: boolean;
+                /** Format: date-time */
+                last_inbound_at: string | null;
+                window_hours: number | null;
+                /** @enum {string} */
+                fallback: "none" | "hsm";
+                hsm_name: string | null;
+                recipient_masked: string | null;
+            };
+            email: {
+                address_masked: string | null;
+            };
+        };
+        SendDocumentDto: {
+            /** @enum {string} */
+            channel: "whatsapp" | "email";
+            /** Format: email */
+            to_email?: string;
+        };
+        SendDocumentResultDto: {
+            delivery: {
+                id: string;
+                /** @enum {string} */
+                channel: "whatsapp" | "email";
+                /** @enum {string} */
+                status: "queued" | "sent" | "delivered" | "failed" | "skipped";
+                skip_reason: string | null;
+                error_code: string | null;
+                content_kind: string | null;
+                channel_kind: string | null;
+                recipient_masked: string | null;
+                attempt: number;
+                /** @enum {string} */
+                requested_by: "user" | "system";
+                requested_by_user_id: string | null;
+                /** Format: date-time */
+                queued_at: string | null;
+                /** Format: date-time */
+                resolved_at: string | null;
+                /** Format: date-time */
+                created_at: string;
+            };
+            document: {
+                id: string;
+                type_code: string;
+                type_label: string;
+                tracks_subject_changes: boolean;
+                /** @enum {string} */
+                status: "queued" | "rendering" | "rendered" | "failed" | "superseded";
+                number: string;
+                contact_id: string | null;
+                order_id: string | null;
+                payment_id: string | null;
+                /** @enum {string} */
+                template_source: "system" | "tenant";
+                template_version_id: string | null;
+                size_bytes: number | null;
+                page_count: number | null;
+                /** Format: date-time */
+                rendered_at: string | null;
+                error_code: string | null;
+                attempts: number;
+                /** @enum {string} */
+                issued_by: "user" | "system";
+                issued_by_user_id: string | null;
+                regenerated_from_id: string | null;
+                /** Format: date-time */
+                superseded_at: string | null;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+                last_delivery: {
+                    whatsapp: {
+                        id: string;
+                        /** @enum {string} */
+                        channel: "whatsapp" | "email";
+                        /** @enum {string} */
+                        status: "queued" | "sent" | "delivered" | "failed" | "skipped";
+                        skip_reason: string | null;
+                        error_code: string | null;
+                        content_kind: string | null;
+                        channel_kind: string | null;
+                        recipient_masked: string | null;
+                        attempt: number;
+                        /** @enum {string} */
+                        requested_by: "user" | "system";
+                        requested_by_user_id: string | null;
+                        /** Format: date-time */
+                        queued_at: string | null;
+                        /** Format: date-time */
+                        resolved_at: string | null;
+                        /** Format: date-time */
+                        created_at: string;
+                    } | null;
+                    email: {
+                        id: string;
+                        /** @enum {string} */
+                        channel: "whatsapp" | "email";
+                        /** @enum {string} */
+                        status: "queued" | "sent" | "delivered" | "failed" | "skipped";
+                        skip_reason: string | null;
+                        error_code: string | null;
+                        content_kind: string | null;
+                        channel_kind: string | null;
+                        recipient_masked: string | null;
+                        attempt: number;
+                        /** @enum {string} */
+                        requested_by: "user" | "system";
+                        requested_by_user_id: string | null;
+                        /** Format: date-time */
+                        queued_at: string | null;
+                        /** Format: date-time */
+                        resolved_at: string | null;
+                        /** Format: date-time */
+                        created_at: string;
+                    } | null;
+                };
+                deliveries: {
+                    id: string;
+                    /** @enum {string} */
+                    channel: "whatsapp" | "email";
+                    /** @enum {string} */
+                    status: "queued" | "sent" | "delivered" | "failed" | "skipped";
+                    skip_reason: string | null;
+                    error_code: string | null;
+                    content_kind: string | null;
+                    channel_kind: string | null;
+                    recipient_masked: string | null;
+                    attempt: number;
+                    /** @enum {string} */
+                    requested_by: "user" | "system";
+                    requested_by_user_id: string | null;
+                    /** Format: date-time */
+                    queued_at: string | null;
+                    /** Format: date-time */
+                    resolved_at: string | null;
+                    /** Format: date-time */
+                    created_at: string;
+                }[];
+            };
         };
         GeoSearchResultsDto: {
             items: {
@@ -24845,6 +26976,7 @@ export interface operations {
                 contact_id?: string;
                 conversation_id?: string;
                 created_by_type?: "user" | "ai_agent";
+                payment_state?: "unpaid" | "partially_paid" | "paid";
                 created_from?: string;
                 created_to?: string;
                 service_date_from?: string;
@@ -25749,6 +27881,134 @@ export interface operations {
         };
         responses: {
             204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FxController_settings_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FxSettingsDto"];
+                };
+            };
+        };
+    };
+    FxController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FxSettingsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FxSettingsDto"];
+                };
+            };
+        };
+    };
+    FxController_latest_v1: {
+        parameters: {
+            query?: {
+                base?: string;
+                quote?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LatestFxRateDto"];
+                };
+            };
+        };
+    };
+    PlatformFxController_rates_v1: {
+        parameters: {
+            query?: {
+                base?: string;
+                quote?: string;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FxRatesListDto"];
+                };
+            };
+        };
+    };
+    PlatformFxController_setManual_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetManualRateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FxRateDto"];
+                };
+            };
+        };
+    };
+    PlatformFxController_refresh_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -29137,7 +31397,33 @@ export interface operations {
             };
         };
     };
-    FxController_settings_v1: {
+    CollectionsController_list_v1: {
+        parameters: {
+            query?: {
+                bucket?: "current" | "d1_30" | "d31_60" | "d61_90" | "d90_plus" | "overdue";
+                travelled?: boolean;
+                assigned_user_id?: string;
+                q?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceivablesListDto"];
+                };
+            };
+        };
+    };
+    CollectionsController_receivablesStats_v1: {
         parameters: {
             query?: never;
             header?: never;
@@ -29151,12 +31437,194 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["FxSettingsDto"];
+                    "application/json": components["schemas"]["ReceivablesStatsDto"];
                 };
             };
         };
     };
-    FxController_update_v1: {
+    CollectionsController_byOrder_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanDetailDto"];
+                };
+            };
+        };
+    };
+    CollectionsController_detail_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanDetailDto"];
+                };
+            };
+        };
+    };
+    CollectionsController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePlanRequestDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanActionResultDto"];
+                };
+            };
+        };
+    };
+    CollectionsController_reminderHistory_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanRemindersDto"];
+                };
+            };
+        };
+    };
+    CollectionsController_sendReminder_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ManualReminderDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReminderResultDto"];
+                };
+            };
+        };
+    };
+    CollectionsController_changeSchedule_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RescheduleRequestDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanActionResultDto"];
+                };
+            };
+        };
+    };
+    CollectionsController_promise_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PromiseRequestDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanActionResultDto"];
+                };
+            };
+        };
+    };
+    CollectionsSettingsController_settings_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CollectionsSettingsDto"];
+                };
+            };
+        };
+    };
+    CollectionsSettingsController_updateSettings_v1: {
         parameters: {
             query?: never;
             header?: never;
@@ -29165,7 +31633,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["FxSettingsDto"];
+                "application/json": components["schemas"]["CollectionsPolicyDto"];
             };
         };
         responses: {
@@ -29174,58 +31642,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["FxSettingsDto"];
+                    "application/json": components["schemas"]["CollectionsPolicyDto"];
                 };
             };
         };
     };
-    FxController_latest_v1: {
-        parameters: {
-            query?: {
-                base?: string;
-                quote?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LatestFxRateDto"];
-                };
-            };
-        };
-    };
-    PlatformFxController_rates_v1: {
-        parameters: {
-            query?: {
-                base?: string;
-                quote?: string;
-                from?: string;
-                to?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FxRatesListDto"];
-                };
-            };
-        };
-    };
-    PlatformFxController_setManual_v1: {
+    CollectionsSettingsController_preview_v1: {
         parameters: {
             query?: never;
             header?: never;
@@ -29234,7 +31656,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["SetManualRateDto"];
+                "application/json": components["schemas"]["PlanPreviewRequestDto"];
             };
         };
         responses: {
@@ -29243,16 +31665,281 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["FxRateDto"];
+                    "application/json": components["schemas"]["PlanPreviewDto"];
                 };
             };
         };
     };
-    PlatformFxController_refresh_v1: {
+    DocumentTypesController_types_v1: {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentTypesDto"];
+                };
+            };
+        };
+    };
+    DocumentTemplatesController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentTemplatesDto"];
+                };
+            };
+        };
+    };
+    DocumentTemplatesController_one_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                type: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentTemplateDto"];
+                };
+            };
+        };
+    };
+    DocumentTemplatesController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                type: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveDocumentTemplateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentTemplateDto"];
+                };
+            };
+        };
+    };
+    DocumentTemplatesController_resetToSystem_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                type: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentTemplateDto"];
+                };
+            };
+        };
+    };
+    DocumentTemplatesController_preview_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                type: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PreviewDocumentTemplateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentPreviewDto"];
+                };
+            };
+        };
+    };
+    DocumentsSettingsController_settings_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentsSettingsDto"];
+                };
+            };
+        };
+    };
+    DocumentsSettingsController_updateSettings_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateDocumentsSettingsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentsSettingsDto"];
+                };
+            };
+        };
+    };
+    DocumentsController_list_v1: {
+        parameters: {
+            query?: {
+                subject_kind?: "order" | "payment" | "contact";
+                subject_id?: string;
+                type_code?: "contract" | "quote" | "proposal" | "receipt" | "statement" | "cuenta_cobro" | "commercial_invoice";
+                status?: "queued" | "rendering" | "rendered" | "failed" | "superseded";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentsListDto"];
+                };
+            };
+        };
+    };
+    DocumentsController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IssueDocumentDto"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssueDocumentResultDto"];
+                };
+            };
+        };
+    };
+    DocumentsController_byId_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentDetailDto"];
+                };
+            };
+        };
+    };
+    DocumentsController_fileUrl_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentFileUrlDto"];
+                };
+            };
+        };
+    };
+    DocumentsController_regenerate_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -29261,7 +31948,76 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["IssueDocumentResultDto"];
+                };
+            };
+        };
+    };
+    DocumentsController_retry_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentDto"];
+                };
+            };
+        };
+    };
+    DocumentsDeliveryController_sendOptions_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentSendOptionsDto"];
+                };
+            };
+        };
+    };
+    DocumentsDeliveryController_sendDocument_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendDocumentDto"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SendDocumentResultDto"];
+                };
             };
         };
     };

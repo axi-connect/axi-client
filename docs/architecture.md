@@ -208,6 +208,8 @@ src/modules/<slice>/
 
 ### 3.3 Reglas de dependencia
 
+> **F7 Cobros (2026-09-22):** barrel `modules/documents/public.ts` — el slice de documentos es del negocio, no de cobros; lo monta Mi empresa hoy y pedidos/CRM/agenda/inbox mañana con un `subject {kind, id}` genérico. `FeatureDisabledState` vive en `shared/components/features/feature-disabled-state/`.
+
 Dentro de un slice (dependencias solo hacia adentro):
 
 1. `domain` → solo TypeScript puro y otros tipos de `domain`. **Prohibido** importar React, `http`, `zod`, componentes o infraestructura.

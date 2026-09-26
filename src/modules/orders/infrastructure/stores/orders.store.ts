@@ -3,6 +3,7 @@ import { errorMessage } from "@/core/lib/error-messages";
 import type {
   OrderCreatedEvent,
   OrderPaymentReportedEvent,
+  OrderPaymentVerifiedEvent,
   OrderStatusChangedEvent,
   OrderUpdatedEvent,
 } from "@/core/realtime/events";
@@ -103,6 +104,7 @@ type OrdersStore = {
   onOrderCreated: (evt: OrderCreatedEvent) => void;
   onOrderStatusChanged: (evt: OrderStatusChangedEvent) => void;
   onOrderPaymentReported: (evt: OrderPaymentReportedEvent) => void;
+  onOrderPaymentVerified: (evt: OrderPaymentVerifiedEvent) => void;
   onOrderUpdated: (evt: OrderUpdatedEvent) => void;
 
   dismissToast: (id: string) => void;
@@ -408,6 +410,36 @@ export const useOrdersStore = create<OrdersStore>((set, get) => ({
       ].slice(-MAX_TOASTS),
     }));
     if (state.soundEnabled) playOrderSound();
+    void get().refreshOrder(evt.order_id);
+    void get().fetchStats();
+    notifyDetailRefresh(evt.order_id);
+  },
+
+  /**
+   * F3 Cobros: el evento trae saldo y estado de cobro ya resueltos, así que la
+   * tarjeta se repinta al instante; el re-fetch solo confirma. Un abono NO
+   * mueve el pedido de columna: sigue confirmado.
+   */
+  onOrderPaymentVerified: (evt) => {
+    const known = get().ordersById[evt.order_id];
+    set((s) => ({
+      ordersById:
+        known !== undefined
+          ? {
+              ...s.ordersById,
+              [evt.order_id]: {
+                ...known,
+                status: evt.status,
+                paid_cents: evt.paid_cents,
+                balance_cents: evt.balance_cents,
+                payment_state: evt.payment_state,
+                pending_payment: false,
+              },
+            }
+          : s.ordersById,
+      columns: moveId(s.columns, evt.order_id, evt.status),
+      realtimeVersion: s.realtimeVersion + 1,
+    }));
     void get().refreshOrder(evt.order_id);
     void get().fetchStats();
     notifyDetailRefresh(evt.order_id);

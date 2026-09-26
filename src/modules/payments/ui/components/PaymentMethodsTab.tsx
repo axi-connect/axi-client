@@ -85,7 +85,7 @@ export function PaymentMethodsTab() {
                 showAlert({ tone: "success", title: "Medio de pago eliminado" });
               })
               .catch((error: unknown) =>
-                showAlert({ tone: "error", title: errorMessage(error, "No se pudo eliminar") }),
+                showAlert({ tone: "error", title: "No se pudo eliminar", description: errorMessage(error) }),
               )
               .finally(() => closeModal());
           },

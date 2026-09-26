@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useReconnect } from "@/core/realtime/use-reconnect";
 import { useSocket, useSocketEvent } from "@/core/realtime/use-socket";
 import { BILLING_INVOICE_CHANGED } from "@/modules/billing/domain/events";
 import { useActivationStore } from "@/modules/billing/infrastructure/stores/activation.store";
@@ -16,7 +16,6 @@ import { useBillingStore } from "@/modules/billing/infrastructure/stores/billing
  */
 export function useBillingSocket(): { connected: boolean } {
   const { socket, connected } = useSocket("inbox");
-  const wasConnectedRef = useRef(false);
 
   useSocketEvent(socket, "billing.invoice_issued", (payload) => {
     useBillingStore.getState().onInvoiceIssued(payload);
@@ -51,15 +50,12 @@ export function useBillingSocket(): { connected: boolean } {
   // caído se perdieron, y en facturación quedarse con un saldo viejo significa
   // enseñarle una deuda a quien ya pagó. El guard evita recargar en el primer
   // connect, donde la vista acaba de pedir el dato.
-  useEffect(() => {
-    if (connected && wasConnectedRef.current) {
-      void useBillingStore.getState().refresh();
-      if (useActivationStore.getState().view !== null) {
-        void useActivationStore.getState().refresh();
-      }
+  useReconnect(connected, () => {
+    void useBillingStore.getState().refresh();
+    if (useActivationStore.getState().view !== null) {
+      void useActivationStore.getState().refresh();
     }
-    wasConnectedRef.current = connected;
-  }, [connected]);
+  });
 
   return { connected };
 }

@@ -2,6 +2,7 @@
 
 import { use, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { emptyIfForbidden } from "@/core/api/problem";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { BrandLoader } from "@/shared/components/ui/brand-loader";
@@ -19,12 +20,14 @@ import {
   listAssignableUsers,
 } from "@/modules/crm/infrastructure/services/contacts-service.adapter";
 import { listDeals } from "@/modules/crm/infrastructure/services/deals-service.adapter";
+import { listOrders, type OrderDTO } from "@/modules/orders/public";
 import { subscribeJourneyChanged } from "@/modules/crm/infrastructure/journey-events";
 import { useJourneyRealtime } from "@/modules/crm/infrastructure/realtime/use-journey-realtime";
 import { ContactDataPanel } from "@/modules/crm/ui/components/contact-data/ContactDataPanel";
 import { Contact360Header } from "@/modules/crm/ui/components/contact-detail/Contact360Header";
 import { CopilotPanel } from "@/modules/crm/ui/components/contact-detail/CopilotPanel";
 import { ContactDealsCard } from "@/modules/crm/ui/components/contact-detail/ContactDealsCard";
+import { ContactOrdersDocumentsCard } from "@/modules/crm/ui/components/contact-detail/ContactOrdersDocumentsCard";
 import { ContactJourneyCard } from "@/modules/crm/ui/components/contact-detail/ContactJourneyCard";
 import { ContactTimeline } from "@/modules/crm/ui/components/contact-detail/ContactTimeline";
 import { ScorePanel } from "@/modules/crm/ui/components/contact-detail/ScorePanel";
@@ -36,6 +39,8 @@ type ContactBundle = {
   profile: ContactProfileDTO;
   tags: ContactTagDTO[];
   deals: DealDTO[];
+  /** F8 Cobros: pedidos del contacto para la card «Pedidos y documentos». */
+  orders: OrderDTO[];
   users: Array<{ id: string; name: string }>;
 };
 
@@ -62,18 +67,24 @@ export default function Contact360Page({
 
   const load = useCallback(async () => {
     try {
-      const [contact, profile, tags, dealsPage, users] = await Promise.all([
+      const [contact, profile, tags, dealsPage, ordersPage, users] = await Promise.all([
         getContact(contactId),
         getContactProfile(contactId),
         getContactTags(contactId),
         listDeals({ contact_id: contactId, page_size: 25 }),
-        listAssignableUsers().catch(() => []),
+        // Solo SIN PERMISO de pedidos o de usuarios la sección sale vacía y la
+        // página sigue; cualquier otro error se ve (una API caída no es «sin pedidos»)
+        listOrders({ contact_id: contactId, page_size: 10 }).catch(
+          emptyIfForbidden<{ data: OrderDTO[] }>({ data: [] }),
+        ),
+        listAssignableUsers().catch(emptyIfForbidden<Awaited<ReturnType<typeof listAssignableUsers>>>([])),
       ]);
       setBundle({
         contact,
         profile,
         tags,
         deals: dealsPage.data,
+        orders: ordersPage.data,
         users: users.filter((user) => user.status === "active"),
       });
     } catch (err) {
@@ -129,6 +140,8 @@ export default function Contact360Page({
             deals={bundle.deals}
             contact={{ id: contactId, label: contactDisplayName(bundle.contact) }}
           />
+          {/* F8 Cobros: los pedidos con saldo y el papel archivado a nombre de la persona */}
+          <ContactOrdersDocumentsCard contactId={contactId} orders={bundle.orders} />
         </div>
       </div>
 

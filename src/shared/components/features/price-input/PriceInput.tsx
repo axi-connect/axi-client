@@ -25,10 +25,17 @@ export function PriceInput({
   disabled,
   className,
   "aria-invalid": ariaInvalid,
+  onInvalidChange,
 }: {
   id?: string;
   value: number | null;
   onChange: (cents: number | null) => void;
+  /**
+   * `true` mientras lo escrito NO se entiende como dinero («1.000.000abc»).
+   * `onChange` recibe null tanto para vacío como para inválido; quien deba
+   * frenar el envío ante un monto ilegible distingue aquí los dos casos.
+   */
+  onInvalidChange?: (invalid: boolean) => void;
   currency?: string;
   placeholder?: string;
   disabled?: boolean;
@@ -37,11 +44,15 @@ export function PriceInput({
 }) {
   const [text, setText] = useState(() => centsToInputText(value, currency));
   const [focused, setFocused] = useState(false);
+  // Lo escrito no se entiende como dinero: se conserva con su error hasta que
+  // la persona lo corrija, en vez de borrarse en silencio (QA real F3).
+  const [invalid, setInvalid] = useState(false);
 
-  // Sincroniza cambios externos (reset del form, carga async) sin pisar el tecleo.
+  // Sincroniza cambios externos (reset del form, carga async) sin pisar el
+  // tecleo ni un texto ilegible que la persona todavía tiene que arreglar.
   useEffect(() => {
-    if (!focused) setText(centsToInputText(value, currency));
-  }, [value, currency, focused]);
+    if (!focused && !invalid) setText(centsToInputText(value, currency));
+  }, [value, currency, focused, invalid]);
 
   return (
     <div className={cn("relative", className)}>
@@ -64,11 +75,19 @@ export function PriceInput({
         onChange={(e) => {
           const raw = e.target.value;
           setText(raw);
-          onChange(raw.trim() === "" ? null : parseMoneyToCents(raw));
+          const cents = raw.trim() === "" ? null : parseMoneyToCents(raw);
+          const isInvalid = raw.trim() !== "" && cents === null;
+          setInvalid(isInvalid);
+          onChange(cents);
+          onInvalidChange?.(isInvalid);
         }}
         onBlur={() => {
           setFocused(false);
-          setText(centsToInputText(value, currency));
+          // Lo ilegible NO se borra al salir: quien escribió «un millón» lo ve
+          // con su error hasta que lo corrija, en vez de perderlo sin aviso y
+          // quedarse con el envío habilitado sin monto (QA real F3). Lo que sí
+          // se entiende se normaliza al formato de la moneda.
+          if (!invalid) setText(centsToInputText(value, currency));
         }}
       />
     </div>

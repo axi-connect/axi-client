@@ -75,6 +75,20 @@ describe("FeaturesTab", () => {
     expect(screen.getByText(/Sugerida por Hoteles y turismo/)).toBeInTheDocument();
   });
 
+  it("QA F1: sin tipo de negocio, el chip dice que es el valor de fábrica, no repite «Apagada»", () => {
+    mockFeatures.mockReturnValue({
+      features: [
+        feature({ code: "payment_plans", label: "Planes de pago", enabled: false, source: "default" }),
+        feature({ code: "documents", label: "Documentos", enabled: true, source: "default" }),
+      ],
+      loaded: true,
+      refresh: jest.fn() as never,
+    });
+    render(<FeaturesTab />);
+    expect(screen.getByText("Apagada de fábrica")).toBeInTheDocument();
+    expect(screen.getByText("Encendida de fábrica")).toBeInTheDocument();
+  });
+
   it("una función fijada por Axi no se puede tocar y lo explica", () => {
     mockFeatures.mockReturnValue({
       features: [feature({ code: "documents", label: "Documentos", enabled: false, source: "platform", locked: true })],

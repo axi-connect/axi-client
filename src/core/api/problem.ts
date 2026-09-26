@@ -67,7 +67,23 @@ export const API_ERROR_CODES = {
   featureDisabled: "features/feature_disabled",
   /** Axi fijó la función para este tenant: el interruptor del panel no puede cambiarla. */
   featureLockedByPlatform: "features/locked_by_platform",
+  /** F3 Cobros: verificar sin monto cuando el tenant cobra por partes. */
+  paymentAmountRequired: "orders/payment_amount_required",
+  /** F3 Cobros: el pago verificado supera el saldo del pedido. */
+  paymentExceedsBalance: "orders/payment_exceeds_balance",
   outsideServiceWindow: "channels/outside_service_window",
+  /** F9 Cobros: enviar por correo un documento cuyo contacto no tiene correo en la ficha. */
+  documentContactWithoutEmail: "documents/contact_without_email",
+  /** F9 Cobros: ya hay un envío en curso por ese canal (doble clic, otro operador). */
+  documentDeliveryInFlight: "documents/delivery_in_flight",
+  /** F9 Cobros: el documento no tiene a quién enviarse (sin contacto). */
+  documentNoCounterparty: "documents/no_counterparty",
+  /** F4b Cobros: ya hay una promesa de pago viva en ese plan. */
+  promiseExists: "collections/promise_exists",
+  /** F4b Cobros: las cuotas pendientes no suman el saldo. */
+  scheduleMismatch: "collections/schedule_mismatch",
+  /** F4b Cobros: el plan no está activo (saldado, cancelado o en pausa). */
+  planNotActive: "collections/plan_not_active",
   invalidTransition: "conversations/invalid_transition",
   handoffConflict: "conversations/handoff_conflict",
   notFound: "resource/not_found",
@@ -225,4 +241,18 @@ export async function parseHttpError(res: Response): Promise<HttpError> {
     problem,
     retryAfterSeconds,
   });
+}
+
+/**
+ * Para una sección OPCIONAL de una página compuesta: si el usuario no tiene el
+ * permiso de esa sección (403) se pinta vacía y el resto de la página sigue;
+ * cualquier otro error (red caída, 500, 404 del recurso) sube y se ve. Un
+ * `catch` que devuelve vacío para todo convertiría una API caída en «este
+ * contacto no tiene pedidos», que es mentira.
+ */
+export function emptyIfForbidden<T>(fallback: T): (error: unknown) => T {
+  return (error) => {
+    if (isHttpError(error) && error.status === 403) return fallback;
+    throw error;
+  };
 }

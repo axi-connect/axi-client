@@ -22,6 +22,23 @@ describe("notificationTarget", () => {
     expect(notificationTarget("order.created", {})).toBe("/orders")
   })
 
+  it("resuelve document.* al pedido, si no a la ficha del contacto, si no a nada (F8 Cobros)", () => {
+    expect(notificationTarget("document.failed", { order_id: "o1", contact_id: "c1" })).toBe(
+      "/orders/o1",
+    )
+    expect(notificationTarget("document.failed", { contact_id: "c1" })).toBe("/crm/contacts/c1")
+    expect(notificationTarget("document.failed", { document_id: "d1" })).toBeNull()
+  })
+
+  it("F9: «no se pudo enviar» es de la misma familia y lleva al pedido, donde está Reintentar", () => {
+    expect(
+      notificationTarget("document.delivery_failed", { order_id: "o1", contact_id: "c1" }),
+    ).toBe("/orders/o1")
+    expect(notificationTarget("document.delivery_failed", { contact_id: "c1" })).toBe(
+      "/crm/contacts/c1",
+    )
+  })
+
   it("resuelve crm.deal_* al rail del board (CRM F0)", () => {
     expect(notificationTarget("crm.deal_created", { deal_id: "d1" })).toBe(
       "/crm/pipeline/deal/d1",

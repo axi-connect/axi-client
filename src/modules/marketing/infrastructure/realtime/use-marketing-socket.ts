@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useReconnect } from "@/core/realtime/use-reconnect";
 import { useSocket, useSocketEvent } from "@/core/realtime/use-socket";
 import { useOverviewStore } from "@/modules/marketing/infrastructure/stores/overview.store";
 
@@ -19,7 +19,6 @@ import { useOverviewStore } from "@/modules/marketing/infrastructure/stores/over
 export function useMarketingSocket() {
   const { socket, connected } = useSocket("inbox");
   const store = useOverviewStore;
-  const wasConnectedRef = useRef(false);
 
   useSocketEvent(socket, "marketing.campaign_status_changed", (payload) => {
     store.getState().onCampaignStatusChanged(payload);
@@ -37,12 +36,7 @@ export function useMarketingSocket() {
     store.getState().onOptOutCreated(payload);
   });
 
-  useEffect(() => {
-    if (connected && wasConnectedRef.current) {
-      void store.getState().load();
-    }
-    wasConnectedRef.current = connected;
-  }, [connected, store]);
+  useReconnect(connected, () => store.getState().load());
 
   return { connected };
 }

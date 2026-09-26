@@ -301,8 +301,69 @@ export type OrderStatusChangedEvent = OrderRealtimeSummary & {
 /** Comprobante/reporte de pago (IA o manual). */
 export type OrderPaymentReportedEvent = OrderRealtimeSummary & { payment_id: string };
 
+/**
+ * F3 Cobros: un pago quedó verificado y el pedido tiene saldo nuevo. Va aparte
+ * de `order.status_changed` porque un abono mueve el dinero sin mover el estado
+ * del pedido. Trae las cifras ya resueltas: nadie las recalcula.
+ */
+export type OrderPaymentVerifiedEvent = OrderRealtimeSummary & {
+  payment_id: string;
+  amount_cents: number;
+  paid_cents: number;
+  balance_cents: number;
+  payment_state: "unpaid" | "partially_paid" | "paid";
+  service_date: string | null;
+};
+
 /** Edición de items/notas/descuento en draft|pending. */
 export type OrderUpdatedEvent = OrderRealtimeSummary;
+
+// ---------------------------------------------------------------------------
+// Documentos (F8 Cobros) — el PDF de un documento quedó archivado o su render
+// falló. Los publica la API al consumir `document_events` (el worker no tiene
+// bus). El WS AVISA, no sincroniza: ids, número y estado; el rail vuelve a
+// pedir la lista. Room company_{id}, namespace /inbox.
+// Payload espejo de axi-server documents/infrastructure/queue/document_events.processor.ts
+// ---------------------------------------------------------------------------
+
+/** Lo que TODO evento `document.*` trae para saber si nos concierne: ids de
+ * la entidad emisora y de la persona, número y etiqueta. */
+export type DocumentEventIdentity = {
+  company_id: string;
+  document_id: string;
+  type_code: string | null;
+  /** Etiqueta del tipo («Contrato»): quien escucha no conoce el catálogo. */
+  type_label: string;
+  number: string | null;
+  contact_id: string | null;
+  order_id: string | null;
+  payment_id: string | null;
+};
+
+export type DocumentLifecycleEvent = DocumentEventIdentity & {
+  status: "rendered" | "failed";
+  error_code: string | null;
+};
+
+export type DocumentIssuedEvent = DocumentLifecycleEvent & { status: "rendered" };
+export type DocumentFailedEvent = DocumentLifecycleEvent & { status: "failed" };
+
+/**
+ * F9 Cobros: una entrega cambió de estado (`queued → sent | failed | skipped`).
+ * Payload espejo de axi-server documents/application/delivery/delivery_events.ts.
+ * `delivered` no se publica (Meta no lo reporta al bus por coste): no existe aquí.
+ */
+export type DocumentDeliveryUpdatedEvent = DocumentEventIdentity & {
+  delivery_id: string;
+  channel: "whatsapp" | "email";
+  status: "queued" | "sent" | "failed" | "skipped";
+  skip_reason: string | null;
+  error_code: string | null;
+  /** `document` = salió el PDF; `hsm_notice` = salió la plantilla de aviso. */
+  content_kind: string | null;
+  attempt: number;
+  requested_by: "user" | "system";
+};
 
 // ---------------------------------------------------------------------------
 // CRM (F0) — deals/actividades/imports en vivo. Rooms company_{id} (+
@@ -948,7 +1009,11 @@ export type InboxServerEvents = {
   "order.created": (payload: OrderCreatedEvent) => void;
   "order.status_changed": (payload: OrderStatusChangedEvent) => void;
   "order.payment_reported": (payload: OrderPaymentReportedEvent) => void;
+  "order.payment_verified": (payload: OrderPaymentVerifiedEvent) => void;
   "order.updated": (payload: OrderUpdatedEvent) => void;
+  "document.issued": (payload: DocumentIssuedEvent) => void;
+  "document.failed": (payload: DocumentFailedEvent) => void;
+  "document.delivery_updated": (payload: DocumentDeliveryUpdatedEvent) => void;
   "crm.deal_created": (payload: CrmDealCreatedEvent) => void;
   "crm.deal_updated": (payload: CrmDealUpdatedEvent) => void;
   "crm.deal_stage_changed": (payload: CrmDealStageChangedEvent) => void;

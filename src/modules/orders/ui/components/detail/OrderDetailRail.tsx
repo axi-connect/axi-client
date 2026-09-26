@@ -26,12 +26,16 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { ShopifyOriginBadge, StatusDotBadge } from "@/shared/components/ui/status-badges";
 import { FieldList } from "@/shared/components/features/field-list";
+import { PaymentPlanBlock } from "@/modules/collections/ui/components/PaymentPlanBlock";
+import { DocumentsList, latestChange } from "@/modules/documents/public";
+import { OrderBalanceBlock } from "./OrderBalanceBlock";
 import {
   describeDelivery,
   describeShippingLine,
   externalChargeDelta,
   formatMoney,
   mapOrderToRow,
+  variantLabelText,
   orderNumberLabel,
   SHIPPING_STATE_LABELS,
   type ConversationUsageDTO,
@@ -101,6 +105,8 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
   const [transitionReq, setTransitionReq] = useState<TransitionRequest | null>(null);
   const [reportingPayment, setReportingPayment] = useState(false);
   const [review, setReview] = useState<PaymentReview | null>(null);
+  // F8: cuándo se reprogramó el plan; el contrato lo pinta, así que cuenta para «desactualizado».
+  const [scheduleChangedAt, setScheduleChangedAt] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -151,7 +157,10 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
       />
       <aside
         aria-label="Detalle del pedido"
-        className="relative flex h-full w-full max-w-md flex-col overflow-hidden border-l border-border bg-secondary/50 backdrop-blur-none lg:w-[380px] lg:rounded-2xl lg:border"
+        // En móvil es una pantalla, no una superposición: fondo SÓLIDO (con
+        // `bg-secondary/50` se veía la lista de pedidos detrás, QA real F3).
+        // En escritorio convive con el tablero y conserva su tinte.
+        className="relative flex h-full w-full max-w-md flex-col overflow-hidden border-l border-border bg-background backdrop-blur-none lg:w-[380px] lg:rounded-2xl lg:border lg:bg-secondary/50"
       >
         {/* Header */}
         <header className="flex items-start justify-between gap-2 border-b border-border bg-background/80 p-4">
@@ -189,6 +198,18 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
             <p className="text-sm text-muted-foreground">El pedido ya no existe.</p>
           ) : (
             <>
+              {/* F3 Cobros: lo primero es cuánto falta por cobrar */}
+              <OrderBalanceBlock order={order} />
+
+              {/* F4 Cobros: y cuándo tocaba cada parte. Se pinta solo si el
+                  pedido tiene plan — sin la función, esta sección no existe. */}
+              <PaymentPlanBlock
+                orderId={order.id}
+                contactName={order.contact.full_name ?? "el cliente"}
+                refreshKey={order.updated_at}
+                onLoaded={(plan) => setScheduleChangedAt(plan?.schedule_changed_at ?? null)}
+              />
+
               {/* Artículos */}
               <section className="rounded-2xl border border-border bg-background p-4">
                 <SectionTitle>Artículos</SectionTitle>
@@ -201,7 +222,7 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
                           {item.quantity}× {item.product_name}
                         </p>
                         {item.variant_label !== null ? (
-                          <p className="truncate text-xs text-muted-foreground">{item.variant_label}</p>
+                          <p className="truncate text-xs text-muted-foreground">{variantLabelText(item.variant_label)}</p>
                         ) : null}
                       </div>
                       <p className="shrink-0 text-sm font-medium tabular-nums">
@@ -300,8 +321,9 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
                         <span
                           className={cn(
                             "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium",
-                            payment.status === "verified" && "bg-success/12 text-success",
-                            payment.status === "reported" && "bg-warning/15 text-warning",
+                            // §10: verde y ámbar como texto no llegan a 4,5:1; el tinte va al fondo
+                            payment.status === "verified" && "bg-success/12 text-foreground",
+                            payment.status === "reported" && "bg-warning/15 text-foreground",
                             payment.status === "rejected" && "bg-destructive/10 text-destructive",
                           )}
                         >
@@ -337,10 +359,18 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
                 )}
               </section>
 
+              {/* F8 Cobros: el papel de la reserva. La lista se gatea sola (función
+                  `documents` + permiso de lectura): sin ellos no pinta nada. */}
+              <DocumentsList
+                subject={{ kind: "order", id: order.id }}
+                subjectLabel={`la reserva ${orderNumberLabel(order.order_number)}`}
+                subjectUpdatedAt={latestChange(order.updated_at, scheduleChangedAt)}
+              />
+
               {/* Actividad */}
               <section className="space-y-3">
                 <SectionTitle>Actividad</SectionTitle>
-                <OrderTimeline events={events} />
+                <OrderTimeline events={events} currency={order.currency} />
               </section>
 
               {/* Detalles */}
@@ -513,6 +543,7 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
         ) : null}
         <PaymentReviewDialog
           orderId={orderId}
+          order={order}
           review={review}
           onOpenChange={(open) => {
             if (!open) setReview(null);

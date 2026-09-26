@@ -31,6 +31,44 @@ const LABELS: Record<string, string> = {
 	"meta": "Meta",
 	"acciones": "Acciones",
 	"resultados": "Resultados",
+	// Cobros y ajustes (QA real F1–F4: la miga decía «company › funciones»)
+	"company": "Mi empresa",
+	"funciones": "Funciones",
+	"documentos": "Documentos",
+	"sucursales": "Sucursales",
+	"payments": "Pagos",
+	"moneda": "Moneda y TRM",
+	"plan": "Plan de pagos",
+	"recordatorios": "Recordatorios",
+	"orders": "Pedidos",
+	"receivables": "Cartera",
+	"catalog": "Catálogo",
+	"products": "Productos",
+	"product-types": "Tipos de producto",
+	"shipping": "Envíos",
+	"channels": "Canales",
+	"integrations": "Integraciones",
+	"crm": "CRM",
+	"contacts": "Contactos",
+	"billing": "Facturación",
+	"invoices": "Facturas",
+}
+
+/**
+ * Un identificador no es una etiqueta: la miga no enseña «0199a3f2-…» (QA real
+ * F3/F4). Se nombra por la ruta que lo contiene; sin nombre conocido, «Detalle».
+ * Lo que un módulo declare en `children` sigue mandando.
+ */
+const ID_SEGMENT = /^(?:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|\d+)$/i
+const DETAIL_LABELS: Record<string, string> = {
+	"/orders": "Pedido",
+	"/catalog/products": "Producto",
+	"/catalog/product-types": "Tipo de producto",
+	"/crm/contacts": "Contacto",
+	"/billing/invoices": "Factura",
+	"/settings/channels": "Canal",
+	"/settings/integrations": "Integración",
+	"/marketing/campaigns": "Campaña",
 }
 
 /**
@@ -55,7 +93,8 @@ export function buildCrumbs(pathname: string, config: readonly BreadcrumbConfig[
 		const href = "/" + parts.slice(0, idx + 1).join("/")
 		const parent = "/" + parts.slice(0, idx).join("/")
 		const childLabels = config.map((entry) => entry.children?.[parent]).find((labels) => labels !== undefined)
-		const label = childLabels?.[seg] ?? childLabels?.["*"] ?? LABELS[seg] ?? seg
+		const idLabel = ID_SEGMENT.test(seg) ? (DETAIL_LABELS[parent] ?? "Detalle") : undefined
+		const label = childLabels?.[seg] ?? childLabels?.["*"] ?? LABELS[seg] ?? idLabel ?? seg
 		return { href, label, linked: !unlinked.has(href) }
 	})
 }

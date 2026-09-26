@@ -430,8 +430,12 @@ export function ProductForm({ onCreated, setAlert }: ProductFormProps) {
             )}
           />
 
+          {/* Las dos ramas ocupan la MISMA posición del árbol: sin `key`, React
+              reutiliza el Controller y el editor de variantes recibe en su
+              primer render el string del SKU (`value.map is not a function`). */}
           {variantMode === "simple" ? (
             <FormField
+              key="default_sku"
               name="default_sku"
               control={form.control}
               render={({ field }) => (
@@ -447,6 +451,7 @@ export function ProductForm({ onCreated, setAlert }: ProductFormProps) {
             />
           ) : (
             <FormField
+              key="variants"
               name="variants"
               control={form.control}
               render={({ field, fieldState }) => (

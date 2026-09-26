@@ -25,6 +25,21 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   [API_ERROR_CODES.capabilityNotGranted]: "Tu plan no incluye esta función. Puedes ampliarlo desde Facturación",
   [API_ERROR_CODES.usageLimitExceeded]: "Alcanzaste el límite de uso del plan",
   [API_ERROR_CODES.outsideServiceWindow]: "Fuera de la ventana de 24 h de WhatsApp: se requiere plantilla",
+  // Envío de documentos (F9 Cobros). Dicen qué hacer, no qué falló.
+  [API_ERROR_CODES.documentContactWithoutEmail]:
+    "El contacto no tiene correo en su ficha. Añádelo allí o usa otro correo solo esta vez",
+  [API_ERROR_CODES.documentDeliveryInFlight]:
+    "Ese envío ya va en camino. La fila del documento avisa cuando salga",
+  [API_ERROR_CODES.documentNoCounterparty]:
+    "Este documento no tiene un cliente al que enviarse",
+  "documents/not_rendered": "El PDF todavía no está listo: espera a que la fila diga «Listo»",
+  // Promesas y calendario del plan (F4b Cobros)
+  [API_ERROR_CODES.promiseExists]: "Ya hay una promesa de pago viva en este plan. Se resuelve pagando o cuando pase su fecha",
+  [API_ERROR_CODES.scheduleMismatch]: "Las cuotas pendientes tienen que sumar exactamente el saldo",
+  [API_ERROR_CODES.planNotActive]: "El plan de pagos no está activo: no admite promesas ni cambios de calendario",
+  "collections/invalid_template_variables":
+    "Un aviso usa variables que no existen y saldrían tal cual en el mensaje del cliente. Corrígelas antes de guardar",
+  "documents/already_superseded": "Este documento fue reemplazado: envía el vigente",
   [API_ERROR_CODES.invalidTransition]: "La conversación no admite esa transición",
   [API_ERROR_CODES.handoffConflict]: "Otro operador tomó la conversación primero",
   [API_ERROR_CODES.notFound]: "El recurso ya no existe",
@@ -345,6 +360,8 @@ const CODES_WITH_USEFUL_DETAIL = new Set([
   // El detail trae la lista exacta de scopes / las dos monedas.
   "integrations/missing_scopes",
   "integrations/currency_mismatch",
+  // El detail trae las dos cifras (lo que suman las cuotas y el saldo de AHORA).
+  "collections/schedule_mismatch",
 ]);
 
 /**

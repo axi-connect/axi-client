@@ -259,12 +259,23 @@ export function AgentStudioView({ mode, agentId = null }: { mode: "create" | "ed
         description={mode === "create" ? "Elige quién es, cómo suena y cómo atiende. Puedes cambiarlo todo después." : "Cambia su cara, su voz o sus reglas. Lo que guardes aplica en la siguiente conversación."}
         actions={
           mode === "edit" ? (
-            <Button asChild variant="outline" size="sm" className="rounded-full">
-              <Link href="/workspace/inbox">
-                <MessageSquareText className="size-4" aria-hidden />
-                Probar en el simulador
-              </Link>
-            </Button>
+            // Sin canal, la bandeja está vacía y el simulador no existe para el
+            // tenant: el botón no promete lo que no hay (QA real F6).
+            channels.length > 0 ? (
+              <Button asChild variant="outline" size="sm" className="rounded-full">
+                <Link href="/workspace/inbox">
+                  <MessageSquareText className="size-4" aria-hidden />
+                  Probar en una conversación
+                </Link>
+              </Button>
+            ) : (
+              <Button asChild variant="outline" size="sm" className="rounded-full">
+                <Link href="/settings/channels" title="Conecta WhatsApp para probar tu agente con conversaciones reales">
+                  <MessageSquareText className="size-4" aria-hidden />
+                  Conecta un canal para probarlo
+                </Link>
+              </Button>
+            )
           ) : undefined
         }
       />

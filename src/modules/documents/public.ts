@@ -1,0 +1,104 @@
+/**
+ * SUPERFICIE PÚBLICA del slice `documents` (architecture.md §3.3; F7 del
+ * programa Cobros). Los documentos son el papel de la EMPRESA y los consume
+ * cualquier proceso —pedidos, CRM, agenda, inbox—, así que todo lo que un
+ * consumidor necesita se declara AQUÍ: un solo juego de componentes, nada se
+ * replica por proceso.
+ *
+ * Consumidores hoy: Mi empresa › Documentos (`/settings/company/documentos`),
+ * que monta `DocumentsTab`; el rail del pedido y la ficha del contacto (F8),
+ * que montan `DocumentsList` con un `subject {kind, id}` genérico — la misma
+ * forma que `DocumentSubjectRef` en el servidor — para que el primer consumidor
+ * no imponga su vocabulario. `SendDocumentDialog` (F9) lo monta la propia
+ * lista: los consumidores no lo ven, solo la fila que dice por dónde salió.
+ */
+export {
+  WHEN_PATH_LABELS,
+  blockSummary,
+  extractVariableNames,
+  templateHash,
+  unknownTemplateVariables,
+  type BlockCatalogView,
+  type BlockType,
+  type DocumentTemplateDTO,
+  type DocumentTypeView,
+  type DocumentTypesDTO,
+  type DocumentsSettingsDTO,
+  type TemplateBlock,
+  type TemplateDocument,
+  type TemplateVariableView,
+} from "./domain/template";
+export {
+  getDocumentsSettings,
+  listDocumentTemplates,
+  listDocumentTypes,
+  previewDocumentTemplate,
+  resetDocumentTemplate,
+  saveDocumentTemplate,
+  updateDocumentsSettings,
+} from "./infrastructure/services/documents-service.adapter";
+export { useTemplatePreview } from "./infrastructure/hooks/use-template-preview";
+export { DocumentTemplateEditor } from "./ui/components/templates/DocumentTemplateEditor";
+export {
+  TemplatePreviewFrame,
+  withHostFonts,
+} from "./ui/components/templates/TemplatePreviewFrame";
+export { DocumentKindTabs } from "./ui/components/templates/DocumentKindTabs";
+export { DocumentSettingsForm } from "./ui/forms/DocumentSettingsForm";
+export { DocumentsTab } from "./ui/DocumentsTab";
+
+// ───────────────────────── Documentos emitidos (F8) ─────────────────────────
+export {
+  DOCUMENT_STATUS_LABELS,
+  MAX_RENDER_ROUNDS,
+  canRetry,
+  documentStatusTone,
+  isDocumentInFlight,
+  isOutdated,
+  issueOptions,
+  latestChange,
+  sortDocuments,
+  type DocumentDTO,
+  type DocumentStatus,
+  type DocumentSubject,
+  type IssueSubject,
+} from "./domain/document";
+export {
+  getDocument,
+  getDocumentFileUrl,
+  issueDocument,
+  listDocuments,
+  regenerateDocument,
+  retryDocument,
+} from "./infrastructure/services/documents-service.adapter";
+export { openDocumentFile } from "./infrastructure/lib/open-document-file";
+export { useDocuments } from "./infrastructure/hooks/use-documents";
+export { useDocumentsSocket } from "./infrastructure/realtime/use-documents-socket";
+export { DocumentsList } from "./ui/components/list/DocumentsList";
+export { IssueDocumentMenu } from "./ui/components/list/IssueDocumentMenu";
+export { PaperMark } from "./ui/components/list/PaperMark";
+
+// ───────────────────────── Entrega (F9) ─────────────────────────
+export {
+  CHANNEL_LABELS,
+  DELIVERY_SKIP_LABELS,
+  DELIVERY_STATUS_LABELS,
+  canSend,
+  deliveryLine,
+  deliveryLines,
+  deliveryTone,
+  emailAvailability,
+  whatsappAvailability,
+  type DeliveryChannel,
+  type DeliveryLine,
+  type DeliveryStatus,
+  type DocumentDeliveryDTO,
+  type DocumentDetailDTO,
+  type DocumentSendOptionsDTO,
+  type SendDocumentResultDTO,
+} from "./domain/delivery";
+export {
+  getDocumentSendOptions,
+  sendDocument,
+} from "./infrastructure/services/documents-service.adapter";
+export { SendDocumentDialog } from "./ui/components/list/SendDocumentDialog";

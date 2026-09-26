@@ -40,8 +40,10 @@ jest.mock("@/modules/agents/infrastructure/services/voice-service.adapter", () =
     }),
   getVoiceSettings: () => Promise.resolve(voiceSettings),
 }));
+const CONNECTED = [{ id: "ch1", name: "Savage · WhatsApp", kind: "whatsapp_cloud", status: "connected", default_ai_agent_id: "a1" }];
+let channelsData: unknown[] = CONNECTED;
 jest.mock("@/modules/channels/public", () => ({
-  listChannels: () => Promise.resolve({ data: [{ id: "ch1", name: "Savage · WhatsApp", kind: "whatsapp_cloud", status: "connected", default_ai_agent_id: "a1" }] }),
+  listChannels: () => Promise.resolve({ data: channelsData }),
   ChannelKindIcon: () => <span data-testid="channel-icon" />,
 }));
 
@@ -134,6 +136,23 @@ describe("AgentStudioView", () => {
     expect(setAgentIntentions).toHaveBeenCalledWith("a1", { intentions: [] });
     expect(await screen.findByText(/guardado hace un momento/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Guardar cambios" })).toBeDisabled();
+  });
+
+  it("QA F6: sin canal el botón lleva a conectar uno; con canal, a probar en una conversación — nunca promete un simulador", async () => {
+    channelsData = [];
+    getAgentById.mockResolvedValueOnce(AGENT);
+    const { unmount } = renderStudio({ mode: "edit", agentId: "a1" });
+    const connect = await screen.findByRole("link", { name: /Conecta un canal para probarlo/ });
+    expect(connect).toHaveAttribute("href", "/settings/channels");
+    expect(screen.queryByText(/simulador/i)).toBeNull();
+    unmount();
+
+    channelsData = CONNECTED;
+    getAgentById.mockResolvedValueOnce(AGENT);
+    renderStudio({ mode: "edit", agentId: "a1" });
+    const test = await screen.findByRole("link", { name: /Probar en una conversación/ });
+    expect(test).toHaveAttribute("href", "/workspace/inbox");
+    expect(screen.queryByRole("link", { name: /Conecta un canal/ })).toBeNull();
   });
 
   it("con la voz de empresa apagada el bloque de voz se deshabilita y explica dónde encenderla", async () => {
