@@ -9,7 +9,7 @@ import { useAuth } from "@/shared/auth/auth.hooks";
 import { DetailSheet } from "@/shared/components/features/detail-sheet";
 import { EmptyState } from "@/shared/components/features/empty-state";
 import { TableSkeleton } from "@/shared/components/features/loading";
-import { PageHeader } from "@/shared/components/layout/page-header";
+import { MarketingHeader } from "@/modules/marketing/ui/components/MarketingHeader";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import {
@@ -220,7 +220,7 @@ export function PromotionsView() {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader
+      <MarketingHeader
         title="Promociones"
         description={
           storeGovernsOrders

@@ -9,7 +9,7 @@ import { useAuth } from "@/shared/auth/auth.hooks";
 import { DetailSheet } from "@/shared/components/features/detail-sheet";
 import { EmptyState } from "@/shared/components/features/empty-state";
 import { TableSkeleton } from "@/shared/components/features/loading";
-import { PageHeader } from "@/shared/components/layout/page-header";
+import { MarketingHeader } from "@/modules/marketing/ui/components/MarketingHeader";
 import { Button } from "@/shared/components/ui/button";
 import type {
   AutomationDTO,
@@ -208,7 +208,7 @@ export function AutomationsView() {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader
+      <MarketingHeader
         title="Recuperación de ventas"
         description="Reglas que reenganchan solas a quien se quedó a medias."
         actions={

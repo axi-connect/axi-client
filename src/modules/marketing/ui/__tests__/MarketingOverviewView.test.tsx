@@ -10,6 +10,8 @@ import { MarketingOverviewView } from "../MarketingOverviewView";
  * montaje por estado inicial, no por aserción.
  */
 
+jest.mock("next/navigation", () => ({ usePathname: () => "/marketing", useRouter: () => ({ push: jest.fn() }) }));
+
 jest.mock("@/shared/auth/auth.hooks", () => ({
   useAuth: () => ({ hasPermission: () => true }),
 }));

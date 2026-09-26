@@ -404,6 +404,8 @@ Los primitivos viven en `shared/components/ui/` (shadcn) y los features en `shar
 | Necesitas | Usa |
 |---|---|
 | Listado con paginación/búsqueda | `DataTable` + `usePaginatedList` |
+| Tabla que no es un listado paginado (una configuración, un detalle) | `Table` (`ui/table.tsx`) dentro de una tarjeta `@container`; ver «Tablas y scroll» abajo |
+| Cualquier zona que scrollea (tabla, panel, lista larga) | La barra de axi: `.axi-scroll` (`globals.css`); nunca la barra del navegador por defecto |
 | Formulario | `DynamicForm` + `*.config.tsx` (Zod) |
 | Panel de detalle | `DetailSheet` (`fetchDetail`) |
 | Aviso de que algo pasó (guardado, error, evento) | `useAlert().showAlert` — o `notify` de `@/core/notifications` para una promesa (§9.4) |
@@ -425,6 +427,22 @@ Los primitivos viven en `shared/components/ui/` (shadcn) y los features en `shar
 | Pestañas, sub-navegación de sección y filtros segmentados | La pastilla de §9.3 — `NavTabs`, `Tabs variant="pill"` o `SegmentedControl` |
 | Carga de vista/tabla/formulario | Ver §9.1 (Estados de carga) |
 | Conversación con un asistente de IA (avatar, barra acoplable, burbujas, pregunta con opciones, «pensando», compositor con voz opcional, píldoras, aura) | El kit `shared/components/features/assistant` (`AssistantChatShell` + `AssistantDock` + `AssistantHeroAvatar` + `AssistantBubble`/`UserBubble`/`SystemNote` + `AssistantQuestion` + `AssistantThinking` + `AssistantComposer` + `StarterPills`; el campo es `.assistant-field`). Lo consumen Axel (`cmo`) y Alba (`intake`); cada slice aporta store, copy y personaje (nombre + accesorio). La firma «✦ nombre» es SIEMPRE `AssistantMark`. El inbox de operadores es mensajería (ticks, media) y sigue aparte |
+
+**Tablas y scroll** (regla del dueño, 2026-09-26: «las tablas no pueden desbordar en los diferentes tamaños y el
+scroll debe ser optimizado, con el estilo de axi del scroll»):
+
+- `Table` trae su propio contenedor (`data-slot="table-container"`): `overflow-x-auto` + `overscroll-x-contain` +
+  `.axi-scroll`. Si una tabla no cabe, scrollea **dentro de su tarjeta** con la barra de marca; la página nunca se
+  mueve y el gesto no se encadena al scroll del panel. Una cabecera `sticky` no sirve dentro de ese contenedor.
+- El scroll lateral es el último recurso: la tarjeta es un `@container` y las columnas secundarias aparecen según el
+  ancho de **la tabla** (`hidden @xl:table-cell`), no de la pantalla. A 1024 px con el menú abierto la tabla mide
+  ~720 px. Con la tabla estrecha, esos datos (y las acciones) suben a la primera columna.
+- Primera columna con `@md:min-w-44`, nombres con `truncate` + `title`, piezas de fecha y teléfono en `whitespace-nowrap`.
+- Acciones de fila **en la fila**, no en un `DropdownMenu`: el del sistema no se portaliza y el contenedor lo recortaría.
+- Se verifica en el render: cero `scroll-horizontal-del-panel`, cero `tabla-fuera-de-su-tarjeta` y el scroll interno
+  medido (`docs/qa/marketing-premium/arnes/shoot.js`).
+- Referencia: Configuración de marketing (`modules/marketing/ui/{OptOutsView,TemplatesView,MetaTemplatesView}.tsx`,
+  `components/premium.tsx`).
 
 Patrones de estado obligatorios en toda vista: **cargando** (§9.1), **vacío** (icono + frase + acción sugerida), **error** (`errorMessage(err)` + reintento).
 
@@ -826,6 +844,9 @@ Para un formulario de varios pasos que llega precargado (Preparar entrega):
 ---
 
 ## 10. Accesibilidad (no negociable)
+
+> Objetivo táctil de 24 px aunque el control se vea más pequeño: un `::before` con inset negativo amplía la zona de
+> toque sin cambiar el aspecto (`Switch`, la «x» de `OptionsInput`). El padre no puede recortarla con `overflow-hidden`.
 
 - Contraste AA: 4.5:1 texto, 3:1 texto grande y componentes UI — verificado en light y dark.
 - Focus visible siempre: `focus-visible:ring-ring` (coral) en todo elemento interactivo; jamás `outline: none` sin reemplazo.

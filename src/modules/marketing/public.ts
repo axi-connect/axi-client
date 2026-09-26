@@ -5,6 +5,10 @@
  * el cliente lleva más de 24 h sin escribir. Las consume el CRM para la
  * «plantilla de apertura» de una tarea de agente (F2 del seguimiento autónomo).
  * El ciclo de vida sigue siendo de marketing/channels; aquí solo se lee.
+ *
+ * `MarketingNav`/`MarketingHeader`: la navegación única del módulo. La monta el
+ * layout de Captación (`/marketing/leads`, slice `prospecting`), que vive bajo
+ * marketing y comparte su barra.
  */
 export {
   listHsmTemplates,
@@ -28,3 +32,4 @@ export {
   formatUsd,
   type BulkOpeningCost,
 } from "./domain/template-cost";
+export { MarketingHeader, MarketingNav, MARKETING_SECTIONS } from "./ui/components/MarketingHeader";

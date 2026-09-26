@@ -75,21 +75,18 @@ describe("canal cloud con plantillas", () => {
   });
 
   it("solo ofrece canales cloud: WhatsApp Web no admite plantillas de Meta", () => {
-    const options = screen.getAllByRole("option").map((o) => o.textContent);
-    expect(options).toHaveLength(1);
-    expect(options[0]).toContain("WhatsApp Cloud");
+    // El selector es el `Select` del sistema (Radix: las opciones se portalizan al abrir). Cerrado muestra el
+    // canal elegido, que tiene que ser el cloud: el de WhatsApp Web ni siquiera entra en la lista.
+    expect(screen.getByRole("combobox", { name: "Canal de WhatsApp" })).toHaveTextContent("WhatsApp Cloud");
   });
 
   it("cuenta cuántas sirven de verdad, por uso: abrir seguimientos y promociones", () => {
     // Abren seguimientos las aprobadas que no son de autenticación (marketing +
     // utility: 2); promocionan solo las aprobadas de marketing (1). El contador
     // se compone de varias expresiones JSX: se lee el texto del nodo entero.
-    expect(
-      screen.getByText(
-        (_, el) =>
-          el?.tagName === "SPAN" && el.textContent === "2 para abrir seguimientos · 1 para promociones",
-      ),
-    ).toBeInTheDocument();
+    const approved = screen.getByRole("heading", { name: "Aprobadas" }).closest("section") as HTMLElement;
+    expect(approved).toHaveTextContent("1sirve para promociones");
+    expect(approved).toHaveTextContent("2 abren seguimientos del agente");
   });
 
   it("explica qué implica el estado de cada una, en las palabras del operador", () => {
@@ -215,7 +212,8 @@ describe("editar y borrar una plantilla", () => {
     ]);
     render(<MetaTemplatesView />);
 
-    expect(await screen.findByRole("button", { name: /Editar/ })).toBeEnabled();
+    // Dos copias de las acciones (tabla estrecha / ancha): las dos tienen que decir lo mismo.
+    for (const button of await screen.findAllByRole("button", { name: /Editar/ })) expect(button).toBeEnabled();
   });
 
   it("no deja editar la que Meta tiene en revisión, y dice por qué", async () => {
@@ -230,8 +228,8 @@ describe("editar y borrar una plantilla", () => {
     ]);
     render(<MetaTemplatesView />);
 
-    expect(await screen.findByRole("button", { name: /Editar/ })).toBeDisabled();
-    expect(screen.getByText(/Meta todavía la está revisando/)).toBeInTheDocument();
+    for (const button of await screen.findAllByRole("button", { name: /Editar/ })) expect(button).toBeDisabled();
+    expect(screen.getAllByText(/Meta todavía la está revisando/)[0]).toBeInTheDocument();
   });
 
   it("cuando el bloqueo tiene hora, la dice: un error se vuelve instrucción", async () => {
@@ -246,14 +244,15 @@ describe("editar y borrar una plantilla", () => {
     ]);
     render(<MetaTemplatesView />);
 
-    expect(await screen.findByText(/Podrás el/)).toBeInTheDocument();
+    expect((await screen.findAllByText(/Podrás el/))[0]).toBeInTheDocument();
   });
 
   it("borrar una APROBADA avisa de que Meta bloquea el nombre 30 días", async () => {
     api.listHsmTemplates.mockResolvedValue([hsm({ id: "h23", approval_status: "approved" })]);
     render(<MetaTemplatesView />);
 
-    fireEvent.click(await screen.findByRole("button", { name: "Borrar" }));
+    // Las acciones existen dos veces (bajo el estado en tabla estrecha, en su columna en ancha); CSS oculta una.
+    fireEvent.click((await screen.findAllByRole("button", { name: /^Borrar / }))[0]);
     // Borrar no es deshacer, y quien borra tiene que saberlo ANTES.
     expect(showModal).toHaveBeenCalledWith(
       expect.objectContaining({

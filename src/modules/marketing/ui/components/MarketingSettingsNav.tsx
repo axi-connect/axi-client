@@ -19,7 +19,7 @@ export function MarketingSettingsNav({ optOutCount }: { optOutCount?: number | n
     // `exact`: su href ES la base de la sección, así que por prefijo se
     // quedaría activa también en las otras tres.
     { href: BASE, label: "Ajustes", icon: Settings, exact: true },
-    { href: `${BASE}/templates`, label: "Plantillas", icon: FileText },
+    { href: `${BASE}/templates`, label: "Mensajes", icon: FileText },
     { href: `${BASE}/meta-templates`, label: "Plantillas de Meta", icon: BadgeCheck },
     {
       href: `${BASE}/opt-outs`,

@@ -17,7 +17,10 @@ jest.mock("@/core/providers/alert-provider", () => ({
   useAlert: () => ({ showAlert: jest.fn(), showModal, closeModal: jest.fn() }),
 }));
 
-jest.mock("next/navigation", () => ({ useRouter: () => ({ push: jest.fn() }) }));
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ push: jest.fn() }),
+  usePathname: () => "/marketing/campaigns",
+}));
 
 jest.mock("@/modules/marketing/infrastructure/services/campaigns-service.adapter", () => ({
   listCampaigns: jest.fn(),

@@ -2,13 +2,29 @@
 
 import { cn } from "@/core/lib/utils"
 
-function Table({ className, ...props }: React.ComponentProps<"table">) {
+/**
+ * La tabla viene con su propio contenedor de scroll (como el shadcn de origen):
+ * cuando no cabe, scrollea DENTRO de su tarjeta con la barra de axi y nunca
+ * empuja la página. `overscroll-x-contain`: al llegar al borde, el gesto no se
+ * encadena al scroll del panel ni dispara el «atrás» del navegador.
+ * `containerClassName` ajusta el contenedor (un alto máximo, un borde).
+ */
+function Table({
+  className,
+  containerClassName,
+  ...props
+}: React.ComponentProps<"table"> & { containerClassName?: string }) {
   return (
-    <table
-      data-slot="table"
-      className={cn("w-full caption-bottom text-sm", className)}
-      {...props}
-    />
+    <div
+      data-slot="table-container"
+      className={cn("axi-scroll relative w-full overflow-x-auto overscroll-x-contain", containerClassName)}
+    >
+      <table
+        data-slot="table"
+        className={cn("w-full caption-bottom text-sm", className)}
+        {...props}
+      />
+    </div>
   )
 }
 

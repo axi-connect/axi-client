@@ -13,7 +13,7 @@ import { usePaginatedList } from "@/shared/api/use-paginated-list";
 import { EmptyState } from "@/shared/components/features/empty-state";
 import { StatusBadge } from "@/shared/components/features/status-badge";
 import { TableSkeleton } from "@/shared/components/features/loading";
-import { PageHeader } from "@/shared/components/layout/page-header";
+import { MarketingHeader } from "@/modules/marketing/ui/components/MarketingHeader";
 import { Button } from "@/shared/components/ui/button";
 import BasicPagination from "@/shared/components/ui/pagination";
 import type { CampaignDTO } from "@/modules/marketing/domain/campaign";
@@ -125,7 +125,7 @@ export function CampaignsView() {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader
+      <MarketingHeader
         title="Campañas"
         description="Envíos masivos a un segmento de tu base. Al lanzarlas, la audiencia y el contenido quedan congelados."
         actions={

@@ -17,7 +17,7 @@ import { useAuth } from "@/shared/auth/auth.hooks";
 import { Button } from "@/shared/components/ui/button";
 import { EmptyState } from "@/shared/components/features/empty-state";
 import { StatTile } from "@/shared/components/features/stat-tile";
-import { PageHeader } from "@/shared/components/layout/page-header";
+import { MarketingHeader } from "@/modules/marketing/ui/components/MarketingHeader";
 import { isPromotionLive } from "@/modules/marketing/domain/promotion";
 import { useMarketingSocket } from "@/modules/marketing/infrastructure/realtime/use-marketing-socket";
 import {
@@ -79,8 +79,8 @@ export function MarketingOverviewView() {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader
-        title="Marketing"
+      <MarketingHeader
+        title="Lo que tus mensajes venden"
         description="Recupera ventas perdidas y habla con toda tu base de clientes."
         actions={
           canManage && (

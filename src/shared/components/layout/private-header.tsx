@@ -20,7 +20,8 @@ const LABELS: Record<string, string> = {
 	"campaigns": "Campañas",
 	"automations": "Recuperación",
 	"promotions": "Promociones",
-	"templates": "Plantillas",
+	// Solo existe /marketing/settings/templates: los textos propios del tenant.
+	"templates": "Mensajes",
 	"meta-templates": "Plantillas de Meta",
 	"opt-outs": "Bajas",
 	"new": "Nueva",

@@ -51,7 +51,8 @@ describe("ajustes cargados", () => {
 
   it("parte de lo que devuelve el servidor y no ofrece guardar sin cambios", () => {
     expect(screen.getByLabelText("Horas entre mensajes al mismo contacto")).toHaveValue(12);
-    expect(screen.getByRole("button", { name: "Guardar configuración" })).toBeDisabled();
+    // La barra de tinta con «Guardar» solo aparece cuando hay algo que guardar.
+    expect(screen.queryByRole("button", { name: "Guardar configuración" })).not.toBeInTheDocument();
     expect(screen.queryByText("Tienes cambios sin guardar")).not.toBeInTheDocument();
   });
 
@@ -93,7 +94,7 @@ describe("ajustes cargados", () => {
     fireEvent.change(screen.getByLabelText("Horas entre mensajes al mismo contacto"), {
       target: { value: "48" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Descartar cambios" }));
+    fireEvent.click(screen.getByRole("button", { name: "Descartar" }));
 
     await waitFor(() => expect(api.getMarketingSettings).toHaveBeenCalledTimes(2));
   });
