@@ -7,7 +7,7 @@
 > | Fase | Qué | Lienzo | Estado |
 > |---|---|---|---|
 > | F1 | Pipeline: tablero, detalle, ganar / perder, tabla, resumen de Axi, estados | https://claude.ai/artifact/XeAzi64SAmKKZX9fWUJKTL | Implementado y medido (2026-09-26) |
-> | F2 | Contactos: lista y ficha 360 | — | Por diseñar |
+> | F2 | Contactos: lista y ficha 360 | https://claude.ai/artifact/GhDJsXcao2JY4VdHMYVukc | Implementado y medido (2026-09-26) |
 > | F3 | Tareas | — | Por diseñar |
 > | F4 | Configuración: pipelines, recorrido, secuencias, segmentos, etiquetas, tareas de agente, importar | — | Por diseñar |
 >
@@ -102,6 +102,38 @@ Verjas:
 - `jest`: 483 suites y 3852 tests.
 - `next build`: OK.
 
-## 2. F2–F4
+## 2. F2 · Contactos
 
-Se diseñan después de F1, cada una con su lienzo y su aprobación antes de tocar código.
+Aprobado el 2026-09-26 («aprobado, procede a implementar F2»). Solo cliente: no toca el servidor.
+
+| Pieza | Hoy | Queda |
+|---|---|---|
+| `domain/contact-summary.ts` (nuevo) | — | Puro, con test de los dos signos: `scoreProgress` (el score en 5 tramos y la frase «Habló… Falta: …»), `newContactsSplit` (cómo llegan los nuevos), `contactNextUp` (se enfría → saldo → próxima insistencia → al día) |
+| `domain/contact.ts` | — | `primaryChannel`: el canal de la última vez que escribió, para la columna «Canal» y la cabecera |
+| Lista (`contacts/page.tsx`) | Título pequeño y tarjeta | Título en Nexa, «N personas · las de WhatsApp e Instagram llegan solas» y el bento `ContactsSummary`: «Nuevos» (`/contacts/stats` con período), «Cómo llegan los nuevos» (`by_stage`, monocromo) y la isla «Lo próximo: N posibles duplicados» (`/contacts/duplicates`). Error por ficha con «Reintentar»; `@container` (grid desde 56 rem, fila con scroll de marca debajo) |
+| Columnas | Badges tintados | Etapa en `StatePill` (Lead con el tono nuevo `info`), columna «Canal» (`ChannelKindIcon` + última vez), nombre y correo con ancho máximo por tramo (en una tabla un texto sin saltos ensancha la celda) |
+| Ficha 360 | Dos columnas de tarjetas | Cabecera nueva (nombre truncado, píldoras de copiar, contexto «ciudad · canal · desde»), bento `@container` (4 columnas desde 68 rem) con Recorrido, «Qué tan cerca está» (tramos, sin anillo), «Con nosotros» (solo con `orders:read`) y la isla «Lo próximo»; cuerpo en dos columnas desde `xl` |
+| `ContactJourneyCard` | Card con filas | Ficha del bento con los mismos textos (sus 9 tests intactos) y `onLoaded` para la isla: una sola petición del recorrido |
+| `CopilotPanel` | Superficie violeta | Tarjeta sólida «Axi»; el violeta solo en el icono; modos «Resumen / Siguiente paso / Borrador»; el motivo de «Regenerar» deshabilitado se dice, no va en un `title` |
+| Duplicados y fusión | Lista y diálogo | Parejas con motivo y confianza en tinta; diálogo sin la X de 16 px, columnas apiladas en el celular, «Escribe «X» para confirmar» |
+| `StatePill` (DS) | 4 tonos | + `info` (aditivo) |
+| `DataTable` (DS) | Casilla de 16 px | Cada casilla dentro de un `<label>` de 32 px: el objetivo es la etiqueta (el `::after` de `touchTarget` no pinta en un `<input>`) |
+
+### 2.1 Render medido (§12) — 2026-09-26
+
+Arnés `/root/axi/qa/premium/crm-f2-render.mjs` + `crm-f2-seed.py` sobre `axi_render`: la contacta de nombre de 45
+caracteres y correo de 49, 4 pedidos (pagados y con saldo), oportunidad quieta en Propuesta y una pareja de duplicados.
+Lista, ficha (1900 px de alto), duplicados y fusión × 390/768/1024/1280/1440 × claro/oscuro: **40 capturas sin
+hallazgos** (evidencia en `D:\axi-qa\premium\crm-f2`).
+
+Lo que el render corrigió: la tabla y la ficha a 390 (437/453 px de ancho), el bloque del nombre aplastado a 0 px por
+las acciones (base 0 en una fila que se parte), la cifra de «Con nosotros» empujando su unidad, títulos partidos
+(«Saldo pendiente», «Con saldo primero»), los selectores de filtro truncados, la silueta de datos con `1fr`, el diálogo
+de fusión desbordado a 768 px y las casillas de 16 px.
+
+Verjas: `tsc` (solo el preexistente de `ConversationPanel.test.tsx`), `next lint` 0 errores, `jest` 490 suites / 3900
+tests, `next build` OK.
+
+## 3. F3–F4
+
+Se diseñan después, cada una con su lienzo y su aprobación antes de tocar código.

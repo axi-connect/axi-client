@@ -37,16 +37,16 @@ export function ContactOrdersDocumentsCard({
   });
 
   return (
-    <section className="rounded-2xl border border-border bg-background p-4 md:p-6">
-      <div className="flex items-center justify-between gap-2">
-        <h3 className="text-base font-semibold">
+    <section className="rounded-3xl border border-border bg-card p-5 md:p-6">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <h3 className="font-heading text-lg font-bold">
           Pedidos y documentos{" "}
           <span className="text-sm font-normal text-muted-foreground tabular-nums">
             ({orders.length})
           </span>
         </h3>
         {orders.length > 0 ? (
-          <span className="text-xs text-muted-foreground">
+          <span className="text-xs whitespace-nowrap text-muted-foreground">
             Con saldo primero
           </span>
         ) : null}
@@ -117,12 +117,12 @@ export function ContactOrdersDocumentsCard({
                   }
                   className={cn(
                     "mt-2.5 h-1 overflow-hidden rounded-full",
-                    settled ? "bg-success" : "bg-secondary",
+                    settled ? "bg-foreground" : "bg-muted",
                   )}
                 >
                   {!settled ? (
                     <span
-                      className="block h-full rounded-full bg-brand"
+                      className="block h-full rounded-full bg-foreground"
                       style={{ width: `${progress.percent}%` }}
                     />
                   ) : null}

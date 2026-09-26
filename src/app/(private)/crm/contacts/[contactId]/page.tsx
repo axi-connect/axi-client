@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { emptyIfForbidden } from "@/core/api/problem";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
-import { BrandLoader } from "@/shared/components/ui/brand-loader";
 import {
   contactDisplayName,
   type ContactDTO,
@@ -31,6 +30,9 @@ import { ContactOrdersDocumentsCard } from "@/modules/crm/ui/components/contact-
 import { ContactJourneyCard } from "@/modules/crm/ui/components/contact-detail/ContactJourneyCard";
 import { ContactTimeline } from "@/modules/crm/ui/components/contact-detail/ContactTimeline";
 import { ScorePanel } from "@/modules/crm/ui/components/contact-detail/ScorePanel";
+import { ContactNextUpIsland, ContactValueTile } from "@/modules/crm/ui/components/contact-detail/ContactNextUp";
+import type { ContactJourneyDTO } from "@/modules/crm/domain/journey";
+import { Skeleton } from "@/shared/components/ui/skeleton";
 import { TagsEditor } from "@/modules/crm/ui/components/contact-detail/TagsEditor";
 import { useAuth } from "@/shared/auth/auth.hooks";
 
@@ -63,7 +65,10 @@ export default function Contact360Page({
   // Recorrido (F4 comercial): deshacer un cambio de etapa escribe sobre la
   // oportunidad con rastro auditado; pide el permiso de configurar el CRM.
   const canManage = hasPermission("crm:manage");
+  const canReadOrders = hasPermission("orders:read");
   const [bundle, setBundle] = useState<ContactBundle | null>(null);
+  // El recorrido lo lee su ficha y se lo pasa a la isla (una sola petición).
+  const [journey, setJourney] = useState<ContactJourneyDTO | null | undefined>(undefined);
 
   const load = useCallback(async () => {
     try {
@@ -116,48 +121,84 @@ export default function Contact360Page({
   }, [contactId, load]);
 
   if (!bundle) {
+    // La silueta de la ficha (lienzo F2, estados): cabecera, bento y cuerpo.
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <BrandLoader label="Cargando contacto" />
+      <div className="space-y-5" role="status" aria-label="Cargando el contacto">
+        <div className="flex items-center gap-4">
+          <Skeleton className="size-16 rounded-full" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-7 w-72 max-w-full rounded-full" />
+            <Skeleton className="h-4 w-96 max-w-full rounded-full" />
+          </div>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: 4 }, (_, i) => (
+            <Skeleton key={i} className="h-[168px] rounded-3xl" />
+          ))}
+        </div>
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(20rem,24rem)]">
+          <Skeleton className="h-96 rounded-3xl" />
+          <Skeleton className="h-96 rounded-3xl" />
+        </div>
       </div>
     );
   }
 
+  const contactLabel = encodeURIComponent(contactDisplayName(bundle.contact));
+  const followUpHref = `/crm/tasks/create?contact_id=${contactId}&contact_label=${contactLabel}`;
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <Contact360Header contact={bundle.contact} profile={bundle.profile} users={bundle.users} />
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className="space-y-4">
-          {/* Recorrido (F4): la etapa viva de su oportunidad, sobre el score. */}
-          <ContactJourneyCard contactId={contactId} canManage={canManage} />
-          <ScorePanel profile={bundle.profile} />
-          <CopilotPanel contactId={contactId} />
-        </div>
-        <div className="space-y-4">
-          <TagsEditor contactId={contactId} initialTags={bundle.tags} />
-          <ContactDealsCard
-            deals={bundle.deals}
-            contact={{ id: contactId, label: contactDisplayName(bundle.contact) }}
+      {/* El bento (§9.5; lienzo F2, tablero 4). Se dimensiona por el ancho del
+          CONTENIDO (`@container`): cuatro columnas solo desde 68 rem, porque el
+          recorrido necesita aire para su frase y su «Deshacer». La isla se
+          ancla a la derecha. */}
+      <div className="@container">
+        <section
+          aria-label="Resumen del contacto"
+          className="grid gap-4 @min-[40rem]:grid-cols-2 @min-[68rem]:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(17rem,19rem)] [&>*]:min-w-0"
+        >
+          {/* Recorrido (F4): la etapa viva de su oportunidad. */}
+          <ContactJourneyCard
+            contactId={contactId}
+            canManage={canManage}
+            onLoaded={setJourney}
+            className="@min-[40rem]:col-span-2 @min-[68rem]:col-span-1"
           />
-          {/* F8 Cobros: los pedidos con saldo y el papel archivado a nombre de la persona */}
-          <ContactOrdersDocumentsCard contactId={contactId} orders={bundle.orders} />
-        </div>
+          <ScorePanel profile={bundle.profile} />
+          <ContactValueTile orders={canReadOrders ? bundle.orders : null} deals={bundle.deals} />
+          <ContactNextUpIsland
+            journey={journey}
+            orders={canReadOrders ? bundle.orders : []}
+            followUpHref={followUpHref}
+            className="@min-[40rem]:col-span-2 @min-[68rem]:col-span-1"
+          />
+        </section>
       </div>
 
-      {/* F1: lo que el agente recopiló, con origen y revisión (`docs/modules/crm.md` Parte D). */}
-      <ContactDataPanel contactId={contactId} variant="card" />
-
-      <ContactTimeline
-        contactId={contactId}
-        canRevert={canManage}
-        createActivityHref={`/crm/tasks/create?contact_id=${contactId}&contact_label=${encodeURIComponent(contactDisplayName(bundle.contact))}`}
-        {...(canAutomate
-          ? {
-              scheduleFollowUpHref: `/crm/tasks/create?executor=agent&contact_id=${contactId}&contact_label=${encodeURIComponent(contactDisplayName(bundle.contact))}`,
-            }
-          : {})}
-      />
+      {/* Dos columnas solo desde `xl`: a 1024 px (con el sidebar abierto) la
+          izquierda quedaba en ~330 px y partía las filas de datos y del historial. */}
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(20rem,24rem)] [&>*]:min-w-0">
+        <div className="space-y-4">
+          {/* F1: lo que el agente recopiló, con origen y revisión (`docs/modules/crm.md` Parte D). */}
+          <ContactDataPanel contactId={contactId} variant="card" />
+          <ContactTimeline
+            contactId={contactId}
+            canRevert={canManage}
+            createActivityHref={followUpHref}
+            {...(canAutomate ? { scheduleFollowUpHref: `/crm/tasks/create?executor=agent&contact_id=${contactId}&contact_label=${contactLabel}` } : {})}
+          />
+        </div>
+        <div className="space-y-4">
+          <CopilotPanel contactId={contactId} />
+          <TagsEditor contactId={contactId} initialTags={bundle.tags} />
+          <ContactDealsCard deals={bundle.deals} contact={{ id: contactId, label: contactDisplayName(bundle.contact) }} />
+          {/* F8 Cobros: los pedidos con saldo y el papel archivado a nombre de la persona */}
+          {canReadOrders && <ContactOrdersDocumentsCard contactId={contactId} orders={bundle.orders} />}
+        </div>
+      </div>
     </div>
   );
 }

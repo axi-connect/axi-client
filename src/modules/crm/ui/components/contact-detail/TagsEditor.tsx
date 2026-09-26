@@ -47,8 +47,8 @@ export function TagsEditor({
   };
 
   return (
-    <section className="rounded-2xl border border-border bg-background p-4 md:p-6">
-      <h3 className="text-base font-semibold">Etiquetas</h3>
+    <section className="rounded-3xl border border-border bg-card p-5 md:p-6">
+      <h3 className="font-heading text-lg font-bold">Etiquetas</h3>
       <div className="mt-3">
         {catalog === null ? (
           <div className="h-9 animate-pulse rounded-md bg-muted" role="status" aria-label="Cargando etiquetas" />

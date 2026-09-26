@@ -16,6 +16,7 @@ import type {
   TimelineSource,
   UpdateContactDTO,
 } from "@/modules/crm/domain/contact";
+import type { ContactStatsDTO, ContactStatsPeriod } from "@/modules/crm/domain/contact-summary";
 
 /** Adapter HTTP de contactos (`/contacts`, permisos contacts:read/manage). */
 export function listContacts(
@@ -123,6 +124,11 @@ export function reviewContactField(
     `/crm/contacts/${contactId}/data/${encodeURIComponent(code)}`,
     body satisfies Schemas["ReviewContactFieldDto"],
   );
+}
+
+/** Nuevos del período y su reparto por etapa (el bento de la lista; contacts:read). */
+export function getContactStats(period: ContactStatsPeriod): Promise<ContactStatsDTO> {
+  return http.get<ContactStatsDTO>("/contacts/stats", { period });
 }
 
 /** Pares sugeridos deterministas (máx 50): email exacto o nombre similar. */

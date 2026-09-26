@@ -1,28 +1,45 @@
-"use client"
+"use client";
 
-import type { ReactElement, Ref } from "react"
-import { SearchBar } from "./components/SearchBar"
-import { SelectionBanner } from "./components/SelectionBanner"
-import { TableSearch } from "@/shared/components/features/table-search"
+import type { ReactElement, Ref } from "react";
+import { SearchBar } from "./components/SearchBar";
+import { SelectionBanner } from "./components/SelectionBanner";
+import { TableSearch } from "@/shared/components/features/table-search";
 import type {
   TableSearchAction,
   TableSearchSuggestion,
-} from "@/shared/components/features/table-search"
-import { Checkbox } from "@/shared/components/ui/checkbox"
-import { TableView } from "./components/TableView"
-import BasicPagination from "@/shared/components/ui/pagination"
-import { useControlled, useDebouncedCallback, useSearchableFields } from "./utils/hooks"
-import type { ColumnDef, DataRow, DataTableMessages, Primitive, RowContextMenuRenderer } from "./types"
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useState } from "react"
+} from "@/shared/components/features/table-search";
+import { Checkbox } from "@/shared/components/ui/checkbox";
+import { TableView } from "./components/TableView";
+import BasicPagination from "@/shared/components/ui/pagination";
+import {
+  useControlled,
+  useDebouncedCallback,
+  useSearchableFields,
+} from "./utils/hooks";
+import type {
+  ColumnDef,
+  DataRow,
+  DataTableMessages,
+  Primitive,
+  RowContextMenuRenderer,
+} from "./types";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useState,
+} from "react";
 
-export type { ColumnDef, DataRow } from "./types"
-export { SelectionBanner } from "./components/SelectionBanner"
-export type { SelectionBannerMessages } from "./components/SelectionBanner"
+export type { ColumnDef, DataRow } from "./types";
+export { SelectionBanner } from "./components/SelectionBanner";
+export type { SelectionBannerMessages } from "./components/SelectionBanner";
 
 export type DataTableRef = {
-  getCurrentPage: () => number
-  goToPage: (page: number) => void
-}
+  getCurrentPage: () => number;
+  goToPage: (page: number) => void;
+};
 
 /**
  * Cómo se pinta el buscador de la tabla.
@@ -32,7 +49,7 @@ export type DataTableRef = {
  * - `spotlight` — el buscador que se expande (fase 2b). Sin él montado, cae a
  *   `basic` y no rompe nada.
  */
-export type DataTableSearchMode = "none" | "basic" | "spotlight"
+export type DataTableSearchMode = "none" | "basic" | "spotlight";
 
 /**
  * La selección de filas.
@@ -44,46 +61,46 @@ export type DataTableSearchMode = "none" | "basic" | "spotlight"
  * Lo que sube al compartido es la COLUMNA, que es lo que estaba copiado.
  */
 export type DataTableSelection<T extends DataRow = DataRow> = {
-  rowId: (row: T) => string
-  selected: ReadonlySet<string>
-  onChange: (next: ReadonlySet<string>) => void
+  rowId: (row: T) => string;
+  selected: ReadonlySet<string>;
+  onChange: (next: ReadonlySet<string>) => void;
   /** Qué filas se pueden marcar. Las demás salen con la casilla deshabilitada. */
-  isSelectable?: (row: T) => boolean
+  isSelectable?: (row: T) => boolean;
   /** Obligatoria: una casilla sin nombre no se puede usar con lector de pantalla. */
-  rowLabel: (row: T) => string
+  rowLabel: (row: T) => string;
   /**
    * El segundo paso, «seleccionar los N que cumplen». Sin esto, la banda solo
    * resume la página.
    */
   allMatching?: {
-    active: boolean
+    active: boolean;
     /**
      * Cuántos CUMPLEN el filtro, de `meta.total`. Es la cifra de la OFERTA
      * («seleccionar los 175 que cumplen»), nunca la de lo marcado: lo marcado se
      * cuenta con `selected.size`, que es lo único respaldado por ids.
      */
-    matchingTotal: number
-    onSelectAll: () => void
-    onClear: () => void
-    limit?: number
-  }
+    matchingTotal: number;
+    onSelectAll: () => void;
+    onClear: () => void;
+    limit?: number;
+  };
   /** Los botones de lote. Viven en la banda, que es donde se lee el número. */
-  actions?: (ctx: { count: number; allMatching: boolean }) => React.ReactNode
+  actions?: (ctx: { count: number; allMatching: boolean }) => React.ReactNode;
   /** Un aviso bajo los botones. */
-  note?: React.ReactNode
-}
+  note?: React.ReactNode;
+};
 
 type DataTableProps<T extends DataRow = DataRow> = {
   // data
-  data: T[]
-  columns: ColumnDef<T>[]
+  data: T[];
+  columns: ColumnDef<T>[];
   // row context menu
-  rowContextMenu?: RowContextMenuRenderer<T>
+  rowContextMenu?: RowContextMenuRenderer<T>;
   /** A la derecha del buscador: filtros, exportar, lo que la vista necesite. */
-  toolbar?: React.ReactNode
+  toolbar?: React.ReactNode;
   /** Fila completa bajo la barra. Para los chips de filtros activos. */
-  banner?: React.ReactNode
-  selection?: DataTableSelection<T>
+  banner?: React.ReactNode;
+  selection?: DataTableSelection<T>;
   /**
    * Por defecto: `onSearchChange ? "basic" : "none"`.
    *
@@ -93,8 +110,8 @@ type DataTableProps<T extends DataRow = DataRow> = {
    * Es seguro porque `DataTable` nunca filtra `data` —solo emite—, así que una
    * caja sin manejador es código muerto demostrable.
    */
-  searchMode?: DataTableSearchMode
-  searchPlaceholder?: string
+  searchMode?: DataTableSearchMode;
+  searchPlaceholder?: string;
   /**
    * Lo que el buscador expandido ofrece debajo. Solo se usa con
    * `searchMode="spotlight"`.
@@ -103,7 +120,7 @@ type DataTableProps<T extends DataRow = DataRow> = {
    * («Coincidencias en esta página»): cero trabajo de backend y cero mentiras.
    * Quien quiera ir al servidor pasa las suyas.
    */
-  searchSuggestions?: readonly TableSearchSuggestion[]
+  searchSuggestions?: readonly TableSearchSuggestion[];
   /**
    * Qué pasa al ELEGIR una coincidencia. **Sin esto no se ofrece ninguna.**
    *
@@ -115,60 +132,67 @@ type DataTableProps<T extends DataRow = DataRow> = {
    * Lo decide quien llama porque el destino es suyo: `DataTable` es compartido y
    * no conoce rutas.
    */
-  onSearchSelect?: (row: T) => void
-  searchSuggestionsLabel?: string
-  searchActions?: readonly TableSearchAction[]
-  searchLoading?: boolean
+  onSearchSelect?: (row: T) => void;
+  searchSuggestionsLabel?: string;
+  searchActions?: readonly TableSearchAction[];
+  searchLoading?: boolean;
   // grouped meta
-  pagination?: { page?: number; pageSize: number; total?: number }
-  sorting?: { by: keyof T & string; dir?: "asc" | "desc" }
-  search?: { field?: keyof T & string; value?: string }
+  pagination?: { page?: number; pageSize: number; total?: number };
+  sorting?: { by: keyof T & string; dir?: "asc" | "desc" };
+  search?: { field?: keyof T & string; value?: string };
   // handlers
-  onPageChange?: (page: number) => void
-  onSortChange?: (by: keyof T & string, dir: "asc" | "desc") => void
-  onSearchChange?: (payload: { field: keyof T & string; value: string }) => void
+  onPageChange?: (page: number) => void;
+  onSortChange?: (by: keyof T & string, dir: "asc" | "desc") => void;
+  onSearchChange?: (payload: {
+    field: keyof T & string;
+    value: string;
+  }) => void;
   // search behavior
-  searchDebounceMs?: number
-  searchTrigger?: "debounced" | "submit"
+  searchDebounceMs?: number;
+  searchTrigger?: "debounced" | "submit";
   // i18n
-  messages?: DataTableMessages
+  messages?: DataTableMessages;
   // preferred search field order
-  preferredSearchFields?: Array<keyof T & string>
-}
+  preferredSearchFields?: Array<keyof T & string>;
+};
 
 /** El valor de una celda como texto plano, para el panel del buscador. */
 function asText(value: Primitive): string {
-  if (value === null || value === undefined) return ""
-  if (typeof value === "boolean") return value ? "Sí" : "No"
-  return String(value)
+  if (value === null || value === undefined) return "";
+  if (typeof value === "boolean") return value ? "Sí" : "No";
+  return String(value);
 }
 
-export const DataTable = forwardRef(function DataTableInner<T extends DataRow = DataRow>({
-  data,
-  columns,
-  sorting,
-  search,
-  messages,
-  pagination,
-  onPageChange,
-  onSortChange,
-  onSearchChange,
-  rowContextMenu,
-  preferredSearchFields,
-  searchDebounceMs = 350,
-  searchTrigger = "debounced",
-  toolbar,
-  banner,
-  selection,
-  searchMode,
-  searchPlaceholder,
-  searchSuggestions,
-  onSearchSelect,
-  searchSuggestionsLabel,
-  searchActions,
-  searchLoading,
-}: DataTableProps<T>, ref: React.Ref<DataTableRef>) {
-
+export const DataTable = forwardRef(function DataTableInner<
+  T extends DataRow = DataRow,
+>(
+  {
+    data,
+    columns,
+    sorting,
+    search,
+    messages,
+    pagination,
+    onPageChange,
+    onSortChange,
+    onSearchChange,
+    rowContextMenu,
+    preferredSearchFields,
+    searchDebounceMs = 350,
+    searchTrigger = "debounced",
+    toolbar,
+    banner,
+    selection,
+    searchMode,
+    searchPlaceholder,
+    searchSuggestions,
+    onSearchSelect,
+    searchSuggestionsLabel,
+    searchActions,
+    searchLoading,
+  }: DataTableProps<T>,
+  ref: React.Ref<DataTableRef>,
+) {
   const msgs: DataTableMessages = {
     searchPlaceholder: (label) => `Buscar por ${label}...`,
     searchButton: "Buscar",
@@ -179,23 +203,31 @@ export const DataTable = forwardRef(function DataTableInner<T extends DataRow = 
     no: "No",
     fieldLabelFallback: "campo",
     ...messages,
-  }
+  };
 
-  const [internalPage, setInternalPage] = useState<number>(pagination?.page ?? 1)
-  
+  const [internalPage, setInternalPage] = useState<number>(
+    pagination?.page ?? 1,
+  );
+
   useEffect(() => {
-    if (typeof pagination?.page === "number") setInternalPage(pagination.page)
-  }, [pagination?.page])
+    if (typeof pagination?.page === "number") setInternalPage(pagination.page);
+  }, [pagination?.page]);
 
-  const page = internalPage
-  const pageSize = pagination?.pageSize ?? 10
-  const totalCount = typeof pagination?.total === "number" ? pagination!.total! : data.length
-  const start = (page - 1) * pageSize
-  const clientSlice = data.slice(start, start + pageSize)
-  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize))
-  const rowsToRender = typeof pagination?.total === "number" ? data : clientSlice
-  const [localQuery, setLocalQuery] = useControlled<string>(search?.value ?? "", "")
-  const mode: DataTableSearchMode = searchMode ?? (onSearchChange ? "basic" : "none")
+  const page = internalPage;
+  const pageSize = pagination?.pageSize ?? 10;
+  const totalCount =
+    typeof pagination?.total === "number" ? pagination!.total! : data.length;
+  const start = (page - 1) * pageSize;
+  const clientSlice = data.slice(start, start + pageSize);
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const rowsToRender =
+    typeof pagination?.total === "number" ? data : clientSlice;
+  const [localQuery, setLocalQuery] = useControlled<string>(
+    search?.value ?? "",
+    "",
+  );
+  const mode: DataTableSearchMode =
+    searchMode ?? (onSearchChange ? "basic" : "none");
 
   /**
    * La columna de selección la SINTETIZA el componente.
@@ -206,9 +238,9 @@ export const DataTable = forwardRef(function DataTableInner<T extends DataRow = 
    * ancho fijo, y no hay forma de declararla mal.
    */
   const selectionColumn = useMemo<ColumnDef<T> | null>(() => {
-    if (!selection) return null
-    const { rowId, selected, onChange, isSelectable, rowLabel } = selection
-    const rows = rowsToRender
+    if (!selection) return null;
+    const { rowId, selected, onChange, isSelectable, rowLabel } = selection;
+    const rows = rowsToRender;
 
     /*
       Tocar una casilla ROMPE el modo «todos los que cumplen», y lo rompe el
@@ -218,23 +250,24 @@ export const DataTable = forwardRef(function DataTableInner<T extends DataRow = 
       es exactamente cómo se llega a un rótulo y un diálogo que no cuadran.
     */
     const mark = (next: ReadonlySet<string>) => {
-      if (selection.allMatching?.active === true) selection.allMatching.onClear()
-      onChange(next)
-    }
-    const eligible = rows.filter((row) => isSelectable?.(row) ?? true)
-    const marked = eligible.filter((row) => selected.has(rowId(row)))
-    const allMarked = eligible.length > 0 && marked.length === eligible.length
+      if (selection.allMatching?.active === true)
+        selection.allMatching.onClear();
+      onChange(next);
+    };
+    const eligible = rows.filter((row) => isSelectable?.(row) ?? true);
+    const marked = eligible.filter((row) => selected.has(rowId(row)));
+    const allMarked = eligible.length > 0 && marked.length === eligible.length;
 
     const toggleAll = () => {
-      const next = new Set(selected)
+      const next = new Set(selected);
       // Desde MIXTO se marca la página entera; solo se limpia cuando ya estaba
       // todo marcado. Es lo que la memoria muscular espera de una tabla.
       for (const row of eligible) {
-        if (allMarked) next.delete(rowId(row))
-        else next.add(rowId(row))
+        if (allMarked) next.delete(rowId(row));
+        else next.add(rowId(row));
       }
-      mark(next)
-    }
+      mark(next);
+    };
 
     return {
       id: "select",
@@ -244,94 +277,122 @@ export const DataTable = forwardRef(function DataTableInner<T extends DataRow = 
       headClassName: "w-11",
       cellClassName: "w-11",
       header: "",
+      // Cada casilla va dentro de un <label> de 32 px: el objetivo táctil
+      // (≥ 24 px, DESIGN-SYSTEM §11) es la etiqueta entera, no los 16 px del
+      // input. El `::after` de `touchTarget` no sirve aquí: un <input> no
+      // pinta pseudoelementos.
       headerCell: () => (
-        <Checkbox
-          checked={allMarked}
-          indeterminate={marked.length > 0 && !allMarked}
-          disabled={eligible.length === 0}
-          onChange={toggleAll}
-          aria-label={
-            allMarked
-              ? `Quitar la selección de esta página`
-              : `Seleccionar los ${eligible.length} de esta página`
-          }
-        />
+        <label className="-m-2 inline-flex size-8 cursor-pointer items-center justify-center">
+          <Checkbox
+            checked={allMarked}
+            indeterminate={marked.length > 0 && !allMarked}
+            disabled={eligible.length === 0}
+            onChange={toggleAll}
+            aria-label={
+              allMarked
+                ? `Quitar la selección de esta página`
+                : `Seleccionar los ${eligible.length} de esta página`
+            }
+          />
+        </label>
       ),
       cell: ({ row }) => {
-        const id = rowId(row.original)
-        const can = isSelectable?.(row.original) ?? true
+        const id = rowId(row.original);
+        const can = isSelectable?.(row.original) ?? true;
         return (
-          <Checkbox
-            checked={selected.has(id)}
-            disabled={!can}
-            aria-label={`Seleccionar ${rowLabel(row.original)}`}
-            onChange={() => {
-              const next = new Set(selected)
-              if (next.has(id)) next.delete(id)
-              else next.add(id)
-              mark(next)
-            }}
-          />
-        )
+          <label className="-m-2 inline-flex size-8 cursor-pointer items-center justify-center">
+            <Checkbox
+              checked={selected.has(id)}
+              disabled={!can}
+              aria-label={`Seleccionar ${rowLabel(row.original)}`}
+              onChange={() => {
+                const next = new Set(selected);
+                if (next.has(id)) next.delete(id);
+                else next.add(id);
+                mark(next);
+              }}
+            />
+          </label>
+        );
       },
-    }
-  }, [selection, rowsToRender])
+    };
+  }, [selection, rowsToRender]);
 
   const safeColumns = useMemo(() => {
-    const usable = columns.filter((c) => c.accessorKey || c.cell || c.headerCell)
-    return selectionColumn === null ? usable : [selectionColumn, ...usable]
-  }, [columns, selectionColumn])
+    const usable = columns.filter(
+      (c) => c.accessorKey || c.cell || c.headerCell,
+    );
+    return selectionColumn === null ? usable : [selectionColumn, ...usable];
+  }, [columns, selectionColumn]);
 
   const emitSearch = useCallback(
-    (field: keyof T & string, value: string) => onSearchChange?.({ field, value }),
-    [onSearchChange]
-  )
+    (field: keyof T & string, value: string) =>
+      onSearchChange?.({ field, value }),
+    [onSearchChange],
+  );
 
-  const debouncedEmit = useDebouncedCallback(emitSearch, searchDebounceMs, searchTrigger === "debounced")
+  const debouncedEmit = useDebouncedCallback(
+    emitSearch,
+    searchDebounceMs,
+    searchTrigger === "debounced",
+  );
 
   const searchableFields = useSearchableFields<T>(
     safeColumns,
-    (preferredSearchFields as Array<keyof T & string>) ?? (["name", "nit", "city", "industry"] as Array<keyof T & string>)
-  )
+    (preferredSearchFields as Array<keyof T & string>) ??
+      (["name", "nit", "city", "industry"] as Array<keyof T & string>),
+  );
 
   const [localField, setLocalField] = useControlled<keyof T & string>(
-    (search?.field as keyof T & string) ?? (searchableFields[0]?.key as keyof T & string),
-    (searchableFields[0]?.key as keyof T & string)
-  )
+    (search?.field as keyof T & string) ??
+      (searchableFields[0]?.key as keyof T & string),
+    searchableFields[0]?.key as keyof T & string,
+  );
 
-  const handleFieldChange = useCallback((key: string) => {
-    setLocalField(key as keyof T & string)
-    if (searchTrigger !== "submit") debouncedEmit(key as keyof T & string, localQuery)
-  }, [debouncedEmit, localQuery, searchTrigger, setLocalField])
+  const handleFieldChange = useCallback(
+    (key: string) => {
+      setLocalField(key as keyof T & string);
+      if (searchTrigger !== "submit")
+        debouncedEmit(key as keyof T & string, localQuery);
+    },
+    [debouncedEmit, localQuery, searchTrigger, setLocalField],
+  );
 
-  const handleValueChange = useCallback((value: string) => {
-    setLocalQuery(value)
-    if (searchTrigger !== "submit") debouncedEmit(localField, value)
-  }, [debouncedEmit, localField, searchTrigger, setLocalQuery])
+  const handleValueChange = useCallback(
+    (value: string) => {
+      setLocalQuery(value);
+      if (searchTrigger !== "submit") debouncedEmit(localField, value);
+    },
+    [debouncedEmit, localField, searchTrigger, setLocalQuery],
+  );
 
   const handleSearchSubmit = useCallback(() => {
-    emitSearch(localField, localQuery)
-  }, [emitSearch, localField, localQuery])
+    emitSearch(localField, localQuery);
+  }, [emitSearch, localField, localQuery]);
 
   const handleClear = useCallback(() => {
-    setLocalQuery("")
+    setLocalQuery("");
     if (searchTrigger === "submit") {
-      emitSearch(localField, "")
+      emitSearch(localField, "");
     } else {
-      debouncedEmit(localField, "")
+      debouncedEmit(localField, "");
     }
-  }, [debouncedEmit, emitSearch, localField, searchTrigger, setLocalQuery])
+  }, [debouncedEmit, emitSearch, localField, searchTrigger, setLocalQuery]);
 
   // expose imperative API
-  useImperativeHandle(ref, () => ({
-    getCurrentPage: () => page,
-    goToPage: (p: number) => {
-      const safe = Math.max(1, p)
-      if (safe === page) return
-      setInternalPage(safe)
-      onPageChange?.(safe)
-    },
-  }), [onPageChange, page])
+  useImperativeHandle(
+    ref,
+    () => ({
+      getCurrentPage: () => page,
+      goToPage: (p: number) => {
+        const safe = Math.max(1, p);
+        if (safe === page) return;
+        setInternalPage(safe);
+        onPageChange?.(safe);
+      },
+    }),
+    [onPageChange, page],
+  );
 
   /**
    * Las coincidencias, sacadas de la página ya cargada.
@@ -342,15 +403,19 @@ export const DataTable = forwardRef(function DataTableInner<T extends DataRow = 
    */
   const derivedSuggestions = useMemo<TableSearchSuggestion[]>(() => {
     // Sin destino NO hay coincidencias: ver el docblock de `onSearchSelect`.
-    if (mode !== "spotlight" || onSearchSelect === undefined) return []
-    if (localQuery.trim().length === 0) return []
-    const needle = localQuery.trim().toLowerCase()
-    const fields = searchableFields.map((field) => field.key)
-    const primary = fields[0]
-    if (primary === undefined) return []
+    if (mode !== "spotlight" || onSearchSelect === undefined) return [];
+    if (localQuery.trim().length === 0) return [];
+    const needle = localQuery.trim().toLowerCase();
+    const fields = searchableFields.map((field) => field.key);
+    const primary = fields[0];
+    if (primary === undefined) return [];
     return rowsToRender
       .filter((row) =>
-        fields.some((key) => String(row[key] ?? "").toLowerCase().includes(needle)),
+        fields.some((key) =>
+          String(row[key] ?? "")
+            .toLowerCase()
+            .includes(needle),
+        ),
       )
       .slice(0, 5)
       .map((row, index) => ({
@@ -364,8 +429,8 @@ export const DataTable = forwardRef(function DataTableInner<T extends DataRow = 
           .join(" · "),
         // La FILA, no el texto de búsqueda: elegir un resultado es ir a él.
         onSelect: () => onSearchSelect(row),
-      }))
-  }, [mode, localQuery, searchableFields, rowsToRender, onSearchSelect])
+      }));
+  }, [mode, localQuery, searchableFields, rowsToRender, onSearchSelect]);
 
   /**
    * Lo marcado es `selected.size`. SIEMPRE.
@@ -376,8 +441,8 @@ export const DataTable = forwardRef(function DataTableInner<T extends DataRow = 
    * el rótulo del botón seguía diciendo el total mientras la acción actuaba
    * sobre otro conjunto. Es el bug de «Eliminar 175» abriendo «¿Eliminar 24?».
    */
-  const selectionCount = selection?.selected.size ?? 0
-  const showBand = selection !== undefined && selectionCount > 0
+  const selectionCount = selection?.selected.size ?? 0;
+  const showBand = selection !== undefined && selectionCount > 0;
 
   return (
     <>
@@ -392,7 +457,9 @@ export const DataTable = forwardRef(function DataTableInner<T extends DataRow = 
               suggestions={searchSuggestions ?? derivedSuggestions}
               suggestionsLabel={
                 searchSuggestionsLabel ??
-                (searchSuggestions === undefined ? "Coincidencias en esta página" : "Coincidencias")
+                (searchSuggestions === undefined
+                  ? "Coincidencias en esta página"
+                  : "Coincidencias")
               }
               actions={searchActions}
               loading={searchLoading}
@@ -409,7 +476,9 @@ export const DataTable = forwardRef(function DataTableInner<T extends DataRow = 
                 onSubmit={handleSearchSubmit}
                 onFieldChange={handleFieldChange}
                 onValueChange={handleValueChange}
-                field={(localField as string) || (searchableFields[0]?.key as string)}
+                field={
+                  (localField as string) || (searchableFields[0]?.key as string)
+                }
                 onClear={handleClear}
               />
             </div>
@@ -430,8 +499,8 @@ export const DataTable = forwardRef(function DataTableInner<T extends DataRow = 
             limit={selection.allMatching?.limit}
             onSelectAllMatching={selection.allMatching?.onSelectAll}
             onClear={() => {
-              selection.allMatching?.onClear()
-              selection.onChange(new Set())
+              selection.allMatching?.onClear();
+              selection.onChange(new Set());
             }}
             actions={selection.actions?.({
               count: selectionCount,
@@ -456,25 +525,27 @@ export const DataTable = forwardRef(function DataTableInner<T extends DataRow = 
       />
 
       <div className="flex justify-between items-center">
-        <span className="text-muted-foreground mt-4 text-sm">{msgs?.caption?.(page, totalPages, totalCount)}</span>
+        <span className="text-muted-foreground mt-4 text-sm">
+          {msgs?.caption?.(page, totalPages, totalCount)}
+        </span>
         {onPageChange && (
           <div className="mt-2">
             <BasicPagination
               totalPages={Math.max(1, Math.ceil(totalCount / pageSize))}
               page={page}
               onPageChange={(p) => {
-                if (p === page) return
-                setInternalPage(p)
-                onPageChange?.(p)
+                if (p === page) return;
+                setInternalPage(p);
+                onPageChange?.(p);
               }}
             />
           </div>
         )}
       </div>
     </>
-  )
+  );
 }) as <T extends DataRow = DataRow>(
-  props: DataTableProps<T> & { ref?: Ref<DataTableRef> }
-) => ReactElement
+  props: DataTableProps<T> & { ref?: Ref<DataTableRef> },
+) => ReactElement;
 
-export default DataTable
+export default DataTable;

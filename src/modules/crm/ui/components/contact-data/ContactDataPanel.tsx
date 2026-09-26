@@ -22,12 +22,12 @@ function RowsSkeleton({ variant }: { variant: ContactDataVariant }) {
       {[0, 1, 2].map((index) => (
         <div
           key={index}
-          className={cn("gap-3", variant === "card" ? "grid grid-cols-[180px_1fr]" : "space-y-1.5")}
+          className={cn("gap-3", variant === "card" ? "grid grid-cols-[minmax(0,8rem)_minmax(0,1fr)] sm:grid-cols-[180px_minmax(0,1fr)]" : "space-y-1.5")}
         >
           <Skeleton className="h-3.5 w-24" />
           <div className="space-y-1.5">
             <Skeleton className="h-3.5 w-40" />
-            <Skeleton className="h-3 w-56" />
+            <Skeleton className="h-3 w-56 max-w-full" />
           </div>
         </div>
       ))}
@@ -164,12 +164,12 @@ export function ContactDataPanel({
     <section
       aria-labelledby={titleId}
       className={cn(
-        "rounded-xl border border-border bg-background px-5 pt-5 pb-[18px] md:px-7 md:pt-[22px]",
+        "rounded-3xl border border-border bg-card px-5 pt-5 pb-[18px] md:px-6 md:pt-6",
         className,
       )}
     >
       <div className="mb-1.5 flex flex-wrap items-center justify-between gap-3">
-        <h3 id={titleId} className="text-base font-semibold">
+        <h3 id={titleId} className="font-heading text-lg font-bold">
           Datos del cliente
         </h3>
         {canSeeForms && (
