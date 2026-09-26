@@ -3,12 +3,11 @@ import { BentoTile } from "@/shared/components/features/bento";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import type { CallSessionRowDTO } from "@/modules/calls/domain/call";
-import { CallAura } from "@/modules/calls/ui/components/aura/CallAura";
 import { LiveCallCard } from "@/modules/calls/ui/components/LiveCallCard";
 
 /**
  * «Al teléfono ahora» (canvas, tablero 1): cada llamada en curso con su aura.
- * Vacía, un escenario pequeño con el aura dormida (tablero 9).
+ * Vacía, solo el texto: sin aura, que ahí estorbaba la lectura.
  */
 export function LiveNowTile({
   calls,
@@ -60,17 +59,15 @@ export function LiveNowTile({
           <Skeleton className="h-[104px] rounded-2xl" />
         </div>
       ) : calls.length === 0 ? (
-        // Superficie oscura y no una isla: la isla de la pantalla es «Lo próximo».
-        <div className="surface-dark relative isolate flex min-h-44 flex-col items-center justify-end gap-2 overflow-hidden rounded-2xl bg-background p-5 text-center text-foreground">
-          <div aria-hidden className="absolute inset-0 -z-10">
-            <CallAura mode="idle" size="mini" options={{ scale: 0.26, centerY: 0.36 }} />
-          </div>
+        // Solo texto: el aura detrás del vacío dificultaba la lectura (hotfix
+        // 2026-09-26, pedido del dueño). El aura es de las llamadas en curso.
+        <div className="flex min-h-40 flex-col items-center justify-center gap-2 rounded-2xl bg-muted/50 p-5 text-center">
           <p className="font-heading text-lg font-bold">Nadie está al teléfono</p>
           <p className="max-w-sm text-sm text-muted-foreground">
-            Cuando tu agente llame o alguien entre, la llamada aparece aquí con su aura.
+            Cuando tu agente llame o alguien entre, la llamada aparece aquí.
           </p>
           {onTestCall !== null && (
-            <Button variant="glass" size="sm" className="mt-1" onClick={onTestCall}>
+            <Button variant="outline" size="sm" className="mt-1 rounded-full" onClick={onTestCall}>
               Hacer una llamada de prueba
             </Button>
           )}
