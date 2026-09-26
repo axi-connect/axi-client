@@ -99,7 +99,7 @@ export function AutomationCard({
       : !fired
         ? "Nunca se ha disparado."
         : skips.length > 0
-          ? `Omitidos: ${skips.map((skip) => `${String(skip.count)} ${skip.label.toLowerCase()}`).join(" · ")}`
+          ? `${metrics.skipped.toLocaleString("es-CO")} omitidos: ${skips.map((skip) => `${String(skip.count)} ${skip.label.toLowerCase()}`).join(" · ")}`
           : metrics.skipped > 0
             ? // El desglose excluye los motivos transitorios (cooldown, cupo diario): decir «sin omisiones»
               // con el contador en 3 sería contradecirse en la misma fila.
@@ -132,6 +132,9 @@ export function AutomationCard({
             A los {describeDelay(automation.delay_minutes)} · {delegates ? "la IA retoma con su objetivo" : describeConditions(automation)}
           </p>
         )}
+        {!code && !delegates ? (
+          <span className="bg-muted text-muted-foreground w-fit rounded-md px-2 py-0.5 text-xs font-medium">Solo mensaje · sin descuento</span>
+        ) : null}
         {code ? (
           // La regla solo conoce el NOMBRE de su promoción (no el código): se dice qué ofrece, sin fingir un cupón.
           <span className="bg-muted w-fit max-w-full truncate rounded-md px-2 py-0.5 text-xs font-medium" title={`Ofrece «${code}»`}>
@@ -162,10 +165,16 @@ export function AutomationCard({
                 ? `${((metrics.converted / metrics.sent) * 100).toLocaleString("es-CO", { maximumFractionDigits: 1 })} %`
                 : "—"
             }
+            hint={metrics && metrics.converted > 0 ? `${metrics.converted.toLocaleString("es-CO")} ${metrics.converted === 1 ? "pedido" : "pedidos"}` : undefined}
           />
           <Metric
             label="Recuperado"
             value={metrics && metrics.attributed_revenue_cents > 0 ? formatMillions(metrics.attributed_revenue_cents) : "—"}
+            hint={
+              metrics && metrics.coupons_issued > 0
+                ? `${metrics.coupons_issued.toLocaleString("es-CO")} cupones → ${metrics.coupons_redeemed.toLocaleString("es-CO")}`
+                : undefined
+            }
           />
         </dl>
       )}
@@ -206,11 +215,15 @@ export function AutomationCard({
   );
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
+function Metric({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
     <div className="flex min-w-0 flex-col gap-1">
       <dt className="text-muted-foreground truncate text-xs">{label}</dt>
-      <dd className="font-heading text-lg leading-none font-bold tracking-tight whitespace-nowrap tabular-nums">{value}</dd>
+      {/* Estrecha, una cifra sin abreviar («$ 950.000») no cabe a text-lg: baja un punto en vez de desbordar. */}
+      <dd className="font-heading truncate text-base leading-none font-bold tracking-tight tabular-nums @md:text-lg" title={value}>
+        {value}
+      </dd>
+      {hint ? <dd className="text-muted-foreground truncate text-xs tabular-nums" title={hint}>{hint}</dd> : null}
     </div>
   );
 }

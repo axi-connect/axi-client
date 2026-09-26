@@ -167,6 +167,12 @@ describe("reglas con actividad", () => {
     expect(await row.findByText("$ 3,9 M")).toBeInTheDocument();
     // Y el total de las reglas, al lado: 3,94 M + 0,58 M.
     expect(screen.getByText("$ 4,5 M")).toBeInTheDocument();
+    // Lo que la tarjeta anterior ya decía y el rediseño no puede perder: cuántos compraron (no solo el %), los
+    // cupones de la regla, el total de omitidos y que la regla no ofrece descuento.
+    expect(row.getByText("31 pedidos")).toBeInTheDocument();
+    expect(row.getByText("118 cupones → 31")).toBeInTheDocument();
+    expect(row.getByText(/^14 omitidos:/)).toBeInTheDocument();
+    expect(row.getByText("Solo mensaje · sin descuento")).toBeInTheDocument();
     // El "por qué", no solo el número: si no, parece una avería.
     expect(
       await screen.findByText(/8 el contacto pidió no recibir promociones/i),
