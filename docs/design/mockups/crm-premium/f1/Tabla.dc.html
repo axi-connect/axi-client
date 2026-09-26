@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>CRM · Pipeline en tabla</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&amp;family=Poppins:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#F5F5F7}
+.lt{--bg:#F5F5F7;--side:rgba(255,255,255,.6);--card:#FFFFFF;--fg:#0B0B0E;--fg2:#3A3A40;--mut:#6B6B73;--line:rgba(0,0,0,.06);--line2:rgba(0,0,0,.12);--chip:#F0F0F2;--ink:#0B0B0E;--onink:#FFFFFF;--brand:#D13F42;--onbrand:#FFFFFF;--ok:#1F9D5B;--warn:#D97706;--info:#2563EB;--bad:#DC2626;--ai:#7C3AED;--navon:#FFFFFF}
+a{color:inherit}
+.app{width:1440px;height:900px;display:flex;background:var(--bg);color:var(--fg);overflow:hidden;font-family:Poppins,system-ui,sans-serif}
+.d{font-family:Urbanist,Poppins,sans-serif}
+.side{width:248px;flex-shrink:0;padding:18px 14px;box-sizing:border-box;display:flex;flex-direction:column;gap:2px;border-right:1px solid var(--line);background:var(--side)}
+.nav{display:flex;align-items:center;gap:12px;height:36px;padding:0 12px;border-radius:10px;font-size:13.5px;color:var(--fg2);text-decoration:none}
+.nav-on{background:var(--navon);color:var(--fg);font-weight:500;box-shadow:0 1px 2px rgba(0,0,0,.06),0 0 0 1px var(--line)}
+.grp{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);padding:14px 12px 6px}
+.card{background:var(--card);border-radius:24px;border:1px solid var(--line);box-shadow:0 1px 0 rgba(0,0,0,.03),0 8px 20px -16px rgba(16,16,24,.25)}
+.lbl{font-size:12px;color:var(--mut);white-space:nowrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:999px;font:500 14px Poppins,sans-serif;border:0;cursor:pointer;text-decoration:none;white-space:nowrap;box-sizing:border-box}
+.btn-p{background:var(--brand);color:var(--onbrand)}
+.btn-s{background:var(--card);color:var(--fg);border:1px solid var(--line2)}
+.btn-sm{height:36px;padding:0 14px;font-size:13px}
+.tabs{display:flex;gap:4px;padding:4px;border-radius:999px;background:var(--card);border:1px solid var(--line)}
+.tab{height:36px;padding:0 14px;border-radius:999px;font:500 13.5px Poppins,sans-serif;color:var(--fg2);display:inline-flex;align-items:center;gap:8px;text-decoration:none;white-space:nowrap}
+.tab-on{background:var(--ink);color:var(--onink)}
+.seg{height:32px;padding:0 12px;border-radius:999px;font:500 12.5px Poppins,sans-serif;color:var(--fg2);border:0;background:transparent;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+.seg-on{background:var(--ink);color:var(--onink)}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:500;background:var(--chip);color:var(--fg);white-space:nowrap}
+.dot{width:6px;height:6px;border-radius:9px;flex-shrink:0;display:inline-block}
+.av{width:28px;height:28px;border-radius:999px;background:var(--chip);color:var(--fg);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0}
+.aig{color:var(--ai);flex-shrink:0}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-weight:500;font-size:12px;color:var(--mut);padding:12px 16px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:11px 16px;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:middle}
+tr:last-child td{border-bottom:0}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.t1{font-weight:600;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;max-width:260px}
+.t2{font-size:12px;color:var(--mut);margin-top:1px}
+.search{display:flex;align-items:center;gap:8px;height:40px;width:340px;padding:0 14px;border-radius:999px;background:var(--card);border:1px solid var(--line2);font-size:13px;color:var(--mut);box-sizing:border-box}
+.search input{border:0;outline:0;background:transparent;font:13px Poppins,sans-serif;flex-grow:1;min-width:0;color:var(--fg)}
+</style>
+</helmet>
+<div class="app lt">
+  <aside class="side">
+    <div style="display:flex;align-items:center;gap:10px;padding:4px 10px 16px">
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="11" cy="15" r="7.5" fill="none" stroke="#D13F42" stroke-width="4"></circle><path d="M16 5 L25 24" stroke="#F2A93B" stroke-width="4" stroke-linecap="round"></path><path d="M25 5 L17 20" stroke="#7B5CF0" stroke-width="4" stroke-linecap="round"></path></svg>
+      <div style="display:flex;flex-direction:column;gap:2px"><span class="d" style="font-weight:700;font-size:15px">Axi Connect</span><span style="font-size:11.5px;color:var(--mut)">JuanitoXpeditions</span></div>
+    </div>
+    <a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg>Inicio</a>
+    <a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"></path></svg>Inbox</a>
+    <div class="grp">Ventas</div>
+    <a class="nav nav-on" href="#" aria-current="page"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D13F42" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="3"></rect><path d="M8 7v7M12 7v4M16 7v9"></path></svg>CRM</a>
+    <a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><path d="M3 6h18"></path></svg>Pedidos</a>
+    <a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2" y="5" width="20" height="14" rx="3"></rect><path d="M2 10h20M6 15h4"></path></svg>Cartera</a>
+    <a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3 3 8l9 5 9-5-9-5Z"></path><path d="m3 13 9 5 9-5"></path></svg>Catálogo</a>
+  </aside>
+
+  <main style="flex-grow:1;display:flex;flex-direction:column;min-width:0;min-height:0">
+    <header style="height:64px;display:flex;align-items:center;padding:0 40px;flex-shrink:0">
+      <nav aria-label="Secciones del CRM" class="tabs"><a class="tab" href="#">Contactos</a><a class="tab tab-on" href="Main.dc.html" aria-current="page">Pipeline</a><a class="tab" href="#">Tareas</a><a class="tab" href="#">Configuración</a></nav>
+    </header>
+    <div style="padding:0 40px 28px;display:flex;flex-direction:column;gap:16px;flex-grow:1;min-height:0">
+      <section style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;align-items:center;gap:12px"><h1 class="d" style="margin:0;font-size:36px;font-weight:700;letter-spacing:-.02em;line-height:1.1">Pipeline</h1><span class="btn btn-s btn-sm">Ventas de viajes<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"></path></svg></span></div>
+          <p style="margin:0;font-size:13.5px;color:var(--mut)">23 oportunidades abiertas · $ 96,4 M en juego</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div role="radiogroup" aria-label="Vista del pipeline" class="tabs" style="padding:3px;gap:2px">
+            <a href="Main.dc.html" role="radio" aria-checked="false" class="seg">Tablero</a>
+            <button type="button" role="radio" aria-checked="true" class="seg seg-on">Tabla</button>
+          </div>
+          <a class="btn btn-p" href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>Nueva oportunidad</a>
+        </div>
+      </section>
+
+      <section style="display:flex;justify-content:space-between;align-items:center;gap:16px">
+        <label class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><input aria-label="Buscar oportunidades" placeholder="Buscar por oportunidad o contacto"></label>
+        <div role="radiogroup" aria-label="Estado" class="tabs" style="padding:3px;gap:2px">
+          <sc-for list="{{filters}}" as="f" hint-placeholder-count="4"><button type="button" role="radio" aria-checked="{{f.checked}}" class="seg {{f.cls}}" onClick="{{f.pick}}">{{f.label}}<span style="opacity:.7;font-variant-numeric:tabular-nums">{{f.n}}</span></button></sc-for>
+        </div>
+      </section>
+
+      <section class="card" style="overflow:hidden;flex-grow:1;min-height:0;display:flex;flex-direction:column">
+        <table>
+          <thead><tr><th>Oportunidad</th><th>Etapa</th><th class="num">Valor</th><th class="num">Pondera</th><th>Cierre esperado</th><th>En la etapa</th><th>Responsable</th></tr></thead>
+          <tbody>
+            <sc-for list="{{rows}}" as="r" hint-placeholder-count="9">
+              <tr>
+                <td><div style="display:flex;align-items:center;gap:12px;min-width:0"><span class="av">{{r.ini}}</span><div style="min-width:0"><div class="t1" style="display:flex;align-items:center;gap:6px">{{r.title}}<sc-if value="{{r.ai}}" hint-placeholder-val="{{false}}"><svg class="aig" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-label="La abrió Axi"><path d="M12 3l1.8 5.4L19 10l-5.2 1.6L12 17l-1.8-5.4L5 10l5.2-1.6z"></path></svg></sc-if></div><div class="t2">{{r.who}}</div></div></div></td>
+                <td><span style="display:inline-flex;align-items:center;gap:8px"><span class="dot" style="width:8px;height:8px;background:{{r.color}}"></span>{{r.stage}}<span style="color:var(--mut)">{{r.prob}}</span></span></td>
+                <td class="num" style="font-weight:600">{{r.amount}}</td>
+                <td class="num" style="color:var(--mut)">{{r.weighted}}</td>
+                <td>{{r.close}}</td>
+                <td><sc-if value="{{r.stalled}}" hint-placeholder-val="{{false}}"><span class="pill"><span class="dot" style="background:var(--warn)"></span>{{r.days}}</span></sc-if><sc-if value="{{r.fresh}}" hint-placeholder-val="{{true}}"><span style="color:var(--fg2)">{{r.days}}</span></sc-if></td>
+                <td style="color:var(--fg2)">{{r.owner}}</td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+        <footer style="margin-top:auto;display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-top:1px solid var(--line);font-size:12.5px;color:var(--mut)">
+          <span>Ordenadas por tiempo en la etapa · las más quietas primero</span>
+          <span style="display:flex;align-items:center;gap:10px"><span style="font-variant-numeric:tabular-nums">1–9 de 23</span><button type="button" class="btn btn-s btn-sm" aria-label="Página anterior" disabled="" style="width:36px;padding:0;opacity:.5"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"></path></svg></button><button type="button" class="btn btn-s btn-sm" aria-label="Página siguiente" style="width:36px;padding:0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"></path></svg></button></span>
+        </footer>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { status: 'open' };
+  }
+  renderVals() {
+    const F = [['open', 'Abiertas', '23'], ['won', 'Ganadas', '7'], ['lost', 'Perdidas', '10'], ['all', 'Todas', '40']];
+    const filters = F.map(([k, label, n]) => ({ label, n, checked: this.state.status === k ? 'true' : 'false', cls: this.state.status === k ? 'seg-on' : '', pick: () => this.setState({ status: k }) }));
+    const r = (title, who, ini, stage, prob, color, amount, weighted, close, days, stalled, owner, ai) => ({ title, who, ini, stage, prob, color, amount, weighted, close, days, stalled, fresh: !stalled, owner, ai: !!ai });
+    const rows = [
+      r('Cartagena · viaje de empresa', 'Luis Pardo', 'LP', 'Propuesta', '60 %', '#F59E0B', '$ 8.900.000', '$ 5.340.000', 'mar 30 sep', '12 días · aguanta 10', true, 'Laura Méndez', true),
+      r('Cancún todo incluido · 4 personas', 'Sofía Herrera Castañeda', 'SH', 'Calificado', '40 %', '#8B5CF6', '$ 12.400.000', '$ 4.960.000', 'vie 9 oct', '9 días · aguanta 7', true, 'Laura Méndez'),
+      r('Perú · Machu Picchu', 'Diego Salas', 'DS', 'Contactado', '20 %', '#3B82F6', '$ 5.400.000', '$ 1.080.000', 'lun 12 oct', '5 días · aguanta 5', true, 'Julián Rojas'),
+      r('Galápagos · crucero', 'Jorge Álvarez', 'JA', 'Propuesta', '60 %', '#F59E0B', '$ 6.500.000', '$ 3.900.000', 'mié 14 oct', '6 días', false, 'Laura Méndez'),
+      r('Punta Cana · familia de 5', 'Andrés Molina', 'AM', 'Contactado', '20 %', '#3B82F6', '$ 11.200.000', '$ 2.240.000', 'mar 20 oct', '4 días', false, 'Julián Rojas'),
+      r('Capurganá · buceo', 'Tomás Mejía', 'TM', 'Negociación', '80 %', '#10B981', '$ 2.600.000', '$ 2.080.000', 'sáb 3 oct', '4 días', false, 'Laura Méndez'),
+      r('Cartagena · boda', 'Laura Pinzón', 'LP', 'Calificado', '40 %', '#8B5CF6', '$ 6.700.000', '$ 2.680.000', 'dom 1 nov', '3 días', false, 'Laura Méndez'),
+      r('Santa Marta · fin de semana', 'Paula Vega', 'PV', 'Nuevo', '10 %', '#A1A1AA', '$ 1.900.000', '$ 190.000', 'Sin fecha', '3 días', false, 'Julián Rojas'),
+      r('Madrid y Lisboa', 'Ana Gómez', 'AG', 'Negociación', '80 %', '#10B981', '$ 5.100.000', '$ 4.080.000', 'lun 28 sep', '2 días', false, 'Julián Rojas')
+    ];
+    return { filters, rows };
+  }
+}
+</script>
+</body>
+</html>

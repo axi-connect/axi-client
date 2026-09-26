@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>CRM · Estados del pipeline</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&amp;family=Poppins:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#F5F5F7}
+.lt{--bg:#F5F5F7;--card:#FFFFFF;--fg:#0B0B0E;--fg2:#3A3A40;--mut:#6B6B73;--line:rgba(0,0,0,.06);--line2:rgba(0,0,0,.12);--col:rgba(0,0,0,.028);--chip:#F0F0F2;--ink:#0B0B0E;--onink:#FFFFFF;--brand:#D13F42;--onbrand:#FFFFFF;--track:#ECECEF;--ok:#1F9D5B;--warn:#D97706;--info:#2563EB;--bad:#DC2626;--ai:#7C3AED;--sk:#ECECEF}
+a{color:inherit}
+.frame{width:1440px;height:900px;background:var(--bg);color:var(--fg);font-family:Poppins,system-ui,sans-serif;box-sizing:border-box;padding:40px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:24px}
+.d{font-family:Urbanist,Poppins,sans-serif}
+.pane{display:flex;flex-direction:column;gap:12px;min-width:0;min-height:0}
+.cap{font-size:12px;font-weight:600;color:var(--fg2);display:flex;align-items:center;gap:8px;white-space:nowrap}
+.cap span{font-weight:400;color:var(--mut)}
+.stage{flex-grow:1;border-radius:28px;background:var(--card);border:1px solid var(--line);padding:22px;box-sizing:border-box;display:flex;flex-direction:column;gap:14px;min-height:0;overflow:hidden}
+.card{background:var(--card);border-radius:24px;border:1px solid var(--line)}
+.lbl{font-size:12px;color:var(--mut);white-space:nowrap}
+.fig{font-family:Urbanist,Poppins,sans-serif;font-weight:700;letter-spacing:-.03em;line-height:1;white-space:nowrap;font-variant-numeric:tabular-nums}
+.sub{font-size:12.5px;color:var(--fg2);line-height:1.45}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:999px;font:500 14px Poppins,sans-serif;border:0;cursor:pointer;text-decoration:none;white-space:nowrap;box-sizing:border-box}
+.btn-p{background:var(--brand);color:var(--onbrand)}
+.btn-s{background:var(--card);color:var(--fg);border:1px solid var(--line2)}
+.lnk{display:inline-flex;align-items:center;gap:6px;min-height:24px;font-size:13px;font-weight:500;color:var(--fg);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line2)}
+.col{display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:20px;background:var(--col);min-width:0}
+.sk{background:var(--sk);border-radius:12px}
+.dc{background:var(--card);border-radius:16px;border:1px solid var(--line);padding:12px;display:flex;flex-direction:column;gap:7px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:500;background:var(--chip);color:var(--fg);white-space:nowrap}
+.dot{width:6px;height:6px;border-radius:9px;flex-shrink:0;display:inline-block}
+.alert{display:grid;grid-template-columns:20px minmax(0,1fr);gap:10px;align-items:start;padding:12px 14px;border-radius:16px;border:1px solid var(--line2);background:var(--card);font-size:13px;line-height:1.45}
+@media (prefers-reduced-motion: no-preference){.sk{animation:p 1.6s ease-in-out infinite}}
+@keyframes p{50%{opacity:.55}}
+</style>
+</helmet>
+<div class="frame lt">
+
+  <section class="pane">
+    <div class="cap">A · Tablero vacío <span>la primera vez</span></div>
+    <div class="stage" style="align-items:center;justify-content:center;text-align:center;gap:16px">
+      <div style="display:flex;gap:8px" aria-hidden="true">
+        <div style="width:54px;height:84px;border-radius:14px;border:1.5px dashed var(--line2)"></div>
+        <div style="width:54px;height:84px;border-radius:14px;border:1.5px dashed var(--line2)"></div>
+        <div style="width:54px;height:84px;border-radius:14px;border:1.5px dashed var(--line2);display:flex;align-items:center;justify-content:center"><span style="width:34px;height:22px;border-radius:7px;background:var(--ink)"></span></div>
+        <div style="width:54px;height:84px;border-radius:14px;border:1.5px dashed var(--line2)"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:320px">
+        <h3 class="d" style="margin:0;font-size:22px;font-weight:700">Aún no hay oportunidades</h3>
+        <p class="sub" style="margin:0">Crea la primera, o deja que Axi la abra sola cuando alguien pida precio en el inbox.</p>
+      </div>
+      <a class="btn btn-p" href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>Nueva oportunidad</a>
+      <a class="lnk" href="#">Ver las etapas del pipeline</a>
+    </div>
+  </section>
+
+  <section class="pane">
+    <div class="cap">B · No pudimos leer el tablero <span>error de red</span></div>
+    <div class="stage" style="align-items:center;justify-content:center;text-align:center;gap:16px">
+      <span style="width:52px;height:52px;border-radius:16px;background:var(--chip);display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 8.8a15 15 0 0 1 20 0M5 12.4a10 10 0 0 1 9.5-2.5M8.5 15.9a5 5 0 0 1 5-1.2M12 20h.01"></path><path d="m17 14 5 5M22 14l-5 5"></path></svg></span>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:320px">
+        <h3 class="d" style="margin:0;font-size:22px;font-weight:700">No pudimos leer el pipeline</h3>
+        <p class="sub" style="margin:0">Tus oportunidades están a salvo. Revisa la conexión e inténtalo de nuevo.</p>
+      </div>
+      <button type="button" class="btn btn-s"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path></svg>Reintentar</button>
+    </div>
+  </section>
+
+  <section class="pane">
+    <div class="cap">C · Cargando <span>mismo alto que el contenido</span></div>
+    <div class="stage" role="status" aria-label="Cargando el pipeline">
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">
+        <div class="card" style="padding:14px;display:flex;flex-direction:column;gap:10px"><span class="sk" style="height:10px;width:60%"></span><span class="sk" style="height:26px;width:80%"></span></div>
+        <div class="card" style="padding:14px;display:flex;flex-direction:column;gap:10px"><span class="sk" style="height:10px;width:50%"></span><span class="sk" style="height:26px;width:40%"></span></div>
+        <div class="card" style="padding:14px;display:flex;flex-direction:column;gap:10px"><span class="sk" style="height:10px;width:55%"></span><span class="sk" style="height:26px;width:50%"></span></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;flex-grow:1;min-height:0">
+        <div class="col"><span class="sk" style="height:12px;width:60%;margin:4px"></span><span class="sk" style="height:92px;border-radius:16px"></span><span class="sk" style="height:92px;border-radius:16px"></span></div>
+        <div class="col"><span class="sk" style="height:12px;width:50%;margin:4px"></span><span class="sk" style="height:92px;border-radius:16px"></span><span class="sk" style="height:92px;border-radius:16px"></span></div>
+        <div class="col"><span class="sk" style="height:12px;width:55%;margin:4px"></span><span class="sk" style="height:92px;border-radius:16px"></span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="pane">
+    <div class="cap">D · Sin cierres todavía <span>la tasa no se inventa</span></div>
+    <div class="stage" style="background:transparent;border:0;padding:0;gap:12px">
+      <article class="card" style="padding:18px 22px;display:flex;flex-direction:column;gap:10px">
+        <span class="lbl">Tasa de cierre · 30 días</span>
+        <span class="d" style="font-size:22px;font-weight:700;line-height:1.2">Aún sin cierres</span>
+        <span class="sub">Aparece con la primera que ganes o pierdas. Mientras, mira cuánto llevan tus abiertas en su etapa.</span>
+      </article>
+      <article class="card" style="padding:18px 22px;display:flex;flex-direction:column;gap:10px">
+        <span class="lbl">Pronóstico ponderado</span>
+        <div style="display:flex;align-items:baseline;gap:8px"><span class="fig" style="font-size:34px">$ 0</span><span style="font-size:13.5px;color:var(--mut)">3 abiertas sin monto</span></div>
+        <span class="sub">Ponle valor a cada una y el pronóstico se arma solo, etapa por etapa.</span>
+      </article>
+    </div>
+  </section>
+
+  <section class="pane">
+    <div class="cap">E · Dentro de una columna <span>vacía, más y fallo</span></div>
+    <div class="stage" style="background:transparent;border:0;padding:0;flex-direction:row;gap:10px">
+      <div class="col" style="flex:1">
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600;padding:4px 6px"><span style="display:inline-flex;align-items:center;gap:8px"><span class="dot" style="width:8px;height:8px;background:#10B981"></span>Negociación</span><span style="font-size:12px;color:var(--mut)">0</span></div>
+        <div style="border-radius:16px;border:1.5px dashed var(--line2);padding:18px 12px;text-align:center;font-size:12.5px;color:var(--mut);line-height:1.45">Nada en esta etapa.<br>Arrastra una tarjeta aquí.</div>
+      </div>
+      <div class="col" style="flex:1">
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600;padding:4px 6px"><span style="display:inline-flex;align-items:center;gap:8px"><span class="dot" style="width:8px;height:8px;background:#8B5CF6"></span>Calificado</span><span style="font-size:12px;color:var(--mut)">31</span></div>
+        <div class="dc"><span style="font-size:13px;font-weight:600">Bogotá · incentivos</span><span style="font-size:12px;color:var(--fg2)">Carlos Ruiz</span></div>
+        <div class="dc"><span style="font-size:13px;font-weight:600">Cartagena · boda</span><span style="font-size:12px;color:var(--fg2)">Laura Pinzón</span></div>
+        <button type="button" style="height:36px;border-radius:999px;border:1px dashed var(--line2);background:transparent;font:500 12.5px Poppins,sans-serif;color:var(--fg2)">Ver 25 más</button>
+        <div class="alert" style="padding:10px 12px;font-size:12px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4M12 16h.01"></path></svg><span>No cargaron las siguientes. <a class="lnk" href="#" style="font-size:12px">Reintentar</a></span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="pane">
+    <div class="cap">F · Solo lectura <span>sin permiso para mover</span></div>
+    <div class="stage" style="gap:12px">
+      <div class="alert"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg><span><strong style="font-weight:600">Puedes ver el pipeline.</strong> Mover, ganar o perder oportunidades lo hace quien tenga permiso de operar el CRM.</span></div>
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+        <div class="col">
+          <div style="font-size:13px;font-weight:600;padding:4px 6px;display:flex;align-items:center;gap:8px"><span class="dot" style="width:8px;height:8px;background:#F59E0B"></span>Propuesta</div>
+          <div class="dc" style="cursor:default"><span style="font-size:13px;font-weight:600">Miami · compras</span><span style="font-size:12px;color:var(--fg2)">Natalia Ortega</span><span class="d" style="font-size:16px;font-weight:700">$ 4.200.000</span></div>
+        </div>
+        <div class="col">
+          <div style="font-size:13px;font-weight:600;padding:4px 6px;display:flex;align-items:center;gap:8px"><span class="dot" style="width:8px;height:8px;background:#10B981"></span>Negociación</div>
+          <div class="dc" style="cursor:default"><span style="font-size:13px;font-weight:600">Madrid y Lisboa</span><span style="font-size:12px;color:var(--fg2)">Ana Gómez</span><span class="d" style="font-size:16px;font-weight:700">$ 5.100.000</span></div>
+        </div>
+      </div>
+      <span class="sub" style="color:var(--mut)">Sin botón «Nueva oportunidad», sin arrastre y sin Ganada / Perdida en el detalle.</span>
+    </div>
+  </section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

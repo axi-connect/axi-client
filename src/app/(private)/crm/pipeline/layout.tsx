@@ -19,7 +19,7 @@ export default function CrmPipelineLayout({
   form: ReactNode;
 }) {
   return (
-    <div data-app-view className="flex min-h-0 w-full flex-1 overflow-hidden">
+    <div data-app-view className="relative flex min-h-0 w-full flex-1 overflow-hidden">
       <div className="min-w-0 flex-1 overflow-hidden">{children}</div>
       {sheet}
       {form}

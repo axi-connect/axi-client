@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>CRM · Marcar perdida</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&amp;family=Poppins:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#F5F5F7}
+.lt{--bg:#F5F5F7;--side:rgba(255,255,255,.6);--card:#FFFFFF;--fg:#0B0B0E;--fg2:#3A3A40;--mut:#6B6B73;--line:rgba(0,0,0,.06);--line2:rgba(0,0,0,.12);--col:rgba(0,0,0,.028);--chip:#F0F0F2;--ink:#0B0B0E;--onink:#FFFFFF;--brand:#D13F42;--onbrand:#FFFFFF;--track:#ECECEF;--ok:#1F9D5B;--warn:#D97706;--bad:#DC2626;--ai:#7C3AED}
+a{color:inherit}
+.app{width:1440px;height:900px;display:flex;background:var(--bg);color:var(--fg);overflow:hidden;font-family:Poppins,system-ui,sans-serif;position:relative}
+.d{font-family:Urbanist,Poppins,sans-serif}
+.side{width:248px;flex-shrink:0;border-right:1px solid var(--line);background:var(--side)}
+.ghost{background:var(--card);border-radius:18px;border:1px solid var(--line)}
+.col{display:flex;flex-direction:column;gap:10px;width:262px;flex-shrink:0;padding:12px;border-radius:24px;background:var(--col);box-sizing:border-box}
+.scrim{position:absolute;inset:0;background:rgba(10,10,12,.42);display:flex;align-items:center;justify-content:center}
+.dlg{width:520px;background:var(--card);border-radius:24px;box-shadow:0 50px 100px -40px rgba(0,0,0,.55),0 0 0 1px rgba(0,0,0,.06);padding:28px;box-sizing:border-box;display:flex;flex-direction:column;gap:20px}
+.lbl{font-size:12px;color:var(--mut);white-space:nowrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:999px;font:500 14px Poppins,sans-serif;border:0;cursor:pointer;text-decoration:none;white-space:nowrap;box-sizing:border-box}
+.btn-s{background:var(--card);color:var(--fg);border:1px solid var(--line2)}
+.btn-del{background:var(--bad);color:#FFFFFF}
+.chip{height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line2);background:var(--card);font:500 13px Poppins,sans-serif;color:var(--fg2);cursor:pointer;white-space:nowrap}
+.chip-on{background:var(--ink);color:var(--onink);border-color:var(--ink)}
+.ta{width:100%;box-sizing:border-box;min-height:92px;padding:12px 14px;border-radius:12px;border:1px solid var(--line2);font:13.5px/1.5 Poppins,sans-serif;color:var(--fg);resize:none;outline:0}
+.hint{font-size:12.5px;color:var(--mut);line-height:1.45}
+.av{width:22px;height:22px;border-radius:999px;background:var(--chip);color:var(--fg);display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0}
+.icb{width:36px;height:36px;border-radius:999px;border:1px solid var(--line2);background:var(--card);color:var(--fg);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;padding:0}
+.pv{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border-radius:16px;background:var(--chip)}
+</style>
+</helmet>
+<div class="app lt">
+  <aside class="side" aria-hidden="true"></aside>
+  <main style="flex-grow:1;display:flex;flex-direction:column;gap:16px;padding:18px 40px 28px;min-width:0" aria-hidden="true">
+    <div class="ghost" style="width:520px;height:44px;border-radius:999px"></div>
+    <div class="d" style="font-size:36px;font-weight:700;letter-spacing:-.02em;margin-top:6px">Pipeline</div>
+    <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) 300px;gap:16px"><div class="ghost" style="height:132px;border-radius:24px"></div><div class="ghost" style="height:132px;border-radius:24px"></div><div class="ghost" style="height:132px;border-radius:24px"></div><div class="ghost" style="height:132px;border-radius:24px"></div></div>
+    <div style="display:flex;gap:14px;flex-grow:1;overflow:hidden">
+      <div class="col"><div class="ghost" style="height:128px"></div><div class="ghost" style="height:128px"></div><div class="ghost" style="height:128px"></div></div>
+      <div class="col"><div class="ghost" style="height:128px"></div><div class="ghost" style="height:128px"></div><div class="ghost" style="height:128px"></div></div>
+      <div class="col"><div class="ghost" style="height:128px"></div><div class="ghost" style="height:128px"></div></div>
+      <div class="col"><div class="ghost" style="height:128px;box-shadow:0 0 0 2px var(--ink)"></div><div class="ghost" style="height:128px"></div></div>
+      <div class="col"><div class="ghost" style="height:128px"></div></div>
+    </div>
+  </main>
+
+  <div class="scrim">
+    <section class="dlg" role="dialog" aria-modal="true" aria-labelledby="lose-t">
+      <header style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px">
+        <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+          <h2 id="lose-t" class="d" style="margin:0;font-size:26px;font-weight:700;letter-spacing:-.015em;line-height:1.15">Marcar como perdida</h2>
+          <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--fg2);min-width:0"><span class="av">LP</span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Cartagena · viaje de empresa · $ 8.900.000</span></div>
+        </div>
+        <a class="icb" href="Detalle.dc.html" aria-label="Cerrar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"></path></svg></a>
+      </header>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <span id="lose-q" class="lbl" style="color:var(--fg2);font-weight:500">¿Qué pasó?</span>
+        <div role="radiogroup" aria-labelledby="lose-q" style="display:flex;flex-wrap:wrap;gap:8px">
+          <sc-for list="{{reasons}}" as="r" hint-placeholder-count="5"><button type="button" role="radio" aria-checked="{{r.checked}}" class="chip {{r.cls}}" onClick="{{r.pick}}">{{r.label}}</button></sc-for>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <label for="lose-x" class="lbl" style="color:var(--fg2);font-weight:500">Detalle (opcional)</label>
+        <textarea id="lose-x" class="ta">Pidió pensarlo con su jefe el 13 sep y no volvió a escribir.</textarea>
+      </div>
+
+      <div class="pv">
+        <span class="lbl">Así queda el motivo</span>
+        <span style="font-size:13px;line-height:1.45">{{preview}}</span>
+      </div>
+      <span class="hint" style="margin-top:-8px">Queda en Perdidas con su motivo. Si Luis vuelve a escribir, la reabres desde su detalle.</span>
+
+      <footer style="display:flex;justify-content:flex-end;gap:10px">
+        <a class="btn btn-s" href="Detalle.dc.html">Cancelar</a>
+        <button type="button" class="btn btn-del">Marcar perdida</button>
+      </footer>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { reason: 'Sin respuesta' };
+  }
+  renderVals() {
+    const list = ['Precio', 'Se fue con otro', 'Sin respuesta', 'Cambió de planes', 'Otro motivo'];
+    const reasons = list.map((label) => ({
+      label,
+      checked: this.state.reason === label ? 'true' : 'false',
+      cls: this.state.reason === label ? 'chip-on' : '',
+      pick: () => this.setState({ reason: this.state.reason === label ? '' : label })
+    }));
+    const detail = 'Pidió pensarlo con su jefe el 13 sep y no volvió a escribir.';
+    const r = this.state.reason;
+    return {
+      reasons,
+      preview: r && r !== 'Otro motivo' ? r + ' · ' + detail : detail
+    };
+  }
+}
+</script>
+</body>
+</html>
