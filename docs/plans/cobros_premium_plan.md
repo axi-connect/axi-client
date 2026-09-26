@@ -299,3 +299,66 @@ Hallazgos en `/root/axi/qa/premium/HALLAZGOS-P1-P5-codigo.md`.
   Correo) y en el §5 de este plan («las dos tarjetas de canal»).
 - En «Registrar abono», el monto que se propone es la **cuota** (lienzo F4 «Abono», el chip «La cuota» elegido por
   defecto).
+
+## 10. Segunda tanda: P6–P8, los documentos (F7–F9 del programa)
+
+> Aprobado por la dueña el 2026-09-26 («plan aprobado, procede a implementarlo»). Rama `hotfix/cobros-premium-docs`
+> desde `main` 8dd36c94; se borra al fusionar. Mismas reglas que §0.
+>
+> | Fase | Lienzo |
+> |---|---|
+> | P6 · F7 Documentos de Mi empresa | https://claude.ai/artifact/E4FEjrqVTCPSptjnQ1QbYs |
+> | P7 · F8 Documentos en el pedido | https://claude.ai/artifact/VKmGfv4jHnPwBN6DZeYjZJ |
+> | P8 · F9 Enviar y lo que sale solo | https://claude.ai/artifact/QcggM4VWxkf7KW2QBwbLLk |
+>
+> Fuentes en `docs/design/mockups/cobros-premium/f7…f9/`; el generador y `check.mjs` (ejecuta la lógica de los
+> artboards) en `…/tools/`.
+
+**Servidor: nada.** Todo sale de lecturas que ya existen. El `PUT /documents/settings` ya mezcla por sección
+(`auto_issue`, `auto_send` y `hsm_fallback` ausentes se conservan), así que partir el formulario es solo cliente.
+
+### P6 · Mi empresa › Documentos
+
+| Pieza | Queda |
+|---|---|
+| `DocumentsTab` | Sin el párrafo de cabecera (el título va `sr-only`). Pestañas de tipo con un punto en las que ya tienen **tu versión**, y una pestaña nueva, **Automáticos**, tras «Emisor y numeración» |
+| `DocumentTemplateEditor` | Ficha de bloques: el tipo en grande, `StatePill` «Tu versión N» (info) o «Modelo de Axi» (neutral), «Restablecer». Los botones del pie pasan a la barra de tinta `UnsavedChangesDock` («Guardar plantilla»; bloqueada mientras haya una variable desconocida, diciendo cuál) |
+| `BlockList` | Número de orden de impresión delante de cada bloque; la lista vive dentro de la ficha, sin marco propio |
+| `TemplatePreviewFrame` | La mesa: fondo propio con la barra «Al día · con los datos de una reserva de ejemplo» y el zoom encima de la hoja. En el celular va primero, plegada a una franja con «Ver la hoja completa» |
+| `DocumentSettingsForm` (Emisor y numeración) | Fichas «Quién emite» y «Numeración» (una fila por tipo: papelito, prefijo, siguiente número o candado, cómo sale). Isla «Así firma tus papeles»: las líneas del emisor exactamente como las imprime «Partes» (`issuerLines`, espejo del servidor) y el próximo número de cada tipo. Barra de tinta |
+| `UnsavedChangesDock` | Gana `onDiscard`/`onSave` opcionales para vivir fuera de un `<form>` (el editor no es un formulario: un Enter en un campo no debe guardar) |
+
+**Desviaciones del lienzo:**
+- «editada hace 2 días por Juanita» no se muestra: `DocumentTemplateDto` no trae quién ni cuándo.
+- La «Nota al pie» **no se imprime en el PDF**: el servidor solo la pone en el correo de envío (F9). La ayuda decía
+  «se imprime en todos los documentos»; pasa a decir la verdad y la isla la muestra como pie del correo. Si la dueña
+  la quiere en el papel, es un cambio de servidor aparte.
+- Sin resaltar en la hoja el bloque abierto: pediría marcar cada bloque en el HTML del servidor.
+
+### P7 · Documentos en el pedido y en la ficha del contacto
+
+| Pieza | Queda |
+|---|---|
+| `DocumentsList` | Ficha bento (`rounded-3xl`, `bg-card`): «Documentos · N» + «Emitir»; filas sin marco propio; pie con borde fino. Vacío, error y cargando dentro de la misma ficha |
+| `DocumentRow` | El estado deja la línea del número y va como `StatePill` junto al nombre: Generando (info), No salió (destructive), Desactualizado (warning), Reemplazado (neutral). Las acciones de una línea («Reintentar», «Enviar por correo») bajan a su propia fila: en los 380 px del rail ya no aprietan el texto |
+
+### P8 · Enviar y lo que sale solo
+
+| Pieza | Queda |
+|---|---|
+| `SendDocumentDialog` | Sólido. Cabecera con el papelito y el título en Nexa; canales apilados con glifo en cápsula y radio; el aviso de texto pasa a un resumen de hechos (`sendFacts`, puro): por WhatsApp qué le llega, la ventana de 24 h («abierta · cierra hoy a las 18:40», calculado de `last_inbound_at` + `window_hours` solo si cierra en el futuro), y fuera de ventana la plantilla y el PDF al responder. El caso sin plantilla sigue como `Alert` con «Configurar plantilla» |
+| `DocumentAutomationForm` (pestaña Automáticos) | «Cuándo sale el contrato» (tres opciones), el recibo con cada pago, «Y se envía solo» (tabla contrato/recibo × WhatsApp/correo) y la plantilla de respaldo con su interruptor. Isla «Lo que sale solo» (`automationStory`, puro): la reserva de ejemplo de principio a fin según el borrador, con el hueco punteado cuando WhatsApp está encendido sin plantilla. Barra de tinta |
+
+**Desviaciones:** el diálogo no dice «Responde a …» ni el pie del correo: `send-options` no trae el correo del emisor.
+«Ya se envió por …» se queda en su tarjeta (no se repite en el resumen).
+
+### Tests
+
+Los tests existentes siguen verdes. Cambian solo los que fijaban la forma vieja, y se dice cuáles en la entrega:
+- `DocumentSettingsForm.test` renderiza la pestaña Automáticos y la barra aparece al ensuciar, en vez de un
+  «Guardar» apagado.
+- El test de campos de `document-settings.config.test` pasa a componente, porque `buildDocumentSettingsFields` deja
+  de existir.
+
+Lógica nueva con dos signos: `issuerLines`, `sendFacts` / `windowClosesAt`, `automationStory` y `UnsavedChangesDock`
+con callbacks.

@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Emisor · oscuro</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&amp;family=Poppins:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+
+:root{--bg:#0A0A0A;--fg:#EDEDED;--fg2:#C4C4CC;--mut:#A1A1AA;--card:#141416;--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.14);--soft:#1E1E22;--soft2:#26262B;--desk:#0F0F11;--on:#EDEDED;--onfg:#0A0A0A;--swoff:#3F3F46;--ok:#4ADE80;--warn:#FBBF24;--bad:#F87171;--info:#60A5FA}
+body{margin:0;font-family:Poppins,system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+a{color:var(--fg)}
+button{font-family:Poppins,sans-serif;color:inherit}
+.d{font-family:Urbanist,Poppins,sans-serif}
+.m{font-family:"Geist Mono",ui-monospace,monospace}
+.nav{display:flex;align-items:center;gap:12px;height:36px;padding:0 12px;border-radius:10px;font-size:13.5px;color:var(--fg2);text-decoration:none}
+.nav-on{background:var(--card);color:var(--fg);font-weight:500;box-shadow:0 1px 2px rgba(0,0,0,.06),0 0 0 1px var(--line)}
+.grp{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);padding:14px 12px 6px}
+.card{background:var(--card);border-radius:24px;box-shadow:none;border:1px solid rgba(255,255,255,.08)}
+.lbl{font-size:12px;color:var(--mut);white-space:nowrap}
+.kick{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:999px;font:500 14px Poppins,sans-serif;border:0;cursor:pointer;text-decoration:none;white-space:nowrap}
+.btn-p{background:#D13F42;color:#FFFFFF;box-shadow:0 10px 24px -10px rgba(209,63,66,.55)}
+.btn-p[disabled]{opacity:.45;box-shadow:none;cursor:not-allowed}
+.btn-s{background:var(--card);color:var(--fg);border:1px solid var(--line2)}
+.btn-g{background:transparent;color:var(--fg)}
+.btn-sm{height:32px;padding:0 14px;font-size:13px}
+.icb{width:38px;height:38px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:var(--card);border:1px solid var(--line2);color:var(--fg);cursor:pointer;flex-shrink:0;padding:0}
+.icb-sm{width:30px;height:30px}
+.tab{height:40px;padding:0 14px;border-radius:999px;font:500 13.5px Poppins,sans-serif;color:var(--fg2);display:inline-flex;align-items:center;gap:8px;text-decoration:none;white-space:nowrap;border:0;background:transparent;cursor:pointer}
+.tab-on{background:var(--on);color:var(--onfg)}
+.seg{display:flex;gap:4px;padding:4px;border-radius:999px;background:var(--card);border:1px solid var(--line);align-self:flex-start}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:500;background:var(--soft);color:var(--fg);white-space:nowrap}
+.dot{width:6px;height:6px;border-radius:9px;flex-shrink:0}
+.dot-ok{background:var(--ok)}.dot-warn{background:var(--warn)}.dot-bad{background:var(--bad)}.dot-info{background:var(--info)}.dot-mut{background:var(--mut)}
+.srow{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:20px;padding:14px 0;border-top:1px solid var(--line)}
+.stitle{font-size:14px;font-weight:600}
+.shint{font-size:12.5px;color:var(--mut);margin-top:2px;line-height:1.45}
+.sw{position:relative;width:48px;height:28px;border-radius:999px;border:0;cursor:pointer;flex-shrink:0;padding:0;transition:background .18s}
+.sw .knob{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:999px;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s cubic-bezier(.2,.8,.2,1)}
+.sw-on{background:var(--on)}.sw-on .knob{transform:translateX(20px);background:var(--onfg)}
+.sw-off{background:var(--swoff)}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field label{font-size:12.5px;font-weight:500;color:var(--fg2)}
+.field .hint{font-size:11.5px;color:var(--mut);line-height:1.4}
+.input{height:44px;border-radius:12px;border:1px solid var(--line2);background:var(--card);padding:0 14px;font:14px Poppins,sans-serif;color:var(--fg);box-sizing:border-box;width:100%;display:flex;align-items:center;white-space:nowrap;overflow:hidden}
+.ph{color:var(--mut)}
+.cap{width:36px;height:36px;border-radius:12px;background:var(--soft);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--fg2)}
+.cap-sm{width:18px;height:18px;border-radius:6px}
+.chip{height:28px;padding:0 10px;border-radius:999px;border:1px solid var(--line2);background:var(--card);font:500 12px Poppins,sans-serif;color:var(--fg2);cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.chip-on{background:var(--on);color:var(--onfg);border-color:var(--on)}
+.tag{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:999px;font-size:11.5px;color:var(--fg2);background:var(--soft);white-space:nowrap}
+.tok{font-family:"Geist Mono",monospace;font-size:11.5px;padding:1px 5px;border-radius:6px;background:rgba(124,58,237,.10);color:#6D28D9}
+.tok-bad{background:rgba(220,38,38,.10);color:#B91C1C;text-decoration:underline wavy rgba(220,38,38,.6)}
+.radio{width:18px;height:18px;border-radius:999px;border:1.5px solid var(--line2);flex-shrink:0;box-sizing:border-box;display:flex;align-items:center;justify-content:center}
+.radio-on{border-color:var(--on)}.radio-on::after{content:"";width:8px;height:8px;border-radius:9px;background:var(--on)}
+.opt{display:grid;grid-template-columns:18px minmax(0,1fr);gap:12px;align-items:start;padding:14px 16px;border-radius:16px;border:1px solid var(--line2);background:var(--card);cursor:pointer;text-align:left;width:100%;box-sizing:border-box}
+.opt-on{border-color:var(--on);box-shadow:inset 0 0 0 1px var(--on)}
+.opt[aria-disabled="true"]{opacity:.55;cursor:not-allowed}
+.fact{display:flex;justify-content:space-between;gap:12px;font-size:12.5px;padding:9px 0;border-top:1px solid var(--line)}
+.note{display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:10px;align-items:start;padding:12px 14px;border-radius:16px;font-size:13px;line-height:1.45}
+.note-warn{border:1px solid rgba(217,119,6,.35);background:rgba(217,119,6,.06)}
+.note-bad{border:1px solid rgba(220,38,38,.30);background:rgba(220,38,38,.05)}
+.note-info{border:1px solid var(--line2);background:var(--soft)}
+.menu{background:var(--card);border-radius:18px;border:1px solid var(--line);box-shadow:0 24px 60px -24px rgba(16,16,24,.35),0 2px 6px rgba(0,0,0,.06);padding:6px;display:flex;flex-direction:column}
+.mi{display:grid;grid-template-columns:18px minmax(0,1fr);gap:12px;padding:10px 12px;border-radius:12px;align-items:start;text-align:left;border:0;background:transparent;cursor:pointer;width:100%}
+.mi:hover,.mi-hl{background:var(--soft)}
+.mi b{display:block;font-size:13.5px;font-weight:500}.mi span{display:block;font-size:12px;color:var(--mut)}
+.scrim{position:absolute;inset:0;background:rgba(11,11,14,.42)}
+.dlg{background:var(--card);border-radius:28px;box-shadow:0 40px 90px -30px rgba(0,0,0,.45);border:1px solid var(--line)}
+.toast{display:inline-flex;align-items:center;gap:10px;height:44px;padding:0 18px 0 8px;border-radius:999px;background:#0B0B0E;color:#FFFFFF;font-size:13.5px;font-weight:500;box-shadow:0 20px 40px -18px rgba(0,0,0,.5)}
+.pm{position:relative;display:block;width:30px;height:38px;flex-shrink:0;overflow:hidden;border-radius:3px;border:1px solid #E4E4E7;background:#FFFFFF;box-shadow:0 1px 2px rgba(0,0,0,.08),0 4px 10px rgba(0,0,0,.08)}
+.pm i{position:absolute;left:5px;right:5px;top:6px;height:2px;border-radius:1px}
+.pm u{position:absolute;top:12px;left:5px;right:9px;height:18px;background-image:repeating-linear-gradient(#E4E4E7 0 1.5px,transparent 1.5px 4.5px)}
+.pm-busy u{animation:fill 2.4s ease-in-out infinite}
+.pm-off{transform:rotate(-3deg);opacity:.55}
+.pm-bad em{position:absolute;right:-1px;bottom:-1px;width:14px;height:14px;border-top-left-radius:7px;background:#DC2626}
+@keyframes fill{0%{clip-path:inset(0 0 100% 0)}60%,100%{clip-path:inset(0 0 0 0)}}
+@keyframes pulse{50%{opacity:.35}}
+@keyframes slide{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
+.beat{width:7px;height:7px;border-radius:9px;background:var(--info);animation:pulse 1.4s ease-in-out infinite;flex-shrink:0}
+.drow{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:4px 14px;align-items:center;padding:14px 20px;position:relative}
+.drow+.drow::before{content:"";position:absolute;top:0;left:44px;right:0;height:1px;background:var(--line)}
+.dname{font-size:14.5px;font-weight:500;letter-spacing:-.005em}
+.dmeta{margin-top:2px;display:flex;flex-wrap:wrap;align-items:center;gap:0 6px;font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums}
+.dmeta .m{font-size:12px;color:var(--fg);opacity:.85}
+.dline{grid-column:2/4;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mut);line-height:1.5}
+.sep{opacity:.45}
+.sheet{background:#FFFFFF;color:#18181B;box-shadow:0 1px 2px rgba(0,0,0,.08),0 18px 40px -18px rgba(0,0,0,.28);border-radius:4px;box-sizing:border-box;font-family:Urbanist,Poppins,sans-serif}
+.sheet p{margin:0}
+@media (prefers-reduced-motion: reduce){.sw,.sw .knob{transition:none}.beat,.pm-busy u{animation:none}}
+
+.isl{position:relative;isolation:isolate;overflow:hidden;border-radius:24px}
+.isl-glass{color:#0B0B0E;background:var(--glow,none),linear-gradient(160deg,rgba(255,255,255,.82),rgba(246,243,254,.62));-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);box-shadow:inset 0 2px 2px rgba(11,11,14,.05),inset 0 -2px 2px rgba(255,255,255,.5),inset 0 0 1.6px 4px rgba(255,255,255,.2),inset 0 0 18px 2px rgba(255,255,255,.55),0 4px 2px -2px rgba(11,11,14,.14),0 30px 70px -34px rgba(16,16,24,.35),0 30px 80px -40px rgba(124,58,237,.35)}
+.isl-dark{color:#EDEDED;background:var(--glow,none),linear-gradient(160deg,rgba(38,38,42,.90),rgba(28,24,40,.92));-webkit-backdrop-filter:blur(20px) saturate(170%);backdrop-filter:blur(20px) saturate(170%);box-shadow:inset 0 2px 2px rgba(255,255,255,.10),inset 0 -2px 2px rgba(0,0,0,.35),inset 0 0 1.6px 4px rgba(255,255,255,.04),inset 0 0 14px 1px rgba(255,255,255,.08),0 40px 90px -36px rgba(124,58,237,.55),0 18px 50px -24px rgba(230,87,89,.45)}
+.isl-glass::before,.isl-dark::before{content:"";position:absolute;inset:0;z-index:1;padding:1.5px;border-radius:inherit;pointer-events:none;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.isl-glass::before{background:conic-gradient(from -75deg at 50% 50%,rgba(11,11,14,.32) 0%,transparent 6% 40%,rgba(11,11,14,.32) 50%,transparent 56% 94%,rgba(11,11,14,.32) 100%),linear-gradient(rgba(255,255,255,.85),rgba(255,255,255,.85))}
+.isl-dark::before{background:conic-gradient(from -75deg at 50% 50%,rgba(255,255,255,.7) 0%,transparent 6% 40%,rgba(255,255,255,.7) 50%,transparent 56% 94%,rgba(255,255,255,.7) 100%),linear-gradient(rgba(255,255,255,.12),rgba(255,255,255,.12))}
+.isl-glass::after,.isl-dark::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none}
+.isl-glass::after{background:linear-gradient(-45deg,transparent 0%,rgba(255,255,255,.55) 40% 46%,transparent 54%) 0 0/200% 200%,radial-gradient(60% 45% at 30% 0%,rgba(255,255,255,.9),transparent 70%)}
+.isl-dark::after{background:linear-gradient(-45deg,transparent 0%,rgba(255,255,255,.10) 40% 46%,transparent 54%) 0 0/200% 200%,radial-gradient(60% 45% at 30% 0%,rgba(255,255,255,.14),transparent 70%)}
+.isl-ink{color:#F4F4F5;background:var(--glow,none),#0B0B0E}
+.isl-glass.glow-brand{--glow:radial-gradient(circle 20rem at 90% 8%,rgba(230,87,89,.16),transparent 70%)}
+.isl-glass.glow-ai{--glow:radial-gradient(circle 22rem at 0% 0%,rgba(124,58,237,.16),transparent 70%),radial-gradient(circle 20rem at 100% 100%,rgba(230,87,89,.11),transparent 70%)}
+.isl-dark.glow-brand{--glow:radial-gradient(circle 20rem at 90% 8%,rgba(251,113,133,.26),transparent 70%)}
+.isl-dark.glow-ai{--glow:radial-gradient(circle 22rem at 0% 0%,rgba(167,139,250,.26),transparent 70%),radial-gradient(circle 20rem at 100% 100%,rgba(251,113,133,.18),transparent 70%)}
+.isl-ink.glow-brand{--glow:radial-gradient(circle 20rem at 90% 8%,rgba(230,87,89,.45),transparent 70%)}
+.btn-contrast{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:999px;font:500 14px Poppins,sans-serif;border:0;cursor:pointer;text-decoration:none;background:#0B0B0E;color:#FFFFFF}
+.isl-dark .btn-contrast,.isl-ink .btn-contrast{background:#F4F4F5;color:#0B0B0E}
+.btn-glass{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:999px;font:500 14px Poppins,sans-serif;border:0;cursor:pointer;text-decoration:none;position:relative;color:rgba(11,11,14,.92);background:linear-gradient(-75deg,rgba(255,255,255,.08),rgba(255,255,255,.5),rgba(255,255,255,.08));box-shadow:inset 0 2px 2px rgba(11,11,14,.05),inset 0 -2px 2px rgba(255,255,255,.5),0 4px 2px -2px rgba(11,11,14,.2),inset 0 0 1.6px 4px rgba(255,255,255,.2),0 0 0 1px rgba(11,11,14,.08)}
+.isl-dark .btn-glass{color:rgba(237,237,237,.92);background:linear-gradient(-75deg,rgba(255,255,255,.03),rgba(255,255,255,.10),rgba(255,255,255,.03));box-shadow:inset 0 2px 2px rgba(255,255,255,.08),inset 0 -2px 2px rgba(0,0,0,.3),0 0 0 1px rgba(255,255,255,.12)}
+.isl-glass .fact,.isl-glass .frow,.isl-glass .cal{border-top-color:rgba(11,11,14,.08)!important}
+.isl-glass .seg-on{background:#0B0B0E}.isl-glass .seg-off{background:rgba(11,11,14,.12)}
+.isl-glass .step{color:#3A3A40}.isl-glass .chk-on,.isl-glass .fdot-on{background:#0B0B0E;color:#FFFFFF}.isl-glass .chk-off,.isl-glass .fdot-off,.isl-glass .cn{border-color:rgba(11,11,14,.28)}
+.isl-glass .bub{background:#FFFFFF;box-shadow:0 1px 2px rgba(0,0,0,.06),0 0 0 1px rgba(11,11,14,.05)}.isl-glass .gap{border-color:rgba(11,11,14,.24);color:#6B6B73}.isl-glass .day{color:#6B6B73}
+@media (prefers-reduced-transparency: reduce){.isl-glass{background:#FFFFFF}.isl-dark{background:#1E1E22}}
+
+.tok{background:rgba(167,139,250,.16);color:#C4B5FD}.tok-bad{background:rgba(248,113,113,.14);color:#FCA5A5}.note-warn{background:rgba(251,191,36,.07)}
+
+</style>
+</helmet>
+<div style="width:1440px;height:900px;display:flex;background:var(--bg);overflow:hidden;position:relative">
+  <aside style="width:248px;flex-shrink:0;padding:18px 14px;box-sizing:border-box;display:flex;flex-direction:column;gap:2px;border-right:1px solid var(--line);background:#0E0E10">
+    <div style="display:flex;align-items:center;gap:10px;padding:4px 10px 16px"><svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="11" cy="15" r="7.5" fill="none" stroke="#D13F42" stroke-width="4"></circle><path d="M16 5 L25 24" stroke="#F2A93B" stroke-width="4" stroke-linecap="round"></path><path d="M25 5 L17 20" stroke="#7B5CF0" stroke-width="4" stroke-linecap="round"></path></svg><div style="display:flex;flex-direction:column;gap:2px"><span class="d" style="font-weight:700;font-size:15px">Axi Connect</span><span style="font-size:11.5px;color:var(--mut)">JuanitoXpeditions</span></div></div>
+    <a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg>Inicio</a><a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"></path></svg>Inbox</a><a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="4"></circle><path d="M3 21a6 6 0 0 1 12 0"></path><path d="M16 4a4 4 0 0 1 0 8M21 21a6 6 0 0 0-4-5.6"></path></svg>Contactos</a><div class="grp">Ventas</div><a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><path d="M3 6h18M16 10a4 4 0 0 1-8 0"></path></svg>Pedidos</a><a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="3"></rect><path d="M2 10h20M6 15h4"></path></svg>Cartera</a><a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 3 8l9 5 9-5-9-5Z"></path><path d="m3 13 9 5 9-5"></path></svg>Catálogo</a><div class="grp">Configuración</div><a class="nav nav-on" href="#" aria-current="page"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D13F42" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21V7l8-4 8 4v14"></path><path d="M9 21v-6h6v6"></path></svg>Mi empresa</a><a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="3"></rect><path d="M2 10h20M6 15h4"></path></svg>Pagos</a><a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>Equipo</a>
+    <div style="flex-grow:1"></div>
+    <div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:14px;background:var(--card);border:1px solid var(--line)"><div style="width:32px;height:32px;border-radius:999px;background:var(--on);color:var(--onfg);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">JR</div><div style="display:flex;flex-direction:column"><span style="font-size:13px;font-weight:500">Juanita R.</span><span style="font-size:11.5px;color:var(--mut)">Dueña</span></div></div>
+  </aside>
+  <main style="flex-grow:1;display:flex;flex-direction:column;min-width:0;min-height:0">
+    <header style="height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 40px;flex-shrink:0">
+      <nav aria-label="Ruta" style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--mut)"><span style="">Mi empresa</span><span aria-hidden="true">/</span><span style="">Documentos</span><span aria-hidden="true">/</span><span style="color:var(--fg);font-weight:500">Emisor y numeración</span></nav>
+      <div style="display:flex;gap:10px"><button class="icb" aria-label="Notificaciones"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"></path></svg></button><button class="icb" aria-label="Tema"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg></button></div>
+    </header>
+    <div style="padding:0 40px 28px;display:flex;flex-direction:column;gap:16px;flex-grow:1;min-height:0">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px">
+        <h1 class="d" style="margin:0;font-size:38px;font-weight:700;letter-spacing:-.02em;line-height:1.1">Mi empresa</h1>
+        <nav aria-label="Secciones de Mi empresa" class="seg">
+        <a class="tab" href="#">General</a><a class="tab" href="#">Sucursales</a><a class="tab tab-on" href="#" aria-current="page">Documentos</a><a class="tab" href="#">Funciones</a>
+      </nav>
+      </div>
+      <div role="tablist" aria-label="Tipo de documento" class="seg" style="flex-wrap:nowrap"><button class="tab" role="tab" aria-selected="false">Contrato<span class="dot" style="background:var(--info)"></span></button><button class="tab" role="tab" aria-selected="false">Cotización</button><button class="tab" role="tab" aria-selected="false">Propuesta</button><button class="tab" role="tab" aria-selected="false">Recibo<span class="dot" style="background:var(--info)"></span></button><button class="tab" role="tab" aria-selected="false">Estado de cuenta</button><button class="tab" role="tab" aria-selected="false">Cuenta de cobro</button><span aria-hidden="true" style="width:1px;height:20px;align-self:center;background:var(--line2);margin:0 4px"></span><button class="tab tab-on" role="tab"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21V7l8-4 8 4v14"></path><path d="M9 21v-6h6v6"></path></svg>Emisor y numeración</button><button class="tab" role="tab"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 3 14h9l-1 8 10-12h-9Z"></path></svg>Automáticos</button></div>
+      <section style="display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:16px;flex-grow:1;min-height:0">
+        <div style="display:flex;flex-direction:column;gap:16px;min-width:0;min-height:0;overflow:hidden">
+          <article class="card" style="padding:20px 24px 22px">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;padding-bottom:14px"><span class="d" style="font-size:20px;font-weight:700">Quién emite</span><span class="lbl">Lo vacío cae a Mi empresa</span></div>
+            <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 16px"><div class="field"><label>Razón social</label><div class="input">JuanitoXpeditions S.A.S.</div><span class="hint">Vacío: sale el nombre del negocio.</span></div><div class="field"><label>Etiqueta del NIT</label><div class="input">NIT</div><span class="hint">Se imprime delante de 901.234.567-8.</span></div><div class="field"><label>Dirección</label><div class="input">Calle 93 # 11-27, oficina 402</div><span class="hint">Vacío: la de Mi empresa.</span></div><div class="field"><label>Ciudad</label><div class="input"><span class="ph">Bogotá</span></div><span class="hint">Vacío: la de Mi empresa.</span></div><div class="field"><label>Teléfono</label><div class="input">+57 300 123 4567</div><span class="hint">Sale en el pie y en «Partes».</span></div><div class="field"><label>Correo</label><div class="input">reservas@juanitoxpeditions.co</div><span class="hint">Sale en el pie y en «Partes».</span></div></div>
+          </article>
+          <article class="card" style="padding:20px 24px 8px">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;padding-bottom:10px"><span class="d" style="font-size:20px;font-weight:700">Numeración</span><span class="lbl">Prefijo · siguiente número · cómo sale</span></div>
+            <div style="display:grid;grid-template-columns:30px minmax(0,1fr) 84px 148px 124px;gap:14px;align-items:center;padding:12px 0;border-top:1px solid var(--line)">
+              <span class="pm" aria-hidden="true" style=""><i style="background:#e65759"></i><u></u></span>
+              <span style="min-width:0"><span style="display:block;font-size:14px;font-weight:600">Contrato</span><span style="display:block;font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Ya salió el primero: la cuenta sigue sola.</span></span>
+              <span class="input m" style="height:36px;font-size:13px;text-transform:uppercase">CTR</span>
+              <span style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--mut)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>va en 120</span>
+              <span style="text-align:right"><span class="m" style="font-size:13px">CTR-2026-0121</span></span>
+            </div><div style="display:grid;grid-template-columns:30px minmax(0,1fr) 84px 148px 124px;gap:14px;align-items:center;padding:12px 0;border-top:1px solid var(--line)">
+              <span class="pm" aria-hidden="true" style=""><i style="background:#16a34a"></i><u></u></span>
+              <span style="min-width:0"><span style="display:block;font-size:14px;font-weight:600">Recibo</span><span style="display:block;font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Ya salió el primero: la cuenta sigue sola.</span></span>
+              <span class="input m" style="height:36px;font-size:13px;text-transform:uppercase">REC</span>
+              <span style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--mut)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>va en 19</span>
+              <span style="text-align:right"><span class="m" style="font-size:13px">REC-2026-0020</span></span>
+            </div><div style="display:grid;grid-template-columns:30px minmax(0,1fr) 84px 148px 124px;gap:14px;align-items:center;padding:12px 0;border-top:1px solid var(--line)">
+              <span class="pm" aria-hidden="true" style=""><i style="background:#2563eb"></i><u></u></span>
+              <span style="min-width:0"><span style="display:block;font-size:14px;font-weight:600">Estado de cuenta</span><span style="display:block;font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Ya salió el primero: la cuenta sigue sola.</span></span>
+              <span class="input m" style="height:36px;font-size:13px;text-transform:uppercase">EDC</span>
+              <span style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--mut)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>va en 3</span>
+              <span style="text-align:right"><span class="m" style="font-size:13px">EDC-2026-0004</span></span>
+            </div><div style="display:grid;grid-template-columns:30px minmax(0,1fr) 84px 148px 124px;gap:14px;align-items:center;padding:12px 0;border-top:1px solid var(--line)">
+              <span class="pm" aria-hidden="true" style=""><i style="background:#7c3aed"></i><u></u></span>
+              <span style="min-width:0"><span style="display:block;font-size:14px;font-weight:600">Cuenta de cobro</span><span style="display:block;font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Aún no sale el primero: fija desde dónde cuenta.</span></span>
+              <span class="input m" style="height:36px;font-size:13px;text-transform:uppercase">CC</span>
+              <span class="input m" style="width:76px;height:36px;justify-content:center;font-size:13px">1</span>
+              <span style="text-align:right"><span class="m" style="font-size:13px">CC-2026-0001</span></span>
+            </div><div style="display:grid;grid-template-columns:30px minmax(0,1fr) 84px 148px 124px;gap:14px;align-items:center;padding:12px 0;border-top:1px solid var(--line)">
+              <span class="pm" aria-hidden="true" style=""><i style="background:#f0a431"></i><u></u></span>
+              <span style="min-width:0"><span style="display:block;font-size:14px;font-weight:600">Cotización</span><span style="display:block;font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Aún no sale el primero: fija desde dónde cuenta.</span></span>
+              <span class="input m" style="height:36px;font-size:13px;text-transform:uppercase">COT</span>
+              <span class="input m" style="width:76px;height:36px;justify-content:center;font-size:13px">1</span>
+              <span style="text-align:right"><span class="m" style="font-size:13px">COT-2026-0001</span></span>
+            </div>
+          </article>
+        </div>
+        <article class="isl isl-dark glow-brand" style="padding:24px;display:flex;flex-direction:column;gap:16px;min-height:0">
+          <div style="display:flex;flex-direction:column;gap:6px"><span class="kick">Así firma tus papeles</span><span class="d" style="font-size:22px;font-weight:700;line-height:1.15;letter-spacing:-.01em">El encabezado y el pie que llevan todos</span></div>
+          <div class="sheet" style="padding:16px 18px;display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:8px;border-bottom:1.5px solid #E65759"><span style="width:52px;height:14px;border-radius:3px;background:linear-gradient(90deg,#F2A93B,#E65759 55%,#7B5CF0)"></span><span class="m" style="font-size:9px;font-weight:600">CTR-2026-0121</span></div>
+            <div style="font-size:9.5px;line-height:1.55;color:#3F3F46"><p style="font-size:7.5px;letter-spacing:.1em;color:#E65759;font-weight:700">LA AGENCIA</p><p style="font-weight:700;color:#18181B;font-size:11px">JuanitoXpeditions S.A.S.</p><p>NIT 901.234.567-8</p><p>Calle 93 # 11-27, oficina 402, Bogotá</p><p>+57 300 123 4567 · reservas@juanitoxpeditions.co</p></div>
+            <div style="border-top:1px solid #E4E4E7;padding-top:7px;font-size:8px;color:#71717A;text-align:center;line-height:1.5">JuanitoXpeditions S.A.S. · NIT 901.234.567-8 · Bogotá<br>Registro Nacional de Turismo 45012</div>
+          </div>
+          <div>
+            <div class="fact"><span style="color:var(--mut)">Próximo contrato</span><span class="m">CTR-2026-0121</span></div>
+            <div class="fact"><span style="color:var(--mut)">Próximo recibo</span><span class="m">REC-2026-0020</span></div>
+            <div class="fact"><span style="color:var(--mut)">Primera cuenta de cobro</span><span class="m">CC-2026-0001</span></div>
+          </div>
+          <div style="flex-grow:1"></div>
+          <span style="font-size:12.5px;color:var(--mut);line-height:1.5">El NIT y el isotipo salen de Mi empresa › General. Lo ya emitido conserva su emisor y su número.</span>
+        </article>
+      </section>
+    </div>
+  </main>
+  
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

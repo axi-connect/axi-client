@@ -1,0 +1,82 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-09-26T20:00:00Z"
+  },
+  "title": "Cobros premium · F8 Documentos en el pedido",
+  "launch": {
+    "view": "canvas"
+  },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "1 · En el rail del pedido — un documento emitido es un hecho con número (interactivo: Emitir › Estado de cuenta)",
+      "is_interactive": true
+    },
+    "Movil.dc.html": {
+      "x": 1520,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "2 · Celular"
+    },
+    "Oscuro.dc.html": {
+      "x": 1990,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "3 · Oscuro — el papelito sigue blanco"
+    },
+    "Estados.dc.html": {
+      "x": 0,
+      "y": 1360,
+      "w": 1440,
+      "h": 900,
+      "title": "4 · Estados — el papel, la entrega, vacío, error y solo ver"
+    },
+    "Menus.dc.html": {
+      "x": 1520,
+      "y": 1360,
+      "w": 1440,
+      "h": 900,
+      "title": "5 · «Emitir» y «…» de la fila"
+    },
+    "Contacto.dc.html": {
+      "x": 3040,
+      "y": 1360,
+      "w": 1440,
+      "h": 900,
+      "title": "6 · Ficha del contacto — la misma lista, a su nombre"
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Movil.dc.html",
+    "Oscuro.dc.html",
+    "Estados.dc.html",
+    "Menus.dc.html",
+    "Contacto.dc.html"
+  ],
+  "notes": {
+    "row0": {
+      "x": 0,
+      "y": -300,
+      "text": "El papel del pedido",
+      "kind": "title1",
+      "maxW": 4400
+    },
+    "row1": {
+      "x": 0,
+      "y": 1060,
+      "text": "Estados, menús y la ficha del contacto",
+      "kind": "title1",
+      "maxW": 4400
+    }
+  },
+  "designSystems": []
+}
