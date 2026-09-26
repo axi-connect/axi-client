@@ -101,7 +101,7 @@ Solo cliente.
 | Pieza | Queda |
 |---|---|
 | `domain/conversation-events.ts` (nuevo) | Puro, con test. `describeConversationEvent(event, users)` devuelve un texto legible por tipo y por payload real: `escalated.reason` (`contact_requested_human` → «El cliente pidió hablar con una persona», `tool`, `usage_limit`, `ai_failures`, `unproductive_tools`, `no_ai_runtime`, `operator_missing`), `claimed`, `taken_over` (incluido `via: business_app` → «Respondieron desde el celular»), `returned_to_ai` + la `note` de `note_added`, `closed`/`reopened`, `sla_breached` (`sla_seconds`) y `priority_changed`. `intent_detected` no se pinta en el hilo porque es ruido para el operador. `handoffReason(events)` devuelve el último escalamiento abierto |
-| Hilo (`ConversationPanel`) | Los eventos se intercalan con los mensajes como líneas del sistema: punto, texto y hora, centradas y sin burbuja. Una sola petición `events` al abrir, se refresca cuando el WS cambia el modo y pagina con el mismo cursor que los mensajes. Separadores de día en píldora sólida pegajosa. «Escribiendo…» con tres puntos (movimiento reducido: estático). «Mensajes nuevos» sigue en cristal, porque flota |
+| Hilo (`ConversationPanel`) | Los eventos se intercalan con los mensajes como líneas del sistema: punto, texto y hora, centradas y sin burbuja. Una sola petición `events`, solo para el hilo activo (nunca por fila de la lista). Se invalida con los eventos WS de handoff que ya escucha `use-inbox-socket` y pagina junto con el prepend de mensajes. Separadores de día en píldora sólida pegajosa. «Escribiendo…» con tres puntos (movimiento reducido: estático). «Mensajes nuevos» sigue en cristal, porque flota |
 | `HandoffReasonIsland` (nuevo) | Arriba del hilo, en `human_queued` o recién escalada: `InkIsland glow="ai"` con «Axi te la pasó · hace 12 min», el motivo en una frase y, si hay, la nota. Acción `contrast` «Atender». Se pliega a una línea cuando el operador ya respondió |
 | `ConversationHeader` | Una fila con avatar, nombre truncado y «Canal · esperando X», la píldora de quién atiende («Axi atiende», «En cola · 12 min», «Contigo», «Con Laura») y a la derecha el responsable, la acción principal (Atender / Intervenir / Cerrar) en `contrast` y el menú ⋮. La etapa, el score y las etiquetas salen de la cabecera y se ven en el panel Contacto (F4); en móvil se accede con un toque en la identidad |
 | `MessageBubble` | Entrante sólida (`bg-muted`). Saliente según la decisión D1 (§4). Lo que escribió Axi lleva el kicker «Axi» con el icono violeta, y lo de una persona su nombre, o «Celular» si salió de la app del negocio. Estados de entrega con iconos de 14 px y `title`. El fallo en rojo semántico con «Reintentar» como botón de 24 px, no como enlace subrayado. Los mensajes seguidos del mismo autor se agrupan (hora solo en el último del grupo). Anchos máximos por `@container` y no por `%` fijo |
@@ -175,7 +175,22 @@ Solo cliente.
 5. Commit en `feat/inbox-premium` y el SHA al `audit-agent` para la verja combinada (jest + next build + tsc).
    Aviso antes de lanzar trabajo pesado: una sola tarea pesada a la vez (9,9 GB).
 6. Evidencia en `/root/axi/qa/evidencia/premium/inbox-f<N>/` (D:).
-7. Sin push a `main` sin la orden de la dueña: push a main es despliegue. Nunca `reset --soft main`; se integra con
+7. **Añadidos por el auditor (2026-09-26):**
+   - **Contrato:** los tipos de `events`, `reachability` y `stats` salen SOLO de `src/core/api/schema.d.ts`, nunca
+     escritos a mano. El auditor regenera el esquema desde el openapi de `origin/main` y exige un diff vacío: si un
+     endpoint no está en el openapi, la fase no es «solo cliente».
+   - **Suite completa si se toca `src/shared`:** el subconjunto de jest no alcanza, y el auditor corre la suite entera
+     en la verja combinada.
+   - **Accesibilidad en los detectores:**
+     - foco visible en la lista y el composer;
+     - `aria-live` en los mensajes entrantes (sin anunciar el historial al hacer prepend);
+     - `prefers-reduced-motion` en las píldoras, en «Escribiendo…» y en el panel vacío.
+   - **Guardia de base en la siembra:** el script se niega a correr si la base no es exactamente `axi_render`. Ni
+     `axi_connect` ni `axi_qa`.
+   - **Integración:** merge contra un merge-base fijo, y antes de mandar el SHA,
+     `git diff --name-only <merge-base> <tip>`. Solo debe listar archivos de inbox o workspace, y los de shared
+     acordados.
+8. Sin push a `main` sin la orden de la dueña: push a main es despliegue. Nunca `reset --soft main`; se integra con
    merge y se verifica el diff contra otras sesiones.
 
 ## 6. Lecturas que usa el programa (todas existen)
@@ -193,8 +208,10 @@ Solo cliente.
 
 - **`conversation.message_status` no se emite:** entregado y leído siguen siendo best-effort. El lienzo no promete
   el doble check azul como dato firme.
-- **Los eventos no llegan por WS:** se relee `events` cuando cambia el modo. Un evento `conversation.event_added`
-  ahorraría esa petición.
+- **Solo parte de los eventos llega por WS.** El socket ya emite `conversation.escalated`, `claimed`, `taken_over`,
+  `returned_to_ai`, `sla_breached` y `status_changed`, y con ellos se invalida `events`. `note_added` y
+  `priority_changed` no tienen evento WS: se ven al releer. Un `conversation.event_added` genérico cerraría ese
+  hueco.
 - **La prioridad no se puede cambiar desde el cliente** (no hay endpoint), así que queda de solo lectura.
 - **La tarea anotada por Cobros** (el panel `orders` del rail, medios de WhatsApp Web y `delivered`) se contrasta con
   el código al abrir F3/F4. No se hereda sin verificarla.
@@ -207,3 +224,8 @@ Solo cliente.
 | Re-render por mensaje en la lista | Selectores de primitivos y `memo`; las píldoras nuevas son puras sobre la fila |
 | El ancla del prepend del hilo se rompe al intercalar eventos | Los eventos entran en el mismo `groupMessagesByDay` con clave estable y el ancla mide antes y después igual que hoy |
 | Tests de copia | La copia nueva se actualiza en su test en el mismo commit |
+| **Permisos de «Tu día».** `/inbox/stats` exige `conversations:read`, verificado en `inbox.controller.ts` (el mismo permiso que la lista), así que un agente con acceso al inbox lo lee | El arnés entra también con el rol de agente. La UI tiene respaldo: con 403 o error, el panel se queda con la isla «Lo próximo» (sale de `counts`) y esconde el bento en vez de pintar un error |
+| **N+1.** `reachability` es por contacto y `events` por conversación | Las dos se cargan solo para la conversación abierta, nunca por fila. Hay un test que cuenta las peticiones al pintar una lista de 50 |
+| **Frescura.** `stats`, `events` y `reachability` pueden quedarse viejos | `stats` se refresca cuando cambian los `counts` (los mismos eventos WS que ya los actualizan), con un mínimo de 60 s. `events` se invalida con los eventos WS de handoff (§7). `reachability` se relee con cada mensaje entrante del contacto (abre la ventana) y el tick de un minuto recalcula lo que queda, sin volver a pedirla. Con tests que simulan el evento WS |
+| **Zona horaria.** «Hoy», la ventana de 24 h y los separadores de día | Se calculan en la zona del negocio con `core/lib/business-time.ts` (`businessDayKey`, `todayKey`), nunca con la del navegador. Tests cerca de la medianoche (23:30 y 00:30 del negocio) por los dos lados: Cobros tuvo un error UTC/`daysUntilService` exactamente así |
+| **URLs firmadas de medios** (TTL 300 s) | Se mantiene `use-attachment-url`: caché de módulo con renovación a 30 s del vencimiento y `refresh()` en el `onError` de `<img>/<audio>/<video>`. Las burbujas nuevas de F3 no guardan la URL en su estado |
