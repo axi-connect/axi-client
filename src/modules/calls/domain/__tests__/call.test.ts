@@ -2,6 +2,9 @@ import {
   CALL_OUTCOME_MAP,
   CALL_STATUS_MAP,
   callResultBadge,
+  callResultPill,
+  confidenceLabel,
+  parseGoalAssessment,
   parseTurnLatency,
 } from "@/modules/calls/domain/call";
 
@@ -62,5 +65,35 @@ describe("parseTurnLatency", () => {
   it("payload sin latencia → null", () => {
     expect(parseTurnLatency({})).toBeNull();
     expect(parseTurnLatency(null)).toBeNull();
+  });
+});
+
+describe("calls · llamada terminada (premium F4)", () => {
+  it("el resultado como StatePill: cuatro tonos, info cae a neutro", () => {
+    expect(callResultPill({ status: "completed", outcome: "goal_met" })).toEqual({
+      label: "Objetivo cumplido",
+      tone: "success",
+    });
+    expect(callResultPill({ status: "completed", outcome: "callback_requested" }).tone).toBe("neutral");
+    expect(callResultPill({ status: "failed", outcome: null })).toEqual({ label: "Fallida", tone: "destructive" });
+  });
+
+  it("parseGoalAssessment toma el último veredicto y descarta payloads ilegibles", () => {
+    const at = "2026-09-26T14:15:00.000Z";
+    expect(
+      parseGoalAssessment([
+        { type: "goal_assessment", payload: { met: false, confidence: 0.4, reason: "viejo" }, created_at: at },
+        { type: "turn_completed", payload: {}, created_at: at },
+        { type: "goal_assessment", payload: { met: true, confidence: 0.92, reason: "aceptó el horario" }, created_at: at },
+      ]),
+    ).toEqual({ met: true, confidence: 0.92, reason: "aceptó el horario" });
+    expect(parseGoalAssessment([{ type: "goal_assessment", payload: { met: "sí" }, created_at: at }])).toBeNull();
+    expect(parseGoalAssessment([])).toBeNull();
+  });
+
+  it("la confianza del juez en palabras", () => {
+    expect(confidenceLabel(0.92)).toBe("confianza alta");
+    expect(confidenceLabel(0.6)).toBe("confianza media");
+    expect(confidenceLabel(0.2)).toBe("confianza baja");
   });
 });

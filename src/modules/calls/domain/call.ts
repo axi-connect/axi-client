@@ -201,3 +201,42 @@ export function parseTurnLatency(payload: unknown): TurnLatency | null {
     interrupted: raw.interrupted === true,
   };
 }
+
+/** El resultado como `StatePill` (§9.5): el color va en el punto y la escala
+ * de la ficha solo tiene cuatro tonos; info/violeta caen a neutro. */
+export function callResultPill(row: {
+  status: CallSessionStatus;
+  outcome: CallSessionRowDTO["outcome"];
+}): { label: string; tone: "success" | "warning" | "destructive" | "neutral" } {
+  const { status, map } = callResultBadge(row);
+  const entry = map[status];
+  const tone = entry?.tone;
+  return {
+    label: entry?.label ?? status,
+    tone: tone === "success" || tone === "warning" || tone === "destructive" ? tone : "neutral",
+  };
+}
+
+/** Veredicto del juez de objetivo (evento `goal_assessment` del postprocess). */
+export type GoalAssessment = { met: boolean; confidence: number; reason: string };
+
+/** Parser defensivo: un payload ilegible no se muestra, jamás revienta el detalle. */
+export function parseGoalAssessment(events: readonly CallEventItem[]): GoalAssessment | null {
+  const event = [...events].reverse().find((e) => e.type === "goal_assessment");
+  const payload = event?.payload as Record<string, unknown> | null | undefined;
+  if (payload === null || payload === undefined) return null;
+  const { met, confidence, reason } = payload;
+  if (typeof met !== "boolean" || typeof reason !== "string") return null;
+  return {
+    met,
+    confidence: typeof confidence === "number" ? Math.min(1, Math.max(0, confidence)) : 0,
+    reason,
+  };
+}
+
+/** «confianza alta/media/baja» — la cifra del juez no le dice nada al dueño. */
+export function confidenceLabel(confidence: number): string {
+  if (confidence >= 0.8) return "confianza alta";
+  if (confidence >= 0.5) return "confianza media";
+  return "confianza baja";
+}
