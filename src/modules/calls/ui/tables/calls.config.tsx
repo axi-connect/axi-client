@@ -4,12 +4,11 @@ import Link from "next/link";
 import { ArrowDownLeft, ArrowUpRight, Mic } from "lucide-react";
 import type { ListQuery } from "@/shared/api/query";
 import type { Paginated } from "@/core/api/types";
-import { cn } from "@/core/lib/utils";
-import { StatusBadge } from "@/shared/components/features/status-badge";
+import { StatePill } from "@/shared/components/features/bento";
 import type { ColumnDef } from "@/shared/components/features/data-table/types";
 import { RelativeDate } from "@/shared/components/ui/relative-date";
 import {
-  callResultBadge,
+  callResultPill,
   CALL_PURPOSE_LABELS,
   DIRECTION_LABELS,
   mapSessionToRow,
@@ -36,12 +35,7 @@ export const callColumns: ColumnDef<CallRow>[] = [
       return (
         <Link href={`/calls/${call.id}`} className="group flex items-center gap-3 py-0.5">
           <span
-            className={cn(
-              "flex size-6 shrink-0 items-center justify-center rounded-full border",
-              outbound
-                ? "border-accent-violet/40 bg-accent-violet/10 text-accent-violet"
-                : "border-info/40 bg-info/10 text-info",
-            )}
+            className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground"
             title={DIRECTION_LABELS[call.direction]}
           >
             {outbound ? (
@@ -52,7 +46,7 @@ export const callColumns: ColumnDef<CallRow>[] = [
             <span className="sr-only">{DIRECTION_LABELS[call.direction]}</span>
           </span>
           <span className="min-w-0">
-            <span className="block truncate font-medium transition-colors group-hover:text-brand">
+            <span className="block truncate font-semibold underline-offset-4 group-hover:underline" title={call.contact_name ?? undefined}>
               {call.contact_name ?? "Sin contacto"}
             </span>
             <span className="text-muted-foreground block truncate font-mono text-xs">
@@ -65,12 +59,14 @@ export const callColumns: ColumnDef<CallRow>[] = [
   },
   {
     accessorKey: "purpose",
-    header: "Propósito",
+    header: "Motivo",
     searchable: false,
     cell: ({ row }) => (
-      <span className="border-border text-muted-foreground inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs whitespace-nowrap">
-        {CALL_PURPOSE_LABELS[row.original.purpose]}
-        {row.original.attempt > 1 ? ` · intento ${row.original.attempt}` : ""}
+      <span className="flex flex-col whitespace-nowrap">
+        <span className="text-sm">{CALL_PURPOSE_LABELS[row.original.purpose]}</span>
+        {row.original.attempt > 1 && (
+          <span className="text-xs text-muted-foreground">intento {row.original.attempt}</span>
+        )}
       </span>
     ),
   },
@@ -90,7 +86,7 @@ export const callColumns: ColumnDef<CallRow>[] = [
           ? "—"
           : formatCallClock(row.original.duration_seconds)}
         {row.original.has_recording ? (
-          <Mic className="text-accent-violet size-3" aria-label="Con grabación" />
+          <Mic className="size-3" aria-label="Con grabación" />
         ) : null}
       </span>
     ),
@@ -100,8 +96,8 @@ export const callColumns: ColumnDef<CallRow>[] = [
     header: "Resultado",
     searchable: false,
     cell: ({ row }) => {
-      const badge = callResultBadge(row.original);
-      return <StatusBadge status={badge.status} map={badge.map} />;
+      const result = callResultPill(row.original);
+      return <StatePill tone={result.tone}>{result.label}</StatePill>;
     },
   },
   {
