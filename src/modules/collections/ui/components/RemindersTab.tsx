@@ -255,7 +255,8 @@ export function RemindersTab() {
             );
           })}
           {policy.hsm_templates.overdue === undefined &&
-          policy.templates.overdue.enabled ? (
+          policy.templates.overdue.enabled &&
+          policy.reminder_channels.whatsapp ? (
             <Alert variant="warning" className="mb-2 rounded-2xl">
               <TriangleAlert aria-hidden="true" />
               <AlertTitle>No hay plantilla aprobada para la mora</AlertTitle>

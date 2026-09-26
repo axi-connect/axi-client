@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Check } from "lucide-react";
 
+import { useRadioGroup } from "@/core/hooks/use-radio-group";
 import { cn } from "@/core/lib/utils";
 import { useFeatures } from "@/shared/auth/features.hooks";
 import { InkIsland, Kicker } from "@/shared/components/features/bento";
@@ -57,6 +58,11 @@ export function NichePicker({
   const name = nicheByCode(value)?.name ?? null;
   const changed = value !== saved;
   const total = preview?.rows.length ?? 0;
+  const radio = useRadioGroup(
+    NICHES.map((niche) => niche.code),
+    value === "" ? null : value,
+    onChange,
+  );
 
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)] [&>*]:min-w-0">
@@ -90,6 +96,7 @@ export function NichePicker({
                 type="button"
                 role="radio"
                 aria-checked={checked}
+                {...radio(niche.code)}
                 onClick={() => onChange(niche.code)}
                 className={cn(
                   "flex min-h-12 items-center gap-2.5 rounded-2xl border bg-card px-3.5 text-left text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",

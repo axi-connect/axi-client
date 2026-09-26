@@ -41,7 +41,10 @@ export interface Departure {
   date: string;
   label: string;
   past: boolean;
-  /** Cupos libres; `null` si la salida no lleva inventario. */
+  /**
+   * Cupos libres, con la MISMA regla que la tabla de variantes: agotada según
+   * su umbral ⇒ 0. `null` si la salida no lleva inventario o es un servicio.
+   */
   seatsLeft: number | null;
 }
 
@@ -49,6 +52,7 @@ export interface Departure {
 export function departuresOf(
   variants: readonly ProductVariantDTO[],
   now: Date = new Date(),
+  isService = false,
 ): Departure[] {
   const today = localToday(now);
   return variants
@@ -61,7 +65,12 @@ export function departuresOf(
       date: variant.service_date,
       label: departureLabel(variant.service_date),
       past: variant.service_date < today,
-      seatsLeft: variant.stock ? Math.max(0, variant.stock.on_hand) : null,
+      seatsLeft:
+        isService || !variant.stock
+          ? null
+          : variant.stock.available
+            ? Math.max(0, variant.stock.on_hand)
+            : 0,
     }))
     .sort((a, b) => a.date.localeCompare(b.date));
 }
@@ -75,11 +84,14 @@ export function departuresOf(
 export function DepartureCalendar({
   variants,
   now,
+  isService = false,
 }: {
   variants: readonly ProductVariantDTO[];
   now?: Date;
+  /** Un servicio no lleva cupos: el nodo solo dice la fecha. */
+  isService?: boolean;
 }) {
-  const departures = departuresOf(variants, now);
+  const departures = departuresOf(variants, now, isService);
   if (departures.length === 0) return null;
   const pastCount = departures.filter((departure) => departure.past).length;
 
@@ -139,13 +151,15 @@ export function DepartureCalendar({
               <span className="text-xs whitespace-nowrap text-muted-foreground">
                 {departure.past
                   ? "ya salió"
-                  : departure.seatsLeft === null
-                    ? "sin inventario"
-                    : departure.seatsLeft === 0
-                      ? "llena"
-                      : departure.seatsLeft === 1
-                        ? "1 cupo"
-                        : `${String(departure.seatsLeft)} cupos`}
+                  : isService
+                    ? "por salir"
+                    : departure.seatsLeft === null
+                      ? "sin inventario"
+                      : departure.seatsLeft === 0
+                        ? "llena"
+                        : departure.seatsLeft === 1
+                          ? "1 cupo"
+                          : `${String(departure.seatsLeft)} cupos`}
               </span>
             </li>
           ))}

@@ -501,9 +501,12 @@ function NextDue({
             ? overdueLabel(Math.abs(daysUntil(installment.due_at) ?? 0))
             : fact === null
               ? "Próxima cuota"
-              : fact.label === "Vence"
-                ? "Vence hoy"
-                : `Próxima cuota en ${fact.value}`}
+              : fact.label === "Venció"
+                ? // Vencida pero aún en la gracia: el estado sigue `pending`.
+                  `Venció ${fact.value}`
+                : fact.label === "Vence"
+                  ? "Vence hoy"
+                  : `Próxima cuota en ${fact.value}`}
         </p>
         <p className="mt-0.5 text-[12.5px] text-muted-foreground tabular-nums">
           {label} · {formatMoney(pending, currency)} ·{" "}

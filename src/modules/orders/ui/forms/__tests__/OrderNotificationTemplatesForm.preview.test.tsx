@@ -70,3 +70,12 @@ describe("Avisos del pedido · premium P3", () => {
     );
   });
 });
+
+describe("previewBody rellena como renderTemplate del servidor (auditoría P1–P5, M3)", () => {
+  it("el número va a secas, acepta espacios en las llaves y el abono solo se resuelve en su aviso", () => {
+    expect(previewBody("Pedido #{{ order_number }} por {{total}}", "confirmed")).toBe("Pedido #45 por $ 27.797.980");
+    expect(previewBody("Recibimos {{amount}}", "confirmed")).toBe("Recibimos {{amount}}");
+    expect(previewBody("Recibimos {{amount}}", "payment_received")).toBe("Recibimos $ 5.000.000");
+    expect(previewBody("Estado: {{status}}", "fulfilled")).toBe("Estado: entregado");
+  });
+});

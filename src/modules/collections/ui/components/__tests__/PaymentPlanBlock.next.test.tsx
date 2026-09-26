@@ -139,4 +139,23 @@ describe("PaymentPlanBlock · lo próximo y el riel (premium P4)", () => {
     );
     expect(items).toEqual(["Anticipo", "Cuota 2 de 3", "Saldo final"]);
   });
+
+  it("B7: una cuota vencida dentro de la gracia (aún `pending`) dice «Venció…», no «Próxima cuota en hace…»", async () => {
+    const base = plan();
+    const past = new Date();
+    past.setDate(past.getDate() - 3);
+    const due = past.toLocaleDateString("en-CA");
+    mockPlan.mockResolvedValue(
+      plan({
+        installments: [
+          base.installments[0],
+          { ...base.installments[1], due_at: due, status: "pending" },
+          base.installments[2],
+        ],
+      }),
+    );
+    render(<PaymentPlanBlock orderId="o1" island={false} />);
+    expect(await screen.findByText("Venció hace 3 días")).toBeInTheDocument();
+    expect(screen.queryByText(/Próxima cuota en hace/)).toBeNull();
+  });
 });

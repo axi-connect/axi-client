@@ -1,7 +1,10 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 
 import type { OrderRow } from "@/modules/orders/domain/order";
-import { PendingProofsStrip } from "@/modules/orders/ui/components/kanban/OrdersKanban";
+import {
+  boardOrders,
+  PendingProofsStrip,
+} from "@/modules/orders/ui/components/kanban/OrdersKanban";
 
 const row = (
   id: string,
@@ -66,5 +69,26 @@ describe("PendingProofsStrip (premium P3: la franja de tinta del tablero)", () =
     expect(
       screen.queryByRole("button", { name: "Revisar el primero" }),
     ).toBeNull();
+  });
+});
+
+describe("boardOrders (auditoría P1–P5, B11)", () => {
+  it("cuenta lo que está en las columnas, no lo que quedó en el store", () => {
+    const row = (id: string) => ({ id }) as unknown as OrderRow;
+    const empty = { ids: [] as string[] };
+    const columns = {
+      pending: { ids: ["a"] },
+      confirmed: { ids: ["b"] },
+      payment_reported: empty,
+      paid: empty,
+      fulfilled: empty,
+      cancelled: empty,
+      draft: empty,
+    } as unknown as Parameters<typeof boardOrders>[0];
+    const byId = { a: row("a"), b: row("b"), gone: row("gone") };
+    expect(boardOrders(columns, byId).map((order) => order.id)).toEqual([
+      "a",
+      "b",
+    ]);
   });
 });

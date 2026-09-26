@@ -34,6 +34,7 @@ export function ReminderThread({
     | "templates"
     | "hsm_templates"
     | "pause_on_promise"
+    | "reminder_channels"
   >;
   channelsOff: boolean;
 }) {
@@ -42,12 +43,16 @@ export function ReminderThread({
   const stops = policy.pause_on_promise
     ? "en cuanto pague o prometa"
     : "en cuanto pague";
+  // Cuenta avisos (días), no mensajes por canal: con los dos canales encendidos
+  // cada aviso sale por WhatsApp y por correo, y se dice.
+  const both =
+    policy.reminder_channels.whatsapp && policy.reminder_channels.email;
   const count =
     maxMessages === 0
       ? "Con esto no le escribiríamos nunca."
-      : maxMessages === 1
-        ? `Un mensaje como mucho: para ${stops}.`
-        : `${String(maxMessages)} mensajes como mucho: paran ${stops}.`;
+      : `${maxMessages === 1 ? "Un aviso" : `${String(maxMessages)} avisos`} como mucho${
+          both ? ", cada uno por WhatsApp y por correo" : ""
+        }: ${maxMessages === 1 ? "para" : "paran"} ${stops}.`;
 
   return (
     <InkIsland label="Así le escribimos" className="gap-4 xl:sticky xl:top-6">
@@ -81,7 +86,7 @@ export function ReminderThread({
               <p className="text-center text-[11.5px] text-muted-foreground tabular-nums">
                 {entry.when}
               </p>
-              {entry.gap === "disabled" ? (
+              {entry.disabled ? (
                 <Gap
                   icon={
                     <BellOff aria-hidden="true" className="size-4 shrink-0" />
@@ -95,20 +100,26 @@ export function ReminderThread({
                   {REMINDER_TEMPLATE_LABELS[entry.template].toLowerCase()}» está
                   apagado. Queda anotado en el historial del plan con su razón.
                 </Gap>
-              ) : entry.gap === "no_hsm" ? (
-                <Gap
-                  icon={
-                    <Clock aria-hidden="true" className="size-4 shrink-0" />
-                  }
-                >
-                  Si {firstName} lleva más de 24 horas sin escribir, este aviso{" "}
-                  <b className="font-medium text-foreground">no sale</b>: falta
-                  una plantilla aprobada de Meta.
-                </Gap>
               ) : (
-                <p className="max-w-[92%] self-end rounded-[18px] rounded-br-[6px] bg-card px-3.5 py-2.5 text-[13px] leading-relaxed shadow-sm">
-                  {renderReminderPreview(policy.templates[entry.template].body)}
-                </p>
+                <>
+                  <p className="max-w-[92%] self-end rounded-[18px] rounded-br-[6px] bg-card px-3.5 py-2.5 text-[13px] leading-relaxed shadow-sm">
+                    {renderReminderPreview(
+                      policy.templates[entry.template].body,
+                    )}
+                  </p>
+                  {entry.whatsappNeedsHsm ? (
+                    <Gap
+                      icon={
+                        <Clock aria-hidden="true" className="size-4 shrink-0" />
+                      }
+                    >
+                      Si {firstName} lleva más de 24 horas sin escribir, por
+                      WhatsApp{" "}
+                      <b className="font-medium text-foreground">no sale</b>:
+                      este texto no tiene plantilla aprobada de Meta.
+                    </Gap>
+                  ) : null}
+                </>
               )}
             </li>
           ))}

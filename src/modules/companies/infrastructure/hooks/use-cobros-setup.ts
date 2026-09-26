@@ -3,11 +3,10 @@
 import { useEffect, useState } from "react";
 
 import type { SetupSources } from "@/modules/companies/domain/cobros-setup";
-import {
-  getCollectionsSetup,
-  getDocumentsSetup,
-  getFxSetup,
-} from "@/modules/companies/infrastructure/services/cobros-setup.adapter";
+// Cada ajuste lo lee el slice que lo posee, por su barrel (§3.3): sin copias.
+import { getCollectionsPolicy } from "@/modules/collections/public";
+import { getDocumentsSettings } from "@/modules/documents/public";
+import { getFxSettings } from "@/modules/payments/public";
 
 /**
  * Lee solo lo que hace falta para las funciones ENCENDIDAS: con la cobranza
@@ -43,9 +42,9 @@ export function useCobrosSetup(activeCodes: readonly string[]): {
     ): Promise<T | null | "error"> =>
       want ? read().catch(() => "error" as const) : Promise.resolve(null);
     void Promise.all([
-      settle(wantsCollections, getCollectionsSetup),
-      settle(codes.includes("fx_quotes"), getFxSetup),
-      settle(codes.includes("documents"), getDocumentsSetup),
+      settle(wantsCollections, getCollectionsPolicy),
+      settle(codes.includes("fx_quotes"), getFxSettings),
+      settle(codes.includes("documents"), getDocumentsSettings),
     ]).then(([collections, fx, documents]) => {
       if (alive) setState({ key, sources: { collections, fx, documents } });
     });

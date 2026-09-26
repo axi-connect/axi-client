@@ -192,9 +192,16 @@ export function RescheduleDialog({
               <SegmentedControl
                 value={lines.length <= 3 ? String(lines.length) : ""}
                 onValueChange={(next) => {
-                  setLines((current) =>
-                    splitSchedule(current, balance, Number(next)),
-                  );
+                  // Desde el calendario original, no desde lo editado (B10).
+                  if (plan !== null) {
+                    setLines(
+                      splitSchedule(
+                        pendingSchedule(plan),
+                        balance,
+                        Number(next),
+                      ),
+                    );
+                  }
                   setServerError(null);
                 }}
                 items={COUNT_ITEMS}

@@ -1,7 +1,10 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 
 import type { OrderDTO, OrderPaymentDTO } from "@/modules/orders/domain/order";
-import { PendingProofIsland } from "@/modules/orders/ui/components/detail/OrderDetailRail";
+import {
+  PendingProofIsland,
+  pendingProofs,
+} from "@/modules/orders/ui/components/detail/OrderDetailRail";
 
 const pay = (
   id: string,
@@ -71,5 +74,25 @@ describe("PendingProofIsland (premium P3: lo más accionable del pedido)", () =>
     );
     expect(screen.getByText("sin monto")).toBeInTheDocument();
     expect(screen.queryByText("Si es cierto, falta")).toBeNull();
+  });
+
+  it("B9: un reporte en otra moneda no resta un saldo en pesos; el orden es el mismo que usa «Verificar pago»", () => {
+    const usd = {
+      ...pay("u", "reported", 1_000_00, "2026-09-25T09:41:00Z"),
+      currency: "USD",
+    } as OrderPaymentDTO;
+    render(<PendingProofIsland order={order([usd])} onReview={jest.fn()} />);
+    expect(screen.queryByText("Si es cierto, falta")).toBeNull();
+    const later = pay("b", "reported", 1, "2026-09-25T15:00:00Z");
+    const earlier = pay("a", "reported", 1, "2026-09-25T09:00:00Z");
+    expect(
+      pendingProofs(
+        order([
+          later,
+          pay("v", "verified", 1, "2026-09-20T00:00:00Z"),
+          earlier,
+        ]),
+      ).map((p) => p.id),
+    ).toEqual(["a", "b"]);
   });
 });

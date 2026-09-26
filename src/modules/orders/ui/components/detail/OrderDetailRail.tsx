@@ -27,14 +27,15 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import { ShopifyOriginBadge, StatusDotBadge } from "@/shared/components/ui/status-badges";
 import { FieldList } from "@/shared/components/features/field-list";
 import { InkIsland, Kicker, StatePill, type StatePillTone } from "@/shared/components/features/bento";
-import { PaymentPlanBlock } from "@/modules/collections/ui/components/PaymentPlanBlock";
-import { AllocationPreview } from "@/modules/collections/ui/components/AllocationPreview";
+// El dueño del plan de pagos es el slice collections: se consume por su barrel (§3.3).
 import {
+  AllocationPreview,
   installmentPending,
   nextInstallment,
+  PaymentPlanBlock,
   planInstallmentLabel,
   type PlanDetailDTO,
-} from "@/modules/collections/domain/payment-plan";
+} from "@/modules/collections/public";
 import { DocumentsList, latestChange } from "@/modules/documents/public";
 import { OrderBalanceBlock } from "./OrderBalanceBlock";
 import {
@@ -88,18 +89,31 @@ const PAYMENT_STATUS_TONE: Record<OrderPaymentDTO["status"], StatePillTone> = {
 };
 
 /**
+ * Los comprobantes por revisar, el más antiguo primero: es el que lleva más
+ * tiempo esperando respuesta. La isla y «Verificar pago» del pie abren el
+ * MISMO (auditoría P1–P5, B9).
+ */
+export function pendingProofs(order: Pick<OrderDTO, "payments">): OrderPaymentDTO[] {
+  return order.payments
+    .filter((payment) => payment.status === "reported")
+    .sort((a, b) => a.created_at.localeCompare(b.created_at));
+}
+
+/**
  * La isla del pedido (§9.5.1, cristal): el comprobante más antiguo por
  * revisar, con lo que dijo el cliente y lo que faltaría si es cierto. Sin
  * comprobantes pendientes no existe — no se inventa otro «lo próximo».
  */
 export function PendingProofIsland({ order, onReview }: { order: OrderDTO; onReview: (payment: OrderPaymentDTO) => void }) {
-  // El más antiguo primero: es el que lleva más tiempo esperando respuesta.
-  const pending = order.payments
-    .filter((payment) => payment.status === "reported")
-    .sort((a, b) => a.created_at.localeCompare(b.created_at));
+  const pending = pendingProofs(order);
   const first = pending[0] ?? null;
   if (first === null) return null;
-  const leftIfTrue = first.amount_cents === null ? null : Math.max(0, order.balance_cents - first.amount_cents);
+  // Solo si el reporte va en la moneda del pedido: restar dólares de pesos no es
+  // un saldo. En otra moneda, el cálculo lo hace quien verifica, con la tasa.
+  const leftIfTrue =
+    first.amount_cents === null || first.currency !== order.currency
+      ? null
+      : Math.max(0, order.balance_cents - first.amount_cents);
   return (
     <InkIsland label="Comprobante por revisar" className="gap-3 p-5">
       <Kicker>Lo próximo</Kicker>
@@ -152,6 +166,11 @@ function TicketSeparator() {
   );
 }
 
+/** El plan leído, solo si es del pedido que se mira (auditoría P1–P5, M6). */
+export function planFor<T>(loaded: { orderId: string; plan: T | null }, orderId: string): T | null {
+  return loaded.orderId === orderId ? loaded.plan : null;
+}
+
 export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose: () => void }) {
   const { hasPermission } = useAuth();
   const canManage = hasPermission("orders:manage");
@@ -166,7 +185,13 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
   const [reportingPayment, setReportingPayment] = useState(false);
   const [review, setReview] = useState<PaymentReview | null>(null);
   // F8: cuándo se reprogramó el plan; el contrato lo pinta, así que cuenta para «desactualizado».
-  const [plan, setPlan] = useState<PlanDetailDTO | null>(null);
+  // El plan va con el pedido del que se leyó: al cambiar de pedido, hasta que
+  // llega el suyo, no hay plan — nunca la cuota ni el reparto del ANTERIOR.
+  const [loadedPlan, setLoadedPlan] = useState<{ orderId: string; plan: PlanDetailDTO | null }>({
+    orderId,
+    plan: null,
+  });
+  const plan = planFor(loadedPlan, orderId);
   const scheduleChangedAt = plan?.schedule_changed_at ?? null;
   const nextDue = plan === null ? null : nextInstallment(plan);
 
@@ -207,7 +232,7 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
     await Promise.all([load(), refreshOrderInBoard(orderId), fetchStats()]);
   }
 
-  const reportedPayments = order?.payments.filter((p) => p.status === "reported") ?? [];
+  const reportedPayments = order === null ? [] : pendingProofs(order);
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end lg:static lg:z-auto lg:h-full">
@@ -269,10 +294,11 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
               {/* F4 Cobros: y cuándo tocaba cada parte. Se pinta solo si el
                   pedido tiene plan — sin la función, esta sección no existe. */}
               <PaymentPlanBlock
+                key={order.id}
                 orderId={order.id}
                 contactName={order.contact.full_name ?? "el cliente"}
                 refreshKey={order.updated_at}
-                onLoaded={setPlan}
+                onLoaded={(next) => setLoadedPlan({ orderId: order.id, plan: next })}
                 // Una isla por pantalla: con un comprobante por revisar, esa es la isla.
                 island={!(canManage && order.payments.some((payment) => payment.status === "reported"))}
                 onRegisterPayment={

@@ -75,3 +75,36 @@ describe("DepartureCalendar (premium P2: las salidas son variantes con fecha)", 
     ).toBeNull();
   });
 });
+
+describe("departuresOf · la misma regla de cupos que la tabla (auditoría P1–P5, B8)", () => {
+  const variant = (stock: unknown) =>
+    ({
+      id: "v",
+      service_date: "2099-11-14",
+      attributes: {},
+      stock,
+    }) as unknown as Parameters<typeof departuresOf>[0][number];
+
+  it("agotada por su umbral es «llena» aunque queden unidades; disponible dice sus cupos", () => {
+    expect(
+      departuresOf([
+        variant({ on_hand: 2, out_of_stock_threshold: 2, available: false }),
+      ])[0]!.seatsLeft,
+    ).toBe(0);
+    expect(
+      departuresOf([
+        variant({ on_hand: 2, out_of_stock_threshold: 0, available: true }),
+      ])[0]!.seatsLeft,
+    ).toBe(2);
+  });
+
+  it("un servicio no lleva cupos", () => {
+    expect(
+      departuresOf(
+        [variant({ on_hand: 5, out_of_stock_threshold: 0, available: true })],
+        new Date(),
+        true,
+      )[0]!.seatsLeft,
+    ).toBeNull();
+  });
+});

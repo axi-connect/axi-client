@@ -127,7 +127,7 @@ export function VariantsTable({
       </div>
       <Separator />
 
-      <DepartureCalendar variants={variants} />
+      <DepartureCalendar variants={variants} isService={isService} />
 
       <div className="sidebar-scroll overflow-x-auto">
         <Table>

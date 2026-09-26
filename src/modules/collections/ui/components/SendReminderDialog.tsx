@@ -5,6 +5,7 @@ import { Mail, MessageCircle, Send } from "lucide-react";
 
 import { errorMessage } from "@/core/lib/error-messages";
 import { formatMoney, formatShortDate } from "@/core/lib/format";
+import { useRadioGroup } from "@/core/hooks/use-radio-group";
 import { cn } from "@/core/lib/utils";
 import { useAlert } from "@/core/providers/alert-provider";
 import { Button } from "@/shared/components/ui/button";
@@ -67,6 +68,11 @@ export function SendReminderDialog({
   const [plan, setPlan] = useState<PlanDetailDTO | null>(null);
   const [body, setBody] = useState("");
   const [channel, setChannel] = useState<ReminderChannel>("whatsapp");
+  const radio = useRadioGroup(
+    CHANNELS.map((option) => option.key),
+    channel,
+    setChannel,
+  );
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
@@ -221,6 +227,7 @@ export function SendReminderDialog({
                     type="button"
                     role="radio"
                     aria-checked={checked}
+                    {...radio(option.key)}
                     onClick={() => setChannel(option.key)}
                     className={cn(
                       "flex min-h-14 items-center gap-3 rounded-2xl border bg-card px-3.5 py-2.5 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",

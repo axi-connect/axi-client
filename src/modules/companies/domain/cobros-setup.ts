@@ -129,7 +129,7 @@ function reminders(source: SetupSources["collections"]): FeatureSetup {
   };
 }
 
-function fxQuotes(source: SetupSources["fx"]): FeatureSetup {
+function fxQuotes(source: SetupSources["fx"], today: string): FeatureSetup {
   const base = {
     code: "fx_quotes" as const,
     step: "Moneda y TRM",
@@ -146,10 +146,15 @@ function fxQuotes(source: SetupSources["fx"]): FeatureSetup {
       linkLabel: "Ver en Moneda y TRM",
     };
   }
+  // Una manual vencida ya no manda: el servidor cotiza con la oficial y el
+  // ajuste, y la ficha tiene que decir eso (auditoría P1–P5, B14).
+  const official = `TRM + ${pct(source.spread_bps / 100)} %`;
   const how =
-    source.manual_rate !== null
-      ? "tasa manual"
-      : `TRM + ${pct(source.spread_bps / 100)} %`;
+    source.manual_rate === null
+      ? official
+      : source.manual_rate.valid_until >= today
+        ? "tasa manual"
+        : `${official} · la manual venció`;
   return {
     ...base,
     configured: true,
@@ -195,11 +200,11 @@ function documents(source: SetupSources["documents"]): FeatureSetup {
 
 const BUILDERS: Record<
   SetupFeatureCode,
-  (sources: SetupSources) => FeatureSetup
+  (sources: SetupSources, today: string) => FeatureSetup
 > = {
   payment_plans: (s) => paymentPlans(s.collections),
   collections: (s) => reminders(s.collections),
-  fx_quotes: (s) => fxQuotes(s.fx),
+  fx_quotes: (s, today) => fxQuotes(s.fx, today),
   documents: (s) => documents(s.documents),
 };
 
@@ -207,11 +212,17 @@ export function isSetupFeature(code: string): code is SetupFeatureCode {
   return code in BUILDERS;
 }
 
+/** YYYY-MM-DD del día LOCAL, como lo compara `valid_until`. */
+function localToday(): string {
+  return new Date().toLocaleDateString("en-CA");
+}
+
 export function featureSetup(
   code: SetupFeatureCode,
   sources: SetupSources,
+  today: string = localToday(),
 ): FeatureSetup {
-  return BUILDERS[code](sources);
+  return BUILDERS[code](sources, today);
 }
 
 export interface SetupSummary {

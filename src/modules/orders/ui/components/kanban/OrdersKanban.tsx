@@ -84,7 +84,9 @@ export function OrdersKanban({ canManage, onCardAction, onDropAction }: OrdersKa
     >
       <div className="flex h-full min-h-0 flex-col gap-3">
       <PendingProofsStrip
-        orders={Object.values(ordersById)}
+        // Lo que está en el tablero, no todo lo que pasó por el store: `ordersById`
+        // no se poda y contaría pedidos que ya salieron de las columnas.
+        orders={boardOrders(columns, ordersById)}
         canManage={canManage}
         onReview={(order) => onCardAction(order, { type: "verify_payment" })}
       />
@@ -135,6 +137,16 @@ export function OrdersKanban({ canManage, onCardAction, onDropAction }: OrdersKa
  * la dueña, §9.5.1). Cuenta solo las tarjetas ya cargadas: no promete un total
  * que el tablero no conoce. Sin pendientes, no existe.
  */
+/** Los pedidos que están en alguna columna del tablero, en su orden. */
+export function boardOrders(
+  columns: Record<KanbanStatus, { ids: readonly string[] }>,
+  ordersById: Record<string, OrderRow>,
+): OrderRow[] {
+  return KANBAN_COLUMNS.flatMap((status) => columns[status].ids)
+    .map((id) => ordersById[id])
+    .filter((order): order is OrderRow => order !== undefined);
+}
+
 export function PendingProofsStrip({
   orders,
   canManage,

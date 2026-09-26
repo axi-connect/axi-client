@@ -139,6 +139,8 @@ export function FeatureSwitchRow({
             <StatePill tone={pill.tone}>
               {locked ? <Lock aria-hidden="true" className="size-3" /> : null}
               {pill.text}
+              {/* El candado es decorativo: el estado «fijada» se dice también con texto. */}
+              {locked ? <span className="sr-only"> · fijada</span> : null}
             </StatePill>
           </span>
         </div>

@@ -255,3 +255,47 @@ Todas salen de lo que el servidor entrega de verdad o de las reglas de §0.
 - Entorno:
   - API `:3110` con la base `axi_render_cobros`;
   - cliente `:3200`.
+
+### Ronda 2 del auditor (2026-09-26)
+
+Hallazgos en `/root/axi/qa/premium/HALLAZGOS-P1-P5-codigo.md`.
+
+**Medios, arreglados:**
+
+- **M1.** Con el día 0 en las dos cadencias sale un solo aviso, `due_today`, como en `reminderStage`.
+- **M2.** La plantilla aprobada se busca para cada texto y cuenta solo si WhatsApp está encendido. El aviso va junto
+  al mensaje: «por WhatsApp no sale», no «no sale». La isla cuenta avisos y dice si cada uno sale por los dos canales.
+- **M3.** La vista previa de los avisos del pedido rellena como `renderTemplate`:
+  - el número va sin formato;
+  - acepta espacios dentro de las llaves;
+  - importe y saldo solo en el abono.
+- **M4.** Nuevo `collections/public.ts`. El rail consume por él.
+- **M5.** Fuera `cobros-setup.adapter`. Funciones lee los ajustes por los barrels de collections, payments y documents.
+- **M6.** El plan del rail va atado a su pedido (`planFor` y `key` en el bloque).
+
+**Bajos, arreglados:**
+
+- **B7.** «Venció…» durante la gracia.
+- **B8.** Los cupos del calendario siguen la misma regla que la tabla (`available`/umbral). Los servicios no muestran
+  cupos.
+- **B9.** La isla y «Verificar pago» comparten `pendingProofs`. No se resta un reporte en otra moneda.
+- **B10.** `splitSchedule` sale del calendario original y reparte las fechas.
+- **B11.** La franja cuenta lo que hay en las columnas (`boardOrders`).
+- **B12.** `useRadioGroup`: un solo tabulador y flechas en el tipo de negocio y en el canal. «Fijada» vuelve a
+  decirse con texto.
+- **B13 (en parte).** La isla usa `orderNumberLabel` de `orders/public`.
+- **B14 (en parte).** Una tasa manual vencida dice «la manual venció».
+
+**Anotados, sin arreglar en este hotfix:**
+
+- **B13.** `initialsOf` es la quinta copia de un helper de iniciales. Unificarlo en `shared/` toca las otras cuatro
+  (llamadas, plataforma…), fuera de Cobros.
+- **B14.** «Documentos» se da por configurado con la razón social del emisor, no con «plantilla publicada». Los
+  ajustes de documentos no dicen si hay una plantilla publicada por tipo; eso es un cambio de servidor.
+
+**Lo que aprobó la dueña en los lienzos:**
+
+- La elección de **correo** en el envío manual está en el lienzo F5 («Enviar»: radiogroup «Por dónde» con WhatsApp y
+  Correo) y en el §5 de este plan («las dos tarjetas de canal»).
+- En «Registrar abono», el monto que se propone es la **cuota** (lienzo F4 «Abono», el chip «La cuota» elegido por
+  defecto).

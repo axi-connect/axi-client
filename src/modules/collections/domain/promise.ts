@@ -282,25 +282,41 @@ export function pendingSchedule(
 /**
  * «En cuántas cuotas» (Cobros premium P4): reparte el saldo en `count` partes
  * iguales en pesos enteros; la última se lleva el resto, así la suma cuadra
- * siempre. Las fechas salen de lo que ya había: la última es la del saldo
- * (la que se pactó con la salida) y las de en medio reutilizan las actuales,
- * o esa misma fecha si no había tantas — el operador las mueve después.
+ * siempre.
+ *
+ * Las fechas salen del calendario ORIGINAL del plan, no de lo que se esté
+ * editando (auditoría P1–P5, B10): la última es la del saldo, la que se pactó
+ * con la salida. Si el original tiene cuotas de sobra, se reutilizan sus
+ * fechas; si no, las de en medio se reparten parejas entre la primera fecha
+ * pendiente (u hoy, si solo queda el saldo) y la del saldo — nunca varias
+ * cuotas el mismo día.
  */
 export function splitSchedule(
-  current: readonly ScheduleLine[],
+  original: readonly ScheduleLine[],
   balanceCents: number,
   count: number,
+  today: string = isoDay(new Date()),
 ): ScheduleLine[] {
   const parts = Math.max(1, Math.floor(count));
-  const final = current[current.length - 1]?.due_at ?? "";
+  const final = original[original.length - 1]?.due_at ?? "";
   const base = Math.floor(balanceCents / parts / 100) * 100;
-  return Array.from({ length: parts }, (_, index) => {
-    const last = index === parts - 1;
-    return {
-      due_at: last ? final : (current[index]?.due_at ?? final),
-      amount_cents: last ? balanceCents - base * (parts - 1) : base,
-    };
-  });
+  const start = original.length > 1 ? original[0]!.due_at : today;
+  const from = new Date(`${start}T00:00:00`).getTime();
+  const to = new Date(`${final}T00:00:00`).getTime();
+  const dateAt = (index: number): string => {
+    if (index === parts - 1) return final;
+    if (original.length >= parts) return original[index]!.due_at;
+    if (Number.isNaN(from) || Number.isNaN(to)) return final;
+    const step =
+      parts === 1 ? 0 : (to - from) / (parts - (original.length > 1 ? 1 : 0));
+    const offset = original.length > 1 ? index : index + 1;
+    return isoDay(new Date(from + step * offset));
+  };
+  return Array.from({ length: parts }, (_, index) => ({
+    due_at: dateAt(index),
+    amount_cents:
+      index === parts - 1 ? balanceCents - base * (parts - 1) : base,
+  }));
 }
 
 /**

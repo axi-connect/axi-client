@@ -298,13 +298,16 @@ export interface ReminderThreadEntry {
   /** Único en el hilo: la dirección y el desfase, como la clave del servidor. */
   id: string;
   template: ReminderTemplateKey;
-  /** «vie 9 oct · 7 días antes». */
+  /** «vie 9 de oct · 7 días antes». */
   when: string;
+  /** El texto está apagado: ese día no sale nada (queda en el historial). */
+  disabled: boolean;
   /**
-   * Por qué ese día no sale el texto: `disabled` (el aviso está apagado) o
-   * `no_hsm` (mora sin plantilla aprobada: fuera de las 24 h no sale).
+   * Por WhatsApp, fuera de la ventana de 24 h, este aviso no sale: su texto no
+   * tiene plantilla aprobada de Meta. Solo si WhatsApp está encendido; por
+   * correo sale igual.
    */
-  gap: "disabled" | "no_hsm" | null;
+  whatsappNeedsHsm: boolean;
 }
 
 const SHORT_DAY = new Intl.DateTimeFormat("es-CO", {
@@ -320,11 +323,14 @@ function shiftDay(day: string, offset: number): string {
 }
 
 /**
- * La cadencia contada como conversación (Cobros premium P5): un mensaje por
- * desfase, en el orden en que llegarían para una cuota de ejemplo. Antes de
- * vencer usa el texto «antes de vencer», el desfase 0 el del día, y la mora el
- * de mora — la misma elección de plantilla que hace el servidor. Un texto
- * apagado no desaparece: deja un hueco ese día.
+ * La cadencia contada como conversación (Cobros premium P5): un aviso por día
+ * de la cadencia, en el orden en que llegarían para una cuota de ejemplo.
+ *
+ * Espejo de `reminderStage` del servidor: antes de vencer usa el texto «antes
+ * de vencer»; el día del vencimiento, si «el día» está en la cadencia de
+ * antes, sale `due_today` y NO además `overdue_0` (el servidor manda uno); si
+ * no, el 0 de después sale como mora. La plantilla aprobada se busca para el
+ * texto de cada día, como `reminder_dispatch` (no solo para la mora).
  */
 export function reminderThread(
   policy: Pick<
@@ -333,31 +339,33 @@ export function reminderThread(
     | "overdue_reminder_days"
     | "templates"
     | "hsm_templates"
+    | "reminder_channels"
   >,
   dueDate: string = SAMPLE_DUE_DATE,
 ): { entries: ReminderThreadEntry[]; maxMessages: number } {
   const before = [...new Set(policy.reminder_days_before)].sort(
     (a, b) => b - a,
   );
-  const after = [...new Set(policy.overdue_reminder_days)].sort(
-    (a, b) => a - b,
-  );
+  const dueDayCovered = before.includes(0);
+  const after = [...new Set(policy.overdue_reminder_days)]
+    .filter((days) => !(days === 0 && dueDayCovered))
+    .sort((a, b) => a - b);
   const entry = (
     id: string,
     template: ReminderTemplateKey,
     offset: number,
     note: string,
   ): ReminderThreadEntry => {
-    const enabled = policy.templates[template].enabled;
+    const disabled = !policy.templates[template].enabled;
     return {
       id,
       template,
       when: `${shiftDay(dueDate, offset)} · ${note}`,
-      gap: !enabled
-        ? "disabled"
-        : template === "overdue" && policy.hsm_templates.overdue === undefined
-          ? "no_hsm"
-          : null,
+      disabled,
+      whatsappNeedsHsm:
+        !disabled &&
+        policy.reminder_channels.whatsapp &&
+        policy.hsm_templates[template] === undefined,
     };
   };
   const entries = [
@@ -376,14 +384,19 @@ export function reminderThread(
         `overdue_${String(days)}`,
         "overdue",
         days,
-        days === 1 ? "1 día de mora" : `${String(days)} días de mora`,
+        days === 0
+          ? "el día que vence"
+          : days === 1
+            ? "1 día de mora"
+            : `${String(days)} días de mora`,
       ),
     ),
   ];
-  // «Como mucho»: la mora sin plantilla PUEDE salir si la ventana está abierta.
+  // «Como mucho»: un aviso por día encendido. Con los dos canales, cada aviso
+  // sale por los dos; la isla lo dice aparte.
   return {
     entries,
-    maxMessages: entries.filter((one) => one.gap !== "disabled").length,
+    maxMessages: entries.filter((one) => !one.disabled).length,
   };
 }
 

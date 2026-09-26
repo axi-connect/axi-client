@@ -67,7 +67,7 @@ describe("RemindersTab · la conversación y los interruptores (premium P5)", ()
     });
     // [7, 3, 0] antes y [1, 3, 7] después: seis mensajes.
     expect(island).toHaveTextContent(
-      "6 mensajes como mucho: paran en cuanto pague o prometa.",
+      "6 avisos como mucho, cada uno por WhatsApp y por correo: paran en cuanto pague o prometa.",
     );
     expect(within(island).queryByText(/no se escribe nada/)).toBeNull();
 
@@ -76,7 +76,7 @@ describe("RemindersTab · la conversación y los interruptores (premium P5)", ()
         name: "Enviar el aviso de antes de vencer",
       }),
     );
-    expect(island).toHaveTextContent("4 mensajes como mucho");
+    expect(island).toHaveTextContent("4 avisos como mucho");
     expect(within(island).getAllByText(/no se escribe nada/)).toHaveLength(2);
   });
 
@@ -111,5 +111,31 @@ describe("RemindersTab · la conversación y los interruptores (premium P5)", ()
       "MARK",
     );
     expect(island).toHaveTextContent("Hola Laura Gómez");
+  });
+
+  it("M2: sin plantilla aprobada el aviso por WhatsApp puede no salir; con solo correo no se dice", async () => {
+    mockGet.mockResolvedValue(
+      policy({ reminder_channels: { whatsapp: true, email: false } }),
+    );
+    const { unmount } = render(<RemindersTab />);
+    const island = await screen.findByRole("region", {
+      name: "Así le escribimos",
+    });
+    expect(within(island).getAllByText(/por\s+WhatsApp/)).not.toHaveLength(0);
+    unmount();
+
+    mockGet.mockResolvedValue(
+      policy({ reminder_channels: { whatsapp: false, email: true } }),
+    );
+    render(<RemindersTab />);
+    const onlyEmail = await screen.findByRole("region", {
+      name: "Así le escribimos",
+    });
+    expect(
+      within(onlyEmail).queryByText(/no tiene plantilla aprobada/),
+    ).toBeNull();
+    expect(
+      screen.queryByText(/No hay plantilla aprobada para la mora/),
+    ).toBeNull();
   });
 });

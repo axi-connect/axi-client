@@ -1,6 +1,8 @@
 "use client";
 
 import { formatMoney, formatShortDate } from "@/core/lib/format";
+// El número del pedido lo formatea su dueño, el slice orders (§3.3).
+import { orderNumberLabel } from "@/modules/orders/public";
 import { Button } from "@/shared/components/ui/button";
 import { InkIsland, Kicker } from "@/shared/components/features/bento";
 import {
@@ -53,9 +55,7 @@ export function WriteFirstIsland({
           </p>
           <p className="flex flex-wrap gap-x-1.5 text-[12.5px] text-muted-foreground">
             <span className="whitespace-nowrap">
-              {row.order_number === null
-                ? "Borrador"
-                : `#${String(row.order_number).padStart(4, "0")}`}
+              {orderNumberLabel(row.order_number)}
             </span>
             {row.service_date !== null ? (
               <>

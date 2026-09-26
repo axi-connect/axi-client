@@ -222,11 +222,13 @@ describe("reminderThread (premium P5: la cadencia como conversación)", () => {
     due_today: { enabled: true, body: "b" },
     overdue: { enabled: true, body: "c" },
   };
+  const hsm = { name: "cobro", language: "es" };
   const base = {
     reminder_days_before: [3, 7, 0],
     overdue_reminder_days: [7, 1],
     templates,
-    hsm_templates: { overdue: { name: "cobro", language: "es" } },
+    hsm_templates: { due_soon: hsm, due_today: hsm, overdue: hsm },
+    reminder_channels: { whatsapp: true, email: false },
   };
 
   it("ordena como llegarían y elige el texto de cada día, como el servidor", () => {
@@ -243,20 +245,56 @@ describe("reminderThread (premium P5: la cadencia como conversación)", () => {
     expect(maxMessages).toBe(5);
   });
 
-  it("un texto apagado deja hueco y no cuenta; la mora sin plantilla deja hueco pero puede salir", () => {
+  it("M1: con el día 0 en las dos cadencias sale UNO (due_today); sin él en la de antes, el 0 de después es mora", () => {
+    const both = reminderThread({
+      ...base,
+      reminder_days_before: [0],
+      overdue_reminder_days: [0],
+    });
+    expect(both.entries.map((one) => one.id)).toEqual(["due_today"]);
+    expect(both.maxMessages).toBe(1);
+    const onlyAfter = reminderThread({
+      ...base,
+      reminder_days_before: [3],
+      overdue_reminder_days: [0],
+    });
+    expect(onlyAfter.entries.map((one) => [one.id, one.template])).toEqual([
+      ["due_soon_3", "due_soon"],
+      ["overdue_0", "overdue"],
+    ]);
+  });
+
+  it("un texto apagado no cuenta y no pide plantilla", () => {
     const off = reminderThread({
       ...base,
       templates: { ...templates, due_soon: { enabled: false, body: "a" } },
     });
     expect(
-      off.entries.filter((one) => one.gap === "disabled").map((one) => one.id),
+      off.entries.filter((one) => one.disabled).map((one) => one.id),
     ).toEqual(["due_soon_7", "due_soon_3"]);
-    expect(off.maxMessages).toBe(3);
-    const noHsm = reminderThread({ ...base, hsm_templates: {} });
     expect(
-      noHsm.entries.filter((one) => one.gap === "no_hsm").map((one) => one.id),
-    ).toEqual(["overdue_1", "overdue_7"]);
-    expect(noHsm.maxMessages).toBe(5);
+      off.entries.some((one) => one.disabled && one.whatsappNeedsHsm),
+    ).toBe(false);
+    expect(off.maxMessages).toBe(3);
+  });
+
+  it("M2: la plantilla aprobada se busca para CADA texto y solo importa si WhatsApp está encendido", () => {
+    const partial = reminderThread({
+      ...base,
+      hsm_templates: { overdue: hsm },
+    });
+    expect(
+      partial.entries
+        .filter((one) => one.whatsappNeedsHsm)
+        .map((one) => one.id),
+    ).toEqual(["due_soon_7", "due_soon_3", "due_today"]);
+    expect(partial.maxMessages).toBe(5);
+    const emailOnly = reminderThread({
+      ...base,
+      hsm_templates: {},
+      reminder_channels: { whatsapp: false, email: true },
+    });
+    expect(emailOnly.entries.some((one) => one.whatsappNeedsHsm)).toBe(false);
   });
 });
 

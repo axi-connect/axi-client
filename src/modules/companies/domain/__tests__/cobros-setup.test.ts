@@ -133,8 +133,21 @@ describe("puesta en marcha de cobros", () => {
             manual_rate: { rate: 3950, valid_until: "2026-09-30" },
           } as Partial<FxSetupDTO>),
         }),
+        "2026-09-26",
       ).foot,
     ).toBe("Cobras en COP · tasa manual");
+    // B14: vencida, ya no manda la manual y la ficha lo dice.
+    expect(
+      featureSetup(
+        "fx_quotes",
+        all({
+          fx: fx({
+            manual_rate: { rate: 3950, valid_until: "2026-09-30" },
+          } as Partial<FxSetupDTO>),
+        }),
+        "2026-10-01",
+      ).foot,
+    ).toBe("Cobras en COP · TRM + 1,5 % · la manual venció");
     expect(featureSetup("fx_quotes", all({ fx: "error" }))).toMatchObject({
       configured: null,
     });

@@ -217,13 +217,13 @@ export function OrderNotificationTemplatesForm() {
           </p>
           {current.enabled ? (
             <p className="rounded-2xl rounded-bl-md border border-border bg-card px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap shadow-sm">
-              {previewBody(current.body)}
+              {previewBody(current.body, meta.key)}
             </p>
           ) : (
             <p className="text-sm text-muted-foreground">No sale nada al cliente en este cambio del pedido.</p>
           )}
           <p className="mt-auto text-xs leading-relaxed text-muted-foreground">
-            Ejemplo: Ana, pedido #0045, un abono de $ 5.000.000 y un saldo de $ 14.458.586.
+            Ejemplo: Ana, pedido 45, un total de $ 27.797.980; en el abono, $ 5.000.000 y un saldo de $ 14.458.586.
           </p>
         </InkIsland>
       </div>
@@ -231,16 +231,32 @@ export function OrderNotificationTemplatesForm() {
   );
 }
 
-/** Los datos de ejemplo con los que la isla rellena el texto. */
-const PREVIEW_VALUES: Record<string, string> = {
-  "{{contact_name}}": "Ana",
-  "{{order_number}}": "#0045",
-  "{{total}}": "$ 27.797.980",
-  "{{status}}": "confirmado",
-  "{{amount}}": "$ 5.000.000",
-  "{{balance}}": "$ 14.458.586",
+/** El `{{status}}` de cada aviso: el estado en que queda el pedido (etiquetas cortas del servidor). */
+const PREVIEW_STATUS: Record<TemplateKey, string> = {
+  confirmed: "confirmado",
+  paid: "pagado",
+  payment_received: "confirmado",
+  fulfilled: "entregado",
+  cancelled: "cancelado",
+  payment_rejected: "confirmado",
+  checkout_link: "pendiente",
 };
 
-export function previewBody(body: string): string {
-  return Object.entries(PREVIEW_VALUES).reduce((text, [variable, value]) => text.split(variable).join(value), body);
+/**
+ * El texto con datos de ejemplo, relleno como `renderTemplate` del servidor:
+ * `{{order_number}}` es el número a secas («45»), acepta espacios dentro de las
+ * llaves y el importe y el saldo SOLO se resuelven en el aviso del abono — en
+ * otro aviso quedan literales, que es la señal de que están en el sitio
+ * equivocado. Una variable desconocida también queda literal.
+ */
+export function previewBody(body: string, key: TemplateKey = "payment_received"): string {
+  const values: Record<string, string> = {
+    order_number: "45",
+    total: "$ 27.797.980",
+    contact_name: "Ana",
+    status: PREVIEW_STATUS[key],
+    ...(key === "payment_received" ? { amount: "$ 5.000.000", balance: "$ 14.458.586" } : {}),
+    ...(key === "checkout_link" ? { checkout_url: "https://pagos.ejemplo.com/45" } : {}),
+  };
+  return body.replace(/\{\{\s*(\w+)\s*\}\}/g, (literal, name: string) => (name in values ? values[name] : literal));
 }
