@@ -109,6 +109,45 @@ cada icono lleva un tooltip a la derecha, el conteo de En cola y Contigo, y el p
 | Móvil (<md) | Lista a pantalla completa, la isla como franja compacta arriba y el drawer de canales en cristal |
 | Deuda que se cierra | Error de `tsc` preexistente en `ConversationPanel.test.tsx(40,3)`, pedido por el auditor: con él cerrado, `tsc` puede exigirse en 0 |
 
+#### F1 · Render medido (§12) — 2026-09-26
+
+Arnés `/root/axi/qa/premium/inbox-f1-render.mjs` + `inbox-f1-seed.py` (con guardia: solo `axi_render`) contra
+`next dev` (:3001) y la API dist. El escenario:
+- canales en los cuatro estados;
+- cola con urgente, alta y 99+;
+- conversaciones tuyas, del equipo y de Axi, y cerradas;
+- nombres de 45+ y una preview de 300 caracteres;
+- el día con 47 entradas y 32 resueltas.
+
+Escenas: bandeja, cola, todas, cerradas, plegada, asomada, desplegada, drawer y foco. En 390, 768, 1024, 1280 y
+1440 px, claro y oscuro: **90 capturas sin hallazgos**. Detectores de §5, más el de «el panel scrollea», y el
+guardián de memoria acordado con el auditor (pausa si hay menos de 1,5 GB). Evidencia en `D:\axi-qa\premium\inbox-f1`.
+
+Lo que el render corrigió:
+- **La columna desplegada a 1024 px** dejaba 184 px para «Tu día» y cortaba la isla. Por debajo de `xl` el botón ya
+  no la despliega en su sitio: la **asoma** flotando sobre la lista (`data-peek`, sombra de overlay) y se cierra al
+  elegir, con Escape o al tocar fuera. La preferencia guardada solo manda desde `xl`.
+- **Clases armadas en tiempo de ejecución** (`${v}:inline-flex`), que Tailwind no genera. Ahora son literales.
+- **La X del `Sheet` compartido** medía 16 px y se llamaba «Close». Ahora mide 36 px y se llama «Cerrar».
+- **La frase de «Todas abiertas»** se cortaba en 320 px. Ahora ocupa hasta dos líneas.
+- **Dos iconos de panel iguales en el celular:** el del menú de la app y el del drawer. El del drawer pasa al icono
+  de bandeja.
+
+Verjas locales:
+- `tsc` en **0**: cerrado el preexistente de `ConversationPanel.test.tsx`.
+- `eslint` con 0 errores. Queda el aviso preexistente de `ConversationPanel`.
+- jest de inbox, workspace, `shared/ui` y loading: 34 suites y 309 tests.
+
+Tests nuevos:
+- de los dos signos en el dominio;
+- de frescura con reloj falso, incluida la pestaña que vuelve a visible;
+- del 403;
+- de N+1 con 50 filas;
+- de plegar, asomar y recordar;
+- de «Atender a …».
+
+La suite completa y `next build` los corre el auditor en la verja combinada.
+
 ### F2 · La conversación
 
 Solo cliente.
