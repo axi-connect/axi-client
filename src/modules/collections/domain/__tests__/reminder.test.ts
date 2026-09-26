@@ -1,8 +1,10 @@
 import {
   lastReminderLine,
   manualStageOf,
+  previewSegments,
   relativeDay,
   reminderKeyLabel,
+  reminderThread,
   renderReminderPreview,
   skipReasonLabel,
   unknownReminderVariables,
@@ -211,5 +213,60 @@ describe("manualStageOf", () => {
     expect(manualStageOf("2026-09-15", new Date("2026-09-18T10:00:00"))).toBe(
       "overdue",
     );
+  });
+});
+
+describe("reminderThread (premium P5: la cadencia como conversación)", () => {
+  const templates = {
+    due_soon: { enabled: true, body: "a" },
+    due_today: { enabled: true, body: "b" },
+    overdue: { enabled: true, body: "c" },
+  };
+  const base = {
+    reminder_days_before: [3, 7, 0],
+    overdue_reminder_days: [7, 1],
+    templates,
+    hsm_templates: { overdue: { name: "cobro", language: "es" } },
+  };
+
+  it("ordena como llegarían y elige el texto de cada día, como el servidor", () => {
+    const { entries, maxMessages } = reminderThread(base, "2026-10-16");
+    expect(entries.map((one) => [one.id, one.template])).toEqual([
+      ["due_soon_7", "due_soon"],
+      ["due_soon_3", "due_soon"],
+      ["due_today", "due_today"],
+      ["overdue_1", "overdue"],
+      ["overdue_7", "overdue"],
+    ]);
+    expect(entries[0].when).toMatch(/vie 9 de oct · 7 días antes$/);
+    expect(entries[3].when).toMatch(/17 de oct · 1 día de mora$/);
+    expect(maxMessages).toBe(5);
+  });
+
+  it("un texto apagado deja hueco y no cuenta; la mora sin plantilla deja hueco pero puede salir", () => {
+    const off = reminderThread({
+      ...base,
+      templates: { ...templates, due_soon: { enabled: false, body: "a" } },
+    });
+    expect(
+      off.entries.filter((one) => one.gap === "disabled").map((one) => one.id),
+    ).toEqual(["due_soon_7", "due_soon_3"]);
+    expect(off.maxMessages).toBe(3);
+    const noHsm = reminderThread({ ...base, hsm_templates: {} });
+    expect(
+      noHsm.entries.filter((one) => one.gap === "no_hsm").map((one) => one.id),
+    ).toEqual(["overdue_1", "overdue_7"]);
+    expect(noHsm.maxMessages).toBe(5);
+  });
+});
+
+describe("previewSegments", () => {
+  it("marca solo la variable que el servidor no conoce", () => {
+    expect(
+      previewSegments("Hola {{contact_name}}, {{descuento}}", ["contact_name"]),
+    ).toEqual([
+      { text: "Hola Laura Gómez, ", unknown: false },
+      { text: "{{descuento}}", unknown: true },
+    ]);
   });
 });

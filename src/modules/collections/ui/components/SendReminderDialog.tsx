@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Send } from "lucide-react";
+import { Mail, MessageCircle, Send } from "lucide-react";
 
 import { errorMessage } from "@/core/lib/error-messages";
 import { formatMoney, formatShortDate } from "@/core/lib/format";
+import { cn } from "@/core/lib/utils";
 import { useAlert } from "@/core/providers/alert-provider";
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -43,6 +44,11 @@ import {
  * manda el texto de mora, que le diría «tienes una cuota pendiente desde el 20
  * de septiembre» con una fecha que todavía no ha llegado. Eso se lee como un
  * cobro agresivo y es, en realidad, un error de programa.
+ *
+ * Cobros premium P5: el texto que toca va arriba, en una frase, y el canal se
+ * elige con dos tarjetas (patrón F9). Sin datos de alcance del contacto en
+ * esta lectura, las tarjetas no prometen nada que el servidor no confirme: si
+ * no puede salir, vuelve `skipped` y se dice.
  */
 export function SendReminderDialog({
   orderId,
@@ -60,7 +66,7 @@ export function SendReminderDialog({
   const { showAlert } = useAlert();
   const [plan, setPlan] = useState<PlanDetailDTO | null>(null);
   const [body, setBody] = useState("");
-  const [channel] = useState<ReminderChannel>("whatsapp");
+  const [channel, setChannel] = useState<ReminderChannel>("whatsapp");
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
@@ -114,9 +120,11 @@ export function SendReminderDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[520px]">
+      <DialogContent className="max-w-[560px]">
         <DialogHeader>
-          <DialogTitle>Escribir a {contactName}</DialogTitle>
+          <DialogTitle className="font-heading text-2xl font-bold tracking-tight">
+            Escribir a {contactName}
+          </DialogTitle>
           <DialogDescription>
             {plan === null || target === null
               ? "Buscando la cuota que toca…"
@@ -136,58 +144,120 @@ export function SendReminderDialog({
           </p>
         ) : (
           <>
-            <div className="overflow-hidden rounded-2xl border border-border">
-              <InfoRow
-                label="Texto que va a salir"
-                value={STAGE_LABELS[stage ?? "due_soon"]}
+            <p className="rounded-2xl bg-muted px-4 py-3 text-[13px] leading-relaxed">
+              Toca el texto{" "}
+              <b className="font-semibold">
+                «{REMINDER_TEMPLATE_LABELS[stage ?? "due_soon"]}»
+              </b>
+              {STAGE_NOTES[stage ?? "due_soon"]}
+            </p>
+
+            <div className="flex flex-col gap-2">
+              <p id="reminder-body-label" className="text-sm font-semibold">
+                Texto que va a salir
+              </p>
+              <textarea
+                rows={4}
+                value={body}
+                aria-label="Texto del recordatorio"
+                aria-describedby="reminder-body-hint"
+                placeholder={renderReminderPreview(
+                  `Hola {{contact_name}}, ${
+                    stage === "overdue"
+                      ? "tu pedido {{order_number}} tiene una cuota pendiente."
+                      : "te recordamos que la cuota {{installment_seq}} vence el {{due_date}}."
+                  }`,
+                  {
+                    contact_name: contactName,
+                    order_number:
+                      plan.order_number === null
+                        ? "s/n"
+                        : `#${String(plan.order_number)}`,
+                    installment_seq: String(target.seq),
+                    due_date: formatShortDate(target.due_at),
+                  },
+                )}
+                onChange={(event) => setBody(event.target.value)}
+                className="w-full resize-y rounded-2xl border border-input bg-background px-3.5 py-3 text-sm leading-relaxed focus:border-primary focus:ring-3 focus:ring-primary/20 focus:outline-none"
               />
-              <InfoRow label="Por" value={REMINDER_CHANNEL_LABELS[channel]} />
+              <p
+                id="reminder-body-hint"
+                className="text-[12.5px] leading-relaxed text-muted-foreground"
+              >
+                {stage === "overdue" ? (
+                  <>
+                    La cuota{" "}
+                    <b className="font-medium text-foreground">ya venció</b>,
+                    así que el texto que sale es el de mora.
+                  </>
+                ) : (
+                  <>
+                    La cuota{" "}
+                    <b className="font-medium text-foreground">
+                      todavía no ha vencido
+                    </b>
+                    , así que no sale el texto de mora: decirle «tienes una
+                    cuota pendiente desde el {formatShortDate(target.due_at)}» a
+                    alguien cuya fecha aún no ha llegado se lee como un cobro
+                    agresivo.
+                  </>
+                )}{" "}
+                Déjalo en blanco para mandar tu plantilla tal cual; lo que
+                escribas vale solo para esta vez.
+              </p>
             </div>
 
-            <textarea
-              rows={4}
-              value={body}
-              aria-label="Texto del recordatorio"
-              placeholder={renderReminderPreview(
-                `Hola {{contact_name}}, ${
-                  stage === "overdue"
-                    ? "tu pedido {{order_number}} tiene una cuota pendiente."
-                    : "te recordamos que la cuota {{installment_seq}} vence el {{due_date}}."
-                }`,
-                {
-                  contact_name: contactName,
-                  order_number:
-                    plan.order_number === null
-                      ? "s/n"
-                      : `#${String(plan.order_number)}`,
-                  installment_seq: String(target.seq),
-                  due_date: formatShortDate(target.due_at),
-                },
-              )}
-              onChange={(event) => setBody(event.target.value)}
-              className="w-full resize-y rounded-md border border-input bg-background px-2.5 py-2 text-sm leading-relaxed focus:border-primary focus:outline-none focus:ring-3 focus:ring-primary/20"
-            />
-
-            <p className="text-[12.5px] leading-relaxed text-muted-foreground">
-              {stage === "overdue" ? (
-                <>
-                  La cuota{" "}
-                  <b className="font-medium text-foreground">ya venció</b>, así
-                  que el texto que sale es el de mora.
-                </>
-              ) : (
-                <>
-                  La cuota{" "}
-                  <b className="font-medium text-foreground">
-                    todavía no ha vencido
-                  </b>
-                  , así que no sale el texto de mora: decirle «tienes una cuota
-                  pendiente desde el {formatShortDate(target.due_at)}» a alguien
-                  cuya fecha aún no ha llegado se lee como un cobro agresivo.
-                </>
-              )}{" "}
-              Déjalo en blanco para mandar tu plantilla tal cual.
-            </p>
+            <div
+              role="radiogroup"
+              aria-label="Por dónde"
+              className="grid gap-2.5 sm:grid-cols-2"
+            >
+              {CHANNELS.map((option) => {
+                const checked = channel === option.key;
+                const Icon = option.icon;
+                return (
+                  <button
+                    key={option.key}
+                    type="button"
+                    role="radio"
+                    aria-checked={checked}
+                    onClick={() => setChannel(option.key)}
+                    className={cn(
+                      "flex min-h-16 items-center gap-3 rounded-2xl border bg-card px-3.5 py-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                      checked
+                        ? "border-foreground ring-1 ring-foreground"
+                        : "border-border hover:bg-accent",
+                    )}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="grid size-9 shrink-0 place-items-center rounded-xl bg-muted"
+                    >
+                      <Icon className="size-4" />
+                    </span>
+                    <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                      <span className="text-sm font-semibold">
+                        {REMINDER_CHANNEL_LABELS[option.key]}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {option.hint}
+                      </span>
+                    </span>
+                    <span
+                      aria-hidden="true"
+                      className={cn(
+                        "grid size-[18px] shrink-0 place-items-center rounded-full border-[1.5px]",
+                        checked ? "border-foreground" : "border-foreground/30",
+                      )}
+                    >
+                      {checked ? (
+                        <span className="size-2 rounded-full bg-foreground" />
+                      ) : null}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </>
         )}
 
@@ -200,7 +270,7 @@ export function SendReminderDialog({
             disabled={sending || target === null}
           >
             <Send aria-hidden="true" className="size-4" />
-            Enviar ahora
+            Enviar ahora por {REMINDER_CHANNEL_LABELS[channel]}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -208,17 +278,22 @@ export function SendReminderDialog({
   );
 }
 
-const STAGE_LABELS: Record<ReminderTemplateKey, string> = {
-  due_soon: `${REMINDER_TEMPLATE_LABELS.due_soon} · aún no vence`,
-  due_today: `${REMINDER_TEMPLATE_LABELS.due_today} · vence hoy`,
-  overdue: `${REMINDER_TEMPLATE_LABELS.overdue} · ya vencida`,
+/** Por qué toca ese texto, pegado a su nombre: «… · aún no vence». */
+const STAGE_NOTES: Record<ReminderTemplateKey, string> = {
+  due_soon: " · aún no vence.",
+  due_today: " · vence hoy.",
+  overdue: " · ya vencida.",
 };
 
-function InfoRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="relative grid min-h-[52px] grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-3 [&+&]:before:absolute [&+&]:before:inset-x-4 [&+&]:before:top-0 [&+&]:before:h-px [&+&]:before:bg-border/60">
-      <span className="text-sm">{label}</span>
-      <span className="text-sm font-medium tabular-nums">{value}</span>
-    </div>
-  );
-}
+const CHANNELS = [
+  {
+    key: "whatsapp",
+    icon: MessageCircle,
+    hint: "Por el chat del pedido; fuera de las 24 h, con la plantilla aprobada",
+  },
+  { key: "email", icon: Mail, hint: "Si tiene correo en su ficha" },
+] as const satisfies readonly {
+  key: ReminderChannel;
+  icon: typeof Mail;
+  hint: string;
+}[];

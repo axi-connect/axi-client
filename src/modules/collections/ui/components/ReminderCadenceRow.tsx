@@ -3,7 +3,8 @@
 import { X } from "lucide-react";
 
 /**
- * Los desfases de una cadencia, como fichas que se quitan y se añaden.
+ * Los desfases de una cadencia, como fichas que se quitan y se añaden (filas
+ * del bento en Cobros premium P5).
  *
  * «El día que vence» NO tiene interruptor propio: es el desfase 0 de esta misma
  * lista, igual que en el servidor. Darle un control aparte inventaba un
@@ -12,17 +13,17 @@ import { X } from "lucide-react";
  */
 export function ReminderCadenceRow({
   label,
+  hint,
   days,
   onChange,
   max,
-  first,
 }: {
   label: string;
+  hint: string;
   days: number[];
   onChange: (next: number[]) => void;
   /** Tope de desfases, el mismo que valida el servidor. */
   max: number;
-  first?: boolean;
 }) {
   // El nombre accesible lleva la DIRECCIÓN dentro. Las dos filas comparten
   // desfases —«3 días» está antes y después de vencer—, así que sin ella un
@@ -31,26 +32,25 @@ export function ReminderCadenceRow({
   const where = label.toLowerCase();
   const options = OFFSET_OPTIONS.filter((day) => !days.includes(day));
   return (
-    <div
-      className={`relative grid min-h-[56px] grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-3 ${
-        first === true
-          ? ""
-          : "before:absolute before:inset-x-4 before:top-0 before:h-px before:bg-border/60"
-      }`}
-    >
-      <span className="text-sm">{label}</span>
-      <div className="flex flex-wrap items-center justify-end gap-1.5">
+    <div className="flex flex-col gap-3 border-t border-border/60 py-4 first-of-type:border-t-0 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+      <div className="min-w-0">
+        <p className="text-sm font-semibold">{label}</p>
+        <p className="mt-0.5 text-[13px] leading-relaxed text-muted-foreground">
+          {hint}
+        </p>
+      </div>
+      <div className="flex flex-wrap items-center gap-1.5 sm:justify-end">
         {days.map((day) => (
           <span
             key={day}
-            className="inline-flex h-7 items-center gap-1.5 rounded-full bg-secondary px-2.5 text-[12.5px] font-medium tabular-nums"
+            className="inline-flex h-8 items-center gap-0.5 rounded-full bg-foreground pr-1 pl-3 text-[13px] font-medium whitespace-nowrap text-background tabular-nums"
           >
             {offsetLabel(day)}
             <button
               type="button"
               aria-label={`Quitar el aviso de ${offsetLabel(day)} ${where}`}
               onClick={() => onChange(days.filter((one) => one !== day))}
-              className="opacity-45 transition-opacity hover:opacity-100"
+              className="grid size-6 place-items-center rounded-full opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
             >
               <X aria-hidden="true" className="size-3" />
             </button>
@@ -65,9 +65,9 @@ export function ReminderCadenceRow({
               if (Number.isNaN(day)) return;
               onChange([...days, day]);
             }}
-            className="h-7 rounded-full border border-dashed border-border bg-transparent px-2 text-[12.5px] text-muted-foreground"
+            className="h-8 min-w-12 rounded-full border border-dashed border-border bg-transparent px-3 text-[13px] text-muted-foreground"
           >
-            <option value="">+</option>
+            <option value="">+ día</option>
             {options.map((day) => (
               <option key={day} value={day}>
                 {offsetLabel(day)}

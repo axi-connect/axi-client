@@ -290,3 +290,119 @@ export function manualStageOf(
   if (days > 0) return "overdue";
   return days === 0 ? "due_today" : "due_soon";
 }
+
+/** La cuota del ejemplo vence el día de `SAMPLE_REMINDER_VARS.due_date`. */
+export const SAMPLE_DUE_DATE = "2026-10-16";
+
+export interface ReminderThreadEntry {
+  /** Único en el hilo: la dirección y el desfase, como la clave del servidor. */
+  id: string;
+  template: ReminderTemplateKey;
+  /** «vie 9 oct · 7 días antes». */
+  when: string;
+  /**
+   * Por qué ese día no sale el texto: `disabled` (el aviso está apagado) o
+   * `no_hsm` (mora sin plantilla aprobada: fuera de las 24 h no sale).
+   */
+  gap: "disabled" | "no_hsm" | null;
+}
+
+const SHORT_DAY = new Intl.DateTimeFormat("es-CO", {
+  weekday: "short",
+  day: "numeric",
+  month: "short",
+});
+
+function shiftDay(day: string, offset: number): string {
+  const date = new Date(`${day}T00:00:00`);
+  date.setDate(date.getDate() + offset);
+  return SHORT_DAY.format(date).replace(/\./g, "").replace(/,/g, "");
+}
+
+/**
+ * La cadencia contada como conversación (Cobros premium P5): un mensaje por
+ * desfase, en el orden en que llegarían para una cuota de ejemplo. Antes de
+ * vencer usa el texto «antes de vencer», el desfase 0 el del día, y la mora el
+ * de mora — la misma elección de plantilla que hace el servidor. Un texto
+ * apagado no desaparece: deja un hueco ese día.
+ */
+export function reminderThread(
+  policy: Pick<
+    CollectionsPolicyDTO,
+    | "reminder_days_before"
+    | "overdue_reminder_days"
+    | "templates"
+    | "hsm_templates"
+  >,
+  dueDate: string = SAMPLE_DUE_DATE,
+): { entries: ReminderThreadEntry[]; maxMessages: number } {
+  const before = [...new Set(policy.reminder_days_before)].sort(
+    (a, b) => b - a,
+  );
+  const after = [...new Set(policy.overdue_reminder_days)].sort(
+    (a, b) => a - b,
+  );
+  const entry = (
+    id: string,
+    template: ReminderTemplateKey,
+    offset: number,
+    note: string,
+  ): ReminderThreadEntry => {
+    const enabled = policy.templates[template].enabled;
+    return {
+      id,
+      template,
+      when: `${shiftDay(dueDate, offset)} · ${note}`,
+      gap: !enabled
+        ? "disabled"
+        : template === "overdue" && policy.hsm_templates.overdue === undefined
+          ? "no_hsm"
+          : null,
+    };
+  };
+  const entries = [
+    ...before.map((days) =>
+      days === 0
+        ? entry("due_today", "due_today", 0, "el día que vence")
+        : entry(
+            `due_soon_${String(days)}`,
+            "due_soon",
+            -days,
+            days === 1 ? "1 día antes" : `${String(days)} días antes`,
+          ),
+    ),
+    ...after.map((days) =>
+      entry(
+        `overdue_${String(days)}`,
+        "overdue",
+        days,
+        days === 1 ? "1 día de mora" : `${String(days)} días de mora`,
+      ),
+    ),
+  ];
+  // «Como mucho»: la mora sin plantilla PUEDE salir si la ventana está abierta.
+  return {
+    entries,
+    maxMessages: entries.filter((one) => one.gap !== "disabled").length,
+  };
+}
+
+/**
+ * El texto rellenado partido en trozos, con las variables que el servidor no
+ * sabe rellenar aparte: la vista previa las marca en vez de esconderlas.
+ */
+export function previewSegments(
+  body: string,
+  known: readonly string[],
+): { text: string; unknown: boolean }[] {
+  return renderReminderPreview(body)
+    .split(/(\{\{\s*\w+\s*\}\})/)
+    .filter((part) => part !== "")
+    .map((part) => {
+      const name = /^\{\{\s*(\w+)\s*\}\}$/.exec(part)?.[1];
+      return {
+        text: part,
+        unknown: name !== undefined && !known.includes(name),
+      };
+    });
+}
