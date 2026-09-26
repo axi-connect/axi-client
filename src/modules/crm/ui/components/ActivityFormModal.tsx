@@ -113,6 +113,8 @@ export function ActivityFormModal({
         title: modalTitle(editing, agentBranch),
         description: modalDescription(editing, agentBranch),
         className: "sm:max-w-2xl",
+        // Sin la X de 16 px: «Cancelar» y Escape ya cierran (objetivo ≥ 24 px, §11).
+        showCloseButton: false,
         actions: [
           { label: "Cancelar", variant: "outline", asClose: true, id: "crm-activity-cancel" },
           {

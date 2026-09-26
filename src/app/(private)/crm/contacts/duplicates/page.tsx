@@ -60,7 +60,7 @@ export default function ContactDuplicatesPage() {
   });
 
   return (
-    <div className="mx-auto max-w-4xl space-y-5">
+    <div className="mx-auto w-full min-w-0 max-w-4xl space-y-5">
       <div>
         <Link
           href="/crm/contacts"
