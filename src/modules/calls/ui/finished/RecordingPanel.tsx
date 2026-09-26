@@ -2,7 +2,6 @@
 
 import { Loader2, Pause, Play } from "lucide-react";
 import { cn } from "@/core/lib/utils";
-import { Island } from "@/shared/components/features/island";
 import { Button } from "@/shared/components/ui/button";
 import { SegmentedControl } from "@/shared/components/ui/segmented";
 import type { CallTranscriptSegment } from "@/modules/calls/domain/call";
@@ -26,9 +25,11 @@ const ROLE_TEXT: Record<CallTranscriptSegment["role"], string> = {
 };
 
 /**
- * La grabación de una llamada terminada (canvas, tablero 6): isla de TINTA
- * con la onda de picos reales coloreada por quién habla, el reloj en el color
- * de quien suena, reproducir y velocidad. La onda es la barra de posición.
+ * La grabación de una llamada terminada (canvas, tablero 6): una superficie
+ * oscura (`.surface-dark`, no una isla — la isla de esta pantalla es «Así fue
+ * la llamada», auditoría F5) con la onda de picos reales coloreada por quién
+ * habla, el reloj en el color de quien suena, reproducir y velocidad. La onda
+ * es la barra de posición.
  */
 export function RecordingPanel({
   sync,
@@ -50,7 +51,10 @@ export function RecordingPanel({
   const total = formatCallClock(Math.round(durationMs / 1000));
 
   return (
-    <Island as="section" material="ink" glow="none" aria-label="Grabación" className="flex flex-col gap-4 p-5 sm:p-6">
+    <section
+      aria-label="Grabación"
+      className="surface-dark relative isolate flex flex-col gap-4 overflow-hidden rounded-3xl bg-background p-5 text-foreground sm:p-6 dark:ring-1 dark:ring-border"
+    >
       <header className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-sm font-semibold">Grabación</h2>
         <ul aria-hidden className="flex items-center gap-4 text-xs text-muted-foreground">
@@ -112,11 +116,11 @@ export function RecordingPanel({
       {urlStatus === "error" && (
         <div role="alert" className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
           No pudimos cargar la grabación.
-          <Button variant="glass" size="sm" onClick={sync.retry}>
+          <Button variant="contrast" size="sm" className="rounded-full" onClick={sync.retry}>
             Reintentar
           </Button>
         </div>
       )}
-    </Island>
+    </section>
   );
 }
