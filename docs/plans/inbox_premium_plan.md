@@ -8,7 +8,7 @@
 >
 > | Fase | Qué | Lienzo | Estado |
 > |---|---|---|---|
-> | F1 | La bandeja: shell del workspace, lista, vistas y el panel sin conversación («Tu día») | — | Por diseñar |
+> | F1 | La bandeja: shell del workspace, lista, vistas y el panel sin conversación («Tu día») | https://claude.ai/artifact/WrEnSotKFPTjsQsgjP3WMd | Lienzo publicado, por aprobar |
 > | F2 | La conversación: cabecera, hilo, eventos de handoff en el hilo, «Por qué está aquí», pie cerrado | — | — |
 > | F3 | Escribir y medios: composer, adjuntos, nota de voz, acciones rápidas, burbujas de media, visor | — | — |
 > | F4 | El contexto: rail y paneles (Contacto, Adjuntos, Historial, Llamadas) | — | — |
@@ -145,8 +145,11 @@ Solo cliente.
 - **D2 · Contador de no leídos.** Coral (convención de mensajería) o tinta. Recomendación: seguir la D1.
 - **D3 · Dónde vive «Lo próximo».** Arriba de la lista (siempre visible) o solo en el panel vacío (más limpio).
   Recomendación: en el panel vacío en md+ y como franja compacta en móvil.
-- **D4 · Ancho de la lista.** 288 px (hoy) o 320 px para que quepan las etiquetas de las vistas. El lienzo lo mide a
-  1024 px, con canales, lista, chat y rail.
+- **D4 · Dónde viven las vistas.** El lienzo de F1 propone sacarlas del segmentado y llevarlas a la columna de
+  canales, como los buzones de Mail: cada una con su nombre, su conteo y su icono. La lista gana su título («En
+  cola») y la frase viva. Un control del lienzo compara con el segmentado de hoy. Con eso la lista queda en 320 px.
+  En 1024 px la columna pasa a riel de 64 px (iconos, conteo y punto de estado) para que el panel quepa. En el
+  celular, el segmentado se queda en la lista y las vistas y canales viven en el drawer.
 
 ## 5. Render medido y verjas (cada fase)
 
