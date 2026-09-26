@@ -164,7 +164,7 @@ export function FxSettingsForm({
       <Row
         title="Usar una tasa manual"
         hint="Cuando la oficial no te sirve (fuente caída, acuerdo especial). Vence sola."
-        control={<Switch checked={manualOn} onCheckedChange={setManualOn} aria-label="Usar una tasa manual" />}
+        control={<Switch size="lg" checked={manualOn} onCheckedChange={setManualOn} aria-label="Usar una tasa manual" />}
       />
       {manualOn ? (
         <div className="grid gap-4 pb-4 sm:grid-cols-2">
@@ -208,7 +208,7 @@ export function FxSettingsForm({
         title="Mostrar el precio en pesos al cotizar"
         hint="El agente muestra el equivalente en pesos a la tasa del día junto al precio. Indicativo hasta confirmar."
         control={
-          <Switch checked={indicative} onCheckedChange={setIndicative} aria-label="Mostrar el precio en pesos al cotizar" />
+          <Switch size="lg" checked={indicative} onCheckedChange={setIndicative} aria-label="Mostrar el precio en pesos al cotizar" />
         }
       />
 

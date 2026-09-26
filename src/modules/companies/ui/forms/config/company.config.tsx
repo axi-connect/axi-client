@@ -110,7 +110,8 @@ export function buildCompanyFormFields(savedNiche = ""): ReadonlyArray<FieldConf
       inputKind: "textarea",
       placeholder: "Qué hace tu empresa: la IA usa esta descripción como contexto.",
       description: "Máximo 500 caracteres.",
-      colSpan: { base: 2 },
+      // Ancho completo desde md; en el celular ya lo es (con base: 2 la rejilla se partía en dos a 390 px).
+      colSpan: { base: 1, md: 2 },
     }),
   ] as const
 }

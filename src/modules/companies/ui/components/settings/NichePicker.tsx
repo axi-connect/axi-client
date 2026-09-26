@@ -64,7 +64,7 @@ export function NichePicker({
             .
           </p>
         </div>
-        <div role="radiogroup" aria-labelledby="company-niche-label" className="grid gap-2 sm:grid-cols-2">
+        <div role="radiogroup" aria-labelledby="company-niche-label" className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
           {NICHES.map((niche) => {
             const checked = niche.code === value;
             return (
@@ -121,8 +121,10 @@ export function NichePicker({
                 >
                   {row.on ? <Check className="size-3" strokeWidth={3} /> : null}
                 </span>
-                <span className="flex-1 font-medium">{row.label}</span>
-                <span className="text-xs text-muted-foreground">{row.on ? "se sugiere" : "no se sugiere"}</span>
+                <span className={cn("min-w-0 flex-1 truncate", row.on ? "font-medium" : "text-muted-foreground")} title={row.label}>
+                  {row.label}
+                </span>
+                <span className="sr-only">{row.on ? "se sugiere" : "no se sugiere"}</span>
               </li>
             ))}
           </ul>

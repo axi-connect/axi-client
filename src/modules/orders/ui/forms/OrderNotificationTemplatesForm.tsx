@@ -10,6 +10,8 @@ import { Label } from "@/shared/components/ui/label";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Switch } from "@/shared/components/ui/switch";
 import { Textarea } from "@/shared/components/ui/textarea";
+import { InkIsland, Kicker } from "@/shared/components/features/bento";
+import { cn } from "@/core/lib/utils";
 import type { OrderNotificationSettingsDTO } from "@/modules/orders/domain/order";
 import {
   getOrderNotificationSettings,
@@ -48,6 +50,7 @@ export function OrderNotificationTemplatesForm() {
   const [settings, setSettings] = useState<OrderNotificationSettingsDTO | null>(null);
   const [saving, setSaving] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [selected, setSelected] = useState<TemplateKey>("payment_received");
 
   const load = useCallback(() => {
     setLoadError(null);
@@ -112,73 +115,132 @@ export function OrderNotificationTemplatesForm() {
     );
   }
 
+  const meta = TEMPLATE_META.find((entry) => entry.key === selected) ?? TEMPLATE_META[0]!;
+  const current = settings.templates[meta.key];
+  const own = EXTRA_VARIABLES[meta.key] ?? [];
+
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-semibold tracking-tight">Notificaciones de pedidos</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Mensajes de WhatsApp que reciben tus clientes cuando su pedido cambia de estado.
-          Variables disponibles:{" "}
-          {VARIABLES.map((variable) => (
-            <code key={variable} className="mx-0.5 rounded bg-secondary px-1 py-0.5 font-mono text-xs">
-              {variable}
-            </code>
-          ))}
+        <h1 className="font-heading text-3xl font-bold tracking-tight">Notificaciones de pedidos</h1>
+        <p className="mt-1 max-w-[72ch] text-sm text-muted-foreground">
+          Mensajes de WhatsApp que reciben tus clientes cuando su pedido cambia de estado. Sin plantilla encendida no sale
+          nada.
         </p>
       </div>
 
-      <div className="space-y-4">
-        {TEMPLATE_META.map(({ key, title, hint }) => {
-          const template = settings.templates[key];
-          return (
-            <section key={key} className="space-y-3 rounded-2xl border border-border bg-background p-4">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <Label htmlFor={`tpl-${key}`} className="text-sm font-semibold">
-                    {title}
-                  </Label>
-                  <p className="text-xs text-muted-foreground">{hint}</p>
-                </div>
+      <div className="grid gap-4 lg:grid-cols-[18rem_minmax(0,1fr)] xl:grid-cols-[18rem_minmax(0,1fr)_minmax(17rem,21rem)] [&>*]:min-w-0">
+        <nav aria-label="Avisos" className="flex flex-col gap-1 rounded-3xl border border-border bg-card p-2">
+          {TEMPLATE_META.map(({ key, title }) => {
+            const template = settings.templates[key];
+            const active = key === meta.key;
+            return (
+              <div key={key} className={cn("flex items-center gap-2 rounded-2xl px-3 py-2", active && "bg-muted")}>
+                <button
+                  type="button"
+                  aria-current={active ? "true" : undefined}
+                  onClick={() => setSelected(key)}
+                  className="min-h-10 min-w-0 flex-1 truncate text-left text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                >
+                  {title}
+                </button>
                 <Switch
+                  size="lg"
                   id={`tpl-${key}-enabled`}
                   aria-label={`Habilitar aviso: ${title}`}
                   checked={template.enabled}
                   onCheckedChange={(enabled) => patch(key, { enabled })}
                 />
               </div>
-              <Textarea
-                id={`tpl-${key}`}
-                value={template.body}
-                maxLength={1000}
-                rows={3}
-                disabled={!template.enabled}
-                onChange={(e) => patch(key, { body: e.target.value })}
-              />
-              {EXTRA_VARIABLES[key] !== undefined ? (
-                <p className="text-xs text-muted-foreground">
-                  Solo aquí se resuelven{" "}
-                  {EXTRA_VARIABLES[key]?.map((variable) => (
-                    <code
-                      key={variable}
-                      className="mx-0.5 rounded bg-secondary px-1 py-0.5 font-mono text-xs"
-                    >
-                      {variable}
-                    </code>
-                  ))}
-                  : el importe del abono y el saldo que queda.
-                </p>
-              ) : null}
-            </section>
-          );
-        })}
-      </div>
+            );
+          })}
+        </nav>
 
-      <div className="flex justify-end">
-        <Button onClick={() => void save()} disabled={saving}>
-          {saving ? <LoaderCircle className="size-4 animate-spin" /> : null}
-          Guardar plantillas
-        </Button>
+        <section className="flex flex-col gap-4 rounded-3xl border border-border bg-card p-5">
+          <div className="flex flex-col gap-1">
+            <p className="text-xs text-muted-foreground">Plantilla</p>
+            <Label htmlFor={`tpl-${meta.key}`} className="font-heading text-2xl font-bold tracking-tight">
+              {meta.title}
+            </Label>
+            <p className="text-sm text-pretty text-foreground/80">{meta.hint}</p>
+          </div>
+          <Textarea
+            id={`tpl-${meta.key}`}
+            value={current.body}
+            maxLength={1000}
+            rows={5}
+            disabled={!current.enabled}
+            onChange={(e) => patch(meta.key, { body: e.target.value })}
+          />
+          <div className="flex flex-col gap-2">
+            <p className="text-xs text-muted-foreground">Insertar</p>
+            <div className="flex flex-wrap gap-1.5">
+              {[...own, ...VARIABLES].map((variable) => (
+                <button
+                  key={variable}
+                  type="button"
+                  disabled={!current.enabled}
+                  onClick={() => patch(meta.key, { body: `${current.body}${current.body.endsWith(" ") || current.body === "" ? "" : " "}${variable}` })}
+                  className={cn(
+                    "h-8 rounded-full border bg-card px-3 font-mono text-xs disabled:opacity-50",
+                    own.includes(variable) ? "border-foreground" : "border-border",
+                  )}
+                >
+                  {variable}
+                </button>
+              ))}
+            </div>
+            {own.length > 0 ? (
+              <p className="text-xs text-muted-foreground">
+                Solo aquí se resuelven{" "}
+                {own.map((variable) => (
+                  <code key={variable} className="mx-0.5 rounded bg-secondary px-1 py-0.5 font-mono text-xs">
+                    {variable}
+                  </code>
+                ))}
+                : el importe del abono y el saldo que queda.
+              </p>
+            ) : null}
+          </div>
+          <div className="mt-auto flex justify-end border-t border-border/60 pt-4">
+            <Button onClick={() => void save()} disabled={saving}>
+              {saving ? <LoaderCircle className="size-4 animate-spin" /> : null}
+              Guardar plantillas
+            </Button>
+          </div>
+        </section>
+
+        <InkIsland label="Así le llega" className="gap-4 lg:col-span-2 xl:col-span-1">
+          <Kicker>Así le llega</Kicker>
+          <p className="font-heading text-xl leading-tight font-bold tracking-tight">
+            {current.enabled ? "Con datos de ejemplo" : "Este aviso está apagado"}
+          </p>
+          {current.enabled ? (
+            <p className="rounded-2xl rounded-bl-md border border-border bg-card px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap shadow-sm">
+              {previewBody(current.body)}
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground">No sale nada al cliente en este cambio del pedido.</p>
+          )}
+          <p className="mt-auto text-xs leading-relaxed text-muted-foreground">
+            Ejemplo: Ana, pedido #0045, un abono de $ 5.000.000 y un saldo de $ 14.458.586.
+          </p>
+        </InkIsland>
       </div>
     </div>
   );
+}
+
+/** Los datos de ejemplo con los que la isla rellena el texto. */
+const PREVIEW_VALUES: Record<string, string> = {
+  "{{contact_name}}": "Ana",
+  "{{order_number}}": "#0045",
+  "{{total}}": "$ 27.797.980",
+  "{{status}}": "confirmado",
+  "{{amount}}": "$ 5.000.000",
+  "{{balance}}": "$ 14.458.586",
+};
+
+export function previewBody(body: string): string {
+  return Object.entries(PREVIEW_VALUES).reduce((text, [variable, value]) => text.split(variable).join(value), body);
 }

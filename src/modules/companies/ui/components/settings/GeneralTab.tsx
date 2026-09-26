@@ -76,7 +76,7 @@ export function GeneralTab() {
           gap={4}
           id="company-form"
           schema={companyFormSchema}
-          columns={{ sm: 1, md: 2 }}
+          columns={{ base: 1, md: 2 }}
           defaultValues={companyToFormValues(company)}
           fields={buildCompanyFormFields(company.niche_code ?? "")}
           onSubmit={handleSubmit}

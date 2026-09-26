@@ -26,6 +26,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { ShopifyOriginBadge, StatusDotBadge } from "@/shared/components/ui/status-badges";
 import { FieldList } from "@/shared/components/features/field-list";
+import { InkIsland, Kicker, StatePill, type StatePillTone } from "@/shared/components/features/bento";
 import { PaymentPlanBlock } from "@/modules/collections/ui/components/PaymentPlanBlock";
 import { DocumentsList, latestChange } from "@/modules/documents/public";
 import { OrderBalanceBlock } from "./OrderBalanceBlock";
@@ -72,6 +73,58 @@ const PAYMENT_STATUS_LABEL: Record<OrderPaymentDTO["status"], string> = {
   verified: "Verificado",
   rejected: "Rechazado",
 };
+
+const PAYMENT_STATUS_TONE: Record<OrderPaymentDTO["status"], StatePillTone> = {
+  reported: "warning",
+  verified: "success",
+  rejected: "destructive",
+};
+
+/**
+ * La isla del pedido (§9.5.1, cristal): el comprobante más antiguo por
+ * revisar, con lo que dijo el cliente y lo que faltaría si es cierto. Sin
+ * comprobantes pendientes no existe — no se inventa otro «lo próximo».
+ */
+export function PendingProofIsland({ order, onReview }: { order: OrderDTO; onReview: (payment: OrderPaymentDTO) => void }) {
+  // El más antiguo primero: es el que lleva más tiempo esperando respuesta.
+  const pending = order.payments
+    .filter((payment) => payment.status === "reported")
+    .sort((a, b) => a.created_at.localeCompare(b.created_at));
+  const first = pending[0] ?? null;
+  if (first === null) return null;
+  const leftIfTrue = first.amount_cents === null ? null : Math.max(0, order.balance_cents - first.amount_cents);
+  return (
+    <InkIsland label="Comprobante por revisar" className="gap-3 p-5">
+      <Kicker>Lo próximo</Kicker>
+      <p className="font-heading text-xl leading-tight font-bold tracking-tight">
+        {pending.length === 1 ? "Llegó un comprobante" : `Llegaron ${String(pending.length)} comprobantes`}
+      </p>
+      <dl className="flex flex-col text-[13px]">
+        <div className="flex justify-between gap-3 border-t border-border py-2">
+          <dt className="text-muted-foreground">Dice que pagó</dt>
+          <dd className="font-semibold tabular-nums">
+            {first.amount_cents === null ? "sin monto" : formatMoney(first.amount_cents, first.currency)}
+          </dd>
+        </div>
+        <div className="flex justify-between gap-3 border-t border-border py-2">
+          <dt className="text-muted-foreground">Por</dt>
+          <dd className="min-w-0 truncate text-right">
+            {first.method_label ?? "Pago reportado"} · {relativeTime(first.created_at)}
+          </dd>
+        </div>
+        {leftIfTrue !== null ? (
+          <div className="flex justify-between gap-3 border-t border-border py-2">
+            <dt className="text-muted-foreground">Si es cierto, falta</dt>
+            <dd className="tabular-nums">{formatMoney(leftIfTrue, order.currency)}</dd>
+          </div>
+        ) : null}
+      </dl>
+      <Button variant="contrast" className="w-full" onClick={() => onReview(first)}>
+        Revisar el pago
+      </Button>
+    </InkIsland>
+  );
+}
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
@@ -201,6 +254,9 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
               {/* F3 Cobros: lo primero es cuánto falta por cobrar */}
               <OrderBalanceBlock order={order} />
 
+              {/* Premium P3: lo más accionable del pedido, si lo hay — un comprobante por revisar. */}
+              {canManage ? <PendingProofIsland order={order} onReview={(payment) => setReview({ payment, action: "verify" })} /> : null}
+
               {/* F4 Cobros: y cuándo tocaba cada parte. Se pinta solo si el
                   pedido tiene plan — sin la función, esta sección no existe. */}
               <PaymentPlanBlock
@@ -310,7 +366,7 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
                   <p className="text-xs text-muted-foreground">Aún no hay pagos reportados.</p>
                 ) : (
                   order.payments.map((payment) => (
-                    <div key={payment.id} className="space-y-3 rounded-2xl border border-border bg-background p-4">
+                    <div key={payment.id} className="space-y-3 rounded-3xl border border-border bg-card p-4">
                       <div className="flex items-center justify-between gap-2">
                         <p className="min-w-0 truncate text-sm font-medium">
                           {payment.method_label ?? "Pago reportado"}
@@ -318,17 +374,8 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
                             ? ` · ${formatMoney(payment.amount_cents, payment.currency)}`
                             : ""}
                         </p>
-                        <span
-                          className={cn(
-                            "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium",
-                            // §10: verde y ámbar como texto no llegan a 4,5:1; el tinte va al fondo
-                            payment.status === "verified" && "bg-success/12 text-foreground",
-                            payment.status === "reported" && "bg-warning/15 text-foreground",
-                            payment.status === "rejected" && "bg-destructive/10 text-destructive",
-                          )}
-                        >
-                          {PAYMENT_STATUS_LABEL[payment.status]}
-                        </span>
+                        {/* §9.5: el color del estado vive en el punto; el texto, en foreground */}
+                        <StatePill tone={PAYMENT_STATUS_TONE[payment.status]}>{PAYMENT_STATUS_LABEL[payment.status]}</StatePill>
                       </div>
                       <p className="text-xs text-muted-foreground">
                         {payment.reference !== null ? `Ref. ${payment.reference} · ` : ""}

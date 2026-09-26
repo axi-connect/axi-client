@@ -135,12 +135,15 @@ export function FeatureSwitchRow({
           <h3 className="truncate text-base font-semibold" title={feature.label}>
             {feature.label}
           </h3>
-          <StatePill tone={pill.tone}>
-            {locked ? <Lock aria-hidden="true" className="size-3" /> : null}
-            {pill.text}
-          </StatePill>
+          <span className="flex">
+            <StatePill tone={pill.tone}>
+              {locked ? <Lock aria-hidden="true" className="size-3" /> : null}
+              {pill.text}
+            </StatePill>
+          </span>
         </div>
         <Switch
+          size="lg"
           checked={feature.enabled}
           disabled={locked || pending || !canManage || capabilityMissing}
           aria-label={feature.label}

@@ -28,6 +28,8 @@ export interface FeatureSetup {
   /** El enlace del pie: «Ver en …» si está lista, «Configurar» si no. */
   linkLabel: string;
   cta: string;
+  /** Qué pasa mientras falte: el porqué de la isla. */
+  consequence: string;
 }
 
 export interface SetupSources {
@@ -49,6 +51,7 @@ function paymentPlans(source: SetupSources["collections"]): FeatureSetup {
     missing: "Falta el plan de pagos",
     href: "/settings/payments/plan",
     cta: "Configurar el plan de pagos",
+    consequence: "Sin él, los pedidos no tienen anticipo ni cuotas.",
   };
   if (source === "error" || source === null) {
     return {
@@ -77,6 +80,7 @@ function reminders(source: SetupSources["collections"]): FeatureSetup {
     missing: "Faltan los recordatorios",
     href: "/settings/payments/recordatorios",
     cta: "Configurar recordatorios",
+    consequence: "Mientras falte, la Cartera no le escribe a nadie.",
   };
   if (source === "error" || source === null) {
     return {
@@ -132,6 +136,7 @@ function fxQuotes(source: SetupSources["fx"]): FeatureSetup {
     missing: "Falta la moneda",
     href: "/settings/payments/moneda",
     cta: "Configurar la moneda",
+    consequence: "Sin ella, el agente no cotiza en pesos.",
   };
   if (source === "error" || source === null) {
     return {
@@ -160,6 +165,7 @@ function documents(source: SetupSources["documents"]): FeatureSetup {
     missing: "Falta el emisor de los documentos",
     href: "/settings/company/documentos",
     cta: "Completar el emisor",
+    consequence: "Sin ella, los PDF salen sin quién los emite.",
   };
   if (source === "error" || source === null) {
     return {

@@ -48,7 +48,7 @@ function SetupIsland({ summary, loaded }: { summary: SetupSummary; loaded: boole
     total === 0
       ? "Enciende Planes de pago para vender con anticipo y cuotas."
       : summary.next !== null
-        ? `${summary.next.foot}. Mientras falte, esa parte no le escribe a nadie.`
+        ? `${summary.next.foot}. ${summary.next.consequence}`
         : "Lo que encendiste ya está configurado.";
 
   return (
@@ -115,7 +115,7 @@ function SetupStep({ step }: { step: FeatureSetup }) {
       <span className="flex min-w-0 flex-col">
         <span className="font-medium">{step.step}</span>
         <span className="truncate text-xs text-muted-foreground" title={step.foot}>
-          {step.configured === true ? step.foot : step.configured === false ? `Falta: ${step.foot.toLowerCase()}` : step.foot}
+          {step.foot}
         </span>
       </span>
     </li>
@@ -210,9 +210,11 @@ export function FeaturesTab() {
               </p>
             </div>
             <div className="flex shrink-0 flex-col gap-2 sm:items-end">
-              <StatePill tone={activeCodes.length > 0 ? "success" : "neutral"}>
-                {activeCodes.length} de {features.length} encendidas
-              </StatePill>
+              <span className="flex">
+                <StatePill tone={activeCodes.length > 0 ? "success" : "neutral"}>
+                  {activeCodes.length} de {features.length} encendidas
+                </StatePill>
+              </span>
               <BentoLink href="/settings/company">Cambiar el tipo de negocio</BentoLink>
             </div>
           </article>

@@ -23,10 +23,15 @@ export function PaymentProofViewer({
   const [failed, setFailed] = useState(false);
   const [zoomed, setZoomed] = useState(false);
 
+  const hasProof = payment.attachment_id !== null;
+
   useEffect(() => {
     let cancelled = false;
     setUrl(null);
     setFailed(false);
+    // Sin comprobante no hay nada que firmar: pedirlo igual era un 422 por
+    // cada pago sin evidencia cada vez que se abría el pedido (bajo de la QA R6).
+    if (!hasProof) return;
     getPaymentProofUrl(orderId, payment.id)
       .then((res) => {
         if (!cancelled) setUrl(res.url);
@@ -37,9 +42,9 @@ export function PaymentProofViewer({
     return () => {
       cancelled = true;
     };
-  }, [orderId, payment.id]);
+  }, [orderId, payment.id, hasProof]);
 
-  if (payment.attachment_id === null) return null;
+  if (!hasProof) return null;
   if (failed) {
     return <p className="text-xs text-muted-foreground">No se pudo cargar el comprobante.</p>;
   }
