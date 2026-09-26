@@ -6,6 +6,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/shared/components/ui/tooltip";
+import { BentoTile } from "@/shared/components/features/bento";
 
 import {
   QUALITY_AXES,
@@ -110,23 +111,25 @@ export function QualityBreakdown({
   const checks = readQualityChecks(signals);
 
   return (
-    <div>
-      <div className="mb-2 flex items-baseline gap-2">
-        <h3 className="font-heading text-base font-bold">Índice de calidad</h3>
-        <span className="font-heading text-accent-violet text-2xl leading-none font-extrabold tabular-nums">
-          {measured ? score : "—"}
+    <BentoTile
+      label="Índice de calidad"
+      aside={
+        <span className="flex items-baseline gap-1.5">
+          <span className="font-heading text-accent-violet text-3xl leading-none font-extrabold tabular-nums">
+            {measured ? score : "—"}
+          </span>
+          <span className="text-muted-foreground text-xs">de 100</span>
         </span>
-        <span className="text-muted-foreground text-xs">de 100</span>
-      </div>
-
+      }
+    >
       {!measured && (
-        <p className="text-muted-foreground mb-3 text-xs">
+        <p className="text-muted-foreground text-sm text-pretty">
           Este lead todavía no se ha puntuado. Aparecerá aquí en cuanto el motor
           lo revise.
         </p>
       )}
 
-      <dl className="divide-border-soft divide-y">
+      <dl className="divide-border divide-y">
         {axes.map((axis) => {
           const evaluable = readAxisEvaluable(signals, axis.key);
           const axisChecks = checksByAxis(checks, axis.key);
@@ -141,9 +144,9 @@ export function QualityBreakdown({
                   </span>
                 </dd>
               </div>
-              <div className="bg-foreground/8 mt-1 h-1 overflow-hidden rounded-sm">
+              <div className="bg-muted mt-2 h-1.5 overflow-hidden rounded-full">
                 <div
-                  className="bg-accent-violet h-full rounded-sm"
+                  className="bg-accent-violet h-full rounded-full"
                   style={{
                     width: `${(axis.score / (evaluable > 0 ? evaluable : axis.max)) * 100}%`,
                   }}
@@ -152,7 +155,7 @@ export function QualityBreakdown({
               {/* «de 25» cuando solo se midieron 18 sería mentir sobre lo que
                   se sabe: el denominador es lo evaluable, no el peso. */}
               {evaluable > 0 && evaluable < axis.max && (
-                <p className="text-muted-foreground mt-1 text-[11px]">
+                <p className="text-muted-foreground mt-1.5 text-xs">
                   Sobre {evaluable} de {axis.max} puntos medibles
                 </p>
               )}
@@ -161,6 +164,6 @@ export function QualityBreakdown({
           );
         })}
       </dl>
-    </div>
+    </BentoTile>
   );
 }

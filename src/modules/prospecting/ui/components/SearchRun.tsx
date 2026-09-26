@@ -2,11 +2,11 @@
 
 import { LoaderCircle, RotateCw, Trash2, X } from "lucide-react";
 
-import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import { RelativeDate } from "@/shared/components/ui/relative-date";
 import { Button } from "@/shared/components/ui/button";
 import { Progress } from "@/shared/components/ui/progress";
 import { StatusBadge } from "@/shared/components/features/status-badge";
+import { cn } from "@/core/lib/utils";
 
 import {
   costOf,
@@ -20,19 +20,13 @@ import {
 } from "../../domain/search";
 import type { StatusTone } from "@/shared/components/features/status-badge/types";
 
-/**
- * Del tono de estado a la variante del callout del sistema.
- *
- * Es la única traducción que hace falta, y vive aquí porque `Alert` es del
- * sistema y `StatusTone` del dominio. `neutral` cae en `default`: superficie de
- * tarjeta y texto normal, que es lo que se quiere para una nota sin carga.
- */
-const NOTICE_VARIANT: Record<StatusTone, "default" | "destructive" | "success" | "warning" | "info"> = {
-  success: "success",
-  warning: "warning",
-  destructive: "destructive",
-  info: "info",
-  neutral: "default",
+/** El punto del aviso, en el tono del estado (el color va en el punto, no en una caja tintada: DS §9.5). */
+const NOTICE_DOT: Record<StatusTone, string> = {
+  success: "bg-success",
+  warning: "bg-warning",
+  destructive: "bg-destructive",
+  info: "bg-info",
+  neutral: "bg-muted-foreground",
 };
 
 /**
@@ -62,27 +56,28 @@ export function SearchRun({
   const notice = searchNotice(search);
 
   return (
-    <article className="border-border/60 border-b py-5 last:border-0">
+    <article className="border-border border-b py-5 last:border-0">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="truncate font-semibold">
+          <h3 className="font-heading truncate text-[1.05rem] font-bold tracking-tight">
             {search.label ?? queryOf(search)}
           </h3>
           <p className="text-muted-foreground mt-0.5 truncate text-sm">
             {queryOf(search)} · hasta {search.params.limit.toLocaleString("es-CO")}
           </p>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="text-muted-foreground text-sm tabular-nums">
             {costOf(search)}
           </span>
-          <StatusBadge status={search.status} map={SEARCH_STATUS_MAP} />
+          <StatusBadge status={search.status} map={SEARCH_STATUS_MAP} appearance="dot" />
           {/* Parar es de las pocas cosas del panel que gasta dinero sola: quien
               se da cuenta de que puso mal la categoría tiene que poder cortar. */}
           {live && onCancel !== undefined && (
             <Button
               size="sm"
               variant="ghost"
+              className="rounded-full"
               onClick={() => onCancel(search)}
               aria-label={`Detener «${search.label ?? queryOf(search)}»`}
             >
@@ -94,6 +89,7 @@ export function SearchRun({
             <Button
               size="sm"
               variant="ghost"
+              className="rounded-full"
               onClick={() => onRepeat(search)}
               aria-label={`Repetir «${search.label ?? queryOf(search)}»`}
             >
@@ -101,16 +97,15 @@ export function SearchRun({
               Repetir
             </Button>
           )}
-          {/* DE CONTORNO y no relleno: al lado de las otras acciones, un botón
-              rojo macizo se lee como la acción principal de la tarjeta, y aquí
-              la principal es repetir. El relleno rojo va en el diálogo. */}
+          {/* Fantasma en rojo y no relleno: al lado de las otras acciones, un botón rojo macizo se lee como la
+              acción principal de la fila, y aquí la principal es repetir. El relleno rojo va en el diálogo. */}
           {onDelete !== undefined && (
             <Button
               size="sm"
-              variant="outline"
+              variant="ghost"
               disabled={deleting}
               onClick={() => onDelete(search)}
-              className="border-destructive/45 text-destructive hover:bg-destructive/10 hover:text-destructive"
+              className="text-destructive hover:bg-destructive/10 hover:text-destructive rounded-full"
               aria-label={`Eliminar «${search.label ?? queryOf(search)}» y sus leads`}
             >
               {deleting ? (
@@ -149,9 +144,10 @@ export function SearchRun({
           texto salía repetido en ámbar y en rojo. Qué se dice y con qué tono lo
           decide `searchNotice`, que lee el tono del mismo mapa que la insignia. */}
       {notice !== null && (
-        <Alert variant={NOTICE_VARIANT[notice.tone]} className="mt-3">
-          <AlertDescription>{notice.text}</AlertDescription>
-        </Alert>
+        <p role="alert" data-tone={notice.tone} className="mt-3 flex gap-2.5 text-sm text-pretty">
+          <span aria-hidden className={cn("mt-[0.45em] size-2 shrink-0 rounded-full", NOTICE_DOT[notice.tone])} />
+          <span>{notice.text}</span>
+        </p>
       )}
     </article>
   );

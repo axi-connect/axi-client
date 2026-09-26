@@ -1,6 +1,7 @@
 "use client"
 
 import { cn } from "@/core/lib/utils"
+import { Island } from "@/shared/components/features/island"
 
 export type SelectionBannerMessages = {
   /** «Seleccionaste los 25 de esta página.» */
@@ -51,6 +52,13 @@ type SelectionBannerProps = {
   actions?: React.ReactNode
   /** Una línea de aviso bajo los botones, donde de verdad se lee. */
   note?: React.ReactNode
+  /**
+   * `dock`: la barra de acción en tinta pegada abajo (DESIGN-SYSTEM §9.5.1), para
+   * las pantallas premium. Los botones que pasa quien llama van entonces en
+   * `contrast` / `glass` / `ghost`, que son los de una isla. Por defecto, la banda
+   * de siempre sobre la tabla.
+   */
+  variant?: "band" | "dock"
   className?: string
 }
 
@@ -82,6 +90,7 @@ export function SelectionBanner({
   messages,
   actions,
   note,
+  variant = "band",
   className,
 }: SelectionBannerProps) {
   const msgs = { ...DEFAULT_SELECTION_MESSAGES, ...messages }
@@ -93,15 +102,10 @@ export function SelectionBanner({
     matchingTotal > count
   const overLimit = canOfferAll && limit !== undefined && (matchingTotal ?? 0) > limit
 
-  return (
-    <div
-      // Superficie propia y elevada, NO un bloque de color: lo único que va en
-      // color de acción es el botón, que sí es una acción.
-      className={cn(
-        "border-border bg-background shadow-float flex flex-wrap items-center gap-3 rounded-md border px-3.5 py-2.5",
-        className,
-      )}
-    >
+  const dock = variant === "dock"
+
+  const content = (
+    <>
       <p className="text-sm" aria-live="polite">
         <span className="font-semibold">
           {allMatching
@@ -116,7 +120,10 @@ export function SelectionBanner({
         <button
           type="button"
           onClick={onSelectAllMatching}
-          className="decoration-primary hover:text-primary focus-visible:ring-ring/50 rounded-sm text-sm font-semibold underline decoration-[1.5px] underline-offset-[3px] outline-none focus-visible:ring-[3px]"
+          className={cn(
+            "focus-visible:ring-ring/50 inline-flex min-h-6 items-center rounded-sm text-sm font-semibold underline decoration-[1.5px] underline-offset-[3px] outline-none focus-visible:ring-[3px]",
+            dock ? "decoration-foreground/50 hover:decoration-foreground" : "decoration-primary hover:text-primary",
+          )}
         >
           {msgs.selectAll(matchingTotal)}
         </button>
@@ -130,7 +137,7 @@ export function SelectionBanner({
         <button
           type="button"
           onClick={onClear}
-          className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 rounded-sm text-sm font-medium underline underline-offset-[3px] outline-none focus-visible:ring-[3px]"
+          className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 inline-flex min-h-6 items-center rounded-sm text-sm font-medium underline underline-offset-[3px] outline-none focus-visible:ring-[3px]"
         >
           {msgs.clear}
         </button>
@@ -142,6 +149,35 @@ export function SelectionBanner({
           {note}
         </div>
       )}
+    </>
+  )
+
+  if (dock) {
+    return (
+      <Island
+        as="footer"
+        material="ink"
+        role="region"
+        aria-label="Acciones sobre la selección"
+        className={cn(
+          "sticky bottom-3 z-10 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-3xl px-5 py-3 sm:pr-3",
+          className,
+        )}
+      >
+        {content}
+      </Island>
+    )
+  }
+  return (
+    <div
+      // Superficie propia y elevada, NO un bloque de color: lo único que va en
+      // color de acción es el botón, que sí es una acción.
+      className={cn(
+        "border-border bg-background shadow-float flex flex-wrap items-center gap-3 rounded-md border px-3.5 py-2.5",
+        className,
+      )}
+    >
+      {content}
     </div>
   )
 }

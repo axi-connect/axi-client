@@ -65,13 +65,12 @@ describe("SearchRun · un aviso, no dos", () => {
     // mapa es lo que impide que se contradigan.
     render(<SearchRun search={search({ status: "partial", error: MOTIVO })} />);
     const notice = screen.getByRole("alert");
-    expect(notice.className).toContain("warning");
-    expect(notice.className).not.toContain("destructive");
+    expect(notice).toHaveAttribute("data-tone", "warning");
   });
 
   it("una búsqueda que falló lo pinta en destructivo", () => {
     render(<SearchRun search={search({ status: "failed", error: "El proveedor no respondió" })} />);
-    expect(screen.getByRole("alert").className).toContain("destructive");
+    expect(screen.getByRole("alert")).toHaveAttribute("data-tone", "destructive");
   });
 
   it("una parcial sin motivo usa el aviso de reserva", () => {

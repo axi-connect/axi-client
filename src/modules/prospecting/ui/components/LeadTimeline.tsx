@@ -1,6 +1,7 @@
 "use client";
 
 import { formatShortDate } from "@/core/lib/format";
+import { BentoTile } from "@/shared/components/features/bento";
 
 import type { LeadEventDTO } from "../../domain/lead";
 
@@ -30,29 +31,22 @@ const ACTOR_LABELS: Record<LeadEventDTO["actor_type"], string> = {
  */
 export function LeadTimeline({ events }: { events: LeadEventDTO[] }) {
   return (
-    <div>
-      <p className="text-muted-foreground mb-3 text-[10.5px] font-semibold tracking-wider uppercase">
-        Historia del dato
-      </p>
+    <BentoTile label="Historia del dato">
       {events.length === 0 ? (
-        <p className="text-muted-foreground text-sm">
-          Sin movimientos todavía.
-        </p>
+        <p className="text-muted-foreground text-sm">Sin movimientos todavía.</p>
       ) : (
-        <ol className="flex flex-col gap-3">
+        <ol className="divide-border divide-y">
           {events.map((event) => (
-            <li key={event.id} className="border-border border-l-2 pl-3">
-              <p className="text-sm font-semibold">
+            <li key={event.id} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5 py-2.5 text-sm">
+              <span className="font-medium">
                 {EVENT_LABELS[event.type]}
-              </p>
-              <p className="text-muted-foreground text-xs">
-                {event.provider ?? ACTOR_LABELS[event.actor_type]} ·{" "}
-                {formatShortDate(event.created_at)}
-              </p>
+                <span className="text-muted-foreground font-normal"> · {event.provider ?? ACTOR_LABELS[event.actor_type]}</span>
+              </span>
+              <span className="text-muted-foreground text-xs">{formatShortDate(event.created_at)}</span>
             </li>
           ))}
         </ol>
       )}
-    </div>
+    </BentoTile>
   );
 }

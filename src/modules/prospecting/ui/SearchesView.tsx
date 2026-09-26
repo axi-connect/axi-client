@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { Search, TriangleAlert } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Search } from "lucide-react";
 
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
@@ -9,7 +10,7 @@ import { useSocket } from "@/core/realtime/use-socket";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { BrandLoader } from "@/shared/components/ui/brand-loader";
 import { Button } from "@/shared/components/ui/button";
-import { PageHeader } from "@/shared/components/layout/page-header";
+import { CaptureHeader } from "./components/CaptureHeader";
 
 import { isInFlight, paramsOf, queryOf, type SearchDTO } from "../domain/search";
 import type { DiscoveryCategoryDTO, SourceCatalogItemDTO } from "../domain/search";
@@ -70,6 +71,8 @@ export function SearchesView() {
   const [sources, setSources] = useState<SourceCatalogItemDTO[]>([]);
   const [categories, setCategories] = useState<DiscoveryCategoryDTO[]>([]);
   const [sheet, setSheet] = useState<Partial<StartSearchInput> | null>(null);
+  /** No se pudo leer la lista: se dice con «Reintentar» en vez de fingir que no hay búsquedas. */
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -77,11 +80,26 @@ export function SearchesView() {
       setSearches(runs.items);
       setSources(catalog.items);
       setCategories(catalog.categories);
+      setLoadError(null);
     } catch (caught) {
-      showAlert({ tone: "error", title: errorMessage(caught) });
-      setSearches([]);
+      setLoadError(errorMessage(caught, "Revisa tu conexión e intenta otra vez."));
     }
-  }, [showAlert]);
+  }, []);
+
+  const canStart = canManage && sources.some((source) => source.available);
+
+  /* `?new=1` (desde «Nueva búsqueda» de la bandeja): abre la hoja una vez, cuando ya se sabe si hay fuente
+     disponible, y limpia el parámetro para que recargar no la vuelva a abrir. */
+  const params = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const newConsumed = useRef(false);
+  useEffect(() => {
+    if (params.get("new") !== "1" || newConsumed.current || searches === null) return;
+    newConsumed.current = true;
+    if (canStart) setSheet({});
+    router.replace(pathname, { scroll: false });
+  }, [params, searches, canStart, router, pathname]);
 
   useEffect(() => {
     void load();
@@ -220,20 +238,23 @@ export function SearchesView() {
               y su informe. No se puede deshacer.
             </p>
             {preview.leads_kept > 0 && (
-              <p className="border-border-soft bg-muted/60 text-muted-foreground rounded-md border px-3 py-2.5 text-[12.5px] leading-relaxed">
+              <p className="text-muted-foreground flex gap-2.5 text-[13px] leading-relaxed">
+                <span aria-hidden className="bg-muted-foreground mt-[0.5em] size-2 shrink-0 rounded-full" />
+                <span>
                 <span className="text-foreground font-semibold">
                   {preview.leads_kept}{" "}
                   {preview.leads_kept === 1 ? "ya es contacto" : "ya son contactos"} del CRM
                 </span>{" "}
                 y se {preview.leads_kept === 1 ? "quedará" : "quedarán"} en tu bandeja, sin la
                 búsqueda que los trajo.
+                </span>
               </p>
             )}
             {live && (
               // Ámbar y no rojo: es un efecto colateral que hay que saber, no un
               // peligro. Y no se obliga a cancelar antes: se dice y se hace.
-              <p className="border-warning/25 bg-warning/10 text-warning flex items-start gap-2 rounded-md border px-3 py-2.5 text-[12px]">
-                <TriangleAlert aria-hidden="true" className="mt-px size-3.5 shrink-0" />
+              <p className="flex gap-2.5 text-[13px] leading-relaxed">
+                <span aria-hidden className="bg-warning mt-[0.5em] size-2 shrink-0 rounded-full" />
                 <span>Está corriendo ahora mismo: al borrarla se detiene.</span>
               </p>
             )}
@@ -252,22 +273,53 @@ export function SearchesView() {
     [showAlert, showModal, doDelete],
   );
 
-  if (searches === null) return <BrandLoader />;
+  const header = (
+    <CaptureHeader
+      title="Búsquedas"
+      description="Sal a buscar negocios que todavía no te conocen."
+      actions={
+        canStart ? (
+          <Button className="rounded-full" onClick={() => setSheet({})}>
+            <Search aria-hidden="true" />
+            Nueva búsqueda
+          </Button>
+        ) : null
+      }
+    />
+  );
+
+  if (searches === null) {
+    return (
+      <div className="flex min-w-0 flex-col gap-6">
+        {header}
+        {loadError === null ? (
+          <BrandLoader />
+        ) : (
+          <div className="border-border bg-card flex flex-col items-start gap-3 rounded-3xl border p-6">
+            <p className="font-heading text-xl font-bold tracking-tight">No pudimos cargar tus búsquedas</p>
+            <p className="text-muted-foreground text-sm text-pretty">{loadError}</p>
+            <Button variant="outline" className="rounded-full" onClick={() => void load()}>
+              Reintentar
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col gap-8">
-      <PageHeader
-        title="Búsquedas"
-        description="Sal a buscar negocios que todavía no te conocen."
-        actions={
-          canManage && sources.some((source) => source.available) ? (
-            <Button onClick={() => setSheet({})}>
-              <Search aria-hidden="true" />
-              Nueva búsqueda
-            </Button>
-          ) : null
-        }
-      />
+    <div className="flex min-w-0 flex-col gap-6">
+      {header}
+
+      {loadError !== null && (
+        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+          <span aria-hidden className="bg-warning size-2 shrink-0 rounded-full" />
+          <span className="text-muted-foreground">No pudimos refrescar tus búsquedas: {loadError}</span>
+          <button type="button" className="inline-flex min-h-6 items-center font-medium underline underline-offset-4" onClick={() => void load()}>
+            Reintentar
+          </button>
+        </p>
+      )}
 
       {searches.length === 0 ? (
         // El bloque magnificado en vez de un cartel: quien llega aquí todavía no
@@ -287,7 +339,7 @@ export function SearchesView() {
           }
         />
       ) : (
-        <div className="border-border bg-card rounded-lg border px-5">
+        <section aria-label="Búsquedas" className="border-border bg-card min-w-0 rounded-3xl border px-5 sm:px-6">
           {searches.map((search) => (
             <SearchRun
               key={search.id}
@@ -298,7 +350,7 @@ export function SearchesView() {
               deleting={previewing === search.id}
             />
           ))}
-        </div>
+        </section>
       )}
 
       <DeleteResultSheet

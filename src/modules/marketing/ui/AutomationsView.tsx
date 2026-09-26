@@ -1,7 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { MessageSquare, Plus, ShieldCheck, ShoppingCart, Target } from "lucide-react";
+import { MessageSquare, Plus, ShoppingCart, Target } from "lucide-react";
+import { formatMillions } from "@/core/lib/format";
+import { BentoFigure, BentoLink, BentoTile } from "@/shared/components/features/bento";
+import { LoadError } from "@/modules/marketing/ui/components/premium";
 import { useDeepLinkTarget } from "@/core/hooks/use-deep-link-target";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
@@ -29,6 +32,7 @@ import {
   updateAutomation,
 } from "@/modules/marketing/infrastructure/services/automations-service.adapter";
 import { listPromotions } from "@/modules/marketing/infrastructure/services/promotions-service.adapter";
+import { getMarketingSettings } from "@/modules/marketing/infrastructure/services/settings-service.adapter";
 import { AutomationCard, describeDelay } from "./components/AutomationCard";
 import { AutomationForm, AUTOMATION_FORM_ID } from "./forms/AutomationForm";
 
@@ -36,6 +40,13 @@ const TRIGGER_ICONS: Record<TriggerType, typeof ShoppingCart> = {
   cart_abandoned: ShoppingCart,
   conversation_inactive: MessageSquare,
   deal_stalled: Target,
+};
+
+/** Qué pasó para que el disparador salte, en palabras del dueño. */
+const TRIGGER_HINTS: Record<TriggerType, string> = {
+  cart_abandoned: "Alguien armó un pedido y no lo terminó",
+  conversation_inactive: "Preguntó, le respondimos y no volvió",
+  deal_stalled: "Un trato del CRM lleva días sin moverse",
 };
 
 /**
@@ -53,6 +64,8 @@ export function AutomationsView() {
   const [automations, setAutomations] = useState<AutomationDTO[] | null>(null);
   const [metrics, setMetrics] = useState<Record<string, AutomationMetricsDTO>>({});
   const [promotions, setPromotions] = useState<PromotionDTO[]>([]);
+  /** Los límites reales del tenant: «Cuidamos a tus clientes» no puede prometer lo que Ajustes no hace. */
+  const [guard, setGuard] = useState<Awaited<ReturnType<typeof getMarketingSettings>> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<{
@@ -114,6 +127,12 @@ export function AutomationsView() {
     listPromotions()
       .then((rows) => setPromotions(rows.filter((p) => isPromotionLive(p, now))))
       .catch(() => setPromotions([]));
+  }, []);
+
+  useEffect(() => {
+    getMarketingSettings()
+      .then(setGuard)
+      .catch(() => setGuard(null));
   }, []);
 
   const grouped = useMemo(() => {
@@ -206,18 +225,26 @@ export function AutomationsView() {
     });
   }
 
+  const totals = Object.values(metrics).reduce(
+    (acc, m) => ({
+      revenue: acc.revenue + m.attributed_revenue_cents,
+      converted: acc.converted + m.converted,
+      issued: acc.issued + m.coupons_issued,
+      redeemed: acc.redeemed + m.coupons_redeemed,
+      skipped: acc.skipped + m.skipped,
+    }),
+    { revenue: 0, converted: 0, issued: 0, redeemed: 0, skipped: 0 },
+  );
+
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex min-w-0 flex-col gap-6">
       <MarketingHeader
         title="Recuperación de ventas"
-        description="Reglas que reenganchan solas a quien se quedó a medias."
+        description="Mensajes que salen solos cuando una venta se enfría. Nacen apagados: tú decides cuándo encenderlos."
         actions={
           canManage &&
           !isEmpty && (
-            <Button
-              className="rounded-full"
-              onClick={() => setEditing({ automation: null, trigger: "cart_abandoned" })}
-            >
+            <Button className="rounded-full" onClick={() => setEditing({ automation: null, trigger: "cart_abandoned" })}>
               <Plus className="size-4" aria-hidden="true" />
               Nueva regla
             </Button>
@@ -225,28 +252,10 @@ export function AutomationsView() {
         }
       />
 
-      {!isEmpty && automations !== null && (
-        <p className="flex gap-2.5 rounded-xl border border-info/25 bg-info/5 px-4 py-3 text-sm leading-relaxed text-muted-foreground">
-          <ShieldCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-info" />
-          <span>
-            <strong className="font-medium text-foreground">
-              Un cliente recibe como máximo un mensaje por episodio
-            </strong>
-            , uno al día y uno cada 24 horas. Cuando varias reglas del mismo disparador coinciden,
-            gana la de menor prioridad.
-          </span>
-        </p>
-      )}
-
       {loading && automations === null ? (
         <TableSkeleton rows={4} />
       ) : error ? (
-        <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-destructive/35 bg-destructive/5 px-4 py-3">
-          <p className="flex-1 text-sm text-muted-foreground">{error}</p>
-          <Button size="sm" variant="outline" onClick={() => void load()}>
-            Reintentar
-          </Button>
-        </div>
+        <LoadError message={error} onRetry={() => void load()} />
       ) : isEmpty ? (
         <EmptyState
           glyph="ai"
@@ -254,77 +263,126 @@ export function AutomationsView() {
           description="Cada día se te escapan carritos a medias y conversaciones que se apagaron. Una regla los reengancha sola, a la hora que tú decidas y con el descuento que tú elijas."
           action={
             canManage && (
-              <Button
-                className="rounded-full"
-                onClick={() => setEditing({ automation: null, trigger: "cart_abandoned" })}
-              >
+              <Button className="rounded-full" onClick={() => setEditing({ automation: null, trigger: "cart_abandoned" })}>
                 Crear mi primera regla
               </Button>
             )
           }
         />
       ) : (
-        <div className="flex flex-col gap-6">
-          {TRIGGER_ORDER.map((trigger) => {
-            const rules = grouped.get(trigger) ?? [];
-            const Icon = TRIGGER_ICONS[trigger];
-            return (
-              <section key={trigger}>
-                <div className="mb-2.5 flex items-center gap-2">
-                  <Icon aria-hidden="true" className="size-4 text-muted-foreground" />
-                  <h2 className="text-sm font-semibold">{TRIGGER_LABELS[trigger]}</h2>
-                  <span className="h-px flex-1 bg-border/60" aria-hidden="true" />
-                  <span className="text-xs text-muted-foreground">
-                    {rules.length === 0
-                      ? "sin reglas"
-                      : `${rules.length} ${rules.length === 1 ? "regla" : "reglas"}`}
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_21rem] xl:items-start [&>*]:min-w-0">
+          <div className="flex min-w-0 flex-col gap-4">
+            {automations !== null && automations.length > 0 && enabledCount === 0 ? (
+              <p className="flex gap-2.5 text-sm text-pretty">
+                <span aria-hidden="true" className="bg-warning mt-[0.45em] size-2 shrink-0 rounded-full" />
+                <span>
+                  <b className="font-semibold">Ninguna de tus reglas está encendida.</b>{" "}
+                  <span className="text-muted-foreground">
+                    Nacen apagadas a propósito: revisa el mensaje y enciéndelas cuando estés conforme.
                   </span>
-                  {canManage && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-7 px-2 text-xs"
-                      onClick={() => setEditing({ automation: null, trigger })}
-                    >
-                      Añadir
-                    </Button>
+                </span>
+              </p>
+            ) : null}
+            {TRIGGER_ORDER.map((trigger) => {
+              const rules = grouped.get(trigger) ?? [];
+              const Icon = TRIGGER_ICONS[trigger];
+              return (
+                <section
+                  key={trigger}
+                  aria-labelledby={`trigger-${trigger}`}
+                  className="border-border bg-card @container min-w-0 rounded-3xl border px-5 pt-5 pb-1 sm:px-6"
+                >
+                  <header className="border-border flex flex-wrap items-center gap-x-4 gap-y-3 border-b pb-4">
+                    <span aria-hidden="true" className="bg-muted grid size-10 shrink-0 place-items-center rounded-xl">
+                      <Icon className="size-4.5" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <h2 id={`trigger-${trigger}`} className="font-heading text-lg leading-tight font-bold tracking-tight">
+                        {TRIGGER_LABELS[trigger]}
+                      </h2>
+                      <p className="text-muted-foreground text-sm text-pretty">{TRIGGER_HINTS[trigger]}</p>
+                    </div>
+                    {canManage && (
+                      <Button size="sm" variant="outline" className="rounded-full" onClick={() => setEditing({ automation: null, trigger })}>
+                        Añadir regla
+                      </Button>
+                    )}
+                  </header>
+                  {rules.length === 0 ? (
+                    <p className="text-muted-foreground py-5 text-sm">Nadie está recuperando estas ventas todavía.</p>
+                  ) : (
+                    <div className="divide-border divide-y">
+                      {rules.map((automation, index) => (
+                        <AutomationCard
+                          key={automation.id}
+                          automation={automation}
+                          metrics={metrics[automation.id] ?? null}
+                          rank={index + 1}
+                          canManage={canManage}
+                          onEdit={() => setEditing({ automation, trigger })}
+                          onToggle={() => handleToggle(automation)}
+                          onDelete={() => handleDelete(automation)}
+                          onConfigureHsm={() => setEditing({ automation, trigger })}
+                        />
+                      ))}
+                    </div>
                   )}
-                </div>
+                </section>
+              );
+            })}
+          </div>
 
-                {rules.length === 0 ? (
-                  <p className="rounded-xl border border-dashed border-border px-4 py-4 text-xs text-muted-foreground">
-                    Nadie está recuperando estas ventas todavía.
-                  </p>
-                ) : (
-                  <div className="flex flex-col gap-2.5">
-                    {rules.map((automation, index) => (
-                      <AutomationCard
-                        key={automation.id}
-                        automation={automation}
-                        metrics={metrics[automation.id] ?? null}
-                        rank={index + 1}
-                        canManage={canManage}
-                        onEdit={() => setEditing({ automation, trigger })}
-                        onToggle={() => handleToggle(automation)}
-                        onDelete={() => handleDelete(automation)}
-                        onConfigureHsm={() => setEditing({ automation, trigger })}
-                      />
-                    ))}
+          <aside className="grid gap-4 md:grid-cols-2 xl:grid-cols-1" aria-label="Resumen de la recuperación">
+            <BentoTile label="Lo recuperado por tus reglas">
+              <BentoFigure value={formatMillions(totals.revenue)} />
+              <p className="text-muted-foreground text-sm">
+                {totals.converted.toLocaleString("es-CO")} {totals.converted === 1 ? "pedido pagado" : "pedidos pagados"}
+              </p>
+              <dl className="border-border divide-border mt-1 divide-y border-t text-sm">
+                {(
+                  [
+                    ["Cupones entregados", totals.issued],
+                    ["Cupones canjeados", totals.redeemed],
+                    ["No se enviaron", totals.skipped],
+                  ] as const
+                ).map(([label, value]) => (
+                  <div key={label} className="flex items-baseline justify-between gap-3 py-2.5">
+                    <dt>{label}</dt>
+                    <dd className="font-semibold tabular-nums">{value.toLocaleString("es-CO")}</dd>
                   </div>
-                )}
-              </section>
-            );
-          })}
+                ))}
+              </dl>
+              <p className="text-muted-foreground text-xs text-pretty">
+                Pedidos pagados dentro de la ventana de atribución de cada regla, después de su mensaje.
+              </p>
+            </BentoTile>
+            <BentoTile label="Cuidamos a tus clientes" aside={<BentoLink href="/marketing/settings">Ajustes</BentoLink>}>
+              <ul className="divide-border divide-y text-sm">
+                {[
+                  <>Nadie recibe más de <b className="font-semibold">un mensaje por episodio</b></>,
+                  guard ? (
+                    <>
+                      Como mucho <b className="font-semibold">{guard.daily_cap_per_contact} al día</b> por persona y uno cada{" "}
+                      <b className="font-semibold">{guard.cooldown_hours} h</b>
+                    </>
+                  ) : null,
+                  guard?.exclude_human_active ? (
+                    <>Si alguien de tu equipo está atendiendo, <b className="font-semibold">las reglas esperan</b></>
+                  ) : null,
+                  <>Quien pidió no recibir <b className="font-semibold">no recibe</b></>,
+                  <>Si varias reglas coinciden, <b className="font-semibold">gana la de menor número</b></>,
+                ]
+                  .filter((line) => line !== null)
+                  .map((line, index) => (
+                  <li key={index} className="flex gap-2.5 py-2.5 text-pretty first:pt-0 last:pb-0">
+                    <span aria-hidden="true" className="bg-foreground mt-[0.5em] size-1.5 shrink-0 rounded-full" />
+                    <span>{line}</span>
+                  </li>
+                ))}
+              </ul>
+            </BentoTile>
+          </aside>
         </div>
-      )}
-
-      {automations !== null && automations.length > 0 && enabledCount === 0 && (
-        <p className="rounded-xl border border-warning/30 bg-warning/[0.07] px-4 py-3 text-sm text-muted-foreground">
-          <strong className="font-medium text-foreground">
-            Ninguna de tus reglas está encendida.
-          </strong>{" "}
-          Nacen apagadas a propósito: revisa el mensaje y enciéndelas cuando estés conforme.
-        </p>
       )}
 
       <DetailSheet

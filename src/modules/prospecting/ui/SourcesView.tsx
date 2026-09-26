@@ -1,18 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Globe, MapPin, Search } from "lucide-react";
 
 import { errorMessage } from "@/core/lib/error-messages";
-import { useAlert } from "@/core/providers/alert-provider";
 import { BrandLoader } from "@/shared/components/ui/brand-loader";
-import { Badge } from "@/shared/components/ui/badge";
+import { Button } from "@/shared/components/ui/button";
+import { StatePill } from "@/shared/components/features/bento";
 import {
   ProviderCard,
   ProviderCardGrid,
   type ProviderBrand,
 } from "@/shared/components/features/provider-card";
-import { PageHeader } from "@/shared/components/layout/page-header";
+import { CaptureHeader } from "./components/CaptureHeader";
 
 import { CHANNEL_LABELS } from "../domain/lead";
 import type { SearchSource, SourceCatalogItemDTO } from "../domain/search";
@@ -72,26 +72,48 @@ const PITCH: Record<SearchSource, string> = {
  * eso los canales permitidos están en la tarjeta y no en una nota al pie.
  */
 export function SourcesView() {
-  const { showAlert } = useAlert();
   const [sources, setSources] = useState<SourceCatalogItemDTO[] | null>(null);
+  /** No se pudo leer el catálogo: se dice con «Reintentar» en vez de enseñar una rejilla vacía. */
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const load = useCallback(() => {
+    setLoadError(null);
     listSources()
       .then((catalog) => setSources(catalog.items))
-      .catch((caught: unknown) => {
-        showAlert({ tone: "error", title: errorMessage(caught) });
-        setSources([]);
-      });
-  }, [showAlert]);
+      .catch((caught: unknown) => setLoadError(errorMessage(caught, "Revisa tu conexión e intenta otra vez.")));
+  }, []);
 
-  if (sources === null) return <BrandLoader />;
+  useEffect(() => load(), [load]);
+
+  const header = (
+    <CaptureHeader
+      title="De dónde traemos leads"
+      description="Las llaves las pone axi. Tú eliges la fuente y pagas por lo que uses, contra la cuota de tu plan."
+    />
+  );
+
+  if (sources === null) {
+    return (
+      <div className="flex min-w-0 flex-col gap-6">
+        {header}
+        {loadError === null ? (
+          <BrandLoader />
+        ) : (
+          <div className="border-border bg-card flex flex-col items-start gap-3 rounded-3xl border p-6">
+            <p className="font-heading text-xl font-bold tracking-tight">No pudimos cargar las fuentes</p>
+            <p className="text-muted-foreground text-sm text-pretty">{loadError}</p>
+            <Button variant="outline" className="rounded-full" onClick={load}>
+              Reintentar
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col gap-8">
-      <PageHeader
-        title="De dónde traemos leads"
-        description="Las llaves las pone axi. Tú eliges la fuente y pagas por lo que uses, contra la cuota de tu plan."
-      />
+    <div className="flex min-w-0 flex-col gap-6">
+      {header}
 
       <ProviderCardGrid>
         {sources.map((source) => {
@@ -108,9 +130,9 @@ export function SourcesView() {
               title={source.label}
               subtitle={SUBTITLES[source.source]}
               badge={
-                <Badge variant="outline" className="shrink-0">
+                <StatePill tone={source.available && source.free ? "success" : "neutral"}>
                   {source.available ? (source.free ? "Gratis" : "Consume unidades") : "No disponible"}
-                </Badge>
+                </StatePill>
               }
               body={PITCH[source.source]}
               // Lo que hay que saber ANTES de descubrir doscientos, no después.

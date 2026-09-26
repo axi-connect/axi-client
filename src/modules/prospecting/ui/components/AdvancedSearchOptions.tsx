@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { Switch } from "@/shared/components/ui/switch";
+import { SegmentedControl } from "@/shared/components/ui/segmented";
 
 import {
   ADMISSION_DATA_FIELDS,
@@ -98,8 +99,9 @@ export function AdvancedSearchOptions({
       value={open ? "advanced" : ""}
       onValueChange={(next) => onOpenChange(next === "advanced")}
       className={cn(
-        "rounded-md border px-3 transition-colors",
-        active ? "border-accent-violet/40 bg-accent-violet/5" : "border-border",
+        "rounded-2xl border px-4 transition-colors",
+        // Activas, un borde violeta y no una caja tintada: el color señala, no rellena (DS §9.5).
+        active ? "border-accent-violet" : "border-border",
       )}
     >
       <AccordionItem value="advanced" className="border-b-0">
@@ -120,7 +122,7 @@ export function AdvancedSearchOptions({
                   {chips.map((chip) => (
                     <span
                       key={chip}
-                      className="border-accent-violet/30 bg-accent-violet/12 text-accent-violet rounded-full border px-2 py-px text-[11px] font-medium"
+                      className="bg-muted rounded-full px-2 py-px text-[11px] font-medium"
                     >
                       {chip}
                     </span>
@@ -132,7 +134,7 @@ export function AdvancedSearchOptions({
         </AccordionTrigger>
 
         <AccordionContent className="space-y-4 pb-4">
-          <div className="border-border/60 border-t pt-3.5">
+          <div className="border-border border-t pt-3.5">
             <label className="text-sm font-semibold" htmlFor="adm-score">
               Calidad mínima
             </label>
@@ -166,32 +168,17 @@ export function AdvancedSearchOptions({
             <p className="text-muted-foreground text-xs">
               De cinco: teléfono, correo, sitio, dirección y redes
             </p>
-            <div
-              role="radiogroup"
-              aria-label="Datos mínimos"
-              className="bg-secondary mt-1.5 flex gap-0.5 rounded-md p-0.5"
-            >
-              {[null, 1, 2, 3, 4, 5].map((amount) => {
-                const selected = value.min_data == null ? amount === null : value.min_data === amount;
-                return (
-                  <button
-                    key={amount ?? ANY}
-                    type="button"
-                    role="radio"
-                    aria-checked={selected}
-                    onClick={() => patch({ min_data: amount })}
-                    className={cn(
-                      "flex-1 rounded-sm py-1 text-xs tabular-nums transition-colors",
-                      selected
-                        ? "bg-background text-accent-violet font-bold shadow-sm"
-                        : "text-muted-foreground hover:text-foreground",
-                    )}
-                  >
-                    {amount ?? "Ninguno"}
-                  </button>
-                );
-              })}
-            </div>
+            <SegmentedControl
+              className="mt-1.5"
+              value={value.min_data == null ? ANY : String(value.min_data)}
+              onValueChange={(next) => patch({ min_data: next === ANY ? null : Number(next) })}
+              label="Datos mínimos"
+              size="sm"
+              items={[
+                { value: ANY, label: "Ninguno" },
+                ...[1, 2, 3, 4, 5].map((amount) => ({ value: String(amount), label: String(amount) })),
+              ]}
+            />
             {value.min_data === ADMISSION_DATA_FIELDS && freeSource && (
               <Caution>
                 <b>En OpenStreetMap casi ningún negocio trae los cinco.</b> Es probable que la
@@ -217,9 +204,9 @@ export function AdvancedSearchOptions({
                     aria-pressed={on}
                     onClick={() => toggleField(field)}
                     className={cn(
-                      "rounded-full border px-2.5 py-1 text-xs transition-colors",
+                      "inline-flex min-h-7 items-center rounded-full border px-3 text-xs font-medium transition-colors",
                       on
-                        ? "border-accent-violet/40 bg-accent-violet/12 text-accent-violet font-semibold"
+                        ? "border-foreground bg-foreground text-background"
                         : "border-border text-muted-foreground hover:text-foreground",
                     )}
                   >
@@ -230,7 +217,7 @@ export function AdvancedSearchOptions({
             </div>
           </div>
 
-          <div className="border-border/60 border-t pt-3.5">
+          <div className="border-border border-t pt-3.5">
             <div className="flex items-start gap-3">
               <span className="min-w-0 flex-1">
                 <span
@@ -293,7 +280,7 @@ export function AdvancedSearchOptions({
             </div>
           )}
 
-          <p className="border-accent-violet/20 bg-accent-violet/8 rounded-md border px-3 py-2.5 text-xs leading-relaxed">
+          <p className="border-border border-t pt-3.5 text-sm leading-relaxed text-pretty">
             {admissionSentence(value, limit, categoryLabel)}
           </p>
 
@@ -309,11 +296,12 @@ export function AdvancedSearchOptions({
   );
 }
 
-/** Aviso al pie de un control. Ámbar: no es un error, es una consecuencia. */
+/** Aviso al pie de un control. Punto ámbar: no es un error, es una consecuencia (el color va en el punto). */
 function Caution({ children }: { children: React.ReactNode }) {
   return (
-    <p className="border-warning/40 bg-warning/8 text-muted-foreground mt-2 rounded-md border-l-2 px-3 py-2 text-xs leading-relaxed">
-      {children}
+    <p className="text-muted-foreground mt-2 flex gap-2 text-xs leading-relaxed text-pretty">
+      <span aria-hidden className="bg-warning mt-[0.4em] size-1.5 shrink-0 rounded-full" />
+      <span>{children}</span>
     </p>
   );
 }

@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { RelativeDate } from "@/shared/components/ui/relative-date";
+import { BentoTile, StatePill } from "@/shared/components/features/bento";
 import {
   Timeline,
   type TimelineItem,
@@ -67,19 +68,18 @@ const STEP_STYLE: Record<RunStepState, { icon: TimelineItem["icon"]; tone: Timel
 export function EnrichmentRunCard({ run }: { run: EnrichmentRunDTO | null }) {
   if (run === null) {
     return (
-      <section className="border-border shadow-float bg-background rounded-lg border p-5">
-        <Heading />
-        <div className="py-4 text-center">
-          <span className="bg-secondary text-muted-foreground mx-auto mb-2.5 flex size-9 items-center justify-center rounded-full">
+      <BentoTile label="Última búsqueda de datos">
+        <div className="flex items-start gap-3">
+          <span className="bg-muted text-muted-foreground grid size-9 shrink-0 place-items-center rounded-xl">
             <WandSparkles aria-hidden className="size-4" />
           </span>
-          <p className="text-muted-foreground mx-auto max-w-[44ch] text-xs">
+          <p className="text-muted-foreground text-sm text-pretty">
             Todavía no hemos buscado datos de este lead. Preguntaremos a las fuentes gratuitas
             —registro mercantil, OpenStreetMap y su propia web— y te contaremos qué encontró cada
             una.
           </p>
         </div>
-      </section>
+      </BentoTile>
     );
   }
 
@@ -87,40 +87,24 @@ export function EnrichmentRunCard({ run }: { run: EnrichmentRunDTO | null }) {
   const items = run.steps.map(toTimelineItem);
 
   return (
-    <section className="border-border shadow-float bg-background rounded-lg border p-5">
-      <div className="mb-3 flex flex-wrap items-start gap-3">
-        <div>
-          <Heading />
-          <p className="text-muted-foreground text-xs">{summary(run)}</p>
-        </div>
-        <span className="ml-auto">
-          <RunPill run={run} />
-        </span>
-      </div>
+    <BentoTile label="Última búsqueda de datos" aside={<RunPill run={run} />}>
+      <p className="text-muted-foreground -mt-1 text-xs">{summary(run)}</p>
 
       <Timeline items={items} />
 
       {/* El coste, dicho aunque sea cero: es la pregunta que el dueño se hace
           cada vez que algo consulta a un tercero. */}
-      <p className="border-border-soft text-muted-foreground mt-3 border-t pt-3 text-[11.5px]">
+      <p className="border-border text-muted-foreground border-t pt-3 text-xs">
         {run.units_spent === 0
           ? "No gastó unidades de tu plan: todas las fuentes consultadas son gratuitas."
           : `Consumió ${String(run.units_spent)} ${run.units_spent === 1 ? "unidad" : "unidades"} de tu plan.`}
       </p>
       {live && (
-        <p className="text-muted-foreground mt-1 text-[11.5px]">
+        <p className="text-muted-foreground -mt-1 text-xs">
           Los datos aparecen arriba en cuanto llegan.
         </p>
       )}
-    </section>
-  );
-}
-
-function Heading() {
-  return (
-    <h2 className="text-muted-foreground text-[10.5px] font-semibold tracking-[0.085em] uppercase">
-      Última búsqueda de datos
-    </h2>
+    </BentoTile>
   );
 }
 
@@ -151,8 +135,8 @@ function summary(run: EnrichmentRunDTO): string {
 function RunPill({ run }: { run: EnrichmentRunDTO }) {
   if (isRunInFlight(run)) {
     return (
-      <span className="border-info/25 bg-info/10 text-info inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11.5px] font-semibold">
-        <LoaderCircle aria-hidden className="size-3 animate-spin" />
+      <span className="bg-muted inline-flex h-6 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium whitespace-nowrap">
+        <LoaderCircle aria-hidden className="text-info size-3 animate-spin" />
         Consultando fuentes…
       </span>
     );
@@ -162,18 +146,11 @@ function RunPill({ run }: { run: EnrichmentRunDTO }) {
   // existe.
   const found = run.fields_filled > 0;
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11.5px] font-semibold ${
-        found
-          ? "border-success/25 bg-success/10 text-success"
-          : "border-border bg-secondary text-muted-foreground"
-      }`}
-    >
-      {found ? <Check aria-hidden className="size-3" /> : <Minus aria-hidden className="size-3" />}
+    <StatePill tone={found ? "success" : "neutral"}>
       {found
         ? `Encontramos ${String(run.fields_filled)} ${run.fields_filled === 1 ? "dato" : "datos"}`
         : "No encontramos nada nuevo"}
-    </span>
+    </StatePill>
   );
 }
 
@@ -222,7 +199,7 @@ function detailOf(step: RunStepDTO, fields: string[]): React.ReactNode {
           {fields.map((field) => (
             <li
               key={field}
-              className="border-success/25 bg-success/10 text-success rounded-full border px-2 py-0.5 text-[11px] font-medium"
+              className="bg-muted inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium"
             >
               {field}
             </li>

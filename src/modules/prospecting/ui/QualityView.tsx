@@ -1,24 +1,22 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { ShieldOff, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { useAuth } from "@/shared/auth/auth.hooks";
-import { PageHeader } from "@/shared/components/layout/page-header";
+import { BentoTile } from "@/shared/components/features/bento";
 import { BrandLoader } from "@/shared/components/ui/brand-loader";
+import { Button } from "@/shared/components/ui/button";
 
-import {
-  QUALITY_AXES,
-  type IcpDTO,
-  type QualitySummaryDTO,
-} from "../domain/lead";
+import type { IcpDTO, QualitySummaryDTO } from "../domain/lead";
 import {
   getIcp,
   getQualitySummary,
   updateIcp,
 } from "../infrastructure/services/prospecting-service.adapter";
+import { CaptureHeader } from "./components/CaptureHeader";
 import { IcpEditor } from "./components/IcpEditor";
 import { QualityDistribution } from "./components/QualityDistribution";
 
@@ -38,23 +36,19 @@ export function QualityView() {
   const [icp, setIcp] = useState<IcpDTO | null>(null);
   const [summary, setSummary] = useState<QualitySummaryDTO | null>(null);
   const [saving, setSaving] = useState(false);
+  /** No se pudo leer: antes se quedaba en el cargador para siempre; ahora se dice y se reintenta. */
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
+    setLoadError(null);
     try {
-      const [loadedIcp, loadedSummary] = await Promise.all([
-        getIcp(),
-        getQualitySummary(),
-      ]);
+      const [loadedIcp, loadedSummary] = await Promise.all([getIcp(), getQualitySummary()]);
       setIcp(loadedIcp);
       setSummary(loadedSummary);
     } catch (caught) {
-      showAlert({
-        tone: "error",
-        title: "No pudimos cargar la calidad",
-        description: errorMessage(caught, "Intenta de nuevo."),
-      });
+      setLoadError(errorMessage(caught, "Revisa tu conexión e intenta otra vez."));
     }
-  }, [showAlert]);
+  }, []);
 
   useEffect(() => {
     void load();
@@ -91,65 +85,59 @@ export function QualityView() {
     [showAlert],
   );
 
-  if (icp === null || summary === null)
-    return <BrandLoader label="Cargando calidad" />;
+  const header = (
+    <CaptureHeader title="Calidad" description="Qué es un buen lead para ti, y qué se sabe de los que ya tienes." />
+  );
+
+  if (icp === null || summary === null) {
+    return (
+      <div className="flex min-w-0 flex-col gap-6">
+        {header}
+        {loadError === null ? (
+          <BrandLoader label="Cargando calidad" />
+        ) : (
+          <div className="border-border bg-card flex flex-col items-start gap-3 rounded-3xl border p-6">
+            <p className="font-heading text-xl font-bold tracking-tight">No pudimos cargar la calidad</p>
+            <p className="text-muted-foreground text-sm text-pretty">{loadError}</p>
+            <Button variant="outline" className="rounded-full" onClick={() => void load()}>
+              Reintentar
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col gap-8">
-      <PageHeader
-        title="Calidad"
-        description="Qué es un buen lead para ti, y qué se sabe de los que ya tienes."
-      />
+    <div className="flex min-w-0 flex-col gap-6">
+      {header}
 
       <QualityDistribution summary={summary} />
 
-      <div className="grid items-start gap-5 lg:grid-cols-[1.1fr_0.9fr]">
-        <section className="border-border shadow-float bg-background rounded-lg border p-5">
-          <IcpEditor
-            icp={icp}
-            readOnly={!canManage}
-            saving={saving}
-            onSave={onSave}
-          />
-        </section>
-
-        <section className="border-border shadow-float bg-background rounded-lg border p-5">
-          <p className="text-muted-foreground mb-3 text-[10.5px] font-semibold tracking-wider uppercase">
-            Qué se verifica hoy
-          </p>
-          <ul className="divide-border-soft divide-y text-sm">
-            <VerificationRow label="El correo está bien escrito" active />
-            <VerificationRow
-              label="El dominio puede recibir correo"
-              active
-              hint="consulta DNS"
-            />
-            <VerificationRow label="No es un correo temporal" active />
-            <VerificationRow label="El teléfono es un celular válido" active />
-            <VerificationRow label="El sitio web responde" active />
-            <VerificationRow label="El buzón existe de verdad" />
-            <VerificationRow label="La línea telefónica está activa" />
-          </ul>
-          <p className="text-muted-foreground mt-3 flex items-start gap-2 text-xs">
-            <ShieldOff className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-            Las dos últimas necesitan un proveedor de verificación conectado.
-            Sin él, esas señales quedan{" "}
-            <strong className="font-semibold">sin medir</strong> — que no es lo
-            mismo que fallidas: no bajan el puntaje de nadie.
-          </p>
-        </section>
-      </div>
-
-      <div className="mt-5 flex flex-col gap-2">
-        {QUALITY_AXES.map((axis) => (
-          <p key={axis.key} className="text-muted-foreground text-xs">
-            <strong className="text-foreground font-semibold">
-              {axis.label}
-            </strong>{" "}
-            — {axis.question}
-          </p>
-        ))}
-      </div>
+      <IcpEditor
+        icp={icp}
+        readOnly={!canManage}
+        saving={saving}
+        onSave={onSave}
+        aside={
+          <BentoTile label="Qué se verifica hoy">
+            <ul className="divide-border divide-y text-sm">
+              <VerificationRow label="El correo está bien escrito" active />
+              <VerificationRow label="El dominio puede recibir correo" active hint="consulta DNS" />
+              <VerificationRow label="No es un correo temporal" active />
+              <VerificationRow label="El teléfono es un celular válido" active />
+              <VerificationRow label="El sitio web responde" active />
+              <VerificationRow label="El buzón existe de verdad" />
+              <VerificationRow label="La línea telefónica está activa" />
+            </ul>
+            <p className="text-muted-foreground text-xs text-pretty">
+              Las dos últimas necesitan un proveedor de verificación conectado. Sin él, esas señales quedan{" "}
+              <strong className="text-foreground font-semibold">sin medir</strong> — que no es lo mismo que fallidas:
+              no bajan el puntaje de nadie.
+            </p>
+          </BentoTile>
+        }
+      />
     </div>
   );
 }
@@ -164,9 +152,9 @@ function VerificationRow({
   hint?: string;
 }) {
   return (
-    <li className="flex items-center gap-2 py-2">
+    <li className="flex items-center gap-2.5 py-2.5">
       <span
-        className={`size-1.5 shrink-0 rounded-full ${active ? "bg-success" : "bg-foreground/20"}`}
+        className={`size-2 shrink-0 rounded-full ${active ? "bg-success" : "bg-muted-foreground/40"}`}
         aria-hidden
       />
       <span className={active ? "" : "text-muted-foreground"}>{label}</span>
@@ -174,7 +162,7 @@ function VerificationRow({
         <span className="text-muted-foreground text-xs">· {hint}</span>
       )}
       {!active && (
-        <span className="text-muted-foreground ml-auto flex items-center gap-1 text-[11px]">
+        <span className="bg-muted text-muted-foreground ml-auto inline-flex h-6 items-center gap-1 rounded-full px-2.5 text-[11px] whitespace-nowrap">
           <Sparkles className="size-3" aria-hidden />
           sin proveedor
         </span>

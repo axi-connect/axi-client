@@ -23,6 +23,14 @@ import {
 } from "@/modules/marketing/infrastructure/services/campaigns-service.adapter";
 import { listOptOuts } from "@/modules/marketing/infrastructure/services/opt-outs-service.adapter";
 import { listPromotions } from "@/modules/marketing/infrastructure/services/promotions-service.adapter";
+import {
+  getMessagingWindow,
+  listHsmTemplates,
+} from "@/modules/marketing/infrastructure/services/templates-service.adapter";
+import { TRIGGER_ORDER, type TriggerType } from "@/modules/marketing/domain/enums";
+import type { MetaStatus } from "@/modules/marketing/domain/next-up";
+import { listChannels } from "@/modules/channels/public";
+import { getProspectingStats, type ProspectingStatsDTO } from "@/modules/prospecting/public";
 
 /** Estado de una sección (mismo patrón que analytics/dashboard). */
 export type SectionStatus = "idle" | "loading" | "ready" | "error";
@@ -87,6 +95,8 @@ export type RecoveryTotals = {
   measured: number;
   /** Reglas activas que se dejaron fuera por el tope. */
   omitted: number;
+  /** Lo recuperado por disparador, para la barra de cada uno en el Resumen. */
+  byTrigger: Record<TriggerType, { attributed_revenue_cents: number; converted: number }>;
 };
 
 interface OverviewState {
@@ -95,11 +105,18 @@ interface OverviewState {
   promotions: Section<PromotionDTO[]>;
   optOutsTotal: Section<number>;
   liveCampaigns: Section<LiveCampaign[]>;
+  /** Borradores sin lanzar (solo el total). */
+  drafts: Section<number>;
+  /** WhatsApp Cloud: plantillas por estado y el cupo de hoy. `null` = sin número Cloud. */
+  meta: Section<MetaStatus | null>;
+  /** El embudo de captación (tarjeta «Captación de leads»). Solo se pide con `leads:read`. */
+  capture: Section<ProspectingStatsDTO>;
   /** Campañas en vuelo por encima del tope: se avisa, no se ocultan en silencio. */
   liveCampaignsOmitted: number;
   feed: RecoveryFeedEntry[];
 
-  load: () => Promise<void>;
+  /** `capture`: pedir también el embudo de captación (quien llama sabe si hay `leads:read`). */
+  load: (options?: { capture?: boolean }) => Promise<void>;
   refreshLiveCampaigns: () => Promise<void>;
   refreshCampaignStats: (campaignId: string) => Promise<void>;
   onCampaignStatusChanged: (payload: MarketingCampaignStatusChangedEvent) => void;
@@ -108,31 +125,62 @@ interface OverviewState {
   onOptOutCreated: (payload: MarketingOptOutCreatedEvent) => void;
 }
 
-function sumMetrics(
+export function sumMetrics(
   metrics: AutomationMetricsDTO[],
+  triggers: Record<string, TriggerType>,
   measured: number,
   omitted: number,
 ): RecoveryTotals {
-  return metrics.reduce<RecoveryTotals>(
-    (acc, m) => ({
-      sent: acc.sent + m.sent,
-      converted: acc.converted + m.converted,
-      attributed_revenue_cents: acc.attributed_revenue_cents + m.attributed_revenue_cents,
-      coupons_issued: acc.coupons_issued + m.coupons_issued,
-      coupons_redeemed: acc.coupons_redeemed + m.coupons_redeemed,
-      measured,
-      omitted,
-    }),
-    {
-      sent: 0,
-      converted: 0,
-      attributed_revenue_cents: 0,
-      coupons_issued: 0,
-      coupons_redeemed: 0,
-      measured,
-      omitted,
-    },
-  );
+  const byTrigger = Object.fromEntries(
+    TRIGGER_ORDER.map((trigger) => [trigger, { attributed_revenue_cents: 0, converted: 0 }]),
+  ) as RecoveryTotals["byTrigger"];
+  const totals: RecoveryTotals = {
+    sent: 0,
+    converted: 0,
+    attributed_revenue_cents: 0,
+    coupons_issued: 0,
+    coupons_redeemed: 0,
+    measured,
+    omitted,
+    byTrigger,
+  };
+  for (const m of metrics) {
+    totals.sent += m.sent;
+    totals.converted += m.converted;
+    totals.attributed_revenue_cents += m.attributed_revenue_cents;
+    totals.coupons_issued += m.coupons_issued;
+    totals.coupons_redeemed += m.coupons_redeemed;
+    const trigger = triggers[m.automation_id];
+    if (trigger) {
+      byTrigger[trigger].attributed_revenue_cents += m.attributed_revenue_cents;
+      byTrigger[trigger].converted += m.converted;
+    }
+  }
+  return totals;
+}
+
+/**
+ * Lo que el Resumen necesita de WhatsApp Cloud, del PRIMER número Cloud (las
+ * plantillas son por número; el cupo es del portafolio entero, así que da igual
+ * cuál se pregunte). Sin número Cloud: `null`, que la vista dice como «conéctalo».
+ */
+async function loadMetaStatus(): Promise<MetaStatus | null> {
+  const channels = await listChannels();
+  const cloud = channels.data.find((channel) => channel.kind === "whatsapp_cloud");
+  if (!cloud) return null;
+  const [templates, window] = await Promise.all([
+    listHsmTemplates({ channel_id: cloud.id }),
+    // El cupo es un extra: sin él las plantillas siguen diciendo lo suyo.
+    getMessagingWindow(cloud.id).catch(() => null),
+  ]);
+  const rejected = templates.filter((t) => t.approval_status === "rejected");
+  return {
+    approved: templates.filter((t) => t.approval_status === "approved").length,
+    pending: templates.filter((t) => t.approval_status === "pending").length,
+    rejected: rejected.length,
+    rejectedName: rejected[0]?.name ?? null,
+    window,
+  };
 }
 
 export const useOverviewStore = create<OverviewState>((set, get) => ({
@@ -141,16 +189,22 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
   promotions: idle<PromotionDTO[]>(),
   optOutsTotal: idle<number>(),
   liveCampaigns: idle<LiveCampaign[]>(),
+  drafts: idle<number>(),
+  meta: idle<MetaStatus | null>(),
+  capture: idle<ProspectingStatsDTO>(),
   liveCampaignsOmitted: 0,
   feed: [],
 
-  async load() {
+  async load(options = {}) {
     set((s) => ({
       automations: loading(s.automations),
       recovery: loading(s.recovery),
       promotions: loading(s.promotions),
       optOutsTotal: loading(s.optOutsTotal),
       liveCampaigns: loading(s.liveCampaigns),
+      drafts: loading(s.drafts),
+      meta: loading(s.meta),
+      capture: options.capture ? loading(s.capture) : s.capture,
     }));
 
     // Los cuatro bloques son independientes: que uno falle no debe dejar la
@@ -166,9 +220,10 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
           const metrics = await Promise.all(
             measured.map((a) => getAutomationMetrics(a.id)),
           );
+          const triggers = Object.fromEntries(automations.map((a) => [a.id, a.trigger_type]));
           set({
             recovery: ready(
-              sumMetrics(metrics, measured.length, enabled.length - measured.length),
+              sumMetrics(metrics, triggers, measured.length, enabled.length - measured.length),
             ),
           });
         } catch (error) {
@@ -194,6 +249,33 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
           set({ optOutsTotal: ready(res.meta.total) });
         } catch (error) {
           set((s) => ({ optOutsTotal: failed(s.optOutsTotal, error) }));
+        }
+      })(),
+
+      (async () => {
+        try {
+          // page_size 1: solo interesa `meta.total`.
+          const res = await listCampaigns({ status: "draft", page: 1, page_size: 1 });
+          set({ drafts: ready(res.meta.total) });
+        } catch (error) {
+          set((s) => ({ drafts: failed(s.drafts, error) }));
+        }
+      })(),
+
+      (async () => {
+        try {
+          set({ meta: ready(await loadMetaStatus()) });
+        } catch (error) {
+          set((s) => ({ meta: failed(s.meta, error) }));
+        }
+      })(),
+
+      (async () => {
+        if (!options.capture) return;
+        try {
+          set({ capture: ready(await getProspectingStats()) });
+        } catch (error) {
+          set((s) => ({ capture: failed(s.capture, error) }));
         }
       })(),
 
