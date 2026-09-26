@@ -8,7 +8,7 @@
 >
 > | Fase | Qué | Lienzo | Estado |
 > |---|---|---|---|
-> | F1 | La bandeja: shell del workspace, lista, vistas y el panel sin conversación («Tu día») | https://claude.ai/artifact/WrEnSotKFPTjsQsgjP3WMd | Lienzo publicado, por aprobar |
+> | F1 | La bandeja: shell del workspace, lista, vistas y el panel sin conversación («Tu día») | https://claude.ai/artifact/WrEnSotKFPTjsQsgjP3WMd | Aprobado el 2026-09-26, en implementación |
 > | F2 | La conversación: cabecera, hilo, eventos de handoff en el hilo, «Por qué está aquí», pie cerrado | — | — |
 > | F3 | Escribir y medios: composer, adjuntos, nota de voz, acciones rápidas, burbujas de media, visor | — | — |
 > | F4 | El contexto: rail y paneles (Contacto, Adjuntos, Historial, Llamadas) | — | — |
@@ -80,7 +80,22 @@ Tres materiales, con criterio (`criterio-isla-cristal-tinta`):
 
 ### F1 · La bandeja
 
-Solo cliente.
+Solo cliente. **Aprobado por la dueña el 2026-09-26** («me encanta… te apruebo todo»), con un añadido: **un botón para
+plegar la columna de vistas y canales al riel de 64 px** del artboard 3, para ganar espacio a voluntad, además del
+plegado automático por ancho, que también le gustó. Decisiones que cierra el lienzo:
+- **D2:** contador en tinta.
+- **D3:** «Lo próximo» en «Tu día» y como franja en el celular.
+- **D4:** las vistas en la columna, como Mail; el segmentado queda solo por debajo de `lg`.
+
+**La columna de vistas y canales (`WorkspaceRail`).** Tiene tres modos:
+- `auto` (por defecto): riel entre `lg` y `xl` y desplegada desde `xl`;
+- `expanded`;
+- `compact`.
+
+El botón «Plegar panel» / «Desplegar panel» (`aria-expanded`, `aria-controls`) fija el modo contrario al que se ve y
+se recuerda por navegador en `localStorage` (`axi.workspace.rail`, con try/catch). Sin preferencia guardada, el modo
+lo pinta el CSS, así que no hay salto al hidratar. En el drawer (<`lg`) siempre va desplegada y sin botón. En el riel,
+cada icono lleva un tooltip a la derecha, el conteo de En cola y Contigo, y el punto de estado del canal.
 
 | Pieza | Queda |
 |---|---|
