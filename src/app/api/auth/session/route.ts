@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { http } from "@/core/services/http";
 import { API_ERROR_CODES, isHttpError, isSuspensionCode } from "@/core/api/problem";
 import { clearSessionCookies, refreshSession } from "@/shared/auth/auth.handlers";
-import { clearSupportCookie } from "@/shared/auth/support-session";
+import { clearSupportCookie, readSupportToken } from "@/shared/auth/support-session";
 import type { AuthUser, SessionResponse } from "@/shared/auth/auth.types";
 
 /**
@@ -21,6 +21,12 @@ import type { AuthUser, SessionResponse } from "@/shared/auth/auth.types";
 function suspendedResponse(store: Awaited<ReturnType<typeof cookies>>, code: string) {
   // Las cookies ya no valen (el backend revocó los tokens): se limpian aquí
   // para que el middleware mande futuras navegaciones directo al login.
+  // Bajo soporte la respuesta es del tenant SOPORTADO: se borra solo la
+  // cookie de soporte y la sesión de cliente del navegador queda intacta.
+  if (readSupportToken(store)) {
+    clearSupportCookie(store);
+    return NextResponse.json<SessionResponse>({ isAuthenticated: false, code: API_ERROR_CODES.supportSessionEnded });
+  }
   clearSessionCookies(store);
   return NextResponse.json<SessionResponse>({ isAuthenticated: false, code });
 }

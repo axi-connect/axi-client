@@ -26,11 +26,16 @@ export function PlatformShell({ children }: { children: React.ReactNode }) {
           <PlatformHeader />
           <SessionBanner />
         </div>
-        <SidebarInset>
-          <div className="flex w-full flex-1 flex-col rounded-3xl rounded-b-none bg-gradient-to-br from-muted/50 to-muted">
+        {/* Una vista de aplicación (`data-app-view`, hoy el simulacro de
+            quality) se topa al viewport con :has() — solo en `app-fit`
+            (escritorio con alto suficiente); el resto sigue documental. */}
+        <SidebarInset className="app-fit:has-[[data-app-view]]:min-h-0">
+          <div className="flex w-full flex-1 flex-col rounded-3xl rounded-b-none bg-gradient-to-br from-muted/50 to-muted app-fit:has-[[data-app-view]]:min-h-0">
             {/* Centrado estándar del contenido (DESIGN-SYSTEM §4.2): las
                 páginas no añaden padding propio. */}
-            <div className="mx-auto w-full max-w-7xl p-4 md:p-6">{children}</div>
+            <div className="mx-auto w-full max-w-7xl p-4 md:p-6 app-fit:has-[[data-app-view]]:flex app-fit:has-[[data-app-view]]:min-h-0 app-fit:has-[[data-app-view]]:flex-1 app-fit:has-[[data-app-view]]:flex-col">
+              {children}
+            </div>
           </div>
         </SidebarInset>
       </div>

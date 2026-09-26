@@ -43,7 +43,7 @@ export function ProductPicker({ companyId, selectedIds, onPick, placeholder }: P
         />
       </div>
       {debounced.trim().length > 0 && (
-        <ul className="max-h-56 space-y-1 overflow-y-auto" aria-label="Resultados del catálogo">
+        <ul className="axi-scroll max-h-56 space-y-1 overflow-y-auto" aria-label="Resultados del catálogo">
           {search.isPending && <li className="px-2 py-1 text-xs text-muted-foreground">Buscando…</li>}
           {!search.isPending && results.length === 0 && (
             <li className="px-2 py-1 text-xs text-muted-foreground">Sin resultados para «{debounced}».</li>

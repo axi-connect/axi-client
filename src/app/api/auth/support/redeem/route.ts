@@ -11,7 +11,7 @@ import {
   readJsonBody,
 } from "@/shared/auth/bff-response";
 import { SUPPORT_PLATFORM_TOKEN_HEADER } from "@/shared/auth/auth.types";
-import { hasTenantSession, setSupportCookie } from "@/shared/auth/support-session";
+import { setSupportCookie } from "@/shared/auth/support-session";
 
 /** A dónde entra la pestaña de soporte: el panel del cliente. */
 const PANEL_HOME = "/dashboard";
@@ -23,9 +23,12 @@ const PANEL_HOME = "/dashboard";
  * - El token de plataforma llega en `X-Platform-Token` (el BFF no ve el
  *   `sessionStorage` de la consola) y se reenvía igual al backend, que exige
  *   que sea el MISMO admin que emitió el código. Nunca va a un log.
- * - Si el navegador ya tiene una sesión de CLIENTE (accessToken o
- *   refreshToken), responde 409 `auth/support_session_conflict` sin tocarla:
- *   mezclar las dos pondría las acciones de soporte a nombre del cliente.
+ * - La sesión de soporte TOMA el navegador (decisión del dueño 2026-09-26):
+ *   si ya hay una sesión de CLIENTE (accessToken/refreshToken) no se toca ni
+ *   se borra. La precedencia de `support-session.ts` hace que cada request
+ *   salga con el token de soporte mientras dure —nunca se mezclan en una
+ *   misma petición— y al terminar vuelve sola la del cliente. Las demás
+ *   pestañas se recargan por el canal `axi-auth` (`auth-channel.ts`).
  * - Si sale bien, escribe SOLO `supportAccessToken` (httpOnly, secure, lax,
  *   maxAge = expires_in). El token no vuelve al navegador.
  */
@@ -40,9 +43,6 @@ export async function POST(req: NextRequest) {
   }
 
   const store = await cookies();
-  if (hasTenantSession(store)) {
-    return bffProblem(409, API_ERROR_CODES.supportSessionConflict, "Ya tienes una sesión de cliente abierta en este navegador");
-  }
 
   try {
     const tokens = await http.post<Schemas["SupportAccessTokensDto"]>(

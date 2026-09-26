@@ -1,45 +1,65 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Phone, PhoneCall, Search, Target, Timer } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { Phone, Search } from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useSocket, useSocketEvent } from "@/core/realtime/use-socket";
 import { formatDuration } from "@/core/lib/format";
 import { usePaginatedList } from "@/shared/api/use-paginated-list";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
-import { Progress } from "@/shared/components/ui/progress";
 import { DataTable } from "@/shared/components/features/data-table";
 import { EmptyState } from "@/shared/components/features/empty-state";
 import { TableSkeleton } from "@/shared/components/features/loading";
-import { StatTile } from "@/shared/components/features/stat-tile";
-import type { CallRow, CallsOverviewDTO } from "@/modules/calls/domain/call";
+import { BentoFigure, BentoTile } from "@/shared/components/features/bento";
+import { Skeleton } from "@/shared/components/ui/skeleton";
+import {
+  CALL_OUTCOME_MAP,
+  type CallOutcome,
+  type CallRow,
+  type CallsOverviewDTO,
+} from "@/modules/calls/domain/call";
 import { getCallsOverview } from "@/modules/calls/infrastructure/services/calls-service.adapter";
 import {
   CallFilters,
   rangeToFromIso,
   type CallFiltersValue,
 } from "@/modules/calls/ui/components/CallFilters";
+import { CallsPageHeader } from "@/modules/calls/ui/components/CallsPageHeader";
 import { callColumns, fetchCalls } from "@/modules/calls/ui/tables/calls.config";
 
 const PAGE_SIZE = 25;
 const SEARCH_DEBOUNCE_MS = 400;
 const REFRESH_DEBOUNCE_MS = 400;
 
+/** `?outcome=` válido del contrato (la isla del Monitoreo enlaza aquí filtrado). */
+function outcomeFromQuery(raw: string | null): CallOutcome | undefined {
+  return raw !== null && raw in CALL_OUTCOME_MAP ? (raw as CallOutcome) : undefined;
+}
+
 /**
- * Historial de llamadas (`/calls/history`): KPIs del ciclo, filtros y tabla
- * server-side. Molde: el listado de contactos del CRM.
+ * Historial de llamadas (`/calls/history`, llamadas premium F5, canvas
+ * tablero 7): cifras del ciclo en fichas, filtros y la tabla server-side.
+ * Molde: el listado de contactos del CRM. `?outcome=` llega ya filtrado.
  */
 export function CallsHistoryView() {
+  const searchParams = useSearchParams();
   const [overview, setOverview] = useState<CallsOverviewDTO | null>(null);
-  const [filters, setFilters] = useState<CallFiltersValue>({});
+  const [overviewFailed, setOverviewFailed] = useState(false);
+  const [filters, setFilters] = useState<CallFiltersValue>(() => ({
+    outcome: outcomeFromQuery(searchParams.get("outcome")),
+  }));
   const [searchDraft, setSearchDraft] = useState("");
 
   const loadOverview = useCallback(() => {
     getCallsOverview("week")
-      .then(setOverview)
-      // Sin overview la tabla sigue: los KPIs simplemente no se pintan.
-      .catch(() => undefined);
+      .then((data) => {
+        setOverview(data);
+        setOverviewFailed(false);
+      })
+      // Sin overview la tabla sigue: las fichas simplemente no se pintan.
+      .catch(() => setOverviewFailed(true));
   }, []);
 
   useEffect(() => {
@@ -107,52 +127,64 @@ export function CallsHistoryView() {
       : null;
 
   return (
-    <div className="space-y-4">
-      {overview !== null && (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <StatTile
-            label="Llamadas este ciclo"
-            value={overview.kpis.total}
-            icon={PhoneCall}
-            hint={`${overview.kpis.outbound} salientes · ${overview.kpis.inbound} entrantes`}
-          />
-          <StatTile
-            label="Minutos usados"
-            value={minutes === null ? null : Math.round(minutes.used_seconds / 60)}
-            icon={Timer}
-            tone={minutesPct !== null && minutesPct >= 80 ? "warning" : "default"}
-            hint={
-              minutes === null ? undefined : minutes.limit_seconds === null ? (
-                "Sin tope configurado"
-              ) : (
-                <span className="flex items-center gap-2">
-                  <Progress value={minutesPct ?? 0} className="h-1.5 w-16" />
-                  {`de ${Math.round(minutes.limit_seconds / 60)} min`}
-                </span>
-              )
-            }
-          />
-          <StatTile
-            label="Tasa de conexión"
-            value={`${overview.kpis.connection_pct} %`}
-            icon={Phone}
-            hint={`${overview.kpis.answered} contestadas · ${overview.kpis.no_answer} sin respuesta · ${overview.kpis.voicemail} buzón`}
-          />
-          <StatTile
-            label="Objetivo cumplido"
-            value={`${overview.kpis.goal_met_pct} %`}
-            icon={Target}
-            hint={
-              overview.kpis.avg_duration_seconds === null
-                ? undefined
-                : `duración promedio ${formatDuration(overview.kpis.avg_duration_seconds)}`
-            }
-          />
+    <div className="flex flex-col gap-6">
+      <CallsPageHeader kicker="Llamadas · historial" title="Cada llamada, con su resultado" />
+
+      {overviewFailed && overview === null ? null : overview === null ? (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-busy="true">
+          {[0, 1, 2, 3].map((key) => (
+            <Skeleton key={key} className="h-[132px] rounded-3xl" />
+          ))}
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <BentoTile label="Llamadas este ciclo">
+            <BentoFigure value={String(overview.kpis.total)} unit="llamadas" />
+            <p className="truncate text-xs text-muted-foreground">
+              {overview.kpis.outbound} salen · {overview.kpis.inbound} entran
+            </p>
+          </BentoTile>
+          <BentoTile label="Minutos del ciclo">
+            <BentoFigure
+              value={String(minutes === null ? 0 : Math.round(minutes.used_seconds / 60))}
+              unit={minutes?.limit_seconds == null ? "min · sin tope" : `de ${Math.round(minutes.limit_seconds / 60)} min`}
+            />
+            {minutesPct !== null && (
+              <div
+                className="h-1.5 overflow-hidden rounded-full bg-muted"
+                role="meter"
+                aria-label="Minutos usados del ciclo"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={Math.round(minutesPct)}
+              >
+                <div
+                  className={minutesPct >= 80 ? "h-full rounded-full bg-warning" : "h-full rounded-full bg-foreground"}
+                  style={{ width: `${minutesPct}%` }}
+                />
+              </div>
+            )}
+          </BentoTile>
+          <BentoTile label="Contestaron">
+            <BentoFigure value={`${overview.kpis.connection_pct} %`} />
+            <p className="truncate text-xs text-muted-foreground">
+              {overview.kpis.answered} sí · {overview.kpis.no_answer} no · {overview.kpis.voicemail} buzón
+            </p>
+          </BentoTile>
+          <BentoTile label="Objetivo cumplido">
+            <BentoFigure value={`${overview.kpis.goal_met_pct} %`} />
+            <p className="truncate text-xs text-muted-foreground">
+              {overview.kpis.goal_met} llamadas
+              {overview.kpis.avg_duration_seconds === null
+                ? ""
+                : ` · ${formatDuration(overview.kpis.avg_duration_seconds)} de media`}
+            </p>
+          </BentoTile>
         </div>
       )}
 
       {error ? (
-        <div className="border-border bg-background rounded-2xl border p-8 text-center" role="alert">
+        <div className="rounded-3xl border border-border bg-card p-8 text-center" role="alert">
           <p className="text-muted-foreground text-sm">{errorMessage(error)}</p>
           <Button variant="outline" className="mt-4 rounded-full" onClick={() => void refresh()}>
             Reintentar
@@ -167,7 +199,7 @@ export function CallsHistoryView() {
           description="Cuando tu agente haga o conteste llamadas, quedarán aquí grabadas, transcritas y resumidas."
         />
       ) : (
-        <div className="border-border bg-background space-y-4 rounded-2xl border p-4 md:p-6">
+        <section aria-label="Llamadas" className="space-y-4 rounded-3xl border border-border bg-card p-4 md:p-6">
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative w-full sm:max-w-xs">
               <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
@@ -175,7 +207,7 @@ export function CallsHistoryView() {
                 value={searchDraft}
                 onChange={(e) => setSearchDraft(e.target.value)}
                 placeholder="Buscar por contacto o número…"
-                className="h-9 pl-9"
+                className="h-9 rounded-full pl-9"
                 aria-label="Buscar llamadas"
               />
             </div>
@@ -206,7 +238,7 @@ export function CallsHistoryView() {
             Los costos incluyen telefonía y voz a la tarifa vigente; los minutos del plan se
             descuentan por segundo real de llamada.
           </p>
-        </div>
+        </section>
       )}
     </div>
   );

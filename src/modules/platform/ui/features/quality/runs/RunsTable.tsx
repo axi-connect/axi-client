@@ -29,7 +29,7 @@ export function RunsTable({ runs }: { runs: RunListItem[] }) {
   const router = useRouter();
 
   return (
-    <div className="overflow-x-auto rounded-3xl border border-border bg-card">
+    <div className="axi-scroll overflow-x-auto rounded-3xl border border-border bg-card">
       <Table>
         <TableHeader>
           <TableRow>

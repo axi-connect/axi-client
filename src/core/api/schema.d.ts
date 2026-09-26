@@ -17921,12 +17921,14 @@ export interface components {
             metered_seconds: number;
             recording_duration_seconds: number | null;
             summary: string | null;
+            recording_offset_ms: number | null;
             segments: {
                 seq: number;
                 /** @enum {string} */
                 role: "caller" | "agent" | "system";
                 text: string;
                 at_ms: number;
+                spoken_at_ms: number | null;
                 interrupted: boolean;
             }[];
             events: {

@@ -24,7 +24,7 @@ export function IntentionPicker({ companyId, value, onChange }: IntentionPickerP
   }
   const rows = intentions.data ?? [];
   return (
-    <ul className="max-h-72 space-y-1 overflow-y-auto" aria-label="Intenciones del tenant">
+    <ul className="axi-scroll max-h-72 space-y-1 overflow-y-auto" aria-label="Intenciones del tenant">
       {rows.map((intention) => {
         const picked = value === intention.code;
         return (
