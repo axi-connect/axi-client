@@ -9,6 +9,7 @@ import {
   promiseHistory,
   promiseLine,
   scheduleCheck,
+  splitSchedule,
   suggestedPromiseCents,
   type PromiseDTO,
 } from "@/modules/collections/domain/promise";
@@ -277,5 +278,50 @@ describe("suggestedPromiseCents y el calendario pendiente", () => {
         .valid,
     ).toBe(false);
     expect(scheduleCheck([], 0).valid).toBe(false);
+  });
+});
+
+describe("splitSchedule (premium P4: «En cuántas cuotas»)", () => {
+  const current = [
+    { due_at: "2026-10-01", amount_cents: 463_466_300 },
+    { due_at: "2026-10-14", amount_cents: 463_466_300 },
+  ];
+
+  it("en pesos enteros, la última se lleva el resto y la suma cuadra con el saldo", () => {
+    const three = splitSchedule(current, 926_932_600, 3, "2026-09-26");
+    expect(three.map((line) => line.amount_cents)).toEqual([
+      308_977_500, 308_977_500, 308_977_600,
+    ]);
+    expect(scheduleCheck(three, 926_932_600).valid).toBe(true);
+  });
+
+  it("B10: con menos cuotas originales que las pedidas, las fechas se reparten y ninguna se repite", () => {
+    const three = splitSchedule(current, 926_932_600, 3, "2026-09-26");
+    expect(three.map((line) => line.due_at)).toEqual([
+      "2026-10-01",
+      "2026-10-07",
+      "2026-10-14",
+    ]);
+    const onlyBalance = splitSchedule(
+      [current[1]!],
+      926_932_600,
+      3,
+      "2026-09-26",
+    );
+    expect(onlyBalance.map((line) => line.due_at)).toEqual([
+      "2026-10-02",
+      "2026-10-08",
+      "2026-10-14",
+    ]);
+    expect(new Set(onlyBalance.map((line) => line.due_at)).size).toBe(3);
+  });
+
+  it("con cuotas de sobra reutiliza sus fechas; todo junto va en la fecha del saldo", () => {
+    expect(
+      splitSchedule(current, 926_932_600, 2).map((line) => line.due_at),
+    ).toEqual(["2026-10-01", "2026-10-14"]);
+    expect(splitSchedule(current, 926_932_600, 1)).toEqual([
+      { due_at: "2026-10-14", amount_cents: 926_932_600 },
+    ]);
   });
 });

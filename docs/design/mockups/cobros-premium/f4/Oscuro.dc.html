@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Cartera · oscuro</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&amp;family=Poppins:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Poppins,system-ui,sans-serif;color:#EDEDED;background:#0A0A0A}
+a{color:#EDEDED}
+.d{font-family:Urbanist,Poppins,sans-serif}
+.nav{display:flex;align-items:center;gap:12px;height:36px;padding:0 12px;border-radius:10px;font-size:13.5px;color:#C4C4CC;text-decoration:none}
+.nav-on{background:#18181B;color:#EDEDED;font-weight:500;box-shadow:0 0 0 1px rgba(255,255,255,.08)}
+.grp{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#A1A1AA;padding:14px 12px 6px}
+.card{background:#141416;border-radius:24px;border:1px solid rgba(255,255,255,.08)}
+.lbl{font-size:12px;color:#A1A1AA;white-space:nowrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:40px;padding:0 16px;border-radius:999px;font:500 13.5px Poppins,sans-serif;border:0;text-decoration:none;white-space:nowrap}
+.btn-s{background:#141416;color:#EDEDED;border:1px solid rgba(255,255,255,.14)}
+.seg{height:36px;padding:0 14px;border-radius:999px;border:0;background:transparent;font:500 13px Poppins,sans-serif;color:#C4C4CC}
+.seg-on{background:#EDEDED;color:#0A0A0A}
+.sec{display:flex;justify-content:space-between;padding:14px 6px 6px;font-size:12.5px;color:#A1A1AA}
+.sec b{color:#EDEDED;font-weight:600}
+.row{display:grid;grid-template-columns:10px 36px minmax(0,1.1fr) minmax(0,1.5fr) 118px auto;gap:12px;align-items:center;padding:12px 6px;border-top:1px solid rgba(255,255,255,.08)}
+.mdot{width:8px;height:8px;border-radius:999px}
+.av{width:36px;height:36px;border-radius:999px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600}
+.nm{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta{font-size:12px;color:#A1A1AA;white-space:nowrap}
+.st{font-size:13px;color:#D4D4D8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.amt{font-size:14px;font-weight:600;text-align:right;white-space:nowrap}
+.fact{display:flex;justify-content:space-between;gap:12px;font-size:12.5px;padding:9px 0;border-top:1px solid rgba(255,255,255,.10)}
+.isl{position:relative;isolation:isolate;overflow:hidden;border-radius:24px}
+.isl-glass{color:#0B0B0E;background:var(--glow,none),linear-gradient(160deg,rgba(255,255,255,.82),rgba(246,243,254,.62));-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);box-shadow:inset 0 2px 2px rgba(11,11,14,.05),inset 0 -2px 2px rgba(255,255,255,.5),inset 0 0 1.6px 4px rgba(255,255,255,.2),inset 0 0 18px 2px rgba(255,255,255,.55),0 4px 2px -2px rgba(11,11,14,.14),0 30px 70px -34px rgba(16,16,24,.35),0 30px 80px -40px rgba(124,58,237,.35)}
+.isl-dark{color:#EDEDED;background:var(--glow,none),linear-gradient(160deg,rgba(38,38,42,.90),rgba(28,24,40,.92));-webkit-backdrop-filter:blur(20px) saturate(170%);backdrop-filter:blur(20px) saturate(170%);box-shadow:inset 0 2px 2px rgba(255,255,255,.10),inset 0 -2px 2px rgba(0,0,0,.35),inset 0 0 1.6px 4px rgba(255,255,255,.04),inset 0 0 14px 1px rgba(255,255,255,.08),0 40px 90px -36px rgba(124,58,237,.55),0 18px 50px -24px rgba(230,87,89,.45)}
+.isl-glass::before,.isl-dark::before{content:"";position:absolute;inset:0;z-index:1;padding:1.5px;border-radius:inherit;pointer-events:none;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.isl-glass::before{background:conic-gradient(from -75deg at 50% 50%,rgba(11,11,14,.32) 0%,transparent 6% 40%,rgba(11,11,14,.32) 50%,transparent 56% 94%,rgba(11,11,14,.32) 100%),linear-gradient(rgba(255,255,255,.85),rgba(255,255,255,.85))}
+.isl-dark::before{background:conic-gradient(from -75deg at 50% 50%,rgba(255,255,255,.7) 0%,transparent 6% 40%,rgba(255,255,255,.7) 50%,transparent 56% 94%,rgba(255,255,255,.7) 100%),linear-gradient(rgba(255,255,255,.12),rgba(255,255,255,.12))}
+.isl-glass::after,.isl-dark::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none}
+.isl-glass::after{background:linear-gradient(-45deg,transparent 0%,rgba(255,255,255,.55) 40% 46%,transparent 54%) 0 0/200% 200%,radial-gradient(60% 45% at 30% 0%,rgba(255,255,255,.9),transparent 70%)}
+.isl-dark::after{background:linear-gradient(-45deg,transparent 0%,rgba(255,255,255,.10) 40% 46%,transparent 54%) 0 0/200% 200%,radial-gradient(60% 45% at 30% 0%,rgba(255,255,255,.14),transparent 70%)}
+.isl-ink{color:#F4F4F5;background:var(--glow,none),#0B0B0E}
+.isl-glass.glow-brand{--glow:radial-gradient(circle 20rem at 90% 8%,rgba(230,87,89,.16),transparent 70%)}
+.isl-glass.glow-ai{--glow:radial-gradient(circle 22rem at 0% 0%,rgba(124,58,237,.16),transparent 70%),radial-gradient(circle 20rem at 100% 100%,rgba(230,87,89,.11),transparent 70%)}
+.isl-dark.glow-brand{--glow:radial-gradient(circle 20rem at 90% 8%,rgba(251,113,133,.26),transparent 70%)}
+.isl-dark.glow-ai{--glow:radial-gradient(circle 22rem at 0% 0%,rgba(167,139,250,.26),transparent 70%),radial-gradient(circle 20rem at 100% 100%,rgba(251,113,133,.18),transparent 70%)}
+.isl-ink.glow-brand{--glow:radial-gradient(circle 20rem at 90% 8%,rgba(230,87,89,.45),transparent 70%)}
+.btn-contrast{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:999px;font:500 14px Poppins,sans-serif;border:0;cursor:pointer;text-decoration:none;background:#0B0B0E;color:#FFFFFF}
+.isl-dark .btn-contrast,.isl-ink .btn-contrast{background:#F4F4F5;color:#0B0B0E}
+.btn-glass{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:999px;font:500 14px Poppins,sans-serif;border:0;cursor:pointer;text-decoration:none;position:relative;color:rgba(11,11,14,.92);background:linear-gradient(-75deg,rgba(255,255,255,.08),rgba(255,255,255,.5),rgba(255,255,255,.08));box-shadow:inset 0 2px 2px rgba(11,11,14,.05),inset 0 -2px 2px rgba(255,255,255,.5),0 4px 2px -2px rgba(11,11,14,.2),inset 0 0 1.6px 4px rgba(255,255,255,.2),0 0 0 1px rgba(11,11,14,.08)}
+.isl-dark .btn-glass{color:rgba(237,237,237,.92);background:linear-gradient(-75deg,rgba(255,255,255,.03),rgba(255,255,255,.10),rgba(255,255,255,.03));box-shadow:inset 0 2px 2px rgba(255,255,255,.08),inset 0 -2px 2px rgba(0,0,0,.3),0 0 0 1px rgba(255,255,255,.12)}
+.isl-glass .fact,.isl-glass .frow,.isl-glass .cal{border-top-color:rgba(11,11,14,.08)!important}
+.isl-glass .seg-on{background:#0B0B0E}.isl-glass .seg-off{background:rgba(11,11,14,.12)}
+.isl-glass .step{color:#3A3A40}.isl-glass .chk-on,.isl-glass .fdot-on{background:#0B0B0E;color:#FFFFFF}.isl-glass .chk-off,.isl-glass .fdot-off,.isl-glass .cn{border-color:rgba(11,11,14,.28)}
+.isl-glass .bub{background:#FFFFFF;box-shadow:0 1px 2px rgba(0,0,0,.06),0 0 0 1px rgba(11,11,14,.05)}.isl-glass .gap{border-color:rgba(11,11,14,.24);color:#6B6B73}.isl-glass .day{color:#6B6B73}
+@media (prefers-reduced-transparency: reduce){.isl-glass{background:#FFFFFF}.isl-dark{background:#1E1E22}}
+</style>
+</helmet>
+<div style="width:1440px;height:900px;display:flex;background:#0A0A0A;overflow:hidden">
+  <aside style="width:248px;flex-shrink:0;padding:18px 14px;box-sizing:border-box;display:flex;flex-direction:column;gap:2px;border-right:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.02)">
+    <div style="display:flex;align-items:center;gap:10px;padding:4px 10px 16px">
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="11" cy="15" r="7.5" fill="none" stroke="#FB7185" stroke-width="4"></circle><path d="M16 5 L25 24" stroke="#FBBF24" stroke-width="4" stroke-linecap="round"></path><path d="M25 5 L17 20" stroke="#A78BFA" stroke-width="4" stroke-linecap="round"></path></svg>
+      <div style="display:flex;flex-direction:column;gap:2px"><span class="d" style="font-weight:700;font-size:15px">Axi Connect</span><span style="font-size:11.5px;color:#A1A1AA">JuanitoXpeditions</span></div>
+    </div>
+    <a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg>Inicio</a>
+    <div class="grp">Ventas</div>
+    <a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><path d="M3 6h18"></path></svg>Pedidos</a>
+    <a class="nav nav-on" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FB7185" stroke-width="1.7"><rect x="2" y="5" width="20" height="14" rx="3"></rect><path d="M2 10h20M6 15h4"></path></svg>Cartera</a>
+  </aside>
+  <main style="flex-grow:1;display:flex;flex-direction:column;min-width:0">
+    <header style="height:60px;display:flex;align-items:center;padding:0 40px;flex-shrink:0"><span style="font-size:13px;font-weight:500">Cartera</span></header>
+    <div style="padding:4px 40px 28px;display:flex;flex-direction:column;gap:18px;flex-grow:1;min-height:0">
+      <section style="display:flex;justify-content:space-between;align-items:flex-end">
+        <div style="display:flex;flex-direction:column;gap:6px"><h1 class="d" style="margin:0;font-size:38px;font-weight:700;letter-spacing:-.02em;line-height:1.1">Cartera</h1><p style="margin:0;font-size:13.5px;color:#A1A1AA">Ordenada por a quién escribir primero, no por nombre ni por monto.</p></div>
+        <div role="radiogroup" aria-label="Filtro de cartera" style="display:flex;gap:2px;padding:4px;border-radius:999px;background:#141416;border:1px solid rgba(255,255,255,.08)"><button class="seg seg-on" role="radio" aria-checked="true">Todo</button><button class="seg" role="radio" aria-checked="false">Ya viajaron</button><button class="seg" role="radio" aria-checked="false">En mora</button></div>
+      </section>
+      <section style="display:grid;grid-template-columns:minmax(0,1fr) 336px;gap:16px;flex-grow:1;min-height:0">
+        <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+          <article class="card" style="padding:20px 24px;display:flex;flex-direction:column;gap:10px">
+            <span class="lbl">Por cobrar</span>
+            <span class="d" style="font-size:52px;font-weight:700;letter-spacing:-.03em;line-height:1">$ 56.171.770</span>
+            <span style="font-size:13px;color:#D4D4D8">6 clientes con saldo. $ 9.605.172 ya venció y $ 2.055.375 es de alguien que ya viajó.</span>
+            <div style="display:flex;height:8px;border-radius:999px;overflow:hidden;gap:2px;background:rgba(255,255,255,.10)"><span style="width:17%;background:#F87171"></span><span style="width:17%;background:#FBBF24"></span><span style="width:66%;background:#EDEDED"></span></div>
+          </article>
+          <article class="card" style="padding:4px 20px 8px">
+            <div class="sec"><span><b>Ya viajaron y deben</b> · 1 cliente</span><span>$ 2.055.375</span></div>
+            <div class="row"><span class="mdot" style="background:#F87171"></span><span class="av">AM</span><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span class="nm">Andrés Molina</span><span class="meta">#0033 · viajó sáb 19 sep</span></div><span class="st">Ya viajó · venció hace 6 días</span><span class="amt">$ 2.055.375</span><a class="btn btn-s" href="#">Escribir</a></div>
+            <div class="sec"><span><b>En mora</b> · 2 clientes</span><span>$ 20.659.190</span></div>
+            <div class="row"><span class="mdot" style="background:#F87171"></span><span class="av">ML</span><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span class="nm">Marta León Villegas</span><span class="meta">#0039 · sale sáb 17 oct</span></div><span class="st">Prometió pagar el lun 28</span><span class="amt">$ 6.760.200</span><a class="btn btn-s" href="#">Escribir</a></div>
+            <div class="row"><span class="mdot" style="background:#F87171"></span><span class="av">LP</span><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span class="nm">Luis Pardo</span><span class="meta">#0048 · sale sáb 14 nov</span></div><span class="st">Anticipo vencido hace 3 días</span><span class="amt">$ 13.898.990</span><a class="btn btn-s" href="#">Escribir</a></div>
+            <div class="sec"><span><b>Por vencer</b> · 1 cliente</span><span>$ 9.269.326</span></div>
+            <div class="row"><span class="mdot" style="background:#FBBF24"></span><span class="av">PN</span><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span class="nm">Pedro Nieto</span><span class="meta">#0044 · sale sáb 14 nov</span></div><span class="st">Cuota vence el jue 1 oct</span><span class="amt">$ 9.269.326</span><a class="btn btn-s" href="#">Escribir</a></div>
+          </article>
+        </div>
+        <article class="isl isl-dark glow-brand" style="padding:26px;display:flex;flex-direction:column;gap:16px">
+          <span style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#A1A1AA">Escribe primero a</span>
+          <span class="d" style="font-size:24px;font-weight:700">Andrés Molina</span>
+          <span class="d" style="font-size:40px;font-weight:700;line-height:1">$ 2.055.375</span>
+          <span style="font-size:13.5px;color:#D4D4D8;line-height:1.5">Ya viajó, así que no queda nada que retener: es la deuda que más rápido envejece.</span>
+          <div><div class="fact"><span style="color:#A1A1AA">Venció</span><span>hace 6 días</span></div><div class="fact"><span style="color:#A1A1AA">Último aviso</span><span>ayer · recordatorio automático</span></div></div>
+          <div style="flex-grow:1"></div>
+          <a class="btn" href="#" style="background:#EDEDED;color:#0A0A0A;height:44px">Escribirle</a>
+        </article>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

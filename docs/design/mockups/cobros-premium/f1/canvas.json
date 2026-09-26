@@ -1,0 +1,102 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "Estados.dc.html": {
+      "h": 900,
+      "title": "2 · Funciones — apagada por ti, en espera y fijada por Axi",
+      "w": 1440,
+      "x": 1520,
+      "y": 0
+    },
+    "Forzar.dc.html": {
+      "h": 900,
+      "title": "8 · Consola — forzar una función, con motivo",
+      "w": 1440,
+      "x": 3040,
+      "y": 1320
+    },
+    "General.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "6 · Mi empresa › General — el tipo de negocio dice lo que sugiere (interactivo)",
+      "w": 1440,
+      "x": 0,
+      "y": 1320
+    },
+    "Main.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "1 · Mi empresa › Funciones — la puesta en marcha de cobros (interactivo)",
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "Movil.dc.html": {
+      "h": 844,
+      "title": "3 · Funciones — celular",
+      "w": 390,
+      "x": 3040,
+      "y": 0
+    },
+    "MovilSinVentas.dc.html": {
+      "h": 844,
+      "title": "4 · Funciones — celular, plan sin Ventas",
+      "w": 390,
+      "x": 3510,
+      "y": 0
+    },
+    "Oscuro.dc.html": {
+      "h": 900,
+      "title": "5 · Funciones — oscuro",
+      "w": 1440,
+      "x": 3980,
+      "y": 0
+    },
+    "Plataforma.dc.html": {
+      "h": 900,
+      "title": "7 · Consola › Tenant › Funciones — quién decide cada una",
+      "w": 1440,
+      "x": 1520,
+      "y": 1320
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-09-25T22:30:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {
+    "rowA": {
+      "kind": "title1",
+      "maxW": 5420,
+      "text": "Mi empresa › Funciones",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "rowB": {
+      "kind": "title1",
+      "maxW": 4480,
+      "text": "Tipo de negocio y consola de plataforma",
+      "w": 240,
+      "x": 0,
+      "y": 1060
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Estados.dc.html",
+    "Movil.dc.html",
+    "MovilSinVentas.dc.html",
+    "Oscuro.dc.html",
+    "General.dc.html",
+    "Plataforma.dc.html",
+    "Forzar.dc.html"
+  ],
+  "pages": [],
+  "title": "Cobros premium · F1 Funciones"
+}

@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
+import { cn } from "@/core/lib/utils";
 import { formatMoney, orderNumberLabel, type OrderRow } from "@/modules/orders/domain/order";
 import { reportPayment } from "@/modules/orders/infrastructure/services/order-payments-service.adapter";
 // El dueño del recurso es el slice payments: se consume por su barrel (§3.3).
@@ -38,13 +39,24 @@ import { useOrdersStore } from "@/modules/orders/infrastructure/stores/orders.st
  * que la verificación («1.000.000» es un millón, no NaN), un monto que no se
  * entiende frena el envío con mensaje en vez de mandarse vacío, y se propone
  * el SALDO, no el total: tras un abono nadie paga otra vez el pedido entero.
+ *
+ * Cobros premium P4: con plan de pagos, el rail pasa la cuota que toca y el
+ * reparto. Aparecen los atajos «La cuota», «Otro monto» y «Todo», se propone
+ * la cuota y se ve cómo caería el abono en las cuotas antes de registrarlo.
+ * Sin plan (el kanban, un pedido de contado) el diálogo es el de siempre.
  */
 export function ReportPaymentDialog({
   order,
   onOpenChange,
+  installment,
+  allocation,
 }: {
   order: OrderRow | null;
   onOpenChange: (open: boolean) => void;
+  /** La cuota que toca: su nombre y lo que le falta. */
+  installment?: { label: string; cents: number } | null;
+  /** Cómo se repartiría el monto escrito (lo pinta collections). */
+  allocation?: (amountCents: number | null) => React.ReactNode;
 }) {
   const refreshOrder = useOrdersStore((s) => s.refreshOrder);
   const fetchStats = useOrdersStore((s) => s.fetchStats);
@@ -56,17 +68,53 @@ export function ReportPaymentDialog({
   const [amountInvalid, setAmountInvalid] = useState(false);
   const [reference, setReference] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [custom, setCustom] = useState(false);
+  const suggested = installment != null && installment.cents > 0 ? installment : null;
 
   useEffect(() => {
     if (order === null) return;
-    setAmountCents(order.balance_cents > 0 ? order.balance_cents : null);
+    setCustom(false);
+    setAmountCents(suggested !== null ? suggested.cents : order.balance_cents > 0 ? order.balance_cents : null);
     setAmountInvalid(false);
     listPaymentMethods()
       .then((res) => setMethods(res.data.filter((method) => method.is_active)))
       .catch(() => setMethods([]));
+    // La cuota sugerida solo decide el valor inicial; cambiarla no pisa lo escrito.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [order]);
 
   if (order === null) return null;
+
+  const shortcut: "installment" | "custom" | "all" | null =
+    suggested === null
+      ? null
+      : custom
+        ? "custom"
+        : amountCents === suggested.cents
+          ? "installment"
+          : amountCents === order.balance_cents
+            ? "all"
+            : "custom";
+  const shortcuts =
+    suggested === null
+      ? []
+      : ([
+          { key: "installment", label: `${suggested.label} · ${formatMoney(suggested.cents, order.currency)}` },
+          { key: "custom", label: "Otro monto" },
+          { key: "all", label: `Todo · ${formatMoney(order.balance_cents, order.currency)}` },
+        ] as const);
+
+  function pick(key: "installment" | "custom" | "all") {
+    if (order === null) return;
+    setAmountInvalid(false);
+    if (key === "custom") {
+      setCustom(true);
+      document.getElementById("payment-amount")?.focus();
+      return;
+    }
+    setCustom(false);
+    setAmountCents(key === "installment" && suggested !== null ? suggested.cents : order.balance_cents);
+  }
 
   async function submit() {
     if (order === null || amountInvalid) return;
@@ -128,6 +176,27 @@ export function ReportPaymentDialog({
             </Select>
           </div>
 
+          {shortcuts.length > 0 ? (
+            <div role="group" aria-label="Cuánto pagó" className="flex flex-wrap gap-1.5">
+              {shortcuts.map((option) => (
+                <button
+                  key={option.key}
+                  type="button"
+                  aria-pressed={shortcut === option.key}
+                  onClick={() => pick(option.key)}
+                  className={cn(
+                    "h-9 rounded-full border px-3.5 text-[13px] font-medium whitespace-nowrap tabular-nums transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                    shortcut === option.key
+                      ? "border-foreground bg-foreground text-background"
+                      : "border-border bg-card hover:bg-accent",
+                  )}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          ) : null}
+
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="payment-amount">Monto</Label>
@@ -136,7 +205,10 @@ export function ReportPaymentDialog({
                 value={amountCents}
                 currency={order.currency}
                 aria-invalid={amountInvalid}
-                onChange={setAmountCents}
+                onChange={(cents) => {
+                  setAmountCents(cents);
+                  if (suggested !== null) setCustom(true);
+                }}
                 onInvalidChange={setAmountInvalid}
               />
               {amountInvalid ? (
@@ -172,6 +244,8 @@ export function ReportPaymentDialog({
               />
             </div>
           </div>
+
+          {allocation !== undefined && !amountInvalid ? allocation(amountCents) : null}
         </div>
 
         <DialogFooter>

@@ -290,3 +290,132 @@ export function manualStageOf(
   if (days > 0) return "overdue";
   return days === 0 ? "due_today" : "due_soon";
 }
+
+/** La cuota del ejemplo vence el día de `SAMPLE_REMINDER_VARS.due_date`. */
+export const SAMPLE_DUE_DATE = "2026-10-16";
+
+export interface ReminderThreadEntry {
+  /** Único en el hilo: la dirección y el desfase, como la clave del servidor. */
+  id: string;
+  template: ReminderTemplateKey;
+  /** «vie 9 de oct · 7 días antes». */
+  when: string;
+  /** El texto está apagado: ese día no sale nada (queda en el historial). */
+  disabled: boolean;
+  /**
+   * Por WhatsApp, fuera de la ventana de 24 h, este aviso no sale: su texto no
+   * tiene plantilla aprobada de Meta. Solo si WhatsApp está encendido; por
+   * correo sale igual.
+   */
+  whatsappNeedsHsm: boolean;
+}
+
+const SHORT_DAY = new Intl.DateTimeFormat("es-CO", {
+  weekday: "short",
+  day: "numeric",
+  month: "short",
+});
+
+function shiftDay(day: string, offset: number): string {
+  const date = new Date(`${day}T00:00:00`);
+  date.setDate(date.getDate() + offset);
+  return SHORT_DAY.format(date).replace(/\./g, "").replace(/,/g, "");
+}
+
+/**
+ * La cadencia contada como conversación (Cobros premium P5): un aviso por día
+ * de la cadencia, en el orden en que llegarían para una cuota de ejemplo.
+ *
+ * Espejo de `reminderStage` del servidor: antes de vencer usa el texto «antes
+ * de vencer»; el día del vencimiento, si «el día» está en la cadencia de
+ * antes, sale `due_today` y NO además `overdue_0` (el servidor manda uno); si
+ * no, el 0 de después sale como mora. La plantilla aprobada se busca para el
+ * texto de cada día, como `reminder_dispatch` (no solo para la mora).
+ */
+export function reminderThread(
+  policy: Pick<
+    CollectionsPolicyDTO,
+    | "reminder_days_before"
+    | "overdue_reminder_days"
+    | "templates"
+    | "hsm_templates"
+    | "reminder_channels"
+  >,
+  dueDate: string = SAMPLE_DUE_DATE,
+): { entries: ReminderThreadEntry[]; maxMessages: number } {
+  const before = [...new Set(policy.reminder_days_before)].sort(
+    (a, b) => b - a,
+  );
+  const dueDayCovered = before.includes(0);
+  const after = [...new Set(policy.overdue_reminder_days)]
+    .filter((days) => !(days === 0 && dueDayCovered))
+    .sort((a, b) => a - b);
+  const entry = (
+    id: string,
+    template: ReminderTemplateKey,
+    offset: number,
+    note: string,
+  ): ReminderThreadEntry => {
+    const disabled = !policy.templates[template].enabled;
+    return {
+      id,
+      template,
+      when: `${shiftDay(dueDate, offset)} · ${note}`,
+      disabled,
+      whatsappNeedsHsm:
+        !disabled &&
+        policy.reminder_channels.whatsapp &&
+        policy.hsm_templates[template] === undefined,
+    };
+  };
+  const entries = [
+    ...before.map((days) =>
+      days === 0
+        ? entry("due_today", "due_today", 0, "el día que vence")
+        : entry(
+            `due_soon_${String(days)}`,
+            "due_soon",
+            -days,
+            days === 1 ? "1 día antes" : `${String(days)} días antes`,
+          ),
+    ),
+    ...after.map((days) =>
+      entry(
+        `overdue_${String(days)}`,
+        "overdue",
+        days,
+        days === 0
+          ? "el día que vence"
+          : days === 1
+            ? "1 día de mora"
+            : `${String(days)} días de mora`,
+      ),
+    ),
+  ];
+  // «Como mucho»: un aviso por día encendido. Con los dos canales, cada aviso
+  // sale por los dos; la isla lo dice aparte.
+  return {
+    entries,
+    maxMessages: entries.filter((one) => !one.disabled).length,
+  };
+}
+
+/**
+ * El texto rellenado partido en trozos, con las variables que el servidor no
+ * sabe rellenar aparte: la vista previa las marca en vez de esconderlas.
+ */
+export function previewSegments(
+  body: string,
+  known: readonly string[],
+): { text: string; unknown: boolean }[] {
+  return renderReminderPreview(body)
+    .split(/(\{\{\s*\w+\s*\}\})/)
+    .filter((part) => part !== "")
+    .map((part) => {
+      const name = /^\{\{\s*(\w+)\s*\}\}$/.exec(part)?.[1];
+      return {
+        text: part,
+        unknown: name !== undefined && !known.includes(name),
+      };
+    });
+}

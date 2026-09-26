@@ -6,6 +6,9 @@ import type { Schemas } from "@/core/api/types";
 import { http } from "@/core/services/http";
 
 export type FeaturesDTO = Schemas["FeaturesDto"];
+/** `GET /me/features`: las funciones y lo que sugiere cada tipo de negocio. */
+export type MyFeaturesDTO = Schemas["MyFeaturesDto"];
+export type NicheDefaults = MyFeaturesDTO["niche_defaults"];
 export type FeatureDetailDTO = FeaturesDTO["features"][number];
 export type FeatureSource = FeatureDetailDTO["source"];
 export type FeatureBlocker = FeatureDetailDTO["blocked_by"];
@@ -17,6 +20,8 @@ interface FeaturesState {
   /** Usuario para el que se cargó: al cambiar de sesión se recarga. */
   for_user_id: string | null;
   features: FeatureDetailDTO[] | null;
+  /** Qué funciones sugiere cada tipo de negocio (vista previa de Mi empresa › General). */
+  niche_defaults: NicheDefaults | null;
   load: (userId: string) => Promise<void>;
   refresh: () => Promise<void>;
   reset: () => void;
@@ -39,6 +44,7 @@ export const useFeaturesStore = create<FeaturesState>((set, get) => ({
   status: "idle",
   for_user_id: null,
   features: null,
+  niche_defaults: null,
   load: async (userId) => {
     if (get().for_user_id === userId && get().status !== "idle") return;
     if (inflight && get().for_user_id === userId) return inflight;
@@ -55,7 +61,7 @@ export const useFeaturesStore = create<FeaturesState>((set, get) => ({
   },
   reset: () => {
     inflight = null;
-    set({ status: "idle", for_user_id: null, features: null });
+    set({ status: "idle", for_user_id: null, features: null, niche_defaults: null });
   },
 }));
 
@@ -65,14 +71,14 @@ function fetchInto(
   userId: string,
 ): Promise<void> {
   return http
-    .get<FeaturesDTO>("/me/features")
+    .get<MyFeaturesDTO>("/me/features")
     .then((payload) => {
       if (get().for_user_id !== userId) return;
-      set({ features: payload.features, status: "ready" });
+      set({ features: payload.features, niche_defaults: payload.niche_defaults, status: "ready" });
     })
     .catch(() => {
       if (get().for_user_id !== userId) return;
-      set({ features: null, status: "error" });
+      set({ features: null, niche_defaults: null, status: "error" });
     })
     .finally(() => {
       inflight = null;

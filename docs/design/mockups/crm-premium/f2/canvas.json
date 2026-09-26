@@ -1,0 +1,28 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-09-26T15:00:00Z" },
+  "title": "CRM premium · F2 Contactos",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 1440, "h": 900, "title": "1 · Contactos — quién llega, en qué etapa y qué le falta (interactivo)", "is_interactive": true },
+    "Movil.dc.html": { "x": 1520, "y": 0, "w": 390, "h": 844, "title": "2 · Contactos — celular" },
+    "Oscuro.dc.html": { "x": 1990, "y": 0, "w": 1440, "h": 900, "title": "3 · Contactos — oscuro (interactivo)", "is_interactive": true },
+    "Ficha.dc.html": { "x": 0, "y": 1320, "w": 1440, "h": 1180, "title": "4 · Ficha 360 — una persona, su camino y lo que sigue (interactivo)", "is_interactive": true },
+    "FichaMovil.dc.html": { "x": 1520, "y": 1320, "w": 390, "h": 844, "title": "5 · Ficha 360 — celular" },
+    "FichaOscuro.dc.html": { "x": 1990, "y": 1320, "w": 1440, "h": 1180, "title": "6 · Ficha 360 — oscuro (interactivo)", "is_interactive": true },
+    "Axi.dc.html": { "x": 0, "y": 2800, "w": 1440, "h": 900, "title": "7 · Axi en la ficha — resumen, siguiente paso y borrador, con sus estados" },
+    "Datos.dc.html": { "x": 1520, "y": 2800, "w": 1440, "h": 900, "title": "8 · Datos del cliente — de dónde sale cada dato y qué hacer con él" },
+    "Duplicados.dc.html": { "x": 0, "y": 4120, "w": 1440, "h": 900, "title": "9 · Duplicados y fusión — qué se conserva y qué desaparece" },
+    "Recorrido.dc.html": { "x": 1520, "y": 4120, "w": 1440, "h": 900, "title": "10 · Recorrido — deshacer un paso y la IA en pausa" },
+    "Estados.dc.html": { "x": 3040, "y": 4120, "w": 1440, "h": 900, "title": "11 · Estados — vacío, sin resultados, error, cargando y sin permiso" }
+  },
+  "order": ["Main.dc.html", "Movil.dc.html", "Oscuro.dc.html", "Ficha.dc.html", "FichaMovil.dc.html", "FichaOscuro.dc.html", "Axi.dc.html", "Datos.dc.html", "Duplicados.dc.html", "Recorrido.dc.html", "Estados.dc.html"],
+  "notes": {
+    "rowA": { "x": 0, "y": -300, "text": "La lista", "kind": "title1", "maxW": 3430 },
+    "rowB": { "x": 0, "y": 1020, "text": "La ficha 360", "kind": "title1", "maxW": 3430 },
+    "rowC": { "x": 0, "y": 2500, "text": "Lo que Axi sabe y propone", "kind": "title1", "maxW": 2960 },
+    "rowD": { "x": 0, "y": 3820, "text": "Duplicados, recorrido y estados", "kind": "title1", "maxW": 4480 }
+  },
+  "designSystems": []
+}

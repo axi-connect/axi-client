@@ -1,0 +1,25 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-09-26T19:00:00Z" },
+  "title": "CRM premium · F3 Tareas",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 1440, "h": 1000, "title": "1 · Bandeja — las cifras son el filtro, la isla dice lo que no espera (interactivo)", "is_interactive": true },
+    "Movil.dc.html": { "x": 1520, "y": 0, "w": 390, "h": 844, "title": "2 · Bandeja — celular" },
+    "Oscuro.dc.html": { "x": 1990, "y": 0, "w": 1440, "h": 1000, "title": "3 · Bandeja — oscuro (interactivo)", "is_interactive": true },
+    "Agente.dc.html": { "x": 0, "y": 1420, "w": 1440, "h": 1000, "title": "4 · Del agente — el parte de Axi en la isla, los desenlaces como filtro" },
+    "Programados.dc.html": { "x": 1520, "y": 1420, "w": 1440, "h": 1000, "title": "5 · Programados — el día y la hora en que Axi lo hará" },
+    "Ejecuciones.dc.html": { "x": 3040, "y": 1420, "w": 1440, "h": 900, "title": "6 · Ejecuciones — cada intento, con su resultado y su motivo" },
+    "Seguimiento.dc.html": { "x": 0, "y": 2840, "w": 1440, "h": 1000, "title": "7 · Programar seguimiento — lo que pides y lo que Axi hará (interactivo)", "is_interactive": true },
+    "NuevaTarea.dc.html": { "x": 1520, "y": 2840, "w": 1440, "h": 900, "title": "8 · Nueva tarea del equipo" },
+    "Estados.dc.html": { "x": 3040, "y": 2840, "w": 1440, "h": 900, "title": "9 · Estados — nada pendiente, sin resultados, filtro vacío, error y cargando" }
+  },
+  "order": ["Main.dc.html", "Movil.dc.html", "Oscuro.dc.html", "Agente.dc.html", "Programados.dc.html", "Ejecuciones.dc.html", "Seguimiento.dc.html", "NuevaTarea.dc.html", "Estados.dc.html"],
+  "notes": {
+    "rowA": { "x": 0, "y": -300, "text": "La bandeja", "kind": "title1", "maxW": 3430 },
+    "rowB": { "x": 0, "y": 1120, "text": "Lo que hace Axi", "kind": "title1", "maxW": 4480 },
+    "rowC": { "x": 0, "y": 2540, "text": "Crear y estados", "kind": "title1", "maxW": 4480 }
+  },
+  "designSystems": []
+}

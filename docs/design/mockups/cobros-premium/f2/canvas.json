@@ -1,0 +1,22 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-09-25T23:10:00Z" },
+  "title": "Cobros premium · F2 Pagos, TRM y fecha del servicio",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 1440, "h": 900, "title": "1 · Pagos › Moneda y TRM — la cifra que el cliente oye (interactivo)", "is_interactive": true },
+    "Estados.dc.html": { "x": 1520, "y": 0, "w": 1440, "h": 900, "title": "2 · Moneda y TRM — sin TRM publicada, desactualizada y tasa manual" },
+    "Movil.dc.html": { "x": 3040, "y": 0, "w": 390, "h": 844, "title": "3 · Moneda y TRM — celular" },
+    "Oscuro.dc.html": { "x": 3510, "y": 0, "w": 1440, "h": 900, "title": "4 · Moneda y TRM — oscuro" },
+    "Medios.dc.html": { "x": 0, "y": 1320, "w": 1440, "h": 900, "title": "5 · Pagos › Medios — lo que el agente comparte" },
+    "Salidas.dc.html": { "x": 1520, "y": 1320, "w": 1440, "h": 900, "title": "6 · Catálogo › Producto — las salidas son variantes con fecha" },
+    "Pedido.dc.html": { "x": 3040, "y": 1320, "w": 1440, "h": 900, "title": "7 · Pedido — la fecha del servicio y dos salidas en un carrito" }
+  },
+  "order": ["Main.dc.html", "Estados.dc.html", "Movil.dc.html", "Oscuro.dc.html", "Medios.dc.html", "Salidas.dc.html", "Pedido.dc.html"],
+  "notes": {
+    "rowA": { "x": 0, "y": -300, "text": "Pagos › Moneda y TRM", "kind": "title1", "maxW": 4950 },
+    "rowB": { "x": 0, "y": 1060, "text": "Medios de pago y fecha del servicio", "kind": "title1", "maxW": 4480 }
+  },
+  "designSystems": []
+}

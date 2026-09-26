@@ -26,7 +26,7 @@ export {
   type FxSettingsDTO,
   type LatestFxRateDTO,
 } from "./domain/fx-settings";
-export { getLatestFxRate } from "./infrastructure/services/fx-service.adapter";
+export { getFxSettings, getLatestFxRate } from "./infrastructure/services/fx-service.adapter";
 export {
   useIndicativeQuote,
   type IndicativeQuote,

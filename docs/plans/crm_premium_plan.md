@@ -7,8 +7,8 @@
 > | Fase | Qué | Lienzo | Estado |
 > |---|---|---|---|
 > | F1 | Pipeline: tablero, detalle, ganar / perder, tabla, resumen de Axi, estados | https://claude.ai/artifact/XeAzi64SAmKKZX9fWUJKTL | Implementado y medido (2026-09-26) |
-> | F2 | Contactos: lista y ficha 360 | — | Por diseñar |
-> | F3 | Tareas | — | Por diseñar |
+> | F2 | Contactos: lista y ficha 360 | https://claude.ai/artifact/GhDJsXcao2JY4VdHMYVukc | Implementado y medido (2026-09-26) |
+> | F3 | Tareas | https://claude.ai/artifact/9uX8d8C5cmZV7vGngR9zjC | Implementado y medido (2026-09-26) |
 > | F4 | Configuración: pipelines, recorrido, secuencias, segmentos, etiquetas, tareas de agente, importar | — | Por diseñar |
 >
 > Fuentes de cada lienzo: `docs/design/mockups/crm-premium/<fase>/`.
@@ -102,6 +102,83 @@ Verjas:
 - `jest`: 483 suites y 3852 tests.
 - `next build`: OK.
 
-## 2. F2–F4
+## 2. F2 · Contactos
 
-Se diseñan después de F1, cada una con su lienzo y su aprobación antes de tocar código.
+Aprobado el 2026-09-26 («aprobado, procede a implementar F2»). Solo cliente: no toca el servidor.
+
+| Pieza | Hoy | Queda |
+|---|---|---|
+| `domain/contact-summary.ts` (nuevo) | — | Puro, con test de los dos signos: `scoreProgress` (el score en 5 tramos y la frase «Habló… Falta: …»), `newContactsSplit` (cómo llegan los nuevos), `contactNextUp` (se enfría → saldo → próxima insistencia → al día) |
+| `domain/contact.ts` | — | `primaryChannel`: el canal de la última vez que escribió, para la columna «Canal» y la cabecera |
+| Lista (`contacts/page.tsx`) | Título pequeño y tarjeta | Título en Nexa, «N personas · las de WhatsApp e Instagram llegan solas» y el bento `ContactsSummary`: «Nuevos» (`/contacts/stats` con período), «Cómo llegan los nuevos» (`by_stage`, monocromo) y la isla «Lo próximo: N posibles duplicados» (`/contacts/duplicates`). Error por ficha con «Reintentar»; `@container` (grid desde 56 rem, fila con scroll de marca debajo) |
+| Columnas | Badges tintados | Etapa en `StatePill` (Lead con el tono nuevo `info`), columna «Canal» (`ChannelKindIcon` + última vez), nombre y correo con ancho máximo por tramo (en una tabla un texto sin saltos ensancha la celda) |
+| Ficha 360 | Dos columnas de tarjetas | Cabecera nueva (nombre truncado, píldoras de copiar, contexto «ciudad · canal · desde»), bento `@container` (4 columnas desde 68 rem) con Recorrido, «Qué tan cerca está» (tramos, sin anillo), «Con nosotros» (solo con `orders:read`) y la isla «Lo próximo»; cuerpo en dos columnas desde `xl` |
+| `ContactJourneyCard` | Card con filas | Ficha del bento con los mismos textos (sus 9 tests intactos) y `onLoaded` para la isla: una sola petición del recorrido |
+| `CopilotPanel` | Superficie violeta | Tarjeta sólida «Axi»; el violeta solo en el icono; modos «Resumen / Siguiente paso / Borrador»; el motivo de «Regenerar» deshabilitado se dice, no va en un `title` |
+| Duplicados y fusión | Lista y diálogo | Parejas con motivo y confianza en tinta; diálogo sin la X de 16 px, columnas apiladas en el celular, «Escribe «X» para confirmar» |
+| `StatePill` (DS) | 4 tonos | + `info` (aditivo) |
+| `DataTable` (DS) | Casilla de 16 px | Cada casilla dentro de un `<label>` de 32 px: el objetivo es la etiqueta (el `::after` de `touchTarget` no pinta en un `<input>`) |
+
+### 2.1 Render medido (§12) — 2026-09-26
+
+Arnés `/root/axi/qa/premium/crm-f2-render.mjs` + `crm-f2-seed.py` sobre `axi_render`: la contacta de nombre de 45
+caracteres y correo de 49, 4 pedidos (pagados y con saldo), oportunidad quieta en Propuesta y una pareja de duplicados.
+Lista, ficha (1900 px de alto), duplicados y fusión × 390/768/1024/1280/1440 × claro/oscuro: **40 capturas sin
+hallazgos** (evidencia en `D:\axi-qa\premium\crm-f2`).
+
+Lo que el render corrigió: la tabla y la ficha a 390 (437/453 px de ancho), el bloque del nombre aplastado a 0 px por
+las acciones (base 0 en una fila que se parte), la cifra de «Con nosotros» empujando su unidad, títulos partidos
+(«Saldo pendiente», «Con saldo primero»), los selectores de filtro truncados, la silueta de datos con `1fr`, el diálogo
+de fusión desbordado a 768 px y las casillas de 16 px.
+
+Verjas: `tsc` (solo el preexistente de `ConversationPanel.test.tsx`), `next lint` 0 errores, `jest` 490 suites / 3900
+tests, `next build` OK.
+
+## 3. F3 · Tareas
+
+Aprobado el 2026-09-26 («Aprobado mockup. procede con la implementación»). Solo cliente. Continuidad con el rediseño
+de tareas ya aprobado (`crm-tasks-premium`): las cifras siguen siendo el filtro y el marcador sigue siendo UN
+instrumento.
+
+| Pieza | Queda |
+|---|---|
+| `domain/tasks-next-up.ts` (nuevo) | Puro, con test: mezclada → vencidas / para hoy / al día; modo agente → el parte de Axi (lo que acabó en compra primero, lo que no salió como acción) |
+| `TaskScoreboard` | Material bento (`rounded-3xl`, celdas `rounded-2xl`), cifras en Nexa, el rojo solo en el punto de la etiqueta, 4 columnas por `@container` (46 rem) y 2×2 debajo |
+| `TasksNextUpIsland` (nuevo) | La isla de la bandeja: cristal por defecto, brillo `ai` en el modo agente (absorbe la línea del parte) y en «Todo al día» |
+| `TaskDayList` | Sin franja lateral de color ni hora en rojo: el estado va en su punto; la vencida humana gana su `StatePill` «Vencida»; casilla y enlace a 24 px |
+| `ScheduledAgenda` | Tarjetas del día `rounded-3xl`, el horario silencioso rayado, la hora sin partirse |
+| `PromiseLine` (programar seguimiento) | La isla «Así lo hará…» con la frase real de `promiseSentence` (brillo `ai`) |
+| `ActivityFormModal` | Sin la X de 16 px (Cancelar y Escape cierran) |
+| `SearchField` (DS) | El campo ocupa el alto del control: el objetivo es el control entero, no sus 20 px de texto |
+
+### 3.1 Render medido (§12) — 2026-09-26
+
+Arnés `/root/axi/qa/premium/crm-f3-render.mjs` + `crm-f3-seed.py` sobre `axi_render`: tareas del equipo vencidas, de
+hoy y de mañana con títulos largos, seguimientos de Axi programados y uno que no salió con su motivo. Escenas:
+- bandeja;
+- el filtro «vencidas»;
+- el modo agente;
+- Programados;
+- «Programar seguimiento».
+Cada una × 390/768/1024/1280/1440 × claro/oscuro: **50 capturas sin hallazgos** (evidencia en D:\axi-qa\premium\crm-f3).
+El render se hizo en dos turnos, cediendo la máquina al auditor de Cobros durante su ronda R8.
+
+Lo que el render corrigió:
+- **La bandeja desbordaba a 562 px en el celular.** `mx-auto` en una columna flex encoge la vista a su contenido; el
+  mismo patrón estaba en Duplicados.
+- **Etiquetas del marcador cortadas o partidas en el modo agente.** Ahora pasa a 4 columnas desde 56 rem y el icono
+  cede su sitio por debajo de 30 rem.
+- **La fila de una tarea que no salió desbordaba 80 px.** Ahora sus acciones se parten en líneas.
+- **Objetivos por debajo de 24 px:** casillas, enlaces, el campo del buscador y la X del diálogo.
+- **La hora partida en Programados.**
+- **El hueco bajo el marcador:** ahora iguala el alto de la isla.
+
+Verjas:
+- `tsc`: solo el preexistente de `ConversationPanel.test.tsx`.
+- `next lint`: 0 errores.
+- `jest`: 492 suites / 3909 tests.
+- `next build`: OK.
+
+## 4. F4
+
+Configuración: se diseña después, con su lienzo y su aprobación antes de tocar código.

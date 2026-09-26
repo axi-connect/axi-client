@@ -8118,6 +8118,30 @@ export interface components {
                 };
             }[];
         };
+        MyFeaturesDto: {
+            features: {
+                code: string;
+                label: string;
+                description: string;
+                enabled: boolean;
+                /** @enum {string} */
+                source: "platform" | "tenant" | "niche" | "default";
+                locked: boolean;
+                blocked_by: {
+                    /** @enum {string} */
+                    kind: "capability" | "feature";
+                    code: string;
+                } | null;
+                requires_capability: string;
+                readonly requires: string[];
+            }[];
+            niche_defaults: {
+                [key: string]: ("payment_plans" | "collections" | "fx_quotes" | "documents")[];
+            };
+        };
+        SetTenantFeatureDto: {
+            enabled: boolean;
+        };
         FeaturesDto: {
             features: {
                 code: string;
@@ -8135,9 +8159,6 @@ export interface components {
                 requires_capability: string;
                 readonly requires: string[];
             }[];
-        };
-        SetTenantFeatureDto: {
-            enabled: boolean;
         };
         SetPlatformOverrideDto: {
             /** @enum {string|null} */
@@ -22414,7 +22435,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["FeaturesDto"];
+                    "application/json": components["schemas"]["MyFeaturesDto"];
                 };
             };
         };

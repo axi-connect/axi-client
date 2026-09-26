@@ -1,6 +1,7 @@
 "use client";
 
 import { useFormState, useWatch, type Control } from "react-hook-form";
+import { InkIsland } from "@/shared/components/features/bento";
 import {
   CircleCheck,
   Clock,
@@ -445,14 +446,18 @@ export function PromiseLine({
         ? { quiet: false }
         : quietHoursShift(date, time, settings.quiet_start_hour, settings.quiet_end_hour),
   });
+  // La isla del formulario (lienzo CRM premium F3): la frase EXACTA de lo que
+  // hará el agente, con el brillo `ai` porque habla lo que hará la IA. Es la
+  // única isla del diálogo; el resto del formulario sigue sólido.
   return (
-    <div className="flex items-start gap-2 rounded-xl bg-secondary/70 px-3 py-2.5 text-sm">
-      <Sparkles aria-hidden className="mt-0.5 size-4 shrink-0 text-accent-violet" />
-      <div>
-        <p className="font-medium">{sentence.headline}</p>
-        <p className="text-xs text-muted-foreground">{sentence.detail}</p>
-      </div>
-    </div>
+    <InkIsland label="Así lo hará el agente" glow="ai" className="gap-1.5 p-5">
+      <p className="inline-flex items-center gap-1.5 text-[11px] font-medium tracking-[0.12em] uppercase opacity-70">
+        <Sparkles aria-hidden className="size-3 text-accent-violet" />
+        Así lo hará {agentName}
+      </p>
+      <p className="font-heading text-lg leading-snug font-bold text-pretty">{sentence.headline}</p>
+      <p className="text-[13px] text-pretty text-muted-foreground">{sentence.detail}</p>
+    </InkIsland>
   );
 }
 

@@ -176,6 +176,8 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   "orders/not_found": "El pedido ya no existe",
   "orders/variant_not_found": "Algún producto del pedido ya no está disponible",
   "orders/empty_order": "El pedido no tiene productos",
+  // Cobros premium P2: dos salidas en un carrito. Un pedido lleva una sola fecha del servicio.
+  "orders/mixed_service_dates": "Son dos salidas distintas: un pedido lleva una sola fecha del servicio. Arma otro pedido para la otra salida",
   "orders/insufficient_stock": "No hay stock suficiente para confirmar el pedido",
   "orders/invalid_transition": "El pedido ya cambió de estado. Actualiza e inténtalo de nuevo",
   "orders/active_order_exists": "La conversación ya tiene un pedido activo",
