@@ -50,7 +50,7 @@ export function useLiveCallPreview(call: CallSessionRowDTO): {
     onPhase: (event) => dispatch({ type: "phase", phase: event.phase }),
     onAgentText: (event) => dispatch({ type: "agent_text", generation: event.generation, text: event.text }),
     onSegment: (segment) => {
-      dispatch({ type: "segment", role: segment.role });
+      dispatch({ type: "segment", role: segment.role, generation: segment.generation });
       if (segment.role !== "system") setLastLine({ role: segment.role, text: segment.text });
     },
     // El listado del Monitoreo ya re-consulta con los eventos del tenant.

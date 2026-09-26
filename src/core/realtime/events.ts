@@ -919,6 +919,8 @@ export type CallTranscriptSegmentEvent = CallRealtimeRef & {
   at_ms: number;
   spoken_at_ms?: number | null;
   interrupted?: boolean;
+  /** Solo el del agente: la generación de sus `call.agent_text` (su turno). */
+  generation?: number;
 };
 
 /** Premium F1 · room de la llamada: quién empezó o dejó de hablar (eventos de

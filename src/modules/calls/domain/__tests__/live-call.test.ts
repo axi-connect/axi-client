@@ -62,6 +62,18 @@ describe("pulso de la llamada en vivo (premium F2)", () => {
     expect(liveCallPulseReducer(drafting, { type: "segment", role: "agent" }).draft).toBeNull();
   });
 
+  it("barge-in encadenado: el segmento tardío del turno abortado NO borra el borrador del turno nuevo", () => {
+    const newTurn = run(
+      { type: "agent_text", generation: 3, text: "Te llamo de Axi." },
+      { type: "agent_text", generation: 5, text: "Claro, dime." },
+    );
+    const late = liveCallPulseReducer(newTurn, { type: "segment", role: "agent", generation: 3 });
+    expect(late.draft).toEqual({ generation: 5, text: "Claro, dime." });
+    expect(liveCallPulseReducer(late, { type: "segment", role: "agent", generation: 5 }).draft).toBeNull();
+    // Un servidor anterior (sin generación) conserva el comportamiento de antes
+    expect(liveCallPulseReducer(newTurn, { type: "segment", role: "agent" }).draft).toBeNull();
+  });
+
   it("un turno nuevo (otra generación) empieza su borrador de cero; el texto vacío se ignora", () => {
     const next = run(
       { type: "agent_text", generation: 3, text: "Hola." },

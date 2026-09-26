@@ -5,6 +5,7 @@ import {
   callResultPill,
   confidenceLabel,
   parseGoalAssessment,
+  summaryWaitRemainingMs,
   type CallSessionDetailDTO,
 } from "@/modules/calls/domain/call";
 
@@ -20,10 +21,7 @@ export function CallSummaryIsland({ call, className }: { call: CallSessionDetail
   const hadConversation = call.segments.some((segment) => segment.role !== "system");
   if (call.summary === null && assessment === null && !hadConversation) return null;
   // Sin resumen pasado el rato, el postprocess no lo va a escribir: no se promete.
-  const pending =
-    call.summary === null &&
-    call.ended_at !== null &&
-    Date.now() - new Date(call.ended_at).getTime() < 10 * 60_000;
+  const pending = summaryWaitRemainingMs(call, Date.now()) > 0;
   if (call.summary === null && assessment === null && !pending) return null;
   const result = callResultPill(call);
 

@@ -23,8 +23,9 @@ export type LiveCallPulseAction =
   | { type: "speaker"; speaker: "agent" | "caller"; state: "on" | "off" }
   | { type: "phase"; phase: CallPhase }
   | { type: "agent_text"; generation: number; text: string }
-  /** Llegó un segmento del transcript: el del agente reemplaza su borrador. */
-  | { type: "segment"; role: "caller" | "agent" | "system" };
+  /** Llegó un segmento del transcript: el del agente reemplaza el borrador
+   * de SU turno (`generation`). Sin generación (servidor anterior), cualquiera. */
+  | { type: "segment"; role: "caller" | "agent" | "system"; generation?: number };
 
 export const INITIAL_LIVE_CALL_PULSE: LiveCallPulse = {
   agentSpeaking: false,
@@ -64,8 +65,13 @@ export function liveCallPulseReducer(
           : { generation: action.generation, text };
       return { ...state, draft };
     }
-    case "segment":
-      return action.role === "agent" ? { ...state, draft: null } : state;
+    case "segment": {
+      if (action.role !== "agent" || state.draft === null) return state;
+      // Barge-in encadenado: el segmento del turno abortado llega cuando el
+      // turno nuevo ya está hablando; no borra lo que el nuevo ya mostró.
+      const sameTurn = action.generation === undefined || action.generation === state.draft.generation;
+      return sameTurn ? { ...state, draft: null } : state;
+    }
   }
 }
 

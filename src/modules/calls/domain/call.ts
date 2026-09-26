@@ -240,3 +240,19 @@ export function confidenceLabel(confidence: number): string {
   if (confidence >= 0.5) return "confianza media";
   return "confianza baja";
 }
+
+/** Tope de espera del resumen tras colgar: más allá, el postprocess falló. */
+export const SUMMARY_WAIT_MS = 10 * 60_000;
+
+/**
+ * Ms que quedan esperando el resumen de una llamada terminada con
+ * conversación, o 0 si ya llegó, no aplica o venció el tope.
+ */
+export function summaryWaitRemainingMs(
+  call: Pick<CallSessionDetailDTO, "summary" | "ended_at" | "segments">,
+  now: number,
+): number {
+  if (call.summary !== null || call.ended_at === null) return 0;
+  if (!call.segments.some((segment) => segment.role !== "system")) return 0;
+  return Math.max(0, Date.parse(call.ended_at) + SUMMARY_WAIT_MS - now);
+}

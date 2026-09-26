@@ -5,7 +5,12 @@ import { useRouter } from "next/navigation";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { BrandLoader } from "@/shared/components/ui/brand-loader";
-import { isLiveCallStatus, type CallSessionDetailDTO } from "@/modules/calls/domain/call";
+import {
+  isLiveCallStatus,
+  SUMMARY_WAIT_MS,
+  summaryWaitRemainingMs,
+  type CallSessionDetailDTO,
+} from "@/modules/calls/domain/call";
 import {
   INITIAL_LIVE_CALL_PULSE,
   liveCallPulseReducer,
@@ -14,10 +19,6 @@ import { useLiveCall } from "@/modules/calls/infrastructure/realtime/use-live-ca
 import { getCallSession } from "@/modules/calls/infrastructure/services/calls-service.adapter";
 import { FinishedCallView } from "@/modules/calls/ui/finished/FinishedCallView";
 import { LiveCallView } from "@/modules/calls/ui/live/LiveCallView";
-
-/** Tope de espera del resumen tras colgar: más allá, el postprocess falló y
- * no tiene sentido seguir en la sala. */
-const SUMMARY_WAIT_MS = 10 * 60_000;
 
 /**
  * Detalle de una llamada: carga el detalle, se suscribe a la sala de la
@@ -75,13 +76,17 @@ export function CallDetailView({ callId }: { callId: string }) {
   const live = call !== null && isLiveCallStatus(call.status);
   // Recién terminada, el resumen tarda unos segundos: se sigue en la sala
   // hasta que llegue `call.summary_ready` (la isla promete que aparecerá).
-  const awaitingSummary =
-    call !== null &&
-    !live &&
-    call.summary === null &&
-    call.ended_at !== null &&
-    call.segments.some((segment) => segment.role !== "system") &&
-    Date.now() - new Date(call.ended_at).getTime() < SUMMARY_WAIT_MS;
+  // El tope tiene su propio reloj (auditoría F4, P2): sin él, con la pestaña
+  // abierta la vista seguía en la sala para siempre si el resumen no llegaba.
+  const [, setSummaryDeadline] = useState(0);
+  const awaitingSummary = call !== null && !live && summaryWaitRemainingMs(call, Date.now()) > 0;
+  const endedAt = call?.ended_at ?? null;
+  useEffect(() => {
+    if (!awaitingSummary || endedAt === null) return;
+    const remaining = Date.parse(endedAt) + SUMMARY_WAIT_MS - Date.now();
+    const timer = window.setTimeout(() => setSummaryDeadline((tick) => tick + 1), Math.max(0, remaining) + 50);
+    return () => window.clearTimeout(timer);
+  }, [awaitingSummary, endedAt]);
   const [pulse, dispatchPulse] = useReducer(liveCallPulseReducer, INITIAL_LIVE_CALL_PULSE);
   useLiveCall({
     callSessionId: callId,
@@ -91,7 +96,7 @@ export function CallDetailView({ callId }: { callId: string }) {
     onAgentText: (event) =>
       dispatchPulse({ type: "agent_text", generation: event.generation, text: event.text }),
     onSegment: (segment) => {
-      dispatchPulse({ type: "segment", role: segment.role });
+      dispatchPulse({ type: "segment", role: segment.role, generation: segment.generation });
       setCall((prev) => {
         if (prev === null) return prev;
         if (prev.segments.some((existing) => existing.seq === segment.seq)) return prev;
