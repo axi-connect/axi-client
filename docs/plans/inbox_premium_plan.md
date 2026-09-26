@@ -210,7 +210,7 @@ Solo cliente.
   el doble check azul como dato firme.
 - **Solo parte de los eventos llega por WS.** El socket ya emite `conversation.escalated`, `claimed`, `taken_over`,
   `returned_to_ai`, `sla_breached` y `status_changed`, y con ellos se invalida `events`. `note_added` y
-  `priority_changed` no tienen evento WS. Por eso `events` de la conversación ACTIVA se relee al abrirla y con el tick de un minuto mientras la pestaña está visible (`visibilityState === "visible"`); en una pestaña oculta no se relee. Un test lo fija: con reloj falso, abrir hace 1 petición, cada minuto visible suma 1 y una pestaña oculta no suma ninguna. Nadie debe leer esas dos líneas como en vivo. Un `conversation.event_added` genérico cerraría ese
+  `priority_changed` no tienen evento WS. Por eso `events` de la conversación ACTIVA se relee al abrirla y con el tick de un minuto mientras la pestaña está visible (`visibilityState === "visible"`); en una pestaña oculta no se relee, y al volver a visible se relee en el acto (`visibilitychange`), sin esperar al tick. Un test lo fija: con reloj falso, abrir hace 1 petición, cada minuto visible suma 1 una pestaña oculta no suma ninguna y pasar de oculta a visible suma 1 de inmediato. Nadie debe leer esas dos líneas como en vivo. Un `conversation.event_added` genérico cerraría ese
   hueco.
 - **La prioridad no se puede cambiar desde el cliente** (no hay endpoint), así que queda de solo lectura.
 - **La tarea anotada por Cobros** (el panel `orders` del rail, medios de WhatsApp Web y `delivered`) se contrasta con
