@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>CRM · Tareas en el celular</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&amp;family=Poppins:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#F5F5F7}
+.lt{--bg:#F5F5F7;--card:#FFFFFF;--fg:#0B0B0E;--fg2:#3A3A40;--mut:#6B6B73;--line:rgba(0,0,0,.07);--line2:rgba(0,0,0,.12);--chip:#F0F0F2;--brand:#D13F42;--onbrand:#FFFFFF;--acc:rgba(230,87,89,.12);--ok:#1F9D5B;--bad:#DC2626;--ai:#7C3AED}
+a{color:inherit}
+.ph{width:390px;height:844px;background:var(--bg);color:var(--fg);overflow:hidden;display:flex;flex-direction:column;font-family:Poppins,system-ui,sans-serif}
+.d{font-family:Urbanist,Poppins,sans-serif}
+.icb{width:40px;height:40px;border-radius:999px;border:1px solid var(--line2);background:var(--card);color:var(--fg);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;padding:0;text-decoration:none}
+.icb-p{background:var(--brand);color:var(--onbrand);border:0}
+.tabs{display:flex;gap:4px;padding:4px;border-radius:999px;background:var(--card);border:1px solid var(--line)}
+.tab{height:36px;padding:0 13px;border-radius:999px;font:500 13px Poppins,sans-serif;color:var(--mut);display:inline-flex;align-items:center;text-decoration:none;white-space:nowrap}
+.tab-on{background:var(--acc);color:var(--fg)}
+.card{background:var(--card);border-radius:22px;border:1px solid var(--line)}
+.cell{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border:0;background:transparent;text-align:left;border-radius:16px;font:inherit;color:inherit;min-width:0}
+.cell-on{background:var(--acc)}
+.fig{font-family:Urbanist,Poppins,sans-serif;font-weight:700;letter-spacing:-.03em;line-height:1;font-size:26px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 9px;border-radius:999px;font-size:11.5px;font-weight:500;background:var(--chip);white-space:nowrap}
+.dot{width:6px;height:6px;border-radius:9px;flex-shrink:0;display:inline-block}
+.row{display:grid;grid-template-columns:48px minmax(0,1fr);gap:12px;padding:12px 14px;border-top:1px solid var(--line)}
+.tm{font:500 12.5px 'Geist Mono',monospace;text-align:right}
+.ti{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.su{font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.isl{position:relative;isolation:isolate;overflow:hidden;border-radius:22px}
+.isl-glass{color:#0B0B0E;--mut:#5F5F68;background:radial-gradient(circle 16rem at 90% 8%,rgba(230,87,89,.16),transparent 70%),linear-gradient(160deg,rgba(255,255,255,.82),rgba(246,243,254,.62));box-shadow:inset 0 2px 2px rgba(11,11,14,.05),inset 0 -2px 2px rgba(255,255,255,.5),0 30px 70px -34px rgba(16,16,24,.35),0 30px 80px -40px rgba(124,58,237,.35),0 0 0 1px rgba(11,11,14,.06)}
+.btn-contrast{display:inline-flex;align-items:center;justify-content:center;height:40px;padding:0 16px;border-radius:999px;font:500 13px Poppins,sans-serif;border:0;background:#0B0B0E;color:#FFFFFF;white-space:nowrap}
+</style>
+</helmet>
+<div class="ph lt">
+  <header style="height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;flex-shrink:0">
+    <button type="button" class="icb" aria-label="Abrir el menú"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10"></path></svg></button>
+    <span style="font-size:13px;color:var(--mut)">CRM</span>
+    <a class="icb icb-p" href="#" aria-label="Nueva tarea"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"></path></svg></a>
+  </header>
+  <div style="padding:0 16px;display:flex;flex-direction:column;gap:12px;min-height:0;flex-grow:1">
+    <nav aria-label="Secciones del CRM" style="overflow:hidden;margin-right:-16px"><div class="tabs" style="width:max-content"><a class="tab" href="#">Contactos</a><a class="tab" href="#">Pipeline</a><a class="tab tab-on" href="#" aria-current="page">Tareas</a><a class="tab" href="#">Configuración</a></div></nav>
+    <div><h1 class="d" style="margin:0;font-size:28px;font-weight:700;letter-spacing:-.02em">Tareas</h1><span style="font-size:12.5px;color:var(--mut)">En hora del negocio (GMT-5)</span></div>
+    <div role="group" aria-label="Filtrar la bandeja" class="card" style="padding:4px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:2px">
+      <button type="button" aria-pressed="true" class="cell cell-on"><span class="fig">14</span><span style="font-size:11px;color:var(--fg2)">abiertas</span></button>
+      <button type="button" aria-pressed="false" class="cell"><span class="fig">2</span><span style="font-size:11px;color:var(--fg2);display:inline-flex;align-items:center;gap:4px"><span class="dot" style="background:var(--bad)"></span>vencidas</span></button>
+      <button type="button" aria-pressed="false" class="cell"><span class="fig">6</span><span style="font-size:11px;color:var(--fg2)">para hoy</span></button>
+      <button type="button" aria-pressed="false" class="cell"><span class="fig">1</span><span style="font-size:11px;color:var(--fg2)">sin asignar</span></button>
+    </div>
+    <article class="isl isl-glass" style="padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px" aria-label="Lo próximo">
+      <div style="min-width:0"><span style="font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)">Lo próximo</span><div class="d" style="font-size:18px;font-weight:700">2 vencidas</div><div style="font-size:12px;color:#3A3A40;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Llamar a Luis Pardo · 9:00 a. m.</div></div>
+      <button type="button" class="btn-contrast">Ver</button>
+    </article>
+    <section class="card" style="overflow:hidden">
+      <div style="padding:12px 14px 6px;font-size:12.5px;font-weight:600">Vencidas <span style="font-weight:400;color:var(--mut)">· 2</span></div>
+      <div class="row" style="border-top:0"><span class="tm">9:00<br><span style="font:400 10.5px Poppins;color:var(--mut)">hoy</span></span><div style="min-width:0"><div class="ti">Llamar para confirmar el grupo de 40 personas</div><div class="su"><b style="color:var(--fg);font-weight:600">Luis Pardo</b> · Laura Méndez</div><span class="pill" style="margin-top:6px"><span class="dot" style="background:var(--bad)"></span>Vencida</span></div></div>
+      <div class="row"><span class="tm">4:30<br><span style="font:400 10.5px Poppins;color:var(--mut)">ayer</span></span><div style="min-width:0"><div class="ti">Enviar la cotización corregida de Cancún</div><div class="su"><b style="color:var(--fg);font-weight:600">Sofía Alejandra Herrera Castañeda de la Torre</b> · Laura Méndez</div><span class="pill" style="margin-top:6px"><span class="dot" style="background:var(--bad)"></span>Vencida</span></div></div>
+      <div style="padding:12px 14px 6px;font-size:12.5px;font-weight:600;border-top:1px solid var(--line)">Hoy <span style="font-weight:400;color:var(--mut)">· jue 26 sep · 5</span></div>
+      <div class="row" style="border-top:0"><span class="tm">10:00</span><div style="min-width:0"><div class="ti">Retomar la propuesta de Cartagena</div><div class="su"><b style="color:var(--fg);font-weight:600">Luis Pardo</b> · Axi, por mensaje</div><span class="pill" style="margin-top:6px"><span class="dot" style="background:var(--bad)"></span>No se pudo enviar</span></div></div>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

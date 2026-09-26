@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>CRM · Tareas</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&amp;family=Poppins:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#F5F5F7}
+.lt{--bg:#F5F5F7;--side:#FFFFFF;--card:#FFFFFF;--fg:#0B0B0E;--fg2:#3A3A40;--mut:#6B6B73;--line:rgba(0,0,0,.07);--line2:rgba(0,0,0,.12);--chip:#F0F0F2;--brand:#D13F42;--onbrand:#FFFFFF;--acc:rgba(230,87,89,.12);--track:#ECECEF;--ok:#1F9D5B;--warn:#D97706;--info:#2563EB;--bad:#DC2626;--ai:#7C3AED;--sh:0 1px 0 rgba(0,0,0,.03),0 8px 20px -16px rgba(16,16,24,.25)}
+.dk{--bg:#0A0A0A;--side:#0F0F11;--card:#141416;--fg:#EDEDED;--fg2:#C4C4CC;--mut:#A1A1AA;--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.14);--chip:rgba(255,255,255,.08);--brand:#FB7185;--onbrand:#1A0508;--acc:rgba(251,113,133,.16);--track:rgba(255,255,255,.10);--ok:#4ADE80;--warn:#FBBF24;--info:#60A5FA;--bad:#F87171;--ai:#A78BFA;--sh:none}
+a{color:inherit}
+.app{width:1440px;height:1000px;display:flex;background:var(--bg);color:var(--fg);overflow:hidden;font-family:Poppins,system-ui,sans-serif}
+.d{font-family:Urbanist,Poppins,sans-serif}
+.m{font-family:'Geist Mono',ui-monospace,monospace}
+.side{width:248px;flex-shrink:0;padding:14px 10px;box-sizing:border-box;display:flex;flex-direction:column;gap:2px;border-right:1px solid var(--line);background:var(--side)}
+.nav{display:flex;align-items:center;gap:10px;height:34px;padding:0 10px;border-radius:10px;font-size:13.5px;color:var(--fg2);text-decoration:none;white-space:nowrap}
+.nav-on{background:var(--acc);color:var(--fg);font-weight:500}
+.card{background:var(--card);border-radius:24px;border:1px solid var(--line);box-shadow:var(--sh)}
+.lbl{font-size:12px;color:var(--mut);white-space:nowrap}
+.kick{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);white-space:nowrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 18px;border-radius:999px;font:500 13.5px Poppins,sans-serif;border:0;cursor:pointer;text-decoration:none;white-space:nowrap;box-sizing:border-box}
+.btn-p{background:var(--brand);color:var(--onbrand)}
+.btn-s{background:var(--card);color:var(--fg);border:1px solid var(--line2)}
+.tabs{display:flex;gap:4px;padding:4px;border-radius:999px;background:var(--card);border:1px solid var(--line)}
+.tab{height:36px;padding:0 14px;border-radius:999px;font:500 13.5px Poppins,sans-serif;color:var(--mut);display:inline-flex;align-items:center;gap:8px;text-decoration:none;white-space:nowrap}
+.tab-on{background:var(--acc);color:var(--fg)}
+.seg{height:30px;padding:0 11px;border-radius:999px;font:500 12.5px Poppins,sans-serif;color:var(--mut);border:0;background:transparent;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.seg-on{background:var(--acc);color:var(--fg)}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:500;background:var(--chip);color:var(--fg);white-space:nowrap}
+.dot{width:6px;height:6px;border-radius:9px;flex-shrink:0;display:inline-block}
+.cell{display:flex;align-items:center;gap:14px;padding:16px 20px;border:0;background:transparent;text-align:left;cursor:pointer;min-width:0;border-radius:18px;font:inherit;color:inherit}
+.cell-on{background:var(--acc)}
+.ci{width:40px;height:40px;border-radius:14px;background:var(--chip);display:flex;align-items:center;justify-content:center;color:var(--mut);flex-shrink:0}
+.cell-on .ci{background:var(--card);color:var(--brand)}
+.fig{font-family:Urbanist,Poppins,sans-serif;font-weight:700;letter-spacing:-.03em;line-height:1;white-space:nowrap;font-variant-numeric:tabular-nums}
+.search{display:flex;align-items:center;gap:8px;height:40px;width:340px;padding:0 14px;border-radius:999px;background:var(--card);border:1px solid var(--line2);box-sizing:border-box;color:var(--mut)}
+.search input{border:0;outline:0;background:transparent;font:13px Poppins,sans-serif;flex-grow:1;min-width:0;color:var(--fg)}
+.kbd{font:500 11px 'Geist Mono',monospace;padding:2px 6px;border-radius:6px;background:var(--chip);color:var(--mut)}
+.grp{display:flex;align-items:center;gap:10px;padding:14px 22px 8px;font-size:12.5px;font-weight:600;position:sticky;top:0;background:var(--card);z-index:1}
+.grp span{font-weight:400;color:var(--mut)}
+.row{display:grid;grid-template-columns:64px 22px minmax(0,1fr) auto 32px;gap:14px;align-items:start;padding:11px 22px;border-top:1px solid var(--line)}
+.tm{font:500 13px 'Geist Mono',monospace;text-align:right;font-variant-numeric:tabular-nums;padding-top:1px}
+.tm small{display:block;font:400 10.5px Poppins,sans-serif;color:var(--mut)}
+.chk{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--line2);background:var(--card);margin-top:1px;cursor:pointer;padding:0}
+.ti{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.su{font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.su b{font-weight:600;color:var(--fg)}
+.why{font-size:12px;color:var(--fg2);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.icb{width:32px;height:32px;border-radius:999px;border:0;background:transparent;color:var(--mut);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.aig{color:var(--ai);flex-shrink:0}
+.sb{overflow-y:auto}
+.sb::-webkit-scrollbar{width:6px}
+.sb::-webkit-scrollbar-thumb{background-image:radial-gradient(circle,var(--brand),transparent);border-radius:9999px}
+.isl{position:relative;isolation:isolate;overflow:hidden;border-radius:24px}
+.isl-glass{color:#0B0B0E;--mut:#5F5F68;--fg2:#3A3A40;background:radial-gradient(circle 20rem at 90% 8%,rgba(230,87,89,.16),transparent 70%),linear-gradient(160deg,rgba(255,255,255,.82),rgba(246,243,254,.62));-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);box-shadow:inset 0 2px 2px rgba(11,11,14,.05),inset 0 -2px 2px rgba(255,255,255,.5),inset 0 0 1.6px 4px rgba(255,255,255,.2),inset 0 0 18px 2px rgba(255,255,255,.55),0 4px 2px -2px rgba(11,11,14,.14),0 30px 70px -34px rgba(16,16,24,.35),0 30px 80px -40px rgba(124,58,237,.35)}
+.isl-dark{color:#EDEDED;--mut:#A1A1AA;--fg2:#D4D4D8;background:radial-gradient(circle 20rem at 90% 8%,rgba(251,113,133,.26),transparent 70%),linear-gradient(160deg,rgba(38,38,42,.90),rgba(28,24,40,.92));-webkit-backdrop-filter:blur(20px) saturate(170%);backdrop-filter:blur(20px) saturate(170%);box-shadow:inset 0 2px 2px rgba(255,255,255,.10),inset 0 -2px 2px rgba(0,0,0,.35),inset 0 0 14px 1px rgba(255,255,255,.08),0 40px 90px -36px rgba(124,58,237,.55),0 18px 50px -24px rgba(230,87,89,.45)}
+.isl-glass::before,.isl-dark::before{content:"";position:absolute;inset:0;z-index:1;padding:1.5px;border-radius:inherit;pointer-events:none;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.isl-glass::before{background:conic-gradient(from -75deg at 50% 50%,rgba(11,11,14,.32) 0%,transparent 6% 40%,rgba(11,11,14,.32) 50%,transparent 56% 94%,rgba(11,11,14,.32) 100%),linear-gradient(rgba(255,255,255,.85),rgba(255,255,255,.85))}
+.isl-dark::before{background:conic-gradient(from -75deg at 50% 50%,rgba(255,255,255,.7) 0%,transparent 6% 40%,rgba(255,255,255,.7) 50%,transparent 56% 94%,rgba(255,255,255,.7) 100%),linear-gradient(rgba(255,255,255,.12),rgba(255,255,255,.12))}
+.btn-contrast{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:38px;padding:0 16px;border-radius:999px;font:500 13px Poppins,sans-serif;border:0;cursor:pointer;text-decoration:none;background:#0B0B0E;color:#FFFFFF;white-space:nowrap}
+.isl-dark .btn-contrast{background:#F4F4F5;color:#0B0B0E}
+@media (prefers-reduced-transparency: reduce){.isl-glass{background:#FFFFFF}.isl-dark{background:#1E1E22}}
+</style>
+</helmet>
+<div class="app {{themeCls}}">
+  <aside class="side" aria-label="Menú principal">
+    <div style="display:flex;align-items:center;gap:10px;padding:4px 8px 14px">
+      <svg width="26" height="26" viewBox="0 0 28 28" aria-hidden="true"><circle cx="11" cy="15" r="7.5" fill="none" stroke="#D13F42" stroke-width="4"></circle><path d="M16 5 L25 24" stroke="#F2A93B" stroke-width="4" stroke-linecap="round"></path><path d="M25 5 L17 20" stroke="#7B5CF0" stroke-width="4" stroke-linecap="round"></path></svg>
+      <div style="display:flex;flex-direction:column;min-width:0"><span style="font-weight:600;font-size:13.5px">JuanitoXpeditions</span><span style="font-size:11.5px;color:var(--mut)">Owner</span></div>
+    </div>
+    <a class="nav" href="#"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg>Dashboard</a>
+    <a class="nav" href="#"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3l1.8 5.4L19 10l-5.2 1.6L12 17l-1.8-5.4L5 10l5.2-1.6z"></path></svg>CMO</a>
+    <a class="nav nav-on" href="#" aria-current="page"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="1.7"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="4"></circle></svg>CRM</a>
+    <a class="nav" href="#"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M22 12h-6l-2 3h-4l-2-3H2"></path><path d="M5.5 5h13l3.5 7v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-6z"></path></svg>Inbox</a>
+    <a class="nav" href="#"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="18" rx="3"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>Agenda</a>
+    <a class="nav" href="#"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><path d="M3 6h18"></path></svg>Ventas</a>
+    <a class="nav" href="#"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"></path></svg>Llamadas</a>
+    <a class="nav" href="#"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 19h16M6 15l4-4 3 3 5-6"></path></svg>Comercial</a>
+    <a class="nav" href="#"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path></svg>Configuración</a>
+  </aside>
+
+  <main style="flex-grow:1;display:flex;flex-direction:column;min-width:0;min-height:0">
+    <header style="height:68px;display:flex;align-items:center;gap:20px;padding:0 32px;flex-shrink:0;border-bottom:1px solid var(--line)">
+      <span class="d" style="font-size:19px;font-weight:700">CRM</span>
+      <nav aria-label="Secciones del CRM" class="tabs"><a class="tab" href="#">Contactos</a><a class="tab" href="#">Pipeline</a><a class="tab tab-on" href="#" aria-current="page"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="1.8"><path d="m3 17 2 2 4-4M3 7l2 2 4-4M13 6h8M13 12h8M13 18h8"></path></svg>Tareas</a><a class="tab" href="#">Configuración</a></nav>
+    </header>
+
+    <div style="padding:22px 32px 24px;display:flex;flex-direction:column;gap:16px;flex-grow:1;min-height:0">
+      <section style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px">
+        <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+          <h1 class="d" style="margin:0;font-size:36px;font-weight:700;letter-spacing:-.02em;line-height:1.05">Tareas</h1>
+          <p style="margin:0;font-size:13.5px;color:var(--mut)">Lo que el equipo y Axi tienen entre manos · en hora del negocio (GMT-5)</p>
+        </div>
+        <div style="display:flex;gap:8px">
+          <a class="btn btn-s" href="Seguimiento.dc.html"><svg class="aig" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l1.8 5.4L19 10l-5.2 1.6L12 17l-1.8-5.4L5 10l5.2-1.6z"></path></svg>Programar seguimiento</a>
+          <a class="btn btn-p" href="NuevaTarea.dc.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>Nueva tarea</a>
+        </div>
+      </section>
+
+      <section style="display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;flex-shrink:0">
+        <div role="group" aria-label="Filtrar la bandeja" class="card" style="padding:6px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px">
+          <sc-for list="{{cells}}" as="c" hint-placeholder-count="4">
+            <button type="button" aria-pressed="{{c.pressed}}" class="cell {{c.cls}}" onClick="{{c.pick}}">
+              <span class="ci" aria-hidden="true" style="color:{{c.iconColor}}">{{c.glyph}}</span>
+              <span style="display:flex;flex-direction:column;gap:5px;min-width:0">
+                <span class="fig" style="font-size:30px">{{c.value}}</span>
+                <span style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--fg2);white-space:nowrap"><sc-if value="{{c.alarm}}" hint-placeholder-val="{{false}}"><span class="dot" style="background:var(--bad)"></span></sc-if>{{c.label}}</span>
+              </span>
+            </button>
+          </sc-for>
+        </div>
+        <article class="isl {{islCls}}" style="padding:16px 20px;display:flex;flex-direction:column;gap:6px;min-width:0" aria-label="Lo próximo">
+          <span class="kick">Lo próximo</span>
+          <span class="d" style="font-size:20px;font-weight:700;line-height:1.15">2 vencidas</span>
+          <span style="font-size:12.5px;color:var(--fg2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">La primera: llamar a Luis Pardo, venció hoy 9:00 a. m.</span>
+          <button type="button" class="btn-contrast" style="align-self:flex-start;margin-top:4px" onClick="{{showOverdue}}">Ver las vencidas</button>
+        </article>
+      </section>
+
+      <a href="Agente.dc.html" style="display:flex;align-items:center;gap:14px;text-decoration:none;padding:2px 4px;min-height:28px">
+        <span class="kick" style="display:inline-flex;align-items:center;gap:7px;color:var(--fg2)"><svg class="aig" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.8 5.4L19 10l-5.2 1.6L12 17l-1.8-5.4L5 10l5.2-1.6z"></path></svg>Axi · hoy</span>
+        <span style="font-size:13px;color:var(--fg2)"><strong style="font-weight:600;color:var(--fg)">12</strong> seguimientos · <strong style="font-weight:600;color:var(--fg)">5</strong> respondieron · <strong style="font-weight:600;color:var(--fg)">3</strong> en compra</span>
+        <span style="margin-left:auto;font-size:12.5px;font-weight:500;display:inline-flex;align-items:center;gap:5px">Ver el parte<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>
+      </a>
+
+      <section style="display:flex;align-items:center;gap:10px;justify-content:space-between">
+        <label class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><input aria-label="Buscar tareas por contacto u objetivo" placeholder="Buscar por contacto u objetivo"><span class="kbd">/</span></label>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div role="radiogroup" aria-label="Filtrar por asignación" class="tabs" style="padding:3px;gap:2px"><button type="button" role="radio" aria-checked="true" class="seg seg-on">Mis tareas</button><button type="button" role="radio" aria-checked="false" class="seg">Sin asignar</button><button type="button" role="radio" aria-checked="false" class="seg">Todas</button></div>
+          <div role="tablist" aria-label="Vista de tareas" class="tabs" style="padding:3px;gap:2px"><button type="button" role="tab" aria-selected="true" class="seg seg-on">Lista</button><a role="tab" aria-selected="false" class="seg" href="Programados.dc.html" style="text-decoration:none">Programados</a></div>
+          <span aria-hidden="true" style="width:1px;height:20px;background:var(--line2)"></span>
+          <div role="radiogroup" aria-label="Filtrar por quién ejecuta" class="tabs" style="padding:3px;gap:2px"><button type="button" role="radio" aria-checked="true" class="seg seg-on">Todas</button><button type="button" role="radio" aria-checked="false" class="seg">Del equipo</button><a role="radio" aria-checked="false" class="seg" href="Agente.dc.html" style="text-decoration:none">Del agente</a></div>
+        </div>
+      </section>
+
+      <section class="card" style="flex-grow:1;min-height:0;overflow:hidden;display:flex;flex-direction:column">
+        <div class="sb" style="flex-grow:1;min-height:0">
+          <sc-for list="{{groups}}" as="g" hint-placeholder-count="3">
+            <div>
+              <div class="grp">{{g.title}}<span>{{g.meta}}</span></div>
+              <sc-for list="{{g.rows}}" as="r" hint-placeholder-count="3">
+                <div>
+                  <sc-if value="{{r.nowBefore}}" hint-placeholder-val="{{false}}"><div aria-hidden="true" style="display:grid;grid-template-columns:64px minmax(0,1fr);gap:14px;align-items:center;padding:2px 22px"><span class="m" style="font-size:10.5px;color:var(--brand);text-align:right">10:42</span><span style="height:1px;background:linear-gradient(90deg,var(--brand),transparent);position:relative"><span style="position:absolute;left:-3px;top:-2px;width:5px;height:5px;border-radius:9px;background:var(--brand)"></span></span></div></sc-if>
+                  <div class="row" style="opacity:{{r.opacity}}">
+                    <span class="tm">{{r.time}}<small>{{r.day}}</small></span>
+                    <sc-if value="{{r.agent}}" hint-placeholder-val="{{false}}"><span aria-label="{{r.mediumLabel}}" role="img" style="display:flex;justify-content:center;padding-top:1px"><svg class="aig" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="{{r.mediumPath}}"></path></svg></span></sc-if>
+                    <sc-if value="{{r.human}}" hint-placeholder-val="{{true}}"><button type="button" role="checkbox" aria-checked="false" aria-label="Completar {{r.title}}" class="chk"></button></sc-if>
+                    <div style="min-width:0">
+                      <div class="ti" title="{{r.title}}">{{r.title}}</div>
+                      <div class="su"><b>{{r.contact}}</b> · {{r.who}}</div>
+                      <sc-if value="{{r.hasWhy}}" hint-placeholder-val="{{false}}"><div class="why">{{r.why}}</div></sc-if>
+                    </div>
+                    <span style="display:flex;gap:6px;align-items:center"><span class="pill"><span class="dot" style="background:{{r.stateColor}}"></span>{{r.state}}</span><sc-if value="{{r.retry}}" hint-placeholder-val="{{false}}"><button type="button" class="btn btn-s" style="height:28px;padding:0 11px;font-size:12px">Reintentar</button></sc-if></span>
+                    <button type="button" class="icb" aria-label="Acciones de {{r.title}}"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="12" cy="19" r="1.6"></circle></svg></button>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { due: 'open' };
+  }
+  renderVals() {
+    const dark = this.props.dark === true;
+    const st = this.state;
+    const defs = [
+      ['open', '14', 'abiertas', '▢', false],
+      ['overdue', '2', 'vencidas', '!', true],
+      ['today', '6', 'para hoy', '◷', false],
+      ['unassigned', '1', 'sin asignar', '○', false]
+    ];
+    const cells = defs.map(([k, value, label, glyph, alarm]) => ({
+      value, label, glyph, alarm, pressed: st.due === k ? 'true' : 'false', cls: st.due === k ? 'cell-on' : '',
+      iconColor: alarm ? 'var(--bad)' : 'inherit', pick: () => this.setState({ due: k })
+    }));
+    const MSG = 'M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z';
+    const CALL = 'M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2';
+    const T = (k, time, day, title, contact, who, state, stateColor, extra) => {
+      const x = extra || {};
+      return { k, time, day, title, contact, who, state, stateColor, agent: !!x.agent, human: !x.agent, mediumPath: x.call ? CALL : MSG, mediumLabel: x.call ? 'La ejecuta Axi por llamada' : 'La ejecuta Axi por mensaje', why: x.why || '', hasWhy: !!x.why, retry: !!x.retry, nowBefore: !!x.now, opacity: x.dim ? '.6' : '1', unassigned: !!x.unassigned };
+    };
+    const overdue = [
+      T('overdue', '9:00', 'hoy', 'Llamar para confirmar el grupo de 40 personas', 'Luis Pardo', 'Laura Méndez', 'Vencida', 'var(--bad)'),
+      T('overdue', '4:30', 'ayer', 'Enviar la cotización corregida de Cancún con traslados y club de niños', 'Sofía Alejandra Herrera Castañeda de la Torre', 'Laura Méndez', 'Vencida', 'var(--bad)')
+    ];
+    const today = [
+      T('today', '8:30', '', 'Recordar el saldo del viaje a San Andrés', 'Andrés Felipe Molina Restrepo', 'Axi, por mensaje', 'Enviada', 'var(--ok)', { agent: true, dim: true }),
+      T('today', '10:00', '', 'Retomar la propuesta de Cartagena', 'Luis Pardo', 'Axi, por mensaje', 'No se pudo enviar', 'var(--bad)', { agent: true, retry: true, why: 'Fuera de la ventana de 24 h y sin plantilla de apertura' }),
+      T('today', '11:00', '', 'Revisar la documentación de los viajeros', 'Camila Ortiz', 'Sin asignar', 'Para hoy', 'var(--mut)', { now: true, unassigned: true }),
+      T('today', '3:00', '', 'Llamar para cerrar Madrid y Lisboa', 'Ana Gómez', 'Axi, por llamada', 'Programada', 'var(--mut)', { agent: true, call: true, why: 'Objetivo: confirmar fechas y el anticipo' }),
+      T('today', '5:30', '', 'Mandar el itinerario final', 'Natalia Ortega', 'Julián Rojas', 'Para hoy', 'var(--mut)')
+    ];
+    const tomorrow = [
+      T('tomorrow', '9:00', '', 'Preguntar si revisó la cotización de Punta Cana', 'Valentina Ríos', 'Axi, por mensaje', 'Programada', 'var(--mut)', { agent: true, why: 'Intento 2 de 3 · se detiene si responde' }),
+      T('tomorrow', '11:30', '', 'Reunión de asesoría por videollamada', 'Jorge Álvarez', 'Laura Méndez', 'Mañana', 'var(--mut)')
+    ];
+    let groups;
+    if (st.due === 'overdue') groups = [{ title: 'Vencidas', meta: '· 2', rows: overdue }];
+    else if (st.due === 'today') groups = [{ title: 'Hoy', meta: '· jue 26 sep · 5', rows: today }];
+    else if (st.due === 'unassigned') groups = [{ title: 'Hoy', meta: '· jue 26 sep · 1 sin asignar', rows: today.filter((r) => r.unassigned) }];
+    else groups = [{ title: 'Vencidas', meta: '· 2', rows: overdue }, { title: 'Hoy', meta: '· jue 26 sep · 5', rows: today }, { title: 'Mañana', meta: '· vie 27 sep · 2', rows: tomorrow }];
+    return {
+      themeCls: dark ? 'dk' : 'lt', islCls: dark ? 'isl-dark' : 'isl-glass',
+      cells, groups, showOverdue: () => this.setState({ due: 'overdue' })
+    };
+  }
+}
+</script>
+</body>
+</html>

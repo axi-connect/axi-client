@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>CRM · Ejecuciones de un seguimiento</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&amp;family=Poppins:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#F5F5F7}
+.lt{--bg:#F5F5F7;--card:#FFFFFF;--fg:#0B0B0E;--fg2:#3A3A40;--mut:#6B6B73;--line:rgba(0,0,0,.07);--line2:rgba(0,0,0,.12);--chip:#F0F0F2;--brand:#D13F42;--ok:#1F9D5B;--warn:#D97706;--bad:#DC2626;--ai:#7C3AED}
+a{color:inherit}
+.frame{width:1440px;height:900px;background:var(--bg);color:var(--fg);font-family:Poppins,system-ui,sans-serif;position:relative;overflow:hidden}
+.d{font-family:Urbanist,Poppins,sans-serif}
+.ghost{background:#FFFFFF;border-radius:20px;border:1px solid var(--line)}
+.sheet{position:absolute;top:12px;right:12px;bottom:12px;width:460px;background:var(--card);border-radius:24px;border:1px solid var(--line);box-shadow:0 40px 80px -30px rgba(16,16,24,.35);display:flex;flex-direction:column;overflow:hidden}
+.kick{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+.lbl{font-size:12px;color:var(--mut);white-space:nowrap}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:500;background:var(--chip);color:var(--fg);white-space:nowrap}
+.dot{width:6px;height:6px;border-radius:9px;flex-shrink:0;display:inline-block}
+.icb{width:36px;height:36px;border-radius:999px;border:1px solid var(--line2);background:var(--card);display:inline-flex;align-items:center;justify-content:center;padding:0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 16px;border-radius:999px;font:500 13.5px Poppins,sans-serif;border:1px solid var(--line2);background:var(--card);color:var(--fg);white-space:nowrap;flex:1}
+.btn-p{background:var(--brand);color:#FFFFFF;border-color:var(--brand)}
+.run{display:grid;grid-template-columns:14px minmax(0,1fr) auto;gap:14px;padding:14px 0;border-top:1px solid var(--line)}
+.rd{width:10px;height:10px;border-radius:999px;margin-top:5px}
+.rt{font-size:13.5px;font-weight:600}
+.rs{font-size:12.5px;color:var(--fg2);line-height:1.5;margin-top:3px}
+.rh{font:500 12px 'Geist Mono',monospace;color:var(--mut);white-space:nowrap}
+.aig{color:var(--ai)}
+</style>
+</helmet>
+<div class="frame lt">
+  <div style="position:absolute;inset:0;padding:40px 48px;display:flex;flex-direction:column;gap:14px;opacity:.55" aria-hidden="true">
+    <div class="d" style="font-size:34px;font-weight:700">Tareas</div>
+    <div class="ghost" style="height:96px"></div>
+    <div class="ghost" style="flex:1"></div>
+  </div>
+  <aside class="sheet" aria-label="Ejecuciones del seguimiento">
+    <header style="padding:20px 24px 16px;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid var(--line)">
+      <div style="display:flex;justify-content:space-between;align-items:center"><span class="kick" style="display:inline-flex;gap:6px;align-items:center"><svg class="aig" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.8 5.4L19 10l-5.2 1.6L12 17l-1.8-5.4L5 10l5.2-1.6z"></path></svg>Ejecuciones</span><button type="button" class="icb" aria-label="Cerrar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"></path></svg></button></div>
+      <h2 class="d" style="margin:0;font-size:22px;font-weight:700;line-height:1.2">Retomar la propuesta de Cartagena</h2>
+      <div style="display:flex;gap:6px;flex-wrap:wrap"><span class="pill"><span class="dot" style="background:var(--bad)"></span>No se pudo enviar</span><span class="pill">Luis Pardo</span><span class="pill">Mensaje · intento 2 de 3</span></div>
+      <p style="margin:0;font-size:13px;line-height:1.5;color:var(--fg2)"><span class="lbl" style="display:block;margin-bottom:2px">Objetivo</span>Saber si revisó la propuesta con su jefe y resolverle dudas del precio por persona.</p>
+    </header>
+    <div style="flex:1;min-height:0;overflow:auto;padding:4px 24px 12px">
+      <div class="run" style="border-top:0"><span class="rd" style="background:var(--bad)"></span><div><div class="rt">Intento 2 · No se pudo enviar</div><div class="rs">Fuera de la ventana de 24 h y la tarea no tiene plantilla de apertura. Elige una plantilla aprobada y reintenta.</div></div><span class="rh">hoy 10:00</span></div>
+      <div class="run"><span class="rd" style="border:2px solid var(--fg);box-sizing:border-box"></span><div><div class="rt">Intento 1 · Enviado · sin respuesta</div><div class="rs">«Hola Luis, ¿pudiste revisar la propuesta de Cartagena con tu jefe? Si quieres te la ajusto a 35 personas.»</div></div><span class="rh">23 sep 9:00</span></div>
+      <div class="run"><span class="rd" style="border:2px solid var(--mut);box-sizing:border-box"></span><div><div class="rt">Programado</div><div class="rs">Lo programó Laura Méndez desde la ficha del contacto.</div></div><span class="rh">22 sep 4:12</span></div>
+    </div>
+    <footer style="padding:14px 24px 18px;border-top:1px solid var(--line);display:flex;gap:10px"><button type="button" class="btn">Editar y elegir plantilla</button><button type="button" class="btn btn-p">Reintentar</button></footer>
+  </aside>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

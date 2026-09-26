@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>CRM · Seguimientos programados</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&amp;family=Poppins:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#F5F5F7}
+.lt{--bg:#F5F5F7;--card:#FFFFFF;--fg:#0B0B0E;--fg2:#3A3A40;--mut:#6B6B73;--line:rgba(0,0,0,.07);--line2:rgba(0,0,0,.12);--chip:#F0F0F2;--brand:#D13F42;--acc:rgba(230,87,89,.12);--ok:#1F9D5B;--bad:#DC2626;--ai:#7C3AED;--quiet:repeating-linear-gradient(135deg,rgba(0,0,0,.035) 0 6px,transparent 6px 12px)}
+a{color:inherit}
+.frame{width:1440px;height:1000px;background:var(--bg);color:var(--fg);font-family:Poppins,system-ui,sans-serif;box-sizing:border-box;padding:36px 48px;display:flex;flex-direction:column;gap:18px}
+.d{font-family:Urbanist,Poppins,sans-serif}
+.card{background:var(--card);border-radius:24px;border:1px solid var(--line);overflow:hidden}
+.lbl{font-size:12px;color:var(--mut);white-space:nowrap}
+.seg{height:30px;padding:0 11px;border-radius:999px;font:500 12.5px Poppins,sans-serif;color:var(--mut);border:0;background:transparent;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center}
+.seg-on{background:var(--acc);color:var(--fg)}
+.tabs{display:flex;gap:2px;padding:3px;border-radius:999px;background:var(--card);border:1px solid var(--line)}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:500;background:var(--chip);color:var(--fg);white-space:nowrap}
+.dot{width:6px;height:6px;border-radius:9px;flex-shrink:0;display:inline-block}
+.dh{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:16px 22px 10px;border-bottom:1px solid var(--line)}
+.it{display:grid;grid-template-columns:78px 22px minmax(0,1fr) auto auto;gap:14px;align-items:center;padding:12px 22px;border-top:1px solid var(--line)}
+.it:first-of-type{border-top:0}
+.tm{font:500 13px 'Geist Mono',monospace;text-align:right;white-space:nowrap}
+.ti{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.su{font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.aig{color:var(--ai)}
+.btn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--line2);background:var(--card);font:500 12.5px Poppins,sans-serif;color:var(--fg);white-space:nowrap}
+</style>
+</helmet>
+<div class="frame lt">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px">
+    <div><h1 class="d" style="margin:0;font-size:34px;font-weight:700;letter-spacing:-.02em">Programados</h1><p style="margin:6px 0 0;font-size:13.5px;color:var(--mut)">El día y la hora en que Axi escribirá o llamará · en hora del negocio (GMT-5)</p></div>
+    <div role="tablist" aria-label="Vista de tareas" class="tabs"><a role="tab" aria-selected="false" class="seg" href="Main.dc.html">Lista</a><button type="button" role="tab" aria-selected="true" class="seg seg-on">Programados</button></div>
+  </div>
+
+  <section class="card">
+    <div class="dh"><span class="d" style="font-size:19px;font-weight:700">Hoy <span style="font-family:Poppins;font-size:13px;font-weight:400;color:var(--mut)">· jue 26 sep</span></span><span class="lbl">3 mensajes · 1 llamada</span></div>
+    <div class="it"><span class="tm">10:00 a. m.</span><svg class="aig" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" role="img" aria-label="Mensaje"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"></path></svg><div style="min-width:0"><div class="ti">Retomar la propuesta de Cartagena</div><div class="su"><b style="color:var(--fg);font-weight:600">Luis Pardo</b> · objetivo: saber si la revisó con su jefe</div></div><span class="pill"><span class="dot" style="background:var(--bad)"></span>No se pudo enviar</span><button type="button" class="btn">Ver ejecuciones</button></div>
+    <div class="it"><span class="tm">3:00 p. m.</span><svg class="aig" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" role="img" aria-label="Llamada"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"></path></svg><div style="min-width:0"><div class="ti">Llamar para cerrar Madrid y Lisboa</div><div class="su"><b style="color:var(--fg);font-weight:600">Ana Gómez</b> · objetivo: confirmar fechas y el anticipo</div></div><span class="pill"><span class="dot" style="background:var(--mut)"></span>Programada</span><button type="button" class="btn">Ver ejecuciones</button></div>
+    <div class="it" style="background:var(--quiet)"><span class="tm">9:00 p. m.</span><svg class="aig" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" role="img" aria-label="Mensaje"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"></path></svg><div style="min-width:0"><div class="ti">Recordar el pago del saldo</div><div class="su"><b style="color:var(--fg);font-weight:600">Andrés Felipe Molina Restrepo</b> · cae en el horario silencioso: sale mañana a las 8:00 a. m.</div></div><span class="pill"><span class="dot" style="background:var(--mut)"></span>En espera</span><button type="button" class="btn">Ver ejecuciones</button></div>
+  </section>
+
+  <section class="card">
+    <div class="dh"><span class="d" style="font-size:19px;font-weight:700">Mañana <span style="font-family:Poppins;font-size:13px;font-weight:400;color:var(--mut)">· vie 27 sep</span></span><span class="lbl">2 mensajes</span></div>
+    <div class="it"><span class="tm">9:00 a. m.</span><svg class="aig" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" role="img" aria-label="Mensaje"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"></path></svg><div style="min-width:0"><div class="ti">Preguntar si revisó la cotización de Punta Cana</div><div class="su"><b style="color:var(--fg);font-weight:600">Valentina Ríos</b> · intento 2 de 3 · se detiene si responde</div></div><span class="pill"><span class="dot" style="background:var(--mut)"></span>Programada</span><button type="button" class="btn">Ver ejecuciones</button></div>
+    <div class="it"><span class="tm">11:00 a. m.</span><svg class="aig" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" role="img" aria-label="Mensaje"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"></path></svg><div style="min-width:0"><div class="ti">Agradecer la compra y pedir una reseña</div><div class="su"><b style="color:var(--fg);font-weight:600">Diego Salas</b> · abre con la plantilla «posventa_resena»</div></div><span class="pill"><span class="dot" style="background:var(--mut)"></span>Programada</span><button type="button" class="btn">Ver ejecuciones</button></div>
+  </section>
+
+  <p style="margin:0;display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--mut)"><span aria-hidden="true" style="width:28px;height:14px;border-radius:5px;background:var(--quiet);border:1px solid var(--line)"></span>Lo rayado cae en el horario silencioso (9:00 p. m. – 8:00 a. m.): sale a las 8:00 a. m.</p>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -23,6 +23,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/shared/components/ui/dropdown-menu";
+import { StatePill } from "@/shared/components/features/bento";
 import { StatusBadge } from "@/shared/components/features/status-badge";
 import { isOverdue, type ActivityDTO } from "@/modules/crm/domain/activity";
 import { UNNAMED_CONTACT } from "@/modules/crm/domain/contact";
@@ -71,7 +72,7 @@ export function TaskDayList({
   const groups = groupTasks(tasks, tz, now);
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-background">
+    <div className="overflow-hidden rounded-3xl border border-border bg-card">
       {groups.map(({ bucket, tasks: rows }, group) => (
         <section key={bucket} aria-labelledby={`task-group-${bucket}`}>
           <GroupHeader bucket={bucket} tz={tz} now={now} count={rows.length} first={group === 0} />
@@ -120,17 +121,15 @@ function GroupHeader({
   return (
     <div
       className={cn(
-        "flex items-baseline gap-2 border-y border-border bg-secondary/60 px-4 py-2",
+        "flex items-center gap-2 border-t border-border px-5 pt-4 pb-2",
         first && "border-t-0",
       )}
     >
       <h3
         id={`task-group-${bucket}`}
-        className={cn(
-          "text-[11px] font-semibold tracking-wider uppercase",
-          bucket === "overdue" && "text-destructive",
-        )}
+        className="inline-flex items-center gap-2 text-[13px] font-semibold"
       >
+        {bucket === "overdue" && <span aria-hidden className="size-1.5 rounded-full bg-destructive" />}
         {TASK_BUCKET_LABELS[bucket]}
       </h3>
       {date !== null && <span className="text-xs text-muted-foreground">{date}</span>}
@@ -250,7 +249,8 @@ function TaskRow({
       disabled={task.task_status === "cancelled"}
       onClick={() => void run(completed ? "reopen" : "complete")}
       className={cn(
-        "flex size-5 shrink-0 items-center justify-center rounded-md border transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+        // 24 px de objetivo (§11); el cuadro visible sigue siendo de 20.
+        "flex size-6 shrink-0 items-center justify-center rounded-md border transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
         completed ? "border-success bg-success text-white" : "border-input hover:border-success",
         task.task_status === "cancelled" && "opacity-40",
       )}
@@ -266,21 +266,12 @@ function TaskRow({
         dim && "opacity-60",
       )}
     >
-      {/* Franja de estado: deja escanear la columna sin leer una palabra. */}
-      <span
-        aria-hidden
-        className={cn(
-          "absolute inset-y-0 left-0 w-[3px] rounded-r-sm",
-          failed || (overdue && !agent) ? "bg-destructive" : agent ? "bg-accent-violet/70" : null,
-        )}
-      />
+      {/* Sin franja lateral de color (lienzo CRM premium F3): el estado vive
+          en el punto de su píldora a la derecha y la IA en el icono violeta. */}
 
       <div className="w-16 shrink-0 pt-px pl-4 text-right leading-tight">
         <span
-          className={cn(
-            "block font-mono text-[13px] tabular-nums",
-            overdue && !agent && "text-destructive",
-          )}
+          className="block font-mono text-[13px] tabular-nums"
         >
           {when === null ? "—" : clockLabel(when, tz)}
         </span>
@@ -334,7 +325,7 @@ function TaskRow({
           <Link
             href={`/crm/contacts/${task.contact_id}`}
             className={cn(
-              "min-w-0 shrink truncate rounded-sm underline-offset-2 transition-colors hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+              "min-w-0 shrink truncate rounded-sm py-1 underline-offset-2 transition-colors hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
               task.contact_name === null
                 ? "text-muted-foreground"
                 : "font-medium text-foreground",
@@ -369,12 +360,22 @@ function TaskRow({
         )}
       </div>
 
-      <div className="ml-auto flex shrink-0 items-center gap-2">
-        {state.label !== null && (
+      {/* Se parte en líneas antes que salirse: a 390 px una fallida lleva su
+          estado y dos acciones, y juntos no caben en una fila. */}
+      <div className="ml-auto flex max-w-full min-w-0 flex-wrap items-center justify-end gap-2">
+        {state.label !== null ? (
           <StatusBadge status={TASK_BADGE_KEY} map={taskBadgeMap(state)} appearance="dot" />
+        ) : (
+          overdue &&
+          open &&
+          !agent && (
+            // Antes la vencida solo se decía con rojo (hora y franja): ahora
+            // tiene su palabra, con el color en el punto.
+            <StatePill tone="destructive">Vencida</StatePill>
+          )
         )}
         {failed && (
-          <div className="flex items-center gap-1">
+          <div className="flex flex-wrap items-center gap-1">
             <Button
               variant="outline"
               size="sm"
@@ -402,7 +403,7 @@ function TaskRow({
             <Button
               variant="ghost"
               size="icon"
-              className="size-7"
+              className="size-8 rounded-full"
               aria-label="Más acciones de la tarea"
             >
               <MoreVertical className="size-3.5" />

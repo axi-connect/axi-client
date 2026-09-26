@@ -8,7 +8,7 @@
 > |---|---|---|---|
 > | F1 | Pipeline: tablero, detalle, ganar / perder, tabla, resumen de Axi, estados | https://claude.ai/artifact/XeAzi64SAmKKZX9fWUJKTL | Implementado y medido (2026-09-26) |
 > | F2 | Contactos: lista y ficha 360 | https://claude.ai/artifact/GhDJsXcao2JY4VdHMYVukc | Implementado y medido (2026-09-26) |
-> | F3 | Tareas | — | Por diseñar |
+> | F3 | Tareas | https://claude.ai/artifact/9uX8d8C5cmZV7vGngR9zjC | Implementado y medido (2026-09-26) |
 > | F4 | Configuración: pipelines, recorrido, secuencias, segmentos, etiquetas, tareas de agente, importar | — | Por diseñar |
 >
 > Fuentes de cada lienzo: `docs/design/mockups/crm-premium/<fase>/`.
@@ -134,6 +134,51 @@ de fusión desbordado a 768 px y las casillas de 16 px.
 Verjas: `tsc` (solo el preexistente de `ConversationPanel.test.tsx`), `next lint` 0 errores, `jest` 490 suites / 3900
 tests, `next build` OK.
 
-## 3. F3–F4
+## 3. F3 · Tareas
 
-Se diseñan después, cada una con su lienzo y su aprobación antes de tocar código.
+Aprobado el 2026-09-26 («Aprobado mockup. procede con la implementación»). Solo cliente. Continuidad con el rediseño
+de tareas ya aprobado (`crm-tasks-premium`): las cifras siguen siendo el filtro y el marcador sigue siendo UN
+instrumento.
+
+| Pieza | Queda |
+|---|---|
+| `domain/tasks-next-up.ts` (nuevo) | Puro, con test: mezclada → vencidas / para hoy / al día; modo agente → el parte de Axi (lo que acabó en compra primero, lo que no salió como acción) |
+| `TaskScoreboard` | Material bento (`rounded-3xl`, celdas `rounded-2xl`), cifras en Nexa, el rojo solo en el punto de la etiqueta, 4 columnas por `@container` (46 rem) y 2×2 debajo |
+| `TasksNextUpIsland` (nuevo) | La isla de la bandeja: cristal por defecto, brillo `ai` en el modo agente (absorbe la línea del parte) y en «Todo al día» |
+| `TaskDayList` | Sin franja lateral de color ni hora en rojo: el estado va en su punto; la vencida humana gana su `StatePill` «Vencida»; casilla y enlace a 24 px |
+| `ScheduledAgenda` | Tarjetas del día `rounded-3xl`, el horario silencioso rayado, la hora sin partirse |
+| `PromiseLine` (programar seguimiento) | La isla «Así lo hará…» con la frase real de `promiseSentence` (brillo `ai`) |
+| `ActivityFormModal` | Sin la X de 16 px (Cancelar y Escape cierran) |
+| `SearchField` (DS) | El campo ocupa el alto del control: el objetivo es el control entero, no sus 20 px de texto |
+
+### 3.1 Render medido (§12) — 2026-09-26
+
+Arnés `/root/axi/qa/premium/crm-f3-render.mjs` + `crm-f3-seed.py` sobre `axi_render`: tareas del equipo vencidas, de
+hoy y de mañana con títulos largos, seguimientos de Axi programados y uno que no salió con su motivo. Escenas:
+- bandeja;
+- el filtro «vencidas»;
+- el modo agente;
+- Programados;
+- «Programar seguimiento».
+Cada una × 390/768/1024/1280/1440 × claro/oscuro: **50 capturas sin hallazgos** (evidencia en D:\axi-qa\premium\crm-f3).
+El render se hizo en dos turnos, cediendo la máquina al auditor de Cobros durante su ronda R8.
+
+Lo que el render corrigió:
+- **La bandeja desbordaba a 562 px en el celular.** `mx-auto` en una columna flex encoge la vista a su contenido; el
+  mismo patrón estaba en Duplicados.
+- **Etiquetas del marcador cortadas o partidas en el modo agente.** Ahora pasa a 4 columnas desde 56 rem y el icono
+  cede su sitio por debajo de 30 rem.
+- **La fila de una tarea que no salió desbordaba 80 px.** Ahora sus acciones se parten en líneas.
+- **Objetivos por debajo de 24 px:** casillas, enlaces, el campo del buscador y la X del diálogo.
+- **La hora partida en Programados.**
+- **El hueco bajo el marcador:** ahora iguala el alto de la isla.
+
+Verjas:
+- `tsc`: solo el preexistente de `ConversationPanel.test.tsx`.
+- `next lint`: 0 errores.
+- `jest`: 492 suites / 3909 tests.
+- `next build`: OK.
+
+## 4. F4
+
+Configuración: se diseña después, con su lienzo y su aprobación antes de tocar código.

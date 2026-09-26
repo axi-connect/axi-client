@@ -60,12 +60,12 @@ export function ScheduledAgenda({
   return (
     <div className="space-y-5">
       {[...groups.entries()].map(([day, items]) => (
-        <section key={day} className="overflow-hidden rounded-2xl border border-border bg-background">
-          <header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border bg-secondary/70 px-4 py-2.5">
-            <h3 className="text-sm font-semibold">
+        <section key={day} className="overflow-hidden rounded-3xl border border-border bg-card">
+          <header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border px-5 pt-4 pb-3">
+            <h3 className="font-heading text-lg font-bold">
               {day === today ? "Hoy" : day === tomorrow ? "Mañana" : dayLabel(day)}
               {(day === today || day === tomorrow) && (
-                <span className="ml-1.5 font-medium text-muted-foreground">{dayLabel(day)}</span>
+                <span className="ml-1.5 font-sans text-sm font-normal text-muted-foreground">{dayLabel(day)}</span>
               )}
             </h3>
             <span className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -98,11 +98,13 @@ export function ScheduledAgenda({
                 <li
                   key={task.id}
                   className={cn(
-                    "grid grid-cols-[64px_20px_1fr_auto] items-center gap-x-3 px-4 py-2.5",
-                    quiet && "bg-muted/50",
+                    "grid grid-cols-[5.75rem_20px_minmax(0,1fr)_auto] items-center gap-x-3 px-5 py-3",
+                    // Lo que cae en horario silencioso va rayado, como en el lienzo:
+                    // se lee «no sale ahora» sin sumar otro color.
+                    quiet && "bg-[repeating-linear-gradient(135deg,var(--color-muted)_0_6px,transparent_6px_12px)]",
                   )}
                 >
-                  <div className={cn("font-mono text-sm tabular-nums", quiet && "text-muted-foreground")}>
+                  <div className={cn("font-mono text-sm whitespace-nowrap tabular-nums", quiet && "text-muted-foreground")}>
                     {clock(minutes)}
                   </div>
                   {task.task_medium === "call" ? (
