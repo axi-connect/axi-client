@@ -1,1 +1,1 @@
-export { AudioPlayerCore } from "./AudioPlayerCore"
+export { AudioPlayerCore, type AudioPlayerControl } from "./AudioPlayerCore"

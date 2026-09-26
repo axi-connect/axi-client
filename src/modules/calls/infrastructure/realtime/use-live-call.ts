@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import type { CallTranscriptSegmentEvent } from "@/core/realtime/events";
+import type {
+  CallAgentTextEvent,
+  CallPhaseChangedEvent,
+  CallSpeakerChangedEvent,
+  CallTranscriptSegmentEvent,
+} from "@/core/realtime/events";
 import { socketManager } from "@/core/realtime/socket-manager";
 import { useSocket, useSocketEvent } from "@/core/realtime/use-socket";
 
@@ -18,12 +23,18 @@ import { useSocket, useSocketEvent } from "@/core/realtime/use-socket";
  * - `leave` en el cleanup es best-effort.
  *
  * `enabled=false` (llamada ya terminada) no abre nada.
+ *
+ * Premium F2: `onSpeaker`, `onPhase` y `onAgentText` (opcionales) alimentan el
+ * pulso del aura — quién habla, la fase del agente y su texto mientras suena.
  */
 export function useLiveCall({
   callSessionId,
   enabled,
   onSegment,
   onChanged,
+  onSpeaker,
+  onPhase,
+  onAgentText,
 }: {
   callSessionId: string;
   enabled: boolean;
@@ -31,6 +42,9 @@ export function useLiveCall({
   onSegment: (segment: CallTranscriptSegmentEvent) => void;
   /** Estado/resumen cambiaron o hubo reconexión: re-consultar el detalle. */
   onChanged: () => void;
+  onSpeaker?: (event: CallSpeakerChangedEvent) => void;
+  onPhase?: (event: CallPhaseChangedEvent) => void;
+  onAgentText?: (event: CallAgentTextEvent) => void;
 }) {
   const { socket } = useSocket("inbox");
   const joinedRef = useRef<string | null>(null);
@@ -39,11 +53,26 @@ export function useLiveCall({
   // callbacks de quien llama cambian por render y no deben re-suscribir.
   const onSegmentRef = useRef(onSegment);
   const onChangedRef = useRef(onChanged);
+  const onSpeakerRef = useRef(onSpeaker);
+  const onPhaseRef = useRef(onPhase);
+  const onAgentTextRef = useRef(onAgentText);
   onSegmentRef.current = onSegment;
   onChangedRef.current = onChanged;
+  onSpeakerRef.current = onSpeaker;
+  onPhaseRef.current = onPhase;
+  onAgentTextRef.current = onAgentText;
 
   useSocketEvent(socket, "call.transcript_segment", (payload) => {
     if (payload.call_session_id === callSessionId) onSegmentRef.current(payload);
+  });
+  useSocketEvent(socket, "call.speaker_changed", (payload) => {
+    if (payload.call_session_id === callSessionId) onSpeakerRef.current?.(payload);
+  });
+  useSocketEvent(socket, "call.phase_changed", (payload) => {
+    if (payload.call_session_id === callSessionId) onPhaseRef.current?.(payload);
+  });
+  useSocketEvent(socket, "call.agent_text", (payload) => {
+    if (payload.call_session_id === callSessionId) onAgentTextRef.current?.(payload);
   });
   useSocketEvent(socket, "call.status_changed", (payload) => {
     if (payload.call_session_id === callSessionId) onChangedRef.current();

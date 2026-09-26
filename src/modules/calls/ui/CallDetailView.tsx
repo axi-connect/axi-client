@@ -105,7 +105,8 @@ export function CallDetailView({ callId }: { callId: string }) {
             role: segment.role,
             text: segment.text,
             at_ms: segment.at_ms,
-            interrupted: false,
+            spoken_at_ms: segment.spoken_at_ms ?? null,
+            interrupted: segment.interrupted ?? false,
           },
         ].sort((a, b) => a.seq - b.seq);
         return { ...prev, segments: next };

@@ -1,11 +1,18 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useImperativeHandle, useRef, useState, type Ref } from "react"
 import { Loader2, Pause, Play } from "lucide-react"
 import { cn } from "@/core/lib/utils"
 import { formatDuration } from "@/core/lib/format"
 
 const PLAYBACK_RATES = [1, 1.5, 2] as const
+
+/** Control externo del player (llamadas premium: la transcripción salta el audio). */
+export type AudioPlayerControl = {
+  /** Mueve la posición. Sin `src` aún, se aplica cuando cargue. */
+  seek: (seconds: number) => void
+  toggle: () => void
+}
 
 /**
  * Player de audio compartido (burbujas del inbox, preview del grabador de
@@ -14,6 +21,10 @@ const PLAYBACK_RATES = [1, 1.5, 2] as const
  * Controla un <audio> oculto: play/pause, barra seekable, tiempo y
  * velocidad. `src=null` + `onNeedSrc` = carga perezosa: el primer play pide
  * la URL firmada y reproduce al llegar.
+ *
+ * Opcionales (llamadas premium F2), sin efecto si no se pasan: `onTimeUpdate`
+ * y `onPlayingChange` para quien sincroniza algo con el audio, y `controlRef`
+ * para saltar a una posición desde fuera.
  */
 export function AudioPlayerCore({
   src,
@@ -23,6 +34,9 @@ export function AudioPlayerCore({
   onError,
   outbound = false,
   className,
+  onTimeUpdate,
+  onPlayingChange,
+  controlRef,
 }: {
   src: string | null
   loading?: boolean
@@ -33,6 +47,9 @@ export function AudioPlayerCore({
   onError?: () => void
   outbound?: boolean
   className?: string
+  onTimeUpdate?: (seconds: number) => void
+  onPlayingChange?: (playing: boolean) => void
+  controlRef?: Ref<AudioPlayerControl>
 }) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const pendingPlayRef = useRef(false)
@@ -40,6 +57,15 @@ export function AudioPlayerCore({
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const [rateIndex, setRateIndex] = useState(0)
+  const pendingSeekRef = useRef<number | null>(null)
+  const onTimeUpdateRef = useRef(onTimeUpdate)
+  const onPlayingChangeRef = useRef(onPlayingChange)
+  onTimeUpdateRef.current = onTimeUpdate
+  onPlayingChangeRef.current = onPlayingChange
+
+  useEffect(() => {
+    onPlayingChangeRef.current?.(playing)
+  }, [playing])
 
   // Cuando la URL llega tras un play perezoso, arranca solo.
   useEffect(() => {
@@ -69,11 +95,28 @@ export function AudioPlayerCore({
     }
   }
 
+  const seekTo = (seconds: number) => {
+    const audio = audioRef.current
+    const value = Math.max(0, seconds)
+    if (!src || !audio) {
+      pendingSeekRef.current = value
+      setCurrentTime(value)
+      onTimeUpdateRef.current?.(value)
+      return
+    }
+    audio.currentTime = value
+    setCurrentTime(value)
+    onTimeUpdateRef.current?.(value)
+  }
+
+  useImperativeHandle(controlRef, () => ({ seek: seekTo, toggle: togglePlay }))
+
   const handleSeek = (value: number) => {
     const audio = audioRef.current
     if (!audio || !Number.isFinite(duration) || duration <= 0) return
     audio.currentTime = value
     setCurrentTime(value)
+    onTimeUpdateRef.current?.(value)
   }
 
   const knownDuration = Number.isFinite(duration) && duration > 0
@@ -92,13 +135,23 @@ export function AudioPlayerCore({
           onEnded={() => {
             setPlaying(false)
             setCurrentTime(0)
+            onTimeUpdateRef.current?.(0)
           }}
           onError={() => {
             setPlaying(false)
             onError?.()
           }}
-          onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
-          onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+          onTimeUpdate={(e) => {
+            setCurrentTime(e.currentTarget.currentTime)
+            onTimeUpdateRef.current?.(e.currentTarget.currentTime)
+          }}
+          onLoadedMetadata={(e) => {
+            setDuration(e.currentTarget.duration)
+            if (pendingSeekRef.current !== null) {
+              e.currentTarget.currentTime = pendingSeekRef.current
+              pendingSeekRef.current = null
+            }
+          }}
           onDurationChange={(e) => setDuration(e.currentTarget.duration)}
           className="hidden"
         />

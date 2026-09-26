@@ -909,10 +909,35 @@ export type CallStatusChangedEvent = CallRealtimeRef & { provider_status: string
 
 export type CallEndedEvent = CallStatusChangedEvent;
 
-/** Solo al room de la llamada — varios por minuto durante la conversación. */
+/** Solo al room de la llamada — varios por minuto durante la conversación.
+ * `spoken_at_ms`/`interrupted` llegan desde premium F1 (opcionales: un server
+ * anterior no los manda). */
 export type CallTranscriptSegmentEvent = CallRealtimeRef & {
   seq: number;
   role: "caller" | "agent" | "system";
+  text: string;
+  at_ms: number;
+  spoken_at_ms?: number | null;
+  interrupted?: boolean;
+};
+
+/** Premium F1 · room de la llamada: quién empezó o dejó de hablar (eventos de
+ * habla del relay; solo con `CALLS_RELAY_EVENTS` en el server). */
+export type CallSpeakerChangedEvent = CallRealtimeRef & {
+  speaker: "agent" | "caller";
+  state: "on" | "off";
+  at_ms: number;
+};
+
+export type CallPhase = "greeting" | "listening" | "thinking" | "speaking" | "ending" | "closed";
+
+/** Premium F1 · room de la llamada: transición de la máquina del agente. */
+export type CallPhaseChangedEvent = CallRealtimeRef & { phase: CallPhase; at_ms: number };
+
+/** Premium F1 · room de la llamada: oración del agente AL ENVIARLA al TTS.
+ * Provisional — su `call.transcript_segment` la reemplaza al liquidar el turno. */
+export type CallAgentTextEvent = CallRealtimeRef & {
+  generation: number;
   text: string;
   at_ms: number;
 };
@@ -1074,6 +1099,9 @@ export type InboxServerEvents = {
   "call.started": (payload: CallStartedEvent) => void;
   "call.status_changed": (payload: CallStatusChangedEvent) => void;
   "call.transcript_segment": (payload: CallTranscriptSegmentEvent) => void;
+  "call.speaker_changed": (payload: CallSpeakerChangedEvent) => void;
+  "call.phase_changed": (payload: CallPhaseChangedEvent) => void;
+  "call.agent_text": (payload: CallAgentTextEvent) => void;
   "call.ended": (payload: CallEndedEvent) => void;
   "call.summary_ready": (payload: CallSummaryReadyEvent) => void;
   "notification.created": (payload: NotificationCreatedEvent) => void;
