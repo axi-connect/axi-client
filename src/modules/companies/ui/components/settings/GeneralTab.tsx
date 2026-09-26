@@ -6,6 +6,7 @@ import { applyServerValidation, errorMessage } from "@/core/lib/error-messages"
 import { DynamicForm } from "@/shared/components/features/dynamic-form"
 import { FieldList } from "@/shared/components/features/field-list"
 import { SchedulesEditor } from "@/modules/companies/ui/forms/SchedulesEditor"
+import { UnsavedChangesDock } from "@/shared/components/features/island/UnsavedChangesDock"
 import { updateMyCompany } from "@/modules/companies/infrastructure/services/company-service.adapter"
 import { useMyCompany } from "@/modules/companies/infrastructure/hooks/use-my-company"
 import {
@@ -77,9 +78,14 @@ export function GeneralTab() {
           schema={companyFormSchema}
           columns={{ sm: 1, md: 2 }}
           defaultValues={companyToFormValues(company)}
-          fields={buildCompanyFormFields()}
+          fields={buildCompanyFormFields(company.niche_code ?? "")}
           onSubmit={handleSubmit}
-          actions={{ submitLabel: "Guardar cambios" }}
+          // La barra de tinta aparece al haber cambios (§9.5.1: las barras de acción van en tinta).
+          actions={{
+            render: ({ submitting, dirty, invalid }) => (
+              <UnsavedChangesDock dirty={dirty} submitting={submitting} invalid={invalid} />
+            ),
+          }}
         />
       </section>
 

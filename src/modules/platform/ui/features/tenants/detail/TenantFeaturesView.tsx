@@ -1,25 +1,29 @@
 "use client";
 
 /**
- * Tab «Funciones» del detalle de tenant (F1 del programa Cobros): qué tiene
- * efectivo, de dónde sale y el control de plataforma.
+ * Tab «Funciones» del detalle de tenant (F1 del programa Cobros, premium P1):
+ * qué tiene efectivo, quién lo decide y el control de plataforma.
  *
  * Precedencia: plataforma › tenant › nicho. **Forzar** fija la función (el
  * tenant la ve con candado y no puede cambiarla); **Heredar** borra el override
  * y devuelve la decisión al tenant. Forzar exige motivo: es la única razón por
  * la que esta tabla existe, y queda en Auditoría con el usuario que lo hizo.
+ *
+ * La escalera «Tipo de negocio → Tenant → Plataforma» marca SOLO el peldaño que
+ * manda (`source`): el endpoint no dice qué decidió cada peldaño que no manda,
+ * y pintarlo sería inventarlo.
  */
 import { useState } from "react";
-import { CornerDownRight, Lock, SlidersHorizontal, ToggleLeft, ToggleRight } from "lucide-react";
+import { CornerDownRight, Lock, ToggleLeft, ToggleRight } from "lucide-react";
 
 import { errorMessage } from "@/core/lib/error-messages";
+import { cn } from "@/core/lib/utils";
 import { useAlert } from "@/core/providers/alert-provider";
-import { Badge } from "@/shared/components/ui/badge";
+import { BentoLink, InkIsland, Kicker, StatePill } from "@/shared/components/features/bento";
 import { Label } from "@/shared/components/ui/label";
 import { Modal } from "@/shared/components/ui/modal";
 import { SegmentedControl } from "@/shared/components/ui/segmented";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { StatusDotBadge } from "@/shared/components/ui/status-badges";
 import { Textarea } from "@/shared/components/ui/textarea";
 import type { FeatureDetailDTO } from "@/shared/auth/features.store";
 import {
@@ -36,23 +40,52 @@ const CONTROL_ITEMS = [
   { value: "off" as const, label: "Forzar OFF", icon: ToggleLeft },
 ];
 
+/** Motivos que se repiten; un clic los escribe y se pueden completar. */
+const QUICK_REASONS = ["Lo pidió el dueño", "Piloto", "Soporte técnico"];
+
 /** El control refleja el override, no el valor efectivo: son cosas distintas. */
 function controlOf(feature: FeatureDetailDTO): Control {
   if (feature.source !== "platform") return "inherit";
   return feature.enabled ? "on" : "off";
 }
 
-function OriginBadge({ feature }: { feature: FeatureDetailDTO }) {
-  if (feature.source === "platform") {
-    return (
-      <Badge variant="secondary" className="gap-1.5">
-        <Lock aria-hidden="true" className="size-3" />
-        Plataforma
-      </Badge>
-    );
-  }
-  const label = feature.source === "tenant" ? "Tenant" : feature.source === "niche" ? "Nicho" : "Sin decidir";
-  return <Badge variant="secondary">{label}</Badge>;
+const RUNGS: Array<{ source: FeatureDetailDTO["source"]; label: string }> = [
+  { source: "niche", label: "Tipo de negocio" },
+  { source: "tenant", label: "Tenant" },
+  { source: "platform", label: "Plataforma" },
+];
+
+/** Quién decide: los tres peldaños y, marcado en tinta, el que manda. */
+function Ladder({ feature }: { feature: FeatureDetailDTO }) {
+  const value = feature.enabled ? "Encendida" : "Apagada";
+  return (
+    <ol className="flex items-center gap-1" aria-label={`Quién decide ${feature.label}`}>
+      {RUNGS.map((rung, index) => {
+        const wins = feature.source === rung.source;
+        return (
+          <li key={rung.source} className="flex items-center gap-1">
+            {index > 0 ? (
+              <span aria-hidden="true" className="text-xs text-muted-foreground/60">
+                →
+              </span>
+            ) : null}
+            <span
+              className={cn(
+                "inline-flex h-7 min-w-24 items-center justify-center gap-1 rounded-full border px-2.5 text-xs whitespace-nowrap",
+                wins ? "border-foreground bg-foreground font-medium text-background" : "border-dashed border-border text-muted-foreground",
+              )}
+              title={rung.label}
+            >
+              {wins && rung.source === "platform" ? <Lock aria-hidden="true" className="size-3" /> : null}
+              {wins ? value : rung.label}
+              {wins ? <span className="sr-only"> · manda {rung.label}</span> : null}
+            </span>
+          </li>
+        );
+      })}
+      {feature.source === "default" ? <li className="pl-2 text-xs text-muted-foreground">Nadie la decidió: {value.toLowerCase()} de fábrica</li> : null}
+    </ol>
+  );
 }
 
 export function TenantFeaturesView({ tenantId }: { tenantId: string }) {
@@ -66,8 +99,8 @@ export function TenantFeaturesView({ tenantId }: { tenantId: string }) {
   if (isPending) {
     return (
       <div className="space-y-3" role="status" aria-label="Cargando funciones del tenant">
-        <Skeleton className="h-10 rounded-xl" />
-        <Skeleton className="h-40 rounded-2xl" />
+        <Skeleton className="h-24 rounded-3xl" />
+        <Skeleton className="h-72 rounded-3xl" />
       </div>
     );
   }
@@ -105,72 +138,87 @@ export function TenantFeaturesView({ tenantId }: { tenantId: string }) {
     setReasonError(false);
   };
 
+  const fixed = data.features.filter((feature) => feature.source === "platform");
+
   return (
-    <section className="rounded-2xl border border-border bg-background p-5 md:p-6" aria-labelledby="tenant-features-title">
-      <header className="mb-4 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 id="tenant-features-title" className="flex items-center gap-2 text-lg font-medium">
-            <SlidersHorizontal aria-hidden="true" className="size-[18px] text-muted-foreground" />
-            Funciones
-          </h2>
-          <p className="mt-1 max-w-[70ch] text-sm text-muted-foreground">
-            Lo efectivo para este tenant y de dónde sale (plataforma › tenant › nicho). <strong className="font-medium">Forzar</strong>{" "}
-            fija la función: el tenant la ve con candado y no puede cambiarla. Cada cambio queda en Auditoría.
+    <section className="flex flex-col gap-4" aria-labelledby="tenant-features-title">
+      <h2 id="tenant-features-title" className="sr-only">
+        Funciones
+      </h2>
+
+      <InkIsland label="Fijadas por la plataforma" className="gap-4 sm:flex-row sm:items-center sm:gap-7">
+        <div className="flex shrink-0 flex-col gap-1.5">
+          <Kicker>Fijadas por la plataforma</Kicker>
+          <p className="flex items-baseline gap-2 whitespace-nowrap">
+            <span className="font-heading text-4xl leading-none font-bold tabular-nums">{fixed.length}</span>
+            <span className="text-sm text-muted-foreground">de {data.features.length} funciones</span>
           </p>
         </div>
-      </header>
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          {fixed.length === 0 ? (
+            <p className="text-sm text-pretty">Ninguna: manda lo que decida el tenant sobre la sugerencia de su tipo de negocio.</p>
+          ) : (
+            <ul className="flex flex-col gap-1 text-sm">
+              {fixed.map((feature) => (
+                <li key={feature.code} className="truncate">
+                  <span className="font-medium">{feature.label}</span> · forzada {feature.enabled ? "encendida" : "apagada"}
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className="text-xs text-muted-foreground">El tenant la ve con candado. El motivo queda en Auditoría y el tenant no lo ve.</p>
+        </div>
+        <BentoLink href={`/platform/tenants/${tenantId}/audit`} className="shrink-0">
+          Ver en Auditoría
+        </BentoLink>
+      </InkIsland>
 
-      <div className="overflow-x-auto rounded-xl border border-border">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border/60 text-left text-xs text-muted-foreground">
-              <th className="px-3.5 py-2.5 font-medium">Función</th>
-              <th className="px-3.5 py-2.5 font-medium">Efectiva</th>
-              <th className="px-3.5 py-2.5 font-medium">Origen</th>
-              <th className="px-3.5 py-2.5 font-medium">Control de plataforma</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.features.map((feature) => (
-              <tr key={feature.code} className="border-b border-border/40 last:border-b-0">
-                <td className="px-3.5 py-3">
-                  <span className="font-medium">{feature.label}</span>
-                  <span className="block font-mono text-xs text-muted-foreground">{feature.code}</span>
-                </td>
-                <td className="px-3.5 py-3">
-                  <StatusDotBadge tone={feature.enabled ? "ok" : "off"}>
-                    {feature.enabled ? "Encendida" : "Apagada"}
-                  </StatusDotBadge>
-                  {feature.blocked_by !== null ? (
-                    <span className="mt-1 block text-xs text-muted-foreground">
-                      {feature.blocked_by.kind === "capability"
-                        ? `El plan no incluye ${feature.blocked_by.code}`
-                        : `Requiere ${feature.blocked_by.code}`}
-                    </span>
-                  ) : null}
-                </td>
-                <td className="px-3.5 py-3">
-                  <OriginBadge feature={feature} />
-                </td>
-                <td className="px-3.5 py-3">
-                  <SegmentedControl
-                    value={controlOf(feature)}
-                    onValueChange={(next) => onControlChange(feature, next)}
-                    items={CONTROL_ITEMS}
-                    label={`Override de ${feature.label}`}
-                    size="sm"
-                    surface="inline"
-                  />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <p className="mt-3 text-xs text-muted-foreground">
-        Heredar borra el override: vuelve a mandar lo que el tenant decida sobre la sugerencia de su nicho.
-      </p>
+      <article className="rounded-3xl border border-border bg-card px-5 pt-4 pb-2 md:px-6">
+        <div className="flex flex-col gap-1 pb-2">
+          <p className="text-xs text-muted-foreground">Quién decide cada función</p>
+          <p className="text-sm text-pretty text-foreground/80">
+            Manda la de más a la derecha: la plataforma gana al tenant, y el tenant a su tipo de negocio. Cada cambio queda
+            en Auditoría.
+          </p>
+        </div>
+        <ul>
+          {data.features.map((feature) => (
+            <li
+              key={feature.code}
+              className="grid gap-3 border-t border-border/60 py-4 lg:grid-cols-[minmax(0,1fr)_auto_auto] lg:items-center lg:gap-6"
+            >
+              <div className="flex min-w-0 flex-col gap-1.5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-semibold">{feature.label}</span>
+                  <StatePill tone={feature.enabled ? "success" : "neutral"}>{feature.enabled ? "Encendida" : "Apagada"}</StatePill>
+                </div>
+                <span className="truncate font-mono text-xs text-muted-foreground">{feature.code}</span>
+                {feature.blocked_by !== null ? (
+                  <span className="text-xs text-muted-foreground">
+                    {feature.blocked_by.kind === "capability"
+                      ? `El plan no incluye ${feature.blocked_by.code}`
+                      : `Requiere ${feature.blocked_by.code}`}
+                  </span>
+                ) : null}
+              </div>
+              <div className="overflow-x-auto">
+                <Ladder feature={feature} />
+              </div>
+              <SegmentedControl
+                value={controlOf(feature)}
+                onValueChange={(next) => onControlChange(feature, next)}
+                items={CONTROL_ITEMS}
+                label={`Override de ${feature.label}`}
+                size="sm"
+                surface="inline"
+              />
+            </li>
+          ))}
+        </ul>
+        <p className="border-t border-border/60 py-3 text-xs text-muted-foreground">
+          Heredar borra el override: vuelve a mandar lo que el tenant decida sobre la sugerencia de su nicho.
+        </p>
+      </article>
 
       <Modal
         open={forcing !== null}
@@ -184,8 +232,27 @@ export function TenantFeaturesView({ tenantId }: { tenantId: string }) {
               ? "El tenant verá la función bloqueada con candado y no podrá encenderla."
               : "El tenant tendrá la función encendida y no podrá apagarla.",
           body: (
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               <Label htmlFor="feature-override-reason">Motivo</Label>
+              <div className="flex flex-wrap gap-1.5" role="group" aria-label="Motivos frecuentes">
+                {QUICK_REASONS.map((quick) => (
+                  <button
+                    key={quick}
+                    type="button"
+                    onClick={() => {
+                      setReason(quick);
+                      setReasonError(false);
+                    }}
+                    aria-pressed={reason === quick}
+                    className={cn(
+                      "h-8 rounded-full border px-3 text-xs font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                      reason === quick ? "border-foreground bg-foreground text-background" : "border-border bg-card hover:bg-accent",
+                    )}
+                  >
+                    {quick}
+                  </button>
+                ))}
+              </div>
               <Textarea
                 id="feature-override-reason"
                 value={reason}

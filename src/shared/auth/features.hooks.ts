@@ -10,6 +10,7 @@ import {
   type FeatureBlocker,
   type FeatureDetailDTO,
   type FeatureSource,
+  type NicheDefaults,
 } from "./features.store";
 
 /**
@@ -19,6 +20,8 @@ import {
  */
 export function useFeatures(): {
   features: FeatureDetailDTO[] | null;
+  /** Qué funciones sugiere cada tipo de negocio; `null` mientras carga o si falló. */
+  nicheDefaults: NicheDefaults | null;
   loaded: boolean;
   hasFeature: (code: string) => boolean;
   featureSource: (code: string) => FeatureSource | null;
@@ -29,6 +32,7 @@ export function useFeatures(): {
   const { user } = useAuthContext();
   const status = useFeaturesStore((state) => state.status);
   const features = useFeaturesStore((state) => state.features);
+  const nicheDefaults = useFeaturesStore((state) => state.niche_defaults);
   const load = useFeaturesStore((state) => state.load);
   const refresh = useFeaturesStore((state) => state.refresh);
   const userId = user?.id ?? null;
@@ -43,6 +47,7 @@ export function useFeatures(): {
 
   return {
     features,
+    nicheDefaults,
     loaded: status === "ready" || status === "error",
     hasFeature,
     featureSource,
