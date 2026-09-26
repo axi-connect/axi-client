@@ -2,8 +2,9 @@
 
 /**
  * Simulacro interactivo (upgrade quality F1, mockup F0 aprobado): tres
- * columnas —rail de mis sesiones · chat · inspector— en ≥lg; en pantallas
- * menores se apilan. Sin `sessionId` el centro muestra el formulario de
+ * columnas —rail de mis sesiones · chat · inspector— en ≥xl, topadas al alto
+ * disponible (`app-fit`, ver `simulator/layout.tsx`); en lg el inspector baja
+ * a una segunda fila y en pantallas menores se apilan. Sin `sessionId` el centro muestra el formulario de
  * nueva sesión (con preselección por query `company`/`agent` para «Nueva
  * sesión igual»). Finalizar pide confirmación simple; purgar exige escribir
  * el nombre del tenant (`ConfirmTyped`, destruye datos del tenant).
@@ -35,13 +36,16 @@ export function SimulatorView({ sessionId = null }: { sessionId?: string | null 
       : undefined;
 
   return (
-    <div className="grid min-h-[620px] gap-4 lg:max-xl:grid-cols-[232px_minmax(0,1fr)] lg:max-xl:grid-rows-[640px_auto] xl:h-[calc(100dvh-16rem)] xl:max-[1399px]:grid-cols-[248px_minmax(0,1fr)_340px] xl:grid-rows-none min-[1400px]:grid-cols-[256px_minmax(0,1fr)_360px]">
+    <div className="grid gap-4 max-xl:min-h-[620px] lg:max-xl:grid-cols-[232px_minmax(0,1fr)] lg:max-xl:grid-rows-[600px_auto] xl:grid-rows-[minmax(0,1fr)] xl:max-[1399px]:grid-cols-[248px_minmax(0,1fr)_340px] min-[1400px]:grid-cols-[256px_minmax(0,1fr)_360px] app-fit:min-h-0 app-fit:flex-1 app-short:h-[540px]">
       <SessionsRail currentId={sessionId} tenantFilter={tenantFilter} onTenantFilterChange={setTenantFilter} />
       {sessionId ? (
         <SessionColumns sessionId={sessionId} />
       ) : (
         <>
-          <div className="flex min-h-0 min-w-0 items-start justify-center overflow-y-auto rounded-3xl border border-border bg-card p-4 lg:items-center">
+          {/* Centrado SEGURO: el formulario se centra con `my-auto`; si no cabe, las
+              márgenes automáticas valen 0 y arranca arriba con scroll (con
+              `items-center` el excedente superior quedaba fuera de alcance). */}
+          <div className="axi-scroll flex min-h-0 min-w-0 items-start justify-center overflow-y-auto rounded-3xl border border-border bg-card p-4">
             <NewSessionForm initial={initial} />
           </div>
           <aside className="hidden overflow-hidden rounded-3xl border border-border bg-card xl:block" aria-label="Inspector de la sesión">

@@ -3,10 +3,9 @@
  * Lista con paginación/búsqueda EN SERVER → sin `sortable`.
  */
 import type { ColumnDef } from "@/shared/components/features/data-table";
-import { Badge } from "@/shared/components/ui/badge";
 import { RelativeDate } from "@/shared/components/ui/relative-date";
 import type { SuiteListItem } from "../../../../domain/quality";
-import { QualityStatus } from "../shared/premium";
+import { OriginPill, QualityStatus } from "../shared/premium";
 import { SuiteRowActions } from "./SuiteRowActions";
 
 /** Fila plana para la tabla. */
@@ -62,16 +61,7 @@ export function buildSuiteColumns(handlers: {
       header: "Origen",
       searchable: false,
       minWidth: 100,
-      cell: ({ row }) =>
-        row.original.is_system ? (
-          <Badge variant="outline" className="border-accent-violet/40 bg-accent-violet/10 text-accent-violet">
-            Sistema
-          </Badge>
-        ) : (
-          <Badge variant="outline" className="border-border text-muted-foreground">
-            Propio
-          </Badge>
-        ),
+      cell: ({ row }) => <OriginPill isSystem={row.original.is_system} />,
     },
     {
       accessorKey: "status",

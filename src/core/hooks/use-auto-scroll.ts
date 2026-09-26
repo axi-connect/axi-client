@@ -42,11 +42,22 @@ export function useAutoScroll<TElement extends HTMLElement>({
 		setIsNearBottom(computeIsNearBottom())
 	}, [computeIsNearBottom])
 
+	// Desplaza SOLO el contenedor. `scrollIntoView` mueve además cada ancestro
+	// con scroll —el scroller del panel incluido—, y en pantallas bajas subía
+	// la página entera y metía la cabecera del chat bajo el header sticky.
 	const scrollToBottom = useCallback(
 		(customBehavior?: ScrollBehavior) => {
-			const target = bottomRef.current
-			if (!target) return
-			target.scrollIntoView({ block: "end", inline: "nearest", behavior: customBehavior ?? behavior })
+			const el = containerRef.current
+			if (el) {
+				// jsdom no implementa `Element.scrollTo`: el respaldo mantiene los tests
+				if (typeof el.scrollTo === "function") {
+					el.scrollTo({ top: el.scrollHeight, behavior: customBehavior ?? behavior })
+				} else {
+					el.scrollTop = el.scrollHeight
+				}
+				return
+			}
+			bottomRef.current?.scrollIntoView({ block: "end", inline: "nearest", behavior: customBehavior ?? behavior })
 		},
 		[behavior],
 	)

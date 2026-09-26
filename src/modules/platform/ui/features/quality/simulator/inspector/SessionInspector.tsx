@@ -36,10 +36,10 @@ export function SessionInspector({ session, transcriptLength, onEnd, onPurge, en
             </TabsTrigger>
           </TabsList>
         </div>
-        <TabsContent value="state" className="min-h-0 flex-1 overflow-y-auto px-4 pt-2 pb-4">
+        <TabsContent value="state" className="axi-scroll min-h-0 flex-1 overflow-y-auto px-4 pt-2 pb-4">
           <SessionStatePanel session={session} onEnd={onEnd} onPurge={onPurge} ending={ending} />
         </TabsContent>
-        <TabsContent value="trace" className="min-h-0 flex-1 overflow-y-auto px-4 pt-2 pb-4">
+        <TabsContent value="trace" className="axi-scroll min-h-0 flex-1 overflow-y-auto px-4 pt-2 pb-4">
           <TurnTraceTimeline trace={traceQuery.data} loading={traceQuery.isPending} />
         </TabsContent>
       </Tabs>

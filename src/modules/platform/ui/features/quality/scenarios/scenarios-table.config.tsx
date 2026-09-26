@@ -5,10 +5,9 @@
  * pagina/busca EN SERVER: sin `sortable` (ordenar solo la página engañaría).
  */
 import type { ColumnDef } from "@/shared/components/features/data-table";
-import { Badge } from "@/shared/components/ui/badge";
 import { RelativeDate } from "@/shared/components/ui/relative-date";
 import type { Scenario, ScenarioListItem } from "../../../../domain/quality";
-import { QualityStatus } from "../shared/premium";
+import { OriginPill, QualityStatus, TagChips } from "../shared/premium";
 import { ScenarioRowActions } from "./ScenarioRowActions";
 
 /** Fila plana para la tabla (solo primitivos — contrato del DataTable). */
@@ -17,6 +16,7 @@ export type ScenarioRow = {
   code: string;
   name: string;
   criteria_count: number;
+  /** Tags unidas por ", " (el DataTable exige primitivos); la celda las parte. */
   tags: string;
   is_system: boolean;
   status: string;
@@ -47,13 +47,17 @@ export function buildScenarioColumns(handlers: {
       accessorKey: "code",
       header: "Código",
       minWidth: 170,
-      cell: ({ row }) => <span className="font-mono text-xs">{row.original.code}</span>,
+      cell: ({ row }) => <span className="font-mono text-xs whitespace-nowrap">{row.original.code}</span>,
     },
     {
       accessorKey: "name",
       header: "Nombre",
       minWidth: 190,
-      cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
+      cell: ({ row }) => (
+        <span className="block max-w-64 truncate font-medium" title={row.original.name}>
+          {row.original.name}
+        </span>
+      ),
     },
     {
       accessorKey: "criteria_count",
@@ -66,26 +70,15 @@ export function buildScenarioColumns(handlers: {
       accessorKey: "tags",
       header: "Etiquetas",
       searchable: false,
-      minWidth: 140,
-      cell: ({ row }) => (
-        <span className="truncate text-xs text-muted-foreground">{row.original.tags || "—"}</span>
-      ),
+      minWidth: 200,
+      cell: ({ row }) => <TagChips tags={row.original.tags ? row.original.tags.split(", ") : []} />,
     },
     {
       accessorKey: "is_system",
       header: "Origen",
       searchable: false,
       minWidth: 100,
-      cell: ({ row }) =>
-        row.original.is_system ? (
-          <Badge variant="outline" className="border-accent-violet/40 bg-accent-violet/10 text-accent-violet">
-            Sistema
-          </Badge>
-        ) : (
-          <Badge variant="outline" className="border-border text-muted-foreground">
-            Propio
-          </Badge>
-        ),
+      cell: ({ row }) => <OriginPill isSystem={row.original.is_system} />,
     },
     {
       accessorKey: "status",

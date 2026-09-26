@@ -77,14 +77,14 @@ describe("POST /api/auth/support/redeem", () => {
   })
 
   it.each([["accessToken"], ["refreshToken"]])(
-    "con una sesión de cliente (%s) responde 409 conflict y no toca ninguna cookie",
+    "con una sesión de cliente (%s) entra igual: escribe SOLO la cookie de soporte y no toca la del cliente",
     async (cookie) => {
       jar = new Map([[cookie, { value: "del-cliente" }]])
+      postMock.mockResolvedValueOnce(TOKENS)
       const res = await redeem(redeemRequest())
-      expect(res.status).toBe(409)
-      expect((await res.json()).code).toBe("auth/support_session_conflict")
-      expect(postMock).not.toHaveBeenCalled()
-      expect(written).toHaveLength(0)
+      expect(res.status).toBe(200)
+      expect(written).toHaveLength(1)
+      expect(written[0]).toMatchObject({ name: "supportAccessToken", value: "token-de-soporte" })
       expect(deleted).toHaveLength(0)
       expect(jar.get(cookie)?.value).toBe("del-cliente")
     },

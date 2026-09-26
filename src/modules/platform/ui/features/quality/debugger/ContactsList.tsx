@@ -6,7 +6,7 @@
  * llevan badge violeta — el depurador los muestra a propósito.
  */
 import { cn } from "@/core/lib/utils";
-import { Badge } from "@/shared/components/ui/badge";
+import { TonePill } from "../shared/premium";
 import { RelativeDate } from "@/shared/components/ui/relative-date";
 import type { DebugContact } from "../../../../domain/quality-debug";
 
@@ -18,9 +18,7 @@ type ContactsListProps = {
 
 export function SimulatedBadge() {
   return (
-    <Badge variant="outline" className="border-accent-violet/40 bg-accent-violet/10 text-accent-violet">
-      Simulada
-    </Badge>
+    <TonePill tone="info">Simulada</TonePill>
   );
 }
 

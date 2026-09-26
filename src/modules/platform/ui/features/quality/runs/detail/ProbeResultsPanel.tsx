@@ -134,7 +134,7 @@ export function ProbeResultsPanel({ run }: { run: RunDetail }) {
             {onlyMisses === "misses" ? "Sin fallos: todos los ítems acertaron." : "Sin resultados (¿el dataset se eliminó?)."}
           </p>
         ) : (
-          <div className={cn("overflow-x-auto", results.isPlaceholderData && "opacity-60")}>
+          <div className={cn("axi-scroll overflow-x-auto", results.isPlaceholderData && "opacity-60")}>
             <Table>
               <TableHeader>
                 <TableRow>

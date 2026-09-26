@@ -6,6 +6,7 @@ import { LifeBuoy, LoaderCircle, LogOut } from "lucide-react"
 import { API_ERROR_CODES, SUPPORT_ENDED_PATH, SUPPORT_SESSION_EVENT } from "@/core/api/problem"
 import { useAlert } from "@/core/providers/alert-provider"
 import { socketManager } from "@/core/realtime/socket-manager"
+import { broadcastAuthChange } from "@/shared/auth/auth-channel"
 import { useSession } from "@/shared/auth/auth.hooks"
 import { minutesLeft, SUPPORT_FORBIDDEN_COPY, SUPPORT_READONLY_COPY } from "../domain/support-access"
 import { endSupportSession } from "../infrastructure/support-access.service"
@@ -34,6 +35,7 @@ export function SupportSessionBar() {
   const leave = useCallback(async () => {
     setLeaving(true)
     await endSupportSession()
+    broadcastAuthChange("support-ended")
     // La pestaña la abrió la consola con `window.open`: se puede cerrar. Si el
     // navegador no deja, queda la despedida.
     window.close()

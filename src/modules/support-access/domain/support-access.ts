@@ -77,9 +77,11 @@ export function redeemFailure(status: number, code: string | undefined): RedeemF
 }
 
 export const REDEEM_FAILURE_COPY: Record<RedeemFailure, { title: string; body: string }> = {
+  // Sin emisor desde 2026-09-26 (la sesión de soporte toma el navegador); se
+  // conserva por si un BFF viejo responde 409 durante un despliegue.
   conflict: {
-    title: "Ya hay una sesión de cliente en este navegador",
-    body: "Ya tienes una sesión de cliente abierta en este navegador. Abre una ventana privada o cierra esa sesión.",
+    title: "No pudimos abrir la sesión de soporte",
+    body: "Recarga la consola y vuelve a entrar como soporte.",
   },
   invalid: {
     title: "El código de soporte ya no es válido",
@@ -87,7 +89,7 @@ export const REDEEM_FAILURE_COPY: Record<RedeemFailure, { title: string; body: s
   },
   no_platform_session: {
     title: "Entra desde la consola de plataforma",
-    body: "Esta pestaña se abre desde «Entrar como soporte», con tu sesión de plataforma vigente en este navegador.",
+    body: "La sesión de soporte se abre desde la consola con tu sesión de plataforma vigente en este mismo navegador. Inicia sesión en la consola y vuelve a entrar como soporte.",
   },
   busy: {
     title: "Demasiados intentos",

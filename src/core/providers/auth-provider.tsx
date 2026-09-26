@@ -1,6 +1,7 @@
 "use client"
 
 import { isPublicPath } from "@/core/config/routes"
+import { followsTenantIdentity, onAuthChange } from "@/shared/auth/auth-channel"
 import { socketManager } from "@/core/realtime/socket-manager"
 import {
   API_ERROR_CODES,
@@ -131,6 +132,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     void hydrate()
   }, [hydrate])
+
+  // La sesión de soporte empezó o terminó en OTRA pestaña: la identidad de las
+  // cookies cambió y esta pestaña del panel se recarga para no mostrar datos
+  // de una identidad mientras pide con la otra (`auth-channel.ts`).
+  useEffect(
+    () =>
+      onAuthChange(() => {
+        if (followsTenantIdentity(window.location.pathname)) window.location.reload()
+      }),
+    [],
+  )
 
   const login = useCallback(async (payload: LoginPayload) => {
     const res = await fetch("/api/auth/login", {

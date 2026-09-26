@@ -1,10 +1,12 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import Link from "next/link"
 import { LoaderCircle } from "lucide-react"
 
 import { PLATFORM_STORAGE_KEYS } from "@/modules/platform/domain/auth"
 import { PasswordShell } from "@/modules/password/ui/components/PasswordShell"
+import { broadcastAuthChange } from "@/shared/auth/auth-channel"
 import { Button } from "@/shared/components/ui/button"
 import {
   readHandoffCode,
@@ -49,6 +51,9 @@ export function SupportRedeemFlow() {
     const { hash, pathname, search } = window.location
     if (new URLSearchParams(search).get("fin") === "1") {
       if (hash) window.history.replaceState(window.history.state, "", `${pathname}${search}`)
+      // Venció, la cerraron desde la consola o se terminó aquí: las demás
+      // pestañas vuelven a la sesión del cliente (si la hay).
+      broadcastAuthChange("support-ended")
       setState({ step: "ended" })
       return
     }
@@ -66,6 +71,8 @@ export function SupportRedeemFlow() {
     }
     void redeemSupportCode(code, platformToken).then((result) => {
       if (result.ok) {
+        // Las pestañas del panel de cliente abiertas pasan a la sesión de soporte
+        broadcastAuthChange("support-started")
         // A la pantalla pedida (solo si pasó la lista blanca), o al panel.
         window.location.replace(next)
         return
@@ -95,10 +102,15 @@ export function SupportRedeemFlow() {
     return (
       <PasswordShell
         title="La sesión de soporte terminó"
-        description="Venció, la cerraste o la cerraron desde la consola. Tu consola de plataforma sigue abierta en su pestaña."
+        description="Venció, la cerraste o la cerraron desde la consola. Tu sesión de cliente en este navegador, si tenías una, sigue abierta tal cual."
         focusOnMount
       >
-        {closeTab}
+        <div className="space-y-2">
+          {closeTab}
+          <Button asChild variant="ghost" className="w-full">
+            <Link href="/dashboard">Ir a mi panel de cliente</Link>
+          </Button>
+        </div>
       </PasswordShell>
     )
   }
@@ -107,13 +119,24 @@ export function SupportRedeemFlow() {
     state.reason === "missing"
       ? {
           title: "Falta el código de soporte",
-          body: "Esta pestaña se abre sola desde «Entrar como soporte» en la ficha del tenant.",
+          body: "Abre «Entrar como soporte» desde la ficha del tenant en la consola de plataforma, en este mismo navegador: la pestaña se abre sola con el código.",
         }
       : REDEEM_FAILURE_COPY[state.reason]
+  // Sin sesión de plataforma en este navegador el camino es iniciarla aquí
+  const toConsole = state.reason === "missing" || state.reason === "no_platform_session"
 
   return (
     <PasswordShell title={copy.title} description={copy.body} focusOnMount>
-      {closeTab}
+      {toConsole ? (
+        <div className="space-y-2">
+          <Button asChild className="w-full">
+            <Link href="/platform">Ir a la consola de plataforma</Link>
+          </Button>
+          {closeTab}
+        </div>
+      ) : (
+        closeTab
+      )}
     </PasswordShell>
   )
 }

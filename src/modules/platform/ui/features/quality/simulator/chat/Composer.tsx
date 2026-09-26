@@ -9,7 +9,7 @@
  * toast que se pierde.
  */
 import { useRef, useState } from "react";
-import { Image as ImageIcon, MapPin, Mic, SendHorizontal, Square, Trash2 } from "lucide-react";
+import { Image as ImageIcon, Lock, MapPin, Mic, SendHorizontal, Square, Trash2 } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { useVoiceRecorder } from "@/modules/inbox/infrastructure/hooks/use-voice-recorder";
 import { Button } from "@/shared/components/ui/button";
@@ -73,7 +73,17 @@ export function Composer({ disabled, disabledReason, pending, capUsd, dailyCapUs
 
   return (
     <div className="space-y-2 border-t border-border px-4 pt-3 pb-3.5">
-      {previewing ? (
+      {disabled && !previewing ? (
+        // Sesión que ya no acepta mensajes: una línea de estado, no un
+        // composer vacío con el motivo partido en cuatro líneas de placeholder.
+        <p
+          className="flex min-h-10 items-center gap-2 rounded-2xl border border-dashed border-border px-3 py-2 text-sm text-muted-foreground"
+          role="status"
+        >
+          <Lock aria-hidden="true" className="size-4 shrink-0" />
+          <span className="line-clamp-2">{disabledReason ?? "La sesión no acepta mensajes."}</span>
+        </p>
+      ) : previewing ? (
         <div className="flex items-center gap-2 rounded-2xl border border-border bg-secondary px-3 py-2">
           <Mic aria-hidden="true" className="size-4 text-brand" />
           <span className="text-sm">Nota de voz · {formatSeconds(recorder.recording?.duration_ms ?? 0)}</span>

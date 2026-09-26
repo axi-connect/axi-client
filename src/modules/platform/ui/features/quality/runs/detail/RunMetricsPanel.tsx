@@ -70,7 +70,7 @@ export function RunMetricsPanel({ run }: { run: RunDetail }) {
             Cola bajo carga · {metrics.queue_depth_samples.length}{" "}
             {metrics.queue_depth_samples.length === 1 ? "muestra" : "muestras"}
           </summary>
-          <pre className="mt-2 max-h-64 overflow-auto rounded-xl bg-muted/50 p-3 font-mono text-xs">
+          <pre className="axi-scroll mt-2 max-h-64 overflow-auto rounded-xl bg-muted/50 p-3 font-mono text-xs">
             {JSON.stringify(metrics.queue_depth_samples, null, 2)}
           </pre>
         </details>

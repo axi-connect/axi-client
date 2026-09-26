@@ -39,12 +39,17 @@ type SessionTranscriptProps = {
 };
 
 export function SessionTranscript({ session, transcript, canTap, onTap, pendingTapId }: SessionTranscriptProps) {
-  const { containerRef, bottomRef, scrollToBottom, isNearBottom } = useAutoScroll<HTMLDivElement>({
+  // El hook baja solo si el operador ya estaba cerca del final (no le quita
+  // el sitio si está releyendo). Lo que envía el propio operador sí baja
+  // siempre, como en cualquier mensajería.
+  const { containerRef, bottomRef, scrollToBottom } = useAutoScroll<HTMLDivElement>({
     deps: [transcript.length, session.agent_state],
   });
+  const lastMessage = transcript.at(-1);
+  const lastIsOwn = lastMessage !== undefined && bubbleSideFor(lastMessage) === "customer";
   useEffect(() => {
-    if (isNearBottom) scrollToBottom();
-  }, [transcript.length, session.agent_state, isNearBottom, scrollToBottom]);
+    if (lastIsOwn) scrollToBottom();
+  }, [transcript.length, lastIsOwn, scrollToBottom]);
 
   const agentNames = new Map(session.agents.map((agent) => [agent.id, agent.name]));
   const pinnedName = session.agent?.name ?? "Agente";
@@ -55,7 +60,7 @@ export function SessionTranscript({ session, transcript, canTap, onTap, pendingT
   );
 
   return (
-    <div ref={containerRef} className="min-h-0 flex-1 overflow-y-auto p-4">
+    <div ref={containerRef} className="axi-scroll min-h-0 flex-1 overflow-y-auto p-4">
       {transcript.length === 0 && session.agent_state !== "thinking" && (
         <p className="mx-auto max-w-sm rounded-full border border-border bg-background px-3 py-1 text-center text-xs text-muted-foreground">
           Sesión creada · agente fijado: {pinnedName}. Escribe como lo haría el cliente.
