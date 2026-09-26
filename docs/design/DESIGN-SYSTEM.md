@@ -448,7 +448,12 @@ scroll debe ser optimizado, con el estilo de axi del scroll»):
   ancho de **la tabla** (`hidden @xl:table-cell`), no de la pantalla. A 1024 px con el menú abierto la tabla mide
   ~720 px. Con la tabla estrecha, esos datos (y las acciones) suben a la primera columna.
 - Primera columna con `@md:min-w-44`, nombres con `truncate` + `title`, piezas de fecha y teléfono en `whitespace-nowrap`.
-- Acciones de fila **en la fila**, no en un `DropdownMenu`: el del sistema no se portaliza y el contenedor lo recortaría.
+- Acciones de fila **en la fila**, o en un `DropdownMenu` con `<DropdownMenuContent portal>`: sin `portal` el scroller de
+  la tabla lo recortaría. Con `portal` el panel sigue a su disparador al hacer scroll y se cierra si el disparador deja
+  de verse.
+- Selección en lote: la banda del `DataTable` con `selection.presentation: "dock"` se pinta como la **barra de tinta
+  pegada abajo** (§9.5.1), después de la tabla; sus botones van en `contrast` / `glass` / `ghost` (el destructivo, fantasma
+  en rojo y a la izquierda). Por defecto sigue siendo la banda sobre la tabla. Referencia: la bandeja de captación.
 - Se verifica en el render: cero `scroll-horizontal-del-panel`, cero `tabla-fuera-de-su-tarjeta` y el scroll interno
   medido (`docs/qa/marketing-premium/arnes/shoot.js`).
 - Referencia: Configuración de marketing (`modules/marketing/ui/{OptOutsView,TemplatesView,MetaTemplatesView}.tsx`,

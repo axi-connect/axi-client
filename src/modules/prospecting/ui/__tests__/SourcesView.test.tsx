@@ -24,6 +24,9 @@ jest.mock("@/core/providers/alert-provider", () => ({
   useAlert: () => ({ showAlert: jest.fn() }),
 }));
 
+// La vista monta la cabecera de marketing, cuya navegación lee la ruta.
+jest.mock("next/navigation", () => ({ usePathname: () => "/marketing/leads/sources" }));
+
 const listSourcesMock = listSources as jest.MockedFunction<typeof listSources>;
 
 function source(overrides: Partial<SourceCatalogItemDTO> = {}): SourceCatalogItemDTO {

@@ -30,7 +30,8 @@ export function BulkFollowUpButton({
   /** De dónde salen los contactos, en palabras del operador. */
   audienceLabel: string;
   label: string;
-  variant?: "default" | "outline";
+  /** `contrast` dentro de una isla (§9.5.1), donde el botón fuerte es el del color del texto. */
+  variant?: "default" | "outline" | "contrast";
   size?: "sm" | "default";
   disabled?: boolean;
 }) {

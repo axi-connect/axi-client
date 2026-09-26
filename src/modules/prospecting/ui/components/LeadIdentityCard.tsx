@@ -1,8 +1,7 @@
 "use client";
 
-import { ShieldAlert } from "lucide-react";
-
 import { RelativeDate } from "@/shared/components/ui/relative-date";
+import { BentoTile } from "@/shared/components/features/bento";
 import { FieldList, type FieldItem } from "@/shared/components/features/field-list";
 import { MapPreview } from "@/shared/components/features/location";
 import {
@@ -68,42 +67,57 @@ export function LeadIdentityCard({ lead }: { lead: LeadDetailDTO }) {
   if (empty) return null;
 
   return (
-    <section className="border-border shadow-float bg-background rounded-lg border p-5">
-      <h2 className="text-muted-foreground mb-3 text-[10.5px] font-semibold tracking-[0.085em] uppercase">
-        Identidad y contacto
-      </h2>
-
-      <FieldList items={items} />
+    <BentoTile
+      label="Identidad y contacto"
+      aside={
+        lead.last_enriched_at !== null ? (
+          <span className="text-muted-foreground text-xs whitespace-nowrap">
+            Datos completados <RelativeDate iso={lead.last_enriched_at} />
+          </span>
+        ) : undefined
+      }
+      className="@container gap-4"
+    >
+      {/* Ancha, los datos y el mapa lado a lado; estrecha, el mapa baja. */}
+      <div className={hasPoint ? "grid gap-5 @2xl:grid-cols-[minmax(0,1fr)_minmax(0,18rem)] @2xl:items-start" : undefined}>
+        <FieldList items={items} />
+        {hasPoint && (
+          <MapPreview
+            label={lead.address ?? leadDisplayName(lead)}
+            lat={lead.latitude as number}
+            lng={lead.longitude as number}
+          />
+        )}
+      </div>
 
       {socials.length > 0 && (
-        <div className="border-border-soft mt-3 border-t pt-3">
-          <p className="text-muted-foreground mb-2 text-xs">Perfiles</p>
-          <ul className="flex flex-wrap gap-2">
+        <div className="border-border flex flex-col gap-3 border-t pt-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-muted-foreground mr-1 text-xs">Perfiles</span>
             {socials.map((social) => (
-              <li key={social.network}>
-                <a
-                  className="border-border hover:bg-secondary inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium transition-colors"
-                  href={social.url}
-                  rel="noopener noreferrer nofollow"
-                  target="_blank"
-                >
-                  <SocialIcon
-                    className={`size-3.5 ${BRAND_CLASS[social.network] ?? ""}`}
-                    name={social.network as SocialIconName}
-                  />
-                  {SOCIAL_LABELS[social.network]}
-                </a>
-              </li>
+              <a
+                key={social.network}
+                className="bg-muted hover:bg-accent inline-flex min-h-7 items-center gap-2 rounded-full px-3 text-xs font-medium transition-colors"
+                href={social.url}
+                rel="noopener noreferrer nofollow"
+                target="_blank"
+              >
+                <SocialIcon
+                  className={`size-3.5 ${BRAND_CLASS[social.network] ?? ""}`}
+                  name={social.network as SocialIconName}
+                />
+                {SOCIAL_LABELS[social.network]}
+              </a>
             ))}
-          </ul>
+          </div>
 
           {/* La invariante del módulo, dicha justo donde alguien podría
               desobedecerla: el número está publicado, y aun así el canal puede
               estar prohibido. Tener el dato no es tener permiso. */}
           {socials.some((social) => social.network === "whatsapp") &&
             !lead.allowed_channels.includes("whatsapp") && (
-              <p className="border-warning/25 bg-warning/10 text-warning mt-3 flex items-start gap-2 rounded-md border p-2 text-[11.5px]">
-                <ShieldAlert aria-hidden="true" className="mt-px size-3.5 shrink-0" />
+              <p className="flex gap-2.5 text-sm text-pretty">
+                <span aria-hidden className="bg-warning mt-[0.45em] size-2 shrink-0 rounded-full" />
                 <span>
                   Su WhatsApp está publicado, pero este lead no permite WhatsApp: nunca pidió que lo
                   contactaras. Puedes llamarlo o escribirle un correo.
@@ -112,23 +126,7 @@ export function LeadIdentityCard({ lead }: { lead: LeadDetailDTO }) {
             )}
         </div>
       )}
-
-      {hasPoint && (
-        <div className="mt-4">
-          <MapPreview
-            label={lead.address ?? leadDisplayName(lead)}
-            lat={lead.latitude as number}
-            lng={lead.longitude as number}
-          />
-        </div>
-      )}
-
-      {lead.last_enriched_at !== null && (
-        <p className="border-border-soft text-muted-foreground mt-3 border-t pt-3 text-[11.5px]">
-          Datos completados <RelativeDate iso={lead.last_enriched_at} />
-        </p>
-      )}
-    </section>
+    </BentoTile>
   );
 }
 

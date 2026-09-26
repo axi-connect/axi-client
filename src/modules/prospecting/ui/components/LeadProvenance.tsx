@@ -5,6 +5,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/shared/components/ui/tooltip";
+import { BentoTile } from "@/shared/components/features/bento";
 import { formatShortDate } from "@/core/lib/format";
 import {
   ATTRIBUTE_LABELS,
@@ -89,43 +90,30 @@ export function LeadProvenance({ lead }: { lead: LeadDetailDTO }) {
 
   if (fields.length === 0) {
     return (
-      <div>
-        <Heading />
-        <p className="text-muted-foreground text-sm">
-          Este lead todavía no tiene datos.
-        </p>
-      </div>
+      <BentoTile label="Datos y de dónde salió cada uno">
+        <p className="text-muted-foreground text-sm">Este lead todavía no tiene datos.</p>
+      </BentoTile>
     );
   }
 
   return (
-    <div>
-      <Heading />
-      <dl className="divide-border-soft divide-y">
+    <BentoTile label="Datos y de dónde salió cada uno" className="@container">
+      <dl className="divide-border divide-y">
         {fields.map((field) => (
+          // Ancha: etiqueta · valor · fuente en una fila. Estrecha: la etiqueta arriba y el valor con su fuente debajo.
           <div
             key={field.label}
-            className="grid grid-cols-[108px_1fr_auto] items-baseline gap-3 py-2"
+            className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 gap-y-1 py-2.5 @md:grid-cols-[7rem_minmax(0,1fr)_auto]"
           >
-            <dt className="text-muted-foreground text-xs">{field.label}</dt>
-            <dd
-              className={`text-sm font-medium break-words ${field.mono ? "font-mono text-xs" : ""}`}
-            >
+            <dt className="text-muted-foreground col-span-2 text-xs @md:col-span-1">{field.label}</dt>
+            <dd className={`min-w-0 text-sm font-medium break-words ${field.mono ? "font-mono text-xs" : ""}`}>
               {field.value}
             </dd>
             <SourceBadge field={field} />
           </div>
         ))}
       </dl>
-    </div>
-  );
-}
-
-function Heading() {
-  return (
-    <p className="text-muted-foreground mb-3 text-[10.5px] font-semibold tracking-wider uppercase">
-      Datos y de dónde salió cada uno
-    </p>
+    </BentoTile>
   );
 }
 
@@ -133,7 +121,7 @@ function Heading() {
 function SourceBadge({ field }: { field: Field }) {
   const label = PROVIDER_LABELS[field.source] ?? field.source;
   const badge = (
-    <span className="border-border text-muted-foreground rounded-full border px-2 py-0.5 text-[11px]">
+    <span className="bg-muted inline-flex h-6 items-center rounded-full px-2.5 text-[11.5px] whitespace-nowrap">
       {label}
     </span>
   );

@@ -1,20 +1,26 @@
-import { MarketingNav } from "@/modules/marketing/public";
-import { LeadsNav } from "@/modules/prospecting/ui/components/LeadsNav";
+import { http } from "@/core/services/http";
+import type { ProspectingStatsDTO } from "@/modules/prospecting/domain/lead";
+import { CaptureStatsSeed } from "@/modules/prospecting/ui/components/CaptureStatsSeed";
 
 /**
- * Shell de la sección de captación.
- *
- * Las pestañas viven aquí y no en cada vista para que no parpadeen al navegar
- * entre Bandeja y Calidad: son el marco, no contenido de la página. Arriba, la
- * barra del módulo de marketing (Captación es una de sus secciones); debajo,
- * las de captación.
+ * Marco de captación: precarga en el servidor las cifras del embudo (el
+ * contador de la pestaña «Bandeja» y el embudo no deben parpadear) y las siembra
+ * para todas sus secciones. La cabecera y la navegación las pinta cada vista con
+ * `CaptureHeader`, como el resto de marketing.
  */
-export default function LeadsLayout({ children }: { children: React.ReactNode }) {
+async function loadStats(): Promise<ProspectingStatsDTO | null> {
+  try {
+    return await http.get<ProspectingStatsDTO>("/prospecting/stats");
+  } catch {
+    // Sin cifras la bandeja carga igual desde el cliente; el embudo espera a su recarga.
+    return null;
+  }
+}
+
+export default async function LeadsLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <MarketingNav />
-      <LeadsNav />
+    <CaptureStatsSeed stats={await loadStats()}>
       <div className="min-w-0">{children}</div>
-    </div>
+    </CaptureStatsSeed>
   );
 }

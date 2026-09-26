@@ -88,6 +88,12 @@ export type DataTableSelection<T extends DataRow = DataRow> = {
   actions?: (ctx: { count: number; allMatching: boolean }) => React.ReactNode;
   /** Un aviso bajo los botones. */
   note?: React.ReactNode;
+  /**
+   * `dock`: la banda se pinta como la barra de tinta pegada abajo, DESPUÉS de la
+   * tabla (pantallas premium, §9.5.1). Por defecto, `band`: encima de la tabla,
+   * como siempre.
+   */
+  presentation?: "band" | "dock";
 };
 
 type DataTableProps<T extends DataRow = DataRow> = {
@@ -443,6 +449,28 @@ export const DataTable = forwardRef(function DataTableInner<
    */
   const selectionCount = selection?.selected.size ?? 0;
   const showBand = selection !== undefined && selectionCount > 0;
+  const dock = selection?.presentation === "dock";
+  const selectionBanner =
+    selection === undefined ? null : (
+      <SelectionBanner
+        variant={dock ? "dock" : "band"}
+        count={selectionCount}
+        pageCount={rowsToRender.length}
+        allMatching={selection.allMatching?.active ?? false}
+        matchingTotal={selection.allMatching?.matchingTotal}
+        limit={selection.allMatching?.limit}
+        onSelectAllMatching={selection.allMatching?.onSelectAll}
+        onClear={() => {
+          selection.allMatching?.onClear();
+          selection.onChange(new Set());
+        }}
+        actions={selection.actions?.({
+          count: selectionCount,
+          allMatching: selection.allMatching?.active ?? false,
+        })}
+        note={selection.note}
+      />
+    );
 
   return (
     <>
@@ -489,26 +517,8 @@ export const DataTable = forwardRef(function DataTableInner<
 
       {banner !== undefined && <div className="mb-3">{banner}</div>}
 
-      {showBand && selection !== undefined && (
-        <div className="mb-3">
-          <SelectionBanner
-            count={selectionCount}
-            pageCount={rowsToRender.length}
-            allMatching={selection.allMatching?.active ?? false}
-            matchingTotal={selection.allMatching?.matchingTotal}
-            limit={selection.allMatching?.limit}
-            onSelectAllMatching={selection.allMatching?.onSelectAll}
-            onClear={() => {
-              selection.allMatching?.onClear();
-              selection.onChange(new Set());
-            }}
-            actions={selection.actions?.({
-              count: selectionCount,
-              allMatching: selection.allMatching?.active ?? false,
-            })}
-            note={selection.note}
-          />
-        </div>
+      {showBand && selection !== undefined && selection.presentation !== "dock" && (
+        <div className="mb-3">{selectionBanner}</div>
       )}
 
       <TableView
@@ -542,6 +552,8 @@ export const DataTable = forwardRef(function DataTableInner<
           </div>
         )}
       </div>
+
+      {showBand && dock ? <div className="mt-4">{selectionBanner}</div> : null}
     </>
   );
 }) as <T extends DataRow = DataRow>(

@@ -71,9 +71,12 @@ export function ChannelPermissions({
         return (
           <Tooltip key={channel}>
             <TooltipTrigger asChild>
-              <span
+              {/* Un botón y no un `span`: la explicación vive en el tooltip, y un `span` no recibe foco, así que con
+                  teclado el porqué de un canal tachado era inalcanzable. 24 px: el objetivo mínimo (§10). */}
+              <button
+                type="button"
                 className={cn(
-                  "relative grid size-6 place-items-center rounded-md border",
+                  "focus-visible:ring-ring/50 relative grid size-6 place-items-center rounded-md border outline-none focus-visible:ring-[3px]",
                   STATE_CLASSES[state],
                 )}
                 aria-label={`${CHANNEL_LABELS[channel]}: ${STATE_LABELS[state]}`}
@@ -87,7 +90,7 @@ export function ChannelPermissions({
                     className="bg-foreground/30 absolute inset-x-[3px] top-1/2 h-px -rotate-[32deg]"
                   />
                 )}
-              </span>
+              </button>
             </TooltipTrigger>
             <TooltipContent className="max-w-72">
               <p className="font-medium">{CHANNEL_LABELS[channel]}</p>

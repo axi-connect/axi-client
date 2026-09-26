@@ -440,13 +440,16 @@ export function StartSearchSheet({
 
           {chosen !== undefined && !chosen.allowed_channels.includes("whatsapp") && (
             // Se dice ANTES de gastar, no después de descubrir doscientos.
-            <p className="border-border bg-muted/40 text-muted-foreground rounded-md border px-3 py-2 text-sm">
-              Estos negocios no pidieron que los contactaras, así que solo podrás
-              escribirles por correo o a mano. WhatsApp queda fuera.
+            <p className="text-muted-foreground flex gap-2.5 text-sm text-pretty">
+              <span aria-hidden className="bg-muted-foreground mt-[0.45em] size-2 shrink-0 rounded-full" />
+              <span>
+                Estos negocios no pidieron que los contactaras, así que solo podrás
+                escribirles por correo o a mano. WhatsApp queda fuera.
+              </span>
             </p>
           )}
 
-          <Button className="w-full" disabled={saving} onClick={() => void submit()}>
+          <Button variant="contrast" className="h-11 w-full rounded-full" disabled={saving} onClick={() => void submit()}>
             {saving ? (
               <LoaderCircle aria-hidden="true" className="animate-spin" />
             ) : (
