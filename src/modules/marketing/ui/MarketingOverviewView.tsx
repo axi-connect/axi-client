@@ -17,6 +17,7 @@ import {
   OptOutsTile,
   PromotionsTile,
   QuotaTile,
+  CaptureTile,
   RecoveredTile,
   RecoveryFeedTile,
 } from "./components/overview-tiles";
@@ -38,6 +39,7 @@ function monthName(date: Date): string {
 export function MarketingOverviewView() {
   const { hasPermission } = useAuth();
   const canManage = hasPermission("marketing:manage");
+  const canReadLeads = hasPermission("leads:read");
   const { connected } = useMarketingSocket();
 
   const automations = useOverviewStore((s) => s.automations);
@@ -48,16 +50,17 @@ export function MarketingOverviewView() {
   const liveCampaignsOmitted = useOverviewStore((s) => s.liveCampaignsOmitted);
   const drafts = useOverviewStore((s) => s.drafts);
   const meta = useOverviewStore((s) => s.meta);
+  const capture = useOverviewStore((s) => s.capture);
   const feed = useOverviewStore((s) => s.feed);
   const load = useOverviewStore((s) => s.load);
   // Un solo «ahora» por carga: todas las promociones se comparan contra el mismo instante.
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
-    void load().then(() => setNow(new Date()));
-  }, [load]);
+    void load({ capture: canReadLeads }).then(() => setNow(new Date()));
+  }, [load, canReadLeads]);
 
-  const retry = () => void load().then(() => setNow(new Date()));
+  const retry = () => void load({ capture: canReadLeads }).then(() => setNow(new Date()));
 
   const firstLoad = automations.status === "idle" || (automations.status === "loading" && automations.data === null);
   if (firstLoad) return <OverviewSkeleton />;
@@ -142,10 +145,11 @@ export function MarketingOverviewView() {
             onRetry={retry}
             className="md:col-span-2"
           />
-          <RecoveryFeedTile entries={feed} connected={connected} className="md:row-span-2" />
+          <RecoveryFeedTile entries={feed} connected={connected} />
           <PromotionsTile section={promotions} now={now} onRetry={retry} />
-          <MetaTemplatesTile section={meta} onRetry={retry} />
+          {canReadLeads ? <CaptureTile section={capture} onRetry={retry} /> : null}
           <OptOutsTile section={optOutsTotal} onRetry={retry} />
+          <MetaTemplatesTile section={meta} onRetry={retry} />
           <QuotaTile section={meta} onRetry={retry} />
         </div>
       )}

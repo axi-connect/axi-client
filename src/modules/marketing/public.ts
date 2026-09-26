@@ -6,9 +6,9 @@
  * «plantilla de apertura» de una tarea de agente (F2 del seguimiento autónomo).
  * El ciclo de vida sigue siendo de marketing/channels; aquí solo se lee.
  *
- * `MarketingNav`/`MarketingHeader`: la navegación única del módulo. La monta el
- * layout de Captación (`/marketing/leads`, slice `prospecting`), que vive bajo
- * marketing y comparte su barra.
+ * `MarketingHeader`: la cabecera con la navegación única del módulo. Captación
+ * (`/marketing/leads`, slice `prospecting`) vive bajo marketing y monta
+ * `MarketingHeader` en cada una de sus secciones (`CaptureHeader`).
  */
 export {
   listHsmTemplates,
@@ -32,4 +32,4 @@ export {
   formatUsd,
   type BulkOpeningCost,
 } from "./domain/template-cost";
-export { MarketingHeader, MarketingNav, MARKETING_SECTIONS } from "./ui/components/MarketingHeader";
+export { MarketingHeader } from "./ui/components/MarketingHeader";

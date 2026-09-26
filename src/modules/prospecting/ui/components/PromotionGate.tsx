@@ -1,7 +1,9 @@
 "use client";
 
-import { Check, ShieldCheck, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 
+import { cn } from "@/core/lib/utils";
+import { InkIsland, Kicker } from "@/shared/components/features/bento";
 import { Button } from "@/shared/components/ui/button";
 
 import {
@@ -17,7 +19,8 @@ interface Requirement {
 }
 
 /**
- * La puerta, dibujada como puerta.
+ * La puerta, dibujada como puerta — y como la ÚNICA isla de la ficha (§9.5.1):
+ * es lo más accionable de la pantalla.
  *
  * Promover no es un botón más: crea un contacto real, es irreversible y a
  * partir de ahí el tenant responde por ese dato ante su titular. Por eso los
@@ -49,20 +52,14 @@ export function PromotionGate({
     },
     {
       met: identifiable,
-      title: identifiable
-        ? "Tiene con qué contactarse"
-        : "No tiene teléfono ni correo",
+      title: identifiable ? "Tiene con qué contactarse" : "No tiene teléfono ni correo",
       detail: identifiable
-        ? lead.allowed_channels
-            .map((channel) => CHANNEL_LABELS[channel])
-            .join(" · ")
+        ? lead.allowed_channels.map((channel) => CHANNEL_LABELS[channel]).join(" · ")
         : "Sin uno de los dos no hay contacto que crear en tu CRM.",
     },
     {
       met: allowsWhatsapp,
-      title: allowsWhatsapp
-        ? "Puedes escribirle por WhatsApp"
-        : "WhatsApp queda bloqueado",
+      title: allowsWhatsapp ? "Puedes escribirle por WhatsApp" : "WhatsApp queda bloqueado",
       detail: allowsWhatsapp
         ? "Dio permiso, así que tu agente puede iniciar la conversación."
         : "Sin permiso no se puede escribir primero por WhatsApp: Meta suspende el número. Podrás usar correo y llamada.",
@@ -70,54 +67,36 @@ export function PromotionGate({
   ];
 
   return (
-    <section className="border-primary/30 bg-background overflow-hidden rounded-lg border">
-      <header className="bg-accent px-4 py-3">
-        <h2 className="font-heading text-sm font-bold">Promover al CRM</h2>
-        <p className="text-muted-foreground mt-0.5 text-xs">
-          Al promoverlo se crea un contacto real. Es la única forma de que tu
-          agente o una campaña puedan alcanzarlo.
-        </p>
-      </header>
-
-      <ul className="flex flex-col gap-2.5 px-4 py-3">
+    <InkIsland label="Promover al CRM" glow="ai" className="gap-3">
+      <Kicker>Promover al CRM</Kicker>
+      <p className="text-sm text-pretty">
+        Al promoverlo se crea un contacto real. Es la única forma de que tu agente o una campaña puedan alcanzarlo.
+      </p>
+      <ul className="divide-border divide-y">
         {requirements.map((requirement) => (
-          <li
-            key={requirement.title}
-            className="flex items-start gap-2.5 text-sm"
-          >
+          <li key={requirement.title} className="flex items-start gap-3 py-3 text-sm">
             <span
-              className={`mt-0.5 grid size-4 shrink-0 place-items-center rounded-full ${
-                requirement.met
-                  ? "bg-success/15 text-success"
-                  : "bg-destructive/12 text-destructive"
-              }`}
               aria-hidden
-            >
-              {requirement.met ? (
-                <Check className="size-2.5" />
-              ) : (
-                <X className="size-2.5" />
+              className={cn(
+                "grid size-6 shrink-0 place-items-center rounded-full",
+                requirement.met ? "bg-foreground text-background" : "bg-destructive/15 text-destructive",
               )}
+            >
+              {requirement.met ? <Check className="size-3.5" strokeWidth={2.6} /> : <X className="size-3.5" strokeWidth={2.6} />}
             </span>
-            <span>
-              {requirement.title}
-              <small className="text-muted-foreground block text-xs">
-                {requirement.detail}
-              </small>
+            <span className="flex min-w-0 flex-col gap-0.5">
+              <span className="font-semibold">{requirement.title}</span>
+              <span className="text-muted-foreground text-pretty">{requirement.detail}</span>
             </span>
           </li>
         ))}
       </ul>
-
-      <footer className="border-border flex items-center gap-2 border-t px-4 py-3">
-        <Button disabled={busy || !identifiable} onClick={onPromote}>
-          <ShieldCheck className="size-4" aria-hidden />
+      <div className="flex flex-col items-start gap-2 pt-1">
+        <Button variant="contrast" className="h-11 rounded-full px-5" disabled={busy || !identifiable} onClick={onPromote}>
           Promover al CRM
         </Button>
-        <span className="text-muted-foreground text-xs">
-          Quedará con origen «Captación».
-        </span>
-      </footer>
-    </section>
+        <span className="text-muted-foreground text-xs">Quedará con origen «Captación».</span>
+      </div>
+    </InkIsland>
   );
 }

@@ -8,25 +8,25 @@ import type { QualityCheck } from "../../domain/lead";
 
 const OUTCOME_STYLE: Record<
   QualityCheck["outcome"],
-  { icon: typeof Check; className: string }
+  { icon: typeof Check; iconClassName: string }
 > = {
   pass: {
     icon: Check,
-    className: "text-success border-success/35 bg-success/10",
+    iconClassName: "text-success",
   },
   warn: {
     icon: TriangleAlert,
-    className: "text-warning border-warning/35 bg-warning/10",
+    iconClassName: "text-warning",
   },
   fail: {
     icon: X,
-    className: "text-destructive border-destructive/35 bg-destructive/10",
+    iconClassName: "text-destructive",
   },
   // Sin medir: neutro y apagado. NO es un fallo, y pintarlo en rojo haría que
   // un lead sin verificar pareciera un lead malo.
   unknown: {
     icon: Minus,
-    className: "text-muted-foreground border-border bg-transparent",
+    iconClassName: "text-muted-foreground",
   },
 };
 
@@ -44,19 +44,20 @@ const OUTCOME_STYLE: Record<
 export function QualityEvidence({ checks }: { checks: QualityCheck[] }) {
   if (checks.length === 0) return null;
   return (
-    <ul className="mt-1.5 flex flex-wrap gap-1.5">
+    <ul className="mt-2 flex flex-wrap gap-1.5">
       {checks.map((check) => {
         const style = OUTCOME_STYLE[check.outcome];
         const Icon = style.icon;
         return (
           <li
             key={check.key}
+            // Píldora neutra y el color SOLO en el icono: texto del color de su propio tinte no pasa AA en claro.
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium",
-              style.className,
+              "bg-muted inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11.5px]",
+              check.outcome === "unknown" && "text-muted-foreground",
             )}
           >
-            <Icon className="size-3 shrink-0" aria-hidden />
+            <Icon className={cn("size-3.5 shrink-0", style.iconClassName)} aria-hidden />
             {check.evidence}
           </li>
         );

@@ -15,7 +15,7 @@ function TileSkeleton({ className, rows = 2 }: { className?: string; rows?: numb
 
 /**
  * Silueta del Resumen: la misma rejilla que el bento real (lo recuperado y las
- * campañas a la izquierda, «Lo próximo» a la derecha, las cinco tarjetas
+ * campañas a la izquierda, «Lo próximo» a la derecha, las seis tarjetas
  * debajo) para que el render final no salte. Anchos DETERMINISTAS — un ancho
  * aleatorio rompe la hidratación (DESIGN-SYSTEM §9.1).
  */
@@ -31,7 +31,8 @@ export function OverviewSkeleton() {
         <TileSkeleton className="md:col-span-2" rows={4} />
         <TileSkeleton className="md:col-span-2 xl:col-span-1 xl:row-span-2" rows={5} />
         <TileSkeleton className="md:col-span-2" rows={3} />
-        <TileSkeleton className="md:row-span-2" rows={4} />
+        <TileSkeleton rows={4} />
+        <TileSkeleton />
         <TileSkeleton />
         <TileSkeleton />
         <TileSkeleton />

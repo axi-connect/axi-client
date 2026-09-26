@@ -153,3 +153,57 @@ Cuatro fases, cada una con auditoría y despliegue propios:
 - `?new=1` abre el editor vacío (lo usa «Nueva promoción» del Resumen) y limpia el parámetro.
 - Canjes: la cifra grande con su barra, tabla del sistema (Cupón, Cuándo, Pedido, Aplicado; un revertido es un
   `StatePill`), y la nota de qué significa revertido.
+
+## Fase 4 — Captación (`feat/marketing-premium-f4`, sale de la fase 3 `fc90f640`) · PLAN, sin código
+
+Slice `prospecting`, rutas `/marketing/leads/*`. Mapa del estado actual (2026-09-26): cinco pantallas, sin store,
+servicios en `prospecting-service.adapter.ts`; ya usan `DataTable`/`ui/table` (no hay `<table>` ni `<select>`
+nativos), pero con callouts tintados hechos a mano, `BrandLoader` dentro de las vistas y dos pantallas sin estado
+de error propio. Solo la Bandeja está en el canvas aprobado; las demás siguen su lenguaje.
+
+### F4a — Marco y Bandeja (lo del canvas)
+
+- **Marco:** `MarketingHeader` con kicker «Marketing · Captación» y título «Leads por conocer»; `LeadsNav` como
+  sub-navegación bajo la barra del módulo (Bandeja · Búsquedas · Calidad · Fuentes) y **pasarle `pendingCount`**
+  (hoy nunca llega: el contador de la pestaña no se ve). El «38» de Captación en la barra del módulo sale del mismo dato.
+- **Embudo** (`CaptureFunnel`): una tarjeta bento con cinco cifras y su barra —descubiertos, en cuarentena,
+  calificados, en el CRM, no contactar— en `@container` (5 columnas anchas, 2–3 estrechas).
+- **Bandeja** (`LeadsInboxView` + `leads.config.tsx`): la tabla dentro de una tarjeta `@container` con columnas por
+  container query (Lead siempre; Fuente, Datos «4 de 5 · teléfono, web, correo», Calidad con barra y cifra, Estado
+  como `StatePill`); búsqueda + `FilterTrigger` + chips en la cabecera de la tarjeta; «buscando datos…» en la fila
+  mientras enriquece. Se quitan los anchos fijos (`w-[88px]` de la calidad).
+- **Selección:** la barra de tinta pegada abajo (§9.5.1) con «N seleccionados · o los N que cumplen el filtro»,
+  Eliminar (ghost destructivo) · Buscar datos · gratis (glass) · Pasar al CRM (contrast), respetando
+  `leads:delete` / `leads:manage` / `leads:promote` y el tope de 500. Sustituye al `SelectionBanner` en esta vista.
+- «Puedo contactar por»: chips enfocables con nombre accesible (hoy son `span` con tooltip, sin teclado).
+
+### F4b — Ficha del lead (`LeadDetailView`)
+
+- Bento a dos columnas: identidad y datos, la búsqueda de datos en curso (`EnrichmentRunCard`), la calidad
+  desglosada, de dónde salió cada dato (sin la columna fija de 108 px) y la línea de tiempo. «Pasar al CRM» es la
+  única isla (la puerta de promoción); ya promovido, la isla dice «Ya está en el CRM» con «Ver en el CRM».
+- Cabecera que envuelve en móvil (hoy tres botones desbordan a 390 px). **Estado de error propio** con Reintentar
+  (hoy redirige con un toast) y `loading.tsx`.
+- **«Descartar» exige `leads:manage`** (hoy no mira permisos, a diferencia de todo lo demás).
+
+### F4c — Búsquedas, Calidad y Fuentes
+
+- **Búsquedas:** cada búsqueda es una fila en tarjeta con `StatePill`, barra de avance y acciones en menú con portal;
+  la hoja «Nueva búsqueda» con el `SegmentedControl` del sistema en vez del hecho a mano; el borrado con aviso sin
+  caja tintada. Estado de error propio.
+- **Calidad:** la distribución en bento; el editor del cliente ideal con el deslizador del sistema y chips con «x» de
+  24 px (hoy ~12 px); **estado de error** (hoy se queda en el cargador para siempre); solo lectura sin `leads:manage`.
+- **Fuentes:** `ProviderCard` ya es premium; ajustar insignias y el texto «Las llaves las pone axi». Solo lectura.
+- **Resumen:** la tarjeta «Captación de leads» (descubiertos → calificados → en el CRM) que quedó pendiente en la fase 3.
+
+### Fuera de alcance
+
+- Servidor: ninguno (todo existe en `/prospecting/*`). Las funciones del adaptador sin uso (supresiones, ajustes,
+  borrado individual) no se tocan en esta fase.
+- Las llaves de proveedor viven en platform; el tenant no las ve.
+
+### Verificación (acotada, sin duplicar)
+
+- Por sub-fase: tsc y eslint de lo tocado; jest solo de los tests del slice que cambian (`SourcesView`, `SearchRun`,
+  `StartSearchSheet`, `DeleteResultSheet`, `EnrichmentRunCard`) y tests nuevos para Bandeja y Ficha (hoy no tienen).
+- Render, suite completa y build: la sesión auditora, con el arnés `docs/qa/marketing-premium-f4/arnes` que dejo listo.

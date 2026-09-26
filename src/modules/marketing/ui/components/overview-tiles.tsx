@@ -20,6 +20,7 @@ import {
   type PromotionDTO,
 } from "@/modules/marketing/domain/promotion";
 import { skipReasonLabel } from "@/modules/marketing/domain/skip-reasons";
+import type { ProspectingStatsDTO } from "@/modules/prospecting/public";
 import type {
   LiveCampaign,
   RecoveryFeedEntry,
@@ -537,6 +538,59 @@ export function QuotaTile({
           <p className="text-muted-foreground text-sm text-pretty">
             Usadas {n(window.used)} de las {n(window.limit)} que Meta te deja iniciar al día.
           </p>
+        </>
+      )}
+    </BentoTile>
+  );
+}
+
+/* ─────────────────────────── Captación de leads ─────────────────────────── */
+
+/** El embudo de captación: descubiertos → calificados → en el CRM, cada barra sobre los descubiertos. */
+export function CaptureTile({
+  section,
+  onRetry,
+  className,
+}: {
+  section: Section<ProspectingStatsDTO>;
+  onRetry: () => void;
+  className?: string;
+}) {
+  const stats = section.data;
+  return (
+    <BentoTile
+      label="Captación de leads"
+      aside={<BentoLink href="/marketing/leads">Bandeja</BentoLink>}
+      busy={reloading(section)}
+      className={className}
+    >
+      {stats === null ? (
+        section.status === "error" ? <TileError what="tu captación" onRetry={onRetry} /> : <TileSkeletonLines />
+      ) : (
+        <>
+          <ul className="flex flex-col gap-3.5">
+            {(
+              [
+                ["Descubiertos", stats.discovered, "bg-muted-foreground/40"],
+                ["Calificados", stats.qualified, "bg-accent-violet"],
+                ["En el CRM", stats.promoted, "bg-brand-gradient"],
+              ] as const
+            ).map(([label, value, bar]) => (
+              <li key={label} className="flex flex-col gap-1.5">
+                <span className="flex items-baseline justify-between gap-3 text-sm">
+                  <span>{label}</span>
+                  <b className="font-semibold tabular-nums">{n(value)}</b>
+                </span>
+                <span aria-hidden="true" className="bg-muted h-1.5 overflow-hidden rounded-full">
+                  <span
+                    className={cn("block h-full rounded-full", bar)}
+                    style={{ width: `${String(stats.discovered > 0 ? Math.min(100, (value / stats.discovered) * 100) : 0)}%` }}
+                  />
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p className="text-muted-foreground mt-auto text-xs text-pretty">Buscar datos de un lead no gasta unidades de tu plan.</p>
         </>
       )}
     </BentoTile>

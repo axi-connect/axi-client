@@ -5,13 +5,15 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { socketManager } from "@/core/realtime/socket-manager";
 import { useSocket, useSocketEvent } from "@/core/realtime/use-socket";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, LoaderCircle, RefreshCw, WandSparkles, X } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeft, LoaderCircle, RefreshCw, WandSparkles, X } from "lucide-react";
 
 import { errorMessage } from "@/core/lib/error-messages";
 import { formatShortDate } from "@/core/lib/format";
 import { useAlert } from "@/core/providers/alert-provider";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { StatusBadge } from "@/shared/components/features/status-badge";
+import { InkIsland, Kicker } from "@/shared/components/features/bento";
 import { BrandLoader } from "@/shared/components/ui/brand-loader";
 import { Button } from "@/shared/components/ui/button";
 
@@ -59,6 +61,8 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
   const { showAlert } = useAlert();
 
   const [lead, setLead] = useState<LeadDetailDTO | null>(null);
+  /** No se pudo abrir: se dice aquí con «Reintentar», en vez de echar a la bandeja con un aviso que se va. */
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   /**
    * La pasada en curso. Sale de la fila al cargar y la adelanta el WebSocket.
@@ -76,15 +80,12 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
       const fresh = await getLead(leadId);
       setLead(fresh);
       setRun(fresh.last_run);
+      setLoadError(null);
     } catch (caught) {
-      showAlert({
-        tone: "error",
-        title: "No pudimos abrir el lead",
-        description: errorMessage(caught, ""),
-      });
-      router.replace("/marketing/leads");
+      // Con la ficha ya abierta, un fallo al refrescar no la tira: se conservan los datos que había.
+      setLoadError(errorMessage(caught, "Revisa tu conexión e intenta otra vez."));
     }
-  }, [leadId, router, showAlert]);
+  }, [leadId]);
 
   useEffect(() => {
     void load();
@@ -314,34 +315,40 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
     }
   }, [leadId, router, showAlert]);
 
-  if (lead === null) return <BrandLoader label="Cargando lead" />;
+  const canManage = hasPermission("leads:manage");
+
+  if (lead === null) {
+    if (loadError === null) return <BrandLoader label="Cargando lead" />;
+    return (
+      <div className="flex min-w-0 flex-col gap-4">
+        <BackToInbox />
+        <div className="border-border bg-card flex flex-col items-start gap-3 rounded-3xl border p-6">
+          <p className="font-heading text-xl font-bold tracking-tight">No pudimos abrir el lead</p>
+          <p className="text-muted-foreground text-sm text-pretty">{loadError}</p>
+          <Button variant="outline" className="rounded-full" onClick={() => void load()}>
+            Reintentar
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <Button
-        variant="outline"
-        size="sm"
-        className="mb-4"
-        onClick={() => router.push("/marketing/leads")}
-      >
-        <ArrowLeft className="size-4" aria-hidden />
-        Volver a la bandeja
-      </Button>
+    <div className="flex min-w-0 flex-col gap-6">
+      <BackToInbox />
 
-      <header className="mb-5 flex flex-wrap items-start gap-4">
-        <div>
-          <h1 className="font-heading text-xl font-bold">
+      <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
+        <div className="flex min-w-0 flex-col gap-3">
+          <h1 className="font-heading text-[1.9rem] leading-[1.05] font-bold tracking-tight text-balance break-words sm:text-[2.5rem]">
             {leadDisplayName(lead)}
           </h1>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <StatusBadge
-              status={lead.quality_status}
-              map={QUALITY_STATUS_MAP}
-            />
-            <StatusBadge status={lead.status} map={LEAD_STATUS_MAP} />
-            <span className="border-border text-muted-foreground rounded-full border px-2 py-0.5 text-xs">
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusBadge status={lead.status} map={LEAD_STATUS_MAP} appearance="dot" />
+            <StatusBadge status={lead.quality_status} map={QUALITY_STATUS_MAP} appearance="dot" />
+            <span className="border-border text-muted-foreground inline-flex h-6 items-center rounded-full border px-2.5 text-xs">
               {LEGAL_BASIS_LABELS[lead.legal_basis]}
             </span>
+            <span className="text-muted-foreground ml-1 text-xs">Puedo contactar por</span>
             <ChannelPermissions
               lead={{
                 allowed_channels: lead.allowed_channels,
@@ -353,17 +360,26 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
               }}
             />
           </div>
-          <p className="text-muted-foreground mt-2 text-xs">
-            {SOURCE_LABELS[lead.source]} · descubierto el{" "}
-            {formatShortDate(lead.created_at)}
+          <p className="text-muted-foreground text-sm">
+            {SOURCE_LABELS[lead.source]} · descubierto el {formatShortDate(lead.created_at)}
           </p>
         </div>
 
-        <div className="ml-auto flex gap-2">
-          {/* Buscar datos va PRIMERO y en primario: para un lead a medio
-              llenar es la acción que desbloquea a las otras dos. */}
-          {hasPermission("leads:manage") && (
-            <Button size="sm" disabled={busy || working} onClick={() => void onEnrich()}>
+        {/* Envuelven: a 390 px las tres no caben en una fila. Buscar datos va en primario: para un lead a medio
+            llenar es la acción que desbloquea a las otras dos. */}
+        {canManage && (
+          <div className="flex flex-wrap items-center gap-2">
+            {canDiscard(lead) && (
+              <Button variant="ghost" className="rounded-full" disabled={busy} onClick={() => void onDiscard()}>
+                <X className="size-4" aria-hidden />
+                Descartar
+              </Button>
+            )}
+            <Button variant="outline" className="rounded-full" disabled={busy || working} onClick={() => void onVerify()}>
+              <RefreshCw className="size-4" aria-hidden />
+              Volver a revisar
+            </Button>
+            <Button className="rounded-full" disabled={busy || working} onClick={() => void onEnrich()}>
               {working ? (
                 <LoaderCircle aria-hidden className="size-4 animate-spin" />
               ) : (
@@ -371,87 +387,71 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
               )}
               {working ? "Buscando…" : "Buscar datos"}
             </Button>
-          )}
-          {hasPermission("leads:manage") && (
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={busy || working}
-              onClick={() => void onVerify()}
-            >
-              <RefreshCw className="size-4" aria-hidden />
-              Volver a revisar
-            </Button>
-          )}
-          {canDiscard(lead) && (
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={busy}
-              onClick={() => void onDiscard()}
-            >
-              <X className="size-4" aria-hidden />
-              Descartar
-            </Button>
-          )}
-        </div>
+          </div>
+        )}
       </header>
 
-      <div className="grid items-start gap-5 lg:grid-cols-[1.15fr_0.85fr]">
-        <div className="flex flex-col gap-5">
-          {/* Los datos primero: es lo que se viene a ver. El índice y la
-              procedencia explican y matizan, pero no son la respuesta. */}
+      {loadError !== null && (
+        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+          <span aria-hidden className="bg-warning size-2 shrink-0 rounded-full" />
+          <span className="text-muted-foreground">No pudimos refrescar la ficha: {loadError}</span>
+          <button type="button" className="inline-flex min-h-6 items-center font-medium underline underline-offset-4" onClick={() => void load()}>
+            Reintentar
+          </button>
+        </p>
+      )}
+
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)] lg:items-start [&>*]:min-w-0">
+        <div className="flex min-w-0 flex-col gap-4">
+          {/* Los datos primero: es lo que se viene a ver. Debajo, de dónde salió cada uno y su historia. */}
           <LeadIdentityCard lead={lead} />
-          {/* Qué se consultó y qué dio cada fuente. Va aquí, entre los datos y
-              el índice: responde «de dónde salió esto» justo después de
-              enseñarlo. */}
-          <EnrichmentRunCard run={run} />
-          <section className="border-border shadow-float bg-background rounded-lg border p-5">
-            <QualityBreakdown
-              score={lead.quality_score}
-              signals={lead.quality_signals}
-            />
-          </section>
-          <section className="border-border shadow-float bg-background rounded-lg border p-5">
-            <LeadProvenance lead={lead} />
-          </section>
+          <LeadProvenance lead={lead} />
+          <LeadTimeline events={lead.events} />
         </div>
 
-        <div className="flex flex-col gap-5">
+        <div className="flex min-w-0 flex-col gap-4">
+          {/* La única isla: promover o, si ya se promovió, qué sigue. */}
           {canPromote(lead) && hasPermission("leads:promote") && (
-            <PromotionGate
-              lead={lead}
-              busy={busy}
-              onPromote={() => void onPromote()}
-            />
+            <PromotionGate lead={lead} busy={busy} onPromote={() => void onPromote()} />
           )}
           {lead.status === "promoted" && lead.contact_id !== null && (
-            <section className="border-success/35 bg-success/[0.06] rounded-lg border p-4">
-              <p className="text-success flex items-center gap-2 text-sm font-semibold">
-                <Check className="size-4" aria-hidden />
-                Ya es un contacto de tu CRM
-              </p>
-              {/* F4a: promover declara la base legal y crea el contacto;
-                  escribirle es otra decisión, y es del operador. Por eso el
-                  seguimiento se OFRECE aquí y no se dispara solo. */}
-              <p className="text-muted-foreground mt-1 text-xs">Todavía no le hemos escrito.</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" asChild>
-                  <a href={`/crm/contacts/${lead.contact_id}`}>Ver en el CRM</a>
-                </Button>
+            <InkIsland label="Ya es un contacto de tu CRM" glow="ai" className="gap-3">
+              <Kicker>En el CRM</Kicker>
+              <h2 className="font-heading text-2xl leading-tight font-bold tracking-tight">Ya es un contacto de tu CRM</h2>
+              {/* F4a: promover declara la base legal y crea el contacto; escribirle es otra decisión, y es del
+                  operador. Por eso el seguimiento se OFRECE aquí y no se dispara solo. */}
+              <p className="text-muted-foreground text-sm">Todavía no le hemos escrito.</p>
+              <div className="flex flex-wrap gap-2 pt-1">
                 <BulkFollowUpButton
                   audience={{ source: "contacts", contact_ids: [lead.contact_id] }}
                   audienceLabel={`${lead.display_name ?? "El lead"} · recién promovido desde captación`}
                   label="Poner al agente a trabajar"
+                  variant="contrast"
+                  size="default"
                 />
+                <Button variant="glass" asChild>
+                  <Link href={`/crm/contacts/${lead.contact_id}`}>Ver en el CRM</Link>
+                </Button>
               </div>
-            </section>
+            </InkIsland>
           )}
-          <section className="border-border shadow-float bg-background rounded-lg border p-5">
-            <LeadTimeline events={lead.events} />
-          </section>
+          <QualityBreakdown score={lead.quality_score} signals={lead.quality_signals} />
+          {/* Qué se consultó y qué dio cada fuente. */}
+          <EnrichmentRunCard run={run} />
         </div>
       </div>
     </div>
+  );
+}
+
+function BackToInbox() {
+  return (
+    <Link
+      href="/marketing/leads"
+      className="text-muted-foreground hover:text-foreground inline-flex min-h-6 w-fit items-center gap-1.5 text-sm underline-offset-4 hover:underline"
+    >
+      <ArrowLeft className="size-4" aria-hidden />
+      Volver a la bandeja
+    </Link>
   );
 }

@@ -30,6 +30,7 @@ import {
 import { TRIGGER_ORDER, type TriggerType } from "@/modules/marketing/domain/enums";
 import type { MetaStatus } from "@/modules/marketing/domain/next-up";
 import { listChannels } from "@/modules/channels/public";
+import { getProspectingStats, type ProspectingStatsDTO } from "@/modules/prospecting/public";
 
 /** Estado de una sección (mismo patrón que analytics/dashboard). */
 export type SectionStatus = "idle" | "loading" | "ready" | "error";
@@ -108,11 +109,14 @@ interface OverviewState {
   drafts: Section<number>;
   /** WhatsApp Cloud: plantillas por estado y el cupo de hoy. `null` = sin número Cloud. */
   meta: Section<MetaStatus | null>;
+  /** El embudo de captación (tarjeta «Captación de leads»). Solo se pide con `leads:read`. */
+  capture: Section<ProspectingStatsDTO>;
   /** Campañas en vuelo por encima del tope: se avisa, no se ocultan en silencio. */
   liveCampaignsOmitted: number;
   feed: RecoveryFeedEntry[];
 
-  load: () => Promise<void>;
+  /** `capture`: pedir también el embudo de captación (quien llama sabe si hay `leads:read`). */
+  load: (options?: { capture?: boolean }) => Promise<void>;
   refreshLiveCampaigns: () => Promise<void>;
   refreshCampaignStats: (campaignId: string) => Promise<void>;
   onCampaignStatusChanged: (payload: MarketingCampaignStatusChangedEvent) => void;
@@ -187,10 +191,11 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
   liveCampaigns: idle<LiveCampaign[]>(),
   drafts: idle<number>(),
   meta: idle<MetaStatus | null>(),
+  capture: idle<ProspectingStatsDTO>(),
   liveCampaignsOmitted: 0,
   feed: [],
 
-  async load() {
+  async load(options = {}) {
     set((s) => ({
       automations: loading(s.automations),
       recovery: loading(s.recovery),
@@ -199,6 +204,7 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
       liveCampaigns: loading(s.liveCampaigns),
       drafts: loading(s.drafts),
       meta: loading(s.meta),
+      capture: options.capture ? loading(s.capture) : s.capture,
     }));
 
     // Los cuatro bloques son independientes: que uno falle no debe dejar la
@@ -261,6 +267,15 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
           set({ meta: ready(await loadMetaStatus()) });
         } catch (error) {
           set((s) => ({ meta: failed(s.meta, error) }));
+        }
+      })(),
+
+      (async () => {
+        if (!options.capture) return;
+        try {
+          set({ capture: ready(await getProspectingStats()) });
+        } catch (error) {
+          set((s) => ({ capture: failed(s.capture, error) }));
         }
       })(),
 

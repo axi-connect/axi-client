@@ -1,13 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Gift,
   Inbox,
   LoaderCircle,
-  ShieldCheck,
-  Trash2,
+  Search,
   TriangleAlert,
   WandSparkles,
 } from "lucide-react";
@@ -19,7 +19,6 @@ import { usePaginatedList } from "@/shared/api/use-paginated-list";
 import { DataTable } from "@/shared/components/features/data-table";
 import { EmptyState } from "@/shared/components/features/empty-state";
 import { TableSkeleton } from "@/shared/components/features/loading";
-import { PageHeader } from "@/shared/components/layout/page-header";
 import { Button } from "@/shared/components/ui/button";
 import {
   FilterChips,
@@ -30,14 +29,13 @@ import {
   type FilterValues,
 } from "@/shared/components/features/filter-panel";
 
-import type { LeadRow, ProspectingStatsDTO } from "../domain/lead";
+import type { LeadRow } from "../domain/lead";
 import { canDelete, canEnrich, canPromote } from "../domain/lead";
 import { actionTargets, selectionIsVisible } from "../domain/selection";
 import {
   countLeads,
   deleteLeads,
   enrichLeads,
-  getProspectingStats,
   listLeadIds,
   promoteLeads,
 } from "../infrastructure/services/prospecting-service.adapter";
@@ -46,7 +44,9 @@ import {
   needsDeleteSheet,
   type DeleteOutcome,
 } from "./components/DeleteResultSheet";
+import { useCaptureStats } from "../infrastructure/stores/capture-stats.store";
 import { CaptureFunnel } from "./components/CaptureFunnel";
+import { CaptureHeader } from "./components/CaptureHeader";
 import { buildLeadColumns, fetchLeads } from "./tables/leads.config";
 import {
   LEAD_FILTERS,
@@ -81,17 +81,15 @@ const CONFIRM_ABOVE = 50;
 const POLL_MS = 5_000;
 const POLL_TIMEOUT_MS = 90_000;
 
-export function LeadsInboxView({
-  initialStats,
-}: {
-  initialStats: ProspectingStatsDTO;
-}) {
+export function LeadsInboxView() {
   const router = useRouter();
   const { hasPermission } = useAuth();
   const canPromoteLeads = hasPermission("leads:promote");
   const canManageLeads = hasPermission("leads:manage");
   const canDeleteLeads = hasPermission("leads:delete");
   const { showAlert, showModal } = useAlert();
+  const statsPromoted = useCaptureStats((state) => state.promoted);
+  const reloadStats = useCaptureStats((state) => state.reload);
 
   const [filters, setFilters] = useState<FilterValues>({});
   const [panelOpen, setPanelOpen] = useState(false);
@@ -100,7 +98,6 @@ export function LeadsInboxView({
   /** ¿La selección es «todos los que cumplen» y no solo la página? */
   const [allMatching, setAllMatching] = useState(false);
   const [promoting, setPromoting] = useState(false);
-  const [stats, setStats] = useState(initialStats);
   const [deleting, setDeleting] = useState(false);
   const [outcome, setOutcome] = useState<DeleteOutcome | null>(null);
   const draftTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -384,11 +381,7 @@ export function LeadsInboxView({
       }
       setSelected(new Set());
       refresh();
-      setStats((previous) => ({
-        ...previous,
-        promoted: previous.promoted + result.promoted.length,
-        quarantined: Math.max(0, previous.quarantined - result.promoted.length),
-      }));
+      statsPromoted(result.promoted.length);
     } catch (caught) {
       showAlert({
         tone: "error",
@@ -398,7 +391,7 @@ export function LeadsInboxView({
     } finally {
       setPromoting(false);
     }
-  }, [targets.promote, refresh, showAlert]);
+  }, [targets.promote, refresh, showAlert, statsPromoted]);
 
   const doDelete = useCallback(async () => {
     const ids = targets.delete;
@@ -426,9 +419,7 @@ export function LeadsInboxView({
        * descartados— y restar a mano acabaría en un embudo que no suma. Promover
        * sí se puede estimar porque mueve exactamente dos.
        */
-      getProspectingStats()
-        .then(setStats)
-        .catch(() => undefined);
+      void reloadStats();
 
       // Aviso si salió limpio; panel solo si hay algo que explicar.
       if (needsDeleteSheet(next)) setOutcome(next);
@@ -446,7 +437,7 @@ export function LeadsInboxView({
     } finally {
       setDeleting(false);
     }
-  }, [targets.delete, items, refresh, showAlert]);
+  }, [targets.delete, items, refresh, showAlert, reloadStats]);
 
   /**
    * La confirmación del borrado: UNA, igual para 1 que para 300.
@@ -525,13 +516,23 @@ export function LeadsInboxView({
   }, [targets.promote.length, doPromote, showModal]);
 
   return (
-    <div className="flex flex-col gap-8">
-      <PageHeader
+    <div className="flex min-w-0 flex-col gap-6">
+      <CaptureHeader
         title="Bandeja"
         description="Prospectos descubiertos y a la espera de entrar a tu CRM. Nadie sale de aquí sin que tú lo promuevas."
+        actions={
+          canManageLeads ? (
+            <Button className="rounded-full" asChild>
+              <Link href="/marketing/leads/searches?new=1">
+                <Search className="size-4" aria-hidden />
+                Nueva búsqueda
+              </Link>
+            </Button>
+          ) : null
+        }
       />
 
-      <CaptureFunnel stats={stats} />
+      <CaptureFunnel />
 
       {/* La barra vive DENTRO del `DataTable`: el buscador, el botón de filtros
           y los chips de lo activo, que van fuera de la hoja porque el estado no
@@ -571,6 +572,7 @@ export function LeadsInboxView({
           />
         )
       ) : (
+        <section aria-label="Leads" className="border-border bg-card min-w-0 rounded-3xl border px-3 pt-4 pb-3 sm:px-4">
         <DataTable<LeadRow>
           data={items}
           columns={columns}
@@ -620,12 +622,7 @@ export function LeadsInboxView({
                   actions: () => (
                     <>
                       {canManageLeads && targets.enrich.length > 0 && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => void onEnrich()}
-                          disabled={enriching}
-                        >
+                        <Button variant="glass" onClick={() => void onEnrich()} disabled={enriching}>
                           {enriching ? (
                             <LoaderCircle aria-hidden className="size-4 animate-spin" />
                           ) : (
@@ -635,27 +632,19 @@ export function LeadsInboxView({
                         </Button>
                       )}
                       {canPromoteLeads && targets.promote.length > 0 && (
-                        <Button size="sm" onClick={onPromote} disabled={promoting}>
-                          <ShieldCheck className="size-4" aria-hidden />
+                        <Button variant="contrast" className="rounded-full" onClick={onPromote} disabled={promoting}>
                           Promover {targets.promote.length} al CRM
                         </Button>
                       )}
-                      {/* DE CONTORNO, y no relleno.
-                          La regla «destructivo ≠ coral» se cumplía —coral de
-                          marca contra rojo semántico— y aun así, al lado de
-                          «Promover», los dos se leían como el mismo rectángulo
-                          rojo. Y una de las dos no se deshace. El relleno rojo
-                          se reserva para el botón de CONFIRMAR, donde ya no
-                          compite con nada. */}
+                      {/* Fantasma en rojo, a la izquierda: en la barra de tinta no compite con «Promover», que es la
+                          acción fuerte. El relleno rojo queda para el botón de CONFIRMAR del diálogo. */}
                       {canDeleteLeads && targets.delete.length > 0 && (
                         <Button
-                          size="sm"
-                          variant="outline"
+                          variant="ghost"
                           onClick={onDelete}
                           disabled={deleting}
-                          className="border-destructive/45 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          className="text-destructive hover:text-destructive order-first rounded-full"
                         >
-                          <Trash2 className="size-4" aria-hidden />
                           Eliminar {targets.delete.length}
                         </Button>
                       )}
@@ -667,10 +656,13 @@ export function LeadsInboxView({
                       Buscar datos usa solo las fuentes gratuitas: no gasta unidades de tu plan.
                     </>
                   ) : undefined,
+                  // La barra de tinta pegada abajo (§9.5.1): la selección es lo más accionable de la bandeja.
+                  presentation: "dock",
                 }
               : undefined
           }
         />
+        </section>
       )}
 
       <DeleteResultSheet
