@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Plus, Search } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useDeepLinkTarget } from "@/core/hooks/use-deep-link-target";
@@ -117,8 +117,11 @@ export function PromotionsView() {
   const router = useRouter();
   const pathname = usePathname();
   const wantsNew = params.get("new") === "1";
+  // Una sola vez por visita: sin la marca, un `router` que cambia de identidad reabría el editor en bucle.
+  const newConsumed = useRef(false);
   useEffect(() => {
-    if (!wantsNew || !canManage) return;
+    if (!wantsNew || !canManage || newConsumed.current) return;
+    newConsumed.current = true;
     setEditing({ promotion: null });
     router.replace(pathname, { scroll: false });
   }, [wantsNew, canManage, router, pathname]);
