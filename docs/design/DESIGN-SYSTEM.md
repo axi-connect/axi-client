@@ -180,6 +180,16 @@ Reglas que se derivan de ahí:
 - Los scrollers internos de las vistas (tablas, rails, columnas kanban, lista del inbox) siguen usando `min-h-0 flex-1 overflow-y-auto` y son el único scroll de su área. **Y son scrollers de BLOQUE, no `flex flex-col`**: el tamaño mínimo automático de un hijo que sea contenedor de scroll (cualquier cosa con `overflow-hidden`) es **0**, así que en un scroller flex ese hijo se aplasta a la altura disponible y recorta su contenido en vez de hacer scrollear al padre. Es el defecto que dejaba sin scroll el tablero de Axel. Separa con `space-y-*`, no con `gap`.
 - **`body` es un tercer scroller latente y no documentado.** `globals.css` deja `html { overflow: hidden }` y acto seguido `body { overflow-y: auto }`, lo que convierte a `body` en contenedor de scroll (y fuerza su `overflow-x` a `auto`). Hoy nunca desborda porque el marco del panel mide exactamente `h-dvh`, pero cualquier elemento que se salga de `100dvh` pinta una barra que no pertenece a ninguna superficie.
 
+**Vista de aplicación condicionada al alto (`app-fit`).** En `/platform` la propagación del modo va con la variante `app-fit` (`@custom-variant` en `globals.css`: `width >= 80rem` **y** `height >= 36rem`). Por debajo —portátiles con poca altura, tablets— la vista sigue documental y scrollea el panel, en vez de aplastar sus columnas. Su complemento exacto es `app-short`, para dar un alto fijo sin choque de cascada entre dos media queries solapadas. Primer consumidor: el simulacro de quality (`quality/simulator/layout.tsx`).
+
+- **Centrado seguro dentro de un scroller.** Nunca `items-center`/`justify-center` para centrar un bloque que puede no caber en un contenedor con `overflow-y-auto`: el excedente de arriba queda fuera de alcance y la cabecera se ve cortada. Se centra con `my-auto` en el hijo (con desborde, las márgenes automáticas valen 0 y arranca arriba).
+
+#### Scroll de marca (`axi-scroll`)
+
+- **Todo contenedor con `overflow-*-auto` lleva `axi-scroll`** (`globals.css`): riel transparente, pulgar de 6 px (10 px en horizontal, se agarra con el cursor) con el degradado radial de `--axi-brand` que se afirma al pasar el cursor, y `scrollbar-width: thin` + `scrollbar-color` como respaldo solo donde no hay `::-webkit-scrollbar` (Firefox). `sidebar-scroll` es el nombre histórico y es un alias exacto: no hace falta migrar sus usos.
+- Excepción: las tiras horizontales que esconden su barra a propósito (el segmentado, `[scrollbar-width:none]`).
+- **El auto-scroll de un chat mueve SOLO su contenedor** (`useAutoScroll` → `container.scrollTo`). Nunca `scrollIntoView` para bajar al último mensaje: desplaza cada ancestro con scroll, el panel incluido, y en pantallas bajas sube la página entera y mete la cabecera del chat bajo el header sticky. Lo que envía el propio usuario baja siempre; lo que llega mientras relee más arriba, no le quita el sitio.
+
 ### 4.3 Elevación (sombras)
 
 | Token | Receta | Uso |

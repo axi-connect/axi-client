@@ -8,7 +8,9 @@ import { COOKIE_NAMES } from "./auth.types";
  * entrega F3). Crítica, y por eso vive en un solo sitio:
  *
  * 1. Si existe `supportAccessToken`, ESE es el Bearer. Manda sobre
- *    `accessToken` aunque haya una sesión de cliente en el mismo navegador.
+ *    `accessToken` aunque haya una sesión de cliente en el mismo navegador:
+ *    la sesión de soporte TOMA el navegador mientras dura y la del cliente,
+ *    que nunca se toca, vuelve sola al terminar (dueño, 2026-09-26).
  * 2. Con el token de soporte NUNCA se intenta un refresh: la sesión dura lo
  *    que diga el servidor (≤ 60 min) y no tiene refresh token.
  * 3. Un 401 bajo soporte borra `supportAccessToken` (y SOLO esa cookie) y la
@@ -33,11 +35,6 @@ export function sessionBearer(store: CookieReader): SessionBearer {
   const support = readSupportToken(store);
   if (support) return { kind: "support", token: support };
   return { kind: "tenant", token: store.get(COOKIE_NAMES.accessToken)?.value ?? null };
-}
-
-/** ¿Hay en este navegador una sesión de cliente (cualquiera de sus dos cookies)? */
-export function hasTenantSession(store: CookieReader): boolean {
-  return Boolean(store.get(COOKIE_NAMES.accessToken)?.value || store.get(COOKIE_NAMES.refreshToken)?.value);
 }
 
 /** SOLO la cookie de soporte: nunca escribe ni borra las de la sesión del cliente. */

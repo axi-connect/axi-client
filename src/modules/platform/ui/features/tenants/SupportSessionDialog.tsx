@@ -12,7 +12,7 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useController, useFormContext, useWatch, type Control, type UseFormReturn } from "react-hook-form";
-import { Check, ExternalLink, LoaderCircle, ShieldCheck, X } from "lucide-react";
+import { Check, ExternalLink, LifeBuoy, LoaderCircle, ShieldCheck, X } from "lucide-react";
 import { isHttpError, API_ERROR_CODES } from "@/core/api/problem";
 import { applyServerValidation, errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
@@ -173,6 +173,11 @@ function SupportScope() {
       <p className="flex items-start gap-2 text-xs text-muted-foreground">
         <ShieldCheck aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
         Queda registrado: tu nombre, el motivo, la duración y cada pantalla que abras.
+      </p>
+      <p className="flex items-start gap-2 text-xs text-muted-foreground">
+        <LifeBuoy aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
+        Mientras dure, las pestañas de tu panel de cliente en este navegador pasan a la sesión de soporte; al terminar
+        vuelve tu sesión tal cual.
       </p>
     </div>
   );
