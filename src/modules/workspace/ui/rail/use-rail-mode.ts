@@ -5,17 +5,23 @@ import { useCallback, useEffect, useState, useSyncExternalStore } from "react"
 /**
  * Modo de la columna de vistas y canales del workspace (F1).
  *
- * - `auto` (sin preferencia): riel de 64 px entre `lg` y `xl`, desplegada desde
- *   `xl`. Lo pinta el CSS con `data-mode`, así que no hay salto al hidratar.
- * - `expanded` / `compact`: lo que eligió la persona con el botón, recordado por
- *   navegador. Es una comodidad de quien mira, no un dato: vive en
- *   `localStorage` y cualquier fallo de almacenamiento se ignora.
+ * - Desde `xl` hay sitio para la columna, la lista, el chat y el rail de contexto.
+ *   La preferencia de la persona (`expanded` / `compact`) manda y se recuerda por
+ *   navegador. Sin preferencia (`auto`), la columna va desplegada.
+ * - Por debajo de `xl` desplegarla aplastaría el panel (a 1024 px dejaba 184 px
+ *   para «Tu día»). Ahí es siempre riel, y el botón la ASOMA flotando sobre la
+ *   lista (`peek`), como el Mail del iPad. El asomo no se recuerda: se cierra al
+ *   elegir, con Escape o al tocar fuera.
+ *
+ * El modo automático lo pinta el CSS con `data-mode` y `data-peek`, así que no
+ * hay salto al hidratar. La preferencia es una comodidad de quien mira: vive en
+ * `localStorage` y cualquier fallo de almacenamiento se ignora.
  */
 export type RailPreference = "expanded" | "compact"
 export type RailMode = RailPreference | "auto"
 
 export const RAIL_STORAGE_KEY = "axi.workspace.rail"
-/** El `xl` de Tailwind: desde aquí el modo automático despliega la columna. */
+/** El `xl` de Tailwind: desde aquí la columna puede ir desplegada en su sitio. */
 export const RAIL_WIDE_QUERY = "(min-width: 80rem)"
 
 function readPreference(): RailPreference | null {
@@ -46,20 +52,42 @@ function isWide(): boolean {
   return typeof window.matchMedia === "function" && window.matchMedia(RAIL_WIDE_QUERY).matches
 }
 
-export function useRailMode(): { mode: RailMode; expanded: boolean; toggle: () => void } {
+export interface RailModeState {
+  /** La preferencia guardada, o `auto`: va en `data-mode`. */
+  mode: RailMode
+  /** Asomada sobre la lista (solo por debajo de `xl`): va en `data-peek`. */
+  peek: boolean
+  /** ¿Se ven los nombres? Para lo que el CSS no puede decidir: tooltips y `aria-expanded`. */
+  expanded: boolean
+  toggle: () => void
+  closePeek: () => void
+}
+
+export function useRailMode(): RailModeState {
   const [preference, setPreference] = useState<RailPreference | null>(null)
+  const [peek, setPeek] = useState(false)
   useEffect(() => setPreference(readPreference()), [])
-  // Solo para lo que el CSS no puede decidir (tooltips, `aria-expanded`). En el
-  // servidor vale «estrecho»; el ancho de verdad llega al hidratar.
+  // En el servidor vale «estrecho»; el ancho de verdad llega al hidratar.
   const wide = useSyncExternalStore(subscribeWide, isWide, () => false)
 
-  const expanded = (preference ?? (wide ? "expanded" : "compact")) === "expanded"
+  // Al cruzar a `xl` el asomo sobra: la columna ya tiene su sitio.
+  useEffect(() => {
+    if (wide) setPeek(false)
+  }, [wide])
+
+  const expanded = wide ? preference !== "compact" : peek
 
   const toggle = useCallback(() => {
-    const next: RailPreference = expanded ? "compact" : "expanded"
+    if (!wide) {
+      setPeek((current) => !current)
+      return
+    }
+    const next: RailPreference = preference === "compact" ? "expanded" : "compact"
     setPreference(next)
     writePreference(next)
-  }, [expanded])
+  }, [wide, preference])
 
-  return { mode: preference ?? "auto", expanded, toggle }
+  const closePeek = useCallback(() => setPeek(false), [])
+
+  return { mode: preference ?? "auto", peek, expanded, toggle, closePeek }
 }

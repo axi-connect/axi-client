@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { Bot, CheckCheck, Inbox as InboxIcon, PanelLeft, Timer, UserRound, type LucideIcon } from "lucide-react"
+import { Bot, CheckCheck, Inbox as InboxIcon, Timer, UserRound, type LucideIcon } from "lucide-react"
 import { useAuth } from "@/shared/auth/auth.hooks"
 import { Button } from "@/shared/components/ui/button"
 import { SegmentedControl } from "@/shared/components/ui/segmented"
@@ -173,13 +173,15 @@ export function InboxListHeader() {
           aria-label="Abrir vistas y canales"
           onClick={() => window.dispatchEvent(new CustomEvent("workspace:channels-drawer:open"))}
         >
-          <PanelLeft className="size-4" />
+          {/* El de bandeja, no el de panel: el header de la app ya usa ese para su menú. */}
+          <InboxIcon className="size-4" />
         </Button>
         <div className="min-w-0 flex-1">
           <h1 className="truncate font-heading text-2xl leading-tight font-bold tracking-tight">{INBOX_VIEW_LABELS[view]}</h1>
-          <p className="mt-0.5 flex min-h-4 min-w-0 items-center gap-1.5 text-xs text-muted-foreground" aria-live="polite">
-            {waitingDot && <span aria-hidden className="size-1.5 shrink-0 rounded-full bg-warning" />}
-            {subtitle !== null && <span className="truncate">{subtitle}</span>}
+          {/* Dos líneas como mucho: el reparto de «Todas abiertas» no cabe en una a 320 px. */}
+          <p className="mt-0.5 flex min-h-4 min-w-0 items-start gap-1.5 text-xs leading-4 text-muted-foreground" aria-live="polite">
+            {waitingDot && <span aria-hidden className="mt-[5px] size-1.5 shrink-0 rounded-full bg-warning" />}
+            {subtitle !== null && <span className="line-clamp-2 min-w-0">{subtitle}</span>}
           </p>
         </div>
         <SortMenu value={sort} onChange={setSort} />

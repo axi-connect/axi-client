@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import {
   Bot,
@@ -34,23 +34,37 @@ import { useRailMode, type RailMode } from "./use-rail-mode"
  * - riel (64 px, artboard 3 del lienzo): solo iconos, el conteo de lo accionable
  *   (En cola, Contigo) en una cápsula de tinta y el punto de estado del canal.
  *
- * El modo lo decide `useRailMode`: automático por ancho o el que fijó la
- * persona con el botón. Las clases dependen de `data-mode` en la raíz, de modo
- * que el modo automático lo resuelve el CSS sin esperar a JavaScript. En el
- * drawer del celular va siempre desplegada y sin botón.
+ * El modo lo decide `useRailMode`:
+ * - desde `xl`, desplegada salvo que la persona la pliegue (se recuerda);
+ * - por debajo, riel, que el botón asoma flotando sobre la lista sin mover el panel.
  *
- * Superficie de trabajo ⇒ SÓLIDA (DESIGN §5.1). El drawer que la contiene es el
- * cristal.
+ * Todas las clases dependen de `data-mode`, `data-peek` y `data-variant` en la
+ * raíz, así que el modo automático lo resuelve el CSS sin esperar a JavaScript.
+ * En el drawer del celular va siempre desplegada y sin botón.
+ *
+ * Superficie de trabajo ⇒ SÓLIDA (DESIGN §5.1). Asomada flota con la sombra de
+ * overlay; el drawer que la contiene en el celular es el cristal.
  */
 
 const RAIL_ID = "workspace-rail"
 
-/** Visible solo con la columna desplegada. */
+/*
+ * Los nombres se ven en cuatro casos: en el drawer, asomada, y desde `xl` desplegada
+ * o en automático. En el resto es riel. Las clases van LITERALES (Tailwind solo
+ * genera lo que lee escrito en el código).
+ */
+/** Visible solo con los nombres a la vista. */
 const WHEN_EXPANDED =
-  "hidden group-data-[mode=expanded]/rail:inline-flex xl:group-data-[mode=auto]/rail:inline-flex"
+  "hidden group-data-[variant=drawer]/rail:inline-flex group-data-[peek=true]/rail:inline-flex xl:group-data-[mode=expanded]/rail:inline-flex xl:group-data-[mode=auto]/rail:inline-flex"
 /** Visible solo en el riel. */
 const WHEN_COMPACT =
-  "group-data-[mode=expanded]/rail:hidden xl:group-data-[mode=auto]/rail:hidden"
+  "group-data-[variant=drawer]/rail:hidden group-data-[peek=true]/rail:hidden xl:group-data-[mode=expanded]/rail:hidden xl:group-data-[mode=auto]/rail:hidden"
+/** El punto de estado del canal: sobre el icono en el riel, al final de la fila con nombres. */
+const DOT_PLACEMENT =
+  "absolute right-2.5 bottom-2 group-data-[variant=drawer]/rail:static group-data-[peek=true]/rail:static xl:group-data-[mode=expanded]/rail:static xl:group-data-[mode=auto]/rail:static"
+/** La cabecera reparte «Bandeja» y el botón cuando hay nombres; en el riel, el botón al centro. */
+const HEADER_SPREAD =
+  "group-data-[variant=drawer]/rail:justify-between group-data-[peek=true]/rail:justify-between xl:group-data-[mode=expanded]/rail:justify-between xl:group-data-[mode=auto]/rail:justify-between"
 
 interface ViewDef {
   id: InboxView
@@ -81,51 +95,86 @@ export function WorkspaceRail({
   className?: string
 }) {
   const rail = useRailMode()
-  const mode: RailMode = variant === "drawer" ? "expanded" : rail.mode
-  const expanded = variant === "drawer" || rail.expanded
+  const drawer = variant === "drawer"
+  const mode: RailMode = drawer ? "expanded" : rail.mode
+  const expanded = drawer || rail.expanded
+  const peek = !drawer && rail.peek
+  const navRef = useRef<HTMLElement>(null)
+  const { closePeek } = rail
+
+  // Asomada: se cierra al tocar fuera. Escape la cierra desde el `onKeyDown` de la columna.
+  useEffect(() => {
+    if (!peek) return
+    const onPointerDown = (event: PointerEvent) => {
+      if (navRef.current !== null && !navRef.current.contains(event.target as Node)) closePeek()
+    }
+    document.addEventListener("pointerdown", onPointerDown)
+    return () => document.removeEventListener("pointerdown", onPointerDown)
+  }, [peek, closePeek])
+
+  const navigate = () => {
+    closePeek()
+    onNavigate?.()
+  }
 
   return (
-    <nav
-      id={variant === "inline" ? RAIL_ID : undefined}
-      aria-label="Vistas y canales"
+    // El hueco en el layout mide siempre lo del modo, nunca lo del asomo: asomar no mueve el panel.
+    <div
       data-mode={mode}
       className={cn(
-        "group/rail flex min-h-0 shrink-0 flex-col bg-background",
-        variant === "inline" &&
-          "w-16 border-r border-border transition-[width] duration-200 ease-out motion-reduce:transition-none data-[mode=expanded]:w-60 xl:data-[mode=auto]:w-60",
-        variant === "drawer" && "w-full",
+        "relative flex min-h-0 shrink-0",
+        !drawer &&
+          "w-16 transition-[width] duration-200 ease-out motion-reduce:transition-none xl:data-[mode=auto]:w-60 xl:data-[mode=expanded]:w-60",
+        drawer && "w-full",
         className,
       )}
     >
-      {variant === "inline" && (
-        <div className="flex h-12 shrink-0 items-center justify-center px-3 group-data-[mode=expanded]/rail:justify-between xl:group-data-[mode=auto]/rail:justify-between">
-          <span className={cn(WHEN_EXPANDED, "px-2 text-[11px] font-medium tracking-[0.12em] text-muted-foreground uppercase")}>
-            Bandeja
-          </span>
-          <RailTip label={expanded ? "Plegar el panel" : "Desplegar el panel"} show>
-            <button
-              type="button"
-              aria-controls={RAIL_ID}
-              aria-expanded={expanded}
-              aria-label={expanded ? "Plegar el panel" : "Desplegar el panel"}
-              onClick={rail.toggle}
-              className="grid size-9 place-items-center rounded-xl text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
-            >
-              {expanded ? <PanelLeftClose className="size-4" aria-hidden /> : <PanelLeftOpen className="size-4" aria-hidden />}
-            </button>
-          </RailTip>
-        </div>
-      )}
-
-      <div className="sidebar-scroll min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-3 pt-1 pb-4">
-        {variant === "drawer" && (
-          <p className="px-2 pt-2 text-[11px] font-medium tracking-[0.12em] text-muted-foreground uppercase">Bandeja</p>
+      <nav
+        ref={navRef}
+        id={drawer ? undefined : RAIL_ID}
+        aria-label="Vistas y canales"
+        data-mode={mode}
+        data-peek={peek ? "true" : undefined}
+        data-variant={variant}
+        onKeyDown={(event) => {
+          if (peek && event.key === "Escape") closePeek()
+        }}
+        className={cn(
+          "group/rail flex min-h-0 w-full flex-col bg-background",
+          !drawer && "border-r border-border",
+          peek && "absolute inset-y-0 left-0 z-30 w-60 shadow-overlay",
         )}
-        <RailViews expanded={expanded} onNavigate={onNavigate} />
-        <div aria-hidden className={cn(WHEN_COMPACT, "mx-auto h-px w-7 bg-border")} />
-        <RailChannels expanded={expanded} onNavigate={onNavigate} />
-      </div>
-    </nav>
+      >
+        {!drawer && (
+          <div className={cn("flex h-12 shrink-0 items-center justify-center px-3", HEADER_SPREAD)}>
+            <span className={cn(WHEN_EXPANDED, "px-2 text-[11px] font-medium tracking-[0.12em] text-muted-foreground uppercase")}>
+              Bandeja
+            </span>
+            <RailTip label={expanded ? "Plegar el panel" : "Desplegar el panel"} show>
+              <button
+                type="button"
+                aria-controls={RAIL_ID}
+                aria-expanded={expanded}
+                aria-label={expanded ? "Plegar el panel" : "Desplegar el panel"}
+                onClick={rail.toggle}
+                className="grid size-9 place-items-center rounded-xl text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+              >
+                {expanded ? <PanelLeftClose className="size-4" aria-hidden /> : <PanelLeftOpen className="size-4" aria-hidden />}
+              </button>
+            </RailTip>
+          </div>
+        )}
+
+        <div className="sidebar-scroll min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-3 pt-1 pb-4">
+          {drawer && (
+            <p className="px-2 pt-2 text-[11px] font-medium tracking-[0.12em] text-muted-foreground uppercase">Bandeja</p>
+          )}
+          <RailViews expanded={expanded} onNavigate={navigate} />
+          <div aria-hidden className={cn(WHEN_COMPACT, "mx-auto h-px w-7 bg-border")} />
+          <RailChannels expanded={expanded} onNavigate={navigate} />
+        </div>
+      </nav>
+    </div>
   )
 }
 
@@ -292,8 +341,7 @@ function RailChannels({ expanded, onNavigate }: { expanded: boolean; onNavigate?
                         channelStatusDotClass(channel.status),
                         "size-2 shrink-0 rounded-full ring-2 ring-background",
                         // En el riel el punto se posa sobre el icono, como en el lienzo.
-                        "max-xl:group-data-[mode=auto]/rail:absolute max-xl:group-data-[mode=auto]/rail:right-2.5 max-xl:group-data-[mode=auto]/rail:bottom-2",
-                        "group-data-[mode=compact]/rail:absolute group-data-[mode=compact]/rail:right-2.5 group-data-[mode=compact]/rail:bottom-2",
+                        DOT_PLACEMENT,
                       )}
                     />
                   </button>

@@ -30,7 +30,18 @@ const renderRail = (props: Parameters<typeof WorkspaceRail>[0] = {}) =>
     </TooltipProvider>,
   )
 
+/** jsdom no tiene media queries: se simula el ancho (`xl` o menos). */
+function setWide(wide: boolean) {
+  window.matchMedia = ((query: string) => ({
+    matches: wide && query.includes("80rem"),
+    media: query,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+  })) as unknown as typeof window.matchMedia
+}
+
 beforeEach(() => {
+  setWide(false)
   push.mockReset()
   pathname = "/workspace/inbox"
   window.localStorage.clear()
@@ -43,21 +54,24 @@ describe("WorkspaceRail", () => {
     expect(screen.getByRole("navigation", { name: "Vistas y canales" })).toHaveAttribute("data-mode", "auto")
   })
 
-  it("el botón pliega y despliega, y se recuerda en el navegador", () => {
+  it("desde xl el botón pliega y despliega en su sitio, y se recuerda en el navegador", () => {
+    setWide(true)
     const { unmount } = renderRail()
     const nav = screen.getByRole("navigation", { name: "Vistas y canales" })
-    // En jsdom no hay `xl`: el automático se ve como riel, así que el botón despliega.
-    const toggle = screen.getByRole("button", { name: "Desplegar el panel" })
-    expect(toggle).toHaveAttribute("aria-expanded", "false")
+    // En automático, desde xl va desplegada: el botón pliega.
+    const toggle = screen.getByRole("button", { name: "Plegar el panel" })
+    expect(toggle).toHaveAttribute("aria-expanded", "true")
     expect(toggle).toHaveAttribute("aria-controls", nav.id)
 
     fireEvent.click(toggle)
+    expect(nav).toHaveAttribute("data-mode", "compact")
+    expect(nav).not.toHaveAttribute("data-peek")
+    expect(window.localStorage.getItem(RAIL_STORAGE_KEY)).toBe("compact")
+
+    fireEvent.click(screen.getByRole("button", { name: "Desplegar el panel" }))
     expect(nav).toHaveAttribute("data-mode", "expanded")
     expect(window.localStorage.getItem(RAIL_STORAGE_KEY)).toBe("expanded")
-
     fireEvent.click(screen.getByRole("button", { name: "Plegar el panel" }))
-    expect(nav).toHaveAttribute("data-mode", "compact")
-    expect(window.localStorage.getItem(RAIL_STORAGE_KEY)).toBe("compact")
     unmount()
 
     // La siguiente visita arranca como la dejó.
@@ -65,13 +79,37 @@ describe("WorkspaceRail", () => {
     expect(screen.getByRole("navigation", { name: "Vistas y canales" })).toHaveAttribute("data-mode", "compact")
   })
 
+  it("por debajo de xl el botón la asoma sobre la lista sin guardarlo; Escape, tocar fuera o elegir la cierran", async () => {
+    renderRail()
+    const nav = screen.getByRole("navigation", { name: "Vistas y canales" })
+    fireEvent.click(screen.getByRole("button", { name: "Desplegar el panel" }))
+    expect(nav).toHaveAttribute("data-peek", "true")
+    expect(screen.getByRole("button", { name: "Plegar el panel" })).toHaveAttribute("aria-expanded", "true")
+    expect(window.localStorage.getItem(RAIL_STORAGE_KEY)).toBeNull()
+
+    fireEvent.keyDown(nav, { key: "Escape" })
+    expect(nav).not.toHaveAttribute("data-peek")
+
+    fireEvent.click(screen.getByRole("button", { name: "Desplegar el panel" }))
+    fireEvent.pointerDown(document.body)
+    expect(nav).not.toHaveAttribute("data-peek")
+
+    fireEvent.click(screen.getByRole("button", { name: "Desplegar el panel" }))
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "En cola, 3" }))
+    })
+    expect(nav).not.toHaveAttribute("data-peek")
+    expect(useInboxStore.getState().view).toBe("queued")
+  })
+
   it("un almacenamiento bloqueado no rompe el botón: el modo vale para la visita", () => {
+    setWide(true)
     const setItem = jest.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
       throw new Error("bloqueado")
     })
     renderRail()
-    fireEvent.click(screen.getByRole("button", { name: "Desplegar el panel" }))
-    expect(screen.getByRole("navigation", { name: "Vistas y canales" })).toHaveAttribute("data-mode", "expanded")
+    fireEvent.click(screen.getByRole("button", { name: "Plegar el panel" }))
+    expect(screen.getByRole("navigation", { name: "Vistas y canales" })).toHaveAttribute("data-mode", "compact")
     setItem.mockRestore()
   })
 
