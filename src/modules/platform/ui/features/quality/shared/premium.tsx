@@ -7,7 +7,7 @@
  *
  * - `QualityTile`: tarjeta de UN tema — etiqueta muted arriba, una cifra o frase
  *   principal y una línea secundaria. Sin sombra: separa el borde.
- * - `InkPanel`: la isla de tinta, UNA por pantalla, para lo más accionable.
+ * - `InkPanel`: la isla (§9.5.1), UNA por pantalla, para lo más accionable.
  * - `Meter`: progreso lineal (§9: nunca anillos), con marcas opcionales de umbral.
  * - `QualityStatus`: estado con el tono en el punto y el texto en foreground (AA).
  */

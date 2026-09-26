@@ -22,6 +22,7 @@ import { formatDayTime } from "../../../domain/dates";
 import { cn } from "@/core/lib/utils";
 import { useAlert } from "@/core/providers/alert-provider";
 import { DynamicForm } from "@/shared/components/features/dynamic-form";
+import { Island } from "@/shared/components/features/island";
 import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
@@ -830,9 +831,12 @@ export function DeliveryWorkspace({
 
       {/* La barra de envío: isla de tinta pegada abajo, con el progreso por tramos
           (uno por grupo de la revisión, cada uno lleva a su paso) y «Enviar». */}
-      <footer
+      <Island
+        as="footer"
+        material="ink"
+        glow="none"
         aria-label="Estado del envío"
-        className="sticky bottom-3 z-10 mx-auto flex w-full max-w-4xl flex-wrap items-center gap-x-4 gap-y-3 rounded-3xl bg-foreground p-3 pl-5 text-background shadow-[var(--shadow-overlay)] sm:flex-nowrap sm:rounded-full dark:border dark:border-border dark:bg-card dark:text-foreground"
+        className="sticky bottom-3 z-10 mx-auto flex w-full max-w-4xl flex-wrap items-center gap-x-4 gap-y-3 p-3 pl-5 shadow-[var(--shadow-overlay)] sm:flex-nowrap sm:rounded-full"
       >
         <div className="min-w-0 flex-1 space-y-1.5">
           <div className="flex items-baseline gap-2">
@@ -888,7 +892,7 @@ export function DeliveryWorkspace({
                 ? "Esperando la vista previa."
                 : `${blockerCount === 1 ? "Falta 1 cosa" : `Faltan ${blockerCount} cosas`} por resolver.`}
         </span>
-      </footer>
+      </Island>
 
       {supportIssue ? (
         <SupportSessionDialog

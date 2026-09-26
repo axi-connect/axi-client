@@ -5,7 +5,10 @@
    golpe, sin transición. Ver docs/design/DESIGN-SYSTEM.md §6. */
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
+/* `dark:` aplica en el tema oscuro Y dentro de una superficie oscura (§9.5.1):
+   el primitivo que la traiga (Button outline/ghost) se ve igual en una isla de
+   tinta en tema claro que en la página oscura. */
+@custom-variant dark (&:is(.dark *, .surface-dark *));
 
 /* ============================================================================
    CAPA 1 — PRIMITIVOS DE MARCA
@@ -13,13 +16,24 @@
    SOLO esta capa. Ver docs/design/DESIGN-SYSTEM.md §1–2.
    ============================================================================ */
 
-:root {
+/* `.surface-light` y `.surface-dark` son SUPERFICIES CON ESQUEMA PROPIO: redefinen
+   estos mismos primitivos en su subárbol, igual que `.dark` en toda la página, así
+   que dentro de una isla (§9.5.1) los tokens de siempre (`text-muted-foreground`,
+   `bg-muted`, `Button`) se ven bien sin clases especiales. En tema oscuro una
+   superficie clara toma el esquema oscuro (`.dark .surface-light`, abajo): una isla
+   blanca sobre negro grita. */
+:root,
+.surface-light {
   --background: #ffffff;
   --foreground: #171717;
 
   /* Paleta madre (isotipo tricolor) */
-  --axi-brand: #e65759;   /* coral — color de acción */
-  --axi-brand-2: #e02f2f; /* coral profundo — extremo del gradiente */
+  /* La marca del tema claro, con nombre propio: una superficie oscura dentro del
+     tema claro la conserva (abajo). */
+  --axi-brand-day: #e65759;
+  --axi-brand-2-day: #e02f2f;
+  --axi-brand: var(--axi-brand-day);     /* coral — color de acción */
+  --axi-brand-2: var(--axi-brand-2-day); /* coral profundo — extremo del gradiente */
   --axi-violet: #7c3aed;  /* acento IA / dataviz */
   --axi-amber: #f0a431;   /* acento energía / dataviz */
   --axi-muted: #f4f4f5;   /* superficie atenuada */
@@ -32,6 +46,11 @@
 
   /* Texto sobre superficies de color (primario y estados) */
   --axi-on-color: #ffffff;
+  /* Texto sobre la marca (el CTA). Se calcula en cada esquema desde
+     `--axi-on-color`, y una superficie oscura en tema claro lo HEREDA de la
+     página (blanco) porque su bloque no lo redefine; los estados, en cambio,
+     toman el `--axi-on-color` oscuro que pasa AA sobre sus colores claros. */
+  --axi-on-brand: var(--axi-on-color);
 
   /* Colores OFICIALES de proveedores de mensajería. Familia aparte a propósito:
      no son paleta de axi y nunca deben mezclarse con los primitivos de marca.
@@ -64,7 +83,9 @@
   --toast-loading: #a1a1aa;
 }
 
-.dark {
+.dark,
+.surface-dark,
+.dark .surface-light {
   --background: #0a0a0a;
   --foreground: #ededed;
 
@@ -96,6 +117,22 @@
   --color-accent-foreground: var(--foreground);
 }
 
+/* Una isla oscura dentro del tema claro cambia el esquema neutro y los estados,
+   pero NO la marca: su CTA sigue siendo el coral de siempre, y su texto
+   (`--axi-on-brand`) llega blanco heredado de la página. */
+:root:not(.dark) .surface-dark {
+  --axi-brand: var(--axi-brand-day);
+  --axi-brand-2: var(--axi-brand-2-day);
+}
+
+/* Todo `.dark` recalcula el texto sobre la marca con SU on-color: la página
+   oscura y los envoltorios `dark theme-dark-island` de la landing (el CTA de
+   /productos). Va aparte a propósito: `.surface-dark` NO lo declara, así que en
+   tema claro hereda el blanco de la página (arriba). */
+.dark {
+  --axi-on-brand: var(--axi-on-color);
+}
+
 /* ============================================================================
    CAPA 2 — TOKENS SEMÁNTICOS (derivan de la capa 1; sin hex nuevos)
    Tailwind v4 genera las utilidades (bg-primary, text-brand, rounded-lg,
@@ -111,7 +148,7 @@
   --color-ring: var(--axi-brand);
 
   --color-primary: var(--axi-brand);
-  --color-primary-foreground: var(--axi-on-color);
+  --color-primary-foreground: var(--axi-on-brand);
 
   --color-secondary: color-mix(in srgb, var(--foreground) 6%, var(--background));
   --color-secondary-foreground: var(--foreground);
@@ -2306,4 +2343,243 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   --kit-pill: #f4f4f5;
   --kit-pill-ink: #09090b;
   --kit-rule: color-mix(in srgb, var(--kit-white) 12%, transparent);
+}
+
+/* ============================================================================
+   ISLAS — la isla de tinta en tinta o en cristal (DESIGN-SYSTEM §9.5.1)
+   El aspecto entero de las islas vive aquí: cambiar un token de este bloque
+   cambia todas las islas del producto. Quién usa qué lo decide
+   `ISLAND_DEFAULTS` (shared/components/features/island).
+
+   En `@layer components` a propósito: una utilidad de la vista (`p-5`,
+   `rounded-none`) tiene que poder ajustar la isla, y el CSS fuera de capa les
+   gana a todas las utilidades de Tailwind.
+
+   Coste: cero nodos extra (el brillo es una capa del `background`; el canto y
+   el reflejo, pseudo-elementos) y el `backdrop-filter` solo en el cristal. Hay
+   una isla por pantalla.
+   ============================================================================ */
+
+/* Los ángulos del canto líquido, registrados. El del botón de cristal se
+   transiciona al pasar el ratón (una variable sin tipo saltaría de golpe); el de
+   la isla es estático, pero el `conic-gradient` lee su valor inicial.
+   `inherits: false` los deja en su elemento. */
+@property --island-rim-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: -75deg;
+}
+@property --glass-control-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: -75deg;
+}
+
+@layer components {
+  /* El texto hereda el color ya calculado en <body>: la superficie lo vuelve a
+     pedir (en capa, para que una utilidad de color de la vista le gane). Y como
+     `.theme-dark-island`, re-deriva los dos tokens de capa 2 que el CSS propio
+     (`.glass`, `.grouped-list`) lee como variable: `@theme inline` los dejó
+     resueltos en :root. Las utilidades de Tailwind no lo necesitan. */
+  .surface-light,
+  .surface-dark {
+    --color-background: var(--background);
+    --color-border: color-mix(in srgb, var(--foreground) 12%, var(--background));
+    color: var(--foreground);
+  }
+
+  .island {
+    /* El brillo: sin clase de brillo es `none`, una capa vacía. */
+    --island-glow: none;
+    --island-glow-at: 90% 8%;
+    --island-glow-mix: 45%;
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border-radius: 1.5rem; /* rounded-3xl, §4.1 */
+    color: var(--foreground);
+  }
+
+  .island-glow-brand {
+    --island-glow: radial-gradient(circle 20rem at var(--island-glow-at), color-mix(in oklab, var(--axi-brand) var(--island-glow-mix), transparent), transparent 70%);
+  }
+
+  /* Lo que propone la IA: violeta arriba, coral abajo (el violeta es la IA en todo el producto). */
+  .island-glow-ai {
+    --island-glow:
+      radial-gradient(circle 22rem at 0% 0%, color-mix(in oklab, var(--axi-violet) var(--island-glow-mix), transparent), transparent 70%),
+      radial-gradient(circle 20rem at 100% 100%, color-mix(in oklab, var(--axi-brand) calc(var(--island-glow-mix) * 0.7), transparent), transparent 70%);
+  }
+
+  /* ---- Tinta: el plano del sistema. Siempre esquema oscuro. ---- */
+  .island-ink {
+    background: var(--island-glow), var(--background);
+  }
+  /* En oscuro la tinta es el fondo: la separa un filo. `outline` y no
+     `box-shadow`: una barra con `shadow-*` escribe el box-shadow entero desde
+     la capa de utilidades y borraría el filo. */
+  .dark .island-ink {
+    outline: 1px solid color-mix(in srgb, var(--foreground) 12%, var(--background));
+    outline-offset: -1px;
+  }
+
+  /* ---- Cristal: cuerpo translúcido, canto de luz, reflejo y halo. ---- */
+  .island-glass {
+    /* Tono claro (cristal blanco). El oscuro redefine estos mismos tokens abajo. */
+    --isl-from: color-mix(in oklab, var(--background) 82%, transparent);
+    --isl-to: color-mix(in oklab, color-mix(in oklab, var(--axi-violet) 5%, var(--background)) 62%, transparent);
+    --isl-blur: 20px;
+    --isl-saturate: 180%;
+    /* El canto líquido: dos brillos en esquinas opuestas (cónico desde el centro)
+       sobre un filo tenue. El brillo es del color del texto: tinta en el blanco. */
+    --isl-rim-hi: color-mix(in oklab, var(--foreground) 32%, transparent);
+    --isl-rim-base: rgb(255 255 255 / 0.85);
+    --isl-sheen: rgb(255 255 255 / 0.9);
+    --isl-band: rgb(255 255 255 / 0.55);
+    --isl-edge:
+      inset 0 0.125rem 0.125rem color-mix(in oklab, var(--foreground) 5%, transparent),
+      inset 0 -0.125rem 0.125rem color-mix(in oklab, var(--background) 50%, transparent),
+      inset 0 0 0.1rem 0.25rem color-mix(in oklab, var(--background) 20%, transparent),
+      inset 0 0 18px 2px rgb(255 255 255 / 0.55);
+    --isl-halo:
+      0 0.25rem 0.125rem -0.125rem color-mix(in oklab, var(--foreground) 14%, transparent),
+      0 30px 70px -34px rgb(16 16 24 / 0.35),
+      0 30px 80px -40px color-mix(in oklab, var(--axi-violet) 35%, transparent);
+    --island-glow-mix: 16%;
+
+    background: var(--island-glow), linear-gradient(160deg, var(--isl-from), var(--isl-to));
+    -webkit-backdrop-filter: blur(var(--isl-blur)) saturate(var(--isl-saturate));
+    backdrop-filter: blur(var(--isl-blur)) saturate(var(--isl-saturate));
+    box-shadow: var(--isl-edge), var(--isl-halo);
+  }
+
+  /* Cristal negro, y el blanco cuando el tema es oscuro (su esquema ya es oscuro). */
+  .island-glass.surface-dark,
+  .dark .island-glass {
+    --isl-from: color-mix(in oklab, color-mix(in oklab, var(--foreground) 14%, var(--background)) 90%, transparent);
+    --isl-to: color-mix(in oklab, color-mix(in oklab, var(--axi-violet) 10%, var(--background)) 92%, transparent);
+    --isl-saturate: 170%;
+    --isl-rim-hi: rgb(255 255 255 / 0.7);
+    --isl-rim-base: rgb(255 255 255 / 0.12);
+    --isl-sheen: rgb(255 255 255 / 0.14);
+    --isl-band: rgb(255 255 255 / 0.10);
+    --isl-edge:
+      inset 0 0.125rem 0.125rem rgb(255 255 255 / 0.10),
+      inset 0 -0.125rem 0.125rem rgb(0 0 0 / 0.35),
+      inset 0 0 0.1rem 0.25rem rgb(255 255 255 / 0.04),
+      inset 0 0 14px 1px rgb(255 255 255 / 0.08);
+    --isl-halo: 0 40px 90px -36px color-mix(in oklab, var(--axi-violet) 55%, transparent), 0 18px 50px -24px color-mix(in oklab, var(--axi-brand) 45%, transparent);
+    --island-glow-mix: 26%;
+  }
+
+  /* El canto líquido: un cónico con dos brillos opuestos sobre un filo tenue,
+     recortado con máscara al borde. Estático: una isla no es clicable, así que
+     no reacciona al ratón (eso es del `.glass-control`). */
+  .island-glass::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    padding: 1.5px;
+    border-radius: inherit;
+    background:
+      conic-gradient(from var(--island-rim-angle) at 50% 50%, var(--isl-rim-hi) 0%, transparent 6% 40%, var(--isl-rim-hi) 50%, transparent 56% 94%, var(--isl-rim-hi) 100%),
+      linear-gradient(var(--isl-rim-base), var(--isl-rim-base));
+    pointer-events: none;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  }
+
+  /* La luz: un reflejo suave arriba y una franja diagonal, detrás del contenido. */
+  .island-glass::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      linear-gradient(-45deg, transparent 0%, var(--isl-band) 40% 46%, transparent 54%) 0% 0% / 200% 200%,
+      radial-gradient(60% 45% at 30% 0%, var(--isl-sheen), transparent 70%);
+    pointer-events: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .glass-control::after {
+      transition: none;
+    }
+  }
+
+  /* ---- Control de cristal: el botón líquido (Button variant="glass"). Toma la
+     superficie en la que vive: tinta en la isla blanca, blanco en la negra. ---- */
+  .glass-control {
+    position: relative;
+    isolation: isolate;
+    border-radius: 9999px;
+    color: color-mix(in oklab, var(--foreground) 92%, transparent);
+    background: linear-gradient(-75deg, color-mix(in oklab, var(--background) 8%, transparent), color-mix(in oklab, var(--background) 28%, transparent), color-mix(in oklab, var(--background) 8%, transparent));
+    /* Sin backdrop-filter propio: vive sobre el cristal de la isla, que ya
+       desenfoca, y un segundo filtro anidado solo costaría. */
+    box-shadow:
+      inset 0 0.125em 0.125em color-mix(in oklab, var(--foreground) 5%, transparent),
+      inset 0 -0.125em 0.125em color-mix(in oklab, var(--background) 50%, transparent),
+      0 0.25em 0.125em -0.125em color-mix(in oklab, var(--foreground) 20%, transparent),
+      inset 0 0 0.1em 0.25em color-mix(in oklab, var(--background) 20%, transparent);
+    /* Casi imperceptible: la del original (0,25em) a 14 px parece la palabra duplicada. */
+    text-shadow: 0 0.06em 0.05em color-mix(in oklab, var(--foreground) 8%, transparent);
+    /* La transición la pone el `transition-all` de la base del botón. */
+  }
+  .glass-control:hover {
+    box-shadow:
+      inset 0 0.125em 0.125em color-mix(in oklab, var(--foreground) 5%, transparent),
+      inset 0 -0.125em 0.125em color-mix(in oklab, var(--background) 50%, transparent),
+      0 0.15em 0.05em -0.1em color-mix(in oklab, var(--foreground) 25%, transparent),
+      inset 0 0 0.05em 0.1em color-mix(in oklab, var(--background) 50%, transparent);
+  }
+  .glass-control::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    padding: 1px;
+    border-radius: inherit;
+    background:
+      conic-gradient(from var(--glass-control-angle) at 50% 50%, color-mix(in oklab, var(--foreground) 50%, transparent) 0%, transparent 5% 40%, color-mix(in oklab, var(--foreground) 50%, transparent) 50%, transparent 60% 95%, color-mix(in oklab, var(--foreground) 50%, transparent) 100%),
+      linear-gradient(color-mix(in oklab, var(--background) 50%, transparent), color-mix(in oklab, var(--background) 50%, transparent));
+    pointer-events: none;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+    transition: --glass-control-angle 0.5s ease;
+  }
+  .glass-control:hover::after {
+    --glass-control-angle: -125deg;
+  }
+  @media (hover: none) and (pointer: coarse) {
+    .glass-control:hover::after {
+      --glass-control-angle: -75deg;
+    }
+  }
+
+  /* Sin desenfoque (o si el usuario pide menos transparencia): cuerpo casi opaco, igual de legible. */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .island-glass,
+    .island-glass.surface-dark,
+    .dark .island-glass {
+      --isl-from: color-mix(in oklab, var(--background) 97%, transparent);
+      --isl-to: color-mix(in oklab, var(--background) 95%, transparent);
+    }
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .island-glass,
+    .island-glass.surface-dark,
+    .dark .island-glass {
+      --isl-from: var(--background);
+      --isl-to: var(--background);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+    .glass-control {
+      background: color-mix(in oklab, var(--foreground) 8%, var(--background));
+    }
+  }
 }

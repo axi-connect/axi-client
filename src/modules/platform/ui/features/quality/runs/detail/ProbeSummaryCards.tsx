@@ -139,7 +139,7 @@ export function ProbeSummaryCards({ run }: { run: RunDetail }) {
         </p>
         {run.dataset && misses > 0 && (
           <div className="mt-auto pt-2">
-            <Button asChild variant="secondary">
+            <Button asChild variant="contrast">
               <Link href={`/platform/quality/datasets/${run.dataset.id}`} prefetch={false}>
                 Revisar en el dataset
                 <ArrowRight aria-hidden="true" />

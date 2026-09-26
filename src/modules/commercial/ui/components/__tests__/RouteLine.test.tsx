@@ -30,9 +30,14 @@ const hex = (value: string) => [1, 3, 5].map((i) => parseInt(value.slice(i, i + 
 /** `color-mix(in srgb, A p%, B)`: interpolación en sRGB codificado, como el navegador. */
 const mix = (a: number[], b: number[], p: number) => a.map((v, i) => v * p + b[i] * (1 - p));
 
-/** Lee `--background`/`--foreground` del primer bloque `selector {` de globals.css. */
+/**
+ * Lee `--background`/`--foreground` del primer bloque de globals.css cuya lista
+ * de selectores empieza por `selector` (`:root,\n.surface-light {` cuenta).
+ */
 function tokens(css: string, selector: string): { bg: number[]; fg: number[] } {
-  const start = css.indexOf(`${selector} {`);
+  const head = new RegExp(`(?:^|\\n)${selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}[\\s,][^{]*\\{`).exec(css);
+  if (head === null) throw new Error(`sin bloque ${selector}`);
+  const start = head.index;
   const block = css.slice(start, css.indexOf("}", start));
   const read = (name: string) => {
     const match = new RegExp(`--${name}:\\s*(#[0-9a-fA-F]{6})`).exec(block);
