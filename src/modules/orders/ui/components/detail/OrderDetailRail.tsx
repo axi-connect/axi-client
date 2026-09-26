@@ -26,7 +26,16 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { ShopifyOriginBadge, StatusDotBadge } from "@/shared/components/ui/status-badges";
 import { FieldList } from "@/shared/components/features/field-list";
-import { PaymentPlanBlock } from "@/modules/collections/ui/components/PaymentPlanBlock";
+import { InkIsland, Kicker, StatePill, type StatePillTone } from "@/shared/components/features/bento";
+// El dueño del plan de pagos es el slice collections: se consume por su barrel (§3.3).
+import {
+  AllocationPreview,
+  installmentPending,
+  nextInstallment,
+  PaymentPlanBlock,
+  planInstallmentLabel,
+  type PlanDetailDTO,
+} from "@/modules/collections/public";
 import { DocumentsList, latestChange } from "@/modules/documents/public";
 import { OrderBalanceBlock } from "./OrderBalanceBlock";
 import {
@@ -73,6 +82,71 @@ const PAYMENT_STATUS_LABEL: Record<OrderPaymentDTO["status"], string> = {
   rejected: "Rechazado",
 };
 
+const PAYMENT_STATUS_TONE: Record<OrderPaymentDTO["status"], StatePillTone> = {
+  reported: "warning",
+  verified: "success",
+  rejected: "destructive",
+};
+
+/**
+ * Los comprobantes por revisar, el más antiguo primero: es el que lleva más
+ * tiempo esperando respuesta. La isla y «Verificar pago» del pie abren el
+ * MISMO (auditoría P1–P5, B9).
+ */
+export function pendingProofs(order: Pick<OrderDTO, "payments">): OrderPaymentDTO[] {
+  return order.payments
+    .filter((payment) => payment.status === "reported")
+    .sort((a, b) => a.created_at.localeCompare(b.created_at));
+}
+
+/**
+ * La isla del pedido (§9.5.1, cristal): el comprobante más antiguo por
+ * revisar, con lo que dijo el cliente y lo que faltaría si es cierto. Sin
+ * comprobantes pendientes no existe — no se inventa otro «lo próximo».
+ */
+export function PendingProofIsland({ order, onReview }: { order: OrderDTO; onReview: (payment: OrderPaymentDTO) => void }) {
+  const pending = pendingProofs(order);
+  const first = pending[0] ?? null;
+  if (first === null) return null;
+  // Solo si el reporte va en la moneda del pedido: restar dólares de pesos no es
+  // un saldo. En otra moneda, el cálculo lo hace quien verifica, con la tasa.
+  const leftIfTrue =
+    first.amount_cents === null || first.currency !== order.currency
+      ? null
+      : Math.max(0, order.balance_cents - first.amount_cents);
+  return (
+    <InkIsland label="Comprobante por revisar" className="gap-3 p-5">
+      <Kicker>Lo próximo</Kicker>
+      <p className="font-heading text-xl leading-tight font-bold tracking-tight">
+        {pending.length === 1 ? "Llegó un comprobante" : `Llegaron ${String(pending.length)} comprobantes`}
+      </p>
+      <dl className="flex flex-col text-[13px]">
+        <div className="flex justify-between gap-3 border-t border-border py-2">
+          <dt className="text-muted-foreground">Dice que pagó</dt>
+          <dd className="font-semibold tabular-nums">
+            {first.amount_cents === null ? "sin monto" : formatMoney(first.amount_cents, first.currency)}
+          </dd>
+        </div>
+        <div className="flex justify-between gap-3 border-t border-border py-2">
+          <dt className="text-muted-foreground">Por</dt>
+          <dd className="min-w-0 truncate text-right">
+            {first.method_label ?? "Pago reportado"} · {relativeTime(first.created_at)}
+          </dd>
+        </div>
+        {leftIfTrue !== null ? (
+          <div className="flex justify-between gap-3 border-t border-border py-2">
+            <dt className="text-muted-foreground">Si es cierto, falta</dt>
+            <dd className="tabular-nums">{formatMoney(leftIfTrue, order.currency)}</dd>
+          </div>
+        ) : null}
+      </dl>
+      <Button variant="contrast" className="w-full" onClick={() => onReview(first)}>
+        Revisar el pago
+      </Button>
+    </InkIsland>
+  );
+}
+
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
     <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -92,6 +166,11 @@ function TicketSeparator() {
   );
 }
 
+/** El plan leído, solo si es del pedido que se mira (auditoría P1–P5, M6). */
+export function planFor<T>(loaded: { orderId: string; plan: T | null }, orderId: string): T | null {
+  return loaded.orderId === orderId ? loaded.plan : null;
+}
+
 export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose: () => void }) {
   const { hasPermission } = useAuth();
   const canManage = hasPermission("orders:manage");
@@ -106,7 +185,15 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
   const [reportingPayment, setReportingPayment] = useState(false);
   const [review, setReview] = useState<PaymentReview | null>(null);
   // F8: cuándo se reprogramó el plan; el contrato lo pinta, así que cuenta para «desactualizado».
-  const [scheduleChangedAt, setScheduleChangedAt] = useState<string | null>(null);
+  // El plan va con el pedido del que se leyó: al cambiar de pedido, hasta que
+  // llega el suyo, no hay plan — nunca la cuota ni el reparto del ANTERIOR.
+  const [loadedPlan, setLoadedPlan] = useState<{ orderId: string; plan: PlanDetailDTO | null }>({
+    orderId,
+    plan: null,
+  });
+  const plan = planFor(loadedPlan, orderId);
+  const scheduleChangedAt = plan?.schedule_changed_at ?? null;
+  const nextDue = plan === null ? null : nextInstallment(plan);
 
   const load = useCallback(async () => {
     try {
@@ -145,7 +232,7 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
     await Promise.all([load(), refreshOrderInBoard(orderId), fetchStats()]);
   }
 
-  const reportedPayments = order?.payments.filter((p) => p.status === "reported") ?? [];
+  const reportedPayments = order === null ? [] : pendingProofs(order);
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end lg:static lg:z-auto lg:h-full">
@@ -186,7 +273,7 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
         </header>
 
         {/* Cuerpo scrolleable */}
-        <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-4">
+        <div className="sidebar-scroll min-h-0 flex-1 space-y-5 overflow-y-auto p-4">
           {loading ? (
             <div className="space-y-3" role="status" aria-label="Cargando pedido">
               <Skeleton className="h-4 w-2/3" />
@@ -201,13 +288,22 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
               {/* F3 Cobros: lo primero es cuánto falta por cobrar */}
               <OrderBalanceBlock order={order} />
 
+              {/* Premium P3: lo más accionable del pedido, si lo hay — un comprobante por revisar. */}
+              {canManage ? <PendingProofIsland order={order} onReview={(payment) => setReview({ payment, action: "verify" })} /> : null}
+
               {/* F4 Cobros: y cuándo tocaba cada parte. Se pinta solo si el
                   pedido tiene plan — sin la función, esta sección no existe. */}
               <PaymentPlanBlock
+                key={order.id}
                 orderId={order.id}
                 contactName={order.contact.full_name ?? "el cliente"}
                 refreshKey={order.updated_at}
-                onLoaded={(plan) => setScheduleChangedAt(plan?.schedule_changed_at ?? null)}
+                onLoaded={(next) => setLoadedPlan({ orderId: order.id, plan: next })}
+                // Una isla por pantalla: con un comprobante por revisar, esa es la isla.
+                island={!(canManage && order.payments.some((payment) => payment.status === "reported"))}
+                onRegisterPayment={
+                  canManage && canTransition(order.status, "payment_reported") ? () => setReportingPayment(true) : undefined
+                }
               />
 
               {/* Artículos */}
@@ -310,7 +406,7 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
                   <p className="text-xs text-muted-foreground">Aún no hay pagos reportados.</p>
                 ) : (
                   order.payments.map((payment) => (
-                    <div key={payment.id} className="space-y-3 rounded-2xl border border-border bg-background p-4">
+                    <div key={payment.id} className="space-y-3 rounded-3xl border border-border bg-card p-4">
                       <div className="flex items-center justify-between gap-2">
                         <p className="min-w-0 truncate text-sm font-medium">
                           {payment.method_label ?? "Pago reportado"}
@@ -318,17 +414,8 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
                             ? ` · ${formatMoney(payment.amount_cents, payment.currency)}`
                             : ""}
                         </p>
-                        <span
-                          className={cn(
-                            "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium",
-                            // §10: verde y ámbar como texto no llegan a 4,5:1; el tinte va al fondo
-                            payment.status === "verified" && "bg-success/12 text-foreground",
-                            payment.status === "reported" && "bg-warning/15 text-foreground",
-                            payment.status === "rejected" && "bg-destructive/10 text-destructive",
-                          )}
-                        >
-                          {PAYMENT_STATUS_LABEL[payment.status]}
-                        </span>
+                        {/* §9.5: el color del estado vive en el punto; el texto, en foreground */}
+                        <StatePill tone={PAYMENT_STATUS_TONE[payment.status]}>{PAYMENT_STATUS_LABEL[payment.status]}</StatePill>
                       </div>
                       <p className="text-xs text-muted-foreground">
                         {payment.reference !== null ? `Ref. ${payment.reference} · ` : ""}
@@ -533,6 +620,14 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
         {reportingPayment && order !== null ? (
           <ReportPaymentDialog
             order={mapOrderToRow(order)}
+            installment={
+              plan !== null && nextDue !== null
+                ? { label: planInstallmentLabel(nextDue, plan.installments), cents: installmentPending(nextDue) }
+                : null
+            }
+            allocation={
+              plan === null ? undefined : (amountCents) => <AllocationPreview plan={plan} amountCents={amountCents} />
+            }
             onOpenChange={(open) => {
               if (!open) {
                 setReportingPayment(false);

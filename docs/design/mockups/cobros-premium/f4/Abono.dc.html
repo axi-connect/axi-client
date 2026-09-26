@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Registrar abono</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&amp;family=Poppins:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Poppins,system-ui,sans-serif;color:#0B0B0E;background:#5A5A60}
+.d{font-family:Urbanist,Poppins,sans-serif}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:999px;font:500 14px Poppins,sans-serif;border:0;cursor:pointer}
+.btn-p{background:#D13F42;color:#FFFFFF;box-shadow:0 10px 24px -10px rgba(209,63,66,.55)}
+.btn-g{background:transparent;color:#0B0B0E}
+.chip{height:36px;padding:0 14px;border-radius:999px;border:1px solid rgba(0,0,0,.10);background:#FFFFFF;font:500 13px Poppins,sans-serif;color:#0B0B0E;white-space:nowrap;cursor:pointer}
+.chip-on{background:#0B0B0E;color:#FFFFFF;border-color:#0B0B0E}
+.input{height:52px;border-radius:14px;border:1px solid rgba(0,0,0,.16);background:#FFFFFF;padding:0 16px;font:700 24px Urbanist,Poppins,sans-serif;color:#0B0B0E;box-sizing:border-box;width:100%;font-variant-numeric:tabular-nums;display:flex;align-items:center}
+.al{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 0;border-top:1px solid rgba(0,0,0,.06)}
+.ck{width:24px;height:24px;border-radius:999px;display:flex;align-items:center;justify-content:center;box-sizing:border-box}
+.sel{height:44px;border-radius:12px;border:1px solid rgba(0,0,0,.12);padding:0 12px;font:500 14px Poppins,sans-serif;display:flex;align-items:center;justify-content:space-between;gap:8px}
+</style>
+</helmet>
+<div style="width:1440px;height:900px;background:linear-gradient(180deg,#6A6A70,#4E4E54);display:flex;align-items:center;justify-content:center;overflow:hidden">
+  <section role="dialog" aria-modal="true" aria-labelledby="ab-title" style="width:560px;background:#FFFFFF;border-radius:28px;box-shadow:0 1px 2px rgba(0,0,0,.06),0 24px 64px rgba(0,0,0,.28);padding:28px;box-sizing:border-box;display:flex;flex-direction:column;gap:18px">
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <span style="font-size:12px;color:#6B6B73">Pedido #0044 · Pedro Nieto · falta $ 9.269.326</span>
+      <h2 id="ab-title" class="d" style="margin:0;font-size:26px;font-weight:700">Registrar abono</h2>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <span style="font-size:13px;font-weight:600">Cuánto pagó</span>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <sc-for list="{{opts}}" as="o" hint-placeholder-count="3"><button class="chip {{o.cls}}" aria-pressed="{{o.pressed}}" onClick="{{o.pick}}">{{o.label}}</button></sc-for>
+      </div>
+      <div class="input" role="textbox" aria-label="Monto del abono">$ {{amount}}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+      <label style="display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:500;color:#3A3A40">Por<span class="sel">Nequi<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"></path></svg></span></label>
+      <label style="display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:500;color:#3A3A40">El día<span class="sel">hoy, vie 25 sep</span></label>
+    </div>
+    <div style="padding:6px 16px 4px;border-radius:18px;background:#F7F7F8">
+      <span style="display:block;font-size:12px;color:#6B6B73;padding:8px 0 4px">Se reparte así, primero lo que vence antes</span>
+      <sc-for list="{{alloc}}" as="a" hint-placeholder-count="2">
+        <div class="al">
+          <sc-if value="{{a.full}}" hint-placeholder-val="{{true}}"><span class="ck" style="background:#0B0B0E;color:#FFFFFF"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 12 5 5 9-10"></path></svg></span></sc-if>
+          <sc-if value="{{a.part}}" hint-placeholder-val="{{false}}"><span class="ck" style="border:2px solid #0B0B0E;background:linear-gradient(90deg,#0B0B0E 50%,#FFFFFF 50%)"></span></sc-if>
+          <sc-if value="{{a.none}}" hint-placeholder-val="{{false}}"><span class="ck" style="border:1.5px solid rgba(0,0,0,.24)"></span></sc-if>
+          <div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:13.5px;font-weight:600">{{a.name}}</span><span style="font-size:12px;color:#6B6B73">{{a.detail}}</span></div>
+          <span style="font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap">{{a.value}}</span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+      <span style="font-size:13px;color:#3A3A40">Queda <strong style="font-weight:600;font-variant-numeric:tabular-nums">$ {{left}}</strong></span>
+      <div style="display:flex;gap:8px"><button class="btn btn-g">Cancelar</button><button class="btn btn-p">Registrar $ {{amount}}</button></div>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { pick: 'cuota' };
+  }
+  renderVals() {
+    const fmt = (n) => n.toLocaleString('es-CO');
+    const values = { cuota: 4634663, otro: 6000000, todo: 9269326 };
+    const amount = values[this.state.pick];
+    const cuotas = [
+      { name: 'Cuota 1', due: 'vence el jue 1 oct', v: 4634663 },
+      { name: 'Saldo', due: 'vence el mié 14 oct', v: 4634663 }
+    ];
+    let rest = amount;
+    const alloc = cuotas.map((c) => {
+      const got = Math.min(rest, c.v);
+      rest -= got;
+      const full = got === c.v, none = got === 0, part = !full && !none;
+      return {
+        name: c.name, full, part, none,
+        detail: full ? c.due + ' · queda saldada' : part ? c.due + ' · faltan $ ' + fmt(c.v - got) : c.due + ' · sin cambios',
+        value: none ? '—' : '$ ' + fmt(got)
+      };
+    });
+    const opts = [['cuota', 'La cuota · $ 4.634.663'], ['otro', 'Otro monto'], ['todo', 'Todo · $ 9.269.326']].map(([k, label]) => ({
+      label, cls: k === this.state.pick ? 'chip-on' : '', pressed: k === this.state.pick ? 'true' : 'false', pick: () => this.setState({ pick: k })
+    }));
+    return { opts, alloc, amount: fmt(amount), left: fmt(9269326 - amount) };
+  }
+}
+</script>
+</body>
+</html>

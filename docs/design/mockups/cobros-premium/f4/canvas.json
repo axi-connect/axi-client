@@ -1,0 +1,101 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-09-26T00:10:00Z"
+  },
+  "title": "Cobros premium · F4 La cartera",
+  "launch": {
+    "view": "canvas"
+  },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "1 · Cartera — a quién escribir primero (interactivo)",
+      "is_interactive": true
+    },
+    "Movil.dc.html": {
+      "x": 1520,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "2 · Cartera — celular, sin partir fechas ni montos"
+    },
+    "Oscuro.dc.html": {
+      "x": 1990,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "3 · Cartera — oscuro"
+    },
+    "Estados.dc.html": {
+      "x": 3510,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "4 · Cartera — nadie debe, no se pudo cargar, y el negocio que no tiene cartera"
+    },
+    "Plan.dc.html": {
+      "x": 0,
+      "y": 1320,
+      "w": 1440,
+      "h": 900,
+      "title": "5 · Pedido › Plan de pagos — el calendario del trato"
+    },
+    "Abono.dc.html": {
+      "x": 1520,
+      "y": 1320,
+      "w": 1440,
+      "h": 900,
+      "title": "6 · Registrar abono — el reparto por cuotas a la vista",
+      "is_interactive": true
+    },
+    "Reprogramar.dc.html": {
+      "x": 3040,
+      "y": 1320,
+      "w": 1440,
+      "h": 900,
+      "title": "7 · Reprogramar — la suma cuadra en vivo",
+      "is_interactive": true
+    },
+    "Politica.dc.html": {
+      "x": 4560,
+      "y": 1320,
+      "w": 1440,
+      "h": 900,
+      "title": "8 · Pagos › Plan de pagos — la política y el calendario que produce",
+      "is_interactive": true
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Movil.dc.html",
+    "Oscuro.dc.html",
+    "Estados.dc.html",
+    "Plan.dc.html",
+    "Abono.dc.html",
+    "Reprogramar.dc.html",
+    "Politica.dc.html"
+  ],
+  "notes": {
+    "rowA": {
+      "x": 0,
+      "y": -300,
+      "text": "La cartera",
+      "kind": "title1",
+      "maxW": 4950
+    },
+    "rowB": {
+      "x": 0,
+      "y": 1060,
+      "text": "El plan de pagos del pedido y su política",
+      "kind": "title1",
+      "maxW": 6000
+    }
+  },
+  "designSystems": []
+}

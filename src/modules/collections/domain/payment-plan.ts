@@ -52,6 +52,28 @@ export function installmentLabel(
 }
 
 /**
+ * La etiqueta de una cuota dentro de SU plan: solo la última de tipo saldo es
+ * «Saldo final». Reprogramar encoge el saldo viejo a medio pagar a lo que ya
+ * tenía y lo cierra, pero conserva su `kind`; el calendario nuevo termina en
+ * otro saldo. Sin esto el plan decía «Saldo final» dos veces (QA premium P4).
+ */
+export function planInstallmentLabel(
+  installment: Pick<InstallmentDTO, "kind" | "seq">,
+  installments: readonly Pick<InstallmentDTO, "kind" | "seq">[],
+): string {
+  if (installment.kind === "balance") {
+    const last = installments.reduce(
+      (max, row) => (row.kind === "balance" ? Math.max(max, row.seq) : max),
+      0,
+    );
+    if (installment.seq !== last) {
+      return `Cuota ${String(installment.seq)} de ${String(installments.length)}`;
+    }
+  }
+  return installmentLabel(installment, installments.length);
+}
+
+/**
  * Progreso del plan, medido contra el TOTAL DEL PEDIDO y no contra la suma de
  * las cuotas: son la misma cifra por construcción, pero si algún día dejan de
  * serlo, la que manda es la del pedido.
@@ -84,4 +106,48 @@ export function installmentPending(
   installment: Pick<InstallmentDTO, "amount_cents" | "paid_cents">,
 ): number {
   return Math.max(0, installment.amount_cents - installment.paid_cents);
+}
+
+export interface AllocationLine {
+  installment: InstallmentDTO;
+  label: string;
+  /** Lo que este abono le pone a la cuota. */
+  applied_cents: number;
+  /** Lo que le quedará pendiente después. */
+  left_cents: number;
+  state: "settled" | "partial" | "untouched";
+}
+
+/**
+ * Cómo se repartiría un abono si se verifica (Cobros premium P4): la MISMA
+ * regla que `allocateFifo` en el servidor — por `seq`, lo que vence antes
+ * primero, cada cuota hasta lo que le falta. Lo que sobra es sobrepago.
+ * Es una vista previa: el reparto real lo hace el servidor al verificar.
+ */
+export function allocationPreview(
+  installments: readonly InstallmentDTO[],
+  amountCents: number,
+): { lines: AllocationLine[]; unallocated_cents: number } {
+  let left = Math.max(0, Math.trunc(amountCents));
+  const open = [...installments]
+    .filter((row) => row.status !== "paid" && row.status !== "waived")
+    .sort((a, b) => a.seq - b.seq);
+  const lines = open.map((installment): AllocationLine => {
+    const pending = installmentPending(installment);
+    const applied = Math.min(pending, left);
+    left -= applied;
+    return {
+      installment,
+      label: planInstallmentLabel(installment, installments),
+      applied_cents: applied,
+      left_cents: pending - applied,
+      state:
+        applied === 0
+          ? "untouched"
+          : applied === pending
+            ? "settled"
+            : "partial",
+    };
+  });
+  return { lines, unallocated_cents: left };
 }

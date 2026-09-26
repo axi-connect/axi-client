@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Reprogramar cuotas</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&amp;family=Poppins:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Poppins,system-ui,sans-serif;color:#0B0B0E;background:#5A5A60}
+.d{font-family:Urbanist,Poppins,sans-serif}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:999px;font:500 14px Poppins,sans-serif;border:0;cursor:pointer}
+.btn-p{background:#D13F42;color:#FFFFFF;box-shadow:0 10px 24px -10px rgba(209,63,66,.55)}
+.btn-g{background:transparent;color:#0B0B0E}
+.seg{height:36px;padding:0 14px;border-radius:999px;border:0;background:transparent;font:500 13px Poppins,sans-serif;color:#3A3A40;cursor:pointer;white-space:nowrap}
+.seg-on{background:#0B0B0E;color:#FFFFFF}
+.qrow{display:grid;grid-template-columns:28px minmax(0,1fr) 150px 170px;gap:12px;align-items:center;padding:10px 0;border-top:1px solid rgba(0,0,0,.06)}
+.field{height:44px;border-radius:12px;border:1px solid rgba(0,0,0,.12);padding:0 12px;font:500 14px Poppins,sans-serif;display:flex;align-items:center;box-sizing:border-box;font-variant-numeric:tabular-nums;white-space:nowrap}
+.n{width:28px;height:28px;border-radius:999px;border:1px solid rgba(0,0,0,.14);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;box-sizing:border-box}
+</style>
+</helmet>
+<div style="width:1440px;height:900px;background:linear-gradient(180deg,#6A6A70,#4E4E54);display:flex;align-items:center;justify-content:center;overflow:hidden">
+  <section role="dialog" aria-modal="true" aria-labelledby="rp-title" style="width:620px;background:#FFFFFF;border-radius:28px;box-shadow:0 1px 2px rgba(0,0,0,.06),0 24px 64px rgba(0,0,0,.28);padding:28px;box-sizing:border-box;display:flex;flex-direction:column;gap:18px">
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <span style="font-size:12px;color:#6B6B73">Pedido #0044 · Pedro Nieto · sale el sáb 14 nov</span>
+      <h2 id="rp-title" class="d" style="margin:0;font-size:26px;font-weight:700">Reprogramar cuotas</h2>
+      <span style="font-size:13px;color:#3A3A40">Lo pagado no se toca. Repartes lo que falta: <strong style="font-weight:600">$ 9.269.326</strong>.</span>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <span style="font-size:13px;font-weight:600">En cuántas cuotas</span>
+      <div role="radiogroup" aria-label="Número de cuotas" style="display:flex;gap:2px;padding:4px;border-radius:999px;background:#F0F0F2">
+        <sc-for list="{{counts}}" as="c" hint-placeholder-count="3"><button class="seg {{c.cls}}" role="radio" aria-checked="{{c.checked}}" onClick="{{c.pick}}">{{c.label}}</button></sc-for>
+      </div>
+    </div>
+    <div>
+      <sc-for list="{{rows}}" as="r" hint-placeholder-count="3">
+        <div class="qrow"><span class="n">{{r.n}}</span><span style="font-size:13.5px;font-weight:600">{{r.name}}</span><span class="field">{{r.date}}</span><span class="field">$ {{r.value}}</span></div>
+      </sc-for>
+    </div>
+    <sc-if value="{{ok}}" hint-placeholder-val="{{true}}">
+      <div role="status" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:16px;background:#F7F7F8;font-size:13px"><span style="width:22px;height:22px;border-radius:999px;background:#0B0B0E;color:#FFFFFF;display:flex;align-items:center;justify-content:center"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 12 5 5 9-10"></path></svg></span>Suma $ 9.269.326: cuadra con lo que falta. El saldo vence antes de la salida.</div>
+    </sc-if>
+    <sc-if value="{{bad}}" hint-placeholder-val="{{false}}">
+      <div role="alert" style="display:grid;grid-template-columns:20px minmax(0,1fr);gap:10px;padding:12px 14px;border-radius:16px;border:1px solid rgba(220,38,38,.35);background:rgba(220,38,38,.05);font-size:13px;line-height:1.45"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4M12 16h.01"></path></svg><span>Suman $ 8.634.663: <strong style="font-weight:600;color:#B91C1C">faltan $ 634.663</strong> por repartir. Súmalos a una cuota para poder guardar.</span></div>
+    </sc-if>
+    <div style="display:flex;justify-content:flex-end;align-items:center;gap:8px">
+      <div style="display:flex;gap:8px"><button class="btn btn-g">Cancelar</button><button class="btn btn-p" aria-disabled="{{notOk}}" style="opacity:{{saveOpacity}}">Guardar el calendario</button></div>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"descuadre":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { count: 2 };
+  }
+  renderVals() {
+    const fmt = (n) => n.toLocaleString('es-CO');
+    const total = 9269326;
+    const { count } = this.state;
+    const bad = this.props.descuadre ?? false;
+    const dates = { 1: ['mié 14 oct'], 2: ['jue 1 oct', 'mié 14 oct'], 3: ['jue 1 oct', 'jue 8 oct', 'mié 14 oct'] }[count];
+    const base = Math.floor(total / count);
+    const rows = dates.map((d, i) => {
+      let v = i === count - 1 ? total - base * (count - 1) : base;
+      if (bad && i === count - 1) v -= 634663;
+      return { n: String(i + 1), name: i === count - 1 ? 'Saldo' : 'Cuota ' + (i + 1), date: d, value: fmt(v) };
+    });
+    const counts = [1, 2, 3].map((n) => ({ label: n === 1 ? '1 · todo junto' : String(n), cls: n === count ? 'seg-on' : '', checked: n === count ? 'true' : 'false', pick: () => this.setState({ count: n }) }));
+    return {
+      counts, rows, ok: !bad, bad,
+      notOk: bad ? 'true' : 'false', saveOpacity: bad ? '0.6' : '1'
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -5,6 +5,7 @@ import { useDraggable } from "@dnd-kit/core";
 import { motion, useReducedMotion } from "framer-motion";
 import { CheckCircle2, EllipsisVertical, Eye, Paperclip, PackageCheck, Receipt, ShieldCheck, XCircle } from "lucide-react";
 import { cn } from "@/core/lib/utils";
+import { StatePill } from "@/shared/components/features/bento";
 import { relativeTime } from "@/core/lib/relative-time";
 import { fade, spring } from "@/core/styles/motion";
 import { Avatar } from "@/shared/components/ui/avatar";
@@ -65,7 +66,7 @@ function OrderCardBase({ order, highlighted, canManage, dragDisabled, onAction }
         {...listeners}
         data-order-id={order.id}
         className={cn(
-          "group rounded-2xl border border-border bg-background p-3.5 shadow-none transition-shadow",
+          "group rounded-3xl border border-border bg-card p-4 shadow-none transition-shadow",
           canManage && !dragDisabled && "cursor-grab active:cursor-grabbing",
           isDragging && "opacity-40",
           highlighted && "ring-2 ring-ring",
@@ -81,10 +82,7 @@ function OrderCardBase({ order, highlighted, canManage, dragDisabled, onAction }
           </p>
           <div className="flex items-center gap-1">
             {order.has_payment_proof ? (
-              <Paperclip
-                aria-label="Comprobante adjunto"
-                className={cn("size-3.5", order.pending_payment ? "text-warning" : "text-muted-foreground")}
-              />
+              <Paperclip aria-label="Comprobante adjunto" className="size-3.5 text-muted-foreground" />
             ) : null}
             {order.status === "fulfilled" ? (
               <CheckCircle2 aria-hidden className="size-3.5 text-success" />
@@ -150,6 +148,12 @@ function OrderCardBase({ order, highlighted, canManage, dragDisabled, onAction }
         <p className="mt-2 text-base font-semibold tabular-nums">
           {formatMoney(order.total_cents, order.currency)}
         </p>
+        {/* Premium P3: el comprobante por revisar se dice con su punto, no con un icono ámbar */}
+        {order.pending_payment ? (
+          <span className="mt-2 flex">
+            <StatePill tone="warning">Por revisar</StatePill>
+          </span>
+        ) : null}
 
         {/* F3 Cobros: un pedido con abono sigue siendo un pedido confirmado, así
             que el cobro entra en la tarjeta y NO como columna del tablero. */}

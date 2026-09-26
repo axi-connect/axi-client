@@ -1,39 +1,70 @@
 "use client";
 
-import { BellOff, CheckCheck, Clock } from "lucide-react";
+import { BellOff, Clock } from "lucide-react";
 
+import { InkIsland, Kicker } from "@/shared/components/features/bento";
 import {
+  reminderThread,
   renderReminderPreview,
-  type ReminderTemplates,
+  REMINDER_TEMPLATE_LABELS,
+  SAMPLE_DUE_DATE,
+  SAMPLE_REMINDER_VARS,
+  type CollectionsPolicyDTO,
 } from "@/modules/collections/domain/reminder";
+import { formatShortDate } from "@/core/lib/format";
 
 /**
- * La vista previa de la cadencia: el HILO, no un calendario.
+ * «Así le escribimos» (Cobros premium P5): la cadencia como CONVERSACIÓN, no
+ * como calendario — la isla de la pestaña.
  *
  * El dueño no está configurando un cron; está decidiendo qué le llega por
- * WhatsApp a una persona que le debe dinero. Enseñarlo como conversación hace
- * visible de un vistazo lo que una rejilla de ajustes esconde: que apagar una
- * plantilla deja un hueco ese día, y que sin plantilla aprobada de Meta el
- * aviso de mora no sale nunca — justo a quien más hay que perseguir.
+ * WhatsApp a una persona que le debe dinero. Un mensaje por desfase, con el
+ * texto que toca ese día y los datos de una cuota de ejemplo. Lo que un ajuste
+ * esconde, la conversación lo enseña: apagar un texto deja un hueco ese día, y
+ * sin plantilla aprobada de Meta la mora no sale fuera de las 24 horas.
  */
 export function ReminderThread({
-  templates,
-  hasOverdueHsm,
+  policy,
   channelsOff,
 }: {
-  templates: ReminderTemplates;
-  /** Sin HSM de mora, el aviso fuera de la ventana de 24 h no sale. */
-  hasOverdueHsm: boolean;
+  policy: Pick<
+    CollectionsPolicyDTO,
+    | "reminder_days_before"
+    | "overdue_reminder_days"
+    | "templates"
+    | "hsm_templates"
+    | "pause_on_promise"
+    | "reminder_channels"
+  >;
   channelsOff: boolean;
 }) {
+  const { entries, maxMessages } = reminderThread(policy);
+  const firstName = SAMPLE_REMINDER_VARS.contact_name.split(" ")[0];
+  const stops = policy.pause_on_promise
+    ? "en cuanto pague o prometa"
+    : "en cuanto pague";
+  // Cuenta avisos (días), no mensajes por canal: con los dos canales encendidos
+  // cada aviso sale por WhatsApp y por correo, y se dice.
+  const both =
+    policy.reminder_channels.whatsapp && policy.reminder_channels.email;
+  const count =
+    maxMessages === 0
+      ? "Con esto no le escribiríamos nunca."
+      : `${maxMessages === 1 ? "Un aviso" : `${String(maxMessages)} avisos`} como mucho${
+          both ? ", cada uno por WhatsApp y por correo" : ""
+        }: ${maxMessages === 1 ? "para" : "paran"} ${stops}.`;
+
   return (
-    <aside className="rounded-[20px] border border-border bg-background p-5 pb-6">
-      <p className="text-[12.5px] text-muted-foreground">
-        Lo que le va a llegar a
-      </p>
-      <p className="mt-0.5 text-[15.5px] font-semibold tracking-[-0.01em]">
-        Laura Gómez · cuota 2 de 3
-      </p>
+    <InkIsland label="Así le escribimos" className="gap-4 xl:sticky xl:top-6">
+      <div className="flex flex-col gap-1.5">
+        <Kicker>Así le escribimos</Kicker>
+        <p className="font-heading text-xl leading-tight font-bold tracking-tight md:text-2xl">
+          {firstName}, por la cuota del {formatShortDate(SAMPLE_DUE_DATE)}
+        </p>
+        {channelsOff ? null : (
+          <p className="text-[12.5px] text-muted-foreground">{count}</p>
+        )}
+      </div>
 
       {channelsOff ? (
         <Gap icon={<BellOff aria-hidden="true" className="size-4 shrink-0" />}>
@@ -41,70 +72,60 @@ export function ReminderThread({
           <b className="font-medium text-foreground">ningún</b> aviso, por mucha
           cadencia que haya. La cartera se sigue viendo; nadie recibe nada.
         </Gap>
+      ) : entries.length === 0 ? (
+        <Gap icon={<BellOff aria-hidden="true" className="size-4 shrink-0" />}>
+          Sin días en la cadencia no hay a qué día escribirle.
+        </Gap>
       ) : (
-        <div className="mt-5 flex flex-col gap-3.5">
-          <When>9 de octubre · 7 días antes</When>
-          <Step template={templates.due_soon} stage="antes de vencer" />
-
-          <When>16 de octubre · el día del vencimiento</When>
-          <Step
-            template={templates.due_today}
-            stage="del día del vencimiento"
-          />
-
-          <When>17 de octubre · 1 día de mora</When>
-          {hasOverdueHsm || !templates.overdue.enabled ? (
-            <Step template={templates.overdue} stage="de mora" />
-          ) : (
-            <Gap
-              icon={<Clock aria-hidden="true" className="size-4 shrink-0" />}
-            >
-              Si Laura lleva días sin escribir, la ventana de 24 horas de
-              WhatsApp está cerrada y este aviso{" "}
-              <b className="font-medium text-foreground">no sale</b>. Es justo a
-              quien hay que perseguir. Con una plantilla aprobada de Meta, sí
-              saldría.
-            </Gap>
-          )}
-        </div>
+        <ol
+          aria-label="Mensajes de ejemplo"
+          className="m-0 flex list-none flex-col gap-3 p-0"
+        >
+          {entries.map((entry) => (
+            <li key={entry.id} className="flex flex-col gap-1.5">
+              <p className="text-center text-[11.5px] text-muted-foreground tabular-nums">
+                {entry.when}
+              </p>
+              {entry.disabled ? (
+                <Gap
+                  icon={
+                    <BellOff aria-hidden="true" className="size-4 shrink-0" />
+                  }
+                >
+                  Ese día{" "}
+                  <b className="font-medium text-foreground">
+                    no se escribe nada
+                  </b>
+                  : el texto «
+                  {REMINDER_TEMPLATE_LABELS[entry.template].toLowerCase()}» está
+                  apagado. Queda anotado en el historial del plan con su razón.
+                </Gap>
+              ) : (
+                <>
+                  <p className="max-w-[92%] self-end rounded-[18px] rounded-br-[6px] bg-card px-3.5 py-2.5 text-[13px] leading-relaxed shadow-sm">
+                    {renderReminderPreview(
+                      policy.templates[entry.template].body,
+                    )}
+                  </p>
+                  {entry.whatsappNeedsHsm ? (
+                    <Gap
+                      icon={
+                        <Clock aria-hidden="true" className="size-4 shrink-0" />
+                      }
+                    >
+                      Si {firstName} lleva más de 24 horas sin escribir, por
+                      WhatsApp{" "}
+                      <b className="font-medium text-foreground">no sale</b>:
+                      este texto no tiene plantilla aprobada de Meta.
+                    </Gap>
+                  ) : null}
+                </>
+              )}
+            </li>
+          ))}
+        </ol>
       )}
-    </aside>
-  );
-}
-
-function Step({
-  template,
-  stage,
-}: {
-  template: ReminderTemplates[keyof ReminderTemplates];
-  stage: string;
-}) {
-  if (!template.enabled) {
-    return (
-      <Gap icon={<BellOff aria-hidden="true" className="size-4 shrink-0" />}>
-        Ese día{" "}
-        <b className="font-medium text-foreground">no se escribe nada</b>: el
-        aviso {stage} está apagado. Queda anotado en el historial del plan con
-        su razón, para que se sepa que fue una decisión y no un fallo.
-      </Gap>
-    );
-  }
-  return (
-    <div className="max-w-[88%] self-end rounded-[16px] rounded-br-[5px] bg-secondary px-3.5 py-2.5 text-[13px] leading-relaxed">
-      {renderReminderPreview(template.body)}
-      <span className="mt-2 flex items-center justify-end gap-1.5 text-[11px] text-muted-foreground">
-        <CheckCheck aria-hidden="true" className="size-3" />
-        WhatsApp · entregado
-      </span>
-    </div>
-  );
-}
-
-function When({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="text-center text-[11.5px] tabular-nums text-muted-foreground">
-      {children}
-    </p>
+    </InkIsland>
   );
 }
 
@@ -116,7 +137,7 @@ function Gap({
   children: React.ReactNode;
 }) {
   return (
-    <div className="mt-5 flex items-start gap-2.5 rounded-[14px] border border-dashed border-border px-3.5 py-2.5 text-[12.5px] leading-relaxed text-muted-foreground">
+    <div className="flex items-start gap-2.5 rounded-2xl border border-dashed border-border px-3.5 py-2.5 text-[12.5px] leading-relaxed text-muted-foreground">
       {icon}
       <span>{children}</span>
     </div>

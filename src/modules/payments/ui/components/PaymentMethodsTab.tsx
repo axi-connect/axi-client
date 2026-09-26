@@ -9,7 +9,8 @@ import { useAlert } from "@/core/providers/alert-provider";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { EmptyState } from "@/shared/components/features/empty-state";
-import type { PaymentMethodDTO } from "@/modules/payments/domain/payment-method";
+import { PAYMENT_KIND_LABELS, type PaymentMethodDTO } from "@/modules/payments/domain/payment-method";
+import { InkIsland, Kicker } from "@/shared/components/features/bento";
 import {
   deletePaymentMethod,
   listPaymentMethods,
@@ -140,11 +141,11 @@ export function PaymentMethodsTab() {
 
       {state.kind === "loading" ? (
         <div className="space-y-3" role="status" aria-busy="true" aria-label="Cargando medios de pago">
-          <Skeleton className="h-20 w-full rounded-2xl" />
-          <Skeleton className="h-20 w-full rounded-2xl" />
+          <Skeleton className="h-44 w-full rounded-3xl" />
+          <Skeleton className="h-44 w-full rounded-3xl" />
         </div>
       ) : state.kind === "error" ? (
-        <p role="alert" className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+        <p role="alert" className="rounded-3xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
           {state.message}
         </p>
       ) : state.methods.length === 0 ? (
@@ -159,7 +160,8 @@ export function PaymentMethodsTab() {
           }
         />
       ) : (
-        <div className="grid gap-3">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-flow-dense xl:grid-cols-[repeat(2,minmax(0,1fr))_minmax(17rem,21rem)] [&>*]:min-w-0">
+          <SharedMethodsIsland methods={state.methods} />
           {state.methods.map((method) => (
             <PaymentMethodCard
               key={method.id}
@@ -179,5 +181,48 @@ export function PaymentMethodsTab() {
         onSaved={() => void load()}
       />
     </div>
+  );
+}
+
+/**
+ * La isla de Medios (§9.5.1, brillo `ai`): lo que el agente comparte cuando
+ * alguien va a pagar — los medios activos y visibles para la IA, por su nombre.
+ * El número no se repite aquí: vive enmascarado en su ficha.
+ */
+function SharedMethodsIsland({ methods }: { methods: PaymentMethodDTO[] }) {
+  const shared = methods.filter((method) => method.is_active && method.visible_to_ai);
+  return (
+    <InkIsland
+      label="Lo que el agente comparte"
+      glow="ai"
+      className="gap-4 md:col-span-2 xl:col-span-1 xl:col-start-3 xl:row-span-2 xl:row-start-1"
+    >
+      <div className="flex flex-col gap-1.5">
+        <Kicker>Lo que el agente comparte</Kicker>
+        <p className="flex items-baseline gap-2 whitespace-nowrap">
+          <span className="font-heading text-5xl leading-none font-bold tabular-nums">{shared.length}</span>
+          <span className="text-sm text-muted-foreground">de {methods.length} medios</span>
+        </p>
+      </div>
+      {shared.length === 0 ? (
+        <p className="text-sm text-pretty text-muted-foreground">
+          Ninguno visible para la IA: cuando un cliente pregunte cómo pagar, el agente no tendrá qué compartir.
+        </p>
+      ) : (
+        <ul className="flex flex-col text-sm">
+          {shared.map((method) => (
+            <li key={method.id} className="flex items-center justify-between gap-3 border-t border-border py-2.5">
+              <span className="min-w-0 truncate font-medium" title={method.label}>
+                {method.label}
+              </span>
+              <span className="shrink-0 text-xs text-muted-foreground">{PAYMENT_KIND_LABELS[method.kind]}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="mt-auto text-xs leading-relaxed text-muted-foreground">
+        Usa exactamente lo que escribes aquí; los que marcas «Solo operadores» sirven para registrar pagos a mano.
+      </p>
+    </InkIsland>
   );
 }

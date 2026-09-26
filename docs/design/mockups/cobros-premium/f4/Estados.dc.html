@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Cartera · estados</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&amp;family=Poppins:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Poppins,system-ui,sans-serif;color:#0B0B0E;background:#F5F5F7}
+a{color:#0B0B0E}
+.d{font-family:Urbanist,Poppins,sans-serif}
+.card{background:#FFFFFF;border-radius:24px;box-shadow:0 1px 0 rgba(0,0,0,.04),0 12px 32px -18px rgba(16,16,24,.18);border:1px solid rgba(0,0,0,.05)}
+.lbl{font-size:12px;color:#6B6B73}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 20px;border-radius:999px;font:500 14px Poppins,sans-serif;border:0;text-decoration:none}
+.btn-k{background:#0B0B0E;color:#FFFFFF}
+.btn-s{background:#FFFFFF;color:#0B0B0E;border:1px solid rgba(0,0,0,.10)}
+.glyph{width:96px;height:96px;border-radius:30px;display:flex;align-items:center;justify-content:center;background:#F0F0F2;color:#3A3A40}
+.note{font-size:13.5px;color:#3A3A40;line-height:1.55;text-align:center;max-width:36ch}
+</style>
+</helmet>
+<div style="width:1440px;height:900px;background:#F5F5F7;overflow:hidden;display:flex;flex-direction:column;padding:48px 56px;box-sizing:border-box;gap:24px">
+  <h1 class="d" style="margin:0;font-size:38px;font-weight:700;letter-spacing:-.02em">Cartera</h1>
+  <section style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;flex-grow:1;min-height:0">
+    <article class="card" style="padding:40px 32px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+      <span class="lbl">Todos al día</span>
+      <div class="glyph"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="12" r="9"></circle><path d="m8 12 3 3 5-6"></path></svg></div>
+      <span class="d" style="font-size:26px;font-weight:700;text-align:center">No te debe nadie</span>
+      <span class="note">Cuando un pedido con plan de pagos quede con saldo, aparece aquí, ordenado por a quién escribir primero.</span>
+      <a class="btn btn-s" href="#">Ver pedidos</a>
+    </article>
+    <article class="card" style="padding:40px 32px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+      <span class="lbl">No se pudo cargar</span>
+      <div class="glyph" style="color:#B91C1C"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 9v4M12 17h.01"></path><path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3Z"></path></svg></div>
+      <span class="d" style="font-size:26px;font-weight:700;text-align:center">No se pudo cargar la cartera</span>
+      <span class="note">Se perdió la conexión con el servidor. Lo que te deben no cambió: vuelve a intentarlo.</span>
+      <button class="btn btn-k">Reintentar</button>
+    </article>
+    <article class="card" style="padding:40px 32px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+      <span class="lbl">Un negocio que cobra de una</span>
+      <div class="glyph"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="5" width="20" height="14" rx="3"></rect><path d="M2 10h20M6 15h4"></path></svg></div>
+      <span class="d" style="font-size:26px;font-weight:700;text-align:center">Aquí no hay cartera</span>
+      <span class="note">Este negocio cobra de una, así que no tiene cuotas que perseguir. La cartera se enciende en Mi empresa › Funciones.</span>
+      <a class="btn btn-s" href="#">Ir a Funciones</a>
+    </article>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

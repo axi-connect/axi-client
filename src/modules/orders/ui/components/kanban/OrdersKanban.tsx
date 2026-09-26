@@ -1,5 +1,8 @@
 "use client";
 
+import { Island } from "@/shared/components/features/island";
+import { Button } from "@/shared/components/ui/button";
+
 import { useState } from "react";
 import {
   DndContext,
@@ -12,7 +15,7 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
-import type { OrderRow } from "@/modules/orders/domain/order";
+import { orderNumberLabel, type OrderRow } from "@/modules/orders/domain/order";
 import {
   dragActionFor,
   isKanbanStatus,
@@ -79,7 +82,15 @@ export function OrdersKanban({ canManage, onCardAction, onDropAction }: OrdersKa
       onDragEnd={handleDragEnd}
       onDragCancel={() => setDragging(null)}
     >
-      <div className="flex h-full min-h-0 snap-x gap-3 overflow-x-auto pb-1">
+      <div className="flex h-full min-h-0 flex-col gap-3">
+      <PendingProofsStrip
+        // Lo que está en el tablero, no todo lo que pasó por el store: `ordersById`
+        // no se poda y contaría pedidos que ya salieron de las columnas.
+        orders={boardOrders(columns, ordersById)}
+        canManage={canManage}
+        onReview={(order) => onCardAction(order, { type: "verify_payment" })}
+      />
+      <div className="sidebar-scroll flex min-h-0 flex-1 snap-x gap-3 overflow-x-auto pb-1">
         {KANBAN_COLUMNS.map((status) => (
           <KanbanColumn
             key={status}
@@ -101,6 +112,7 @@ export function OrdersKanban({ canManage, onCardAction, onDropAction }: OrdersKa
           />
         ))}
       </div>
+      </div>
 
       <DragOverlay dropAnimation={null}>
         {dragging !== null ? (
@@ -116,5 +128,58 @@ export function OrdersKanban({ canManage, onCardAction, onDropAction }: OrdersKa
         ) : null}
       </DragOverlay>
     </DndContext>
+  );
+}
+
+/**
+ * La franja del tablero (Cobros premium P3): los comprobantes que esperan
+ * revisión, en TINTA — manda sobre una vista de trabajo cargada (criterio de
+ * la dueña, §9.5.1). Cuenta solo las tarjetas ya cargadas: no promete un total
+ * que el tablero no conoce. Sin pendientes, no existe.
+ */
+/** Los pedidos que están en alguna columna del tablero, en su orden. */
+export function boardOrders(
+  columns: Record<KanbanStatus, { ids: readonly string[] }>,
+  ordersById: Record<string, OrderRow>,
+): OrderRow[] {
+  return KANBAN_COLUMNS.flatMap((status) => columns[status].ids)
+    .map((id) => ordersById[id])
+    .filter((order): order is OrderRow => order !== undefined);
+}
+
+export function PendingProofsStrip({
+  orders,
+  canManage,
+  onReview,
+}: {
+  orders: readonly OrderRow[];
+  canManage: boolean;
+  onReview: (order: OrderRow) => void;
+}) {
+  const pending = orders.filter((order) => order.pending_payment);
+  if (pending.length === 0) return null;
+  const names = pending.slice(0, 2).map((order) => `${order.contact_name} · ${orderNumberLabel(order.order_number)}`);
+  const extra = pending.length - names.length;
+  return (
+    <Island
+      as="section"
+      material="ink"
+      aria-label="Comprobantes por revisar"
+      className="flex shrink-0 flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:gap-5"
+    >
+      <span className="flex items-baseline gap-2 whitespace-nowrap">
+        <span className="font-heading text-3xl leading-none font-bold tabular-nums">{pending.length}</span>
+        <span className="text-sm">{pending.length === 1 ? "comprobante por revisar" : "comprobantes por revisar"}</span>
+      </span>
+      <span className="min-w-0 flex-1 truncate text-[13px] text-muted-foreground" title={names.join(" y ")}>
+        {names.join(" y ")}
+        {extra > 0 ? ` y ${String(extra)} más` : ""}
+      </span>
+      {canManage ? (
+        <Button variant="contrast" size="sm" className="shrink-0 rounded-full" onClick={() => onReview(pending[0]!)}>
+          Revisar el primero
+        </Button>
+      ) : null}
+    </Island>
   );
 }
