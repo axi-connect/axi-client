@@ -37,7 +37,7 @@ function conversation(overrides: Partial<ConversationDTO> = {}): ConversationDTO
   } as ConversationDTO
 }
 const message = (id: string, created_at: string): UiMessage =>
-  ({ id, direction: "inbound", sender_type: "contact", content_type: "text", body: `msg ${id}`, status: "received", attachments: [], payload: null, created_at }) as UiMessage
+  ({ id, direction: "inbound", sender_type: "contact", sender_user_id: null, content_type: "text", body: `msg ${id}`, status: "received", provider_message_id: null, status_updated_at: null, error: null, attachments: [], payload: null, created_at }) as UiMessage
 
 const commands = { markRead: jest.fn(async () => ({ ok: true, data: null })) } as never
 

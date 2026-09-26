@@ -6,6 +6,8 @@ import type {
   EnqueuedMessage,
   InboxConversation,
   InboxCounts,
+  InboxStats,
+  InboxStatsPeriod,
   Message,
   SendMessageDTO,
   UploadResultDTO,
@@ -102,4 +104,13 @@ export function closeRest(id: string, opts: { resolved?: boolean; reason?: strin
 
 export function markReadRest(id: string): Promise<void> {
   return http.post<void>(`/inbox/conversations/${id}/mark-read`);
+}
+
+/**
+ * «Tu día» (F1): entradas, resueltas y abiertas del período, cortadas en la
+ * zona del negocio por el servidor. Mismo permiso que la lista
+ * (`conversations:read`).
+ */
+export function getInboxStats(period: InboxStatsPeriod): Promise<InboxStats> {
+  return http.get<InboxStats>("/inbox/stats", { period });
 }

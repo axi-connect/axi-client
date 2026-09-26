@@ -116,6 +116,12 @@ type InboxStore = {
   loadingMore: boolean
   listError: string | null
   counts: InboxCounts | null
+  /**
+   * Sube con cada lectura de `GET /inbox/counts` (no con los parches locales de
+   * no leídos). Es la señal de «la bandeja cambió» para lo que se deriva de la
+   * cola y del día sin tener evento propio: la cabeza de la cola y «Tu día».
+   */
+  countsVersion: number
   /** Errores de la conversación/hilo (la lista tiene `listError`). */
   error: string | null
 
@@ -256,6 +262,7 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
   loadingMore: false,
   listError: null,
   counts: null,
+  countsVersion: 0,
   error: null,
 
   selectedId: null,
@@ -409,7 +416,8 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
 
   fetchCounts: async () => {
     try {
-      set({ counts: await getInboxCounts() })
+      const counts = await getInboxCounts()
+      set((state) => ({ counts, countsVersion: state.countsVersion + 1 }))
     } catch {
       // Los badges no rompen la vista.
     }

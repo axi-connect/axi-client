@@ -6,7 +6,6 @@ import { cn } from "@/core/lib/utils"
 import { useInboxStore } from "@/modules/inbox/infrastructure/stores/inbox.store"
 import { useSendMessage } from "@/modules/inbox/infrastructure/realtime/use-send-message"
 import type { InboxCommands } from "@/modules/inbox/infrastructure/realtime/use-inbox-socket"
-import { GlassGlyph } from "@/shared/components/ui/glyphs"
 import { isReadOnlyConversation } from "@/modules/inbox/domain/inbox"
 import { formatDayLabel } from "@/core/lib/day-label"
 import { useMinuteTick } from "@/modules/inbox/ui/hooks/use-minute-tick"
@@ -16,6 +15,8 @@ import { DaySeparator } from "./timeline/DaySeparator"
 import { groupMessagesByDay } from "./timeline/group-messages-by-day"
 import { ConversationHeader } from "./header/ConversationHeader"
 import { Composer } from "./composer/Composer"
+import { InboxDayPanel } from "./day/InboxDayPanel"
+import { Skeleton } from "@/shared/components/ui/skeleton"
 
 /**
  * Panel de conversación: header con contacto + acciones de handoff,
@@ -104,16 +105,29 @@ export function ConversationPanel({
     return () => document.removeEventListener("visibilitychange", attempt)
   }, [selectedIdForRead, selectedUnread, socketConnected, readOnly, commands, markReadLocal, rollbackUnread])
 
+  // Sin conversación abierta, el panel cuenta el día (Inbox premium F1). Con
+  // una pedida que aún no llega, su silueta: «Tu día» no parpadea en medio.
   if (!selected) {
+    if (selectedId === null) return <InboxDayPanel commands={commands} className={className} />
     return (
       <div
-        className={cn(
-          "min-h-0 flex-1 flex-col items-center justify-center gap-3 text-muted-foreground",
-          className,
-        )}
+        role="status"
+        aria-label="Abriendo la conversación"
+        aria-busy="true"
+        className={cn("min-h-0 flex-1 flex-col overflow-hidden", className)}
       >
-        <GlassGlyph kind="conversation" tier="lg" />
-        <p className="text-sm">Selecciona una conversación para empezar</p>
+        <div className="flex h-14 shrink-0 items-center gap-2.5 border-b border-border px-3">
+          <Skeleton className="size-9 rounded-full" />
+          <div className="space-y-1.5">
+            <Skeleton className="h-3.5 w-36" />
+            <Skeleton className="h-3 w-24" />
+          </div>
+        </div>
+        <div className="flex-1 space-y-3 p-4">
+          <Skeleton className="h-10 w-3/5 rounded-2xl" />
+          <Skeleton className="ml-auto h-14 w-1/2 rounded-2xl" />
+          <Skeleton className="h-10 w-2/5 rounded-2xl" />
+        </div>
       </div>
     )
   }

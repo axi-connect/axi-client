@@ -6,6 +6,7 @@ import { useAuth } from "@/shared/auth/auth.hooks"
 import { useInboxSocket } from "@/modules/inbox/infrastructure/realtime/use-inbox-socket"
 import { useInboxStore } from "@/modules/inbox/infrastructure/stores/inbox.store"
 import { ContactContextProvider } from "@/modules/inbox/infrastructure/stores/contact-context.context"
+import { InboxDayProvider } from "@/modules/inbox/infrastructure/stores/inbox-day.context"
 import { InboxList } from "./components/InboxList"
 import { ConversationPanel } from "./components/ConversationPanel"
 import { ContextRail } from "./components/context-rail/ContextRail"
@@ -38,27 +39,30 @@ export function InboxView({ initialConversationId }: { initialConversationId?: s
   }, [initialConversationId])
 
   // Maestro-detalle en móvil (<md): se ve la lista o la conversación, no ambas.
-  // En md+ conviven lado a lado como en desktop.
+  // En md+ conviven lado a lado como en desktop. `InboxDayProvider` resuelve
+  // una vez la cola y el día para la isla, la franja del celular y la lista.
   return (
-    <ContactContextProvider contactId={contactId} version={contextVersion}>
-      {/* `min-h-0 flex-1`, nunca `h-full`: la altura la reparte el flex del
-          shell (DESIGN-SYSTEM §4.2). Con un porcentaje, el timeline crecía
-          hasta contener todos los mensajes y el scroll se lo quedaba el panel. */}
-      <div className="flex min-h-0 w-full flex-1">
-        <InboxList className={cn(selectedId ? "hidden md:flex" : "flex")} />
-        {/* min-w-0: sin él el timeline fuerza overflow horizontal al aparecer el rail */}
-        <ConversationPanel
-          className={cn(selectedId ? "flex" : "hidden md:flex", "min-w-0")}
-          commands={commands}
-          socketConnected={connected}
-        />
-        {/* useSearchParams exige frontera Suspense; el rail no es crítico para el chat */}
-        <Suspense fallback={null}>
-          <InboxViewUrlSync />
-          <ContextSurface />
-        </Suspense>
-      </div>
-    </ContactContextProvider>
+    <InboxDayProvider>
+      <ContactContextProvider contactId={contactId} version={contextVersion}>
+        {/* `min-h-0 flex-1`, nunca `h-full`: la altura la reparte el flex del
+            shell (DESIGN-SYSTEM §4.2). Con un porcentaje, el timeline crecía
+            hasta contener todos los mensajes y el scroll se lo quedaba el panel. */}
+        <div className="flex min-h-0 w-full flex-1">
+          <InboxList className={cn(selectedId ? "hidden md:flex" : "flex")} commands={commands} />
+          {/* min-w-0: sin él el timeline fuerza overflow horizontal al aparecer el rail */}
+          <ConversationPanel
+            className={cn(selectedId ? "flex" : "hidden md:flex", "min-w-0")}
+            commands={commands}
+            socketConnected={connected}
+          />
+          {/* useSearchParams exige frontera Suspense; el rail no es crítico para el chat */}
+          <Suspense fallback={null}>
+            <InboxViewUrlSync />
+            <ContextSurface />
+          </Suspense>
+        </div>
+      </ContactContextProvider>
+    </InboxDayProvider>
   )
 }
 

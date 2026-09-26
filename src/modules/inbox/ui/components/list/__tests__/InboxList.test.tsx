@@ -18,9 +18,9 @@ jest.mock("@/modules/inbox/infrastructure/services/inbox-service.adapter", () =>
   getConversationMessages: jest.fn(async () => ({ data: [] })),
 }))
 
-const { listInboxConversations } = jest.requireMock(
+const { listInboxConversations, getInboxCounts } = jest.requireMock(
   "@/modules/inbox/infrastructure/services/inbox-service.adapter",
-) as { listInboxConversations: jest.Mock }
+) as { listInboxConversations: jest.Mock; getInboxCounts: jest.Mock }
 
 /**
  * El polyfill de `IntersectionObserver` de jest.setup es inerte: aquí se
@@ -115,21 +115,22 @@ describe("InboxList — scroll infinito", () => {
     listInboxConversations.mockRejectedValueOnce(new Error("boom")).mockResolvedValueOnce(page(1, 1, 1, 1))
     render(<InboxList />)
     await act(async () => {})
-    expect(screen.getByText("No se pudo cargar el inbox")).toBeInTheDocument()
+    expect(screen.getByText("No pudimos leer el inbox")).toBeInTheDocument()
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "Reintentar" }))
     })
     expect(screen.getAllByRole("listitem")).toHaveLength(1)
   })
 
-  it("búsqueda sin resultados: «Limpiar filtros» vacía la búsqueda y recarga", async () => {
+  it("búsqueda sin resultados: «Limpiar búsqueda» vacía la búsqueda y recarga", async () => {
     listInboxConversations.mockResolvedValue(page(1, 0, 0, 1))
     useInboxStore.setState({ q: "nadie" })
     render(<InboxList />)
     await act(async () => {})
-    expect(screen.getByText("Sin resultados")).toBeInTheDocument()
+    expect(screen.getByText("Ninguna coincide")).toBeInTheDocument()
+    expect(screen.getByText(/No hay conversaciones con «nadie» en esta vista/)).toBeInTheDocument()
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "Limpiar filtros" }))
+      fireEvent.click(screen.getByRole("button", { name: "Limpiar búsqueda" }))
     })
     expect(useInboxStore.getState().q).toBe("")
     expect(listInboxConversations).toHaveBeenLastCalledWith(expect.not.objectContaining({ q: expect.anything() }))
@@ -146,5 +147,38 @@ describe("InboxList — scroll infinito", () => {
     })
     expect(listInboxConversations).toHaveBeenLastCalledWith(expect.objectContaining({ status: "resolved,closed" }))
     expect(screen.getByText("Aún no hay conversaciones cerradas")).toBeInTheDocument()
+  })
+
+  it("la cabecera titula la vista y dice cuántas hay (la frase viva sale de counts)", async () => {
+    listInboxConversations.mockResolvedValue(page(1, 0, 0, 1))
+    render(<InboxList />)
+    await act(async () => {})
+    expect(screen.getByRole("heading", { level: 1, name: "Todas abiertas" })).toBeInTheDocument()
+    expect(screen.getByText("60 abiertas · 0 con Axi, 60 con el equipo, 0 en cola")).toBeInTheDocument()
+  })
+
+  it("En cola vacía: «Nadie espera» y, si Axi atiende, el camino a su vista", async () => {
+    listInboxConversations.mockResolvedValue(page(1, 0, 0, 1))
+    getInboxCounts.mockResolvedValueOnce({ queued: 0, mine: 0, ai: 4, all_open: 4, unread_total: 0 })
+    useInboxStore.setState({ view: "queued" })
+    render(<InboxList />)
+    await act(async () => {})
+    expect(screen.getAllByText("Nadie espera").length).toBeGreaterThan(0)
+    expect(screen.getByText("Axi atiende 4 conversaciones. Si pasa una al equipo, aparece aquí.")).toBeInTheDocument()
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Ver lo que atiende Axi" }))
+    })
+    expect(useInboxStore.getState().view).toBe("ai")
+  })
+
+  it("pintar 50 filas no dispara peticiones por fila (N+1): una lista y nada más por conversación", async () => {
+    const adapter = jest.requireMock("@/modules/inbox/infrastructure/services/inbox-service.adapter") as Record<string, jest.Mock>
+    listInboxConversations.mockResolvedValueOnce(page(1, 50, 50, 1))
+    render(<InboxList />)
+    await act(async () => {})
+    expect(screen.getAllByRole("listitem")).toHaveLength(50)
+    expect(listInboxConversations).toHaveBeenCalledTimes(1)
+    expect(adapter.getConversation).not.toHaveBeenCalled()
+    expect(adapter.getConversationMessages).not.toHaveBeenCalled()
   })
 })

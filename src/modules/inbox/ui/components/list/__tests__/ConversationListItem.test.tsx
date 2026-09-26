@@ -72,11 +72,27 @@ describe("ConversationListItem", () => {
     expect(buttons[1]).toHaveAttribute("data-priority", "urgent")
   })
 
-  it("IA solo cuando la vista mezcla modos", () => {
+  it("quién atiende, solo cuando la vista mezcla modos: Axi, tú o el equipo", () => {
     renderItem(makeConversation({ id: "x", mode: "ai_active" }), { showMode: false })
-    expect(screen.queryByText("IA")).not.toBeInTheDocument()
+    expect(screen.queryByText("Axi atiende")).not.toBeInTheDocument()
     renderItem(makeConversation({ id: "y", mode: "ai_active" }), { showMode: true })
-    expect(screen.getByText("IA")).toBeInTheDocument()
+    expect(screen.getByText("Axi atiende")).toBeInTheDocument()
+    renderItem(makeConversation({ id: "z", assigned_user_id: "u1" }), { showMode: true, meId: "u1" })
+    expect(screen.getByText("Contigo")).toBeInTheDocument()
+    renderItem(makeConversation({ id: "w", assigned_user_id: "u2" }), { showMode: true, meId: "u1" })
+    expect(screen.getByText("Con el equipo")).toBeInTheDocument()
+  })
+
+  it("prioridad: el punto lleva su nombre al lector y la fila no pierde el foco del nombre", () => {
+    renderItem(makeConversation({ priority: "urgent", unread_count: 2 }))
+    expect(screen.getByRole("button", { name: /Cristian Velásquez, 2 sin leer, prioridad urgente/ })).toBeInTheDocument()
+    expect(screen.getByTitle("Prioridad urgente")).toBeInTheDocument()
+  })
+
+  it("contador de no leídos en tinta, no en coral (D2)", () => {
+    renderItem(makeConversation({ unread_count: 3 }))
+    expect(screen.getByText("3")).toHaveClass("bg-foreground")
+    expect(screen.getByText("3")).not.toHaveClass("bg-brand")
   })
 
   it("cerrada: sin burbuja aunque tenga no leídos, con fecha de cierre", () => {

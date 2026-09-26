@@ -21,6 +21,10 @@ import { buildInboxQuery } from "@/modules/inbox/infrastructure/stores/inbox-que
 import { listInboxConversations } from "@/modules/inbox/infrastructure/services/inbox-service.adapter"
 import { getInboxChannels } from "@/modules/inbox/infrastructure/services/inbox-filter-options"
 import { INBOX_VIEW_LABELS, INBOX_VIEWS, type InboxView } from "@/modules/inbox/domain/inbox"
+import { viewSubtitle } from "@/modules/inbox/domain/inbox-summary"
+import { useInboxDayIfMounted } from "@/modules/inbox/infrastructure/stores/inbox-day.context"
+import { useMinuteTick } from "@/modules/inbox/ui/hooks/use-minute-tick"
+import { sinceLabel } from "../day/since-label"
 import { hydrateInboxFilters, INBOX_FILTERS_BASE } from "./inbox.filters"
 import { InboxSearch } from "./InboxSearch"
 import { SortMenu } from "./SortMenu"
@@ -55,14 +59,16 @@ function viewCount(view: InboxView, counts: ReturnType<typeof useInboxStore.getS
 const DRAFT_COUNT_DEBOUNCE_MS = 350
 
 /**
- * Cabecera del rail (288 px), cuatro filas que nunca se ensanchan:
- * 1. título + total · orden · filtros (compactos) · drawer de canales (<lg)
- * 2. búsqueda a todo el ancho
- * 3. las cinco vistas en un solo control segmentado (solo la activa con etiqueta)
- * 4. chips de filtros, solo cuando hay filtros activos
+ * Cabecera de la lista (Inbox premium F1). Filas que nunca se ensanchan:
+ * 1. el título de la vista en Nexa + la frase viva («3 esperan · la más
+ *    antigua hace 14 min»), y a la derecha orden, filtros y el drawer (<lg);
+ * 2. la búsqueda a todo el ancho;
+ * 3. por debajo de `lg`, las cinco vistas en el segmentado. Desde `lg` viven en
+ *    la columna del workspace, como los buzones de Mail;
+ * 4. los chips de filtros, solo cuando hay filtros activos.
  *
- * Suscribe únicamente a lo que pinta (vista, orden, búsqueda, filtros, counts,
- * total): nunca a `conversations`, que cambia con cada mensaje.
+ * Suscribe solo a lo que pinta (vista, orden, búsqueda, filtros, counts,
+ * total), nunca a `conversations`, que cambia con cada mensaje.
  */
 export function InboxListHeader() {
   const view = useInboxStore((s) => s.view)
@@ -112,6 +118,19 @@ export function InboxListHeader() {
 
   const [filtersOpen, setFiltersOpen] = useState(false)
 
+  // La frase viva: los conteos de la vista, o cuántas coinciden si se busca o filtra.
+  const day = useInboxDayIfMounted()
+  const now = useMinuteTick()
+  const narrowed = q.trim() !== "" || activeCount > 0
+  const subtitle = narrowed
+    ? loadingList
+      ? null
+      : total === 1
+        ? "1 coincide con la búsqueda o los filtros"
+        : `${total.toLocaleString("es-CO")} coinciden con la búsqueda o los filtros`
+    : viewSubtitle(view, counts, sinceLabel(day?.head?.queued_at ?? null, now))
+  const waitingDot = !narrowed && view === "queued" && (counts?.queued ?? 0) > 0
+
   // Contador del botón «Ver N conversaciones»: `page_size: 1` sobre el mismo
   // listado con el borrador, así número y lista no pueden discrepar. Con rebote
   // y turno para que una respuesta lenta no pise a la actual.
@@ -144,27 +163,27 @@ export function InboxListHeader() {
   }, [])
 
   return (
-    <div className="shrink-0 space-y-2 border-b border-border bg-background p-3">
-      <div className="flex h-9 items-center gap-1">
-        <h2 className="text-sm font-semibold">Inbox</h2>
-        {!loadingList && total > 0 && (
-          <span className="ml-1.5 text-xs text-muted-foreground tabular-nums" aria-label={`${String(total)} conversaciones`}>
-            {total.toLocaleString("es-CO")}
-          </span>
-        )}
-        <span className="flex-1" />
-        <SortMenu value={sort} onChange={setSort} />
-        <FilterTrigger compact count={activeCount} onClick={() => setFiltersOpen(true)} />
-        {/* En <lg el sidebar de canales vive en un drawer: este botón lo abre. */}
+    <div className="shrink-0 space-y-3 border-b border-border bg-background px-4 pt-4 pb-3">
+      <div className="flex items-start gap-1">
+        {/* En <lg las vistas y los canales viven en un drawer: este botón lo abre. */}
         <Button
           variant="ghost"
           size="icon"
-          className="size-9 lg:hidden"
-          aria-label="Abrir panel de canales"
+          className="-ml-2 size-10 shrink-0 lg:hidden"
+          aria-label="Abrir vistas y canales"
           onClick={() => window.dispatchEvent(new CustomEvent("workspace:channels-drawer:open"))}
         >
           <PanelLeft className="size-4" />
         </Button>
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate font-heading text-2xl leading-tight font-bold tracking-tight">{INBOX_VIEW_LABELS[view]}</h1>
+          <p className="mt-0.5 flex min-h-4 min-w-0 items-center gap-1.5 text-xs text-muted-foreground" aria-live="polite">
+            {waitingDot && <span aria-hidden className="size-1.5 shrink-0 rounded-full bg-warning" />}
+            {subtitle !== null && <span className="truncate">{subtitle}</span>}
+          </p>
+        </div>
+        <SortMenu value={sort} onChange={setSort} />
+        <FilterTrigger compact count={activeCount} onClick={() => setFiltersOpen(true)} />
       </div>
 
       <InboxSearch value={q} onChange={setSearch} />
@@ -172,13 +191,13 @@ export function InboxListHeader() {
       {/* Eligen qué se lista, no abren panel ⇒ radiogroup (DS §9.3). Solo la
           vista activa muestra su etiqueta: cinco no caben en 264 px. */}
       <SegmentedControl
+        className="w-full lg:hidden"
         value={view}
         onValueChange={setView}
         label="Vistas del inbox"
         size="sm"
         surface="inline"
         labels="active"
-        className="w-full"
         items={INBOX_VIEWS.map((option) => {
           const count = viewCount(option, counts)
           return {

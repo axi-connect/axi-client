@@ -14,6 +14,9 @@ export type { AudioTranscription, ProductRecognition, ProductRecognitionCandidat
 export type ConversationDTO = Schemas["ConversationDto"];
 export type InboxConversation = Schemas["InboxListDto"]["data"][number];
 export type InboxCounts = Schemas["InboxCountsDto"];
+/** `GET /inbox/stats`: el día (o 7/30 días) de la bandeja, en la zona del negocio. */
+export type InboxStats = Schemas["ConversationStatsDto"];
+export type InboxStatsPeriod = InboxStats["period"];
 export type Message = Schemas["ConversationMessagesDto"]["data"][number];
 export type EnqueuedMessage = Schemas["EnqueuedMessageDto"];
 export type ConversationEvent = Schemas["ConversationEventsDto"]["data"][number];
@@ -273,9 +276,9 @@ export type InboxTab = "queued" | "mine" | "ai" | "all_open";
 
 export const INBOX_TAB_LABELS: Record<InboxTab, string> = {
   queued: "En cola",
-  mine: "Mías",
-  ai: "IA",
-  all_open: "Abiertas",
+  mine: "Contigo",
+  ai: "Axi atiende",
+  all_open: "Todas abiertas",
 };
 
 /** Las cuatro vistas operables más «Cerradas» (resolved + closed, solo lectura). */
