@@ -54,13 +54,46 @@ it("un clic en una opción del panel portalado la ejecuta, no cierra el menú an
   expect(onPick).toHaveBeenCalledTimes(1);
 });
 
-it("un clic fuera y un scroll lo cierran", () => {
+it("un clic fuera lo cierra", () => {
   render(<Menu />);
   fireEvent.click(screen.getByRole("button", { name: "Más" }));
   fireEvent.mouseDown(document.body);
   expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+});
 
-  fireEvent.click(screen.getByRole("button", { name: "Más" }));
-  fireEvent.scroll(screen.getByTestId("scroller"));
-  expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+/** Una caja como la de `getBoundingClientRect`, sin depender de que jsdom traiga `DOMRect`. */
+const box = (left: number, top: number, width: number, height: number) =>
+  ({ left, top, width, height, x: left, y: top, right: left + width, bottom: top + height, toJSON: () => ({}) }) as DOMRect;
+
+describe("al hacer scroll", () => {
+  // jsdom no calcula cajas: se simula dónde está el disparador.
+  let where: DOMRect;
+  beforeEach(() => {
+    where = box(100, 100, 32, 32);
+    jest.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
+      return this.getAttribute("role") === "menu" ? box(0, 0, 0, 0) : where;
+    });
+  });
+  afterEach(() => jest.restoreAllMocks());
+
+  it("sigue a su disparador mientras se ve: el scroll que provoca el foco en otra fila no lo cierra (P2 fase 2)", () => {
+    render(<Menu />);
+    fireEvent.click(screen.getByRole("button", { name: "Más" }));
+    where = box(100, 140, 32, 32);
+    fireEvent.scroll(screen.getByTestId("scroller"));
+
+    const menu = screen.getByRole("menu");
+    expect(menu).toBeInTheDocument();
+    // Se recoloca bajo el disparador: 140 + 32 + 8.
+    expect(menu.style.top).toBe("180px");
+  });
+
+  it("se cierra cuando el disparador sale de la vista", () => {
+    render(<Menu />);
+    fireEvent.click(screen.getByRole("button", { name: "Más" }));
+    where = box(100, -80, 32, 32);
+    fireEvent.scroll(screen.getByTestId("scroller"));
+
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+  });
 });
