@@ -57,7 +57,8 @@ export function ItemsRail({ kind, name, remaining, labeledCount, itemsCount, fil
           <Meter value={itemsCount === 0 ? 0 : labeledCount / itemsCount} label="Ítems etiquetados" />
           <p className="text-xs text-muted-foreground tabular-nums">{remaining} por etiquetar</p>
         </div>
-        <div className="-mx-1 overflow-x-auto px-1">
+        {/* Ancho completo con los cuatro filtros repartidos: con `w-max` en
+            una tira con scroll, «Omitidos» quedaba cortado entre 1024 y 1440. */}
         <SegmentedControl
           value={filter}
           onValueChange={onFilterChange}
@@ -65,11 +66,10 @@ export function ItemsRail({ kind, name, remaining, labeledCount, itemsCount, fil
           size="sm"
           surface="inline"
           items={FILTERS}
-          className="w-max"
+          className="w-full [&_button]:flex-1 [&_button]:px-2"
         />
-        </div>
       </div>
-      <ol className="min-h-0 flex-1 space-y-0.5 overflow-y-auto px-2 pb-2">
+      <ol className="axi-scroll min-h-0 flex-1 space-y-0.5 overflow-y-auto px-2 pb-2">
         {loading && (
           <li className="space-y-2 p-3">
             <Skeleton className="h-12 w-full rounded-xl" />

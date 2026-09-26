@@ -52,7 +52,7 @@ export function SessionChat({ session, onEnd, ending }: SessionChatProps) {
   const sendError = error ? describeSessionError(problem) ?? errorMessage(error) : null;
 
   const disabledReason = !active
-    ? "La sesión terminó: no se pueden enviar más mensajes."
+    ? "La sesión terminó: ya no admite mensajes."
     : session.agent_state === "closed"
       ? "El agente cerró la conversación."
       : null;

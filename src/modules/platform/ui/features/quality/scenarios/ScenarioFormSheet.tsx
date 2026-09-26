@@ -34,7 +34,7 @@ import {
 } from "../../../../infrastructure/api/hooks/use-quality-scenarios";
 import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import { droppedCriterionText, type ScenarioDraft } from "../../../../domain/quality-capabilities";
-import { QualityStatus } from "../shared/premium";
+import { OriginPill, QualityStatus } from "../shared/premium";
 import { AttachmentsEditor } from "./AttachmentsEditor";
 import { CriteriaEditor } from "./CriteriaEditor";
 import { CriteriaList } from "./CriteriaList";
@@ -296,11 +296,7 @@ function ScenarioReadView({
       <div className="flex flex-wrap items-center gap-2">
         <span className="font-mono text-xs text-muted-foreground">{scenario.code}</span>
         <QualityStatus status={scenario.status} />
-        {scenario.is_system && (
-          <Badge variant="outline" className="border-accent-violet/40 bg-accent-violet/10 text-accent-violet">
-            Sistema
-          </Badge>
-        )}
+        {scenario.is_system && <OriginPill isSystem />}
         <span className="text-xs text-muted-foreground tabular-nums">Máx. {scenario.max_turns} turnos</span>
       </div>
 

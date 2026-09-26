@@ -62,7 +62,7 @@ export function NewSessionForm({ initial }: NewSessionFormProps) {
   };
 
   return (
-    <form onSubmit={submit} className="mx-auto w-full max-w-lg space-y-5 rounded-2xl border border-border bg-background p-6">
+    <form onSubmit={submit} className="mx-auto my-auto w-full max-w-lg space-y-5 rounded-2xl border border-border bg-background p-6 [@media(max-height:760px)]:space-y-4 [@media(max-height:760px)]:p-4">
       <header className="space-y-1">
         <h2 className="flex items-center gap-2 text-lg font-medium">
           <MessageSquarePlus aria-hidden="true" className="size-4.5" />

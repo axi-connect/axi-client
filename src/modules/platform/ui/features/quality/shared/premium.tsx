@@ -185,3 +185,39 @@ export function TonePill({
 export function ToneDot({ tone, className }: { tone: QualityTone; className?: string }) {
   return <span aria-hidden="true" className={cn("inline-block size-1.5 shrink-0 rounded-full", TONE_DOT[tone], className)} />;
 }
+
+/**
+ * Origen de un escenario o suite: «Sistema» (sembrado, punto info) o «Propio».
+ * Sustituye al badge violeta tintado, que no pasaba AA en claro.
+ */
+export function OriginPill({ isSystem }: { isSystem: boolean }) {
+  return <TonePill tone={isSystem ? "info" : "neutral"}>{isSystem ? "Sistema" : "Propio"}</TonePill>;
+}
+
+/**
+ * Etiquetas en una celda de tabla: hasta `max` chips neutros y un «+N» con el
+ * resto en el `title`. Ancho acotado: una lista larga de tags no puede
+ * ensanchar la tabla (antes una cadena unida desbordaba la vista).
+ */
+export function TagChips({ tags, max = 2, className }: { tags: string[]; max?: number; className?: string }) {
+  if (tags.length === 0) return <span className="text-xs text-muted-foreground">—</span>;
+  const shown = tags.slice(0, max);
+  const rest = tags.slice(max);
+  return (
+    <span className={cn("flex max-w-60 min-w-0 items-center gap-1 overflow-hidden", className)} title={tags.join(", ")}>
+      {shown.map((tag) => (
+        <span
+          key={tag}
+          className="inline-flex h-6 min-w-0 shrink items-center rounded-full border border-border bg-secondary px-2 text-xs text-foreground"
+        >
+          <span className="truncate">{tag}</span>
+        </span>
+      ))}
+      {rest.length > 0 && (
+        <span className="inline-flex h-6 shrink-0 items-center rounded-full border border-border px-2 text-xs text-muted-foreground tabular-nums">
+          +{rest.length}
+        </span>
+      )}
+    </span>
+  );
+}

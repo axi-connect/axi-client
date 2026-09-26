@@ -9,6 +9,12 @@
    el primitivo que la traiga (Button outline/ghost) se ve igual en una isla de
    tinta en tema claro que en la página oscura. */
 @custom-variant dark (&:is(.dark *, .surface-dark *));
+/* Vista de aplicación topada al viewport (DESIGN-SYSTEM §4.2) solo en
+   escritorio con alto suficiente; por debajo la vista es documental y
+   scrollea el panel. `app-short` es el complemento exacto (sin choque de
+   cascada entre dos media queries que se solapen). */
+@custom-variant app-fit (@media (width >= 80rem) and (height >= 36rem));
+@custom-variant app-short (@media (width >= 80rem) and (height < 36rem));
 
 /* ============================================================================
    CAPA 1 — PRIMITIVOS DE MARCA
@@ -1058,18 +1064,52 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   html, body { scroll-behavior: auto; }
 }
 
-/* -------- Scrollbar de marca (sidebar) -------- */
+/* -------- Scroll de marca (DESIGN-SYSTEM §4.3) --------
+   `axi-scroll` va en TODO contenedor con `overflow-*-auto`. `sidebar-scroll`
+   es el nombre histórico (sidebars, PlatformShell, diálogos) y queda como
+   alias exacto. Riel transparente, pulgar de 6 px con el degradado de marca
+   que se afirma al pasar el cursor. */
 
 /* WebKit (Chrome, Edge, Safari) */
+.axi-scroll::-webkit-scrollbar,
 .sidebar-scroll::-webkit-scrollbar {
   width: 6px;
+  /* La barra horizontal (kanban, tiras de tarjetas) se agarra con el cursor:
+     más alta que la vertical. */
   height: 10px;
 }
 
+.axi-scroll::-webkit-scrollbar-track,
+.sidebar-scroll::-webkit-scrollbar-track,
+.axi-scroll::-webkit-scrollbar-corner,
+.sidebar-scroll::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.axi-scroll::-webkit-scrollbar-thumb,
 .sidebar-scroll::-webkit-scrollbar-thumb {
   background-image: radial-gradient(circle, var(--axi-brand), transparent);
   border-radius: 9999px;
   background-clip: content-box;
+}
+
+.axi-scroll::-webkit-scrollbar-thumb:hover,
+.sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background-image: radial-gradient(
+    circle,
+    var(--axi-brand),
+    color-mix(in oklab, var(--axi-brand) 35%, transparent)
+  );
+}
+
+/* Firefox: sin pseudo-elementos, la propiedad estándar. Solo donde no hay
+   ::-webkit-scrollbar — en Chrome `scrollbar-color` anularía el degradado. */
+@supports not selector(::-webkit-scrollbar) {
+  .axi-scroll,
+  .sidebar-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, var(--axi-brand) 55%, transparent) transparent;
+  }
 }
 
 /* ==========================================================================

@@ -53,7 +53,7 @@ export function SessionsRail({ currentId, tenantFilter, onTenantFilterChange }: 
         />
       </div>
 
-      <ol className="min-h-0 flex-1 space-y-0.5 overflow-y-auto px-2 pb-2">
+      <ol className="axi-scroll min-h-0 flex-1 space-y-0.5 overflow-y-auto px-2 pb-2">
         {sessionsQuery.isPending && (
           <li className="space-y-2 p-3">
             <Skeleton className="h-10 w-full rounded-xl" />
