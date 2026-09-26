@@ -3,12 +3,9 @@
 import {
   Calendar,
   CalendarClock,
-  Check,
-  CircleAlert,
   Ellipsis,
   ExternalLink,
   Handshake,
-  Plane,
   Send,
   TriangleAlert,
 } from "lucide-react";
@@ -27,41 +24,33 @@ import { promiseLine } from "@/modules/collections/domain/promise";
 import { lastReminderLine } from "@/modules/collections/domain/reminder";
 import {
   dueLabel,
+  sectionOf,
   type ReceivableDTO,
   type ReceivableSection,
+  type ReceivableSectionKey,
 } from "@/modules/collections/domain/receivable";
+import { initialsOf } from "@/modules/collections/domain/write-first";
 
-const SECTION_ICONS = {
-  plane: Plane,
-  "circle-alert": CircleAlert,
-  "calendar-clock": CalendarClock,
-  check: Check,
-} as const;
-
-const SECTION_TONES: Record<ReceivableSection["tone"], string> = {
-  destructive: "text-destructive",
-  warning: "text-warning",
-  info: "text-info",
-  success: "text-success",
+/** El punto de la prisa del dinero: la sección ya lo dice, la fila lo recuerda al bajar. */
+const MONEY_DOT: Record<ReceivableSectionKey, string> = {
+  travelled: "bg-destructive",
+  overdue: "bg-destructive",
+  soon: "bg-warning",
+  current: "bg-foreground",
 };
 
 /**
- * Una fila de la cartera.
+ * Una fila de la cartera (Cobros premium P4).
  *
- * La fila deja de ser UN enlace porque ahora tiene una acción propia, y un
- * botón dentro de un enlace no es HTML válido: el nombre estira su área hasta
- * cubrir la fila —patrón de tarjeta enlazada— y «Escribir» queda por encima.
- * Sigue habiendo una sola acción por fila, que es lo que F4 dejó dicho.
+ * La fila no es UN enlace porque tiene una acción propia, y un botón dentro de
+ * un enlace no es HTML válido: el nombre estira su área hasta cubrir la fila
+ * —patrón de tarjeta enlazada— y «Escribir» queda por encima. Una sola diana
+ * visible; lo demás (anotar promesa, reprogramar, abrir el pedido) va en «…».
  *
- * El «último aviso» baja al subtítulo y no vuelve como columna: F4 quitó la
- * tabla a propósito. Es contexto para decidir, no una cifra que comparar — y
- * «no salió» tiene que leerse tan claro como «entregado», porque es justo lo
- * que cambia lo que el operador hace a continuación.
- *
- * F4b: «Escribir» sigue siendo la única diana visible; lo que no cabe en una
- * diana —anotar la promesa, reprogramar, abrir el pedido— va en «…», como en
- * la fila de documentos de F8. La promesa se lee en la fila como texto: viva
- * con su fecha, rota si el día pasó sin pago.
+ * A la izquierda, el punto de la prisa del dinero; el «último aviso» va en el
+ * subtítulo y «no salió» se lee tan claro como «entregado», porque cambia lo
+ * que el operador hace después. Las piezas del subtítulo no se parten por
+ * dentro (QA: «#0004 · sale el…» cortado a 390 px): se envuelven enteras.
  */
 export type RowActions = {
   onWrite: (row: ReceivableDTO) => void;
@@ -81,16 +70,26 @@ function Row({
   const promise = promiseLine(row);
   const menu = onPromise !== undefined || onReschedule !== undefined;
   return (
-    <div className="relative grid min-h-[76px] w-full grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-foreground/[0.03] focus-within:bg-foreground/[0.03] [&+&]:before:absolute [&+&]:before:inset-x-0 [&+&]:before:left-5 [&+&]:before:top-0 [&+&]:before:h-px [&+&]:before:bg-border/60">
+    <div className="relative grid grid-cols-[0.5rem_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 py-4 transition-colors hover:bg-foreground/[0.02] focus-within:bg-foreground/[0.02] md:grid-cols-[0.5rem_2.25rem_minmax(0,1fr)_auto_auto] md:gap-x-4 [&+&]:border-t [&+&]:border-border/60">
+      <span
+        aria-hidden="true"
+        className={`size-2 self-start rounded-full md:self-center ${MONEY_DOT[sectionOf(row)]} mt-[7px] md:mt-0`}
+      />
+      <span
+        aria-hidden="true"
+        className="hidden size-9 place-items-center rounded-full bg-muted text-xs font-semibold md:grid"
+      >
+        {initialsOf(row.contact_name)}
+      </span>
       <span className="min-w-0">
         <Link
           href={`/orders/${row.order_id}`}
-          className="block truncate text-[15.5px] font-medium tracking-[-0.005em] after:absolute after:inset-0 after:content-['']"
+          className="block truncate text-[15px] font-semibold tracking-[-0.005em] after:absolute after:inset-0 after:content-['']"
         >
           {row.contact_name}
         </Link>
-        <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[13px] text-muted-foreground">
-          <span className="font-mono text-[11.5px]">
+        <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[12.5px] text-muted-foreground">
+          <span className="font-mono text-[11.5px] whitespace-nowrap">
             {row.order_number === null
               ? "Borrador"
               : `#${String(row.order_number).padStart(4, "0")}`}
@@ -98,7 +97,7 @@ function Row({
           {row.service_date !== null ? (
             <>
               <span aria-hidden="true">·</span>
-              <span>
+              <span className="whitespace-nowrap">
                 {row.travelled ? "viajó el " : "sale el "}
                 {formatShortDate(row.service_date)}
               </span>
@@ -109,7 +108,9 @@ function Row({
               <span aria-hidden="true">·</span>
               {/* Pausado sigue siendo deuda y sigue contando: lo que se detuvo
                   es la persecución, y por eso se dice en vez de esconderse. */}
-              <span className="text-foreground">en pausa</span>
+              <span className="whitespace-nowrap text-foreground">
+                en pausa
+              </span>
             </>
           ) : null}
           {promise !== null ? (
@@ -119,10 +120,13 @@ function Row({
                 {promise.tone === "warning" ? (
                   <TriangleAlert
                     aria-hidden="true"
-                    className="size-3 text-warning"
+                    className="size-3 shrink-0 text-warning"
                   />
                 ) : (
-                  <Handshake aria-hidden="true" className="size-3 text-info" />
+                  <Handshake
+                    aria-hidden="true"
+                    className="size-3 shrink-0 text-info"
+                  />
                 )}
                 {promise.text}
               </span>
@@ -132,20 +136,23 @@ function Row({
         <span
           className={`mt-1 flex items-center gap-1.5 text-[12.5px] ${
             reminder.tone === "warning"
-              ? "text-warning"
+              ? "text-foreground"
               : "text-muted-foreground"
           }`}
         >
-          <Send aria-hidden="true" className="size-3 shrink-0" />
+          <Send
+            aria-hidden="true"
+            className={`size-3 shrink-0 ${reminder.tone === "warning" ? "text-warning" : ""}`}
+          />
           {reminder.text}
         </span>
       </span>
-      <span className="text-right">
-        <span className="block text-[16.5px] font-semibold tracking-[-0.015em] tabular-nums">
+      <span className="self-start text-right md:self-center">
+        <span className="block text-[15px] font-semibold tracking-[-0.015em] whitespace-nowrap tabular-nums">
           {formatMoney(row.balance_cents, row.currency)}
         </span>
         <span
-          className={`mt-0.5 block text-[12.5px] tabular-nums ${late ? "text-destructive" : "text-muted-foreground"}`}
+          className={`mt-0.5 block text-[12.5px] whitespace-nowrap tabular-nums ${late ? "text-destructive" : "text-muted-foreground"}`}
         >
           {due === "" ? (
             <>
@@ -174,8 +181,13 @@ function Row({
           )}
         </span>
       </span>
-      <span className="relative z-[1] flex items-center gap-1">
-        <Button variant="outline" size="sm" onClick={() => onWrite(row)}>
+      <span className="relative z-[1] col-span-2 col-start-2 flex items-center justify-end gap-1 md:col-span-1 md:col-start-auto">
+        <Button
+          variant="outline"
+          size="sm"
+          className="rounded-full"
+          onClick={() => onWrite(row)}
+        >
           <Send aria-hidden="true" className="size-3.5" />
           Escribir
         </Button>
@@ -185,7 +197,7 @@ function Row({
               <Button
                 variant="ghost"
                 size="icon"
-                className="size-8 rounded-full text-muted-foreground"
+                className="size-9 rounded-full text-muted-foreground"
                 aria-label={`Más acciones · ${row.contact_name}`}
               >
                 <Ellipsis className="size-4" />
@@ -241,12 +253,24 @@ function Row({
   );
 }
 
+/** Suma de una sección, solo si todas sus filas cobran en la misma moneda. */
+function sectionTotal(rows: readonly ReceivableDTO[]): string | null {
+  const currency = rows[0]?.currency;
+  if (currency === undefined || rows.some((row) => row.currency !== currency))
+    return null;
+  return formatMoney(
+    rows.reduce((sum, row) => sum + row.balance_cents, 0),
+    currency,
+  );
+}
+
 /**
- * Las secciones de la cartera, ordenadas por urgencia.
+ * Las secciones de la cartera, ordenadas por urgencia, en una sola ficha.
  *
  * Los dos ejes —qué pasó con el servicio, cuánta prisa corre el dinero— los
- * lleva la SECCIÓN y no la fila: el operador lee el titular y baja, en vez de
- * descodificar un color y un icono en cada renglón.
+ * lleva la SECCIÓN y no la fila: el operador lee el titular, su cuenta y su
+ * total, y baja. Con una sola fila el total no se repite: sería la misma cifra
+ * dos veces seguidas.
  */
 export function ReceivableSectionList({
   sections,
@@ -255,34 +279,37 @@ export function ReceivableSectionList({
   onReschedule,
 }: { sections: ReceivableSection[] } & RowActions) {
   return (
-    <div>
+    <div className="rounded-3xl border border-border bg-card px-4 pt-1 pb-1 md:px-5">
       {sections.map((section) => {
-        const Icon = SECTION_ICONS[section.icon];
+        const total =
+          section.rows.length > 1 ? sectionTotal(section.rows) : null;
         return (
-          <section key={section.key} className="[&+&]:mt-7">
-            <h2 className="flex items-center gap-2.5 px-1 pb-2.5 text-[13px] text-muted-foreground">
-              <Icon
-                aria-hidden="true"
-                className={`size-[15px] ${SECTION_TONES[section.tone]}`}
-              />
-              <span className="font-medium text-foreground">
+          <section
+            key={section.key}
+            className="[&+&]:border-t [&+&]:border-border"
+          >
+            <h2 className="flex items-center gap-2 pt-4 pb-1 text-[12.5px] text-muted-foreground">
+              <span className="font-semibold text-foreground">
                 {section.title}
               </span>
-              <span className="ml-auto tabular-nums">
-                {section.rows.length}
-              </span>
+              <span aria-hidden="true">·</span>
+              <span className="tabular-nums">{section.rows.length}</span>
+              {total !== null ? (
+                <span className="ml-auto whitespace-nowrap tabular-nums">
+                  <span className="sr-only">Suma: </span>
+                  {total}
+                </span>
+              ) : null}
             </h2>
-            <div className="overflow-hidden rounded-[18px] border border-border bg-background">
-              {section.rows.map((row) => (
-                <Row
-                  key={row.plan_id}
-                  row={row}
-                  onWrite={onWrite}
-                  onPromise={onPromise}
-                  onReschedule={onReschedule}
-                />
-              ))}
-            </div>
+            {section.rows.map((row) => (
+              <Row
+                key={row.plan_id}
+                row={row}
+                onWrite={onWrite}
+                onPromise={onPromise}
+                onReschedule={onReschedule}
+              />
+            ))}
           </section>
         );
       })}

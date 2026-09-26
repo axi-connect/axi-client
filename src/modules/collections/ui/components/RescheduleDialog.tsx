@@ -1,13 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  CalendarClock,
-  LoaderCircle,
-  Plus,
-  TriangleAlert,
-  X,
-} from "lucide-react";
+import { Check, LoaderCircle, Plus, TriangleAlert, X } from "lucide-react";
 
 import { API_ERROR_CODES, isHttpError } from "@/core/api/problem";
 import { errorMessage } from "@/core/lib/error-messages";
@@ -24,12 +18,14 @@ import {
   DialogTitle,
 } from "@/shared/components/ui/dialog";
 import { Input } from "@/shared/components/ui/input";
+import { SegmentedControl } from "@/shared/components/ui/segmented";
 import { PriceInput } from "@/shared/components/features/price-input";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import type { PlanDetailDTO } from "@/modules/collections/domain/payment-plan";
 import {
   pendingSchedule,
   scheduleCheck,
+  splitSchedule,
   type ScheduleLine,
 } from "@/modules/collections/domain/promise";
 import {
@@ -37,8 +33,15 @@ import {
   reschedulePlan,
 } from "@/modules/collections/infrastructure/services/collections-service.adapter";
 
+/** «En cuántas cuotas»: los casos que se negocian por teléfono; más, con «Añadir cuota». */
+const COUNT_ITEMS = [
+  { value: "1", label: "1 · todo junto" },
+  { value: "2", label: "2" },
+  { value: "3", label: "3" },
+] as const;
+
 /**
- * Reprogramar las cuotas (F4b; el diseño viene del mockup aprobado de F4).
+ * Reprogramar las cuotas (F4b; segmentado de cuotas en Cobros premium P4).
  *
  * Solo lo pendiente: lo ya pagado no se toca. La regla del servidor —las
  * cuotas pendientes tienen que sumar exactamente el saldo— se comprueba
@@ -144,8 +147,7 @@ export function RescheduleDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[560px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2.5">
-            <CalendarClock aria-hidden="true" className="size-5 text-info" />
+          <DialogTitle className="font-heading text-2xl font-bold tracking-tight">
             Reprogramar cuotas
           </DialogTitle>
           <DialogDescription>
@@ -154,6 +156,16 @@ export function RescheduleDialog({
               ? `; ${String(paidCount)} ${paidCount === 1 ? "cuota pagada no se toca" : "cuotas pagadas no se tocan"}`
               : ""}
             .
+            {plan !== null ? (
+              <>
+                {" "}
+                Repartes lo que falta:{" "}
+                <b className="font-semibold whitespace-nowrap text-foreground tabular-nums">
+                  {formatMoney(balance, plan.currency)}
+                </b>
+                .
+              </>
+            ) : null}
           </DialogDescription>
         </DialogHeader>
 
@@ -175,6 +187,22 @@ export function RescheduleDialog({
           </Alert>
         ) : (
           <>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <span className="text-sm font-semibold">En cuántas cuotas</span>
+              <SegmentedControl
+                value={lines.length <= 3 ? String(lines.length) : ""}
+                onValueChange={(next) => {
+                  setLines((current) =>
+                    splitSchedule(current, balance, Number(next)),
+                  );
+                  setServerError(null);
+                }}
+                items={COUNT_ITEMS}
+                label="Número de cuotas"
+                size="sm"
+                treatment="lift"
+              />
+            </div>
             <ol className="m-0 list-none divide-y divide-border/60 p-0">
               {lines.map((line, index) => (
                 <li
@@ -238,8 +266,19 @@ export function RescheduleDialog({
             </Button>
 
             {check.valid ? (
-              <div className="flex items-center justify-between gap-3 rounded-xl bg-secondary px-3.5 py-3 text-sm">
-                <span>Las cuotas pendientes cuadran con el saldo</span>
+              <div
+                role="status"
+                className="flex items-center gap-3 rounded-2xl bg-muted px-3.5 py-3 text-sm"
+              >
+                <span
+                  aria-hidden="true"
+                  className="grid size-[22px] shrink-0 place-items-center rounded-full bg-foreground text-background"
+                >
+                  <Check className="size-3" strokeWidth={3} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  Las cuotas pendientes cuadran con el saldo
+                </span>
                 <span className="font-semibold tabular-nums">
                   {formatMoney(balance, plan?.currency ?? "COP")}
                 </span>

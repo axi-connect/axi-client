@@ -28,6 +28,13 @@ import { ShopifyOriginBadge, StatusDotBadge } from "@/shared/components/ui/statu
 import { FieldList } from "@/shared/components/features/field-list";
 import { InkIsland, Kicker, StatePill, type StatePillTone } from "@/shared/components/features/bento";
 import { PaymentPlanBlock } from "@/modules/collections/ui/components/PaymentPlanBlock";
+import { AllocationPreview } from "@/modules/collections/ui/components/AllocationPreview";
+import {
+  installmentPending,
+  nextInstallment,
+  planInstallmentLabel,
+  type PlanDetailDTO,
+} from "@/modules/collections/domain/payment-plan";
 import { DocumentsList, latestChange } from "@/modules/documents/public";
 import { OrderBalanceBlock } from "./OrderBalanceBlock";
 import {
@@ -159,7 +166,9 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
   const [reportingPayment, setReportingPayment] = useState(false);
   const [review, setReview] = useState<PaymentReview | null>(null);
   // F8: cuándo se reprogramó el plan; el contrato lo pinta, así que cuenta para «desactualizado».
-  const [scheduleChangedAt, setScheduleChangedAt] = useState<string | null>(null);
+  const [plan, setPlan] = useState<PlanDetailDTO | null>(null);
+  const scheduleChangedAt = plan?.schedule_changed_at ?? null;
+  const nextDue = plan === null ? null : nextInstallment(plan);
 
   const load = useCallback(async () => {
     try {
@@ -263,7 +272,12 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
                 orderId={order.id}
                 contactName={order.contact.full_name ?? "el cliente"}
                 refreshKey={order.updated_at}
-                onLoaded={(plan) => setScheduleChangedAt(plan?.schedule_changed_at ?? null)}
+                onLoaded={setPlan}
+                // Una isla por pantalla: con un comprobante por revisar, esa es la isla.
+                island={!(canManage && order.payments.some((payment) => payment.status === "reported"))}
+                onRegisterPayment={
+                  canManage && canTransition(order.status, "payment_reported") ? () => setReportingPayment(true) : undefined
+                }
               />
 
               {/* Artículos */}
@@ -580,6 +594,14 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
         {reportingPayment && order !== null ? (
           <ReportPaymentDialog
             order={mapOrderToRow(order)}
+            installment={
+              plan !== null && nextDue !== null
+                ? { label: planInstallmentLabel(nextDue, plan.installments), cents: installmentPending(nextDue) }
+                : null
+            }
+            allocation={
+              plan === null ? undefined : (amountCents) => <AllocationPreview plan={plan} amountCents={amountCents} />
+            }
             onOpenChange={(open) => {
               if (!open) {
                 setReportingPayment(false);

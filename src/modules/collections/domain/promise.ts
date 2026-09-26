@@ -280,6 +280,30 @@ export function pendingSchedule(
 }
 
 /**
+ * «En cuántas cuotas» (Cobros premium P4): reparte el saldo en `count` partes
+ * iguales en pesos enteros; la última se lleva el resto, así la suma cuadra
+ * siempre. Las fechas salen de lo que ya había: la última es la del saldo
+ * (la que se pactó con la salida) y las de en medio reutilizan las actuales,
+ * o esa misma fecha si no había tantas — el operador las mueve después.
+ */
+export function splitSchedule(
+  current: readonly ScheduleLine[],
+  balanceCents: number,
+  count: number,
+): ScheduleLine[] {
+  const parts = Math.max(1, Math.floor(count));
+  const final = current[current.length - 1]?.due_at ?? "";
+  const base = Math.floor(balanceCents / parts / 100) * 100;
+  return Array.from({ length: parts }, (_, index) => {
+    const last = index === parts - 1;
+    return {
+      due_at: last ? final : (current[index]?.due_at ?? final),
+      amount_cents: last ? balanceCents - base * (parts - 1) : base,
+    };
+  });
+}
+
+/**
  * La regla del servidor, dicha antes de perder el trabajo: las cuotas
  * pendientes tienen que sumar exactamente el saldo. Devuelve la diferencia
  * (positiva = faltan, negativa = sobran) y si cada línea es válida.

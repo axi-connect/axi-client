@@ -6,7 +6,7 @@ import { applyServerValidation, errorMessage } from "@/core/lib/error-messages"
 import { DynamicForm } from "@/shared/components/features/dynamic-form"
 import { FieldList } from "@/shared/components/features/field-list"
 import { SchedulesEditor } from "@/modules/companies/ui/forms/SchedulesEditor"
-import { UnsavedChangesDock } from "@/shared/components/features/island/UnsavedChangesDock"
+import { UnsavedChangesDock } from "@/shared/components/features/island"
 import { updateMyCompany } from "@/modules/companies/infrastructure/services/company-service.adapter"
 import { useMyCompany } from "@/modules/companies/infrastructure/hooks/use-my-company"
 import {

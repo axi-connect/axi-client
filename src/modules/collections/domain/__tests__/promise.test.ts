@@ -9,6 +9,7 @@ import {
   promiseHistory,
   promiseLine,
   scheduleCheck,
+  splitSchedule,
   suggestedPromiseCents,
   type PromiseDTO,
 } from "@/modules/collections/domain/promise";
@@ -277,5 +278,31 @@ describe("suggestedPromiseCents y el calendario pendiente", () => {
         .valid,
     ).toBe(false);
     expect(scheduleCheck([], 0).valid).toBe(false);
+  });
+});
+
+describe("splitSchedule (premium P4: «En cuántas cuotas»)", () => {
+  const current = [
+    { due_at: "2026-10-01", amount_cents: 463_466_300 },
+    { due_at: "2026-10-14", amount_cents: 463_466_300 },
+  ];
+
+  it("en pesos enteros, la última se lleva el resto y la suma cuadra con el saldo", () => {
+    const three = splitSchedule(current, 926_932_600, 3);
+    expect(three.map((line) => line.amount_cents)).toEqual([
+      308_977_500, 308_977_500, 308_977_600,
+    ]);
+    expect(scheduleCheck(three, 926_932_600).valid).toBe(true);
+    expect(three.map((line) => line.due_at)).toEqual([
+      "2026-10-01",
+      "2026-10-14",
+      "2026-10-14",
+    ]);
+  });
+
+  it("todo junto: una sola cuota por todo el saldo, en la fecha del saldo", () => {
+    expect(splitSchedule(current, 926_932_600, 1)).toEqual([
+      { due_at: "2026-10-14", amount_cents: 926_932_600 },
+    ]);
   });
 });

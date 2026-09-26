@@ -25,7 +25,7 @@ import {
   type ReminderTemplateKey,
 } from "@/modules/collections/domain/reminder";
 import {
-  installmentLabel,
+  planInstallmentLabel,
   nextInstallment,
   type PlanDetailDTO,
 } from "@/modules/collections/domain/payment-plan";
@@ -120,7 +120,7 @@ export function SendReminderDialog({
           <DialogDescription>
             {plan === null || target === null
               ? "Buscando la cuota que toca…"
-              : `${installmentLabel(target, plan.installments.length)} · ${formatMoney(
+              : `${planInstallmentLabel(target, plan.installments)} · ${formatMoney(
                   target.amount_cents - target.paid_cents,
                   plan.currency,
                 )} · vence el ${formatShortDate(target.due_at)}`}
