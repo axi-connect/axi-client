@@ -1,0 +1,110 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "Main.dc.html": {
+      "h": 1000,
+      "title": "1 · El contexto a 1440 — cinco paneles; controles: panel y D6 (interactivo)",
+      "w": 1440,
+      "x": 0,
+      "y": 0,
+      "is_interactive": true
+    },
+    "D6.dc.html": {
+      "h": 1000,
+      "title": "2 · D6 · Dónde abre el contexto entre 1280 y 1535 px",
+      "w": 1880,
+      "x": 1520,
+      "y": 0
+    },
+    "Ancha.dc.html": {
+      "h": 1080,
+      "title": "3 · Pantalla ancha 1920 — en línea, como cuarta columna",
+      "w": 1920,
+      "x": 3480,
+      "y": 0
+    },
+    "Paneles.dc.html": {
+      "h": 1000,
+      "title": "4 · Los cinco paneles — Contacto, Adjuntos, Historial, Llamadas y Pedidos (D5)",
+      "w": 1880,
+      "x": 0,
+      "y": 1500
+    },
+    "Estados.dc.html": {
+      "h": 1000,
+      "title": "5 · Estados — cargando, error y vacíos",
+      "w": 1440,
+      "x": 1960,
+      "y": 1500
+    },
+    "Oscuro.dc.html": {
+      "h": 1000,
+      "title": "6 · Oscuro (interactivo)",
+      "w": 1440,
+      "x": 0,
+      "y": 2920,
+      "is_interactive": true
+    },
+    "Movil.dc.html": {
+      "h": 844,
+      "title": "7 · Celular — la conversación con el acceso al contexto",
+      "w": 390,
+      "x": 1520,
+      "y": 2920
+    },
+    "MovilContexto.dc.html": {
+      "h": 844,
+      "title": "8 · Celular — el contexto a pantalla completa",
+      "w": 390,
+      "x": 1990,
+      "y": 2920
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-09-27T21:00:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {
+    "rowA": {
+      "kind": "title1",
+      "maxW": 5400,
+      "text": "El contexto y dónde abre",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "rowB": {
+      "kind": "title1",
+      "maxW": 3400,
+      "text": "Los paneles y sus estados",
+      "w": 240,
+      "x": 0,
+      "y": 1200
+    },
+    "rowC": {
+      "kind": "title1",
+      "maxW": 2380,
+      "text": "Oscuro y celular",
+      "w": 240,
+      "x": 0,
+      "y": 2620
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "D6.dc.html",
+    "Ancha.dc.html",
+    "Paneles.dc.html",
+    "Estados.dc.html",
+    "Oscuro.dc.html",
+    "Movil.dc.html",
+    "MovilContexto.dc.html"
+  ],
+  "pages": [],
+  "title": "Inbox premium · F4 El contexto"
+}

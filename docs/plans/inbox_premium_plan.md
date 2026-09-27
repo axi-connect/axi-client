@@ -302,6 +302,36 @@ Solo cliente.
 | `AttachmentsPanel` | Rejilla por categoría con `SegmentedControl` y miniaturas uniformes |
 | `HistoryPanel` / `CallsPanel` | Línea de tiempo (DESIGN-SYSTEM §9.6) con el mismo `describe*` del CRM y de Llamadas |
 
+#### F4 · Lo que dejó el diagnóstico (2026-09-27, antes del lienzo)
+
+Lienzo: https://claude.ai/artifact/QistmYB9Y3DUkrg5gEDfgZ (8 artboards; fuentes en
+`docs/design/mockups/inbox-premium/f4/`). Rama `feat/inbox-premium-f4` sobre F3 (a60c44f1), sin tocar la de F3 en
+certificación.
+
+- **El panel en línea ya no cabe entre 1280 y 1535 px.** `ContextPanel` entra en línea desde xl. Con la columna de
+  la bandeja de F1 desplegada, a 1440 px: navegación 256 + bandeja 232 + lista 320 + panel 340 + riel 52 deja el chat
+  en unos 240 px. **D6** en el lienzo: (a) flota sobre el chat hasta 2xl y en línea desde 1536 (recomendada) o (b)
+  empuja y la bandeja pasa a riel mientras el panel está abierto.
+- **D5 · Pedidos en el riel (nuevo).** La tarea que dejó Cobros (panel `orders`, plan del servidor §6.1) es solo
+  cliente: `listOrders` de `orders/public`, con saldo primero, `paymentProgress` y `DocumentsList` por pedido, como
+  `ContactOrdersDocumentsCard` del 360. Permiso `orders:read`.
+- **Contacto:**
+  - la etapa pasa de `Badge` a `StatePill`;
+  - «Qué tan cerca está» en tramos, con `scoreProgress` del CRM F2 (exportado desde `crm/public`, cambio aditivo);
+  - las etiquetas con su color;
+  - el pie fijo con «Programar seguimiento» y «Ver ficha completa».
+- **Cabecera de los paneles:** `Kicker` + título en Nexa + una línea de contexto, y cierre de 36 px (hoy es de 32).
+- **Riel:**
+  - la píldora activa en tinta (hoy `bg-accent` coral);
+  - conteo en Adjuntos (del hilo cargado), Llamadas y Pedidos;
+  - tooltip a la izquierda.
+- **Historial:** los filtros de `ContactTimelineFeed` usan `bg-accent` (coral) y pasan a tinta. Es un componente del
+  CRM que también usa el 360, así que se cambia allí para los dos.
+- **Celular:** el contexto a pantalla completa con las pestañas arriba. El acceso es el botón (i) de la cabecera,
+  porque el riel no existe por debajo de md.
+- **Sin cambios de contrato.** Todo sale de lecturas que ya existen: contexto del contacto, el hilo, el timeline, las
+  llamadas por contacto y los pedidos por contacto.
+
 ## 4. Decisiones que se muestran en el lienzo para que decida la dueña
 
 - **D1 · Burbuja saliente.** Hoy la burbuja saliente es coral sólida: es la mayor mancha de coral del producto y el
