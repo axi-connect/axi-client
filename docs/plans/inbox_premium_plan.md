@@ -190,6 +190,30 @@ Lo que dejó la implementación (3fdcc879):
 | `ClosedConversationFooter` | Barra sólida con «Resuelta el 24 sep a las 3:10 p.m. · por Laura» (el actor del evento `closed`) |
 | Estados | Hilo cargando con la silueta de burbujas alternadas. Error «No pudimos leer la conversación» + «Reintentar». Sin mensajes: «Aún no hay mensajes» |
 
+#### F2 · Render medido (§12) — 2026-09-26
+
+Arnés `/root/axi/qa/premium/inbox-f2-render.mjs` + `inbox-f2-seed.py`, que corre primero la siembra de F1, con la
+guardia `axi_render`. Escenas: cola, contigo, axi, cerrada, vacía, preview larga y devolver. En 390, 768, 1024,
+1280 y 1440 px, claro y oscuro: **70 capturas sin hallazgos**. Más una regresión corta de F1: 24 capturas sin
+hallazgos. Evidencia en `D:\axi-qa\premium\inbox-f2`.
+
+Lo que corrigió:
+- **La cabecera se medía con el viewport.** A 1440 px, con columna y rail, el chat mide unos 580 px, y la isla de
+  Atender, el responsable y ⋮ dejaban el nombre en 0 px. Ahora es `@container/chead` con prioridad nombre > acción
+  > ⋮ > responsable: el responsable aparece desde 30 rem, su nombre desde 48 rem, «Axi te la pasó» desde 36 rem y el
+  tiempo desde 24 rem. El nombre tiene un mínimo de 6,5 rem.
+- **Selección de la fila y vista activa en `bg-accent`**, que es el tinte coral. Pasan a `bg-muted`, el anillo
+  neutro del lienzo.
+- **La X de 16 px en los diálogos de traspaso.** `showCloseButton: false`: «Cancelar» y Escape ya cierran.
+- **El `textarea` del composer era un scroller sin la barra de Axi.** Ahora lleva `sidebar-scroll`.
+- **La cerrada decía «esperando…».** La espera solo cuenta con la conversación abierta.
+- **Auditoría IB1:**
+  - **H2:** el vacío se decía antes de la primera respuesta; ahora sale silueta.
+  - **H1:** la conversación abierta vive en la URL con `history.pushState`, y «Atrás» la cierra.
+
+Visto y fuera de alcance: en el celular, el botón flotante del usuario del shell privado (abajo a la izquierda) tapa
+el arranque de la barra del composer. No es del inbox; queda anotado para el shell.
+
 ### F3 · Escribir y medios
 
 Solo cliente.

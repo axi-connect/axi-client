@@ -31,7 +31,7 @@ export function ClaimIsland({
   busy: boolean
 }) {
   const reduced = useReducedMotion() === true
-  const label = reason === null ? "Axi te la pasó" : `Axi te la pasó: ${reason}`
+  const label = [reason === null ? "Axi te la pasó" : `Axi te la pasó: ${reason}`, since === null ? null : `hace ${since}`].filter(Boolean).join(" · ")
 
   return (
     <motion.div
@@ -60,11 +60,12 @@ export function ClaimIsland({
       >
         <span className="flex items-center gap-1.5 text-xs font-medium whitespace-nowrap tabular-nums">
           <Sparkles aria-hidden className="size-3 text-accent-violet" />
-          <span className="hidden sm:inline">Axi te la pasó</span>
+          <span className="hidden @min-[36rem]/chead:inline">Axi te la pasó</span>
           {since !== null && (
             <>
-              <span aria-hidden className="hidden sm:inline">·</span>
-              <span>{since}</span>
+              <span aria-hidden className="hidden @min-[36rem]/chead:inline">·</span>
+              {/* Muy estrecha: solo el destello y Atender (el tiempo sigue en el nombre accesible). */}
+              <span className="hidden @min-[24rem]/chead:inline">{since}</span>
             </>
           )}
         </span>

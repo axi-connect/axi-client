@@ -159,6 +159,8 @@ export function useHandoffActions(
             },
           ],
           className: "sm:max-w-md",
+          // «Cancelar» y Escape ya cierran: sin la X de 16 px (render F2).
+          showCloseButton: false,
         }}
       >
         <Textarea
@@ -198,6 +200,8 @@ export function useHandoffActions(
             },
           ],
           className: "sm:max-w-md",
+          // «Cancelar» y Escape ya cierran: sin la X de 16 px (render F2).
+          showCloseButton: false,
         }}
       >
         <div className="space-y-3">

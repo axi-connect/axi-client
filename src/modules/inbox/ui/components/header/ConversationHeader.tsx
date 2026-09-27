@@ -94,13 +94,17 @@ export function ConversationHeader({
   const { primary, secondary, dialogs, busy } = handoff
 
   const contactName = conversation.contact.full_name || conversation.contact.phone || "Sin nombre"
-  const since = waitingSince(conversation)
+  // Una conversación cerrada no espera a nadie, aunque el último mensaje sea del contacto.
+  const since = conversation.status === "open" ? waitingSince(conversation) : null
   const waiting = since !== null ? relativeTime(since, new Date(now)) : null
   const holder = conversationHolder(conversation, meId, now)
   const claim = primary?.id === "claim" ? primary : null
 
   return (
-    <div className="flex h-16 shrink-0 items-center gap-2 border-b border-border bg-background px-3 sm:px-4">
+    /* La cabecera responde a SU ancho (`@container/chead`), no al del viewport: con la
+       columna desplegada y el rail, a 1440 px el chat mide ~580 px, y la isla de Atender,
+       el responsable y ⋮ dejaban el nombre en 0 px (render F2). */
+    <div className="@container/chead flex h-16 shrink-0 items-center gap-2 border-b border-border bg-background px-3 sm:px-4">
       {/* Volver a la lista en móvil (maestro-detalle); en md+ la lista ya se ve */}
       <Button
         variant="ghost"
@@ -117,7 +121,7 @@ export function ConversationHeader({
         href="?panel=contact"
         scroll={false}
         aria-label={`Ver contacto de ${contactName}`}
-        className="flex min-w-0 flex-1 items-center gap-2.5 rounded-xl py-1 pr-1 transition-colors hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+        className="flex min-w-[6.5rem] flex-1 items-center gap-2.5 rounded-xl py-1 pr-1 transition-colors hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
       >
         <Avatar src={conversation.contact.avatar_url} alt="" fallback={contactName} size={38} className="shrink-0" />
         <div className="min-w-0">
@@ -132,19 +136,23 @@ export function ConversationHeader({
         </div>
       </Link>
 
-      {claim === null && <HolderPill kind={holder.kind} text={holder.text} className="hidden sm:inline-flex" />}
+      {claim === null && <HolderPill kind={holder.kind} text={holder.text} className="hidden @min-[30rem]/chead:inline-flex" />}
 
       <div className="flex shrink-0 items-center gap-1">
-        <ContactOwnerSelect
-          contactId={conversation.contact.id}
-          ownerUserId={profile?.owner_user_id ?? null}
-          ownerName={ownerName}
-          // El responsable vive en el contexto compartido: al cambiarlo hay que
-          // invalidarlo para que la cabecera y el rail vean el nuevo valor.
-          onChanged={() => bumpContactContext(conversation.contact.id)}
-          // Solo avatar por debajo de xl: a ese ancho el nombre competiría con el del contacto.
-          labelClassName="hidden xl:inline-flex"
-        />
+        {/* Prioridad cuando no cabe todo: nombre > acción > ⋮ > responsable. El
+            responsable sigue en el panel Contacto del rail. */}
+        <div className="hidden @min-[30rem]/chead:flex">
+          <ContactOwnerSelect
+            contactId={conversation.contact.id}
+            ownerUserId={profile?.owner_user_id ?? null}
+            ownerName={ownerName}
+            // El responsable vive en el contexto compartido: al cambiarlo hay que
+            // invalidarlo para que la cabecera y el rail vean el nuevo valor.
+            onChanged={() => bumpContactContext(conversation.contact.id)}
+            // Solo avatar si la cabecera es estrecha: el nombre competiría con el del contacto.
+            labelClassName="hidden @min-[48rem]/chead:inline-flex"
+          />
+        </div>
 
         {claim !== null ? (
           <ClaimIsland

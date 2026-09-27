@@ -148,7 +148,7 @@ export const ConversationListItem = memo(function ConversationListItem({
           "focus-visible:ring-ring/50 focus-visible:ring-[3px]",
           "active:scale-[0.99] motion-reduce:active:scale-100",
           // Seleccionada: anillo neutro, como la selección de Cobros y CRM.
-          active ? "bg-accent ring-[1.5px] ring-foreground ring-inset" : "hover:bg-accent/50",
+          active ? "bg-muted ring-[1.5px] ring-foreground ring-inset" : "hover:bg-muted/70",
         )}
       >
         <span className="relative shrink-0">

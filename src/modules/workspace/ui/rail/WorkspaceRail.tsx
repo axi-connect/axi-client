@@ -228,7 +228,7 @@ function RailViews({ expanded, onNavigate }: { expanded: boolean; onNavigate?: (
                 className={cn(
                   "relative flex h-10 w-full items-center gap-2.5 rounded-xl px-3 text-left text-sm outline-none",
                   "transition-colors duration-150 focus-visible:ring-[3px] focus-visible:ring-ring/50",
-                  active ? "bg-accent font-medium text-foreground" : "text-foreground/80 hover:bg-accent/60",
+                  active ? "bg-muted font-medium text-foreground" : "text-foreground/80 hover:bg-muted/70",
                 )}
               >
                 <Icon aria-hidden className={cn("size-4 shrink-0", item.id === "ai" && "text-accent-violet")} />

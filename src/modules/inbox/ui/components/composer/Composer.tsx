@@ -235,7 +235,7 @@ export function Composer({
                     : "Escribe un mensaje… (Enter para enviar)"
               }
               className={cn(
-                "max-h-32 min-h-10 w-full resize-y rounded-lg border border-border bg-background px-3 py-2 text-sm",
+                "sidebar-scroll max-h-32 min-h-10 w-full resize-y rounded-lg border border-border bg-background px-3 py-2 text-sm",
                 "focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-50",
               )}
               aria-label="Mensaje"
