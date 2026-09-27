@@ -241,6 +241,19 @@ Lienzo: https://claude.ai/artifact/GjoSeJKsNp4w9KyUTPbSo6 (10 artboards; fuentes
   `ConversationDTO` ya trae `channel.kind` y `last_inbound_at`: `domain/reply-window.ts` replica esa regla, pura y
   con test (bordes a 24 h exactas, sin inbound, por cerrar < 1 h). Cero peticiones nuevas, sin N+1, y la frescura
   llega sola con el WS que ya actualiza la conversación; el tick de 60 s recalcula lo que queda.
+- **Condiciones del auditor para `reply-window.ts` (2026-09-27), verificadas contra el servidor:**
+  - (a) Tabla exacta de `OUTBOUND_WINDOW_HOURS` (`whatsapp_cloud`, `instagram_dm`, `facebook_messenger` = 24 h;
+    cualquier otro kind, wweb incluido, sin ventana), con comentario a `enqueue_outbound_message.use_case.ts:108`.
+  - (b) La guarda cubre todo lo que no es plantilla, media y voz incluidas: fuera de ventana se bloquea la caja
+    entera (clip, voz, rayo salvo Plantillas), no solo el texto.
+  - (c) `last_inbound_at === null` es fuera de ventana.
+  - (d) Borde estricto: fuera si `last_inbound_at < now − 24 h`; justo a 24 h sigue dentro.
+  - (e) Tests por los dos lados del borde con fechas reales: dentro, fuera, null, wweb, Instagram fuera.
+  - (f) La regla del cliente no es la verdad: si el envío vuelve con `channels/outside_service_window` (o
+    `channels/template_not_supported` en wweb), el composer pasa al aviso o al selector de plantillas y el mensaje
+    optimista queda como «No se envió». El auditor lo fuerza en QA.
+  - Envío desde el popover: un clic en la lista solo selecciona y muestra la vista previa; enviar exige el botón
+    «Enviar a <nombre>» (o Enter con la vista previa a la vista). En el celular, tocar abre la vista previa.
 - **Plantillas:** solo `whatsapp_cloud` (`supports_templates` del servidor dice lo mismo). Fuera de ventana en
   Instagram o Messenger no se ofrece botón. El DTO de la acción rápida trae `template_name` y
   `template_language`, no el texto: la vista previa de una plantilla muestra nombre e idioma, no se inventa el cuerpo.
