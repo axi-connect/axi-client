@@ -58,7 +58,7 @@ vistas, orden, filtros y lecturas optimistas. Lo que le falta es la capa premium
 | Panel sin conversación | Glifo y «Selecciona una conversación para empezar» | Es el hueco más grande de la pantalla y no dice nada. Pasa a ser «Tu día en el inbox» con `/inbox/stats` (nuevas, resueltas, cuánto resolvió Axi) y la isla «Lo próximo» |
 | Cabecera del chat | Cinco badges pequeños (`text-[10px]`) que compiten | Identidad, una píldora de quién atiende y la acción principal en `contrast`. El resto va al rail |
 | Hilo | Burbujas planas y eventos invisibles | Los eventos de handoff (`/inbox/conversations/:id/events`) no aparecen: el operador no sabe por qué la conversación llegó a su cola. Tampoco se distingue «lo escribió Axi» de «lo escribió una persona» |
-| Composer | Textarea con borde y avisos sueltos en `text-[10px]` ámbar | Superficie de escritura de un solo bloque y el estado de la ventana de 24 h (`reachability`) antes de escribir |
+| Composer | Textarea con borde y avisos sueltos en `text-[10px]` ámbar | Superficie de escritura de un solo bloque y el estado de la ventana de 24 h (regla del motor sobre la conversación) antes de escribir |
 | Rail de contexto | Paneles correctos pero planos | Fichas `rounded-3xl`, cabeceras en Nexa y el mismo lenguaje que la ficha 360 del CRM F2 |
 | Estados | Genéricos | Carga, vacío y error con la silueta real de cada área |
 
@@ -220,7 +220,7 @@ Solo cliente.
 
 | Pieza | Queda |
 |---|---|
-| `domain/reply-window.ts` (nuevo) | Puro, con test. A partir de `GET /conversations/contacts/:id/reachability` (hoy sin uso en el cliente) da «Ventana abierta · quedan 3 h», «La ventana de 24 h se cerró: envía una plantilla» o «Canal desconectado», con el tono del punto |
+| `domain/reply-window.ts` (nuevo) | Puro, con test. A partir de `channel.kind` y `last_inbound_at` de la conversación (ver «Lo que dejó el diagnóstico») da «Ventana abierta · quedan 3 h», «La ventana de 24 h se cerró: envía una plantilla» o «Canal desconectado», con el tono del punto |
 | `Composer` | Un solo bloque `rounded-2xl` con adjuntar, acciones rápidas y voz dentro y el envío en coral. Crece hasta 8 líneas con scroll de marca. Cuando no se puede escribir (Axi atiende o está en cola) muestra una línea con la acción: «Axi está atendiendo · Intervenir». Encima, la línea de la ventana de 24 h (solo WhatsApp) y «Sin tiempo real: se envía por HTTP», en `StatePill` y no en `text-[10px]` ámbar |
 | `AttachmentTray` | Miniaturas de 56 px con progreso, error y quitar, todo con objetivos de 24 px |
 | `VoiceRecorderBar` | Onda o nivel, tiempo `tabular-nums` y descartar / enviar |
@@ -341,7 +341,7 @@ Solo cliente.
 | `GET /inbox/conversations`, `/inbox/counts` | Sí | Lista, vistas y subtítulo vivo |
 | `GET /inbox/stats?period=today` | Solo el dashboard | «Tu día» (F1) |
 | `GET /inbox/conversations/:id/events` | No | Eventos en el hilo e isla del motivo (F2) |
-| `GET /conversations/contacts/:id/reachability` | No | Ventana de 24 h en el composer (F3) |
+| ~~`GET /conversations/contacts/:id/reachability`~~ | No | Descartada en F3: es por contacto y puede elegir otro canal. La ventana sale de `channel.kind` + `last_inbound_at` de la conversación (regla del motor) |
 | WS `/inbox` (mensajes, modo, typing, leídos) | Sí | Sin cambios de contrato |
 | Contexto del contacto (`crm/public`) | Sí | Panel Contacto (F4) |
 
@@ -373,7 +373,7 @@ Solo cliente.
 | El ancla del prepend del hilo se rompe al intercalar eventos | Los eventos entran en el mismo `groupMessagesByDay` con clave estable y el ancla mide antes y después igual que hoy |
 | Tests de copia | La copia nueva se actualiza en su test en el mismo commit |
 | **Permisos de «Tu día».** `/inbox/stats` exige `conversations:read`, verificado en `inbox.controller.ts` (el mismo permiso que la lista), así que un agente con acceso al inbox lo lee | El arnés entra también con el rol de agente. La UI tiene respaldo: con 403 o error, el panel se queda con la isla «Lo próximo» (sale de `counts`) y esconde el bento en vez de pintar un error |
-| **N+1.** `reachability` es por contacto y `events` por conversación | Las dos se cargan solo para la conversación abierta, nunca por fila. Hay un test que cuenta las peticiones al pintar una lista de 50 |
-| **Frescura.** `stats`, `events` y `reachability` pueden quedarse viejos | `stats` se refresca cuando cambian los `counts` (los mismos eventos WS que ya los actualizan), con un mínimo de 60 s. `events` se invalida con los eventos WS de handoff (§7). `reachability` se relee con cada mensaje entrante del contacto (abre la ventana) y el tick de un minuto recalcula lo que queda, sin volver a pedirla. Con tests que simulan el evento WS |
+| **N+1.** `events` es por conversación (la ventana de F3 no pide nada) | Se carga solo para la conversación abierta, nunca por fila. Hay un test que cuenta las peticiones al pintar una lista de 50 |
+| **Frescura.** `stats`, `events` y la ventana de 24 h pueden quedarse viejos | `stats` se refresca cuando cambian los `counts` (los mismos eventos WS que ya los actualizan), con un mínimo de 60 s. `events` se invalida con los eventos WS de handoff (§7). La ventana de F3 se recalcula con `last_inbound_at`, que ya llega por WS, y el tick de un minuto recalcula lo que queda. Con tests que simulan el evento WS |
 | **Zona horaria.** «Hoy», la ventana de 24 h y los separadores de día | Se calculan en la zona del negocio con `core/lib/business-time.ts` (`businessDayKey`, `todayKey`), nunca con la del navegador. Tests cerca de la medianoche (23:30 y 00:30 del negocio) por los dos lados: Cobros tuvo un error UTC/`daysUntilService` exactamente así |
 | **URLs firmadas de medios** (TTL 300 s) | Se mantiene `use-attachment-url`: caché de módulo con renovación a 30 s del vencimiento y `refresh()` en el `onError` de `<img>/<audio>/<video>`. Las burbujas nuevas de F3 no guardan la URL en su estado |
