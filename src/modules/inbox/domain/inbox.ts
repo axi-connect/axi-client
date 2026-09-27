@@ -393,8 +393,19 @@ export interface ComposerAttachment {
   object_url: string;
   kind: OutboundMediaKind;
   status: "pending" | "uploading" | "uploaded" | "error";
+  /** Por qué falló la subida (F3: se dice en la miniatura, no en un toast). */
+  error_message?: string;
   upload_id?: string;
   voice_note?: boolean;
+}
+
+/** Archivo que no entró a la cola (tipo o peso): se dice dentro del composer (F3). */
+export interface ComposerRejection {
+  file_name: string;
+  reason: "type" | "size";
+  /** Solo `size`: el máximo de su tipo, en bytes. */
+  max_bytes?: number;
+  kind?: OutboundMediaKind;
 }
 
 /** Entrada única del envío (Composer → use-send-message). */

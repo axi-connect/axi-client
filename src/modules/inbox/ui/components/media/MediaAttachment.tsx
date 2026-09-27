@@ -1,6 +1,7 @@
 "use client"
 
 import { Package } from "lucide-react"
+import { cn } from "@/core/lib/utils"
 import {
   extractCatalogSku,
   extractLocationPayload,
@@ -57,7 +58,8 @@ export function MediaAttachment({
       // que el operador sepa qué producto mostró el agente.
       const catalogSku = kind === "image" ? extractCatalogSku(message.payload) : null
       return (
-        <div className="flex flex-col gap-1">
+        // Ancho del marco (F3): el chip del producto no ensancha la burbuja más que la foto.
+        <div className={cn("flex flex-col gap-1", kind === "image" && "w-60 max-w-full")}>
           <ImageBubble
             conversationId={conversationId}
             messageId={message.id}
@@ -67,7 +69,7 @@ export function MediaAttachment({
             sticker={kind === "sticker"}
           />
           {catalogSku && (
-            <span className="inline-flex w-fit items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
+            <span className="mx-1 inline-flex w-fit items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
               <Package className="size-3" aria-hidden />
               <span className="font-mono">{catalogSku}</span>
             </span>
@@ -83,7 +85,7 @@ export function MediaAttachment({
     }
     case "video":
       return (
-        <div className="flex flex-col gap-1">
+        <div className="flex w-60 max-w-full flex-col gap-1">
           <VideoBubble
             conversationId={conversationId}
             messageId={message.id}

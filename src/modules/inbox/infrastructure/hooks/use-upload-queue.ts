@@ -2,12 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { errorMessage } from "@/core/lib/error-messages"
-import { formatBytes } from "@/core/lib/format"
-import { useAlert } from "@/core/providers/alert-provider"
 import {
   MAX_UPLOAD_BYTES,
   mediaKindForMime,
   type ComposerAttachment,
+  type ComposerRejection,
 } from "@/modules/inbox/domain/inbox"
 import { uploadConversationFile } from "@/modules/inbox/infrastructure/services/inbox-service.adapter"
 
@@ -16,12 +15,17 @@ import { uploadConversationFile } from "@/modules/inbox/infrastructure/services/
  * inmediatamente (paralelismo 2) y expone el estado por archivo. Estado local
  * del composer (muere al cambiar de conversación — correcto: los uploads no
  * enviados quedan huérfanos en el backend y un janitor futuro los limpia).
+ * F3: lo que no entra (tipo o peso) queda en `rejections` y un fallo de
+ * subida en `error_message` de su miniatura; el composer los dice en la caja.
  */
 const MAX_CONCURRENT_UPLOADS = 2
 
 export interface UploadQueue {
   attachments: ComposerAttachment[]
   add: (files: FileList | File[]) => void
+  /** Archivos que no entraron en la última tanda, hasta `dismissRejections`. */
+  rejections: ComposerRejection[]
+  dismissRejections: () => void
   remove: (localId: string) => void
   retryUpload: (localId: string) => void
   clear: () => void
@@ -30,8 +34,8 @@ export interface UploadQueue {
 }
 
 export function useUploadQueue(conversationId: string): UploadQueue {
-  const { showAlert } = useAlert()
   const [attachments, setAttachments] = useState<ComposerAttachment[]>([])
+  const [rejections, setRejections] = useState<ComposerRejection[]>([])
   // Los File viven fuera del estado React (solo se necesitan para subir/reintentar)
   const filesRef = useRef(new Map<string, File>())
   const activeUploadsRef = useRef(0)
@@ -58,35 +62,26 @@ export function useUploadQueue(conversationId: string): UploadQueue {
       uploadConversationFile(conversationId, file, { filename: file.name })
         .then((upload) => patch(localId, { status: "uploaded", upload_id: upload.id }))
         .catch((err: unknown) => {
-          patch(localId, { status: "error" })
-          showAlert({
-            tone: "error",
-            title: errorMessage(err, "No se pudo subir el archivo"),
-          })
+          patch(localId, { status: "error", error_message: errorMessage(err, "No se pudo subir el archivo") })
         })
         .finally(() => {
           activeUploadsRef.current -= 1
         })
     },
-    [conversationId, patch, showAlert],
+    [conversationId, patch],
   )
 
   const add = useCallback(
     (files: FileList | File[]) => {
+      const rejected: ComposerRejection[] = []
       for (const file of Array.from(files)) {
         const kind = mediaKindForMime(file.type)
         if (!kind) {
-          showAlert({
-            tone: "error",
-            title: `Tipo de archivo no soportado: ${file.name}`,
-          })
+          rejected.push({ file_name: file.name, reason: "type" })
           continue
         }
         if (file.size > MAX_UPLOAD_BYTES[kind]) {
-          showAlert({
-            tone: "error",
-            title: `${file.name} supera el máximo de ${formatBytes(MAX_UPLOAD_BYTES[kind])}`,
-          })
+          rejected.push({ file_name: file.name, reason: "size", max_bytes: MAX_UPLOAD_BYTES[kind], kind })
           continue
         }
         const localId = `up-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
@@ -105,8 +100,10 @@ export function useUploadQueue(conversationId: string): UploadQueue {
         ])
         startUpload(localId)
       }
+      // Cada tanda reemplaza el aviso anterior: dice lo último que pasó.
+      setRejections(rejected)
     },
-    [showAlert, startUpload],
+    [startUpload],
   )
 
   const remove = useCallback((localId: string) => {
@@ -120,7 +117,7 @@ export function useUploadQueue(conversationId: string): UploadQueue {
 
   const retryUpload = useCallback(
     (localId: string) => {
-      patch(localId, { status: "pending" })
+      patch(localId, { status: "pending", error_message: undefined })
       startUpload(localId)
     },
     [patch, startUpload],
@@ -138,6 +135,7 @@ export function useUploadQueue(conversationId: string): UploadQueue {
       setAttachments([])
     }
     filesRef.current.clear()
+    setRejections([])
   }, [])
 
   // Cambio de conversación: descarta la cola (y libera los previews no enviados)
@@ -152,6 +150,8 @@ export function useUploadQueue(conversationId: string): UploadQueue {
   return {
     attachments,
     add,
+    rejections,
+    dismissRejections: () => setRejections([]),
     remove,
     retryUpload,
     clear: () => clear(),

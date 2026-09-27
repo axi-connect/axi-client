@@ -4,7 +4,7 @@ import { useRef, useState } from "react"
 import { cn } from "@/core/lib/utils"
 import { useAttachmentUrl } from "@/modules/inbox/infrastructure/hooks/use-attachment-url"
 import { attachmentDisplayName, type MessageAttachment } from "@/modules/inbox/domain/inbox"
-import { MediaError, MediaSkeleton } from "./MediaStates"
+import { MEDIA_FRAME, MediaError, MediaSkeleton } from "./MediaStates"
 import { MediaLightbox } from "./MediaLightbox"
 
 /**
@@ -55,8 +55,12 @@ export function ImageBubble({
   return (
     <>
       <button
+        type="button"
         onClick={() => attachment && setLightboxOpen(true)}
-        className={cn("block overflow-hidden rounded-xl", sticker ? "size-32" : "max-w-full")}
+        className={cn(
+          "block overflow-hidden bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+          sticker ? "size-32 rounded-[14px] bg-transparent" : cn(MEDIA_FRAME, "cursor-zoom-in"),
+        )}
         aria-label={`Ver ${attachment !== undefined ? attachmentDisplayName(attachment) : "imagen"}`}
       >
         {/* URL firmada rotativa (TTL 300 s): incompatible con el cache de next/image */}
@@ -65,10 +69,7 @@ export function ImageBubble({
           src={src}
           alt={attachment !== undefined ? attachmentDisplayName(attachment) : "Imagen"}
           loading="lazy"
-          className={cn(
-            "object-cover",
-            sticker ? "size-32" : "max-h-72 w-auto max-w-full",
-          )}
+          className={cn("size-full", sticker ? "object-contain" : "object-cover")}
           onError={() => {
             if (previewUrl) return
             if (autoRetriedRef.current) {

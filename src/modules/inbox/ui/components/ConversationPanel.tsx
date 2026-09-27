@@ -102,6 +102,8 @@ function OpenConversation({
   const now = useMinuteTick()
 
   const scrollRef = useRef<HTMLDivElement>(null)
+  // F3: toda la conversación recibe archivos arrastrados; el composer los encola.
+  const dropRef = useRef<HTMLDivElement>(null)
   const stickToBottomRef = useRef(true)
   /** Evita reentrar en la paginación mientras la página anterior está en vuelo. */
   const loadingOlderRef = useRef(false)
@@ -210,7 +212,7 @@ function OpenConversation({
   const loaded = messagesState?.loaded === true
 
   return (
-    <div className={cn("min-h-0 flex-1 flex-col overflow-hidden bg-background", className)}>
+    <div ref={dropRef} className={cn("relative min-h-0 flex-1 flex-col overflow-hidden bg-background", className)}>
       <ConversationHeader conversation={conversation} handoff={handoff} meId={meId} now={now} reason={reason?.sentence ?? null} />
 
       <p className="sr-only" aria-live="polite">
@@ -338,6 +340,7 @@ function OpenConversation({
           onSend={send}
           unlock={handoff.primary !== null && handoff.primary.id !== "close" ? handoff.primary : null}
           unlockBusy={handoff.busy}
+          dropTargetRef={dropRef}
         />
       )}
     </div>

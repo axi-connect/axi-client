@@ -4,11 +4,19 @@ import { Composer } from "../Composer"
 import type { ConversationDTO } from "@/modules/inbox/domain/inbox"
 
 jest.mock("@/core/providers/alert-provider", () => ({ useAlert: () => ({ showAlert: jest.fn() }) }))
-jest.mock("../QuickActionsMenu", () => ({ QuickActionsMenu: () => null }))
-jest.mock("../AttachmentPicker", () => ({ AttachmentPicker: () => null }))
+jest.mock("../QuickActionsMenu", () => ({ QuickActionsMenu: ({ children }: { children: React.ReactNode }) => children }))
+jest.mock("@/modules/channels/public", () => ({ useChannelStatus: () => "connected" }))
 
 const conversation = (mode: ConversationDTO["mode"]) =>
-  ({ id: "c1", status: "open", mode, contact: { full_name: "Mariana", phone: null } }) as unknown as ConversationDTO
+  ({
+    id: "c1",
+    status: "open",
+    mode,
+    channel_id: "ch1",
+    channel: { id: "ch1", name: "WhatsApp Ventas", kind: "whatsapp_web" },
+    last_inbound_at: null,
+    contact: { full_name: "Mariana", phone: null },
+  }) as unknown as ConversationDTO
 
 describe("Composer — la barra cuando todavía no se puede escribir (F2)", () => {
   it("con Axi atendiendo: explica la pausa y «Intervenir» abre la escritura; no hay caja de texto", () => {
