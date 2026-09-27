@@ -76,7 +76,7 @@ export function TemplateTextField<V extends string>({
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         className={cn(
-          "w-full resize-y rounded-md border bg-background px-2.5 py-2 text-sm leading-relaxed focus:outline-none focus:ring-3 focus:ring-primary/20",
+          "w-full sidebar-scroll resize-y rounded-md border bg-background px-2.5 py-2 text-sm leading-relaxed focus:outline-none focus:ring-3 focus:ring-primary/20",
           error ? "border-destructive" : "border-input focus:border-primary",
         )}
       />

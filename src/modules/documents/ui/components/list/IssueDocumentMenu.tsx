@@ -94,7 +94,7 @@ export function IssueDocumentMenu({
         <Button
           variant="outline"
           size="sm"
-          className="h-7 rounded-full px-2.5 text-xs"
+          className="h-[30px] rounded-full px-3 text-[13px]"
           disabled={issuing !== null}
         >
           <Plus className="size-3.5" /> Emitir

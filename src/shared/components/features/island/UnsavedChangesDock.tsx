@@ -13,6 +13,10 @@ import { Island } from "./Island";
  *
  * Sin cambios no se pinta nada: un «Guardar» encendido sin nada que guardar
  * invita a un clic que no hace nada.
+ *
+ * Fuera de un `<form>` (un editor donde un Enter en un campo no debe guardar)
+ * se le pasan `onSave` y `onDiscard`: los botones dejan de ser `submit` y
+ * `reset` y llaman a esos callbacks.
  */
 export function UnsavedChangesDock({
   dirty,
@@ -20,6 +24,9 @@ export function UnsavedChangesDock({
   invalid,
   detail,
   submitLabel = "Guardar cambios",
+  invalidReason = "Revisa los campos marcados antes de guardar.",
+  onSave,
+  onDiscard,
 }: {
   dirty: boolean;
   submitting: boolean;
@@ -27,6 +34,10 @@ export function UnsavedChangesDock({
   /** Una línea de qué cambia al guardar. */
   detail?: string;
   submitLabel?: string;
+  /** Por qué no se puede guardar, cuando hay algo concreto que decir. */
+  invalidReason?: string;
+  onSave?: () => void;
+  onDiscard?: () => void;
 }) {
   if (!dirty && !submitting) return null;
   const blockedId = invalid ? "unsaved-dock-invalid" : undefined;
@@ -41,7 +52,7 @@ export function UnsavedChangesDock({
         <span className="text-sm font-semibold">Cambios sin guardar</span>
         {invalid ? (
           <span id={blockedId} className="text-xs text-muted-foreground">
-            Revisa los campos marcados antes de guardar.
+            {invalidReason}
           </span>
         ) : detail ? (
           <span className="truncate text-xs text-muted-foreground">
@@ -50,16 +61,25 @@ export function UnsavedChangesDock({
         ) : null}
       </span>
       <span className="flex shrink-0 gap-2">
-        <Button type="reset" variant="glass" disabled={submitting}>
+        <Button
+          type={onDiscard === undefined ? "reset" : "button"}
+          variant="glass"
+          disabled={submitting}
+          onClick={onDiscard}
+        >
           Descartar
         </Button>
         <Button
-          type="submit"
+          type={onSave === undefined ? "submit" : "button"}
           aria-disabled={invalid || submitting}
           aria-describedby={blockedId}
           className={invalid ? "opacity-60" : undefined}
           onClick={(event) => {
-            if (invalid || submitting) event.preventDefault();
+            if (invalid || submitting) {
+              event.preventDefault();
+              return;
+            }
+            onSave?.();
           }}
         >
           {submitting ? (

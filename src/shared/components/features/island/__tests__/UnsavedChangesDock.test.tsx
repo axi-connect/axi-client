@@ -65,4 +65,42 @@ describe("UnsavedChangesDock (la barra de tinta de «Cambios sin guardar»)", ()
     fireEvent.click(save);
     expect(onSubmit).not.toHaveBeenCalled();
   });
+
+  it("fuera de un formulario llama a sus callbacks y no envía ningún formulario que la rodee", () => {
+    const onSave = jest.fn();
+    const onDiscard = jest.fn();
+    const { onSubmit, onReset } = inForm(
+      <UnsavedChangesDock
+        dirty
+        submitting={false}
+        invalid={false}
+        submitLabel="Guardar plantilla"
+        onSave={onSave}
+        onDiscard={onDiscard}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Guardar plantilla" }));
+    fireEvent.click(screen.getByRole("button", { name: "Descartar" }));
+    expect(onSave).toHaveBeenCalledTimes(1);
+    expect(onDiscard).toHaveBeenCalledTimes(1);
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(onReset).not.toHaveBeenCalled();
+  });
+
+  it("inválida con callbacks: no guarda y dice la razón concreta", () => {
+    const onSave = jest.fn();
+    render(
+      <UnsavedChangesDock
+        dirty
+        submitting={false}
+        invalid
+        invalidReason="Corrige {{cupo}} para guardar."
+        onSave={onSave}
+      />,
+    );
+    const save = screen.getByRole("button", { name: "Guardar cambios" });
+    expect(save).toHaveAccessibleDescription("Corrige {{cupo}} para guardar.");
+    fireEvent.click(save);
+    expect(onSave).not.toHaveBeenCalled();
+  });
 });

@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Documentos · editor</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&amp;family=Poppins:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+
+:root{--bg:#F5F5F7;--fg:#0B0B0E;--fg2:#3A3A40;--mut:#6B6B73;--card:#FFFFFF;--line:rgba(0,0,0,.06);--line2:rgba(0,0,0,.12);--soft:#F4F4F5;--soft2:#ECECEF;--desk:#EBEBEE;--on:#0B0B0E;--onfg:#FFFFFF;--swoff:#D4D4D8;--ok:#16A34A;--warn:#D97706;--bad:#DC2626;--info:#2563EB}
+body{margin:0;font-family:Poppins,system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+a{color:var(--fg)}
+button{font-family:Poppins,sans-serif;color:inherit}
+.d{font-family:Urbanist,Poppins,sans-serif}
+.m{font-family:"Geist Mono",ui-monospace,monospace}
+.nav{display:flex;align-items:center;gap:12px;height:36px;padding:0 12px;border-radius:10px;font-size:13.5px;color:var(--fg2);text-decoration:none}
+.nav-on{background:var(--card);color:var(--fg);font-weight:500;box-shadow:0 1px 2px rgba(0,0,0,.06),0 0 0 1px var(--line)}
+.grp{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);padding:14px 12px 6px}
+.card{background:var(--card);border-radius:24px;box-shadow:0 1px 0 rgba(0,0,0,.04),0 12px 32px -18px rgba(16,16,24,.18);border:1px solid rgba(0,0,0,.05)}
+.lbl{font-size:12px;color:var(--mut);white-space:nowrap}
+.kick{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:999px;font:500 14px Poppins,sans-serif;border:0;cursor:pointer;text-decoration:none;white-space:nowrap}
+.btn-p{background:#D13F42;color:#FFFFFF;box-shadow:0 10px 24px -10px rgba(209,63,66,.55)}
+.btn-p[disabled]{opacity:.45;box-shadow:none;cursor:not-allowed}
+.btn-s{background:var(--card);color:var(--fg);border:1px solid var(--line2)}
+.btn-g{background:transparent;color:var(--fg)}
+.btn-sm{height:32px;padding:0 14px;font-size:13px}
+.icb{width:38px;height:38px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:var(--card);border:1px solid var(--line2);color:var(--fg);cursor:pointer;flex-shrink:0;padding:0}
+.icb-sm{width:30px;height:30px}
+.tab{height:40px;padding:0 14px;border-radius:999px;font:500 13.5px Poppins,sans-serif;color:var(--fg2);display:inline-flex;align-items:center;gap:8px;text-decoration:none;white-space:nowrap;border:0;background:transparent;cursor:pointer}
+.tab-on{background:var(--on);color:var(--onfg)}
+.seg{display:flex;gap:4px;padding:4px;border-radius:999px;background:var(--card);border:1px solid var(--line);align-self:flex-start}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:500;background:var(--soft);color:var(--fg);white-space:nowrap}
+.dot{width:6px;height:6px;border-radius:9px;flex-shrink:0}
+.dot-ok{background:var(--ok)}.dot-warn{background:var(--warn)}.dot-bad{background:var(--bad)}.dot-info{background:var(--info)}.dot-mut{background:var(--mut)}
+.srow{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:20px;padding:14px 0;border-top:1px solid var(--line)}
+.stitle{font-size:14px;font-weight:600}
+.shint{font-size:12.5px;color:var(--mut);margin-top:2px;line-height:1.45}
+.sw{position:relative;width:48px;height:28px;border-radius:999px;border:0;cursor:pointer;flex-shrink:0;padding:0;transition:background .18s}
+.sw .knob{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:999px;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s cubic-bezier(.2,.8,.2,1)}
+.sw-on{background:var(--on)}.sw-on .knob{transform:translateX(20px);background:var(--onfg)}
+.sw-off{background:var(--swoff)}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field label{font-size:12.5px;font-weight:500;color:var(--fg2)}
+.field .hint{font-size:11.5px;color:var(--mut);line-height:1.4}
+.input{height:44px;border-radius:12px;border:1px solid var(--line2);background:var(--card);padding:0 14px;font:14px Poppins,sans-serif;color:var(--fg);box-sizing:border-box;width:100%;display:flex;align-items:center;white-space:nowrap;overflow:hidden}
+.ph{color:var(--mut)}
+.cap{width:36px;height:36px;border-radius:12px;background:var(--soft);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--fg2)}
+.cap-sm{width:18px;height:18px;border-radius:6px}
+.chip{height:28px;padding:0 10px;border-radius:999px;border:1px solid var(--line2);background:var(--card);font:500 12px Poppins,sans-serif;color:var(--fg2);cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.chip-on{background:var(--on);color:var(--onfg);border-color:var(--on)}
+.tag{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:999px;font-size:11.5px;color:var(--fg2);background:var(--soft);white-space:nowrap}
+.tok{font-family:"Geist Mono",monospace;font-size:11.5px;padding:1px 5px;border-radius:6px;background:rgba(124,58,237,.10);color:#6D28D9}
+.tok-bad{background:rgba(220,38,38,.10);color:#B91C1C;text-decoration:underline wavy rgba(220,38,38,.6)}
+.radio{width:18px;height:18px;border-radius:999px;border:1.5px solid var(--line2);flex-shrink:0;box-sizing:border-box;display:flex;align-items:center;justify-content:center}
+.radio-on{border-color:var(--on)}.radio-on::after{content:"";width:8px;height:8px;border-radius:9px;background:var(--on)}
+.opt{display:grid;grid-template-columns:18px minmax(0,1fr);gap:12px;align-items:start;padding:14px 16px;border-radius:16px;border:1px solid var(--line2);background:var(--card);cursor:pointer;text-align:left;width:100%;box-sizing:border-box}
+.opt-on{border-color:var(--on);box-shadow:inset 0 0 0 1px var(--on)}
+.opt[aria-disabled="true"]{opacity:.55;cursor:not-allowed}
+.fact{display:flex;justify-content:space-between;gap:12px;font-size:12.5px;padding:9px 0;border-top:1px solid var(--line)}
+.note{display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:10px;align-items:start;padding:12px 14px;border-radius:16px;font-size:13px;line-height:1.45}
+.note-warn{border:1px solid rgba(217,119,6,.35);background:rgba(217,119,6,.06)}
+.note-bad{border:1px solid rgba(220,38,38,.30);background:rgba(220,38,38,.05)}
+.note-info{border:1px solid var(--line2);background:var(--soft)}
+.menu{background:var(--card);border-radius:18px;border:1px solid var(--line);box-shadow:0 24px 60px -24px rgba(16,16,24,.35),0 2px 6px rgba(0,0,0,.06);padding:6px;display:flex;flex-direction:column}
+.mi{display:grid;grid-template-columns:18px minmax(0,1fr);gap:12px;padding:10px 12px;border-radius:12px;align-items:start;text-align:left;border:0;background:transparent;cursor:pointer;width:100%}
+.mi:hover,.mi-hl{background:var(--soft)}
+.mi b{display:block;font-size:13.5px;font-weight:500}.mi span{display:block;font-size:12px;color:var(--mut)}
+.scrim{position:absolute;inset:0;background:rgba(11,11,14,.42)}
+.dlg{background:var(--card);border-radius:28px;box-shadow:0 40px 90px -30px rgba(0,0,0,.45);border:1px solid var(--line)}
+.toast{display:inline-flex;align-items:center;gap:10px;height:44px;padding:0 18px 0 8px;border-radius:999px;background:#0B0B0E;color:#FFFFFF;font-size:13.5px;font-weight:500;box-shadow:0 20px 40px -18px rgba(0,0,0,.5)}
+.pm{position:relative;display:block;width:30px;height:38px;flex-shrink:0;overflow:hidden;border-radius:3px;border:1px solid #E4E4E7;background:#FFFFFF;box-shadow:0 1px 2px rgba(0,0,0,.08),0 4px 10px rgba(0,0,0,.08)}
+.pm i{position:absolute;left:5px;right:5px;top:6px;height:2px;border-radius:1px}
+.pm u{position:absolute;top:12px;left:5px;right:9px;height:18px;background-image:repeating-linear-gradient(#E4E4E7 0 1.5px,transparent 1.5px 4.5px)}
+.pm-busy u{animation:fill 2.4s ease-in-out infinite}
+.pm-off{transform:rotate(-3deg);opacity:.55}
+.pm-bad em{position:absolute;right:-1px;bottom:-1px;width:14px;height:14px;border-top-left-radius:7px;background:#DC2626}
+@keyframes fill{0%{clip-path:inset(0 0 100% 0)}60%,100%{clip-path:inset(0 0 0 0)}}
+@keyframes pulse{50%{opacity:.35}}
+@keyframes slide{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
+.beat{width:7px;height:7px;border-radius:9px;background:var(--info);animation:pulse 1.4s ease-in-out infinite;flex-shrink:0}
+.drow{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:4px 14px;align-items:center;padding:14px 20px;position:relative}
+.drow+.drow::before{content:"";position:absolute;top:0;left:44px;right:0;height:1px;background:var(--line)}
+.dname{font-size:14.5px;font-weight:500;letter-spacing:-.005em}
+.dmeta{margin-top:2px;display:flex;flex-wrap:wrap;align-items:center;gap:0 6px;font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums}
+.dmeta .m{font-size:12px;color:var(--fg);opacity:.85}
+.dline{grid-column:2/4;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mut);line-height:1.5}
+.sep{opacity:.45}
+.sheet{background:#FFFFFF;color:#18181B;box-shadow:0 1px 2px rgba(0,0,0,.08),0 18px 40px -18px rgba(0,0,0,.28);border-radius:4px;box-sizing:border-box;font-family:Urbanist,Poppins,sans-serif}
+.sheet p{margin:0}
+@media (prefers-reduced-motion: reduce){.sw,.sw .knob{transition:none}.beat,.pm-busy u{animation:none}}
+
+.isl{position:relative;isolation:isolate;overflow:hidden;border-radius:24px}
+.isl-glass{color:#0B0B0E;background:var(--glow,none),linear-gradient(160deg,rgba(255,255,255,.82),rgba(246,243,254,.62));-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);box-shadow:inset 0 2px 2px rgba(11,11,14,.05),inset 0 -2px 2px rgba(255,255,255,.5),inset 0 0 1.6px 4px rgba(255,255,255,.2),inset 0 0 18px 2px rgba(255,255,255,.55),0 4px 2px -2px rgba(11,11,14,.14),0 30px 70px -34px rgba(16,16,24,.35),0 30px 80px -40px rgba(124,58,237,.35)}
+.isl-dark{color:#EDEDED;background:var(--glow,none),linear-gradient(160deg,rgba(38,38,42,.90),rgba(28,24,40,.92));-webkit-backdrop-filter:blur(20px) saturate(170%);backdrop-filter:blur(20px) saturate(170%);box-shadow:inset 0 2px 2px rgba(255,255,255,.10),inset 0 -2px 2px rgba(0,0,0,.35),inset 0 0 1.6px 4px rgba(255,255,255,.04),inset 0 0 14px 1px rgba(255,255,255,.08),0 40px 90px -36px rgba(124,58,237,.55),0 18px 50px -24px rgba(230,87,89,.45)}
+.isl-glass::before,.isl-dark::before{content:"";position:absolute;inset:0;z-index:1;padding:1.5px;border-radius:inherit;pointer-events:none;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.isl-glass::before{background:conic-gradient(from -75deg at 50% 50%,rgba(11,11,14,.32) 0%,transparent 6% 40%,rgba(11,11,14,.32) 50%,transparent 56% 94%,rgba(11,11,14,.32) 100%),linear-gradient(rgba(255,255,255,.85),rgba(255,255,255,.85))}
+.isl-dark::before{background:conic-gradient(from -75deg at 50% 50%,rgba(255,255,255,.7) 0%,transparent 6% 40%,rgba(255,255,255,.7) 50%,transparent 56% 94%,rgba(255,255,255,.7) 100%),linear-gradient(rgba(255,255,255,.12),rgba(255,255,255,.12))}
+.isl-glass::after,.isl-dark::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none}
+.isl-glass::after{background:linear-gradient(-45deg,transparent 0%,rgba(255,255,255,.55) 40% 46%,transparent 54%) 0 0/200% 200%,radial-gradient(60% 45% at 30% 0%,rgba(255,255,255,.9),transparent 70%)}
+.isl-dark::after{background:linear-gradient(-45deg,transparent 0%,rgba(255,255,255,.10) 40% 46%,transparent 54%) 0 0/200% 200%,radial-gradient(60% 45% at 30% 0%,rgba(255,255,255,.14),transparent 70%)}
+.isl-ink{color:#F4F4F5;background:var(--glow,none),#0B0B0E}
+.isl-glass.glow-brand{--glow:radial-gradient(circle 20rem at 90% 8%,rgba(230,87,89,.16),transparent 70%)}
+.isl-glass.glow-ai{--glow:radial-gradient(circle 22rem at 0% 0%,rgba(124,58,237,.16),transparent 70%),radial-gradient(circle 20rem at 100% 100%,rgba(230,87,89,.11),transparent 70%)}
+.isl-dark.glow-brand{--glow:radial-gradient(circle 20rem at 90% 8%,rgba(251,113,133,.26),transparent 70%)}
+.isl-dark.glow-ai{--glow:radial-gradient(circle 22rem at 0% 0%,rgba(167,139,250,.26),transparent 70%),radial-gradient(circle 20rem at 100% 100%,rgba(251,113,133,.18),transparent 70%)}
+.isl-ink.glow-brand{--glow:radial-gradient(circle 20rem at 90% 8%,rgba(230,87,89,.45),transparent 70%)}
+.btn-contrast{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:999px;font:500 14px Poppins,sans-serif;border:0;cursor:pointer;text-decoration:none;background:#0B0B0E;color:#FFFFFF}
+.isl-dark .btn-contrast,.isl-ink .btn-contrast{background:#F4F4F5;color:#0B0B0E}
+.btn-glass{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:999px;font:500 14px Poppins,sans-serif;border:0;cursor:pointer;text-decoration:none;position:relative;color:rgba(11,11,14,.92);background:linear-gradient(-75deg,rgba(255,255,255,.08),rgba(255,255,255,.5),rgba(255,255,255,.08));box-shadow:inset 0 2px 2px rgba(11,11,14,.05),inset 0 -2px 2px rgba(255,255,255,.5),0 4px 2px -2px rgba(11,11,14,.2),inset 0 0 1.6px 4px rgba(255,255,255,.2),0 0 0 1px rgba(11,11,14,.08)}
+.isl-dark .btn-glass{color:rgba(237,237,237,.92);background:linear-gradient(-75deg,rgba(255,255,255,.03),rgba(255,255,255,.10),rgba(255,255,255,.03));box-shadow:inset 0 2px 2px rgba(255,255,255,.08),inset 0 -2px 2px rgba(0,0,0,.3),0 0 0 1px rgba(255,255,255,.12)}
+.isl-glass .fact,.isl-glass .frow,.isl-glass .cal{border-top-color:rgba(11,11,14,.08)!important}
+.isl-glass .seg-on{background:#0B0B0E}.isl-glass .seg-off{background:rgba(11,11,14,.12)}
+.isl-glass .step{color:#3A3A40}.isl-glass .chk-on,.isl-glass .fdot-on{background:#0B0B0E;color:#FFFFFF}.isl-glass .chk-off,.isl-glass .fdot-off,.isl-glass .cn{border-color:rgba(11,11,14,.28)}
+.isl-glass .bub{background:#FFFFFF;box-shadow:0 1px 2px rgba(0,0,0,.06),0 0 0 1px rgba(11,11,14,.05)}.isl-glass .gap{border-color:rgba(11,11,14,.24);color:#6B6B73}.isl-glass .day{color:#6B6B73}
+@media (prefers-reduced-transparency: reduce){.isl-glass{background:#FFFFFF}.isl-dark{background:#1E1E22}}
+
+
+
+</style>
+</helmet>
+<div style="width:1440px;height:900px;display:flex;background:var(--bg);overflow:hidden;position:relative">
+  <aside style="width:248px;flex-shrink:0;padding:18px 14px;box-sizing:border-box;display:flex;flex-direction:column;gap:2px;border-right:1px solid var(--line);background:rgba(255,255,255,.6)">
+    <div style="display:flex;align-items:center;gap:10px;padding:4px 10px 16px"><svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="11" cy="15" r="7.5" fill="none" stroke="#D13F42" stroke-width="4"></circle><path d="M16 5 L25 24" stroke="#F2A93B" stroke-width="4" stroke-linecap="round"></path><path d="M25 5 L17 20" stroke="#7B5CF0" stroke-width="4" stroke-linecap="round"></path></svg><div style="display:flex;flex-direction:column;gap:2px"><span class="d" style="font-weight:700;font-size:15px">Axi Connect</span><span style="font-size:11.5px;color:var(--mut)">JuanitoXpeditions</span></div></div>
+    <a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg>Inicio</a><a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"></path></svg>Inbox</a><a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="4"></circle><path d="M3 21a6 6 0 0 1 12 0"></path><path d="M16 4a4 4 0 0 1 0 8M21 21a6 6 0 0 0-4-5.6"></path></svg>Contactos</a><div class="grp">Ventas</div><a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><path d="M3 6h18M16 10a4 4 0 0 1-8 0"></path></svg>Pedidos</a><a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="3"></rect><path d="M2 10h20M6 15h4"></path></svg>Cartera</a><a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 3 8l9 5 9-5-9-5Z"></path><path d="m3 13 9 5 9-5"></path></svg>Catálogo</a><div class="grp">Configuración</div><a class="nav nav-on" href="#" aria-current="page"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D13F42" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21V7l8-4 8 4v14"></path><path d="M9 21v-6h6v6"></path></svg>Mi empresa</a><a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="3"></rect><path d="M2 10h20M6 15h4"></path></svg>Pagos</a><a class="nav" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>Equipo</a>
+    <div style="flex-grow:1"></div>
+    <div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:14px;background:var(--card);border:1px solid var(--line)"><div style="width:32px;height:32px;border-radius:999px;background:var(--on);color:var(--onfg);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">JR</div><div style="display:flex;flex-direction:column"><span style="font-size:13px;font-weight:500">Juanita R.</span><span style="font-size:11.5px;color:var(--mut)">Dueña</span></div></div>
+  </aside>
+  <main style="flex-grow:1;display:flex;flex-direction:column;min-width:0;min-height:0">
+    <header style="height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 40px;flex-shrink:0">
+      <nav aria-label="Ruta" style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--mut)"><span style="">Mi empresa</span><span aria-hidden="true">/</span><span style="">Documentos</span><span aria-hidden="true">/</span><span style="color:var(--fg);font-weight:500">Contrato</span></nav>
+      <div style="display:flex;gap:10px"><button class="icb" aria-label="Notificaciones"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"></path></svg></button><button class="icb" aria-label="Tema"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14A8 8 0 1 1 10 4a6.5 6.5 0 0 0 10 10Z"></path></svg></button></div>
+    </header>
+    <div style="padding:0 40px 28px;display:flex;flex-direction:column;gap:16px;flex-grow:1;min-height:0">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px">
+        <h1 class="d" style="margin:0;font-size:38px;font-weight:700;letter-spacing:-.02em;line-height:1.1">Mi empresa</h1>
+        <nav aria-label="Secciones de Mi empresa" class="seg">
+        <a class="tab" href="#">General</a><a class="tab" href="#">Sucursales</a><a class="tab tab-on" href="#" aria-current="page">Documentos</a><a class="tab" href="#">Funciones</a>
+      </nav>
+      </div>
+      <div role="tablist" aria-label="Tipo de documento" class="seg" style="flex-wrap:nowrap"><button class="tab tab-on" role="tab" aria-selected="true">Contrato<span class="dot" style="background:var(--onfg)"></span></button><button class="tab" role="tab" aria-selected="false">Cotización</button><button class="tab" role="tab" aria-selected="false">Propuesta</button><button class="tab" role="tab" aria-selected="false">Recibo<span class="dot" style="background:var(--info)"></span></button><button class="tab" role="tab" aria-selected="false">Estado de cuenta</button><button class="tab" role="tab" aria-selected="false">Cuenta de cobro</button><span aria-hidden="true" style="width:1px;height:20px;align-self:center;background:var(--line2);margin:0 4px"></span><button class="tab" role="tab"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21V7l8-4 8 4v14"></path><path d="M9 21v-6h6v6"></path></svg>Emisor y numeración</button><button class="tab" role="tab"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 3 14h9l-1 8 10-12h-9Z"></path></svg>Automáticos</button></div>
+      <section style="display:grid;grid-template-columns:460px minmax(0,1fr);gap:16px;flex-grow:1;min-height:0">
+        <article class="card" style="padding:20px 24px 0;display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding-bottom:14px">
+            <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+              <div style="display:flex;align-items:center;gap:10px"><span class="d" style="font-size:26px;font-weight:700;letter-spacing:-.02em;line-height:1.1">Contrato</span><span class="pill"><span class="dot dot-info"></span>Tu versión 3</span></div>
+              <span style="font-size:12.5px;color:var(--mut)">editada hace 2 días por Juanita</span>
+            </div>
+            <button class="btn btn-g btn-sm" style="padding:0 10px;color:var(--fg2)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path></svg>Restablecer</button>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:8px"><span class="lbl">Los bloques, en el orden en que se imprimen</span><span class="lbl">12</span></div>
+          <ul style="margin:0;padding:0;overflow:hidden;flex-grow:1;min-height:0"><li style="list-style:none;border-top:1px solid var(--line)">
+      <div style="display:grid;grid-template-columns:22px 36px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 0">
+        <span class="m" style="font-size:11px;color:var(--mut);text-align:right">01</span>
+        <span class="cap"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"></path></svg></span>
+        <span style="min-width:0;display:flex;flex-direction:column;gap:3px"><span style="font-size:14px;font-weight:600">Logo</span><span style="font-size:12.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">El isotipo del negocio, a la izquierda</span></span>
+        <span style="display:flex;gap:2px;color:var(--mut)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"></path></svg><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></span>
+      </div>
+    </li><li style="list-style:none;border-top:1px solid var(--line)">
+      <div style="display:grid;grid-template-columns:22px 36px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 0">
+        <span class="m" style="font-size:11px;color:var(--mut);text-align:right">02</span>
+        <span class="cap"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4v16M18 4v16M6 12h12"></path></svg></span>
+        <span style="min-width:0;display:flex;flex-direction:column;gap:3px"><span style="font-size:14px;font-weight:600">Título</span><span style="font-size:12.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Contrato de servicios turísticos <span class="tok">&#123;&#123;document_number&#125;&#125;</span></span><span style="display:flex;gap:6px;flex-wrap:wrap;margin-top:3px"><span class="tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>obligatorio</span></span></span>
+        <span style="display:flex;gap:2px;color:var(--mut)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"></path></svg><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></span>
+      </div>
+    </li><li style="list-style:none;border-top:1px solid var(--line)">
+      <div style="display:grid;grid-template-columns:22px 36px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 0">
+        <span class="m" style="font-size:11px;color:var(--mut);text-align:right">03</span>
+        <span class="cap"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="3.5"></circle><circle cx="17" cy="9" r="2.5"></circle><path d="M2 20a6 6 0 0 1 12 0M14 20a4.5 4.5 0 0 1 8 0"></path></svg></span>
+        <span style="min-width:0;display:flex;flex-direction:column;gap:3px"><span style="font-size:14px;font-weight:600">Partes</span><span style="font-size:12.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">La agencia · El viajero</span><span style="display:flex;gap:6px;flex-wrap:wrap;margin-top:3px"><span class="tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>obligatorio</span></span></span>
+        <span style="display:flex;gap:2px;color:var(--mut)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"></path></svg><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></span>
+      </div>
+    </li><li style="list-style:none;border-top:1px solid var(--line)"><button onClick="{{toggleIntro}}" style="all:unset;display:block;width:100%;cursor:pointer" aria-expanded="{{introOpen}}">
+      <div style="display:grid;grid-template-columns:22px 36px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 0">
+        <span class="m" style="font-size:11px;color:var(--mut);text-align:right">04</span>
+        <span class="cap"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"></path></svg></span>
+        <span style="min-width:0;display:flex;flex-direction:column;gap:3px"><span style="font-size:14px;font-weight:600">Párrafo</span><span style="font-size:12.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Entre <span class="tok">&#123;&#123;company_legal_name&#125;&#125;</span> (la agencia) y…</span></span>
+        <span style="display:flex;gap:2px;color:var(--mut)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"></path></svg><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></span>
+      </div></button>
+    <sc-if value="{{introOpen}}" hint-placeholder-val="{{true}}"><div style="margin:0 0 14px 70px;padding:14px;border-radius:16px;background:var(--soft);display:flex;flex-direction:column;gap:12px">
+        <div class="field"><label>Texto</label><div class="input" style="display:block;height:auto;min-height:66px;padding:10px 14px;white-space:normal;font-size:13px;line-height:1.7">Entre&nbsp;<span class="tok">&#123;&#123;company_legal_name&#125;&#125;</span>&nbsp;(la agencia) y&nbsp;<span class="tok">&#123;&#123;contact_name&#125;&#125;</span>&nbsp;(el viajero) se celebra el presente contrato para la prestación de los servicios turísticos descritos a continuación.</div>
+          <span style="display:flex;gap:6px;flex-wrap:wrap"><span class="tok">&#123;&#123;contact_document&#125;&#125;</span><span class="tok">&#123;&#123;order_number&#125;&#125;</span><span class="tok">&#123;&#123;service_date&#125;&#125;</span><span class="lbl" style="align-self:center">+ 14 variables</span></span></div>
+        <div class="field"><label>Cuándo aparece</label>
+          <span style="display:flex;gap:6px;flex-wrap:wrap"><sc-for list="{{whens}}" as="w" hint-placeholder-count="3"><button class="chip {{w.cls}}" aria-pressed="{{w.pressed}}" onClick="{{w.pick}}">{{w.label}}</button></sc-for></span>
+          <span class="hint">{{whenHint}}</span></div>
+      </div></sc-if>
+    </li><li style="list-style:none;border-top:1px solid var(--line)">
+      <div style="display:grid;grid-template-columns:22px 36px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 0">
+        <span class="m" style="font-size:11px;color:var(--mut);text-align:right">05</span>
+        <span class="cap"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"></path><circle cx="4.5" cy="6" r="1"></circle><circle cx="4.5" cy="12" r="1"></circle><circle cx="4.5" cy="18" r="1"></circle></svg></span>
+        <span style="min-width:0;display:flex;flex-direction:column;gap:3px"><span style="font-size:14px;font-weight:600">Datos en pares</span><span style="font-size:12.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Reserva · Fecha de salida · Viajeros</span></span>
+        <span style="display:flex;gap:2px;color:var(--mut)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"></path></svg><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></span>
+      </div>
+    </li><li style="list-style:none;border-top:1px solid var(--line)">
+      <div style="display:grid;grid-template-columns:22px 36px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 0">
+        <span class="m" style="font-size:11px;color:var(--mut);text-align:right">06</span>
+        <span class="cap"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 6h10M10 12h10M10 18h10"></path><path d="M4 5h1.5v3M4 11.5h2L4 14h2M4 17h2v3H4"></path></svg></span>
+        <span style="min-width:0;display:flex;flex-direction:column;gap:3px"><span style="font-size:14px;font-weight:600">Cláusulas</span><span style="font-size:12.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">4 cláusulas · Objeto, Precio, Forma de pago…</span></span>
+        <span style="display:flex;gap:2px;color:var(--mut)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"></path></svg><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></span>
+      </div>
+    </li><li style="list-style:none;border-top:1px solid var(--line)">
+      <div style="display:grid;grid-template-columns:22px 36px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 0">
+        <span class="m" style="font-size:11px;color:var(--mut);text-align:right">07</span>
+        <span class="cap"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M3 10h18M3 15h18M9 10v10"></path></svg></span>
+        <span style="min-width:0;display:flex;flex-direction:column;gap:3px"><span style="font-size:14px;font-weight:600">Tabla de ítems</span><span style="font-size:12.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Descripción · Cant. · Precio unitario · Total</span><span style="display:flex;gap:6px;flex-wrap:wrap;margin-top:3px"><span class="tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3"></ellipse><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"></path></svg>filas desde los datos</span></span></span>
+        <span style="display:flex;gap:2px;color:var(--mut)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"></path></svg><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></span>
+      </div>
+    </li><li style="list-style:none;border-top:1px solid var(--line)">
+      <div style="display:grid;grid-template-columns:22px 36px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 0">
+        <span class="m" style="font-size:11px;color:var(--mut);text-align:right">08</span>
+        <span class="cap"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 5H6l6 7-6 7h12"></path></svg></span>
+        <span style="min-width:0;display:flex;flex-direction:column;gap:3px"><span style="font-size:14px;font-weight:600">Totales</span><span style="font-size:12.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Total · Total en USD · Tasa aplicada</span><span style="display:flex;gap:6px;flex-wrap:wrap;margin-top:3px"><span class="tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="2.5"></circle><circle cx="6" cy="18" r="2.5"></circle><circle cx="18" cy="8" r="2.5"></circle><path d="M6 8.5v7M18 10.5c0 4-6 3-10.5 5.5"></path></svg>con conversión si la hay</span></span></span>
+        <span style="display:flex;gap:2px;color:var(--mut)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"></path></svg><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></span>
+      </div>
+    </li><li style="list-style:none;border-top:1px solid var(--line)">
+      <div style="display:grid;grid-template-columns:22px 36px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 0">
+        <span class="m" style="font-size:11px;color:var(--mut);text-align:right">09</span>
+        <span class="cap"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="3"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg></span>
+        <span style="min-width:0;display:flex;flex-direction:column;gap:3px"><span style="font-size:14px;font-weight:600">Plan de pagos</span><span style="font-size:12.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">N.º · Concepto · Vence · Valor · Pagado</span><span style="display:flex;gap:6px;flex-wrap:wrap;margin-top:3px"><span class="tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3"></ellipse><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"></path></svg>filas desde los datos</span><span class="tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="2.5"></circle><circle cx="6" cy="18" r="2.5"></circle><circle cx="18" cy="8" r="2.5"></circle><path d="M6 8.5v7M18 10.5c0 4-6 3-10.5 5.5"></path></svg>solo si hay plan de pagos</span></span></span>
+        <span style="display:flex;gap:2px;color:var(--mut)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"></path></svg><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></span>
+      </div>
+    </li><li style="list-style:none;border-top:1px solid var(--line)">
+      <div style="display:grid;grid-template-columns:22px 36px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 0">
+        <span class="m" style="font-size:11px;color:var(--mut);text-align:right">10</span>
+        <span class="cap"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"></path></svg></span>
+        <span style="min-width:0;display:flex;flex-direction:column;gap:3px"><span style="font-size:14px;font-weight:600">Párrafo</span><span style="font-size:12.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Para constancia se firma en <span class="tok">&#123;&#123;company_city&#125;&#125;</span>…</span></span>
+        <span style="display:flex;gap:2px;color:var(--mut)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"></path></svg><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></span>
+      </div>
+    </li><li style="list-style:none;border-top:1px solid var(--line)">
+      <div style="display:grid;grid-template-columns:22px 36px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 0">
+        <span class="m" style="font-size:11px;color:var(--mut);text-align:right">11</span>
+        <span class="cap"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 19H4M16 3l5 5-9 9H7v-5Z"></path></svg></span>
+        <span style="min-width:0;display:flex;flex-direction:column;gap:3px"><span style="font-size:14px;font-weight:600">Firmas</span><span style="font-size:12.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Por la agencia · El viajero · con fecha</span><span style="display:flex;gap:6px;flex-wrap:wrap;margin-top:3px"><span class="tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>obligatorio</span></span></span>
+        <span style="display:flex;gap:2px;color:var(--mut)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"></path></svg><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></span>
+      </div>
+    </li><li style="list-style:none;border-top:1px solid var(--line)">
+      <div style="display:grid;grid-template-columns:22px 36px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 0">
+        <span class="m" style="font-size:11px;color:var(--mut);text-align:right">12</span>
+        <span class="cap"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M3 16h18"></path></svg></span>
+        <span style="min-width:0;display:flex;flex-direction:column;gap:3px"><span style="font-size:14px;font-weight:600">Pie de página</span><span style="font-size:12.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Se repite en cada página</span><span style="display:flex;gap:6px;flex-wrap:wrap;margin-top:3px"><span class="tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m17 2 4 4-4 4"></path><path d="M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4"></path><path d="M21 13v2a3 3 0 0 1-3 3H3"></path></svg>en cada página</span></span></span>
+        <span style="display:flex;gap:2px;color:var(--mut)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"></path></svg><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></span>
+      </div>
+    </li></ul>
+        </article>
+        <article style="border-radius:24px;background:var(--desk);display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden;border:1px solid var(--line)">
+          <div style="display:flex;align-items:center;gap:10px;padding:14px 16px 0 20px">
+            <span class="pill"><span class="dot dot-ok"></span>Al día</span><span style="font-size:12.5px;color:var(--mut)">con los datos de una reserva de ejemplo</span>
+            <span style="flex-grow:1"></span>
+            <button class="icb icb-sm" aria-label="Alejar"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3M8 11h6"></path></svg></button><button class="icb icb-sm" aria-label="Acercar"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3M11 8v6M8 11h6"></path></svg></button><button class="icb icb-sm" aria-label="Pantalla completa"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg></button>
+          </div>
+          <div style="flex-grow:1;min-height:0;overflow:hidden;display:flex;justify-content:center;padding:18px 20px 0"><div class="sheet" style="width:580px;padding:44px 46px;flex-shrink:0">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:10px;border-bottom:1.5px solid #E65759">
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="width:64px;height:17px;border-radius:4px;background:linear-gradient(90deg,#F2A93B,#E65759 55%,#7B5CF0)"></span><span style="font-size:9.6px;color:#71717A">Contrato</span></div>
+    <div style="text-align:right"><p class="m" style="font-size:11.4px;font-weight:600;color:#18181B">CTR-2026-0121</p><p style="font-size:9.0px;color:#71717A">26 de septiembre de 2026</p></div>
+  </div>
+  <p style="font-size:15.6px;font-weight:700;margin-top:14px !important;letter-spacing:-.01em">Contrato de servicios turísticos CTR-2026-0121</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px;font-size:9.6px;line-height:1.55;color:#3F3F46">
+    <div><p style="font-size:7.8px;letter-spacing:.1em;color:#E65759;font-weight:700">LA AGENCIA</p><p style="font-weight:700;color:#18181B">JuanitoXpeditions S.A.S.</p><p>NIT 901.234.567-8</p><p>Calle 93 # 11-27, oficina 402, Bogotá</p></div>
+    <div><p style="font-size:7.8px;letter-spacing:.1em;color:#E65759;font-weight:700">EL VIAJERO</p><p style="font-weight:700;color:#18181B">Ana Gómez Rueda</p><p>CC 1.020.456.789</p><p>+57 310 555 0199</p></div>
+  </div>
+  <p style="font-size:10.2px;line-height:1.6;color:#3F3F46;margin-top:10px">Entre JuanitoXpeditions S.A.S. (la agencia) y Ana Gómez Rueda (el viajero) se celebra el presente contrato para la prestación de los servicios turísticos descritos a continuación.</p>
+  
+  <div style="margin-top:10px;display:grid;grid-template-columns:auto 1fr;gap:3px 18px;font-size:10.2px;color:#3F3F46"><b style="color:#18181B">Reserva</b><span>#0045</span><b style="color:#18181B">Fecha de salida</b><span>sábado 14 de noviembre de 2026</span><b style="color:#18181B">Viajeros</b><span>2</span></div>
+  <div style="margin-top:12px;display:flex;flex-direction:column;gap:7px;font-size:9.8px;line-height:1.55;color:#3F3F46">
+    <div><b style="color:#18181B"><span style="color:#E65759">1.</span> Objeto</b><p>La agencia organiza y presta los servicios turísticos de la Expedición Cocuy para la salida del 14 de noviembre.</p></div>
+    <div><b style="color:#18181B"><span style="color:#E65759">2.</span> Precio</b><p>El valor total es de $ 27.797.980 (US$ 7.000 a 3.971,14 COP por dólar), fijo desde la confirmación.</p></div>
+    <div><b style="color:#18181B"><span style="color:#E65759">3.</span> Forma de pago</b><p>Un anticipo del 33 % y el saldo en dos cuotas; el saldo vence 30 días antes de la salida.</p></div>
+  </div>
+  <div style="margin-top:12px;border-top:1px solid #E4E4E7;font-size:9.6px;color:#3F3F46">
+    <div style="display:grid;grid-template-columns:1fr 40px 90px 90px;padding:6px 0;font-weight:700;color:#18181B;border-bottom:1px solid #E4E4E7"><span>Descripción</span><span>Cant.</span><span style="text-align:right">Precio unitario</span><span style="text-align:right">Total</span></div>
+    <div style="display:grid;grid-template-columns:1fr 40px 90px 90px;padding:5px 0"><span>Expedición Cocuy · sáb 14 nov</span><span>2</span><span style="text-align:right">$ 13.898.990</span><span style="text-align:right">$ 27.797.980</span></div>
+  </div>
+</div></div>
+        </article>
+      </section>
+    </div>
+  </main>
+  <sc-if value="{{dirty}}" hint-placeholder-val="{{false}}"><footer class="isl isl-ink glow-brand" role="region" aria-label="Cambios sin guardar" style="position:absolute;left:calc(248px + (100% - 248px) / 2);bottom:20px;transform:translateX(-50%);border-radius:999px;padding:8px 8px 8px 24px;display:flex;align-items:center;gap:18px;white-space:nowrap;box-shadow:0 20px 50px -20px rgba(11,11,14,.55);z-index:5">
+      <span style="display:flex;flex-direction:column;gap:1px"><span style="font-size:13.5px;font-weight:600">Cambios sin guardar</span><span style="font-size:12px;color:#A1A1AA">Guardar crea tu versión 4; lo ya emitido conserva la suya</span></span>
+      <span style="display:flex;gap:6px"><button class="btn" onClick="{{reset}}" style="background:transparent;color:#F4F4F5;border:1px solid rgba(255,255,255,.18)">Descartar</button><button class="btn btn-p">Guardar plantilla</button></span>
+    </footer></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { open: true, when: 'always' }; }
+  renderVals() {
+    const st = this.state;
+    const opts = [['always', 'Siempre'], ['plan', 'Solo con plan de pagos'], ['single', 'Solo en pago único']];
+    const hints = { always: 'Sale en todos los contratos.', plan: 'Solo en las reservas que se pagan en cuotas; en pago único desaparece.', single: 'Solo cuando la reserva se paga de una.' };
+    return {
+      introOpen: st.open,
+      toggleIntro: () => this.setState({ open: !st.open }),
+      whens: opts.map(([k, label]) => ({ label, cls: st.when === k ? 'chip-on' : '', pressed: st.when === k ? 'true' : 'false', pick: () => this.setState({ when: k }) })),
+      whenHint: hints[st.when],
+      dirty: st.when !== 'always',
+      reset: () => this.setState({ when: 'always' })
+    };
+  }
+}
+</script>
+</body>
+</html>
