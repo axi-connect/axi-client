@@ -3,14 +3,14 @@
 import Link from "next/link";
 import { use, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { AlertCircle, ArrowLeft, Store } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert";
 import { Button } from "@/shared/components/ui/button";
 import { Modal } from "@/shared/components/ui/modal";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { errorMessage } from "@/core/lib/error-messages";
-import { FormSkeleton } from "@/shared/components/features/loading";
 import { useAlert } from "@/core/providers/alert-provider";
-import { flattenCategoryTree } from "@/modules/catalog/domain/category";
+import { productReadiness } from "@/modules/catalog/domain/product-readiness";
 import type { ProductDTO, StockDTO } from "@/modules/catalog/domain/product";
 import type { ProductTypeDTO } from "@/modules/catalog/domain/product-type";
 import {
@@ -23,21 +23,30 @@ import { useCatalog } from "@/modules/catalog/infrastructure/stores/catalog.cont
 import { ProductAttributesSection } from "@/modules/catalog/ui/components/ProductAttributesSection";
 import { ProductBaseSection } from "@/modules/catalog/ui/components/ProductBaseSection";
 import { ProductDetailHeader } from "@/modules/catalog/ui/components/ProductDetailHeader";
+import { ProductDetailSkeleton } from "@/modules/catalog/ui/components/ProductDetailSkeleton";
 import { ProductEnrichmentSection } from "@/modules/catalog/ui/components/ProductEnrichmentSection";
 import { ProductPhotosSection } from "@/modules/catalog/ui/components/ProductPhotosSection";
+import { ProductReadinessIsland } from "@/modules/catalog/ui/components/ProductReadinessIsland";
+import { useUnsavedGuard } from "@/modules/catalog/ui/hooks/use-unsaved-guard";
 import { VariantsTable } from "@/modules/catalog/ui/components/VariantsTable";
 
+const CARD = "rounded-3xl border border-border bg-card p-5";
+
 /**
- * Detalle de producto: hub con secciones editables independientes
- * (información / atributos EAV / variantes+stock), porque el backend
- * fragmenta la edición en endpoints separados.
+ * La ficha de un producto (catálogo premium F3, canvas tableros 4 y 5): la
+ * cabecera con el `h1`, a la izquierda Información, Atributos y Variantes; a
+ * la derecha la isla «Para que tu agente lo venda» y las Fotos; debajo, la
+ * búsqueda con IA. Cada sección guarda por su cuenta (el backend fragmenta la
+ * edición en endpoints separados) y avisa si quedó a medias
+ * (`useUnsavedGuard`). Paridad: `docs/plans/catalog_premium_f3_paridad.md`.
  */
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
   const searchParams = useSearchParams();
   const { hasPermission } = useAuth();
-  const { catalogs, categoryTree } = useCatalog();
+  const { catalogs } = useCatalog();
+  const guard = useUnsavedGuard();
   const canManage = hasPermission("catalog:manage");
   const canAdjustStock = hasPermission("catalog:stock");
   const highlightRequired = searchParams.get("pending_attributes") === "1";
@@ -89,12 +98,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     () => catalogs.find((catalog) => catalog.id === product?.catalog_id)?.name ?? null,
     [catalogs, product?.catalog_id],
   );
-  const categoryName = useMemo(() => {
-    if (!product?.category_id) return null;
-    return (
-      flattenCategoryTree(categoryTree).find((option) => option.id === product.category_id)?.label ?? null
-    );
-  }, [categoryTree, product?.category_id]);
+  // La cabecera dice la categoría EFECTIVA, la misma que Información (D.1 #18).
+  const categoryName = product?.effective_category?.name ?? null;
+  const readiness = useMemo(() => (product ? productReadiness(product, productType) : null), [product, productType]);
 
   const variantAxes = useMemo(
     () => productType?.attributes.filter((attribute) => attribute.scope === "variant") ?? [],
@@ -130,6 +136,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     try {
       setDeleting(true);
       await deleteProduct(product.id);
+      showAlert({ tone: "success", title: "Producto eliminado" });
       router.replace("/catalog/products");
     } catch (err) {
       showAlert({ tone: "error", title: errorMessage(err, "No se pudo eliminar el producto") });
@@ -160,73 +167,119 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   };
 
   return (
-    <div className="space-y-6">
+    <div className="flex min-w-0 flex-col gap-6">
       <Link
         href="/catalog/products"
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        onClick={(event) => {
+          // Con cambios sin guardar se pregunta antes de salir.
+          if (!guard.dirty) return;
+          event.preventDefault();
+          guard.leave("/catalog/products");
+        }}
+        className="inline-flex min-h-6 w-fit items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
       >
-        <ArrowLeft className="h-4 w-4" />
+        <ArrowLeft aria-hidden="true" className="h-4 w-4" />
         Productos
       </Link>
 
       {loadError ? (
-        <div className="rounded-2xl border border-border bg-background p-8 text-center">
-          <p className="text-sm text-muted-foreground">{loadError}</p>
-          <Button variant="outline" className="mt-4 rounded-full" onClick={() => void load()}>
-            Reintentar
-          </Button>
-        </div>
-      ) : !product ? (
-        <FormSkeleton fields={8} showHeader={false} />
+        <Alert variant="destructive" className="rounded-2xl">
+          <AlertCircle aria-hidden="true" />
+          <AlertTitle>No pudimos abrir este producto</AlertTitle>
+          <AlertDescription>
+            <p>{loadError}</p>
+            <Button variant="outline" size="sm" className="mt-2 rounded-full px-4 text-foreground" onClick={() => void load()}>
+              Reintentar
+            </Button>
+          </AlertDescription>
+        </Alert>
+      ) : !product || !readiness ? (
+        <ProductDetailSkeleton />
       ) : (
         <>
+          <ProductDetailHeader
+            product={product}
+            catalogName={catalogName}
+            categoryName={categoryName}
+            // `status` gobernado: activar/desactivar/eliminar lo decide el sync
+            canManage={canManage && !locked.has("status")}
+            toggling={toggling}
+            onToggleActive={() => void handleToggleActive()}
+            onDelete={() => setDeleteOpen(true)}
+          />
+
           {governed && (
-            <div className="rounded-2xl border border-border bg-secondary/40 p-4">
-              <p className="text-sm">
-                <span className="font-medium">Este producto lo gobierna tu tienda conectada.</span>{" "}
-                <span className="text-muted-foreground">
-                  Nombre, precio, stock e imágenes se actualizan solos desde Shopify; editarlos
-                  allá es la forma de cambiarlos aquí. La conexión se administra en{" "}
-                </span>
-                <Link href="/settings/integrations" className="underline underline-offset-2">
-                  Integraciones
-                </Link>
-                .
-              </p>
-            </div>
+            <Alert variant="info" className="rounded-2xl">
+              <Store aria-hidden="true" />
+              <AlertDescription>
+                <p>
+                  <span className="font-medium text-foreground">Este producto lo gobierna tu tienda conectada.</span>{" "}
+                  Nombre, precio, stock e imágenes se actualizan solos desde Shopify; editarlos allá es la forma de
+                  cambiarlos aquí. La conexión se administra en{" "}
+                  <Link href="/settings/integrations" className="inline-block py-0.5 text-foreground underline underline-offset-2">
+                    Integraciones
+                  </Link>
+                  .
+                </p>
+              </AlertDescription>
+            </Alert>
           )}
 
-          <div className="rounded-2xl border border-border bg-background p-4 md:p-6">
-            <ProductDetailHeader
-              product={product}
-              catalogName={catalogName}
-              categoryName={categoryName}
-              // `status` gobernado: activar/desactivar/eliminar lo decide el sync
-              canManage={canManage && !locked.has("status")}
-              toggling={toggling}
-              onToggleActive={() => void handleToggleActive()}
-              onDelete={() => setDeleteOpen(true)}
-            />
-          </div>
+          <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] [&>*]:min-w-0">
+            {/* Derecha en escritorio; primero en el celular (canvas tablero 5). */}
+            <div className="flex flex-col gap-4 lg:col-start-2 lg:row-start-1">
+              <ProductReadinessIsland readiness={readiness} canManage={canManage} />
+              <div className={CARD}>
+                <ProductPhotosSection
+                  product={product}
+                  canManage={canManage && !locked.has("images")}
+                  onSaved={setProduct}
+                  setAlert={showAlert}
+                />
+              </div>
+            </div>
 
-          <div className="rounded-2xl border border-border bg-background p-4 md:p-6">
-            <ProductBaseSection
-              product={product}
-              // Con canManage=false la sección ya pinta valores de lectura, que
-              // es exactamente el tratamiento del plan (ocultar, no deshabilitar)
-              canManage={canManage && !locked.has("name") && !locked.has("price")}
-              onSaved={setProduct}
-              setAlert={showAlert}
-            />
-          </div>
+            <div className="flex flex-col gap-4 lg:col-start-1 lg:row-start-1">
+              <div className={CARD}>
+                <ProductBaseSection
+                  product={product}
+                  // Con canManage=false la sección ya pinta valores de lectura, que
+                  // es exactamente el tratamiento del plan (ocultar, no deshabilitar)
+                  canManage={canManage && !locked.has("name") && !locked.has("price")}
+                  onSaved={setProduct}
+                  setAlert={showAlert}
+                  onDirtyChange={guard.track("base")}
+                />
+              </div>
 
-          <div className="rounded-2xl border border-border bg-background p-4 md:p-6">
-            <ProductPhotosSection
-              product={product}
-              canManage={canManage && !locked.has("images")}
-              onSaved={setProduct}
-              setAlert={showAlert}
-            />
+              {productType && (
+                <div className={CARD}>
+                  <ProductAttributesSection
+                    product={product}
+                    productType={productType}
+                    canManage={canManage && !governed}
+                    highlightRequired={highlightRequired}
+                    onSaved={setProduct}
+                    setAlert={showAlert}
+                    onDirtyChange={guard.track("attributes")}
+                  />
+                </div>
+              )}
+
+              <div className={CARD}>
+                <VariantsTable
+                  product={product}
+                  axes={variantAxes}
+                  canManage={canManage && !locked.has("variants")}
+                  // El popover de ajuste queda OCULTO para espejados en vez de
+                  // fallar con 409: el stock lo dicta la tienda
+                  canAdjustStock={canAdjustStock && !locked.has("stock")}
+                  onRefetch={load}
+                  onStockAdjusted={handleStockAdjusted}
+                  setAlert={showAlert}
+                />
+              </div>
+            </div>
           </div>
 
           {/* Metadatos con IA: lo generado es de axi y se edita también en un
@@ -237,34 +290,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             canApplyCategory={canManage && !locked.has("category")}
             onCategoryApplied={load}
             setAlert={showAlert}
+            onDirtyChange={guard.track("enrichment")}
           />
-
-          {productType && (
-            <div className="rounded-2xl border border-border bg-background p-4 md:p-6">
-              <ProductAttributesSection
-                product={product}
-                productType={productType}
-                canManage={canManage && !governed}
-                highlightRequired={highlightRequired}
-                onSaved={setProduct}
-                setAlert={showAlert}
-              />
-            </div>
-          )}
-
-          <div className="rounded-2xl border border-border bg-background p-4 md:p-6">
-            <VariantsTable
-              product={product}
-              axes={variantAxes}
-              canManage={canManage && !locked.has("variants")}
-              // El popover de ajuste queda OCULTO para espejados en vez de
-              // fallar con 409: el stock lo dicta la tienda
-              canAdjustStock={canAdjustStock && !locked.has("stock")}
-              onRefetch={load}
-              onStockAdjusted={handleStockAdjusted}
-              setAlert={showAlert}
-            />
-          </div>
         </>
       )}
 
@@ -277,7 +304,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
           actions: [
             { label: "Cancelar", variant: "outline", asClose: true, id: "product-detail-delete-cancel" },
             {
-              label: deleting ? "Eliminando..." : "Eliminar",
+              label: deleting ? "Eliminando…" : "Eliminar",
               variant: "destructive",
               asClose: false,
               onClick: handleConfirmDelete,
@@ -295,3 +322,4 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     </div>
   );
 }
+

@@ -47,6 +47,7 @@ export function SortablePhotoGallery({
   setAlert,
   emptyHint,
   className,
+  markFirstAsMain,
 }: {
   images: ProductImageDTO[];
   max: number;
@@ -63,6 +64,8 @@ export function SortablePhotoGallery({
   /** Mensaje cuando la galería está vacía (p.ej. fallback de variante). */
   emptyHint?: React.ReactNode;
   className?: string;
+  /** Marca la primera como «Principal» (galería del producto, catálogo premium F3). */
+  markFirstAsMain?: boolean;
 }) {
   const sensors = useSensors(
     // Distancia mínima para no robar el click de las acciones del tile.
@@ -89,9 +92,10 @@ export function SortablePhotoGallery({
       <div className="grid grid-cols-[repeat(auto-fill,minmax(5.5rem,1fr))] gap-2">
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={ids} strategy={rectSortingStrategy} disabled={sortingDisabled}>
-            {images.map((image) => (
+            {images.map((image, index) => (
               <SortableTile
                 key={image.id}
+                isMain={markFirstAsMain === true && index === 0}
                 image={image}
                 altFallback={altFallback}
                 canManage={canManage}
@@ -127,10 +131,12 @@ function SortableTile({
   onDelete,
   onRetryImport,
   onImageError,
+  isMain,
 }: {
   image: ProductImageDTO;
   altFallback: string;
   canManage: boolean;
+  isMain: boolean;
   sortingDisabled: boolean;
   onView: (image: ProductImageDTO) => void;
   onDelete: (image: ProductImageDTO) => void;
@@ -158,6 +164,7 @@ function SortableTile({
         onDelete={onDelete}
         onRetryImport={onRetryImport}
         onImageError={onImageError}
+        isMain={isMain}
       />
     </div>
   );

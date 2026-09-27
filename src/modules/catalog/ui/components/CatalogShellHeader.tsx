@@ -3,8 +3,8 @@
 import { usePathname } from "next/navigation";
 import { CatalogNav } from "@/modules/catalog/ui/components/CatalogNav";
 
-/** Rutas que ya pintan su propio encabezado premium (`CatalogHeader`). */
-const OWN_HEADER = new Set(["/catalog/products"]);
+/** Todo `/catalog/products/**` (listado, crear y la ficha) lleva su propio encabezado desde F3. */
+const hasOwnHeader = (pathname: string) => pathname === "/catalog/products" || pathname.startsWith("/catalog/products/");
 
 /**
  * Encabezado compartido del catálogo para las vistas que todavía no pasaron
@@ -13,7 +13,7 @@ const OWN_HEADER = new Set(["/catalog/products"]);
  */
 export function CatalogShellHeader() {
   const pathname = usePathname();
-  if (OWN_HEADER.has(pathname)) return null;
+  if (hasOwnHeader(pathname)) return null;
   return (
     <>
       <div>

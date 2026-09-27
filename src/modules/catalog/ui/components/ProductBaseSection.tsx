@@ -7,12 +7,12 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Switch } from "@/shared/components/ui/switch";
 import { Textarea } from "@/shared/components/ui/textarea";
-import { Separator } from "@/shared/components/ui/separator";
 import { applyServerValidation, errorMessage } from "@/core/lib/error-messages";
 import type { ProductDTO } from "@/modules/catalog/domain/product";
 import { updateProduct } from "@/modules/catalog/infrastructure/services/product-service.adapter";
 import { useCatalog } from "@/modules/catalog/infrastructure/stores/catalog.context";
 import { EffectiveCategoryField } from "./EffectiveCategoryField";
+import { ProductThumb } from "./ProductThumb";
 import { PriceInput } from "./PriceInput";
 import {
   NONE_VALUE,
@@ -25,6 +25,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -49,11 +50,14 @@ export function ProductBaseSection({
   canManage,
   onSaved,
   setAlert,
+  onDirtyChange,
 }: {
   product: ProductDTO;
   canManage: boolean;
   onSaved: (updated: ProductDTO) => void;
   setAlert?: (alert: AppAlert) => void;
+  /** Catálogo premium F3: la ficha avisa antes de salir con cambios sin guardar. */
+  onDirtyChange?: (dirty: boolean) => void;
 }) {
   const { productTypes } = useCatalog();
   const [submitting, setSubmitting] = useState(false);
@@ -71,7 +75,11 @@ export function ProductBaseSection({
   }, [product]);
 
   const currency = form.watch("currency");
+  const imageUrl = form.watch("image_url");
   const isDirty = form.formState.isDirty;
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
 
   const handleSubmit = async (values: ProductBaseFormValues) => {
     if (submitting) return;
@@ -92,15 +100,14 @@ export function ProductBaseSection({
     <section className="space-y-4" aria-label="Información del producto">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h3 className="text-base font-semibold">Información</h3>
+          <div className="flex min-h-9 flex-wrap items-center justify-between gap-2">
+            <h2 className="text-[15px] font-semibold">Información</h2>
             {canManage && (
-              <Button type="submit" disabled={submitting || !isDirty}>
+              <Button type="submit" size="sm" className="rounded-full px-4" disabled={submitting || !isDirty}>
                 {submitting ? "Guardando…" : "Guardar cambios"}
               </Button>
             )}
           </div>
-          <Separator />
 
           <fieldset disabled={!canManage} className="space-y-4">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -123,9 +130,18 @@ export function ProductBaseSection({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Imagen (URL)</FormLabel>
-                    <FormControl>
-                      <Input type="url" placeholder="https://…/producto.png" {...field} />
-                    </FormControl>
+                    <div className="flex items-center gap-2">
+                      <FormControl>
+                        <Input type="url" placeholder="https://…/producto.png" {...field} />
+                      </FormControl>
+                      {/* Misma vista previa que al crear (inventario B §3.6). */}
+                      <ProductThumb
+                        src={imageUrl || null}
+                        alt="Vista previa de la imagen"
+                        kind={product.kind}
+                        className="h-9 w-9 shrink-0 rounded-lg"
+                      />
+                    </div>
                     <p className="text-xs text-muted-foreground">
                       La descargaremos y la serviremos desde axi para que siempre cargue rápido
                     </p>
@@ -142,20 +158,27 @@ export function ProductBaseSection({
                 <FormItem>
                   <FormLabel>Descripción</FormLabel>
                   <FormControl>
-                    <Textarea rows={3} maxLength={2000} {...field} />
+                    <Textarea
+                      rows={3}
+                      maxLength={2000}
+                      placeholder="Describe el producto: la IA la usa para recomendarlo (opcional)"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <EffectiveCategoryField
-                product={product}
-                canManage={canManage}
-                onSaved={onSaved}
-                setAlert={setAlert}
-              />
+            {/* La categoría efectiva guarda al instante (no con «Guardar cambios») y va en su propia fila. */}
+            <EffectiveCategoryField
+              product={product}
+              canManage={canManage}
+              onSaved={onSaved}
+              setAlert={setAlert}
+            />
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
               <FormField
                 name="product_type_id"
                 control={form.control}
@@ -227,7 +250,7 @@ export function ProductBaseSection({
             </div>
 
             {isService && (
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 <FormField
                   name="duration_minutes"
                   control={form.control}
@@ -240,6 +263,7 @@ export function ProductBaseSection({
                           min={5}
                           max={480}
                           step={5}
+                          placeholder="45"
                           className="tabular-nums"
                           value={field.value === undefined ? "" : String(field.value)}
                           onChange={(e) =>
@@ -263,6 +287,7 @@ export function ProductBaseSection({
                           min={0}
                           max={240}
                           step={5}
+                          placeholder="10"
                           className="tabular-nums"
                           value={field.value === undefined ? "" : String(field.value)}
                           onChange={(e) =>
@@ -270,6 +295,7 @@ export function ProductBaseSection({
                           }
                         />
                       </FormControl>
+                      <FormDescription>Margen entre citas</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}

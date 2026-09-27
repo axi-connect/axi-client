@@ -1,5 +1,6 @@
-import { FormSkeleton } from "@/shared/components/features/loading";
+import { ProductDetailSkeleton } from "@/modules/catalog/ui/components/ProductDetailSkeleton";
 
+/** La silueta de la ficha premium: cabecera, dos columnas y la isla. */
 export default function ProductDetailLoading() {
-  return <FormSkeleton fields={8} />;
+  return <ProductDetailSkeleton />;
 }

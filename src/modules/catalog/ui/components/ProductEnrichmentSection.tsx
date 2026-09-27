@@ -27,6 +27,7 @@ import {
   updateProductEnrichment,
 } from "@/modules/catalog/infrastructure/services/product-enrichment-service.adapter";
 import type { AppAlert } from "@/core/notifications";
+import { useAlert } from "@/core/providers/alert-provider";
 
 
 /**
@@ -43,6 +44,7 @@ export function ProductEnrichmentSection({
   canApplyCategory,
   onCategoryApplied,
   setAlert,
+  onDirtyChange,
 }: {
   product: ProductDTO;
   canManage: boolean;
@@ -50,7 +52,10 @@ export function ProductEnrichmentSection({
   canApplyCategory: boolean;
   onCategoryApplied: () => void | Promise<void>;
   setAlert?: (alert: AppAlert) => void;
+  /** Catálogo premium F3: la ficha avisa antes de salir con metadatos sin guardar. */
+  onDirtyChange?: (dirty: boolean) => void;
 }) {
+  const { showModal, closeModal } = useAlert();
   const [enrichment, setEnrichment] = useState<ProductEnrichmentDTO | null>(product.enrichment ?? null);
   const [busy, setBusy] = useState<"regenerate" | "save" | "toggle" | "category" | null>(null);
   const [description, setDescription] = useState(product.enrichment?.description ?? "");
@@ -63,6 +68,10 @@ export function ProductEnrichmentSection({
 
   const state = enrichmentDisplayState(enrichment);
   const pending = state === "pending";
+
+  useEffect(() => {
+    onDirtyChange?.(dirty);
+  }, [dirty, onDirtyChange]);
 
   const syncFrom = useCallback((next: ProductEnrichmentDTO | null) => {
     setEnrichment(next);
@@ -140,6 +149,40 @@ export function ProductEnrichmentSection({
     }
   };
 
+  /**
+   * «Regenerar» reemplaza lo que el dueño corrigió (o está corrigiendo): eso
+   * se pregunta antes (catálogo premium F3, inventario D.1 #16). Sin
+   * ediciones, regenera directo como siempre.
+   */
+  const requestRegenerate = () => {
+    if (busy !== null) return;
+    if (state !== "edited" && !dirty) {
+      void regenerate();
+      return;
+    }
+    showModal({
+      title: "¿Regenerar la búsqueda con IA?",
+      description:
+        state === "edited" && enrichment?.edited_by_user_at
+          ? `Corregiste estos metadatos el ${formatDate(enrichment.edited_by_user_at)}. Regenerar los reemplaza por unos nuevos.`
+          : "Tienes cambios sin guardar. Regenerar los descarta y los reemplaza por unos nuevos.",
+      className: "sm:max-w-md",
+      actions: [
+        { label: "Conservar los míos", variant: "outline", asClose: true, id: "enrichment-regenerate-cancel" },
+        {
+          label: "Regenerar",
+          variant: "default",
+          asClose: false,
+          id: "enrichment-regenerate-confirm",
+          onClick: () => {
+            closeModal();
+            void regenerate();
+          },
+        },
+      ],
+    });
+  };
+
   const save = async () => {
     if (busy !== null) return;
     setBusy("save");
@@ -197,15 +240,16 @@ export function ProductEnrichmentSection({
 
   return (
     <section
+      id="busqueda-ia"
       className={cn(
-        "space-y-4 rounded-2xl border p-4 md:p-6",
-        tinted ? "border-accent-violet/30 bg-accent-violet/5" : "border-border bg-background",
+        "scroll-mt-24 space-y-4 rounded-3xl border bg-card p-5",
+        tinted ? "border-accent-violet/25" : "border-border",
       )}
       aria-labelledby="product-enrichment-title"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 id="product-enrichment-title" className="flex flex-wrap items-center gap-2 text-sm font-semibold">
+          <h2 id="product-enrichment-title" className="flex flex-wrap items-center gap-2 text-[15px] font-semibold">
             <Sparkles className={cn("size-4", tinted ? "text-accent-violet" : "text-muted-foreground")} aria-hidden />
             Búsqueda con IA
             <StateBadge state={state} />
@@ -225,7 +269,7 @@ export function ProductEnrichmentSection({
               </Button>
             ) : (
               <>
-                <Button variant="outline" size="sm" onClick={() => void regenerate()} disabled={busy !== null || pending}>
+                <Button variant="outline" size="sm" onClick={requestRegenerate} disabled={busy !== null || pending}>
                   {busy === "regenerate" ? <LoaderCircle className="size-4 animate-spin" aria-hidden /> : <RefreshCw className="size-4" aria-hidden />}
                   {state === "failed" ? "Intentar de nuevo" : "Regenerar"}
                 </Button>
@@ -316,12 +360,12 @@ export function ProductEnrichmentSection({
                 </div>
                 <div className="flex min-h-11 flex-wrap items-center gap-1.5 rounded-xl border border-input bg-background p-2" aria-label="Términos de búsqueda">
                   {terms.map((term) => (
-                    <span key={term} className="inline-flex h-6 items-center gap-1 rounded-full bg-secondary pl-2.5 pr-1 text-xs font-medium">
+                    <span key={term} className="inline-flex h-6 items-center gap-0.5 rounded-full bg-secondary pl-2.5 text-xs font-medium">
                       {term}
                       {canManage && (
                         <button
                           type="button"
-                          className="grid size-4 place-items-center rounded-full text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
+                          className="grid size-6 place-items-center rounded-full text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
                           aria-label={`Quitar ${term}`}
                           onClick={() => {
                             setTerms((prev) => prev.filter((candidate) => candidate !== term));
