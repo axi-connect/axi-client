@@ -63,6 +63,32 @@ describe("OrdersPanel — los pedidos del contacto (F4 · D5)", () => {
     expect(listOrders).toHaveBeenCalledTimes(2)
   })
 
+  it("al cambiar de contacto NO se ve ni un instante lo del anterior (auditoría F4-H1)", async () => {
+    listOrders.mockResolvedValueOnce({ data: [order({ items: [{ product_name: "Viaje de Laura" }] })], meta: { total: 1 } })
+    const { rerender } = render(<OrdersPanel {...props} contactId="laura" />)
+    expect(await screen.findByText("Viaje de Laura")).toBeInTheDocument()
+    // El siguiente contacto: su respuesta todavía no llega.
+    listOrders.mockReturnValueOnce(new Promise(() => {}))
+    rerender(<OrdersPanel {...props} contactId="mariana" />)
+    expect(screen.queryByText("Viaje de Laura")).not.toBeInTheDocument()
+    expect(screen.getByRole("status", { name: "Cargando los pedidos" })).toBeInTheDocument()
+  })
+
+  it("un refresco del MISMO contacto conserva lo que hay a la vista (no parpadea)", async () => {
+    listOrders.mockResolvedValueOnce({ data: [order({ items: [{ product_name: "Viaje de Laura" }] })], meta: { total: 1 } })
+    const { rerender } = render(<OrdersPanel {...props} contactId="laura" />)
+    expect(await screen.findByText("Viaje de Laura")).toBeInTheDocument()
+    listOrders.mockReturnValueOnce(new Promise(() => {}))
+    rerender(<OrdersPanel {...props} contactId="laura" contextVersion={1} />)
+    expect(screen.getByText("Viaje de Laura")).toBeInTheDocument()
+  })
+
+  it("con más pedidos que la página, lleva a la ficha con el total (auditoría F4-H2)", async () => {
+    listOrders.mockResolvedValue({ data: [order({})], meta: { total: 14 } })
+    render(<OrdersPanel {...props} />)
+    expect(await screen.findByRole("link", { name: /Ver los 14 pedidos en la ficha/ })).toHaveAttribute("href", "/crm/contacts/k1")
+  })
+
   it("sortOrdersForPanel: saldo antes que pagado, y el más reciente primero", () => {
     const sorted = sortOrdersForPanel([
       order({ id: "a", payment_state: "paid", created_at: "2026-09-26T00:00:00Z" }),

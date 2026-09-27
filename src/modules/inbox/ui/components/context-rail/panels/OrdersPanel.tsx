@@ -32,7 +32,8 @@ const PAYMENT_TONE: Record<PaymentState, StatePillTone> = {
 
 export function useOrdersHeading({ conversation }: ContextPanelProps): ContextPanelHeading {
   const name = conversation.contact.full_name || conversation.contact.phone || "el contacto";
-  return { title: `De ${firstNameOf(name)}`, subtitle: "Con saldo primero" };
+  // Sin prometer más de lo que hay: son los últimos (página chica), con saldo arriba.
+  return { title: `De ${firstNameOf(name)}`, subtitle: "Los más recientes, con saldo primero" };
 }
 
 /** Con saldo primero; dentro de cada grupo, el más reciente arriba. */
@@ -54,33 +55,40 @@ export function sortOrdersForPanel(orders: readonly OrderDTO[]): OrderDTO[] {
  * (la misma `DocumentsList` del 360, que se gatea sola).
  */
 export function OrdersPanel({ contactId, contextVersion }: ContextPanelProps) {
-  const [orders, setOrders] = useState<OrderDTO[] | null>(null);
-  const [error, setError] = useState(false);
+  // Lo cargado va con el contacto al que PERTENECE: al pasar a otra conversación
+  // no se pinta ni un instante lo del anterior (son saldos de otra persona;
+  // auditoría F4-H1). Un refresco del MISMO contacto (contextVersion) conserva
+  // lo que hay a la vista y no parpadea.
+  const [loaded, setLoaded] = useState<{ contactId: string; orders: OrderDTO[]; total: number } | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
-    setError(false);
+    setError(null);
     listOrders({ contact_id: contactId, page: 1, page_size: ORDERS_PANEL_PAGE_SIZE, sort_by: "created_at", sort_dir: "desc" })
       .then((page) => {
-        if (!cancelled) setOrders(sortOrdersForPanel(page.data));
+        if (!cancelled) setLoaded({ contactId, orders: sortOrdersForPanel(page.data), total: page.meta.total });
       })
       .catch(() => {
-        if (!cancelled) setError(true);
+        if (!cancelled) setError(contactId);
       });
     return () => {
       cancelled = true;
     };
   }, [contactId, contextVersion, attempt]);
 
-  if (error) {
+  const orders = loaded !== null && loaded.contactId === contactId ? loaded.orders : null;
+  const total = loaded !== null && loaded.contactId === contactId ? loaded.total : 0;
+
+  if (error === contactId) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center" role="alert">
         <span className="grid size-14 place-items-center rounded-[18px] bg-muted text-muted-foreground">
           <ShoppingBag className="size-6" aria-hidden />
         </span>
         <p className="text-sm font-semibold">No pudimos traer los pedidos</p>
-        <p className="max-w-60 text-xs text-muted-foreground">Se perdió la conexión. Lo demás de la conversación sigue a salvo.</p>
+        <p className="max-w-60 text-xs text-muted-foreground">Intenta de nuevo; lo demás de la conversación sigue a salvo.</p>
         <Button variant="outline" className="h-9 rounded-full" onClick={() => setAttempt((n) => n + 1)}>
           Reintentar
         </Button>
@@ -113,6 +121,16 @@ export function OrdersPanel({ contactId, contextVersion }: ContextPanelProps) {
             <OrderCard key={order.id} order={order} />
           ))}
         </ul>
+      )}
+      {/* Más de una página: el orden «con saldo primero» es de estos; los demás
+          (quizá uno viejo con saldo) están en la ficha 360 (auditoría F4-H2). */}
+      {total > orders.length && (
+        <Button asChild variant="outline" className="h-9 w-full rounded-full text-[13px]">
+          <Link href={`/crm/contacts/${contactId}`}>
+            Ver los {total} pedidos en la ficha
+            <ExternalLink className="size-3.5" aria-hidden />
+          </Link>
+        </Button>
       )}
 
       <DocumentsList subject={{ kind: "contact", id: contactId }} embedded className="mt-1 border-t border-border pt-4" />

@@ -139,7 +139,9 @@ export function ContextPanel({
           </nav>
         )}
 
-        <Panel conversation={conversation} contactId={contactId} contextVersion={contextVersion} />
+        {/* Un panel por contacto: al pasar a otra conversación nada del anterior
+            (pedidos, llamadas, historial, filtros) se queda a la vista (F4-H1). */}
+        <Panel key={contactId} conversation={conversation} contactId={contactId} contextVersion={contextVersion} />
       </motion.aside>
     </div>
   );
