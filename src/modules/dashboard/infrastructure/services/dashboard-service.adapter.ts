@@ -1,5 +1,5 @@
 import { http } from "@/core/services/http";
-import { getInboxStats } from "@/modules/inbox/public";
+import { getInboxCounts as getInboxCountsFromInbox, getInboxStats } from "@/modules/inbox/public";
 import type {
   ChannelListDTO,
   ContactStatsDTO,
@@ -22,9 +22,9 @@ export function getOrderStats(period: DashboardPeriod): Promise<OrderStatsDTO> {
   return http.get<OrderStatsDTO>("/orders/stats", { period });
 }
 
-/** Contadores del inbox en vivo (estado actual, sin período). */
+/** Contadores del inbox en vivo (estado actual, sin período). Adaptador del inbox (IB-1). */
 export function getInboxCounts(): Promise<InboxCountsDTO> {
-  return http.get<InboxCountsDTO>("/inbox/counts");
+  return getInboxCountsFromInbox();
 }
 
 /**

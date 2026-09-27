@@ -3,10 +3,11 @@
  *
  * Consumidores:
  * - `dashboard`: el flujo de conversaciones del Panel lee `/inbox/stats` con el
- *   mismo adaptador que «Tu día» (auditoría IB-1: antes eran dos).
+ *   mismo adaptador que «Tu día», y los contadores de `/inbox/counts` con el
+ *   de la bandeja (auditoría IB-1: antes eran dos de cada uno).
  * - `workspace`: la columna de vistas y canales lee y cambia la vista del store.
  */
-export { getInboxStats } from "./infrastructure/services/inbox-service.adapter";
+export { getInboxCounts, getInboxStats } from "./infrastructure/services/inbox-service.adapter";
 export { useInboxStore } from "./infrastructure/stores/inbox.store";
 export {
   INBOX_VIEW_LABELS,
