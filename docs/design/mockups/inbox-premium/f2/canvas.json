@@ -1,0 +1,24 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-09-27T00:20:00Z" },
+  "title": "Inbox premium · F2 La conversación",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 1440, "h": 1000, "title": "1 · En cola — por qué llegó, desde cuándo y «Atender» (interactivo)", "is_interactive": true },
+    "Contigo.dc.html": { "x": 1520, "y": 0, "w": 1440, "h": 1000, "title": "2 · Contigo — quién escribió cada cosa, entregas, fallo y el celular" },
+    "AxiAtiende.dc.html": { "x": 3040, "y": 0, "w": 1440, "h": 1000, "title": "3 · Axi atiende — lo que dice Axi y «Intervenir»" },
+    "Burbuja.dc.html": { "x": 0, "y": 1420, "w": 1440, "h": 1000, "title": "4 · D1 · La burbuja que sale — coral, tinta o neutra" },
+    "Cerrada.dc.html": { "x": 1520, "y": 1420, "w": 1440, "h": 1000, "title": "5 · Cerrada — la nota para Axi y quién la cerró" },
+    "Movil.dc.html": { "x": 3040, "y": 1420, "w": 390, "h": 844, "title": "6 · Celular — en cola" },
+    "Oscuro.dc.html": { "x": 0, "y": 2840, "w": 1440, "h": 1000, "title": "7 · En cola — oscuro (interactivo)", "is_interactive": true },
+    "Estados.dc.html": { "x": 1520, "y": 2840, "w": 1440, "h": 1000, "title": "8 · Estados — abriendo, error, sin mensajes y sin permiso para atender" }
+  },
+  "order": ["Main.dc.html", "Contigo.dc.html", "AxiAtiende.dc.html", "Burbuja.dc.html", "Cerrada.dc.html", "Movil.dc.html", "Oscuro.dc.html", "Estados.dc.html"],
+  "notes": {
+    "rowA": { "x": 0, "y": -300, "text": "Quién la tiene", "kind": "title1", "maxW": 4480 },
+    "rowB": { "x": 0, "y": 1120, "text": "La burbuja, el cierre y el celular", "kind": "title1", "maxW": 3430 },
+    "rowC": { "x": 0, "y": 2540, "text": "Oscuro y estados", "kind": "title1", "maxW": 2960 }
+  },
+  "designSystems": []
+}

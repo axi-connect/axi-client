@@ -9,7 +9,7 @@
 > | Fase | Qué | Lienzo | Estado |
 > |---|---|---|---|
 > | F1 | La bandeja: shell del workspace, lista, vistas y el panel sin conversación («Tu día») | https://claude.ai/artifact/WrEnSotKFPTjsQsgjP3WMd | Aprobado el 2026-09-26, en implementación |
-> | F2 | La conversación: cabecera, hilo, eventos de handoff en el hilo, «Por qué está aquí», pie cerrado | https://claude.ai/artifact/C3eXTy2imH6Qv7eGRWMMgc | Lienzo publicado, por aprobar (con la D1) |
+> | F2 | La conversación: cabecera, hilo, eventos de handoff en el hilo, «Por qué está aquí», pie cerrado | https://claude.ai/artifact/C3eXTy2imH6Qv7eGRWMMgc | Aprobado el 2026-09-26 (D1 = tinta), implementado en 3fdcc879 |
 > | F3 | Escribir y medios: composer, adjuntos, nota de voz, acciones rápidas, burbujas de media, visor | — | — |
 > | F4 | El contexto: rail y paneles (Contacto, Adjuntos, Historial, Llamadas) | — | — |
 >
@@ -150,7 +150,25 @@ La suite completa y `next build` los corre el auditor en la verja combinada.
 
 ### F2 · La conversación
 
-Solo cliente.
+Solo cliente. **Aprobado por la dueña el 2026-09-26** («Aprobado D1 con Tinta, procede a implementarlo»): la burbuja
+saliente va en tinta (`bg-foreground text-background`) y el coral queda para Enviar, Atender e Intervenir. Los textos
+fijos en blanco de medios e interactivos pasan a `text-background` para leerse también sobre la tinta clara del tema
+oscuro.
+
+Lo que dejó la implementación (3fdcc879):
+- **Una sola instancia de `useHandoffActions`** en el panel, para la cabecera, la isla y la barra del composer: un
+  único juego de modales. «Devolver a Axi» se ofrece también desde la cola, porque el servidor admite `return_to_ai`
+  desde `human_queued`.
+- **`ConversationChips` se retira.** Etapa, score y etiquetas pasan al panel Contacto (F4). En la cabecera queda la
+  píldora de quién la tiene: «En cola · X», «Axi atiende», «Contigo», «Con el equipo», «Resuelta».
+- **El hilo deja de ser región viva:** una región `sr-only` anuncia solo el entrante nuevo, nunca el prepend del
+  historial (a11y del auditor).
+- **Días del hilo en la zona del negocio** (`timeline/business-day.ts`), con test a las 11:30 p. m. y a las
+  12:30 a. m. de Bogotá.
+- **`groupMessagesByDay` se reemplaza por `buildTimeline`**, que intercala mensajes y eventos, agrupa autores y cubre
+  los mismos casos de su test.
+- **IB-1 del auditor:** `/inbox/stats` y `/inbox/counts` solo en el adaptador del inbox. El Panel y la columna los
+  leen por `modules/inbox/public.ts`.
 
 | Pieza | Queda |
 |---|---|

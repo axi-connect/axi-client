@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Inbox · Axi atiende</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&amp;family=Poppins:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#F5F5F7}
+.lt{--bg:#F5F5F7;--side:#FFFFFF;--card:#FFFFFF;--fg:#0B0B0E;--fg2:#3A3A40;--mut:#6B6B73;--line:rgba(0,0,0,.07);--line2:rgba(0,0,0,.12);--chip:#F0F0F2;--brand:#D13F42;--onbrand:#FFFFFF;--acc:rgba(230,87,89,.12);--track:#ECECEF;--ok:#1F9D5B;--warn:#D97706;--bad:#DC2626;--ai:#7C3AED;--sh:0 1px 0 rgba(0,0,0,.03),0 8px 20px -16px rgba(16,16,24,.25)}
+.dk{--bg:#0A0A0A;--side:#0F0F11;--card:#141416;--fg:#EDEDED;--fg2:#C4C4CC;--mut:#A1A1AA;--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.14);--chip:rgba(255,255,255,.08);--brand:#FB7185;--onbrand:#1A0508;--acc:rgba(251,113,133,.16);--track:rgba(255,255,255,.10);--ok:#4ADE80;--warn:#FBBF24;--bad:#F87171;--ai:#A78BFA;--sh:none}
+a{color:inherit}
+.app{width:1440px;height:1000px;display:flex;background:var(--bg);color:var(--fg);overflow:hidden;font-family:Poppins,system-ui,sans-serif}
+.d{font-family:Urbanist,Poppins,sans-serif}
+.side{width:248px;flex-shrink:0;padding:14px 10px;box-sizing:border-box;display:flex;flex-direction:column;gap:2px;border-right:1px solid var(--line);background:var(--side)}
+.nav{display:flex;align-items:center;gap:10px;height:34px;padding:0 10px;border-radius:10px;font-size:13.5px;color:var(--fg2);text-decoration:none;white-space:nowrap}
+.nav-on{background:var(--acc);color:var(--fg);font-weight:500}
+.kick{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);white-space:nowrap}
+.lbl{font-size:12px;color:var(--mut);white-space:nowrap}
+.card{background:var(--card);border-radius:24px;border:1px solid var(--line);box-shadow:var(--sh)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:38px;padding:0 16px;border-radius:999px;font:500 13px Poppins,sans-serif;border:1px solid var(--line2);background:var(--card);color:var(--fg);cursor:pointer;text-decoration:none;white-space:nowrap}
+.btn-ink{border-color:transparent;background:var(--fg);color:var(--bg)}
+.btn-glass{border-color:rgba(11,11,14,.10);background:rgba(255,255,255,.55);color:inherit}
+.isl-dark .btn-ink{background:#EDEDED;color:#0B0B0E}
+.isl-dark .btn-glass{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.14)}
+.icb{width:36px;height:36px;border-radius:999px;border:0;background:transparent;color:var(--mut);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex-shrink:0}
+.pill{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 9px;border-radius:999px;font-size:11.5px;font-weight:500;background:var(--chip);color:var(--fg);white-space:nowrap;flex-shrink:0}
+.dot{width:8px;height:8px;border-radius:9px;flex-shrink:0;display:inline-block}
+.cols{width:232px;flex-shrink:0;box-sizing:border-box;padding:16px 10px;display:flex;flex-direction:column;gap:4px;border-right:1px solid var(--line);background:var(--side)}
+.vw{display:flex;align-items:center;gap:10px;height:36px;padding:0 10px;border-radius:10px;border:0;background:transparent;color:var(--fg2);font:400 13.5px Poppins,sans-serif;cursor:pointer;text-align:left;width:100%}
+.vw-on{background:var(--chip);color:var(--fg);font-weight:500}
+.vw .n{margin-left:auto;font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums}
+.vw-on .n{color:var(--fg)}
+.chn{display:flex;align-items:center;gap:10px;min-height:36px;padding:4px 10px;border-radius:10px;font-size:13px;color:var(--fg2);text-decoration:none}
+.list{flex-shrink:0;display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--line);background:var(--card)}
+.srch{display:flex;align-items:center;gap:8px;height:38px;border-radius:999px;background:var(--chip);padding:0 14px;font-size:13px;color:var(--mut)}
+.seg{display:flex;gap:2px;padding:3px;border-radius:999px;background:var(--chip)}
+.sg{height:30px;min-width:30px;padding:0 9px;border-radius:999px;border:0;background:transparent;color:var(--mut);display:inline-flex;align-items:center;justify-content:center;gap:6px;font:500 12.5px Poppins,sans-serif;cursor:pointer;white-space:nowrap}
+.sg-on{background:var(--card);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.scr{overflow-y:auto;overscroll-behavior:contain}
+.scr::-webkit-scrollbar{width:6px}
+.scr::-webkit-scrollbar-track{background:transparent}
+.scr::-webkit-scrollbar-thumb{border-radius:9px;background:radial-gradient(circle at 50% 30%,#F08A8C,#E65759)}
+.row{display:flex;gap:12px;align-items:flex-start;width:100%;padding:11px 12px;border-radius:14px;border:0;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer;box-sizing:border-box}
+.row:hover{background:var(--chip)}
+.av{position:relative;width:40px;height:40px;border-radius:999px;background:var(--chip);color:var(--fg2);display:inline-flex;align-items:center;justify-content:center;font:600 13px Poppins,sans-serif;flex-shrink:0}
+.chb{position:absolute;right:-3px;bottom:-3px;width:18px;height:18px;border-radius:999px;background:var(--card);box-shadow:0 0 0 2px var(--card);display:inline-flex;align-items:center;justify-content:center;color:var(--fg2)}
+.nm{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1}
+.pv{font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1}
+.ub{height:20px;min-width:20px;padding:0 6px;box-sizing:border-box;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font:600 11px Poppins,sans-serif;font-variant-numeric:tabular-nums;flex-shrink:0}
+.ub-tinta{background:var(--fg);color:var(--bg)}
+.ub-coral{background:var(--brand);color:var(--onbrand)}
+.tile{display:flex;flex-direction:column;gap:6px;padding:18px 20px;min-width:0}
+.fig{font-family:Urbanist,Poppins,sans-serif;font-size:40px;font-weight:700;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.track{height:8px;border-radius:999px;background:var(--track);overflow:hidden;display:flex}
+.isl{position:relative;isolation:isolate;overflow:hidden;border-radius:24px}
+.isl-glass{color:#0B0B0E;--mut:#5F5F68;--fg2:#3A3A40;--chip:rgba(11,11,14,.06);background:radial-gradient(circle 20rem at 92% 0%,rgba(230,87,89,.18),transparent 70%),linear-gradient(160deg,rgba(255,255,255,.86),rgba(250,246,246,.66));-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);box-shadow:inset 0 2px 2px rgba(11,11,14,.05),inset 0 -2px 2px rgba(255,255,255,.5),inset 0 0 18px 2px rgba(255,255,255,.55),0 4px 2px -2px rgba(11,11,14,.14),0 30px 70px -34px rgba(16,16,24,.35),0 30px 80px -40px rgba(230,87,89,.40)}
+.isl-dark{color:#EDEDED;--mut:#A1A1AA;--fg2:#D4D4D8;--chip:rgba(255,255,255,.08);background:radial-gradient(circle 20rem at 92% 0%,rgba(251,113,133,.26),transparent 70%),linear-gradient(160deg,rgba(38,38,42,.92),rgba(30,26,30,.94));box-shadow:inset 0 2px 2px rgba(255,255,255,.10),inset 0 -2px 2px rgba(0,0,0,.35),0 18px 50px -24px rgba(230,87,89,.45)}
+.isl-glass::before,.isl-dark::before{content:"";position:absolute;inset:0;z-index:1;padding:1.5px;border-radius:inherit;pointer-events:none;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.isl-glass::before{background:conic-gradient(from -75deg at 50% 50%,rgba(11,11,14,.32) 0%,transparent 6% 40%,rgba(11,11,14,.32) 50%,transparent 56% 94%,rgba(11,11,14,.32) 100%),linear-gradient(rgba(255,255,255,.85),rgba(255,255,255,.85))}
+.isl-dark::before{background:conic-gradient(from -75deg at 50% 50%,rgba(255,255,255,.7) 0%,transparent 6% 40%,rgba(255,255,255,.7) 50%,transparent 56% 94%,rgba(255,255,255,.7) 100%),linear-gradient(rgba(255,255,255,.12),rgba(255,255,255,.12))}
+.isl>*{position:relative;z-index:2}
+@media (prefers-reduced-transparency: reduce){.isl-glass{background:#FFFFFF}.isl-dark{background:#1E1E22}}
+
+.sk{background:var(--track);border-radius:8px;display:block}
+.rail{width:64px;flex-shrink:0;box-sizing:border-box;padding:14px 0;display:flex;flex-direction:column;align-items:center;gap:6px;border-right:1px solid var(--line);background:var(--side)}
+.rb{position:relative;width:40px;height:40px;border-radius:12px;border:0;background:transparent;color:var(--fg2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.rb-on{background:var(--chip);color:var(--fg)}
+.rb .c{position:absolute;top:2px;right:0;min-width:16px;height:16px;padding:0 4px;box-sizing:border-box;border-radius:999px;background:var(--fg);color:var(--bg);font:600 10px Poppins,sans-serif;display:inline-flex;align-items:center;justify-content:center}
+.rb .s{position:absolute;right:5px;bottom:5px;width:8px;height:8px;border-radius:9px;box-shadow:0 0 0 2px var(--side)}
+.conv{flex-grow:1;min-width:0;display:flex;flex-direction:column;background:var(--bg);position:relative}
+.chead{height:64px;flex-shrink:0;display:flex;align-items:center;gap:10px;padding:0 12px 0 18px;border-bottom:1px solid var(--line);background:var(--card)}
+.thread{flex-grow:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:4px 22px 18px}
+.thread::-webkit-scrollbar{width:6px}.thread::-webkit-scrollbar-thumb{border-radius:9px;background:radial-gradient(circle at 50% 30%,#F08A8C,#E65759)}
+.msg{display:flex;margin-top:3px}
+.msg.in{justify-content:flex-start}.msg.out{justify-content:flex-end}
+.msg.gap{margin-top:12px}
+.b{max-width:72%;padding:8px 12px 6px;border-radius:18px;font-size:13.5px;line-height:1.45;box-sizing:border-box}
+.in .b{background:var(--card);border:1px solid var(--line);color:var(--fg)}
+.in.last .b{border-bottom-left-radius:6px}
+.out.last .b{border-bottom-right-radius:6px}
+.bub-coral .out .b{background:var(--brand);color:#fff}
+.bub-tinta .out .b{background:var(--fg);color:var(--bg)}
+.bub-neutra .out .b{background:#E4E4EA;color:var(--fg)}
+.dk.bub-neutra .out .b,.dk .bub-neutra .out .b{background:rgba(255,255,255,.13)}
+.mt{display:flex;justify-content:flex-end;align-items:center;gap:4px;font-size:10.5px;margin-top:2px;white-space:nowrap}
+.mt>*{opacity:.72}
+.who{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--mut);margin:14px 6px 3px}
+.who.r{justify-content:flex-end}
+.ev{display:flex;justify-content:center;margin:16px 0 10px}
+.evp{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--mut);max-width:78%;text-align:center;line-height:1.4}
+.day{position:sticky;top:0;display:flex;justify-content:center;padding:10px 0 4px;z-index:2}
+.dayp{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:3px 12px;font-size:11.5px;font-weight:500;box-shadow:var(--sh)}
+.comp{flex-shrink:0;padding:10px 16px 14px;border-top:1px solid var(--line);background:var(--card)}
+.cbox{display:flex;align-items:flex-end;gap:4px;border:1px solid var(--line2);border-radius:20px;padding:5px 5px 5px 6px;background:var(--card)}
+.cin{flex-grow:1;min-height:36px;display:flex;align-items:center;font-size:13.5px;color:var(--mut);padding:0 6px}
+.send{width:36px;height:36px;border-radius:999px;border:0;background:var(--brand);color:#fff;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.lock{display:flex;align-items:center;gap:14px;padding:10px 10px 10px 16px;border-radius:18px;background:var(--chip);font-size:13px;color:var(--fg2)}
+.ctx{width:52px;flex-shrink:0;border-left:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 0;background:var(--card)}
+.hpill{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:999px;background:var(--chip);font-size:12px;font-weight:500;white-space:nowrap;flex-shrink:0}
+.retry{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 10px;border-radius:999px;border:1px solid rgba(220,38,38,.35);background:var(--card);color:var(--bad);font:500 11.5px Poppins,sans-serif;cursor:pointer}
+.isl-ai{color:#0B0B0E;--mut:#5F5F68;--fg2:#3A3A40;--chip:rgba(11,11,14,.06);background:radial-gradient(circle 18rem at 92% 0%,rgba(124,58,237,.20),transparent 70%),radial-gradient(circle 14rem at 8% 120%,rgba(230,87,89,.14),transparent 70%),linear-gradient(160deg,rgba(255,255,255,.88),rgba(247,244,254,.70));-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);box-shadow:inset 0 2px 2px rgba(11,11,14,.05),inset 0 -2px 2px rgba(255,255,255,.5),0 4px 2px -2px rgba(11,11,14,.12),0 24px 60px -34px rgba(124,58,237,.45)}
+.isl-ai-dark{color:#EDEDED;--mut:#A1A1AA;--fg2:#D4D4D8;--chip:rgba(255,255,255,.08);background:radial-gradient(circle 18rem at 92% 0%,rgba(167,139,250,.28),transparent 70%),linear-gradient(160deg,rgba(38,36,46,.94),rgba(28,26,36,.95));box-shadow:inset 0 2px 2px rgba(255,255,255,.10),0 24px 60px -30px rgba(124,58,237,.6)}
+.isl-ai::before,.isl-ai-dark::before{content:"";position:absolute;inset:0;z-index:1;padding:1.5px;border-radius:inherit;pointer-events:none;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.isl-ai::before{background:conic-gradient(from -75deg at 50% 50%,rgba(11,11,14,.30) 0%,transparent 6% 40%,rgba(11,11,14,.30) 50%,transparent 56% 94%,rgba(11,11,14,.30) 100%),linear-gradient(rgba(255,255,255,.85),rgba(255,255,255,.85))}
+.isl-ai-dark::before{background:conic-gradient(from -75deg at 50% 50%,rgba(255,255,255,.7) 0%,transparent 6% 40%,rgba(255,255,255,.7) 50%,transparent 56% 94%,rgba(255,255,255,.7) 100%),linear-gradient(rgba(255,255,255,.12),rgba(255,255,255,.12))}
+.isl-ai-dark .btn-ink{background:#EDEDED;color:#0B0B0E}.isl-ai-dark .btn-glass{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.14)}
+.fold{display:flex;align-items:center;gap:8px;padding:8px 14px;margin:10px 18px 0;border-radius:14px;background:var(--card);border:1px solid var(--line);font-size:12.5px;color:var(--fg2)}
+.typing{display:inline-flex;gap:4px;align-items:center;padding:10px 14px;border-radius:18px;border-bottom-left-radius:6px;background:var(--card);border:1px solid var(--line)}
+.typing span{width:6px;height:6px;border-radius:9px;background:var(--mut);opacity:.6}
+</style>
+</helmet>
+<div class="app {{themeCls}} bub-tinta">
+  <aside class="side" aria-label="Menú principal">
+    <div style="display:flex;align-items:center;gap:10px;padding:4px 8px 14px">
+      <svg width="26" height="26" viewBox="0 0 28 28" aria-hidden="true"><circle cx="11" cy="15" r="7.5" fill="none" stroke="#D13F42" stroke-width="4"></circle><path d="M16 5 L25 24" stroke="#F2A93B" stroke-width="4" stroke-linecap="round"></path><path d="M25 5 L17 20" stroke="#7B5CF0" stroke-width="4" stroke-linecap="round"></path></svg>
+      <div style="display:flex;flex-direction:column;min-width:0"><span style="font-weight:600;font-size:13.5px">JuanitoXpeditions</span><span style="font-size:11.5px;color:var(--mut)">Owner</span></div>
+    </div>
+    <a class="nav" href="#">Dashboard</a><a class="nav" href="#">CMO</a><a class="nav" href="#">CRM</a><a class="nav nav-on" href="#" aria-current="page">Inbox<span style="margin-left:auto;font-size:12px;font-variant-numeric:tabular-nums">7</span></a><a class="nav" href="#">Agenda</a><a class="nav" href="#">Ventas</a><a class="nav" href="#">Comercial</a><a class="nav" href="#">Configuración</a>
+  </aside>
+  <main style="flex-grow:1;display:flex;flex-direction:column;min-width:0;min-height:0">
+    <header style="height:52px;display:flex;align-items:center;gap:12px;padding:0 20px 0 24px;flex-shrink:0;border-bottom:1px solid var(--line)"><span style="font-size:13px;color:var(--mut)">Workspace</span><span style="font-size:13px;color:var(--mut)">/</span><span style="font-size:13px;font-weight:500">Inbox</span></header>
+    <div style="display:flex;flex-grow:1;min-height:0"><nav class="cols" aria-label="Vistas y canales" style="width:232px">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 0 6px 10px"><span class="kick">Bandeja</span><button type="button" class="icb" aria-label="Plegar el panel"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"></rect><path d="M9 4v16M15 10l-2 2 2 2"></path></svg></button></div>
+      <button type="button" class="vw" aria-pressed="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l2.5 2.5M9 2h6"></path></svg><span>En cola</span><span class="n">3</span></button><button type="button" class="vw" aria-pressed="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg><span>Contigo</span><span class="n">5</span></button><button type="button" class="vw vw-on" aria-pressed="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ai)" stroke-width="1.8" aria-hidden="true"><rect x="4" y="8" width="16" height="12" rx="3"></rect><path d="M12 4v4M9 13h0M15 13h0"></path></svg><span>Axi atiende</span><span class="n">12</span></button><button type="button" class="vw" aria-pressed="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 13h5l2 3h4l2-3h5"></path><path d="M5.5 5h13L21 13v6H3v-6z"></path></svg><span>Todas abiertas</span><span class="n">24</span></button><button type="button" class="vw" aria-pressed="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m2 13 4 4 8-9M10 16l1 1 8-9"></path></svg><span>Cerradas</span></button>
+      <div style="height:14px"></div><span class="kick" style="padding:4px 10px 6px">Canales · 4</span>
+      <a class="chn" href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 21l1.6-4.6A8.5 8.5 0 1 1 8 19.6z"></path></svg><span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">WhatsApp Ventas</span></span><span class="dot" style="background:var(--ok)"></span></a><a class="chn" href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle></svg><span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Instagram @juanitoxpeditions</span></span><span class="dot" style="background:var(--ok)"></span></a><a class="chn" href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 21l1.6-4.6A8.5 8.5 0 1 1 8 19.6z"></path></svg><span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">WhatsApp Soporte</span><span style="font-size:11.5px;color:var(--mut)">Pendiente de configurar</span></span><span class="dot" style="background:var(--mut)"></span></a><a class="chn" href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3C6.9 3 3 6.7 3 11.4c0 2.6 1.2 4.9 3.2 6.4V21l3-1.6c.9.2 1.8.4 2.8.4 5.1 0 9-3.7 9-8.4S17.1 3 12 3z"></path></svg><span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Messenger</span><span style="font-size:11.5px;color:var(--mut)">Desconectado</span></span><span class="dot" style="background:var(--mut)"></span></a>
+    </nav><section class="list" style="width:320px" aria-label="Conversaciones">
+      <div style="padding:18px 16px 12px;display:flex;flex-direction:column;gap:12px;border-bottom:1px solid var(--line)">
+        <div style="min-width:0"><h1 class="d" style="margin:0;font-size:26px;font-weight:700;letter-spacing:-.02em;line-height:1.1">Axi atiende</h1>
+        <p style="margin:4px 0 0;font-size:12.5px;color:var(--fg2);display:flex;align-items:center;gap:7px"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">12 con Axi · puedes intervenir en cualquiera</span></p></div>
+        <div class="srch"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>Buscar por nombre o teléfono</div>
+      </div>
+      <div class="scr" style="flex-grow:1;min-height:0;padding:6px 6px 10px"><sc-for list="{{rows}}" as="r" hint-placeholder-count="6">
+            <button type="button" class="row" style="{{r.sel}}" aria-label="{{r.aria}}">
+              <span class="av" style="{{r.avStyle}}">{{r.ini}}<span class="chb">
+                <sc-if value="{{r.wa}}" hint-placeholder-val="{{ true }}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M3 21l1.6-4.6A8.5 8.5 0 1 1 8 19.6z"></path></svg></sc-if>
+                <sc-if value="{{r.ig}}" hint-placeholder-val="{{ false }}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle></svg></sc-if>
+                <sc-if value="{{r.ms}}" hint-placeholder-val="{{ false }}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 3C6.9 3 3 6.7 3 11.4c0 2.6 1.2 4.9 3.2 6.4V21l3-1.6c.9.2 1.8.4 2.8.4 5.1 0 9-3.7 9-8.4S17.1 3 12 3z"></path></svg></sc-if>
+              </span></span>
+              <span style="display:flex;flex-direction:column;gap:3px;min-width:0;flex:1">
+                <span style="display:flex;align-items:center;gap:6px;min-width:0">
+                  <sc-if value="{{r.prio}}" hint-placeholder-val="{{ false }}"><span class="dot" style="background:{{r.prioC}}" title="{{r.prioT}}"></span></sc-if>
+                  <span class="nm" style="font-weight:{{r.nw}};color:{{r.nc}}" title="{{r.name}}">{{r.name}}</span>
+                  <span style="font-size:11.5px;white-space:nowrap;font-variant-numeric:tabular-nums;color:{{r.tc}};font-weight:{{r.tw}}">{{r.time}}</span>
+                </span>
+                <span style="display:flex;align-items:center;gap:6px;min-width:0">
+                  <sc-if value="{{r.photo}}" hint-placeholder-val="{{ false }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" style="flex-shrink:0;color:var(--mut)"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg></sc-if>
+                  <sc-if value="{{r.voice}}" hint-placeholder-val="{{ false }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" style="flex-shrink:0;color:var(--mut)"><rect x="9" y="3" width="6" height="12" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg></sc-if>
+                  <span class="pv" style="color:{{r.pc}}" title="{{r.prev}}">{{r.prev}}</span>
+                  <sc-if value="{{r.hasUnread}}" hint-placeholder-val="{{ false }}"><span class="ub {{r.ub}}" aria-hidden="true">{{r.unread}}</span></sc-if>
+                </span>
+                <sc-if value="{{r.hasMeta}}" hint-placeholder-val="{{ false }}">
+                  <span style="display:flex;gap:6px;margin-top:3px;min-width:0">
+                    <span class="pill">
+                      <sc-if value="{{r.mAi}}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--ai)" stroke-width="2" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"></path></svg></sc-if>
+                      <sc-if value="{{r.mDot}}" hint-placeholder-val="{{ false }}"><span class="dot" style="background:{{r.mC}}"></span></sc-if>
+                      <sc-if value="{{r.mDone}}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--mut)" stroke-width="2" aria-hidden="true"><path d="m2 13 4 4 8-9M10 16l1 1 8-9"></path></svg></sc-if>
+                      {{r.mT}}
+                    </span>
+                  </span>
+                </sc-if>
+              </span>
+            </button>
+          </sc-for></div>
+    </section><section class="conv" aria-label="Conversación con Valentina Herrera">
+  <header class="chead">
+      
+      <a href="#" style="display:flex;align-items:center;gap:10px;min-width:0;text-decoration:none;border-radius:12px;padding:4px 6px 4px 0">
+        <span class="av" style="width:38px;height:38px">VH</span>
+        <span style="display:flex;flex-direction:column;min-width:0"><span style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Valentina Herrera</span><span style="font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">WhatsApp Ventas · +57 315 220 9031</span></span>
+      </a>
+      <span style="flex-grow:1"></span>
+      <span class="hpill"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--ai)" stroke-width="2" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"></path><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"></path></svg>Axi atiende</span>
+      <button type="button" class="btn btn-g" aria-label="Responsable: sin asignar" style="height:36px;padding:0 6px;gap:4px"><span class="av" style="width:26px;height:26px;background:transparent;border:1.5px dashed var(--line2);color:var(--mut)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg></span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></button><button type="button" class="btn btn-ink" style="height:36px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M18 11V6a2 2 0 0 0-4 0v5M14 10V4a2 2 0 0 0-4 0v6M10 10.5V6a2 2 0 0 0-4 0v8"></path><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.4l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15"></path></svg>Intervenir</button><button type="button" class="icb" aria-label="Más acciones"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="12" cy="19" r="1.6"></circle></svg></button>
+    </header>
+  <div class="thread"><div class="day"><span class="dayp">Hoy</span></div><div class="msg in last gap"><div class="b" style=""><div style="white-space:pre-wrap;overflow-wrap:anywhere">Hola, ¿tienen planes a San Andrés en diciembre?</div><div class="mt"><span style="font-variant-numeric:tabular-nums">9:31 a. m.</span></div></div></div><div class="who r"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--ai)" stroke-width="2" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"></path><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"></path></svg><span>Axi</span></div><div class="msg out last"><div class="b" style=""><div style="white-space:pre-wrap;overflow-wrap:anywhere">¡Hola, Valentina! Sí, tenemos tres planes para diciembre con vuelo y hotel. ¿Para cuántas personas y qué fechas?</div><div class="mt"><span style="font-variant-numeric:tabular-nums">9:31 a. m.</span><span title="Leído" aria-label="Leído"><svg width="15" height="13" viewBox="0 0 28 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m2 13 4 4 8-9M12 16l1 1 8-9"></path></svg></span></div></div></div><div class="msg in last gap"><div class="b" style=""><div style="white-space:pre-wrap;overflow-wrap:anywhere">Sí, somos dos adultos y un niño de 6 años</div><div class="mt"><span style="font-variant-numeric:tabular-nums">9:39 a. m.</span></div></div></div><div class="who r"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--ai)" stroke-width="2" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"></path><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"></path></svg><span>Axi</span></div><div class="msg out"><div class="b" style=""><div style="white-space:pre-wrap;overflow-wrap:anywhere">Perfecto. Para dos adultos y un niño, del 20 al 27 de diciembre, el plan Todo Incluido Sunrise queda en $ 7.940.000.</div></div></div><div class="msg out last"><div class="b" style=""><div style="white-space:pre-wrap;overflow-wrap:anywhere">¿Quieres que te envíe el detalle y las fotos del hotel?</div><div class="mt"><span style="font-variant-numeric:tabular-nums">9:39 a. m.</span><span title="Entregado" aria-label="Entregado"><svg width="15" height="13" viewBox="0 0 28 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m2 13 4 4 8-9M12 16l1 1 8-9"></path></svg></span></div></div></div></div>
+  <div class="comp"><div class="lock"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--ai)" stroke-width="2" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"></path><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"></path></svg><span style="flex:1;min-width:0">Axi está atendiendo. Si intervienes, Axi se pausa en esta conversación hasta que se la devuelvas.</span><button type="button" class="btn btn-ink" style="height:36px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M18 11V6a2 2 0 0 0-4 0v5M14 10V4a2 2 0 0 0-4 0v6M10 10.5V6a2 2 0 0 0-4 0v8"></path><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.4l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15"></path></svg>Intervenir</button></div></div>
+</section><aside class="ctx" aria-label="Contexto de la conversación">
+      <button type="button" class="icb" aria-label="Contacto"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg></button><button type="button" class="icb" aria-label="Adjuntos"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m21 11-8.5 8.5a5 5 0 0 1-7-7L14 4a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3L15 7"></path></svg></button><button type="button" class="icb" aria-label="Historial"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5M12 7v5l3 2"></path></svg></button><button type="button" class="icb" aria-label="Llamadas"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"></path></svg></button>
+    </aside></div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark === true;
+    const PEOPLE = {
+      mariana: { name: 'Mariana Restrepo Villegas', ini: 'MR', ch: 'wa', time: '9:28 a. m.', prev: 'Hola, ¿me pueden pasar con una persona? Es por el reembolso del viaje a Cartagena', unread: 3, kind: 'queued', wait: '14 min', prio: 'urgent' },
+      julian: { name: 'Julián Ortiz', ini: 'JO', ch: 'ig', time: '9:36 a. m.', prev: 'Foto', media: 'photo', unread: 1, kind: 'queued', wait: '6 min' },
+      hotel: { name: 'Hotel Boutique Casa del Mar · Reservas corporativas', ini: 'HC', ch: 'wa', time: '9:40 a. m.', prev: '¿Tienen disponibilidad para 40 personas del 12 al 15 de octubre? Necesitamos cotización con traslados', unread: 124, kind: 'queued', wait: '2 min', prio: 'high' },
+      laura: { name: 'Laura Gómez', ini: 'LG', ch: 'wa', time: '9:41 a. m.', prev: 'Perfecto, quedo atenta al link de pago', unread: 0, kind: 'mine' },
+      andres: { name: 'Andrés Felipe Cárdenas Montoya', ini: 'AC', ch: 'wa', time: '9:12 a. m.', prev: 'Nota de voz · 0:42', media: 'voice', unread: 1, kind: 'mine' },
+      valen: { name: 'Valentina Herrera', ini: 'VH', ch: 'wa', time: '9:39 a. m.', prev: 'Sí, somos dos adultos y un niño de 6 años', unread: 0, kind: 'ai' },
+      pedro: { name: 'Pedro Luis Arango', ini: 'PA', ch: 'ig', time: '9:33 a. m.', prev: '¿Cuánto cuesta el tour a Guatapé con almuerzo?', unread: 0, kind: 'ai' },
+      ricardo: { name: 'Ricardo Peña', ini: 'RP', ch: 'wa', time: '9:30 a. m.', prev: 'Listo, espero la cotización del grupo', unread: 0, kind: 'other', owner: 'Con Esteban' },
+      dani: { name: 'Daniela Mejía', ini: 'DM', ch: 'ms', time: '9:20 a. m.', prev: 'Me interesa el plan de San Andrés en noviembre', unread: 0, kind: 'ai' },
+      jp: { name: 'Juan Pablo Mesa', ini: 'JM', ch: 'wa', time: 'Ayer', prev: 'Muchas gracias por todo, nos vemos en el aeropuerto', unread: 0, kind: 'closed', done: 'Resuelta · ayer' }
+    };
+    const mkRow = (key, mixed, coral) => {
+      const p = PEOPLE[key];
+      const unread = p.kind === 'closed' ? 0 : p.unread;
+      let meta = null;
+      if (p.kind === 'queued') meta = { mDot: true, mC: 'var(--warn)', mT: 'En cola · ' + p.wait };
+      else if (p.kind === 'closed') meta = { mDone: true, mT: p.done };
+      else if (mixed && p.kind === 'ai') meta = { mAi: true, mT: 'Axi atiende' };
+      else if (mixed && p.kind === 'mine') meta = { mDot: true, mC: 'var(--fg)', mT: 'Contigo' };
+      else if (mixed && p.kind === 'other') meta = { mDot: true, mC: 'var(--mut)', mT: p.owner };
+      const prioT = p.prio === 'urgent' ? 'Prioridad urgente' : p.prio === 'high' ? 'Prioridad alta' : '';
+      return Object.assign({
+        name: p.name, ini: p.ini, time: p.time, prev: p.prev, unread: unread > 99 ? '99+' : String(unread),
+        hasUnread: unread > 0, ub: coral ? 'ub-coral' : 'ub-tinta', wa: p.ch === 'wa', ig: p.ch === 'ig', ms: p.ch === 'ms',
+        photo: p.media === 'photo', voice: p.media === 'voice',
+        prio: p.kind !== 'closed' && !!p.prio, prioC: p.prio === 'urgent' ? 'var(--bad)' : 'var(--warn)', prioT,
+        nw: unread > 0 ? 600 : 500, nc: p.kind === 'closed' ? 'var(--mut)' : 'var(--fg)',
+        tc: unread > 0 ? 'var(--fg)' : 'var(--mut)', tw: unread > 0 ? 600 : 400,
+        pc: unread > 0 ? 'var(--fg)' : 'var(--mut)',
+        avStyle: p.kind === 'closed' ? 'opacity:.7' : '',
+        hasMeta: meta !== null, mAi: false, mDot: false, mDone: false, mC: '', mT: '',
+        aria: [p.name, unread > 0 ? unread + ' sin leer' : '', prioT, meta ? meta.mT : '', p.time].filter(Boolean).join(', ')
+      }, meta || {});
+    };
+
+    const sel = (k, active) => Object.assign(mkRow(k, false, false), { sel: active ? "background:var(--chip);box-shadow:inset 0 0 0 1.5px var(--fg)" : '' });
+    return { themeCls: dark ? 'dk' : 'lt', rows: [sel('valen', true), sel('pedro', false), sel('dani', false)] };
+  }
+}
+</script>
+</body>
+</html>
