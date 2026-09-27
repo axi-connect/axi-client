@@ -26,11 +26,14 @@ export function conversationIdFromPath(pathname: string | null): string | null {
  * - La conversación abierta en la ruta, `/workspace/inbox/<id>` (auditoría
  *   IB1-H1: antes la URL no cambiaba, «Atrás» sacaba del inbox y no se podía
  *   compartir el enlace).
- *   - Abrir una conversación hace `history.pushState`, que Next 15 integra con el
- *     router, sin remontar la vista: el socket, la lista y el scroll siguen.
- *   - «Atrás» cierra la conversación.
+ *   - Abrir una conversación desde la bandeja hace `history.pushState`, que Next 15
+ *     integra con el router, sin remontar la vista: el socket, la lista y el scroll
+ *     siguen.
+ *   - Pasar de una conversación a otra REEMPLAZA la entrada, así que sobre la bandeja
+ *     hay siempre como mucho una.
+ *   - «Atrás» cierra la conversación y vuelve a la lista.
  *   - Cerrarla desde la app (la flecha del celular) vuelve atrás si la entrada la
- *     pusimos nosotros, para no apilar historial.
+ *     pusimos nosotros; si se entró por el enlace, reemplaza.
  *
  * Búsqueda, orden y filtros se quedan en el store: espejarlos a la URL sería un
  * segundo serializador.
@@ -86,15 +89,30 @@ export function InboxViewUrlSync() {
     const wanted = useInboxStore.getState().selectedId
     const current = conversationIdFromPath(window.location.pathname)
     if (wanted === current) return
-    if (wanted === null && pushedRef.current) {
-      pushedRef.current = false
-      window.history.back()
+    const query = window.location.search
+    if (wanted === null) {
+      // Cerrar: si la entrada de la conversación la pusimos nosotros, volver a ella
+      // es volver a la bandeja. Si se entró por el enlace, se reemplaza para no
+      // apilar historial.
+      if (pushedRef.current) {
+        pushedRef.current = false
+        window.history.back()
+      } else {
+        window.history.replaceState(null, "", `${BASE}${query}`)
+      }
       return
     }
-    const query = window.location.search
-    const target = wanted === null ? BASE : `${BASE}/${encodeURIComponent(wanted)}`
-    window.history.pushState(null, "", `${target}${query}`)
-    pushedRef.current = wanted !== null
+    const target = `${BASE}/${encodeURIComponent(wanted)}${query}`
+    if (current === null) {
+      // De la bandeja a una conversación: UNA entrada nueva.
+      window.history.pushState(null, "", target)
+      pushedRef.current = true
+    } else {
+      // De una conversación a otra: se reemplaza (auditoría IB2-H1). Sobre la bandeja
+      // hay siempre como mucho una entrada de conversación, así que «Atrás» y cerrar
+      // vuelven a la lista y no reabren la anterior.
+      window.history.replaceState(null, "", target)
+    }
   }, [selectedId])
 
   return null
