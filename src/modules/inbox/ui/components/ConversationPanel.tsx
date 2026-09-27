@@ -21,11 +21,9 @@ import { EventLineView } from "./timeline/EventLineView"
 import { buildTimeline } from "./timeline/build-timeline"
 import { businessDayLabel, businessTimeZone, dayKeyIn } from "./timeline/business-day"
 import { ConversationHeader } from "./header/ConversationHeader"
-import { HandoffReasonIsland, HandoffReasonLine } from "./header/HandoffReasonIsland"
 import { useHandoffActions } from "./header/use-handoff-actions"
 import { Composer } from "./composer/Composer"
 import { InboxDayPanel } from "./day/InboxDayPanel"
-import { sinceLabel } from "./day/since-label"
 
 /**
  * Panel de conversación. Sin conversación abierta cuenta el día («Tu día», F1).
@@ -73,14 +71,14 @@ function OpeningSkeleton({ className }: { className?: string }) {
 /**
  * La conversación abierta (Inbox premium F2):
  * - cabecera con quién la tiene;
- * - la isla «Por qué está aquí» mientras espera en cola, plegada a una línea
- *   una vez atendida;
+ * - en cola, «Atender» como isla en la cabecera (el motivo va en su `title` y
+ *   como línea del hilo);
  * - el hilo con mensajes y eventos de handoff intercalados, días en la zona del
  *   negocio y autores agrupados;
  * - el composer, o la barra que dice por qué todavía no se puede escribir.
  *
- * `useHandoffActions` se monta UNA vez aquí, para la cabecera, la isla y la
- * barra, y así un solo juego de modales.
+ * `useHandoffActions` se monta UNA vez aquí, para la cabecera y la barra del
+ * composer, y así un solo juego de modales.
  */
 function OpenConversation({
   conversation,
@@ -210,17 +208,10 @@ function OpenConversation({
   }
 
   const loaded = messagesState?.loaded === true
-  const queued = conversation.status === "open" && conversation.mode === "human_queued"
-  const attended = conversation.status === "open" && conversation.mode === "human_active"
 
   return (
     <div className={cn("min-h-0 flex-1 flex-col overflow-hidden bg-background", className)}>
-      <ConversationHeader conversation={conversation} handoff={handoff} meId={meId} now={now} />
-
-      {reason !== null && queued && (
-        <HandoffReasonIsland reason={reason} since={sinceLabel(reason.at, now)} handoff={handoff} />
-      )}
-      {reason !== null && attended && <HandoffReasonLine reason={reason} />}
+      <ConversationHeader conversation={conversation} handoff={handoff} meId={meId} now={now} reason={reason?.sentence ?? null} />
 
       <p className="sr-only" aria-live="polite">
         {announcement}

@@ -6,7 +6,9 @@ import type { ConversationDTO, ConversationEvent, UiMessage } from "@/modules/in
 jest.mock("../composer/Composer", () => ({
   Composer: ({ unlock }: { unlock: { label: string } | null }) => <div data-testid="composer">{unlock?.label ?? ""}</div>,
 }))
-jest.mock("../header/ConversationHeader", () => ({ ConversationHeader: () => <div data-testid="header" /> }))
+jest.mock("../header/ConversationHeader", () => ({
+  ConversationHeader: ({ reason }: { reason: string | null }) => <div data-testid="header">{reason ?? ""}</div>,
+}))
 jest.mock("@/modules/inbox/infrastructure/realtime/use-send-message", () => ({
   useSendMessage: () => ({ send: jest.fn(), retry: jest.fn() }),
 }))
@@ -103,7 +105,7 @@ describe("ConversationPanel — solo lectura y separadores de día", () => {
   })
 })
 
-describe("ConversationPanel — F2: por qué está aquí y los eventos en el hilo", () => {
+describe("ConversationPanel — F2: el motivo del handoff y los eventos en el hilo", () => {
   beforeEach(() => {
     getConversationEvents.mockReset()
     permissions = ["conversations:claim"]
@@ -112,7 +114,7 @@ describe("ConversationPanel — F2: por qué está aquí y los eventos en el hil
   const escalated = () =>
     event("e1", "escalated", todayAt(9, 28), { payload: { reason: "contact_requested_human" } })
 
-  it("en cola: la isla cuenta el motivo con Atender y Devolver a Axi; la barra del composer ofrece Atender", async () => {
+  it("en cola: sin isla sobre el hilo; el motivo va a la cabecera (su isla de Atender) y la barra ofrece Atender", async () => {
     getConversationEvents.mockResolvedValue({ data: [escalated()] })
     useInboxStore.setState({
       selectedId: "c1",
@@ -121,16 +123,14 @@ describe("ConversationPanel — F2: por qué está aquí y los eventos en el hil
       typingByConversation: {},
     })
     await renderPanel()
-    const island = screen.getByRole("region", { name: "Por qué está aquí" })
-    expect(island).toHaveTextContent("El cliente pidió hablar con una persona.")
-    expect(island).toHaveTextContent("Atender")
-    expect(island).toHaveTextContent("Devolver a Axi")
+    expect(screen.queryByRole("region", { name: "Por qué está aquí" })).not.toBeInTheDocument()
+    expect(screen.getByTestId("header")).toHaveTextContent("El cliente pidió hablar con una persona.")
     expect(screen.getByTestId("composer")).toHaveTextContent("Atender")
     // El evento va en el hilo, después del mensaje que lo causó.
     expect(screen.getByText(/Axi pasó la conversación al equipo: el cliente pidió hablar con una persona/)).toBeInTheDocument()
   })
 
-  it("sin permiso para atender: la isla explica y no ofrece botones", async () => {
+  it("sin permiso para atender: la barra no ofrece Atender (el motivo sigue en el hilo)", async () => {
     permissions = []
     getConversationEvents.mockResolvedValue({ data: [escalated()] })
     useInboxStore.setState({
@@ -140,12 +140,11 @@ describe("ConversationPanel — F2: por qué está aquí y los eventos en el hil
       typingByConversation: {},
     })
     await renderPanel()
-    const island = screen.getByRole("region", { name: "Por qué está aquí" })
-    expect(island).toHaveTextContent("La atiende quien tenga permiso de atender conversaciones.")
-    expect(island.querySelector("button")).toBeNull()
+    expect(screen.getByTestId("composer")).toHaveTextContent(/^$/)
+    expect(screen.getByText(/Axi pasó la conversación al equipo: el cliente pidió/)).toBeInTheDocument()
   })
 
-  it("atendida: el motivo se pliega a una línea; lo de Axi y lo tuyo llevan su autor", async () => {
+  it("atendida: sin isla ni línea plegada; lo de Axi y lo tuyo llevan su autor", async () => {
     getConversationEvents.mockResolvedValue({
       data: [event("e2", "claimed", todayAt(9, 43), { actor_type: "user", actor_user_id: "me" }), escalated()],
     })
@@ -165,7 +164,7 @@ describe("ConversationPanel — F2: por qué está aquí y los eventos en el hil
     })
     await renderPanel()
     expect(screen.queryByRole("region", { name: "Por qué está aquí" })).not.toBeInTheDocument()
-    expect(screen.getByTitle("Axi te la pasó · El cliente pidió hablar con una persona.")).toBeInTheDocument()
+    expect(screen.queryByTitle(/Axi te la pasó/)).not.toBeInTheDocument()
     expect(screen.getByText("Atendiste la conversación", { exact: false })).toBeInTheDocument()
     expect(screen.getByText("Axi")).toBeInTheDocument()
     expect(screen.getByText("Tú")).toBeInTheDocument()

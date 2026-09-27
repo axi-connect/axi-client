@@ -155,6 +155,16 @@ saliente va en tinta (`bg-foreground text-background`) y el coral queda para Env
 fijos en blanco de medios e interactivos pasan a `text-background` para leerse también sobre la tinta clara del tema
 oscuro.
 
+**Ajuste de la dueña después de aprobar, el 2026-09-26:** «prefiero que en la F2 no esté la isla… para atender a un
+cliente en el chat, estorba mucho; quiero que esa isla esté en el botón en la posición de antes y que aparezca con
+una animación cuando sea necesario atender».
+- Se retiran la isla «Por qué está aquí» sobre el hilo y su línea plegada.
+- En cola, la píldora y el botón de la cabecera pasan a ser UNA isla compacta, `ClaimIsland`: «Axi te la pasó · 14 min
+  · Atender», en cristal con brillo `ai`. Entra con `spring.snappy` y un destello violeta que se abre dos veces; con
+  `prefers-reduced-motion`, sin animación.
+- El motivo va en el `title` y en el nombre accesible de la isla, y como línea del hilo.
+- Lienzo actualizado (artboards 1, 6, 7 y 8).
+
 Lo que dejó la implementación (3fdcc879):
 - **Una sola instancia de `useHandoffActions`** en el panel, para la cabecera, la isla y la barra del composer: un
   único juego de modales. «Devolver a Axi» se ofrece también desde la cola, porque el servidor admite `return_to_ai`
@@ -174,7 +184,7 @@ Lo que dejó la implementación (3fdcc879):
 |---|---|
 | `domain/conversation-events.ts` (nuevo) | Puro, con test. `describeConversationEvent(event, users)` devuelve un texto legible por tipo y por payload real: `escalated.reason` (`contact_requested_human` → «El cliente pidió hablar con una persona», `tool`, `usage_limit`, `ai_failures`, `unproductive_tools`, `no_ai_runtime`, `operator_missing`), `claimed`, `taken_over` (incluido `via: business_app` → «Respondieron desde el celular»), `returned_to_ai` + la `note` de `note_added`, `closed`/`reopened`, `sla_breached` (`sla_seconds`) y `priority_changed`. `intent_detected` no se pinta en el hilo porque es ruido para el operador. `handoffReason(events)` devuelve el último escalamiento abierto |
 | Hilo (`ConversationPanel`) | Los eventos se intercalan con los mensajes como líneas del sistema: punto, texto y hora, centradas y sin burbuja. Una sola petición `events`, solo para el hilo activo (nunca por fila de la lista). Se invalida con los eventos WS de handoff que ya escucha `use-inbox-socket` y pagina junto con el prepend de mensajes. Separadores de día en píldora sólida pegajosa. «Escribiendo…» con tres puntos (movimiento reducido: estático). «Mensajes nuevos» sigue en cristal, porque flota |
-| `HandoffReasonIsland` (nuevo) | Arriba del hilo, en `human_queued` o recién escalada: `InkIsland glow="ai"` con «Axi te la pasó · hace 12 min», el motivo en una frase y, si hay, la nota. Acción `contrast` «Atender». Se pliega a una línea cuando el operador ya respondió |
+| ~~`HandoffReasonIsland` (nuevo)~~ Retirada por la dueña el 2026-09-26; «Atender» pasa a una isla compacta en la cabecera (`ClaimIsland`) | Arriba del hilo, en `human_queued` o recién escalada: `InkIsland glow="ai"` con «Axi te la pasó · hace 12 min», el motivo en una frase y, si hay, la nota. Acción `contrast` «Atender». Se pliega a una línea cuando el operador ya respondió |
 | `ConversationHeader` | Una fila con avatar, nombre truncado y «Canal · esperando X», la píldora de quién atiende («Axi atiende», «En cola · 12 min», «Contigo», «Con Laura») y a la derecha el responsable, la acción principal (Atender / Intervenir / Cerrar) en `contrast` y el menú ⋮. La etapa, el score y las etiquetas salen de la cabecera y se ven en el panel Contacto (F4); en móvil se accede con un toque en la identidad |
 | `MessageBubble` | Entrante sólida (`bg-muted`). Saliente según la decisión D1 (§4). Lo que escribió Axi lleva el kicker «Axi» con el icono violeta, y lo de una persona su nombre, o «Celular» si salió de la app del negocio. Estados de entrega con iconos de 14 px y `title`. El fallo en rojo semántico con «Reintentar» como botón de 24 px, no como enlace subrayado. Los mensajes seguidos del mismo autor se agrupan (hora solo en el último del grupo). Anchos máximos por `@container` y no por `%` fijo |
 | `ClosedConversationFooter` | Barra sólida con «Resuelta el 24 sep a las 3:10 p.m. · por Laura» (el actor del evento `closed`) |

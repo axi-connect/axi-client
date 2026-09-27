@@ -1,24 +1,110 @@
 {
   "v": 3,
-  "createdOnFiles": { "v": 1, "at": "2026-09-27T00:20:00Z" },
-  "title": "Inbox premium · F2 La conversación",
-  "launch": { "view": "canvas" },
-  "pages": [],
+  "attachments": {},
   "boards": {
-    "Main.dc.html": { "x": 0, "y": 0, "w": 1440, "h": 1000, "title": "1 · En cola — por qué llegó, desde cuándo y «Atender» (interactivo)", "is_interactive": true },
-    "Contigo.dc.html": { "x": 1520, "y": 0, "w": 1440, "h": 1000, "title": "2 · Contigo — quién escribió cada cosa, entregas, fallo y el celular" },
-    "AxiAtiende.dc.html": { "x": 3040, "y": 0, "w": 1440, "h": 1000, "title": "3 · Axi atiende — lo que dice Axi y «Intervenir»" },
-    "Burbuja.dc.html": { "x": 0, "y": 1420, "w": 1440, "h": 1000, "title": "4 · D1 · La burbuja que sale — coral, tinta o neutra" },
-    "Cerrada.dc.html": { "x": 1520, "y": 1420, "w": 1440, "h": 1000, "title": "5 · Cerrada — la nota para Axi y quién la cerró" },
-    "Movil.dc.html": { "x": 3040, "y": 1420, "w": 390, "h": 844, "title": "6 · Celular — en cola" },
-    "Oscuro.dc.html": { "x": 0, "y": 2840, "w": 1440, "h": 1000, "title": "7 · En cola — oscuro (interactivo)", "is_interactive": true },
-    "Estados.dc.html": { "x": 1520, "y": 2840, "w": 1440, "h": 1000, "title": "8 · Estados — abriendo, error, sin mensajes y sin permiso para atender" }
+    "AxiAtiende.dc.html": {
+      "h": 1000,
+      "title": "3 · Axi atiende — lo que dice Axi y «Intervenir»",
+      "w": 1440,
+      "x": 3040,
+      "y": 0
+    },
+    "Burbuja.dc.html": {
+      "h": 1000,
+      "title": "4 · D1 · La burbuja que sale — coral, tinta o neutra",
+      "w": 1440,
+      "x": 0,
+      "y": 1420
+    },
+    "Cerrada.dc.html": {
+      "h": 1000,
+      "title": "5 · Cerrada — la nota para Axi y quién la cerró",
+      "w": 1440,
+      "x": 1520,
+      "y": 1420
+    },
+    "Contigo.dc.html": {
+      "h": 1000,
+      "title": "2 · Contigo — quién escribió cada cosa, entregas, fallo y el celular",
+      "w": 1440,
+      "x": 1520,
+      "y": 0
+    },
+    "Estados.dc.html": {
+      "h": 1000,
+      "title": "8 · Estados — abriendo, error, sin mensajes y sin permiso para atender",
+      "w": 1440,
+      "x": 1520,
+      "y": 2840
+    },
+    "Main.dc.html": {
+      "h": 1000,
+      "is_interactive": true,
+      "title": "1 · En cola — «Atender» aparece en la cabecera como isla, con animación (interactivo)",
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "Movil.dc.html": {
+      "h": 844,
+      "title": "6 · Celular — en cola",
+      "w": 390,
+      "x": 3040,
+      "y": 1420
+    },
+    "Oscuro.dc.html": {
+      "h": 1000,
+      "is_interactive": true,
+      "title": "7 · En cola — oscuro (interactivo)",
+      "w": 1440,
+      "x": 0,
+      "y": 2840
+    }
   },
-  "order": ["Main.dc.html", "Contigo.dc.html", "AxiAtiende.dc.html", "Burbuja.dc.html", "Cerrada.dc.html", "Movil.dc.html", "Oscuro.dc.html", "Estados.dc.html"],
+  "createdOnFiles": {
+    "at": "2026-09-27T00:20:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
   "notes": {
-    "rowA": { "x": 0, "y": -300, "text": "Quién la tiene", "kind": "title1", "maxW": 4480 },
-    "rowB": { "x": 0, "y": 1120, "text": "La burbuja, el cierre y el celular", "kind": "title1", "maxW": 3430 },
-    "rowC": { "x": 0, "y": 2540, "text": "Oscuro y estados", "kind": "title1", "maxW": 2960 }
+    "rowA": {
+      "kind": "title1",
+      "maxW": 4480,
+      "text": "Quién la tiene",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "rowB": {
+      "kind": "title1",
+      "maxW": 3430,
+      "text": "La burbuja, el cierre y el celular",
+      "w": 240,
+      "x": 0,
+      "y": 1120
+    },
+    "rowC": {
+      "kind": "title1",
+      "maxW": 2960,
+      "text": "Oscuro y estados",
+      "w": 240,
+      "x": 0,
+      "y": 2540
+    }
   },
-  "designSystems": []
+  "order": [
+    "Main.dc.html",
+    "Contigo.dc.html",
+    "AxiAtiende.dc.html",
+    "Burbuja.dc.html",
+    "Cerrada.dc.html",
+    "Movil.dc.html",
+    "Oscuro.dc.html",
+    "Estados.dc.html"
+  ],
+  "pages": [],
+  "title": "Inbox premium · F2 La conversación"
 }

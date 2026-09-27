@@ -49,6 +49,12 @@ CSS = '''
 .isl-ai::before{background:conic-gradient(from -75deg at 50% 50%,rgba(11,11,14,.30) 0%,transparent 6% 40%,rgba(11,11,14,.30) 50%,transparent 56% 94%,rgba(11,11,14,.30) 100%),linear-gradient(rgba(255,255,255,.85),rgba(255,255,255,.85))}
 .isl-ai-dark::before{background:conic-gradient(from -75deg at 50% 50%,rgba(255,255,255,.7) 0%,transparent 6% 40%,rgba(255,255,255,.7) 50%,transparent 56% 94%,rgba(255,255,255,.7) 100%),linear-gradient(rgba(255,255,255,.12),rgba(255,255,255,.12))}
 .isl-ai-dark .btn-ink{background:#EDEDED;color:#0B0B0E}.isl-ai-dark .btn-glass{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.14)}
+.claim{display:inline-flex;align-items:center;gap:10px;border-radius:999px;overflow:visible;padding:4px 4px 4px 12px;flex-shrink:0;animation:claimIn .7s cubic-bezier(.2,.9,.3,1.25) both}
+.claim::after{content:"";position:absolute;inset:-3px;border-radius:inherit;pointer-events:none;box-shadow:0 0 0 0 rgba(124,58,237,.45);animation:claimGlow 1.8s ease-out .55s 2}
+.claim-t{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;white-space:nowrap}
+@keyframes claimIn{0%{opacity:0;transform:translateY(-8px) scale(.9)}60%{opacity:1;transform:translateY(0) scale(1.04)}100%{opacity:1;transform:none}}
+@keyframes claimGlow{0%{box-shadow:0 0 0 0 rgba(124,58,237,.45)}100%{box-shadow:0 0 0 12px rgba(124,58,237,0)}}
+@media (prefers-reduced-motion: reduce){.claim,.claim::after{animation:none}}
 .fold{display:flex;align-items:center;gap:8px;padding:8px 14px;margin:10px 18px 0;border-radius:14px;background:var(--card);border:1px solid var(--line);font-size:12.5px;color:var(--fg2)}
 .typing{display:inline-flex;gap:4px;align-items:center;padding:10px 14px;border-radius:18px;border-bottom-left-radius:6px;background:var(--card);border:1px solid var(--line)}
 .typing span{width:6px;height:6px;border-radius:9px;background:var(--mut);opacity:.6}
@@ -263,12 +269,16 @@ def mariana_conv(interactive=True, mobile=False, narrow_island=False):
         </div>
       </article>'''
     fold = f'''<div class="fold">{I['spark']}<span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Axi te la pasó: el cliente pidió hablar con una persona.</span><span style="font-size:11.5px;color:var(--mut);white-space:nowrap">9:28 a. m.</span></div>'''
-    pill_q = pill('queued', 'En cola · 14 min')
+    claim_isl = f'''<div class="isl {{{{islCls}}}} claim" role="group" aria-label="Axi te la pasó: el cliente pidió hablar con una persona" title="El cliente pidió hablar con una persona · espera desde las 9:28 a. m.">
+        <span class="claim-t">{I['spark']}<span>{'14 min' if mobile else 'Axi te la pasó · 14 min'}</span></span>
+        <button type="button" class="btn btn-ink" onClick="{{{{claim}}}}" style="height:{'36' if mobile else '32'}px;padding:0 14px">{I['hand']}Atender</button>
+      </div>'''
+    pill_q = ''
     pill_m = pill('mine', 'Contigo')
-    act_q = owner_btn() + f'<button type="button" class="btn btn-ink" onClick="{{{{claim}}}}" style="height:36px">{I["hand"]}Atender</button>' + more()
+    act_q = owner_btn() + claim_isl + more()
     act_m = owner_btn('OD') + f'<button type="button" class="btn btn-ink" style="height:36px">{I["check"]}Cerrar</button>' + more()
     if mobile:
-        act_q = f'<button type="button" class="btn btn-ink" onClick="{{{{claim}}}}" style="height:40px;padding:0 14px">{I["hand"]}Atender</button>' + more()
+        act_q = claim_isl + more()
         act_m = f'<button type="button" class="btn btn-ink" style="height:40px;padding:0 14px">{I["check"]}Cerrar</button>' + more()
         pill_q = ''
         pill_m = ''
@@ -278,8 +288,6 @@ def mariana_conv(interactive=True, mobile=False, narrow_island=False):
     return f'''<section class="conv" aria-label="Conversación con Mariana Restrepo Villegas">
       <sc-if value="{{{{queued}}}}" hint-placeholder-val="{{{{ true }}}}">{head('Mariana Restrepo Villegas','MR',sub_q,pill_q,act_q,mobile)}</sc-if>
       <sc-if value="{{{{mine}}}}" hint-placeholder-val="{{{{ false }}}}">{head('Mariana Restrepo Villegas','MR',sub_m,pill_m,act_m,mobile)}</sc-if>
-      <sc-if value="{{{{queued}}}}" hint-placeholder-val="{{{{ true }}}}">{island_q}</sc-if>
-      <sc-if value="{{{{mine}}}}" hint-placeholder-val="{{{{ false }}}}">{fold}</sc-if>
       <div class="thread" aria-live="polite">
         {MARIANA_THREAD}
         <sc-if value="{{{{mine}}}}" hint-placeholder-val="{{{{ false }}}}">{ev('<span class="dot" style="background:var(--fg)"></span>','Atendiste la conversación','9:43 a. m.')}</sc-if>
@@ -469,7 +477,7 @@ est_body = f'''<div class="{{{{themeCls}}}} bub-tinta" style="width:1440px;heigh
     {stcell('Abriendo · la silueta del hilo, no «Tu día» parpadeando', mini_head('<span class="sk" style="width:150px;height:13px"></span>', None, '<span class="sk" style="width:96px;height:10px"></span>', '') + '<div style="padding:18px 22px;display:flex;flex-direction:column;gap:12px" role="status" aria-label="Abriendo la conversación"><span class="sk" style="width:58%;height:42px;border-radius:18px"></span><span class="sk" style="width:46%;height:56px;border-radius:18px;align-self:flex-end"></span><span class="sk" style="width:38%;height:42px;border-radius:18px"></span><span class="sk" style="width:52%;height:42px;border-radius:18px;align-self:flex-end"></span></div>')}
     {stcell('Error al leer el hilo', mini_head('<span style="font-size:14px;font-weight:600">Pedro Luis Arango</span>', 'PA', '<span style="font-size:12px;color:var(--mut)">Instagram</span>', pill('ai','Axi atiende')) + empty('No pudimos leer la conversación', 'Se perdió la conexión con el servidor. Lo que ya se envió está a salvo.', '<button type="button" class="btn" style="margin-top:4px">Reintentar</button>', warnic))}
     {stcell('Sin mensajes todavía', mini_head('<span style="font-size:14px;font-weight:600">Teo Salazar</span>', 'TS', '<span style="font-size:12px;color:var(--mut)">WhatsApp Ventas</span>', pill('ai','Axi atiende')) + empty('Aún no hay mensajes', 'Cuando Teo escriba, Axi le responde y lo verás aquí.', '', chat))}
-    {stcell('En cola, sin permiso para atender · la isla explica y no ofrece el botón', mini_head('<span style="font-size:14px;font-weight:600">Julián Ortiz</span>', 'JO', '<span style="font-size:12px;color:var(--mut)">Instagram · esperando hace 6 min</span>', pill('queued','En cola · 6 min')) + noperm_island + '<div class="thread" style="padding-top:8px">' + day('Hoy') + msg('in', 'Hola, ¿siguen con la promo de Medellín?', '9:36 a. m.', gap=True) + '</div>')}
+    {stcell('En cola, sin permiso para atender · la cabecera no ofrece «Atender»; el motivo está en el hilo', mini_head('<span style="font-size:14px;font-weight:600">Julián Ortiz</span>', 'JO', '<span style="font-size:12px;color:var(--mut)">Instagram · esperando hace 6 min</span>', pill('queued','En cola · 6 min')) + ev(I['spark'], 'Axi pasó la conversación al equipo: no pudo responder varias veces seguidas', '9:36 a. m.') + '<div class="thread" style="padding-top:8px">' + day('Hoy') + msg('in', 'Hola, ¿siguen con la promo de Medellín?', '9:36 a. m.', gap=True) + '</div>')}
   </div>
 </div>'''
 est_js = '''  renderVals() {

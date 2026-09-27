@@ -11,6 +11,7 @@ import { ContactOwnerSelect } from "@/modules/crm/public"
 import { STATUS_LABELS, waitingSince, type ConversationDTO } from "@/modules/inbox/domain/inbox"
 import { useInboxStore } from "@/modules/inbox/infrastructure/stores/inbox.store"
 import { useConversationContact } from "@/modules/inbox/infrastructure/stores/contact-context.context"
+import { ClaimIsland } from "./ClaimIsland"
 import { HeaderOverflowMenu } from "./HeaderOverflowMenu"
 import type { HandoffActionsState } from "./use-handoff-actions"
 
@@ -19,7 +20,11 @@ import type { HandoffActionsState } from "./use-handoff-actions"
  * - a la izquierda, la identidad (el único elemento navegable: abre el panel
  *   Contacto) con «canal · teléfono · esperando X»;
  * - a la derecha, la píldora de QUIÉN LA TIENE, el responsable, la acción
- *   principal en `contrast` (Atender, Intervenir o Cerrar) y el menú ⋮.
+ *   principal en `contrast` (Intervenir o Cerrar) y el menú ⋮.
+ *
+ * En cola, la píldora y el botón se vuelven UNA isla, `ClaimIsland`: «Axi te la
+ * pasó · 14 min · Atender», que entra con animación cuando hace falta atender.
+ * La isla grande sobre el hilo se retiró a pedido de la dueña porque estorbaba.
  *
  * Etapa, score y etiquetas ya no compiten aquí: viven en el panel Contacto del
  * rail (F4). La altura no cambia entre modos ni sin permiso de handoff; solo
@@ -73,9 +78,12 @@ export function ConversationHeader({
   handoff,
   meId,
   now,
+  reason = null,
 }: {
   conversation: ConversationDTO
   handoff: HandoffActionsState
+  /** Por qué Axi la pasó, en una frase (del último `escalated`): va en la isla de Atender. */
+  reason?: string | null
   meId: string | null
   /** El tick de un minuto del panel: «En cola · 14 min» avanza solo. */
   now: number
@@ -89,6 +97,7 @@ export function ConversationHeader({
   const since = waitingSince(conversation)
   const waiting = since !== null ? relativeTime(since, new Date(now)) : null
   const holder = conversationHolder(conversation, meId, now)
+  const claim = primary?.id === "claim" ? primary : null
 
   return (
     <div className="flex h-16 shrink-0 items-center gap-2 border-b border-border bg-background px-3 sm:px-4">
@@ -123,7 +132,7 @@ export function ConversationHeader({
         </div>
       </Link>
 
-      <HolderPill kind={holder.kind} text={holder.text} className="hidden sm:inline-flex" />
+      {claim === null && <HolderPill kind={holder.kind} text={holder.text} className="hidden sm:inline-flex" />}
 
       <div className="flex shrink-0 items-center gap-1">
         <ContactOwnerSelect
@@ -137,7 +146,14 @@ export function ConversationHeader({
           labelClassName="hidden xl:inline-flex"
         />
 
-        {primary !== null && (
+        {claim !== null ? (
+          <ClaimIsland
+            action={claim}
+            reason={reason}
+            since={conversation.queued_at === null ? null : elapsedShort(conversation.queued_at, now)}
+            busy={busy}
+          />
+        ) : primary !== null && (
           <Button variant="contrast" className="h-9 px-3.5" disabled={busy} onClick={primary.onSelect}>
             <primary.icon className="size-4" aria-hidden />
             {primary.label}
