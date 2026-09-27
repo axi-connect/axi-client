@@ -23,7 +23,8 @@ import type { ContextPanelDef } from "./registry";
  * - `< md` → pantalla completa, con las pestañas de los paneles arriba (el riel
  *   no existe a ese ancho; se entra desde la cabecera del chat).
  *
- * Profundidad: velo y panel en `z-40`, el riel en `z-50`; los menús, selects,
+ * Profundidad: velo y panel en `z-40` DENTRO del área del inbox (nunca sobre
+ * la barra de la app ni la navegación), el riel en `z-50`; los menús, selects,
  * popovers y tooltips del panel van por portal en `z-50`/`z-[70]` y quedan
  * por encima. Los paneles del inbox son SÓLIDOS, nunca glass (DESIGN-SYSTEM §5.2).
  */
@@ -64,7 +65,10 @@ export function ContextPanel({
   };
 
   return (
-    <div className="fixed inset-0 z-40 flex justify-end md:right-12 min-[100rem]:static min-[100rem]:z-auto min-[100rem]:min-h-0">
+    // `absolute`, no `fixed`: el velo y el panel cubren SOLO el área del inbox
+    // (InboxView es `relative`). Con `fixed` tapaban la barra superior de la app
+    // —campana y tema— a 1440 px (render F4).
+    <div className="absolute inset-0 z-40 flex justify-end md:right-12 min-[100rem]:static min-[100rem]:z-auto min-[100rem]:min-h-0">
       {/* Velo solo cuando el panel flota; en ≥ 1600 px convive con el chat */}
       <button
         type="button"

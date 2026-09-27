@@ -342,6 +342,24 @@ certificación.
 - **Sin cambios de contrato.** Todo sale de lecturas que ya existen: contexto del contacto, el hilo, el timeline, las
   llamadas por contacto y los pedidos por contacto.
 
+#### F4 · Aprobado e implementado (2026-09-27)
+
+- **Aprobación:** la dueña aprobó F4 con D6 = (a) flota y D5 = sí.
+- **Lo que pidió cuidar:**
+  - que el texto no desborde;
+  - la profundidad de los paneles;
+  - que modales, iconos, pestañas y menús se rendericen bien.
+- **Render medido:** `qa/premium/inbox-f4-render.mjs` + `inbox-f4-seed.py`. 8 escenas × 390/768/1280/1440/1536/1680 × claro/oscuro.
+- **Ronda 1, hallazgos:**
+  - el panel flotante (`fixed`) tapaba la barra superior de la app (campana y tema) a 1440. Ahora es `absolute`
+    dentro de `InboxView` (`relative`) y nunca sale del área del inbox;
+  - objetivos de 14 px («Copiar teléfono», en el `FieldList` compartido) y de 17 px («Añadir al formulario»). Pasan a
+    24 px con margen negativo, así que la fila no se mueve;
+  - el ⋮ de la cabecera se teñía de coral al abrirse; pasa a `bg-muted`.
+- **Ronda 2:** 96/96 limpias. El chat nunca bajó de 400 px desde md (a 1680, en línea, 476 px). Los menús de la cabecera
+  quedan encima del panel en línea y el tooltip del riel encima del panel flotante.
+- **Umbral en línea:** `min-[100rem]` (1600 px), no 2xl. A 1536 con la bandeja desplegada el chat quedaría en 340 px.
+
 ## 4. Decisiones que se muestran en el lienzo para que decida la dueña
 
 - **D1 · Burbuja saliente.** Hoy la burbuja saliente es coral sólida: es la mayor mancha de coral del producto y el
