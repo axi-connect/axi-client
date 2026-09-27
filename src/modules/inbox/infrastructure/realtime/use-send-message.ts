@@ -3,7 +3,9 @@
 import { useCallback } from "react"
 import { errorMessage } from "@/core/lib/error-messages"
 import { useAlert } from "@/core/providers/alert-provider"
+import { HttpError } from "@/core/api/problem"
 import { useInboxStore } from "@/modules/inbox/infrastructure/stores/inbox.store"
+import { isWindowRejection, useWindowRejections } from "@/modules/inbox/infrastructure/hooks/use-reply-window"
 import { sendMessageRest } from "@/modules/inbox/infrastructure/services/inbox-service.adapter"
 import type { InboxCommands } from "@/modules/inbox/infrastructure/realtime/use-inbox-socket"
 import type {
@@ -19,6 +21,22 @@ import type {
  * F9: media por `upload_id` (el archivo YA está subido cuando se envía) —
  * el retry reutiliza `local_payload` sin re-subir.
  */
+const WINDOW_CLOSED_TITLE = "La ventana de 24 h está cerrada: el mensaje no salió"
+
+/**
+ * El servidor manda sobre la ventana (F3): un rechazo por ventana la cierra en
+ * el composer con el `last_inbound_at` que tenía la conversación. Devuelve si
+ * lo era, para que el aviso diga eso y no el mensaje genérico.
+ */
+export function noteWindowRejection(conversationId: string, code: string | undefined | null): boolean {
+  if (!isWindowRejection(code)) return false
+  const state = useInboxStore.getState()
+  const conversation =
+    state.selected?.id === conversationId ? state.selected : state.conversations.find((c) => c.id === conversationId)
+  useWindowRejections.getState().reject(conversationId, conversation?.last_inbound_at ?? null)
+  return true
+}
+
 function toDto(input: SendInput): SendMessageDTO {
   if (input.kind === "text") return { type: "text", body: input.body }
   return { type: "media", upload_id: input.upload_id, caption: input.caption }
@@ -51,7 +69,8 @@ export function useSendMessage(conversationId: string, commands: InboxCommands, 
             reconcileSent(conversationId, localId, ack.data as UiMessage)
           } else {
             markSendFailed(conversationId, localId)
-            showAlert({ tone: "error", title: ack.error.message || "No se pudo enviar el mensaje" })
+            const closed = noteWindowRejection(conversationId, ack.error.code)
+            showAlert({ tone: "error", title: closed ? WINDOW_CLOSED_TITLE : ack.error.message || "No se pudo enviar el mensaje" })
           }
         } else {
           // Fallback REST: 202; la confirmación llega al reconectar el WS.
@@ -60,7 +79,8 @@ export function useSendMessage(conversationId: string, commands: InboxCommands, 
         }
       } catch (err) {
         markSendFailed(conversationId, localId)
-        showAlert({ tone: "error", title: errorMessage(err, "No se pudo enviar el mensaje") })
+        const closed = noteWindowRejection(conversationId, err instanceof HttpError ? err.code : null)
+        showAlert({ tone: "error", title: closed ? WINDOW_CLOSED_TITLE : errorMessage(err, "No se pudo enviar el mensaje") })
       }
     },
     [conversationId, commands, socketConnected, sendOptimistic, reconcileSent, markSendFailed, showAlert],

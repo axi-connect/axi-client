@@ -120,11 +120,13 @@ export function AudioPlayerCore({
   }
 
   const knownDuration = Number.isFinite(duration) && duration > 0
-  const tone = outbound ? "text-white" : "text-foreground"
-  const subtle = outbound ? "text-white/70" : "text-muted-foreground"
+  const progress = knownDuration ? Math.min(100, (currentTime / duration) * 100) : 0
+  // Tokens y no blanco fijo: la burbuja saliente es tinta (F2 D1) y en oscuro
+  // la tinta es clara; con `text-white` el reproductor desaparecía.
+  const tone = outbound ? "text-background" : "text-foreground"
 
   return (
-    <div className={cn("flex w-56 max-w-full items-center gap-2", tone, className)} role="group" aria-label="Audio">
+    <div className={cn("flex w-60 max-w-full items-center gap-2.5", tone, className)} role="group" aria-label="Audio">
       {src && (
         <audio
           ref={audioRef}
@@ -160,8 +162,9 @@ export function AudioPlayerCore({
         onClick={togglePlay}
         disabled={error}
         className={cn(
-          "flex size-9 shrink-0 items-center justify-center rounded-full transition-colors",
-          outbound ? "bg-white/20 hover:bg-white/30" : "bg-foreground/10 hover:bg-foreground/15",
+          "flex size-9 shrink-0 items-center justify-center rounded-full transition-opacity hover:opacity-90",
+          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+          outbound ? "bg-background text-foreground" : "bg-foreground text-background",
           error && "opacity-50",
         )}
         aria-label={playing ? "Pausar audio" : "Reproducir audio"}
@@ -175,6 +178,17 @@ export function AudioPlayerCore({
         )}
       </button>
       <div className="min-w-0 flex-1">
+        {/* Pista propia (4 px, continua) con el range nativo encima, transparente:
+            el teclado y el lector siguen teniendo el control real. */}
+        <div className="relative flex h-4 items-center rounded-full outline-offset-2 outline-ring has-[input:focus-visible]:outline-2">
+          <div aria-hidden className={cn("h-1 w-full overflow-hidden rounded-full", outbound ? "bg-background/25" : "bg-foreground/12")}>
+            <div className="h-full rounded-full bg-current" style={{ width: `${String(progress)}%` }} />
+          </div>
+          <span
+            aria-hidden
+            className="pointer-events-none absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-current"
+            style={{ left: `${String(progress)}%` }}
+          />
         <input
           type="range"
           min={0}
@@ -183,19 +197,19 @@ export function AudioPlayerCore({
           value={currentTime}
           disabled={!src || !knownDuration}
           onChange={(e) => handleSeek(Number(e.target.value))}
-          className="h-1 w-full cursor-pointer disabled:cursor-default"
-          style={{ accentColor: "currentColor" }}
+          className="absolute inset-0 h-4 w-full cursor-pointer opacity-0 disabled:cursor-default"
           aria-label="Posición del audio"
           aria-valuetext={`${formatDuration(currentTime)} de ${formatDuration(duration)}`}
         />
-        <div className={cn("mt-0.5 flex items-center justify-between text-[10px]", subtle)}>
-          <span>
+        </div>
+        <div className="mt-1 flex items-center justify-between text-[11px] opacity-75">
+          <span className="tabular-nums">
             {formatDuration(currentTime)}
             {knownDuration ? ` / ${formatDuration(duration)}` : ""}
           </span>
           <button
             onClick={() => setRateIndex((index) => (index + 1) % PLAYBACK_RATES.length)}
-            className="rounded px-1 font-medium hover:underline"
+            className="rounded-full bg-current/10 px-2 py-0.5 font-semibold tabular-nums hover:bg-current/15"
             aria-label={`Velocidad de reproducción ${PLAYBACK_RATES[rateIndex]}x`}
           >
             {PLAYBACK_RATES[rateIndex]}x
