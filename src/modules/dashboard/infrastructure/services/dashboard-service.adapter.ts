@@ -1,4 +1,5 @@
 import { http } from "@/core/services/http";
+import { getInboxStats } from "@/modules/inbox/public";
 import type {
   ChannelListDTO,
   ContactStatsDTO,
@@ -26,9 +27,13 @@ export function getInboxCounts(): Promise<InboxCountsDTO> {
   return http.get<InboxCountsDTO>("/inbox/counts");
 }
 
-/** Flujo de conversaciones: nuevas/resueltas + serie + reparto IA/humano. */
+/**
+ * Flujo de conversaciones: nuevas/resueltas + serie + reparto IA/humano. El
+ * endpoint es del inbox y su adaptador vive allí (auditoría IB-1); aquí solo se
+ * reexpone con el nombre que usa el store del Panel.
+ */
 export function getConversationStats(period: DashboardPeriod): Promise<ConversationStatsDTO> {
-  return http.get<ConversationStatsDTO>("/inbox/stats", { period });
+  return getInboxStats(period);
 }
 
 /** Clientes nuevos por período + reparto por etapa + serie. */

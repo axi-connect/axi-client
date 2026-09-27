@@ -21,8 +21,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/components/ui/
 import { CHANNEL_STATUS_LABELS, ChannelKindIcon, type ChannelDTO } from "@/modules/channels/public"
 import { channelStatusDotClass } from "@/modules/channels/ui/components/ChannelStatusBadge"
 import { useChannelStore } from "@/modules/channels/infrastructure/stores/channels.store"
-import { useInboxStore } from "@/modules/inbox/infrastructure/stores/inbox.store"
-import { INBOX_VIEW_LABELS, type InboxCounts, type InboxView } from "@/modules/inbox/domain/inbox"
+import { INBOX_VIEW_LABELS, useInboxStore, type InboxCounts, type InboxView } from "@/modules/inbox/public"
 import { useRailMode, type RailMode } from "./use-rail-mode"
 
 /**
