@@ -22,8 +22,8 @@ export function AudioTranscription({
   pending: boolean
   outbound: boolean
 }) {
-  const label = outbound ? "text-white/70" : "text-muted-foreground"
-  const divider = outbound ? "border-white/15" : "border-border/60"
+  const label = outbound ? "text-background/70" : "text-muted-foreground"
+  const divider = outbound ? "border-background/15" : "border-border/60"
 
   if (transcription?.status === "done" && transcription.text) {
     return (
@@ -35,7 +35,7 @@ export function AudioTranscription({
         <p
           className={cn(
             "whitespace-pre-wrap break-words text-sm",
-            outbound ? "text-white/90" : "text-foreground",
+            outbound ? "text-background/90" : "text-foreground",
           )}
         >
           {transcription.text}

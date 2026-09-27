@@ -202,8 +202,9 @@ export function useInboxSocket() {
   useSocketEvent(socket, "conversation.taken_over", (p) => store.getState().onHandoffEvent(p))
   useSocketEvent(socket, "conversation.returned_to_ai", (p) => store.getState().onHandoffEvent(p))
   useSocketEvent(socket, "conversation.status_changed", (p) => store.getState().onHandoffEvent(p))
-  useSocketEvent(socket, "conversation.sla_breached", () => {
+  useSocketEvent(socket, "conversation.sla_breached", (p) => {
     store.getState().fetchCounts()
+    store.getState().bumpEvents(p.conversation_id)
   })
 
   // --- Contexto del contacto (rail) ----------------------------------------

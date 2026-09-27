@@ -50,22 +50,22 @@ export function DocumentCard({
     <div
       className={cn(
         "flex w-60 max-w-full items-center gap-2.5 rounded-lg px-2.5 py-2",
-        outbound ? "bg-white/10" : "bg-background/60",
+        outbound ? "bg-background/10" : "bg-background/60",
       )}
     >
       <div
         className={cn(
           "flex size-10 shrink-0 items-center justify-center rounded-lg",
-          outbound ? "bg-white/15 text-white" : "bg-muted text-muted-foreground",
+          outbound ? "bg-background/15 text-background" : "bg-muted text-muted-foreground",
         )}
       >
         <Icon className="size-5" aria-hidden />
       </div>
       <div className="min-w-0 flex-1">
-        <p className={cn("truncate text-xs font-medium", outbound ? "text-white" : "text-foreground")}>
+        <p className={cn("truncate text-xs font-medium", outbound ? "text-background" : "text-foreground")}>
           {displayName}
         </p>
-        <p className={cn("text-[10px]", outbound ? "text-white/70" : "text-muted-foreground")}>
+        <p className={cn("text-[10px]", outbound ? "text-background/70" : "text-muted-foreground")}>
           {extensionLabel(displayName, attachment.mime_type)} ·{" "}
           {formatBytes(attachment.size_bytes)}
         </p>
@@ -75,7 +75,7 @@ export function DocumentCard({
         disabled={downloading}
         className={cn(
           "flex size-8 shrink-0 items-center justify-center rounded-full transition-colors",
-          outbound ? "text-white hover:bg-white/15" : "text-muted-foreground hover:bg-muted",
+          outbound ? "text-background hover:bg-background/15" : "text-muted-foreground hover:bg-muted",
         )}
         aria-label={`Descargar ${displayName}`}
       >

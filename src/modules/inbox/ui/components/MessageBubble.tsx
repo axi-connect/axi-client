@@ -2,7 +2,7 @@
 
 import { cn } from "@/core/lib/utils"
 import { MessageTime } from "./timeline/MessageTime"
-import { AlertCircle, Bot, Check, CheckCheck, Clock, RotateCw, Smartphone, User } from "lucide-react"
+import { AlertCircle, Check, CheckCheck, Clock, RotateCw, Smartphone, Sparkles } from "lucide-react"
 import {
   extractInteractivePayload,
   extractInteractiveReply,
@@ -23,13 +23,15 @@ import { MediaAttachment } from "./media"
 function StatusIcon({ message }: { message: UiMessage }) {
   if (message.direction !== "outbound") return null
   if (message.delivery === "failed" || message.status === "failed") {
-    return <AlertCircle className="size-3.5 text-destructive" aria-label="Falló el envío" />
+    return <AlertCircle className="size-3.5" aria-label="Falló el envío" />
   }
   if (message.delivery === "pending" || message.status === "queued") {
     return <Clock className="size-3.5 opacity-60" aria-label="Enviando" />
   }
   if (message.status === "read" || message.status === "delivered") {
-    return <CheckCheck className={cn("size-3.5", message.status === "read" ? "text-info" : "opacity-60")} aria-label={message.status === "read" ? "Leído" : "Entregado"} />
+    // Leído a opacidad plena y entregado atenuado: sin azul, que sobre la tinta no
+    // se lee y además es best-effort (el backend no emite `message_status`).
+    return <CheckCheck className={cn("size-3.5", message.status === "read" ? "opacity-100" : "opacity-60")} aria-label={message.status === "read" ? "Leído" : "Entregado"} />
   }
   return <Check className="size-3.5 opacity-60" aria-label="Enviado" />
 }
@@ -38,10 +40,19 @@ export function MessageBubble({
   message,
   conversationId,
   onRetry,
+  first = true,
+  last = true,
+  author = null,
 }: {
   message: UiMessage
   conversationId: string
   onRetry?: (message: UiMessage) => void
+  /** Primero de un grupo del mismo autor: lleva el autor arriba (F2). */
+  first?: boolean
+  /** Último del grupo: lleva la hora, el estado y la esquina de la cola. */
+  last?: boolean
+  /** «Axi», «Tú», «Desde el celular del negocio»…; `null` no pinta autor. */
+  author?: string | null
 }) {
   const outbound = message.direction === "outbound"
   const system = message.sender_type === "system" || message.content_type === "system"
@@ -68,21 +79,32 @@ export function MessageBubble({
   const footerTone = sticker
     ? "text-muted-foreground"
     : outbound
-      ? "text-white/70"
+      ? "text-background/75"
       : "text-muted-foreground"
+  const fromApp = message.sender_type === "user" && sentFromBusinessApp(message.payload)
 
   return (
-    <div className={cn("flex", outbound ? "justify-end" : "justify-start")}>
+    <div className={cn("flex flex-col", outbound ? "items-end" : "items-start")}>
+      {first && author !== null && (
+        <p className="mb-1 flex items-center gap-1.5 px-1.5 text-[11px] text-muted-foreground">
+          {message.sender_type === "ai_agent" && <Sparkles aria-hidden className="size-3 text-accent-violet" />}
+          {author}
+        </p>
+      )}
       <div
         className={cn(
-          "max-w-[75%] rounded-2xl text-sm",
+          // Ancho por el hilo, con tope: en un chat ancho una línea de 75 % no se lee.
+          "max-w-[min(75%,34rem)] rounded-2xl text-sm",
+          // D1 (aprobada en el lienzo de F2): lo que sale va en TINTA; el coral queda
+          // para las acciones (Enviar, Atender, Intervenir).
           sticker
             ? "bg-transparent"
             : outbound
-              ? "rounded-br-sm bg-brand text-white"
-              : "rounded-bl-sm bg-muted text-foreground",
+              ? "bg-foreground text-background"
+              : "border border-border bg-card text-foreground",
+          last && !sticker && (outbound ? "rounded-br-md" : "rounded-bl-md"),
           media && edgeToEdge && !sticker ? "p-1" : sticker ? "p-0" : "px-3 py-2",
-          failed && "opacity-70 ring-1 ring-destructive",
+          failed && "opacity-80 ring-[1.5px] ring-destructive",
         )}
       >
         {media ? (
@@ -93,7 +115,7 @@ export function MessageBubble({
           // Sin rama propia, un content_type nuevo se pinta con su nombre
           // crudo: es feo pero honesto, y es lo que delata que falta soporte
           message.content_type !== "text" && !interactive && (
-            <div className={cn("mb-1 text-[10px] uppercase tracking-wide", outbound ? "text-white/70" : "text-muted-foreground")}>
+            <div className={cn("mb-1 text-[10px] uppercase tracking-wide", outbound ? "text-background/70" : "text-muted-foreground")}>
               {message.content_type}
             </div>
           )
@@ -104,37 +126,42 @@ export function MessageBubble({
           </p>
         )}
         {interactive && <InteractiveMessage interactive={interactive} outbound={outbound} />}
-        <div
-          className={cn(
-            "mt-1 flex items-center justify-end gap-1 text-[10px]",
-            footerTone,
-            media && edgeToEdge && !sticker && "px-2 pb-1",
-          )}
-        >
-          {message.sender_type === "ai_agent" && <Bot className="size-3" aria-label="Enviado por IA" />}
-          {message.sender_type === "user" &&
-            (sentFromBusinessApp(message.payload) ? (
-              // Coexistencia (F2): salió del celular del negocio, no de Axi
+        {last && (
+          <div
+            className={cn(
+              "mt-1 flex items-center justify-end gap-1 text-[10.5px]",
+              footerTone,
+              media && edgeToEdge && !sticker && "px-2 pb-1",
+            )}
+          >
+            {fromApp && (
+              // Coexistencia (F2 de WhatsApp): salió del celular del negocio, no de Axi
               <span className="inline-flex items-center gap-0.5" title="Enviado desde el celular">
                 <Smartphone className="size-3" aria-label="Enviado desde el celular" />
                 <span className="font-medium">Celular</span>
               </span>
-            ) : (
-              <User className="size-3" aria-label="Enviado por operador" />
-            ))}
-          <MessageTime iso={message.created_at} />
-          <StatusIcon message={message} />
-          {failed && onRetry && (
+            )}
+            <MessageTime iso={message.created_at} />
+            <StatusIcon message={message} />
+          </div>
+        )}
+      </div>
+      {failed && (
+        <div className="mt-1.5 flex items-center gap-2 text-xs text-destructive" role="status">
+          <AlertCircle aria-hidden className="size-3.5" />
+          <span>No se envió</span>
+          {onRetry && (
             <button
+              type="button"
               onClick={() => onRetry(message)}
-              className="ml-1 inline-flex items-center gap-0.5 underline"
               aria-label="Reintentar envío"
+              className="inline-flex h-7 items-center gap-1 rounded-full border border-destructive/35 bg-card px-2.5 font-medium transition-colors hover:bg-destructive/10 focus-visible:ring-[3px] focus-visible:ring-destructive/40 focus-visible:outline-none"
             >
-              <RotateCw className="size-3" /> Reintentar
+              <RotateCw aria-hidden className="size-3" /> Reintentar
             </button>
           )}
         </div>
-      </div>
+      )}
     </div>
   )
 }

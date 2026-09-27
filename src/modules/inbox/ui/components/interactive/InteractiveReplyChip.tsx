@@ -22,7 +22,7 @@ export function InteractiveReplyChip({
     <div
       className={cn(
         "mb-1 flex items-center gap-1 text-[10px] uppercase tracking-wide",
-        outbound ? "text-white/70" : "text-muted-foreground",
+        outbound ? "text-background/70" : "text-muted-foreground",
       )}
     >
       <CornerDownRight className="size-3 shrink-0" aria-hidden />

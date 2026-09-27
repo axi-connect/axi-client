@@ -210,6 +210,13 @@ type InboxStore = {
    */
   contextVersion: Record<string, number>
   bumpContactContext: (contactId: string) => void
+  /**
+   * Sube cuando el socket avisa un cambio de handoff (o un SLA vencido) de una
+   * conversación: el hilo relee sus eventos. Los que no tienen evento WS
+   * (`note_added`, `priority_changed`) se releen con el tick de la vista.
+   */
+  eventsVersion: Record<string, number>
+  bumpEvents: (conversationId: string) => void
 
   // Reducers de eventos WS
   onHandoffEvent: (event: ConversationHandoffEvent) => void
@@ -270,6 +277,7 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
   messagesById: {},
   typingByConversation: {},
   contextVersion: {},
+  eventsVersion: {},
 
   bumpContactContext: (contactId) =>
     set((state) => ({
@@ -900,6 +908,11 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
     })
   },
 
+  bumpEvents: (conversationId) =>
+    set((state) => ({
+      eventsVersion: { ...state.eventsVersion, [conversationId]: (state.eventsVersion[conversationId] ?? 0) + 1 },
+    })),
+
   onHandoffEvent: (event) => {
     // Actualiza la fila si está en la lista y la conversación abierta.
     set((state) => ({
@@ -915,6 +928,8 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
     }))
     // La pertenencia a la vista pudo cambiar → refresco coalescido de lista y counts.
     get().scheduleListRefresh({ counts: true })
+    // El hilo tiene un evento nuevo que contar.
+    get().bumpEvents(event.conversation_id)
   },
 
   onTyping: (event) => {

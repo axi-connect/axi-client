@@ -1,15 +1,14 @@
 /**
  * Separador de día del hilo (patrón WhatsApp/Telegram): chip centrado que se
- * queda pegado arriba al hacer scroll. Es `glass` a propósito — no es una
- * superficie de contenido sino un marcador que FLOTA sobre las burbujas, la
- * misma materia que el pill «Mensajes nuevos» del mismo scroller. `z-[1]` es
- * local al scroller (como en AppointmentsList); `pointer-events-none` para no
- * tapar el mensaje que pasa por debajo.
+ * queda pegado arriba al hacer scroll. SÓLIDO desde Inbox premium F2: la
+ * píldora del lienzo aprobado, borde fino y sombra corta, sin el cristal de
+ * antes, igual que el resto de marcadores del hilo. `z-[1]` es local al scroller;
+ * `pointer-events-none` para no tapar el mensaje que pasa por debajo.
  */
 export function DaySeparator({ label }: { label: string }) {
   return (
-    <div className="pointer-events-none sticky top-1 z-[1] flex justify-center">
-      <h3 className="glass rounded-full border border-border px-3 py-1 text-[11px] font-medium text-muted-foreground shadow-float">
+    <div className="pointer-events-none sticky top-2 z-[1] flex justify-center py-1">
+      <h3 className="rounded-full border border-border bg-card px-3 py-1 text-[11px] font-medium text-foreground shadow-float">
         {label}
       </h3>
     </div>
