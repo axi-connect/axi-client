@@ -59,11 +59,11 @@ export function useUnsavedGuard() {
         description: "Tienes cambios sin guardar en esta ficha. Si sales ahora, se pierden.",
         className: "sm:max-w-md",
         actions: [
-          { label: "Seguir editando", variant: "outline", asClose: true, id: "unsaved-stay" },
+          { label: "Seguir editando", variant: "outline", id: "unsaved-stay" },
           {
             label: "Salir sin guardar",
             variant: "destructive",
-            asClose: false,
+            keepOpen: true,
             id: "unsaved-leave",
             onClick: () => {
               closeModal();

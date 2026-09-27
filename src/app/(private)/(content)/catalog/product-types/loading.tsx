@@ -1,5 +1,5 @@
-import { TableSkeleton } from "@/shared/components/features/loading";
+import { CatalogSectionSkeleton } from "@/modules/catalog/ui/components/CatalogSectionSkeleton";
 
-export default function ProductTypesLoading() {
-  return <TableSkeleton rows={6} />;
+export default function Loading() {
+  return <CatalogSectionSkeleton label="Cargando los tipos de producto" />;
 }

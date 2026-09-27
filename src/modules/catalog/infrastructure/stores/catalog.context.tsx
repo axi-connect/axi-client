@@ -23,7 +23,16 @@ type CatalogContextValue = {
   fetchCatalogs: () => Promise<void>;
   fetchCategoryTree: () => Promise<void>;
   fetchProductTypes: () => Promise<void>;
+  /**
+   * Catálogo premium F4: el estado de cada recurso por separado. `error` (arriba)
+   * guarda el último mensaje; esto dice qué recurso falló y si ya respondió,
+   * para no pintar «vacío» mientras carga ni cuando falló (inventario D.1 #21).
+   */
+  status: Record<CatalogResource, ResourceStatus>;
 };
+
+export type CatalogResource = "catalogs" | "categories" | "productTypes";
+export type ResourceStatus = "loading" | "ready" | "error";
 
 const CatalogContext = createContext<CatalogContextValue | undefined>(undefined);
 
@@ -32,36 +41,51 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const [catalogs, setCatalogs] = useState<CatalogListItemDTO[]>([]);
   const [categoryTree, setCategoryTree] = useState<CategoryTreeNodeDTO[]>([]);
   const [productTypes, setProductTypes] = useState<ProductTypeListItemDTO[]>([]);
+  const [status, setStatus] = useState<Record<CatalogResource, ResourceStatus>>({
+    catalogs: "loading",
+    categories: "loading",
+    productTypes: "loading",
+  });
+  const mark = useCallback(
+    (resource: CatalogResource, next: ResourceStatus) => setStatus((previous) => ({ ...previous, [resource]: next })),
+    [],
+  );
 
   const fetchCatalogs = useCallback(async () => {
     try {
       const res = await listCatalogs();
       setCatalogs(res.data);
       setError(null);
+      mark("catalogs", "ready");
     } catch (err) {
       setError(errorMessage(err, "No se pudieron cargar los catálogos"));
+      mark("catalogs", "error");
     }
-  }, []);
+  }, [mark]);
 
   const fetchCategoryTree = useCallback(async () => {
     try {
       const res = await listCategoryTree();
       setCategoryTree(res.data);
       setError(null);
+      mark("categories", "ready");
     } catch (err) {
       setError(errorMessage(err, "No se pudieron cargar las categorías"));
+      mark("categories", "error");
     }
-  }, []);
+  }, [mark]);
 
   const fetchProductTypes = useCallback(async () => {
     try {
       const res = await listProductTypes();
       setProductTypes(res.data);
       setError(null);
+      mark("productTypes", "ready");
     } catch (err) {
       setError(errorMessage(err, "No se pudieron cargar los tipos de producto"));
+      mark("productTypes", "error");
     }
-  }, []);
+  }, [mark]);
 
   useEffect(() => {
     void fetchCatalogs();
@@ -79,6 +103,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
         fetchCatalogs,
         fetchCategoryTree,
         fetchProductTypes,
+        status,
       }}
     >
       {children}

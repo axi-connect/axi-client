@@ -168,11 +168,11 @@ export function ProductEnrichmentSection({
           : "Tienes cambios sin guardar. Regenerar los descarta y los reemplaza por unos nuevos.",
       className: "sm:max-w-md",
       actions: [
-        { label: "Conservar los míos", variant: "outline", asClose: true, id: "enrichment-regenerate-cancel" },
+        { label: "Conservar los míos", variant: "outline", id: "enrichment-regenerate-cancel" },
         {
           label: "Regenerar",
           variant: "default",
-          asClose: false,
+          keepOpen: true,
           id: "enrichment-regenerate-confirm",
           onClick: () => {
             closeModal();
