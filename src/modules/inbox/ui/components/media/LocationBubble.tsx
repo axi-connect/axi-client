@@ -36,7 +36,7 @@ export function LocationBubble({
           href={mapsUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-1 inline-flex w-fit items-center gap-1 text-xs font-medium underline underline-offset-2"
+          className="mt-0.5 inline-flex min-h-6 w-fit items-center gap-1 text-xs font-medium underline underline-offset-2"
         >
           Abrir en Google Maps <ExternalLink className="size-3" aria-hidden />
         </a>

@@ -273,6 +273,23 @@ Lienzo: https://claude.ai/artifact/GjoSeJKsNp4w9KyUTPbSo6 (10 artboards; fuentes
   composer hasta cerrarlo, en vez de un toast por archivo.
 - **Visor:** recorre las fotos cargadas de la conversación (flechas, ← →, tira), descarga con URL fresca y Escape.
 
+#### F3 · Render medido (2026-09-27)
+
+Arnés: `qa/premium/inbox-f3-render.mjs` + `inbox-f3-seed.py` (corre la de F2; sube foto, video, audio y PDF de prueba al
+MinIO local, prefijo `seed-f3/`). 15 escenas × 390/768/1280/1440 × claro/oscuro. Evidencia en
+`D:\axi-qa\premium\inbox-f3` (`report-ronda1.jsonl` y `report.jsonl`).
+
+- Primera ronda, 120 capturas y 89 limpias:
+  - tres objetivos por debajo de 24 px: la pista del audio (16 px), la velocidad (20 px) y «Abrir en Google Maps» (16 px);
+  - la escena de adjuntos falló por el arnés.
+- Arreglado:
+  - pista y range a 24 px, velocidad a 24 px y el enlace con `min-h-6`;
+  - el visor salía claro en tema claro, porque el `glass-overlay` del diálogo compartido pone su fondo: ahora el velo va en línea;
+  - las acciones rápidas preseleccionaban la primera del API y no la primera que se ve: ahora siguen el orden de los grupos.
+- Segunda ronda de las escenas tocadas, 56 capturas: todas limpias.
+- La «deuda» del botón flotante que F2 anotó para el shell en el celular es el indicador de desarrollo de Next.js (la «N»
+  negra). Solo existe con `next dev`: no hay nada que arreglar en producción.
+
 ### F4 · El contexto
 
 Solo cliente.

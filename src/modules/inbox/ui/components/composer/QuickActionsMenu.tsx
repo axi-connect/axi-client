@@ -143,7 +143,8 @@ function QuickActionsPanel({
   const [sending, setSending] = useState(false)
 
   const sendable = (action: QuickActionDTO) => mode === "all" || action.type === "whatsapp_template"
-  const available = actions.filter(sendable)
+  // En el orden en que se pintan los grupos: la primera elegida es la primera que se ve.
+  const available = GROUP_ORDER.flatMap((type) => actions.filter((action) => action.type === type && sendable(action)))
   const blocked = mode === "templates" ? actions.filter((action) => !sendable(action)) : []
   const chosen = available.find((action) => action.id === cursor) ?? (compact ? undefined : available[0])
   const firstName = contactName.split(/\s+/)[0] || contactName

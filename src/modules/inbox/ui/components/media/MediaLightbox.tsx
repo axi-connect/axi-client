@@ -104,6 +104,9 @@ function LightboxBody({
     <DialogContent
       showCloseButton={false}
       className="top-0 left-0 flex h-dvh max-h-none w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 bg-black/80 p-0 text-white backdrop-blur-2xl sm:max-w-none"
+      // Oscuro en los DOS temas: el cristal del diálogo compartido (`glass-overlay`)
+      // pone su propio fondo claro, así que el velo va en línea y gana.
+      style={{ background: "rgb(8 8 10 / 0.84)", backdropFilter: "blur(26px) saturate(140%)" }}
       onKeyDown={(e) => {
         if (e.key === "ArrowLeft" && hasPrev) {
           e.preventDefault()

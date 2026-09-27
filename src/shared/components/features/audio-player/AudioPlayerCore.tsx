@@ -180,7 +180,7 @@ export function AudioPlayerCore({
       <div className="min-w-0 flex-1">
         {/* Pista propia (4 px, continua) con el range nativo encima, transparente:
             el teclado y el lector siguen teniendo el control real. */}
-        <div className="relative flex h-4 items-center rounded-full outline-offset-2 outline-ring has-[input:focus-visible]:outline-2">
+        <div className="relative flex h-6 items-center rounded-full outline-offset-2 outline-ring has-[input:focus-visible]:outline-2">
           <div aria-hidden className={cn("h-1 w-full overflow-hidden rounded-full", outbound ? "bg-background/25" : "bg-foreground/12")}>
             <div className="h-full rounded-full bg-current" style={{ width: `${String(progress)}%` }} />
           </div>
@@ -197,19 +197,19 @@ export function AudioPlayerCore({
           value={currentTime}
           disabled={!src || !knownDuration}
           onChange={(e) => handleSeek(Number(e.target.value))}
-          className="absolute inset-0 h-4 w-full cursor-pointer opacity-0 disabled:cursor-default"
+          className="absolute inset-0 h-6 w-full cursor-pointer opacity-0 disabled:cursor-default"
           aria-label="Posición del audio"
           aria-valuetext={`${formatDuration(currentTime)} de ${formatDuration(duration)}`}
         />
         </div>
-        <div className="mt-1 flex items-center justify-between text-[11px] opacity-75">
+        <div className="flex items-center justify-between text-[11px] opacity-75">
           <span className="tabular-nums">
             {formatDuration(currentTime)}
             {knownDuration ? ` / ${formatDuration(duration)}` : ""}
           </span>
           <button
             onClick={() => setRateIndex((index) => (index + 1) % PLAYBACK_RATES.length)}
-            className="rounded-full bg-current/10 px-2 py-0.5 font-semibold tabular-nums hover:bg-current/15"
+            className="inline-flex h-6 min-w-9 items-center justify-center rounded-full bg-current/10 px-2 font-semibold tabular-nums hover:bg-current/15"
             aria-label={`Velocidad de reproducción ${PLAYBACK_RATES[rateIndex]}x`}
           >
             {PLAYBACK_RATES[rateIndex]}x
