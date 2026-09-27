@@ -21,9 +21,13 @@ import type { InboxCommands } from "@/modules/inbox/infrastructure/realtime/use-
  * duplicarlo entre el botón inline y el menú.
  *
  * Mapa de acciones por `mode`:
- * - `human_queued` → Atender (claim)
- * - `ai_active`    → Intervenir (takeover, pausa la IA)
- * - `human_active` → Devolver a la IA (con nota) · Cerrar (resolved + razón)
+ * - `human_queued` → Atender (claim) · Devolver a Axi (con nota)
+ * - `ai_active`    → Intervenir (takeover, pausa a Axi)
+ * - `human_active` → Cerrar (resolved + razón) · Devolver a Axi (con nota)
+ *
+ * El servidor admite devolver desde la cola (`return_to_ai` desde
+ * human_queued|human_active): la isla «Por qué está aquí» (F2) lo ofrece junto a
+ * Atender.
  *
  * Van por WS con ack; `handoff_conflict` ya lo auto-corrige el hook del socket,
  * aquí solo se traduce a un mensaje legible.
@@ -91,6 +95,13 @@ export function useHandoffActions(
   let primary: HandoffActionDescriptor | null = null
   const secondary: HandoffActionDescriptor[] = []
 
+  const returnToAi: HandoffActionDescriptor = {
+    id: "return_to_ai",
+    label: "Devolver a Axi",
+    icon: Bot,
+    onSelect: () => setReturnOpen(true),
+  }
+
   if (available) {
     if (conversation.mode === "human_queued") {
       primary = {
@@ -99,13 +110,14 @@ export function useHandoffActions(
         icon: Hand,
         onSelect: () => void run(() => commands.claim(conversation.id), "Conversación asignada a ti"),
       }
+      secondary.push(returnToAi)
     } else if (conversation.mode === "ai_active") {
       primary = {
         id: "takeover",
         label: "Intervenir",
         icon: Hand,
         onSelect: () =>
-          void run(() => commands.takeover(conversation.id), "Tomaste la conversación (IA en pausa)"),
+          void run(() => commands.takeover(conversation.id), "Tomaste la conversación (Axi en pausa)"),
       }
     } else {
       // human_active: la conversación ya es de un humano. Lo frecuente es
@@ -116,12 +128,7 @@ export function useHandoffActions(
         icon: CheckCheck,
         onSelect: () => setCloseOpen(true),
       }
-      secondary.push({
-        id: "return_to_ai",
-        label: "Devolver a la IA",
-        icon: Bot,
-        onSelect: () => setReturnOpen(true),
-      })
+      secondary.push(returnToAi)
     }
   }
 
@@ -132,8 +139,8 @@ export function useHandoffActions(
         open={returnOpen}
         onOpenChange={setReturnOpen}
         config={{
-          title: "Devolver a la IA",
-          description: "La IA retoma la conversación. Puedes dejarle contexto.",
+          title: "Devolver a Axi",
+          description: "Axi retoma la conversación. Puedes dejarle contexto: la nota solo la lee el agente.",
           actions: [
             { label: "Cancelar", variant: "outline", asClose: true, id: "return-cancel" },
             {
@@ -144,7 +151,7 @@ export function useHandoffActions(
               onClick: async () => {
                 await run(
                   () => commands.returnToAi(conversation.id, note.trim() || undefined),
-                  "Conversación devuelta a la IA",
+                  "Conversación devuelta a Axi",
                 )
                 setReturnOpen(false)
                 setNote("")
@@ -152,12 +159,14 @@ export function useHandoffActions(
             },
           ],
           className: "sm:max-w-md",
+          // «Cancelar» y Escape ya cierran: sin la X de 16 px (render F2).
+          showCloseButton: false,
         }}
       >
         <Textarea
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          placeholder="Nota para la IA (opcional): “el cliente ya pagó, confirma el envío”"
+          placeholder="Nota para Axi (opcional): «el cliente ya pagó, confirma el envío»"
           maxLength={2000}
         />
       </Modal>
@@ -191,6 +200,8 @@ export function useHandoffActions(
             },
           ],
           className: "sm:max-w-md",
+          // «Cancelar» y Escape ya cierran: sin la X de 16 px (render F2).
+          showCloseButton: false,
         }}
       >
         <div className="space-y-3">

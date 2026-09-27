@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { Mic, SendHorizonal } from "lucide-react"
+import { Mic, SendHorizonal, Sparkles } from "lucide-react"
 import { cn } from "@/core/lib/utils"
 import { errorMessage } from "@/core/lib/error-messages"
 import { useAlert } from "@/core/providers/alert-provider"
@@ -19,6 +19,7 @@ import type { QuickActionDTO } from "@/modules/quick-actions/domain/quick-action
 import { AttachmentPicker } from "./AttachmentPicker"
 import { AttachmentTray } from "./AttachmentTray"
 import { QuickActionsMenu } from "./QuickActionsMenu"
+import type { HandoffActionDescriptor } from "../header/use-handoff-actions"
 import { VoiceRecorderBar } from "./VoiceRecorderBar"
 
 /**
@@ -35,11 +36,20 @@ export function Composer({
   commands,
   socketConnected,
   onSend,
+  unlock = null,
+  unlockBusy = false,
 }: {
   conversation: ConversationDTO
   commands: InboxCommands
   socketConnected: boolean
   onSend: (input: SendInput) => Promise<void>
+  /**
+   * La acción que abre la escritura cuando todavía no se puede (Atender en cola,
+   * Intervenir con Axi). Es la misma de la cabecera, de `useHandoffActions`.
+   * Sin permiso de handoff llega `null` y la barra solo explica.
+   */
+  unlock?: HandoffActionDescriptor | null
+  unlockBusy?: boolean
 }) {
   const { showAlert } = useAlert()
   const [body, setBody] = useState("")
@@ -174,17 +184,23 @@ export function Composer({
 
   return (
     <div className="border-t border-border bg-background p-3">
-      {!canWrite && (
-        <p className="mb-2 text-center text-xs text-muted-foreground">
-          {conversation.status !== "open"
-            ? "La conversación está cerrada."
-            : conversation.mode === "ai_active"
-              ? "La IA está atendiendo: usa “Intervenir” para responder tú."
-              : "Toma la conversación (“Atender”) para responder."}
-        </p>
-      )}
-
-      {recording ? (
+      {/* Todavía no se puede escribir (F2): una barra que dice por qué y abre la escritura. */}
+      {!canWrite && conversation.status === "open" ? (
+        <div className="flex items-center gap-3 rounded-2xl bg-muted py-2 pr-2 pl-4 text-sm text-foreground/85" role="status">
+          {conversation.mode === "ai_active" && <Sparkles aria-hidden className="size-3.5 shrink-0 text-accent-violet" />}
+          <span className="min-w-0 flex-1 leading-snug">
+            {conversation.mode === "ai_active"
+              ? "Axi está atendiendo. Si intervienes, Axi se pausa en esta conversación hasta que se la devuelvas."
+              : "Atiéndela para responder. Axi ya no le escribe."}
+          </span>
+          {unlock !== null && (
+            <Button variant="contrast" className="h-9 shrink-0 px-3.5" disabled={unlockBusy} onClick={unlock.onSelect}>
+              <unlock.icon aria-hidden className="size-4" />
+              {unlock.label}
+            </Button>
+          )}
+        </div>
+      ) : recording ? (
         <VoiceRecorderBar recorder={recorder} sending={sendingVoice} onSend={() => void handleSendVoice()} />
       ) : (
         <>
@@ -219,7 +235,7 @@ export function Composer({
                     : "Escribe un mensaje… (Enter para enviar)"
               }
               className={cn(
-                "max-h-32 min-h-10 w-full resize-y rounded-lg border border-border bg-background px-3 py-2 text-sm",
+                "sidebar-scroll max-h-32 min-h-10 w-full resize-y rounded-lg border border-border bg-background px-3 py-2 text-sm",
                 "focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-50",
               )}
               aria-label="Mensaje"

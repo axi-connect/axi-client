@@ -115,7 +115,19 @@ type InboxStore = {
   /** Página siguiente en vuelo (añade). */
   loadingMore: boolean
   listError: string | null
+  /**
+   * ¿Llegó ya una primera respuesta de la lista? Hasta entonces la lista vacía
+   * es «todavía no sé», no «no hay» (auditoría IB1-H2: antes pintaba el vacío
+   * antes de la primera respuesta).
+   */
+  listLoaded: boolean
   counts: InboxCounts | null
+  /**
+   * Sube con cada lectura de `GET /inbox/counts` (no con los parches locales de
+   * no leídos). Es la señal de «la bandeja cambió» para lo que se deriva de la
+   * cola y del día sin tener evento propio: la cabeza de la cola y «Tu día».
+   */
+  countsVersion: number
   /** Errores de la conversación/hilo (la lista tiene `listError`). */
   error: string | null
 
@@ -204,6 +216,13 @@ type InboxStore = {
    */
   contextVersion: Record<string, number>
   bumpContactContext: (contactId: string) => void
+  /**
+   * Sube cuando el socket avisa un cambio de handoff (o un SLA vencido) de una
+   * conversación: el hilo relee sus eventos. Los que no tienen evento WS
+   * (`note_added`, `priority_changed`) se releen con el tick de la vista.
+   */
+  eventsVersion: Record<string, number>
+  bumpEvents: (conversationId: string) => void
 
   // Reducers de eventos WS
   onHandoffEvent: (event: ConversationHandoffEvent) => void
@@ -255,7 +274,9 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
   loadingList: false,
   loadingMore: false,
   listError: null,
+  listLoaded: false,
   counts: null,
+  countsVersion: 0,
   error: null,
 
   selectedId: null,
@@ -263,6 +284,7 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
   messagesById: {},
   typingByConversation: {},
   contextVersion: {},
+  eventsVersion: {},
 
   bumpContactContext: (contactId) =>
     set((state) => ({
@@ -324,6 +346,7 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
         page: 1,
         hasMore: hasMorePages(res.data.length, 1, res.meta),
         loadingList: false,
+        listLoaded: true,
       })
     } catch (err) {
       if (seq !== listRequestSeq) return
@@ -409,7 +432,8 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
 
   fetchCounts: async () => {
     try {
-      set({ counts: await getInboxCounts() })
+      const counts = await getInboxCounts()
+      set((state) => ({ counts, countsVersion: state.countsVersion + 1 }))
     } catch {
       // Los badges no rompen la vista.
     }
@@ -892,6 +916,11 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
     })
   },
 
+  bumpEvents: (conversationId) =>
+    set((state) => ({
+      eventsVersion: { ...state.eventsVersion, [conversationId]: (state.eventsVersion[conversationId] ?? 0) + 1 },
+    })),
+
   onHandoffEvent: (event) => {
     // Actualiza la fila si está en la lista y la conversación abierta.
     set((state) => ({
@@ -907,6 +936,8 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
     }))
     // La pertenencia a la vista pudo cambiar → refresco coalescido de lista y counts.
     get().scheduleListRefresh({ counts: true })
+    // El hilo tiene un evento nuevo que contar.
+    get().bumpEvents(event.conversation_id)
   },
 
   onTyping: (event) => {

@@ -20,13 +20,13 @@ export function LocationBubble({
   return (
     <div className="flex w-60 max-w-full items-start gap-2">
       <MapPin
-        className={cn("mt-0.5 size-4 shrink-0", outbound ? "text-white" : "text-brand")}
+        className={cn("mt-0.5 size-4 shrink-0", outbound ? "text-background" : "text-brand")}
         aria-hidden
       />
       <div className="min-w-0 flex-1 text-xs">
-        <p className={cn("font-medium", outbound ? "text-white" : "text-foreground")}>{title}</p>
+        <p className={cn("font-medium", outbound ? "text-background" : "text-foreground")}>{title}</p>
         {location.address && (
-          <p className={cn("mt-0.5", outbound ? "text-white/80" : "text-muted-foreground")}>
+          <p className={cn("mt-0.5", outbound ? "text-background/80" : "text-muted-foreground")}>
             {location.address}
           </p>
         )}
@@ -36,7 +36,7 @@ export function LocationBubble({
           rel="noopener noreferrer"
           className={cn(
             "mt-1 inline-flex items-center gap-1 font-medium underline underline-offset-2",
-            outbound ? "text-white" : "text-brand",
+            outbound ? "text-background" : "text-brand",
           )}
         >
           Ver en Google Maps <ExternalLink className="size-3" aria-hidden />

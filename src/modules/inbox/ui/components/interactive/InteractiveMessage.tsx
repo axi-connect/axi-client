@@ -31,7 +31,7 @@ export function InteractiveMessage({
           rel="noopener noreferrer"
           className={cn(
             "flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium underline-offset-2 hover:underline",
-            outbound ? "bg-white/15 text-white" : "bg-background text-foreground",
+            outbound ? "bg-background/15 text-background" : "bg-background text-foreground",
           )}
         >
           <ExternalLink className="size-3 shrink-0" aria-hidden />
@@ -58,12 +58,12 @@ export function InteractiveMessage({
             key={option.id}
             className={cn(
               "rounded-lg px-3 py-1.5 text-xs",
-              outbound ? "bg-white/15 text-white" : "bg-background text-foreground",
+              outbound ? "bg-background/15 text-background" : "bg-background text-foreground",
             )}
           >
             <span className="font-medium">{option.title}</span>
             {option.description && (
-              <span className={cn("block", outbound ? "text-white/70" : "text-muted-foreground")}>
+              <span className={cn("block", outbound ? "text-background/70" : "text-muted-foreground")}>
                 {option.description}
               </span>
             )}
@@ -90,13 +90,13 @@ function InteractiveFrame({
     <div
       className={cn(
         "mt-2 border-t pt-2",
-        outbound ? "border-white/20" : "border-border/60",
+        outbound ? "border-background/20" : "border-border/60",
       )}
     >
       <div
         className={cn(
           "mb-1.5 flex items-center gap-1 text-[10px] uppercase tracking-wide",
-          outbound ? "text-white/70" : "text-muted-foreground",
+          outbound ? "text-background/70" : "text-muted-foreground",
         )}
       >
         <Icon className="size-3 shrink-0" aria-hidden />

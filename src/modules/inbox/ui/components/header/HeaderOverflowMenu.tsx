@@ -40,7 +40,7 @@ export function HeaderOverflowMenu({
         <Button
           variant="ghost"
           size="icon"
-          className="size-8 shrink-0"
+          className="size-9 shrink-0"
           aria-label="Más acciones"
           disabled={disabled}
         >

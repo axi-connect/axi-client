@@ -31,7 +31,7 @@ export function MediaError({
     <div
       className={cn(
         "flex items-center gap-2 rounded-lg px-3 py-2 text-xs",
-        outbound ? "bg-white/10 text-white/90" : "bg-background/60 text-muted-foreground",
+        outbound ? "bg-background/10 text-background/90" : "bg-background/60 text-muted-foreground",
       )}
       role="alert"
     >
@@ -59,7 +59,7 @@ export function MediaUnavailable({
     <div
       className={cn(
         "flex items-center gap-2 rounded-lg px-3 py-2 text-xs italic",
-        outbound ? "bg-white/10 text-white/80" : "bg-background/60 text-muted-foreground",
+        outbound ? "bg-background/10 text-background/80" : "bg-background/60 text-muted-foreground",
       )}
     >
       <FileWarning className="size-4 shrink-0" aria-hidden />

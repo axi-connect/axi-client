@@ -2,15 +2,14 @@
 
 import { memo } from "react"
 import {
-  Bot,
   Camera,
   CheckCheck,
   FileText,
   Film,
   MapPin,
   Mic,
+  Sparkles,
   Sticker,
-  Timer,
   type LucideIcon,
 } from "lucide-react"
 import { cn } from "@/core/lib/utils"
@@ -21,6 +20,7 @@ import {
   isNotablePriority,
   isReadOnlyConversation,
   parsePreview,
+  PRIORITY_LABELS,
   STATUS_LABELS,
   type InboxConversation,
   type MediaContentKind,
@@ -36,38 +36,60 @@ const PREVIEW_ICONS: Record<MediaContentKind, LucideIcon> = {
   location: MapPin,
 }
 
-type Meta = { icon: LucideIcon; text: string; tone: "muted" | "warning" }
-
 /**
- * Tercera línea de la fila. Solo existe en estados que NO son el default,
- * para que la lista respire: cerrada (qué pasó y cuándo), en cola (cuánto
- * lleva esperando) e IA cuando la vista mezcla modos.
+ * Tercera línea de la fila: una cápsula con el estado, como `StatePill` (el
+ * color en el punto o el icono, el texto en foreground). Solo existe cuando
+ * dice algo, para que la lista respire:
+ * - cerrada: qué pasó y cuándo;
+ * - en cola: cuánto lleva esperando;
+ * - quién atiende, solo cuando la vista mezcla modos («Todas abiertas»).
  */
+export type Meta =
+  | { kind: "done"; text: string }
+  | { kind: "queued"; text: string }
+  | { kind: "ai"; text: string }
+  | { kind: "self"; text: string }
+  | { kind: "team"; text: string }
+
 export function conversationMeta(
   conversation: InboxConversation,
   now: number,
   showMode: boolean,
+  meId: string | null = null,
 ): Meta | null {
   if (isReadOnlyConversation(conversation)) {
     const when = conversation.closed_at ?? conversation.last_message_at
     return {
-      icon: CheckCheck,
+      kind: "done",
       text: when === null ? STATUS_LABELS[conversation.status] : `${STATUS_LABELS[conversation.status]} · ${formatConversationTime(when, now)}`,
-      tone: "muted",
     }
   }
   if (conversation.mode === "human_queued") {
     const since = conversation.queued_at ?? conversation.last_inbound_at
-    return {
-      icon: Timer,
-      text: since === null ? "En cola" : `En cola · ${elapsedShort(since, now)}`,
-      tone: "warning",
-    }
+    return { kind: "queued", text: since === null ? "En cola" : `En cola · ${elapsedShort(since, now)}` }
   }
-  if (showMode && conversation.mode === "ai_active") {
-    return { icon: Bot, text: "IA", tone: "muted" }
-  }
-  return null
+  if (!showMode) return null
+  if (conversation.mode === "ai_active") return { kind: "ai", text: "Axi atiende" }
+  if (meId !== null && conversation.assigned_user_id === meId) return { kind: "self", text: "Contigo" }
+  return { kind: "team", text: "Con el equipo" }
+}
+
+const META_DOT: Partial<Record<Meta["kind"], string>> = {
+  queued: "bg-warning",
+  self: "bg-foreground",
+  team: "bg-muted-foreground",
+}
+
+function MetaPill({ meta }: { meta: Meta }) {
+  const dot = META_DOT[meta.kind]
+  return (
+    <span className="mt-1 inline-flex h-[22px] max-w-full min-w-0 items-center gap-1.5 self-start rounded-full bg-muted px-2 text-[11px] font-medium text-foreground">
+      {meta.kind === "ai" && <Sparkles aria-hidden className="size-3 shrink-0 text-accent-violet" />}
+      {meta.kind === "done" && <CheckCheck aria-hidden className="size-3 shrink-0 text-muted-foreground" />}
+      {dot !== undefined && <span aria-hidden className={cn("size-1.5 shrink-0 rounded-full", dot)} />}
+      <span className="truncate tabular-nums">{meta.text}</span>
+    </span>
+  )
 }
 
 function contactName(conversation: InboxConversation): string {
@@ -79,6 +101,7 @@ export const ConversationListItem = memo(function ConversationListItem({
   active,
   now,
   showMode,
+  meId = null,
   onSelect,
 }: {
   conversation: InboxConversation
@@ -87,6 +110,8 @@ export const ConversationListItem = memo(function ConversationListItem({
   now: number
   /** Pintar «IA» en la tercera línea: solo cuando la vista mezcla modos. */
   showMode: boolean
+  /** Quien mira: en «Todas abiertas» distingue «Contigo» de «Con el equipo». */
+  meId?: string | null
   onSelect: (id: string) => void
 }) {
   const name = contactName(conversation)
@@ -94,7 +119,7 @@ export const ConversationListItem = memo(function ConversationListItem({
   const unread = closed ? 0 : conversation.unread_count
   const preview = parsePreview(conversation.last_message_preview)
   const PreviewIcon = preview.kind ? PREVIEW_ICONS[preview.kind] : null
-  const meta = conversationMeta(conversation, now, showMode)
+  const meta = conversationMeta(conversation, now, showMode, meId)
   const notable = !closed && isNotablePriority(conversation.priority)
   const iso = conversation.last_message_at
   const fullDate = iso === null ? "" : formatFullDateTime(iso)
@@ -102,6 +127,7 @@ export const ConversationListItem = memo(function ConversationListItem({
   const ariaLabel = [
     name,
     unread > 0 ? `${String(unread)} sin leer` : null,
+    notable ? `prioridad ${PRIORITY_LABELS[conversation.priority].toLowerCase()}` : null,
     meta?.text ?? null,
     fullDate || null,
   ]
@@ -117,24 +143,14 @@ export const ConversationListItem = memo(function ConversationListItem({
         aria-label={ariaLabel}
         data-priority={notable ? conversation.priority : undefined}
         className={cn(
-          "group relative flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left outline-none",
+          "group relative flex w-full items-start gap-3 rounded-2xl px-3 py-2.5 text-left outline-none",
           "transition-[background-color,transform] duration-150 motion-reduce:transition-none",
           "focus-visible:ring-ring/50 focus-visible:ring-[3px]",
           "active:scale-[0.99] motion-reduce:active:scale-100",
-          active ? "bg-accent" : "hover:bg-accent/50",
+          // Seleccionada: anillo neutro, como la selección de Cobros y CRM.
+          active ? "bg-muted ring-[1.5px] ring-foreground ring-inset" : "hover:bg-muted/70",
         )}
       >
-        {/* Prioridad: barra fina, solo high/urgent. Ámbar = atención, rojo = peligro. */}
-        {notable && (
-          <span
-            aria-hidden="true"
-            className={cn(
-              "absolute top-3 bottom-3 left-0 w-0.5 rounded-full",
-              conversation.priority === "urgent" ? "bg-destructive" : "bg-warning",
-            )}
-          />
-        )}
-
         <span className="relative shrink-0">
           <Avatar
             src={conversation.contact.avatar_url}
@@ -153,7 +169,18 @@ export const ConversationListItem = memo(function ConversationListItem({
         </span>
 
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="flex items-baseline gap-2">
+          <span className="flex items-center gap-1.5">
+            {/* Prioridad: un punto antes del nombre, solo high/urgent. Ámbar = atención, rojo = peligro. */}
+            {notable && (
+              <span
+                aria-hidden="true"
+                title={`Prioridad ${PRIORITY_LABELS[conversation.priority].toLowerCase()}`}
+                className={cn(
+                  "size-2 shrink-0 rounded-full",
+                  conversation.priority === "urgent" ? "bg-destructive" : "bg-warning",
+                )}
+              />
+            )}
             <span
               className={cn(
                 "min-w-0 flex-1 truncate text-sm",
@@ -163,6 +190,7 @@ export const ConversationListItem = memo(function ConversationListItem({
                     ? "font-semibold text-foreground"
                     : "font-medium text-foreground",
               )}
+              title={name}
             >
               {name}
             </span>
@@ -171,8 +199,8 @@ export const ConversationListItem = memo(function ConversationListItem({
                 dateTime={iso}
                 title={fullDate}
                 className={cn(
-                  "shrink-0 text-[11px] tabular-nums",
-                  unread > 0 ? "font-medium text-brand" : "text-muted-foreground",
+                  "ml-0.5 shrink-0 text-[11px] tabular-nums",
+                  unread > 0 ? "font-semibold text-foreground" : "text-muted-foreground",
                 )}
               >
                 {formatConversationTime(iso, now)}
@@ -193,24 +221,15 @@ export const ConversationListItem = memo(function ConversationListItem({
             {unread > 0 && (
               <span
                 aria-hidden="true"
-                className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-brand px-1.5 text-[11px] font-semibold tabular-nums text-white dark:text-background"
+                // Tinta, no coral: el coral es acción (D2 del plan, aprobado en el lienzo de F1).
+                className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-foreground px-1.5 text-[11px] font-semibold tabular-nums text-background"
               >
                 {unread > 99 ? "99+" : unread}
               </span>
             )}
           </span>
 
-          {meta && (
-            <span
-              className={cn(
-                "flex items-center gap-1 text-[11px]",
-                meta.tone === "warning" ? "text-warning" : "text-muted-foreground",
-              )}
-            >
-              <meta.icon className="size-3 shrink-0" aria-hidden="true" />
-              <span className="truncate tabular-nums">{meta.text}</span>
-            </span>
-          )}
+          {meta && <MetaPill meta={meta} />}
         </span>
       </button>
     </li>

@@ -1,9 +1,8 @@
 "use client"
 
-import { useEffect, useState, type CSSProperties, type ReactNode } from "react"
-import { SidebarProvider } from "@/shared/components/layout/sidebar/core"
+import { useEffect, useState, type ReactNode } from "react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/shared/components/ui/sheet"
-import WorkspaceSidebar from "@/modules/workspace/ui/sidebar/WorkspaceSidebar"
+import { WorkspaceRail } from "@/modules/workspace/ui/rail/WorkspaceRail"
 import { ChannelDetailSheet } from "@/modules/channels/ui/components/ChannelDetailSheet"
 import { useChannelsRealtime } from "@/modules/channels/infrastructure/hooks/use-channels-realtime"
 
@@ -33,26 +32,18 @@ export default function WorkspacesLayout({ children }: { children: ReactNode }) 
     // aplicación y no debe crecer, para que el scroll se quede dentro (el
     // timeline del chat) en vez de irse al panel — DESIGN-SYSTEM §4.2.
     <div data-app-view className="flex min-h-0 w-full flex-1 overflow-hidden">
-      {/* min-h-0 neutraliza el min-h-svh base del SidebarProvider anidado: la
-          columna de canales queda topada y su SidebarContent scrollea
-          internamente. Solo inline en lg+. */}
-      <SidebarProvider className="hidden w-max min-h-0 lg:flex">
-        <WorkspaceSidebar />
-      </SidebarProvider>
+      {/* lg+: la columna de vistas y canales, desplegada o en riel (Inbox
+          premium F1). Es un scroller propio: su lista crece sin empujar al chat. */}
+      <WorkspaceRail className="hidden lg:flex" />
 
-      {/* <lg: las mismas secciones (inbox/canales/QR) en un drawer lateral. */}
+      {/* <lg: las mismas vistas y canales en un drawer lateral, siempre desplegadas. */}
       <Sheet open={channelsOpen} onOpenChange={setChannelsOpen}>
-        <SheetContent side="left" className="w-72 p-0 lg:hidden">
-          <SheetHeader className="sr-only">
-            <SheetTitle>Canales</SheetTitle>
-            <SheetDescription>Inbox, canales y códigos QR del workspace.</SheetDescription>
+        <SheetContent side="left" className="flex w-76 flex-col p-0 lg:hidden">
+          <SheetHeader className="px-5 pt-5 pb-1">
+            <SheetTitle className="font-heading text-xl">Inbox</SheetTitle>
+            <SheetDescription className="sr-only">Vistas de la bandeja y canales del workspace.</SheetDescription>
           </SheetHeader>
-          <SidebarProvider
-            className="w-full h-full min-h-0"
-            style={{ "--sidebar-width": "100%" } as CSSProperties}
-          >
-            <WorkspaceSidebar />
-          </SidebarProvider>
+          <WorkspaceRail variant="drawer" onNavigate={() => setChannelsOpen(false)} className="min-h-0 flex-1" />
         </SheetContent>
       </Sheet>
 

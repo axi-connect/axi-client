@@ -60,10 +60,10 @@ beforeEach(() => {
 });
 
 describe("useHandoffActions", () => {
-  it("human_queued → Atender como acción destacada, sin secundarias", () => {
+  it("human_queued → Atender destacada y Devolver a Axi al desborde (el servidor lo admite desde la cola)", () => {
     render(<Probe conversation={conversation({ mode: "human_queued" })} commands={commandsMock()} />);
     expect(screen.getByTestId("primary")).toHaveTextContent("claim");
-    expect(screen.getByTestId("secondary")).toHaveTextContent("none");
+    expect(screen.getByTestId("secondary")).toHaveTextContent("return_to_ai");
   });
 
   it("ai_active → Intervenir", () => {
@@ -71,7 +71,7 @@ describe("useHandoffActions", () => {
     expect(screen.getByTestId("primary")).toHaveTextContent("takeover");
   });
 
-  it("human_active → Cerrar destacada y Devolver a la IA al desborde", () => {
+  it("human_active → Cerrar destacada y Devolver a Axi al desborde", () => {
     render(<Probe conversation={conversation({ mode: "human_active" })} commands={commandsMock()} />);
     expect(screen.getByTestId("primary")).toHaveTextContent("close");
     expect(screen.getByTestId("secondary")).toHaveTextContent("return_to_ai");
