@@ -16,7 +16,7 @@ import { firstNameOf } from "@/modules/inbox/domain/inbox-summary"
 import { closedWindowNotice, rejectionSentence, windowLine } from "@/modules/inbox/domain/composer-copy"
 import type { InboxCommands } from "@/modules/inbox/infrastructure/realtime/use-inbox-socket"
 import { noteWindowRejection } from "@/modules/inbox/infrastructure/realtime/use-send-message"
-import { useReplyWindow } from "@/modules/inbox/infrastructure/hooks/use-reply-window"
+import { useReplyWindow, useWindowRejections } from "@/modules/inbox/infrastructure/hooks/use-reply-window"
 import { useUploadQueue } from "@/modules/inbox/infrastructure/hooks/use-upload-queue"
 import { useVoiceRecorder } from "@/modules/inbox/infrastructure/hooks/use-voice-recorder"
 import { sendMessageRest, uploadConversationFile } from "@/modules/inbox/infrastructure/services/inbox-service.adapter"
@@ -113,6 +113,27 @@ export function Composer({
   // Al desmontar o cambiar de conversación, apaga el typing.
   useEffect(() => stopTyping, [stopTyping])
 
+  // Si mientras se graba (hasta 5 min) deja de poderse escribir —la ventana se
+  // cierra con el tick, el canal se cae, la conversación vuelve a Axi— la barra
+  // de la voz desaparece, pero el grabador vive aquí: sin esto el micrófono
+  // seguiría encendido sin control para pararlo (auditoría F3-H1).
+  const recorderStatus = recorder.status
+  const { cancel: cancelRecording, reset: resetRecording } = recorder
+  const lostReason = !humanActive
+    ? "la conversación ya no está contigo"
+    : channelDown
+      ? "el canal se desconectó"
+      : windowClosed
+        ? "la ventana de 24 h se cerró"
+        : null
+  useEffect(() => {
+    if (lostReason === null) return
+    if (recorderStatus !== "recording" && recorderStatus !== "preview") return
+    if (recorderStatus === "recording") cancelRecording()
+    else resetRecording()
+    showAlert({ tone: "info", title: `Se descartó la nota de voz: ${lostReason}` })
+  }, [lostReason, recorderStatus, cancelRecording, resetRecording, showAlert])
+
   // Crece con el texto hasta 8 líneas; después, scroll con la barra de marca.
   useLayoutEffect(() => {
     const el = textareaRef.current
@@ -160,6 +181,9 @@ export function Composer({
               size_bytes: attachment.size_bytes,
             },
           })
+          // Si el servidor cerró la ventana con este archivo, los siguientes también
+          // caerían: se corta aquí en vez de fallar uno por uno (auditoría F3-H2).
+          if (useWindowRejections.getState().byConversation[conversation.id] === conversation.last_inbound_at) break
         }
       } else {
         await onSend({ kind: "text", body: text })
