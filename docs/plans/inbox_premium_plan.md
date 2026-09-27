@@ -329,6 +329,16 @@ certificación.
   CRM que también usa el 360, así que se cambia allí para los dos.
 - **Celular:** el contexto a pantalla completa con las pestañas arriba. El acceso es el botón (i) de la cabecera,
   porque el riel no existe por debajo de md.
+- **Condiciones del auditor (2026-09-27):**
+  - **D6 flotante:** no tapa el composer ni la cabecera sin una salida obvia (Escape y clic fuera); devuelve el foco a
+    su botón del riel; el chat nunca baja de unos 360 px entre xl y 2xl (QA a 1280, 1440 y 1536 con la bandeja
+    desplegada).
+  - **D5 Pedidos:**
+    - `listOrders({ contact_id, page_size })` de `orders/public`, filtrado en el servidor con página chica;
+    - sin `orders:read` el panel no se monta y no llama al API (un 403 en consola es fallo);
+    - estados de carga, vacío y error.
+  - **Compartidos:** el «listo» lista por grep los consumidores de `ContactTimelineFeed`; `scoreProgress` en
+    `crm/public` es aditivo.
 - **Sin cambios de contrato.** Todo sale de lecturas que ya existen: contexto del contacto, el hilo, el timeline, las
   llamadas por contacto y los pedidos por contacto.
 
