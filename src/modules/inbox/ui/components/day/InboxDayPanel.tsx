@@ -65,29 +65,36 @@ export function InboxDayPanel({ commands, className }: { commands?: InboxCommand
           <p className="mt-1 text-sm text-muted-foreground">Lo que entró, lo que se resolvió y quién espera. Se actualiza solo.</p>
         </header>
 
-        <InkIsland label="Lo próximo" className="gap-4 p-5 @min-[34rem]:flex-row @min-[34rem]:items-center">
-          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-            <Kicker>Lo próximo</Kicker>
-            <p className="font-heading text-4xl leading-none font-bold tracking-tight">{next.headline}</p>
-            <p className="text-sm leading-relaxed text-muted-foreground">{next.line}</p>
+        {/* Sin la primera lectura de counts, silueta: «Nadie espera» solo con datos (IB1-H2). */}
+        {counts === null ? (
+          <div role="status" aria-label="Cargando lo próximo">
+            <Skeleton className="h-32 w-full rounded-3xl" />
           </div>
-          <div className="flex shrink-0 flex-wrap gap-2 @min-[34rem]:flex-col">
-            {head !== null && next.firstName !== null && (
-              <Button variant="contrast" disabled={claim.busy} onClick={() => void claim.run(head)}>
-                {claim.canClaim ? `Atender a ${next.firstName}` : `Abrir a ${next.firstName}`}
-              </Button>
-            )}
-            {next.queued > 0 ? (
-              <Button variant="glass" onClick={() => setView("queued")}>
-                {view === "queued" ? "Ver quién sigue" : "Ver la cola"}
-              </Button>
-            ) : (counts?.ai ?? 0) > 0 ? (
-              <Button variant="glass" onClick={() => setView("ai")}>
-                Ver lo que atiende Axi
-              </Button>
-            ) : null}
-          </div>
-        </InkIsland>
+        ) : (
+          <InkIsland label="Lo próximo" className="gap-4 p-5 @min-[34rem]:flex-row @min-[34rem]:items-center">
+            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+              <Kicker>Lo próximo</Kicker>
+              <p className="font-heading text-4xl leading-none font-bold tracking-tight">{next.headline}</p>
+              <p className="text-sm leading-relaxed text-muted-foreground">{next.line}</p>
+            </div>
+            <div className="flex shrink-0 flex-wrap gap-2 @min-[34rem]:flex-col">
+              {head !== null && next.firstName !== null && (
+                <Button variant="contrast" disabled={claim.busy} onClick={() => void claim.run(head)}>
+                  {claim.canClaim ? `Atender a ${next.firstName}` : `Abrir a ${next.firstName}`}
+                </Button>
+              )}
+              {next.queued > 0 ? (
+                <Button variant="glass" onClick={() => setView("queued")}>
+                  {view === "queued" ? "Ver quién sigue" : "Ver la cola"}
+                </Button>
+              ) : (counts?.ai ?? 0) > 0 ? (
+                <Button variant="glass" onClick={() => setView("ai")}>
+                  Ver lo que atiende Axi
+                </Button>
+              ) : null}
+            </div>
+          </InkIsland>
+        )}
 
         {statsStatus === "loading" && stats === null ? (
           <DaySkeleton />

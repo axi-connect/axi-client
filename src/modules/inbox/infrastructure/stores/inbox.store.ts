@@ -115,6 +115,12 @@ type InboxStore = {
   /** Página siguiente en vuelo (añade). */
   loadingMore: boolean
   listError: string | null
+  /**
+   * ¿Llegó ya una primera respuesta de la lista? Hasta entonces la lista vacía
+   * es «todavía no sé», no «no hay» (auditoría IB1-H2: antes pintaba el vacío
+   * antes de la primera respuesta).
+   */
+  listLoaded: boolean
   counts: InboxCounts | null
   /**
    * Sube con cada lectura de `GET /inbox/counts` (no con los parches locales de
@@ -268,6 +274,7 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
   loadingList: false,
   loadingMore: false,
   listError: null,
+  listLoaded: false,
   counts: null,
   countsVersion: 0,
   error: null,
@@ -339,6 +346,7 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
         page: 1,
         hasMore: hasMorePages(res.data.length, 1, res.meta),
         loadingList: false,
+        listLoaded: true,
       })
     } catch (err) {
       if (seq !== listRequestSeq) return

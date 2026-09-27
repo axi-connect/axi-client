@@ -78,6 +78,7 @@ beforeEach(() => {
     loadingList: false,
     loadingMore: false,
     listError: null,
+    listLoaded: false,
     selectedId: null,
     selected: null,
   })
@@ -180,5 +181,19 @@ describe("InboxList — scroll infinito", () => {
     expect(listInboxConversations).toHaveBeenCalledTimes(1)
     expect(adapter.getConversation).not.toHaveBeenCalled()
     expect(adapter.getConversationMessages).not.toHaveBeenCalled()
+  })
+
+  it("IB1-H2, los dos signos: sin primera respuesta, silueta y nada de vacío; con la respuesta vacía, el vacío", async () => {
+    let resolve: (value: unknown) => void = () => {}
+    listInboxConversations.mockReturnValueOnce(new Promise((r) => { resolve = r }))
+    render(<InboxList />)
+    await act(async () => {})
+    expect(screen.getByRole("status", { name: "Cargando conversaciones" })).toBeInTheDocument()
+    expect(screen.queryByText("No hay conversaciones abiertas")).not.toBeInTheDocument()
+    await act(async () => {
+      resolve(page(1, 0, 0, 1))
+    })
+    expect(screen.getByText("No hay conversaciones abiertas")).toBeInTheDocument()
+    expect(screen.queryByRole("status", { name: "Cargando conversaciones" })).not.toBeInTheDocument()
   })
 })

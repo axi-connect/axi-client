@@ -125,4 +125,16 @@ describe("InboxDayPanel", () => {
     expect(screen.queryByText("Entraron hoy")).not.toBeInTheDocument()
     expect(screen.getByRole("region", { name: "Lo próximo" })).toBeInTheDocument()
   })
+
+  it("IB1-H2: sin la primera lectura de counts no dice «Nadie espera» (silueta); con counts en cero, sí", () => {
+    day = { ...day, head: null }
+    useInboxStore.setState({ counts: null })
+    const { unmount } = render(<InboxDayPanel commands={commands} />)
+    expect(screen.getByRole("status", { name: "Cargando lo próximo" })).toBeInTheDocument()
+    expect(screen.queryByText("Nadie espera")).not.toBeInTheDocument()
+    unmount()
+    useInboxStore.setState({ counts: { queued: 0, mine: 0, ai: 0, all_open: 0, unread_total: 0 } })
+    render(<InboxDayPanel commands={commands} />)
+    expect(screen.getByText("Nadie espera")).toBeInTheDocument()
+  })
 })

@@ -26,6 +26,7 @@ const FIRST_LOAD_ROWS = 8
 export function ConversationList() {
   const conversations = useInboxStore((s) => s.conversations)
   const loadingList = useInboxStore((s) => s.loadingList)
+  const listLoaded = useInboxStore((s) => s.listLoaded)
   const loadingMore = useInboxStore((s) => s.loadingMore)
   const hasMore = useInboxStore((s) => s.hasMore)
   const listError = useInboxStore((s) => s.listError)
@@ -71,7 +72,8 @@ export function ConversationList() {
   const filtered = q.trim() !== "" || hasFilters
 
   let body: React.ReactNode
-  if (loadingList && conversations.length === 0) {
+  // Sin primera respuesta todavía, silueta: el vacío solo se afirma con datos (IB1-H2).
+  if (conversations.length === 0 && listError === null && (loadingList || !listLoaded)) {
     body = (
       <div role="status" aria-label="Cargando conversaciones" aria-busy="true" className="space-y-0.5">
         {Array.from({ length: FIRST_LOAD_ROWS }).map((_, index) => (

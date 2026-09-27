@@ -31,8 +31,10 @@ export function InboxView({ initialConversationId }: { initialConversationId?: s
     s.selected === null ? 0 : (s.contextVersion[s.selected.contact.id] ?? 0),
   )
 
+  // Deep-link: el espejo de la URL (`InboxViewUrlSync`, efecto hijo) suele
+  // haberla seleccionado ya. Se mira el store, no la captura, para no pedirla dos veces.
   useEffect(() => {
-    if (initialConversationId && selectedId !== initialConversationId) {
+    if (initialConversationId && useInboxStore.getState().selectedId !== initialConversationId) {
       void select(initialConversationId)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
