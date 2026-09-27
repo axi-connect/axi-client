@@ -51,12 +51,17 @@ export function ProductRowActions({ product }: { product: ProductRow }) {
     <div className="flex justify-end">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-8 w-8 p-0" onClick={(e) => e.stopPropagation()}>
-            <span className="sr-only">Abrir menú de acciones</span>
-            <MoreHorizontal className="h-4 w-4" />
+          <Button
+            variant="ghost"
+            className="size-9 rounded-full p-0"
+            aria-label={`Acciones de ${product.name}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <MoreHorizontal aria-hidden="true" className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        {/* `portal`: la tabla scrollea dentro de su tarjeta y la recortaría (DS §9 «Tablas y scroll»). */}
+        <DropdownMenuContent align="end" portal>
           <DropdownMenuLabel>Acciones</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem
@@ -98,7 +103,7 @@ export function ProductRowActions({ product }: { product: ProductRow }) {
           actions: [
             { label: "Cancelar", variant: "outline", asClose: true, id: "product-delete-cancel" },
             {
-              label: submitting ? "Eliminando..." : "Eliminar",
+              label: submitting ? "Eliminando…" : "Eliminar",
               variant: "destructive",
               asClose: false,
               onClick: handleConfirmDelete,

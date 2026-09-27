@@ -1,72 +1,106 @@
-"use client";
-
 import Link from "next/link";
-import { Camera } from "lucide-react";
-import { Badge } from "@/shared/components/ui/badge";
-import { PRODUCT_KIND_LABELS, type ProductRow } from "@/modules/catalog/domain/product";
+import { ImagePlus } from "lucide-react";
+import { cn } from "@/core/lib/utils";
+import type { ProductRow } from "@/modules/catalog/domain/product";
+import { ProductThumb } from "@/modules/catalog/ui/components/ProductThumb";
 import { ProductRowActions } from "@/modules/catalog/ui/tables/product.actions";
-import { ProductThumb } from "./ProductThumb";
+import { GovernedTag, NO_PHOTOS_HINT, PhotoCount, StockLabel } from "@/modules/catalog/ui/products/ProductCells";
+
+const CHIP =
+  "inline-flex h-6 items-center gap-1.5 rounded-full bg-card/85 px-2.5 text-[11.5px] font-medium whitespace-nowrap shadow-[0_0_0_1px_var(--border)] backdrop-blur";
 
 /**
- * Vista de tarjetas del listado de productos (misma fuente de filas que la
- * tabla). Toda la tarjeta navega al detalle; el menú ⋮ conserva las acciones.
+ * Vista de tarjetas del listado (catálogo premium, canvas tablero 3). Dice lo
+ * mismo que la tabla: stock con su punto, fotos, origen de la tienda, servicio
+ * con su duración. Toda la tarjeta enlaza al detalle; el menú de acciones va
+ * por encima del enlace. Sin fotos, la imagen lo dice y ofrece subirlas.
  */
-export function ProductGrid({ rows }: { rows: ProductRow[] }) {
+export function ProductGrid({ rows, busy = false, canManage }: { rows: ProductRow[]; busy?: boolean; canManage: boolean }) {
   return (
-    <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {rows.map((row) => (
-        <li
-          key={row.id}
-          className="group relative overflow-hidden rounded-2xl border border-border bg-background transition-shadow hover:shadow-md"
-        >
-          <Link
-            href={`/catalog/products/${row.id}`}
-            className="absolute inset-0 z-0"
-            aria-label={`Ver ${row.name}`}
-          />
-          <div className="pointer-events-none relative">
-            <ProductThumb
-              src={row.image_url}
-              alt={`Imagen de ${row.name}`}
-              kind={row.kind}
-              className="aspect-[4/3] w-full"
-              iconClassName="h-8 w-8"
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+    <ul
+      aria-busy={busy || undefined}
+      className={cn(
+        "grid grid-cols-1 gap-4 transition-opacity duration-200 @lg:grid-cols-2 @3xl:grid-cols-3 @5xl:grid-cols-4",
+        busy && "opacity-60",
+      )}
+    >
+      {rows.map((row) => {
+        const noPhotos = row.image_count === 0 && row.image_url === null;
+        const line =
+          row.kind === "service"
+            ? ["Servicio", ...(row.duration_minutes !== null ? [`${row.duration_minutes} min`] : [])].join(" · ")
+            : [
+                row.category_missing ? "Sin categoría" : row.category_name,
+                ...(row.variant_count > 1 ? [`${row.variant_count} variantes`] : []),
+              ].join(" · ");
+        return (
+          <li
+            key={row.id}
+            className="group relative flex min-w-0 flex-col overflow-hidden rounded-[22px] border border-border bg-card transition-shadow hover:shadow-md"
+          >
+            <Link
+              href={`/catalog/products/${row.id}`}
+              aria-label={`Ver ${row.name}`}
+              className="absolute inset-0 z-0 rounded-[22px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             />
-            <div className="absolute left-2 top-2 flex flex-wrap gap-1">
-              {row.kind === "service" && <Badge variant="secondary">{PRODUCT_KIND_LABELS.service}</Badge>}
-              {/* F17: badge de origen — este producto lo gobierna la tienda conectada */}
-              {row.governed && <Badge variant="secondary">Shopify</Badge>}
-              {!row.is_active && <Badge variant="secondary">Inactivo</Badge>}
-              {row.stock_state === "out" && <Badge variant="destructive">Agotado</Badge>}
+            {/* La imagen deja pasar el clic al enlace de la tarjeta; solo «Subir fotos» lo captura. */}
+            <div className="pointer-events-none relative aspect-[4/3]">
+              {noPhotos ? (
+                <div className="absolute inset-2.5 flex flex-col items-center justify-center gap-1 rounded-2xl border-[1.5px] border-dashed border-foreground/15 text-xs text-muted-foreground">
+                  <ImagePlus aria-hidden="true" className="size-6" />
+                  <span className="font-medium text-foreground/80">Sin fotos</span>
+                  <span className="sr-only">{NO_PHOTOS_HINT}</span>
+                  {canManage ? (
+                    <Link
+                      href={`/catalog/products/${row.id}#fotos`}
+                      className="pointer-events-auto relative z-10 inline-flex min-h-6 items-center font-medium text-foreground underline underline-offset-3"
+                    >
+                      Subir fotos
+                    </Link>
+                  ) : null}
+                </div>
+              ) : (
+                <ProductThumb
+                  src={row.image_url}
+                  alt={`Imagen de ${row.name}`}
+                  kind={row.kind}
+                  className="h-full w-full"
+                  iconClassName="h-8 w-8"
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                />
+              )}
+              <div className="pointer-events-none absolute top-2.5 left-2.5 flex flex-wrap gap-1.5">
+                {row.kind === "service" ? <span className={CHIP}>Servicio</span> : null}
+                {row.governed ? <GovernedTag /> : null}
+                {!row.is_active ? (
+                  <span className={CHIP}>
+                    <span aria-hidden="true" className="size-1.5 rounded-full bg-muted-foreground" />
+                    Inactivo
+                  </span>
+                ) : null}
+              </div>
+              {!noPhotos ? (
+                <span className={cn(CHIP, "absolute right-2.5 bottom-2.5")}>
+                  <PhotoCount count={row.image_count} />
+                </span>
+              ) : null}
             </div>
-            {/* Nº de fotos que la IA puede enviar (F16); 0 = producto "invisible" para el agente */}
-            <span
-              className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full bg-background/85 px-2 py-0.5 text-[11px] tabular-nums text-muted-foreground shadow-sm"
-              title={row.image_count === 0 ? "Sin fotos: tu agente no podrá mostrar este producto" : undefined}
-            >
-              <Camera className="size-3" aria-hidden />
-              {row.image_count}
-            </span>
-          </div>
-          <div className="relative flex items-start justify-between gap-2 p-3">
-            <div className="pointer-events-none min-w-0">
-              <p className="truncate text-sm font-medium">{row.name}</p>
-              <p className="truncate text-xs text-muted-foreground">
-                {row.kind === "service" && row.duration_minutes
-                  ? `${row.duration_minutes} min`
-                  : row.category_name !== "—"
-                    ? row.category_name
-                    : `${row.variant_count} variante${row.variant_count === 1 ? "" : "s"}`}
-              </p>
-              <p className="mt-1 text-sm font-semibold tabular-nums">{row.price_label}</p>
+            <div className="flex min-w-0 flex-col gap-1 px-4 pt-3 pb-3.5">
+              <span className="truncate text-sm font-semibold" title={row.name}>
+                {row.name}
+              </span>
+              <span className="truncate text-xs text-muted-foreground" title={line}>
+                {line}
+              </span>
+              <span className="mt-1.5 text-sm font-semibold whitespace-nowrap tabular-nums">{row.price_range_label}</span>
+              <StockLabel row={row} className="text-xs" />
             </div>
-            <div className="relative z-10">
+            <div className="absolute top-2 right-2 z-10 rounded-full bg-card/85 backdrop-blur">
               <ProductRowActions product={row} />
             </div>
-          </div>
-        </li>
-      ))}
+          </li>
+        );
+      })}
     </ul>
   );
 }

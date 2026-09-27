@@ -2084,6 +2084,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/catalog/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProductsController_summary_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/catalog/products": {
         parameters: {
             query?: never;
@@ -10896,6 +10912,7 @@ export interface components {
                 created_at: string;
                 /** Format: date-time */
                 updated_at: string;
+                product_count: number;
             }[];
         };
         CatalogDto: {
@@ -10943,6 +10960,7 @@ export interface components {
             created_at: string;
             /** Format: date-time */
             updated_at: string;
+            product_count: number;
             children: components["schemas"]["CategoryListDto__schema0"][];
         };
         CategoryListDto: {
@@ -10963,6 +10981,7 @@ export interface components {
                 created_at: string;
                 /** Format: date-time */
                 updated_at: string;
+                product_count: number;
             })[];
         };
         CreateCategoryDto: {
@@ -11024,6 +11043,7 @@ export interface components {
                     unit: string | null;
                     position: number;
                 }[];
+                product_count: number;
             }[];
         };
         ProductTypeDto: {
@@ -11074,6 +11094,27 @@ export interface components {
                 options?: string[];
                 unit?: string;
             }[];
+        };
+        CatalogSummaryDto: {
+            products: {
+                total: number;
+                active: number;
+                inactive: number;
+                physical: number;
+                services: number;
+            };
+            stock: {
+                ok: number;
+                low: number;
+                out: number;
+                untracked: number;
+            };
+            attention: {
+                without_images: number;
+                out_of_stock: number;
+                uncategorized: number;
+                enrichment_failed: number;
+            };
         };
         ProductsListDto: {
             data: {
@@ -25784,6 +25825,25 @@ export interface operations {
             };
         };
     };
+    ProductsController_summary_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogSummaryDto"];
+                };
+            };
+        };
+    };
     ProductsController_list_v1: {
         parameters: {
             query?: {
@@ -25792,6 +25852,10 @@ export interface operations {
                 category_id?: string;
                 kind?: "product" | "service";
                 is_active?: "true" | "false";
+                has_images?: "true" | "false";
+                stock_state?: "ok" | "low" | "out" | "untracked";
+                uncategorized?: "true" | "false";
+                enrichment_status?: "pending" | "ready" | "failed" | "disabled" | "none";
                 page?: number;
                 page_size?: number;
             };

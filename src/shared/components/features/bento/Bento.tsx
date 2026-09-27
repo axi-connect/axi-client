@@ -73,16 +73,18 @@ export function StatePill({ tone, children }: { tone: StatePillTone; children: R
 /** La cifra de la ficha: Nexa grande, tabular, con su unidad al lado. Nunca una cifra sin unidad. */
 export function BentoFigure({ value, unit, size = "lg" }: { value: string; unit?: string; size?: "lg" | "md" }) {
   return (
-    <p className="flex items-baseline gap-1.5 whitespace-nowrap">
+    // La cifra y su unidad nunca se parten por dentro; si juntas no caben (cifras de 7 dígitos en una ficha
+    // estrecha), la unidad baja a la línea siguiente en vez de salirse de la ficha.
+    <p className="flex flex-wrap items-baseline gap-x-1.5 gap-y-1">
       <span
         className={cn(
-          "font-heading leading-none font-bold tracking-tight tabular-nums",
+          "font-heading leading-none font-bold tracking-tight whitespace-nowrap tabular-nums",
           size === "lg" ? "text-4xl" : "text-3xl",
         )}
       >
         {value}
       </span>
-      {unit ? <span className="text-sm text-muted-foreground">{unit}</span> : null}
+      {unit ? <span className="text-sm whitespace-nowrap text-muted-foreground">{unit}</span> : null}
     </p>
   );
 }

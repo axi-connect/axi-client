@@ -124,6 +124,11 @@ export type ListProductsParams = {
   category_id?: string;
   kind?: ProductKind;
   is_active?: boolean;
+  /** Catálogo premium: los filtros de la isla «Lo próximo» (servidor F1). */
+  has_images?: boolean;
+  stock_state?: "ok" | "low" | "out" | "untracked";
+  uncategorized?: boolean;
+  enrichment_status?: "pending" | "ready" | "failed" | "disabled" | "none";
   page?: number;
   page_size?: number;
 };
@@ -157,7 +162,18 @@ export type ProductRow = {
   price_cents: number;
   currency: string;
   price_label: string;
+  /** «$ 89.000 – $ 129.000» si las variantes activas tienen precios distintos; si no, el precio. */
+  price_range_label: string;
+  /** SKU de la variante por defecto (o la primera): identifica el producto en la fila. */
+  sku: string | null;
   variant_count: number;
+  /** Variantes activas agotadas (el estado `low` dice cuántas). */
+  unavailable_variant_count: number;
+  /** «automática · 92 % · por IA»; vacío sin categoría efectiva. */
+  category_note: string;
+  /** Sin categoría efectiva (D5). */
+  category_missing: boolean;
+  requires_booking: boolean;
   image_count: number;
   stock_total: number | null;
   stock_state: ProductStockState;
@@ -200,6 +216,61 @@ export function aggregateStock(item: ProductListItemDTO): {
   if (unavailable === active.length) return { total, state: "out" };
   if (unavailable > 0) return { total, state: "low" };
   return { total, state: "ok" };
+}
+
+/** Variantes ACTIVAS con inventario y agotadas (las que el estado `low` cuenta). */
+export function unavailableVariantCount(item: ProductListItemDTO): number {
+  if (item.kind === "service") return 0;
+  return item.variants.filter((variant) => variant.is_active && variant.stock?.available === false).length;
+}
+
+/**
+ * Precio de la fila: el rango de las variantes activas cuando difieren
+ * («$ 89.000 – $ 129.000»); si no, el precio base. Sin variantes activas, el
+ * precio base (el backend lo sigue sirviendo).
+ */
+export function productPriceRangeLabel(
+  item: Pick<ProductListItemDTO, "price_cents" | "currency" | "variants">,
+  format: (cents: number, currency: string) => string,
+): string {
+  const prices = item.variants.filter((variant) => variant.is_active).map((variant) => variant.price_cents);
+  if (prices.length === 0) return format(item.price_cents, item.currency);
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  return min === max ? format(min, item.currency) : `${format(min, item.currency)} – ${format(max, item.currency)}`;
+}
+
+/** SKU con que se reconoce el producto: el de la variante por defecto, si no el de la primera. */
+export function productSku(item: Pick<ProductListItemDTO, "variants">): string | null {
+  const byDefault = item.variants.find((variant) => variant.is_default);
+  return (byDefault ?? item.variants[0])?.sku ?? null;
+}
+
+/**
+ * La etiqueta de stock de una fila, con su cifra aparte. «Bajo» siempre fue
+ * «alguna variante agotada»: ahora lo dice (`1 variante agotada`), en vez de un
+ * «Stock bajo» que se leía como «quedan pocas unidades».
+ */
+export function productStockText(row: Pick<ProductRow, "stock_state" | "stock_total" | "unavailable_variant_count">): {
+  figure: string | null;
+  label: string;
+} {
+  switch (row.stock_state) {
+    case "none":
+      return { figure: null, label: "no aplica" };
+    case "untracked":
+      return { figure: null, label: "sin control de stock" };
+    case "out":
+      return { figure: String(row.stock_total ?? 0), label: "agotado" };
+    case "low": {
+      const count = row.unavailable_variant_count;
+      return { figure: String(row.stock_total ?? 0), label: `${count} ${count === 1 ? "variante agotada" : "variantes agotadas"}` };
+    }
+    case "ok": {
+      const total = row.stock_total ?? 0;
+      return { figure: String(total), label: total === 1 ? "disponible" : "disponibles" };
+    }
+  }
 }
 
 /**

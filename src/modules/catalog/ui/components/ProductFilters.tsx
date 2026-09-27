@@ -1,9 +1,8 @@
 "use client";
 
-import { X } from "lucide-react";
-import { Button } from "@/shared/components/ui/button";
 import type { CatalogListItemDTO } from "@/modules/catalog/domain/catalog";
 import type { ProductKind } from "@/modules/catalog/domain/product";
+import type { ProductListFilterKey, ProductListFilters } from "@/modules/catalog/domain/product-list-query";
 import {
   Select,
   SelectContent,
@@ -14,18 +13,16 @@ import {
 
 const ALL = "__all__";
 
-export type ProductFiltersValue = {
-  catalog_id?: string;
-  category_id?: string;
-  kind?: ProductKind;
-  is_active?: boolean;
-};
-
 export type CategoryOption = { id: string; label: string; depth: number };
 
+const TRIGGER = "h-9 w-full min-w-0 rounded-full sm:w-auto sm:min-w-36 [&>span]:truncate";
+
 /**
- * Filtros del listado de productos (catálogo, categoría, tipo, estado).
- * Cambiar cualquiera reinicia a la página 1 (lo maneja `usePaginatedList`).
+ * Filtros del listado de productos: catálogo, categoría, tipo y estado (los
+ * de la isla —sin fotos, agotados…— llegan por la URL y se ven como chips).
+ * Controlados por el estado de la URL (`product-list-query.ts`); cambiar uno
+ * vuelve a la página 1. El «Limpiar» vive en la fila de chips, junto a lo que
+ * limpia.
  */
 export function ProductFilters({
   value,
@@ -33,24 +30,24 @@ export function ProductFilters({
   catalogs,
   categories,
 }: {
-  value: ProductFiltersValue;
-  onChange: (value: ProductFiltersValue) => void;
+  value: ProductListFilters;
+  onChange: <K extends ProductListFilterKey>(key: K, next: ProductListFilters[K]) => void;
   catalogs: CatalogListItemDTO[];
   categories: CategoryOption[];
 }) {
-  const hasFilters =
-    value.catalog_id !== undefined ||
-    value.category_id !== undefined ||
-    value.kind !== undefined ||
-    value.is_active !== undefined;
+  // El valor visible puede truncarse en el celular: el `title` lo dice entero.
+  const catalogLabel = catalogs.find((catalog) => catalog.id === value.catalog_id)?.name ?? "Todos los catálogos";
+  const categoryLabel = categories.find((category) => category.id === value.category_id)?.label ?? "Todas las categorías";
+  const kindLabel = value.kind === "service" ? "Servicios" : value.kind === "product" ? "Productos" : "Todo";
+  const stateLabel = value.is_active === undefined ? "Cualquier estado" : value.is_active ? "Activos" : "Inactivos";
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center [&>*]:min-w-0">
       <Select
         value={value.catalog_id ?? ALL}
-        onValueChange={(v: string) => onChange({ ...value, catalog_id: v === ALL ? undefined : v })}
+        onValueChange={(v: string) => onChange("catalog_id", v === ALL ? undefined : v)}
       >
-        <SelectTrigger className="h-9 w-full sm:w-40" aria-label="Filtrar por catálogo">
+        <SelectTrigger className={TRIGGER} aria-label="Filtrar por catálogo" title={catalogLabel}>
           <SelectValue placeholder="Catálogo" />
         </SelectTrigger>
         <SelectContent>
@@ -65,9 +62,9 @@ export function ProductFilters({
 
       <Select
         value={value.category_id ?? ALL}
-        onValueChange={(v: string) => onChange({ ...value, category_id: v === ALL ? undefined : v })}
+        onValueChange={(v: string) => onChange("category_id", v === ALL ? undefined : v)}
       >
-        <SelectTrigger className="h-9 w-full sm:w-44" aria-label="Filtrar por categoría">
+        <SelectTrigger className={TRIGGER} aria-label="Filtrar por categoría" title={categoryLabel}>
           <SelectValue placeholder="Categoría" />
         </SelectTrigger>
         <SelectContent>
@@ -82,11 +79,9 @@ export function ProductFilters({
 
       <Select
         value={value.kind ?? ALL}
-        onValueChange={(v: string) =>
-          onChange({ ...value, kind: v === ALL ? undefined : (v as ProductKind) })
-        }
+        onValueChange={(v: string) => onChange("kind", v === ALL ? undefined : (v as ProductKind))}
       >
-        <SelectTrigger className="h-9 w-full sm:w-32" aria-label="Filtrar por tipo">
+        <SelectTrigger className={TRIGGER} aria-label="Filtrar por tipo" title={kindLabel}>
           <SelectValue placeholder="Tipo" />
         </SelectTrigger>
         <SelectContent>
@@ -98,11 +93,9 @@ export function ProductFilters({
 
       <Select
         value={value.is_active === undefined ? ALL : value.is_active ? "active" : "inactive"}
-        onValueChange={(v: string) =>
-          onChange({ ...value, is_active: v === ALL ? undefined : v === "active" })
-        }
+        onValueChange={(v: string) => onChange("is_active", v === ALL ? undefined : v === "active")}
       >
-        <SelectTrigger className="h-9 w-full sm:w-32" aria-label="Filtrar por estado">
+        <SelectTrigger className={TRIGGER} aria-label="Filtrar por estado" title={stateLabel}>
           <SelectValue placeholder="Estado" />
         </SelectTrigger>
         <SelectContent>
@@ -111,13 +104,6 @@ export function ProductFilters({
           <SelectItem value="inactive">Inactivos</SelectItem>
         </SelectContent>
       </Select>
-
-      {hasFilters && (
-        <Button type="button" variant="ghost" size="sm" className="h-9" onClick={() => onChange({})}>
-          <X className="h-4 w-4" />
-          Limpiar
-        </Button>
-      )}
     </div>
   );
 }
