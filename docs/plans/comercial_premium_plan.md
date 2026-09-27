@@ -1,6 +1,6 @@
 # Comercial premium — plan
 
-Canvas aprobado (F0, 2026-09-25; luz verde 2026-09-27): https://claude.ai/artifact/JpZ7pzwdf8emGMH7WjLcZu, con copia en
+Canvas aprobado (F0, 2026-09-25; luz verde 2026-09-27): https://claude.ai/artifact/N8orVsan9UaeChqYrrTHi8 (republicado 2026-09-27 en la cuenta actual; el original JpZ7pzwdf8emGMH7WjLcZu era de otra cuenta), con copia en
 `docs/design/mockups/comercial-premium/` del repo de docs. Lista de paridad: [comercial_premium_inventario.md](comercial_premium_inventario.md).
 Rama `feat/comercial-premium` sobre `origin/main` 9cb96f27. Solo cliente: el contrato del servidor no cambia.
 
