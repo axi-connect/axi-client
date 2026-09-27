@@ -137,6 +137,35 @@ describe("GoalEditorView", () => {
     expect(screen.queryByText("Falta el ticket")).toBeNull();
   });
 
+  it("las ventas salen de la cuenta a la vista, y cada cifra de la cadena lleva su barra de embudo", () => {
+    withData();
+    useCommercialStore.setState({ preview: { status: "ready", data: plan, error: null } });
+    render(<GoalEditorView />);
+    const list = screen.getByRole("region", { name: "Lo que implica" });
+    expect(within(list).getByText(/÷ .*700\.000 de ticket = 42,9 → 43$/)).toBeInTheDocument();
+    expect(within(list).getAllByRole("listitem")).toHaveLength(6);
+  });
+
+  it("«Así queda tu mes»: ventas al día hábil, contra el mes pasado, por semana y lo alcanzable", () => {
+    withData();
+    useCommercialStore.setState({ preview: { status: "ready", data: plan, error: null } });
+    render(<GoalEditorView />);
+    const island = within(screen.getByRole("region", { name: "Así queda tu mes" }));
+    expect(island.getByText("1,7")).toBeInTheDocument();
+    expect(island.getByText("ventas al día hábil, 26 días de lunes a sábado")).toBeInTheDocument();
+    expect(island.getByText("Sobre agosto").nextSibling).toHaveTextContent("+36 %");
+    expect(island.getByText("Por semana").nextSibling).toHaveTextContent("10 ventas");
+    expect(island.getByText(/es alcanzable/)).toHaveTextContent(/25\.400\.000.*\(\+15 %\) es alcanzable/);
+  });
+
+  it("«Así queda tu mes» sin ticket no inventa el ritmo: dice qué falta", () => {
+    withData();
+    useCommercialStore.setState({ preview: { status: "ready", data: { ...plan, status: "incomplete" }, error: null } });
+    render(<GoalEditorView />);
+    const island = within(screen.getByRole("region", { name: "Así queda tu mes" }));
+    expect(island.getByText("Con tu ticket promedio te decimos cuántas ventas al día pide.")).toBeInTheDocument();
+  });
+
   it("si la vista previa falla con cifras viejas, las atenúa y lo dice", () => {
     withData();
     useCommercialStore.setState({ preview: { status: "error", data: plan, error: "Sin conexión" } });

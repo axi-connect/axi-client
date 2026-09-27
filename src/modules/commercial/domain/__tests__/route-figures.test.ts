@@ -1,6 +1,6 @@
 import { formatMoney } from "@/core/lib/format";
 import { pace, learningPace } from "../../ui/__tests__/fixtures";
-import { lastBusinessDay, routeFigures, todayMark, weekChart } from "../route-figures";
+import { lastBusinessDay, routeFigures, todayMark, weekChart, weekdaySpan } from "../route-figures";
 
 describe("todayMark y lastBusinessDay", () => {
   it("«Hoy · mié 23» y el último día hábil según el horario, no el último del mes", () => {
@@ -74,5 +74,18 @@ describe("weekChart", () => {
 
   it("sin días hábiles en la semana no hay gráfica", () => {
     expect(weekChart([], "2026-09-23", [], "2026-09-01", "2026-09-30")).toBeNull();
+  });
+});
+
+describe("weekdaySpan", () => {
+  it("dice los días hábiles en palabras", () => {
+    expect(weekdaySpan([1, 2, 3, 4, 5, 6])).toBe("de lunes a sábado");
+    expect(weekdaySpan([1, 2, 3, 4, 5])).toBe("de lunes a viernes");
+    expect(weekdaySpan([1, 3, 5])).toBe("lunes, miércoles y viernes");
+    expect(weekdaySpan([2, 3, 4, 5, 6, 0])).toBe("de martes a domingo");
+    expect(weekdaySpan([0, 1, 2, 3, 4, 5, 6])).toBe("todos los días");
+    expect(weekdaySpan([6])).toBe("solo los sábados");
+    expect(weekdaySpan([1])).toBe("solo los lunes");
+    expect(weekdaySpan([])).toBeNull();
   });
 });

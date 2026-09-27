@@ -8,6 +8,7 @@ import {
   noProposalsMessage,
   paceHeadline,
   projectionLine,
+  reachableLine,
   rateLine,
   salesPerDay,
   seedLine,
@@ -177,5 +178,18 @@ describe("noProposalsMessage (Q12)", () => {
   it("aprendiendo, el aviso de aprendizaje; sin ritmo, el neutro", () => {
     expect(noProposalsMessage("insufficient_data")).toMatch(/Cuando conozcamos tu ritmo/);
     expect(noProposalsMessage(null)).toMatch(/^Estás al día/);
+  });
+});
+
+describe("reachableLine", () => {
+  it("la meta que la historia hace alcanzable, con su alza; sin historia o sin sugerencia, nada", () => {
+    const seed = { last_month_revenue_cents: 2_210_000_000, last_month_sales: 31, last_month_avg_ticket_cents: 71_300_000, suggested_target_cents: 2_540_000_000, source: "history" as const, niche_label: null };
+    const line = reachableLine(seed, "COP");
+    expect(line?.lift).toBe("+15 %");
+    expect(line?.amount).toMatch(/25\.400\.000/);
+    expect(reachableLine({ ...seed, source: "benchmark" }, "COP")).toBeNull();
+    expect(reachableLine({ ...seed, suggested_target_cents: null }, "COP")).toBeNull();
+    expect(reachableLine({ ...seed, last_month_revenue_cents: null }, "COP")?.lift).toBeNull();
+    expect(reachableLine(null, "COP")).toBeNull();
   });
 });

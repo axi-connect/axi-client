@@ -6,12 +6,12 @@ sobre `9cb96f27` (no de memoria ni del canvas). Textos entre comillas = los de h
 Al final: lo que el canvas pinta y hoy NO existe (se decide, no se inventa).
 
 ## 0. Transversal (no cambia, se conserva tal cual)
-- [ ] Gates: sin `commercial:read` → «No tienes acceso a Comercial» / «Pídele a un administrador el permiso de lectura del módulo.»; sin capacidad `crm` (o 403 `no_plan`) → bloqueado «Comercial no está en tu plan» + «Tus agentes siguen atendiendo y vendiendo…» + «Ver planes» → `/billing`; mientras `useEntitlements` carga NO se pinta el bloqueado.
-- [ ] Carga una sola vez (`goal.status === "idle"`), `cancelStaleRetry` al desmontar, tiempo real `useCommercialRealtime` (meta, plan, ritmo y propuestas con debounce), propuestas pedidas con meta y una vez por montaje.
-- [ ] Rutas: `/comercial`, `/comercial/meta`, `/comercial/resultados/[key]` y `/comercial/acciones/[id]` con hoja interceptada (`@sheet`, `back`) y página dura (`replace` a `/comercial`); `default.tsx` monta la ruta detrás; `loading.tsx` con la silueta.
-- [ ] Superficie pública intacta: `GoalProgressBlock` (Panel), `commercialProposalHref`/`isCommercialProposal` (cmo), `useGoalChip` (briefing de Axel), `useRouteRates` (Analítica), `COMMERCIAL_BREADCRUMBS`.
-- [ ] Cada cifra lleva su procedencia (`SourceMark`: «según tu historia» · «lo dijiste tú» · «supuesto para {nicho}», con icono). Voz «progreso»: nunca un negativo ni un regaño (`copy.ts` entero, testeado).
-- [ ] Violeta SOLO en «Axi propone» (D4). El coral no significa nunca «mal»; ritmo con `PACE_BADGES` (Adelantado, Al ritmo, Ritmo bajo ×2, Aprendiendo tu ritmo, Cumplida).
+- [x] Gates: sin `commercial:read` → «No tienes acceso a Comercial» / «Pídele a un administrador el permiso de lectura del módulo.»; sin capacidad `crm` (o 403 `no_plan`) → bloqueado «Comercial no está en tu plan» + «Tus agentes siguen atendiendo y vendiendo…» + «Ver planes» → `/billing`; mientras `useEntitlements` carga NO se pinta el bloqueado.
+- [x] Carga una sola vez (`goal.status === "idle"`), `cancelStaleRetry` al desmontar, tiempo real `useCommercialRealtime` (meta, plan, ritmo y propuestas con debounce), propuestas pedidas con meta y una vez por montaje.
+- [x] Rutas: `/comercial`, `/comercial/meta`, `/comercial/resultados/[key]` y `/comercial/acciones/[id]` con hoja interceptada (`@sheet`, `back`) y página dura (`replace` a `/comercial`); `default.tsx` monta la ruta detrás; `loading.tsx` con la silueta.
+- [x] Superficie pública intacta: `GoalProgressBlock` (Panel), `commercialProposalHref`/`isCommercialProposal` (cmo), `useGoalChip` (briefing de Axel), `useRouteRates` (Analítica), `COMMERCIAL_BREADCRUMBS`.
+- [x] Cada cifra lleva su procedencia (`SourceMark`: «según tu historia» · «lo dijiste tú» · «supuesto para {nicho}», con icono). Voz «progreso»: nunca un negativo ni un regaño (`copy.ts` entero, testeado).
+- [x] Violeta SOLO en «Axi propone» (D4). El coral no significa nunca «mal»; ritmo con `PACE_BADGES` (Adelantado, Al ritmo, Ritmo bajo ×2, Aprendiendo tu ritmo, Cumplida).
 
 ## 1. La ruta del mes (`/comercial`, `CommercialView`)
 - [x] Estados de la vista: error de meta «No pude cargar la ruta» + detalle + «Reintentar»; silueta; sin meta; con meta y ritmo cargando (silueta sin cabecera); error de ritmo «No pude leer el ritmo» + «Reintentar» (`reloadPace`); aprendiendo; con ritmo.
@@ -38,35 +38,43 @@ Al final: lo que el canvas pinta y hoy NO existe (se decide, no se inventa).
 - «Axi propone» → isla «Acciones recomendadas» (`RecommendedActions`): los mismos estados, textos de vacío, línea de solo lectura, «Aprobar» que abre el detalle y «Ver qué quedó» (C6). Las decididas del mes suman las **descartadas con su motivo** (`?status=rejected`); al rechazar, la fila pasa a descartada en vez de desaparecer. «Se aprobó el 22 de septiembre» se dice ahora «Aprobada el 22 sep».
 
 ## 2. Definir la meta (`/comercial/meta`, `GoalEditorView`)
-- [ ] Estados: sin permiso de lectura; bloqueado; error «No pude cargar la meta» + «Reintentar»; silueta; sin `commercial:manage` → «Solo un administrador puede cambiar la meta» + «Volver a la ruta».
-- [ ] Título «¿Cuánto quieres vender en {mes}?»; «El mes pasado: $ X · N ventas · ticket $ Y» o «Una cifra, un mes. Te decimos qué implica.».
-- [ ] Aviso de mitad de mes (`midMonthLine`) cuando hay meta y ya hay ventas.
-- [ ] Cifra grande `PriceInput` (sr-only «Meta del mes en {moneda}»), «{moneda} · {mes}»; valor inicial = meta actual o sugerida; tocar la cifra pasa el atajo a «Otra cifra».
-- [ ] Atajos (solo con mes pasado): «Como el mes pasado», «+10 %», «+25 %», «Otra cifra».
-- [ ] «Lo que implica»: vista previa con debounce 350 ms y aborto; filas Ventas necesarias (ticket $ X), Cotizaciones (≈, «N % de las cotizaciones se venden»), Citas agendadas, Contactados, Conversaciones nuevas, Llamadas («N % contestan»), cada una con procedencia y «N en D días»; vacío «Escribe una cifra y te decimos…»; error; calculando; plan incompleto → aviso «Falta tu ticket promedio para trazar la ruta… El ticket nunca se supone.» y «Falta el ticket» en cada fila; error al recalcular «lo de abajo es de la anterior».
-- [ ] «Ajustar supuestos» (plegable): Ticket promedio (`PriceInput`, «Como tu historia»), «Cotización → venta (%)» (decimal con coma); nota «Lo que cambies aquí pasa a decir «lo dijiste tú»…».
-- [ ] Guardar: validación «Escribe cuánto quieres vender.», error del servidor, toast «Meta puesta» / «Empezamos a medir el camino.», vuelve a `/comercial`; «Cancelar».
+- [x] Estados: sin permiso de lectura; bloqueado; error «No pude cargar la meta» + «Reintentar»; silueta; sin `commercial:manage` → «Solo un administrador puede cambiar la meta» + «Volver a la ruta».
+- [x] Título «¿Cuánto quieres vender en {mes}?»; «El mes pasado: $ X · N ventas · ticket $ Y» o «Una cifra, un mes. Te decimos qué implica.».
+- [x] Aviso de mitad de mes (`midMonthLine`) cuando hay meta y ya hay ventas.
+- [x] Cifra grande `PriceInput` (sr-only «Meta del mes en {moneda}»), «{moneda} · {mes}»; valor inicial = meta actual o sugerida; tocar la cifra pasa el atajo a «Otra cifra».
+- [x] Atajos (solo con mes pasado): «Como el mes pasado», «+10 %», «+25 %», «Otra cifra».
+- [x] «Lo que implica»: vista previa con debounce 350 ms y aborto; filas Ventas necesarias (ticket $ X), Cotizaciones (≈, «N % de las cotizaciones se venden»), Citas agendadas, Contactados, Conversaciones nuevas, Llamadas («N % contestan»), cada una con procedencia y «N en D días»; vacío «Escribe una cifra y te decimos…»; error; calculando; plan incompleto → aviso «Falta tu ticket promedio para trazar la ruta… El ticket nunca se supone.» y «Falta el ticket» en cada fila; error al recalcular «lo de abajo es de la anterior».
+- [x] «Ajustar supuestos» (plegable): Ticket promedio (`PriceInput`, «Como tu historia»), «Cotización → venta (%)» (decimal con coma); nota «Lo que cambies aquí pasa a decir «lo dijiste tú»…».
+- [x] Guardar: validación «Escribe cuánto quieres vender.», error del servidor, toast «Meta puesta» / «Empezamos a medir el camino.», vuelve a `/comercial`; «Cancelar».
 
 ## 3. Detalle de un resultado (`KeyResultSheetRoute` + `KeyResultDetail`)
-- [ ] Hoja `lg`, título del resultado, subtítulo «Resultado clave»; sin permiso; clave inexistente «Ese resultado no existe.»; sin meta «Aún no hay meta este mes…» + «Definir la meta» (manage); cargando; error; «Este resultado no está en tu ruta de este mes.».
-- [ ] Cifra grande «27» + «de 43 · faltan 16» + badge fuera de ritmo; ticket: real o «—» + «plan $ X».
-- [ ] Tendencia acumulada (solo ventas, no aprendiendo): real coral con relleno vs esperado punteado, corte en `today`, recharts diferido, etiqueta accesible, leyenda Real/Esperado.
-- [ ] «El camino»: Recorrido (N unidad · %; llamadas «Contestadas…»); Donde deberías ir hoy («43 × 20 de 26 días hábiles»); Ritmo real; Ritmo necesario («Ya llegaste» / «X al día · N días hábiles» / «N hoy», con la cuenta); Proyección al cierre (con $ en ventas). Aprendiendo: solo Recorrido. Ticket: «Ticket real del mes» («sobre N ventas» / «Aún sin ventas este mes») y «Frente al plan».
-- [ ] «De dónde sale»: tasas `KR_INPUTS` con procedencia, «últimos N días», «sobre N», «Corregir» → `/comercial/meta` (manage, aria «Corregir {tasa}»); «Días hábiles: N en {mes} · según tu horario de atención».
-- [ ] «Mix sugerido» (ventas): categoría, «N ventas», «N % de tus ventas».
-- [ ] Pie: «N acciones propuestas empujan este resultado» (violeta) + «Ver en el CRM» / «Ver en Analítica».
+- [x] Hoja `lg`, título del resultado, subtítulo «Resultado clave»; sin permiso; clave inexistente «Ese resultado no existe.»; sin meta «Aún no hay meta este mes…» + «Definir la meta» (manage); cargando; error; «Este resultado no está en tu ruta de este mes.».
+- [x] Cifra grande «27» + «de 43 · faltan 16» + badge fuera de ritmo; ticket: real o «—» + «plan $ X».
+- [x] Tendencia acumulada (solo ventas, no aprendiendo): real coral con relleno vs esperado punteado, corte en `today`, recharts diferido, etiqueta accesible, leyenda Real/Esperado.
+- [x] «El camino»: Recorrido (N unidad · %; llamadas «Contestadas…»); Donde deberías ir hoy («43 × 20 de 26 días hábiles»); Ritmo real; Ritmo necesario («Ya llegaste» / «X al día · N días hábiles» / «N hoy», con la cuenta); Proyección al cierre (con $ en ventas). Aprendiendo: solo Recorrido. Ticket: «Ticket real del mes» («sobre N ventas» / «Aún sin ventas este mes») y «Frente al plan».
+- [x] «De dónde sale»: tasas `KR_INPUTS` con procedencia, «últimos N días», «sobre N», «Corregir» → `/comercial/meta` (manage, aria «Corregir {tasa}»); «Días hábiles: N en {mes} · según tu horario de atención».
+- [x] «Mix sugerido» (ventas): categoría, «N ventas», «N % de tus ventas».
+- [x] Pie: «N acciones propuestas empujan este resultado» (violeta) + «Ver en el CRM» / «Ver en Analítica».
 
 ## 4. Detalle de una acción (`ActionSheetRoute` + `ActionDetail`)
-- [ ] Estados: sin permiso; cargando; 404 «Esta acción ya no está» / «Venció o alguien de tu equipo la decidió.» + «Volver a la ruta»; error + «Reintentar»; 409/403 → relectura sin silueta (C4).
-- [ ] Cabecera: tipo (Lote de seguimiento/Secuencia), estado o vencimiento, titular violeta, «La cuenta: {basis}» + procedencia.
-- [ ] Resultado de aprobar (`approvalLines`): aplicado / fallido en contactos, `NOTHING_APPLIED_NOTE`, «No había nada que encender…»; aprobada sin resultado: «Se aprobó el {fecha}.» + dónde seguirla; rechazada: «Anotado. Axi no vuelve a proponerlo esta semana.» + motivo.
-- [ ] «Por qué ahora»: razón + evidencias (etiqueta, valor, procedencia o «según tu ruta»).
-- [ ] «Qué va a pasar» / «Lo que se aprobó»: Contactos (+ nota de bajas; aprobada «Ver en Tareas/Secuencias»), Canal, Cuándo/Arranque («mañana a las 9:00» / fecha · N por hora, «Dentro de tu horario · respeta las horas de silencio.»), Quién (agente activo/asignado, «Objetivo: …»).
-- [ ] «Qué puede salir mal» (riesgos) y «Después» (`AFTER_APPROVAL_NOTE` / `AFTER_APPROVED_NOTE`).
-- [ ] Pie: pendiente → nota de rechazo + «Rechazar» + «Aprobar»; rechazar → «¿Por qué no?» con `REJECT_REASONS`, «Otro motivo…» (≥ 8 car., 300 máx., «Escríbelo como una regla…»), «Volver»/«Rechazar»; solo lectura → la línea; aprobada → «Ver en Tareas/Secuencias».
+- [x] Estados: sin permiso; cargando; 404 «Esta acción ya no está» / «Venció o alguien de tu equipo la decidió.» + «Volver a la ruta»; error + «Reintentar»; 409/403 → relectura sin silueta (C4).
+- [x] Cabecera: tipo (Lote de seguimiento/Secuencia), estado o vencimiento, titular violeta, «La cuenta: {basis}» + procedencia.
+- [x] Resultado de aprobar (`approvalLines`): aplicado / fallido en contactos, `NOTHING_APPLIED_NOTE`, «No había nada que encender…»; aprobada sin resultado: «Se aprobó el {fecha}.» + dónde seguirla; rechazada: «Anotado. Axi no vuelve a proponerlo esta semana.» + motivo.
+- [x] «Por qué ahora»: razón + evidencias (etiqueta, valor, procedencia o «según tu ruta»).
+- [x] «Qué va a pasar» / «Lo que se aprobó»: Contactos (+ nota de bajas; aprobada «Ver en Tareas/Secuencias»), Canal, Cuándo/Arranque («mañana a las 9:00» / fecha · N por hora, «Dentro de tu horario · respeta las horas de silencio.»), Quién (agente activo/asignado, «Objetivo: …»).
+- [x] «Qué puede salir mal» (riesgos) y «Después» (`AFTER_APPROVAL_NOTE` / `AFTER_APPROVED_NOTE`).
+- [x] Pie: pendiente → nota de rechazo + «Rechazar» + «Aprobar»; rechazar → «¿Por qué no?» con `REJECT_REASONS`, «Otro motivo…» (≥ 8 car., 300 máx., «Escríbelo como una regla…»), «Volver»/«Rechazar»; solo lectura → la línea; aprobada → «Ver en Tareas/Secuencias».
+
+**C2 — dónde quedó cada cosa** (verificado en código y render, 2026-09-27):
+- Editor: los mismos estados, título, «El mes pasado…», aviso de mitad de mes, atajos, vista previa con espera y aborto, supuestos, validación, error y guardado. La cifra se escribe en grande sobre la raya; «{moneda} · {mes}» pasa a la etiqueta de arriba («Meta del mes · COP · septiembre 2026») y el alza sobre el mes pasado se dice al lado de los atajos. Se añade «Volver a la ruta» (Cancelar sigue).
+- «Lo que implica»: las mismas filas, tasas, procedencias y estados (vacío, calculando, error, incompleto con «Falta el ticket» y sin ceros, error al recalcular con la lista atenuada). Una sola rejilla con la columna de cifras a `max-content` y barras del embudo; las ventas muestran su cuenta («$ 30.000.000 ÷ $ 700.000 de ticket = 42,9 → 43») en vez de «ticket $ 700.000».
+- «Así queda tu mes» (nuevo, la isla): ventas al día hábil, días y cuáles, barra del mes pasado contra la meta, alza, ventas por semana y la meta alcanzable de la semilla. Sin cifra o sin ticket lo dice.
+- Avisos: con el color en el punto (mitad de mes, falta el ticket, error) en vez de `Callout` tintado. «Ajustar supuestos» solo monta sus campos abierto; la nota de «lo dijiste tú» queda siempre a la vista debajo.
+- Hoja de resultado: subtítulo «Resultado clave · {mes}»; la píldora de ritmo en vez del badge; la leyenda de la tendencia con cifras (Real · 27 · Esperado · 33 a hoy · Si sigues así · 35); el pie sin violeta, con la diana. Listas, «Corregir» y enlaces, iguales.
+- Hoja de acción: «Acción recomendada · {tipo}» con el estado o el vencimiento en píldora; «+2 ventas estimadas» en grande (coral) y el resto al lado; la cuenta y su procedencia, iguales. Los avisos del resultado de aprobar llevan el color en el punto. Por qué ahora, qué va a pasar, riesgos, después, rechazar con motivo y solo lectura: sin cambios.
 
 ## 5. Franja del Panel (`GoalProgressBlock`) y chip de Axel
-- [ ] Ya rediseñada y certificada con el Panel premium (2026-09-26): «Tu meta de {mes}», cifra, «de $ · %», badge, frase, línea, «Ventas: 27 de 43 · faltan 16», «Ver la ruta»; sin meta (manage) la invitación «Ponle una meta al mes…» / «Definir la meta»; nunca bloquea ni pinta errores. **No se toca en este upgrade** (el canvas 6 es anterior al Panel certificado); solo hereda los cambios de `RouteLine` sin romper `compact`.
+- [x] Ya rediseñada y certificada con el Panel premium (2026-09-26): «Tu meta de {mes}», cifra, «de $ · %», badge, frase, línea, «Ventas: 27 de 43 · faltan 16», «Ver la ruta»; sin meta (manage) la invitación «Ponle una meta al mes…» / «Definir la meta»; nunca bloquea ni pinta errores. **No se toca en este upgrade** (el canvas 6 es anterior al Panel certificado); solo hereda los cambios de `RouteLine` sin romper `compact`.
 
 ## Lo que el canvas pinta y hoy NO existe — decisión por punto
 | Del canvas | ¿Hay dato? | Decisión propuesta |

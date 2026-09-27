@@ -77,11 +77,13 @@ beforeEach(() => {
 });
 
 describe("ActionSheetRoute / ActionDetail", () => {
-  it("pinta tipo, titular violeta con la cuenta, por qué ahora y qué va a pasar", async () => {
+  it("pinta qué es, el titular con la cifra en grande y su cuenta, por qué ahora y qué va a pasar", async () => {
     render(<ActionSheetRoute proposalId={proposal.id} closeBehavior="back" />);
     expect(await screen.findByRole("heading", { name: proposal.title })).toBeInTheDocument();
-    expect(screen.getByText("Lote de seguimiento")).toBeInTheDocument();
-    expect(screen.getByText("+2 ventas estimadas · cubre el 20 % de lo que falta para volver al ritmo")).toHaveClass("text-accent-violet");
+    expect(screen.getByText("Acción recomendada · Lote de seguimiento")).toBeInTheDocument();
+    // La cifra en grande (coral, sin violeta: el dueño lo quiso «menos IA») y el resto al lado.
+    expect(screen.getByText("+2 ventas estimadas")).toHaveClass("text-brand");
+    expect(screen.getByText("cubre el 20 % de lo que falta para volver al ritmo")).toBeInTheDocument();
     expect(screen.getByText("La cuenta: 12 × 50 % × 35 % = 2")).toBeInTheDocument();
     // La procedencia del titular (`estimate_source`) va junto a la cuenta.
     expect(screen.getByText("La cuenta: 12 × 50 % × 35 % = 2").parentElement).toHaveTextContent("según tu historia");

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
+import { monthLabel } from "@/modules/commercial/domain/format";
 import { isKeyResultDetailKey } from "@/modules/commercial/domain/key-result";
 import { useCommercialStore } from "@/modules/commercial/infrastructure/stores/commercial.store";
 import { useAuth } from "@/shared/auth/auth.hooks";
@@ -52,7 +53,7 @@ export function KeyResultSheetRoute({ resultKey, closeBehavior }: { resultKey: s
         if (!next) close();
       }}
       title={key === null ? "Resultado clave" : keyResultTitle(key)}
-      subtitle="Resultado clave"
+      subtitle={pace.data === null ? "Resultado clave" : `Resultado clave · ${monthLabel(pace.data.period_start)}`}
       renderFooter={key === null || pace.data === null ? undefined : () => <KeyResultDetailFooter detailKey={key} />}
     >
       {!canRead ? (

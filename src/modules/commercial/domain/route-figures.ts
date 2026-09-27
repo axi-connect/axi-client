@@ -192,3 +192,22 @@ export function weekChart(
         : `${String(dayOfMonth(first))} ${month(first)} – ${String(dayOfMonth(last))} ${month(last)}`;
   return { bars, range };
 }
+
+/**
+ * Los días hábiles dichos en palabras: «de lunes a sábado» si son seguidos,
+ * «lunes, miércoles y viernes» si no. `null` sin días.
+ */
+export function weekdaySpan(weekdays: readonly number[]): string | null {
+  const days = [...new Set(weekdays)].filter((d) => d >= 0 && d <= 6).sort((a, b) => (a === 0 ? 7 : a) - (b === 0 ? 7 : b));
+  if (days.length === 0) return null;
+  if (days.length === 1) {
+    const name = WEEKDAY_NAMES[days[0]];
+    return `solo los ${name.endsWith("s") ? name : `${name}s`}`;
+  }
+  if (days.length === 7) return "todos los días";
+  const order = days.map((d) => (d === 0 ? 7 : d));
+  const contiguous = order.every((d, i) => i === 0 || d === order[i - 1] + 1);
+  if (contiguous) return `de ${WEEKDAY_NAMES[days[0]]} a ${WEEKDAY_NAMES[days[days.length - 1]]}`;
+  const names = days.map((d) => WEEKDAY_NAMES[d]);
+  return `${names.slice(0, -1).join(", ")} y ${names[names.length - 1]}`;
+}

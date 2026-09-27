@@ -139,6 +139,18 @@ export function seedLine(seed: GoalSeedDTO | null, currency: string): string | n
   return `Aún no tenemos tu historia: te proponemos empezar con lo típico de ${niche}.`;
 }
 
+/**
+ * «Así queda tu mes» en el editor: la meta que la historia hace alcanzable,
+ * dicha sin regaño («Con tu ritmo, $ 25.400.000 (+15 %) es alcanzable.»).
+ * `null` sin historia o sin sugerencia del servidor.
+ */
+export function reachableLine(seed: GoalSeedDTO | null, currency: string): { amount: string; lift: string | null } | null {
+  if (seed === null || seed.source === "benchmark" || seed.suggested_target_cents === null) return null;
+  const last = seed.last_month_revenue_cents;
+  const lift = last === null || last <= 0 ? null : Math.round(((seed.suggested_target_cents - last) / last) * 100);
+  return { amount: formatMoney(seed.suggested_target_cents, currency), lift: lift === null || lift <= 0 ? null : `+${String(lift)} %` };
+}
+
 /** «Meta del mes: $ 30.000.000 · la pusiste tú el 1 sep». Quién la puso cambia el verbo. */
 export function goalLead(targetCents: number, currency: string, source: GoalSource, setAtIso: string): string {
   const when = shortDay(setAtIso);
