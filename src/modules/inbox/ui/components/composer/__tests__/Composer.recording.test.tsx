@@ -95,7 +95,7 @@ describe("Composer — varios adjuntos fuera de ventana (auditoría F3-H2)", () 
   it("si el servidor cierra la ventana con el primero, no intenta los siguientes", async () => {
     global.URL.createObjectURL = jest.fn(() => "blob:x")
     const c = conv(H)
-    const onSend = jest.fn(async (_input: SendInput) => {
+    const onSend = jest.fn<Promise<void>, [SendInput]>(async () => {
       // Lo que hace use-send-message al recibir channels/outside_service_window.
       useWindowRejections.getState().reject("c1", c.last_inbound_at)
     })
