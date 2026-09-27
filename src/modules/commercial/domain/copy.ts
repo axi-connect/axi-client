@@ -163,7 +163,7 @@ export const MISSING_TICKET_FIGURE = "Falta el ticket";
 export const GOAL_SAVED_TITLE = "Meta puesta";
 export const GOAL_SAVED_DETAIL = "Empezamos a medir el camino.";
 
-/** El estado vacío de «Axi propone» mientras no haya nada que acelerar (F6). */
+/** El estado vacío de «Acciones recomendadas» mientras no haya nada que acelerar (F6). */
 const NO_PROPOSALS_MESSAGE = "Estás al día. Cuando algo pueda acelerar la ruta, aquí lo verás.";
 
 /** El mismo hueco, en el estado «aprendiendo». */
@@ -173,7 +173,7 @@ export const LEARNING_PROPOSALS_MESSAGE = "Cuando conozcamos tu ritmo, te propon
 const SEARCHING_PROPOSALS_MESSAGE = "Axi está buscando qué puede acelerar la ruta; las propuestas salen al cerrar el día.";
 
 /**
- * El vacío de «Axi propone» según el ritmo: «Estás al día» solo cuando la
+ * El vacío de «Acciones recomendadas» según el ritmo: «Estás al día» solo cuando la
  * ruta va bien (al ritmo, por delante o cumplida); con ritmo bajo dice que
  * Axi busca y cuándo llegan las propuestas, sin regaño; aprendiendo, que aún
  * no conocemos el ritmo. Sin ritmo leído, el mensaje neutro de siempre.

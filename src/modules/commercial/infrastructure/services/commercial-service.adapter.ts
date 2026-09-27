@@ -71,7 +71,7 @@ export function getPace(granularity: PaceGranularity = "day"): Promise<Commercia
 }
 
 /*
- * «Axi propone» (F6). Lo sirve un controller del módulo cmo bajo el prefijo
+ * «Acciones recomendadas» (F6). Lo sirve un controller del módulo cmo bajo el prefijo
  * `commercial/proposals` (capacidad `crm`, permisos `commercial:read` y
  * `commercial:approve`): solo `source='commercial'`; una propuesta de Axel
  * pedida por aquí es un 404. Aprobar y rechazar pasan por los MISMOS casos de

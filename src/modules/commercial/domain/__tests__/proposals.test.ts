@@ -2,8 +2,9 @@ import { CRM_AI_MISSING_FAILED } from "../copy";
 import {
   approvalLines,
   approvedOnPhrase,
-  approvedThisPeriod,
   commercialProposalHref,
+  decidedOnShort,
+  decidedThisPeriod,
   expiryPhrase,
   isCommercialProposal,
   outreachDetailText,
@@ -129,11 +130,23 @@ describe("helpers", () => {
     expect(expiryPhrase(new Date(2026, 8, 24, 12).toISOString(), now)).toBe("Vence mañana");
     expect(expiryPhrase(new Date(2026, 8, 26, 12).toISOString(), now)).toBe("Vence el sábado");
     expect(expiryPhrase(new Date(2026, 8, 20).toISOString(), now)).toBe("Venció");
+  });
+
+  it("las decididas del periodo: aprobadas y descartadas del mes, la más reciente primero", () => {
     const rows = [
       { ...proposal, id: "a", status: "approved" as const, decided_at: "2026-09-10T00:00:00Z" },
       { ...proposal, id: "b", status: "approved" as const, decided_at: "2026-08-30T00:00:00Z" },
+      { ...proposal, id: "r", status: "rejected" as const, decided_at: "2026-09-16T00:00:00Z", reject_reason: "Ya los llamamos nosotros." },
+      { ...proposal, id: "p", status: "pending" as const },
     ];
-    expect(approvedThisPeriod(rows, "2026-09-01").map((row) => row.id)).toEqual(["a"]);
+    expect(decidedThisPeriod(rows, "2026-09-01").map((row) => row.id)).toEqual(["r", "a"]);
+    expect(decidedThisPeriod(rows, "2026-09-01", 1).map((row) => row.id)).toEqual(["r"]);
+  });
+
+  it("decidedOnShort: el verbo del estado y el día corto", () => {
+    expect(decidedOnShort("approved", "2026-09-16T15:00:00Z")).toBe("Aprobada el 16 sep");
+    expect(decidedOnShort("rejected", "2026-09-09T15:00:00Z")).toBe("Descartada el 9 sep");
+    expect(decidedOnShort("rejected", null)).toBe("Descartada");
   });
 });
 

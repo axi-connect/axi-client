@@ -430,7 +430,7 @@ function serveProposals(byStatus: Record<string, CommercialProposalDTO[] | Promi
 }
 
 describe("propuestas", () => {
-  it("pendientes primero y detrás solo las aprobadas del mes de la meta", async () => {
+  it("pendientes primero y detrás las decididas del mes de la meta (aprobadas y descartadas), la más reciente primero", async () => {
     useCommercialStore.setState({ goal: { status: "ready", data: withGoal, error: null } });
     serveProposals({
       pending: [proposalRow("p1")],
@@ -438,13 +438,25 @@ describe("propuestas", () => {
         proposalRow("a1", { status: "approved", decided_at: "2026-09-16T15:00:00.000Z" }),
         proposalRow("a0", { status: "approved", decided_at: "2026-08-28T15:00:00.000Z" }),
       ],
+      rejected: [proposalRow("r1", { status: "rejected", decided_at: "2026-09-20T15:00:00.000Z", reject_reason: "Ya los llamamos nosotros." })],
     });
 
     await useCommercialStore.getState().loadProposals();
 
-    expect(useCommercialStore.getState().proposals.data?.map((row) => row.id)).toEqual(["p1", "a1"]);
+    expect(useCommercialStore.getState().proposals.data?.map((row) => row.id)).toEqual(["p1", "r1", "a1"]);
     expect(mockGet).toHaveBeenCalledWith("/commercial/proposals", { status: "pending" }, undefined);
     expect(mockGet).toHaveBeenCalledWith("/commercial/proposals", { status: "approved" }, undefined);
+    expect(mockGet).toHaveBeenCalledWith("/commercial/proposals", { status: "rejected" }, undefined);
+  });
+
+  it("una propuesta que llega en dos listas (se decidió entre lecturas) cuenta una vez", async () => {
+    useCommercialStore.setState({ goal: { status: "ready", data: withGoal, error: null } });
+    const decided = proposalRow("p1", { status: "approved", decided_at: "2026-09-21T10:00:00.000Z" });
+    serveProposals({ pending: [], approved: [decided, decided] });
+
+    await useCommercialStore.getState().loadProposals();
+
+    expect(useCommercialStore.getState().proposals.data?.map((row) => row.id)).toEqual(["p1"]);
   });
 
   it("una carga vieja no pisa a la nueva (número de secuencia)", async () => {
@@ -562,14 +574,36 @@ describe("propuestas", () => {
     expect(state.proposals.data?.[0].status).toBe("approved");
   });
 
-  it("rechazar manda el motivo y saca la fila de la lista", async () => {
+  it("rechazar manda el motivo y la fila pasa a descartada con él (queda en el historial del mes)", async () => {
     useCommercialStore.setState({ proposals: { status: "ready", data: [proposalRow("p1"), proposalRow("p2")], error: null } });
     mockPost.mockResolvedValue({ directive_created: false });
 
     await useCommercialStore.getState().rejectProposal("p1", "Es pronto para volver a escribirles.");
 
     expect(mockPost).toHaveBeenCalledWith("/commercial/proposals/p1/reject", { reason: "Es pronto para volver a escribirles." });
-    expect(useCommercialStore.getState().proposals.data?.map((row) => row.id)).toEqual(["p2"]);
+    const rows = useCommercialStore.getState().proposals.data ?? [];
+    expect(rows.map((row) => [row.id, row.status])).toEqual([
+      ["p1", "rejected"],
+      ["p2", "pending"],
+    ]);
+    expect(rows[0].reject_reason).toBe("Es pronto para volver a escribirles.");
+    expect(rows[0].decided_at).not.toBeNull();
+  });
+
+  it("una carga vieja que aún trae pendiente a la recién descartada la pinta descartada, no pendiente", async () => {
+    useCommercialStore.setState({
+      goal: { status: "ready", data: withGoal, error: null },
+      proposals: { status: "ready", data: [proposalRow("p1")], error: null },
+    });
+    mockPost.mockResolvedValue({ directive_created: false });
+    await useCommercialStore.getState().rejectProposal("p1", "Ya los llamamos nosotros.");
+    serveProposals({ pending: [proposalRow("p1")], approved: [], rejected: [] });
+
+    await useCommercialStore.getState().loadProposals();
+
+    const [row] = useCommercialStore.getState().proposals.data ?? [];
+    expect(row.status).toBe("rejected");
+    expect(row.reject_reason).toBe("Ya los llamamos nosotros.");
   });
 
   it("aprobar que falla con 409 lanza al llamador, no inventa el resultado y recarga la lista (C4)", async () => {
@@ -590,7 +624,8 @@ describe("propuestas", () => {
     serveProposals({ pending: [proposalRow("p1")], approved: [] });
     mockPost.mockRejectedValueOnce(new HttpError({ status: 403, code: "rbac/permission_denied", message: "no" }));
     await expect(useCommercialStore.getState().approveProposal("p1")).rejects.toThrow();
-    expect(mockGet).toHaveBeenCalledTimes(2);
+    // Pendientes, aprobadas y descartadas.
+    expect(mockGet).toHaveBeenCalledTimes(3);
 
     mockGet.mockClear();
     mockPost.mockRejectedValueOnce(new HttpError({ status: 500, code: "internal", message: "boom" }));

@@ -158,3 +158,46 @@ describe("RouteLine · «hoy» junto a una semana corta (V7)", () => {
     expect(screen.getByText("S3")).toBeInTheDocument();
   });
 });
+
+describe("RouteLine · la ruta del mes (marca de hoy arriba)", () => {
+  const weeks = [
+    { label: "S1", days: 5, start_pct: 0, end_pct: 20, mid_pct: 10 },
+    { label: "S2", days: 6, start_pct: 20, end_pct: 40, mid_pct: 30 },
+    { label: "S3", days: 6, start_pct: 40, end_pct: 60, mid_pct: 50 },
+    { label: "S4", days: 6, start_pct: 60, end_pct: 80, mid_pct: 70 },
+    { label: "S5", days: 3, start_pct: 80, end_pct: 100, mid_pct: 90 },
+  ];
+
+  it("con la marca arriba se ven TODAS las semanas y la de hoy va resaltada; sin bandera, con el texto de la meta", () => {
+    const { container } = render(
+      <RouteLine done={0.63} expected={0.77} weeks={weeks} todayLabel="Hoy · mié 23" targetLabel="Meta · $ 30 M" progress={1} />,
+    );
+    expect(screen.getByText("Hoy · mié 23")).toHaveClass("top-0");
+    for (const label of ["S1", "S2", "S3", "S5"]) expect(screen.getByText(label)).toHaveClass("text-muted-foreground");
+    expect(screen.getByText("S4")).toHaveClass("text-foreground", "font-medium");
+    expect(screen.queryByText("hoy")).toBeNull();
+    expect(screen.getByText("Meta · $ 30 M")).toBeInTheDocument();
+    expect(container.querySelector("path")).toBeNull();
+  });
+
+  it("el atraso se pinta solo cuando vas por detrás de hoy", () => {
+    const behind = render(<RouteLine done={0.5} expected={0.77} progress={1} />);
+    const gapOf = (root: HTMLElement) => Array.from(root.querySelectorAll("line")).filter((line) => line.getAttribute("stroke")?.includes("--color-brand) 30%"));
+    expect(gapOf(behind.container)).toHaveLength(1);
+    behind.unmount();
+    const ahead = render(<RouteLine done={0.9} expected={0.77} progress={1} />);
+    expect(gapOf(ahead.container)).toHaveLength(0);
+  });
+
+  it("cerca del final la marca de hoy se ancla a la derecha y el texto de la meta le cede el sitio", () => {
+    render(<RouteLine done={0.85} expected={0.95} weeks={weeks} todayLabel="Hoy · lun 29" targetLabel="Meta · $ 30 M" progress={1} />);
+    expect(screen.getByText("Hoy · lun 29").className).toMatch(/-translate-x-\[calc\(100%-0\.5rem\)\]/);
+    expect(screen.queryByText("Meta · $ 30 M")).toBeNull();
+  });
+
+  it("al principio del mes la marca de hoy se ancla a la izquierda", () => {
+    render(<RouteLine done={0.02} expected={0.04} weeks={weeks} todayLabel="Hoy · mar 1" targetLabel="Meta · $ 30 M" progress={1} />);
+    expect(screen.getByText("Hoy · mar 1")).toHaveClass("-translate-x-2");
+    expect(screen.getByText("Meta · $ 30 M")).toBeInTheDocument();
+  });
+});

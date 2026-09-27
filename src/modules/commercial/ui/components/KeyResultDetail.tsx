@@ -71,7 +71,7 @@ export function KeyResultDetail({
 
 /**
  * El pie: cuántas acciones propuestas empujan este resultado (las pendientes
- * con `target_key_result` = la clave, del mismo store que «Axi propone») y
+ * con `target_key_result` = la clave, del mismo store que «Acciones recomendadas») y
  * dónde se ve el dato con más detalle (CRM o Analítica, por href).
  */
 export function KeyResultDetailFooter({ detailKey }: { detailKey: KeyResultDetailKey }) {

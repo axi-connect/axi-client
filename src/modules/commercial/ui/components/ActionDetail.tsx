@@ -26,11 +26,12 @@ import {
   startPhrase,
   type OutreachPlan,
 } from "@/modules/commercial/domain/proposals";
+import { PROPOSAL_BADGES } from "@/modules/commercial/domain/labels";
 import { isStaleDecision, useCommercialStore } from "@/modules/commercial/infrastructure/stores/commercial.store";
 import { useApproveAccess } from "@/modules/commercial/ui/hooks/use-approve-access";
 import { StatusBadge } from "@/shared/components/features/status-badge";
 import { Button } from "@/shared/components/ui/button";
-import { PROPOSAL_BADGES } from "./ActionRow";
+
 import { SheetList, SheetRow } from "./SheetList";
 import { SourceMark } from "./SourceMark";
 
