@@ -228,6 +228,38 @@ Solo cliente.
 | Burbujas de media | Imagen y video con esquinas continuas y relación fija (sin salto al cargar). Audio con reproductor propio y la transcripción plegable. Documento como ficha con icono, nombre truncado y peso. Ubicación con mapa estático o ficha. `ProductRecognitionChip` con el lenguaje del chip del catálogo |
 | `MediaLightbox` | Cristal oscuro a pantalla completa, flechas, descarga y Escape |
 
+#### F3 · Lo que dejó el diagnóstico (2026-09-27, antes del lienzo)
+
+Lienzo: https://claude.ai/artifact/GjoSeJKsNp4w9KyUTPbSo6 (10 artboards; fuentes en
+`docs/design/mockups/inbox-premium/f3/`).
+
+- **La ventana de 24 h NO sale de `reachability`.** Esa lectura es por contacto y elige entre todos sus canales
+  (si Cloud está fuera de ventana y hay wweb conectado, responde por wweb), así que puede hablar de otro canal
+  que el de la conversación. El motor, al enviar desde el inbox (`enqueue_outbound_message.use_case.ts`), mira
+  `OUTBOUND_WINDOW_HOURS[channel.kind]` (24 h en `whatsapp_cloud`, `instagram_dm` y `facebook_messenger`; wweb sin
+  ventana) contra `conversation.last_inbound_at`, y rechaza con `channels/outside_service_window` salvo plantilla.
+  `ConversationDTO` ya trae `channel.kind` y `last_inbound_at`: `domain/reply-window.ts` replica esa regla, pura y
+  con test (bordes a 24 h exactas, sin inbound, por cerrar < 1 h). Cero peticiones nuevas, sin N+1, y la frescura
+  llega sola con el WS que ya actualiza la conversación; el tick de 60 s recalcula lo que queda.
+- **Plantillas:** solo `whatsapp_cloud` (`supports_templates` del servidor dice lo mismo). Fuera de ventana en
+  Instagram o Messenger no se ofrece botón. El DTO de la acción rápida trae `template_name` y
+  `template_language`, no el texto: la vista previa de una plantilla muestra nombre e idioma, no se inventa el cuerpo.
+- **Canal desconectado:** sale del `status` del canal que ya lee la columna de la bandeja.
+- **Progreso de subida:** el cliente HTTP no reporta bytes; el anillo es indeterminado, sin porcentaje falso.
+- **Nivel de la grabación:** un `AnalyserNode` sobre el stream que ya abre `use-voice-recorder`. La burbuja de
+  audio no pinta onda (no hay datos de forma de onda): pista y tiempo.
+- **Ubicación:** no hay proveedor de mapas estáticos; ficha con «Abrir en Google Maps».
+- **`AudioPlayerCore` (shared)** pinta `text-white`/`bg-white/*` en la saliente: con D1 (tinta) en oscuro la burbuja
+  es clara y el reproductor desaparece. Pasa a tokens (`text-background`, etc.). Consumidores fuera del inbox:
+  `agents/ui/components/VoiceRangeField.tsx` y `landing/ui/components/mockups/DeviceChat.tsx`; el «listo F3» dice qué
+  pasa en cada uno (pedido del auditor).
+- **Acciones rápidas:** el envío sale del popover con su vista previa (misma `InteractiveMessage` del hilo) y
+  desaparece el modal de confirmación. Se abre con el rayo o con «/» al empezar la caja. En el celular, hoja inferior.
+- **Adjuntos:** además del clip, arrastrar sobre la conversación y pegar (Ctrl+V) entran por la misma cola
+  (`useUploadQueue.add`). Lo rechazado (tipo o peso, con los límites de `MAX_UPLOAD_BYTES`) se dice dentro del
+  composer hasta cerrarlo, en vez de un toast por archivo.
+- **Visor:** recorre las fotos cargadas de la conversación (flechas, ← →, tira), descarga con URL fresca y Escape.
+
 ### F4 · El contexto
 
 Solo cliente.
