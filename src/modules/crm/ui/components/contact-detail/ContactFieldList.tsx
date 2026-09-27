@@ -4,7 +4,6 @@ import { FaFacebookMessenger, FaInstagram, FaWhatsapp } from "react-icons/fa";
 import { cn } from "@/core/lib/utils";
 import { formatShortDate } from "@/core/lib/format";
 import { relativeTime } from "@/core/lib/relative-time";
-import { Badge } from "@/shared/components/ui/badge";
 import { FieldList, type FieldItem } from "@/shared/components/features/field-list";
 import type {
   ContactChannelIdentity,
@@ -117,19 +116,20 @@ export function ContactFieldList({
           <SectionLabel>Etiquetas</SectionLabel>
           <ul className="flex flex-wrap gap-1.5">
             {tags.map((tag) => (
-              <li key={tag.id}>
-                <Badge
-                  variant="outline"
-                  // El color lo define el tenant al crear la etiqueta: es dato,
-                  // no diseño, así que aquí sí va como estilo inline.
-                  style={
-                    tag.color !== null
-                      ? { borderColor: tag.color, color: tag.color }
-                      : undefined
-                  }
-                >
-                  {tag.name}
-                </Badge>
+              <li key={tag.id} className="min-w-0 max-w-full">
+                {/* El color lo define el tenant: es dato, así que va en línea, pero
+                    solo en el PUNTO. Como color del texto no pasaba AA en claro
+                    (un amarillo sobre blanco) — inbox F4. */}
+                <span className="inline-flex h-6 max-w-full items-center gap-1.5 rounded-full border border-border bg-card px-2.5 text-xs">
+                  <span
+                    aria-hidden
+                    className="size-2 shrink-0 rounded-full bg-muted-foreground"
+                    style={tag.color !== null ? { backgroundColor: tag.color } : undefined}
+                  />
+                  <span className="truncate" title={tag.name}>
+                    {tag.name}
+                  </span>
+                </span>
               </li>
             ))}
           </ul>

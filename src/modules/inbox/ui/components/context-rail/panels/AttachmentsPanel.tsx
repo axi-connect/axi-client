@@ -2,11 +2,11 @@
 
 import { useMemo, useState } from "react";
 import { Download, FileText, Mic } from "lucide-react";
-import { cn } from "@/core/lib/utils";
 import { formatDayLabel } from "@/core/lib/day-label";
 import { formatBytes } from "@/core/lib/format";
 import { relativeTime } from "@/core/lib/relative-time";
 import { Button } from "@/shared/components/ui/button";
+import { SegmentedControl } from "@/shared/components/ui/segmented";
 import {
   ATTACHMENT_CATEGORY_LABELS,
   attachmentCategory,
@@ -19,7 +19,7 @@ import { useInboxStore } from "@/modules/inbox/infrastructure/stores/inbox.store
 import { getFreshAttachmentUrl } from "@/modules/inbox/infrastructure/hooks/use-attachment-url";
 import { GlassGlyph } from "@/shared/components/ui/glyphs";
 import { AttachmentThumb } from "./AttachmentThumb";
-import type { ContextPanelProps } from "../registry";
+import type { ContextPanelHeading, ContextPanelProps } from "../registry";
 
 /**
  * Archivos compartidos en la conversación abierta.
@@ -32,13 +32,33 @@ import type { ContextPanelProps } from "../registry";
  * paginar aquí también enriquece la conversación.
  */
 
-const FILTERS: Array<{ id: AttachmentCategory | "all"; label: string }> = [
-  { id: "all", label: "Todo" },
-  { id: "image", label: ATTACHMENT_CATEGORY_LABELS.image },
-  { id: "video", label: ATTACHMENT_CATEGORY_LABELS.video },
-  { id: "audio", label: ATTACHMENT_CATEGORY_LABELS.audio },
-  { id: "document", label: ATTACHMENT_CATEGORY_LABELS.document },
+type Filter = AttachmentCategory | "all";
+
+const FILTERS: Array<{ value: Filter; label: string }> = [
+  { value: "all", label: "Todo" },
+  { value: "image", label: ATTACHMENT_CATEGORY_LABELS.image },
+  { value: "video", label: ATTACHMENT_CATEGORY_LABELS.video },
+  { value: "audio", label: ATTACHMENT_CATEGORY_LABELS.audio },
+  { value: "document", label: ATTACHMENT_CATEGORY_LABELS.document },
 ];
+
+/** Cuántos adjuntos hay en el tramo YA cargado del hilo (sin pedir nada). */
+function useLoadedAttachmentCount(conversationId: string): number {
+  return useInboxStore((s) => (s.messagesById[conversationId]?.items ?? []).filter(isAttachmentMessage).length);
+}
+
+/** Conteo del icono del riel (F4): solo lo que el hilo ya tiene en memoria. */
+export function useAttachmentsCount({ conversation }: Pick<ContextPanelProps, "conversation">): number | null {
+  return useLoadedAttachmentCount(conversation.id);
+}
+
+export function useAttachmentsHeading({ conversation }: ContextPanelProps): ContextPanelHeading {
+  const count = useLoadedAttachmentCount(conversation.id);
+  return {
+    title: count === 0 ? "Sin archivos" : count === 1 ? "1 archivo" : `${String(count)} archivos`,
+    subtitle: "En lo que llevas cargado de la conversación",
+  };
+}
 
 /** Etiqueta del grupo por día (helper compartido con la lista y el hilo). */
 function dayLabel(iso: string): string {
@@ -66,12 +86,12 @@ function DocumentRow({
       : (preview?.filename ?? "Adjunto");
 
   return (
-    <li className="flex items-center gap-3 rounded-lg p-2 hover:bg-accent/50">
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-secondary text-secondary-foreground">
+    <li className="flex min-w-0 items-center gap-3 rounded-xl p-2 hover:bg-muted">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground/75 ring-1 ring-border">
         <Icon className="size-4" aria-hidden />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm">{title}</p>
+        <p className="truncate text-sm font-medium" title={title}>{title}</p>
         <p className="text-xs text-muted-foreground">
           {size !== null && `${formatBytes(size)} · `}
           {relativeTime(message.created_at)}
@@ -81,7 +101,7 @@ function DocumentRow({
         <Button
           variant="ghost"
           size="icon"
-          className="size-8 shrink-0"
+          className="size-9 shrink-0 rounded-full hover:bg-background"
           aria-label={`Descargar ${title}`}
           onClick={() => {
             // URL fresca: la cacheada pudo expirar mientras el panel estaba abierto.
@@ -101,7 +121,7 @@ export function AttachmentsPanel({ conversation }: ContextPanelProps) {
   const conversationId = conversation.id;
   const messagesState = useInboxStore((s) => s.messagesById[conversationId]);
   const fetchOlderMessages = useInboxStore((s) => s.fetchOlderMessages);
-  const [filter, setFilter] = useState<AttachmentCategory | "all">("all");
+  const [filter, setFilter] = useState<Filter>("all");
   const [loadingMore, setLoadingMore] = useState(false);
 
   const items = messagesState?.items;
@@ -128,32 +148,17 @@ export function AttachmentsPanel({ conversation }: ContextPanelProps) {
 
   return (
     <>
-      <div className="border-b border-border px-4 py-2">
-        <div
-          className="sidebar-scroll flex gap-1.5 overflow-x-auto pb-1"
-          role="group"
-          aria-label="Tipo de adjunto"
-        >
-          {FILTERS.map((option) => {
-            const active = filter === option.id;
-            return (
-              <button
-                key={option.id}
-                type="button"
-                aria-pressed={active}
-                onClick={() => setFilter(option.id)}
-                className={cn(
-                  "shrink-0 rounded-full border px-2.5 py-1 text-xs transition-colors",
-                  active
-                    ? "border-primary/40 bg-accent text-foreground"
-                    : "border-border text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {option.label}
-              </button>
-            );
-          })}
-        </div>
+      <div className="shrink-0 border-b border-border px-3.5 py-2.5">
+        {/* Filtro, no pestañas: un radiogroup (sin panel). El activo se ELEVA, sin coral. */}
+        <SegmentedControl<Filter>
+          label="Tipo de adjunto"
+          size="sm"
+          treatment="lift"
+          value={filter}
+          onValueChange={setFilter}
+          items={FILTERS}
+          className="w-full [&>button]:flex-1 [&>button]:px-1.5"
+        />
       </div>
 
       <div className="sidebar-scroll min-h-0 flex-1 overflow-y-auto p-4">
@@ -163,7 +168,7 @@ export function AttachmentsPanel({ conversation }: ContextPanelProps) {
             <p className="text-sm text-muted-foreground">
               {filter === "all"
                 ? "Todavía no se han compartido archivos."
-                : `Sin adjuntos de tipo “${FILTERS.find((f) => f.id === filter)?.label}”.`}
+                : `Sin adjuntos de tipo «${FILTERS.find((f) => f.value === filter)?.label ?? ""}».`}
             </p>
           </div>
         ) : (
@@ -213,19 +218,18 @@ export function AttachmentsPanel({ conversation }: ContextPanelProps) {
         <div className="space-y-2 border-t border-border p-3 text-center">
           {/* Sin este aviso el panel aparentaría cubrir todo el historial. */}
           <p className="text-xs text-muted-foreground">
-            Mostrando los adjuntos del tramo cargado del hilo.
+            Solo lo que ya se cargó del hilo. Más atrás puede haber otros.
           </p>
           <Button
             variant="outline"
-            size="sm"
-            className="w-full rounded-full"
+            className="h-9 w-full rounded-full"
             disabled={loadingMore}
             onClick={() => {
               setLoadingMore(true);
               void fetchOlderMessages(conversationId).finally(() => setLoadingMore(false));
             }}
           >
-            {loadingMore ? "Cargando…" : "Cargar más"}
+            {loadingMore ? "Cargando…" : "Cargar más de la conversación"}
           </Button>
         </div>
       )}

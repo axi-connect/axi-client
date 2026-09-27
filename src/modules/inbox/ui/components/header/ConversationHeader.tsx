@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowLeft, CheckCheck, Sparkles } from "lucide-react"
+import { ArrowLeft, CheckCheck, Info, Sparkles } from "lucide-react"
 import { cn } from "@/core/lib/utils"
 import { elapsedShort } from "@/core/lib/day-label"
 import { relativeTime } from "@/core/lib/relative-time"
@@ -121,7 +121,7 @@ export function ConversationHeader({
         href="?panel=contact"
         scroll={false}
         aria-label={`Ver contacto de ${contactName}`}
-        className="flex min-w-[6.5rem] flex-1 items-center gap-2.5 rounded-xl py-1 pr-1 transition-colors hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+        className="flex min-w-[6.5rem] flex-1 items-center gap-2.5 rounded-xl py-1 pr-1 transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
       >
         <Avatar src={conversation.contact.avatar_url} alt="" fallback={contactName} size={38} className="shrink-0" />
         <div className="min-w-0">
@@ -134,6 +134,16 @@ export function ConversationHeader({
               .join(" · ")}
           </p>
         </div>
+      </Link>
+
+      {/* Celular (F4): el riel no existe; el contexto se abre desde aquí, a pantalla completa. */}
+      <Link
+        href="?panel=contact"
+        scroll={false}
+        aria-label="Contexto: contacto, adjuntos, historial, llamadas y pedidos"
+        className="grid size-10 shrink-0 place-items-center rounded-full text-foreground/80 transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none md:hidden"
+      >
+        <Info className="size-[18px]" aria-hidden />
       </Link>
 
       {claim === null && <HolderPill kind={holder.kind} text={holder.text} className="hidden @min-[30rem]/chead:inline-flex" />}

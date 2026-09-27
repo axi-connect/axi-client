@@ -3,6 +3,7 @@
 import { Suspense, useEffect } from "react"
 import { cn } from "@/core/lib/utils"
 import { useAuth } from "@/shared/auth/auth.hooks"
+import { useEntitlements } from "@/shared/auth/entitlements.hooks"
 import { useInboxSocket } from "@/modules/inbox/infrastructure/realtime/use-inbox-socket"
 import { useInboxStore } from "@/modules/inbox/infrastructure/stores/inbox.store"
 import { ContactContextProvider } from "@/modules/inbox/infrastructure/stores/contact-context.context"
@@ -11,7 +12,7 @@ import { InboxList } from "./components/InboxList"
 import { ConversationPanel } from "./components/ConversationPanel"
 import { ContextRail } from "./components/context-rail/ContextRail"
 import { ContextPanel } from "./components/context-rail/ContextPanel"
-import { CONTEXT_PANELS } from "./components/context-rail/registry"
+import { CONTEXT_PANELS, visibleContextPanels } from "./components/context-rail/registry"
 import { useContextPanel } from "./components/context-rail/use-context-panel"
 import { InboxViewUrlSync } from "./components/list/InboxViewUrlSync"
 
@@ -74,15 +75,15 @@ export function InboxView({ initialConversationId }: { initialConversationId?: s
  */
 function ContextSurface() {
   const { hasPermission } = useAuth()
+  const { hasCapability, loaded: entitlementsLoaded } = useEntitlements()
   const selected = useInboxStore((s) => s.selected)
   const contactId = selected?.contact.id ?? null
   const contextVersion = useInboxStore((s) =>
     contactId !== null ? (s.contextVersion[contactId] ?? 0) : 0,
   )
 
-  const panels = CONTEXT_PANELS.filter(
-    (panel) => panel.permission === undefined || hasPermission(panel.permission),
-  )
+  // Sin permiso o sin la capacidad del plan, el panel ni se pinta ni pide nada.
+  const panels = visibleContextPanels(CONTEXT_PANELS, { hasPermission, hasCapability, entitlementsLoaded })
   const { activeId, setActiveId, toggle } = useContextPanel(panels.map((panel) => panel.id))
   const active = panels.find((panel) => panel.id === activeId) ?? null
 
@@ -93,17 +94,22 @@ function ContextSurface() {
     <>
       {active !== null && (
         <ContextPanel
+          // Un panel por id: su hook de cabecera es siempre el mismo.
+          key={active.id}
           panel={active}
+          panels={panels}
           conversation={selected}
           contactId={contactId}
           contextVersion={contextVersion}
           onClose={() => setActiveId(null)}
+          onSelect={setActiveId}
         />
       )}
       <ContextRail
         panels={panels}
         activeId={activeId}
         onToggle={toggle}
+        conversation={selected}
         className="hidden md:flex"
       />
     </>

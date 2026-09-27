@@ -16,6 +16,18 @@ export const CONTACT_STAGE_LABELS: Record<ContactLifecycleStage, string> = {
 };
 
 /**
+ * Tono del punto de la etapa en `StatePill` (§9.5: el estado vive en el punto,
+ * el texto en foreground). Una sola fuente para la tabla, el 360 y el panel
+ * Contacto del inbox; los valores son los de `StatePillTone`.
+ */
+export const CONTACT_STAGE_TONE: Record<ContactLifecycleStage, "success" | "info" | "neutral"> = {
+  prospect: "neutral",
+  lead: "info",
+  customer: "success",
+  other: "neutral",
+};
+
+/**
  * Clases del badge de etapa. Viven aquí (strings puros, sin React) para que la
  * etapa se vea idéntica en el 360, en el rail del inbox y en la cabecera del
  * chat — antes estaba copiado en cada vista.

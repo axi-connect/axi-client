@@ -372,10 +372,13 @@ export function ContactTimelineFeed({
                 aria-pressed={active}
                 onClick={() => toggleSource(source)}
                 className={cn(
-                  "rounded-full border px-2.5 py-1 text-xs transition-colors",
+                  // 28 px de alto: objetivo cómodo también en el rail del inbox.
+                  "inline-flex h-7 items-center rounded-full border px-3 text-xs font-medium whitespace-nowrap transition-colors",
+                  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
                   compact && "shrink-0",
+                  // Inbox F4: el activo en tinta, no en coral (el coral es de las acciones).
                   active
-                    ? "border-primary/40 bg-accent text-foreground"
+                    ? "border-transparent bg-foreground text-background"
                     : "border-border text-muted-foreground hover:text-foreground",
                 )}
               >

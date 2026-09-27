@@ -76,7 +76,7 @@ export function AttachmentThumb({
           }
           setLightboxOpen(true);
         }}
-        className="group relative aspect-square overflow-hidden rounded-lg bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:cursor-default"
+        className="group relative aspect-square overflow-hidden rounded-xl bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:cursor-default"
       >
         {isVideo ? (
           // El poster del video sale del propio archivo; no hay thumbnail aparte.
