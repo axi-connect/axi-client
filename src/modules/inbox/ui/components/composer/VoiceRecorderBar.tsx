@@ -25,7 +25,10 @@ export function VoiceRecorderBar({
     // Relleno a la izquierda para que las barras nuevas entren siempre por la derecha.
     const bars = [...Array.from({ length: Math.max(0, LEVEL_HISTORY - recorder.levels.length) }, () => 0), ...recorder.levels]
     return (
-      <div className="flex items-center gap-3 px-2 py-2.5" role="group" aria-label="Grabando nota de voz">
+      // Se mide la CAJA, no la ventana (@container): a 1280 con bandeja, lista y
+      // riel la caja mide ~380 px y con `sm:` el texto y «Detener» la desbordaban,
+      // dejando las barras en 0 px (QA IB3-H3).
+      <div className="@container/rec flex items-center gap-2.5 px-2 py-2.5" role="group" aria-label="Grabando nota de voz">
         <Button type="button" variant="ghost" size="icon" className="size-9 rounded-full text-destructive" onClick={recorder.cancel} aria-label="Descartar la grabación">
           <Trash2 className="size-4" />
         </Button>
@@ -33,7 +36,7 @@ export function VoiceRecorderBar({
         <span className="min-w-10 text-sm font-semibold tabular-nums" aria-live="off">
           {formatDuration(recorder.elapsedMs / 1000)}
         </span>
-        <div aria-hidden className="flex h-7 min-w-0 flex-1 items-center justify-end gap-[3px] overflow-hidden">
+        <div aria-hidden className="flex h-7 min-w-16 flex-1 items-center justify-end gap-[3px] overflow-hidden">
           {bars.map((level, index) => (
             <span
               key={index}
@@ -42,12 +45,19 @@ export function VoiceRecorderBar({
             />
           ))}
         </div>
-        <span className="hidden text-xs whitespace-nowrap text-muted-foreground sm:inline">
+        <span className="hidden shrink-0 text-xs whitespace-nowrap text-muted-foreground @min-[34rem]/rec:inline">
           Grabando · máx. {String(MAX_RECORDING_MS / 60_000)} min
         </span>
-        <Button type="button" variant="contrast" className="h-9 shrink-0 rounded-full px-3.5" onClick={recorder.stop} aria-label="Detener y escuchar">
+        <Button
+          type="button"
+          variant="contrast"
+          className="h-9 shrink-0 rounded-full px-2.5 @min-[20rem]/rec:px-3.5"
+          onClick={recorder.stop}
+          aria-label="Detener y escuchar"
+          title={`Detener y escuchar · máximo ${String(MAX_RECORDING_MS / 60_000)} min`}
+        >
           <Square className="size-3.5 fill-current" aria-hidden />
-          Detener
+          <span className="hidden @min-[20rem]/rec:inline">Detener</span>
         </Button>
       </div>
     )
@@ -55,7 +65,7 @@ export function VoiceRecorderBar({
 
   if (recorder.status === "preview" && recorder.recording) {
     return (
-      <div className="flex items-center gap-3 px-2 py-2.5" role="group" aria-label="Nota de voz lista">
+      <div className="@container/rec flex items-center gap-2.5 px-2 py-2.5" role="group" aria-label="Nota de voz lista">
         <Button
           type="button"
           variant="ghost"
@@ -70,9 +80,9 @@ export function VoiceRecorderBar({
         <div className="min-w-0 flex-1">
           <AudioPlayerCore src={recorder.recording.object_url} className="w-full" />
         </div>
-        <Button type="button" className="h-9 shrink-0 rounded-full px-3.5" disabled={sending} onClick={onSend} aria-label="Enviar nota de voz">
+        <Button type="button" className="h-9 shrink-0 rounded-full px-2.5 @min-[20rem]/rec:px-3.5" disabled={sending} onClick={onSend} aria-label="Enviar nota de voz">
           {sending ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
-          Enviar
+          <span className="hidden @min-[20rem]/rec:inline">Enviar</span>
           {!sending && <SendHorizonal className="size-4" aria-hidden />}
         </Button>
       </div>
