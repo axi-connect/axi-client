@@ -17,6 +17,7 @@ export type {
 
 export { AssistantAvatar, type AssistantAvatarProps } from "./avatar/AssistantAvatar";
 export { AssistantStage } from "./avatar/AssistantStage";
+export { AssistantIslandStage, type AssistantIslandTone } from "./avatar/AssistantIslandStage";
 export {
   ASSISTANT_AVATAR_COLORS,
   ASSISTANT_CHARACTERS,
@@ -74,6 +75,7 @@ export { UserBubble } from "./chat/UserBubble";
 export { SystemNote } from "./chat/SystemNote";
 export { AssistantQuestion } from "./chat/AssistantQuestion";
 export { AssistantThinking } from "./chat/AssistantThinking";
+export { AssistantIslandActivity } from "./chat/AssistantIslandActivity";
 export { AssistantMarkdown } from "./chat/AssistantMarkdown";
 export { AssistantComposer, COMPOSER_MAX_PX, type AssistantComposerVoice } from "./chat/AssistantComposer";
 export { StarterPills } from "./chat/StarterPills";
@@ -83,7 +85,6 @@ export { AssistantChatShell } from "./shell/AssistantChatShell";
 export { useAssistantMood, type AssistantMoodState } from "./hooks/use-assistant-mood";
 export { useAvatarGaze } from "./hooks/use-avatar-gaze";
 export { useAvatarLife } from "./hooks/use-avatar-life";
-export { useDockedHero, DOCK_HEIGHT_PX } from "./hooks/use-docked-hero";
 export { useStoredAccessory, type StoredAccessoryOptions } from "./hooks/use-stored-accessory";
 export { useComposerFlip } from "./shell/use-composer-flip";
 export { parseAssistantText, parseInline, type Block, type ListItem, type Span } from "./chat/markdown";

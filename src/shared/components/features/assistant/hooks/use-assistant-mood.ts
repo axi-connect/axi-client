@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useReducedMotion } from "framer-motion";
 
 import {
@@ -39,9 +39,18 @@ export interface AssistantMoodState {
  * es una buena noticia (una propuesta nueva en Axel); llega ya resuelta en la
  * instantánea.
  */
+const noopSubscribe = () => () => undefined;
+const isClient = () => true;
+const isServer = () => false;
+
 export function useAssistantMood(input: AssistantMoodInput): AssistantMoodState {
   const reduced: boolean | null = useReducedMotion();
-  const motion = reduced !== true;
+  /* El servidor no sabe si el sistema pide reducir movimiento, y renderiza el
+     avatar como botón. Si el primer render del cliente ya leyera la
+     preferencia, pintaría un `div` y React rehacería el árbol entero (error de
+     hidratación visto en el arnés, 2026-09-28). Se decide después de hidratar. */
+  const hydrated = useSyncExternalStore(noopSubscribe, isClient, isServer);
+  const motion = !hydrated || reduced !== true;
 
   const [gesture, setGesture] = useState<AssistantGesture | null>(null);
   const gestureTimer = useRef<ReturnType<typeof setTimeout> | null>(null);

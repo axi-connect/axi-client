@@ -278,7 +278,7 @@ retiró la `GridCard` que vino con la plantilla del mega-menú).
 | Sidebar (`AppSidebar`) | Formularios (`DynamicForm`) |
 | `Modal`, `Dialog`, `DetailSheet` | Paneles del inbox (lista + conversación) — el chip de día `sticky` del hilo sí es glass: flota sobre las burbujas, no es superficie de contenido |
 | `Popover`, `DropdownMenu`, `Command` | Cards de datos/métricas |
-| La barra del kit de asistente (`AssistantDock`, Axel y Alba) **cuando está acoplada**: sticky sobre el hilo, se vuelve cristal al bajar y transparente en reposo | Las burbujas del hilo del asistente (`AssistantBubble`, `UserBubble`): sólidas, sin borde, con `shadow-float` |
+| — La isla del asistente (`AssistantDock`, Axel y Alba) NO es cristal: es **tinta** (`.island-ink .surface-dark`, §9.5.1), ver la nota de abajo | Las burbujas del hilo del asistente (`AssistantBubble`, `UserBubble`): sólidas, sin borde, con `shadow-float` |
 | La cápsula del compositor del asistente (`AssistantComposer`, receta `.glass`) y las píldoras de arranque: flotan sobre el hilo y el aura cae detrás | La lista agrupada de la pregunta y de la ficha (`.grouped-list`) |
 | Tooltips | Cualquier superficie con texto denso |
 
@@ -295,6 +295,8 @@ El registro `/comenzar` (rediseño «Flow», 2026-09-05) pinta sus controles —
 ---
 
 ## 6. Movimiento
+
+> **La isla del asistente y el chat en tinta** (dueño, 2026-09-28; lienzo https://claude.ai/artifact/N9NQ1hEPBhU746ub1bdEbT). La barra de Axel y Alba es una isla de tinta tipo Dynamic Island con tres formas que se funden por `opacity` y un solo avatar que viaja entre ellas por `transform`: **L** escenario del estado vacío (`[data-empty]`), **S** píldora con conversación, **M** trabajando (`working`, con `AssistantIslandActivity`: el paso anterior y el actual). Las pantallas sin chat (bloqueo, carga, cierre) usan `AssistantIslandStage` con el brillo del estado (`ai`, `warning`, `success`, `neutral`). **El chat no lleva coral**: la burbuja de la persona y Enviar van en tinta (`.assistant-bubble-user`, `.assistant-send`), como lo que sale en el inbox; el violeta queda para la IA. Las propuestas de Axel usan el lenguaje de las fichas de /comercial: monocromas, tipo en un cuadro de tinta, botón `contrast` + `glass`.
 
 > **Un solo avatar vivo por pantalla** (estudio de agentes, 2026-09-21): en una vista con varios personajes (rejilla de agentes, selector de personaje, vista previa del onboarding) solo el del escenario lleva vida (`useAvatarLife`/`useAvatarGaze`); el resto son `AssistantAvatar` estáticos con `transitionMs={0}`. Cinco caras parpadeando a la vez son cinco loops en reposo, que es justo lo que esta sección prohíbe.
 
@@ -436,7 +438,7 @@ Los primitivos viven en `shared/components/ui/` (shadcn) y los features en `shar
 | Navegación jerárquica en el sidebar | `NavItemNode` + `nav-tree` / `nav-active` (ver §9.2) |
 | Pestañas, sub-navegación de sección y filtros segmentados | La pastilla de §9.3 — `NavTabs`, `Tabs variant="pill"` o `SegmentedControl` |
 | Carga de vista/tabla/formulario | Ver §9.1 (Estados de carga) |
-| Conversación con un asistente de IA (avatar, barra acoplable, burbujas, pregunta con opciones, «pensando», compositor con voz opcional, píldoras, aura) | El kit `shared/components/features/assistant` (`AssistantChatShell` + `AssistantDock` + `AssistantHeroAvatar` + `AssistantBubble`/`UserBubble`/`SystemNote` + `AssistantQuestion` + `AssistantThinking` + `AssistantComposer` + `StarterPills`; el campo es `.assistant-field`). Lo consumen Axel (`cmo`) y Alba (`intake`); cada slice aporta store, copy y personaje (nombre + accesorio). La firma «✦ nombre» es SIEMPRE `AssistantMark`. El inbox de operadores es mensajería (ticks, media) y sigue aparte |
+| Conversación con un asistente de IA (avatar, isla de tinta, burbujas, pregunta con opciones, «pensando», compositor con voz opcional, píldoras, aura) | El kit `shared/components/features/assistant` (`AssistantChatShell` + `AssistantDock` (la isla L/S/M) + `AssistantIslandActivity` + `AssistantIslandStage` (pantallas sin chat) + `AssistantHeroAvatar` + `AssistantBubble`/`UserBubble`/`SystemNote` + `AssistantQuestion` + `AssistantThinking` + `AssistantComposer` + `StarterPills`; el campo es `.assistant-field`). Lo consumen Axel (`cmo`) y Alba (`intake`); cada slice aporta store, copy y personaje (nombre + accesorio). La firma «✦ nombre» es SIEMPRE `AssistantMark`. El inbox de operadores es mensajería (ticks, media) y sigue aparte |
 
 **Tablas y scroll** (regla del dueño, 2026-09-26: «las tablas no pueden desbordar en los diferentes tamaños y el
 scroll debe ser optimizado, con el estilo de axi del scroll»):

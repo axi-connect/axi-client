@@ -1142,10 +1142,11 @@ h1, h2, h3, h4, h5, h6, .font-heading {
    del módulo, y aparece en medio de un hilo de texto: sin relieve propio se lee
    como un párrafo más y el dueño la pasa de largo.
 
-   El relieve son tres capas y ninguna estrena color: un realce violeta en el
-   borde superior (la luz), una sombra proyectada teñida hacia abajo (el peso) y
-   el anillo cónico recortado al borde, con la técnica de `.channel-surface::after`
-   — dos máscaras que se excluyen sobre `@property --comet-angle`.
+   El relieve es neutro, como las fichas de /comercial (decisión del dueño
+   2026-09-28: nada de violeta en las propuestas): una sombra proyectada suave
+   y, solo en la tarjeta NUEVA, el anillo cónico en tinta recortado al borde,
+   con la técnica de `.channel-surface::after` — dos máscaras que se excluyen
+   sobre `@property --comet-angle`.
 
    El anillo solo gira mientras la tarjeta es NUEVA: tres vueltas y se apaga
    solo, sin temporizador en JavaScript. Un anillo permanente en cada tarjeta
@@ -1154,38 +1155,17 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .axel-comet-card {
   position: relative;
   isolation: isolate;
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--axi-violet) 24%, transparent),
-    0 14px 34px -16px color-mix(in srgb, var(--axi-violet) 34%, transparent),
-    var(--shadow-float);
   transition:
     transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
     box-shadow 220ms ease;
 }
 
-/* El levantamiento al pasar por encima: `perspective` en la propia transform
-   para que el giro sea volumétrico y no un escalado plano. */
 .axel-comet-card:hover {
-  transform: perspective(1100px) translateY(-2px) rotateX(1.1deg);
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--axi-violet) 30%, transparent),
-    0 22px 46px -18px color-mix(in srgb, var(--axi-violet) 40%, transparent),
-    var(--shadow-overlay);
+  transform: translateY(-2px);
 }
 
-/* Halo violeta de la esquina de la tarjeta pendiente. Vive aquí y no como un
-   bg-[radial-gradient(...color-mix...)] inline: un color-mix anidado dentro de
-   una clase arbitraria es frágil de extraer y el KB del slice lo prohíbe. */
-.axel-card-halo {
-  background: radial-gradient(
-    circle 110px at 22px 18px,
-    color-mix(in srgb, var(--axi-violet) 18%, transparent),
-    transparent
-  );
-}
-
-/* Entrada: la tarjeta se endereza como un panel físico que cae en su sitio. Es
-   la señal de que ACABA de llegar, y por eso solo la lleva la variante nueva. */
+/* Entrada: la tarjeta cae en su sitio. Es la señal de que ACABA de llegar, y
+   por eso solo la lleva la variante nueva. */
 .axel-comet-card--new {
   animation: axel-card-in 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -1193,11 +1173,11 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 @keyframes axel-card-in {
   from {
     opacity: 0;
-    transform: perspective(1000px) rotateX(-7deg) translateY(14px) scale(0.985);
+    transform: translateY(14px) scale(0.985);
   }
   to {
     opacity: 1;
-    transform: perspective(1000px) rotateX(0deg) translateY(0) scale(1);
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -1210,10 +1190,9 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   padding: 1.5px;
   background: conic-gradient(
     from var(--comet-angle),
-    transparent 0deg 214deg,
-    color-mix(in srgb, var(--axi-violet) 45%, transparent) 296deg,
-    var(--axi-brand) 338deg,
-    var(--axi-amber) 351deg,
+    transparent 0deg 220deg,
+    color-mix(in srgb, var(--foreground) 22%, transparent) 300deg,
+    color-mix(in srgb, var(--foreground) 70%, transparent) 350deg,
     transparent 360deg
   );
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
@@ -2048,26 +2027,31 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 }
 
 /* ==========================================================================
-   EL CHAT DEL KIT — la barra (`AssistantDock`), el compositor que baja, las
+   EL CHAT DEL KIT — la isla (`AssistantDock`), el compositor que baja, las
    burbujas y la lista agrupada
    --------------------------------------------------------------------------
-   Plan: docs/plans/cmo_despacho_minimalista_plan.md §3–§4.
+   Planes: docs/plans/cmo_despacho_minimalista_plan.md §3–§4 y
+   docs/plans/assistants_premium_plan.md (la isla, 2026-09-28).
 
-   La barra es sticky dentro del scroller del chat. En reposo es TRANSPARENTE y
-   Axel cuelga de ella a tamaño completo, centrado; cuando el centinela (bajo el
-   hero) cruza el borde superior, `useDockedHero` pone `data-docked` en la raíz
-   del chat y esto acopla: el stage se ESCALA (136 → 40 px, rasteriza grande y
-   reduce: nítido) a la esquina, y el cristal, el nombre y la fecha entran por
-   `opacity`. Solo `transform` y `opacity`: compositor. Un solo Axel vivo.
+   La isla es sticky dentro del scroller del chat y es TINTA (`.island-ink
+   .surface-dark`, §9.5.1): una sola pieza que cambia de tamaño con lo que
+   pasa, como la Dynamic Island. Tres capas superpuestas que se funden por
+   `opacity`, y el avatar —la única instancia viva— viaja entre ellas con un
+   solo `transform`:
 
-   Con `data-empty` (sin conversación) la raíz centra el conjunto —barra con
-   Axel, saludo, compositor y píldoras— y el scroller deja de crecer; al primer
-   mensaje el atributo cae y `useComposerFlip` anima el viaje del compositor con
-   un único `translateY` (WAAPI). El `<form>` nunca se remonta.
+   · L — `[data-empty]` en la raíz del chat: el escenario ancho con la trama
+     quieta y el avatar a tamaño completo.
+   · S — con conversación: la píldora centrada con avatar, nombre y meta. Su
+     ancho depende del texto y lo escribe `AssistantDock` en `--pill-w`.
+   · M — `[data-working]` en la isla: crece y enseña los pasos del turno.
 
-   Los tres números que se hablan con el hook viven aquí como variables:
-   `--dock-h` (altura de la barra = `DOCK_HEIGHT_PX`), `--dock-scale` (40/140) y
-   la reserva `.assistant-hero-spacer`.
+   Nada cambia de tamaño: solo `transform` y `opacity` (compositor), sin
+   animación en reposo.
+
+   Con `data-empty` (sin conversación) la raíz centra el conjunto —la isla,
+   el saludo, el compositor y las píldoras— y el scroller deja de crecer; al
+   primer mensaje el atributo cae y `useComposerFlip` anima el viaje del
+   compositor con un único `translateY` (WAAPI). El `<form>` nunca se remonta.
    ========================================================================== */
 .assistant-chat[data-empty] {
   justify-content: center;
@@ -2082,86 +2066,253 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   position: sticky;
   top: 8px;
   z-index: 20;
-  --dock-h: 56px;
-  --dock-scale: 0.2857;
 }
 .assistant-dock__bar {
+  /* Stage nativo del avatar: 136 × 140 (AssistantStage). */
+  --dock-h: 52px;
+  --pill-h: 46px;
+  --l-h: 208px;
+  --m-w: min(560px, 100cqw);
+  --m-h: 112px;
+  --s-scale: 0.2353; /* 32 px */
+  --m-scale: 0.5294; /* 72 px */
   position: relative;
-  display: flex;
-  align-items: center;
   height: var(--dock-h);
-  padding-right: 14px;
-  border-radius: 16px;
   container-type: inline-size;
 }
-/* El cristal, como pseudo: se enciende por `opacity` (receta de `.glass`, §5.1;
-   permitido en §5.2 como superficie flotante sticky). */
-.assistant-dock__bar::before {
+
+.assistant-island {
+  position: absolute;
+  top: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    opacity 240ms cubic-bezier(0.4, 0, 0.2, 1),
+    transform 380ms cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: 0 18px 40px -20px rgb(0 0 0 / 0.55);
+}
+
+/* S — la píldora. */
+.assistant-island--s {
+  top: 3px;
+  left: 50%;
+  height: var(--pill-h);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 18px 0 49px;
+  border-radius: 9999px;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  opacity: 1;
+  pointer-events: auto;
+}
+.assistant-island--s:has(.assistant-dock__status) {
+  padding-right: 8px;
+}
+.assistant-dock__title {
+  font-size: 14px;
+  font-weight: 700;
+}
+/* `--color-muted-foreground` queda resuelto en :root y la isla (`.surface-dark`)
+   no lo re-deriva: dentro de la tinta el gris se mezcla desde `--foreground`,
+   que sí cambia con la superficie. */
+.assistant-dock__meta {
+  font-size: 12px;
+  color: color-mix(in srgb, var(--foreground) 64%, transparent);
+}
+.assistant-dock__status {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+}
+/* En una columna estrecha (móvil) la meta cede su sitio al estado: la píldora
+   no puede salirse de la isla. */
+@container (max-width: 440px) {
+  .assistant-island--s:has(.assistant-dock__status) .assistant-dock__meta {
+    display: none;
+  }
+}
+
+/* M — trabajando. */
+.assistant-island--m {
+  --island-glow: radial-gradient(circle 9rem at 14% 30%, color-mix(in oklab, var(--axi-violet) 34%, transparent), transparent 70%);
+  left: 50%;
+  width: var(--m-w);
+  height: var(--m-h);
+  display: flex;
+  align-items: center;
+  padding: 0 22px 0 108px;
+  border-radius: 30px;
+  transform: translateX(-50%) scale(0.94);
+  transform-origin: 50% 0;
+}
+.assistant-dock[data-working] .assistant-island--m {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+  pointer-events: auto;
+}
+.assistant-dock[data-working] .assistant-island--s {
+  opacity: 0;
+  pointer-events: none;
+}
+.assistant-island__activity {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.assistant-island__line {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+.assistant-island__line--before {
+  font-size: 12.5px;
+  color: color-mix(in srgb, var(--foreground) 64%, transparent);
+}
+.assistant-island__line--now {
+  font-size: 15px;
+  font-weight: 600;
+  animation: assistant-rise 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* L — el escenario del vacío: trama de puntos quieta y un brillo violeta. */
+.assistant-island--l {
+  --island-glow: radial-gradient(circle 13rem at 50% 42%, color-mix(in oklab, var(--axi-violet) 36%, transparent), transparent 70%);
+  left: 0;
+  width: 100%;
+  height: var(--l-h);
+  border-radius: 36px;
+}
+.assistant-island--l::after,
+.assistant-island-stage::after {
   content: "";
   position: absolute;
   inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  opacity: 0;
-  background-color: color-mix(in srgb, var(--color-background) 68%, transparent);
-  -webkit-backdrop-filter: saturate(160%) blur(16px);
-  backdrop-filter: saturate(160%) blur(16px);
-  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
-  box-shadow: var(--shadow-float);
-  transition: opacity 240ms cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  background-image: radial-gradient(color-mix(in oklab, var(--foreground) 16%, transparent) 1px, transparent 1.4px);
+  background-size: 14px 14px;
+  -webkit-mask-image: radial-gradient(closest-side, transparent 32%, #000 58%, transparent 100%);
+  mask-image: radial-gradient(closest-side, transparent 32%, #000 58%, transparent 100%);
 }
-.assistant-chat[data-docked] .assistant-dock__bar::before {
+.assistant-chat[data-empty] .assistant-island--l {
   opacity: 1;
 }
-/* El stage de Axel: tamaño intrínseco del hero, centrado en la barra con
-   unidades de contenedor (`50cqw`), sin JavaScript. */
+.assistant-chat[data-empty] .assistant-island--s {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* El avatar: una sola instancia que viaja entre las tres formas. */
 .assistant-dock__hero {
   position: absolute;
-  top: 8px;
-  left: 8px;
+  top: 0;
+  left: 0;
   width: 136px;
   height: 140px;
   transform-origin: 0 0;
-  transform: translate(calc(50cqw - 68px - 8px), 0) scale(1);
-  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  transform: translate(calc(50cqw - var(--pill-w, 150px) / 2 + 7px), 9px) scale(var(--s-scale));
+  transition: transform 380ms cubic-bezier(0.22, 1, 0.36, 1);
   will-change: transform;
 }
-.assistant-chat[data-docked] .assistant-dock__hero {
-  transform: translate(0, 0) scale(var(--dock-scale));
+.assistant-dock[data-working] .assistant-dock__hero {
+  transform: translate(calc(50cqw - var(--m-w) / 2 + 18px), 19px) scale(var(--m-scale));
 }
-.assistant-dock__title,
-.assistant-dock__meta {
-  opacity: 0;
+.assistant-chat[data-empty] .assistant-dock__hero {
+  transform: translate(calc(50cqw - 68px), 34px) scale(1);
+}
+
+/* Chat estrecho (móvil, o el panel con barra lateral): la isla se alinea a la
+   izquierda y deja libre el sitio de las acciones de la esquina, que el shell
+   mide en `--actions-w`. En ancho la isla va centrada, como la Dynamic Island. */
+.assistant-chat {
+  container: assistant-chat / inline-size;
+}
+@container assistant-chat (max-width: 899px) {
+  .assistant-dock__bar {
+    padding-right: calc(var(--actions-w, 0px) + 8px);
+  }
+  .assistant-island--s {
+    left: 0;
+    transform: none;
+  }
+  .assistant-island--m {
+    left: 0;
+    transform: scale(0.94);
+    transform-origin: 0 0;
+  }
+  /* Trabajando, la isla M toma el ancho entero y las acciones ceden mientras
+     dura el turno (dos de las tres ya están deshabilitadas mientras piensa):
+     con su sitio reservado los pasos no cabían ni en tres líneas. */
+  .assistant-island--m {
+    width: calc(100cqw + var(--actions-w, 0px) + 8px);
+  }
+  .assistant-dock[data-working] .assistant-island--m {
+    transform: scale(1);
+  }
+  .assistant-dock__hero {
+    transform: translate(7px, 9px) scale(var(--s-scale));
+  }
+  .assistant-dock[data-working] .assistant-dock__hero {
+    transform: translate(18px, 19px) scale(var(--m-scale));
+  }
+}
+
+.assistant-chat__actions {
   transition: opacity 200ms ease;
 }
-.assistant-dock__title {
-  margin-left: 52px;
-  font-size: 13px;
-  font-weight: 700;
+@container assistant-chat (max-width: 899px) {
+  .assistant-chat:has(.assistant-dock[data-working]) .assistant-chat__actions {
+    opacity: 0;
+    pointer-events: none;
+  }
 }
-.assistant-dock__meta {
-  margin-left: 8px;
-  font-size: 11px;
-  color: var(--color-muted-foreground);
-}
-.assistant-chat[data-docked] .assistant-dock__title,
-.assistant-chat[data-docked] .assistant-dock__meta {
-  opacity: 1;
-}
-/* Reserva para el avatar colgando: (140 + 8) − 56 + holgura. */
+
+/* Reserva bajo la isla: el escenario L en el vacío, una holgura después. */
 .assistant-hero-spacer {
-  height: 132px;
+  height: 16px;
 }
 .assistant-chat[data-empty] .assistant-hero-spacer {
-  height: 116px;
+  height: calc(var(--l-h, 208px) - 52px + 24px);
+}
+
+/* La isla fija de los estados sin chat (bloqueo, cierre, carga): mismo
+   material que el escenario L, con el brillo del estado. */
+.assistant-island-stage {
+  --island-glow: radial-gradient(circle 12rem at 50% 40%, color-mix(in oklab, var(--axi-violet) 32%, transparent), transparent 70%);
+  display: grid;
+  place-items: center;
+  width: min(100%, 420px);
+  height: 200px;
+  border-radius: 36px;
+  box-shadow: 0 18px 40px -20px rgb(0 0 0 / 0.55);
+}
+.assistant-island-stage > * {
+  position: relative;
+  z-index: 1;
+}
+.assistant-island-stage[data-tone="warning"] {
+  --island-glow: radial-gradient(circle 14rem at 50% 110%, color-mix(in oklab, var(--axi-warning) 40%, transparent), transparent 70%);
+}
+.assistant-island-stage[data-tone="success"] {
+  --island-glow: radial-gradient(circle 14rem at 50% 110%, color-mix(in oklab, var(--axi-success) 38%, transparent), transparent 70%);
+}
+.assistant-island-stage[data-tone="neutral"] {
+  --island-glow: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .assistant-dock__hero,
-  .assistant-dock__bar::before,
-  .assistant-dock__title,
-  .assistant-dock__meta {
+  .assistant-island,
+  .assistant-dock__hero {
     transition: none;
+  }
+  .assistant-island__line--now {
+    animation: none;
   }
 }
 
@@ -2169,33 +2320,23 @@ h1, h2, h3, h4, h5, h6, .font-heading {
    Burbujas, compositor, pregunta y pensando (kit de asistente)
    --------------------------------------------------------------------------
    Las tarjetas del hilo son SÓLIDAS (§5.2): se leen. El cristal queda para lo
-   que flota: la barra acoplada, la cápsula del compositor (`.glass`) y las
-   píldoras. La burbuja del humano va en coral degradado —la voz de la persona,
-   como el azul de Messages— y el violeta se reserva a la IA. Los degradados con
-   `color-mix` anidado viven aquí, no en `bg-[...]` (frágil de extraer).
+   que flota: la cápsula del compositor (`.glass`) y las píldoras. **El chat va
+   en tinta, como el inbox** (decisión del dueño 2026-09-28): la burbuja de la
+   persona y Enviar son el plano del texto, sin coral; el violeta se reserva a
+   la IA.
    -------------------------------------------------------------------------- */
 .assistant-bubble-user {
-  color: var(--axi-on-color);
-  background: linear-gradient(
-    160deg,
-    color-mix(in srgb, var(--axi-brand) 78%, white) 0%,
-    var(--axi-brand) 45%,
-    var(--axi-brand-2) 100%
-  );
-  box-shadow: 0 6px 18px color-mix(in srgb, var(--axi-brand) 28%, transparent);
+  color: var(--color-background);
+  background: var(--color-foreground);
+  box-shadow: 0 6px 18px -8px color-mix(in srgb, var(--foreground) 45%, transparent);
 }
 .assistant-send {
-  color: var(--axi-on-color);
-  background: linear-gradient(
-    160deg,
-    color-mix(in srgb, var(--axi-brand) 78%, white) 0%,
-    var(--axi-brand) 45%,
-    var(--axi-brand-2) 100%
-  );
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--axi-brand) 30%, transparent);
+  color: var(--color-background);
+  background: var(--color-foreground);
+  box-shadow: 0 4px 12px -4px color-mix(in srgb, var(--foreground) 40%, transparent);
 }
 .assistant-send:not(:disabled):hover {
-  filter: brightness(1.06);
+  opacity: 0.88;
 }
 
 /* Entrada de un mensaje NUEVO de la sesión: finita, solo transform/opacity. */
@@ -2225,6 +2366,12 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 }
 .grouped-row {
   position: relative;
+}
+/* La ficha de Alba en oscuro: las tarjetas suben un peldaño sobre el suelo de
+   la ficha. Con `--color-background` quedaban MÁS oscuras que el suelo y la
+   ficha se aplanaba (nota de la auditoría del kit, 2026-09-18). */
+.dark .setup-ficha .grouped-list {
+  background: color-mix(in srgb, var(--foreground) 7%, var(--background));
 }
 .grouped-row + .grouped-row::before {
   content: "";
@@ -2295,7 +2442,7 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   width: 3px;
   height: 8px;
   border-radius: 2px;
-  background: var(--axi-brand);
+  background: var(--color-foreground);
   animation: assistant-wave 0.9s ease-in-out infinite;
 }
 .assistant-wave > i:nth-child(2) { animation-delay: 0.1s; }

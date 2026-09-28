@@ -166,7 +166,7 @@ export function AssistantComposer({
       >
         {recording ? (
           <div className="flex min-h-9 flex-1 items-center gap-3 py-1" role="status" aria-live="polite">
-            <span className="size-2.5 flex-none animate-pulse rounded-full bg-brand" aria-hidden="true" />
+            <span className="size-2.5 flex-none animate-pulse rounded-full bg-foreground" aria-hidden="true" />
             <span className="text-[13px] font-semibold tabular-nums">
               {recorder.state === "requesting" ? "Un momento…" : formatSeconds(recorder.seconds)}
             </span>

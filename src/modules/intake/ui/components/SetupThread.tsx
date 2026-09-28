@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { Check } from "lucide-react";
 
 import type { IntakeMessage } from "@/modules/intake/domain/intake";
@@ -37,10 +38,11 @@ interface SetupThreadProps {
  * se ve en el acto y se corrige hablando o desde la ficha.
  *
  * Solo la última pregunta está viva: se resuelve por posición en el hilo, sin
- * ninguna columna. Los mensajes con id local (`pending-*`, `assistant-*`)
+ * ninguna columna. `memo`: guardar un dato de la ficha repinta la vista, no el
+ * hilo (sus props son `messages` y callbacks estables). Los mensajes con id local (`pending-*`, `assistant-*`)
  * nacieron en esta sesión y entran animados; los del historial, no.
  */
-export function SetupThread({
+export const SetupThread = memo(function SetupThread({
   messages,
   assistantName,
   thinking,
@@ -87,7 +89,7 @@ export function SetupThread({
       {thinking ? <AssistantThinking /> : null}
     </div>
   );
-}
+});
 
 function Captured({ items }: { items: IntakeMessage["captured"] }) {
   return (

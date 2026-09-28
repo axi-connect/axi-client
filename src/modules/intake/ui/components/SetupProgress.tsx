@@ -53,7 +53,7 @@ export function SetupProgress({
             <span
               className={cn(
                 "block h-full rounded-full transition-[width,background-color] duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]",
-                topic.status === "done" && "w-full bg-brand-gradient",
+                topic.status === "done" && "w-full bg-foreground",
                 topic.status === "in_progress" && "w-1/2 bg-accent-violet/80",
                 topic.status === "deferred" && "w-full bg-muted-foreground/30",
                 topic.status === "pending" && "w-0",
@@ -126,7 +126,7 @@ export function SetupTopicList({
               onClick={() => {
                 onResume(topic.code);
               }}
-              className="flex-none text-[13px] font-medium text-brand transition-opacity active:opacity-60"
+              className="flex-none text-[13px] font-semibold text-foreground underline-offset-4 transition-opacity hover:underline active:opacity-60"
             >
               Retomar
             </button>
@@ -136,7 +136,7 @@ export function SetupTopicList({
               onClick={() => {
                 onDefer(topic.code);
               }}
-              className="flex-none text-[13px] font-medium text-brand transition-opacity active:opacity-60"
+              className="flex-none text-[13px] font-semibold text-foreground underline-offset-4 transition-opacity hover:underline active:opacity-60"
             >
               Luego
             </button>

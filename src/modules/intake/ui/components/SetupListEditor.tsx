@@ -125,7 +125,7 @@ export function SetupListEditor({
           onClick={() => {
             setDraft([...draft, ""]);
           }}
-          className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-foreground/[0.14] py-2 text-[13.5px] text-muted-foreground transition-colors hover:border-brand hover:text-brand disabled:opacity-50"
+          className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-foreground/[0.14] py-2 text-[13.5px] text-muted-foreground transition-colors hover:border-foreground/40 hover:text-foreground disabled:opacity-50"
         >
           <Plus className="size-3.5" aria-hidden="true" />
           Añadir
@@ -150,7 +150,7 @@ export function SetupListEditor({
           onClick={() => {
             onDone(changed ? usable : null);
           }}
-          className="flex-none rounded-full bg-brand/10 px-[13px] py-1.5 text-[12.5px] font-semibold text-brand transition-[background-color,transform] hover:bg-brand/16 active:scale-[.95] disabled:opacity-50"
+          className="flex-none rounded-full bg-foreground px-[13px] py-1.5 text-[12.5px] font-semibold text-background transition-[background-color,transform] hover:bg-foreground/90 active:scale-[.95] disabled:opacity-50"
         >
           Listo
         </button>

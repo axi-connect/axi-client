@@ -1,10 +1,9 @@
 "use client";
 
-import { useRef, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 import { useAutoScroll } from "@/core/hooks/use-auto-scroll";
 import { cn } from "@/core/lib/utils";
-import { useDockedHero } from "../hooks/use-docked-hero";
 import { useComposerFlip } from "./use-composer-flip";
 
 interface AssistantChatShellProps {
@@ -37,9 +36,9 @@ interface AssistantChatShellProps {
  * Tres decisiones (2026-09-15, despacho de Axel) que explican la forma que tiene
  * y que ahora comparten Axel y Alba:
  *
- * - **El personaje no se pierde al bajar.** Vive en la barra sticky dentro del
- *   scroller: al pasar el centinela, `useDockedHero` marca `data-docked` y el
- *   CSS lo acopla a 40 px con un `transform`. Una sola instancia, siempre.
+ * - **El personaje no se pierde al bajar.** Vive en la isla sticky dentro del
+ *   scroller (`AssistantDock`): escenario grande con `data-empty`, píldora en
+ *   cuanto hay conversación. Una sola instancia, siempre.
  * - **El compositor empieza centrado y baja al primer mensaje.** Con
  *   `data-empty` la raíz centra el conjunto; al llegar la conversación vuelve a
  *   `[scroller][compositor]`. El nodo del compositor es el mismo en los dos
@@ -60,17 +59,60 @@ export function AssistantChatShell({
   className,
 }: AssistantChatShellProps) {
   const rootRef = useRef<HTMLDivElement>(null);
-  const sentinelRef = useRef<HTMLDivElement>(null);
   const composerRef = useRef<HTMLDivElement>(null);
   const hasDock = dock !== undefined && dock !== null;
 
-  const { containerRef, bottomRef } = useAutoScroll<HTMLDivElement>({
+  const contentRef = useRef<HTMLDivElement>(null);
+  const actionsRef = useRef<HTMLDivElement>(null);
+
+  /* En una pantalla estrecha la isla no puede centrarse: taparía las acciones
+     de la esquina. Se mide su ancho una vez por cambio y el CSS le deja ese
+     sitio (`--actions-w`, ver `.assistant-chat` en globals.css). */
+  useEffect(() => {
+    const root = rootRef.current;
+    const actionsEl = actionsRef.current;
+    if (root === null) return;
+    if (actionsEl === null) {
+      root.style.removeProperty("--actions-w");
+      return;
+    }
+    const write = () => {
+      root.style.setProperty("--actions-w", `${String(actionsEl.offsetWidth)}px`);
+    };
+    write();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(write);
+    observer.observe(actionsEl);
+    return () => {
+      observer.disconnect();
+    };
+  }, [actions]);
+  const { containerRef, bottomRef, isNearBottom, scrollToBottom } = useAutoScroll<HTMLDivElement>({
     deps: autoScrollDeps,
     stickOnMount: false,
     behavior: "auto",
   });
 
-  useDockedHero(rootRef, containerRef, sentinelRef, { enabled: hasDock && !empty });
+  /* El texto que llega en vivo hace crecer el hilo sin cambiar ninguna
+     dependencia: lo sigue un `ResizeObserver` sobre el contenido (un aviso por
+     cuadro como mucho), con la misma guarda de intención. Antes el largo del
+     borrador iba en `autoScrollDeps` y el efecto corría con cada fragmento. */
+  const nearRef = useRef(isNearBottom);
+  useEffect(() => {
+    nearRef.current = isNearBottom;
+  }, [isNearBottom]);
+  useEffect(() => {
+    const content = contentRef.current;
+    if (content === null || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => {
+      if (nearRef.current) scrollToBottom("auto");
+    });
+    observer.observe(content);
+    return () => {
+      observer.disconnect();
+    };
+  }, [scrollToBottom]);
+
   useComposerFlip(composerRef, empty);
 
   return (
@@ -80,17 +122,18 @@ export function AssistantChatShell({
       className={cn("assistant-chat relative flex min-h-0 flex-1 flex-col", className)}
     >
       {actions === undefined || actions === null ? null : (
-        <div className="absolute top-2.5 right-3 z-30">{actions}</div>
+        <div ref={actionsRef} className="assistant-chat__actions absolute top-2.5 right-3 z-30">
+          {actions}
+        </div>
       )}
 
       <div ref={containerRef} className="sidebar-scroll assistant-scroller min-h-0 flex-1 overflow-y-auto px-6 pb-2">
-        <div className="mx-auto flex w-full max-w-[640px] flex-col">
+        <div ref={contentRef} className="mx-auto flex w-full max-w-[640px] flex-col">
           {hasDock ? (
             <>
               {dock}
-              {/* Reserva para el personaje colgando de la barra, y el centinela que decide el acople. */}
+              {/* Reserva para la isla: el escenario L en el vacío, la holgura bajo la píldora después. */}
               <div className="assistant-hero-spacer" aria-hidden="true" />
-              <div ref={sentinelRef} className="h-px" aria-hidden="true" />
             </>
           ) : null}
           {hero}

@@ -153,6 +153,13 @@ interface CmoState {
   settled: Record<string, ProposalDTO | null>;
   /** Las conversaciones del dueño con Axel, para el conmutador. */
   threads: Section<CmoThreadDTO[]>;
+  /**
+   * La carga inicial ya decidió con qué hilo se abre (el último, o ninguno).
+   * Hasta entonces la vista no sabe si pintar el estado vacío o la
+   * conversación, y pintar uno para cambiar al otro era el salto de la carga
+   * (CLS 0,2–0,35 en el arnés, 2026-09-28).
+   */
+  restored: boolean;
 
   load: () => Promise<void>;
   refreshThreads: () => Promise<void>;
@@ -267,6 +274,7 @@ export const useCmoStore = create<CmoState>((set, get) => {
   unseen: 0,
   settled: {},
   threads: idle(),
+  restored: false,
 
   /**
    * Carga inicial de la pantalla. Las tres peticiones van en paralelo y **cada
@@ -308,9 +316,13 @@ export const useCmoStore = create<CmoState>((set, get) => {
         .then(async (threads) => {
           set({ threads: ready(threads) });
           const current = threads[0];
-          if (current === undefined) return;
+          if (current === undefined) {
+            set({ restored: true });
+            return;
+          }
           const transcript = await getTranscript(current.id);
           set({
+            restored: true,
             thread: {
               id: current.id,
               messages: transcript.map(toUiMessage),
@@ -320,8 +332,8 @@ export const useCmoStore = create<CmoState>((set, get) => {
         })
         .catch((error: unknown) => {
           // Sin hilo previo se arranca en blanco: no es un error que reportar en
-          // el chat; el conmutador sí lo sabe.
-          set((state) => ({ threads: failed(state.threads, errorMessage(error)) }));
+          // el chat; el conmutador sí lo sabe. Restaurado igual: no hay más que esperar.
+          set((state) => ({ restored: true, threads: failed(state.threads, errorMessage(error)) }));
         }),
     ]);
   },

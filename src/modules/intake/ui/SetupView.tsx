@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ClipboardList, X } from "lucide-react";
+import { ClipboardList } from "lucide-react";
+import { useShallow } from "zustand/react/shallow";
 
-import { cn } from "@/core/lib/utils";
+import { useIsMobile } from "@/core/hooks/use-mobile";
 import { countCaptured, type IntakeField } from "@/modules/intake/domain/intake";
 import { intakeService } from "@/modules/intake/infrastructure/services/intake-service.adapter";
 import { useIntakeStore } from "@/modules/intake/infrastructure/stores/intake.store";
@@ -11,16 +12,22 @@ import {
   AssistantChatShell,
   AssistantComposer,
   AssistantDock,
+  AssistantIslandActivity,
   AssistantMark,
   type AssistantComposerVoice,
 } from "@/shared/components/features/assistant";
+import { Sheet, SheetContent, SheetTitle } from "@/shared/components/ui/sheet";
 import { AlbaHeroAvatar } from "./components/AlbaHeroAvatar";
+import { AlbaIslandStatus } from "./components/AlbaIslandStatus";
 import { SetupBlocked, SetupDone, SetupSkeleton } from "./components/SetupStates";
 import { SetupSummary } from "./components/SetupSummary";
 import { SetupThread } from "./components/SetupThread";
 
 /** Texto de reposo del compositor: constante, es la invariante del typewriter. */
 const PLACEHOLDER = "Escribe o dicta…";
+
+/** Lo que dice la isla mientras Alba piensa. Alba no informa pasos: son frases, y se detienen en la última. */
+const THINKING_PHASES = ["Anotando lo que me contaste…", "Pensando la siguiente pregunta…"] as const;
 
 /**
  * La entrevista de puesta en marcha, tal como la ve el cliente.
@@ -46,25 +53,51 @@ const PLACEHOLDER = "Escribe o dicta…";
  * store, la ficha, la voz y el copy.
  */
 export function SetupView({ token }: { token: string }) {
-  // Selectores individuales: la ficha guarda un dato y no debe repintar el hilo entero.
-  const session = useIntakeStore((state) => state.session);
-  const messages = useIntakeStore((state) => state.messages);
-  const loading = useIntakeStore((state) => state.loading);
-  const thinking = useIntakeStore((state) => state.thinking);
-  const blocked = useIntakeStore((state) => state.blocked);
-  const turnError = useIntakeStore((state) => state.turnError);
-  const savingField = useIntakeStore((state) => state.savingField);
-  const load = useIntakeStore((state) => state.load);
-  const send = useIntakeStore((state) => state.send);
-  const retry = useIntakeStore((state) => state.retry);
-  const saveField = useIntakeStore((state) => state.saveField);
-  const skipField = useIntakeStore((state) => state.skipField);
-  const unskipField = useIntakeStore((state) => state.unskipField);
-  const deferTopic = useIntakeStore((state) => state.deferTopic);
-  const resumeTopic = useIntakeStore((state) => state.resumeTopic);
-  const reset = useIntakeStore((state) => state.reset);
+  // Una suscripción superficial. Guardar un dato de la ficha cambia `session`
+  // y repinta esta vista, pero NO el hilo: `SetupThread` es `memo`, recibe
+  // `messages` (que no cambió) y callbacks estables.
+  const {
+    session,
+    messages,
+    loading,
+    thinking,
+    blocked,
+    turnError,
+    savingField,
+    load,
+    send,
+    retry,
+    saveField,
+    skipField,
+    unskipField,
+    deferTopic,
+    resumeTopic,
+    reset,
+  } = useIntakeStore(
+    useShallow((state) => ({
+      session: state.session,
+      messages: state.messages,
+      loading: state.loading,
+      thinking: state.thinking,
+      blocked: state.blocked,
+      turnError: state.turnError,
+      savingField: state.savingField,
+      load: state.load,
+      send: state.send,
+      retry: state.retry,
+      saveField: state.saveField,
+      skipField: state.skipField,
+      unskipField: state.unskipField,
+      deferTopic: state.deferTopic,
+      resumeTopic: state.resumeTopic,
+      reset: state.reset,
+    })),
+  );
 
   const [sheetOpen, setSheetOpen] = useState(false);
+  /* Una sola ficha montada: el lateral en escritorio o la hoja en móvil. Antes
+     había dos a la vez y cada dato guardado pintaba las dos. */
+  const mobile = useIsMobile();
   const [focusToken, setFocusToken] = useState(0);
   /* Alba «escucha» cuando la persona le está escribiendo: foco en el
      compositor o borrador sin enviar. Estado local de UI, no del store. */
@@ -116,6 +149,40 @@ export function SetupView({ token }: { token: string }) {
     [send],
   );
 
+  const onSkip = useCallback(
+    (field: IntakeField) => {
+      void skipField(field, "no_aplica");
+    },
+    [skipField],
+  );
+  const onUnskip = useCallback(
+    (field: IntakeField) => {
+      void unskipField(field);
+    },
+    [unskipField],
+  );
+  const onDefer = useCallback(
+    (code: string) => {
+      void deferTopic(code);
+    },
+    [deferTopic],
+  );
+  const onResume = useCallback(
+    (code: string) => {
+      void resumeTopic(code);
+    },
+    [resumeTopic],
+  );
+  const onPick = useCallback(
+    (label: string) => {
+      void send(label);
+    },
+    [send],
+  );
+  const onRetry = useCallback(() => {
+    void retry();
+  }, [retry]);
+
   if (blocked !== null) return <SetupBlocked title={blocked.title} detail={blocked.detail} />;
   if (loading || session === null) return <SetupSkeleton />;
 
@@ -131,18 +198,10 @@ export function SetupView({ token }: { token: string }) {
       onSave={saveField}
       onConfirm={confirm}
       onAskAbout={askAbout}
-      onSkip={(field) => {
-        void skipField(field, "no_aplica");
-      }}
-      onUnskip={(field) => {
-        void unskipField(field);
-      }}
-      onDefer={(code) => {
-        void deferTopic(code);
-      }}
-      onResume={(code) => {
-        void resumeTopic(code);
-      }}
+      onSkip={onSkip}
+      onUnskip={onUnskip}
+      onDefer={onDefer}
+      onResume={onResume}
       // Terminada, la ficha se relee: el servidor no acepta escribir en una
       // sesión cerrada y el cierre ya no promete corregir desde aquí.
       readOnly={finished}
@@ -173,6 +232,9 @@ export function SetupView({ token }: { token: string }) {
                   title={session.assistant_name}
                   hero={<AlbaHeroAvatar name={session.assistant_name} clientTyping={clientTyping} />}
                   meta={`Poniendo a punto ${session.company_name}`}
+                  status={<AlbaIslandStatus progress={session.progress} />}
+                  working={thinking}
+                  activity={<AssistantIslandActivity phrases={THINKING_PHASES} />}
                 />
               }
               actions={
@@ -217,63 +279,33 @@ export function SetupView({ token }: { token: string }) {
                 assistantName={session.assistant_name}
                 thinking={thinking}
                 turnError={turnError}
-                onPick={(label) => {
-                  void send(label);
-                }}
+                onPick={onPick}
                 onWriteInstead={focusComposer}
-                onRetry={() => {
-                  void retry();
-                }}
+                onRetry={onRetry}
               />
             </AssistantChatShell>
           )}
         </section>
 
         {/* Escritorio: la ficha SIEMPRE a la vista. Es la mitad del diseño. */}
-        {summary("hidden w-[380px] flex-none border-l border-foreground/[0.09] bg-secondary/40 lg:flex")}
+        {mobile ? null : summary("hidden w-[380px] flex-none border-l border-foreground/[0.09] bg-secondary/40 lg:flex")}
       </div>
 
-      {/* Móvil: la misma ficha, en una hoja con su asa. */}
-      <div
-        className={cn("fixed inset-0 z-50 lg:hidden", sheetOpen ? "pointer-events-auto" : "pointer-events-none")}
-        aria-hidden={!sheetOpen}
-      >
-        <button
-          type="button"
-          tabIndex={sheetOpen ? 0 : -1}
-          onClick={() => {
-            setSheetOpen(false);
-          }}
-          className={cn(
-            "absolute inset-0 bg-black/28 transition-opacity duration-300",
-            sheetOpen ? "opacity-100" : "opacity-0",
-          )}
-          aria-label="Cerrar"
-        />
-        <div
-          className={cn(
-            "absolute inset-x-0 bottom-0 flex max-h-[90dvh] flex-col rounded-t-[28px] bg-background shadow-overlay",
-            "transition-transform duration-[420ms] ease-[cubic-bezier(0.32,0.72,0,1)]",
-            sheetOpen ? "translate-y-0" : "translate-y-[102%]",
-          )}
-        >
-          <div className="relative flex flex-none justify-center pt-2.5">
-            <span className="h-[5px] w-9 rounded-full bg-foreground/[0.18]" aria-hidden="true" />
-            <button
-              type="button"
-              onClick={() => {
-                setSheetOpen(false);
-              }}
-              className="absolute top-2 right-4 flex size-8 items-center justify-center rounded-full bg-foreground/[0.06] text-muted-foreground"
-              aria-label="Cerrar"
-            >
-              <X className="size-4" aria-hidden="true" />
-            </button>
-          </div>
-
-          {summary("min-h-0 flex-1")}
-        </div>
-      </div>
+      {/* Móvil: la misma ficha, en una hoja de Radix: el foco entra en ella y
+          vuelve al botón que la abrió al cerrarla (H7). */}
+      {mobile ? (
+        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+          <SheetContent
+            side="bottom"
+            aria-describedby={undefined}
+            className="flex max-h-[90dvh] flex-col gap-0 rounded-t-[28px] border-0 bg-background p-0 pt-2.5"
+          >
+            <SheetTitle className="sr-only">Ficha de {session.company_name}</SheetTitle>
+            <span className="mx-auto h-[5px] w-9 flex-none rounded-full bg-foreground/[0.18]" aria-hidden="true" />
+            {summary("min-h-0 flex-1")}
+          </SheetContent>
+        </Sheet>
+      ) : null}
     </main>
   );
 }

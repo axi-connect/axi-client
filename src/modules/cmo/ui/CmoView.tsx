@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { LayoutPanelLeft } from "lucide-react";
+import { useShallow } from "zustand/react/shallow";
 
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { cn } from "@/core/lib/utils";
@@ -30,15 +31,23 @@ import { CmoBoardRail } from "./components/CmoBoardRail";
  */
 export function CmoView() {
   const { hasPermission, user } = useAuth();
-  const settings = useCmoStore((state) => state.settings);
-  const briefing = useCmoStore((state) => state.briefing);
-  const proposals = useCmoStore((state) => state.proposals);
-  const blocker = useCmoStore((state) => state.blocker);
-  const load = useCmoStore((state) => state.load);
-  const reloadProposals = useCmoStore((state) => state.reloadProposals);
-  const reloadBriefing = useCmoStore((state) => state.reloadBriefing);
-  const unseen = useCmoStore((state) => state.unseen);
-  const markSeen = useCmoStore((state) => state.markSeen);
+  // Una sola suscripción superficial: la vista se repinta cuando cambia una de
+  // estas secciones, nunca por un fragmento del streaming (vive en `live`).
+  const { settings, briefing, proposals, blocker, restored, load, reloadProposals, reloadBriefing, unseen, markSeen } =
+    useCmoStore(
+      useShallow((state) => ({
+        settings: state.settings,
+        briefing: state.briefing,
+        proposals: state.proposals,
+        blocker: state.blocker,
+        restored: state.restored,
+        load: state.load,
+        reloadProposals: state.reloadProposals,
+        reloadBriefing: state.reloadBriefing,
+        unseen: state.unseen,
+        markSeen: state.markSeen,
+      })),
+    );
 
   const [railOpen, setRailOpen] = useState(false);
 
@@ -102,6 +111,9 @@ export function CmoView() {
           proposals={pending}
           blocked={blocked}
           canManage={canManage}
+          // Sin ajustes ni hilo decidido no se sabe qué pantalla toca (vacío,
+          // conversación o bloqueo): se espera en vez de pintar una y saltar.
+          settling={!restored || settings.status === "idle" || settings.status === "loading"}
         />
       </main>
 

@@ -1,5 +1,7 @@
 "use client";
 
+import { memo } from "react";
+
 import { cn } from "@/core/lib/utils";
 import {
   countCaptured,
@@ -26,7 +28,7 @@ import { SetupProgress, SetupTopicList } from "./SetupProgress";
  * Y es una LISTA, no una tabla: etiqueta → valor, una línea secundaria, un solo
  * indicador, acciones al pasar el ratón.
  */
-export function SetupSummary({
+export const SetupSummary = memo(function SetupSummary({
   topics,
   progress,
   savingField,
@@ -68,7 +70,7 @@ export function SetupSummary({
   const deferred = new Set(progress.topics.filter((topic) => topic.deferred).map((topic) => topic.code));
 
   return (
-    <aside className={cn("flex min-h-0 flex-col", className)}>
+    <aside className={cn("setup-ficha flex min-h-0 flex-col", className)}>
       <header className="flex-none px-[22px] pt-5 pb-3">
         <h2 className="text-[22px] leading-[1.15] font-heading font-bold tracking-[-0.02em] text-foreground">
           Lo que ya sabemos
@@ -107,10 +109,8 @@ export function SetupSummary({
                   field={field}
                   saving={savingField === field.code}
                   readOnly={readOnly}
-                  onSave={(value) => onSave(field, value)}
-                  onConfirm={() => {
-                    onConfirm(field);
-                  }}
+                  onSave={onSave}
+                  onConfirm={onConfirm}
                   onAskAbout={onAskAbout}
                   onSkip={onSkip}
                   onUnskip={onUnskip}
@@ -129,7 +129,7 @@ export function SetupSummary({
       </div>
     </aside>
   );
-}
+});
 
 /**
  * El aviso de lo pendiente, sin mentir sobre el origen: lo de la web «lo

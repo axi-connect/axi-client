@@ -109,7 +109,7 @@ export function AssistantQuestion({
         <button
           type="button"
           onClick={onWriteInstead}
-          className="mt-2.5 inline-flex items-center text-[13px] font-semibold text-brand transition-colors hover:text-brand-2"
+          className="mt-2 inline-flex min-h-7 items-center text-[13px] font-semibold text-foreground underline-offset-4 transition-colors hover:underline"
         >
           {text.writeInstead}
         </button>

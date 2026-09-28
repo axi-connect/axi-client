@@ -71,6 +71,24 @@ export function toneClasses(tone: BriefingTone | string): string {
 }
 
 /**
+ * El punto de color de un highlight del briefing. El tono va en el punto y no
+ * en el texto (DESIGN.md §8 regla 10): el texto queda en tinta y pasa AA en
+ * los dos temas.
+ */
+export function toneDot(tone: BriefingTone | string): string {
+  switch (tone) {
+    case "up":
+      return "bg-success";
+    case "down":
+      return "bg-warning";
+    case "warn":
+      return "bg-destructive";
+    default:
+      return "bg-muted-foreground";
+  }
+}
+
+/**
  * Cuánto queda para que una propuesta venza, en palabras.
  *
  * Devuelve `null` cuando no vence: la UI entonces no pinta nada en vez de un
