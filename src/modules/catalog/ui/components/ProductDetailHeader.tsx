@@ -1,5 +1,6 @@
 "use client";
 
+import { Lock } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { StatePill } from "@/shared/components/features/bento";
 import { formatMoney } from "@/core/lib/format";
@@ -23,6 +24,7 @@ export function ProductDetailHeader({
   toggling,
   onToggleActive,
   onDelete,
+  statusLocked = false,
 }: {
   product: ProductDTO;
   catalogName: string | null;
@@ -31,6 +33,8 @@ export function ProductDetailHeader({
   toggling: boolean;
   onToggleActive: () => void;
   onDelete: () => void;
+  /** Catálogo premium F5: activar, desactivar y eliminar los decide la tienda conectada. */
+  statusLocked?: boolean;
 }) {
   const variants = product.variants.filter((variant) => variant.is_active).length;
   const service =
@@ -82,6 +86,12 @@ export function ProductDetailHeader({
           ))}
         </p>
       </div>
+      {statusLocked ? (
+        <p className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
+          <Lock aria-hidden="true" className="size-3" />
+          El estado lo manda Shopify
+        </p>
+      ) : null}
       {canManage && (
         <div className="flex shrink-0 flex-wrap items-center gap-2">
           <Button type="button" variant="outline" className="rounded-full" disabled={toggling} onClick={onToggleActive}>

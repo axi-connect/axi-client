@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { RefreshCw, Sparkles, X } from "lucide-react";
+import { Lock, RefreshCw, Sparkles, X } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Modal } from "@/shared/components/ui/modal";
 import { errorMessage } from "@/core/lib/error-messages";
@@ -45,11 +45,14 @@ export function ProductPhotosSection({
   canManage,
   onSaved,
   setAlert,
+  lockedByStore = false,
 }: {
   product: ProductDTO;
   canManage: boolean;
   onSaved: (updated: ProductDTO) => void;
   setAlert?: (alert: AppAlert) => void;
+  /** Catálogo premium F5: las fotos las manda la tienda conectada. */
+  lockedByStore?: boolean;
 }) {
   const { productImages, byVariant } = groupProductImages(product.images);
   const [lightbox, setLightbox] = useState<{ id: string; alt: string } | null>(null);
@@ -140,7 +143,15 @@ export function ProductPhotosSection({
   return (
     <section id="fotos" className="scroll-mt-24 space-y-4" aria-label="Fotos del producto">
       <div className="flex min-h-9 flex-wrap items-center justify-between gap-2">
-        <h2 className="text-[15px] font-semibold">Fotos</h2>
+        <div className="flex flex-col gap-0.5">
+          <h2 className="text-[15px] font-semibold">Fotos</h2>
+          {lockedByStore ? (
+            <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Lock aria-hidden="true" className="size-3" />
+              Las manda Shopify: se suben y ordenan en tu tienda
+            </p>
+          ) : null}
+        </div>
         {stalled && (
           <Button variant="outline" size="sm" onClick={() => void resume()}>
             <RefreshCw className="size-3.5" aria-hidden />

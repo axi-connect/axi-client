@@ -78,6 +78,23 @@ describe("«Para que tu agente lo venda» (catálogo premium F3)", () => {
     expect(readiness.items[1]).toMatchObject({ action: "Generar con IA", href: "#busqueda-ia" });
   });
 
+  it("producto de la tienda (F5): lo que manda Shopify se resuelve allá y la acción solo lleva a verlo", () => {
+    const readiness = productReadiness(
+      product({
+        images: [],
+        governed_by_connection_id: "c1",
+        locked_fields: ["name", "description", "price", "status", "category", "variants", "stock", "images"],
+        variants: [variant("a", { stock: { on_hand: 0, out_of_stock_threshold: 0, available: false } })],
+      }),
+      type,
+    );
+    expect(readiness.items.map((item) => [item.key, item.detail, item.action])).toEqual([
+      ["no_photos", "súbelas en tu tienda conectada", "Ver las fotos"],
+      ["out_of_stock", "el stock lo manda tu tienda conectada", "Ver el stock"],
+      ["missing_attributes", "atributo requerido · tu agente lo usa para recomendar", "Ver los atributos"],
+    ]);
+  });
+
   it("todo listo: titular en positivo y sin filas", () => {
     const readiness = productReadiness(
       product({ variants: [variant("v30")], attribute_values: [{ code: "tipo_piel", label: "Tipo de piel", type: "select", value: "Mixta" }] as ProductDTO["attribute_values"] }),

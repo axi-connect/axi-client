@@ -1,6 +1,6 @@
 # Catálogo premium — plan
 
-Estado (2026-09-27): F0 aprobado por el dueño. F1 servidor certificado (axi-server `feat/catalog-premium` c9b984fb). F2 (listado) certificado. F3 (ficha y crear) certificado. F4 (categorías, tipos y catálogos) implementado; en auditoría. Paridad: `docs/plans/catalog_premium_f{2,3,4}_paridad.md`; render: `docs/qa/catalog-premium/` del monorepo.
+Estado (2026-09-27): F0 aprobado por el dueño. F1 servidor certificado (axi-server `feat/catalog-premium` c9b984fb). F2 (listado) certificado. F3 (ficha y crear) certificado. F4 certificado. F5 (tienda conectada y cierre) implementado; en auditoría. Paridad: `docs/plans/catalog_premium_f{2,3,4,5}_paridad.md`; render: `docs/qa/catalog-premium/` del monorepo.
 encargo del dueño. Mismo proceso que Llamadas, Marketing y Comercial.
 
 - Inventario de paridad: `docs/plans/catalog_premium_inventario.md` (A listado, B ficha, C taxonomía, D qué cambia).

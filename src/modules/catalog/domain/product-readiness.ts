@@ -44,15 +44,18 @@ export function productReadiness(product: ProductDTO, productType: ProductTypeDT
   const images = product.images ?? [];
   const productPhotos = images.filter((image) => image.variant_id === null && image.status !== "failed");
   const activeVariants = product.variants.filter((variant) => variant.is_active);
+  // F5: en un espejo, lo que manda la tienda se resuelve allá; la fila lo dice y su acción solo lleva a verlo.
+  const locked = new Set(product.locked_fields ?? []);
+  const governed = product.governed_by_connection_id !== null && product.governed_by_connection_id !== undefined;
 
   if (!product.is_active) {
     items.push({
       key: "inactive",
       title: "Está inactivo",
-      detail: "tu agente no lo ofrece hasta que lo actives",
+      detail: locked.has("status") ? "se activa en tu tienda conectada" : "tu agente no lo ofrece hasta que lo actives",
       tone: "warning",
       href: "#ficha",
-      action: "Activar",
+      action: locked.has("status") ? "Ver el estado" : "Activar",
     });
   }
 
@@ -60,10 +63,10 @@ export function productReadiness(product: ProductDTO, productType: ProductTypeDT
     items.push({
       key: "no_photos",
       title: "No tiene fotos",
-      detail: "tu agente no podrá enviarlo por WhatsApp",
+      detail: locked.has("images") ? "súbelas en tu tienda conectada" : "tu agente no podrá enviarlo por WhatsApp",
       tone: "warning",
       href: "#fotos",
-      action: "Subir fotos",
+      action: locked.has("images") ? "Ver las fotos" : "Subir fotos",
     });
   } else {
     ready.push(`${productPhotos.length} ${plural(productPhotos.length, "foto", "fotos")}`);
@@ -75,19 +78,19 @@ export function productReadiness(product: ProductDTO, productType: ProductTypeDT
       items.push({
         key: "out_of_stock",
         title: "Está agotado",
-        detail: "tu agente responde que no hay",
+        detail: locked.has("stock") ? "el stock lo manda tu tienda conectada" : "tu agente responde que no hay",
         tone: "destructive",
         href: "#variantes",
-        action: "Ajustar el stock",
+        action: locked.has("stock") ? "Ver el stock" : "Ajustar el stock",
       });
     } else if (out.length > 0) {
       items.push({
         key: "out_of_stock",
         title: out.length === 1 ? `${variantName(out[0])} está agotada` : `${out.length} variantes agotadas`,
-        detail: "tu agente ofrece las demás",
+        detail: locked.has("stock") ? "el stock lo manda tu tienda · ofrece las demás" : "tu agente ofrece las demás",
         tone: "warning",
         href: "#variantes",
-        action: "Ajustar el stock",
+        action: locked.has("stock") ? "Ver el stock" : "Ajustar el stock",
       });
     } else if (activeVariants.length > 0) {
       ready.push(activeVariants.length === 1 ? "con stock" : `las ${activeVariants.length} variantes tienen stock`);
@@ -112,7 +115,12 @@ export function productReadiness(product: ProductDTO, productType: ProductTypeDT
           : missing.map((attribute) => attribute.label).join(", "),
       tone: "warning",
       href: "#atributos",
-      action: missing.length === 1 ? `Completar ${articleFor(label)} ${label}` : "Completar los atributos",
+      // Los atributos de un espejo no se editan (el servidor lo rechaza): solo se ven.
+      action: governed
+        ? "Ver los atributos"
+        : missing.length === 1
+          ? `Completar ${articleFor(label)} ${label}`
+          : "Completar los atributos",
     });
   }
 
@@ -124,10 +132,14 @@ export function productReadiness(product: ProductDTO, productType: ProductTypeDT
         key: "variants_without_photos",
         title:
           without.length === 1 ? `${variantName(without[0])} no tiene fotos` : `${without.length} variantes sin fotos propias`,
-        detail: "tu agente enviará las del producto",
+        detail: locked.has("images") ? "se suben en tu tienda conectada" : "tu agente enviará las del producto",
         tone: "neutral",
         href: "#fotos",
-        action: without.length === 1 ? `Subir fotos de ${variantName(without[0])}` : "Subir fotos por variante",
+        action: locked.has("images")
+          ? "Ver las fotos"
+          : without.length === 1
+            ? `Subir fotos de ${variantName(without[0])}`
+            : "Subir fotos por variante",
       });
     }
   }

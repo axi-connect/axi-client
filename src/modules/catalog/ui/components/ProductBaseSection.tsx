@@ -8,7 +8,8 @@ import { Input } from "@/shared/components/ui/input";
 import { Switch } from "@/shared/components/ui/switch";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { applyServerValidation, errorMessage } from "@/core/lib/error-messages";
-import type { ProductDTO } from "@/modules/catalog/domain/product";
+import { Lock } from "lucide-react";
+import type { GovernedField, ProductDTO } from "@/modules/catalog/domain/product";
 import { updateProduct } from "@/modules/catalog/infrastructure/services/product-service.adapter";
 import { useCatalog } from "@/modules/catalog/infrastructure/stores/catalog.context";
 import { EffectiveCategoryField } from "./EffectiveCategoryField";
@@ -51,15 +52,33 @@ export function ProductBaseSection({
   onSaved,
   setAlert,
   onDirtyChange,
+  locked,
 }: {
   product: ProductDTO;
+  /** `catalog:manage`. En un espejo, la ficha no se edita pero la categoría efectiva sí (F5). */
   canManage: boolean;
+  /**
+   * Catálogo premium F5: los campos que manda la tienda conectada
+   * (`locked_fields`). En un producto espejado el servidor rechaza cualquier
+   * PATCH de la ficha, así que la ficha queda de lectura, pero cada campo dice
+   * si lo manda la tienda y la categoría efectiva se puede fijar.
+   */
+  locked?: ReadonlySet<GovernedField>;
   onSaved: (updated: ProductDTO) => void;
   setAlert?: (alert: AppAlert) => void;
   /** Catálogo premium F3: la ficha avisa antes de salir con cambios sin guardar. */
   onDirtyChange?: (dirty: boolean) => void;
 }) {
   const { productTypes } = useCatalog();
+  const governed = (locked?.size ?? 0) > 0;
+  const editable = canManage && !governed;
+  const lockHint = (field: GovernedField) =>
+    locked?.has(field) ? (
+      <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <Lock aria-hidden="true" className="size-3" />
+        Lo manda Shopify
+      </p>
+    ) : null;
   const [submitting, setSubmitting] = useState(false);
   const isService = product.kind === "service";
 
@@ -102,14 +121,19 @@ export function ProductBaseSection({
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
           <div className="flex min-h-9 flex-wrap items-center justify-between gap-2">
             <h2 className="text-[15px] font-semibold">Información</h2>
-            {canManage && (
+            {editable && (
               <Button type="submit" size="sm" className="rounded-full px-4" disabled={submitting || !isDirty}>
                 {submitting ? "Guardando…" : "Guardar cambios"}
               </Button>
             )}
           </div>
 
-          <fieldset disabled={!canManage} className="space-y-4">
+          {governed ? (
+            <p className="text-xs text-pretty text-muted-foreground">
+              Un producto de tu tienda se edita allá. Aquí puedes fijar su categoría y ajustar su búsqueda con IA.
+            </p>
+          ) : null}
+          <fieldset disabled={!editable} className="space-y-4">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <FormField
                 name="name"
@@ -120,6 +144,7 @@ export function ProductBaseSection({
                     <FormControl>
                       <Input maxLength={200} {...field} />
                     </FormControl>
+                    {lockHint("name")}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -165,18 +190,20 @@ export function ProductBaseSection({
                       {...field}
                     />
                   </FormControl>
+                  {lockHint("description")}
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            {/* La categoría efectiva guarda al instante (no con «Guardar cambios») y va en su propia fila. */}
-            <EffectiveCategoryField
-              product={product}
-              canManage={canManage}
-              onSaved={onSaved}
-              setAlert={setAlert}
-            />
+          </fieldset>
+
+          {/* La categoría efectiva guarda al instante (no con «Guardar cambios») y va en su propia fila,
+              FUERA del fieldset: en un espejo se puede fijar (el servidor escribe la clasificación, no el
+              campo de la tienda). */}
+          <EffectiveCategoryField product={product} canManage={canManage} onSaved={onSaved} setAlert={setAlert} />
+
+          <fieldset disabled={!editable} className="space-y-4">
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
               <FormField
@@ -215,10 +242,11 @@ export function ProductBaseSection({
                         value={field.value}
                         currency={currency}
                         onChange={field.onChange}
-                        disabled={!canManage}
+                        disabled={!editable}
                         aria-invalid={Boolean(fieldState.error)}
                       />
                     </FormControl>
+                    {lockHint("price")}
                     <FormMessage />
                   </FormItem>
                 )}

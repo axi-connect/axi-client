@@ -389,3 +389,29 @@ export function effectiveCategoryNote(category: EffectiveCategoryDTO): string {
   if (source !== undefined) parts.push(source);
   return parts.join(" · ");
 }
+
+/**
+ * Los campos que manda la tienda conectada en un producto espejado
+ * (`locked_fields`, lo decide el backend — nunca se deriva aquí). Catálogo
+ * premium F5: la ficha dice cuáles son, uno por uno, en vez de bloquear la
+ * sección en silencio.
+ */
+export type GovernedField = ProductDTO["locked_fields"][number];
+
+export const GOVERNED_FIELD_LABELS: Record<GovernedField, string> = {
+  name: "Nombre",
+  description: "Descripción",
+  price: "Precio",
+  status: "Estado",
+  category: "Categoría de la tienda",
+  variants: "Variantes",
+  stock: "Stock",
+  images: "Fotos",
+};
+
+/** En el orden en que aparecen en la ficha. */
+const GOVERNED_ORDER: GovernedField[] = ["name", "description", "price", "status", "images", "variants", "stock", "category"];
+
+export function governedFieldLabels(locked: readonly GovernedField[]): string[] {
+  return GOVERNED_ORDER.filter((field) => locked.includes(field)).map((field) => GOVERNED_FIELD_LABELS[field]);
+}

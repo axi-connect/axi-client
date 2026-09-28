@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { use, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { AlertCircle, ArrowLeft, Store } from "lucide-react";
+import { AlertCircle, ArrowLeft, Lock, Store } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert";
 import { Button } from "@/shared/components/ui/button";
 import { Modal } from "@/shared/components/ui/modal";
@@ -11,6 +11,7 @@ import { useAuth } from "@/shared/auth/auth.hooks";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { productReadiness } from "@/modules/catalog/domain/product-readiness";
+import { governedFieldLabels } from "@/modules/catalog/domain/product";
 import type { ProductDTO, StockDTO } from "@/modules/catalog/domain/product";
 import type { ProductTypeDTO } from "@/modules/catalog/domain/product-type";
 import {
@@ -101,6 +102,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   // La cabecera dice la categoría EFECTIVA, la misma que Información (D.1 #18).
   const categoryName = product?.effective_category?.name ?? null;
   const readiness = useMemo(() => (product ? productReadiness(product, productType) : null), [product, productType]);
+  const lockedLabels = useMemo(() => governedFieldLabels(product?.locked_fields ?? []), [product?.locked_fields]);
 
   const variantAxes = useMemo(
     () => productType?.attributes.filter((attribute) => attribute.scope === "variant") ?? [],
@@ -203,6 +205,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             categoryName={categoryName}
             // `status` gobernado: activar/desactivar/eliminar lo decide el sync
             canManage={canManage && !locked.has("status")}
+            statusLocked={canManage && locked.has("status")}
             toggling={toggling}
             onToggleActive={() => void handleToggleActive()}
             onDelete={() => setDeleteOpen(true)}
@@ -221,6 +224,16 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                   </Link>
                   .
                 </p>
+                {/* Catálogo premium F5: lo que manda la tienda, uno por uno (`locked_fields` del backend). */}
+                <ul aria-label="Lo manda Shopify" className="mt-2 flex flex-wrap gap-1.5">
+                  {lockedLabels.map((label) => (
+                    <li key={label} className="inline-flex h-6 items-center gap-1 rounded-full bg-background/70 px-2.5 text-xs font-medium text-foreground">
+                      <Lock aria-hidden="true" className="size-3" />
+                      {label}
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-2 text-xs">Aquí sí puedes fijar su categoría y ajustar su búsqueda con IA.</p>
               </AlertDescription>
             </Alert>
           )}
@@ -233,6 +246,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 <ProductPhotosSection
                   product={product}
                   canManage={canManage && !locked.has("images")}
+                  lockedByStore={locked.has("images")}
                   onSaved={setProduct}
                   setAlert={showAlert}
                 />
@@ -243,9 +257,10 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               <div className={CARD}>
                 <ProductBaseSection
                   product={product}
-                  // Con canManage=false la sección ya pinta valores de lectura, que
-                  // es exactamente el tratamiento del plan (ocultar, no deshabilitar)
-                  canManage={canManage && !locked.has("name") && !locked.has("price")}
+                  // F5: en un espejo la ficha es de lectura (el servidor rechaza el PATCH) y cada campo
+                  // dice si lo manda la tienda; la categoría efectiva sí se fija.
+                  canManage={canManage}
+                  locked={governed ? locked : undefined}
                   onSaved={setProduct}
                   setAlert={showAlert}
                   onDirtyChange={guard.track("base")}
@@ -274,6 +289,15 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                   // El popover de ajuste queda OCULTO para espejados en vez de
                   // fallar con 409: el stock lo dicta la tienda
                   canAdjustStock={canAdjustStock && !locked.has("stock")}
+                  lockNote={
+                    locked.has("variants") && locked.has("stock")
+                      ? "Las variantes y el stock los manda Shopify"
+                      : locked.has("variants")
+                        ? "Las variantes las manda Shopify"
+                        : locked.has("stock")
+                          ? "El stock lo manda Shopify"
+                          : undefined
+                  }
                   onRefetch={load}
                   onStockAdjusted={handleStockAdjusted}
                   setAlert={showAlert}
