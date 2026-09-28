@@ -1,10 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { RefreshCw, Sparkles, X } from "lucide-react";
+import { Lock, RefreshCw, Sparkles, X } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Modal } from "@/shared/components/ui/modal";
-import { Separator } from "@/shared/components/ui/separator";
 import { errorMessage } from "@/core/lib/error-messages";
 import {
   PRODUCT_GALLERY_MAX,
@@ -46,11 +45,14 @@ export function ProductPhotosSection({
   canManage,
   onSaved,
   setAlert,
+  lockedByStore = false,
 }: {
   product: ProductDTO;
   canManage: boolean;
   onSaved: (updated: ProductDTO) => void;
   setAlert?: (alert: AppAlert) => void;
+  /** Catálogo premium F5: las fotos las manda la tienda conectada. */
+  lockedByStore?: boolean;
 }) {
   const { productImages, byVariant } = groupProductImages(product.images);
   const [lightbox, setLightbox] = useState<{ id: string; alt: string } | null>(null);
@@ -139,9 +141,17 @@ export function ProductPhotosSection({
     setLightbox({ id: image.id, alt: image.alt_text ?? altFallback });
 
   return (
-    <section className="space-y-4" aria-label="Fotos del producto">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-base font-semibold">Fotos</h3>
+    <section id="fotos" className="scroll-mt-24 space-y-4" aria-label="Fotos del producto">
+      <div className="flex min-h-9 flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-col gap-0.5">
+          <h2 className="text-[15px] font-semibold">Fotos</h2>
+          {lockedByStore ? (
+            <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Lock aria-hidden="true" className="size-3" />
+              Las manda Shopify: se suben y ordenan en tu tienda
+            </p>
+          ) : null}
+        </div>
         {stalled && (
           <Button variant="outline" size="sm" onClick={() => void resume()}>
             <RefreshCw className="size-3.5" aria-hidden />
@@ -149,7 +159,6 @@ export function ProductPhotosSection({
           </Button>
         )}
       </div>
-      <Separator />
 
       {showBanner && (
         <div className="relative flex items-start gap-3 rounded-lg border border-accent-violet/25 bg-accent-violet/8 p-3 pr-10">
@@ -162,7 +171,7 @@ export function ProductPhotosSection({
             type="button"
             onClick={dismissBanner}
             aria-label="Descartar aviso"
-            className="absolute right-2 top-2 rounded-full p-1 text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+            className="absolute top-1.5 right-1.5 flex size-7 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
           >
             <X className="size-3.5" aria-hidden />
           </button>
@@ -184,6 +193,7 @@ export function ProductPhotosSection({
           max={PRODUCT_GALLERY_MAX}
           altFallback={product.name}
           canManage={canManage}
+          markFirstAsMain
           uploadFn={(file) => uploadProductImage(product.id, file)}
           onUploaded={refetch}
           onReorder={(next) => void handleReorder(null, next)}
@@ -212,7 +222,9 @@ export function ProductPhotosSection({
               <div key={variant.id} className="space-y-2">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex min-w-0 items-center gap-2">
-                    <span className="truncate text-sm">{label}</span>
+                    <span className="truncate text-sm" title={label}>
+                      {label}
+                    </span>
                     <span className="rounded-full bg-muted px-2 py-0.5 font-mono text-[11px] text-muted-foreground">
                       {variant.sku}
                     </span>

@@ -61,7 +61,7 @@ describe("diálogo abierto desde un ítem de menú (QA H5-1)", () => {
     const trigger = await openFromMenu()
     const dialog = screen.getByRole("dialog")
     if (way === "escape") fireEvent.keyDown(dialog, { key: "Escape" })
-    if (way === "close-button") fireEvent.click(screen.getByRole("button", { name: "Close" }))
+    if (way === "close-button") fireEvent.click(screen.getByRole("button", { name: "Cerrar" }))
     if (way === "cancel") fireEvent.click(screen.getByRole("button", { name: "Cancelar" }))
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument())
     await waitFor(() => expect(document.activeElement).toBe(trigger))

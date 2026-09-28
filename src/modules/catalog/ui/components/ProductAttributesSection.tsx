@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/shared/components/ui/button";
 import { Label } from "@/shared/components/ui/label";
-import { Separator } from "@/shared/components/ui/separator";
+import { TriangleAlert } from "lucide-react";
+import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import { errorMessage } from "@/core/lib/error-messages";
 import type { ProductTypeAttributeDTO, ProductTypeDTO } from "@/modules/catalog/domain/product-type";
 import type { ProductDTO } from "@/modules/catalog/domain/product";
@@ -12,6 +13,12 @@ import { AttributeValueInput } from "./AttributeValueInput";
 import type { AppAlert } from "@/core/notifications";
 
 type AttributeValueMap = Record<string, string | number | boolean>;
+
+function sameValues(a: AttributeValueMap, b: AttributeValueMap): boolean {
+  const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
+  for (const key of keys) if (a[key] !== b[key]) return false;
+  return true;
+}
 
 function initialValues(product: ProductDTO): AttributeValueMap {
   const values: AttributeValueMap = {};
@@ -33,6 +40,7 @@ export function ProductAttributesSection({
   highlightRequired,
   onSaved,
   setAlert,
+  onDirtyChange,
 }: {
   product: ProductDTO;
   productType: ProductTypeDTO;
@@ -41,6 +49,8 @@ export function ProductAttributesSection({
   highlightRequired?: boolean;
   onSaved: (updated: ProductDTO) => void;
   setAlert?: (alert: AppAlert) => void;
+  /** Catálogo premium F3: la ficha avisa antes de salir con cambios sin guardar. */
+  onDirtyChange?: (dirty: boolean) => void;
 }) {
   const [values, setValues] = useState<AttributeValueMap>(() => initialValues(product));
   const [saving, setSaving] = useState(false);
@@ -49,6 +59,12 @@ export function ProductAttributesSection({
   useEffect(() => {
     setValues(initialValues(product));
   }, [product]);
+
+  // Sucio = distinto de lo guardado (antes el botón quedaba siempre activo y nada avisaba al salir).
+  const dirty = useMemo(() => !sameValues(values, initialValues(product)), [values, product]);
+  useEffect(() => {
+    onDirtyChange?.(dirty);
+  }, [dirty, onDirtyChange]);
 
   const productAttributes = useMemo(
     () =>
@@ -112,24 +128,25 @@ export function ProductAttributesSection({
   };
 
   return (
-    <section className="space-y-4" aria-label="Atributos del producto">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h3 className="text-base font-semibold">Atributos ({productType.name})</h3>
-          {highlightRequired && missingRequired.length > 0 && (
-            <p className="text-sm text-warning">
-              Faltan atributos requeridos: {missingRequired.join(", ")}
-            </p>
-          )}
-        </div>
+    <section id="atributos" className="scroll-mt-24 space-y-4" aria-label="Atributos del producto">
+      <div className="flex min-h-9 flex-wrap items-center justify-between gap-2">
+        <h2 className="text-[15px] font-semibold">
+          Atributos <span className="font-normal text-muted-foreground">({productType.name})</span>
+        </h2>
         {canManage && (
-          <Button type="button" onClick={() => void save()} disabled={saving}>
+          <Button type="button" size="sm" variant="outline" className="rounded-full px-4" onClick={() => void save()} disabled={saving}>
             {saving ? "Guardando…" : "Guardar atributos"}
           </Button>
         )}
       </div>
-      <Separator />
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {highlightRequired && missingRequired.length > 0 && (
+        // Aviso en línea del DS: el ámbar va en el icono, no en el texto (no pasa AA, §9.4).
+        <Alert variant="warning">
+          <TriangleAlert aria-hidden="true" />
+          <AlertDescription>Faltan atributos requeridos: {missingRequired.join(", ")}</AlertDescription>
+        </Alert>
+      )}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {productAttributes.map((attribute) => (
           <div key={attribute.code} className="space-y-1.5">
             <Label htmlFor={`product-attr-${attribute.code}`}>

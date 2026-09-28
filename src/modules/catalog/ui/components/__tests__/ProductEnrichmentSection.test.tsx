@@ -13,6 +13,12 @@ jest.mock("@/modules/catalog/infrastructure/services/product-enrichment-service.
   applySuggestedCategory: (id: string) => applySuggestedCategory(id),
 }));
 
+const showModal = jest.fn();
+const closeModal = jest.fn();
+jest.mock("@/core/providers/alert-provider", () => ({
+  useAlert: () => ({ showAlert: jest.fn(), showModal: (config: unknown) => showModal(config), closeModal: () => closeModal() }),
+}));
+
 const READY: ProductEnrichmentDTO = {
   status: "ready",
   source: "vision",
@@ -116,6 +122,34 @@ describe("ProductEnrichmentSection", () => {
     );
     expect(screen.getByText("Editado por ti")).toBeInTheDocument();
     expect(screen.getByText(/no se vuelven a generar solos/)).toBeInTheDocument();
+  });
+
+  it("regenerar lo que corregiste pregunta antes; sin ediciones regenera directo (catálogo premium F3)", async () => {
+    const { unmount } = render(
+      <ProductEnrichmentSection
+        product={product({ ...READY, edited_by_user_at: "2026-09-08T11:42:00.000Z" })}
+        canManage
+        canApplyCategory
+        onCategoryApplied={jest.fn()}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /Regenerar/ }));
+    expect(regenerateProductEnrichment).not.toHaveBeenCalled();
+    expect(showModal).toHaveBeenCalledTimes(1);
+    const config = showModal.mock.calls[0][0] as {
+      title: string;
+      actions: { label: string; onClick?: () => void }[];
+    };
+    expect(config.title).toBe("¿Regenerar la búsqueda con IA?");
+    expect(config.actions.map((action) => action.label)).toEqual(["Conservar los míos", "Regenerar"]);
+    config.actions[1].onClick?.();
+    await waitFor(() => expect(regenerateProductEnrichment).toHaveBeenCalledWith("p1"));
+    unmount();
+
+    render(<ProductEnrichmentSection product={product(READY)} canManage canApplyCategory onCategoryApplied={jest.fn()} />);
+    fireEvent.click(screen.getByRole("button", { name: /Regenerar/ }));
+    await waitFor(() => expect(regenerateProductEnrichment).toHaveBeenCalledTimes(2));
+    expect(showModal).toHaveBeenCalledTimes(1);
   });
 
   it("aplicar la categoría llama al endpoint y recarga el producto", async () => {

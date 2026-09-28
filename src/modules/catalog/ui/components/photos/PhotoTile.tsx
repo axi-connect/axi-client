@@ -19,6 +19,7 @@ export function PhotoTile({
   onDelete,
   onRetryImport,
   onImageError,
+  isMain = false,
 }: {
   image: ProductImageDTO;
   altFallback: string;
@@ -29,6 +30,8 @@ export function PhotoTile({
   onRetryImport?: (image: ProductImageDTO) => void;
   /** El host re-fetch el detalle para renovar las presigned expiradas. */
   onImageError?: () => void;
+  /** Catálogo premium F3: la primera foto del producto es la que el agente envía primero. */
+  isMain?: boolean;
 }) {
   const [broken, setBroken] = useState(false);
   const autoRetriedRef = useRef(false);
@@ -48,7 +51,7 @@ export function PhotoTile({
   };
 
   return (
-    <div className="group relative aspect-square overflow-hidden rounded-lg border border-border bg-muted">
+    <div className="group relative aspect-square overflow-hidden rounded-xl border border-border bg-muted">
       {/* Import en curso: sin url todavía */}
       {isPending ? (
         <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 text-muted-foreground">
@@ -88,6 +91,12 @@ export function PhotoTile({
           onError={handleError}
           draggable={false}
         />
+      )}
+
+      {isMain && (
+        <span className="pointer-events-none absolute bottom-1.5 left-1.5 inline-flex h-5 items-center rounded-full bg-background/90 px-2 text-[10.5px] font-semibold text-foreground shadow-sm">
+          Principal
+        </span>
       )}
 
       {/* Acciones al hover — solo cuando la foto está lista */}

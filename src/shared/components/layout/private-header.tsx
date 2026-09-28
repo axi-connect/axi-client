@@ -46,6 +46,10 @@ const LABELS: Record<string, string> = {
 	"catalog": "Catálogo",
 	"products": "Productos",
 	"product-types": "Tipos de producto",
+	// Catálogo premium (D.1 #7): la miga decía «create», «categories» y «catalogs».
+	"categories": "Categorías",
+	"catalogs": "Catálogos",
+	"create": "Crear",
 	"shipping": "Envíos",
 	"channels": "Canales",
 	"integrations": "Integraciones",

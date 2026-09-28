@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Modal } from "@/shared/components/ui/modal";
+import { Island } from "@/shared/components/features/island";
 import { errorMessage } from "@/core/lib/error-messages";
 import {
   ATTRIBUTE_SCOPE_LABELS,
@@ -53,6 +54,21 @@ function fromDto(productType: ProductTypeDTO): EditableAttribute[] {
     }));
 }
 
+/** Lo que se guarda de una fila (sin la clave de render): para saber si hay cambios. */
+function signature(rows: EditableAttribute[]): string {
+  return JSON.stringify(
+    rows.map(({ code, label, type, scope, is_required, options, unit }) => [
+      code,
+      label,
+      type,
+      scope,
+      is_required,
+      type === "select" ? (options ?? []) : [],
+      unit?.trim() || null,
+    ]),
+  );
+}
+
 function validate(rows: EditableAttribute[]): string | null {
   const codes = new Set<string>();
   for (const row of rows) {
@@ -80,15 +96,27 @@ export function AttributeSetEditor({
   onSaved,
   setAlert,
   readOnly,
+  onDirtyChange,
 }: {
   productType: ProductTypeDTO;
   onSaved?: (updated: ProductTypeDTO) => void | Promise<void>;
   setAlert?: (alert: AppAlert) => void;
   readOnly?: boolean;
+  /** Catálogo premium F4: la vista avisa antes de salir con atributos sin guardar. */
+  onDirtyChange?: (dirty: boolean) => void;
 }) {
   const [rows, setRows] = useState<EditableAttribute[]>(() => fromDto(productType));
   const [saving, setSaving] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+
+  // Sucio = distinto de lo guardado. Antes nada avisaba y la barra no existía.
+  const saved = useMemo(() => signature(fromDto(productType)), [productType]);
+  const dirty = signature(rows) !== saved;
+  useEffect(() => {
+    onDirtyChange?.(dirty);
+  }, [dirty, onDirtyChange]);
+  const discard = () => setRows(fromDto(productType));
+  const newCount = rows.filter((row) => !row.persisted).length;
 
   const persistedCodes = useMemo(
     () => new Set(productType.attributes.map((attribute) => attribute.code)),
@@ -168,15 +196,15 @@ export function AttributeSetEditor({
   };
 
   return (
-    <section className="space-y-4" aria-label="Atributos del tipo de producto">
+    <section className="space-y-4 rounded-3xl border border-border bg-card p-5" aria-label="Atributos del tipo de producto">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="text-base font-semibold">
+          <h2 className="text-[15px] font-semibold">
             Atributos{" "}
             <span className="font-normal text-muted-foreground tabular-nums">
               ({rows.length}/{MAX_ATTRIBUTES_PER_TYPE})
             </span>
-          </h3>
+          </h2>
           <p className="text-sm text-muted-foreground">
             Ámbito «Producto» describe la ficha; «Variante» define ejes de variación (color, talla…).
           </p>
@@ -186,15 +214,15 @@ export function AttributeSetEditor({
             <Button
               type="button"
               variant="outline"
+              className="rounded-full"
               onClick={addRow}
               disabled={rows.length >= MAX_ATTRIBUTES_PER_TYPE}
+              title={rows.length >= MAX_ATTRIBUTES_PER_TYPE ? `Llegaste al máximo de ${MAX_ATTRIBUTES_PER_TYPE} atributos` : undefined}
             >
               <Plus className="h-4 w-4" />
               Añadir atributo
             </Button>
-            <Button type="button" onClick={handleSaveClick} disabled={saving}>
-              {saving ? "Guardando…" : "Guardar atributos"}
-            </Button>
+
           </div>
         )}
       </div>
@@ -349,6 +377,33 @@ export function AttributeSetEditor({
         </ul>
       )}
 
+      {!readOnly && dirty ? (
+        // La barra de acción en tinta, pegada abajo (DS §9.5.1): aparece con cambios y dice cuáles.
+        <Island
+          as="footer"
+          material="ink"
+          glow="none"
+          className="sticky bottom-3 z-10 flex flex-wrap items-center gap-3 rounded-3xl py-2.5 pr-2.5 pl-5 sm:rounded-full"
+        >
+          <p className="min-w-0 basis-full text-sm sm:flex-1 sm:basis-auto">
+            <span className="font-semibold">
+              {newCount > 0
+                ? `${newCount} ${newCount === 1 ? "atributo nuevo" : "atributos nuevos"}`
+                : removedCodes.length > 0
+                  ? `${removedCodes.length} ${removedCodes.length === 1 ? "atributo quitado" : "atributos quitados"}`
+                  : "Cambios sin guardar"}
+            </span>
+            <span className="hidden text-muted-foreground xl:inline"> · nada se guarda hasta que guardes</span>
+          </p>
+          <Button type="button" variant="ghost" className="ml-auto rounded-full sm:ml-0" onClick={discard} disabled={saving}>
+            Descartar
+          </Button>
+          <Button type="button" variant="contrast" className="rounded-full px-5" onClick={handleSaveClick} disabled={saving}>
+            {saving ? "Guardando…" : "Guardar atributos"}
+          </Button>
+        </Island>
+      ) : null}
+
       <Modal
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
@@ -356,11 +411,11 @@ export function AttributeSetEditor({
           title: "Eliminar atributos existentes",
           description: `Se eliminarán: ${removedCodes.join(", ")}.`,
           actions: [
-            { label: "Cancelar", variant: "outline", asClose: true, id: "attrs-cancel" },
+            { label: "Cancelar", variant: "outline", id: "attrs-cancel" },
             {
               label: saving ? "Guardando…" : "Eliminar y guardar",
               variant: "destructive",
-              asClose: false,
+              keepOpen: true,
               onClick: () => void save(),
               id: "attrs-confirm",
             },

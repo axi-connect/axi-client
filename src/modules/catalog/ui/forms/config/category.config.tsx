@@ -119,12 +119,13 @@ export function buildCategoryFormFields(opts: {
               <SelectValue placeholder="Estado" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="active">Activa</SelectItem>
-              <SelectItem value="inactive">Inactiva</SelectItem>
+              <SelectItem value="active">Visible</SelectItem>
+              <SelectItem value="inactive">Oculta</SelectItem>
             </SelectContent>
           </Select>
         ),
-        { label: "Estado", htmlFor: "df-is_active" },
+        // Un solo vocabulario con el árbol (catálogo premium F4, D.1 #24): «Oculta», no «Inactiva».
+        { label: "Visible para tu agente", htmlFor: "df-is_active" },
       ),
     );
   }

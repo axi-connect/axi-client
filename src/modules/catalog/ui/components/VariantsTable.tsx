@@ -1,11 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Plus, Star, Trash2 } from "lucide-react";
-import { Badge } from "@/shared/components/ui/badge";
+import { Lock, Pencil, Plus, Star, Trash2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Modal } from "@/shared/components/ui/modal";
-import { Separator } from "@/shared/components/ui/separator";
 import { cn } from "@/core/lib/utils";
 import { formatMoney } from "@/core/lib/format";
 import { errorMessage } from "@/core/lib/error-messages";
@@ -58,6 +56,7 @@ export function VariantsTable({
   onRefetch,
   onStockAdjusted,
   setAlert,
+  lockNote,
 }: {
   product: ProductDTO;
   axes: ProductTypeAttributeDTO[];
@@ -66,6 +65,8 @@ export function VariantsTable({
   onRefetch: () => Promise<void>;
   onStockAdjusted: (variantId: string, stock: StockDTO) => void;
   setAlert?: (alert: AppAlert) => void;
+  /** Catálogo premium F5: qué de esta sección manda la tienda conectada. */
+  lockNote?: string;
 }) {
   const isService = product.kind === "service";
   const [formOpen, setFormOpen] = useState(false);
@@ -112,34 +113,46 @@ export function VariantsTable({
       .join(" · ");
 
   return (
-    <section className="space-y-4" aria-label="Variantes y stock">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-base font-semibold">
-          Variantes{isService ? "" : " y stock"}{" "}
-          <span className="font-normal text-muted-foreground tabular-nums">({variants.length})</span>
-        </h3>
+    <section id="variantes" className="scroll-mt-24 space-y-4" aria-label="Variantes y stock">
+      <div className="flex min-h-9 flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-col gap-0.5">
+          <h2 className="text-[15px] font-semibold">
+            Variantes{isService ? "" : " y stock"}{" "}
+            <span className="font-normal text-muted-foreground tabular-nums">({variants.length})</span>
+          </h2>
+          {lockNote ? (
+            <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Lock aria-hidden="true" className="size-3" />
+              {lockNote}
+            </p>
+          ) : null}
+        </div>
         {canManage && (
-          <Button type="button" variant="outline" onClick={openCreate}>
+          <Button type="button" size="sm" variant="outline" className="rounded-full px-4" onClick={openCreate}>
             <Plus className="h-4 w-4" />
             Añadir variante
           </Button>
         )}
       </div>
-      <Separator />
 
       <DepartureCalendar variants={variants} isService={isService} />
 
-      <div className="sidebar-scroll overflow-x-auto">
+      {/* `Table` ya trae su scroll interno (.axi-scroll): la tabla no empuja la ficha. */}
+      <div className="min-w-0">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>SKU</TableHead>
-              <TableHead>Nombre</TableHead>
-              {hasAxes && <TableHead>Atributos</TableHead>}
+              {/* Nombre y atributos en una celda (canvas tablero 4): la tabla cabe en su columna. */}
+              <TableHead>{hasAxes ? "Variante" : "Nombre"}</TableHead>
               <TableHead>Precio</TableHead>
               <TableHead>Estado</TableHead>
               <TableHead>{isService ? "" : "Stock"}</TableHead>
-              {(canManage || canAdjustStock) && <TableHead className="text-right">Acciones</TableHead>}
+              {(canManage || canAdjustStock) && (
+                <TableHead className="text-right">
+                  <span className="sr-only">Acciones</span>
+                </TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -153,19 +166,26 @@ export function VariantsTable({
                     {variant.sku}
                   </span>
                 </TableCell>
-                <TableCell className="text-sm">{variant.name || "—"}</TableCell>
-                {hasAxes && (
-                  <TableCell className="text-sm text-muted-foreground">
-                    {formatAttributes(variant) || "—"}
-                  </TableCell>
-                )}
-                <TableCell className="text-sm tabular-nums">
+                <TableCell className="text-sm">
+                  <span className="flex min-w-0 flex-col gap-0.5">
+                    <span>{variant.name || "—"}</span>
+                    {hasAxes && formatAttributes(variant) ? (
+                      <span className="text-xs text-muted-foreground">{formatAttributes(variant)}</span>
+                    ) : null}
+                  </span>
+                </TableCell>
+                <TableCell className="text-sm whitespace-nowrap tabular-nums">
                   {formatMoney(variant.price_cents, product.currency)}
                 </TableCell>
                 <TableCell>
-                  <Badge variant={variant.is_active ? "default" : "secondary"}>
+                  {/* El estado en el punto, el texto en foreground (DS §10). */}
+                  <span className="inline-flex items-center gap-1.5 text-sm whitespace-nowrap">
+                    <span
+                      aria-hidden="true"
+                      className={cn("size-1.5 rounded-full", variant.is_active ? "bg-success" : "bg-muted-foreground")}
+                    />
                     {variant.is_active ? "Activa" : "Inactiva"}
-                  </Badge>
+                  </span>
                 </TableCell>
                 <TableCell>
                   <VariantStockCell variant={variant} isService={isService} />
@@ -245,7 +265,7 @@ export function VariantsTable({
           actions: [
             { label: "Cancelar", variant: "outline", asClose: true, id: "variant-delete-cancel" },
             {
-              label: deleting ? "Eliminando..." : "Eliminar",
+              label: deleting ? "Eliminando…" : "Eliminar",
               variant: "destructive",
               asClose: false,
               onClick: handleConfirmDelete,

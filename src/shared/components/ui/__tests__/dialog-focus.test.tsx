@@ -21,7 +21,7 @@ type CloseWay = "escape" | "close-button" | "primary-action"
 function close(way: CloseWay) {
   const dialog = screen.getByRole("dialog")
   if (way === "escape") fireEvent.keyDown(dialog, { key: "Escape" })
-  if (way === "close-button") fireEvent.click(screen.getByRole("button", { name: "Close" }))
+  if (way === "close-button") fireEvent.click(screen.getByRole("button", { name: "Cerrar" }))
   if (way === "primary-action") fireEvent.click(screen.getByRole("button", { name: "Guardar" }))
 }
 
