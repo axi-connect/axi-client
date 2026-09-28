@@ -18,6 +18,10 @@ const mockHasPermission = jest.fn<boolean, [string]>(() => true);
 jest.mock("@/shared/auth/auth.hooks", () => ({
   useAuth: () => ({ hasPermission: mockHasPermission }),
 }));
+// La función Cobros encendida: el bloque solo pide el plan con ella (deuda D1).
+jest.mock("@/shared/auth/features.hooks", () => ({
+  useFeatures: () => ({ loaded: true, hasFeature: (code: string) => code === "collections" }),
+}));
 jest.mock("@/core/providers/alert-provider", () => ({
   useAlert: () => ({ showAlert: jest.fn() }),
 }));
