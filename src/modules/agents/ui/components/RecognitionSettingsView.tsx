@@ -1,11 +1,35 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { Info, LoaderCircle, RefreshCw, Sparkles, Tags, TriangleAlert } from "lucide-react"
+import {
+  Camera,
+  Check,
+  Eye,
+  Info,
+  ListTree,
+  LoaderCircle,
+  Lock,
+  Minus,
+  Plus,
+  RefreshCw,
+  Share,
+  Smartphone,
+  Sparkles,
+  Tags,
+  TriangleAlert,
+  type LucideIcon,
+} from "lucide-react"
 import { cn } from "@/core/lib/utils"
 import { errorMessage } from "@/core/lib/error-messages"
 import { useAlert } from "@/core/providers/alert-provider"
-import { Badge } from "@/shared/components/ui/badge"
+import {
+  BentoFigure,
+  BentoTile,
+  InkIsland,
+  Kicker,
+  StatePill,
+  type StatePillTone,
+} from "@/shared/components/features/bento"
 import { Button } from "@/shared/components/ui/button"
 import {
   Dialog,
@@ -17,13 +41,6 @@ import {
 } from "@/shared/components/ui/dialog"
 import { Skeleton } from "@/shared/components/ui/skeleton"
 import { Switch } from "@/shared/components/ui/switch"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/components/ui/select"
 import {
   classificationPendingNote,
   classificationUncategorized,
@@ -52,9 +69,6 @@ import {
   updateRecognitionSettings,
   type RecognitionUsage,
 } from "@/modules/agents/infrastructure/services/recognition-service.adapter"
-
-/** Valor del selector cuando el vertical se deduce del nicho (`null` en el DTO). */
-const AUTO_VERTICAL = "__auto__"
 
 /**
  * Configuración → Reconocimiento de producto: el opt-in de empresa, el consumo
@@ -239,186 +253,172 @@ export function RecognitionSettingsView() {
   }
 
   if (loadError !== null) {
-    return <p className="rounded-xl bg-destructive/10 p-4 text-sm text-destructive">{loadError}</p>
+    return <p className="rounded-3xl bg-destructive/10 p-5 text-sm text-destructive">{loadError}</p>
   }
 
   if (settings === null) {
     return (
-      <div className="space-y-4" role="status" aria-label="Cargando configuración del reconocimiento">
-        <Skeleton className="h-40 w-full rounded-2xl" />
-        <Skeleton className="h-40 w-full rounded-2xl" />
+      <div className="flex flex-col gap-4" role="status" aria-label="Cargando configuración del reconocimiento">
+        <Skeleton className="h-24 w-full rounded-3xl" />
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <Skeleton className="h-52 rounded-3xl" />
+          <Skeleton className="h-52 rounded-3xl" />
+          <Skeleton className="h-52 rounded-3xl" />
+        </div>
+        <Skeleton className="h-72 w-full rounded-3xl" />
       </div>
     )
   }
 
   const pctUsed = usage?.limit?.pct_used ?? 0
   const quotaExhausted = usage?.limit !== null && usage !== null && pctUsed >= 100
+  const recognitionTone: StatePillTone = settings.ai_enabled ? (quotaExhausted ? "warning" : "success") : "neutral"
+  const effectiveVertical: EnrichmentVertical | null = settings.enrichment_vertical ?? stats?.vertical ?? null
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-semibold tracking-tight">Reconocimiento de producto</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Cuando un cliente envía una foto, una captura o comparte una publicación de Instagram, el
-          agente reconoce qué producto es y lo cotiza.
-        </p>
-      </div>
-
-      <section className="space-y-4 rounded-2xl border border-border bg-background p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-sm font-semibold">Reconocer productos en las fotos que envían tus clientes</h2>
-              <Badge
-                variant="outline"
-                className={cn(
-                  settings.ai_enabled && !quotaExhausted
-                    ? "border-accent-violet/40 bg-accent-violet/10 text-accent-violet"
-                    : "text-muted-foreground",
-                )}
-              >
-                {settings.ai_enabled ? (quotaExhausted ? "En pausa" : "Activo") : "Desactivado"}
-              </Badge>
-            </div>
-            <p className="mt-1 max-w-prose text-xs text-muted-foreground">
-              Cada foto analizada consume{" "}
-              <span className="font-medium text-foreground">un reconocimiento</span> de tu plan. Con
-              confianza alta el agente cotiza directo; si duda, muestra hasta tres opciones con foto y
-              deja que el cliente elija. Sin coincidencias, pide la referencia.
-            </p>
-          </div>
-          <Switch
-            checked={settings.ai_enabled}
-            onCheckedChange={(value) => void toggle(value)}
-            disabled={savingSwitch}
-            aria-label="Activar reconocimiento de producto para la empresa"
-          />
+    <div className="flex min-w-0 flex-col gap-6">
+      <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <p className="text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+            Ajustes · Catálogo con IA
+          </p>
+          <h1 className="font-heading text-[1.9rem] leading-[1.05] font-bold tracking-tight text-balance sm:text-[2.5rem]">
+            Reconocimiento de producto
+          </h1>
+          <p className="max-w-3xl text-sm text-pretty text-muted-foreground">
+            Cuando un cliente envía una foto, una captura o comparte una publicación de Instagram, el agente
+            reconoce qué producto es y lo cotiza.
+          </p>
         </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            className="rounded-full"
+            onClick={() => void reindex()}
+            disabled={reindexing || index === null || !index.enabled}
+          >
+            {reindexing ? <LoaderCircle className="size-4 animate-spin" aria-hidden /> : <RefreshCw className="size-4" aria-hidden />}
+            Indexar ahora
+          </Button>
+          <Button
+            variant="outline"
+            className="rounded-full"
+            onClick={() => void classifyCatalog()}
+            disabled={classifying || classification === null}
+          >
+            {classifying ? <LoaderCircle className="size-4 animate-spin" aria-hidden /> : <Tags className="size-4" aria-hidden />}
+            Clasificar catálogo
+          </Button>
+        </div>
+      </header>
 
-        {usage !== null && usage.limit !== null && (
-          <div>
-            <div className="mb-1.5 flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">Reconocimientos de este ciclo</span>
-              <span className="tabular-nums">
-                {usage.used.toLocaleString("es-CO")} / {usage.limit.value.toLocaleString("es-CO")}
-              </span>
-            </div>
-            <div className="h-2 overflow-hidden rounded-full border border-border bg-muted">
-              <div
-                className={cn(
-                  "h-full rounded-full",
-                  pctUsed >= 100 ? "bg-destructive" : pctUsed >= 80 ? "bg-warning" : "bg-accent-violet",
-                )}
-                style={{ width: `${String(Math.min(100, pctUsed))}%` }}
-                role="progressbar"
-                aria-label="Consumo de reconocimientos"
-                aria-valuenow={Math.round(pctUsed)}
-                aria-valuemin={0}
-                aria-valuemax={100}
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <BentoTile
+          label="Reconocimiento"
+          aside={
+            <StatePill tone={recognitionTone}>
+              {settings.ai_enabled ? (quotaExhausted ? "En pausa" : "Activo") : "Desactivado"}
+            </StatePill>
+          }
+        >
+          {usage !== null && usage.limit !== null ? (
+            <>
+              <BentoFigure
+                value={usage.used.toLocaleString("es-CO")}
+                unit={`de ${usage.limit.value.toLocaleString("es-CO")} este ciclo`}
               />
-            </div>
-            <p className="mt-1.5 text-xs text-muted-foreground">
-              {quotaExhausted
-                ? "Cuota agotada: las fotos entran al inbox como siempre y el agente pide la referencia por texto hasta el nuevo ciclo."
-                : "Un reconocimiento por foto analizada · el límite lo define tu plan."}
-            </p>
-          </div>
-        )}
-
-        {settings.ai_enabled && quotaExhausted && (
-          <p className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 p-3 text-xs">
-            <TriangleAlert className="mt-0.5 size-3.5 shrink-0 text-warning" aria-hidden />
-            <span>
-              <span className="font-medium">Cuota de reconocimientos agotada.</span> Puedes ampliarla
-              con un bloque de 100 desde Facturación; se reactiva sola al iniciar el nuevo ciclo.
-            </span>
+              <Meter
+                label="Consumo de reconocimientos"
+                pct={pctUsed}
+                tone={pctUsed >= 100 ? "destructive" : pctUsed >= 80 ? "warning" : "ink"}
+              />
+              <p className="text-xs text-muted-foreground">
+                {quotaExhausted
+                  ? "Cuota agotada: las fotos entran al inbox como siempre y el agente pide la referencia por texto hasta el nuevo ciclo."
+                  : "Un reconocimiento por foto analizada · el límite lo define tu plan."}
+              </p>
+            </>
+          ) : null}
+          <p className="text-xs text-pretty text-muted-foreground">
+            Cada foto analizada consume <span className="font-medium text-foreground">un reconocimiento</span> de
+            tu plan. Con confianza alta el agente cotiza directo; si duda, muestra hasta tres opciones con foto y
+            deja que el cliente elija. Sin coincidencias, pide la referencia.
           </p>
-        )}
-      </section>
+          {settings.ai_enabled && quotaExhausted ? (
+            <Notice>
+              <span className="font-medium">Cuota de reconocimientos agotada.</span> Puedes ampliarla con un bloque
+              de 100 desde Facturación; se reactiva sola al iniciar el nuevo ciclo.
+            </Notice>
+          ) : null}
+          <SwitchRow
+            id="recognition-ai"
+            label="Reconocer productos en las fotos que envían tus clientes"
+            checked={settings.ai_enabled}
+            onChange={(value) => void toggle(value)}
+            disabled={savingSwitch}
+            ariaLabel="Activar reconocimiento de producto para la empresa"
+          />
+        </BentoTile>
 
-      <section className="space-y-4 rounded-2xl border border-border bg-background p-4">
-        <div>
-          <h2 className="text-sm font-semibold">Índice del catálogo</h2>
-          <p className="mt-1 max-w-prose text-xs text-muted-foreground">
-            Para reconocer una foto, tus productos y sus fotos tienen que estar indexados. Se hace solo
-            cada vez que guardas un producto o subes una foto; aquí puedes forzarlo.
-          </p>
-        </div>
+        <BentoTile
+          label="Índice del catálogo"
+          aside={index === null ? null : <IndexPill index={index} />}
+        >
+          {index === null ? (
+            <p className="text-xs text-muted-foreground">El estado del índice no está disponible ahora.</p>
+          ) : (
+            <>
+              <BentoFigure
+                value={index.products_indexed.toLocaleString("es-CO")}
+                unit={`de ${index.products.toLocaleString("es-CO")} productos`}
+              />
+              <Meter label="Productos indexados" pct={index.products === 0 ? 0 : (index.products_indexed / index.products) * 100} tone="ink" />
+              <dl className="grid grid-cols-2 gap-3 border-t border-border pt-3">
+                <Figure
+                  value={index.images_indexed.toLocaleString("es-CO")}
+                  label={`de ${index.images.toLocaleString("es-CO")} fotos indexadas`}
+                />
+                <Figure value={index.products_without_photo.toLocaleString("es-CO")} label="productos sin foto" />
+              </dl>
+              <p className="text-xs text-muted-foreground">
+                Se indexa solo cada vez que guardas un producto o subes una foto; «Indexar ahora» lo fuerza.
+              </p>
+              {!index.enabled ? (
+                <Notice>
+                  <span className="font-medium">El reconocimiento por imagen no está disponible en la plataforma.</span>{" "}
+                  Las fotos se reconocen solo por su descripción hasta que se habilite.
+                </Notice>
+              ) : null}
+            </>
+          )}
+        </BentoTile>
 
-        {index === null ? (
-          <p className="text-xs text-muted-foreground">El estado del índice no está disponible ahora.</p>
-        ) : (
-          <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-            <IndexStat
-              label="Productos indexados"
-              value={index.products_indexed}
-              total={index.products}
-              note={
-                pendingProducts(index) === 0
-                  ? "Todo al día"
-                  : `${pendingProducts(index).toLocaleString("es-CO")} pendientes · se completan en segundos`
-              }
-            />
-            <IndexStat
-              label="Fotos indexadas"
-              value={index.images_indexed}
-              total={index.images}
-              note={
-                index.products_without_photo > 0
-                  ? `${index.products_without_photo.toLocaleString("es-CO")} productos sin foto: solo se reconocen por texto`
-                  : pendingImages(index) === 0
-                    ? "Todo al día"
-                    : `${pendingImages(index).toLocaleString("es-CO")} pendientes`
-              }
-            />
-            <Button variant="outline" onClick={() => void reindex()} disabled={reindexing || !index.enabled}>
-              {reindexing ? (
-                <LoaderCircle className="size-4 animate-spin" aria-hidden />
-              ) : (
-                <RefreshCw className="size-4" aria-hidden />
-              )}
-              Indexar ahora
-            </Button>
-          </div>
-        )}
-
-        {index !== null && !index.enabled && (
-          <p className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 p-3 text-xs">
-            <TriangleAlert className="mt-0.5 size-3.5 shrink-0 text-warning" aria-hidden />
-            <span>
-              <span className="font-medium">El reconocimiento por imagen no está disponible en la plataforma.</span>{" "}
-              Las fotos se reconocen solo por su descripción hasta que se habilite.
-            </span>
-          </p>
-        )}
-
-        {index !== null && index.enabled && indexComplete(index) && index.products > 0 && (
-          <p className="text-xs text-muted-foreground">Índice completo: cada producto y cada foto tienen su huella.</p>
-        )}
-
-        <div className="grid gap-3 text-xs sm:grid-cols-3">
-          <HowItem title="Foto directa" text="WhatsApp, Instagram y Messenger." />
-          <HowItem title="Captura de pantalla" text="De un video o de una publicación." />
-          <HowItem title="Publicación compartida" text="Posts y menciones de historia en Instagram." />
-        </div>
-      </section>
-
-      <section className="space-y-4 rounded-2xl border border-accent-violet/30 bg-accent-violet/10 p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h2 className="flex items-center gap-2 text-sm font-semibold">
-              <Tags className="size-4 text-accent-violet" aria-hidden />
-              Clasificación automática
-            </h2>
-            <p className="mt-1 max-w-prose text-xs text-muted-foreground">
-              Cada producto nuevo o modificado recibe su categoría de la taxonomía de tu tipo de negocio:
-              primero por señales de la tienda (colección, tipo, nombre) y, si no basta, con IA. Lo que tú
-              fijes no se toca.
-            </p>
-          </div>
-          <Switch
+        <BentoTile
+          label="Clasificación"
+          className="md:col-span-2 xl:col-span-1"
+          aside={classification === null ? null : <ClassificationPill stats={classification} />}
+        >
+          {classification === null ? (
+            <p className="text-xs text-muted-foreground">El estado de la clasificación no está disponible ahora.</p>
+          ) : (
+            <>
+              <BentoFigure
+                value={classification.categorized.toLocaleString("es-CO")}
+                unit={`de ${classification.products.toLocaleString("es-CO")} con categoría`}
+              />
+              <Meter
+                label="Productos con categoría"
+                pct={classification.products === 0 ? 0 : (classification.categorized / classification.products) * 100}
+                tone="ink"
+              />
+              <p className="text-xs text-muted-foreground">{classificationPendingNote(classification)}</p>
+            </>
+          )}
+          <SwitchRow
+            id="classification-auto"
+            label="Clasificar automáticamente"
             checked={settings.classification_auto_enabled !== false}
-            onCheckedChange={(value) =>
+            onChange={(value) =>
               void saveEnrichment(
                 { classification_auto_enabled: value },
                 value
@@ -427,200 +427,241 @@ export function RecognitionSettingsView() {
               )
             }
             disabled={savingEnrichment}
-            aria-label="Clasificar automáticamente el catálogo"
+            ariaLabel="Clasificar automáticamente el catálogo"
           />
-        </div>
+        </BentoTile>
+      </div>
 
-        {classification === null ? (
-          <p className="text-xs text-muted-foreground">El estado de la clasificación no está disponible ahora.</p>
-        ) : (
-          <div className="grid gap-3 sm:grid-cols-[1fr_1fr_1fr_1fr_auto] sm:items-end">
-            <IndexStat
-              label="Con categoría"
-              value={classification.categorized}
-              total={classification.products}
-              note={classificationPendingNote(classification)}
-            />
-            <PlainStat label="Automáticas" value={classification.automatic} note="sin confirmar" />
-            <PlainStat label="Fijadas por ti" value={classification.tenant_set} note="no se tocan" />
-            <PlainStat
-              label="Sin resolver"
-              value={classification.unresolved}
-              note={classificationUncategorized(classification) === 0 ? "todo al día" : "elígelas a mano"}
-            />
-            <Button variant="outline" onClick={() => void classifyCatalog()} disabled={classifying}>
-              {classifying ? (
-                <LoaderCircle className="size-4 animate-spin" aria-hidden />
-              ) : (
-                <Tags className="size-4" aria-hidden />
-              )}
-              Clasificar catálogo
-            </Button>
+      <InkIsland label="Tipo de catálogo y metadatos con IA" className="gap-0 p-6 sm:p-7">
+        <div className="grid min-w-0 gap-7 lg:grid-cols-[minmax(0,1fr)_22rem]">
+          <div className="flex min-w-0 flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <Kicker>Tipo de catálogo</Kicker>
+              <h2 className="font-heading text-2xl leading-tight font-bold tracking-tight">
+                {effectiveVertical ? ENRICHMENT_VERTICAL_LABELS[effectiveVertical] : "Según tu tipo de negocio"}
+                {settings.enrichment_vertical === null ? (
+                  <span className="font-sans text-sm font-medium text-muted-foreground"> · según tu tipo de negocio</span>
+                ) : null}
+              </h2>
+              <p className="max-w-2xl text-sm text-pretty text-muted-foreground">
+                Decide las categorías base y los atributos que genera la IA. Cambiarlo rehace la taxonomía: siembra
+                las categorías del nuevo tipo y retira las del anterior que no tengan productos.
+              </p>
+            </div>
+            <div role="radiogroup" aria-label="Tipo de catálogo" className="flex flex-wrap gap-1.5">
+              <VerticalChip
+                on={settings.enrichment_vertical === null}
+                disabled={savingEnrichment}
+                onPick={() => settings.enrichment_vertical !== null && setPendingVertical(null)}
+              >
+                Según tu negocio{stats ? ` (${ENRICHMENT_VERTICAL_LABELS[stats.vertical]})` : ""}
+              </VerticalChip>
+              {(Object.keys(ENRICHMENT_VERTICAL_LABELS) as EnrichmentVertical[]).map((vertical) => (
+                <VerticalChip
+                  key={vertical}
+                  on={settings.enrichment_vertical === vertical}
+                  disabled={savingEnrichment}
+                  onPick={() => settings.enrichment_vertical !== vertical && setPendingVertical(vertical)}
+                >
+                  {ENRICHMENT_VERTICAL_LABELS[vertical]}
+                </VerticalChip>
+              ))}
+            </div>
           </div>
-        )}
-      </section>
 
-      <section className="space-y-4 rounded-2xl border border-border bg-background p-4" aria-labelledby="enrichment-title">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 id="enrichment-title" className="flex items-center gap-1.5 text-sm font-semibold">
-                <Sparkles className="size-4 text-accent-violet" aria-hidden />
+          <div className="flex min-w-0 flex-col gap-3.5 border-t border-border pt-6 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-7" aria-labelledby="enrichment-title">
+            <div className="flex items-center justify-between gap-2">
+              <h2 id="enrichment-title" className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Sparkles className="size-3.5" aria-hidden />
                 Metadatos con IA
               </h2>
-              <Badge
-                variant="outline"
-                className={cn(
-                  settings.enrichment_auto_enabled === true
-                    ? "border-accent-violet/40 bg-accent-violet/10 text-accent-violet"
-                    : "text-muted-foreground",
-                )}
-              >
+              <StatePill tone={settings.enrichment_auto_enabled === true ? "success" : "neutral"}>
                 {settings.enrichment_auto_enabled === true ? "Automático" : "Bajo demanda"}
-              </Badge>
+              </StatePill>
             </div>
-            <p className="mt-1 max-w-prose text-xs text-muted-foreground">
-              Cada producto nuevo o modificado, incluidos los que llegan de tu tienda conectada, recibe una
-              descripción para el agente, atributos y las palabras con que lo piden tus clientes.{" "}
-              <span className="font-medium text-foreground">No consume tu plan</span> y no escribe nada en tu
-              tienda.
-            </p>
-          </div>
-          <Switch
-            checked={settings.enrichment_auto_enabled === true}
-            onCheckedChange={(value) =>
-              void saveEnrichment(
-                { enrichment_auto_enabled: value },
-                value
-                  ? { title: "Enriquecimiento automático activado", description: "Cada producto nuevo o modificado recibe sus metadatos en segundos." }
-                  : { title: "Enriquecimiento automático desactivado", description: "Puedes generarlos por producto o con «Enriquecer catálogo»." },
-              )
-            }
-            disabled={savingEnrichment}
-            aria-label="Enriquecer automáticamente el catálogo con IA"
-          />
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-          <div className="space-y-1.5">
-            <label htmlFor="enrichment-vertical" className="text-xs text-muted-foreground">
-              Tipo de catálogo
-            </label>
-            <Select
-              value={settings.enrichment_vertical ?? AUTO_VERTICAL}
-              onValueChange={(value) => {
-                const vertical = value === AUTO_VERTICAL ? null : (value as EnrichmentVertical)
-                if (vertical !== settings.enrichment_vertical) setPendingVertical(vertical)
-              }}
+            {stats === null ? (
+              <p className="text-xs text-muted-foreground">El estado de los metadatos no está disponible ahora.</p>
+            ) : (
+              <>
+                <BentoFigure
+                  value={stats.ready.toLocaleString("es-CO")}
+                  unit={`de ${stats.products.toLocaleString("es-CO")} con metadatos`}
+                  size="md"
+                />
+                <p className="text-xs text-muted-foreground">{enrichmentPendingNote(stats)}</p>
+                <DetailList
+                  rows={[
+                    { label: "Editados por ti", note: "no se regeneran solos", value: stats.user_edited },
+                    { label: "Desactivados", note: "usan la ficha original", value: stats.disabled },
+                  ]}
+                />
+                {!stats.enabled ? (
+                  <Notice>
+                    <span className="font-medium">Los metadatos con IA no están disponibles en la plataforma.</span>{" "}
+                    El agente usa la descripción de la ficha hasta que se habiliten.
+                  </Notice>
+                ) : null}
+                {stats.enabled && enrichmentCapReached(stats) ? (
+                  <Notice icon="info">
+                    <span className="font-medium">Tope del mes alcanzado.</span> Lo pendiente se enriquece solo al
+                    iniciar el próximo mes. Si necesitas más este mes, escríbenos.
+                  </Notice>
+                ) : null}
+                {stats.enabled && stats.monthly_used !== null ? (
+                  <p className="text-xs text-muted-foreground">
+                    Consumo del mes:{" "}
+                    <span className="tabular-nums">
+                      {stats.monthly_used.toLocaleString("es-CO")} de {stats.monthly_cap.toLocaleString("es-CO")}
+                    </span>
+                    .
+                  </p>
+                ) : null}
+              </>
+            )}
+            <SwitchRow
+              id="enrichment-auto"
+              label="Enriquecer automáticamente"
+              checked={settings.enrichment_auto_enabled === true}
+              onChange={(value) =>
+                void saveEnrichment(
+                  { enrichment_auto_enabled: value },
+                  value
+                    ? { title: "Enriquecimiento automático activado", description: "Cada producto nuevo o modificado recibe sus metadatos en segundos." }
+                    : { title: "Enriquecimiento automático desactivado", description: "Puedes generarlos por producto o con «Enriquecer catálogo»." },
+                )
+              }
               disabled={savingEnrichment}
-            >
-              <SelectTrigger id="enrichment-vertical" className="w-full sm:w-72" aria-label="Tipo de catálogo">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={AUTO_VERTICAL}>
-                  Según tu tipo de negocio{stats ? ` (${ENRICHMENT_VERTICAL_LABELS[stats.vertical]})` : ""}
-                </SelectItem>
-                {(Object.keys(ENRICHMENT_VERTICAL_LABELS) as EnrichmentVertical[]).map((vertical) => (
-                  <SelectItem key={vertical} value={vertical}>
-                    {ENRICHMENT_VERTICAL_LABELS[vertical]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {stats === null ? (
-          <p className="text-xs text-muted-foreground">El estado de los metadatos no está disponible ahora.</p>
-        ) : (
-          <div className="grid gap-3 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end">
-            <IndexStat
-              label="Con metadatos"
-              value={stats.ready}
-              total={stats.products}
-              note={enrichmentPendingNote(stats)}
+              ariaLabel="Enriquecer automáticamente el catálogo con IA"
             />
-            <PlainStat label="Editados por ti" value={stats.user_edited} note="no se regeneran solos" />
-            <PlainStat label="Desactivados" value={stats.disabled} note="usan la ficha original" />
-            <Button variant="outline" onClick={() => void enrichCatalog()} disabled={enriching || !stats.enabled}>
-              {enriching ? (
-                <LoaderCircle className="size-4 animate-spin" aria-hidden />
-              ) : (
-                <Sparkles className="size-4" aria-hidden />
-              )}
+            <Button
+              variant="contrast"
+              className="rounded-full"
+              onClick={() => void enrichCatalog()}
+              disabled={enriching || stats === null || !stats.enabled}
+            >
+              {enriching ? <LoaderCircle className="size-4 animate-spin" aria-hidden /> : <Sparkles className="size-4" aria-hidden />}
               Enriquecer catálogo
             </Button>
           </div>
-        )}
+        </div>
+      </InkIsland>
 
-        {stats !== null && !stats.enabled && (
-          <p className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 p-3 text-xs">
-            <TriangleAlert className="mt-0.5 size-3.5 shrink-0 text-warning" aria-hidden />
-            <span>
-              <span className="font-medium">Los metadatos con IA no están disponibles en la plataforma.</span>{" "}
-              El agente usa la descripción de la ficha hasta que se habiliten.
-            </span>
+      <div className="grid gap-4 md:grid-cols-2">
+        <BentoTile label="Clasificación · detalle">
+          {classification === null ? (
+            <p className="text-xs text-muted-foreground">El estado de la clasificación no está disponible ahora.</p>
+          ) : (
+            <DetailList
+              rows={[
+                { label: "Automáticas", note: "sin confirmar", value: classification.automatic },
+                { label: "Fijadas por ti", note: "no se tocan", value: classification.tenant_set },
+                {
+                  label: "Sin resolver",
+                  note: classificationUncategorized(classification) === 0 ? "todo al día" : "elígelas a mano",
+                  value: classification.unresolved,
+                },
+              ]}
+            />
+          )}
+          <p className="text-xs text-pretty text-muted-foreground">
+            Cada producto nuevo o modificado recibe su categoría de la taxonomía de tu tipo de catálogo: primero por
+            señales de la tienda (colección, tipo, nombre) y, si no basta, con IA. Lo que tú fijes no se toca.
           </p>
-        )}
-
-        {stats !== null && stats.enabled && enrichmentCapReached(stats) && (
-          <p className="flex items-start gap-2 rounded-md border border-accent-violet/30 bg-background p-3 text-xs">
-            <Info className="mt-0.5 size-3.5 shrink-0 text-accent-violet" aria-hidden />
-            <span>
-              <span className="font-medium">Tope del mes alcanzado.</span> Lo pendiente se enriquece solo al
-              iniciar el próximo mes. Si necesitas más este mes, escríbenos.
-            </span>
-          </p>
-        )}
-
-        <p className="text-xs text-muted-foreground">
-          «Enriquecer catálogo» genera solo lo que falta o quedó desactualizado; lo editado por ti y lo
-          desactivado no se tocan. Va al ritmo que permite el proveedor de IA: un catálogo grande tarda
-          unos minutos.
-          {stats !== null && stats.enabled && stats.monthly_used !== null && (
+        </BentoTile>
+        <BentoTile label="Índice · detalle">
+          {index === null ? (
+            <p className="text-xs text-muted-foreground">El estado del índice no está disponible ahora.</p>
+          ) : (
             <>
-              {" "}
-              Consumo del mes:{" "}
-              <span className="tabular-nums">
-                {stats.monthly_used.toLocaleString("es-CO")} de {stats.monthly_cap.toLocaleString("es-CO")}
-              </span>
-              .
+              <DetailList
+                rows={[
+                  { label: "Productos pendientes", note: "se completan en segundos", value: pendingProducts(index) },
+                  { label: "Fotos pendientes", note: "solo se procesa lo que cambió", value: pendingImages(index) },
+                  { label: "Productos sin foto", note: "solo se reconocen por texto", value: index.products_without_photo },
+                ]}
+              />
+              <p className="text-xs text-muted-foreground">
+                {index.enabled && indexComplete(index) && index.products > 0
+                  ? "Índice completo: cada producto y cada foto tienen su huella."
+                  : "Solo se procesa lo que cambió desde la última indexación."}
+              </p>
             </>
           )}
-        </p>
+        </BentoTile>
+      </div>
 
-        <div className="grid gap-3 text-xs sm:grid-cols-3">
-          <HowItem
-            title="Qué genera"
-            text="Descripción de hasta 160 caracteres, atributos según tu tipo de negocio y hasta 12 formas de pedirlo."
-          />
-          <HowItem
-            title="Qué ve el agente"
-            text="Solo la descripción, en lugar de la de la ficha. Atributos y términos mejoran la búsqueda por texto y por foto."
-          />
-          <HowItem
-            title="Qué no toca"
-            text="Tu tienda conectada. Nombre, precio, fotos y categoría siguen siendo de Shopify; lo generado vive en axi."
-          />
-        </div>
-      </section>
+      <div className="grid gap-4 md:grid-cols-2">
+        <BentoTile label="Cómo reconoce">
+          <ul className="flex flex-col gap-3">
+            <HowItem icon={Camera} title="Foto directa" text="WhatsApp, Instagram y Messenger." />
+            <HowItem icon={Smartphone} title="Captura de pantalla" text="De un video o de una publicación." />
+            <HowItem icon={Share} title="Publicación compartida" text="Posts y menciones de historia en Instagram." />
+          </ul>
+        </BentoTile>
+        <BentoTile label="Qué hace la IA con tu catálogo">
+          <ul className="flex flex-col gap-3">
+            <HowItem
+              icon={ListTree}
+              title="Qué genera"
+              text="Descripción de hasta 160 caracteres, atributos según tu tipo de negocio y hasta 12 formas de pedirlo."
+            />
+            <HowItem
+              icon={Eye}
+              title="Qué ve el agente"
+              text="Solo la descripción, en lugar de la de la ficha. Atributos y términos mejoran la búsqueda por texto y por foto."
+            />
+            <HowItem
+              icon={Lock}
+              title="Qué no toca"
+              text="Tu tienda conectada. Nombre, precio, fotos y categoría siguen siendo de Shopify; lo generado vive en axi."
+            />
+          </ul>
+          <p className="text-xs text-pretty text-muted-foreground">
+            Cada producto nuevo o modificado, incluidos los que llegan de tu tienda conectada, recibe una descripción
+            para el agente, atributos y las palabras con que lo piden tus clientes.{" "}
+            <span className="font-medium text-foreground">No consume tu plan</span> y no escribe nada en tu tienda.
+            «Enriquecer catálogo» genera solo lo que falta o quedó desactualizado; lo editado por ti y lo desactivado
+            no se tocan. Va al ritmo que permite el proveedor de IA: un catálogo grande tarda unos minutos.
+          </p>
+        </BentoTile>
+      </div>
+
       <Dialog open={pendingVertical !== undefined} onOpenChange={(open) => { if (!open && !savingEnrichment) setPendingVertical(undefined) }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>¿Cambiar el tipo de catálogo?</DialogTitle>
             <DialogDescription>
-              Se sembrarán las categorías de{" "}
-              {pendingVertical ? ENRICHMENT_VERTICAL_LABELS[pendingVertical] : "tu tipo de negocio"}. Las de{" "}
-              {stats ? ENRICHMENT_VERTICAL_LABELS[stats.vertical] : "el tipo actual"} que no tengan productos se
-              retiran; las que tienen productos se conservan. Puedes volver a cambiarlo cuando quieras.
+              Tus categorías se rehacen para el nuevo tipo. Puedes volver a cambiarlo cuando quieras.
             </DialogDescription>
           </DialogHeader>
+          <ul className="flex flex-col gap-2.5 rounded-2xl bg-muted p-4 text-sm">
+            <li className="flex items-start gap-2.5">
+              <Plus className="mt-0.5 size-4 shrink-0" aria-hidden />
+              <span>
+                Se siembran las categorías de{" "}
+                <span className="font-medium">
+                  {pendingVertical ? ENRICHMENT_VERTICAL_LABELS[pendingVertical] : "tu tipo de negocio"}
+                </span>
+                .
+              </span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <Minus className="mt-0.5 size-4 shrink-0" aria-hidden />
+              <span>
+                Las de <span className="font-medium">{stats ? ENRICHMENT_VERTICAL_LABELS[stats.vertical] : "el tipo actual"}</span>{" "}
+                que no tienen productos se retiran.
+              </span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <Check className="mt-0.5 size-4 shrink-0 text-success" aria-hidden />
+              <span>Las que tienen productos, y las que creaste tú, se conservan.</span>
+            </li>
+          </ul>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPendingVertical(undefined)} disabled={savingEnrichment}>
+            <Button variant="outline" className="rounded-full" onClick={() => setPendingVertical(undefined)} disabled={savingEnrichment}>
               Cancelar
             </Button>
-            <Button onClick={() => void changeVertical(pendingVertical ?? null)} disabled={savingEnrichment}>
+            <Button variant="contrast" className="rounded-full" onClick={() => void changeVertical(pendingVertical ?? null)} disabled={savingEnrichment}>
               {savingEnrichment ? "Cambiando…" : "Cambiar tipo"}
             </Button>
           </DialogFooter>
@@ -630,44 +671,143 @@ export function RecognitionSettingsView() {
   )
 }
 
-function PlainStat({ label, value, note }: { label: string; value: number; note: string }) {
+/** Barra de avance de una ficha: tinta por omisión; ámbar y rojo solo para la cuota (≥80 % y ≥100 %). */
+function Meter({ label, pct, tone }: { label: string; pct: number; tone: "ink" | "warning" | "destructive" }) {
+  const value = Math.max(0, Math.min(100, pct))
   return (
-    <div className="flex flex-col gap-0.5">
-      <span className="text-xs text-muted-foreground">{label}</span>
-      <span className="text-xl font-semibold tracking-tight tabular-nums">{value.toLocaleString("es-CO")}</span>
-      <span className="text-xs text-muted-foreground">{note}</span>
+    <div
+      role="meter"
+      aria-label={label}
+      aria-valuenow={Math.round(value)}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      className="h-1.5 overflow-hidden rounded-full bg-muted"
+    >
+      <div
+        className={cn(
+          "h-full rounded-full",
+          tone === "destructive" ? "bg-destructive" : tone === "warning" ? "bg-warning" : "bg-foreground",
+        )}
+        style={{ width: `${String(value)}%` }}
+      />
     </div>
   )
 }
 
-function IndexStat({
+/** Cifra secundaria de una ficha: número tabular + qué cuenta. */
+function Figure({ value, label }: { value: string; label: string }) {
+  return (
+    <div className="flex min-w-0 flex-col gap-0.5">
+      <dt className="order-2 text-xs text-pretty text-muted-foreground">{label}</dt>
+      <dd className="order-1 text-xl font-semibold tracking-tight whitespace-nowrap tabular-nums">{value}</dd>
+    </div>
+  )
+}
+
+/** Detalle de una ficha como LISTA (no tabla): qué cuenta y su nota a la izquierda, la cifra a la derecha. */
+function DetailList({ rows }: { rows: { label: string; note: string; value: number }[] }) {
+  return (
+    <dl className="flex flex-col divide-y divide-border">
+      {rows.map((row) => (
+        <div key={row.label} className="flex items-center justify-between gap-4 py-2.5 first:pt-0 last:pb-0">
+          <dt className="min-w-0 text-sm">
+            <span className="block font-medium">{row.label}</span>
+            <span className="block text-xs text-muted-foreground">{row.note}</span>
+          </dt>
+          <dd className="shrink-0 text-lg font-semibold tracking-tight whitespace-nowrap tabular-nums">
+            {row.value.toLocaleString("es-CO")}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  )
+}
+
+function SwitchRow({
+  id,
   label,
-  value,
-  total,
-  note,
+  checked,
+  onChange,
+  disabled,
+  ariaLabel,
 }: {
+  id: string
   label: string
-  value: number
-  total: number
-  note: string
+  checked: boolean
+  onChange: (value: boolean) => void
+  disabled: boolean
+  ariaLabel: string
 }) {
   return (
-    <div className="flex flex-col gap-0.5">
-      <span className="text-xs text-muted-foreground">{label}</span>
-      <span className="text-xl font-semibold tracking-tight tabular-nums">
-        {value.toLocaleString("es-CO")}{" "}
-        <span className="text-sm font-normal text-muted-foreground">/ {total.toLocaleString("es-CO")}</span>
-      </span>
-      <span className="text-xs text-muted-foreground">{note}</span>
+    <div className="mt-auto flex items-center justify-between gap-3 border-t border-border pt-3">
+      <label htmlFor={id} className="min-w-0 text-sm font-medium text-pretty">
+        {label}
+      </label>
+      <Switch id={id} checked={checked} onCheckedChange={onChange} disabled={disabled} aria-label={ariaLabel} />
     </div>
   )
 }
 
-function HowItem({ title, text }: { title: string; text: string }) {
+/** Aviso dentro de una ficha: el color vive en el icono, el texto en foreground (AA). */
+function Notice({ children, icon = "warning" }: { children: React.ReactNode; icon?: "warning" | "info" }) {
+  const Icon = icon === "warning" ? TriangleAlert : Info
   return (
-    <div className="rounded-lg bg-secondary p-3">
-      <span className="block font-semibold text-foreground">{title}</span>
-      <span className="text-muted-foreground">{text}</span>
-    </div>
+    <p className="flex items-start gap-2 rounded-2xl bg-muted p-3 text-xs">
+      <Icon className={cn("mt-0.5 size-3.5 shrink-0", icon === "warning" ? "text-warning" : "text-info")} aria-hidden />
+      <span>{children}</span>
+    </p>
+  )
+}
+
+function IndexPill({ index }: { index: RecognitionIndexStatusDTO }) {
+  if (!index.enabled) return <StatePill tone="warning">No disponible</StatePill>
+  const pending = pendingProducts(index) + pendingImages(index)
+  if (pending > 0) return <StatePill tone="warning">{`${pending.toLocaleString("es-CO")} pendientes`}</StatePill>
+  return <StatePill tone="success">Completo</StatePill>
+}
+
+function ClassificationPill({ stats }: { stats: ClassificationStatsDTO }) {
+  if (classificationUncategorized(stats) === 0) return <StatePill tone="success">Al día</StatePill>
+  if (stats.unresolved > 0) return <StatePill tone="neutral">{`${stats.unresolved.toLocaleString("es-CO")} sin resolver`}</StatePill>
+  return <StatePill tone="info">En curso</StatePill>
+}
+
+function VerticalChip({
+  on,
+  disabled,
+  onPick,
+  children,
+}: {
+  on: boolean
+  disabled: boolean
+  onPick: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={on}
+      disabled={disabled}
+      onClick={onPick}
+      className={cn(
+        "h-9 rounded-full px-3.5 text-[13px] font-medium whitespace-nowrap ring-1 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-60",
+        on ? "bg-foreground text-background ring-foreground" : "bg-background ring-border hover:ring-foreground/40",
+      )}
+    >
+      {children}
+    </button>
+  )
+}
+
+function HowItem({ icon: Icon, title, text }: { icon: LucideIcon; title: string; text: string }) {
+  return (
+    <li className="flex items-start gap-3">
+      <Icon className="mt-0.5 size-4 shrink-0" aria-hidden />
+      <span className="min-w-0 text-sm">
+        <span className="block font-medium">{title}</span>
+        <span className="text-xs text-pretty text-muted-foreground">{text}</span>
+      </span>
+    </li>
   )
 }

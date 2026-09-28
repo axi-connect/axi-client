@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import { RecognitionSettingsView } from "../RecognitionSettingsView"
 
 const showAlert = jest.fn()
@@ -26,28 +26,6 @@ jest.mock("@/modules/agents/infrastructure/services/recognition-service.adapter"
   getClassificationStats: () => getClassificationStats(),
   requestClassificationBackfill: () => requestClassificationBackfill(),
 }))
-
-// El Select de Radix no se abre en jsdom: un <select> nativo con el mismo contrato
-jest.mock("@/shared/components/ui/select", () => {
-  const React = jest.requireActual<typeof import("react")>("react")
-  const Ctx = React.createContext<{ value?: string; onValueChange?: (value: string) => void }>({})
-  return {
-    Select: ({ value, onValueChange, children }: { value?: string; onValueChange?: (v: string) => void; children: React.ReactNode }) => (
-      <Ctx.Provider value={{ value, onValueChange }}>{children}</Ctx.Provider>
-    ),
-    SelectTrigger: () => null,
-    SelectValue: () => null,
-    SelectContent: ({ children }: { children: React.ReactNode }) => {
-      const ctx = React.useContext(Ctx)
-      return (
-        <select aria-label="Tipo de catálogo" value={ctx.value} onChange={(e) => ctx.onValueChange?.(e.target.value)}>
-          {children}
-        </select>
-      )
-    },
-    SelectItem: ({ value, children }: { value: string; children: React.ReactNode }) => <option value={value}>{children}</option>,
-  }
-})
 
 const CLASSIFICATION = {
   products: 157,
@@ -112,11 +90,13 @@ describe("RecognitionSettingsView", () => {
       await screen.findByRole("switch", { name: "Activar reconocimiento de producto para la empresa" }),
     ).toBeChecked()
     expect(screen.getByText("Activo")).toBeInTheDocument()
-    expect(screen.getByText("57 / 200")).toBeInTheDocument()
+    expect(screen.getByText("57")).toBeInTheDocument()
+    expect(screen.getByText("de 200 este ciclo")).toBeInTheDocument()
+    expect(screen.getByRole("meter", { name: "Consumo de reconocimientos" })).toHaveAttribute("aria-valuenow", "29")
     expect(screen.getByText("412")).toBeInTheDocument()
-    expect(screen.getByText("/ 420")).toBeInTheDocument()
-    expect(screen.getByText(/8 pendientes/)).toBeInTheDocument()
-    expect(screen.getByText(/3 productos sin foto/)).toBeInTheDocument()
+    expect(screen.getByText("de 420 productos")).toBeInTheDocument()
+    expect(screen.getByText("8 pendientes")).toBeInTheDocument()
+    expect(screen.getByText("productos sin foto")).toBeInTheDocument()
   })
 
   it("apagar el switch llama al PUT y avisa; si falla, revierte", async () => {
@@ -149,7 +129,7 @@ describe("RecognitionSettingsView", () => {
     expect(auto).toBeChecked()
     expect(screen.getByText("Automático")).toBeInTheDocument()
     expect(screen.getByText("151")).toBeInTheDocument()
-    expect(screen.getByText("/ 158")).toBeInTheDocument()
+    expect(screen.getByText("de 158 con metadatos")).toBeInTheDocument()
     expect(screen.getByText(/4 pendientes · en curso/)).toBeInTheDocument()
     expect(screen.getByText("12")).toBeInTheDocument()
     expect(screen.getByText(/Consumo del mes:/)).toBeInTheDocument()
@@ -256,7 +236,7 @@ describe("RecognitionSettingsView", () => {
   })
   it("clasificación automática: pinta las cifras, el interruptor escribe solo su hoja y «Clasificar catálogo» encola", async () => {
     render(<RecognitionSettingsView />)
-    await screen.findByText("Clasificación automática")
+    await screen.findByText("Clasificación")
     expect(screen.getByText("141")).toBeInTheDocument()
     expect(screen.getByText(/9 sin resolver · elígelas a mano/)).toBeInTheDocument()
 
@@ -277,9 +257,10 @@ describe("RecognitionSettingsView", () => {
       taxonomy: { vertical: "beauty", version: 1, created: 12, adopted: 0, updated: 0, retired: 9, kept: 2 },
     })
     render(<RecognitionSettingsView />)
-    const select = await screen.findByRole("combobox", { name: "Tipo de catálogo" })
+    const group = await screen.findByRole("radiogroup", { name: "Tipo de catálogo" })
+    expect(within(group).getByRole("radio", { name: "Según tu negocio (Moda y accesorios)" })).toBeChecked()
 
-    fireEvent.change(select, { target: { value: "beauty" } })
+    fireEvent.click(within(group).getByRole("radio", { name: "Salud y belleza" }))
     expect(await screen.findByText("¿Cambiar el tipo de catálogo?")).toBeInTheDocument()
     expect(updateRecognitionSettings).not.toHaveBeenCalled()
 
@@ -299,9 +280,15 @@ describe("RecognitionSettingsView", () => {
 
   it("cancelar la confirmación no guarda nada", async () => {
     render(<RecognitionSettingsView />)
-    fireEvent.change(await screen.findByRole("combobox", { name: "Tipo de catálogo" }), { target: { value: "food" } })
+    fireEvent.click(await screen.findByRole("radio", { name: "Restaurantes y comida" }))
     fireEvent.click(await screen.findByRole("button", { name: "Cancelar" }))
     await waitFor(() => expect(screen.queryByText("¿Cambiar el tipo de catálogo?")).not.toBeInTheDocument())
     expect(updateRecognitionSettings).not.toHaveBeenCalled()
+  })
+
+  it("elegir el tipo que ya está no abre la confirmación", async () => {
+    render(<RecognitionSettingsView />)
+    fireEvent.click(await screen.findByRole("radio", { name: "Según tu negocio (Moda y accesorios)" }))
+    expect(screen.queryByText("¿Cambiar el tipo de catálogo?")).not.toBeInTheDocument()
   })
 })
