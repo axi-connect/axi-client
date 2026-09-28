@@ -14,11 +14,21 @@ interface EntitlementsState {
   /** Usuario para el que se cargó: al cambiar de sesión se recarga. */
   for_user_id: string | null;
   entitlements: EntitlementsDTO | null;
+  /** Momento de la última carga buena: `revalidate` no relee antes de tiempo. */
+  loaded_at: number | null;
   load: (userId: string) => Promise<void>;
+  /**
+   * Relectura silenciosa (sin pasar por `loading`): un cambio de plan en
+   * platform llega al tenant ya logueado al volver a la pestaña, sin cerrar
+   * sesión. No relee si la última carga tiene menos de `REVALIDATE_AFTER_MS`.
+   */
+  revalidate: (userId: string) => Promise<void>;
   reset: () => void;
 }
 
 let inflight: Promise<void> | null = null;
+
+export const REVALIDATE_AFTER_MS = 60_000;
 
 /**
  * Capacidades del plan del tenant (`GET /me/entitlements`), una sola carga por
@@ -33,6 +43,7 @@ export const useEntitlementsStore = create<EntitlementsState>((set, get) => ({
   status: "idle",
   for_user_id: null,
   entitlements: null,
+  loaded_at: null,
   load: async (userId) => {
     if (get().for_user_id === userId && get().status !== "idle") return;
     if (inflight && get().for_user_id === userId) return inflight;
@@ -41,7 +52,7 @@ export const useEntitlementsStore = create<EntitlementsState>((set, get) => ({
       .get<EntitlementsDTO>("/me/entitlements")
       .then((entitlements) => {
         if (get().for_user_id !== userId) return;
-        set({ entitlements, status: "ready" });
+        set({ entitlements, status: "ready", loaded_at: Date.now() });
       })
       .catch(() => {
         if (get().for_user_id !== userId) return;
@@ -52,9 +63,26 @@ export const useEntitlementsStore = create<EntitlementsState>((set, get) => ({
       });
     return inflight;
   },
+  revalidate: async (userId) => {
+    const { for_user_id, status, loaded_at } = get();
+    if (for_user_id !== userId || status !== "ready" || inflight) return;
+    if (loaded_at !== null && Date.now() - loaded_at < REVALIDATE_AFTER_MS) return;
+    inflight = http
+      .get<EntitlementsDTO>("/me/entitlements")
+      .then((entitlements) => {
+        if (get().for_user_id !== userId) return;
+        set({ entitlements, loaded_at: Date.now() });
+      })
+      // Un fallo al releer conserva lo que ya había: no se degrada a `error`
+      .catch(() => undefined)
+      .finally(() => {
+        inflight = null;
+      });
+    return inflight;
+  },
   reset: () => {
     inflight = null;
-    set({ status: "idle", for_user_id: null, entitlements: null });
+    set({ status: "idle", for_user_id: null, entitlements: null, loaded_at: null });
   },
 }));
 

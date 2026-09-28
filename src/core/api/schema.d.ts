@@ -10396,6 +10396,17 @@ export interface components {
             enrichment_vertical?: "fashion" | "food" | "beauty" | "home" | "tech" | "generic" | null;
             classification_auto_enabled?: boolean;
         };
+        RecognitionSettingsUpdateResultDto: {
+            taxonomy: {
+                vertical: string;
+                version: number | null;
+                created: number;
+                adopted: number;
+                updated: number;
+                retired: number;
+                kept: number;
+            } | null;
+        };
         AiAgentListDto: {
             data: {
                 /** Format: uuid */
@@ -10942,6 +10953,8 @@ export interface components {
             created: number;
             adopted: number;
             updated: number;
+            retired: number;
+            kept: number;
         };
         CategoryListDto__schema0: {
             /** Format: uuid */
@@ -24930,11 +24943,13 @@ export interface operations {
             };
         };
         responses: {
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["RecognitionSettingsUpdateResultDto"];
+                };
             };
         };
     };

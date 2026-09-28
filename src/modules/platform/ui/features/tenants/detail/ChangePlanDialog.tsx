@@ -61,7 +61,7 @@ export function ChangePlanDialog({
       showAlert({
         tone: "success",
         title: "Plan asignado",
-        description: "Los límites del plan se re-sembraron; los manuales se conservan.",
+        description: "Límites y módulos del plan aplicados; los límites manuales se conservan. El tenant los ve al recargar.",
         autoCloseMs: 5000,
       });
       onOpenChange(false);

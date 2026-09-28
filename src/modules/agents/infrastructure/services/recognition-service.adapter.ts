@@ -18,9 +18,12 @@ export function getRecognitionSettings(): Promise<RecognitionSettingsDTO> {
   return http.get<RecognitionSettingsDTO>("/ai-agents/recognition-settings");
 }
 
-/** Efecto en caliente: la siguiente foto ya obedece el switch. */
-export function updateRecognitionSettings(dto: RecognitionSettingsDTO): Promise<void> {
-  return http.put("/ai-agents/recognition-settings", dto);
+/** Efecto en caliente: la siguiente foto ya obedece el switch. Si cambió el
+ * tipo de catálogo, devuelve lo que hizo la taxonomía (`taxonomy`, si no null). */
+export function updateRecognitionSettings(
+  dto: RecognitionSettingsDTO,
+): Promise<Schemas["RecognitionSettingsUpdateResultDto"]> {
+  return http.put<Schemas["RecognitionSettingsUpdateResultDto"]>("/ai-agents/recognition-settings", dto);
 }
 
 /** Estado del índice vectorial: productos y fotos indexados vs. existentes. */

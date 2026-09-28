@@ -96,3 +96,24 @@ export function classificationPendingNote(stats: ClassificationStatsDTO): string
   return parts.join(" · ");
 }
 
+
+export type TaxonomyChangeResult = NonNullable<Schemas["RecognitionSettingsUpdateResultDto"]["taxonomy"]>;
+
+/**
+ * Toast al cambiar el tipo de catálogo: la taxonomía se REHACE — se siembran
+ * las categorías del nuevo tipo y se retiran las del anterior que nadie usa.
+ */
+export function taxonomyChangeNote(result: TaxonomyChangeResult | null): string {
+  const base = "Los atributos de los próximos productos siguen este tipo; «Enriquecer catálogo» regenera los demás.";
+  if (result === null) return base;
+  const plural = (count: number, one: string, many: string) =>
+    `${count.toLocaleString("es-CO")} ${count === 1 ? one : many}`;
+  const parts: string[] = [];
+  if (result.created + result.adopted > 0) {
+    parts.push(plural(result.created + result.adopted, "categoría nueva", "categorías nuevas"));
+  }
+  if (result.retired > 0) parts.push(plural(result.retired, "retirada del tipo anterior", "retiradas del tipo anterior"));
+  if (result.kept > 0) parts.push(plural(result.kept, "conservada porque tiene productos", "conservadas porque tienen productos"));
+  const taxonomy = parts.length === 0 ? "Las categorías ya estaban al día." : `Categorías: ${parts.join(" · ")}.`;
+  return `${taxonomy} ${base}`;
+}

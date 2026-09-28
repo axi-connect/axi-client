@@ -27,6 +27,28 @@ jest.mock("@/modules/agents/infrastructure/services/recognition-service.adapter"
   requestClassificationBackfill: () => requestClassificationBackfill(),
 }))
 
+// El Select de Radix no se abre en jsdom: un <select> nativo con el mismo contrato
+jest.mock("@/shared/components/ui/select", () => {
+  const React = jest.requireActual<typeof import("react")>("react")
+  const Ctx = React.createContext<{ value?: string; onValueChange?: (value: string) => void }>({})
+  return {
+    Select: ({ value, onValueChange, children }: { value?: string; onValueChange?: (v: string) => void; children: React.ReactNode }) => (
+      <Ctx.Provider value={{ value, onValueChange }}>{children}</Ctx.Provider>
+    ),
+    SelectTrigger: () => null,
+    SelectValue: () => null,
+    SelectContent: ({ children }: { children: React.ReactNode }) => {
+      const ctx = React.useContext(Ctx)
+      return (
+        <select aria-label="Tipo de catálogo" value={ctx.value} onChange={(e) => ctx.onValueChange?.(e.target.value)}>
+          {children}
+        </select>
+      )
+    },
+    SelectItem: ({ value, children }: { value: string; children: React.ReactNode }) => <option value={value}>{children}</option>,
+  }
+})
+
 const CLASSIFICATION = {
   products: 157,
   categorized: 141,
@@ -248,5 +270,38 @@ describe("RecognitionSettingsView", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /Clasificar catálogo/ }))
     await waitFor(() => expect(requestClassificationBackfill).toHaveBeenCalledTimes(1))
+  })
+
+  it("cambiar el tipo de catálogo pide confirmación y el toast cuenta lo que hizo la taxonomía", async () => {
+    updateRecognitionSettings.mockResolvedValue({
+      taxonomy: { vertical: "beauty", version: 1, created: 12, adopted: 0, updated: 0, retired: 9, kept: 2 },
+    })
+    render(<RecognitionSettingsView />)
+    const select = await screen.findByRole("combobox", { name: "Tipo de catálogo" })
+
+    fireEvent.change(select, { target: { value: "beauty" } })
+    expect(await screen.findByText("¿Cambiar el tipo de catálogo?")).toBeInTheDocument()
+    expect(updateRecognitionSettings).not.toHaveBeenCalled()
+
+    fireEvent.click(screen.getByRole("button", { name: "Cambiar tipo" }))
+    await waitFor(() =>
+      expect(updateRecognitionSettings).toHaveBeenCalledWith(expect.objectContaining({ enrichment_vertical: "beauty" })),
+    )
+    await waitFor(() =>
+      expect(showAlert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "Tipo de catálogo guardado",
+          description: expect.stringMatching(/12 categorías nuevas · 9 retiradas del tipo anterior · 2 conservadas/),
+        }),
+      ),
+    )
+  })
+
+  it("cancelar la confirmación no guarda nada", async () => {
+    render(<RecognitionSettingsView />)
+    fireEvent.change(await screen.findByRole("combobox", { name: "Tipo de catálogo" }), { target: { value: "food" } })
+    fireEvent.click(await screen.findByRole("button", { name: "Cancelar" }))
+    await waitFor(() => expect(screen.queryByText("¿Cambiar el tipo de catálogo?")).not.toBeInTheDocument())
+    expect(updateRecognitionSettings).not.toHaveBeenCalled()
   })
 })

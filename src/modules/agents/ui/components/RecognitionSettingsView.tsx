@@ -7,6 +7,14 @@ import { errorMessage } from "@/core/lib/error-messages"
 import { useAlert } from "@/core/providers/alert-provider"
 import { Badge } from "@/shared/components/ui/badge"
 import { Button } from "@/shared/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/shared/components/ui/dialog"
 import { Skeleton } from "@/shared/components/ui/skeleton"
 import { Switch } from "@/shared/components/ui/switch"
 import {
@@ -25,6 +33,7 @@ import {
   indexComplete,
   pendingImages,
   pendingProducts,
+  taxonomyChangeNote,
   type ClassificationStatsDTO,
   type EnrichmentStatsDTO,
   type EnrichmentVertical,
@@ -66,6 +75,8 @@ export function RecognitionSettingsView() {
   const [savingEnrichment, setSavingEnrichment] = useState(false)
   const [reindexing, setReindexing] = useState(false)
   const [enriching, setEnriching] = useState(false)
+  /** Tipo de catálogo elegido a la espera de confirmar (`undefined` = sin diálogo). */
+  const [pendingVertical, setPendingVertical] = useState<EnrichmentVertical | null | undefined>(undefined)
 
   const load = useCallback(() => {
     getRecognitionSettings()
@@ -156,6 +167,33 @@ export function RecognitionSettingsView() {
       showAlert({ tone: "error", title: "No se pudo guardar el cambio", description: errorMessage(err) })
     } finally {
       setSavingEnrichment(false)
+    }
+  }
+
+  /** Cambiar el tipo de catálogo REHACE la taxonomía: se confirma antes y el
+   * toast cuenta lo que se sembró, retiró y conservó. */
+  async function changeVertical(vertical: EnrichmentVertical | null) {
+    if (settings === null || savingEnrichment) return
+    const previous = settings
+    const next = { ...settings, enrichment_vertical: vertical }
+    setSettings(next)
+    setSavingEnrichment(true)
+    try {
+      const result = await updateRecognitionSettings(next)
+      showAlert({
+        tone: "success",
+        title: "Tipo de catálogo guardado",
+        // Un servidor aún sin el hotfix responde 204 sin cuerpo
+        description: taxonomyChangeNote(result?.taxonomy ?? null),
+        autoCloseMs: 6000,
+      })
+      void getEnrichmentStats().then(setStats).catch(() => undefined)
+    } catch (err) {
+      setSettings(previous)
+      showAlert({ tone: "error", title: "No se pudo guardar el cambio", description: errorMessage(err) })
+    } finally {
+      setSavingEnrichment(false)
+      setPendingVertical(undefined)
     }
   }
 
@@ -470,12 +508,10 @@ export function RecognitionSettingsView() {
             </label>
             <Select
               value={settings.enrichment_vertical ?? AUTO_VERTICAL}
-              onValueChange={(value) =>
-                void saveEnrichment(
-                  { enrichment_vertical: value === AUTO_VERTICAL ? null : (value as EnrichmentVertical) },
-                  { title: "Tipo de catálogo guardado", description: "Los atributos de los próximos productos siguen este tipo; «Enriquecer catálogo» regenera los demás." },
-                )
-              }
+              onValueChange={(value) => {
+                const vertical = value === AUTO_VERTICAL ? null : (value as EnrichmentVertical)
+                if (vertical !== settings.enrichment_vertical) setPendingVertical(vertical)
+              }}
               disabled={savingEnrichment}
             >
               <SelectTrigger id="enrichment-vertical" className="w-full sm:w-72" aria-label="Tipo de catálogo">
@@ -569,6 +605,27 @@ export function RecognitionSettingsView() {
           />
         </div>
       </section>
+      <Dialog open={pendingVertical !== undefined} onOpenChange={(open) => { if (!open && !savingEnrichment) setPendingVertical(undefined) }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>¿Cambiar el tipo de catálogo?</DialogTitle>
+            <DialogDescription>
+              Se sembrarán las categorías de{" "}
+              {pendingVertical ? ENRICHMENT_VERTICAL_LABELS[pendingVertical] : "tu tipo de negocio"}. Las de{" "}
+              {stats ? ENRICHMENT_VERTICAL_LABELS[stats.vertical] : "el tipo actual"} que no tengan productos se
+              retiran; las que tienen productos se conservan. Puedes volver a cambiarlo cuando quieras.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPendingVertical(undefined)} disabled={savingEnrichment}>
+              Cancelar
+            </Button>
+            <Button onClick={() => void changeVertical(pendingVertical ?? null)} disabled={savingEnrichment}>
+              {savingEnrichment ? "Cambiando…" : "Cambiar tipo"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

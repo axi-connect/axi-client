@@ -19,11 +19,22 @@ export function useEntitlements(): {
   const status = useEntitlementsStore((state) => state.status);
   const entitlements = useEntitlementsStore((state) => state.entitlements);
   const load = useEntitlementsStore((state) => state.load);
+  const revalidate = useEntitlementsStore((state) => state.revalidate);
   const userId = user?.id ?? null;
 
   useEffect(() => {
     if (userId) void load(userId);
   }, [userId, load]);
+
+  // Un cambio de plan en platform se ve al volver a la pestaña
+  useEffect(() => {
+    if (!userId) return;
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void revalidate(userId);
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [userId, revalidate]);
 
   const hasCapability = useCallback(
     (capability: string) => hasCapabilityIn(entitlements, status, capability),
