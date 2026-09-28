@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BarChart3, Flame, Lock, Megaphone } from "lucide-react";
 
 import type { BriefingDTO, ProposalDTO } from "@/modules/cmo/domain/cmo";
@@ -10,6 +10,7 @@ import {
   AssistantChatShell,
   AssistantComposer,
   AssistantDock,
+  AssistantIslandActivity,
   AssistantMark,
   AssistantQuestion,
   AssistantThinking,
@@ -56,9 +57,6 @@ export const STARTERS: readonly AssistantStarter[] = [
 /** Fases del respaldo mientras Axel trabaja sin socket, en el orden en que el runtime las suele recorrer. */
 const THINKING_PHASES = ["Revisando tus números…", "Armando la recomendación…", "Ya casi…"] as const;
 
-/** Cuántas propuestas del informe entran al hilo. El resto vive en el rail. */
-const PROPOSALS_IN_THREAD = 2;
-
 interface AxelChatProps {
   ownerName: string | null;
   briefing: BriefingDTO | null;
@@ -73,6 +71,8 @@ interface AxelChatProps {
   /** Cuando Axel no está disponible, esto ocupa el lugar del hilo. */
   blocked: NonNullable<CmoBlocker> | null;
   canManage: boolean;
+  /** La carga inicial aún no decidió qué pantalla toca: el chat espera invisible. */
+  settling?: boolean;
 }
 
 /**
@@ -83,9 +83,17 @@ interface AxelChatProps {
  *
  * Dos reglas que vienen de antes y siguen vivas: el mensaje propio se pinta
  * antes de la respuesta (el turno tarda decenas de segundos) y un turno que
- * falla no pierde el texto. Y una del rendimiento: este componente suscribe
- * `thread` y `live` enteros y se re-renderiza en cada delta; el avatar NO,
- * porque `AxelHeroAvatar` lleva su propia suscripción superficial.
+ * falla no pierde el texto.
+ *
+ * **Rendimiento (2026-09-28): un fragmento del streaming no repinta el hilo.**
+ * Este componente ya no suscribe `live`: solo sabe SI hay texto en vivo. El
+ * borrador (`LiveBubble`) y los pasos de la isla (`AxelIslandSteps`) llevan su
+ * propia suscripción, y las burbujas asentadas y las tarjetas son `memo` con
+ * callbacks estables. El avatar tampoco, por `AxelHeroAvatar`.
+ *
+ * Las propuestas del informe viven en el panel «Por decidir» (dirección A del
+ * lienzo): el hero solo las cuenta y el hilo solo pinta las que nacieron en la
+ * conversación, debajo del mensaje que las anuncia.
  */
 export function AxelChat({
   ownerName,
@@ -97,9 +105,12 @@ export function AxelChat({
   proposals,
   blocked,
   canManage,
+  settling = false,
 }: AxelChatProps) {
   const thread = useCmoStore((state) => state.thread);
-  const live = useCmoStore((state) => state.live);
+  /* Solo SI hay texto en vivo, no el texto: un booleano cambia dos veces por
+     turno, el texto cambia en cada fragmento. */
+  const writing = useCmoStore((state) => state.live !== null && state.live.text !== "");
   const settled = useCmoStore((state) => state.settled);
   const resolveSettled = useCmoStore((state) => state.resolveSettled);
   const ask = useCmoStore((state) => state.ask);
@@ -125,6 +136,24 @@ export function AxelChat({
     void ask(text);
   };
 
+  /* Callbacks estables: son props de `MessageBubble` y `ProposalCard`, que son
+     `memo`. Una función nueva por render los repintaría a todos. */
+  const onPick = useCallback(
+    (label: string) => {
+      void answer(label);
+    },
+    [answer],
+  );
+  const onWriteInstead = useCallback(() => {
+    textareaRef.current?.focus();
+  }, []);
+  const onAsk = useCallback(
+    (proposal: ProposalDTO) => {
+      void ask(`¿Por qué me propones «${proposal.title}» ahora?`);
+    },
+    [ask],
+  );
+
   const byId = useMemo(() => new Map(proposals.map((item) => [item.id, item])), [proposals]);
 
   /* Las propuestas que nacieron EN la conversación se pintan pegadas al mensaje
@@ -142,8 +171,6 @@ export function AxelChat({
       if (!byId.has(id) && !(id in settled)) void resolveSettled(id);
     }
   }, [anchored, byId, settled, resolveSettled]);
-
-  const inThread = proposals.filter((proposal) => !anchored.has(proposal.id)).slice(0, PROPOSALS_IN_THREAD);
 
   const composer = (
     <AssistantComposer
@@ -176,36 +203,34 @@ export function AxelChat({
   return (
     <AssistantChatShell
       empty={isEmpty}
+      className={settling ? "invisible" : undefined}
       dock={
         blocked === null ? (
-          <AssistantDock title="Axel" hero={<AxelHeroAvatar ownerTyping={ownerTyping} />} meta={today} />
+          <AssistantDock
+            title="Axel"
+            hero={<AxelHeroAvatar ownerTyping={ownerTyping} />}
+            meta={today}
+            working={thread.thinking && !writing}
+            activity={<AxelIslandSteps />}
+          />
         ) : undefined
       }
       actions={blocked === null ? <CmoActions /> : undefined}
       hero={
         blocked === null ? (
-          <>
-            <BriefingHero
-              briefing={briefing}
-              loading={briefingLoading}
-              error={briefingError}
-              onRetry={onRetryBriefing}
-              briefingHour={briefingHour}
-              ownerName={ownerName}
-              proposalCount={proposals.length}
-            />
-            {inThread.length > 0 ? (
-              <div className="mt-6 flex flex-col gap-3">
-                {inThread.map((proposal) => (
-                  <ProposalCard key={proposal.id} proposal={proposal} />
-                ))}
-              </div>
-            ) : null}
-          </>
+          <BriefingHero
+            briefing={briefing}
+            loading={briefingLoading}
+            error={briefingError}
+            onRetry={onRetryBriefing}
+            briefingHour={briefingHour}
+            ownerName={ownerName}
+            proposalCount={proposals.length}
+          />
         ) : undefined
       }
       composer={composer}
-      autoScrollDeps={[hasMessages, thread.messages.length, thread.thinking, proposals.length, live?.text.length]}
+      autoScrollDeps={[hasMessages, thread.messages.length, thread.thinking, proposals.length, writing]}
     >
       {blocked !== null ? (
         <CmoBlockedState blocker={blocked} canManage={canManage} />
@@ -229,36 +254,50 @@ export function AxelChat({
                     onRetry={retryLast}
                     questionLive={message.id === lastMessageId}
                     busy={thread.thinking}
-                    onPick={(label) => {
-                      void answer(label);
-                    }}
-                    onWriteInstead={() => {
-                      textareaRef.current?.focus();
-                    }}
+                    onPick={onPick}
+                    onWriteInstead={onWriteInstead}
                   />
                   {/* La propuesta va DEBAJO del mensaje que la anuncia. `fresh`
                       solo en los mensajes de esta sesión (id local): al recargar
                       no debe volver a anunciarse. */}
-                  {proposal !== undefined ? <ProposalCard proposal={proposal} fresh={fresh} /> : null}
+                  {proposal !== undefined ? (
+                    <ProposalCard
+                      proposal={proposal}
+                      fresh={fresh}
+                      onAsk={blocked === null ? onAsk : undefined}
+                      askDisabled={thread.thinking}
+                    />
+                  ) : null}
                 </Fragment>
               );
             })}
           </div>
-          {/* Mientras Axel trabaja se ven sus PASOS; en cuanto empieza a
-              escribir, el texto los reemplaza. El borrador es una burbuja
-              aparte: no está guardado todavía y no tiene id, hora ni traza. */}
-          {thread.thinking && live?.text ? (
-            <AssistantBubble name="Axel" body={live.text} streaming />
-          ) : thread.thinking ? (
-            <AssistantThinking steps={live?.steps ?? []} phrases={THINKING_PHASES} />
-          ) : null}
+          {/* Mientras Axel trabaja, sus PASOS van en la isla (tamaño M) y aquí,
+              donde está la mirada, tres puntos. En cuanto empieza a escribir, el
+              borrador los reemplaza: una burbuja aparte, sin id, hora ni traza. */}
+          {thread.thinking && writing ? <LiveBubble /> : thread.thinking ? <AssistantThinking /> : null}
         </div>
       ) : null}
     </AssistantChatShell>
   );
 }
 
-function MessageBubble({
+/**
+ * Los pasos del turno en la isla. Suscripción propia: los pasos cambian unas
+ * pocas veces por turno y un fragmento de texto conserva su referencia.
+ */
+function AxelIslandSteps() {
+  const steps = useCmoStore((state) => state.live?.steps);
+  return <AssistantIslandActivity steps={steps ?? []} phrases={THINKING_PHASES} />;
+}
+
+/** El borrador que se escribe en vivo. Es lo ÚNICO que se repinta por fragmento. */
+function LiveBubble() {
+  const text = useCmoStore((state) => state.live?.text ?? "");
+  return <AssistantBubble name="Axel" body={text} streaming />;
+}
+
+const MessageBubble = memo(function MessageBubble({
   message,
   fresh,
   onRetry,
@@ -307,4 +346,4 @@ function MessageBubble({
       )}
     </AssistantBubble>
   );
-}
+});

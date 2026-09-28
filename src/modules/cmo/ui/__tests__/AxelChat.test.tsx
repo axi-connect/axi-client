@@ -224,9 +224,9 @@ describe("la propuesta que nace en la conversación", () => {
     const card = screen.getByRole("article");
     expect(within(card).getByText("Aprobada")).toBeInTheDocument();
     expect(within(card).getByText("Ver qué quedó")).toBeInTheDocument();
-    expect(within(card).queryByText("Revisar")).not.toBeInTheDocument();
-    // Baja de tono: el violeta queda para lo que sí falta decidir.
-    expect(card.className).toContain("bg-secondary/40");
+    expect(within(card).queryByText("Revisar y decidir")).not.toBeInTheDocument();
+    // Ya decidida no se le pregunta a Axel «¿por qué ahora?», ni se anuncia.
+    expect(within(card).queryByRole("button", { name: "¿Por qué ahora?" })).not.toBeInTheDocument();
     expect(card.className).not.toContain("axel-comet-card--new");
   });
 
@@ -252,15 +252,25 @@ describe("la propuesta que nace en la conversación", () => {
     expect(mockState.resolveSettled).toHaveBeenCalledWith("prop-1");
   });
 
-  it("la del informe del día sigue arriba: no nació de ningún mensaje", () => {
+  it("la del informe del día NO entra al hilo: vive en el panel y el hero solo la cuenta", () => {
+    // Dirección A del lienzo 2026-09-28: antes dos propuestas del informe se
+    // veían a la vez en el hilo y en el panel.
     view({
       messages: [message({ id: "local-2", proposal_id: null })],
       proposals: [proposal({ id: "prop-9", source: "briefing" })],
     });
 
-    const card = screen.getByRole("article");
-    const bubble = screen.getByText(/te dejé armada y apagada/);
-    expect(card.compareDocumentPosition(bubble) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.queryByRole("article")).not.toBeInTheDocument();
+  });
+
+  it("«¿Por qué ahora?» le pregunta a Axel por esa propuesta en la misma conversación", () => {
+    view({
+      messages: [message({ id: "local-2", proposal_id: "prop-1" })],
+      proposals: [proposal()],
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "¿Por qué ahora?" }));
+    expect(mockState.ask).toHaveBeenCalledWith("¿Por qué me propones «Persigue los 22 carritos con urgencia real» ahora?");
   });
 });
 

@@ -5,7 +5,7 @@ import { Clock, Inbox, RotateCcw, Route } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
 import type { BriefingDTO } from "@/modules/cmo/domain/cmo";
-import { formatHour, toneClasses } from "@/modules/cmo/domain/proposal-labels";
+import { formatHour, toneDot } from "@/modules/cmo/domain/proposal-labels";
 import { useGoalChip } from "@/modules/commercial/public";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 
@@ -65,7 +65,7 @@ export function BriefingHero({
           <button
             type="button"
             onClick={onRetry}
-            className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-border bg-background/70 px-3 py-1 text-[11.5px] font-semibold text-foreground backdrop-blur transition-colors hover:border-accent-violet/40"
+            className="glass mt-2.5 inline-flex h-8 items-center gap-1.5 rounded-full px-3.5 text-[12px] font-semibold text-foreground transition-colors hover:border-foreground/25"
           >
             <RotateCcw className="size-3" aria-hidden="true" />
             Reintentar
@@ -83,7 +83,7 @@ export function BriefingHero({
           </h1>
           <p className="mt-2 text-[13px] text-muted-foreground">Miro tus números y te dejo propuestas.</p>
           <Chip className="mt-3">
-            <Clock className="size-3.5 text-accent-violet" aria-hidden="true" />
+            <Clock className="size-3.5 text-foreground" aria-hidden="true" />
             <span>
               Primer informe mañana · <b className="font-semibold text-foreground">{formatHour(briefingHour)}</b>
             </span>
@@ -102,7 +102,7 @@ export function BriefingHero({
           </h1>
           <div className="mt-3 flex flex-wrap justify-center gap-1.5">
             {proposalCount > 0 ? (
-              <Chip className="border-accent-violet/40 text-accent-violet">
+              <Chip className="text-foreground">
                 <Inbox className="size-3.5" aria-hidden="true" />
                 <b className="font-semibold tabular-nums">{proposalCount}</b> por decidir
               </Chip>
@@ -112,16 +112,17 @@ export function BriefingHero({
             {goal !== null ? (
               <Link
                 href={goal.href}
-                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/70 px-3 py-1 text-[11.5px] text-muted-foreground backdrop-blur transition-colors hover:border-brand/40 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="glass inline-flex h-7 items-center gap-1.5 rounded-full px-3 text-[12px] text-muted-foreground transition-colors hover:border-foreground/25 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                <Route className="size-3.5 text-brand" aria-hidden="true" />
+                <Route className="size-3.5 text-foreground" aria-hidden="true" />
                 Meta · <b className="font-semibold text-foreground tabular-nums">{goal.pct} %</b>
               </Link>
             ) : null}
             {briefing.highlights.slice(0, MAX_HIGHLIGHTS).map((highlight) => (
-              <Chip key={`${highlight.label}-${highlight.detail}`} className={toneClasses(highlight.tone)}>
+              <Chip key={`${highlight.label}-${highlight.detail}`}>
+                <span aria-hidden="true" className={cn("size-1.5 rounded-full", toneDot(highlight.tone))} />
                 {highlight.label}
-                <b className="font-semibold tabular-nums opacity-90">{highlight.detail}</b>
+                <b className="font-semibold text-foreground tabular-nums">{highlight.detail}</b>
               </Chip>
             ))}
           </div>
@@ -135,7 +136,7 @@ function Chip({ className, children }: { className?: string; children: React.Rea
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border border-border bg-background/70 px-3 py-1 text-[11.5px] text-muted-foreground backdrop-blur",
+        "glass inline-flex h-7 items-center gap-1.5 rounded-full px-3 text-[12px] text-muted-foreground",
         className,
       )}
     >

@@ -59,7 +59,8 @@ export function SetupNextSteps({ summary, className }: { summary: IntakeSummary;
 
   if (groups.length === 0) return null;
   return (
-    <div className={cn("flex w-full max-w-[480px] flex-col gap-[18px] text-left", className)} data-testid="next-steps">
+    // En bento (lienzo 2026-09-28): una ficha por grupo, dos columnas desde `md`.
+    <div className={cn("grid w-full max-w-[880px] grid-cols-1 gap-[18px] text-left md:grid-cols-2", className)} data-testid="next-steps">
       {groups}
     </div>
   );
@@ -88,8 +89,8 @@ function axiGroup(summary: IntakeSummary) {
 
 /**
  * La meta del mes (método comercial F7), antes de «Lo pones tú»: cuánto quiere
- * vender, qué implica y contra qué se compara. Coral porque habla el progreso
- * (el icono; el texto no, que en coral no pasa AA). Sin cifras inventadas: la
+ * vender, qué implica y contra qué se compara. En tinta, como todo el chat
+ * (decisión del dueño 2026-09-28). Sin cifras inventadas: la
  * fila que el servidor no trae no se pinta, y una meta por debajo del mes
  * pasado no se dice como porcentaje negativo.
  */
@@ -126,14 +127,14 @@ const STEP_ICONS: Record<ActivationStep, Icon> = {
 
 const EYEBROW: Record<Tone, string> = {
   ok: "text-success",
-  goal: "text-muted-foreground [&>svg]:text-brand",
+  goal: "text-muted-foreground [&>svg]:text-foreground",
   you: "text-muted-foreground",
   act: "text-accent-amber",
 };
 
 const INDICATOR: Record<Tone, string> = {
   ok: "bg-success/[0.14] text-success",
-  goal: "bg-brand/[0.12] text-brand",
+  goal: "bg-foreground/[0.08] text-foreground",
   you: "bg-accent-violet/[0.12] text-accent-violet",
   act: "bg-accent-amber/[0.16] text-accent-amber",
 };

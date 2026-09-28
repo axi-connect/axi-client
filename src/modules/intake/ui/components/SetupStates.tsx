@@ -3,18 +3,39 @@
 import { Clock3 } from "lucide-react";
 
 import type { IntakeSummary } from "@/modules/intake/domain/intake";
-import { AssistantAvatar, AssistantStage, type AssistantExpressionName } from "@/shared/components/features/assistant";
+import {
+  AssistantAvatar,
+  AssistantIslandStage,
+  AssistantStage,
+  type AssistantExpressionName,
+  type AssistantIslandTone,
+} from "@/shared/components/features/assistant";
 import { ALBA_ACCESSORY } from "./AlbaHeroAvatar";
 import { SetupNextSteps } from "./SetupNextSteps";
 
-/** Alba quieta, con una expresión fija: sin botón, sin mirada, sin vida. */
-function AlbaStill({ expression, busy = false, label }: { expression: AssistantExpressionName; busy?: boolean; label: string }) {
+/**
+ * Alba quieta, con una expresión fija, dentro de su isla de tinta: sin botón,
+ * sin mirada, sin vida. El brillo de la isla dice el estado (lienzo 2026-09-28).
+ */
+function AlbaStill({
+  expression,
+  busy = false,
+  label,
+  tone,
+}: {
+  expression: AssistantExpressionName;
+  busy?: boolean;
+  label: string;
+  tone: AssistantIslandTone;
+}) {
   return (
-    <div role="img" aria-label={label} data-mood={expression} className="mx-auto">
-      <AssistantStage busy={busy}>
-        <AssistantAvatar expression={expression} accessory={ALBA_ACCESSORY} transitionMs={0} />
-      </AssistantStage>
-    </div>
+    <AssistantIslandStage tone={tone} className="mx-auto">
+      <div role="img" aria-label={label} data-mood={expression}>
+        <AssistantStage busy={busy}>
+          <AssistantAvatar expression={expression} accessory={ALBA_ACCESSORY} transitionMs={0} />
+        </AssistantStage>
+      </div>
+    </AssistantIslandStage>
   );
 }
 
@@ -30,7 +51,7 @@ export function SetupBlocked({ title, detail }: { title: string; detail: string 
   return (
     <main className="assistant-field flex min-h-[100dvh] items-center justify-center px-6">
       <div className="relative z-10 flex w-full max-w-[400px] flex-col items-center text-center">
-        <AlbaStill expression="asleep" label="Alba, dormida" />
+        <AlbaStill expression="asleep" label="Alba, dormida" tone="neutral" />
         <h1 className="font-heading mt-5 text-[24px] leading-tight font-bold tracking-[-0.02em] text-foreground text-balance">
           {title}
         </h1>
@@ -64,8 +85,8 @@ export function SetupDone({
   return (
     // La pantalla crece con el resumen: se desplaza en vez de recortarse.
     <div className="relative z-10 flex min-h-0 flex-1 flex-col items-center overflow-y-auto px-6 py-10">
-      <div className="my-auto flex w-full max-w-[480px] flex-col items-center text-center">
-        <AlbaStill expression="proud" label={`${assistantName}, orgullosa`} />
+      <div className="my-auto flex w-full max-w-[880px] flex-col items-center text-center">
+        <AlbaStill expression="proud" label={`${assistantName}, orgullosa`} tone="success" />
 
         <h2 className="font-heading mt-5 text-[26px] leading-[1.1] font-bold tracking-[-0.02em] text-foreground text-balance">
           Listo, {companyName} ya tiene lo suyo
@@ -80,7 +101,7 @@ export function SetupDone({
         <button
           type="button"
           onClick={onReview}
-          className="mt-7 rounded-full bg-brand/10 px-5 py-2.5 text-[14px] font-semibold text-brand transition-[background-color,transform] hover:bg-brand/15 active:scale-[.97]"
+          className="mt-7 h-11 rounded-full bg-foreground px-6 text-[14px] font-semibold text-background transition-[background-color,transform] hover:bg-foreground/90 active:scale-[.97]"
         >
           Revisar lo que anoté
         </button>
@@ -99,7 +120,7 @@ export function SetupSkeleton() {
   return (
     <main className="assistant-field flex min-h-[100dvh] items-center justify-center">
       <div className="relative z-10 flex flex-col items-center gap-4">
-        <AlbaStill expression="neutral" busy label="Alba, abriendo tu conversación" />
+        <AlbaStill expression="neutral" busy label="Alba, abriendo tu conversación" tone="ai" />
         <p className="text-[13px] text-muted-foreground">Abriendo tu conversación…</p>
       </div>
     </main>

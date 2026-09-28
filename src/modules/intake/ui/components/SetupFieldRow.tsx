@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { Check, ChevronRight, RotateCcw, X } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
-import { AssistantMark } from "@/shared/components/features/assistant";
 import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
 import {
@@ -35,7 +34,7 @@ import { SetupListEditor } from "./SetupListEditor";
  * la chispa, porque ahí sí cambia lo que hay que hacer con el dato. Y ese dato
  * trae el botón «Así es»: la cápsula tintada del App Store, un toque y listo.
  */
-export function SetupFieldRow({
+export const SetupFieldRow = memo(function SetupFieldRow({
   field,
   saving,
   onSave,
@@ -47,9 +46,10 @@ export function SetupFieldRow({
 }: {
   field: IntakeField;
   saving: boolean;
-  onSave: (value: unknown) => Promise<boolean>;
+  /** Guarda el valor del dato. Recibe el campo para ser estable entre filas (`memo`). */
+  onSave: (field: IntakeField, value: unknown) => Promise<boolean>;
   /** Confirmar una deducción tal cual está: un toque y deja de estar pendiente. */
-  onConfirm: () => void;
+  onConfirm: (field: IntakeField) => void;
   /** Llevar la duda al chat cuando el dato no se puede teclear en una fila. */
   onAskAbout: (field: IntakeField) => void;
   /** «No aplica» desde la ficha: el dato queda saltado con motivo, sin turno. */
@@ -98,7 +98,7 @@ export function SetupFieldRow({
       setError("No pude entender ese valor");
       return;
     }
-    const ok = await onSave(value);
+    const ok = await onSave(field, value);
     if (ok) setEditing(false);
     else setError("No se pudo guardar. Inténtalo de nuevo.");
   }
@@ -119,11 +119,11 @@ export function SetupFieldRow({
           // Sin cambios sobre la propuesta basta confirmarla: así no se
           // reescribe en el tenant algo que ya vale lo mismo.
           if (items === null) {
-            onConfirm();
+            onConfirm(field);
             setEditing(false);
             return;
           }
-          void onSave(items).then((ok) => {
+          void onSave(field, items).then((ok) => {
             if (ok) setEditing(false);
           });
         }}
@@ -132,15 +132,9 @@ export function SetupFieldRow({
   }
 
   return (
-    <li
-      className={cn(
-        "grouped-row group",
-        confirmable &&
-          (proposed
-            ? "bg-gradient-to-r from-brand/7 to-transparent to-70%"
-            : "bg-gradient-to-r from-accent-violet/8 to-transparent to-70%"),
-      )}
-    >
+    // Sin fondos tintados: el estado lo dice la píldora junto a la etiqueta
+    // (lienzo 2026-09-28), la fila queda limpia como una de Contactos.
+    <li className="grouped-row group">
       {editing ? (
         <div className="flex items-start gap-3 py-2.5 pr-3 pl-4">
           <div className="min-w-0 flex-1">
@@ -190,10 +184,13 @@ export function SetupFieldRow({
             label={`Corregir ${field.label}`}
           >
             <span className="min-w-0 flex-1">
-              <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
+              <span className="flex flex-wrap items-center gap-1.5 text-[12px] text-muted-foreground">
                 {field.label}
-                {field.required && field.value === null ? (
-                  <span className="size-[5px] rounded-full bg-accent-amber" title="Hace falta" />
+                {field.required && field.value === null && skipped === null && !readOnly ? (
+                  <FieldPill tone="missing">Falta</FieldPill>
+                ) : null}
+                {confirmable && badge !== null ? (
+                  <FieldPill tone={proposed ? "proposed" : "derived"}>{proposed ? "Propuesto" : "De tu web"}</FieldPill>
                 ) : null}
               </span>
               <span
@@ -210,16 +207,10 @@ export function SetupFieldRow({
                   «{skipped.note}»
                 </span>
               ) : null}
-              {badge !== null ? (
-                <span
-                  className={cn(
-                    "mt-[3px] inline-flex items-center gap-1 text-[11.5px]",
-                    !confirmable ? "text-muted-foreground/60" : proposed ? "text-brand" : "text-accent-violet",
-                  )}
-                >
-                  {confirmable ? <AssistantMark size="sm" /> : null}
-                  {badge}
-                </span>
+              {/* Pendiente de confirmar, la píldora ya dice de dónde salió; ya
+                  confirmado, la procedencia queda en una línea muda. */}
+              {badge !== null && !confirmable ? (
+                <span className="mt-[3px] block text-[11.5px] text-muted-foreground/70">{badge}</span>
               ) : null}
             </span>
             {confirmable || readOnly || skipped !== null ? null : (
@@ -275,13 +266,17 @@ export function SetupFieldRow({
                   ? () => {
                       setEditing(true);
                     }
-                  : onConfirm
+                  : () => {
+                      onConfirm(field);
+                    }
               }
               disabled={saving}
               className={cn(
                 "flex-none rounded-full px-[13px] py-1.5 text-[12.5px] font-semibold transition-[background-color,transform] active:scale-[.95] disabled:opacity-50",
+                // Lo propuesto por el tipo de negocio se revisa en tinta; lo que
+                // la IA sacó de su web conserva el violeta de la IA.
                 proposed
-                  ? "bg-brand/10 text-brand hover:bg-brand/16"
+                  ? "bg-foreground text-background hover:bg-foreground/90"
                   : "bg-accent-violet/10 text-accent-violet hover:bg-accent-violet/16",
               )}
             >
@@ -291,6 +286,25 @@ export function SetupFieldRow({
         </div>
       )}
     </li>
+  );
+});
+
+type FieldPillTone = "missing" | "derived" | "proposed";
+
+const PILL: Record<FieldPillTone, string> = {
+  // El color va en el punto; el texto queda en tinta y pasa AA (DESIGN §8.10).
+  missing: "bg-warning",
+  derived: "bg-accent-violet",
+  proposed: "bg-foreground",
+};
+
+/** El estado del dato, junto a su etiqueta: el mismo lenguaje que `StatePill`, a la escala de la fila. */
+function FieldPill({ tone, children }: { tone: FieldPillTone; children: React.ReactNode }) {
+  return (
+    <span className="inline-flex h-[18px] items-center gap-1 rounded-full bg-foreground/[0.06] px-[7px] text-[10.5px] font-medium whitespace-nowrap text-foreground">
+      <span aria-hidden="true" className={cn("size-[5px] rounded-full", PILL[tone])} />
+      {children}
+    </span>
   );
 }
 
