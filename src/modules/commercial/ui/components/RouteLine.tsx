@@ -1,9 +1,10 @@
 "use client";
 
-import { useId, useLayoutEffect, useRef, useState } from "react";
+import { useId } from "react";
 
 import { cn } from "@/core/lib/utils";
 import type { WeekTick } from "@/modules/commercial/domain/weeks";
+import { useElementWidth } from "@/modules/commercial/ui/hooks/use-element-width";
 import { useEntrance } from "@/modules/commercial/ui/hooks/use-entrance";
 
 interface RouteLineProps {
@@ -62,19 +63,7 @@ export const TARGET_CLEARANCE_PX = 150;
 /** Sin medida todavía (primer render, jsdom) se supone la línea del escritorio. */
 const FALLBACK_WIDTH_PX = 1040;
 
-/** El ancho de un elemento, al vuelo (ResizeObserver). 0 = aún no medido. */
-function useWidth<T extends HTMLElement>(): [React.RefObject<T | null>, number] {
-  const ref = useRef<T>(null);
-  const [width, setWidth] = useState(0);
-  useLayoutEffect(() => {
-    const node = ref.current;
-    if (node === null || typeof ResizeObserver === "undefined") return;
-    const observer = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, []);
-  return [ref, width];
-}
+
 
 function crowdsToday(week: WeekTick, expected: number | null): boolean {
   return expected !== null && Math.abs(week.mid_pct - expected * 100) < TODAY_LABEL_CLEARANCE_PCT;
@@ -152,7 +141,7 @@ function RouteLineBase({
   className,
 }: RouteLineProps & { progress: number }) {
   const gradientId = useId();
-  const [boxRef, width] = useWidth<HTMLDivElement>();
+  const [boxRef, width] = useElementWidth<HTMLDivElement>();
 
   const doneClamped = Math.min(1, Math.max(0, done));
   const doneNow = doneClamped * t;

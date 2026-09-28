@@ -37,6 +37,37 @@ Al final: lo que el canvas pinta y hoy NO existe (se decide, no se inventa).
 - Ticket: la fila pasa a ser la ficha `TicketTile` (real, plan, desvío y procedencia · días · ventas) y abre el mismo detalle.
 - «Axi propone» → isla «Acciones recomendadas» (`RecommendedActions`): los mismos estados, textos de vacío, línea de solo lectura, «Aprobar» que abre el detalle y «Ver qué quedó» (C6). Las decididas del mes suman las **descartadas con su motivo** (`?status=rejected`); al rechazar, la fila pasa a descartada en vez de desaparecer. «Se aprobó el 22 de septiembre» se dice ahora «Aprobada el 22 sep».
 
+**C3a — la ruta como navegación: dónde quedó cada cosa** (canvas https://claude.ai/artifact/FumpQm7AXWNvu4mvfgpRqt; verificado en código y render, 2026-09-27):
+- **Cabecera:** kicker, título, `goalLead`, y «En vivo» o «Actualizado». «Cambiar meta» pasa al destino del panel de navegación («Cambiar», con el nombre accesible «Cambiar meta» y solo con manage).
+- **El instrumento de C1 (`RouteHero` + `RouteLine`) se vuelve el mapa `RouteMap`:**
+  - Lo vendido y el % son «Vas aquí».
+  - Lo esperado a hoy es «Deberías ir en $ X», con «Tramo lento · vas $ X por debajo».
+  - La proyección es «N % · Si sigues así llegas a $ X».
+  - La meta y el último día hábil, en la bandera.
+  - Las semanas ya recorridas, como hitos con su dinero.
+  - La etiqueta accesible dice todo eso con cifras.
+  - `RouteLine` se queda solo para la franja del Panel, sin cambios.
+- **La franja de cuatro cifras de C1:**
+  - Faltan y Quedan pasan al panel («N días hábiles · hasta el {día}») y a la llegada estimada («faltan N ventas»).
+  - «A hoy deberías llevar» es la marca del mapa.
+  - «Si sigues así» es la llegada estimada.
+- **La frase `paceHeadline`,** con lo accionable en negrita: en el panel.
+- **Aprendiendo:**
+  - Sin tramo lento ni proyección.
+  - La llegada dice «sin proyección todavía».
+  - `learningLine` va en la llegada.
+  - No hay indicaciones.
+- **Meta cumplida:** la carretera entera en coral y «Llegaste a la meta…».
+- **Nuevo, derivado del ritmo:** «Indicaciones de hoy» (`todaySteps`), lo que falta de cada resultado ÷ los días que quedan.
+- **«Acciones recomendadas» (C1):**
+  - Las pendientes son las «Rutas · las prepara Axi» del panel, con la ruta actual primero y la llegada de cada una (proyección + ventas estimadas × ticket del plan, con «≈»).
+  - Elegir una la previsualiza en el mapa y en la llegada.
+  - «Tomar esta ruta · aprobar» usa el mismo `onApprove`, que abre el detalle; «Ver el detalle» enlaza.
+  - Se mantienen la línea de solo lectura, cargando, error con reintento y el vacío según el ritmo.
+  - Las decididas del mes pasan a la ficha «Decididas este mes», con las mismas filas, motivo y «Ver qué quedó».
+  - `RecommendedActions` desaparece.
+- **Sin cambios:** `WeekTile`, `TicketTile` y `KeyResultGrid`, debajo del mapa.
+
 ## 2. Definir la meta (`/comercial/meta`, `GoalEditorView`)
 - [x] Estados: sin permiso de lectura; bloqueado; error «No pude cargar la meta» + «Reintentar»; silueta; sin `commercial:manage` → «Solo un administrador puede cambiar la meta» + «Volver a la ruta».
 - [x] Título «¿Cuánto quieres vender en {mes}?»; «El mes pasado: $ X · N ventas · ticket $ Y» o «Una cifra, un mes. Te decimos qué implica.».
@@ -46,6 +77,21 @@ Al final: lo que el canvas pinta y hoy NO existe (se decide, no se inventa).
 - [x] «Lo que implica»: vista previa con debounce 350 ms y aborto; filas Ventas necesarias (ticket $ X), Cotizaciones (≈, «N % de las cotizaciones se venden»), Citas agendadas, Contactados, Conversaciones nuevas, Llamadas («N % contestan»), cada una con procedencia y «N en D días»; vacío «Escribe una cifra y te decimos…»; error; calculando; plan incompleto → aviso «Falta tu ticket promedio para trazar la ruta… El ticket nunca se supone.» y «Falta el ticket» en cada fila; error al recalcular «lo de abajo es de la anterior».
 - [x] «Ajustar supuestos» (plegable): Ticket promedio (`PriceInput`, «Como tu historia»), «Cotización → venta (%)» (decimal con coma); nota «Lo que cambies aquí pasa a decir «lo dijiste tú»…».
 - [x] Guardar: validación «Escribe cuánto quieres vender.», error del servidor, toast «Meta puesta» / «Empezamos a medir el camino.», vuelve a `/comercial`; «Cancelar».
+
+**C3b — fijar el destino: dónde quedó cada cosa** (canvas 2; verificado en código y render, 2026-09-27):
+- **El editor de C2 se vuelve el mapa del destino (`DestinationMap`):**
+  - La carretera sale de «Hoy · {día}» hasta «Meta · $ X · {último día hábil}».
+  - Las paradas del camino al revés son las mismas cifras de la vista previa: conversaciones, contactados, citas, cotizaciones y ventas.
+  - Sin ticket, cada parada dice «—».
+  - Una etapa que el negocio no usa no aparece como parada.
+  - Mientras recalcula, el mapa se atenúa.
+- **La isla es el buscador del destino («Fijar el destino»):** «Volver a la ruta», el título, el mes pasado, «Destino · {moneda} · {mes año}», la cifra, los atajos y el alza. El aviso de mitad de mes queda arriba, sobre el mapa.
+- **«Así queda tu mes» pasa a «Así queda tu viaje»:**
+  - Trae velocidad, duración con sus días, ventas por semana, alza sobre el mes pasado y la meta alcanzable.
+  - El error de guardar se muestra aquí.
+  - El guardado es el mismo, con el texto «Trazar la ruta» (nombre accesible «Guardar meta y trazar la ruta») y «Cancelar».
+  - Sale la barra del mes pasado frente a la meta, que era un añadido de C2; el alza lo sigue diciendo.
+- **Sin cambios:** «Lo que implica», «Ajustar supuestos» y su nota van debajo del mapa.
 
 ## 3. Detalle de un resultado (`KeyResultSheetRoute` + `KeyResultDetail`)
 - [x] Hoja `lg`, título del resultado, subtítulo «Resultado clave»; sin permiso; clave inexistente «Ese resultado no existe.»; sin meta «Aún no hay meta este mes…» + «Definir la meta» (manage); cargando; error; «Este resultado no está en tu ruta de este mes.».

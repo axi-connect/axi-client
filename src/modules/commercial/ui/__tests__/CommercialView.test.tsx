@@ -82,7 +82,7 @@ describe("CommercialView", () => {
     expect(screen.getByText(/El mes pasado vendiste/)).toBeInTheDocument();
   });
 
-  it("al ritmo y sin propuestas, las acciones recomendadas sí dicen «Estás al día» (Q12)", () => {
+  it("al ritmo y sin propuestas, las rutas de Axi sí dicen «Estás al día» (Q12)", () => {
     useCommercialStore.setState({
       goal: { status: "ready", data: goalResponse, error: null },
       plan: { status: "ready", data: plan, error: null },
@@ -93,7 +93,7 @@ describe("CommercialView", () => {
     expect(screen.getByText(/Estás al día/)).toBeInTheDocument();
   });
 
-  it("con meta: cabecera con procedencia, hero, bento, resultados y acciones recomendadas vacías", () => {
+  it("con meta: cabecera con procedencia, el mapa con su panel, el bento y las rutas vacías", () => {
     useCommercialStore.setState({
       goal: { status: "ready", data: goalResponse, error: null },
       plan: { status: "ready", data: plan, error: null },
@@ -107,7 +107,7 @@ describe("CommercialView", () => {
     expect(screen.getByRole("link", { name: /cambiar meta/i })).toHaveAttribute("href", "/comercial/meta");
     expect(screen.getByRole("region", { name: "La ruta del mes" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Lo que hace falta" })).toBeInTheDocument();
-    expect(screen.getByRole("region", { name: "Acciones recomendadas" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Navegación de la ruta" })).toBeInTheDocument();
     // Sin tiempo real conectado no se dice «En vivo»: se dice de cuándo es el dato.
     expect(screen.queryByText(/En vivo/)).toBeNull();
     expect(screen.getByText(/^Actualizado /)).toBeInTheDocument();
@@ -124,7 +124,7 @@ describe("CommercialView", () => {
     expect(loadProposals).toHaveBeenCalledTimes(1);
   });
 
-  it("con propuestas: la pendiente enlaza a su detalle y «Aprobar» aprueba y lo abre", async () => {
+  it("con propuestas: la ruta de Axi se elige, sube la llegada, enlaza a su detalle y «Tomar esta ruta» aprueba y lo abre", async () => {
     useCommercialStore.setState({
       goal: { status: "ready", data: goalResponse, error: null },
       plan: { status: "ready", data: plan, error: null },
@@ -132,15 +132,17 @@ describe("CommercialView", () => {
       proposals: { status: "ready", data: [proposal], error: null },
     });
     render(<CommercialView />);
-    const actions = screen.getByRole("region", { name: "Acciones recomendadas" });
-    expect(within(actions).getByRole("link", { name: proposal.title })).toHaveAttribute("href", `/comercial/acciones/${proposal.id}`);
-    expect(within(actions).getByText("La que más te acerca")).toBeInTheDocument();
-    expect(within(actions).getByText("+2 ventas estimadas")).toBeInTheDocument();
-    expect(within(actions).getByText("cubre el 20 % de lo que falta para volver al ritmo")).toBeInTheDocument();
-    expect(within(actions).getByText("12 × 50 % × 35 % = 2")).toBeInTheDocument();
-    expect(within(actions).getByText("1 por decidir")).toBeInTheDocument();
-    expect(within(actions).getByRole("link", { name: "Ver el detalle" })).toHaveAttribute("href", `/comercial/acciones/${proposal.id}`);
-    fireEvent.click(within(actions).getByRole("button", { name: /Aprobar/ }));
+    const panel = screen.getByRole("region", { name: "Navegación de la ruta" });
+    const options = within(panel).getAllByRole("radio");
+    expect(options).toHaveLength(2);
+    expect(options[0]).toHaveAttribute("aria-checked", "true");
+    expect(options[0]).toHaveTextContent("Seguir al ritmo de hoy");
+    expect(options[1]).toHaveTextContent(proposal.title);
+    fireEvent.click(options[1]);
+    // 24,62 M + 2 ventas × 700.000 = 26,02 M → 87 % de 30 M.
+    expect(screen.getAllByText(/87 %/).length).toBeGreaterThan(0);
+    expect(within(panel).getByRole("link", { name: "Ver el detalle" })).toHaveAttribute("href", `/comercial/acciones/${proposal.id}`);
+    fireEvent.click(within(panel).getByRole("button", { name: `Tomar esta ruta: ${proposal.title}` }));
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith(`/comercial/acciones/${proposal.id}`);
     });
@@ -156,8 +158,10 @@ describe("CommercialView", () => {
       proposals: { status: "ready", data: [proposal], error: null },
     });
     render(<CommercialView />);
-    const actions = screen.getByRole("region", { name: "Acciones recomendadas" });
-    expect(within(actions).queryByRole("button", { name: /Aprobar/ })).toBeNull();
+    const actions = screen.getByRole("region", { name: "Navegación de la ruta" });
+    fireEvent.click(within(actions).getAllByRole("radio")[1]);
+    expect(within(actions).queryByRole("button", { name: /Tomar esta ruta/ })).toBeNull();
+    expect(within(actions).getByRole("link", { name: "Ver el detalle" })).toBeInTheDocument();
     expect(within(actions).getByText(/Pídele a un administrador que apruebe/)).toBeInTheDocument();
   });
 
@@ -170,8 +174,9 @@ describe("CommercialView", () => {
       proposals: { status: "ready", data: [proposal], error: null },
     });
     render(<CommercialView />);
-    const actions = screen.getByRole("region", { name: "Acciones recomendadas" });
-    expect(within(actions).queryByRole("button", { name: /Aprobar/ })).toBeNull();
+    const actions = screen.getByRole("region", { name: "Navegación de la ruta" });
+    fireEvent.click(within(actions).getAllByRole("radio")[1]);
+    expect(within(actions).queryByRole("button", { name: /Tomar esta ruta/ })).toBeNull();
     expect(within(actions).getByText("Tu plan no incluye CRM con IA: el agente no puede trabajar esta lista.")).toBeInTheDocument();
   });
 
@@ -186,7 +191,8 @@ describe("CommercialView", () => {
       approvals: { a2: { applied: [], failed: [], status: "approved" } },
     });
     render(<CommercialView />);
-    const [first, second] = within(screen.getByRole("region", { name: "Acciones recomendadas" })).getAllByRole("listitem");
+    const decided = screen.getByRole("heading", { name: "Decididas este mes" }).closest("section") as HTMLElement;
+    const [first, second] = within(decided).getAllByRole("listitem");
     expect(first).toHaveTextContent("Aprobada el 22 sep");
     expect(first).toHaveTextContent(/Ver$/);
     expect(first).not.toHaveTextContent("Ver qué quedó");
@@ -202,12 +208,12 @@ describe("CommercialView", () => {
       proposals: { status: "ready", data: [rejected], error: null },
     });
     render(<CommercialView />);
-    const actions = screen.getByRole("region", { name: "Acciones recomendadas" });
-    const [row] = within(actions).getAllByRole("listitem");
+    const decided = screen.getByRole("heading", { name: "Decididas este mes" }).closest("section") as HTMLElement;
+    const [row] = within(decided).getAllByRole("listitem");
     expect(row).toHaveTextContent("Descartada el 9 sep");
     expect(row).toHaveTextContent("«Ya los llamamos nosotros»");
-    expect(within(actions).queryByRole("button", { name: /Aprobar/ })).toBeNull();
-    expect(within(actions).queryByText(/por decidir/)).toBeNull();
+    // Una descartada no es una ruta: el panel solo ofrece seguir como vas.
+    expect(within(screen.getByRole("region", { name: "Navegación de la ruta" })).getAllByRole("radio")).toHaveLength(1);
   });
 
   it("con el tiempo real escuchando, la cabecera dice «En vivo»", () => {

@@ -85,8 +85,7 @@ export function WeekTile({
         </div>
 
         <p className="text-[12.5px] text-muted-foreground tabular-nums">
-          {formatRate(perDay)} al día
-          {expectedPerDay > 0 ? ` · la línea es lo esperado (${formatRate(expectedPerDay)})` : null}
+          {`${formatRate(perDay)} al día${expectedPerDay > 0 ? ` · la línea es lo esperado (${formatRate(expectedPerDay)})` : ""}`}
         </p>
       </BentoTile>
     </Link>

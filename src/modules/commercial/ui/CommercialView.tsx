@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo } from "react";
-import { Lock, Pencil, RotateCcw } from "lucide-react";
+import { Lock, RotateCcw } from "lucide-react";
 
 import { errorMessage } from "@/core/lib/error-messages";
 import { cn } from "@/core/lib/utils";
@@ -27,8 +26,8 @@ import { CommercialSkeleton } from "./CommercialSkeleton";
 import { CommercialBlockedState } from "./components/CommercialBlockedState";
 import { GoalEmptyState } from "./components/GoalEmptyState";
 import { KeyResultGrid } from "./components/KeyResultGrid";
-import { RecommendedActions } from "./components/RecommendedActions";
-import { RouteHero } from "./components/RouteHero";
+import { DecidedTile } from "./components/DecidedTile";
+import { RouteMap } from "./components/RouteMap";
 import { TicketTile } from "./components/TicketTile";
 import { WeekTile } from "./components/WeekTile";
 
@@ -162,6 +161,7 @@ export function CommercialView() {
     weekChart(p.series, p.today, p.weekdays, p.period_start, p.period_end) !== null;
   const hasTicket = plan.data?.inputs.avg_ticket_cents != null;
   const tiles = Number(hasWeek) + Number(hasTicket);
+  const hasDecided = proposals.data?.some((row) => row.status !== "pending") ?? false;
 
   return (
     <div className="@container space-y-5">
@@ -170,16 +170,6 @@ export function CommercialView() {
         title={routeTitle(month)}
         lead={goalLead(current.target_revenue_cents, currency, current.source, current.updated_at)}
         status={p === null ? null : <Freshness live={live} computedAt={p.computed_at} />}
-        action={
-          canManage ? (
-            <Button asChild variant="outline" className="rounded-full">
-              <Link href="/comercial/meta">
-                <Pencil aria-hidden className="size-4" />
-                Cambiar meta
-              </Link>
-            </Button>
-          ) : null
-        }
       />
 
       {p === null ? (
@@ -201,22 +191,21 @@ export function CommercialView() {
         )
       ) : (
         <>
-          <RouteHero pace={p} plan={plan.data} />
-          {/* El bento (canvas 1): en ancho, las dos fichas arriba, «Lo que hace falta» debajo y la isla a la
-              derecha de ambas; en estrecho, la isla primero (canvas 7). */}
-          <div className="grid grid-cols-1 gap-4 @2xl:grid-cols-2 @4xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_22rem]">
-            <RecommendedActions
-              className="@2xl:col-span-2 @4xl:col-span-1 @4xl:col-start-3 @4xl:row-span-2 @4xl:row-start-1 @4xl:self-start"
-              learning={learning}
-              paceStatus={p.status}
-              proposals={proposals.data ?? undefined}
-              error={proposals.status === "error" ? proposals.error : null}
-              onRetry={() => void loadProposals()}
-              canApprove={canApprove}
-              readOnlyMessage={readOnlyMessage}
-              onApprove={onApprove}
-              resultIds={resultIds}
-            />
+          <RouteMap
+            pace={p}
+            plan={plan.data}
+            lead={goalLead(current.target_revenue_cents, currency, current.source, current.updated_at)}
+            canManage={canManage}
+            proposals={proposals.data ?? undefined}
+            proposalsError={proposals.status === "error" ? proposals.error : null}
+            onRetryProposals={() => void loadProposals()}
+            canApprove={canApprove}
+            readOnlyMessage={readOnlyMessage}
+            onApprove={onApprove}
+          />
+          {/* Bajo el mapa, el bento: la semana y el ticket arriba, «Lo que hace falta» debajo y, si
+              hay, las decididas del mes a la derecha. */}
+          <div className={cn("grid grid-cols-1 gap-4 @2xl:grid-cols-2", hasDecided && "@4xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_22rem]")}>
             {hasWeek ? (
               <WeekTile
                 pace={p}
@@ -233,6 +222,13 @@ export function CommercialView() {
             <div className={cn("min-w-0 @2xl:col-span-2 @4xl:col-start-1 @4xl:col-end-3", tiles === 0 ? "@4xl:row-start-1" : "@4xl:row-start-2")}>
               <KeyResultGrid pace={p} plan={plan.data} learning={learning} detailHref={keyResultHref} />
             </div>
+            {hasDecided ? (
+              <DecidedTile
+                proposals={proposals.data ?? []}
+                resultIds={resultIds}
+                className="@2xl:col-span-2 @4xl:col-span-1 @4xl:col-start-3 @4xl:row-span-2 @4xl:row-start-1 @4xl:self-start"
+              />
+            ) : null}
           </div>
         </>
       )}

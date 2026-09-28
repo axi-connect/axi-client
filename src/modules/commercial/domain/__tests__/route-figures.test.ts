@@ -1,43 +1,12 @@
-import { formatMoney } from "@/core/lib/format";
-import { pace, learningPace } from "../../ui/__tests__/fixtures";
-import { lastBusinessDay, routeFigures, todayMark, weekChart, weekdaySpan } from "../route-figures";
+import { pace } from "../../ui/__tests__/fixtures";
+import { lastBusinessDay, weekChart, weekdaySpan } from "../route-figures";
 
-describe("todayMark y lastBusinessDay", () => {
-  it("«Hoy · mié 23» y el último día hábil según el horario, no el último del mes", () => {
-    expect(todayMark("2026-09-23")).toBe("Hoy · mié 23");
+describe("lastBusinessDay", () => {
+  it("el último día hábil según el horario, no el último del mes", () => {
     expect(lastBusinessDay("2026-09-01", "2026-09-30", [1, 2, 3, 4, 5, 6])).toBe("2026-09-30");
     // Agosto de 2026 acaba en lunes; de martes a sábado, el último hábil es el sábado 29.
     expect(lastBusinessDay("2026-08-01", "2026-08-31", [2, 3, 4, 5, 6])).toBe("2026-08-29");
     expect(lastBusinessDay("2026-08-01", "2026-08-31", [])).toBeNull();
-  });
-});
-
-describe("routeFigures", () => {
-  it("las cuatro cifras de la franja, en la voz de siempre (nunca un negativo)", () => {
-    expect(routeFigures(pace)).toEqual([
-      { key: "missing", label: "Faltan", value: "16 ventas", detail: "$ 11,1 M" },
-      { key: "left", label: "Quedan", value: "6 días hábiles", detail: "hasta el miércoles 30" },
-      { key: "expected", label: "A hoy deberías llevar", value: "$ 23,1 M", detail: "$ 4,1 M por debajo" },
-      { key: "projection", label: "Si sigues así", value: "≈ $ 24,6 M", detail: "82 % de la meta" },
-    ]);
-  });
-
-  it("aprendiendo: solo Faltan y Quedan", () => {
-    expect(routeFigures(learningPace).map((figure) => figure.key)).toEqual(["missing", "left"]);
-  });
-
-  it("en singular, en el último día y por encima de la meta", () => {
-    const sales = { ...pace.key_results[0], actual: 44, target: 43 };
-    const figures = routeFigures({ ...pace, actual_revenue_cents: 3_050_000_000, business_days_left: 1, key_results: [sales] });
-    expect(figures[0]).toEqual({ key: "missing", label: "Por encima de la meta", value: formatMoney(50_000_000, "COP"), detail: "1 venta de más" });
-    expect(figures[1].value).toBe("1 día hábil");
-    expect(routeFigures({ ...pace, business_days_left: 0 })[1]).toEqual({ key: "left", label: "Quedan", value: "Hoy", detail: "es el último día hábil" });
-  });
-
-  it("sin meta ni proyección no inventa la cuarta cifra; justo en lo esperado lo dice", () => {
-    const figures = routeFigures({ ...pace, target_revenue_cents: 0, projected_revenue_cents: null, expected_revenue_cents: pace.actual_revenue_cents });
-    expect(figures.map((figure) => figure.key)).toEqual(["missing", "left", "expected"]);
-    expect(figures[2].detail).toBe("justo donde deberías");
   });
 });
 

@@ -5,16 +5,17 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronLeft, Flag, Lock, RotateCcw } from "lucide-react";
 
-import { addMonthsToKey } from "@/core/lib/business-time";
+import { addDaysToKey, addMonthsToKey } from "@/core/lib/business-time";
 import { errorMessage } from "@/core/lib/error-messages";
 import { formatMoney } from "@/core/lib/format";
 import { cn } from "@/core/lib/utils";
 import { useAlert } from "@/core/providers/alert-provider";
-import type { CommercialPlanDTO, FigureDTO, GoalInputDTO, PlanRateDTO } from "@/modules/commercial/domain/commercial";
+import type { CommercialPlanDTO, FigureDTO, GoalInputDTO, GoalResponseDTO, PlanRateDTO } from "@/modules/commercial/domain/commercial";
 import { GOAL_SAVED_DETAIL, GOAL_SAVED_TITLE, midMonthLine, MISSING_TICKET_FIGURE, reachableLine } from "@/modules/commercial/domain/copy";
 import { formatInteger } from "@/core/lib/commercial-units";
-import { formatMillions, formatPct, formatRate, monthLabel } from "@/modules/commercial/domain/format";
-import { weekdaySpan } from "@/modules/commercial/domain/route-figures";
+import { formatPct, formatRate, monthLabel, shortDay } from "@/modules/commercial/domain/format";
+import { lastBusinessDay, weekdaySpan } from "@/modules/commercial/domain/route-figures";
+import { DESTINATION_ROAD, NARROW_ROAD, sampleRoad } from "@/modules/commercial/domain/route-map";
 import { useCommercialStore } from "@/modules/commercial/infrastructure/stores/commercial.store";
 import { useMyCompany } from "@/modules/companies/public";
 import { useAuth } from "@/shared/auth/auth.hooks";
@@ -28,6 +29,9 @@ import { Label } from "@/shared/components/ui/label";
 import { SegmentedControl } from "@/shared/components/ui/segmented";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { CommercialBlockedState } from "./components/CommercialBlockedState";
+import { DestinationMap, type DestinationStop } from "./components/DestinationMap";
+import { WIDE_MIN_PX } from "./components/RouteMap";
+import { useElementWidth } from "./hooks/use-element-width";
 import { SourceMark } from "./components/SourceMark";
 
 type Preset = "last" | "plus10" | "plus25" | "custom";
@@ -40,6 +44,9 @@ const PRESETS: readonly { value: Preset; label: string; lift: number | null }[] 
 ];
 
 const PREVIEW_DEBOUNCE_MS = 350;
+
+const DESTINATION = sampleRoad(DESTINATION_ROAD);
+const NARROW = sampleRoad(NARROW_ROAD);
 
 /**
  * `/comercial/meta`: «¿Cuánto quieres vender en septiembre?». Una cifra
@@ -85,6 +92,9 @@ export function GoalEditorView() {
   const [seeded, setSeeded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [assumptionsOpen, setAssumptionsOpen] = useState(false);
+  // Un solo trazado montado: el que cabe (sin medida todavía, el ancho).
+  const [boxRef, width] = useElementWidth<HTMLDivElement>();
+  const wide = width === 0 || width >= WIDE_MIN_PX;
 
   useEffect(() => {
     if (enabled && canRead && goal.status === "idle") void load();
@@ -192,150 +202,113 @@ export function GoalEditorView() {
   const periodKey = current?.period_start ?? pace.data?.today ?? monthKeyFallback();
   const lastMonthName = monthLabel(addMonthsToKey(periodKey, -1));
   const lift = target !== null && target > 0 && lastMonth !== null && lastMonth > 0 ? Math.round((target / lastMonth - 1) * 100) : null;
+  const periodEnd = current?.period_end ?? addDaysToKey(addMonthsToKey(periodKey, 1), -1);
+  const goalDay = shortDay(pace.data === null ? periodEnd : (lastBusinessDay(periodKey, periodEnd, pace.data.weekdays) ?? periodEnd));
+  const startLabel = `Hoy · ${shortDay(pace.data?.today ?? periodKey)}`;
+  const goalLabel = target !== null && target > 0 ? `Meta · ${formatMoney(target, currency)}` : "Meta · escribe una cifra";
+  const stops = destinationStops(target !== null && target > 0 ? preview.data : null);
+  const busy = preview.status === "loading";
+
+  const search = (
+    <SearchIsland
+      month={month}
+      year={periodKey.slice(0, 4)}
+      currency={currency}
+      lastMonth={lastMonth}
+      seed={seed}
+      target={target}
+      onTarget={(cents) => {
+        setTarget(cents);
+        setPreset("custom");
+      }}
+      preset={preset}
+      onPreset={choosePreset}
+      lift={lift}
+      lastMonthName={lastMonthName}
+    />
+  );
+  const trip = (
+    <TripCard
+      preview={preview.data}
+      target={target}
+      lift={lift}
+      lastMonthName={lastMonthName}
+      weekdays={pace.data?.weekdays ?? null}
+      reachable={reachableLine(seed, currency)}
+      error={error}
+      saving={saving}
+      canSave={input !== null}
+    />
+  );
 
   return (
-    <form onSubmit={(event) => void submit(event)} className="@container mx-auto w-full max-w-[1120px]">
-      <div className="grid gap-5 @4xl:grid-cols-[minmax(0,1fr)_24rem] @4xl:gap-7">
-        <div className="flex min-w-0 flex-col gap-5">
-          <Link
-            href="/comercial"
-            className="inline-flex min-h-6 w-fit items-center gap-1.5 rounded-md text-[13px] text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-          >
-            <ChevronLeft aria-hidden className="size-4" />
-            Volver a la ruta
-          </Link>
-          <header className="flex flex-col gap-2">
-            <h1 className="font-heading text-[30px] leading-[1.05] font-bold tracking-[-0.025em] text-balance @xl:text-[44px]">
-              {`¿Cuánto quieres vender en ${month}?`}
-            </h1>
-            {lastMonth !== null && seed !== null ? (
-              <p className="text-sm text-muted-foreground tabular-nums">
-                El mes pasado: <b className="font-medium whitespace-nowrap text-foreground">{formatMoney(lastMonth, currency)}</b>
-                {seed.last_month_sales !== null ? <span className="whitespace-nowrap">{` · ${formatInteger(seed.last_month_sales)} ventas`}</span> : null}
-                {seed.last_month_avg_ticket_cents !== null ? (
-                  <span className="whitespace-nowrap">{` · ticket ${formatMoney(seed.last_month_avg_ticket_cents, currency)}`}</span>
-                ) : null}
-              </p>
-            ) : (
-              <p className="text-sm text-muted-foreground">Una cifra, un mes. Te decimos qué implica.</p>
-            )}
-          </header>
+    <form onSubmit={(event) => void submit(event)} className="w-full">
+      <div ref={boxRef} className="@container flex flex-col gap-5">
+        {midMonth && pace.data !== null ? (
+          <Note>
+            {midMonthLine({
+              currency,
+              actual_cents: pace.data.actual_revenue_cents,
+              sales_actual: pace.data.key_results.find((kr) => kr.key === "sales")?.actual ?? 0,
+              sales_target: pace.data.key_results.find((kr) => kr.key === "sales")?.target ?? 0,
+              days_left: pace.data.business_days_left,
+            })}
+          </Note>
+        ) : null}
 
-          {midMonth && pace.data !== null ? (
-            <Note>
-              {midMonthLine({
-                currency,
-                actual_cents: pace.data.actual_revenue_cents,
-                sales_actual: pace.data.key_results.find((kr) => kr.key === "sales")?.actual ?? 0,
-                sales_target: pace.data.key_results.find((kr) => kr.key === "sales")?.target ?? 0,
-                days_left: pace.data.business_days_left,
-              })}
-            </Note>
-          ) : null}
-
-          <section className="flex min-w-0 flex-col gap-4 rounded-3xl border border-border bg-card p-5 @xl:px-7 @xl:pt-6">
-            <p aria-hidden className="text-xs text-muted-foreground">
-              Meta del mes · {currency} · {month} {periodKey.slice(0, 4)}
-            </p>
-            <Label htmlFor="goal-target" className="sr-only">
-              Meta del mes en {currency}
-            </Label>
-            {/* La cifra grande: se escribe en el propio número, con la raya de la meta debajo. */}
-            <PriceInput
-              id="goal-target"
-              value={target}
-              currency={currency}
-              onChange={(cents) => {
-                setTarget(cents);
-                setPreset("custom");
-              }}
-              className="[&_input]:font-heading [&_input]:h-20 [&_input]:rounded-none [&_input]:border-0 [&_input]:border-b-2 [&_input]:border-foreground [&_input]:bg-transparent [&_input]:pl-10 [&_input]:text-[44px] [&_input]:font-extrabold [&_input]:tracking-[-0.04em] [&_input]:shadow-none [&_input]:focus-visible:ring-0 @xl:[&_input]:pl-12 @xl:[&_input]:text-[64px] [&>span]:left-0 [&>span]:text-3xl [&>span]:font-bold @xl:[&>span]:text-4xl"
-            />
-            {lastMonth !== null ? (
-              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-                <SegmentedControl
-                  label="Atajos sobre el mes pasado"
-                  size="sm"
-                  surface="inline"
-                  value={preset}
-                  onValueChange={choosePreset}
-                  items={PRESETS.map(({ value, label }) => ({ value, label }))}
-                />
-                {lift !== null ? (
-                  <span className="text-[13px] whitespace-nowrap text-muted-foreground tabular-nums">
-                    {lift >= 0 ? "+" : "−"}
-                    {formatInteger(Math.abs(lift))} % sobre {lastMonthName}
-                  </span>
-                ) : null}
-              </div>
-            ) : null}
-          </section>
-
-          <ImpliesList
-            preview={preview.data}
-            loading={preview.status === "loading"}
-            error={preview.status === "error" ? preview.error : null}
-            target={target}
-            currency={currency}
-          />
-        </div>
-
-        <aside className="flex min-w-0 flex-col gap-4 @4xl:pt-11">
-          <MonthIsland
-            preview={preview.data}
-            target={target}
-            lastMonth={lastMonth}
-            lastMonthName={lastMonthName}
-            lift={lift}
-            weekdays={pace.data?.weekdays ?? null}
-            reachable={reachableLine(seed, currency)}
-            currency={currency}
-          />
-
-          <details
-            className="group rounded-3xl border border-border bg-card"
-            open={assumptionsOpen}
-            onToggle={(event) => setAssumptionsOpen(event.currentTarget.open)}
-          >
-            <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between rounded-3xl px-5 text-[15px] font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
-              Ajustar supuestos
-              <ChevronDown aria-hidden className="size-4 text-muted-foreground transition-transform group-open:rotate-180" />
-            </summary>
-            {assumptionsOpen ? (
-            <div className="grid gap-3 border-t border-border px-5 pt-4 pb-5">
-              <div className="space-y-1.5">
-                <Label htmlFor="goal-ticket">Ticket promedio</Label>
-                <PriceInput id="goal-ticket" value={ticket} currency={currency} onChange={setTicket} placeholder="Como tu historia" />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="goal-close-rate">Cotización → venta (%)</Label>
-                <Input
-                  id="goal-close-rate"
-                  inputMode="decimal"
-                  value={closeRate}
-                  placeholder="Como tu historia"
-                  onChange={(event) => setCloseRate(event.target.value)}
-                />
-              </div>
-            </div>
-            ) : null}
-          </details>
-          <p className="px-1 text-xs leading-relaxed text-muted-foreground">
-            Lo que cambies en «Ajustar supuestos» pasa a decir «lo dijiste tú». Cuando tu historia alcance muestra, te avisamos si conviene volver al dato real.
-          </p>
-
-          {error !== null ? <Note tone="danger">{error}</Note> : null}
-
-          <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
-            <Button type="submit" size="lg" className="h-12 rounded-full" disabled={saving || input === null}>
-              <Flag aria-hidden className="size-4" />
-              Guardar meta
-            </Button>
-            <Button asChild type="button" variant="ghost" size="lg" className="h-12 rounded-full">
-              <Link href="/comercial">Cancelar</Link>
-            </Button>
+        {wide ? (
+          // Ancho: el buscador del destino y el viaje flotan sobre el mapa (canvas 2).
+          <div className="relative overflow-hidden rounded-[28px] border border-border" style={{ aspectRatio: `${String(DESTINATION_ROAD.width)} / ${String(DESTINATION_ROAD.height)}` }}>
+            <DestinationMap road={DESTINATION} stops={stops} startLabel={startLabel} goalLabel={goalLabel} goalDay={goalDay} busy={busy} />
+            <div className="absolute top-4 left-4 w-[27rem]">{search}</div>
+            <div className="absolute right-4 bottom-4 w-[21.5rem]">{trip}</div>
           </div>
-        </aside>
+        ) : (
+          <>
+            <div className="relative overflow-hidden rounded-[28px] border border-border" style={{ aspectRatio: `${String(NARROW_ROAD.width)} / ${String(NARROW_ROAD.height)}` }}>
+              <DestinationMap road={NARROW} stops={stops} startLabel={startLabel} goalLabel={goalLabel} goalDay={goalDay} busy={busy} compact />
+            </div>
+            {search}
+            {trip}
+          </>
+        )}
+
+        <div className="grid items-start gap-5 @4xl:grid-cols-[minmax(0,1fr)_24rem]">
+          <ImpliesList preview={preview.data} loading={busy} error={preview.status === "error" ? preview.error : null} target={target} currency={currency} />
+          <div className="flex min-w-0 flex-col gap-3">
+            <details
+              className="group rounded-3xl border border-border bg-card"
+              open={assumptionsOpen}
+              onToggle={(event) => setAssumptionsOpen(event.currentTarget.open)}
+            >
+              <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between rounded-3xl px-5 text-[15px] font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
+                Ajustar supuestos
+                <ChevronDown aria-hidden className="size-4 text-muted-foreground transition-transform group-open:rotate-180" />
+              </summary>
+              {assumptionsOpen ? (
+                <div className="grid gap-3 border-t border-border px-5 pt-4 pb-5">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="goal-ticket">Ticket promedio</Label>
+                    <PriceInput id="goal-ticket" value={ticket} currency={currency} onChange={setTicket} placeholder="Como tu historia" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="goal-close-rate">Cotización → venta (%)</Label>
+                    <Input
+                      id="goal-close-rate"
+                      inputMode="decimal"
+                      value={closeRate}
+                      placeholder="Como tu historia"
+                      onChange={(event) => setCloseRate(event.target.value)}
+                    />
+                  </div>
+                </div>
+              ) : null}
+            </details>
+            <p className="px-1 text-xs leading-relaxed text-muted-foreground">
+              Lo que cambies en «Ajustar supuestos» pasa a decir «lo dijiste tú». Cuando tu historia alcance muestra, te avisamos si conviene volver al dato real.
+            </p>
+          </div>
+        </div>
       </div>
     </form>
   );
@@ -495,41 +468,162 @@ function ImpliesList({ preview, loading, error, target, currency }: { preview: C
   );
 }
 
+/** Las paradas del camino al revés, de la primera conversación a la venta. */
+const STOPS: readonly { key: keyof CommercialPlanDTO["figures"]; label: string; approx: boolean }[] = [
+  { key: "needed_leads", label: "Conversaciones nuevas", approx: true },
+  { key: "needed_contacted", label: "Contactados", approx: true },
+  { key: "needed_meetings", label: "Citas agendadas", approx: true },
+  { key: "needed_quotes", label: "Cotizaciones", approx: true },
+  { key: "needed_sales", label: "Ventas", approx: false },
+];
+
 /**
- * «Así queda tu mes» (canvas 2): la isla de la pantalla. Las ventas al día
- * hábil que pide la cifra, la meta contra el mes pasado, lo que toca por
- * semana y la meta que la historia hace alcanzable. Todo sale de la vista
- * previa y de la semilla; sin cifra o sin ticket lo dice en vez de inventar.
+ * Las paradas del mapa del destino, de la vista previa: las mismas cifras de
+ * «Lo que implica». Sin ticket (plan incompleto) la parada dice «—» en vez de
+ * un cero; una etapa que el negocio no usa (sin citas) no es parada.
  */
-function MonthIsland({
+function destinationStops(preview: CommercialPlanDTO | null): DestinationStop[] {
+  if (preview === null) return [];
+  const incomplete = preview.status === "incomplete";
+  return STOPS.flatMap(({ key, label, approx }) => {
+    const figure = preview.figures[key];
+    if (figure === null) return [];
+    return [{ key, label, value: incomplete ? "—" : `${approx ? "≈ " : ""}${formatInteger(figure.value)}` }];
+  });
+}
+
+/**
+ * El buscador del destino (canvas 2): LA isla de la pantalla. La pregunta, el
+ * mes pasado, la cifra, los atajos sobre el mes pasado y el alza.
+ */
+function SearchIsland({
+  month,
+  year,
+  currency,
+  lastMonth,
+  seed,
+  target,
+  onTarget,
+  preset,
+  onPreset,
+  lift,
+  lastMonthName,
+}: {
+  month: string;
+  year: string;
+  currency: string;
+  lastMonth: number | null;
+  seed: GoalResponseDTO["seed"];
+  target: number | null;
+  onTarget: (cents: number | null) => void;
+  preset: Preset;
+  onPreset: (next: Preset) => void;
+  lift: number | null;
+  lastMonthName: string;
+}) {
+  return (
+    <InkIsland label="Fijar el destino" className="gap-4 p-5 @xl:p-6">
+      <Link
+        href="/comercial"
+        className="inline-flex min-h-6 w-fit items-center gap-1.5 rounded-md text-[13px] text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+      >
+        <ChevronLeft aria-hidden className="size-4" />
+        Volver a la ruta
+      </Link>
+      <header className="flex flex-col gap-2">
+        <h1 className="font-heading text-[28px] leading-[1.08] font-bold tracking-[-0.02em] text-balance">{`¿Cuánto quieres vender en ${month}?`}</h1>
+        {lastMonth !== null && seed !== null ? (
+          <p className="text-[13px] text-muted-foreground tabular-nums">
+            El mes pasado: <b className="font-medium whitespace-nowrap text-foreground">{formatMoney(lastMonth, currency)}</b>
+            {seed.last_month_sales !== null ? <span className="whitespace-nowrap">{` · ${formatInteger(seed.last_month_sales)} ventas`}</span> : null}
+            {seed.last_month_avg_ticket_cents !== null ? (
+              <span className="whitespace-nowrap">{` · ticket ${formatMoney(seed.last_month_avg_ticket_cents, currency)}`}</span>
+            ) : null}
+          </p>
+        ) : (
+          <p className="text-[13px] text-muted-foreground">Una cifra, un mes. Te decimos qué implica.</p>
+        )}
+      </header>
+      <div className="flex flex-col gap-2">
+        <p aria-hidden className="text-xs text-muted-foreground">
+          Destino · {currency} · {month} {year}
+        </p>
+        <Label htmlFor="goal-target" className="sr-only">
+          Meta del mes en {currency}
+        </Label>
+        {/* La cifra del destino, con la bandera al lado: se escribe en el propio número. */}
+        <div className="flex items-center gap-2 rounded-2xl bg-background px-4 ring-[1.5px] ring-foreground focus-within:ring-2">
+          <Flag aria-hidden className="size-4.5 shrink-0" />
+          <PriceInput
+            id="goal-target"
+            value={target}
+            currency={currency}
+            onChange={onTarget}
+            className="min-w-0 flex-1 [&_input]:font-heading [&_input]:h-16 [&_input]:border-0 [&_input]:bg-transparent [&_input]:pl-8 [&_input]:text-[30px] [&_input]:font-bold [&_input]:tracking-[-0.02em] [&_input]:shadow-none [&_input]:focus-visible:ring-0 [&>span]:left-0 [&>span]:text-2xl [&>span]:font-bold"
+          />
+        </div>
+      </div>
+      {lastMonth !== null ? (
+        <div className="flex flex-col gap-2">
+          <SegmentedControl
+            label="Atajos sobre el mes pasado"
+            size="sm"
+            surface="inline"
+            value={preset}
+            onValueChange={onPreset}
+            items={PRESETS.map(({ value, label }) => ({ value, label }))}
+          />
+          {lift !== null ? (
+            <span className="text-[13px] whitespace-nowrap text-muted-foreground tabular-nums">
+              {lift >= 0 ? "+" : "−"}
+              {formatInteger(Math.abs(lift))} % sobre {lastMonthName}
+            </span>
+          ) : null}
+        </div>
+      ) : null}
+    </InkIsland>
+  );
+}
+
+/**
+ * «Así queda tu viaje» (canvas 2): la velocidad (ventas al día hábil), la
+ * duración, lo que toca por semana, el alza sobre el mes pasado y la meta que
+ * la historia hace alcanzable; con «Trazar la ruta», que guarda la meta. Todo
+ * sale de la vista previa y de la semilla; sin cifra o sin ticket lo dice.
+ */
+function TripCard({
   preview,
   target,
-  lastMonth,
-  lastMonthName,
   lift,
+  lastMonthName,
   weekdays,
   reachable,
-  currency,
+  error,
+  saving,
+  canSave,
 }: {
   preview: CommercialPlanDTO | null;
   target: number | null;
-  lastMonth: number | null;
-  lastMonthName: string;
   lift: number | null;
+  lastMonthName: string;
   weekdays: readonly number[] | null;
   reachable: { amount: string; lift: string | null } | null;
-  currency: string;
+  error: string | null;
+  saving: boolean;
+  canSave: boolean;
 }) {
   const sales = preview !== null && preview.status !== "incomplete" ? preview.figures.needed_sales.value : null;
   const days = preview?.pacing.business_days_total ?? 0;
   const perDay = sales !== null && days > 0 ? sales / days : null;
   const perWeek = perDay !== null && weekdays !== null && weekdays.length > 0 ? Math.ceil(perDay * weekdays.length) : null;
   const span = weekdays === null ? null : weekdaySpan(weekdays);
-  const barPct = target !== null && target > 0 && lastMonth !== null ? Math.min(100, (lastMonth / Math.max(target, lastMonth)) * 100) : null;
+  const cell = "flex min-w-0 flex-col gap-0.5 bg-background px-4 py-3";
 
   return (
-    <InkIsland label="Así queda tu mes" className="@container/month gap-5 p-6">
-      <p className="text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">Así queda tu mes</p>
+    <section aria-labelledby="goal-trip" className="glass flex min-w-0 flex-col gap-3.5 rounded-3xl p-5">
+      <h2 id="goal-trip" className="text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+        Así queda tu viaje
+      </h2>
       {perDay === null ? (
         <p className="text-sm leading-relaxed text-muted-foreground">
           {target === null || target <= 0
@@ -539,52 +633,47 @@ function MonthIsland({
               : "Calculando…"}
         </p>
       ) : (
-        <p className="flex flex-col gap-1.5">
-          <span className="font-heading text-[52px] leading-[0.95] font-extrabold tracking-[-0.04em] whitespace-nowrap tabular-nums">
-            {formatRate(perDay, 1)}
-          </span>
-          <span className="text-sm text-muted-foreground">{`ventas al día hábil, ${formatInteger(days)} días${span !== null ? ` ${span}` : ""}`}</span>
-        </p>
-      )}
-
-      {barPct !== null && lastMonth !== null ? (
-        <div className="flex flex-col gap-2">
-          <span aria-hidden className="relative block h-2.5 rounded-full bg-foreground/10">
-            <span className="absolute inset-y-0 left-0 rounded-full bg-brand" style={{ width: `${String(barPct)}%` }} />
-            <span className="absolute -top-1.5 right-0 h-5 w-0.5 rounded-full bg-foreground" />
-          </span>
-          <span className="flex justify-between gap-3 text-xs text-muted-foreground tabular-nums">
-            <span className="whitespace-nowrap">
-              {lastMonthName} {formatMillions(lastMonth, currency)}
-            </span>
-            <span className="whitespace-nowrap">tu meta</span>
-          </span>
-        </div>
-      ) : null}
-
-      {lift !== null || perWeek !== null ? (
         <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl bg-border">
-          <div className="flex min-w-0 flex-col gap-1 bg-card/70 px-4 py-3.5">
-            <dt className="text-[11.5px] text-muted-foreground">Sobre {lastMonthName}</dt>
-            <dd className="font-heading text-xl font-bold whitespace-nowrap tabular-nums @sm/month:text-2xl">
+          <div className={cell}>
+            <dt className="text-xs text-muted-foreground">Velocidad</dt>
+            <dd className="font-heading text-2xl font-bold whitespace-nowrap tabular-nums">{formatRate(perDay, 1)}</dd>
+            <dd className="text-[11.5px] text-muted-foreground">ventas al día hábil</dd>
+          </div>
+          <div className={cell}>
+            <dt className="text-xs text-muted-foreground">Duración</dt>
+            <dd className="font-heading text-2xl font-bold whitespace-nowrap tabular-nums">{`${formatInteger(days)} días`}</dd>
+            <dd className="text-[11.5px] text-muted-foreground">{span ?? "hábiles"}</dd>
+          </div>
+          <div className={cell}>
+            <dt className="text-xs text-muted-foreground">Por semana</dt>
+            <dd className="font-heading text-2xl font-bold whitespace-nowrap tabular-nums">{perWeek === null ? "—" : formatInteger(perWeek)}</dd>
+            <dd className="text-[11.5px] text-muted-foreground">{perWeek === 1 ? "venta" : "ventas"}</dd>
+          </div>
+          <div className={cell}>
+            <dt className="text-xs text-muted-foreground">Sobre {lastMonthName}</dt>
+            <dd className="font-heading text-2xl font-bold whitespace-nowrap tabular-nums">
               {lift === null ? "—" : `${lift >= 0 ? "+" : "−"}${formatInteger(Math.abs(lift))} %`}
             </dd>
-          </div>
-          <div className="flex min-w-0 flex-col gap-1 bg-card/70 px-4 py-3.5">
-            <dt className="text-[11.5px] text-muted-foreground">Por semana</dt>
-            <dd className="font-heading text-xl font-bold whitespace-nowrap tabular-nums @sm/month:text-2xl">
-              {perWeek === null ? "—" : `${formatInteger(perWeek)} ${perWeek === 1 ? "venta" : "ventas"}`}
-            </dd>
+            <dd className="text-[11.5px] text-muted-foreground">de alza</dd>
           </div>
         </dl>
-      ) : null}
-
+      )}
       {reachable !== null ? (
         <p className="text-[13px] leading-relaxed text-pretty text-muted-foreground">
-          Con tu ritmo, <b className="font-semibold text-foreground tabular-nums">{reachable.amount}</b>
+          Con tu ritmo, <b className="font-semibold whitespace-nowrap text-foreground tabular-nums">{reachable.amount}</b>
           {reachable.lift !== null ? ` (${reachable.lift})` : ""} es alcanzable. Más arriba también se puede: Axi te propondrá cómo acelerar.
         </p>
       ) : null}
-    </InkIsland>
+      {error !== null ? <Note tone="danger">{error}</Note> : null}
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+        <Button type="submit" size="lg" className="h-12 rounded-full" disabled={saving || !canSave} aria-label="Guardar meta y trazar la ruta">
+          <Flag aria-hidden className="size-4" />
+          Trazar la ruta
+        </Button>
+        <Button asChild type="button" variant="ghost" size="lg" className="h-12 rounded-full">
+          <Link href="/comercial">Cancelar</Link>
+        </Button>
+      </div>
+    </section>
   );
 }
