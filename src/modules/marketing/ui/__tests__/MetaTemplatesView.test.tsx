@@ -4,8 +4,9 @@ import { MetaTemplatesView } from "../MetaTemplatesView";
 
 /** Agrupados por escenario (ver `PromotionsView.test.tsx`). */
 
+let canManage = true;
 jest.mock("@/shared/auth/auth.hooks", () => ({
-  useAuth: () => ({ hasPermission: () => true }),
+  useAuth: () => ({ hasPermission: () => canManage }),
 }));
 
 const showAlert = jest.fn();
@@ -59,7 +60,10 @@ const CLOUD = {
   ],
 };
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => {
+  jest.clearAllMocks();
+  canManage = true;
+});
 afterEach(cleanup);
 
 describe("canal cloud con plantillas", () => {
@@ -259,5 +263,19 @@ describe("editar y borrar una plantilla", () => {
         description: expect.stringContaining("30 días") as unknown as string,
       }),
     );
+  });
+});
+
+describe("sin marketing:manage", () => {
+  it("se leen las plantillas, pero sin Editar ni Borrar en la fila (antes solo se ocultaba la cabecera)", async () => {
+    canManage = false;
+    channelsApi.listChannels.mockResolvedValue(CLOUD);
+    api.listHsmTemplates.mockResolvedValue([hsm()]);
+    render(<MetaTemplatesView />);
+    await screen.findByText("promo_agosto");
+
+    expect(screen.queryByRole("button", { name: /Editar/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Borrar/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Nueva plantilla" })).not.toBeInTheDocument();
   });
 });

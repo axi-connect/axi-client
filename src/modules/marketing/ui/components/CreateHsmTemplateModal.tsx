@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   BadgeCheck,
   CircleDollarSign,
@@ -16,6 +16,7 @@ import {
   Zap,
 } from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
+import { isHttpError } from "@/core/api/problem";
 import { cn } from "@/core/lib/utils";
 import { useAlert } from "@/core/providers/alert-provider";
 import { Modal } from "@/shared/components/ui/modal";
@@ -37,6 +38,7 @@ import {
   emptyButton,
   FOOTER_MAX,
   groupButtons,
+  hasIncompleteButton,
   HEADER_MAX,
   readTemplatePieces,
   type TemplateButton,
@@ -92,6 +94,7 @@ export function CreateHsmTemplateModal({
   editing = null,
   onOpenChange,
   onCreated,
+  onExists,
 }: {
   open: boolean;
   channelId: string;
@@ -106,6 +109,13 @@ export function CreateHsmTemplateModal({
   editing?: HsmTemplateDTO | null;
   onOpenChange: (open: boolean) => void;
   onCreated: (template: HsmTemplateDTO) => void;
+  /**
+   * El servidor dijo que ya hay una plantilla con ese nombre e idioma (409
+   * `channels/template_exists`): la lista de atrás puede estar vieja —en el
+   * incidente 2026-09-28 Meta la había aceptado y la respuesta se perdió—, así
+   * que el consumidor la recarga.
+   */
+  onExists?: () => void;
 }) {
   const { showAlert } = useAlert();
   const isEditing = editing !== null;
@@ -121,6 +131,10 @@ export function CreateHsmTemplateModal({
   const [footer, setFooter] = useState<string | null>(stored.footer);
   const [buttons, setButtons] = useState<TemplateButton[]>(stored.buttons);
   const [submitting, setSubmitting] = useState(false);
+  // Guarda síncrona: `submitting` es estado y no llega a tiempo para el segundo
+  // clic del mismo tick. Un segundo POST crea en Meta otra vez (incidente
+  // 2026-09-28).
+  const inFlight = useRef(false);
   const [touched, setTouched] = useState(false);
 
   const verdict = useMemo(() => inspectTemplateVariables(body), [body]);
@@ -140,6 +154,9 @@ export function CreateHsmTemplateModal({
       variableCount > 0 && examples.slice(0, variableCount).some((example) => !example?.trim())
         ? "Meta exige un ejemplo por cada variable"
         : undefined,
+    header: header !== null && header.trim() === "" ? "Escribe la cabecera o quítala" : undefined,
+    footer: footer !== null && footer.trim() === "" ? "Escribe el pie o quítalo" : undefined,
+    buttons: hasIncompleteButton(buttons) ? "Completa cada botón o quítalo" : undefined,
   };
   const invalid = Object.values(errors).some((error) => error !== undefined);
 
@@ -159,7 +176,8 @@ export function CreateHsmTemplateModal({
 
   async function submit() {
     setTouched(true);
-    if (invalid) return;
+    if (invalid || inFlight.current) return;
+    inFlight.current = true;
     setSubmitting(true);
     try {
       const params = {
@@ -203,8 +221,15 @@ export function CreateHsmTemplateModal({
       onCreated(created);
       onOpenChange(false);
     } catch (err) {
-      showAlert({ tone: "error", title: errorMessage(err, "Meta rechazó la plantilla") });
+      const exists = isHttpError(err) && err.code === "channels/template_exists";
+      showAlert({
+        tone: "error",
+        title: errorMessage(err, "Meta rechazó la plantilla"),
+        ...(exists ? { description: "Actualizamos la lista: si ya está ahí, edítala en vez de crearla otra vez." } : {}),
+      });
+      if (exists) onExists?.();
     } finally {
+      inFlight.current = false;
       setSubmitting(false);
     }
   }
@@ -230,7 +255,7 @@ export function CreateHsmTemplateModal({
                 ? "Guardar y reenviar a revisión"
                 : "Enviar a revisión de Meta",
             variant: "default",
-            asClose: false,
+            keepOpen: true,
             onClick: () => void submit(),
           },
         ],
@@ -281,7 +306,11 @@ export function CreateHsmTemplateModal({
               onChange={(event) => setHeader(event.target.value)}
             />
             <p className="text-xs text-muted-foreground">
-              Va en negrita arriba. Admite un solo hueco, y no admite negritas ni cursivas.
+              {touched && errors.header ? (
+                <span className="text-destructive">{errors.header}</span>
+              ) : (
+                "Va en negrita arriba. Admite un solo hueco, y no admite negritas ni cursivas."
+              )}
             </p>
           </section>
         )}
@@ -310,7 +339,11 @@ export function CreateHsmTemplateModal({
               onChange={(event) => setFooter(event.target.value)}
             />
             <p className="text-xs text-muted-foreground">
-              Sin huecos: Meta no los admite en el pie. Es donde suele ir la salida del cliente.
+              {touched && errors.footer ? (
+                <span className="text-destructive">{errors.footer}</span>
+              ) : (
+                "Sin huecos: Meta no los admite en el pie. Es donde suele ir la salida del cliente."
+              )}
             </p>
           </section>
         )}
@@ -319,6 +352,7 @@ export function CreateHsmTemplateModal({
           <section className="space-y-1">
             <span className="text-xs font-medium">Botones</span>
             <TemplateButtonsEditor buttons={buttons} onChange={setButtons} />
+            {touched && errors.buttons && <p className="text-xs text-destructive">{errors.buttons}</p>}
             {breaksDesktop(buttons) && (
               <p className="flex gap-2 rounded-lg border border-warning/35 bg-warning/5 px-3 py-2 text-xs leading-relaxed">
                 <Monitor aria-hidden className="mt-0.5 size-3.5 shrink-0 text-warning" />

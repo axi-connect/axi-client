@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
@@ -57,6 +58,8 @@ export function MetaTemplatesView() {
   const { showAlert, showModal, closeModal } = useAlert();
 
   const [channels, setChannels] = useState<ChannelDTO[] | null>(null);
+  // La que se está borrando: su papelera no admite un segundo clic mientras.
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [channelId, setChannelId] = useState<string | null>(null);
   const [templates, setTemplates] = useState<HsmTemplateDTO[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -144,6 +147,7 @@ export function MetaTemplatesView() {
           onClick: () => {
             closeModal();
             void (async () => {
+              setDeletingId(template.id);
               try {
                 await deleteHsmTemplate(template.id);
                 showAlert({ tone: "success", title: "Plantilla borrada" });
@@ -153,6 +157,8 @@ export function MetaTemplatesView() {
                   tone: "error",
                   title: errorMessage(err, "Meta no dejó borrarla"),
                 });
+              } finally {
+                setDeletingId(null);
               }
             })();
           },
@@ -194,7 +200,7 @@ export function MetaTemplatesView() {
         description="Las plantillas de Meta viven en la cuenta de WhatsApp Business de un canal Cloud. Conecta uno para poder escribirle a tus clientes pasadas las 24 horas."
         action={
           <Button variant="outline" asChild>
-            <a href="/workspace">Ir a canales</a>
+            <Link href="/workspace">Ir a canales</Link>
           </Button>
         }
       />
@@ -206,6 +212,8 @@ export function MetaTemplatesView() {
 
   /** Editar y borrar, en la fila: la tabla scrollea y un menú no portalizado se recortaría. */
   function rowActions(template: HsmTemplateDTO) {
+    // Sin `marketing:manage` se lee, no se edita ni se borra (como las acciones de la cabecera).
+    if (!canManage) return null;
     return (
       <>
                       <div className="flex items-center gap-1 @xl:justify-end">
@@ -227,7 +235,7 @@ export function MetaTemplatesView() {
                           size="icon"
                           className="text-muted-foreground hover:text-destructive size-9 rounded-full"
                           aria-label={`Borrar ${template.name}`}
-                          disabled={template.approval_status === "disabled"}
+                          disabled={template.approval_status === "disabled" || deletingId === template.id}
                           onClick={() => void confirmDelete(template)}
                         >
                           <Trash2 aria-hidden className="size-4" />
@@ -319,6 +327,7 @@ export function MetaTemplatesView() {
             setEditing(null);
             void load(channelId);
           }}
+          onExists={() => void load(channelId)}
         />
       )}
 
@@ -351,9 +360,11 @@ export function MetaTemplatesView() {
                 <TableHead className={`${TH} hidden @6xl:table-cell`}>Contenido</TableHead>
                 <TableHead className={TH}>Estado en Meta</TableHead>
                 <TableHead className={`${TH} hidden text-right @3xl:table-cell`}>Costo</TableHead>
-                <TableHead className={`${TH} hidden @xl:table-cell`}>
-                  <span className="sr-only">Acciones</span>
-                </TableHead>
+                {canManage && (
+                  <TableHead className={`${TH} hidden @xl:table-cell`}>
+                    <span className="sr-only">Acciones</span>
+                  </TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -380,7 +391,7 @@ export function MetaTemplatesView() {
                         </span>
                       </span>
                       {/* Con la tabla estrecha, las acciones bajan aquí: al lado del estado no caben. */}
-                      <div className="mt-2 @xl:hidden">{rowActions(template)}</div>
+                      {canManage && <div className="mt-2 @xl:hidden">{rowActions(template)}</div>}
                     </TableCell>
                     <TableCell className={`${TD} text-muted-foreground hidden max-w-sm align-top text-sm whitespace-normal @6xl:table-cell`}>
                       <span className="line-clamp-2">{template.body}</span>
@@ -413,7 +424,9 @@ export function MetaTemplatesView() {
                     <TableCell className={`${TD} hidden align-top text-right font-mono text-xs @3xl:table-cell`}>
                       {formatTemplateCost(template.category)}
                     </TableCell>
-                    <TableCell className={`${TD} hidden align-top @xl:table-cell`}>{rowActions(template)}</TableCell>
+                    {canManage && (
+                      <TableCell className={`${TD} hidden align-top @xl:table-cell`}>{rowActions(template)}</TableCell>
+                    )}
                   </TableRow>
                 );
               })}

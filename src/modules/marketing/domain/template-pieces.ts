@@ -191,3 +191,23 @@ function readButton(raw: unknown): TemplateButton | null {
       return null;
   }
 }
+
+/**
+ * Si algún botón quedó a medias (sin texto, sin enlace, sin número o sin
+ * código de ejemplo). Meta rechaza la plantilla entera por uno solo, y el
+ * servidor también: esto lo dice antes de enviar y junto al botón.
+ */
+export function hasIncompleteButton(buttons: readonly TemplateButton[]): boolean {
+  return buttons.some((button) => {
+    switch (button.type) {
+      case "quick_reply":
+        return button.text.trim() === "";
+      case "url":
+        return button.text.trim() === "" || button.url.trim() === "";
+      case "phone_number":
+        return button.text.trim() === "" || button.phone_number.trim() === "";
+      case "copy_code":
+        return button.example.trim() === "";
+    }
+  });
+}

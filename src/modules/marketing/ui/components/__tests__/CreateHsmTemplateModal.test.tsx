@@ -1,9 +1,11 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { HttpError } from "@/core/api/problem";
 import { CreateHsmTemplateModal } from "../CreateHsmTemplateModal";
 import type { HsmTemplateDTO } from "@/modules/marketing/domain/template-catalog";
 
+const showAlert = jest.fn();
 jest.mock("@/core/providers/alert-provider", () => ({
-  useAlert: () => ({ showAlert: jest.fn() }),
+  useAlert: () => ({ showAlert }),
 }));
 jest.mock("@/modules/marketing/infrastructure/services/templates-service.adapter", () => ({
   createHsmTemplate: jest.fn(),
@@ -89,5 +91,54 @@ describe("quitar una pieza al editar", () => {
       expect(api.updateHsmTemplate).toHaveBeenCalled();
     });
     expect(api.updateHsmTemplate.mock.calls[0][1]).not.toHaveProperty("header");
+  });
+});
+
+describe("enviar una plantilla nueva (incidente 2026-09-28)", () => {
+  function openNew(onExists = jest.fn()) {
+    render(
+      <CreateHsmTemplateModal open channelId="ch1" onOpenChange={jest.fn()} onCreated={jest.fn()} onExists={onExists} />,
+    );
+    fireEvent.change(screen.getByLabelText("Nombre interno"), { target: { value: "sesion_en_vivo_v1" } });
+    fireEvent.change(screen.getByPlaceholderText(/Hola \{\{1\}\}, te escribo/), {
+      target: { value: "Gracias por escribirnos, ya te atendemos." },
+    });
+    return onExists;
+  }
+
+  it("dos clics seguidos mandan UN solo POST: el segundo crearía en Meta otra vez", async () => {
+    let resolve: (value: unknown) => void = () => undefined;
+    api.createHsmTemplate.mockImplementation(() => new Promise((done) => (resolve = done)));
+    openNew();
+
+    const send = screen.getByRole("button", { name: "Enviar a revisión de Meta" });
+    fireEvent.click(send);
+    fireEvent.click(send);
+
+    await waitFor(() => expect(api.createHsmTemplate).toHaveBeenCalledTimes(1));
+    resolve(template([]));
+  });
+
+  it("409 template_exists: dice qué hacer y pide recargar la lista", async () => {
+    api.createHsmTemplate.mockRejectedValue(
+      new HttpError({ status: 409, code: "channels/template_exists", message: "ya existe" }),
+    );
+    const onExists = openNew();
+
+    fireEvent.click(screen.getByRole("button", { name: "Enviar a revisión de Meta" }));
+
+    await waitFor(() => expect(onExists).toHaveBeenCalled());
+    expect(showAlert).toHaveBeenCalledWith(
+      expect.objectContaining({ tone: "error", title: expect.stringMatching(/^Ya tienes una plantilla con ese nombre e idioma/) }),
+    );
+  });
+
+  it("un pie añadido y vacío no se envía: se pide escribirlo o quitarlo", () => {
+    openNew();
+    fireEvent.click(screen.getByRole("button", { name: "Añadir pie" }));
+    fireEvent.click(screen.getByRole("button", { name: "Enviar a revisión de Meta" }));
+
+    expect(screen.getByText("Escribe el pie o quítalo")).toBeInTheDocument();
+    expect(api.createHsmTemplate).not.toHaveBeenCalled();
   });
 });

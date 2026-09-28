@@ -11,6 +11,8 @@ export type UpdateTemplateDTO = Schemas["UpdateTemplateDto"];
 export type HsmTemplateDTO = Schemas["HsmTemplateDto"];
 export type MessagingWindowDTO = Schemas["MessagingWindowDto"];
 export type CreateHsmTemplateDTO = Schemas["CreateHsmTemplateDto"];
+/** Con cabecera, pie y botones: el tipo a mano los omitía aunque el modal los manda. */
+export type UpdateHsmTemplateDTO = Schemas["UpdateHsmTemplateDto"];
 
 /**
  * Una HSM sirve para marketing SOLO si está aprobada y su categoría es

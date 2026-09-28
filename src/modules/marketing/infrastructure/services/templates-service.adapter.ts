@@ -1,6 +1,7 @@
 import { http } from "@/core/services/http";
 import type {
   CreateHsmTemplateDTO,
+  UpdateHsmTemplateDTO,
   CreateTemplateDTO,
   HsmTemplateDTO,
   MessagingWindowDTO,
@@ -40,7 +41,7 @@ export function deleteTemplate(id: string): Promise<void> {
  */
 export function updateHsmTemplate(
   templateId: string,
-  input: { body: string; examples?: string[]; category?: HsmTemplateDTO["category"] },
+  input: UpdateHsmTemplateDTO,
 ): Promise<HsmTemplateDTO> {
   return http.patch<HsmTemplateDTO>(`/marketing/hsm-templates/${templateId}`, input);
 }

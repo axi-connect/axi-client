@@ -275,8 +275,12 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   "marketing/opt_out_already_active": "Ese contacto ya está dado de baja",
   "marketing/segment_not_found": "El segmento ya no existe",
   // `channels/template_not_supported` ya vive en el bloque de canales (arriba).
-  "channels/template_sync_failed":
-    "Meta rechazó la sincronización de plantillas. Revisa el detalle e inténtalo de nuevo",
+  // Crear, editar, borrar o sincronizar: el mismo código para cualquier
+  // rechazo de Graph, así que el texto no nombra la operación. El detail (lo
+  // que dijo Meta) se concatena: ver CODES_WITH_USEFUL_DETAIL.
+  "channels/template_sync_failed": "Meta no aceptó la operación con la plantilla",
+  "channels/template_exists": "Ya tienes una plantilla con ese nombre e idioma. Usa otro nombre (por ejemplo, termínalo en _v2)",
+  "channels/template_edit_blocked": "Meta no deja editar esta plantilla ahora",
   "platform/forbidden": "Tu cuenta no tiene acceso a la consola de plataforma",
   // Facturación de la licencia (slice billing) — KB §12.
   //
@@ -364,6 +368,11 @@ const CODES_WITH_USEFUL_DETAIL = new Set([
   "integrations/currency_mismatch",
   // El detail trae las dos cifras (lo que suman las cuotas y el saldo de AHORA).
   "collections/schedule_mismatch",
+  // Lo que respondió Meta (incidente 2026-09-28: el aviso pedía «revisar el
+  // detalle» y el detalle se tiraba).
+  "channels/template_sync_failed",
+  // El motivo exacto del tope y cuándo se podrá (24 h / 10 en 30 días).
+  "channels/template_edit_blocked",
 ]);
 
 /**
