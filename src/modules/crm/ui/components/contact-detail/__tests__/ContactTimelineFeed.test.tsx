@@ -347,3 +347,28 @@ describe("ContactTimelineFeed — recorrido (F4)", () => {
     expect(screen.getByRole("region", { name: "Historial" })).not.toHaveFocus();
   });
 });
+
+describe("ContactTimelineFeed — al cambiar de contacto (deuda D2)", () => {
+  it("con la respuesta del nuevo pendiente, no se ve nada del anterior ni se pagina con su cursor", async () => {
+    getContactTimeline.mockResolvedValueOnce(page([entry({ id: "a1", title: "Pedido de Laura" })], "cursor-de-laura"));
+    const { rerender } = render(<ContactTimelineFeed contactId="laura" />);
+    expect(await screen.findByText("Pedido de Laura")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Cargar más" })).toBeInTheDocument();
+
+    getContactTimeline.mockReturnValueOnce(new Promise(() => {}));
+    rerender(<ContactTimelineFeed contactId="mariana" />);
+    expect(screen.queryByText("Pedido de Laura")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Cargar más" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Sin eventos para las fuentes seleccionadas.")).not.toBeInTheDocument();
+    expect(getContactTimeline).toHaveBeenLastCalledWith("mariana", expect.objectContaining({ cursor: undefined }));
+  });
+
+  it("un refresco del MISMO contacto (version) conserva lo que hay a la vista", async () => {
+    getContactTimeline.mockResolvedValueOnce(page([entry({ id: "a1", title: "Pedido de Laura" })]));
+    const { rerender } = render(<ContactTimelineFeed contactId="laura" />);
+    expect(await screen.findByText("Pedido de Laura")).toBeInTheDocument();
+    getContactTimeline.mockReturnValueOnce(new Promise(() => {}));
+    rerender(<ContactTimelineFeed contactId="laura" version={1} />);
+    expect(screen.getByText("Pedido de Laura")).toBeInTheDocument();
+  });
+});

@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 
 // Deuda D1: sin la función `collections` (o sin `collections:read`, o sin que
 // hayan cargado las funciones) el bloque NO pide el plan: el 403 salía igual.
-const mockPlan = jest.fn(() => new Promise(() => {}));
+const mockPlan = jest.fn<Promise<never>, [string]>(() => new Promise(() => {}));
 jest.mock("@/modules/collections/infrastructure/services/collections-service.adapter", () => ({
   getPlanByOrder: (orderId: string) => mockPlan(orderId),
 }));
