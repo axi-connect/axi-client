@@ -16,6 +16,7 @@ import { cn } from "@/core/lib/utils";
 import { isHttpError } from "@/core/api/problem";
 import { formatMoney, formatShortDate } from "@/core/lib/format";
 import { useAuth } from "@/shared/auth/auth.hooks";
+import { useFeatures } from "@/shared/auth/features.hooks";
 import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
@@ -102,6 +103,14 @@ export function PaymentPlanBlock({
 }) {
   const { hasPermission } = useAuth();
   const canManage = hasPermission("collections:manage");
+  // El servidor exige la función `collections` y `collections:read`
+  // (collections.controller.ts). Sin ellas NO se pide: el 403 se tragaba en
+  // silencio, pero salía igual y ensuciaba la red y la consola. Mientras las
+  // funciones cargan tampoco se pide; si su carga FALLA, `hasFeature` responde
+  // true (fail-open, features.store) y manda el servidor.
+  const { loaded: featuresLoaded, hasFeature } = useFeatures();
+  const canRead = hasPermission("collections:read");
+  const enabled = canRead && featuresLoaded && hasFeature("collections");
   const [plan, setPlan] = useState<PlanDetailDTO | null>(null);
   const [loading, setLoading] = useState(true);
   const [dialog, setDialog] = useState<
@@ -113,6 +122,7 @@ export function PaymentPlanBlock({
   onLoadedRef.current = onLoaded;
 
   useEffect(() => {
+    if (!enabled) return;
     let alive = true;
     let timer: ReturnType<typeof setTimeout> | null = null;
     const attempt = (round: number) => {
@@ -154,9 +164,11 @@ export function PaymentPlanBlock({
       alive = false;
       if (timer !== null) clearTimeout(timer);
     };
-  }, [orderId, reloads, refreshKey]);
+  }, [orderId, reloads, refreshKey, enabled]);
 
-  if (loading) return <Skeleton className="h-40 w-full rounded-3xl" />;
+  // Sin permiso, o con la función apagada (ya se sabe): la sección no existe.
+  if (!canRead || (featuresLoaded && !hasFeature("collections"))) return null;
+  if (!enabled || loading) return <Skeleton className="h-40 w-full rounded-3xl" />;
   if (plan === null) return null;
 
   const next = plan.installments.find(

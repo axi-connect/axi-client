@@ -197,18 +197,31 @@ export function ContactTimelineFeed({
     },
   });
   const [enabled, setEnabled] = useState<TimelineSource[]>([...TIMELINE_SOURCES]);
-  const [entries, setEntries] = useState<TimelineEntryDTO[]>([]);
-  const [cursor, setCursor] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Lo cargado —entradas, cursor y error— va con el contacto al que PERTENECE:
+  // al navegar a otro contacto sin remontar (el 360, el rail) no se ve ni un
+  // instante lo del anterior ni se pagina con su cursor (deuda D2). Los filtros
+  // de fuente sí se conservan: son una preferencia de quien mira, no del contacto.
+  const [feed, setFeed] = useState<{ contactId: string | null; entries: TimelineEntryDTO[]; cursor: string | null }>({
+    contactId: null,
+    entries: [],
+    cursor: null,
+  });
+  const [fetching, setFetching] = useState(true);
+  const [failure, setFailure] = useState<{ contactId: string; message: string } | null>(null);
+  const current = feed.contactId === contactId;
+  const entries = current ? feed.entries : [];
+  const cursor = current ? feed.cursor : null;
+  const error = failure !== null && failure.contactId === contactId ? failure.message : null;
+  // Recién cambiado el contacto, antes de que salga su consulta: silueta, no «sin eventos».
+  const loading = fetching || (!current && error === null);
   // Guard anti-race: solo aplica la respuesta de la última consulta lanzada.
   const requestSeq = useRef(0);
 
   const load = useCallback(
     async (sources: TimelineSource[], nextCursor?: string) => {
       const seq = ++requestSeq.current;
-      setLoading(true);
-      setError(null);
+      setFetching(true);
+      setFailure(null);
       try {
         const page = await getContactTimeline(contactId, {
           sources,
@@ -216,13 +229,17 @@ export function ContactTimelineFeed({
           limit: PAGE_LIMIT,
         });
         if (seq !== requestSeq.current) return;
-        setEntries((prev) => (nextCursor ? [...prev, ...page.data] : page.data));
-        setCursor(page.next_cursor ?? null);
+        setFeed((prev) => ({
+          contactId,
+          // Solo se añade a la página del MISMO contacto.
+          entries: nextCursor && prev.contactId === contactId ? [...prev.entries, ...page.data] : page.data,
+          cursor: page.next_cursor ?? null,
+        }));
       } catch (err) {
         if (seq !== requestSeq.current) return;
-        setError(errorMessage(err, "No se pudo cargar el historial"));
+        setFailure({ contactId, message: errorMessage(err, "No se pudo cargar el historial") });
       } finally {
-        if (seq === requestSeq.current) setLoading(false);
+        if (seq === requestSeq.current) setFetching(false);
       }
     },
     [contactId],
@@ -250,8 +267,7 @@ export function ContactTimelineFeed({
   );
 
   const toggleSource = (source: TimelineSource) => {
-    setEntries([]);
-    setCursor(null);
+    setFeed((prev) => ({ ...prev, entries: [], cursor: null }));
     setEnabled((prev) =>
       prev.includes(source)
         ? prev.length > 1

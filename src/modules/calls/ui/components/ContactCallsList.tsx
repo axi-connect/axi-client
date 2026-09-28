@@ -48,8 +48,13 @@ export function ContactCallsList({
   contactId: string;
   version?: number;
 }) {
-  const [calls, setCalls] = useState<CallSessionRowDTO[] | null>(null);
-  const [error, setError] = useState(false);
+  // Lo cargado va con el contacto al que PERTENECE: al pasar a otro contacto
+  // sin remontar no se ven ni un instante sus llamadas (deuda D2); un refresco
+  // del MISMO contacto (`version`) conserva la lista y no parpadea.
+  const [loaded, setLoaded] = useState<{ contactId: string; calls: CallSessionRowDTO[] } | null>(null);
+  const [failedFor, setFailedFor] = useState<string | null>(null);
+  const calls = loaded !== null && loaded.contactId === contactId ? loaded.calls : null;
+  const error = failedFor === contactId;
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const mountedRef = useRef(true);
@@ -62,15 +67,21 @@ export function ContactCallsList({
     };
   }, []);
 
+  // Otro contacto: la grabación que sonaba era del anterior.
+  useEffect(() => {
+    sharedAudio?.pause();
+    setPlayingId(null);
+  }, [contactId]);
+
   useEffect(() => {
     let cancelled = false;
-    setError(false);
+    setFailedFor(null);
     listCallSessions({ contact_id: contactId, page: 1, page_size: LIMIT })
       .then((page) => {
-        if (!cancelled) setCalls(page.data);
+        if (!cancelled) setLoaded({ contactId, calls: page.data });
       })
       .catch(() => {
-        if (!cancelled) setError(true);
+        if (!cancelled) setFailedFor(contactId);
       });
     return () => {
       cancelled = true;
