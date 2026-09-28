@@ -28,7 +28,7 @@ export const BULK_RATES: readonly { value: number; label: string }[] = [
 export const BULK_SKIP_LABELS: Record<BulkSkipReason, string> = {
   opted_out: "Se dieron de baja",
   task_open: "Ya tienen un seguimiento abierto",
-  no_channel: "Sin WhatsApp ni teléfono",
+  no_channel: "Sin teléfono ni WhatsApp",
   contact_not_found: "El contacto ya no existe",
   error: "No se pudo programar",
 };
@@ -37,7 +37,7 @@ export const BULK_SKIP_LABELS: Record<BulkSkipReason, string> = {
 export const BULK_SKIP_HINTS: Record<BulkSkipReason, string | null> = {
   opted_out: "No se les puede escribir nada comercial. Es una obligación legal, no una preferencia.",
   task_open: "El que ya estaba sigue su curso; no se les encola un segundo.",
-  no_channel: "Entraron al CRM sin canal de contacto: complétales el teléfono o el WhatsApp.",
+  no_channel: "No hay a dónde escribirles: complétales el teléfono.",
   contact_not_found: "Se borró entre que lo programaste y que el agente llegó a él.",
   error: "Fallo al crear esa tarea concreta. El resto del lote siguió.",
 };

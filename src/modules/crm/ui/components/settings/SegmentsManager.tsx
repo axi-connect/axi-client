@@ -21,6 +21,7 @@ import {
 } from "@/modules/crm/domain/segment";
 import { AudienceFilterBuilder } from "@/modules/crm/ui/components/segments/AudienceFilterBuilder";
 import { BulkFollowUpButton } from "@/modules/crm/ui/components/BulkFollowUpButton";
+import { SendTemplateButton } from "@/modules/marketing/public";
 import { EnrollInSequenceButton } from "@/modules/crm/ui/components/EnrollInSequenceButton";
 import {
   createSegment,
@@ -263,6 +264,7 @@ function SegmentCard({
         {/* F4a: el segmento deja de ser solo una lista que se mira. Se
             resuelve AL PROGRAMAR: los que entren después no reciben nada de
             ese lote — para eso están las secuencias. */}
+        <SendTemplateButton audience={{ mode: "segment", segmentId: segment.id, label: `Del segmento «${segment.name}»` }} />
         <BulkFollowUpButton
           audience={{ source: "segment", segment_id: segment.id }}
           audienceLabel={`Del segmento «${segment.name}»`}

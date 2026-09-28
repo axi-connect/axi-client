@@ -15,7 +15,7 @@
 export const SKIP_REASON_LABELS: Record<string, string> = {
   // --- El contacto no quiere o no se le puede escribir ---
   opted_out: "El contacto pidió no recibir promociones",
-  no_channel: "El contacto no tiene ningún canal alcanzable",
+  no_channel: "Sin teléfono ni WhatsApp: no hay a dónde escribirle",
   channel_not_found: "El canal ya no existe",
   channel_not_connected: "El canal está desconectado",
   unsupported_channel_kind: "Instagram y Messenger todavía no envían campañas",

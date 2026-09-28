@@ -32,6 +32,10 @@ export type SegmentFilters = {
   has_open_deal?: boolean;
   /** "Contactos fríos": sin actividad desde la fecha (incluye sin actividad). */
   last_activity_before?: string;
+  /** F6: una lista marcada a mano (selección de la tabla). Tope 5000. */
+  contact_ids?: string[];
+  /** F6: los contactos que creó un import; el servidor lo expande a la lista. */
+  import_job_id?: string;
 };
 
 /**
@@ -69,6 +73,8 @@ export function describeSegmentFilters(filters: SegmentFilters, tags: TagDTO[]):
   if (filters.last_activity_before) {
     parts.push(`sin actividad desde ${filters.last_activity_before.slice(0, 10)}`);
   }
+  if (filters.contact_ids?.length) parts.push(`lista de ${String(filters.contact_ids.length)} contactos`);
+  if (filters.import_job_id) parts.push("los contactos de un import");
   return parts.length > 0 ? parts.join(" · ") : "sin filtros (todos los contactos)";
 }
 
@@ -99,6 +105,10 @@ export function segmentFilterChips(filters: SegmentFilters, tags: TagDTO[]): { l
     chips.push({ label: "Oportunidad", value: filters.has_open_deal ? "con una abierta" : "sin ninguna abierta" });
   }
   if (filters.last_activity_before) chips.push({ label: "Sin actividad desde", value: day(filters.last_activity_before) });
+  if (filters.contact_ids?.length) {
+    chips.push({ label: "Lista", value: `${String(filters.contact_ids.length)} ${filters.contact_ids.length === 1 ? "contacto" : "contactos"}` });
+  }
+  if (filters.import_job_id) chips.push({ label: "Import", value: "los contactos que creó" });
   return chips;
 }
 
@@ -119,5 +129,7 @@ export function compactSegmentFilters(filters: SegmentFilters): SegmentFilters {
   if (filters.created_before) out.created_before = filters.created_before;
   if (filters.has_open_deal !== undefined) out.has_open_deal = filters.has_open_deal;
   if (filters.last_activity_before) out.last_activity_before = filters.last_activity_before;
+  if (filters.contact_ids?.length) out.contact_ids = filters.contact_ids;
+  if (filters.import_job_id) out.import_job_id = filters.import_job_id;
   return out;
 }

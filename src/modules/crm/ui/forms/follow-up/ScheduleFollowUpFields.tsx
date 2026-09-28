@@ -70,7 +70,7 @@ export function MediumPicker({
   onChange: (medium: FollowUpMedium) => void;
 }) {
   return (
-    <div role="radiogroup" aria-label="Cómo contacta" className="grid gap-2 sm:grid-cols-3">
+    <div role="radiogroup" aria-label="Cómo contacta" className="grid gap-2 sm:grid-cols-[repeat(3,minmax(0,1fr))]">
       {FOLLOW_UP_MEDIA.map((option) => {
         const Icon = MEDIUM_ICONS[option.value];
         const available = availableMedia.includes(option.value);
@@ -85,7 +85,7 @@ export function MediumPicker({
             disabled={!available}
             onClick={() => available && onChange(option.value)}
             className={cn(
-              "grid grid-cols-[auto_1fr] items-start gap-x-2.5 gap-y-1 rounded-xl border px-3 py-2.5 text-left transition-colors",
+              "grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-start gap-x-2.5 gap-y-1 rounded-xl border px-3 py-2.5 text-left transition-colors",
               checked ? "border-brand bg-accent" : "border-border bg-background hover:bg-secondary/60",
               !available && "cursor-not-allowed opacity-55",
             )}

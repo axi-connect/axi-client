@@ -33,3 +33,5 @@ export {
   type BulkOpeningCost,
 } from "./domain/template-cost";
 export { MarketingHeader } from "./ui/components/MarketingHeader";
+export { SendTemplateButton } from "./ui/components/SendTemplateButton";
+export { presetToSearchParams, type PresetAudience } from "./domain/campaign-draft";

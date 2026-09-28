@@ -11,6 +11,7 @@ import { listImports } from "@/modules/crm/infrastructure/services/imports-servi
 import { ContactImportWizard } from "@/modules/crm/ui/components/imports/ContactImportWizard";
 import { ImportReport, ImportStatusBadge } from "@/modules/crm/ui/components/imports/ImportReport";
 import { BulkFollowUpButton } from "@/modules/crm/ui/components/BulkFollowUpButton";
+import { SendTemplateButton } from "@/modules/marketing/public";
 import { EnrollInSequenceButton } from "@/modules/crm/ui/components/EnrollInSequenceButton";
 
 /**
@@ -59,6 +60,9 @@ export function ImportsManager() {
                       la trabaja — que es donde un CRM se queda en agenda. */}
                   {selected.status !== "failed" && selected.created_count > 0 && (
                     <>
+                      <SendTemplateButton
+                        audience={{ mode: "import", importJobId: selected.id, label: `Del import ${selected.filename}` }}
+                      />
                       <BulkFollowUpButton
                         audience={{ source: "import", import_job_id: selected.id }}
                         audienceLabel={`Del import ${selected.filename}`}

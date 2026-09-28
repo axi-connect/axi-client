@@ -17573,6 +17573,7 @@ export interface components {
         BulkPreviewDto: {
             total: number;
             eligible: number;
+            needs_opening: number;
             skipped: {
                 /** @enum {string} */
                 reason: "opted_out" | "task_open" | "no_channel" | "contact_not_found" | "error";

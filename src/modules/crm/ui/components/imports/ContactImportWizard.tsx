@@ -48,6 +48,7 @@ import {
 } from "@/modules/crm/infrastructure/services/imports-service.adapter";
 import { listTags } from "@/modules/crm/infrastructure/services/segments-service.adapter";
 import { BulkFollowUpButton } from "@/modules/crm/ui/components/BulkFollowUpButton";
+import { SendTemplateButton } from "@/modules/marketing/public";
 import { EnrollInSequenceButton } from "@/modules/crm/ui/components/EnrollInSequenceButton";
 import { ImportGuideCard } from "./ImportGuideCard";
 import { ImportReport, ImportStatusBadge } from "./ImportReport";
@@ -445,6 +446,7 @@ export function ContactImportWizard({
           embebido. */}
       {failure === null && job.created_count > 0 && (
         <div className="flex flex-wrap items-center gap-2">
+          <SendTemplateButton audience={{ mode: "import", importJobId: job.id, label: `Del import ${job.filename}` }} />
           <BulkFollowUpButton
             audience={{ source: "import", import_job_id: job.id }}
             audienceLabel={`Del import ${job.filename}`}
