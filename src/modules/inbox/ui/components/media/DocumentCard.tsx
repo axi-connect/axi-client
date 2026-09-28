@@ -13,13 +13,17 @@ function iconForMime(mime: string) {
   return File
 }
 
+function isPdf(mime: string): boolean {
+  return mime.includes("pdf")
+}
+
 function extensionLabel(filename: string, mime: string): string {
   const ext = filename.includes(".") ? filename.split(".").pop() : undefined
   if (ext && ext.length <= 5) return ext.toUpperCase()
   return mime.split("/").pop()?.toUpperCase() ?? "ARCHIVO"
 }
 
-/** Tarjeta de documento: icono por mime + nombre + tamaño + abrir/descargar. */
+/** Ficha de documento (F3): la extensión como tapa, nombre truncado, tipo y peso, y descarga de 36 px. */
 export function DocumentCard({
   conversationId,
   messageId,
@@ -47,43 +51,33 @@ export function DocumentCard({
   }
 
   return (
-    <div
-      className={cn(
-        "flex w-60 max-w-full items-center gap-2.5 rounded-lg px-2.5 py-2",
-        outbound ? "bg-background/10" : "bg-background/60",
-      )}
-    >
-      <div
+    <div className="flex w-[17rem] max-w-full items-center gap-3 rounded-[14px] bg-current/[0.06] py-2 pr-1.5 pl-2">
+      <span
+        aria-hidden
         className={cn(
-          "flex size-10 shrink-0 items-center justify-center rounded-lg",
-          outbound ? "bg-background/15 text-background" : "bg-muted text-muted-foreground",
+          "relative grid h-10 w-9 shrink-0 place-items-end justify-center rounded-lg pb-1.5 text-[9.5px] font-bold tracking-wide ring-1",
+          outbound ? "bg-background text-foreground ring-transparent" : "bg-card text-foreground/75 ring-border",
         )}
       >
-        <Icon className="size-5" aria-hidden />
-      </div>
+        <Icon className="absolute top-1.5 size-3.5 opacity-50" />
+        <span className={cn(isPdf(attachment.mime_type) && "text-brand")}>{extensionLabel(displayName, attachment.mime_type)}</span>
+      </span>
       <div className="min-w-0 flex-1">
-        <p className={cn("truncate text-xs font-medium", outbound ? "text-background" : "text-foreground")}>
+        <p className="truncate text-[13px] font-medium" title={displayName}>
           {displayName}
         </p>
-        <p className={cn("text-[10px]", outbound ? "text-background/70" : "text-muted-foreground")}>
-          {extensionLabel(displayName, attachment.mime_type)} ·{" "}
-          {formatBytes(attachment.size_bytes)}
+        <p className="text-[11px] tabular-nums opacity-70">
+          {extensionLabel(displayName, attachment.mime_type)} · {formatBytes(attachment.size_bytes)}
         </p>
       </div>
       <button
+        type="button"
         onClick={() => void handleDownload()}
         disabled={downloading}
-        className={cn(
-          "flex size-8 shrink-0 items-center justify-center rounded-full transition-colors",
-          outbound ? "text-background hover:bg-background/15" : "text-muted-foreground hover:bg-muted",
-        )}
+        className="grid size-9 shrink-0 place-items-center rounded-full transition-colors hover:bg-current/10 focus-visible:outline-2 focus-visible:outline-ring"
         aria-label={`Descargar ${displayName}`}
       >
-        {downloading ? (
-          <Loader2 className="size-4 animate-spin" aria-hidden />
-        ) : (
-          <Download className="size-4" aria-hidden />
-        )}
+        {downloading ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Download className="size-4" aria-hidden />}
       </button>
     </div>
   )

@@ -1,15 +1,16 @@
 "use client"
 
 import { Loader2, SendHorizonal, Square, Trash2 } from "lucide-react"
-import { cn } from "@/core/lib/utils"
 import { formatDuration } from "@/core/lib/format"
 import { Button } from "@/shared/components/ui/button"
-import type { useVoiceRecorder } from "@/modules/inbox/infrastructure/hooks/use-voice-recorder"
+import { LEVEL_HISTORY, MAX_RECORDING_MS, type useVoiceRecorder } from "@/modules/inbox/infrastructure/hooks/use-voice-recorder"
 import { AudioPlayerCore } from "@/shared/components/features/audio-player"
 
 /**
- * Barra de grabación/preview de nota de voz (W3): sustituye la fila del
- * composer mientras se graba. Preview con el mismo player de las burbujas.
+ * Grabar y escuchar la nota de voz sin salir de la caja (F3). Grabando: las
+ * barras son el nivel real del micrófono, el tiempo en `tabular-nums`, y
+ * Descartar (rojo, a la izquierda) queda lejos de Detener. Lista: el mismo
+ * reproductor de las burbujas y Enviar en coral.
  */
 export function VoiceRecorderBar({
   recorder,
@@ -21,23 +22,42 @@ export function VoiceRecorderBar({
   onSend: () => void
 }) {
   if (recorder.status === "recording") {
+    // Relleno a la izquierda para que las barras nuevas entren siempre por la derecha.
+    const bars = [...Array.from({ length: Math.max(0, LEVEL_HISTORY - recorder.levels.length) }, () => 0), ...recorder.levels]
     return (
-      <div className="flex items-center gap-3">
-        <Button type="button" variant="ghost" size="icon" onClick={recorder.cancel} aria-label="Cancelar grabación">
-          <Trash2 className="size-4 text-destructive" />
+      // Se mide la CAJA, no la ventana (@container): a 1280 con bandeja, lista y
+      // riel la caja mide ~380 px y con `sm:` el texto y «Detener» la desbordaban,
+      // dejando las barras en 0 px (QA IB3-H3).
+      <div className="@container/rec flex items-center gap-2.5 px-2 py-2.5" role="group" aria-label="Grabando nota de voz">
+        <Button type="button" variant="ghost" size="icon" className="size-9 rounded-full text-destructive" onClick={recorder.cancel} aria-label="Descartar la grabación">
+          <Trash2 className="size-4" />
         </Button>
-        <div className="flex min-w-0 flex-1 items-center gap-2 text-sm">
-          <span
-            className={cn("size-2.5 rounded-full bg-destructive", "motion-safe:animate-pulse")}
-            aria-hidden
-          />
-          <span aria-live="polite" className="tabular-nums">
-            {formatDuration(recorder.elapsedMs / 1000)}
-          </span>
-          <span className="text-muted-foreground">Grabando…</span>
+        <span aria-hidden className="size-2.5 shrink-0 rounded-full bg-destructive motion-safe:animate-pulse" />
+        <span className="min-w-10 text-sm font-semibold tabular-nums" aria-live="off">
+          {formatDuration(recorder.elapsedMs / 1000)}
+        </span>
+        <div aria-hidden className="flex h-7 min-w-16 flex-1 items-center justify-end gap-[3px] overflow-hidden">
+          {bars.map((level, index) => (
+            <span
+              key={index}
+              className="w-[3px] shrink-0 rounded-full bg-foreground"
+              style={{ height: `${String(Math.max(3, Math.round(level * 28)))}px`, opacity: index < bars.length - 12 ? 0.35 : 0.85 }}
+            />
+          ))}
         </div>
-        <Button type="button" size="icon" onClick={recorder.stop} aria-label="Detener grabación">
-          <Square className="size-4" />
+        <span className="hidden shrink-0 text-xs whitespace-nowrap text-muted-foreground @min-[34rem]/rec:inline">
+          Grabando · máx. {String(MAX_RECORDING_MS / 60_000)} min
+        </span>
+        <Button
+          type="button"
+          variant="contrast"
+          className="h-9 shrink-0 rounded-full px-2.5 @min-[20rem]/rec:px-3.5"
+          onClick={recorder.stop}
+          aria-label="Detener y escuchar"
+          title={`Detener y escuchar · máximo ${String(MAX_RECORDING_MS / 60_000)} min`}
+        >
+          <Square className="size-3.5 fill-current" aria-hidden />
+          <span className="hidden @min-[20rem]/rec:inline">Detener</span>
         </Button>
       </div>
     )
@@ -45,22 +65,25 @@ export function VoiceRecorderBar({
 
   if (recorder.status === "preview" && recorder.recording) {
     return (
-      <div className="flex items-center gap-3">
+      <div className="@container/rec flex items-center gap-2.5 px-2 py-2.5" role="group" aria-label="Nota de voz lista">
         <Button
           type="button"
           variant="ghost"
           size="icon"
+          className="size-9 rounded-full text-destructive"
           disabled={sending}
           onClick={recorder.reset}
-          aria-label="Descartar nota de voz"
+          aria-label="Descartar la nota de voz"
         >
-          <Trash2 className="size-4 text-destructive" />
+          <Trash2 className="size-4" />
         </Button>
         <div className="min-w-0 flex-1">
-          <AudioPlayerCore src={recorder.recording.object_url} />
+          <AudioPlayerCore src={recorder.recording.object_url} className="w-full" />
         </div>
-        <Button type="button" size="icon" disabled={sending} onClick={onSend} aria-label="Enviar nota de voz">
-          {sending ? <Loader2 className="size-4 animate-spin" /> : <SendHorizonal className="size-4" />}
+        <Button type="button" className="h-9 shrink-0 rounded-full px-2.5 @min-[20rem]/rec:px-3.5" disabled={sending} onClick={onSend} aria-label="Enviar nota de voz">
+          {sending ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
+          <span className="hidden @min-[20rem]/rec:inline">Enviar</span>
+          {!sending && <SendHorizonal className="size-4" aria-hidden />}
         </Button>
       </div>
     )

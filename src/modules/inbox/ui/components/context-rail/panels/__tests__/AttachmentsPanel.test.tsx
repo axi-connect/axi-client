@@ -130,11 +130,11 @@ describe("AttachmentsPanel", () => {
     ]);
     renderPanel();
 
-    fireEvent.click(screen.getByRole("button", { name: "Documentos" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Documentos" }));
     expect(screen.getByText("doc.pdf")).toBeInTheDocument();
     expect(screen.queryByText("Nota de voz")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Audio" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Audio" }));
     expect(screen.getByText("Nota de voz")).toBeInTheDocument();
     expect(screen.queryByText("doc.pdf")).not.toBeInTheDocument();
   });
@@ -149,7 +149,7 @@ describe("AttachmentsPanel", () => {
     ]);
     renderPanel();
 
-    fireEvent.click(screen.getByRole("button", { name: "Audio" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Audio" }));
     expect(screen.getByText(/Sin adjuntos de tipo/)).toBeInTheDocument();
   });
 
@@ -169,14 +169,14 @@ describe("AttachmentsPanel", () => {
     renderPanel();
 
     expect(
-      screen.getByText("Mostrando los adjuntos del tramo cargado del hilo."),
+      screen.getByText("Solo lo que ya se cargó del hilo. Más atrás puede haber otros."),
     ).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Cargar más" }));
+    fireEvent.click(screen.getByRole("button", { name: "Cargar más de la conversación" }));
     expect(fetchOlderMessages).toHaveBeenCalledWith(CONVERSATION_ID);
     // El botón se rehabilita al resolver: evita el warning de act() por el
     // setState que ocurre fuera del tick del click.
     await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Cargar más" })).not.toBeDisabled(),
+      expect(screen.getByRole("button", { name: "Cargar más de la conversación" })).not.toBeDisabled(),
     );
   });
 
@@ -191,6 +191,6 @@ describe("AttachmentsPanel", () => {
     renderPanel();
 
     expect(screen.queryByText(/tramo cargado/)).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Cargar más" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Cargar más de la conversación" })).not.toBeInTheDocument();
   });
 });

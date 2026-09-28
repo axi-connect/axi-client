@@ -1,0 +1,126 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "Main.dc.html": {
+      "h": 1000,
+      "title": "1 · Escribir — un solo bloque, la ventana arriba y el envío en coral (interactivo: estados del composer)",
+      "w": 1440,
+      "x": 0,
+      "y": 0,
+      "is_interactive": true
+    },
+    "Ventana.dc.html": {
+      "h": 1000,
+      "title": "2 · La ventana de 24 h — abierta, por cerrar, cerrada, Instagram, desconectado y WhatsApp Web",
+      "w": 1440,
+      "x": 1520,
+      "y": 0
+    },
+    "Acciones.dc.html": {
+      "h": 1000,
+      "title": "3 · Acciones rápidas — buscar, ver lo que sale y enviar en el mismo popover",
+      "w": 1440,
+      "x": 3040,
+      "y": 0
+    },
+    "Adjuntos.dc.html": {
+      "h": 1000,
+      "title": "4 · Adjuntos — miniaturas en la caja, arrastrar y pegar, y lo que no se puede enviar",
+      "w": 1440,
+      "x": 0,
+      "y": 1420
+    },
+    "Voz.dc.html": {
+      "h": 1000,
+      "title": "5 · Nota de voz — grabando con el nivel real, escuchar y enviar",
+      "w": 1440,
+      "x": 1520,
+      "y": 1420
+    },
+    "Medios.dc.html": {
+      "h": 1300,
+      "title": "6 · Burbujas de media — claro y oscuro, sin saltos al cargar",
+      "w": 1440,
+      "x": 3040,
+      "y": 1420
+    },
+    "Visor.dc.html": {
+      "h": 1000,
+      "title": "7 · Visor — cristal oscuro, flechas, tira de fotos y descarga",
+      "w": 1440,
+      "x": 0,
+      "y": 3140
+    },
+    "Oscuro.dc.html": {
+      "h": 1000,
+      "title": "8 · Escribir — oscuro (interactivo)",
+      "w": 1440,
+      "x": 1520,
+      "y": 3140,
+      "is_interactive": true
+    },
+    "Movil.dc.html": {
+      "h": 844,
+      "title": "9 · Celular — escribir con adjuntos",
+      "w": 390,
+      "x": 3040,
+      "y": 3140
+    },
+    "MovilAcciones.dc.html": {
+      "h": 844,
+      "title": "10 · Celular — acciones rápidas en hoja inferior",
+      "w": 390,
+      "x": 3510,
+      "y": 3140
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-09-27T12:00:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {
+    "rowA": {
+      "kind": "title1",
+      "maxW": 4480,
+      "text": "Escribir",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "rowB": {
+      "kind": "title1",
+      "maxW": 4480,
+      "text": "Adjuntos, voz y medios",
+      "w": 240,
+      "x": 0,
+      "y": 1120
+    },
+    "rowC": {
+      "kind": "title1",
+      "maxW": 4480,
+      "text": "Visor, oscuro y celular",
+      "w": 240,
+      "x": 0,
+      "y": 2840
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Ventana.dc.html",
+    "Acciones.dc.html",
+    "Adjuntos.dc.html",
+    "Voz.dc.html",
+    "Medios.dc.html",
+    "Visor.dc.html",
+    "Oscuro.dc.html",
+    "Movil.dc.html",
+    "MovilAcciones.dc.html"
+  ],
+  "pages": [],
+  "title": "Inbox premium · F3 Escribir y medios"
+}

@@ -90,7 +90,7 @@ describe("MessageBubble — render por content_type (F9)", () => {
       />,
     )
     expect(screen.getByText("Sede Chapinero")).toBeInTheDocument()
-    const link = screen.getByRole("link", { name: /Ver en Google Maps/ })
+    const link = screen.getByRole("link", { name: /Abrir en Google Maps/ })
     expect(link).toHaveAttribute("href", expect.stringContaining("google.com/maps"))
   })
 

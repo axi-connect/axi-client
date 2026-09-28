@@ -136,3 +136,12 @@ export const useChannelStore = create<ChannelStore>((set) => ({
     }))
   },
 }))
+
+/**
+ * Estado de un canal por id, o `null` si la lista aún no lo trae (inbox F3: el
+ * composer avisa de un canal caído). Selector de primitivo: re-renderiza solo
+ * cuando cambia ESE estado.
+ */
+export function useChannelStatus(channelId: string): ChannelDTO["status"] | null {
+  return useChannelStore((state) => state.channels.find((channel) => channel.id === channelId)?.status ?? null)
+}

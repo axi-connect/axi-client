@@ -40,7 +40,8 @@ function CopyButton({ value, label }: { value: string; label: React.ReactNode })
     <button
       type="button"
       aria-label={typeof label === "string" ? `Copiar ${label.toLowerCase()}` : "Copiar"}
-      className="shrink-0 text-muted-foreground transition-colors hover:text-foreground"
+      // 24 px de objetivo (§10) sin mover la fila: el margen negativo devuelve lo que suma el tamaño.
+      className="-my-1 -mr-1 grid size-6 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
       onClick={() => {
         void navigator.clipboard.writeText(value).then(() => {
           setCopied(true);

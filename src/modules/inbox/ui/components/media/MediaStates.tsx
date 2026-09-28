@@ -5,14 +5,21 @@ import { FileWarning, ImageOff, RotateCw } from "lucide-react"
 import { Skeleton } from "@/shared/components/ui/skeleton"
 import { MEDIA_PREVIEW_LABELS, type MediaContentKind } from "@/modules/inbox/domain/inbox"
 
+/**
+ * Marco de foto y video (F3): el contrato no trae dimensiones, así que la
+ * proporción es fija (4:3, recorte centrado) y el visor muestra la foto entera.
+ */
+export const MEDIA_FRAME = "aspect-[4/3] w-60 max-w-full rounded-[14px]"
+
 /** Skeleton con la proporción del tipo de media mientras llega la URL firmada. */
 export function MediaSkeleton({ kind }: { kind: MediaContentKind }) {
+  // El MISMO marco que la media cargada (F3): la silueta ocupa lo mismo y nada salta.
   const shape =
     kind === "image" || kind === "video"
-      ? "aspect-[4/3] w-56 max-w-full rounded-xl"
+      ? MEDIA_FRAME
       : kind === "sticker"
-        ? "size-32 rounded-xl"
-        : "h-12 w-56 max-w-full rounded-lg"
+        ? "size-32 rounded-[14px]"
+        : "h-14 w-60 max-w-full rounded-[14px]"
   return <Skeleton className={shape} aria-label="Cargando adjunto" />
 }
 

@@ -1,45 +1,50 @@
 "use client"
 
+import { useState } from "react"
+import { ChevronDown, Sparkles } from "lucide-react"
 import { cn } from "@/core/lib/utils"
-import { Sparkles } from "lucide-react"
 import type { AudioTranscription as Transcription } from "@/modules/inbox/domain/inbox"
 
+/** Por encima de esto la transcripción empieza plegada (dos líneas y «ver toda»). */
+export const TRANSCRIPT_FOLD_CHARS = 160
+
 /**
- * Transcripción STT bajo el player de audio. Tres estados:
- * - `pending` (audio en vivo, transcripción en camino) → "Transcribiendo…".
- * - `done` con texto → bloque etiquetado sutil con la transcripción.
- * - `failed` / sin datos y sin pending → no renderiza nada (solo queda el player).
+ * Transcripción STT bajo el reproductor. Tres estados:
+ * - `pending` (audio en vivo, transcripción en camino) → «Transcribiendo…».
+ * - `done` con texto → el texto, plegable (F3): una larga empieza en dos
+ *   líneas; la cabecera abre y cierra.
+ * - `failed` / sin datos y sin pending → nada (solo queda el reproductor).
  *
- * El pulso del estado pendiente se desactiva con `prefers-reduced-motion`
- * (media query global en globals.css sobre `animate-*`).
+ * Colores con `currentColor`: sirve igual en la entrante (tarjeta) y en la
+ * saliente (tinta) en los dos temas. El pulso respeta `prefers-reduced-motion`.
  */
 export function AudioTranscription({
   transcription,
   pending,
-  outbound,
 }: {
   transcription: Transcription | null
   pending: boolean
-  outbound: boolean
+  /** Ya no cambia nada (los colores salen de `currentColor`); se acepta por compatibilidad. */
+  outbound?: boolean
 }) {
-  const label = outbound ? "text-background/70" : "text-muted-foreground"
-  const divider = outbound ? "border-background/15" : "border-border/60"
+  const text = transcription?.status === "done" ? transcription.text?.trim() : undefined
+  const long = text !== undefined && text.length > TRANSCRIPT_FOLD_CHARS
+  const [open, setOpen] = useState(!long)
 
-  if (transcription?.status === "done" && transcription.text) {
+  if (text) {
     return (
-      <div className={cn("mt-1.5 border-t pt-1.5", divider)}>
-        <div className={cn("mb-0.5 flex items-center gap-1 text-[10px] uppercase tracking-wide", label)}>
-          <Sparkles className="size-3 shrink-0" aria-hidden />
-          <span>Transcripción</span>
-        </div>
-        <p
-          className={cn(
-            "whitespace-pre-wrap break-words text-sm",
-            outbound ? "text-background/90" : "text-foreground",
-          )}
+      <div className="mt-2 border-t border-current/15 pt-1.5">
+        <button
+          type="button"
+          onClick={() => setOpen((value) => !value)}
+          aria-expanded={open}
+          className="flex h-6 items-center gap-1 rounded-full text-[10.5px] tracking-[0.08em] uppercase opacity-75 hover:opacity-100"
         >
-          {transcription.text}
-        </p>
+          <Sparkles className="size-3 shrink-0" aria-hidden />
+          Transcripción
+          <ChevronDown className={cn("size-3 transition-transform motion-reduce:transition-none", !open && "-rotate-90")} aria-hidden />
+        </button>
+        <p className={cn("text-[13px] leading-relaxed break-words whitespace-pre-wrap", !open && "line-clamp-2")}>{text}</p>
       </div>
     )
   }
@@ -47,11 +52,7 @@ export function AudioTranscription({
   if (pending) {
     return (
       <div
-        className={cn(
-          "mt-1.5 flex items-center gap-1 border-t pt-1.5 text-[10px] uppercase tracking-wide",
-          divider,
-          label,
-        )}
+        className="mt-2 flex items-center gap-1 border-t border-current/15 pt-1.5 text-[10.5px] tracking-[0.08em] uppercase opacity-75"
         role="status"
         aria-label="Transcribiendo audio"
       >

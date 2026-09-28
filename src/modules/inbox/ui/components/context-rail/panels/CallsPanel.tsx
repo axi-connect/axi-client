@@ -1,7 +1,13 @@
 "use client";
 
 import { ContactCallsList } from "@/modules/calls/public";
-import type { ContextPanelProps } from "../registry";
+import { firstNameOf } from "@/modules/inbox/domain/inbox-summary";
+import type { ContextPanelHeading, ContextPanelProps } from "../registry";
+
+export function useCallsHeading({ conversation }: ContextPanelProps): ContextPanelHeading {
+  const name = conversation.contact.full_name || conversation.contact.phone || "el contacto";
+  return { title: `Con ${firstNameOf(name)}`, subtitle: "Las últimas llamadas del agente de voz" };
+}
 
 /**
  * Últimas llamadas del contacto dentro del inbox (calls F4-D): el operador

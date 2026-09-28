@@ -38,6 +38,7 @@ export { ContactPicker } from "./ui/forms/ContactPicker";
 export {
   CONTACT_STAGE_LABELS,
   CONTACT_STAGE_BADGE_CLASSES,
+  CONTACT_STAGE_TONE,
   CONTACT_SOURCE_LABELS,
   CONTACT_DOCUMENT_TYPE_LABELS,
   type ContactLifecycleStage,
@@ -57,6 +58,13 @@ export { useContactContext, type ContactContext } from "./infrastructure/hooks/u
 
 /** Bloque presentacional de solo lectura; no depende del contexto del slice. */
 export { ContactFieldList } from "./ui/components/contact-detail/ContactFieldList";
+
+/**
+ * «Qué tan cerca está» (CRM premium F2): la cifra y los cinco tramos del embudo.
+ * El panel Contacto del inbox (F4) monta la MISMA tesela que la ficha 360.
+ */
+export { ScorePanel } from "./ui/components/contact-detail/ScorePanel";
+export { scoreProgress, type ScoreProgress } from "./domain/contact-summary";
 
 /**
  * «Datos del cliente» (F1): lo que el agente recopiló, con origen, verificación

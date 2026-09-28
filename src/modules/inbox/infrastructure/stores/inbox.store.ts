@@ -984,8 +984,10 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
   },
 
   applyMessageEvent: (conversationId, message, patch) => {
+    // Un entrante reabre la ventana de 24 h (F3): el composer la lee de aquí.
+    const inboundAt = message?.direction === "inbound" ? { last_inbound_at: message.created_at } : {}
     if (patch !== undefined) {
-      get().patchConversation(conversationId, patch)
+      get().patchConversation(conversationId, { ...patch, ...inboundAt })
       return
     }
     if (message === undefined) {
@@ -997,6 +999,7 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
     const isOpen = state.selectedId === conversationId
     const inbound = message.direction === "inbound"
     get().patchConversation(conversationId, {
+      ...inboundAt,
       last_message_at: message.created_at,
       last_message_preview: message.body ?? `[${message.content_type}]`,
       ...(inbound && !isOpen && existing !== undefined

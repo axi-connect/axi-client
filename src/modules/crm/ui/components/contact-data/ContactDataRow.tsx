@@ -62,7 +62,7 @@ function Separator() {
 
 /** Enlace de texto dentro de la línea secundaria («Usar», «Ignorar», «Añadir al formulario»). */
 const INLINE_LINK =
-  "rounded-sm font-medium text-foreground underline decoration-border underline-offset-[3px] outline-none hover:decoration-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50";
+  "inline-flex min-h-6 items-center rounded-sm font-medium text-foreground underline decoration-border underline-offset-[3px] outline-none hover:decoration-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50";
 
 function AiMark({ size }: { size: "card" | "rail" }) {
   return (

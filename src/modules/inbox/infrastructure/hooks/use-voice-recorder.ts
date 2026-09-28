@@ -30,8 +30,11 @@ export interface VoiceRecording {
   duration_ms: number
 }
 
-const MAX_RECORDING_MS = 5 * 60_000
+export const MAX_RECORDING_MS = 5 * 60_000
 const TIMER_TICK_MS = 250
+/** F3: nivel del micrófono para las barras de la grabación. */
+const LEVEL_TICK_MS = 100
+export const LEVEL_HISTORY = 48
 
 const PREFERRED_MIMES = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg"]
 
@@ -43,6 +46,9 @@ export function useVoiceRecorder() {
   const [status, setStatus] = useState<VoiceRecorderStatus>("idle")
   const [elapsedMs, setElapsedMs] = useState(0)
   const [recording, setRecording] = useState<VoiceRecording | null>(null)
+  /** Últimos niveles (0–1) del micrófono de verdad, del más viejo al más nuevo. */
+  const [levels, setLevels] = useState<number[]>([])
+  const levelRef = useRef<{ context: AudioContext; timer: ReturnType<typeof setInterval> } | null>(null)
 
   const recorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<BlobPart[]>([])
@@ -65,6 +71,48 @@ export function useVoiceRecorder() {
   const clearTimer = () => {
     if (timerRef.current) clearInterval(timerRef.current)
     timerRef.current = null
+  }
+
+  const stopLevels = () => {
+    const meter = levelRef.current
+    if (!meter) return
+    clearInterval(meter.timer)
+    void meter.context.close().catch(() => undefined)
+    levelRef.current = null
+  }
+
+  /**
+   * AnalyserNode sobre el MISMO stream que graba: las barras son el nivel real
+   * (RMS del dominio temporal), no una onda decorativa. Sin Web Audio (jsdom,
+   * navegadores viejos) no hay barras y la grabación sigue igual.
+   */
+  const startLevels = (stream: MediaStream) => {
+    const AudioContextCtor =
+      typeof window !== "undefined"
+        ? (window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext)
+        : undefined
+    if (!AudioContextCtor) return
+    try {
+      const context = new AudioContextCtor()
+      const analyser = context.createAnalyser()
+      analyser.fftSize = 512
+      context.createMediaStreamSource(stream).connect(analyser)
+      const samples = new Uint8Array(analyser.fftSize)
+      const timer = setInterval(() => {
+        analyser.getByteTimeDomainData(samples)
+        let sum = 0
+        for (const sample of samples) {
+          const centered = (sample - 128) / 128
+          sum += centered * centered
+        }
+        // RMS de voz hablada ronda 0,02–0,3: se amplía para que se lea.
+        const level = Math.min(1, Math.sqrt(sum / samples.length) * 4)
+        setLevels((current) => [...current.slice(-(LEVEL_HISTORY - 1)), level])
+      }, LEVEL_TICK_MS)
+      levelRef.current = { context, timer }
+    } catch {
+      levelRef.current = null
+    }
   }
 
   const start = useCallback(async () => {
@@ -94,6 +142,7 @@ export function useVoiceRecorder() {
     recorder.onstop = () => {
       stopTracks(recorder)
       clearTimer()
+      stopLevels()
       if (discardRef.current) {
         setStatus("idle")
         return
@@ -114,6 +163,8 @@ export function useVoiceRecorder() {
     }
 
     recorder.start()
+    setLevels([])
+    startLevels(stream)
     setStatus("recording")
     timerRef.current = setInterval(() => {
       const elapsed = Date.now() - startedAtRef.current
@@ -155,8 +206,9 @@ export function useVoiceRecorder() {
       if (recorderRef.current?.state === "recording") recorderRef.current.stop()
       stopTracks(recorderRef.current)
       clearTimer()
+      stopLevels()
     }
   }, [])
 
-  return { status, supported, elapsedMs, recording, start, stop, cancel, reset }
+  return { status, supported, elapsedMs, levels, recording, start, stop, cancel, reset }
 }

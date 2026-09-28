@@ -11,23 +11,16 @@ import { relativeTime } from "@/core/lib/relative-time";
 import { useAlert } from "@/core/providers/alert-provider";
 import { ChannelKindIcon } from "@/modules/channels/public";
 import { contactDisplayName, primaryChannel, type ContactDTO, type ContactProfileDTO } from "@/modules/crm/domain/contact";
-import { CONTACT_STAGE_LABELS, type ContactLifecycleStage } from "@/modules/crm/domain/enums";
+import { CONTACT_STAGE_LABELS, CONTACT_STAGE_TONE } from "@/modules/crm/domain/enums";
 import { assignContactOwner, deleteContact } from "@/modules/crm/infrastructure/services/contacts-service.adapter";
 import { useAuth } from "@/shared/auth/auth.hooks";
-import { StatePill, type StatePillTone } from "@/shared/components/features/bento";
+import { StatePill } from "@/shared/components/features/bento";
 import { Avatar } from "@/shared/components/ui/avatar";
 import { Button } from "@/shared/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/shared/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
 
 const NO_OWNER = "__none__";
-
-const STAGE_TONE: Record<ContactLifecycleStage, StatePillTone> = {
-  prospect: "neutral",
-  lead: "info",
-  customer: "success",
-  other: "neutral",
-};
 
 const CHANNEL_LABEL = {
   whatsapp_cloud: "WhatsApp",
@@ -118,7 +111,7 @@ export function Contact360Header({
               <h1 className="min-w-0 truncate font-heading text-2xl leading-tight font-bold tracking-tight md:text-3xl" title={name}>
                 {name}
               </h1>
-              <StatePill tone={STAGE_TONE[contact.lifecycle_stage]}>{CONTACT_STAGE_LABELS[contact.lifecycle_stage]}</StatePill>
+              <StatePill tone={CONTACT_STAGE_TONE[contact.lifecycle_stage]}>{CONTACT_STAGE_LABELS[contact.lifecycle_stage]}</StatePill>
             </div>
             <div className="flex min-w-0 flex-wrap items-center gap-2">
               {contact.phone && (

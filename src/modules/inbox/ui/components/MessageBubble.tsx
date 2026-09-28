@@ -121,7 +121,7 @@ export function MessageBubble({
           )
         )}
         {(!media || (message.body && message.body.length > 0)) && (
-          <p className={cn("whitespace-pre-wrap break-words", media && edgeToEdge && "px-2 pt-1")}>
+          <p className={cn("whitespace-pre-wrap break-words", media && edgeToEdge && "max-w-60 px-2 pt-1")}>
             {media ? message.body : (message.body ?? "(sin contenido)")}
           </p>
         )}

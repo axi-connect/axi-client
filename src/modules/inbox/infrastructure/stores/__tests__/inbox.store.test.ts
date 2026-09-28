@@ -588,6 +588,21 @@ describe("inbox.store — fila en vivo (patchConversation / applyMessageEvent)",
     expect(useInboxStore.getState().conversations.find((c) => c.id === "b")?.unread_count).toBe(2)
   })
 
+  it("un entrante reabre la ventana de 24 h (F3): mueve last_inbound_at en la fila y en la abierta; un saliente no", () => {
+    useInboxStore.getState().applyMessageEvent(
+      "b",
+      makeMessage({ id: "m11", direction: "inbound", created_at: "2026-09-10T14:00:00Z" }),
+      { unread_count: 2, last_message_at: "2026-09-10T14:00:00Z", last_message_preview: "hola" },
+    )
+    let state = useInboxStore.getState()
+    expect(state.selected).toMatchObject({ id: "b", last_inbound_at: "2026-09-10T14:00:00Z" })
+    expect(state.conversations.find((c) => c.id === "b")).toMatchObject({ last_inbound_at: "2026-09-10T14:00:00Z" })
+
+    useInboxStore.getState().applyMessageEvent("b", makeMessage({ id: "m12", direction: "outbound", created_at: "2026-09-10T15:00:00Z" }))
+    state = useInboxStore.getState()
+    expect(state.selected).toMatchObject({ last_inbound_at: "2026-09-10T14:00:00Z", last_message_at: "2026-09-10T15:00:00Z" })
+  })
+
   it("markReadLocal baja a 0 fila, seleccionada y total; rollbackUnread lo devuelve", () => {
     const previous = useInboxStore.getState().markReadLocal("b")
     expect(previous).toBe(2)

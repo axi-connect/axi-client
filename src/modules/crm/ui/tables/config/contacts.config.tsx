@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { StatePill, type StatePillTone } from "@/shared/components/features/bento";
+import { StatePill } from "@/shared/components/features/bento";
 import { Avatar } from "@/shared/components/ui/avatar";
 import type { ColumnDef } from "@/shared/components/features/data-table";
 import type { Paginated } from "@/core/api/types";
@@ -18,7 +18,7 @@ import {
 import {
   CONTACT_SOURCE_LABELS,
   CONTACT_STAGE_LABELS,
-  type ContactLifecycleStage,
+  CONTACT_STAGE_TONE,
 } from "@/modules/crm/domain/enums";
 import {
   completenessTone,
@@ -70,14 +70,6 @@ function DataCompletenessCell({ row }: { row: ContactRow }) {
   );
 }
 
-/** El estado vive en el punto; el texto, en foreground (§9.5). */
-const STAGE_TONE: Record<ContactLifecycleStage, StatePillTone> = {
-  prospect: "neutral",
-  lead: "info",
-  customer: "success",
-  other: "neutral",
-};
-
 const CHANNEL_LABEL: Record<NonNullable<ContactRow["channel_kind"]>, string> = {
   whatsapp_cloud: "WhatsApp",
   whatsapp_web: "WhatsApp",
@@ -115,7 +107,7 @@ export const contactColumns: ColumnDef<ContactRow>[] = [
     header: "Etapa",
     minWidth: 120,
     cell: ({ row }) => (
-      <StatePill tone={STAGE_TONE[row.original.lifecycle_stage]}>
+      <StatePill tone={CONTACT_STAGE_TONE[row.original.lifecycle_stage]}>
         {CONTACT_STAGE_LABELS[row.original.lifecycle_stage]}
       </StatePill>
     ),

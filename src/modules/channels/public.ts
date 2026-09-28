@@ -8,6 +8,8 @@
  * - `modules/scheduling`: selector de canal de los recordatorios — filtrado a
  *   canales conectados — y nombre del canal en la tabla.
  *
+ * - `modules/inbox` (F3): el estado del canal de la conversación abierta, para
+ *   que el composer diga que está caído antes de escribir (`useChannelStatus`).
  * - `modules/onboarding` (F6): el paso «WhatsApp» embebe el wizard de conexión
  *   (`ConnectChannelFlow`) dentro de su propio marco. Es el MISMO flujo que
  *   `/settings/channels/connect`, no una copia: el popup de Meta, el `code` de
@@ -26,6 +28,9 @@ export {
 } from "./domain/channel";
 
 export { listChannels } from "./infrastructure/services/channels-service.adapter";
+
+/** Lectura del estado de UN canal (inbox F3: el composer avisa si está caído). */
+export { useChannelStatus } from "./infrastructure/stores/channels.store";
 
 export { ConnectChannelFlow } from "./ui/components/connect/ConnectChannelFlow";
 

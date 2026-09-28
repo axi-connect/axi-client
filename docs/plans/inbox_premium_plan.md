@@ -58,7 +58,7 @@ vistas, orden, filtros y lecturas optimistas. Lo que le falta es la capa premium
 | Panel sin conversación | Glifo y «Selecciona una conversación para empezar» | Es el hueco más grande de la pantalla y no dice nada. Pasa a ser «Tu día en el inbox» con `/inbox/stats` (nuevas, resueltas, cuánto resolvió Axi) y la isla «Lo próximo» |
 | Cabecera del chat | Cinco badges pequeños (`text-[10px]`) que compiten | Identidad, una píldora de quién atiende y la acción principal en `contrast`. El resto va al rail |
 | Hilo | Burbujas planas y eventos invisibles | Los eventos de handoff (`/inbox/conversations/:id/events`) no aparecen: el operador no sabe por qué la conversación llegó a su cola. Tampoco se distingue «lo escribió Axi» de «lo escribió una persona» |
-| Composer | Textarea con borde y avisos sueltos en `text-[10px]` ámbar | Superficie de escritura de un solo bloque y el estado de la ventana de 24 h (`reachability`) antes de escribir |
+| Composer | Textarea con borde y avisos sueltos en `text-[10px]` ámbar | Superficie de escritura de un solo bloque y el estado de la ventana de 24 h (regla del motor sobre la conversación) antes de escribir |
 | Rail de contexto | Paneles correctos pero planos | Fichas `rounded-3xl`, cabeceras en Nexa y el mismo lenguaje que la ficha 360 del CRM F2 |
 | Estados | Genéricos | Carga, vacío y error con la silueta real de cada área |
 
@@ -220,13 +220,75 @@ Solo cliente.
 
 | Pieza | Queda |
 |---|---|
-| `domain/reply-window.ts` (nuevo) | Puro, con test. A partir de `GET /conversations/contacts/:id/reachability` (hoy sin uso en el cliente) da «Ventana abierta · quedan 3 h», «La ventana de 24 h se cerró: envía una plantilla» o «Canal desconectado», con el tono del punto |
+| `domain/reply-window.ts` (nuevo) | Puro, con test. A partir de `channel.kind` y `last_inbound_at` de la conversación (ver «Lo que dejó el diagnóstico») da «Ventana abierta · quedan 3 h», «La ventana de 24 h se cerró: envía una plantilla» o «Canal desconectado», con el tono del punto |
 | `Composer` | Un solo bloque `rounded-2xl` con adjuntar, acciones rápidas y voz dentro y el envío en coral. Crece hasta 8 líneas con scroll de marca. Cuando no se puede escribir (Axi atiende o está en cola) muestra una línea con la acción: «Axi está atendiendo · Intervenir». Encima, la línea de la ventana de 24 h (solo WhatsApp) y «Sin tiempo real: se envía por HTTP», en `StatePill` y no en `text-[10px]` ámbar |
 | `AttachmentTray` | Miniaturas de 56 px con progreso, error y quitar, todo con objetivos de 24 px |
 | `VoiceRecorderBar` | Onda o nivel, tiempo `tabular-nums` y descartar / enviar |
 | `QuickActionsMenu` | Popover en cristal (flota) con buscador y vista previa de lo que se va a enviar |
 | Burbujas de media | Imagen y video con esquinas continuas y relación fija (sin salto al cargar). Audio con reproductor propio y la transcripción plegable. Documento como ficha con icono, nombre truncado y peso. Ubicación con mapa estático o ficha. `ProductRecognitionChip` con el lenguaje del chip del catálogo |
 | `MediaLightbox` | Cristal oscuro a pantalla completa, flechas, descarga y Escape |
+
+#### F3 · Lo que dejó el diagnóstico (2026-09-27, antes del lienzo)
+
+Lienzo: https://claude.ai/artifact/GjoSeJKsNp4w9KyUTPbSo6 (10 artboards; fuentes en
+`docs/design/mockups/inbox-premium/f3/`).
+
+- **La ventana de 24 h NO sale de `reachability`.** Esa lectura es por contacto y elige entre todos sus canales
+  (si Cloud está fuera de ventana y hay wweb conectado, responde por wweb), así que puede hablar de otro canal
+  que el de la conversación. El motor, al enviar desde el inbox (`enqueue_outbound_message.use_case.ts`), mira
+  `OUTBOUND_WINDOW_HOURS[channel.kind]` (24 h en `whatsapp_cloud`, `instagram_dm` y `facebook_messenger`; wweb sin
+  ventana) contra `conversation.last_inbound_at`, y rechaza con `channels/outside_service_window` salvo plantilla.
+  `ConversationDTO` ya trae `channel.kind` y `last_inbound_at`: `domain/reply-window.ts` replica esa regla, pura y
+  con test (bordes a 24 h exactas, sin inbound, por cerrar < 1 h). Cero peticiones nuevas, sin N+1, y la frescura
+  llega sola con el WS que ya actualiza la conversación; el tick de 60 s recalcula lo que queda.
+- **Condiciones del auditor para `reply-window.ts` (2026-09-27), verificadas contra el servidor:**
+  - (a) Tabla exacta de `OUTBOUND_WINDOW_HOURS` (`whatsapp_cloud`, `instagram_dm`, `facebook_messenger` = 24 h;
+    cualquier otro kind, wweb incluido, sin ventana), con comentario a `enqueue_outbound_message.use_case.ts:108`.
+  - (b) La guarda cubre todo lo que no es plantilla, media y voz incluidas: fuera de ventana se bloquea la caja
+    entera (clip, voz, rayo salvo Plantillas), no solo el texto.
+  - (c) `last_inbound_at === null` es fuera de ventana.
+  - (d) Borde estricto: fuera si `last_inbound_at < now − 24 h`; justo a 24 h sigue dentro.
+  - (e) Tests por los dos lados del borde con fechas reales: dentro, fuera, null, wweb, Instagram fuera.
+  - (f) La regla del cliente no es la verdad: si el envío vuelve con `channels/outside_service_window` (o
+    `channels/template_not_supported` en wweb), el composer pasa al aviso o al selector de plantillas y el mensaje
+    optimista queda como «No se envió». El auditor lo fuerza en QA.
+  - Envío desde el popover: un clic en la lista solo selecciona y muestra la vista previa; enviar exige el botón
+    «Enviar a <nombre>» (o Enter con la vista previa a la vista). En el celular, tocar abre la vista previa.
+- **Plantillas:** solo `whatsapp_cloud` (`supports_templates` del servidor dice lo mismo). Fuera de ventana en
+  Instagram o Messenger no se ofrece botón. El DTO de la acción rápida trae `template_name` y
+  `template_language`, no el texto: la vista previa de una plantilla muestra nombre e idioma, no se inventa el cuerpo.
+- **Canal desconectado:** sale del `status` del canal que ya lee la columna de la bandeja.
+- **Progreso de subida:** el cliente HTTP no reporta bytes; el anillo es indeterminado, sin porcentaje falso.
+- **Nivel de la grabación:** un `AnalyserNode` sobre el stream que ya abre `use-voice-recorder`. La burbuja de
+  audio no pinta onda (no hay datos de forma de onda): pista y tiempo.
+- **Ubicación:** no hay proveedor de mapas estáticos; ficha con «Abrir en Google Maps».
+- **`AudioPlayerCore` (shared)** pinta `text-white`/`bg-white/*` en la saliente: con D1 (tinta) en oscuro la burbuja
+  es clara y el reproductor desaparece. Pasa a tokens (`text-background`, etc.). Consumidores fuera del inbox:
+  `agents/ui/components/VoiceRangeField.tsx` y `landing/ui/components/mockups/DeviceChat.tsx`; el «listo F3» dice qué
+  pasa en cada uno (pedido del auditor).
+- **Acciones rápidas:** el envío sale del popover con su vista previa (misma `InteractiveMessage` del hilo) y
+  desaparece el modal de confirmación. Se abre con el rayo o con «/» al empezar la caja. En el celular, hoja inferior.
+- **Adjuntos:** además del clip, arrastrar sobre la conversación y pegar (Ctrl+V) entran por la misma cola
+  (`useUploadQueue.add`). Lo rechazado (tipo o peso, con los límites de `MAX_UPLOAD_BYTES`) se dice dentro del
+  composer hasta cerrarlo, en vez de un toast por archivo.
+- **Visor:** recorre las fotos cargadas de la conversación (flechas, ← →, tira), descarga con URL fresca y Escape.
+
+#### F3 · Render medido (2026-09-27)
+
+Arnés: `qa/premium/inbox-f3-render.mjs` + `inbox-f3-seed.py` (corre la de F2; sube foto, video, audio y PDF de prueba al
+MinIO local, prefijo `seed-f3/`). 15 escenas × 390/768/1280/1440 × claro/oscuro. Evidencia en
+`D:\axi-qa\premium\inbox-f3` (`report-ronda1.jsonl` y `report.jsonl`).
+
+- Primera ronda, 120 capturas y 89 limpias:
+  - tres objetivos por debajo de 24 px: la pista del audio (16 px), la velocidad (20 px) y «Abrir en Google Maps» (16 px);
+  - la escena de adjuntos falló por el arnés.
+- Arreglado:
+  - pista y range a 24 px, velocidad a 24 px y el enlace con `min-h-6`;
+  - el visor salía claro en tema claro, porque el `glass-overlay` del diálogo compartido pone su fondo: ahora el velo va en línea;
+  - las acciones rápidas preseleccionaban la primera del API y no la primera que se ve: ahora siguen el orden de los grupos.
+- Segunda ronda de las escenas tocadas, 56 capturas: todas limpias.
+- La «deuda» del botón flotante que F2 anotó para el shell en el celular es el indicador de desarrollo de Next.js (la «N»
+  negra). Solo existe con `next dev`: no hay nada que arreglar en producción.
 
 ### F4 · El contexto
 
@@ -239,6 +301,64 @@ Solo cliente.
 | `ContactPanel` | Ficha como la 360 del CRM F2 en pequeño: identidad, etapa en `StatePill`, «Qué tan cerca está» (tramos, reutilizando `scoreProgress` del CRM F2, que se exporta desde `crm/public` como cambio aditivo), datos del cliente y etiquetas con su color (aquí sí hay sitio). Pie fijo con «Programar seguimiento» y «Ver ficha completa» |
 | `AttachmentsPanel` | Rejilla por categoría con `SegmentedControl` y miniaturas uniformes |
 | `HistoryPanel` / `CallsPanel` | Línea de tiempo (DESIGN-SYSTEM §9.6) con el mismo `describe*` del CRM y de Llamadas |
+
+#### F4 · Lo que dejó el diagnóstico (2026-09-27, antes del lienzo)
+
+Lienzo: https://claude.ai/artifact/QistmYB9Y3DUkrg5gEDfgZ (8 artboards; fuentes en
+`docs/design/mockups/inbox-premium/f4/`). Rama `feat/inbox-premium-f4` sobre F3 (a60c44f1), sin tocar la de F3 en
+certificación.
+
+- **El panel en línea ya no cabe entre 1280 y 1535 px.** `ContextPanel` entra en línea desde xl. Con la columna de
+  la bandeja de F1 desplegada, a 1440 px: navegación 256 + bandeja 232 + lista 320 + panel 340 + riel 52 deja el chat
+  en unos 240 px. **D6** en el lienzo: (a) flota sobre el chat hasta 2xl y en línea desde 1536 (recomendada) o (b)
+  empuja y la bandeja pasa a riel mientras el panel está abierto.
+- **D5 · Pedidos en el riel (nuevo).** La tarea que dejó Cobros (panel `orders`, plan del servidor §6.1) es solo
+  cliente: `listOrders` de `orders/public`, con saldo primero, `paymentProgress` y `DocumentsList` por pedido, como
+  `ContactOrdersDocumentsCard` del 360. Permiso `orders:read`.
+- **Contacto:**
+  - la etapa pasa de `Badge` a `StatePill`;
+  - «Qué tan cerca está» en tramos, con `scoreProgress` del CRM F2 (exportado desde `crm/public`, cambio aditivo);
+  - las etiquetas con su color;
+  - el pie fijo con «Programar seguimiento» y «Ver ficha completa».
+- **Cabecera de los paneles:** `Kicker` + título en Nexa + una línea de contexto, y cierre de 36 px (hoy es de 32).
+- **Riel:**
+  - la píldora activa en tinta (hoy `bg-accent` coral);
+  - conteo en Adjuntos (del hilo cargado), Llamadas y Pedidos;
+  - tooltip a la izquierda.
+- **Historial:** los filtros de `ContactTimelineFeed` usan `bg-accent` (coral) y pasan a tinta. Es un componente del
+  CRM que también usa el 360, así que se cambia allí para los dos.
+- **Celular:** el contexto a pantalla completa con las pestañas arriba. El acceso es el botón (i) de la cabecera,
+  porque el riel no existe por debajo de md.
+- **Condiciones del auditor (2026-09-27):**
+  - **D6 flotante:** no tapa el composer ni la cabecera sin una salida obvia (Escape y clic fuera); devuelve el foco a
+    su botón del riel; el chat nunca baja de unos 360 px entre xl y 2xl (QA a 1280, 1440 y 1536 con la bandeja
+    desplegada).
+  - **D5 Pedidos:**
+    - `listOrders({ contact_id, page_size })` de `orders/public`, filtrado en el servidor con página chica;
+    - sin `orders:read` el panel no se monta y no llama al API (un 403 en consola es fallo);
+    - estados de carga, vacío y error.
+  - **Compartidos:** el «listo» lista por grep los consumidores de `ContactTimelineFeed`; `scoreProgress` en
+    `crm/public` es aditivo.
+- **Sin cambios de contrato.** Todo sale de lecturas que ya existen: contexto del contacto, el hilo, el timeline, las
+  llamadas por contacto y los pedidos por contacto.
+
+#### F4 · Aprobado e implementado (2026-09-27)
+
+- **Aprobación:** la dueña aprobó F4 con D6 = (a) flota y D5 = sí.
+- **Lo que pidió cuidar:**
+  - que el texto no desborde;
+  - la profundidad de los paneles;
+  - que modales, iconos, pestañas y menús se rendericen bien.
+- **Render medido:** `qa/premium/inbox-f4-render.mjs` + `inbox-f4-seed.py`. 8 escenas × 390/768/1280/1440/1536/1680 × claro/oscuro.
+- **Ronda 1, hallazgos:**
+  - el panel flotante (`fixed`) tapaba la barra superior de la app (campana y tema) a 1440. Ahora es `absolute`
+    dentro de `InboxView` (`relative`) y nunca sale del área del inbox;
+  - objetivos de 14 px («Copiar teléfono», en el `FieldList` compartido) y de 17 px («Añadir al formulario»). Pasan a
+    24 px con margen negativo, así que la fila no se mueve;
+  - el ⋮ de la cabecera se teñía de coral al abrirse; pasa a `bg-muted`.
+- **Ronda 2:** 96/96 limpias. El chat nunca bajó de 400 px desde md (a 1680, en línea, 476 px). Los menús de la cabecera
+  quedan encima del panel en línea y el tooltip del riel encima del panel flotante.
+- **Umbral en línea:** `min-[100rem]` (1600 px), no 2xl. A 1536 con la bandeja desplegada el chat quedaría en 340 px.
 
 ## 4. Decisiones que se muestran en el lienzo para que decida la dueña
 
@@ -309,7 +429,7 @@ Solo cliente.
 | `GET /inbox/conversations`, `/inbox/counts` | Sí | Lista, vistas y subtítulo vivo |
 | `GET /inbox/stats?period=today` | Solo el dashboard | «Tu día» (F1) |
 | `GET /inbox/conversations/:id/events` | No | Eventos en el hilo e isla del motivo (F2) |
-| `GET /conversations/contacts/:id/reachability` | No | Ventana de 24 h en el composer (F3) |
+| ~~`GET /conversations/contacts/:id/reachability`~~ | No | Descartada en F3: es por contacto y puede elegir otro canal. La ventana sale de `channel.kind` + `last_inbound_at` de la conversación (regla del motor) |
 | WS `/inbox` (mensajes, modo, typing, leídos) | Sí | Sin cambios de contrato |
 | Contexto del contacto (`crm/public`) | Sí | Panel Contacto (F4) |
 
@@ -341,7 +461,7 @@ Solo cliente.
 | El ancla del prepend del hilo se rompe al intercalar eventos | Los eventos entran en el mismo `groupMessagesByDay` con clave estable y el ancla mide antes y después igual que hoy |
 | Tests de copia | La copia nueva se actualiza en su test en el mismo commit |
 | **Permisos de «Tu día».** `/inbox/stats` exige `conversations:read`, verificado en `inbox.controller.ts` (el mismo permiso que la lista), así que un agente con acceso al inbox lo lee | El arnés entra también con el rol de agente. La UI tiene respaldo: con 403 o error, el panel se queda con la isla «Lo próximo» (sale de `counts`) y esconde el bento en vez de pintar un error |
-| **N+1.** `reachability` es por contacto y `events` por conversación | Las dos se cargan solo para la conversación abierta, nunca por fila. Hay un test que cuenta las peticiones al pintar una lista de 50 |
-| **Frescura.** `stats`, `events` y `reachability` pueden quedarse viejos | `stats` se refresca cuando cambian los `counts` (los mismos eventos WS que ya los actualizan), con un mínimo de 60 s. `events` se invalida con los eventos WS de handoff (§7). `reachability` se relee con cada mensaje entrante del contacto (abre la ventana) y el tick de un minuto recalcula lo que queda, sin volver a pedirla. Con tests que simulan el evento WS |
+| **N+1.** `events` es por conversación (la ventana de F3 no pide nada) | Se carga solo para la conversación abierta, nunca por fila. Hay un test que cuenta las peticiones al pintar una lista de 50 |
+| **Frescura.** `stats`, `events` y la ventana de 24 h pueden quedarse viejos | `stats` se refresca cuando cambian los `counts` (los mismos eventos WS que ya los actualizan), con un mínimo de 60 s. `events` se invalida con los eventos WS de handoff (§7). La ventana de F3 se recalcula con `last_inbound_at`, que ya llega por WS, y el tick de un minuto recalcula lo que queda. Con tests que simulan el evento WS |
 | **Zona horaria.** «Hoy», la ventana de 24 h y los separadores de día | Se calculan en la zona del negocio con `core/lib/business-time.ts` (`businessDayKey`, `todayKey`), nunca con la del navegador. Tests cerca de la medianoche (23:30 y 00:30 del negocio) por los dos lados: Cobros tuvo un error UTC/`daysUntilService` exactamente así |
 | **URLs firmadas de medios** (TTL 300 s) | Se mantiene `use-attachment-url`: caché de módulo con renovación a 30 s del vencimiento y `refresh()` en el `onError` de `<img>/<audio>/<video>`. Las burbujas nuevas de F3 no guardan la URL en su estado |
