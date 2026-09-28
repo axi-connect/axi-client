@@ -116,7 +116,9 @@ export const TEMPLATE_KIND_LABELS: Record<TemplateKind, string> = {
 export type HsmApprovalStatus = Schemas["HsmTemplateDto"]["approval_status"];
 
 export const HSM_APPROVAL_LABELS: Record<HsmApprovalStatus, string> = {
-  pending: "Pendiente",
+  // «En revisión» y no «Pendiente»: dice qué pasa (Meta la está mirando), no
+  // que falte algo del operador (lienzo aprobado 2026-09-26, tablero 10).
+  pending: "En revisión",
   approved: "Aprobada",
   rejected: "Rechazada",
   paused: "Pausada",

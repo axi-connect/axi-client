@@ -160,8 +160,9 @@ describe("lo que Meta contesta sobre una plantilla", () => {
 
     // Antes solo decía qué HACER, nunca qué estaba MAL, que es lo único que
     // sirve para corregirla.
+    // Firmado: es el veredicto de Meta. Sale en la fila y en «Lo próximo».
     expect(
-      await screen.findByText("El cuerpo promete un descuento que no aparece en el pie"),
+      (await screen.findAllByText(/^Meta: El cuerpo promete un descuento que no aparece en el pie/))[0],
     ).toBeInTheDocument();
   });
 
@@ -178,7 +179,7 @@ describe("lo que Meta contesta sobre una plantilla", () => {
     ]);
     render(<MetaTemplatesView />);
 
-    expect(await screen.findByText(/El formato no le vale a Meta/)).toBeInTheDocument();
+    expect((await screen.findAllByText(/El formato no le vale a Meta/))[0]).toBeInTheDocument();
     expect(screen.queryByText("INVALID_FORMAT")).not.toBeInTheDocument();
   });
 
@@ -189,7 +190,7 @@ describe("lo que Meta contesta sobre una plantilla", () => {
     ]);
     render(<MetaTemplatesView />);
 
-    expect(await screen.findByText(new RegExp(prosa.slice(0, 30)))).toBeInTheDocument();
+    expect((await screen.findAllByText(new RegExp(prosa.slice(0, 30))))[0]).toBeInTheDocument();
   });
 
   it("avisa de la calidad solo cuando ya no es verde", async () => {
@@ -199,9 +200,10 @@ describe("lo que Meta contesta sobre una plantilla", () => {
     ]);
     render(<MetaTemplatesView />);
 
-    // La calidad es el aviso PREVIO a que Meta pause la plantilla.
-    expect(await screen.findByText(/Calidad yellow/)).toBeInTheDocument();
-    expect(screen.queryByText(/Calidad green/)).not.toBeInTheDocument();
+    // La calidad es el aviso PREVIO a que Meta pause la plantilla, en español
+    // (antes: «Calidad yellow»).
+    expect(await screen.findByText(/Calidad media: si baja más/)).toBeInTheDocument();
+    expect(screen.queryByText(/Calidad (green|yellow)/i)).not.toBeInTheDocument();
   });
 });
 
@@ -216,8 +218,9 @@ describe("editar y borrar una plantilla", () => {
     ]);
     render(<MetaTemplatesView />);
 
-    // Dos copias de las acciones (tabla estrecha / ancha): las dos tienen que decir lo mismo.
-    for (const button of await screen.findAllByRole("button", { name: /Editar/ })) expect(button).toBeEnabled();
+    // Dos copias de las acciones (tabla estrecha / ancha): las dos tienen que
+    // decir lo mismo. En una rechazada la acción se llama «Corregir».
+    for (const button of await screen.findAllByRole("button", { name: /Corregir/ })) expect(button).toBeEnabled();
   });
 
   it("no deja editar la que Meta tiene en revisión, y dice por qué", async () => {
@@ -277,5 +280,40 @@ describe("sin marketing:manage", () => {
     expect(screen.queryByRole("button", { name: /Editar/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Borrar/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Nueva plantilla" })).not.toBeInTheDocument();
+  });
+});
+
+describe("lo próximo y los estados (lienzo 2026-09-28)", () => {
+  beforeEach(() => {
+    channelsApi.listChannels.mockResolvedValue(CLOUD);
+  });
+
+  it("la isla cuenta la rechazada, la que está en revisión y la de calidad en baja", async () => {
+    api.listHsmTemplates.mockResolvedValue([
+      hsm({ id: "r1", name: "promo_rechazada", approval_status: "rejected", rejected_reason: "INVALID_FORMAT" }),
+      hsm({ id: "p1", name: "sesion_en_vivo_v1", approval_status: "pending", editable: false }),
+      hsm({ id: "q1", name: "amor_amistad", quality_score: "RED" }),
+    ]);
+    render(<MetaTemplatesView />);
+
+    const island = await screen.findByRole("region", { name: "Lo próximo" });
+    expect(island).toHaveTextContent("Corregir promo_rechazada");
+    expect(island).toHaveTextContent("En revisión en Meta");
+    expect(island).toHaveTextContent("Calidad baja");
+    expect(island).toHaveTextContent("Preguntando a Meta cada 15 s");
+  });
+
+  it("sin nada que hacer no hay isla: no celebra sin decir qué sigue", async () => {
+    api.listHsmTemplates.mockResolvedValue([hsm()]);
+    render(<MetaTemplatesView />);
+    await screen.findByText("promo_agosto");
+    expect(screen.queryByRole("region", { name: "Lo próximo" })).not.toBeInTheDocument();
+  });
+
+  it("la que Meta está mirando dice «En revisión», no «Pendiente»", async () => {
+    api.listHsmTemplates.mockResolvedValue([hsm({ id: "p2", approval_status: "pending", editable: false })]);
+    render(<MetaTemplatesView />);
+    expect((await screen.findAllByText("En revisión"))[0]).toBeInTheDocument();
+    expect(screen.queryByText("Pendiente")).not.toBeInTheDocument();
   });
 });

@@ -2623,3 +2623,31 @@ h1, h2, h3, h4, h5, h6, .font-heading {
     }
   }
 }
+
+/* ─────────── VISTA PREVIA DE WHATSAPP (plantillas de Meta) ───────────
+   Los colores son los de WhatsApp, no los de axi, por lo mismo que los
+   `--logo-*`: la previa enseña lo que verá el CLIENTE en su teléfono. Viven
+   aquí y solo aquí (DESIGN §3.5), con su versión oscura. Lienzo «Plantillas de
+   Meta premium» (2026-09-28), tableros 4–6. */
+.wa-preview {
+  --wa-canvas: #efeae2;
+  --wa-bubble: #ffffff;
+  --wa-ink: #111b21;
+  --wa-muted: #667781;
+  --wa-link: #027eb5;
+  --wa-mark: color-mix(in oklab, var(--axi-violet) 14%, transparent);
+  background: var(--wa-canvas);
+  color: var(--wa-ink);
+}
+.dark .wa-preview {
+  --wa-canvas: #0b141a;
+  --wa-bubble: #202c33;
+  --wa-ink: #e9edef;
+  --wa-muted: #8696a0;
+  --wa-link: #53bdeb;
+  --wa-mark: color-mix(in oklab, var(--axi-violet) 26%, transparent);
+}
+.wa-bubble { background: var(--wa-bubble); color: var(--wa-ink); box-shadow: 0 1px 0.5px rgb(11 20 26 / 0.13); }
+.wa-muted { color: var(--wa-muted); }
+.wa-link { color: var(--wa-link); border-top: 1px solid color-mix(in oklab, var(--wa-muted) 22%, transparent); }
+.wa-mark { background: var(--wa-mark); color: inherit; border-radius: 4px; padding: 0 2px; }
