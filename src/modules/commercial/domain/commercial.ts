@@ -53,7 +53,7 @@ export type KeyResultKey = PaceKeyResultDTO["key"];
 /*
  * ---------------------------------------------------------------- propuestas
  *
- * «Axi propone» (F6): `GET /commercial/proposals`, `GET /commercial/proposals/:id`,
+ * «Acciones recomendadas» (F6): `GET /commercial/proposals`, `GET /commercial/proposals/:id`,
  * `POST …/approve` y `POST …/reject`. Lo sirve un controller de cmo (el dueño
  * de `cmo_proposal`) con los DTOs de `cmo/presentation/dto/cmo.dto.ts`.
  */

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useId, useState } from "react";
-import { ArrowRight, Check, CircleCheck, Info, TriangleAlert } from "lucide-react";
+import { ArrowRight, Check, Info, TriangleAlert } from "lucide-react";
 
 import { errorMessage } from "@/core/lib/error-messages";
 import { formatInteger } from "@/core/lib/commercial-units";
@@ -26,11 +26,12 @@ import {
   startPhrase,
   type OutreachPlan,
 } from "@/modules/commercial/domain/proposals";
+import { PROPOSAL_BADGES } from "@/modules/commercial/domain/labels";
 import { isStaleDecision, useCommercialStore } from "@/modules/commercial/infrastructure/stores/commercial.store";
 import { useApproveAccess } from "@/modules/commercial/ui/hooks/use-approve-access";
-import { StatusBadge } from "@/shared/components/features/status-badge";
+import { StatePill } from "@/shared/components/features/bento";
 import { Button } from "@/shared/components/ui/button";
-import { PROPOSAL_BADGES } from "./ActionRow";
+
 import { SheetList, SheetRow } from "./SheetList";
 import { SourceMark } from "./SourceMark";
 
@@ -139,18 +140,19 @@ export function ActionDetailHeader({ proposal, state }: { proposal: CommercialPr
   const expiry = state.status === "pending" ? expiryPhrase(proposal.expires_at) : null;
   return (
     // Sin borde propio: la cabecera del panel ya trae el suyo encima (C11).
-    <div className="flex flex-col gap-1.5 px-4 pt-3.5">
-      <p className="flex flex-wrap items-center gap-2">
-        {type !== undefined ? (
-          <StatusBadge status={type} map={{ [type]: { label: OUTREACH_TYPE_LABELS[type], tone: "neutral" } }} appearance="dot" />
-        ) : null}
+    <div className="flex flex-col gap-2 px-4 pt-3.5">
+      {/* Qué es (canvas 4): «Acción recomendada · Lote de seguimiento» y, a la derecha, su estado o su vencimiento. */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+          Acción recomendada{type !== undefined ? ` · ${OUTREACH_TYPE_LABELS[type]}` : ""}
+        </p>
         {state.status !== "pending" ? (
-          <StatusBadge status={state.status} map={PROPOSAL_BADGES} appearance="dot" />
+          <StatePill tone={state.status === "approved" ? "success" : "neutral"}>{PROPOSAL_BADGES[state.status]?.label ?? state.status}</StatePill>
         ) : expiry !== null ? (
-          <StatusBadge status="expiry" map={{ expiry: { label: expiry, tone: "warning" } }} appearance="dot" />
+          <StatePill tone="warning">{expiry}</StatePill>
         ) : null}
-      </p>
-      {primary !== null ? <p className="text-[15px] font-medium text-accent-violet tabular-nums">{primary}</p> : null}
+      </div>
+      {primary !== null ? <Headline primary={primary} /> : null}
       {basis !== null ? (
         <p className="flex flex-wrap items-center gap-x-1.5 text-[12.5px] text-muted-foreground tabular-nums">
           <span>La cuenta: {basis}</span>
@@ -163,6 +165,19 @@ export function ActionDetailHeader({ proposal, state }: { proposal: CommercialPr
         </p>
       ) : null}
     </div>
+  );
+}
+
+/** «+2 ventas estimadas · cubre el 13 %…» → la cifra grande (coral, texto grande: pasa AA) y el resto al lado. */
+function Headline({ primary }: { primary: string }) {
+  const at = primary.indexOf(" · ");
+  const big = at === -1 ? primary : primary.slice(0, at);
+  const rest = at === -1 ? null : primary.slice(at + 3);
+  return (
+    <p className="flex flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
+      <span className="font-heading text-[28px] leading-none font-extrabold tracking-[-0.02em] whitespace-nowrap text-brand tabular-nums">{big}</span>
+      {rest !== null ? <span className="text-[13.5px] text-muted-foreground tabular-nums">{rest}</span> : null}
+    </p>
   );
 }
 
@@ -404,16 +419,14 @@ function ApprovalOutcome({ result, plans }: { result: CommercialApprovalResultDT
 }
 
 function Notice({ tone, title, detail = null }: { tone: "ok" | "warn" | "neutral"; title: string; detail?: string | null }) {
-  const Icon = tone === "ok" ? CircleCheck : tone === "warn" ? TriangleAlert : Info;
+  // El color vive en el punto (§10: el texto y los bordes tintados no pasan AA en claro).
   return (
-    <div
-      className={cn(
-        "flex gap-2.5 rounded-xl border p-3 text-[13px]",
-        tone === "ok" ? "border-success/40" : tone === "warn" ? "border-warning/40" : "border-border",
-      )}
-    >
-      <Icon aria-hidden className={cn("mt-0.5 size-4 flex-none", tone === "ok" ? "text-success" : tone === "warn" ? "text-warning" : "text-muted-foreground")} />
-      <div>
+    <div data-tone={tone} className="flex gap-3 rounded-2xl bg-muted/60 px-4 py-3 text-[13px]">
+      <span
+        aria-hidden
+        className={cn("mt-[6px] size-2 shrink-0 rounded-full", tone === "ok" ? "bg-success" : tone === "warn" ? "bg-warning" : "bg-muted-foreground")}
+      />
+      <div className="min-w-0">
         <p className="font-semibold text-foreground">{title}</p>
         {detail !== null ? <p className="mt-0.5 text-muted-foreground">{detail}</p> : null}
       </div>

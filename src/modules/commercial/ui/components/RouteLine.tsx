@@ -4,6 +4,7 @@ import { useId } from "react";
 
 import { cn } from "@/core/lib/utils";
 import type { WeekTick } from "@/modules/commercial/domain/weeks";
+import { useElementWidth } from "@/modules/commercial/ui/hooks/use-element-width";
 import { useEntrance } from "@/modules/commercial/ui/hooks/use-entrance";
 
 interface RouteLineProps {
@@ -17,6 +18,14 @@ interface RouteLineProps {
   projectedLabel?: string | null;
   /** Semanas hábiles del mes para las marcas S1…Sn (no en compacto). */
   weeks?: readonly WeekTick[];
+  /**
+   * La marca de hoy SOBRE la línea («Hoy · mié 23», la ruta del mes). Con ella
+   * todas las semanas se ven y la de hoy se resalta; sin ella (el Panel), «hoy»
+   * va debajo y su semana le cede el sitio.
+   */
+  todayLabel?: string | null;
+  /** «Meta · $ 30 M» arriba a la derecha, en vez de la bandera. */
+  targetLabel?: string | null;
   /** Franja del panel: 28 px de alto, sin semanas ni bandera. */
   compact?: boolean;
   /**
@@ -42,6 +51,20 @@ const PAD_PCT = 1.2;
  */
 export const TODAY_LABEL_CLEARANCE_PCT = 6;
 
+/** Cerca de un extremo (en fracción de la línea), la marca «Hoy · …» se ancla a ese lado. */
+const TODAY_EDGE = 0.12;
+/**
+ * Lo que ocupan, en píxeles, media marca «Hoy · mié 23» más el texto «Meta ·
+ * $ 30 M» y un respiro: si «hoy» cae más cerca que esto del final, el texto
+ * de la meta cede su sitio. En píxeles y no en %: a 390 px el 30 % de la línea
+ * es poco y a 1040 px sobra.
+ */
+export const TARGET_CLEARANCE_PX = 150;
+/** Sin medida todavía (primer render, jsdom) se supone la línea del escritorio. */
+const FALLBACK_WIDTH_PX = 1040;
+
+
+
 function crowdsToday(week: WeekTick, expected: number | null): boolean {
   return expected !== null && Math.abs(week.mid_pct - expected * 100) < TODAY_LABEL_CLEARANCE_PCT;
 }
@@ -61,14 +84,18 @@ function isWeekOf(week: WeekTick, at: number): boolean {
  */
 export const ROUTE_TRACK_MIX_PCT = 50;
 const TRACK_COLOR = `color-mix(in srgb, var(--foreground) ${String(ROUTE_TRACK_MIX_PCT)}%, var(--background))`;
+/** El atraso: coral de marca apagado sobre la pista. Es refuerzo; la cifra lo dice en la franja de abajo. */
+const GAP_COLOR = "color-mix(in srgb, var(--color-brand) 30%, var(--background))";
 /** Hasta dónde puede asomar la proyección más allá de la bandera (1 = la meta). */
 const PROJECTION_MAX = 1.04;
 const track = (value: number, max = 1): string => `${String(PAD_PCT + Math.min(max, Math.max(0, value)) * (100 - 2 * PAD_PCT))}%`;
 
 /**
  * El instrumento del módulo: UNA línea horizontal (el mes). El tramo
- * recorrido va en el gradiente de marca, un marcador hueco dice dónde
- * deberías ir hoy y una prolongación punteada a dónde llegas si sigues así.
+ * recorrido va en el gradiente de marca y acaba en un punto con anillo; una
+ * raya que atraviesa la pista dice dónde deberías ir hoy (el atraso hasta
+ * ella, en coral apagado) y una prolongación punteada con su anillo, a dónde
+ * llegas si sigues así.
  * Nada de anillos ni tiles: progreso hacia una meta, no vanidad.
  *
  * Dibujado con coordenadas en % y sin `viewBox`: así los trazos, los círculos
@@ -106,12 +133,15 @@ function RouteLineBase({
   projected = null,
   projectedLabel = null,
   weeks = [],
+  todayLabel = null,
+  targetLabel = null,
   compact = false,
   figures,
   progress: t,
   className,
 }: RouteLineProps & { progress: number }) {
   const gradientId = useId();
+  const [boxRef, width] = useElementWidth<HTMLDivElement>();
 
   const doneClamped = Math.min(1, Math.max(0, done));
   const doneNow = doneClamped * t;
@@ -120,6 +150,11 @@ function RouteLineBase({
 
   // Solo UNA semana cede su etiqueta, aunque «hoy» caiga justo en un borde.
   const todayWeek = expected === null ? -1 : weeks.findIndex((week) => isWeekOf(week, expected));
+  // La marca de hoy se ancla al borde cuando cae cerca de él (no se sale de la
+  // tarjeta), y el texto de la meta cede si la marca de hoy se le acerca.
+  const todayAnchor = expected === null ? "center" : expected < TODAY_EDGE ? "start" : expected > 1 - TODAY_EDGE ? "end" : "center";
+  const lineWidth = width > 0 ? width : FALLBACK_WIDTH_PX;
+  const crowdsTarget = todayLabel !== null && expected !== null && (1 - expected) * lineWidth < TARGET_CLEARANCE_PX;
   const height = compact ? 28 : 40;
   const y = height / 2;
   const label = [
@@ -137,7 +172,7 @@ function RouteLineBase({
     .join(", ");
 
   return (
-    <div className={cn("relative w-full", compact ? "pt-0" : "pt-5 pb-6", className)}>
+    <div ref={boxRef} className={cn("relative w-full", compact ? "pt-0" : "pt-5 pb-6", className)}>
 
       <svg width="100%" height={height} role="img" aria-label={label} className="block overflow-visible">
         <defs>
@@ -160,6 +195,13 @@ function RouteLineBase({
               />
             ))
           : null}
+        {/* El atraso: de lo recorrido a donde deberías ir hoy, en coral suave. Solo si vas por detrás. */}
+        {expected !== null && expected > doneClamped ? (
+          <line x1={track(doneNow)} x2={track(expected)} y1={y} y2={y} stroke={GAP_COLOR} strokeWidth={compact ? 6 : 8} />
+        ) : null}
+        {doneNow > 0 ? (
+          <line x1={track(0)} x2={track(doneNow)} y1={y} y2={y} stroke={`url(#${gradientId})`} strokeWidth={compact ? 6 : 8} strokeLinecap="round" />
+        ) : null}
         {projClamped !== null ? (
           <line
             x1={track(doneNow)}
@@ -169,24 +211,39 @@ function RouteLineBase({
             // Sobre la pista al 50 %: el trazo va en el color del texto para
             // seguir leyéndose (el gris apagado desaparecía encima).
             stroke="var(--color-foreground)"
+            strokeWidth={1.5}
+            strokeDasharray="1.5 4.5"
+            strokeLinecap="round"
+          />
+        ) : null}
+        {projClamped !== null ? (
+          <circle cx={track(projClamped, PROJECTION_MAX)} cy={y} r={3.5} fill="var(--color-background)" stroke="var(--color-foreground)" strokeWidth={1.5} />
+        ) : null}
+        {/* Dónde deberías ir hoy: una raya que atraviesa la pista. */}
+        {expected !== null ? (
+          <line
+            data-slot="route-today"
+            x1={track(expected)}
+            x2={track(expected)}
+            y1={y - (compact ? 8 : 11)}
+            y2={y + (compact ? 8 : 11)}
+            stroke="var(--color-foreground)"
             strokeWidth={2}
-            strokeDasharray="3 6"
             strokeLinecap="round"
           />
         ) : null}
         {doneNow > 0 ? (
-          <line x1={track(0)} x2={track(doneNow)} y1={y} y2={y} stroke={`url(#${gradientId})`} strokeWidth={compact ? 6 : 8} strokeLinecap="round" />
-        ) : null}
-        {expected !== null ? (
-          <circle cx={track(expected)} cy={y} r={compact ? 5 : 6} fill="var(--color-background)" stroke="var(--color-foreground)" strokeWidth={2} />
-        ) : null}
-        {doneNow > 0 ? (
-          <circle cx={track(doneNow)} cy={y} r={compact ? 5.5 : 7} fill="var(--color-brand)" stroke="var(--color-background)" strokeWidth={3} />
+          <circle cx={track(doneNow)} cy={y} r={compact ? 5 : 6.5} fill="var(--color-background)" stroke="var(--color-brand)" strokeWidth={3} />
         ) : null}
       </svg>
 
-      {/* La bandera de la meta, al final de la línea */}
-      {!compact ? (
+      {/* La bandera de la meta, al final de la línea (o su texto, arriba a la derecha) */}
+      {!compact && targetLabel !== null && !crowdsTarget ? (
+        <span aria-hidden data-slot="route-target" className="absolute top-0 right-0 text-[11.5px] leading-4 whitespace-nowrap text-muted-foreground">
+          {targetLabel}
+        </span>
+      ) : null}
+      {!compact && targetLabel === null ? (
         <span
           aria-hidden
           className="absolute -translate-x-full text-foreground"
@@ -212,9 +269,40 @@ function RouteLineBase({
         </span>
       ) : null}
 
-      {/* S1…S5 debajo de la línea; la semana de hoy cede su sitio a «hoy»,
-          bajo el marcador hueco (arriba chocaría con la proyección). */}
-      {!compact
+      {/* Con la marca arriba: todas las semanas debajo y la de hoy resaltada. */}
+      {!compact && todayLabel !== null && expected !== null ? (
+        <span
+          aria-hidden
+          data-slot="route-today-label"
+          className={cn(
+            "absolute top-0 text-[11.5px] leading-4 font-medium whitespace-nowrap text-foreground",
+            todayAnchor === "start" ? "-translate-x-2" : todayAnchor === "end" ? "-translate-x-[calc(100%-0.5rem)]" : "-translate-x-1/2",
+          )}
+          style={{ left: track(expected) }}
+        >
+          {todayLabel}
+        </span>
+      ) : null}
+      {!compact && todayLabel !== null
+        ? weeks.map((week, index) => (
+            <span
+              key={week.label}
+              aria-hidden
+              className={cn(
+                "absolute bottom-0 -translate-x-1/2 text-[10.5px]",
+                index === todayWeek ? "font-medium text-foreground" : "text-muted-foreground",
+              )}
+              style={{ left: track(week.mid_pct / 100) }}
+            >
+              {week.label}
+            </span>
+          ))
+        : null}
+
+      {/* Sin marca arriba (el Panel): S1…S5 debajo de la línea y la semana de
+          hoy cede su sitio a «hoy», bajo el marcador (arriba chocaría con la
+          proyección). */}
+      {!compact && todayLabel === null
         ? weeks
             .filter((week, index) => index !== todayWeek && !crowdsToday(week, expected))
             .map((week) => (
@@ -228,7 +316,7 @@ function RouteLineBase({
               </span>
             ))
         : null}
-      {!compact && expected !== null ? (
+      {!compact && todayLabel === null && expected !== null ? (
         <span
           aria-hidden
           className="absolute bottom-0 -translate-x-1/2 text-[10.5px] font-medium text-foreground"

@@ -133,8 +133,51 @@ describe("GoalEditorView", () => {
     withData();
     useCommercialStore.setState({ preview: { status: "ready", data: plan, error: null } });
     render(<GoalEditorView />);
-    expect(screen.getByText("43")).toBeInTheDocument();
+    // «43» también es la última parada del mapa: se mira en la lista.
+    const list = within(screen.getByRole("region", { name: "Lo que implica" }));
+    expect(list.getByText("43")).toBeInTheDocument();
     expect(screen.queryByText("Falta el ticket")).toBeNull();
+  });
+
+  it("las ventas salen de la cuenta a la vista, y cada cifra de la cadena lleva su barra de embudo", () => {
+    withData();
+    useCommercialStore.setState({ preview: { status: "ready", data: plan, error: null } });
+    render(<GoalEditorView />);
+    const list = screen.getByRole("region", { name: "Lo que implica" });
+    expect(within(list).getByText(/÷ .*700\.000 de ticket = 42,9 → 43$/)).toBeInTheDocument();
+    expect(within(list).getAllByRole("listitem")).toHaveLength(6);
+  });
+
+  it("«Así queda tu viaje»: velocidad, duración, por semana, sobre el mes pasado y lo alcanzable", () => {
+    withData();
+    useCommercialStore.setState({ preview: { status: "ready", data: plan, error: null } });
+    render(<GoalEditorView />);
+    const trip = within(screen.getByRole("region", { name: "Así queda tu viaje" }));
+    expect(trip.getByText("Velocidad").parentElement).toHaveTextContent("Velocidad1,7ventas al día hábil");
+    expect(trip.getByText("Duración").parentElement).toHaveTextContent("Duración26 díasde lunes a sábado");
+    expect(trip.getByText("Por semana").parentElement).toHaveTextContent("Por semana10ventas");
+    expect(trip.getByText("Sobre agosto").parentElement).toHaveTextContent("+36 %");
+    expect(trip.getByText(/es alcanzable/)).toHaveTextContent(/25\.400\.000.*\(\+15 %\) es alcanzable/);
+  });
+
+  it("«Así queda tu viaje» sin ticket no inventa la velocidad: dice qué falta", () => {
+    withData();
+    useCommercialStore.setState({ preview: { status: "ready", data: { ...plan, status: "incomplete" }, error: null } });
+    render(<GoalEditorView />);
+    const trip = within(screen.getByRole("region", { name: "Así queda tu viaje" }));
+    expect(trip.getByText("Con tu ticket promedio te decimos cuántas ventas al día pide.")).toBeInTheDocument();
+  });
+
+  it("el mapa del destino lleva las paradas del camino al revés, con las cifras de la vista previa", () => {
+    withData();
+    useCommercialStore.setState({ preview: { status: "ready", data: plan, error: null } });
+    render(<GoalEditorView />);
+    expect(screen.getByRole("region", { name: "Fijar el destino" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("img", {
+        name: /^De hoy · 23 sep a Meta · .*30\.000\.000, 30 sep; parada 1: ≈ 600 conversaciones nuevas; parada 2: ≈ 210 contactados; parada 3: ≈ 95 citas agendadas; parada 4: ≈ 110 cotizaciones; parada 5: 43 ventas$/,
+      }),
+    ).toBeInTheDocument();
   });
 
   it("si la vista previa falla con cifras viejas, las atenúa y lo dice", () => {

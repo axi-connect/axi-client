@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Target } from "lucide-react";
 
 import { formatInteger } from "@/core/lib/commercial-units";
 import { formatMoney } from "@/core/lib/format";
@@ -17,10 +17,10 @@ import {
   type KeyResultDetailKey,
   type PlanInputKey,
 } from "@/modules/commercial/domain/key-result";
-import { isOffPace, KR_LABELS, PACE_BADGES } from "@/modules/commercial/domain/labels";
+import { isOffPace, KR_LABELS, PACE_BADGES, PACE_PILL_TONES } from "@/modules/commercial/domain/labels";
 import { gap, isLearning, ratioPct } from "@/modules/commercial/domain/pace";
 import { useCommercialStore } from "@/modules/commercial/infrastructure/stores/commercial.store";
-import { StatusBadge } from "@/shared/components/features/status-badge";
+import { StatePill } from "@/shared/components/features/bento";
 import { Button } from "@/shared/components/ui/button";
 import { PaceTrend } from "./PaceTrend";
 import { SheetList, SheetRow } from "./SheetList";
@@ -71,7 +71,7 @@ export function KeyResultDetail({
 
 /**
  * El pie: cuántas acciones propuestas empujan este resultado (las pendientes
- * con `target_key_result` = la clave, del mismo store que «Axi propone») y
+ * con `target_key_result` = la clave, del mismo store que «Acciones recomendadas») y
  * dónde se ve el dato con más detalle (CRM o Analítica, por href).
  */
 export function KeyResultDetailFooter({ detailKey }: { detailKey: KeyResultDetailKey }) {
@@ -81,8 +81,13 @@ export function KeyResultDetailFooter({ detailKey }: { detailKey: KeyResultDetai
   );
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <p className="min-w-0 flex-1 text-[12.5px] text-accent-violet">
-        {pushing === 0 ? null : pushing === 1 ? "1 acción propuesta empuja este resultado" : `${formatInteger(pushing)} acciones propuestas empujan este resultado`}
+      <p className="flex min-w-0 flex-1 items-center gap-2 text-[12.5px] text-foreground">
+        {pushing === 0 ? null : (
+          <>
+            <Target aria-hidden className="size-4 shrink-0" strokeWidth={1.8} />
+            {pushing === 1 ? "1 acción propuesta empuja este resultado" : `${formatInteger(pushing)} acciones propuestas empujan este resultado`}
+          </>
+        )}
       </p>
       <Button asChild variant="outline" size="sm">
         <Link href={link.href}>
@@ -98,9 +103,13 @@ function BigFigure({ kr, learning }: { kr: PaceKeyResultDTO; learning: boolean }
   const [head, tail] = splitMissing(missingLine(kr.actual, kr.target));
   return (
     <p className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-      <span className="font-heading text-[34px] leading-none tracking-tight tabular-nums">{head}</span>
+      <span className="font-heading text-[40px] leading-none font-bold tracking-[-0.03em] tabular-nums">{head}</span>
       {tail !== null ? <span className="text-[15px] text-muted-foreground tabular-nums">{tail}</span> : null}
-      {!learning && isOffPace(kr.status) ? <StatusBadge status={kr.status} map={PACE_BADGES} appearance="dot" className="self-center" /> : null}
+      {!learning && isOffPace(kr.status) ? (
+        <span className="self-center">
+          <StatePill tone={PACE_PILL_TONES[kr.status]}>{PACE_BADGES[kr.status]?.label ?? kr.status}</StatePill>
+        </span>
+      ) : null}
     </p>
   );
 }
@@ -117,7 +126,7 @@ function TicketFigure({ pace, plan }: { pace: CommercialPaceDTO; plan: Commercia
   return (
     <div className="flex flex-col gap-3">
       <p className="flex flex-wrap items-baseline gap-x-2">
-        <span className="font-heading text-[34px] leading-none tracking-tight tabular-nums">
+        <span className="font-heading text-[40px] leading-none font-bold tracking-[-0.03em] tabular-nums">
           {actual !== null ? formatMoney(actual, pace.currency) : "—"}
         </span>
         {planned !== null ? (

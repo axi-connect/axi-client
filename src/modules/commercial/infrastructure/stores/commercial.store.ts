@@ -12,7 +12,7 @@ import type {
   GoalResponseDTO,
   RejectCommercialProposalResultDTO,
 } from "@/modules/commercial/domain/commercial";
-import { approvalTookEffect, approvedThisPeriod } from "@/modules/commercial/domain/proposals";
+import { approvalTookEffect, decidedThisPeriod } from "@/modules/commercial/domain/proposals";
 import {
   approveProposal as approveProposalApi,
   getGoal,
@@ -62,7 +62,7 @@ interface CommercialState {
   pace: Section<CommercialPaceDTO>;
   /** «Lo que implica» del editor de meta: la vista previa de la cifra tecleada. */
   preview: Section<CommercialPlanDTO>;
-  /** «Axi propone»: pendientes primero y, detrás, las aprobadas del mes (con «Ver qué quedó»). */
+  /** «Acciones recomendadas»: pendientes primero y, detrás, las decididas del mes (aprobadas con «Ver qué quedó», descartadas con su motivo). */
   proposals: Section<CommercialProposalDTO[]>;
   /**
    * Lo que dejó cada aprobación de esta sesión, por id: aprobar desde la lista
@@ -95,7 +95,7 @@ interface CommercialState {
   /** Vista previa con aborto: la petición anterior se cancela al llegar la siguiente cifra. */
   previewPlan: (input: GoalInputDTO) => Promise<void>;
   cancelPreview: () => void;
-  /** Pendientes + aprobadas del mes, en paralelo. Un fallo deja la sección en error sin tumbar la ruta. */
+  /** Pendientes + aprobadas y descartadas del mes, en paralelo. Un fallo deja la sección en error sin tumbar la ruta. */
   loadProposals: () => Promise<void>;
   /**
    * Aprueba (una sola vez: el segundo clic es 409). Con una aprobación de la
@@ -107,7 +107,7 @@ interface CommercialState {
    * plan y ritmo (el lote puede mover la ruta).
    */
   approveProposal: (id: string) => Promise<CommercialApprovalResultDTO>;
-  /** Rechaza con motivo. Lanza al llamador (409/403 recargan la lista); la fila sale de la lista de pendientes. */
+  /** Rechaza con motivo. Lanza al llamador (409/403 recargan la lista); la fila pasa de pendiente a descartada, con su motivo. */
   rejectProposal: (id: string, reason: string | undefined) => Promise<RejectCommercialProposalResultDTO>;
   /**
    * Cancela el reintento pendiente de un ritmo caducado (Q3) y reinicia su
@@ -116,7 +116,7 @@ interface CommercialState {
   cancelStaleRetry: () => void;
 }
 
-type ProposalDecision = Pick<CommercialProposalDTO, "status" | "decided_at">;
+type ProposalDecision = Pick<CommercialProposalDTO, "status" | "decided_at"> & Partial<Pick<CommercialProposalDTO, "reject_reason">>;
 
 function blockerFor(error: unknown): CommercialBlocker {
   if (error instanceof HttpError && error.code === API_ERROR_CODES.capabilityNotGranted) return "no_plan";
@@ -156,12 +156,10 @@ export const useCommercialStore = create<CommercialState>((set, get) => {
    */
   function applyDecisions(rows: readonly CommercialProposalDTO[]): CommercialProposalDTO[] {
     const { decisions } = get();
-    return rows
-      .filter((row) => decisions[row.id]?.status !== "rejected")
-      .map((row) => {
-        const decision = decisions[row.id];
-        return decision === undefined ? row : { ...row, ...decision };
-      });
+    return rows.map((row) => {
+      const decision = decisions[row.id];
+      return decision === undefined ? row : { ...row, ...decision };
+    });
   }
   let previewController: AbortController | null = null;
   /** La carga completa en vuelo (C8): un segundo `load()` la comparte. */
@@ -344,13 +342,21 @@ export const useCommercialStore = create<CommercialState>((set, get) => {
       const mine = (seq.proposals += 1);
       set((state) => ({ proposals: loading(state.proposals) }));
       try {
-        const [pending, approved] = await Promise.all([listProposals("pending"), listProposals("approved")]);
+        const [pending, approved, rejected] = await Promise.all([
+          listProposals("pending"),
+          listProposals("approved"),
+          listProposals("rejected"),
+        ]);
         if (seq.proposals !== mine) return;
         const periodStart = get().goal.data?.goal?.period_start ?? null;
-        const rows = applyDecisions(pending);
-        const seen = new Set(rows.map((row) => row.id));
-        const settled = approvedThisPeriod(applyDecisions(approved), periodStart).filter((row) => !seen.has(row.id));
-        const stillPending = new Set(rows.filter((row) => row.status === "pending").map((row) => row.id));
+        // Lo decidido en esta sesión sale de las pendientes y pasa al historial,
+        // aunque la carga saliera antes del clic.
+        // Una misma propuesta puede venir en dos listas (se decidió entre dos
+        // lecturas): cuenta una vez.
+        const all = [...new Map(applyDecisions([...pending, ...approved, ...rejected]).map((row) => [row.id, row])).values()];
+        const rows = all.filter((row) => row.status === "pending");
+        const settled = decidedThisPeriod(all.filter((row) => row.status !== "pending"), periodStart);
+        const stillPending = new Set(rows.map((row) => row.id));
         set((state) => ({
           proposals: ready([...rows, ...settled]),
           // Un resultado «nada se aplicó» solo vale mientras la fila siga
@@ -384,11 +390,9 @@ export const useCommercialStore = create<CommercialState>((set, get) => {
       set((state) => ({
         // El «no se pudo» de un intento anterior ya no describe nada (V3).
         approvals: omit(state.approvals, id),
-        decisions: { ...state.decisions, [id]: { status: "rejected", decided_at: new Date().toISOString() } },
-        proposals:
-          state.proposals.data === null
-            ? state.proposals
-            : { ...state.proposals, data: state.proposals.data.filter((proposal) => proposal.id !== id) },
+        decisions: { ...state.decisions, [id]: { status: "rejected", decided_at: new Date().toISOString(), reject_reason: reason ?? null } },
+        // Sale de las pendientes y queda en «Semanas anteriores» con su motivo.
+        proposals: patchProposal(state.proposals, id, { status: "rejected", decided_at: new Date().toISOString(), reject_reason: reason ?? null }),
       }));
       return result;
     },

@@ -139,6 +139,18 @@ export function seedLine(seed: GoalSeedDTO | null, currency: string): string | n
   return `Aún no tenemos tu historia: te proponemos empezar con lo típico de ${niche}.`;
 }
 
+/**
+ * «Así queda tu mes» en el editor: la meta que la historia hace alcanzable,
+ * dicha sin regaño («Con tu ritmo, $ 25.400.000 (+15 %) es alcanzable.»).
+ * `null` sin historia o sin sugerencia del servidor.
+ */
+export function reachableLine(seed: GoalSeedDTO | null, currency: string): { amount: string; lift: string | null } | null {
+  if (seed === null || seed.source === "benchmark" || seed.suggested_target_cents === null) return null;
+  const last = seed.last_month_revenue_cents;
+  const lift = last === null || last <= 0 ? null : Math.round(((seed.suggested_target_cents - last) / last) * 100);
+  return { amount: formatMoney(seed.suggested_target_cents, currency), lift: lift === null || lift <= 0 ? null : `+${String(lift)} %` };
+}
+
 /** «Meta del mes: $ 30.000.000 · la pusiste tú el 1 sep». Quién la puso cambia el verbo. */
 export function goalLead(targetCents: number, currency: string, source: GoalSource, setAtIso: string): string {
   const when = shortDay(setAtIso);
@@ -163,7 +175,7 @@ export const MISSING_TICKET_FIGURE = "Falta el ticket";
 export const GOAL_SAVED_TITLE = "Meta puesta";
 export const GOAL_SAVED_DETAIL = "Empezamos a medir el camino.";
 
-/** El estado vacío de «Axi propone» mientras no haya nada que acelerar (F6). */
+/** El estado vacío de «Acciones recomendadas» mientras no haya nada que acelerar (F6). */
 const NO_PROPOSALS_MESSAGE = "Estás al día. Cuando algo pueda acelerar la ruta, aquí lo verás.";
 
 /** El mismo hueco, en el estado «aprendiendo». */
@@ -173,7 +185,7 @@ export const LEARNING_PROPOSALS_MESSAGE = "Cuando conozcamos tu ritmo, te propon
 const SEARCHING_PROPOSALS_MESSAGE = "Axi está buscando qué puede acelerar la ruta; las propuestas salen al cerrar el día.";
 
 /**
- * El vacío de «Axi propone» según el ritmo: «Estás al día» solo cuando la
+ * El vacío de «Acciones recomendadas» según el ritmo: «Estás al día» solo cuando la
  * ruta va bien (al ritmo, por delante o cumplida); con ritmo bajo dice que
  * Axi busca y cuándo llegan las propuestas, sin regaño; aprendiendo, que aún
  * no conocemos el ritmo. Sin ritmo leído, el mensaje neutro de siempre.

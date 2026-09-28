@@ -48,3 +48,22 @@ export const PACE_BADGES: StatusMap = {
 export function isOffPace(status: PaceStatus): boolean {
   return status !== "on_track" && status !== "insufficient_data";
 }
+
+/** El estado de una acción recomendada (la hoja de detalle lo pinta como badge de punto). */
+export const PROPOSAL_BADGES: StatusMap = {
+  pending: { label: "Por decidir", tone: "neutral" },
+  approved: { label: "Aprobada", tone: "success" },
+  rejected: { label: "Descartada", tone: "neutral" },
+  expired: { label: "Vencida", tone: "neutral" },
+  superseded: { label: "Reemplazada", tone: "neutral" },
+};
+
+/** El mismo ritmo como `StatePill` de las fichas (punto de color, texto en foreground). */
+export const PACE_PILL_TONES: Record<PaceStatus, "success" | "warning" | "neutral"> = {
+  ahead: "success",
+  on_track: "success",
+  at_risk: "warning",
+  behind: "warning",
+  insufficient_data: "neutral",
+  achieved: "success",
+};

@@ -1,11 +1,12 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { resetCommercialStore, useCommercialStore } from "@/modules/commercial/infrastructure/stores/commercial.store";
 import { CommercialView } from "../CommercialView";
-import { goalResponse, pace, plan, proposal } from "./fixtures";
+import { goalResponse, learningPace, pace, plan, proposal } from "./fixtures";
 
 type Ent = { entitlements: null; loaded: boolean; hasCapability: (code: string) => boolean };
 const mockEntitlements = jest.fn<Ent, []>(() => ({ entitlements: null, loaded: true, hasCapability: () => true }));
-jest.mock("@/modules/commercial/infrastructure/realtime/use-commercial-realtime", () => ({ useCommercialRealtime: () => undefined }));
+let mockLive = false;
+jest.mock("@/modules/commercial/infrastructure/realtime/use-commercial-realtime", () => ({ useCommercialRealtime: () => ({ live: mockLive }) }));
 jest.mock("@/shared/auth/entitlements.hooks", () => ({ useEntitlements: () => mockEntitlements() }));
 jest.mock("@/modules/companies/public", () => ({ useMyCompany: () => ({ company: { currency: "COP" } }) }));
 const permissions = new Set(["commercial:read", "commercial:manage"]);
@@ -81,7 +82,7 @@ describe("CommercialView", () => {
     expect(screen.getByText(/El mes pasado vendiste/)).toBeInTheDocument();
   });
 
-  it("al ritmo y sin propuestas, «Axi propone» sí dice «Estás al día» (Q12)", () => {
+  it("al ritmo y sin propuestas, las rutas de Axi sí dicen «Estás al día» (Q12)", () => {
     useCommercialStore.setState({
       goal: { status: "ready", data: goalResponse, error: null },
       plan: { status: "ready", data: plan, error: null },
@@ -92,7 +93,7 @@ describe("CommercialView", () => {
     expect(screen.getByText(/Estás al día/)).toBeInTheDocument();
   });
 
-  it("con meta: cabecera con procedencia, hero, ritmo, resultados y «Axi propone» vacío", () => {
+  it("con meta: cabecera con procedencia, el mapa con su panel, el bento y las rutas vacías", () => {
     useCommercialStore.setState({
       goal: { status: "ready", data: goalResponse, error: null },
       plan: { status: "ready", data: plan, error: null },
@@ -101,10 +102,15 @@ describe("CommercialView", () => {
     });
     render(<CommercialView />);
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Tu ruta de septiembre");
+    expect(screen.getByText("Comercial · septiembre 2026")).toBeInTheDocument();
     expect(screen.getByText(/Meta del mes: .*30\.000\.000.*la pusiste tú el 1 sep/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /cambiar meta/i })).toHaveAttribute("href", "/comercial/meta");
     expect(screen.getByRole("region", { name: "La ruta del mes" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Resultados clave" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Lo que hace falta" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Navegación de la ruta" })).toBeInTheDocument();
+    // Sin tiempo real conectado no se dice «En vivo»: se dice de cuándo es el dato.
+    expect(screen.queryByText(/En vivo/)).toBeNull();
+    expect(screen.getByText(/^Actualizado /)).toBeInTheDocument();
     // Lista vacía DE VERDAD con la ruta en ritmo bajo: «Estás al día» sería falso (Q12).
     expect(screen.getByText("Axi está buscando qué puede acelerar la ruta; las propuestas salen al cerrar el día.")).toBeInTheDocument();
     expect(screen.queryByText(/Estás al día/)).toBeNull();
@@ -118,7 +124,7 @@ describe("CommercialView", () => {
     expect(loadProposals).toHaveBeenCalledTimes(1);
   });
 
-  it("con propuestas: la pendiente enlaza a su detalle y «Aprobar» aprueba y lo abre", async () => {
+  it("con propuestas: la ruta de Axi se elige, sube la llegada, enlaza a su detalle y «Tomar esta ruta» aprueba y lo abre", async () => {
     useCommercialStore.setState({
       goal: { status: "ready", data: goalResponse, error: null },
       plan: { status: "ready", data: plan, error: null },
@@ -126,10 +132,17 @@ describe("CommercialView", () => {
       proposals: { status: "ready", data: [proposal], error: null },
     });
     render(<CommercialView />);
-    const actions = screen.getByRole("region", { name: "Axi propone" });
-    expect(within(actions).getByRole("link", { name: proposal.title })).toHaveAttribute("href", `/comercial/acciones/${proposal.id}`);
-    expect(within(actions).getByText("+2 ventas estimadas · cubre el 20 % de lo que falta para volver al ritmo")).toBeInTheDocument();
-    fireEvent.click(within(actions).getByRole("button", { name: /Aprobar/ }));
+    const panel = screen.getByRole("region", { name: "Navegación de la ruta" });
+    const options = within(panel).getAllByRole("radio");
+    expect(options).toHaveLength(2);
+    expect(options[0]).toHaveAttribute("aria-checked", "true");
+    expect(options[0]).toHaveTextContent("Seguir al ritmo de hoy");
+    expect(options[1]).toHaveTextContent(proposal.title);
+    fireEvent.click(options[1]);
+    // 24,62 M + 2 ventas × 700.000 = 26,02 M → 87 % de 30 M.
+    expect(screen.getAllByText(/87 %/).length).toBeGreaterThan(0);
+    expect(within(panel).getByRole("link", { name: "Ver el detalle" })).toHaveAttribute("href", `/comercial/acciones/${proposal.id}`);
+    fireEvent.click(within(panel).getByRole("button", { name: `Tomar esta ruta: ${proposal.title}` }));
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith(`/comercial/acciones/${proposal.id}`);
     });
@@ -145,8 +158,10 @@ describe("CommercialView", () => {
       proposals: { status: "ready", data: [proposal], error: null },
     });
     render(<CommercialView />);
-    const actions = screen.getByRole("region", { name: "Axi propone" });
-    expect(within(actions).queryByRole("button", { name: /Aprobar/ })).toBeNull();
+    const actions = screen.getByRole("region", { name: "Navegación de la ruta" });
+    fireEvent.click(within(actions).getAllByRole("radio")[1]);
+    expect(within(actions).queryByRole("button", { name: /Tomar esta ruta/ })).toBeNull();
+    expect(within(actions).getByRole("link", { name: "Ver el detalle" })).toBeInTheDocument();
     expect(within(actions).getByText(/Pídele a un administrador que apruebe/)).toBeInTheDocument();
   });
 
@@ -159,8 +174,9 @@ describe("CommercialView", () => {
       proposals: { status: "ready", data: [proposal], error: null },
     });
     render(<CommercialView />);
-    const actions = screen.getByRole("region", { name: "Axi propone" });
-    expect(within(actions).queryByRole("button", { name: /Aprobar/ })).toBeNull();
+    const actions = screen.getByRole("region", { name: "Navegación de la ruta" });
+    fireEvent.click(within(actions).getAllByRole("radio")[1]);
+    expect(within(actions).queryByRole("button", { name: /Tomar esta ruta/ })).toBeNull();
     expect(within(actions).getByText("Tu plan no incluye CRM con IA: el agente no puede trabajar esta lista.")).toBeInTheDocument();
   });
 
@@ -175,11 +191,55 @@ describe("CommercialView", () => {
       approvals: { a2: { applied: [], failed: [], status: "approved" } },
     });
     render(<CommercialView />);
-    const [first, second] = within(screen.getByRole("region", { name: "Axi propone" })).getAllByRole("listitem");
-    expect(first).toHaveTextContent("Se aprobó el 22 de septiembre");
+    const decided = screen.getByRole("heading", { name: "Decididas este mes" }).closest("section") as HTMLElement;
+    const [first, second] = within(decided).getAllByRole("listitem");
+    expect(first).toHaveTextContent("Aprobada el 22 sep");
     expect(first).toHaveTextContent(/Ver$/);
     expect(first).not.toHaveTextContent("Ver qué quedó");
     expect(second).toHaveTextContent("Ver qué quedó");
+  });
+
+  it("las descartadas del mes se quedan en el historial con su motivo, y nada de ellas ofrece «Aprobar»", () => {
+    const rejected = { ...proposal, id: "r1", title: "Retomar 24 cotizaciones", status: "rejected" as const, decided_at: "2026-09-09T15:00:00.000Z", reject_reason: "Ya los llamamos nosotros." };
+    useCommercialStore.setState({
+      goal: { status: "ready", data: goalResponse, error: null },
+      plan: { status: "ready", data: plan, error: null },
+      pace: { status: "ready", data: pace, error: null },
+      proposals: { status: "ready", data: [rejected], error: null },
+    });
+    render(<CommercialView />);
+    const decided = screen.getByRole("heading", { name: "Decididas este mes" }).closest("section") as HTMLElement;
+    const [row] = within(decided).getAllByRole("listitem");
+    expect(row).toHaveTextContent("Descartada el 9 sep");
+    expect(row).toHaveTextContent("«Ya los llamamos nosotros»");
+    // Una descartada no es una ruta: el panel solo ofrece seguir como vas.
+    expect(within(screen.getByRole("region", { name: "Navegación de la ruta" })).getAllByRole("radio")).toHaveLength(1);
+  });
+
+  it("con el tiempo real escuchando, la cabecera dice «En vivo»", () => {
+    mockLive = true;
+    useCommercialStore.setState({
+      goal: { status: "ready", data: goalResponse, error: null },
+      plan: { status: "ready", data: plan, error: null },
+      pace: { status: "ready", data: pace, error: null },
+      proposals: { status: "ready", data: [], error: null },
+    });
+    render(<CommercialView />);
+    expect(screen.getByText(/^En vivo · /)).toBeInTheDocument();
+    mockLive = false;
+  });
+
+  it("aprendiendo: no hay ficha de la semana; el ticket y los resultados sí", () => {
+    useCommercialStore.setState({
+      goal: { status: "ready", data: goalResponse, error: null },
+      plan: { status: "ready", data: plan, error: null },
+      pace: { status: "ready", data: learningPace, error: null },
+      proposals: { status: "ready", data: [], error: null },
+    });
+    render(<CommercialView />);
+    expect(screen.queryByText("Ritmo · esta semana")).toBeNull();
+    expect(screen.getByText("Ticket promedio")).toBeInTheDocument();
+    expect(screen.getByText("Cuando conozcamos tu ritmo, te proponemos acciones.")).toBeInTheDocument();
   });
 
   it("carga una sola vez, solo si la sección está en idle", () => {

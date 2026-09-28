@@ -19,7 +19,7 @@ export const COMMERCIAL_REALTIME_DEBOUNCE_MS = 1000;
  * - `commercial.plan_recomputed` · `pace_updated` · `pace_behind` ·
  *   `pace_recovered` → plan y ritmo (`reloadPace`; sin meta no pide nada).
  * - Con `proposals`: `cmo.proposal_created` / `cmo.proposal_decided` y
- *   `pace_behind` → «Axi propone» (la propuesta la persiste cmo y llega por su
+ *   `pace_behind` → «Acciones recomendadas» (la propuesta la persiste cmo y llega por su
  *   evento; la decidió quizá otra pestaña u otra persona).
  * - Al RECONECTAR se recarga todo: lo emitido con el socket caído se perdió.
  *
@@ -27,7 +27,7 @@ export const COMMERCIAL_REALTIME_DEBOUNCE_MS = 1000;
  * (`GoalProgressBlock`, sin ellas). Sin `enabled` (permiso o capacidad) no
  * hace nada.
  */
-export function useCommercialRealtime({ enabled, proposals = false }: { enabled: boolean; proposals?: boolean }): void {
+export function useCommercialRealtime({ enabled, proposals = false }: { enabled: boolean; proposals?: boolean }): { live: boolean } {
   const { socket, connected } = useSocket("inbox");
   const store = useCommercialStore;
   const everConnected = useRef(false);
@@ -84,4 +84,7 @@ export function useCommercialRealtime({ enabled, proposals = false }: { enabled:
     }
     everConnected.current = true;
   }, [connected, store]);
+
+  // «En vivo» en la cabecera: solo si de verdad se está escuchando.
+  return { live: enabled && connected };
 }

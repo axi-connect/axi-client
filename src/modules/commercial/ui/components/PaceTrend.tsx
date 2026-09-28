@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { formatInteger } from "@/core/lib/commercial-units";
 import type { CommercialPaceDTO } from "@/modules/commercial/domain/commercial";
 import { shortDay } from "@/modules/commercial/domain/format";
-import { salesTrend } from "@/modules/commercial/domain/key-result";
+import { projectedCount, salesTrend } from "@/modules/commercial/domain/key-result";
 import { AXIS_COLOR, CHART_COLORS } from "@/shared/components/features/charts/chart-theme";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 
@@ -29,28 +29,32 @@ const SERIES = [
  * `today` para no dibujar la meseta de los días que no han pasado. La etiqueta
  * accesible dice lo mismo que la gráfica en una frase.
  */
-export function PaceTrend({ pace }: { pace: Pick<CommercialPaceDTO, "series" | "today" | "key_results"> }) {
+export function PaceTrend({ pace }: { pace: Pick<CommercialPaceDTO, "series" | "today" | "key_results" | "business_days_elapsed" | "business_days_total"> }) {
   const data = salesTrend(pace.series, pace.today);
   if (data.length < 2) return null;
   const sales = pace.key_results.find((kr) => kr.key === "sales");
+  const projected = sales === undefined ? null : projectedCount(sales.actual, pace.business_days_elapsed, pace.business_days_total);
   const label =
     sales === undefined
       ? "Ventas acumuladas del mes frente a lo esperado"
       : `Ventas acumuladas del mes: ${formatInteger(sales.actual)} reales frente a ${formatInteger(sales.expected)} esperadas a hoy`;
   return (
     <figure className="flex flex-col gap-2">
-      <div role="img" aria-label={label}>
+      {/* El eje de la izquierda va con margen negativo: sin este aire, «45» sale cortado dentro del panel. */}
+      <div role="img" aria-label={label} className="pl-3">
         <AreaTrend data={data} series={SERIES} xKey="date" formatX={shortDay} formatY={(value) => formatInteger(value)} />
       </div>
-      <figcaption className="flex items-center gap-4 text-[12px] text-muted-foreground">
+      {/* La leyenda con sus cifras (canvas 3): lo real, lo esperado a hoy y a dónde llegas. */}
+      <figcaption className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-muted-foreground tabular-nums">
         <span className="inline-flex items-center gap-1.5">
           <i aria-hidden className="block h-0.5 w-4 rounded-full bg-brand" />
-          Real
+          Real{sales === undefined ? null : ` · ${formatInteger(sales.actual)}`}
         </span>
         <span className="inline-flex items-center gap-1.5">
           <i aria-hidden className="block w-4 border-t-2 border-dashed border-muted-foreground" />
-          Esperado
+          Esperado{sales === undefined ? null : ` · ${formatInteger(sales.expected)} a hoy`}
         </span>
+        {projected !== null ? <span>Si sigues así · {formatInteger(projected)}</span> : null}
       </figcaption>
     </figure>
   );

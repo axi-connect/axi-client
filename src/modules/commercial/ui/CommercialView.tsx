@@ -1,17 +1,19 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo } from "react";
-import { Lock, Pencil, RotateCcw } from "lucide-react";
+import { Lock, RotateCcw } from "lucide-react";
 
 import { errorMessage } from "@/core/lib/error-messages";
+import { cn } from "@/core/lib/utils";
 import { useAlert } from "@/core/providers/alert-provider";
 import { goalLead, routeTitle } from "@/modules/commercial/domain/copy";
 import { keyResultHref } from "@/modules/commercial/domain/key-result";
 import { commercialProposalHref } from "@/modules/commercial/domain/proposals";
 import { monthLabel } from "@/modules/commercial/domain/format";
 import { isLearning } from "@/modules/commercial/domain/pace";
+import { weekChart } from "@/modules/commercial/domain/route-figures";
+import { weekProgress } from "@/modules/commercial/domain/weeks";
 import { useCommercialRealtime } from "@/modules/commercial/infrastructure/realtime/use-commercial-realtime";
 import { useCommercialStore } from "@/modules/commercial/infrastructure/stores/commercial.store";
 import { useMyCompany } from "@/modules/companies/public";
@@ -21,13 +23,13 @@ import { EmptyState } from "@/shared/components/features/empty-state";
 import { Button } from "@/shared/components/ui/button";
 import { useApproveAccess } from "./hooks/use-approve-access";
 import { CommercialSkeleton } from "./CommercialSkeleton";
-import { ActionList } from "./components/ActionList";
 import { CommercialBlockedState } from "./components/CommercialBlockedState";
 import { GoalEmptyState } from "./components/GoalEmptyState";
-import { KeyResultList } from "./components/KeyResultList";
-import { LearningNotice } from "./components/LearningNotice";
-import { PaceLine } from "./components/PaceLine";
-import { RouteHero } from "./components/RouteHero";
+import { KeyResultGrid } from "./components/KeyResultGrid";
+import { DecidedTile } from "./components/DecidedTile";
+import { RouteMap } from "./components/RouteMap";
+import { TicketTile } from "./components/TicketTile";
+import { WeekTile } from "./components/WeekTile";
 
 /**
  * `/comercial`: la ruta del mes. Orquesta los estados —sin permiso, bloqueado
@@ -76,11 +78,11 @@ export function CommercialView() {
   const cancelStaleRetry = useCommercialStore((state) => state.cancelStaleRetry);
   useEffect(() => cancelStaleRetry, [cancelStaleRetry]);
 
-  // Tiempo real (F8): la meta, el plan, el ritmo y «Axi propone» se recargan
+  // Tiempo real (F8): la meta, el plan, el ritmo y las acciones recomendadas se recargan
   // al avisar el servidor, con debounce y sin romper la secuencia del store.
-  useCommercialRealtime({ enabled: enabled && canRead && blocker === null, proposals: true });
+  const { live } = useCommercialRealtime({ enabled: enabled && canRead && blocker === null, proposals: true });
 
-  // «Axi propone» se pide con meta y una vez por montaje: aprobar o rechazar
+  // Las acciones recomendadas se piden con meta y una vez por montaje: aprobar o rechazar
   // actualiza la lista en el store, y al volver de otra pantalla puede haber
   // propuestas que llegaron mientras no se escuchaba.
   const hasGoal = goal.data?.goal != null;
@@ -135,39 +137,42 @@ export function CommercialView() {
   }
 
   const current = goal.data.goal;
-  const month = monthLabel(current?.period_start ?? pace.data?.today ?? monthKeyFallback());
+  const periodKey = current?.period_start ?? pace.data?.today ?? monthKeyFallback();
+  const month = monthLabel(periodKey);
   // Sin meta la moneda es la del tenant, no un «COP» fijo.
   const currency = current?.currency ?? company?.currency ?? "COP";
+  const kicker = `Comercial · ${month} ${periodKey.slice(0, 4)}`;
 
   if (current === null) {
     return (
-      <div className="space-y-5">
-        <Header title={routeTitle(month)} lead="Sin meta todavía." />
+      <div className="@container space-y-5">
+        <Header kicker={kicker} title={routeTitle(month)} lead="Sin meta todavía." />
         <GoalEmptyState month={month} seed={goal.data.seed} currency={currency} canManage={canManage} />
       </div>
     );
   }
 
-  const learning = pace.data !== null && isLearning(pace.data);
+  const p = pace.data;
+  const learning = p !== null && isLearning(p);
+  const hasWeek =
+    p !== null &&
+    !learning &&
+    weekProgress(p.series, p.today, p.weekdays, p.period_start) !== null &&
+    weekChart(p.series, p.today, p.weekdays, p.period_start, p.period_end) !== null;
+  const hasTicket = plan.data?.inputs.avg_ticket_cents != null;
+  const tiles = Number(hasWeek) + Number(hasTicket);
+  const hasDecided = proposals.data?.some((row) => row.status !== "pending") ?? false;
 
   return (
-    <div className="space-y-5">
+    <div className="@container space-y-5">
       <Header
+        kicker={kicker}
         title={routeTitle(month)}
         lead={goalLead(current.target_revenue_cents, currency, current.source, current.updated_at)}
-        action={
-          canManage ? (
-            <Button asChild variant="outline" size="sm">
-              <Link href="/comercial/meta">
-                <Pencil aria-hidden className="size-4" />
-                Cambiar meta
-              </Link>
-            </Button>
-          ) : null
-        }
+        status={p === null ? null : <Freshness live={live} computedAt={p.computed_at} />}
       />
 
-      {pace.data === null ? (
+      {p === null ? (
         pace.status === "error" ? (
           <EmptyState
             icon={RotateCcw}
@@ -186,24 +191,45 @@ export function CommercialView() {
         )
       ) : (
         <>
-          <RouteHero pace={pace.data} plan={plan.data} />
-          {learning ? (
-            <LearningNotice daysElapsed={pace.data.business_days_elapsed} />
-          ) : (
-            <PaceLine pace={pace.data} href={keyResultHref("sales")} />
-          )}
-          <KeyResultList pace={pace.data} plan={plan.data} learning={learning} detailHref={keyResultHref} />
-          <ActionList
-            learning={learning}
-            paceStatus={pace.data.status}
+          <RouteMap
+            pace={p}
+            plan={plan.data}
+            lead={goalLead(current.target_revenue_cents, currency, current.source, current.updated_at)}
+            canManage={canManage}
             proposals={proposals.data ?? undefined}
-            error={proposals.status === "error" ? proposals.error : null}
-            onRetry={() => void loadProposals()}
+            proposalsError={proposals.status === "error" ? proposals.error : null}
+            onRetryProposals={() => void loadProposals()}
             canApprove={canApprove}
             readOnlyMessage={readOnlyMessage}
             onApprove={onApprove}
-            resultIds={resultIds}
           />
+          {/* Bajo el mapa, el bento: la semana y el ticket arriba, «Lo que hace falta» debajo y, si
+              hay, las decididas del mes a la derecha. */}
+          <div className={cn("grid grid-cols-1 gap-4 @2xl:grid-cols-2", hasDecided && "@4xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_22rem]")}>
+            {hasWeek ? (
+              <WeekTile
+                pace={p}
+                href={keyResultHref("sales")}
+                className={cn("@4xl:col-start-1 @4xl:row-start-1", tiles === 1 && "@2xl:col-span-2 @4xl:col-end-3")}
+              />
+            ) : null}
+            <TicketTile
+              pace={p}
+              plan={plan.data}
+              href={keyResultHref("avg_ticket")}
+              className={cn(tiles === 2 ? "@4xl:col-start-2" : "@2xl:col-span-2 @4xl:col-start-1 @4xl:col-end-3", "@4xl:row-start-1")}
+            />
+            <div className={cn("min-w-0 @2xl:col-span-2 @4xl:col-start-1 @4xl:col-end-3", tiles === 0 ? "@4xl:row-start-1" : "@4xl:row-start-2")}>
+              <KeyResultGrid pace={p} plan={plan.data} learning={learning} detailHref={keyResultHref} />
+            </div>
+            {hasDecided ? (
+              <DecidedTile
+                proposals={proposals.data ?? []}
+                resultIds={resultIds}
+                className="@2xl:col-span-2 @4xl:col-span-1 @4xl:col-start-3 @4xl:row-span-2 @4xl:row-start-1 @4xl:self-start"
+              />
+            ) : null}
+          </div>
         </>
       )}
     </div>
@@ -220,14 +246,51 @@ function monthKeyFallback(): string {
   return `${String(now.getFullYear())}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
 }
 
-function Header({ title, lead, action }: { title: string; lead: string; action?: React.ReactNode }) {
+function Header({
+  kicker,
+  title,
+  lead,
+  status,
+  action,
+}: {
+  kicker: string;
+  title: string;
+  lead: string;
+  status?: React.ReactNode;
+  action?: React.ReactNode;
+}) {
   return (
-    <header className="flex flex-wrap items-start justify-between gap-3">
-      <div>
-        <h1 className="text-3xl font-semibold tracking-tight">{title}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{lead}</p>
+    <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+      <div className="flex min-w-0 flex-col gap-2">
+        <p className="text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">{kicker}</p>
+        <h1 className="font-heading text-[32px] leading-[1.02] font-bold tracking-[-0.025em] text-balance @xl:text-[44px]">{title}</h1>
+        <p className="text-sm text-muted-foreground">{lead}</p>
       </div>
-      {action}
+      {status !== undefined || action !== undefined ? (
+        <div className="flex flex-wrap items-center gap-3">
+          {status}
+          {action}
+        </div>
+      ) : null}
     </header>
+  );
+}
+
+const TIME = new Intl.DateTimeFormat("es-CO", { hour: "numeric", minute: "2-digit" });
+
+/**
+ * «En vivo · 10:42 a. m.» solo cuando el tiempo real escucha de verdad; si no,
+ * «Actualizado 10:42 a. m.»: la hora es la del cálculo del ritmo en el
+ * servidor, no la del navegador.
+ */
+function Freshness({ live, computedAt }: { live: boolean; computedAt: string }) {
+  const date = new Date(computedAt);
+  const time = Number.isNaN(date.getTime()) ? null : TIME.format(date);
+  if (!live && time === null) return null;
+  return (
+    <span className="inline-flex items-center gap-2 text-[12.5px] whitespace-nowrap text-muted-foreground">
+      <span aria-hidden className={cn("size-1.5 rounded-full", live ? "bg-success ring-4 ring-success/15" : "bg-muted-foreground")} />
+      {live ? (time === null ? "En vivo" : `En vivo · ${time}`) : `Actualizado ${time ?? ""}`}
+    </span>
   );
 }

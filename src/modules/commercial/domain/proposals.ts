@@ -1,4 +1,5 @@
 import { formatInteger } from "@/core/lib/commercial-units";
+import { shortDay } from "./format";
 import type { CommercialApprovalResultDTO, CommercialProposalDTO } from "./commercial";
 import { CRM_AI_MISSING_FAILED } from "./copy";
 
@@ -287,15 +288,31 @@ export function expiryPhrase(expiresAt: string | null, now: Date = new Date()): 
   return `Vence en ${String(days)} días`;
 }
 
-/** Las propuestas decididas que se siguen enseñando: aprobadas dentro del mes de la meta. */
-export function approvedThisPeriod(
+/**
+ * Las decididas que se siguen enseñando en «Semanas anteriores»: aprobadas y
+ * descartadas dentro del mes de la meta, la más reciente primero. Una
+ * descartada se enseña con su motivo: es lo que Axi recuerda.
+ */
+export function decidedThisPeriod(
   proposals: readonly CommercialProposalDTO[],
   periodStart: string | null,
-  limit = 3,
+  limit = 4,
 ): CommercialProposalDTO[] {
   return proposals
-    .filter((proposal) => proposal.status === "approved" && (periodStart === null || (proposal.decided_at ?? "") >= periodStart))
+    .filter(
+      (proposal) =>
+        (proposal.status === "approved" || proposal.status === "rejected") &&
+        (periodStart === null || (proposal.decided_at ?? "") >= periodStart),
+    )
+    .sort((a, b) => (b.decided_at ?? "").localeCompare(a.decided_at ?? ""))
     .slice(0, limit);
+}
+
+/** «Aprobada el 16 sep» · «Descartada el 9 sep»: la línea corta del historial. */
+export function decidedOnShort(status: CommercialProposalDTO["status"], decidedAt: string | null): string {
+  const verb = status === "approved" ? "Aprobada" : status === "rejected" ? "Descartada" : status === "expired" ? "Vencida" : "Reemplazada";
+  const day = decidedAt === null ? "" : shortDay(decidedAt);
+  return day === "" ? verb : `${verb} el ${day}`;
 }
 
 /** El servidor rechaza el artefacto con `entitlements/capability_not_granted`
