@@ -7,17 +7,8 @@ import path from "node:path";
  * otro (el 360) o al recargar la URL, sin la real hay un 404 (QA DQ-H2:
  * «Nueva oportunidad» desde el 360).
  *
- * `KNOWN_DEBT` son las que ya faltaban cuando se añadió esta guarda: hoy solo
- * se enlazan desde su propio segmento, así que solo fallan al recargar. Una
- * nueva sin gemela hace caer el test.
+ * Sin excepciones: una interceptada nueva sin gemela hace caer el test.
  */
-const KNOWN_DEBT = new Set([
-  "/settings/quick-actions/create",
-  "/settings/quick-actions/update/[id]",
-  "/crm/contacts/create",
-  "/crm/contacts/update/[id]",
-]);
-
 const APP = path.resolve(__dirname, "..");
 const INTERCEPT = /^\((\.{1,3})\)(.*)$/;
 
@@ -61,12 +52,21 @@ describe("rutas interceptadas", () => {
     expect(intercepted.length).toBeGreaterThan(10);
   });
 
-  it("toda ruta interceptada tiene su página real, salvo la deuda conocida", () => {
-    const missing = intercepted.filter((url) => !real.has(url) && !KNOWN_DEBT.has(url));
+  it("toda ruta interceptada tiene su página real, sin excepciones", () => {
+    const missing = intercepted.filter((url) => !real.has(url));
     expect(missing).toEqual([]);
   });
 
   it("«Nueva oportunidad» (/crm/pipeline/create) tiene su ruta real", () => {
     expect(real.has("/crm/pipeline/create")).toBe(true);
+  });
+
+  it("/crm/contacts/create es un segmento ESTÁTICO junto a [contactId]: Next resuelve primero el estático", () => {
+    // Orden de resolución de Next: estático > dinámico. Con `create/page.tsx`
+    // presente, recargar /crm/contacts/create ya no abre la 360 de un contacto «create».
+    const contacts = path.join(APP, "(private)", "crm", "contacts");
+    expect(fs.existsSync(path.join(contacts, "create", "page.tsx"))).toBe(true);
+    expect(fs.existsSync(path.join(contacts, "[contactId]"))).toBe(true);
+    expect(real.has("/crm/contacts/create")).toBe(true);
   });
 });
