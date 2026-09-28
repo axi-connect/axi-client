@@ -479,7 +479,7 @@ export function CreateHsmTemplateModal({
                       ) : touched && errors.name ? (
                         <span className="text-destructive">{errors.name}</span>
                       ) : (
-                        "Minúsculas, números y guion bajo. Meta bloquea 30 días un nombre rechazado."
+                        "Minúsculas, números y guion bajo. Si borras una plantilla, Meta reserva su nombre 30 días."
                       )}
                     </p>
                   </div>
