@@ -162,7 +162,7 @@ describe("enviar una plantilla nueva (incidente 2026-09-28)", () => {
     expect(screen.getByRole("button", { name: "Sincronizar con Meta" })).toBeInTheDocument();
   });
 
-  it("Meta la rechaza (502): dice lo que dijo Meta y la referencia para su soporte", async () => {
+  it("Meta no responde bien (502): dice lo que respondió y la referencia para su soporte", async () => {
     api.createHsmTemplate.mockRejectedValue(
       new HttpError({
         status: 502,
@@ -180,9 +180,61 @@ describe("enviar una plantilla nueva (incidente 2026-09-28)", () => {
     );
     openNew();
     send();
-    expect(await screen.findByText("Meta no aceptó la plantilla")).toBeInTheDocument();
-    expect(screen.getByText(/Meta dijo: «Invalid parameter»/)).toBeInTheDocument();
+    // Un 502 ya no es un rechazo: es «no pudimos hablar con Meta», con lo que respondió y la referencia.
+    expect(await screen.findByText("No pudimos hablar con Meta")).toBeInTheDocument();
+    expect(screen.getByText(/Meta respondió: «Invalid parameter»/)).toBeInTheDocument();
     expect(screen.getByText("AxE78QRNA4o")).toBeInTheDocument();
+  });
+
+  // Incidente 2026-09-28 p. m.: recrear una borrada daba 502 «Invalid parameter».
+  it("409 nombre reservado: dice hasta cuándo, ofrece _v2 y deja el foco en el nombre", async () => {
+    api.createHsmTemplate.mockRejectedValue(
+      new HttpError({
+        status: 409,
+        code: "channels/template_name_locked",
+        message: "reservado",
+        problem: {
+          type: "t",
+          title: "Meta tiene reservado ese nombre",
+          status: 409,
+          code: "channels/template_name_locked",
+          details: { locked_until: "2026-10-28T17:00:00.000Z", estimated: false },
+        },
+      }),
+    );
+    openNew();
+    send();
+
+    expect(await screen.findByText(/Meta tiene reservado «sesion_en_vivo_v1» \(es_CO\) hasta el 28/)).toBeInTheDocument();
+    expect(api.createHsmTemplate).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole("button", { name: "Usar sesion_en_vivo_v2" }));
+    expect(screen.getByLabelText("Nombre interno")).toHaveValue("sesion_en_vivo_v2");
+  });
+
+  it("422 formato de cabecera: el motivo en español, lo que dijo Meta y abre el paso 4", async () => {
+    api.createHsmTemplate.mockRejectedValue(
+      new HttpError({
+        status: 422,
+        code: "channels/template_rejected",
+        message: "rechazada",
+        problem: {
+          type: "t",
+          title: "Meta no aceptó la plantilla",
+          status: 422,
+          code: "channels/template_rejected",
+          details: { reason_code: "header_format", user_msg: "Header format is incorrect", fbtrace_id: "Ax9" },
+        },
+      }),
+    );
+    openNew();
+    // El paso 4 se pliega antes de enviar: el rechazo tiene que volver a abrirlo.
+    fireEvent.click(screen.getByRole("button", { name: /Cabecera, pie y botones/ }));
+    expect(screen.getByRole("button", { name: /Cabecera, pie y botones/ })).toHaveAttribute("aria-expanded", "false");
+    send();
+
+    expect(await screen.findByText("El formato de la cabecera no le vale a Meta")).toBeInTheDocument();
+    expect(screen.getByText(/Meta dijo: «Header format is incorrect»/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Cabecera, pie y botones/ })).toHaveAttribute("aria-expanded", "true");
   });
 
   it("sin respuesta: no deja reenviar a ciegas; mira la lista y, si llegó, cierra", async () => {

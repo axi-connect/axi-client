@@ -41,6 +41,7 @@ import {
 } from "@/modules/marketing/domain/template-catalog";
 import {
   classifyHsmSubmitError,
+  HSM_REJECT_REASONS,
   nextTemplateName,
   type HsmSubmitFailure,
 } from "@/modules/marketing/domain/meta-template-view";
@@ -233,6 +234,11 @@ export function CreateHsmTemplateModal({
     setBody((prev) => `${prev}${prev.endsWith(" ") || prev === "" ? "" : " "}{{${String(next)}}}`);
   }
 
+  function goToStep(step: StepKey) {
+    setOpenSteps((prev) => ({ ...prev, [step]: true }));
+    if (step === "identity") requestAnimationFrame(() => nameRef.current?.focus());
+  }
+
   function takeSuggestedName() {
     setName(nextTemplateName(name));
     setFailure(null);
@@ -329,6 +335,12 @@ export function CreateHsmTemplateModal({
       const next = classifyHsmSubmitError(err);
       setFailure(next);
       if (next.kind === "exists_here" || next.kind === "exists_meta" || next.kind === "unknown") onExists?.();
+      // Un rechazo con paso conocido lo abre: un error plegado no se ve. El nombre reservado deja el foco ahí.
+      if (next.kind === "rejected") {
+        const step = HSM_REJECT_REASONS[next.reason].step;
+        if (step !== null) goToStep(step);
+      }
+      if (next.kind === "name_locked") goToStep("identity");
     } finally {
       inFlight.current = false;
       setSubmitting(false);
@@ -376,6 +388,7 @@ export function CreateHsmTemplateModal({
                   onSync?.();
                 }}
                 onRefresh={() => void checkArrived()}
+                onGoToStep={goToStep}
               />
             )}
 
@@ -449,7 +462,12 @@ export function CreateHsmTemplateModal({
                       disabled={isEditing}
                       onChange={(event) => {
                         setName(event.target.value.toLowerCase());
-                        if (failure?.kind === "exists_here" || failure?.kind === "exists_meta") setFailure(null);
+                        if (
+                          failure?.kind === "exists_here" ||
+                          failure?.kind === "exists_meta" ||
+                          failure?.kind === "name_locked"
+                        )
+                          setFailure(null);
                       }}
                       placeholder="seguimiento_v1"
                       className="font-mono"

@@ -254,8 +254,9 @@ describe("editar y borrar una plantilla", () => {
     expect((await screen.findAllByText(/Podrás el/))[0]).toBeInTheDocument();
   });
 
-  it("borrar una APROBADA avisa de que Meta bloquea el nombre 30 días", async () => {
-    api.listHsmTemplates.mockResolvedValue([hsm({ id: "h23", approval_status: "approved" })]);
+  // Incidente 2026-09-28 p. m.: se borró una EN REVISIÓN y Meta reservó el nombre igual.
+  it.each(["approved", "pending", "paused"] as const)("borrar una %s avisa de que Meta reserva el nombre 30 días", async (status) => {
+    api.listHsmTemplates.mockResolvedValue([hsm({ id: "h23", approval_status: status, editable: false })]);
     render(<MetaTemplatesView />);
 
     // Las acciones existen dos veces (bajo el estado en tabla estrecha, en su columna en ancha); CSS oculta una.
@@ -265,6 +266,16 @@ describe("editar y borrar una plantilla", () => {
       expect.objectContaining({
         description: expect.stringContaining("30 días") as unknown as string,
       }),
+    );
+  });
+
+  it("borrar una RECHAZADA dice que el nombre queda libre al momento", async () => {
+    api.listHsmTemplates.mockResolvedValue([hsm({ id: "h24", approval_status: "rejected" })]);
+    render(<MetaTemplatesView />);
+
+    fireEvent.click((await screen.findAllByRole("button", { name: /^Borrar / }))[0]);
+    expect(showModal).toHaveBeenCalledWith(
+      expect.objectContaining({ description: expect.stringContaining("queda libre al momento") as unknown as string }),
     );
   });
 });
@@ -300,7 +311,7 @@ describe("lo próximo y los estados (lienzo 2026-09-28)", () => {
     expect(island).toHaveTextContent("Corregir promo_rechazada");
     expect(island).toHaveTextContent("En revisión en Meta");
     expect(island).toHaveTextContent("Calidad baja");
-    expect(island).toHaveTextContent("Preguntando a Meta cada 15 s");
+    expect(island).toHaveTextContent("Comprobando cada 15 s si Meta ya decidió");
   });
 
   it("sin nada que hacer no hay isla: no celebra sin decir qué sigue", async () => {

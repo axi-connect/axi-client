@@ -56,3 +56,18 @@ Contra `meta_templates_ds_inventario.md`. **Se conserva** = igual; **cambia** = 
 
 - Arnés `docs/qa/meta-templates-premium/arnes` (13 escenarios): base, largos, error, vacío, sin Cloud, solo lectura, nueva, piezas, corregir, existe, existe en Meta, rechazo y sin respuesta; 1440/1024/768/390, claro y oscuro. Sin desbordes; a 390 px la tabla scrollea 7 px dentro de su tarjeta.
 - Jest: `meta-template-view.test.ts` (nuevo), `MetaTemplatesView.test.tsx` (+3) y `CreateHsmTemplateModal.test.tsx` (+5).
+
+## Segundo incidente (2026-09-28 p. m.): nombre reservado tras borrar y rechazos de Meta
+
+Servidor `d2dfe902` + cliente (este commit). Contra `docs/incidents/2026-09-28-plantilla-hsm-nombre-bloqueado-tras-borrarla-en-meta.md`.
+
+| Antes | Ahora |
+|---|---|
+| Recrear una borrada: 502 «Meta rechazó la operación: Invalid parameter» | 409 `channels/template_name_locked`: «Meta tiene reservado «x» (es_CO) hasta el 28 oct», con «Usar x_v2» y el foco en el nombre. Con el borrado hecho desde axi, la fecha es exacta y no se llama a Meta; si se borró en el Business Manager, la fecha es estimada y se dice. |
+| Cualquier rechazo de contenido de Meta: el mismo 502 con «Invalid parameter» | 422 `channels/template_rejected`: motivo en español (cabecera, texto, pie, variables, tope de 250…), lo que dijo Meta y «Ir a corregirlo», que abre el paso. |
+| El 502 se leía como rechazo | «No pudimos hablar con Meta»: solo lo infra (5xx, red, credenciales) llega ahí. |
+| Aviso de borrado con el bloqueo de 30 días solo en aprobadas | En todas salvo la rechazada (que «queda libre al momento»). |
+| Sincronizar: solo cuántas trajo | También cuántas retiró porque Meta ya no las lista (`removed`). |
+| «Preguntando a Meta cada 15 s» | «Comprobando cada 15 s si Meta ya decidió»: el sondeo lee nuestra base, no llama a Meta. |
+
+Escenarios nuevos del arnés: `reservado` (409 con fecha) y `formato` (422 cabecera), a 1440 y 390, claro y oscuro, sin desbordes.

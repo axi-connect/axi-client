@@ -108,15 +108,100 @@ export function namesLine(templates: readonly HsmTemplateDTO[]): string {
 export type HsmSubmitFailure =
   | { kind: "exists_here"; templateId: string | null; status: HsmApprovalStatus | null }
   | { kind: "exists_meta" }
+  /** Meta reserva 30 días el nombre + idioma de una plantilla borrada. `until` ISO; `estimated` si no lo sabemos exacto. */
+  | { kind: "name_locked"; until: string | null; estimated: boolean }
+  /** Meta rechazó el contenido, el nombre o el tope de la cuenta: se corrige aquí. */
+  | { kind: "rejected"; reason: HsmRejectReason; detail: string | null; reference: string | null }
   | { kind: "meta_rejected"; detail: string | null; reference: string | null }
   | { kind: "invalid"; message: string }
   | { kind: "unknown" };
 
+/** Los motivos estables del servidor (`graph_error.ts`, TEMPLATE_GRAPH_SUBCODES). */
+export type HsmRejectReason =
+  | "exists"
+  | "name_locked"
+  | "status_locked"
+  | "too_long"
+  | "header_format"
+  | "body_format"
+  | "footer_format"
+  | "param_ratio"
+  | "param_edges"
+  | "template_limit"
+  | "unknown";
+
+/** Dónde se corrige cada motivo: el paso del diálogo que hay que abrir. */
+export type HsmFormStep = "identity" | "category" | "message" | "pieces";
+
+export const HSM_REJECT_REASONS: Record<HsmRejectReason, { title: string; hint: string; step: HsmFormStep | null }> = {
+  exists: { title: "Ya existe una plantilla con ese nombre e idioma", hint: "Usa otro nombre.", step: "identity" },
+  name_locked: {
+    title: "Meta tiene reservado ese nombre",
+    hint: "Hace poco se borró una plantilla así; Meta lo reserva unos 30 días. Usa otro nombre.",
+    step: "identity",
+  },
+  status_locked: {
+    title: "Meta todavía la está revisando",
+    hint: "Hasta que decida no se puede cambiar. Espera su veredicto.",
+    step: null,
+  },
+  too_long: {
+    title: "Se pasa del límite de caracteres",
+    hint: "Cabecera y pie hasta 60, texto hasta 1024, botones hasta 25. Acorta y vuelve a enviar.",
+    step: "message",
+  },
+  header_format: {
+    title: "El formato de la cabecera no le vale a Meta",
+    hint: "Sin negritas ni cursivas, y como mucho un hueco.",
+    step: "pieces",
+  },
+  body_format: {
+    title: "El formato del texto no le vale a Meta",
+    hint: "Revisa saltos de línea, símbolos y las variables.",
+    step: "message",
+  },
+  footer_format: { title: "El formato del pie no le vale a Meta", hint: "Sin huecos ni formato en el pie.", step: "pieces" },
+  param_ratio: {
+    title: "Demasiadas variables para tan poco texto",
+    hint: "Meta exige más texto fijo por cada hueco. Escribe más o quita variables.",
+    step: "message",
+  },
+  param_edges: {
+    title: "Una variable abre o cierra el mensaje",
+    hint: "Pon texto antes de la primera y después de la última.",
+    step: "message",
+  },
+  template_limit: {
+    title: "La cuenta llegó a su tope de plantillas",
+    hint: "Meta admite 250 en una cuenta sin verificar. Borra alguna que no uses.",
+    step: null,
+  },
+  unknown: { title: "Meta no aceptó la plantilla", hint: "Revisa lo que dijo y vuelve a enviarla.", step: null },
+};
+
 const APPROVAL_STATUSES = new Set<string>(["pending", "approved", "rejected", "paused", "disabled"]);
+const REJECT_REASONS = new Set<string>(Object.keys(HSM_REJECT_REASONS));
 
 export function classifyHsmSubmitError(error: unknown): HsmSubmitFailure {
   if (!isHttpError(error)) return { kind: "unknown" };
   const details = (error.problem?.details ?? {}) as Record<string, unknown>;
+  const reference = typeof details.fbtrace_id === "string" ? details.fbtrace_id : null;
+  if (error.code === "channels/template_name_locked") {
+    return {
+      kind: "name_locked",
+      until: typeof details.locked_until === "string" ? details.locked_until : null,
+      estimated: details.estimated !== false,
+    };
+  }
+  if (error.code === "channels/template_rejected") {
+    const reason = typeof details.reason_code === "string" && REJECT_REASONS.has(details.reason_code)
+      ? (details.reason_code as HsmRejectReason)
+      : "unknown";
+    // Lo que dijo Meta en sus palabras (`user_msg`), o su detalle técnico.
+    const detail =
+      typeof details.user_msg === "string" ? details.user_msg : typeof details.detail === "string" ? details.detail : null;
+    return { kind: "rejected", reason, detail, reference };
+  }
   if (error.code === "channels/template_exists") {
     // Con `template_id` la teníamos aquí; sin él, fue Graph (100/2388024) quien dijo que ya existe.
     if (typeof details.template_id !== "string") return { kind: "exists_meta" };
@@ -129,7 +214,7 @@ export function classifyHsmSubmitError(error: unknown): HsmSubmitFailure {
     return {
       kind: "meta_rejected",
       detail: typeof details.detail === "string" ? details.detail : (error.problem?.detail ?? null),
-      reference: typeof details.fbtrace_id === "string" ? details.fbtrace_id : null,
+      reference,
     };
   }
   // Un 4xx nuestro (borrador inválido, tope de edición, validación): el servidor ya dice qué corregir.

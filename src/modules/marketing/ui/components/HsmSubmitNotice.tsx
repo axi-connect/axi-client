@@ -4,7 +4,7 @@ import { useState } from "react";
 import { AlertTriangle, Check, CircleX, Copy } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert";
 import { Button } from "@/shared/components/ui/button";
-import { hsmStatusLabel, type HsmSubmitFailure } from "@/modules/marketing/domain/meta-template-view";
+import { HSM_REJECT_REASONS, hsmStatusLabel, type HsmSubmitFailure } from "@/modules/marketing/domain/meta-template-view";
 
 /**
  * Qué pasó al enviar, dicho DENTRO del formulario y hasta que el operador
@@ -21,6 +21,7 @@ export function HsmSubmitNotice({
   onUseName,
   onSync,
   onRefresh,
+  onGoToStep,
 }: {
   failure: HsmSubmitFailure;
   name: string;
@@ -31,8 +32,61 @@ export function HsmSubmitNotice({
   onUseName: () => void;
   onSync: () => void;
   onRefresh: () => void;
+  /** «Ir a corregirlo»: abre el paso del formulario donde está el problema. */
+  onGoToStep: (step: "identity" | "category" | "message" | "pieces") => void;
 }) {
   switch (failure.kind) {
+    case "name_locked":
+      return (
+        <Alert variant="warning">
+          <AlertTriangle aria-hidden />
+          <AlertTitle className="line-clamp-none">
+            Meta tiene reservado «{name}» ({language}){" "}
+            {failure.until ? `hasta el ${lockedUntilLabel(failure.until)}` : "unos 30 días"}
+          </AlertTitle>
+          <AlertDescription>
+            <p>
+              Hace poco se borró una plantilla con ese nombre e idioma, y Meta reserva el nombre 30 días
+              {failure.estimated && failure.until ? " (la fecha es aproximada: se borró fuera de axi)" : ""}. Usa otro
+              nombre para continuar.
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <Button size="sm" variant="contrast" className="rounded-full" onClick={onUseName}>
+                Usar {suggestedName}
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      );
+    case "rejected": {
+      const reason = HSM_REJECT_REASONS[failure.reason];
+      return (
+        <Alert variant="destructive">
+          <CircleX aria-hidden />
+          <AlertTitle className="line-clamp-none">{reason.title}</AlertTitle>
+          <AlertDescription className="text-foreground">
+            <p>
+              {reason.hint}
+              {failure.detail ? ` Meta dijo: «${failure.detail}».` : ""}
+            </p>
+            {(reason.step !== null || failure.reason === "exists" || failure.reason === "name_locked") && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {failure.reason === "exists" || failure.reason === "name_locked" ? (
+                  <Button size="sm" variant="contrast" className="rounded-full" onClick={onUseName}>
+                    Usar {suggestedName}
+                  </Button>
+                ) : reason.step !== null ? (
+                  <Button size="sm" variant="outline" className="rounded-full" onClick={() => onGoToStep(reason.step as never)}>
+                    Ir a corregirlo
+                  </Button>
+                ) : null}
+              </div>
+            )}
+            {failure.reference ? <SupportReference reference={failure.reference} /> : null}
+          </AlertDescription>
+        </Alert>
+      );
+    }
     case "exists_here":
       return (
         <Alert variant="warning">
@@ -81,10 +135,10 @@ export function HsmSubmitNotice({
       return (
         <Alert variant="destructive">
           <CircleX aria-hidden />
-          <AlertTitle className="line-clamp-none">Meta no aceptó la plantilla</AlertTitle>
+          <AlertTitle className="line-clamp-none">No pudimos hablar con Meta</AlertTitle>
           <AlertDescription className="text-foreground">
             <p>
-              {failure.detail ? `Meta dijo: «${failure.detail}». ` : ""}Revisa el texto y las variables, y vuelve a enviarla.
+              {failure.detail ? `Meta respondió: «${failure.detail}». ` : ""}Suele ser pasajero: inténtalo en un momento.
             </p>
             {failure.reference ? <SupportReference reference={failure.reference} /> : null}
           </AlertDescription>
@@ -119,6 +173,11 @@ export function HsmSubmitNotice({
         </Alert>
       );
   }
+}
+
+/** «28 oct» en la zona del navegador: la reserva de Meta es de días, no de horas. */
+function lockedUntilLabel(iso: string): string {
+  return new Date(iso).toLocaleDateString("es-CO", { day: "numeric", month: "short" });
 }
 
 /** El `fbtrace_id` de Graph: lo primero que pide el soporte de Meta al abrir un caso. */

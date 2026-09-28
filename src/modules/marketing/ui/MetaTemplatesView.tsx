@@ -152,16 +152,18 @@ export function MetaTemplatesView() {
   }
 
   /**
-   * Borrar no es deshacer: Meta **bloquea el nombre 30 días** si la plantilla
-   * estaba aprobada, así que quien borre tiene que saberlo ANTES.
+   * Borrar no es deshacer: Meta **reserva el nombre 30 días** de toda plantilla
+   * borrada salvo una rechazada (incidente 2026-09-28: se borró una en
+   * revisión y no se pudo recrear), así que quien borre tiene que saberlo ANTES.
    */
   function confirmDelete(template: HsmTemplateDTO) {
+    const consequences = "Las campañas y reglas que la usen dejarán de alcanzar a los contactos fríos.";
     showModal({
       title: `¿Borrar «${template.name}»?`,
       description:
-        template.approval_status === "approved"
-          ? "Estaba aprobada, así que Meta bloqueará ese nombre durante 30 días: no podrás crear otra que se llame igual. Las campañas y reglas que la usen dejarán de alcanzar a los contactos fríos."
-          : "Se borra en Meta y aquí. Las campañas y reglas que la usen dejarán de alcanzar a los contactos fríos.",
+        template.approval_status === "rejected"
+          ? `Se borra en Meta y aquí. Como Meta la rechazó, el nombre queda libre al momento. ${consequences}`
+          : `Se borra en Meta y aquí, y Meta reservará ese nombre e idioma durante 30 días: no podrás crear otra que se llame igual hasta entonces. ${consequences}`,
       actions: [
         { label: "Conservarla", variant: "outline" },
         {
@@ -191,13 +193,18 @@ export function MetaTemplatesView() {
     if (!channelId) return;
     setSyncing(true);
     try {
-      const { synced } = await syncHsmTemplates(channelId);
+      const { synced, removed = 0 } = await syncHsmTemplates(channelId);
       showAlert({
         tone: "success",
         title:
-          synced === 0
+          synced === 0 && removed === 0
             ? "Meta no devolvió plantillas nuevas"
             : `${synced} ${synced === 1 ? "plantilla sincronizada" : "plantillas sincronizadas"}`,
+        ...(removed > 0
+          ? {
+              description: `${removed} ${removed === 1 ? "ya no está en Meta y se retiró" : "ya no están en Meta y se retiraron"} de aquí.`,
+            }
+          : {}),
       });
       await load(channelId, { quiet: true });
     } catch (err) {
@@ -534,7 +541,7 @@ function NextUpIsland({
       count: pending.length,
       title: pollStopped ? "Sigue en revisión" : "En revisión en Meta",
       detail: pollStopped
-        ? `${namesLine(pending)} · la pantalla preguntó a Meta durante 20 minutos. Puede tardar hasta 48 h.`
+        ? `${namesLine(pending)} · la pantalla lo comprobó durante 20 minutos. Puede tardar hasta 48 h.`
         : `${namesLine(pending)} · suele decidir en minutos, hasta 48 h`,
       onClick: () => onPoint(firstPending.id),
     });
@@ -558,7 +565,7 @@ function NextUpIsland({
         {pending.length > 0 &&
           (pollStopped ? (
             <span className="flex items-center gap-2">
-              <span className="text-muted-foreground text-xs">Dejamos de preguntar a Meta</span>
+              <span className="text-muted-foreground text-xs">Dejamos de comprobar</span>
               {canManage && (
                 <Button size="sm" variant="contrast" className="rounded-full" disabled={syncing} onClick={onSync}>
                   {syncing ? "Sincronizando…" : "Sincronizar con Meta"}
@@ -568,7 +575,7 @@ function NextUpIsland({
           ) : (
             <span className="text-muted-foreground flex items-center gap-1.5 text-xs">
               <span aria-hidden="true" className="border-warning size-2.5 animate-spin rounded-full border-2 border-r-transparent motion-reduce:animate-none" />
-              Preguntando a Meta cada 15 s
+              Comprobando cada 15 s si Meta ya decidió
             </span>
           ))}
       </div>

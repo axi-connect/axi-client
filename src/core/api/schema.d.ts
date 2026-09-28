@@ -14627,6 +14627,7 @@ export interface components {
         };
         SyncHsmResultDto: {
             synced: number;
+            removed: number;
         };
         CreateHsmTemplateDto: {
             /** Format: uuid */

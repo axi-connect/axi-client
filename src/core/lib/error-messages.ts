@@ -278,8 +278,16 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   // Crear, editar, borrar o sincronizar: el mismo código para cualquier
   // rechazo de Graph, así que el texto no nombra la operación. El detail (lo
   // que dijo Meta) se concatena: ver CODES_WITH_USEFUL_DETAIL.
-  "channels/template_sync_failed": "Meta no aceptó la operación con la plantilla",
+  "channels/template_sync_failed": "No pudimos hablar con Meta para esta plantilla. Inténtalo en un momento",
   "channels/template_exists": "Ya tienes una plantilla con ese nombre e idioma. Usa otro nombre (por ejemplo, termínalo en _v2)",
+  // Meta reserva 30 días el nombre + idioma de una plantilla borrada (incidente 2026-09-28).
+  "channels/template_name_locked":
+    "Meta tiene reservado ese nombre e idioma: hace poco se borró una plantilla así. Usa otro nombre (por ejemplo, termínalo en _v2)",
+  // Rechazo del contenido, el nombre o el tope de la cuenta: el detail dice qué.
+  "channels/template_rejected": "Meta no aceptó la plantilla",
+  "channels/template_draft_invalid": "Meta no aceptaría esta plantilla así",
+  "channels/template_channel_not_ready":
+    "Este canal no tiene una cuenta de WhatsApp Business vinculada: vuelve a conectarlo desde Canales",
   "channels/template_edit_blocked": "Meta no deja editar esta plantilla ahora",
   "platform/forbidden": "Tu cuenta no tiene acceso a la consola de plataforma",
   // Facturación de la licencia (slice billing) — KB §12.
@@ -371,6 +379,8 @@ const CODES_WITH_USEFUL_DETAIL = new Set([
   // Lo que respondió Meta (incidente 2026-09-28: el aviso pedía «revisar el
   // detalle» y el detalle se tiraba).
   "channels/template_sync_failed",
+  "channels/template_rejected",
+  "channels/template_draft_invalid",
   // El motivo exacto del tope y cuándo se podrá (24 h / 10 en 30 días).
   "channels/template_edit_blocked",
 ]);

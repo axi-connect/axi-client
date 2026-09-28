@@ -73,8 +73,9 @@ export async function listHsmTemplates(params: {
 }
 
 /** Pull desde Meta. 502 `channels/template_sync_failed` con el detalle de Meta. */
-export function syncHsmTemplates(channelId: string): Promise<{ synced: number }> {
-  return http.post<{ synced: number }>("/marketing/hsm-templates/sync", {
+export function syncHsmTemplates(channelId: string): Promise<{ synced: number; removed?: number }> {
+  // `removed` llega desde el servidor que retira lo que Meta ya no lista; uno viejo no lo manda.
+  return http.post<{ synced: number; removed?: number }>("/marketing/hsm-templates/sync", {
     channel_id: channelId,
   });
 }

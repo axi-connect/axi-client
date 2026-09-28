@@ -2,6 +2,7 @@ import { HttpError } from "@/core/api/problem";
 import type { HsmTemplateDTO } from "../template-catalog";
 import {
   classifyHsmSubmitError,
+  HSM_REJECT_REASONS,
   hsmNextUp,
   hsmQualityLabel,
   hsmStatusNote,
@@ -58,6 +59,38 @@ describe("qué pasó al enviar (incidente 2026-09-28)", () => {
     expect(classifyHsmSubmitError(problem(500, "internal/unexpected"))).toEqual({ kind: "unknown" });
     expect(classifyHsmSubmitError(problem(504, "http/504"))).toEqual({ kind: "unknown" });
     expect(classifyHsmSubmitError(new TypeError("Failed to fetch"))).toEqual({ kind: "unknown" });
+  });
+
+  // Incidente 2026-09-28 p. m.: Meta reserva 30 días el nombre de una borrada (100/2388023).
+  it("409 nombre reservado trae hasta cuándo y si la fecha es estimada", () => {
+    expect(
+      classifyHsmSubmitError(
+        problem(409, "channels/template_name_locked", { locked_until: "2026-10-28T17:00:00.000Z", estimated: false }),
+      ),
+    ).toEqual({ kind: "name_locked", until: "2026-10-28T17:00:00.000Z", estimated: false });
+    expect(classifyHsmSubmitError(problem(409, "channels/template_name_locked", {}))).toEqual({
+      kind: "name_locked",
+      until: null,
+      estimated: true,
+    });
+  });
+
+  it("422 rechazo de Meta: el motivo estable, lo que dijo Meta y el paso que abrir", () => {
+    const failure = classifyHsmSubmitError(
+      problem(422, "channels/template_rejected", {
+        reason_code: "header_format",
+        detail: "Invalid parameter",
+        user_msg: "Header format is incorrect",
+        fbtrace_id: "Ax9",
+      }),
+    );
+    expect(failure).toEqual({ kind: "rejected", reason: "header_format", detail: "Header format is incorrect", reference: "Ax9" });
+    expect(HSM_REJECT_REASONS.header_format.step).toBe("pieces");
+    // Un motivo que el cliente no conoce sigue siendo un rechazo legible.
+    expect(classifyHsmSubmitError(problem(422, "channels/template_rejected", { reason_code: "algo_nuevo" }))).toMatchObject({
+      kind: "rejected",
+      reason: "unknown",
+    });
   });
 
   it("el nombre libre que se propone sube la versión", () => {
