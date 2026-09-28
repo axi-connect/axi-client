@@ -88,8 +88,10 @@ export function AudienceFilterBuilder({
   return (
     <div className="@container flex min-w-0 flex-col gap-5">
       <Block title="Quién">
-        <FieldRow label="Etapas">
+        <FieldRow label="Etapas" htmlFor={id("stages")}>
           <MultiSelect
+            id={id("stages")}
+            aria-label="Etapas"
             options={STAGE_OPTIONS}
             defaultValue={value.lifecycle_stage ?? []}
             disabled={disabled}
@@ -97,8 +99,10 @@ export function AudienceFilterBuilder({
             placeholder="Cualquier etapa"
           />
         </FieldRow>
-        <FieldRow label="Fuentes">
+        <FieldRow label="Fuentes" htmlFor={id("sources")}>
           <MultiSelect
+            id={id("sources")}
+            aria-label="Fuentes"
             options={SOURCE_OPTIONS}
             defaultValue={value.source ?? []}
             disabled={disabled}
@@ -108,8 +112,10 @@ export function AudienceFilterBuilder({
         </FieldRow>
         {tagOptions.length > 0 && (
           <>
-            <FieldRow label="Con alguna etiqueta">
+            <FieldRow label="Con alguna etiqueta" htmlFor={id("tags-any")}>
               <MultiSelect
+                id={id("tags-any")}
+                aria-label="Con alguna etiqueta"
                 options={tagOptions}
                 defaultValue={value.tag_ids?.any ?? []}
                 disabled={disabled}
@@ -117,8 +123,10 @@ export function AudienceFilterBuilder({
                 placeholder="Cualquier etiqueta"
               />
             </FieldRow>
-            <FieldRow label="Con todas estas etiquetas">
+            <FieldRow label="Con todas estas etiquetas" htmlFor={id("tags-all")}>
               <MultiSelect
+                id={id("tags-all")}
+                aria-label="Con todas estas etiquetas"
                 options={tagOptions}
                 defaultValue={value.tag_ids?.all ?? []}
                 disabled={disabled}
@@ -165,7 +173,7 @@ export function AudienceFilterBuilder({
           <SegmentedControl<DealChoice>
             label="Oportunidad abierta"
             value={deal}
-            items={DEAL_ITEMS}
+            items={disabled ? DEAL_ITEMS.map((item) => ({ ...item, disabled: true })) : DEAL_ITEMS}
             surface="inline"
             size="sm"
             className="w-full [&>button]:flex-1"

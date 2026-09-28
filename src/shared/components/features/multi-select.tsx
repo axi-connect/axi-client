@@ -5,6 +5,7 @@ import { CheckIcon, ChevronDown, X } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import {
   Popover,
+  PopoverAnchor,
   PopoverContent,
   PopoverTrigger,
 } from "@/shared/components/ui/popover";
@@ -28,6 +29,13 @@ import {
  * son neutras (`secondary` + borde) con la «x» como BOTÓN real, centrada por
  * construcción (`grid place-items-center`) y con zona táctil de 24 px por un
  * `::before` (§10), igual que la de `OptionsInput`.
+ *
+ * **Anatomía (auditoría 2026-09-28, H1).** El campo es un `div` con el
+ * aspecto de `Input` y ancla del popover; dentro conviven como HERMANOS las
+ * fichas con su «x», el botón «Quitar N» y el `combobox` (un `button` con el
+ * chevron y el nombre accesible). Ningún control vive dentro de otro `button`:
+ * un botón anidado rompe la hidratación del HTML del servidor y la ARIA lo
+ * prohíbe. Clic en cualquier hueco del campo abre; las «x» detienen el evento.
  *
  * Lo consumen seis pantallas —segmentos, audiencia de campañas, zonas de envío,
  * importar contactos, etiquetas del contacto y simulacros de quality—, así que
@@ -89,11 +97,11 @@ function plural(n: number, one: string, many: string): string {
   return `${String(n)} ${n === 1 ? one : many}`;
 }
 
-/** El aspecto del control: el de `Input`, con altura mínima y no fija. */
-const triggerClass = cn(
-  "flex min-h-9 w-full min-w-0 items-center gap-1 rounded-md border border-input bg-transparent py-1 pr-1 pl-1 text-left text-sm shadow-xs transition-[color,box-shadow] outline-none dark:bg-input/30",
-  "focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
-  "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
+/** El aspecto del campo: el de `Input`, con altura mínima y no fija. */
+const fieldClass = cn(
+  "flex min-h-9 w-full min-w-0 cursor-pointer items-center gap-1 rounded-md border border-input bg-transparent py-1 pr-1 pl-1 text-left text-sm shadow-xs transition-[color,box-shadow] dark:bg-input/30",
+  "focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50",
+  "has-disabled:pointer-events-none has-disabled:cursor-not-allowed has-disabled:opacity-50",
 );
 
 /** Tesela de marcado en tinta: no coral, para no competir con el CTA del formulario. */
@@ -138,7 +146,7 @@ function SelectedChip({
         onPointerDown={(event) => event.stopPropagation()}
         className="relative grid size-4 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors before:absolute before:-inset-1 before:content-[''] hover:bg-foreground/10 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
       >
-        <X className="size-2.5" strokeWidth={2.75} aria-hidden />
+        <X className="size-3" strokeWidth={2.75} aria-hidden />
       </button>
     </span>
   );
@@ -174,6 +182,7 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
     const prevDefault = React.useRef<string[]>(defaultValue);
     const id = React.useId();
     const listboxId = `${id}-listbox`;
+    const selectionId = `${id}-selection`;
 
     const allOptions = React.useMemo((): MultiSelectOption[] => {
       const flat = isGrouped(options) ? options.flatMap((group) => group.options) : options;
@@ -280,6 +289,9 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
     const visible = selected.slice(0, maxCount).map((value) => byValue.get(value)).filter(Boolean) as MultiSelectOption[];
     const hidden = selected.slice(maxCount).map((value) => byValue.get(value)?.label ?? value);
     const allChosen = enabledValues.length > 0 && enabledValues.every((value) => selected.includes(value));
+    // El nombre accesible lo pone el consumidor (aria-label / aria-labelledby /
+    // una <label htmlFor>); el placeholder es el último recurso, no el primero.
+    const labelled = props["aria-label"] !== undefined || props["aria-labelledby"] !== undefined;
 
     const renderItem = (option: MultiSelectOption) => {
       const checked = selected.includes(option.value);
@@ -288,8 +300,8 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
           key={option.value}
           value={option.value}
           onSelect={() => toggle(option.value)}
-          role="option"
-          aria-selected={checked}
+          aria-checked={checked}
+          data-checked={checked ? "true" : undefined}
           disabled={option.disabled}
           className="cursor-pointer gap-2.5 rounded-lg"
         >
@@ -305,28 +317,23 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
         <span className="sr-only" aria-live="polite" aria-atomic="true">
           {announcement}
         </span>
-        <PopoverTrigger asChild>
-          <button
-            type="button"
-            {...props}
-            ref={buttonRef}
-            role="combobox"
-            disabled={disabled}
-            aria-haspopup="listbox"
-            aria-expanded={open}
-            aria-controls={open ? listboxId : undefined}
-            aria-label={
-              selected.length === 0
-                ? placeholder
-                : `${placeholder}: ${selected.map((value) => byValue.get(value)?.label ?? value).join(", ")}`
-            }
-            className={cn(triggerClass, className)}
+        <PopoverAnchor asChild>
+          {/* Zona de clic del campo entero (el combobox real es el botón del
+              chevron): un div con onClick y sin rol, para que no haya control
+              dentro de control. El teclado entra por el botón. */}
+          <div
+            className={cn(fieldClass, className)}
+            data-slot="multi-select"
+            data-state={open ? "open" : "closed"}
+            onClick={() => {
+              if (!disabled) setOpen((current) => !current);
+            }}
           >
             {selected.length === 0 ? (
               <span className="min-w-0 flex-1 truncate px-2 text-muted-foreground">{placeholder}</span>
             ) : (
               <>
-                <span className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
+                <span id={selectionId} className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
                   {visible.map((option) => (
                     <SelectedChip
                       key={option.value}
@@ -345,8 +352,8 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
                   )}
                 </span>
                 {!disabled && (
-                  <span
-                    role="button"
+                  <button
+                    type="button"
                     tabIndex={-1}
                     aria-label={`Quitar ${plural(selected.length, "seleccionado", "seleccionados")}`}
                     onClick={(event) => {
@@ -354,28 +361,45 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
                       clear();
                     }}
                     onPointerDown={(event) => event.stopPropagation()}
-                    className="grid size-6 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
+                    className="grid size-6 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
                   >
                     <X className="size-3.5" aria-hidden />
-                  </span>
+                  </button>
                 )}
                 <span aria-hidden className="h-4 w-px shrink-0 bg-border" />
               </>
             )}
-            <ChevronDown
-              aria-hidden
-              className={cn(
-                "mx-1.5 size-4 shrink-0 text-muted-foreground transition-transform",
-                open && "rotate-180",
-              )}
-            />
-          </button>
-        </PopoverTrigger>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                aria-label={labelled ? undefined : placeholder}
+                {...props}
+                ref={buttonRef}
+                role="combobox"
+                disabled={disabled}
+                aria-haspopup="listbox"
+                aria-expanded={open}
+                aria-controls={open ? listboxId : undefined}
+                aria-describedby={selected.length > 0 ? selectionId : undefined}
+                onClick={(event) => {
+                  // El div de fuera ya conmuta: que el botón no lo haga dos veces.
+                  event.stopPropagation();
+                  setOpen((current) => !current);
+                  props.onClick?.(event);
+                }}
+                className="grid h-7 w-8 shrink-0 place-items-center rounded-sm text-muted-foreground outline-none"
+              >
+                <ChevronDown
+                  aria-hidden
+                  className={cn("size-4 transition-transform", open && "rotate-180")}
+                />
+              </button>
+            </PopoverTrigger>
+          </div>
+        </PopoverAnchor>
         <PopoverContent
           id={listboxId}
-          role="listbox"
-          aria-multiselectable="true"
-          aria-label={placeholder}
+          aria-label={props["aria-label"] ?? placeholder}
           align="start"
           className={cn("w-[var(--radix-popover-trigger-width)] min-w-56 rounded-2xl p-0", popoverClassName)}
           onEscapeKeyDown={() => setOpen(false)}
@@ -390,7 +414,7 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
                 aria-label="Buscar entre las opciones"
               />
             )}
-            <CommandList className="max-h-[40vh] overscroll-contain p-1">
+            <CommandList className="max-h-[40vh] overscroll-contain p-1" aria-multiselectable="true">
               <CommandEmpty>{emptyIndicator ?? "No se encontraron resultados."}</CommandEmpty>
               {!hideSelectAll && search === "" && enabledValues.length > 0 && (
                 <>
@@ -398,8 +422,7 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
                     <CommandItem
                       value="__all__"
                       onSelect={toggleAll}
-                      role="option"
-                      aria-selected={allChosen}
+                      aria-checked={allChosen}
                       className="cursor-pointer gap-2.5 rounded-lg text-muted-foreground"
                     >
                       <CheckTile checked={allChosen} />
