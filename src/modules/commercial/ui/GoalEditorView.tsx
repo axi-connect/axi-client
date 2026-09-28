@@ -20,13 +20,11 @@ import { useCommercialStore } from "@/modules/commercial/infrastructure/stores/c
 import { useMyCompany } from "@/modules/companies/public";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { useEntitlements } from "@/shared/auth/entitlements.hooks";
-import { InkIsland } from "@/shared/components/features/bento";
 import { EmptyState } from "@/shared/components/features/empty-state";
 import { PriceInput } from "@/shared/components/features/price-input";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
-import { SegmentedControl } from "@/shared/components/ui/segmented";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { CommercialBlockedState } from "./components/CommercialBlockedState";
 import { DestinationMap, type DestinationStop } from "./components/DestinationMap";
@@ -522,7 +520,7 @@ function SearchIsland({
   lastMonthName: string;
 }) {
   return (
-    <InkIsland label="Fijar el destino" className="gap-4 p-5 @xl:p-6">
+    <section aria-label="Fijar el destino" className="glass-overlay flex min-w-0 flex-col gap-4 rounded-3xl p-5 @xl:p-6">
       <Link
         href="/comercial"
         className="inline-flex min-h-6 w-fit items-center gap-1.5 rounded-md text-[13px] text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
@@ -552,8 +550,10 @@ function SearchIsland({
           Meta del mes en {currency}
         </Label>
         {/* La cifra del destino, con la bandera al lado: se escribe en el propio número. */}
-        <div className="flex items-center gap-2 rounded-2xl bg-background px-4 ring-[1.5px] ring-foreground focus-within:ring-2">
-          <Flag aria-hidden className="size-4.5 shrink-0" />
+        <div className="flex items-center gap-3 rounded-2xl bg-background px-3 ring-[1.5px] ring-foreground focus-within:ring-2">
+          <span aria-hidden className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-foreground text-background">
+            <Flag className="size-4" />
+          </span>
           <PriceInput
             id="goal-target"
             value={target}
@@ -565,14 +565,28 @@ function SearchIsland({
       </div>
       {lastMonth !== null ? (
         <div className="flex flex-col gap-2">
-          <SegmentedControl
-            label="Atajos sobre el mes pasado"
-            size="sm"
-            surface="inline"
-            value={preset}
-            onValueChange={onPreset}
-            items={PRESETS.map(({ value, label }) => ({ value, label }))}
-          />
+          {/* Los atajos como píldoras: la elegida en tinta (canvas 2). */}
+          <div role="radiogroup" aria-label="Atajos sobre el mes pasado" className="flex flex-wrap gap-1.5">
+            {PRESETS.map((item) => {
+              const on = item.value === preset;
+              return (
+                <button
+                  key={item.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={on}
+                  onClick={() => onPreset(item.value)}
+                  className={cn(
+                    "h-9 rounded-full px-3 text-[13px] font-medium whitespace-nowrap ring-1 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                    on ? "bg-foreground text-background ring-foreground" : "bg-background ring-border hover:ring-foreground/40",
+                  )}
+                >
+                  {/* «Como agosto»: el mes pasado por su nombre (canvas 2); los demás, tal cual. */}
+                  {item.value === "last" ? `Como ${lastMonthName}` : item.label}
+                </button>
+              );
+            })}
+          </div>
           {lift !== null ? (
             <span className="text-[13px] whitespace-nowrap text-muted-foreground tabular-nums">
               {lift >= 0 ? "+" : "−"}
@@ -581,7 +595,7 @@ function SearchIsland({
           ) : null}
         </div>
       ) : null}
-    </InkIsland>
+    </section>
   );
 }
 
@@ -620,7 +634,7 @@ function TripCard({
   const cell = "flex min-w-0 flex-col gap-0.5 bg-background px-4 py-3";
 
   return (
-    <section aria-labelledby="goal-trip" className="glass flex min-w-0 flex-col gap-3.5 rounded-3xl p-5">
+    <section aria-labelledby="goal-trip" className="glass-overlay flex min-w-0 flex-col gap-3.5 rounded-3xl p-5">
       <h2 id="goal-trip" className="text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
         Así queda tu viaje
       </h2>

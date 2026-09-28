@@ -29,7 +29,8 @@ import {
 } from "@/modules/commercial/domain/route-map";
 import { weekTicks } from "@/modules/commercial/domain/weeks";
 import { useElementWidth } from "@/modules/commercial/ui/hooks/use-element-width";
-import { InkIsland, StatePill } from "@/shared/components/features/bento";
+import { CityScene } from "./CityScene";
+import { StatePill } from "@/shared/components/features/bento";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 
@@ -179,7 +180,7 @@ const CHIP = "inline-flex h-7 items-center gap-1.5 rounded-full bg-background px
  * La etiqueta accesible del SVG dice lo mismo que las marcas, con cifras.
  */
 function MapLayer({ road, marks, variant }: { road: SampledRoad; marks: MapMarks; variant: "wide" | "narrow" }) {
-  const patternId = useId();
+  const uid = useId();
   const { layout } = road;
   const d = roadPath(layout);
   const you = pointAt(road, marks.done);
@@ -204,12 +205,20 @@ function MapLayer({ road, marks, variant }: { road: SampledRoad; marks: MapMarks
     <>
       <svg viewBox={`0 0 ${String(layout.width)} ${String(layout.height)}`} className="absolute inset-0 size-full" role="img" aria-label={label}>
         <defs>
-          <pattern id={patternId} width="108" height="90" patternUnits="userSpaceOnUse">
-            <rect x="8" y="8" width="92" height="74" rx="10" fill="var(--color-secondary)" />
-          </pattern>
+          {/* La sombra de la carretera y el resplandor de lo recorrido: la ruta se despega del plano. */}
+          <filter id={`${uid}-shadow`} x="-5%" y="-5%" width="110%" height="110%">
+            <feGaussianBlur stdDeviation="6" />
+          </filter>
+          <filter id={`${uid}-glow`} x="-10%" y="-10%" width="120%" height="120%">
+            <feGaussianBlur stdDeviation="5" />
+          </filter>
+          <linearGradient id={`${uid}-done`} x1="0" x2="1" y1="1" y2="0">
+            <stop offset="0" stopColor="var(--color-brand)" />
+            <stop offset="1" stopColor="var(--color-brand-2)" />
+          </linearGradient>
         </defs>
-        <rect width={layout.width} height={layout.height} fill="var(--color-muted)" />
-        <rect width={layout.width} height={layout.height} fill={`url(#${patternId})`} />
+        <CityScene layout={layout} seed={wide ? 7 : 3} />
+        <path d={d} fill="none" stroke="var(--color-foreground)" strokeOpacity={0.14} strokeWidth={stroke * 3} strokeLinecap="round" filter={`url(#${uid}-shadow)`} transform="translate(0 6)" />
         <path d={d} fill="none" stroke="var(--color-background)" strokeWidth={stroke * 2} strokeLinecap="round" />
         <path d={d} fill="none" stroke="color-mix(in srgb, var(--color-foreground) 18%, var(--color-background))" strokeWidth={stroke} strokeLinecap="round" />
         <path d={d} fill="none" stroke="var(--color-foreground)" strokeOpacity={0.5} strokeWidth={3} strokeDasharray="1 9" strokeLinecap="round" />
@@ -219,7 +228,8 @@ function MapLayer({ road, marks, variant }: { road: SampledRoad; marks: MapMarks
         {marks.expected !== null && marks.expected > marks.done ? (
           <polyline points={roadSlice(road, marks.done, marks.expected)} fill="none" stroke="var(--color-warning)" strokeWidth={stroke} strokeLinecap="round" strokeLinejoin="round" />
         ) : null}
-        <polyline points={roadSlice(road, 0, marks.done)} fill="none" stroke="var(--color-brand)" strokeWidth={stroke} strokeLinecap="round" strokeLinejoin="round" />
+        <polyline points={roadSlice(road, 0, marks.done)} fill="none" stroke="var(--color-brand)" strokeOpacity={0.45} strokeWidth={stroke + 6} strokeLinecap="round" strokeLinejoin="round" filter={`url(#${uid}-glow)`} />
+        <polyline points={roadSlice(road, 0, marks.done)} fill="none" stroke={`url(#${uid}-done)`} strokeWidth={stroke} strokeLinecap="round" strokeLinejoin="round" />
         <circle cx={start.x} cy={start.y} r={7} fill="var(--color-background)" stroke="var(--color-foreground)" strokeWidth={3} />
         {marks.weeks.map((week) => {
           const at = pointAt(road, week.at);
@@ -229,15 +239,24 @@ function MapLayer({ road, marks, variant }: { road: SampledRoad; marks: MapMarks
         {arr !== null && (marks.arrival ?? 0) < 1 ? (
           <circle cx={arr.x} cy={arr.y} r={10} fill="var(--color-background)" stroke="var(--color-foreground)" strokeWidth={2.5} strokeDasharray="3 3" />
         ) : null}
-        <circle cx={goal.x} cy={goal.y} r={wide ? 18 : 15} fill="var(--color-foreground)" />
-        <path
-          d={`M ${String(goal.x - 5)} ${String(goal.y + 8)} V ${String(goal.y - 9)} H ${String(goal.x + 7)} L ${String(goal.x + 4)} ${String(goal.y - 5)} L ${String(goal.x + 7)} ${String(goal.y - 1)} H ${String(goal.x - 5)}`}
-          fill="none"
-          stroke="var(--color-background)"
-          strokeWidth={2}
-        />
+        <GoalPin at={goal} scale={wide ? 1 : 0.8} />
+        {/* Tú: el disco de navegación con su pulso (sin movimiento si se pide menos animación). */}
         <circle cx={you.x} cy={you.y} r={wide ? 30 : 24} fill="var(--color-brand)" fillOpacity={0.16} />
+        <circle
+          cx={you.x}
+          cy={you.y}
+          r={wide ? 18 : 14}
+          fill="none"
+          stroke="var(--color-brand)"
+          strokeWidth={2}
+          className="origin-center motion-safe:animate-ping"
+          style={{ transformBox: "fill-box" }}
+        />
         <circle cx={you.x} cy={you.y} r={wide ? 15 : 12} fill="var(--color-brand)" stroke="var(--color-background)" strokeWidth={4} />
+        <path
+          d={`M ${String(you.x)} ${String(you.y - 6)} L ${String(you.x + 5)} ${String(you.y + 5)} L ${String(you.x)} ${String(you.y + 2.5)} L ${String(you.x - 5)} ${String(you.y + 5)} Z`}
+          fill="var(--color-background)"
+        />
       </svg>
 
       {wide ? (
@@ -286,7 +305,7 @@ function MapLayer({ road, marks, variant }: { road: SampledRoad; marks: MapMarks
               <span className={cn(CHIP, "bg-foreground text-background ring-0")}>{marks.arrivalLabel}</span>
             </Pin>
           ) : null}
-          <Pin at={goal} layout={layout} place="translate(calc(-100% - 28px), -50%)">
+          <Pin at={goal} layout={layout} place="translate(calc(-100% - 28px), calc(-50% - 34px))">
             <span className={cn(CHIP, "h-8 px-3.5")}>
               <b className="font-semibold">{marks.goalLabel}</b>
               <span className="text-muted-foreground">{marks.goalDay}</span>
@@ -298,12 +317,23 @@ function MapLayer({ road, marks, variant }: { road: SampledRoad; marks: MapMarks
           <Pin at={you} layout={layout} place="translate(calc(-100% - 20px), -50%)">
             <span className={cn(CHIP, "bg-foreground text-background ring-0")}>Vas aquí · {marks.actualMoney}</span>
           </Pin>
-          <Pin at={goal} layout={layout} place="translate(calc(-100% - 22px), -50%)">
+          <Pin at={goal} layout={layout} place="translate(calc(-100% - 22px), calc(-50% - 27px))">
             <span className={CHIP}>Meta · {marks.goalDay}</span>
           </Pin>
         </>
       )}
     </>
+  );
+}
+
+/** La meta como pin de mapa: la gota en tinta con su bandera y la sombra en el suelo. */
+export function GoalPin({ at, scale = 1 }: { at: RoadPoint; scale?: number }) {
+  return (
+    <g transform={`translate(${String(at.x)} ${String(at.y)}) scale(${String(scale)})`}>
+      <ellipse cx={0} cy={2} rx={12} ry={4} fill="var(--color-foreground)" fillOpacity={0.18} />
+      <path d="M 0 0 C -6 -10, -20 -18, -20 -34 A 20 20 0 1 1 20 -34 C 20 -18, 6 -10, 0 0 Z" fill="var(--color-foreground)" />
+      <path d="M -6 -24 V -44 H 8 L 4.5 -39.5 L 8 -35 H -6" fill="none" stroke="var(--color-background)" strokeWidth={2.2} strokeLinejoin="round" />
+    </g>
   );
 }
 
@@ -354,7 +384,7 @@ function ArrivalCard({ pace, route, learning, achieved, className }: { pace: Com
         : `Con esta ruta la llegada sube a ${route.pct ?? ""}. Nada se envía sin tu aprobación.`;
 
   return (
-    <div className={cn("glass flex min-w-0 flex-col gap-2.5 rounded-3xl px-5 py-4", className)}>
+    <div className={cn("glass-overlay flex min-w-0 flex-col gap-2.5 rounded-3xl px-5 py-4", className)}>
       <span className="text-xs text-muted-foreground">Llegada estimada · {shortDay(last)}</span>
       <p className="flex items-baseline gap-2.5">
         <b className="font-heading text-[44px] leading-none font-bold tracking-[-0.03em] whitespace-nowrap tabular-nums">
@@ -432,7 +462,7 @@ function NavigationPanel({
   };
 
   return (
-    <InkIsland label="Navegación de la ruta" className={cn("axi-scroll gap-4 overflow-y-auto p-4 @xl/route:p-5", className)}>
+    <section aria-label="Navegación de la ruta" className={cn("glass-overlay axi-scroll flex min-w-0 flex-col gap-4 overflow-y-auto rounded-3xl p-4 @xl/route:p-5", className)}>
       <div className="flex items-center gap-3 rounded-2xl bg-background/80 p-3 ring-1 ring-border">
         <span aria-hidden className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-foreground text-background">
           <Flag className="size-4" />
@@ -505,7 +535,7 @@ function NavigationPanel({
             <div className="flex flex-col items-start gap-2">
               <p className="text-[13px] text-muted-foreground">{proposalsError}</p>
               {onRetryProposals !== undefined ? (
-                <Button variant="glass" size="sm" onClick={onRetryProposals}>
+                <Button variant="outline" size="sm" className="rounded-full" onClick={onRetryProposals}>
                   <RotateCcw aria-hidden className="size-4" />
                   Reintentar
                 </Button>
@@ -542,7 +572,7 @@ function NavigationPanel({
                 </div>
               ) : (
                 <div className="flex flex-col gap-2">
-                  <Button asChild variant="glass" className="h-11 w-full">
+                  <Button asChild variant="outline" className="h-11 w-full rounded-full">
                     <Link href={commercialProposalHref(route.id)}>Ver el detalle</Link>
                   </Button>
                   {readOnlyMessage !== null ? <p className="text-[12.5px] text-muted-foreground">{readOnlyMessage}</p> : null}
@@ -552,7 +582,7 @@ function NavigationPanel({
           </>
         )}
       </section>
-    </InkIsland>
+    </section>
   );
 }
 

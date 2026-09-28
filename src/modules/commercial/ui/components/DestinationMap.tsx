@@ -4,6 +4,8 @@ import { useId } from "react";
 
 import { cn } from "@/core/lib/utils";
 import { pointAt, roadPath, stopFractions, type SampledRoad } from "@/modules/commercial/domain/route-map";
+import { CityScene } from "./CityScene";
+import { GoalPin } from "./RouteMap";
 
 export interface DestinationStop {
   key: string;
@@ -39,7 +41,7 @@ export function DestinationMap({
   /** Estrecho: las paradas sin rótulo largo. */
   compact?: boolean;
 }) {
-  const patternId = useId();
+  const uid = useId();
   const { layout } = road;
   const d = roadPath(layout);
   const start = pointAt(road, 0);
@@ -51,12 +53,12 @@ export function DestinationMap({
     <div className={cn("absolute inset-0 transition-opacity", busy && "opacity-60")} aria-busy={busy || undefined}>
       <svg viewBox={`0 0 ${String(layout.width)} ${String(layout.height)}`} className="absolute inset-0 size-full" role="img" aria-label={label}>
         <defs>
-          <pattern id={patternId} width="108" height="90" patternUnits="userSpaceOnUse">
-            <rect x="8" y="8" width="92" height="74" rx="10" fill="var(--color-secondary)" />
-          </pattern>
+          <filter id={`${uid}-shadow`} x="-5%" y="-5%" width="110%" height="110%">
+            <feGaussianBlur stdDeviation="6" />
+          </filter>
         </defs>
-        <rect width={layout.width} height={layout.height} fill="var(--color-muted)" />
-        <rect width={layout.width} height={layout.height} fill={`url(#${patternId})`} />
+        <CityScene layout={layout} seed={compact ? 3 : 11} />
+        <path d={d} fill="none" stroke="var(--color-foreground)" strokeOpacity={0.14} strokeWidth={26} strokeLinecap="round" filter={`url(#${uid}-shadow)`} transform="translate(0 6)" />
         <path d={d} fill="none" stroke="var(--color-background)" strokeWidth={18} strokeLinecap="round" />
         <path d={d} fill="none" stroke="var(--color-foreground)" strokeWidth={8} strokeLinecap="round" />
         <circle cx={start.x} cy={start.y} r={9} fill="var(--color-brand)" stroke="var(--color-background)" strokeWidth={4} />
@@ -68,13 +70,7 @@ export function DestinationMap({
             </text>
           </g>
         ))}
-        <circle cx={goal.x} cy={goal.y} r={compact ? 15 : 20} fill="var(--color-foreground)" />
-        <path
-          d={`M ${String(goal.x - 5)} ${String(goal.y + 9)} V ${String(goal.y - 10)} H ${String(goal.x + 8)} L ${String(goal.x + 5)} ${String(goal.y - 6)} L ${String(goal.x + 8)} ${String(goal.y - 2)} H ${String(goal.x - 5)}`}
-          fill="none"
-          stroke="var(--color-background)"
-          strokeWidth={2}
-        />
+        <GoalPin at={goal} scale={compact ? 0.8 : 1} />
       </svg>
 
       <span aria-hidden className="absolute w-max" style={{ left: pct(start.x, layout.width), top: pct(start.y, layout.height), transform: "translate(-20%, 18px)" }}>
@@ -100,7 +96,7 @@ export function DestinationMap({
           </span>
         </span>
       ))}
-      <span aria-hidden className="absolute w-max" style={{ left: pct(goal.x, layout.width), top: pct(goal.y, layout.height), transform: `translate(calc(-100% - ${compact ? "22px" : "30px"}), -50%)` }}>
+      <span aria-hidden className="absolute w-max" style={{ left: pct(goal.x, layout.width), top: pct(goal.y, layout.height), transform: `translate(calc(-100% - ${compact ? "20px" : "28px"}), calc(-50% - ${compact ? "27px" : "34px"}))` }}>
         <span className={cn(CHIP, "h-8 gap-1.5 px-3.5")}>
           <b className="font-semibold">{goalLabel}</b>
           <span className="text-muted-foreground">{goalDay}</span>
