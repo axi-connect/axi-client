@@ -203,8 +203,8 @@ export function OutreachPolicyView() {
           className="sticky bottom-3 z-10 flex flex-wrap items-center justify-between gap-3 rounded-3xl px-5 py-3 sm:rounded-full sm:py-2.5 sm:pr-2.5"
         >
           <p className="min-w-0 text-sm text-pretty">
-            <span className="font-semibold">Cambios sin guardar</span>
-            <span className="text-muted-foreground"> · {summary}</span>
+            <span className="font-semibold">{summary.title}</span>
+            {summary.detail !== undefined && <span className="text-muted-foreground"> · {summary.detail}</span>}
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="glass" disabled={saving} onClick={() => setDraft(view.policy)}>
@@ -275,7 +275,7 @@ function ChannelRow({
           </span>
         )}
       </div>
-      <div className="col-start-2 row-start-2 min-w-0 @2xl:col-start-3 @2xl:row-start-1">
+      <div className="col-span-2 col-start-2 row-start-2 min-w-0 @2xl:col-span-1 @2xl:col-start-3 @2xl:row-start-1">
         {meta.choice.kind === "mode" ? (
           <SegmentedControl
             label={`Modo de ${meta.label}`}
@@ -343,21 +343,21 @@ function HoursCard({
   }, nunca domingos ni festivos de Colombia, un toque por canal y contacto al día`;
   const ok = Object.keys(errors).length === 0;
   return (
-    <section aria-labelledby="op-hours" className="border-border bg-card rounded-3xl border p-5 sm:p-6">
-      <header className="mb-4 flex flex-wrap items-start justify-between gap-3">
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
+    <section aria-labelledby="op-hours" className="border-border bg-card @container rounded-3xl border p-5 sm:p-6">
+      <header className="mb-4 flex flex-col gap-1">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
           <h3 id="op-hours" className="font-heading text-lg font-bold tracking-tight">
             Horario y ritmo
           </h3>
-          <p className="text-muted-foreground text-sm text-pretty">
-            Criterio prudente adoptado sobre la Ley 2300 de 2023: {floorText}. Se aplica a todo envío
-            comercial, también B2B (pendiente de validación jurídica). Puedes estrecharlo, no abrirlo más.
-          </p>
+          <StatePill tone={ok ? "success" : "warning"}>{ok ? "Dentro del criterio" : "Fuera del criterio"}</StatePill>
         </div>
-        <StatePill tone={ok ? "success" : "warning"}>{ok ? "Dentro del criterio" : "Fuera del criterio"}</StatePill>
+        <p className="text-muted-foreground text-sm text-pretty">
+          Criterio prudente adoptado sobre la Ley 2300 de 2023: {floorText}. Se aplica a todo envío
+          comercial, también B2B (pendiente de validación jurídica). Puedes estrecharlo, no abrirlo más.
+        </p>
       </header>
 
-      <div className="grid gap-3.5 sm:grid-cols-3">
+      <div className="grid gap-3.5 @lg:grid-cols-2 @4xl:grid-cols-3">
         <RangeField
           id="op-weekdays"
           label="Lunes a viernes"
@@ -455,7 +455,7 @@ function TimeRangeInputs({
   onChange: (value: OutreachTimeRange) => void;
 }) {
   const input = cn(
-    "h-9 min-w-0 flex-1 rounded-md border bg-background px-2 text-sm tabular-nums focus:outline-none focus:ring-3 focus:ring-primary/20 disabled:opacity-60",
+    "h-9 min-w-[7.5rem] flex-1 rounded-md border bg-background px-2 text-sm tabular-nums focus:outline-none focus:ring-3 focus:ring-primary/20 disabled:opacity-60",
     invalid ? "border-destructive" : "border-input focus:border-primary",
   );
   return (

@@ -142,15 +142,22 @@ export function validateHours(hours: OutreachHours, floor: OutreachPolicyView["f
 
 /**
  * La frase de la barra de guardar: el cambio que más importa, en voz de axi.
- * Abrir un canal de riesgo alto va primero porque es lo que el dueño tiene que
- * ver antes de guardar; si no, cuántos cambios hay.
+ * Abrir un canal de riesgo alto va primero —con su consecuencia como
+ * detalle— porque es lo que el dueño tiene que ver antes de guardar; si no,
+ * cuántos cambios hay. `null` = nada que guardar.
  */
-export function describeChanges(before: OutreachPolicy, after: OutreachPolicy): string | null {
+export function describeChanges(
+  before: OutreachPolicy,
+  after: OutreachPolicy,
+): { title: string; detail?: string } | null {
   const opened = OUTREACH_CHANNELS_SHOWN.find(
     (meta) => isHighRisk(meta, after.channels[meta.key]) && !isHighRisk(meta, before.channels[meta.key]),
   );
   if (opened !== undefined) {
-    return `Abriste ${opened.label} a cualquier lead · el riesgo queda escrito en cada envío`;
+    return {
+      title: `Abriste ${opened.label} a cualquier lead`,
+      detail: "el riesgo queda escrito en cada envío",
+    };
   }
   let count = 0;
   for (const meta of OUTREACH_CHANNELS_SHOWN) {
@@ -160,5 +167,5 @@ export function describeChanges(before: OutreachPolicy, after: OutreachPolicy): 
   }
   if (JSON.stringify(before.hours) !== JSON.stringify(after.hours)) count += 1;
   if (count === 0) return null;
-  return count === 1 ? "Un cambio sin guardar" : `${count} cambios sin guardar`;
+  return { title: count === 1 ? "Un cambio sin guardar" : `${count} cambios sin guardar` };
 }

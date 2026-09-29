@@ -78,9 +78,10 @@ describe("describeChanges", () => {
       },
       hours: { ...FLOOR, saturday: null },
     };
-    expect(describeChanges(DEFAULT_POLICY, after)).toBe(
-      "Abriste WhatsApp · plantilla a cualquier lead · el riesgo queda escrito en cada envío",
-    );
+    expect(describeChanges(DEFAULT_POLICY, after)).toEqual({
+      title: "Abriste WhatsApp · plantilla a cualquier lead",
+      detail: "el riesgo queda escrito en cada envío",
+    });
   });
 
   it("cuenta los cambios cuando ninguno abre riesgo", () => {
@@ -89,7 +90,7 @@ describe("describeChanges", () => {
       channels: { ...DEFAULT_POLICY.channels, email: { enabled: false, mode: "any_lead", daily_cap: 1 } },
       hours: { ...FLOOR, saturday: null },
     };
-    expect(describeChanges(DEFAULT_POLICY, after)).toBe("2 cambios sin guardar");
+    expect(describeChanges(DEFAULT_POLICY, after)).toEqual({ title: "2 cambios sin guardar" });
   });
 });
 
