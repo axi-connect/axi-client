@@ -26,6 +26,7 @@ const LABELS: Record<string, string> = {
 	"templates": "Mensajes",
 	"meta-templates": "Plantillas de Meta",
 	"opt-outs": "Bajas",
+	"outreach": "Política de contacto",
 	"new": "Nueva",
 	// Método comercial: /comercial, /comercial/meta, /comercial/acciones/:id,
 	// /comercial/resultados/:key (Q20: salía «comercial» en minúscula). Las
