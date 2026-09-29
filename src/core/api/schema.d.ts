@@ -15215,7 +15215,6 @@ export interface components {
                 };
                 /** @enum {string} */
                 source: "inbound_keyword" | "manual" | "import" | "habeas_data" | "email_unsubscribe" | "sms_stop";
-                /** @description P1: canal de la baja; `null` = de todos los canales. */
                 channel: string | null;
                 keyword_text: string | null;
                 /** Format: uuid */
@@ -15239,11 +15238,10 @@ export interface components {
             /** Format: uuid */
             contact_id: string;
             /**
-             * @description P1: `habeas_data` = el titular ejerció Ley 1581 (baja de todo, terminal).
              * @default manual
              * @enum {string}
              */
-            source?: "manual" | "habeas_data";
+            source: "manual" | "habeas_data";
         };
         CreatedOptOutDto: {
             /** Format: uuid */
