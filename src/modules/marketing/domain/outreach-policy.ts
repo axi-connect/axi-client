@@ -96,6 +96,11 @@ export const MODE_OPTIONS: readonly { value: Extract<OutreachMode, "opt_in_only"
 ];
 
 /** ¿Este canal, así configurado, pone en riesgo un número del tenant? */
+/** Nombre del canal de una baja por canal; crudo si no se conoce. */
+export function optOutChannelLabel(channel: string): string {
+  return OUTREACH_CHANNELS_SHOWN.find((item) => item.key === channel)?.label ?? channel;
+}
+
 export function isHighRisk(meta: OutreachChannelMeta, policy: OutreachChannelPolicy): boolean {
   return meta.number_at_stake && policy.enabled && policy.mode === "any_lead";
 }

@@ -15214,7 +15214,9 @@ export interface components {
                     email: string | null;
                 };
                 /** @enum {string} */
-                source: "inbound_keyword" | "manual" | "import";
+                source: "inbound_keyword" | "manual" | "import" | "habeas_data" | "email_unsubscribe" | "sms_stop";
+                /** @description P1: canal de la baja; `null` = de todos los canales. */
+                channel: string | null;
                 keyword_text: string | null;
                 /** Format: uuid */
                 conversation_id: string | null;
@@ -15236,6 +15238,17 @@ export interface components {
         CreateOptOutDto: {
             /** Format: uuid */
             contact_id: string;
+            /**
+             * @description P1: `habeas_data` = el titular ejerció Ley 1581 (baja de todo, terminal).
+             * @default manual
+             * @enum {string}
+             */
+            source?: "manual" | "habeas_data";
+        };
+        CreatedOptOutDto: {
+            /** Format: uuid */
+            id: string;
+            upgraded: boolean;
         };
         MarketingSettingsDto: {
             attribution_window_hours: number;
@@ -31012,7 +31025,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["OptOutsListDto"];
+                    "application/json": components["schemas"]["CreatedOptOutDto"];
                 };
             };
         };

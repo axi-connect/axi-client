@@ -1,4 +1,5 @@
 import { HSM_WINDOW_REASON_NO_TEMPLATE } from "@/core/lib/hsm-copy";
+import { OUTREACH_BLOCK_REASON_LABELS } from "@/core/lib/outreach-reasons";
 
 /**
  * Por qué un contacto NO recibió el mensaje, en el idioma del operador.
@@ -17,6 +18,7 @@ import { HSM_WINDOW_REASON_NO_TEMPLATE } from "@/core/lib/hsm-copy";
 export const SKIP_REASON_LABELS: Record<string, string> = {
   // --- El contacto no quiere o no se le puede escribir ---
   opted_out: "El contacto pidió no recibir promociones",
+  ...OUTREACH_BLOCK_REASON_LABELS,
   no_channel: "Sin teléfono ni WhatsApp: no hay a dónde escribirle",
   channel_not_found: "El canal ya no existe",
   channel_not_connected: "El canal está desconectado",

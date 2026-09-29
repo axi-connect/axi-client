@@ -26,10 +26,13 @@ export function ContactPicker({
   value,
   onChange,
   error,
+  labelledBy,
 }: {
   value: { id: string; label: string } | null;
   onChange: (contact: { id: string; label: string } | null) => void;
   error?: string;
+  /** Id de la etiqueta visible: un `combobox` no toma su nombre del texto. */
+  labelledBy?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -58,6 +61,7 @@ export function ContactPicker({
             role="combobox"
             aria-expanded={open}
             aria-invalid={Boolean(error)}
+            aria-labelledby={labelledBy}
             className={cn(
               "h-9 w-full justify-between font-normal",
               value === null && "text-muted-foreground",

@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
+import { Plus } from "lucide-react";
 import { formatShortDate } from "@/core/lib/format";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
@@ -12,16 +13,19 @@ import { StatePill } from "@/shared/components/features/bento";
 import { EmptyState } from "@/shared/components/features/empty-state";
 import { TableSkeleton } from "@/shared/components/features/loading";
 import { Button } from "@/shared/components/ui/button";
+import { Checkbox } from "@/shared/components/ui/checkbox";
 import BasicPagination from "@/shared/components/ui/pagination";
 import { SegmentedControl } from "@/shared/components/ui/segmented";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/components/ui/table";
 import { OPT_OUT_SOURCE_LABELS } from "@/modules/marketing/domain/enums";
+import { optOutChannelLabel } from "@/modules/marketing/domain/outreach-policy";
 import {
   listOptOuts,
   revokeOptOut,
   type OptOutDTO,
 } from "@/modules/marketing/infrastructure/services/opt-outs-service.adapter";
 import { LoadError, TableCard, TD, TH } from "@/modules/marketing/ui/components/premium";
+import { RegisterOptOutDialog } from "@/modules/marketing/ui/components/RegisterOptOutDialog";
 
 const PAGE_SIZE = 20;
 
@@ -40,9 +44,10 @@ type Scope = "active" | "all";
 export function OptOutsView() {
   const { hasPermission } = useAuth();
   const canManage = hasPermission("marketing:manage");
-  const { showAlert, showModal, closeModal } = useAlert();
+  const { showAlert, showModal } = useAlert();
 
   const [scope, setScope] = useState<Scope>("active");
+  const [registering, setRegistering] = useState(false);
   const activeOnly = scope === "active";
 
   const fetcher = useCallback(
@@ -67,32 +72,64 @@ export function OptOutsView() {
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
+  async function revoke(optOut: OptOutDTO) {
+    try {
+      await revokeOptOut(optOut.id);
+      await refresh();
+      showAlert({ tone: "success", title: "Baja revocada" });
+    } catch (err) {
+      showAlert({
+        tone: "error",
+        title: errorMessage(err, "No se pudo revocar la baja"),
+      });
+    }
+  }
+
+  /**
+   * Habeas data es un registro legal: volver a incluir exige que el operador
+   * declare tener la retractación por escrito. El modal del proveedor es de
+   * configuración fija, así que la casilla lo vuelve a abrir con su estado.
+   */
+  function confirmHabeasRevoke(optOut: OptOutDTO, confirmed: boolean) {
+    showModal({
+      title: "¿Volver a incluir a este contacto?",
+      description:
+        "Pidió habeas data: volver a incluirlo reactiva el uso de sus datos para contacto comercial.",
+      body: (
+        <label className="flex cursor-pointer items-start gap-2.5 text-sm text-pretty">
+          <Checkbox
+            checked={confirmed}
+            onChange={(event) => confirmHabeasRevoke(optOut, event.target.checked)}
+            className="mt-0.5"
+            touchTarget
+          />
+          <span>Solo si el titular retiró su solicitud por escrito. Confirmo que la tengo.</span>
+        </label>
+      ),
+      actions: [
+        { label: "Cancelar", variant: "outline" },
+        {
+          label: "Volver a incluir",
+          variant: "destructive",
+          disabled: !confirmed,
+          onClick: () => void revoke(optOut),
+        },
+      ],
+    });
+  }
+
   function handleRevoke(optOut: OptOutDTO) {
+    if (optOut.source === "habeas_data") {
+      confirmHabeasRevoke(optOut, false);
+      return;
+    }
     showModal({
       title: "¿Volver a incluir a este contacto?",
       description:
         "Volverá a recibir campañas y mensajes de recuperación. Hazlo solo si te lo pidió: la baja quedó registrada con su evidencia.",
       actions: [
-        { label: "Cancelar", variant: "outline", asClose: true },
-        {
-          label: "Volver a incluir",
-          variant: "default",
-          onClick: () => {
-            closeModal();
-            void (async () => {
-              try {
-                await revokeOptOut(optOut.id);
-                await refresh();
-                showAlert({ tone: "success", title: "Baja revocada" });
-              } catch (err) {
-                showAlert({
-                  tone: "error",
-                  title: errorMessage(err, "No se pudo revocar la baja"),
-                });
-              }
-            })();
-          },
-        },
+        { label: "Cancelar", variant: "outline" },
+        { label: "Volver a incluir", variant: "default", onClick: () => void revoke(optOut) },
       ],
     });
   }
@@ -130,13 +167,22 @@ export function OptOutsView() {
             { value: "all", label: "Todas" },
           ]}
         />
-        <p className="text-muted-foreground text-xs text-pretty">
-          <span className="tabular-nums">
-            {total.toLocaleString("es-CO")} {total === 1 ? "registro" : "registros"}
-          </span>{" "}
-          · nadie en esta lista recibe campañas ni recuperación
-        </p>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+          <p className="text-muted-foreground text-xs text-pretty">
+            <span className="tabular-nums">
+              {total.toLocaleString("es-CO")} {total === 1 ? "registro" : "registros"}
+            </span>{" "}
+            · nadie en esta lista recibe campañas ni recuperación
+          </p>
+          {canManage && (
+            <Button size="sm" className="rounded-full" onClick={() => setRegistering(true)}>
+              <Plus aria-hidden />
+              Registrar baja
+            </Button>
+          )}
+        </div>
       </div>
+      <RegisterOptOutDialog open={registering} onOpenChange={setRegistering} onRegistered={refresh} />
 
       {loading && items.length === 0 ? (
         <TableSkeleton rows={5} />
@@ -155,8 +201,8 @@ export function OptOutsView() {
             <TableHeader>
               <TableRow className="hover:bg-transparent">
                 <TableHead className={`${TH} @md:min-w-44`}>Contacto</TableHead>
-                <TableHead className={`${TH} hidden @xl:table-cell`}>Motivo</TableHead>
-                <TableHead className={`${TH} hidden @2xl:table-cell`}>Cuándo</TableHead>
+                <TableHead className={`${TH} hidden min-w-44 @xl:table-cell`}>Motivo</TableHead>
+                <TableHead className={`${TH} hidden @3xl:table-cell`}>Cuándo</TableHead>
                 <TableHead className={`${TH} hidden @4xl:table-cell`}>Evidencia</TableHead>
                 <TableHead className={`${TH} hidden @md:table-cell`}>
                   <span className="sr-only">Estado</span>
@@ -175,7 +221,7 @@ export function OptOutsView() {
                         <span className="text-muted-foreground block text-xs whitespace-nowrap tabular-nums">{row.contact.phone}</span>
                       )}
                       {/* Con la tabla estrecha, motivo y fecha van aquí: sin columnas que obliguen a desplazar. */}
-                      <span className="text-muted-foreground mt-1 flex flex-wrap gap-x-1 text-xs @2xl:hidden">
+                      <span className="text-muted-foreground mt-1 flex flex-wrap gap-x-1 text-xs @3xl:hidden">
                         <span className="whitespace-nowrap @xl:hidden">{OPT_OUT_SOURCE_LABELS[row.source]} ·</span>
                         <span className="whitespace-nowrap">{formatShortDate(row.created_at)}</span>
                       </span>
@@ -184,11 +230,14 @@ export function OptOutsView() {
                     </TableCell>
                     <TableCell className={`${TD} hidden text-sm whitespace-normal @xl:table-cell`}>
                       {OPT_OUT_SOURCE_LABELS[row.source]}
+                      {row.channel !== null && (
+                        <span className="text-muted-foreground block text-xs">Solo este canal: {optOutChannelLabel(row.channel)}</span>
+                      )}
                       {row.keyword_text && (
                         <span className="text-muted-foreground ml-1 font-mono text-xs whitespace-nowrap">«{row.keyword_text}»</span>
                       )}
                     </TableCell>
-                    <TableCell className={`${TD} text-muted-foreground hidden text-sm @2xl:table-cell`}>
+                    <TableCell className={`${TD} text-muted-foreground hidden text-sm @3xl:table-cell`}>
                       {formatShortDate(row.created_at)}
                     </TableCell>
                     <TableCell className={`${TD} hidden @4xl:table-cell`}>
