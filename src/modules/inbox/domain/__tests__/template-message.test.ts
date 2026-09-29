@@ -4,6 +4,7 @@ import {
   failureCopy,
   mergeDeliveryStatus,
   parseMessageError,
+  resentByOf,
   resentFrom,
 } from "@/modules/inbox/domain/template-message";
 
@@ -132,5 +133,7 @@ describe("deliveryLabel y resentFrom", () => {
   it("lee el enlace al mensaje original de un reenvío", () => {
     expect(resentFrom({ resent_from: "m1", template: {} })).toBe("m1");
     expect(resentFrom({})).toBeNull();
+    expect(resentByOf({ resent_by_user_id: "u1" })).toBe("u1");
+    expect(resentByOf(null)).toBeNull();
   });
 });

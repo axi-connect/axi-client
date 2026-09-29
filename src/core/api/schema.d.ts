@@ -4756,6 +4756,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/conversations/{id}/messages/{messageId}/resend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConversationsController_resend_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/conversations/{id}/uploads": {
         parameters: {
             query?: never;
@@ -13452,6 +13468,7 @@ export interface components {
                 /** Format: uuid */
                 contact_id: string;
                 contact_name: string | null;
+                contact_phone: string | null;
                 /** Format: uuid */
                 deal_id: string | null;
                 /** Format: uuid */
@@ -13505,6 +13522,24 @@ export interface components {
                 task_channel: "message" | "call" | "call_then_message" | null;
                 /** @enum {string|null} */
                 task_medium: "message" | "call" | null;
+                /** Format: uuid */
+                bulk_id: string | null;
+                last_opening: {
+                    /** Format: uuid */
+                    run_id: string;
+                    /** Format: uuid */
+                    message_id: string | null;
+                    /** Format: uuid */
+                    conversation_id: string | null;
+                    /** Format: date-time */
+                    sent_at: string | null;
+                    /** @enum {string|null} */
+                    delivery_status: "sent" | "delivered" | "read" | "failed" | null;
+                    /** Format: date-time */
+                    delivery_updated_at: string | null;
+                    failed_reason: string | null;
+                    failed_detail: string | null;
+                } | null;
                 /** Format: date-time */
                 created_at: string;
                 /** Format: date-time */
@@ -13542,6 +13577,7 @@ export interface components {
             /** Format: uuid */
             contact_id: string;
             contact_name: string | null;
+            contact_phone: string | null;
             /** Format: uuid */
             deal_id: string | null;
             /** Format: uuid */
@@ -13595,6 +13631,24 @@ export interface components {
             task_channel: "message" | "call" | "call_then_message" | null;
             /** @enum {string|null} */
             task_medium: "message" | "call" | null;
+            /** Format: uuid */
+            bulk_id: string | null;
+            last_opening: {
+                /** Format: uuid */
+                run_id: string;
+                /** Format: uuid */
+                message_id: string | null;
+                /** Format: uuid */
+                conversation_id: string | null;
+                /** Format: date-time */
+                sent_at: string | null;
+                /** @enum {string|null} */
+                delivery_status: "sent" | "delivered" | "read" | "failed" | null;
+                /** Format: date-time */
+                delivery_updated_at: string | null;
+                failed_reason: string | null;
+                failed_detail: string | null;
+            } | null;
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
@@ -13742,6 +13796,10 @@ export interface components {
                 /** Format: uuid */
                 call_session_id: string | null;
                 opened_with_template: boolean;
+                /** @enum {string|null} */
+                delivery_status: "sent" | "delivered" | "read" | "failed" | null;
+                /** Format: date-time */
+                delivery_updated_at: string | null;
                 /** Format: date-time */
                 created_at: string;
             }[];
@@ -13776,6 +13834,10 @@ export interface components {
                 /** Format: uuid */
                 call_session_id: string | null;
                 opened_with_template: boolean;
+                /** @enum {string|null} */
+                delivery_status: "sent" | "delivered" | "read" | "failed" | null;
+                /** Format: date-time */
+                delivery_updated_at: string | null;
                 /** Format: date-time */
                 created_at: string;
             }[];
@@ -31215,6 +31277,28 @@ export interface operations {
                 "application/json": components["schemas"]["SendMessageDto"];
             };
         };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnqueuedMessageDto"];
+                };
+            };
+        };
+    };
+    ConversationsController_resend_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                messageId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             202: {
                 headers: {

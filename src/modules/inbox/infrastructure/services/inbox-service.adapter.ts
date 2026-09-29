@@ -86,6 +86,16 @@ export function sendMessageRest(conversationId: string, dto: SendMessageDTO): Pr
   return http.post<EnqueuedMessage>(`/conversations/${conversationId}/messages`, dto);
 }
 
+/**
+ * Reenvía un saliente que falló (plantilla o texto): crea un mensaje NUEVO con
+ * el mismo contenido y deja el fallido en el hilo con su motivo. Idempotente:
+ * un doble clic devuelve el mismo reenvío. El mensaje llega también por
+ * `conversation.message_created`.
+ */
+export function resendMessageRest(conversationId: string, messageId: string): Promise<EnqueuedMessage> {
+  return http.post<EnqueuedMessage>(`/conversations/${conversationId}/messages/${messageId}/resend`);
+}
+
 export function claimRest(id: string): Promise<ConversationDTO> {
   return http.post<ConversationDTO>(`/inbox/conversations/${id}/claim`);
 }

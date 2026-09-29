@@ -30,6 +30,8 @@ export {
 } from "./domain/template-catalog";
 export { HSM_CATEGORY_LABELS } from "./domain/enums";
 export { renderHsmPreview, type PreviewSegment } from "./domain/hsm-preview";
+// El inbox pinta la cabecera, el pie y los botones de una plantilla ya enviada.
+export { readTemplatePieces, type TemplateButton } from "./domain/template-pieces";
 export {
   bulkOpeningCost,
   formatUsd,

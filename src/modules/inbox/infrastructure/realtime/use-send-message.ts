@@ -6,7 +6,7 @@ import { useAlert } from "@/core/providers/alert-provider"
 import { HttpError } from "@/core/api/problem"
 import { useInboxStore } from "@/modules/inbox/infrastructure/stores/inbox.store"
 import { isWindowRejection, useWindowRejections } from "@/modules/inbox/infrastructure/hooks/use-reply-window"
-import { sendMessageRest } from "@/modules/inbox/infrastructure/services/inbox-service.adapter"
+import { resendMessageRest, sendMessageRest } from "@/modules/inbox/infrastructure/services/inbox-service.adapter"
 import type { InboxCommands } from "@/modules/inbox/infrastructure/realtime/use-inbox-socket"
 import type {
   OutboundMediaKind,
@@ -56,7 +56,7 @@ function toOptimistic(input: SendInput) {
 
 export function useSendMessage(conversationId: string, commands: InboxCommands, socketConnected: boolean) {
   const { showAlert } = useAlert()
-  const { sendOptimistic, reconcileSent, markSendFailed } = useInboxStore()
+  const { sendOptimistic, reconcileSent, markSendFailed, appendMessage } = useInboxStore()
 
   const send = useCallback(
     async (input: SendInput, existingLocalId?: string) => {
@@ -130,5 +130,22 @@ export function useSendMessage(conversationId: string, commands: InboxCommands, 
     [conversationId, send],
   )
 
-  return { send, retry }
+  /**
+   * Reenvío de un saliente que falló en el servidor o que Meta rechazó
+   * (hotfix 2026-09-29). Siempre por REST: es una acción puntual, no el chat.
+   */
+  const resend = useCallback(
+    async (message: UiMessage) => {
+      try {
+        const enqueued = await resendMessageRest(conversationId, message.id)
+        appendMessage(conversationId, enqueued as UiMessage)
+      } catch (err) {
+        const closed = noteWindowRejection(conversationId, err instanceof HttpError ? err.code : null)
+        showAlert({ tone: "error", title: closed ? WINDOW_CLOSED_TITLE : errorMessage(err, "No se pudo reenviar el mensaje") })
+      }
+    },
+    [conversationId, appendMessage, showAlert],
+  )
+
+  return { send, retry, resend }
 }

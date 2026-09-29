@@ -66,6 +66,13 @@ export function resentFrom(payload: unknown): string | null {
   return typeof value === "string" ? value : null;
 }
 
+/** `payload.resent_by_user_id`: quién pulsó «Reenviar» (el reenvío conserva el `sender_type` del original). */
+export function resentByOf(payload: unknown): string | null {
+  if (typeof payload !== "object" || payload === null) return null;
+  const value = (payload as { resent_by_user_id?: unknown }).resent_by_user_id;
+  return typeof value === "string" ? value : null;
+}
+
 /**
  * El error de un mensaje fallido. Llega con dos formas:
  * - el envío síncrono (`markFailed`): `{ code: "channels/…", detail }`;

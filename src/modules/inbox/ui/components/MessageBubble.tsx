@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { cn } from "@/core/lib/utils"
 import { MessageTime } from "./timeline/MessageTime"
 import { AlertCircle, Check, CheckCheck, Clock, RotateCw, Smartphone, Sparkles } from "lucide-react"
@@ -10,13 +11,23 @@ import {
   sentFromBusinessApp,
   type UiMessage,
 } from "@/modules/inbox/domain/inbox"
+import {
+  deliveryLabel,
+  extractTemplatePayload,
+  failureCopy,
+  parseMessageError,
+} from "@/modules/inbox/domain/template-message"
+import { useChannelTemplate } from "@/modules/inbox/infrastructure/hooks/use-channel-templates"
 import { InteractiveMessage, InteractiveReplyChip } from "./interactive"
+import { TemplateButtons, TemplateContent } from "./TemplateMessage"
 import { MediaAttachment } from "./media"
 
 /**
  * Burbuja de mensaje. Estados de entrega: pending (reloj) → sent (check) →
- * delivered/read (doble check) → failed (alerta + retry). El backend aún no
- * emite `conversation.message_status`, así que delivered/read son best-effort.
+ * delivered/read (doble check) → failed (alerta + motivo). Desde el hotfix del
+ * 2026-09-29 el backend emite `message_status` con `delivered`/`read` también.
+ * Plantilla de Meta: su texto del catálogo, el estado en palabras y, si Meta la
+ * rechazó, el motivo en español con «Reenviar».
  * Media (F9): imagen/video/sticker van edge-to-edge (p-1); audio/documento/
  * ubicación con padding normal; sticker sin fondo de burbuja (patrón WhatsApp).
  */
@@ -30,16 +41,22 @@ function StatusIcon({ message }: { message: UiMessage }) {
   }
   if (message.status === "read" || message.status === "delivered") {
     // Leído a opacidad plena y entregado atenuado: sin azul, que sobre la tinta no
-    // se lee y además es best-effort (el backend no emite `message_status`).
+    // se lee sin color.
     return <CheckCheck className={cn("size-3.5", message.status === "read" ? "opacity-100" : "opacity-60")} aria-label={message.status === "read" ? "Leído" : "Entregado"} />
   }
   return <Check className="size-3.5 opacity-60" aria-label="Enviado" />
 }
 
+const RETRY_CLASS =
+  "inline-flex h-7 items-center gap-1 rounded-full border border-destructive/35 bg-card px-2.5 text-xs font-medium transition-colors hover:bg-destructive/10 focus-visible:ring-[3px] focus-visible:ring-destructive/40 focus-visible:outline-none"
+
 export function MessageBubble({
   message,
   conversationId,
   onRetry,
+  onResend,
+  resentAt = null,
+  channelId = null,
   first = true,
   last = true,
   author = null,
@@ -47,6 +64,12 @@ export function MessageBubble({
   message: UiMessage
   conversationId: string
   onRetry?: (message: UiMessage) => void
+  /** Reenvío de un saliente que falló en el SERVIDOR (plantilla o texto). */
+  onResend?: (message: UiMessage) => Promise<void>
+  /** Si este fallido ya se reenvió: la hora del reenvío. */
+  resentAt?: string | null
+  /** Canal de la conversación: de su catálogo sale el texto de una plantilla. */
+  channelId?: string | null
   /** Primero de un grupo del mismo autor: lleva el autor arriba (F2). */
   first?: boolean
   /** Último del grupo: lleva la hora, el estado y la esquina de la cola. */
@@ -55,7 +78,12 @@ export function MessageBubble({
   author?: string | null
 }) {
   const outbound = message.direction === "outbound"
-  const system = message.sender_type === "system" || message.content_type === "system"
+  const sentTemplate = message.content_type === "template" ? extractTemplatePayload(message.payload) : null
+  const catalog = useChannelTemplate(sentTemplate ? channelId : null, sentTemplate?.name ?? null, sentTemplate?.language ?? null)
+  const [resending, setResending] = useState(false)
+  // Una plantilla del sistema (apertura del CRM, recordatorio, campaña) va al
+  // contacto: es una burbuja, no la píldora de los avisos internos.
+  const system = !sentTemplate && (message.sender_type === "system" || message.content_type === "system")
   const failed = message.delivery === "failed" || message.status === "failed"
   const media = isMediaContentType(message.content_type)
   const sticker = message.content_type === "sticker"
@@ -107,7 +135,9 @@ export function MessageBubble({
           failed && "opacity-80 ring-[1.5px] ring-destructive",
         )}
       >
-        {media ? (
+        {sentTemplate ? (
+          <TemplateContent sent={sentTemplate} catalog={catalog} />
+        ) : media ? (
           <MediaAttachment message={message} conversationId={conversationId} outbound={outbound} />
         ) : reply ? (
           <InteractiveReplyChip reply={reply} outbound={outbound} />
@@ -120,7 +150,7 @@ export function MessageBubble({
             </div>
           )
         )}
-        {(!media || (message.body && message.body.length > 0)) && (
+        {!sentTemplate && (!media || (message.body && message.body.length > 0)) && (
           <p className={cn("whitespace-pre-wrap break-words", media && edgeToEdge && "max-w-60 px-2 pt-1")}>
             {media ? message.body : (message.body ?? "(sin contenido)")}
           </p>
@@ -142,11 +172,14 @@ export function MessageBubble({
               </span>
             )}
             <MessageTime iso={message.created_at} />
+            {sentTemplate && outbound && <span>{deliveryLabel(message.status, message.delivery === "pending")}</span>}
             <StatusIcon message={message} />
           </div>
         )}
       </div>
-      {failed && (
+      {sentTemplate && <TemplateButtons catalog={catalog} muted={failed} />}
+      {failed && message.local_id ? (
+        // Optimista que nunca salió de aquí: se reintenta el mismo envío.
         <div className="mt-1.5 flex items-center gap-2 text-xs text-destructive" role="status">
           <AlertCircle aria-hidden className="size-3.5" />
           <span>No se envió</span>
@@ -155,13 +188,40 @@ export function MessageBubble({
               type="button"
               onClick={() => onRetry(message)}
               aria-label="Reintentar envío"
-              className="inline-flex h-7 items-center gap-1 rounded-full border border-destructive/35 bg-card px-2.5 font-medium transition-colors hover:bg-destructive/10 focus-visible:ring-[3px] focus-visible:ring-destructive/40 focus-visible:outline-none"
+              className={RETRY_CLASS}
             >
               <RotateCw aria-hidden className="size-3" /> Reintentar
             </button>
           )}
         </div>
-      )}
+      ) : failed ? (
+        // Falló en el servidor o Meta lo rechazó: el motivo y, si se puede, reenviar.
+        <div className="mt-1.5 flex max-w-[min(75%,34rem)] items-start justify-end gap-2" role="status">
+          <p className="text-right text-xs leading-relaxed text-foreground/80">
+            <span className="font-semibold text-destructive">No llegó.</span>{" "}
+            {failureCopy(parseMessageError(message.error))}
+            {resentAt && (
+              <>
+                {" "}Se reenvió a las <MessageTime iso={resentAt} />.
+              </>
+            )}
+          </p>
+          {!resentAt && onResend && (message.content_type === "template" || message.content_type === "text") && (
+            <button
+              type="button"
+              disabled={resending}
+              onClick={() => {
+                setResending(true)
+                void onResend(message).finally(() => setResending(false))
+              }}
+              className={cn(RETRY_CLASS, "shrink-0 text-destructive disabled:opacity-60")}
+            >
+              <RotateCw aria-hidden className={cn("size-3", resending && "animate-spin motion-reduce:animate-none")} />
+              {resending ? "Reenviando…" : "Reenviar"}
+            </button>
+          )}
+        </div>
+      ) : null}
     </div>
   )
 }
