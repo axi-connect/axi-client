@@ -19,6 +19,7 @@ import {
   type MessageStatus,
   type UiMessage,
 } from "@/modules/inbox/domain/inbox"
+import { mergeDeliveryStatus } from "@/modules/inbox/domain/template-message"
 import type { FilterValues } from "@/shared/components/features/filter-panel"
 import type {
   AudioTranscription,
@@ -186,8 +187,17 @@ type InboxStore = {
   ) => string
   reconcileSent: (conversationId: string, localId: string, real: Message | UiMessage) => void
   markSendFailed: (conversationId: string, localId: string) => void
-  /** F9.1: fallo reportado por el backend (message_status) — por id REAL. */
-  markMessageFailed: (conversationId: string, messageId: string) => void
+  /**
+   * `conversation.message_status` por id REAL: `sent`/`delivered`/`read`/`failed`
+   * con precedencia (`mergeDeliveryStatus`). Un fallo sin `error` guardado se
+   * queda con el `error_code` del evento, para poder decir por qué.
+   */
+  applyMessageStatus: (
+    conversationId: string,
+    messageId: string,
+    status: MessageStatus,
+    errorCode?: string | null,
+  ) => void
   appendMessage: (conversationId: string, message: UiMessage) => void
   /** Reemplaza un mensaje por id con datos frescos de servidor (attachments), preservando lo local. */
   upsertMessage: (conversationId: string, message: UiMessage) => void
@@ -611,7 +621,7 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
     })
   },
 
-  markMessageFailed: (conversationId, messageId) => {
+  applyMessageStatus: (conversationId, messageId, status, errorCode = null) => {
     set((state) => {
       const current = state.messagesById[conversationId]
       if (!current) return state
@@ -620,9 +630,12 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
           ...state.messagesById,
           [conversationId]: {
             ...current,
-            items: current.items.map((m) =>
-              m.id === messageId ? { ...m, status: "failed", delivery: "failed" } : m,
-            ),
+            items: current.items.map((m) => {
+              if (m.id !== messageId) return m
+              const next = mergeDeliveryStatus(m.status, status)
+              const error = next === "failed" && m.error == null && errorCode ? { code: errorCode } : m.error
+              return { ...m, status: next, error, delivery: deliveryFor(next, m.delivery) }
+            }),
           },
         },
       }
@@ -787,7 +800,8 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
           [conversationId]: {
             ...current,
             items: current.items.map((m) =>
-              m.id === messageId ? { ...m, status: "sent", delivery: "confirmed" } : m,
+              // `message_sent` puede llegar DESPUÉS de un recibo de Meta: no baja un «leído».
+              m.id === messageId ? { ...m, status: mergeDeliveryStatus(m.status, "sent"), delivery: "confirmed" } : m,
             ),
           },
         },

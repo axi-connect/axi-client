@@ -181,11 +181,12 @@ export function useInboxSocket() {
     }
   })
 
-  // F9.1: el envío falló en el proveedor → la burbuja pasa a failed en vivo
+  // F9.1 + hotfix 2026-09-29: el recorrido de la entrega en vivo — enviada,
+  // entregada, leída o fallida (con el código de Meta para decir por qué).
   useSocketEvent(socket, "conversation.message_status", (payload) => {
-    if (payload.status === "failed") {
-      store.getState().markMessageFailed(payload.conversation_id, payload.message_id)
-    }
+    store
+      .getState()
+      .applyMessageStatus(payload.conversation_id, payload.message_id, payload.status, payload.error_code ?? null)
   })
 
   useSocketEvent(socket, "conversation.typing", (payload) => {

@@ -172,7 +172,10 @@ export type ProductRecognition = {
   analyzed_at?: string;
 };
 
-/** F9.1: hoy el backend lo emite solo con `failed` (markFailed del outbound). */
+/**
+ * Recibos de entrega de un saliente: `failed` desde F9.1 (envío síncrono o
+ * webhook de Meta) y `delivered`/`read` desde el hotfix del 2026-09-29.
+ */
 export type MessageStatusEvent = {
   conversation_id: string;
   message_id: string;
