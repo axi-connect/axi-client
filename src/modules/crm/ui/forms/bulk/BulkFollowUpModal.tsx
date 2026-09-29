@@ -297,7 +297,7 @@ export function BulkFollowUpModal({
         ],
       }}
     >
-      <div className="grid min-h-0 min-w-0 flex-1 content-start gap-4 overflow-x-hidden overflow-y-auto pr-1 sidebar-scroll">
+      <div className="grid min-h-0 min-w-0 flex-1 content-start gap-4 overflow-x-hidden overflow-y-auto pr-1 axi-scroll">
         {counted && preview.skipped.length > 0 && <ExclusionsDetails preview={preview} className="sm:hidden" />}
         {previewError !== null && (
           <Callout tone="warn" icon={TriangleAlert}>
@@ -587,7 +587,7 @@ function AudiencePanel({ preview }: { preview: BulkPreviewDTO }) {
 function Figure({ value, label, short, muted = false }: { value: number; label: string; short: string; muted?: boolean }) {
   return (
     // En el DOM va dt→dd (lo exige el HTML); la cifra se pinta primero por CSS.
-    <div className="flex min-w-0 flex-col-reverse gap-0.5 px-2.5 py-2 sm:px-3.5 sm:py-3">
+    <div className="flex min-w-0 flex-col-reverse justify-end gap-0.5 px-2.5 py-2 sm:px-3.5 sm:py-3">
       <dt className="min-w-0 text-[11px] leading-snug text-pretty text-muted-foreground sm:text-[11.5px]">
         <span className="sm:hidden">{short}</span>
         <span className="hidden sm:inline">{label}</span>
