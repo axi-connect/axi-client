@@ -18,10 +18,18 @@ import { SourcesView } from "../SourcesView";
 
 jest.mock("../../infrastructure/services/prospecting-service.adapter", () => ({
   listSources: jest.fn(),
+  // P2: la tarjeta «Apollo · tu llave». Sin llave puesta.
+  listMyProviderKeys: jest.fn(() => Promise.resolve({ items: [] })),
+  saveProviderKey: jest.fn(),
+  removeProviderKey: jest.fn(),
+}));
+
+jest.mock("@/shared/auth/auth.hooks", () => ({
+  useAuth: () => ({ hasPermission: () => true }),
 }));
 
 jest.mock("@/core/providers/alert-provider", () => ({
-  useAlert: () => ({ showAlert: jest.fn() }),
+  useAlert: () => ({ showAlert: jest.fn(), showModal: jest.fn() }),
 }));
 
 // La vista monta la cabecera de marketing, cuya navegación lee la ruta.
@@ -34,6 +42,7 @@ function source(overrides: Partial<SourceCatalogItemDTO> = {}): SourceCatalogIte
     source: "openstreetmap",
     provider: "overpass",
     label: "OpenStreetMap",
+    query_shape: "map",
     available: true,
     unavailable_reason: null,
     free: true,

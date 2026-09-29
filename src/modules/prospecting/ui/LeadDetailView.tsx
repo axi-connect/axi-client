@@ -6,7 +6,7 @@ import { socketManager } from "@/core/realtime/socket-manager";
 import { useSocket, useSocketEvent } from "@/core/realtime/use-socket";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, LoaderCircle, RefreshCw, WandSparkles, X } from "lucide-react";
+import { ArrowLeft, LoaderCircle, RefreshCw, UsersRound, WandSparkles, X } from "lucide-react";
 
 import { errorMessage } from "@/core/lib/error-messages";
 import { formatShortDate } from "@/core/lib/format";
@@ -30,20 +30,34 @@ import {
   type LeadDetailDTO,
 } from "../domain/lead";
 import {
+  BUYING_ROLE_LABELS,
+  NO_REVEAL_COSTS,
+  PROMOTED_WITH_BUSINESS,
+  type LeadPersonDTO,
+  type LeadSignalDTO,
+  type RevealCosts,
+} from "../domain/person";
+import {
   discardLead,
   enrichLead,
+  findPeopleForLead,
   getLead,
+  getLeadSignals,
+  listMyProviderKeys,
   promoteLeads,
+  revealLeads,
   verifyLead,
 } from "../infrastructure/services/prospecting-service.adapter";
 import { BulkFollowUpButton } from "@/modules/crm/ui/components/BulkFollowUpButton";
 import { ChannelPermissions } from "./components/ChannelPermissions";
 import { EnrichmentRunCard } from "./components/EnrichmentRunCard";
 import { LeadIdentityCard } from "./components/LeadIdentityCard";
+import { LeadPeopleSection } from "./components/LeadPeopleSection";
 import { LeadProvenance } from "./components/LeadProvenance";
 import { LeadTimeline } from "./components/LeadTimeline";
 import { PromotionGate } from "./components/PromotionGate";
 import { QualityBreakdown } from "./components/QualityIndex";
+import { RevealButtons } from "./components/RevealButtons";
 
 /**
  * Cada cuánto se relee la fila mientras hay una pasada viva.
@@ -72,6 +86,12 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
    * trabajando» y dejaba el spinner girando para siempre.
    */
   const [run, setRun] = useState<EnrichmentRunDTO | null>(null);
+  // P2: personas del negocio, sus señales y lo que cuesta revelar.
+  const [peopleRefresh, setPeopleRefresh] = useState(0);
+  const [people, setPeople] = useState<LeadPersonDTO[]>([]);
+  const [signals, setSignals] = useState<LeadSignalDTO[]>([]);
+  const [costs, setCosts] = useState<RevealCosts>(NO_REVEAL_COSTS);
+  const [waitingPhone, setWaitingPhone] = useState(false);
   const { socket } = useSocket("inbox");
   const joinedRef = useRef<string | null>(null);
 
@@ -90,6 +110,21 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // P2: las señales del negocio y los créditos de revelar. Fallar aquí no
+  // tumba la ficha: la ficha sin señales sigue siendo la ficha.
+  const isBusiness = lead?.kind === "business";
+  useEffect(() => {
+    if (!isBusiness) return;
+    getLeadSignals(leadId)
+      .then((result) => setSignals(result.items))
+      .catch(() => setSignals([]));
+  }, [isBusiness, leadId, peopleRefresh]);
+  useEffect(() => {
+    listMyProviderKeys()
+      .then((result) => setCosts(result.items.find((item) => item.provider === "apollo")?.credit_costs ?? NO_REVEAL_COSTS))
+      .catch(() => setCosts(NO_REVEAL_COSTS));
+  }, []);
 
   const working = isRunInFlight(run);
 
@@ -166,6 +201,22 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
     if (payload.lead_id !== leadId) return;
     setRun(payload.run as EnrichmentRunDTO);
     void load();
+    // P2: una pasada de personas se anuncia como tal, y relee la sección.
+    const steps = (payload.run as EnrichmentRunDTO).steps;
+    if (steps.some((step) => step.capability === "find_people")) {
+      setPeopleRefresh((current) => current + 1);
+      const news = steps.map((step) => step.detail).filter((detail) => detail !== undefined && detail !== null);
+      showAlert({
+        tone: "info",
+        title: "Terminamos de buscar personas",
+        description: news.length > 0 ? news.join(" ") : "Abajo tienes a quién encontramos y de dónde salió.",
+      });
+      return;
+    }
+    if (steps.some((step) => step.capability === "reveal_phone" || step.capability === "enrich_person")) {
+      setWaitingPhone(false);
+      return;
+    }
     const ganados = payload.run.fields_filled;
     showAlert(
       ganados > 0
@@ -273,6 +324,56 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
    * `leads:manage`— y se dice en el botón: quien lo pulsa está pidiendo que se
    * pague por saber.
    */
+  /** P2 · «Buscar personas»: la misma cola y el mismo visor que «Buscar datos». */
+  const onFindPeople = useCallback(async () => {
+    setBusy(true);
+    try {
+      await findPeopleForLead(leadId);
+      setRun({
+        id: "pendiente",
+        lead_id: leadId,
+        status: "queued",
+        steps: [],
+        fields_filled: 0,
+        units_spent: 0,
+        manual: true,
+        started_at: null,
+        finished_at: null,
+        created_at: new Date().toISOString(),
+      });
+      showAlert({
+        tone: "info",
+        title: "Buscando personas",
+        description: "Miramos el registro mercantil, su web y Apollo. Buscar no gasta créditos.",
+      });
+    } catch (caught) {
+      showAlert({
+        tone: "error",
+        title: "No se pudo buscar personas",
+        description: errorMessage(caught, "Intenta de nuevo."),
+      });
+    } finally {
+      setBusy(false);
+    }
+  }, [leadId, showAlert]);
+
+  /** P2 · revelar a ESTA persona (su ficha). */
+  const onReveal = useCallback(
+    async (fields: ("email" | "phone")[]) => {
+      setBusy(true);
+      try {
+        await revealLeads([leadId], fields);
+        if (fields.includes("phone")) setWaitingPhone(true);
+        showAlert({ tone: "info", title: fields.includes("phone") ? "Pedimos su contacto" : "Pedimos su correo" });
+      } catch (caught) {
+        showAlert({ tone: "error", title: "No se pudo revelar", description: errorMessage(caught) });
+      } finally {
+        setBusy(false);
+      }
+    },
+    [leadId, showAlert],
+  );
+
   const onVerify = useCallback(async () => {
     setBusy(true);
     try {
@@ -360,6 +461,21 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
               }}
             />
           </div>
+          {lead.kind === "person" && lead.parent !== null && (
+            <p className="text-sm text-pretty">
+              {lead.title !== null && <>{lead.title} · </>}
+              {lead.buying_role !== null && (
+                <span className="font-semibold">{BUYING_ROLE_LABELS[lead.buying_role]}</span>
+              )}
+              {lead.decision_maker_confidence !== null && (
+                <span className="text-muted-foreground tabular-nums"> · confianza {lead.decision_maker_confidence}</span>
+              )}{" "}
+              en{" "}
+              <Link href={`/marketing/leads/${lead.parent.id}`} className="font-medium underline underline-offset-4">
+                {lead.parent.display_name ?? "su negocio"}
+              </Link>
+            </p>
+          )}
           <p className="text-muted-foreground text-sm">
             {SOURCE_LABELS[lead.source]} · descubierto el {formatShortDate(lead.created_at)}
           </p>
@@ -379,14 +495,41 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
               <RefreshCw className="size-4" aria-hidden />
               Volver a revisar
             </Button>
-            <Button className="rounded-full" disabled={busy || working} onClick={() => void onEnrich()}>
-              {working ? (
-                <LoaderCircle aria-hidden className="size-4 animate-spin" />
-              ) : (
-                <WandSparkles aria-hidden className="size-4" />
-              )}
-              {working ? "Buscando…" : "Buscar datos"}
-            </Button>
+            {/* Una PERSONA se revela; un negocio busca datos y busca personas. En un negocio,
+                «Buscar personas» es el primario (tablero 5b): es lo que lleva a quien decide. */}
+            {lead.kind === "person" ? (
+              <RevealButtons
+                target={{
+                  id: lead.id,
+                  masked: lead.masked,
+                  revealable: lead.source === "apollo_people",
+                  email: lead.email,
+                  phone: lead.phone,
+                  has_email: hasAttribute(lead.attributes, "has_email") || lead.email !== null,
+                  has_phone: hasAttribute(lead.attributes, "has_direct_phone") || lead.phone !== null,
+                  in_crm: lead.contact_id !== null,
+                }}
+                costs={costs}
+                busy={busy}
+                waitingPhone={waitingPhone}
+                onReveal={(fields) => void onReveal(fields)}
+              />
+            ) : (
+              <>
+                <Button variant="outline" className="rounded-full" disabled={busy || working} onClick={() => void onEnrich()}>
+                  <WandSparkles aria-hidden className="size-4" />
+                  Buscar datos
+                </Button>
+                <Button className="rounded-full" disabled={busy || working} onClick={() => void onFindPeople()}>
+                  {working ? (
+                    <LoaderCircle aria-hidden className="size-4 animate-spin" />
+                  ) : (
+                    <UsersRound aria-hidden className="size-4" />
+                  )}
+                  {working ? "Buscando…" : "Buscar personas"}
+                </Button>
+              </>
+            )}
           </div>
         )}
       </header>
@@ -404,7 +547,19 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)] lg:items-start [&>*]:min-w-0">
         <div className="flex min-w-0 flex-col gap-4">
           {/* Los datos primero: es lo que se viene a ver. Debajo, de dónde salió cada uno y su historia. */}
-          <LeadIdentityCard lead={lead} />
+          <LeadIdentityCard lead={lead} signals={signals} />
+          {lead.kind === "business" && (
+            <LeadPeopleSection
+              leadId={lead.id}
+              refreshKey={peopleRefresh}
+              searching={working && (run?.steps ?? []).some((step) => step.capability === "find_people")}
+              costs={costs}
+              canManage={canManage}
+              canPromote={hasPermission("leads:promote")}
+              onSearch={() => void onFindPeople()}
+              onPeopleChange={setPeople}
+            />
+          )}
           <LeadProvenance lead={lead} />
           <LeadTimeline events={lead.events} />
         </div>
@@ -412,7 +567,19 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
         <div className="flex min-w-0 flex-col gap-4">
           {/* La única isla: promover o, si ya se promovió, qué sigue. */}
           {canPromote(lead) && hasPermission("leads:promote") && (
-            <PromotionGate lead={lead} busy={busy} onPromote={() => void onPromote()} />
+            <PromotionGate
+              lead={lead}
+              busy={busy}
+              onPromote={() => void onPromote()}
+              people={people
+                .filter(
+                  (person) =>
+                    !person.in_crm &&
+                    PROMOTED_WITH_BUSINESS.includes(person.buying_role) &&
+                    (person.email !== null || person.phone !== null),
+                )
+                .map((person) => ({ name: person.display_name ?? "Sin nombre", role: person.buying_role }))}
+            />
           )}
           {lead.status === "promoted" && lead.contact_id !== null && (
             <InkIsland label="Ya es un contacto de tu CRM" glow="ai" className="gap-3">
@@ -454,4 +621,9 @@ function BackToInbox() {
       Volver a la bandeja
     </Link>
   );
+}
+
+/** ¿Apollo dice que tiene este dato? (viaja en `attributes`, sin revelar). */
+function hasAttribute(attributes: unknown, key: string): boolean {
+  return typeof attributes === "object" && attributes !== null && (attributes as Record<string, unknown>)[key] === true;
 }

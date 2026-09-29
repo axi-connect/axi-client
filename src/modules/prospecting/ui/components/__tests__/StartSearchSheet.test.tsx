@@ -48,8 +48,8 @@ jest.mock("@/shared/components/ui/sheet", () => {
 const startSearchMock = startSearch as jest.MockedFunction<typeof startSearch>;
 
 const CATEGORIES: DiscoveryCategoryDTO[] = [
-  { id: "panaderia", label: "Panaderías" },
-  { id: "restaurante", label: "Restaurantes" },
+  { id: "panaderia", label: "Panaderías", niche_code: "restaurants", ciiu: ["1081"] },
+  { id: "restaurante", label: "Restaurantes", niche_code: "restaurants", ciiu: ["5611", "5612", "5619"] },
 ];
 
 function source(overrides: Partial<SourceCatalogItemDTO> = {}): SourceCatalogItemDTO {

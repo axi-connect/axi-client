@@ -14,12 +14,16 @@ import type {
   QualitySummaryDTO,
 } from "../../domain/lead";
 import type {
-  AdmissionDTO,
+  LeadPersonDTO,
+  LeadSignalDTO,
+  TenantProviderKeyDTO,
+} from "../../domain/person";
+import type {
   DiscoveryCategoryDTO,
   GeocodedPlaceDTO,
   SearchDTO,
-  SearchSource,
   SourceCatalogItemDTO,
+  StartSearchInput,
 } from "../../domain/search";
 
 export type ProspectingSettingsDTO = Schemas["ProspectingSettingsDto"];
@@ -66,7 +70,12 @@ export interface ListLeadsParams extends Params {
   created_before?: string;
   city?: string;
   q?: string;
-  sort?: "score" | "data" | "recent";
+  sort?: "score" | "data" | "recent" | "discovered";
+  /** P2: los resultados de UNA búsqueda (pestaña Personas). */
+  search_id?: string;
+  kind?: "person" | "business";
+  /** P2: la bandeja no enseña los enmascarados; «Nuevos» pide solo esos. */
+  masked?: "exclude" | "only" | "include";
 }
 
 /**
@@ -293,33 +302,58 @@ export function startSearch(input: StartSearchInput): Promise<{ search_id: strin
   return http.post<{ search_id: string }>("/prospecting/searches", input);
 }
 
-export type StartSearchInput = {
-  source: SearchSource;
-  label?: string;
-  text?: string;
-  category?: string;
-  /** El municipio. Distinto de `zone`; ver el comentario de allí. */
-  city?: string;
-  /**
-   * La zona elegida en el mapa: «Zona G», «UPZ Chapinero». Solo se muestra.
-   *
-   * Iba mezclada con `city`, y eso hacía que el nombre del punto geocodificado
-   * —para «Zona G», un hotel que se llama así— viajara como si fuera el
-   * municipio: entraba en la consulta que se le manda a Google y se escribía
-   * como ciudad de los leads.
-   */
-  zone?: string;
-  country?: string;
-  center?: { lat: number; lng: number };
-  radius_m?: number;
-  /** Obligatorio: no existe «búscame todos». */
-  limit: number;
-  /**
-   * Criterios de admisión. CON ellos, `limit` cuenta ADMITIDOS y el gasto lo
-   * manda `admission.max_records`.
-   */
-  admission?: AdmissionDTO;
-};
+export type { StartSearchInput };
+
+/**
+ * P2 · la siguiente página de una búsqueda que se navega. 409
+ * `prospecting/search_no_more_pages` si ya no hay, o si sigue buscando.
+ */
+export function nextSearchPage(searchId: string): Promise<{ search_id: string }> {
+  return http.post<{ search_id: string }>(`/prospecting/searches/${searchId}/next-page`, {});
+}
+
+/** P2 · las personas de un negocio (encolado; el avance llega por el visor). */
+export function findPeopleForLead(leadId: string): Promise<{ queued: string[] }> {
+  return http.post(`/prospecting/leads/${leadId}/people`);
+}
+
+/** P2 · lo mismo en lote, sin gasto: se consulta lo gratis. */
+export function findPeopleForLeads(leadIds: string[]): Promise<{ queued: string[] }> {
+  return http.post("/prospecting/leads/people", { lead_ids: leadIds });
+}
+
+export function getLeadPeople(leadId: string): Promise<{ items: LeadPersonDTO[] }> {
+  return http.get<{ items: LeadPersonDTO[] }>(`/prospecting/leads/${leadId}/people`);
+}
+
+export function getLeadSignals(leadId: string): Promise<{ items: LeadSignalDTO[] }> {
+  return http.get<{ items: LeadSignalDTO[] }>(`/prospecting/leads/${leadId}/signals`);
+}
+
+/**
+ * P2 · revelar el contacto de personas enmascaradas (≤50). El correo siempre;
+ * el celular llega después por webhook y solo se cobra si aparece.
+ */
+export function revealLeads(
+  leadIds: string[],
+  fields: ("email" | "phone")[],
+): Promise<{ queued: string[] }> {
+  return http.post("/prospecting/leads/reveal", { lead_ids: leadIds, fields });
+}
+
+/** P2 · las llaves propias del tenant (Apollo). Nunca la llave: sus 4 últimos. */
+export function listMyProviderKeys(): Promise<{ items: TenantProviderKeyDTO[] }> {
+  return http.get<{ items: TenantProviderKeyDTO[] }>("/prospecting/providers/mine");
+}
+
+/** Pegar o rotar. 422 `prospecting/invalid_credentials` si el proveedor no la reconoce. */
+export function saveProviderKey(provider: string, apiKey: string): Promise<void> {
+  return http.put<void>(`/prospecting/providers/${provider}/key`, { api_key: apiKey });
+}
+
+export function removeProviderKey(provider: string): Promise<void> {
+  return http.delete<void>(`/prospecting/providers/${provider}/key`);
+}
 
 export function listSearches(): Promise<{ items: SearchDTO[] }> {
   return http.get<{ items: SearchDTO[] }>("/prospecting/searches");

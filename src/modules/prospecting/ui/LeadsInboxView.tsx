@@ -9,6 +9,7 @@ import {
   LoaderCircle,
   Search,
   TriangleAlert,
+  UsersRound,
   WandSparkles,
 } from "lucide-react";
 
@@ -36,6 +37,7 @@ import {
   countLeads,
   deleteLeads,
   enrichLeads,
+  findPeopleForLeads,
   listLeadIds,
   promoteLeads,
 } from "../infrastructure/services/prospecting-service.adapter";
@@ -315,6 +317,8 @@ export function LeadsInboxView() {
       promote: actionTargets(selected, items, canPromote),
       enrich: actionTargets(selected, items, canEnrich),
       delete: actionTargets(selected, items, canDelete),
+      // P2: las personas se buscan para un NEGOCIO que aún está en la cuarentena.
+      people: actionTargets(selected, items, (row) => row.kind === "business" && canEnrich(row)),
     }),
     [items, selected],
   );
@@ -356,6 +360,36 @@ export function LeadsInboxView() {
       setEnriching(false);
     }
   }, [items, targets.enrich, showAlert]);
+
+  /**
+   * P2 · buscar las personas de los negocios marcados. Sin gasto, como buscar
+   * datos en lote: el registro, su web y Apollo por dominio (buscar no cobra).
+   */
+  const [findingPeople, setFindingPeople] = useState(false);
+  const onFindPeople = useCallback(async () => {
+    if (targets.people.length === 0) return;
+    setFindingPeople(true);
+    try {
+      const result = await findPeopleForLeads(targets.people);
+      setSelected(new Set());
+      showAlert({
+        tone: "info",
+        title:
+          result.queued.length === 1
+            ? "Buscando personas de 1 negocio"
+            : `Buscando personas de ${String(result.queued.length)} negocios`,
+        description: "Aparecen en la ficha de cada negocio. Buscar no gasta créditos.",
+      });
+    } catch (caught) {
+      showAlert({
+        tone: "error",
+        title: "No se pudo buscar personas",
+        description: errorMessage(caught, "Intenta de nuevo."),
+      });
+    } finally {
+      setFindingPeople(false);
+    }
+  }, [targets.people, showAlert]);
 
   const doPromote = useCallback(async () => {
     if (targets.promote.length === 0) return;
@@ -629,6 +663,12 @@ export function LeadsInboxView() {
                             <WandSparkles aria-hidden className="size-4" />
                           )}
                           Buscar datos de {targets.enrich.length}
+                        </Button>
+                      )}
+                      {canManageLeads && targets.people.length > 0 && (
+                        <Button variant="glass" onClick={() => void onFindPeople()} disabled={findingPeople}>
+                          <UsersRound aria-hidden className="size-4" />
+                          Buscar personas de {targets.people.length}
                         </Button>
                       )}
                       {canPromoteLeads && targets.promote.length > 0 && (

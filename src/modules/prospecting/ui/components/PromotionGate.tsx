@@ -11,6 +11,7 @@ import {
   LEGAL_BASIS_LABELS,
   type LeadDetailDTO,
 } from "../../domain/lead";
+import { BUYING_ROLE_LABELS, type BuyingRole } from "../../domain/person";
 
 interface Requirement {
   met: boolean;
@@ -36,10 +37,17 @@ export function PromotionGate({
   lead,
   busy,
   onPromote,
+  people = [],
 }: {
   lead: LeadDetailDTO;
   busy: boolean;
   onPromote: () => void;
+  /**
+   * P2: las personas que pasan con el negocio (deciden, aprueban o
+   * recomiendan, y tienen con qué contactarse). Cada una será su propio
+   * contacto con el negocio en sus campos (D3).
+   */
+  people?: readonly { name: string; role: BuyingRole }[];
 }) {
   const identifiable = lead.phone !== null || lead.email !== null;
   const allowsWhatsapp = lead.allowed_channels.includes("whatsapp");
@@ -70,7 +78,15 @@ export function PromotionGate({
     <InkIsland label="Promover al CRM" glow="ai" className="gap-3">
       <Kicker>Promover al CRM</Kicker>
       <p className="text-sm text-pretty">
-        Al promoverlo se crea un contacto real. Es la única forma de que tu agente o una campaña puedan alcanzarlo.
+        {people.length > 0 ? (
+          <>
+            Se crea <span className="font-semibold">{lead.legal_name ?? lead.display_name ?? "el negocio"}</span> y,
+            como sus contactos, {peopleSentence(people)}, con su base legal y los canales que permiten. No se pierde
+            ningún dato.
+          </>
+        ) : (
+          "Al promoverlo se crea un contacto real. Es la única forma de que tu agente o una campaña puedan alcanzarlo."
+        )}
       </p>
       <ul className="divide-border divide-y">
         {requirements.map((requirement) => (
@@ -99,4 +115,11 @@ export function PromotionGate({
       </div>
     </InkIsland>
   );
+}
+
+/** «Carolina (decide) y Andrés (recomienda)». */
+function peopleSentence(people: readonly { name: string; role: BuyingRole }[]): string {
+  const parts = people.map((person) => `${person.name.split(" ")[0]} (${BUYING_ROLE_LABELS[person.role]})`);
+  if (parts.length === 1) return parts[0];
+  return `${parts.slice(0, -1).join(", ")} y ${parts[parts.length - 1]}`;
 }

@@ -9,6 +9,10 @@ export type SearchDTO = Schemas["SearchDto"];
 export type SearchStatus = SearchDTO["status"];
 export type SearchSource = SearchDTO["source"];
 export type SourceCatalogItemDTO = Schemas["SourcesCatalogDto"]["items"][number];
+/** P2: filtros de persona y de empresa, tal como viajan. */
+export type PersonFiltersDTO = NonNullable<SearchDTO["params"]["person"]>;
+export type CompanyFiltersDTO = NonNullable<SearchDTO["params"]["company"]>;
+export type QueryShape = SourceCatalogItemDTO["query_shape"];
 
 /**
  * El semáforo de una búsqueda.
@@ -31,6 +35,8 @@ export const SEARCH_SOURCE_LABELS: Record<SearchSource, string> = {
   google_places: "Google Maps",
   openstreetmap: "OpenStreetMap",
   serp: "Buscador web",
+  apollo_people: "Personas · Apollo",
+  rues_open: "Registro mercantil",
 };
 
 /** Mientras esté en vuelo hay que seguirla: por WS y, de respaldo, por polling. */
@@ -116,6 +122,10 @@ export function paramsOf(search: SearchDTO) {
     // Sin esto, «Repetir» perdería los filtros en silencio y traería el triple
     // de leads que la búsqueda original.
     admission: search.params.admission,
+    // P2: los filtros de persona y empresa, y cómo pagina.
+    person: search.params.person ?? undefined,
+    company: search.params.company ?? undefined,
+    mode: search.params.mode,
   };
 }
 
@@ -287,3 +297,38 @@ function joinDemands(demands: string[]): string {
   const head = demands.slice(0, -1).join(", ");
   return last.startsWith("y ") ? `${head} ${last}` : `${head} y ${last}`;
 }
+
+/** Lo que se le pide al servidor para lanzar una búsqueda. */
+export type StartSearchInput = {
+  source: SearchSource;
+  label?: string;
+  text?: string;
+  category?: string;
+  /** El municipio. Distinto de `zone`; ver el comentario de allí. */
+  city?: string;
+  /**
+   * La zona elegida en el mapa: «Zona G», «UPZ Chapinero». Solo se muestra.
+   *
+   * Iba mezclada con `city`, y eso hacía que el nombre del punto geocodificado
+   * —para «Zona G», un hotel que se llama así— viajara como si fuera el
+   * municipio: entraba en la consulta que se le manda a Google y se escribía
+   * como ciudad de los leads.
+   */
+  zone?: string;
+  country?: string;
+  center?: { lat: number; lng: number };
+  radius_m?: number;
+  /** Obligatorio: no existe «búscame todos». */
+  limit: number;
+  /**
+   * Criterios de admisión. CON ellos, `limit` cuenta ADMITIDOS y el gasto lo
+   * manda `admission.max_records`.
+   */
+  admission?: AdmissionDTO;
+  /** P2: filtros de persona (Apollo). */
+  person?: PersonFiltersDTO;
+  /** P2: filtros de empresa (CIIU para el registro; dominios y tamaño para Apollo). */
+  company?: CompanyFiltersDTO;
+  /** P2: `browse` pide una página por clic (Personas); `fill` llena el tope. */
+  mode?: "fill" | "browse";
+};
