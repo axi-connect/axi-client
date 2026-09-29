@@ -1,5 +1,6 @@
 "use client";
 
+import { META_DAILY_QUOTA_HINT, META_DAILY_QUOTA_LABEL, META_TEMPLATES_HREF } from "@/core/lib/hsm-copy";
 import Link from "next/link";
 import { Clock } from "lucide-react";
 import { formatMillions } from "@/core/lib/format";
@@ -459,7 +460,7 @@ export function MetaTemplatesTile({
   return (
     <BentoTile
       label="Plantillas de Meta"
-      aside={meta ? <BentoLink href="/marketing/settings/meta-templates">Plantillas</BentoLink> : undefined}
+      aside={meta ? <BentoLink href={META_TEMPLATES_HREF}>Plantillas</BentoLink> : undefined}
       busy={reloading(section)}
       className={className}
     >
@@ -507,8 +508,8 @@ export function QuotaTile({
   const window = meta?.window ?? null;
   return (
     <BentoTile
-      label="Cupo de Meta hoy"
-      aside={meta ? <span className="text-muted-foreground text-xs">se renueva cada 24 h</span> : undefined}
+      label={META_DAILY_QUOTA_LABEL}
+      aside={meta ? <span className="text-muted-foreground text-xs">{META_DAILY_QUOTA_HINT}</span> : undefined}
       busy={reloading(section)}
       className={className}
     >

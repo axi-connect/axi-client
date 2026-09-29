@@ -16,6 +16,9 @@ export {
 } from "./infrastructure/services/templates-service.adapter";
 export {
   isUsableAsOpening,
+  isUsableAs,
+  whyUnusableAs,
+  type HsmPurpose,
   whyUnusableAsOpening,
   isUsableForMarketing,
   whyUnusable,

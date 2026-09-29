@@ -15,24 +15,55 @@ export type CreateHsmTemplateDTO = Schemas["CreateHsmTemplateDto"];
 export type UpdateHsmTemplateDTO = Schemas["UpdateHsmTemplateDto"];
 
 /**
+ * Para qué se va a usar una plantilla de Meta. Cada flujo tenía su propia
+ * regla de elegibilidad (campañas solo Marketing; automatizaciones cualquiera
+ * sin variables; aperturas cualquiera menos Autenticación; acciones rápidas,
+ * cobros y documentos ninguna): esta es la ÚNICA tabla, y los flujos la leen.
+ *
+ * - `campaign`: promociones. Solo Marketing aprobada; una Utilidad la rechaza Meta.
+ * - `automation`: una regla la manda `{name, language}` sin mapear variables:
+ *   aprobada, sin `{{n}}` y nunca de autenticación.
+ * - `opening`: abre una tarea de agente (seguimiento individual o en lote):
+ *   aprobada y nunca de autenticación. Las de Utilidad son las preferidas.
+ * - `quick_action`, `document`, `collections`: un operador o un aviso escribe a
+ *   quien lleva más de 24 h sin escribir: aprobada y nunca de autenticación.
+ */
+export type HsmPurpose = "campaign" | "automation" | "opening" | "quick_action" | "document" | "collections";
+
+export function isUsableAs(template: HsmTemplateDTO, purpose: HsmPurpose): boolean {
+  return whyUnusableAs(template, purpose) === null;
+}
+
+/** Por qué NO sirve para ese uso, en palabras del operador; `null` si sirve. */
+export function whyUnusableAs(template: HsmTemplateDTO, purpose: HsmPurpose): string | null {
+  if (template.approval_status !== "approved") {
+    return `Meta la tiene como ${HSM_APPROVAL_LABELS[template.approval_status].toLowerCase()}`;
+  }
+  if (purpose === "campaign") {
+    return template.category === "marketing" ? null : "Solo las de categoría Marketing sirven para promociones";
+  }
+  if (template.category === "authentication") {
+    return "Las de autenticación son para códigos, no para abrir una conversación";
+  }
+  if (purpose === "automation" && countTemplateVariables(template.body) !== 0) {
+    return "Tiene variables y una regla automática no sabe rellenarlas";
+  }
+  return null;
+}
+
+/**
  * Una HSM sirve para marketing SOLO si está aprobada y su categoría es
  * `marketing`. Una `utility` aprobada existe y se ve bien, pero Meta rechaza
  * el envío promocional: filtrarla en el selector evita un fallo que solo
  * aparecería al lanzar la campaña.
  */
 export function isUsableForMarketing(template: HsmTemplateDTO): boolean {
-  return template.approval_status === "approved" && template.category === "marketing";
+  return isUsableAs(template, "campaign");
 }
 
-/** Por qué una plantilla NO se puede usar, o `null` si sí se puede. */
+/** Por qué una plantilla NO se puede usar en una campaña, o `null` si sí se puede. */
 export function whyUnusable(template: HsmTemplateDTO): string | null {
-  if (template.approval_status !== "approved") {
-    return `Meta la tiene como ${HSM_APPROVAL_LABELS[template.approval_status].toLowerCase()}`;
-  }
-  if (template.category !== "marketing") {
-    return "Solo las de categoría Marketing sirven para promociones";
-  }
-  return null;
+  return whyUnusableAs(template, "campaign");
 }
 
 /** Semáforo del estado de aprobación. `pending` es transitorio: lo decide Meta. */
@@ -82,17 +113,11 @@ export function describeTemplateContent(template: TemplateDTO): string {
  * el cliente inició, y veinticinco veces más baratas.
  */
 export function isUsableAsOpening(template: HsmTemplateDTO): boolean {
-  return template.approval_status === "approved" && template.category !== "authentication";
+  return isUsableAs(template, "opening");
 }
 
 export function whyUnusableAsOpening(template: HsmTemplateDTO): string | null {
-  if (template.approval_status !== "approved") {
-    return `Meta la tiene como ${HSM_APPROVAL_LABELS[template.approval_status].toLowerCase()}`;
-  }
-  if (template.category === "authentication") {
-    return "Las de autenticación son para códigos, no para abrir una conversación";
-  }
-  return null;
+  return whyUnusableAs(template, "opening");
 }
 
 /**

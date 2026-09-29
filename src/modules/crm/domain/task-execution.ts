@@ -1,3 +1,4 @@
+import { HSM_WINDOW_REASON } from "@/core/lib/hsm-copy";
 import type { Schemas } from "@/core/api/types";
 import type { StatusMap, StatusTone } from "@/shared/components/features/status-badge/types";
 
@@ -89,8 +90,8 @@ export function isTransientRunStatus(status: TaskRunStatus): boolean {
  * traduce lo que conoce y muestra el crudo cuando no — nunca se queda en blanco.
  */
 export const TASK_RUN_REASON_LABELS: Partial<Record<string, string>> = {
-  outside_service_window: "Fuera de la ventana de 24 h de WhatsApp",
-  no_channel: "El contacto no tiene ningún canal alcanzable",
+  outside_service_window: HSM_WINDOW_REASON,
+  no_channel: "Sin teléfono ni WhatsApp: no hay a dónde escribirle",
   channel_not_found: "El canal ya no existe",
   channel_not_connected: "El canal está desconectado",
   no_contact_identity: "El contacto no tiene identidad en ese canal",

@@ -206,13 +206,13 @@ describe("resumen con actividad", () => {
     expect(rows[0]).toContain("plantilla rechazada por Meta");
     expect(rows[0]).toContain("promo_septiembre");
     expect(rows[1]).toContain("borradores sin lanzar");
-    expect(island.getByRole("link", { name: "Revisar plantilla" })).toHaveAttribute("href", "/marketing/settings/meta-templates");
+    expect(island.getByRole("link", { name: "Revisar plantilla" })).toHaveAttribute("href", "/settings/meta-templates");
   });
 
   it("dice el estado de las plantillas y el cupo de Meta de hoy", () => {
     const tpl = within(screen.getByText("Plantillas de Meta").closest("section")!);
     expect(tpl.getByText("1 rechazada")).toBeInTheDocument();
-    const quota = within(screen.getByText("Cupo de Meta hoy").closest("section")!);
+    const quota = within(screen.getByText("Cupo diario de Meta").closest("section")!);
     expect(quota.getByText("830")).toBeInTheDocument();
     expect(quota.getByText(/Usadas 170 de las 1.000/)).toBeInTheDocument();
   });

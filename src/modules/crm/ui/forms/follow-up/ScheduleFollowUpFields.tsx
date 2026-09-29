@@ -1,5 +1,6 @@
 "use client";
 
+import { HSM_CATEGORY_LABELS } from "@/modules/marketing/public";
 import { useFormState, useWatch, type Control } from "react-hook-form";
 import { InkIsland } from "@/shared/components/features/bento";
 import {
@@ -278,7 +279,7 @@ export function WindowNoticeCard({
         {notice.body && <p className="text-muted-foreground">{notice.body}</p>}
         {notice.waits_for_customer && reach?.supports_templates === true && !hasApprovedTemplates && (
           <Link href={templatesHref} className="mt-1 inline-flex items-center gap-1 font-medium text-brand hover:underline">
-            Crear una plantilla de apertura
+            Crear una plantilla de Meta
           </Link>
         )}
       </div>
@@ -335,7 +336,7 @@ export function OpeningTemplatePicker({
               <SelectItem key={template.id} value={template.id}>
                 <span className="font-mono text-xs">{template.name}</span>
                 <span className="ml-2 text-xs text-muted-foreground">
-                  {template.category} · {formatTemplateCost(template.category)}
+                  {HSM_CATEGORY_LABELS[template.category]} · {formatTemplateCost(template.category)}
                 </span>
               </SelectItem>
             ))}

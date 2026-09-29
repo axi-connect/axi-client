@@ -119,7 +119,7 @@ export function CoexistenceImportCard({
 
       {windowClosed && !nothingPending ? (
         <p className="p-4 text-sm text-muted-foreground">
-          Pasaron más de 24 horas desde la conexión y Meta ya no acepta la importación. Para traer
+          Pasaron más de 24 h desde la conexión y Meta ya no acepta la importación. Para traer
           tus contactos o chats habría que desconectar el número y volver a conectarlo.
         </p>
       ) : (

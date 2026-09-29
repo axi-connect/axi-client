@@ -87,7 +87,7 @@ describe("RemindersTab · la conversación y los interruptores (premium P5)", ()
       await screen.findByRole("button", { name: "Elegir plantilla" }),
     );
     expect(
-      screen.getByLabelText("Nombre de la plantilla aprobada de Meta"),
+      screen.getByLabelText("Nombre de la plantilla de Meta"),
     ).toBeInTheDocument();
     expect(
       screen.getByLabelText(/Texto del aviso de en mora/),

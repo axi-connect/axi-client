@@ -1,3 +1,4 @@
+import { META_TEMPLATES_HREF } from "@/core/lib/hsm-copy";
 import { canEnableAutomation, type AutomationDTO } from "./automation";
 import { isPromotionLive, redemptionProgressPct, type PromotionDTO } from "./promotion";
 import type { MessagingWindowDTO } from "./template-catalog";
@@ -79,7 +80,7 @@ export function marketingNextUpItems(input: {
       title: `${plural(n, "plantilla rechazada", "plantillas rechazadas")} por Meta`,
       detail: input.meta.rejectedName ? `«${input.meta.rejectedName}» · revísala y reenvíala` : "revísalas y reenvíalas",
       tone: "destructive",
-      href: "/marketing/settings/meta-templates",
+      href: META_TEMPLATES_HREF,
       action: "Revisar plantilla",
     });
   }

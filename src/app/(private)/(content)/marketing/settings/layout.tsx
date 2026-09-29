@@ -18,7 +18,7 @@ export default function MarketingSettingsLayout({
     <div className="flex min-w-0 flex-col gap-6">
       <MarketingHeader
         title="Configuración"
-        description="Los límites que protegen a tus clientes y a tus números de WhatsApp, tus mensajes y tus plantillas de Meta."
+        description="Los límites que protegen a tus clientes y a tus números de WhatsApp, y tus mensajes. Las plantillas de Meta viven en Configuración."
       />
       <MarketingSettingsNav />
       {children}

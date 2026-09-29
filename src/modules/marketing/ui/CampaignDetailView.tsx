@@ -457,7 +457,7 @@ export function CampaignDetailView({ campaignId }: { campaignId: string }) {
                               recipient.error_code
                             ) : recipient.conversation_id ? (
                               <Link
-                                href={`/inbox?conversation=${recipient.conversation_id}`}
+                                href={`/workspace/inbox/${recipient.conversation_id}`}
                                 className="text-foreground inline-flex min-h-6 items-center font-medium underline-offset-4 hover:underline"
                               >
                                 Ver conversación

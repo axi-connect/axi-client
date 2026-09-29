@@ -168,7 +168,7 @@ export function prerequisitesFor(
  */
 const NO_HSM_PREREQUISITE: ChannelPrerequisite = {
   id: "no_templates_outside_window",
-  label: "Sé que fuera de 24 horas no puedo retomar la conversación con una plantilla",
+  label: "Sé que pasadas las 24 h no puedo retomar la conversación con una plantilla",
   detail:
     "A diferencia de WhatsApp, este canal no tiene plantillas aprobadas. Si pasan 24 horas desde el último mensaje del cliente, hay que esperar a que escriba de nuevo.",
   critical: true,

@@ -113,10 +113,10 @@ export function ReminderThread({
                         <Clock aria-hidden="true" className="size-4 shrink-0" />
                       }
                     >
-                      Si {firstName} lleva más de 24 horas sin escribir, por
+                      Si {firstName} lleva más de 24 h sin escribir, por
                       WhatsApp{" "}
                       <b className="font-medium text-foreground">no sale</b>:
-                      este texto no tiene plantilla aprobada de Meta.
+                      este texto no tiene plantilla de Meta.
                     </Gap>
                   ) : null}
                 </>

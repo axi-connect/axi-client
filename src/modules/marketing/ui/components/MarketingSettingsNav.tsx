@@ -1,6 +1,6 @@
 "use client";
 
-import { BadgeCheck, FileText, Settings, UserMinus } from "lucide-react";
+import { FileText, Settings, UserMinus } from "lucide-react";
 
 import { NavTabs, type NavTabItem } from "@/shared/components/layout/nav-tabs";
 
@@ -20,7 +20,6 @@ export function MarketingSettingsNav({ optOutCount }: { optOutCount?: number | n
     // quedaría activa también en las otras tres.
     { href: BASE, label: "Ajustes", icon: Settings, exact: true },
     { href: `${BASE}/templates`, label: "Mensajes", icon: FileText },
-    { href: `${BASE}/meta-templates`, label: "Plantillas de Meta", icon: BadgeCheck },
     {
       href: `${BASE}/opt-outs`,
       label: "Bajas",
