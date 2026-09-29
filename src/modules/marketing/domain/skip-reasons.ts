@@ -1,3 +1,5 @@
+import { HSM_WINDOW_REASON_NO_TEMPLATE } from "@/core/lib/hsm-copy";
+
 /**
  * Por qué un contacto NO recibió el mensaje, en el idioma del operador.
  *
@@ -15,7 +17,7 @@
 export const SKIP_REASON_LABELS: Record<string, string> = {
   // --- El contacto no quiere o no se le puede escribir ---
   opted_out: "El contacto pidió no recibir promociones",
-  no_channel: "El contacto no tiene ningún canal alcanzable",
+  no_channel: "Sin teléfono ni WhatsApp: no hay a dónde escribirle",
   channel_not_found: "El canal ya no existe",
   channel_not_connected: "El canal está desconectado",
   unsupported_channel_kind: "Instagram y Messenger todavía no envían campañas",
@@ -24,8 +26,8 @@ export const SKIP_REASON_LABELS: Record<string, string> = {
   conversation_not_found: "La conversación ya no existe",
 
   // --- Ventana de 24 h de WhatsApp ---
-  outside_service_window: "Pasaron más de 24 h y no había plantilla de Meta",
-  outside_service_window_no_hsm: "Pasaron más de 24 h y la regla no tiene plantilla de Meta",
+  outside_service_window: HSM_WINDOW_REASON_NO_TEMPLATE,
+  outside_service_window_no_hsm: HSM_WINDOW_REASON_NO_TEMPLATE,
   template_not_approved: "La plantilla de Meta fue pausada o rechazada",
   unsupported_content: "Ese contenido no viaja por ese canal",
 

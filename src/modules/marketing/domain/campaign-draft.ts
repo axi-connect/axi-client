@@ -10,7 +10,19 @@ import type { AudiencePreviewDTO, CampaignDTO, CreateCampaignDTO, UpdateCampaign
  * cosas que conviene poder probar sin montar cuatro pasos de UI.
  */
 
-export type AudienceMode = "all" | "segment" | "filters";
+/**
+ * `contacts` e `import` (F6) son audiencias que llegan HECHAS desde el CRM
+ * —«Enviar plantilla» sobre una selección, un segmento o un import— y viajan
+ * como `audience_filters` del mismo DSL (`contact_ids` / `import_job_id`): el
+ * servidor les aplica opt-out, simulados y alcance igual que a un segmento.
+ */
+export type AudienceMode = "all" | "segment" | "filters" | "contacts" | "import";
+
+/** Lo que el CRM le pasa al asistente cuando la audiencia ya está decidida. */
+export type PresetAudience =
+  | { mode: "contacts"; contactIds: string[]; label: string }
+  | { mode: "import"; importJobId: string; label: string }
+  | { mode: "segment"; segmentId: string; label: string };
 
 export type CampaignDraft = {
   name: string;
@@ -18,6 +30,8 @@ export type CampaignDraft = {
   audienceMode: AudienceMode;
   segmentId: string | null;
   filters: SegmentFilters;
+  /** Con `contacts` / `import`: de dónde salió la lista, en palabras del operador. */
+  audienceLabel: string | null;
   /** `null` = plantilla del tenant sin elegir todavía. */
   templateId: string | null;
   hsmChannelTemplateId: string | null;
@@ -34,6 +48,7 @@ export const EMPTY_DRAFT: CampaignDraft = {
   audienceMode: "segment",
   segmentId: null,
   filters: {},
+  audienceLabel: null,
   templateId: null,
   hsmChannelTemplateId: null,
   hsmParamMapping: [],
@@ -64,6 +79,12 @@ export function blockerForStep(step: WizardStep, draft: CampaignDraft): string |
       if (draft.name.trim().length < 3) return "Ponle un nombre de al menos 3 caracteres";
       if (draft.audienceMode === "segment" && draft.segmentId === null) {
         return "Elige el segmento al que le vas a escribir";
+      }
+      if (draft.audienceMode === "contacts" && !draft.filters.contact_ids?.length) {
+        return "La lista llegó vacía: vuelve a marcar los contactos";
+      }
+      if (draft.audienceMode === "import" && !draft.filters.import_job_id) {
+        return "No sé de qué import salen los contactos: vuelve desde el import";
       }
       return null;
     case "contenido": {
@@ -136,6 +157,13 @@ function audiencePayload(draft: CampaignDraft) {
       return { segment_id: draft.segmentId, audience_filters: null };
     case "filters":
       return { segment_id: null, audience_filters: draft.filters };
+    case "contacts":
+      return { segment_id: null, audience_filters: { contact_ids: draft.filters.contact_ids ?? [] } };
+    case "import":
+      return {
+        segment_id: null,
+        audience_filters: { import_job_id: draft.filters.import_job_id ?? "" },
+      };
     case "all":
       return { segment_id: null, audience_filters: null };
   }
@@ -213,8 +241,17 @@ export function readAudienceEstimate(preview: AudiencePreviewDTO): AudienceEstim
  * `scheduledAtISO` la escribió.
  */
 export function fromCampaignDTO(campaign: CampaignDTO): CampaignDraft {
+  const filters = (campaign.audience_filters ?? {}) as SegmentFilters;
   const audienceMode: AudienceMode =
-    campaign.segment_id !== null ? "segment" : campaign.audience_filters !== null ? "filters" : "all";
+    campaign.segment_id !== null
+      ? "segment"
+      : campaign.audience_filters === null
+        ? "all"
+        : filters.import_job_id !== undefined
+          ? "import"
+          : filters.contact_ids !== undefined
+            ? "contacts"
+            : "filters";
   const pad = (n: number) => String(n).padStart(2, "0");
   const at = campaign.scheduled_at === null ? null : new Date(campaign.scheduled_at);
   const valid = at !== null && !Number.isNaN(at.getTime());
@@ -223,7 +260,8 @@ export function fromCampaignDTO(campaign: CampaignDTO): CampaignDraft {
     description: campaign.description ?? "",
     audienceMode,
     segmentId: campaign.segment_id,
-    filters: (campaign.audience_filters ?? {}) as SegmentFilters,
+    filters,
+    audienceLabel: null,
     templateId: campaign.template?.id ?? null,
     hsmChannelTemplateId: campaign.hsm_channel_template_id,
     hsmParamMapping: (campaign.hsm_param_mapping ?? []).filter(isHsmParamEntry),
@@ -264,4 +302,59 @@ export function toDuplicateCampaignDTO(campaign: CampaignDTO): CreateCampaignDTO
 /** Dónde se retoma un borrador (o se edita una programada): el asistente, con la campaña cargada. */
 export function campaignEditHref(id: string): string {
   return `/marketing/campaigns/new?campaign=${encodeURIComponent(id)}`;
+}
+
+/** El borrador con el que arranca el asistente cuando la audiencia viene decidida (F6). */
+export function draftFromPreset(preset: PresetAudience): CampaignDraft {
+  switch (preset.mode) {
+    case "contacts":
+      return {
+        ...EMPTY_DRAFT,
+        audienceMode: "contacts",
+        filters: { contact_ids: preset.contactIds },
+        audienceLabel: preset.label,
+      };
+    case "import":
+      return {
+        ...EMPTY_DRAFT,
+        audienceMode: "import",
+        filters: { import_job_id: preset.importJobId },
+        audienceLabel: preset.label,
+      };
+    case "segment":
+      return { ...EMPTY_DRAFT, audienceMode: "segment", segmentId: preset.segmentId, audienceLabel: preset.label };
+  }
+}
+
+/**
+ * La audiencia decidida, en la URL: es como el CRM abre el asistente
+ * («Enviar plantilla» desde la selección, un segmento o un import). Ida y
+ * vuelta simétricas para que la página pueda leerla sin adivinar.
+ */
+export function presetToSearchParams(preset: PresetAudience): URLSearchParams {
+  const params = new URLSearchParams();
+  params.set("audience", preset.mode);
+  params.set("label", preset.label);
+  if (preset.mode === "contacts") params.set("contact_ids", preset.contactIds.join(","));
+  if (preset.mode === "import") params.set("import_job_id", preset.importJobId);
+  if (preset.mode === "segment") params.set("segment_id", preset.segmentId);
+  return params;
+}
+
+export function presetFromSearchParams(params: Record<string, string | undefined>): PresetAudience | null {
+  const label = params.label?.trim() || "";
+  switch (params.audience) {
+    case "contacts": {
+      const contactIds = (params.contact_ids ?? "").split(",").map((id) => id.trim()).filter(Boolean);
+      return contactIds.length === 0
+        ? null
+        : { mode: "contacts", contactIds, label: label || `${String(contactIds.length)} contactos que marcaste` };
+    }
+    case "import":
+      return params.import_job_id ? { mode: "import", importJobId: params.import_job_id, label: label || "Del import" } : null;
+    case "segment":
+      return params.segment_id ? { mode: "segment", segmentId: params.segment_id, label: label || "Del segmento" } : null;
+    default:
+      return null;
+  }
 }

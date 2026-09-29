@@ -1,6 +1,6 @@
 import { z } from "zod";
 import {
-  sendsWithoutParams,
+  isUsableAs,
   type HsmTemplateDTO,
 } from "@/modules/marketing/domain/template-catalog";
 import { MessageSquare, Sparkles } from "lucide-react";
@@ -697,7 +697,7 @@ function hsmTemplateField(
     "hsm_template_name",
     ({ value, setValue, getError }) => {
       const current = typeof value === "string" ? value : "";
-      const usable = templates.filter(sendsWithoutParams);
+      const usable = templates.filter((template) => isUsableAs(template, "automation"));
       const omitted = templates.length - usable.length;
       const known = usable.some((template) => template.name === current);
       return (
@@ -738,7 +738,7 @@ function hsmTemplateField(
             <p className="text-xs text-muted-foreground">
               Obligatoria para encender esta regla: escribe fuera de la ventana de 24 h.
               {omitted > 0 &&
-                ` Se omiten ${String(omitted)} plantilla(s) con variables: esta regla no sabe rellenarlas.`}
+                ` Se omiten ${String(omitted)}: sin aprobar, de autenticación o con variables, que esta regla no sabe rellenar.`}
             </p>
           )}
         </div>

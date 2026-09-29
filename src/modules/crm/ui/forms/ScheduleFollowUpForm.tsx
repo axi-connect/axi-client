@@ -1,5 +1,6 @@
 "use client";
 
+import { META_TEMPLATES_HREF } from "@/core/lib/hsm-copy";
 import { useEffect, useMemo, useState } from "react";
 import { CircleUser, Sparkles } from "lucide-react";
 import { applyServerValidation, errorMessage } from "@/core/lib/error-messages";
@@ -52,7 +53,7 @@ import {
   WindowNoticeCard,
 } from "./follow-up/ScheduleFollowUpFields";
 
-const TEMPLATES_HREF = "/marketing/settings/meta-templates";
+const TEMPLATES_HREF = META_TEMPLATES_HREF;
 const DEFAULT_TZ = "America/Bogota";
 
 /**

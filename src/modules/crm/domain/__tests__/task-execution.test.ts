@@ -91,7 +91,7 @@ describe("taskDisplayState — tabla de verdad task_status × last_run_status", 
     );
     expect(state.label).toBe("En espera");
     expect(state.tone).toBe("info");
-    expect(state.reason).toBe("Fuera de la ventana de 24 h de WhatsApp");
+    expect(state.reason).toBe("Pasaron más de 24 h desde su último mensaje: hace falta una plantilla de Meta");
   });
 
   it("fallida: destructive y con la razón legible", () => {
@@ -99,7 +99,7 @@ describe("taskDisplayState — tabla de verdad task_status × last_run_status", 
       task({ assignee_type: "agent", last_run_status: "failed", last_run_reason: "no_channel" }),
     );
     expect(state.tone).toBe("destructive");
-    expect(state.reason).toBe("El contacto no tiene ningún canal alcanzable");
+    expect(state.reason).toBe("Sin teléfono ni WhatsApp: no hay a dónde escribirle");
   });
 
   it("task_status GOBIERNA: una cancelada no promete un reintento", () => {

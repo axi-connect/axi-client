@@ -182,7 +182,7 @@ describe("campaña en curso", () => {
       (await screen.findByText("No lo recibieron")).closest("section")!,
     );
     expect(panel.getByText("El contacto pidió no recibir promociones")).toBeInTheDocument();
-    expect(panel.getByText("Pasaron más de 24 h y no había plantilla de Meta")).toBeInTheDocument();
+    expect(panel.getByText("Pasaron más de 24 h desde su último mensaje y no había plantilla de Meta")).toBeInTheDocument();
     // `cooldown` libera el episodio: el contacto sí puede recibirlo más tarde.
     expect(panel.queryByText("Se le escribió hace muy poco")).not.toBeInTheDocument();
   });

@@ -1,5 +1,6 @@
 "use client";
 
+import { HSM_CATEGORY_LABELS } from "@/modules/marketing/public";
 import { useFormState, useWatch, type Control } from "react-hook-form";
 import { InkIsland } from "@/shared/components/features/bento";
 import {
@@ -70,7 +71,7 @@ export function MediumPicker({
   onChange: (medium: FollowUpMedium) => void;
 }) {
   return (
-    <div role="radiogroup" aria-label="Cómo contacta" className="grid gap-2 sm:grid-cols-3">
+    <div role="radiogroup" aria-label="Cómo contacta" className="grid gap-2 sm:grid-cols-[repeat(3,minmax(0,1fr))]">
       {FOLLOW_UP_MEDIA.map((option) => {
         const Icon = MEDIUM_ICONS[option.value];
         const available = availableMedia.includes(option.value);
@@ -85,7 +86,7 @@ export function MediumPicker({
             disabled={!available}
             onClick={() => available && onChange(option.value)}
             className={cn(
-              "grid grid-cols-[auto_1fr] items-start gap-x-2.5 gap-y-1 rounded-xl border px-3 py-2.5 text-left transition-colors",
+              "grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-start gap-x-2.5 gap-y-1 rounded-xl border px-3 py-2.5 text-left transition-colors",
               checked ? "border-brand bg-accent" : "border-border bg-background hover:bg-secondary/60",
               !available && "cursor-not-allowed opacity-55",
             )}
@@ -278,7 +279,7 @@ export function WindowNoticeCard({
         {notice.body && <p className="text-muted-foreground">{notice.body}</p>}
         {notice.waits_for_customer && reach?.supports_templates === true && !hasApprovedTemplates && (
           <Link href={templatesHref} className="mt-1 inline-flex items-center gap-1 font-medium text-brand hover:underline">
-            Crear una plantilla de apertura
+            Crear una plantilla de Meta
           </Link>
         )}
       </div>
@@ -335,7 +336,7 @@ export function OpeningTemplatePicker({
               <SelectItem key={template.id} value={template.id}>
                 <span className="font-mono text-xs">{template.name}</span>
                 <span className="ml-2 text-xs text-muted-foreground">
-                  {template.category} · {formatTemplateCost(template.category)}
+                  {HSM_CATEGORY_LABELS[template.category]} · {formatTemplateCost(template.category)}
                 </span>
               </SelectItem>
             ))}

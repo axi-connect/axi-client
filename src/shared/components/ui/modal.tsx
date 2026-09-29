@@ -18,6 +18,12 @@ export type ModalAction = {
   onClick?: () => void
   variant?: "default" | "outline" | "destructive" | "secondary"
   /**
+   * La acción todavía no se puede ejecutar (falta algo en el formulario).
+   * Va deshabilitada de verdad y no con `aria-disabled`: la razón la explica
+   * el propio formulario en línea, no el botón.
+   */
+  disabled?: boolean
+  /**
    * La EXCEPCIÓN: esta acción no cierra el diálogo; el cierre lo decide quien
    * la pasó (el `onSuccess` del formulario, un `closeModal()` tras el `await`).
    *
@@ -101,6 +107,7 @@ export function Modal({ open, onOpenChange, config, children }: ModalProps) {
                   type="button"
                   onClick={a.onClick}
                   variant={a.variant}
+                  disabled={a.disabled}
                 >
                   {a.label}
                 </Button>

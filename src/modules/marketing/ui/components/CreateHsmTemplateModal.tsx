@@ -76,7 +76,7 @@ const CATEGORIES: ReadonlyArray<{
 }> = [
   {
     value: "utility",
-    label: "Utility",
+    label: "Utilidad",
     description: "Seguimiento de algo que el cliente inició (cotización, pedido, cita). Aprobación rápida.",
     icon: BadgeCheck,
   },

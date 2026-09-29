@@ -47,7 +47,7 @@ export const QUICK_ACTION_TYPE_LABELS: Record<QuickActionType, string> = {
 export const QUICK_ACTION_TYPE_DESCRIPTIONS: Record<QuickActionType, string> = {
   media_resource: "Envía archivos precargados (PDF, imágenes) con un mensaje opcional",
   canned_response: "Envía un texto predefinido",
-  whatsapp_template: "Envía una plantilla HSM aprobada de Meta",
+  whatsapp_template: "Envía una plantilla de Meta aprobada",
   interactive: "Envía botones o un menú de opciones que el cliente toca",
 };
 

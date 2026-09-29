@@ -221,10 +221,10 @@ export function MetaTemplatesView() {
       <EmptyState
         glyph="connections"
         title="No tienes ningún canal de WhatsApp Cloud"
-        description="Las plantillas de Meta viven en la cuenta de WhatsApp Business de un canal Cloud. Conecta uno para poder escribirle a tus clientes pasadas las 24 horas."
+        description="Las plantillas de Meta viven en la cuenta de WhatsApp Business de un canal Cloud. Conecta uno para poder escribirle a tus clientes pasadas las 24 h."
         action={
           <Button variant="outline" asChild>
-            <Link href="/workspace">Ir a canales</Link>
+            <Link href="/settings/channels">Ir a canales</Link>
           </Button>
         }
       />

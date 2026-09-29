@@ -16,6 +16,8 @@ const LABELS: Record<string, string> = {
 	// Un slug en inglés dentro de una UI en español es un defecto en cualquier
 	// ruta, no solo en marketing: `settings` ya se pintaba crudo en /settings/*.
 	"settings": "Configuración",
+	// /crm/settings/segments (segmentos premium 2026-09-28): salía «segments» crudo.
+	"segments": "Segmentos",
 	"marketing": "Marketing",
 	"campaigns": "Campañas",
 	"automations": "Recuperación",

@@ -1,3 +1,5 @@
+import { HSM_WINDOW_REASON_NO_TEMPLATE } from "@/core/lib/hsm-copy";
+import { lowerFirst } from "@/core/lib/route-skip-reasons";
 import type {
   DeliveryErrorCode,
   DeliverySkipReason,
@@ -172,7 +174,7 @@ describe("deliveryLine: la tercera línea de la fila, por estado × canal", () =
     expect(window).toMatchObject({
       tone: "warn",
       text: "No salió por WhatsApp",
-      detail: "fuera de la ventana de 24 h y sin plantilla aprobada",
+      detail: lowerFirst(HSM_WINDOW_REASON_NO_TEMPLATE),
       retry: "email",
     });
     const noEmail = deliveryLine(

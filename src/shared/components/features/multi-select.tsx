@@ -1,1197 +1,474 @@
-import * as React from "react";
-import { cn } from "@/core/lib/utils";
-import { Badge } from "@/shared/components/ui/badge";
-import { Button } from "@/shared/components/ui/button";
-import { Separator } from "@/shared/components/ui/separator";
-import { cva, type VariantProps } from "class-variance-authority";
+"use client";
 
+import * as React from "react";
+import { CheckIcon, ChevronDown, X } from "lucide-react";
+import { cn } from "@/core/lib/utils";
+import { plural } from "@/core/lib/plural";
 import {
-	XIcon,
-	XCircle,
-	CheckIcon,
-	ChevronDown,
-	WandSparkles,
-} from "lucide-react";
-import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
+  Popover,
+  PopoverAnchor,
+  PopoverContent,
+  PopoverTrigger,
 } from "@/shared/components/ui/popover";
 import {
-	Command,
-	CommandEmpty,
-	CommandGroup,
-	CommandInput,
-	CommandItem,
-	CommandList,
-	CommandSeparator,
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
 } from "@/shared/components/ui/command";
 
 /**
- * Animation types and configurations
-*/
-export interface AnimationConfig {
-	/** Badge animation type */
-	badgeAnimation?: "bounce" | "pulse" | "wiggle" | "fade" | "slide" | "none";
-	/** Popover animation type */
-	popoverAnimation?: "scale" | "slide" | "fade" | "flip" | "none";
-	/** Option hover animation type */
-	optionHoverAnimation?: "highlight" | "scale" | "glow" | "none";
-	/** Animation duration in seconds */
-	duration?: number;
-	/** Animation delay in seconds */
-	delay?: number;
-}
-
-/**
- * Variants for the multi-select component to handle different styles.
- * Uses class-variance-authority (cva) to define different styles based on "variant" prop.
-*/
-const multiSelectVariants = cva("m-1 transition-all duration-300 ease-in-out", {
-	variants: {
-		variant: {
-			default: "",
-			secondary:
-				"border-foreground/10 bg-secondary text-secondary-foreground hover:bg-secondary/80",
-			destructive:
-				"border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
-			inverted: "inverted",
-		},
-		badgeAnimation: {
-			bounce: "hover:-translate-y-1 hover:scale-110",
-			pulse: "hover:animate-pulse",
-			wiggle: "hover:animate-wiggle",
-			fade: "hover:opacity-80",
-			slide: "hover:translate-x-1",
-			none: "",
-		},
-	},
-	defaultVariants: {
-		variant: "default",
-		badgeAnimation: "bounce",
-	},
-});
-
-/**
- * Option interface for MultiSelect component
-*/
-interface MultiSelectOption {
-	/** The text to display for the option. */
-	label: string;
-	/** The unique value associated with the option. */
-	value: string;
-	/** Optional icon component to display alongside the option. */
-	icon?: React.ComponentType<{ className?: string }>;
-	/** Whether this option is disabled */
-	disabled?: boolean;
-	/** Custom styling for the option */
-	style?: {
-		/** Custom badge color */
-		badgeColor?: string;
-		/** Custom icon color */
-		iconColor?: string;
-		/** Gradient background for badge */
-		gradient?: string;
-	};
-}
-
-/**
- * Group interface for organizing options
-*/
-interface MultiSelectGroup {
-	/** Group heading */
-	heading: string;
-	/** Options in this group */
-	options: MultiSelectOption[];
-}
-
-/**
- * Props for MultiSelect component
-*/
-interface MultiSelectProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>,"animationConfig">, VariantProps<typeof multiSelectVariants> {
-	/**
-	 * An array of option objects or groups to be displayed in the multi-select component.
-	*/
-	options: MultiSelectOption[] | MultiSelectGroup[];
-	/**
-	 * Callback function triggered when the selected values change.
-	 * Receives an array of the new selected values.
-	*/
-	onValueChange: (value: string[]) => void;
-
-	/** The default selected values when the component mounts. */
-	defaultValue?: string[];
-
-	/**
-	 * Placeholder text to be displayed when no values are selected.
-	 * Optional, defaults to "Select options".
-	*/
-	placeholder?: string;
-
-	/**
-	 * Animation duration in seconds for the visual effects (e.g., bouncing badges).
-	 * Optional, defaults to 0 (no animation).
-	*/
-	animation?: number;
-
-	/**
-	 * Advanced animation configuration for different component parts.
-	 * Optional, allows fine-tuning of various animation effects.
-	*/
-	animationConfig?: AnimationConfig;
-
-	/**
-	 * Maximum number of items to display. Extra selected items will be summarized.
-	 * Optional, defaults to 3.
-	*/
-	maxCount?: number;
-
-	/**
-	 * The modality of the popover. When set to true, interaction with outside elements
-	 * will be disabled and only popover content will be visible to screen readers.
-	 * Optional, defaults to false.
-	*/
-	modalPopover?: boolean;
-
-	/**
-	 * If true, renders the multi-select component as a child of another component.
-	 * Optional, defaults to false.
-	*/
-	asChild?: boolean;
-
-	/**
-	 * Additional class names to apply custom styles to the multi-select component.
-	 * Optional, can be used to add custom styles.
-	*/
-	className?: string;
-
-	/**
-	 * If true, disables the select all functionality.
-	 * Optional, defaults to false.
-	*/
-	hideSelectAll?: boolean;
-
-	/**
-	 * If true, shows search functionality in the popover.
-	 * If false, hides the search input completely.
-	 * Optional, defaults to true.
-	*/
-	searchable?: boolean;
-
-	/**
-	 * Custom empty state message when no options match search.
-	 * Optional, defaults to "No results found."
-	 */
-	emptyIndicator?: React.ReactNode;
-
-	/**
-	 * If true, allows the component to grow and shrink with its content.
-	 * If false, uses fixed width behavior.
-	 * Optional, defaults to false.
-	 */
-	autoSize?: boolean;
-
-	/**
-	 * If true, shows badges in a single line with horizontal scroll.
-	 * If false, badges wrap to multiple lines.
-	 * Optional, defaults to false.
-	 */
-	singleLine?: boolean;
-
-	/**
-	 * Custom CSS class for the popover content.
-	 * Optional, can be used to customize popover appearance.
-	 */
-	popoverClassName?: string;
-
-	/**
-	 * If true, disables the component completely.
-	 * Optional, defaults to false.
-	 */
-	disabled?: boolean;
-
-	/**
-	 * Responsive configuration for different screen sizes.
-	 * Allows customizing maxCount and other properties based on viewport.
-	 * Can be boolean true for default responsive behavior or an object for custom configuration.
-	 */
-	responsive?:
-		| boolean
-		| {
-				/** Configuration for mobile devices (< 640px) */
-				mobile?: {
-					maxCount?: number;
-					hideIcons?: boolean;
-					compactMode?: boolean;
-				};
-				/** Configuration for tablet devices (640px - 1024px) */
-				tablet?: {
-					maxCount?: number;
-					hideIcons?: boolean;
-					compactMode?: boolean;
-				};
-				/** Configuration for desktop devices (> 1024px) */
-				desktop?: {
-					maxCount?: number;
-					hideIcons?: boolean;
-					compactMode?: boolean;
-				};
-		  };
-
-	/**
-	 * Minimum width for the component.
-	 * Optional, defaults to auto-sizing based on content.
-	 * When set, component will not shrink below this width.
-	 */
-	minWidth?: string;
-
-	/**
-	 * Maximum width for the component.
-	 * Optional, defaults to 100% of container.
-	 * Component will not exceed container boundaries.
-	 */
-	maxWidth?: string;
-
-	/**
-	 * If true, automatically removes duplicate options based on their value.
-	 * Optional, defaults to false (shows warning in dev mode instead).
-	 */
-	deduplicateOptions?: boolean;
-
-	/**
-	 * If true, the component will reset its internal state when defaultValue changes.
-	 * Useful for React Hook Form integration and form reset functionality.
-	 * Optional, defaults to true.
-	 */
-	resetOnDefaultValueChange?: boolean;
-
-	/**
-	 * If true, automatically closes the popover after selecting an option.
-	 * Useful for single-selection-like behavior or mobile UX.
-	 * Optional, defaults to false.
-	 */
-	closeOnSelect?: boolean;
-}
-
-/**
- * Imperative methods exposed through ref
+ * Selección múltiple del panel (DESIGN-SYSTEM §9, «Selección múltiple»).
+ *
+ * Es UN control de formulario, no un widget: mide lo que un `Input` (`min-h-9`,
+ * el mismo radio y borde), ocupa el ancho de su columna y nunca menos —el
+ * `minWidth: 200px` de la versión anterior desbordaba cualquier columna
+ * angosta, que es como llegó a la captura del dueño—, y las fichas elegidas
+ * son neutras (`secondary` + borde) con la «x» como BOTÓN real, centrada por
+ * construcción (`grid place-items-center`) y con zona táctil de 24 px por un
+ * `::before` (§10), igual que la de `OptionsInput`.
+ *
+ * **Anatomía (auditoría 2026-09-28, H1).** El campo es un `div` con el
+ * aspecto de `Input` y ancla del popover; dentro conviven como HERMANOS las
+ * fichas con su «x», el botón «Quitar N» y el `combobox` (un `button` con el
+ * chevron y el nombre accesible). Ningún control vive dentro de otro `button`:
+ * un botón anidado rompe la hidratación del HTML del servidor y la ARIA lo
+ * prohíbe. Clic en cualquier hueco del campo abre; las «x» detienen el evento.
+ *
+ * Lo consumen seis pantallas —segmentos, audiencia de campañas, zonas de envío,
+ * importar contactos, etiquetas del contacto y simulacros de quality—, así que
+ * la API pública se conserva; lo que se retiró (animaciones, tamaños por
+ * dispositivo, `singleLine`, `autoSize`, `minWidth`…) no lo usaba ninguna.
  */
+interface MultiSelectOption {
+  label: string;
+  value: string;
+  icon?: React.ComponentType<{ className?: string }>;
+  disabled?: boolean;
+}
+
+interface MultiSelectGroup {
+  heading: string;
+  options: MultiSelectOption[];
+}
+
+interface MultiSelectProps
+  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "onChange" | "defaultValue"> {
+  options: MultiSelectOption[] | MultiSelectGroup[];
+  onValueChange: (value: string[]) => void;
+  defaultValue?: string[];
+  placeholder?: string;
+  /** Fichas visibles antes de resumir el resto como «+N». */
+  maxCount?: number;
+  modalPopover?: boolean;
+  className?: string;
+  hideSelectAll?: boolean;
+  searchable?: boolean;
+  emptyIndicator?: React.ReactNode;
+  popoverClassName?: string;
+  disabled?: boolean;
+  deduplicateOptions?: boolean;
+  /** Vuelve al `defaultValue` cuando este cambia (reset de un formulario). */
+  resetOnDefaultValueChange?: boolean;
+  closeOnSelect?: boolean;
+}
+
 export interface MultiSelectRef {
-	/**
-	 * Programmatically reset the component to its default value
-	 */
-	reset: () => void;
-	/**
-	 * Get current selected values
-	 */
-	getSelectedValues: () => string[];
-	/**
-	 * Set selected values programmatically
-	 */
-	setSelectedValues: (values: string[]) => void;
-	/**
-	 * Clear all selected values
-	 */
-	clear: () => void;
-	/**
-	 * Focus the component
-	 */
-	focus: () => void;
+  reset: () => void;
+  getSelectedValues: () => string[];
+  setSelectedValues: (values: string[]) => void;
+  clear: () => void;
+  focus: () => void;
+}
+
+function isGrouped(opts: MultiSelectOption[] | MultiSelectGroup[]): opts is MultiSelectGroup[] {
+  return opts.length > 0 && "heading" in opts[0];
+}
+
+function sameSet(a: readonly string[], b: readonly string[]): boolean {
+  if (a.length !== b.length) return false;
+  const sorted = [...b].sort();
+  return [...a].sort().every((value, index) => value === sorted[index]);
+}
+
+/** El aspecto del campo: el de `Input`, con altura mínima y no fija. */
+const fieldClass = cn(
+  "flex min-h-9 w-full min-w-0 cursor-pointer items-center gap-1 rounded-md border border-input bg-transparent py-1 pr-1 pl-1 text-left text-sm shadow-xs transition-[color,box-shadow] dark:bg-input/30",
+  "focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50",
+  "has-disabled:pointer-events-none has-disabled:cursor-not-allowed has-disabled:opacity-50",
+);
+
+/** Tesela de marcado en tinta: no coral, para no competir con el CTA del formulario. */
+function CheckTile({ checked }: { checked: boolean }) {
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "grid size-4 shrink-0 place-items-center rounded-[5px] border transition-colors",
+        checked ? "border-foreground bg-foreground text-background" : "border-foreground/35",
+      )}
+    >
+      <CheckIcon className={cn("size-3", !checked && "invisible")} strokeWidth={3} />
+    </span>
+  );
+}
+
+function SelectedChip({
+  label,
+  onRemove,
+  disabled,
+}: {
+  label: string;
+  onRemove: () => void;
+  disabled: boolean;
+}) {
+  return (
+    <span
+      className="inline-flex h-6 max-w-full min-w-0 items-center gap-0.5 rounded-full border border-border bg-secondary py-0 pr-[3px] pl-2.5 text-xs font-medium text-secondary-foreground"
+      title={label}
+    >
+      <span className="truncate">{label}</span>
+      <button
+        type="button"
+        tabIndex={-1}
+        disabled={disabled}
+        aria-label={`Quitar ${label}`}
+        onClick={(event) => {
+          event.stopPropagation();
+          onRemove();
+        }}
+        onPointerDown={(event) => event.stopPropagation()}
+        className="relative grid size-4 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors before:absolute before:-inset-1 before:content-[''] hover:bg-foreground/10 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
+      >
+        <X className="size-3" strokeWidth={2.75} aria-hidden />
+      </button>
+    </span>
+  );
 }
 
 export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
-	(
-		{
-			options,
-			onValueChange,
-			variant,
-			defaultValue = [],
-			placeholder = "Seleccionar opciones",
-			animation = 0,
-			animationConfig,
-			maxCount = 3,
-			modalPopover = false,
-			asChild = false,
-			className,
-			hideSelectAll = false,
-			searchable = true,
-			emptyIndicator,
-			autoSize = false,
-			singleLine = false,
-			popoverClassName,
-			disabled = false,
-			responsive,
-			minWidth,
-			maxWidth,
-			deduplicateOptions = false,
-			resetOnDefaultValueChange = true,
-			closeOnSelect = false,
-			...props
-		},
-		ref
-	) => {
-		const [selectedValues, setSelectedValues] = React.useState<string[]>(defaultValue);
-		const [isPopoverOpen, setIsPopoverOpen] = React.useState(false);
-		const [isAnimating, setIsAnimating] = React.useState(false);
-		const [searchValue, setSearchValue] = React.useState("");
+  (
+    {
+      options,
+      onValueChange,
+      defaultValue = [],
+      placeholder = "Seleccionar opciones",
+      maxCount = 3,
+      modalPopover = false,
+      className,
+      hideSelectAll = false,
+      searchable = true,
+      emptyIndicator,
+      popoverClassName,
+      disabled = false,
+      deduplicateOptions = false,
+      resetOnDefaultValueChange = true,
+      closeOnSelect = false,
+      ...props
+    },
+    ref,
+  ) => {
+    const [selected, setSelected] = React.useState<string[]>(defaultValue);
+    const [open, setOpen] = React.useState(false);
+    const [search, setSearch] = React.useState("");
+    const [announcement, setAnnouncement] = React.useState("");
+    const buttonRef = React.useRef<HTMLButtonElement>(null);
+    // C1: con el popover abierto, el pointerdown sobre el campo (fuera del
+    // contenido) ya lo cierra por Radix; el click que sigue NO debe reabrirlo.
+    // Se recuerda cómo estaba en el pointerdown y el click solo abre si estaba cerrado.
+    const openAtPointerDown = React.useRef(false);
+    const prevDefault = React.useRef<string[]>(defaultValue);
+    const id = React.useId();
+    const listboxId = `${id}-listbox`;
+    const selectionId = `${id}-selection`;
 
-		const [politeMessage, setPoliteMessage] = React.useState("");
-		const [assertiveMessage, setAssertiveMessage] = React.useState("");
-		const prevSelectedCount = React.useRef(selectedValues.length);
-		const prevIsOpen = React.useRef(isPopoverOpen);
-		const prevSearchValue = React.useRef(searchValue);
+    const allOptions = React.useMemo((): MultiSelectOption[] => {
+      const flat = isGrouped(options) ? options.flatMap((group) => group.options) : options;
+      if (!deduplicateOptions) return flat;
+      const seen = new Set<string>();
+      return flat.filter((option) => {
+        if (seen.has(option.value)) return false;
+        seen.add(option.value);
+        return true;
+      });
+    }, [options, deduplicateOptions]);
 
-		const announce = React.useCallback(
-			(message: string, priority: "polite" | "assertive" = "polite") => {
-				if (priority === "assertive") {
-					setAssertiveMessage(message);
-					setTimeout(() => setAssertiveMessage(""), 100);
-				} else {
-					setPoliteMessage(message);
-					setTimeout(() => setPoliteMessage(""), 100);
-				}
-			},
-			[]
-		);
+    const byValue = React.useMemo(
+      () => new Map(allOptions.map((option) => [option.value, option] as const)),
+      [allOptions],
+    );
+    const enabledValues = React.useMemo(
+      () => allOptions.filter((option) => !option.disabled).map((option) => option.value),
+      [allOptions],
+    );
 
-		const multiSelectId = React.useId();
-		const listboxId = `${multiSelectId}-listbox`;
-		const triggerDescriptionId = `${multiSelectId}-description`;
-		const selectedCountId = `${multiSelectId}-count`;
+    const commit = React.useCallback(
+      (next: string[]) => {
+        setSelected(next);
+        onValueChange(next);
+      },
+      [onValueChange],
+    );
 
-		const prevDefaultValueRef = React.useRef<string[]>(defaultValue);
+    React.useImperativeHandle(
+      ref,
+      () => ({
+        reset: () => {
+          commit(defaultValue);
+          setOpen(false);
+          setSearch("");
+        },
+        getSelectedValues: () => selected,
+        setSelectedValues: commit,
+        clear: () => commit([]),
+        focus: () => buttonRef.current?.focus(),
+      }),
+      [commit, defaultValue, selected],
+    );
 
-		const isGroupedOptions = React.useCallback(
-			(
-				opts: MultiSelectOption[] | MultiSelectGroup[]
-			): opts is MultiSelectGroup[] => {
-				return opts.length > 0 && "heading" in opts[0];
-			},
-			[]
-		);
+    React.useEffect(() => {
+      if (!resetOnDefaultValueChange) return;
+      if (sameSet(prevDefault.current, defaultValue)) return;
+      prevDefault.current = [...defaultValue];
+      setSelected((current) => (sameSet(current, defaultValue) ? current : defaultValue));
+    }, [defaultValue, resetOnDefaultValueChange]);
 
-		const arraysEqual = React.useCallback(
-			(a: string[], b: string[]): boolean => {
-				if (a.length !== b.length) return false;
-				const sortedA = [...a].sort();
-				const sortedB = [...b].sort();
-				return sortedA.every((val, index) => val === sortedB[index]);
-			},
-			[]
-		);
+    React.useEffect(() => {
+      if (!open) setSearch("");
+    }, [open]);
 
-		const resetToDefault = React.useCallback(() => {
-			setSelectedValues(defaultValue);
-			setIsPopoverOpen(false);
-			setSearchValue("");
-			onValueChange(defaultValue);
-		}, [defaultValue, onValueChange]);
+    const filtered = React.useMemo(() => {
+      if (!searchable || search === "") return options;
+      const needle = search.toLowerCase();
+      const matches = (option: MultiSelectOption) =>
+        option.label.toLowerCase().includes(needle) || option.value.toLowerCase().includes(needle);
+      if (isGrouped(options)) {
+        return options
+          .map((group) => ({ ...group, options: group.options.filter(matches) }))
+          .filter((group) => group.options.length > 0);
+      }
+      return options.filter(matches);
+    }, [options, search, searchable]);
 
-		const buttonRef = React.useRef<HTMLButtonElement>(null);
+    const toggle = (value: string) => {
+      if (disabled || byValue.get(value)?.disabled) return;
+      const next = selected.includes(value)
+        ? selected.filter((item) => item !== value)
+        : [...selected, value];
+      const label = byValue.get(value)?.label ?? value;
+      setAnnouncement(
+        selected.includes(value)
+          ? `${label} quitado. ${plural(next.length, "opción seleccionada", "opciones seleccionadas")}.`
+          : `${label} seleccionado. ${plural(next.length, "opción seleccionada", "opciones seleccionadas")}.`,
+      );
+      commit(next);
+      if (closeOnSelect) setOpen(false);
+    };
 
-		React.useImperativeHandle(
-			ref,
-			() => ({
-				reset: resetToDefault,
-				getSelectedValues: () => selectedValues,
-				setSelectedValues: (values: string[]) => {
-					setSelectedValues(values);
-					onValueChange(values);
-				},
-				clear: () => {
-					setSelectedValues([]);
-					onValueChange([]);
-				},
-				focus: () => {
-					if (buttonRef.current) {
-						buttonRef.current.focus();
-						const originalOutline = buttonRef.current.style.outline;
-						const originalOutlineOffset = buttonRef.current.style.outlineOffset;
-						buttonRef.current.style.outline = "2px solid hsl(var(--ring))";
-						buttonRef.current.style.outlineOffset = "2px";
-						setTimeout(() => {
-							if (buttonRef.current) {
-								buttonRef.current.style.outline = originalOutline;
-								buttonRef.current.style.outlineOffset = originalOutlineOffset;
-							}
-						}, 1000);
-					}
-				},
-			}),
-			[resetToDefault, selectedValues, onValueChange]
-		);
+    const clear = () => {
+      if (disabled) return;
+      setAnnouncement("Selección vaciada.");
+      commit([]);
+    };
 
-		const [screenSize, setScreenSize] = React.useState<"mobile" | "tablet" | "desktop">("desktop");
+    const toggleAll = () => {
+      if (disabled) return;
+      const allChosen = enabledValues.every((value) => selected.includes(value));
+      commit(allChosen ? [] : enabledValues);
+      if (closeOnSelect) setOpen(false);
+    };
 
-		React.useEffect(() => {
-			if (typeof window === "undefined") return;
-			const handleResize = () => {
-				const width = window.innerWidth;
-				if (width < 640) {
-					setScreenSize("mobile");
-				} else if (width < 1024) {
-					setScreenSize("tablet");
-				} else {
-					setScreenSize("desktop");
-				}
-			};
-			handleResize();
-			window.addEventListener("resize", handleResize);
-			return () => {
-				if (typeof window !== "undefined") {
-					window.removeEventListener("resize", handleResize);
-				}
-			};
-		}, []);
+    const onSearchKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+      if (event.key === "Backspace" && event.currentTarget.value === "" && selected.length > 0) {
+        commit(selected.slice(0, -1));
+      }
+    };
 
-		const getResponsiveSettings = () => {
-			if (!responsive) {
-				return {
-					maxCount: maxCount,
-					hideIcons: false,
-					compactMode: false,
-				};
-			}
-			if (responsive === true) {
-				const defaultResponsive = {
-					mobile: { maxCount: 2, hideIcons: false, compactMode: true },
-					tablet: { maxCount: 4, hideIcons: false, compactMode: false },
-					desktop: { maxCount: 6, hideIcons: false, compactMode: false },
-				};
-				const currentSettings = defaultResponsive[screenSize];
-				return {
-					maxCount: currentSettings?.maxCount ?? maxCount,
-					hideIcons: currentSettings?.hideIcons ?? false,
-					compactMode: currentSettings?.compactMode ?? false,
-				};
-			}
-			const currentSettings = responsive[screenSize];
-			return {
-				maxCount: currentSettings?.maxCount ?? maxCount,
-				hideIcons: currentSettings?.hideIcons ?? false,
-				compactMode: currentSettings?.compactMode ?? false,
-			};
-		};
+    const visible = selected.slice(0, maxCount).map((value) => byValue.get(value)).filter(Boolean) as MultiSelectOption[];
+    const hidden = selected.slice(maxCount).map((value) => byValue.get(value)?.label ?? value);
+    const allChosen = enabledValues.length > 0 && enabledValues.every((value) => selected.includes(value));
+    // El nombre accesible lo pone el consumidor (aria-label / aria-labelledby /
+    // una <label htmlFor>); el placeholder es el último recurso, no el primero.
+    const labelled = props["aria-label"] !== undefined || props["aria-labelledby"] !== undefined;
 
-		const responsiveSettings = getResponsiveSettings();
+    const renderItem = (option: MultiSelectOption) => {
+      const checked = selected.includes(option.value);
+      return (
+        <CommandItem
+          key={option.value}
+          value={option.value}
+          onSelect={() => toggle(option.value)}
+          aria-checked={checked}
+          data-checked={checked ? "true" : undefined}
+          disabled={option.disabled}
+          className="cursor-pointer gap-2.5 rounded-lg"
+        >
+          <CheckTile checked={checked} />
+          {option.icon && <option.icon className="size-4 text-muted-foreground" aria-hidden />}
+          <span className="truncate">{option.label}</span>
+        </CommandItem>
+      );
+    };
 
-		const getBadgeAnimationClass = () => {
-			if (animationConfig?.badgeAnimation) {
-				switch (animationConfig.badgeAnimation) {
-					case "bounce":
-						return isAnimating
-							? "animate-bounce"
-							: "hover:-translate-y-1 hover:scale-110";
-					case "pulse":
-						return "hover:animate-pulse";
-					case "wiggle":
-						return "hover:animate-wiggle";
-					case "fade":
-						return "hover:opacity-80";
-					case "slide":
-						return "hover:translate-x-1";
-					case "none":
-						return "";
-					default:
-						return "";
-				}
-			}
-			return isAnimating ? "animate-bounce" : "";
-		};
-
-		const getPopoverAnimationClass = () => {
-			if (animationConfig?.popoverAnimation) {
-				switch (animationConfig.popoverAnimation) {
-					case "scale":
-						return "animate-scaleIn";
-					case "slide":
-						return "animate-slideInDown";
-					case "fade":
-						return "animate-fadeIn";
-					case "flip":
-						return "animate-flipIn";
-					case "none":
-						return "";
-					default:
-						return "";
-				}
-			}
-			return "";
-		};
-
-		const getAllOptions = React.useCallback((): MultiSelectOption[] => {
-			if (options.length === 0) return [];
-			let allOptions: MultiSelectOption[];
-			if (isGroupedOptions(options)) {
-				allOptions = options.flatMap((group) => group.options);
-			} else {
-				allOptions = options;
-			}
-			const valueSet = new Set<string>();
-			const duplicates: string[] = [];
-			const uniqueOptions: MultiSelectOption[] = [];
-			allOptions.forEach((option) => {
-				if (valueSet.has(option.value)) {
-					duplicates.push(option.value);
-					if (!deduplicateOptions) {
-						uniqueOptions.push(option);
-					}
-				} else {
-					valueSet.add(option.value);
-					uniqueOptions.push(option);
-				}
-			});
-			if (process.env.NODE_ENV === "development" && duplicates.length > 0) {
-				const action = deduplicateOptions
-					? "automatically removed"
-					: "detected";
-				console.warn(
-					`MultiSelect: Duplicate option values ${action}: ${duplicates.join(
-						", "
-					)}. ` +
-						`${
-							deduplicateOptions
-								? "Duplicates have been removed automatically."
-								: "This may cause unexpected behavior. Consider setting 'deduplicateOptions={true}' or ensure all option values are unique."
-						}`
-				);
-			}
-			return deduplicateOptions ? uniqueOptions : allOptions;
-		}, [options, deduplicateOptions, isGroupedOptions]);
-
-		const getOptionByValue = React.useCallback(
-			(value: string): MultiSelectOption | undefined => {
-				const option = getAllOptions().find((option) => option.value === value);
-				if (!option && process.env.NODE_ENV === "development") {
-					console.warn(
-						`MultiSelect: Option with value "${value}" not found in options list`
-					);
-				}
-				return option;
-			},
-			[getAllOptions]
-		);
-
-		const filteredOptions = React.useMemo(() => {
-			if (!searchable || !searchValue) return options;
-			if (options.length === 0) return [];
-			if (isGroupedOptions(options)) {
-				return options
-					.map((group) => ({
-						...group,
-						options: group.options.filter(
-							(option) =>
-								option.label
-									.toLowerCase()
-									.includes(searchValue.toLowerCase()) ||
-								option.value.toLowerCase().includes(searchValue.toLowerCase())
-						),
-					}))
-					.filter((group) => group.options.length > 0);
-			}
-			return options.filter(
-				(option) =>
-					option.label.toLowerCase().includes(searchValue.toLowerCase()) ||
-					option.value.toLowerCase().includes(searchValue.toLowerCase())
-			);
-		}, [options, searchValue, searchable, isGroupedOptions]);
-
-		const handleInputKeyDown = (
-			event: React.KeyboardEvent<HTMLInputElement>
-		) => {
-			if (event.key === "Enter") {
-				setIsPopoverOpen(true);
-			} else if (event.key === "Backspace" && !event.currentTarget.value) {
-				const newSelectedValues = [...selectedValues];
-				newSelectedValues.pop();
-				setSelectedValues(newSelectedValues);
-				onValueChange(newSelectedValues);
-			}
-		};
-
-		const toggleOption = (optionValue: string) => {
-			if (disabled) return;
-			const option = getOptionByValue(optionValue);
-			if (option?.disabled) return;
-			const newSelectedValues = selectedValues.includes(optionValue)
-				? selectedValues.filter((value) => value !== optionValue)
-				: [...selectedValues, optionValue];
-			setSelectedValues(newSelectedValues);
-			onValueChange(newSelectedValues);
-			if (closeOnSelect) {
-				setIsPopoverOpen(false);
-			}
-		};
-
-		const handleClear = () => {
-			if (disabled) return;
-			setSelectedValues([]);
-			onValueChange([]);
-		};
-
-		const handleTogglePopover = () => {
-			if (disabled) return;
-			setIsPopoverOpen((prev) => !prev);
-		};
-
-		const clearExtraOptions = () => {
-			if (disabled) return;
-			const newSelectedValues = selectedValues.slice(
-				0,
-				responsiveSettings.maxCount
-			);
-			setSelectedValues(newSelectedValues);
-			onValueChange(newSelectedValues);
-		};
-
-		const toggleAll = () => {
-			if (disabled) return;
-			const allOptions = getAllOptions().filter((option) => !option.disabled);
-			if (selectedValues.length === allOptions.length) {
-				handleClear();
-			} else {
-				const allValues = allOptions.map((option) => option.value);
-				setSelectedValues(allValues);
-				onValueChange(allValues);
-			}
-
-			if (closeOnSelect) {
-				setIsPopoverOpen(false);
-			}
-		};
-
-		React.useEffect(() => {
-			if (!resetOnDefaultValueChange) return;
-			const prevDefaultValue = prevDefaultValueRef.current;
-			if (!arraysEqual(prevDefaultValue, defaultValue)) {
-				if (!arraysEqual(selectedValues, defaultValue)) {
-					setSelectedValues(defaultValue);
-				}
-				prevDefaultValueRef.current = [...defaultValue];
-			}
-		}, [defaultValue, selectedValues, arraysEqual, resetOnDefaultValueChange]);
-
-		const getWidthConstraints = () => {
-			const defaultMinWidth = screenSize === "mobile" ? "0px" : "200px";
-			const effectiveMinWidth = minWidth || defaultMinWidth;
-			const effectiveMaxWidth = maxWidth || "100%";
-			return {
-				minWidth: effectiveMinWidth,
-				maxWidth: effectiveMaxWidth,
-				width: autoSize ? "auto" : "100%",
-			};
-		};
-
-		const widthConstraints = getWidthConstraints();
-
-		React.useEffect(() => {
-			if (!isPopoverOpen) {
-				setSearchValue("");
-			}
-		}, [isPopoverOpen]);
-
-		React.useEffect(() => {
-			const selectedCount = selectedValues.length;
-			const allOptions = getAllOptions();
-			const totalOptions = allOptions.filter((opt) => !opt.disabled).length;
-			if (selectedCount !== prevSelectedCount.current) {
-				const diff = selectedCount - prevSelectedCount.current;
-				if (diff > 0) {
-					const addedItems = selectedValues.slice(-diff);
-					const addedLabels = addedItems
-						.map(
-							(value) => allOptions.find((opt) => opt.value === value)?.label
-						)
-						.filter(Boolean);
-
-					if (addedLabels.length === 1) {
-						announce(
-							`${addedLabels[0]} selected. ${selectedCount} of ${totalOptions} options selected.`
-						);
-					} else {
-						announce(
-							`${addedLabels.length} options selected. ${selectedCount} of ${totalOptions} total selected.`
-						);
-					}
-				} else if (diff < 0) {
-					announce(
-						`Option removed. ${selectedCount} of ${totalOptions} options selected.`
-					);
-				}
-				prevSelectedCount.current = selectedCount;
-			}
-
-			if (isPopoverOpen !== prevIsOpen.current) {
-				if (isPopoverOpen) {
-					announce(
-						`Dropdown opened. ${totalOptions} options available. Use arrow keys to navigate.`
-					);
-				} else {
-					announce("Dropdown closed.");
-				}
-				prevIsOpen.current = isPopoverOpen;
-			}
-
-			if (
-				searchValue !== prevSearchValue.current &&
-				searchValue !== undefined
-			) {
-				if (searchValue && isPopoverOpen) {
-					const filteredCount = allOptions.filter(
-						(opt) =>
-							opt.label.toLowerCase().includes(searchValue.toLowerCase()) ||
-							opt.value.toLowerCase().includes(searchValue.toLowerCase())
-					).length;
-
-					announce(
-						`${filteredCount} option${
-							filteredCount === 1 ? "" : "s"
-						} found for "${searchValue}"`
-					);
-				}
-				prevSearchValue.current = searchValue;
-			}
-		}, [selectedValues, isPopoverOpen, searchValue, announce, getAllOptions]);
-
-		return (
-			<>
-				<div className="sr-only">
-					<div aria-live="polite" aria-atomic="true" role="status">
-						{politeMessage}
-					</div>
-					<div aria-live="assertive" aria-atomic="true" role="alert">
-						{assertiveMessage}
-					</div>
-				</div>
-
-				<Popover
-					open={isPopoverOpen}
-					modal={modalPopover}
-					onOpenChange={setIsPopoverOpen}
-				>
-					<div id={triggerDescriptionId} className="sr-only">
-						Menú desplegable de selección múltiple. Use las flechas para navegar, Enter para seleccionar,
-						y Escape para cerrar.
-					</div>
-					<div id={selectedCountId} className="sr-only" aria-live="polite">
-						{selectedValues.length === 0
-							? "No se han seleccionado opciones"
-							: `${selectedValues.length} opción${
-									selectedValues.length === 1 ? "" : "s"
-							  } seleccionadas: ${selectedValues
-									.map((value) => getOptionByValue(value)?.label)
-									.filter(Boolean)
-									.join(", ")}`}
-					</div>
-
-					<PopoverTrigger asChild>
-						<Button
-							{...props}
-							ref={buttonRef}
-							role="combobox"
-							disabled={disabled}
-							aria-haspopup="listbox"
-							variant="outline"
-							onClick={handleTogglePopover}
-							aria-expanded={isPopoverOpen}
-							aria-controls={isPopoverOpen ? listboxId : undefined}
-							aria-describedby={`${triggerDescriptionId} ${selectedCountId}`}
-							aria-label={`Multi-select: ${selectedValues.length} of ${
-								getAllOptions().length
-							} options selected. ${placeholder}`}
-							className={cn(
-								"flex p-1 rounded-md border min-h-10 h-auto items-center justify-between bg-inherit hover:bg-inherit [&_svg]:pointer-events-auto",
-								autoSize ? "w-auto" : "w-full",
-								responsiveSettings.compactMode && "min-h-8 text-sm",
-								screenSize === "mobile" && "min-h-12 text-base",
-								disabled && "opacity-50 cursor-not-allowed",
-								className
-							)}
-							style={{
-								...widthConstraints,
-								maxWidth: `min(${widthConstraints.maxWidth}, 100%)`,
-							}}
-						>
-							{selectedValues.length > 0 ? (
-								<div className="flex justify-between items-center w-full">
-									<div
-										className={cn(
-											"flex items-center gap-1",
-											singleLine
-												? "overflow-x-auto multiselect-singleline-scroll"
-												: "flex-wrap",
-											responsiveSettings.compactMode && "gap-0.5"
-										)}
-										style={
-											singleLine
-												? {
-														paddingBottom: "4px",
-												  }
-												: {}
-										}>
-										{selectedValues
-											.slice(0, responsiveSettings.maxCount)
-											.map((value) => {
-												const option = getOptionByValue(value);
-												const IconComponent = option?.icon;
-												const customStyle = option?.style;
-												if (!option) {
-													return null;
-												}
-												const badgeStyle: React.CSSProperties = {
-													animationDuration: `${animation}s`,
-													...(customStyle?.badgeColor && {
-														backgroundColor: customStyle.badgeColor,
-													}),
-													...(customStyle?.gradient && {
-														background: customStyle.gradient,
-														color: "white",
-													}),
-												};
-												return (
-													<Badge
-														key={value}
-														className={cn(
-															getBadgeAnimationClass(),
-															multiSelectVariants({ variant }),
-															customStyle?.gradient &&
-																"text-white border-transparent",
-															responsiveSettings.compactMode &&
-																"text-xs px-1.5 py-0.5",
-															screenSize === "mobile" &&
-																"max-w-[120px] truncate",
-															singleLine && "flex-shrink-0 whitespace-nowrap",
-															"[&>svg]:pointer-events-auto"
-														)}
-														style={{
-															...badgeStyle,
-															animationDuration: `${
-																animationConfig?.duration || animation
-															}s`,
-															animationDelay: `${animationConfig?.delay || 0}s`,
-														}}>
-														{IconComponent && !responsiveSettings.hideIcons && (
-															<IconComponent
-																className={cn(
-																	"h-4 w-4 mr-2",
-																	responsiveSettings.compactMode &&
-																		"h-3 w-3 mr-1",
-																	customStyle?.iconColor && "text-current"
-																)}
-																{...(customStyle?.iconColor && {
-																	style: { color: customStyle.iconColor },
-																})}
-															/>
-														)}
-														<span
-															className={cn(
-																screenSize === "mobile" && "truncate"
-															)}>
-															{option.label}
-														</span>
-														<div
-															role="button"
-															tabIndex={0}
-															onClick={(event) => {
-																event.stopPropagation();
-																toggleOption(value);
-															}}
-															onKeyDown={(event) => {
-																if (
-																	event.key === "Enter" ||
-																	event.key === " "
-																) {
-																	event.preventDefault();
-																	event.stopPropagation();
-																	toggleOption(value);
-																}
-															}}
-															aria-label={`Remove ${option.label} from selection`}
-															className="ml-2 h-4 w-4 cursor-pointer hover:bg-white/20 rounded-sm p-0.5 -m-0.5 focus:outline-none focus:ring-1 focus:ring-white/50">
-															<XCircle
-																className={cn(
-																	"h-3 w-3",
-																	responsiveSettings.compactMode &&
-																		"h-2.5 w-2.5"
-																)}
-															/>
-														</div>
-													</Badge>
-												);
-											})
-											.filter(Boolean)}
-										{selectedValues.length > responsiveSettings.maxCount && (
-											<Badge
-												className={cn(
-													"bg-transparent text-foreground border-foreground/1 hover:bg-transparent",
-													getBadgeAnimationClass(),
-													multiSelectVariants({ variant }),
-													responsiveSettings.compactMode &&
-														"text-xs px-1.5 py-0.5",
-													singleLine && "flex-shrink-0 whitespace-nowrap",
-													"[&>svg]:pointer-events-auto"
-												)}
-												style={{
-													animationDuration: `${
-														animationConfig?.duration || animation
-													}s`,
-													animationDelay: `${animationConfig?.delay || 0}s`,
-												}}>
-												{`+ ${
-													selectedValues.length - responsiveSettings.maxCount
-												} more`}
-												<XCircle
-													className={cn(
-														"ml-2 h-4 w-4 cursor-pointer",
-														responsiveSettings.compactMode && "ml-1 h-3 w-3"
-													)}
-													onClick={(event) => {
-														event.stopPropagation();
-														clearExtraOptions();
-													}}
-												/>
-											</Badge>
-										)}
-									</div>
-									<div className="flex items-center justify-between">
-										<div
-											role="button"
-											tabIndex={0}
-											onClick={(event) => {
-												event.stopPropagation();
-												handleClear();
-											}}
-											onKeyDown={(event) => {
-												if (event.key === "Enter" || event.key === " ") {
-													event.preventDefault();
-													event.stopPropagation();
-													handleClear();
-												}
-											}}
-											aria-label={`Clear all ${selectedValues.length} selected options`}
-											className="flex items-center justify-center h-4 w-4 mx-2 cursor-pointer text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 rounded-sm">
-											<XIcon className="h-4 w-4" />
-										</div>
-										<Separator
-											orientation="vertical"
-											className="flex min-h-6 h-full"
-										/>
-										<ChevronDown
-											className="h-4 mx-2 cursor-pointer text-muted-foreground"
-											aria-hidden="true"
-										/>
-									</div>
-								</div>
-							) : (
-								<div className="flex items-center justify-between w-full mx-auto">
-									<span className="text-sm text-muted-foreground mx-3">
-										{placeholder}
-									</span>
-									<ChevronDown className="h-4 cursor-pointer text-muted-foreground mx-2" />
-								</div>
-							)}
-						</Button>
-					</PopoverTrigger>
-					<PopoverContent
-						id={listboxId}
-						role="listbox"
-						aria-multiselectable="true"
-						aria-label="Available options"
-						className={cn(
-							"w-auto p-0 bg-background",
-							getPopoverAnimationClass(),
-							screenSize === "mobile" && "w-[85vw] max-w-[280px]",
-							screenSize === "tablet" && "w-[70vw] max-w-md",
-							screenSize === "desktop" && "min-w-[300px]",
-							popoverClassName
-						)}
-						style={{
-							animationDuration: `${animationConfig?.duration || animation}s`,
-							animationDelay: `${animationConfig?.delay || 0}s`,
-							maxWidth: `min(${widthConstraints.maxWidth}, 85vw)`,
-							maxHeight: screenSize === "mobile" ? "70vh" : "60vh",
-							touchAction: "manipulation",
-						}}
-						align="start"
-						onEscapeKeyDown={() => setIsPopoverOpen(false)}
-					>
-						<Command>
-							{searchable && (
-								<CommandInput
-									placeholder="Buscar opciones..."
-									onKeyDown={handleInputKeyDown}
-									value={searchValue}
-									onValueChange={setSearchValue}
-									aria-label="Buscar a través de las opciones disponibles"
-									aria-describedby={`${multiSelectId}-search-help`}
-								/>
-							)}
-							{searchable && (
-								<div id={`${multiSelectId}-search-help`} className="sr-only">
-									Escribe para filtrar opciones. Use las flechas para navegar los resultados.
-								</div>
-							)}
-							<CommandList
-								className={cn(
-									"max-h-[40vh] overflow-y-auto multiselect-scrollbar",
-									screenSize === "mobile" && "max-h-[50vh]",
-									"overscroll-behavior-y-contain"
-								)}
-							>
-								<CommandEmpty>
-									{emptyIndicator || "No se encontraron resultados."}
-								</CommandEmpty>{" "}
-								{!hideSelectAll && !searchValue && (
-									<CommandGroup>
-										<CommandItem
-											key="all"
-											role="option"
-											onSelect={toggleAll}
-											aria-selected={
-												selectedValues.length === getAllOptions().filter((opt) => !opt.disabled).length
-											}
-											className="cursor-pointer"
-											aria-label={`Seleccionar todas las ${getAllOptions().length} opciones`}
-										>
-											<div
-												className={cn(
-													"mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-													selectedValues.length ===
-														getAllOptions().filter((opt) => !opt.disabled).length
-														? "bg-primary"
-														: "opacity-50 [&_svg]:invisible"
-												)}
-												aria-hidden="true">
-												<CheckIcon className="h-4 w-4 text-primary-foreground" />
-											</div>
-											<span>
-												Seleccionar todas
-												{getAllOptions().length > 20 ? ` - ${getAllOptions().length} opciones` : ""}
-											</span>
-										</CommandItem>
-									</CommandGroup>
-								)}
-								{isGroupedOptions(filteredOptions) ? (
-									filteredOptions.map((group) => (
-										<CommandGroup key={group.heading} heading={group.heading}>
-											{group.options.map((option) => {
-												const isSelected = selectedValues.includes(option.value);
-												return (
-													<CommandItem
-														key={option.value}
-														onSelect={() => toggleOption(option.value)}
-														role="option"
-														aria-selected={isSelected}
-														aria-disabled={option.disabled}
-														aria-label={`${option.label}${
-															isSelected ? ", selected" : ", not selected"
-														}${option.disabled ? ", disabled" : ""}`}
-														className={cn(
-															"cursor-pointer",
-															option.disabled && "opacity-50 cursor-not-allowed"
-														)}
-														disabled={option.disabled}>
-														<div
-															className={cn(
-																"mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-																isSelected
-																	? "bg-primary"
-																	: "opacity-50 [&_svg]:invisible"
-															)}
-															aria-hidden="true">
-															<CheckIcon className="h-4 w-4 text-primary-foreground" />
-														</div>
-														{option.icon && (
-															<option.icon
-																className="mr-2 h-4 w-4 text-muted-foreground"
-																aria-hidden="true"
-															/>
-														)}
-														<span>{option.label}</span>
-													</CommandItem>
-												);
-											})}
-										</CommandGroup>
-									))
-								) : (
-									<CommandGroup>
-										{filteredOptions.map((option) => {
-											const isSelected = selectedValues.includes(option.value);
-											return (
-												<CommandItem
-													key={option.value}
-													onSelect={() => toggleOption(option.value)}
-													role="option"
-													aria-selected={isSelected}
-													disabled={option.disabled}
-													aria-disabled={option.disabled}
-													aria-label={`${option.label}${isSelected ? ", selected" : ", not selected"}${option.disabled ? ", disabled" : ""}`}
-													className={cn(
-														"cursor-pointer",
-														option.disabled && "opacity-50 cursor-not-allowed"
-													)}
-												>
-													<div
-														className={cn(
-															"mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-															isSelected
-																? "bg-primary"
-																: "opacity-50 [&_svg]:invisible"
-														)}
-														aria-hidden="true">
-														<CheckIcon className="h-4 w-4 text-primary-foreground" />
-													</div>
-													{option.icon && (
-														<option.icon
-															className="mr-2 h-4 w-4 text-muted-foreground"
-															aria-hidden="true"
-														/>
-													)}
-													<span>{option.label}</span>
-												</CommandItem>
-											);
-										})}
-									</CommandGroup>
-								)}
-								<CommandSeparator />
-								<CommandGroup>
-									<div className="flex items-center justify-between">
-										{selectedValues.length > 0 && (
-											<>
-												<CommandItem
-													onSelect={handleClear}
-													className="flex-1 justify-center cursor-pointer">
-													Limpiar
-												</CommandItem>
-												<Separator
-													orientation="vertical"
-													className="flex min-h-6 h-full"
-												/>
-											</>
-										)}
-										<CommandItem
-											onSelect={() => setIsPopoverOpen(false)}
-											className="flex-1 justify-center cursor-pointer max-w-full">
-											Cerrar
-										</CommandItem>
-									</div>
-								</CommandGroup>
-							</CommandList>
-						</Command>
-					</PopoverContent>
-					{animation > 0 && selectedValues.length > 0 && (
-						<WandSparkles
-							className={cn(
-								"cursor-pointer my-2 text-foreground bg-background w-3 h-3",
-								isAnimating ? "" : "text-muted-foreground"
-							)}
-							onClick={() => setIsAnimating(!isAnimating)}
-						/>
-					)}
-				</Popover>
-			</>
-		);
-	}
+    return (
+      <Popover open={open} modal={modalPopover} onOpenChange={setOpen}>
+        <span className="sr-only" aria-live="polite" aria-atomic="true">
+          {announcement}
+        </span>
+        <PopoverAnchor asChild>
+          {/* Zona de clic del campo entero (el combobox real es el botón del
+              chevron): un div con onClick y sin rol, para que no haya control
+              dentro de control. El teclado entra por el botón. */}
+          <div
+            className={cn(fieldClass, className)}
+            data-slot="multi-select"
+            data-state={open ? "open" : "closed"}
+            onPointerDown={() => {
+              openAtPointerDown.current = open;
+            }}
+            onClick={() => {
+              if (disabled || openAtPointerDown.current) return;
+              setOpen(true);
+            }}
+          >
+            {selected.length === 0 ? (
+              <span className="min-w-0 flex-1 truncate px-2 text-muted-foreground">{placeholder}</span>
+            ) : (
+              <>
+                <span id={selectionId} className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
+                  {visible.map((option) => (
+                    <SelectedChip
+                      key={option.value}
+                      label={option.label}
+                      disabled={disabled}
+                      onRemove={() => toggle(option.value)}
+                    />
+                  ))}
+                  {hidden.length > 0 && (
+                    <span
+                      title={hidden.join(", ")}
+                      className="inline-flex h-6 items-center rounded-full border border-dashed border-border px-2 text-xs font-medium text-muted-foreground"
+                    >
+                      +{hidden.length}
+                    </span>
+                  )}
+                </span>
+                {!disabled && (
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    aria-label={`Quitar ${plural(selected.length, "seleccionado", "seleccionados")}`}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      clear();
+                    }}
+                    onPointerDown={(event) => event.stopPropagation()}
+                    className="grid size-6 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
+                  >
+                    <X className="size-3.5" aria-hidden />
+                  </button>
+                )}
+                <span aria-hidden className="h-4 w-px shrink-0 bg-border" />
+              </>
+            )}
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                aria-label={labelled ? undefined : placeholder}
+                {...props}
+                ref={buttonRef}
+                role="combobox"
+                disabled={disabled}
+                aria-haspopup="listbox"
+                aria-expanded={open}
+                aria-controls={open ? listboxId : undefined}
+                aria-describedby={selected.length > 0 ? selectionId : undefined}
+                onClick={(event) => {
+                  // Radix conmuta desde el Trigger; el div de fuera no debe volver a hacerlo.
+                  event.stopPropagation();
+                  props.onClick?.(event);
+                }}
+                className="grid h-7 w-8 shrink-0 place-items-center rounded-sm text-muted-foreground outline-none"
+              >
+                <ChevronDown
+                  aria-hidden
+                  className={cn("size-4 transition-transform", open && "rotate-180")}
+                />
+              </button>
+            </PopoverTrigger>
+          </div>
+        </PopoverAnchor>
+        <PopoverContent
+          id={listboxId}
+          aria-label={props["aria-label"] ?? placeholder}
+          align="start"
+          className={cn("w-[var(--radix-popover-trigger-width)] min-w-56 rounded-2xl p-0", popoverClassName)}
+          onEscapeKeyDown={() => setOpen(false)}
+        >
+          <Command shouldFilter={false}>
+            {searchable && (
+              <CommandInput
+                placeholder="Buscar…"
+                value={search}
+                onValueChange={setSearch}
+                onKeyDown={onSearchKeyDown}
+                aria-label="Buscar entre las opciones"
+              />
+            )}
+            <CommandList className="max-h-[40vh] overscroll-contain p-1" aria-multiselectable="true">
+              <CommandEmpty>{emptyIndicator ?? "No se encontraron resultados."}</CommandEmpty>
+              {!hideSelectAll && search === "" && enabledValues.length > 0 && (
+                <>
+                  <CommandGroup>
+                    <CommandItem
+                      value="__all__"
+                      onSelect={toggleAll}
+                      aria-checked={allChosen}
+                      className="cursor-pointer gap-2.5 rounded-lg text-muted-foreground"
+                    >
+                      <CheckTile checked={allChosen} />
+                      Seleccionar todas
+                      {enabledValues.length > 20 ? ` · ${String(enabledValues.length)}` : ""}
+                    </CommandItem>
+                  </CommandGroup>
+                  <CommandSeparator />
+                </>
+              )}
+              {isGrouped(filtered) ? (
+                filtered.map((group) => (
+                  <CommandGroup key={group.heading} heading={group.heading}>
+                    {group.options.map(renderItem)}
+                  </CommandGroup>
+                ))
+              ) : (
+                <CommandGroup>{filtered.map(renderItem)}</CommandGroup>
+              )}
+            </CommandList>
+            <div className="grid grid-cols-2 border-t border-border">
+              <button
+                type="button"
+                disabled={selected.length === 0}
+                onClick={clear}
+                className="h-9 border-r border-border text-sm font-medium transition-colors hover:bg-accent disabled:text-muted-foreground disabled:hover:bg-transparent"
+              >
+                Limpiar
+              </button>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="h-9 text-sm font-medium transition-colors hover:bg-accent"
+              >
+                Listo
+              </button>
+            </div>
+          </Command>
+        </PopoverContent>
+      </Popover>
+    );
+  },
 );
 
 MultiSelect.displayName = "MultiSelect";

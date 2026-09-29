@@ -1,5 +1,6 @@
 "use client";
 
+import { HSM_COST_NOTE } from "@/core/lib/hsm-copy";
 import { CircleDollarSign, TriangleAlert } from "lucide-react";
 import { Callout } from "@/shared/components/ui/callout";
 import { Input } from "@/shared/components/ui/input";
@@ -190,13 +191,13 @@ export function HsmTemplatePicker({
 
       {cost !== null && (
         <Callout tone={cost.category === "marketing" ? "warn" : "info"} icon={CircleDollarSign}>
-          Solo se cobra la que Meta entregue. Como mucho, {recipients} × {formatUsd(cost.unit_usd, 4)}{" "}
+          {HSM_COST_NOTE} Como mucho, {recipients} × {formatUsd(cost.unit_usd, 4)}{" "}
           ≈ <strong>{formatUsd(cost.total_usd)}</strong>
           {cost.category === "marketing" && (
             <>
               {" "}
               — es una plantilla de <strong>marketing</strong>, unas 25 veces más cara que una
-              utility.
+              de utilidad.
             </>
           )}
         </Callout>

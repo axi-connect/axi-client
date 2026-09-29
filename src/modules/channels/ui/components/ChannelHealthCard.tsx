@@ -1,5 +1,6 @@
 "use client";
 
+import { HSM_COST_NOTE, HSM_WINDOW_RULE } from "@/core/lib/hsm-copy";
 import { Clock, Info, TriangleAlert } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
@@ -145,11 +146,9 @@ export function ChannelHealthCard({
         <div className="flex gap-3 rounded-md border border-border bg-muted/40 p-3.5">
           <Clock aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
           <div className="space-y-1">
-            <p className="text-sm font-semibold">La ventana de 24 horas</p>
+            <p className="text-sm font-semibold">La ventana de 24 h</p>
             <p className="text-sm text-muted-foreground">
-              Cuando alguien te escribe puedes responderle libremente durante 24 horas. Pasado ese
-              tiempo, para retomar la conversación hay que usar una plantilla aprobada por Meta, y
-              esos mensajes sí tienen costo.
+              {HSM_WINDOW_RULE} {HSM_COST_NOTE}
             </p>
             {/* Se cuenta por conversación y el backend no expone un agregado: por
                 eso esto es una explicación y NO una métrica. Cualquier número

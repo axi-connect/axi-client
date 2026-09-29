@@ -1,3 +1,5 @@
+import { HSM_WINDOW_REASON_NO_TEMPLATE } from "@/core/lib/hsm-copy";
+
 /**
  * Por qué NO se pudo escribirle a un contacto por su canal: las razones de la
  * RUTA (`RouteUnavailableReason` del servidor más `unsupported_content`), que
@@ -13,8 +15,7 @@ export const ROUTE_SKIP_REASON_LABELS = {
   no_contact_identity: "El contacto no tiene número en ese canal",
   unsupported_channel_kind: "El canal del contacto no admite este envío",
   unsupported_content: "El canal del contacto no permite mandar archivos",
-  outside_service_window_no_hsm:
-    "Fuera de la ventana de 24 h y sin plantilla aprobada",
+  outside_service_window_no_hsm: HSM_WINDOW_REASON_NO_TEMPLATE,
 } as const;
 
 export type RouteSkipReason = keyof typeof ROUTE_SKIP_REASON_LABELS;

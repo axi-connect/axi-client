@@ -1,4 +1,5 @@
 import {
+  BadgeCheck,
   BadgeDollarSign,
   BellRing,
   Bot,
@@ -63,6 +64,7 @@ const NAV_ICONS: Record<string, LucideIcon> = {
   // este nombre; sin la entrada el ítem del sidebar caería a `Circle`.
   phone: Phone,
   plug: Plug,
+  "badge-check": BadgeCheck,
   puzzle: Puzzle,
   // Facturación de la licencia (slice billing). El seeder del backend lo pide
   // por este nombre; sin la entrada el ítem del sidebar caería a `Circle`.

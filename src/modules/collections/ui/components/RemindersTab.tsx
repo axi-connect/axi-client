@@ -1,5 +1,6 @@
 "use client";
 
+import { HSM_WINDOW_RULE } from "@/core/lib/hsm-copy";
 import {
   Alert,
   AlertDescription,
@@ -262,9 +263,9 @@ export function RemindersTab() {
               <AlertTitle>No hay plantilla aprobada para la mora</AlertTitle>
               <AlertDescription>
                 <span>
-                  Fuera de la ventana de 24 horas de WhatsApp solo pasa una
-                  plantilla que Meta haya aprobado, y quien lleva días sin
-                  escribir es justo el que hay que perseguir: sin ella, ese
+                  Pasadas las 24 h desde el último mensaje del cliente, por
+                  WhatsApp solo sale una plantilla de Meta, y quien lleva días
+                  sin escribir es justo el que hay que perseguir: sin ella, ese
                   aviso no sale.
                 </span>
                 <Button
@@ -292,7 +293,7 @@ export function RemindersTab() {
         <Card title="Por dónde">
           <SettingRow
             label="WhatsApp"
-            hint="Por el canal del pedido; fuera de las 24 h, con la plantilla aprobada"
+            hint="Por el canal del pedido; pasadas las 24 h, con la plantilla de Meta"
             control={
               <Switch
                 size="lg"
@@ -466,15 +467,15 @@ function TemplateEditor({
           </div>
         </Card>
 
-        <Card title="Fuera de la ventana de 24 horas">
+        <Card title="Pasadas las 24 h">
           <SettingRow
-            label="Plantilla aprobada de Meta"
+            label="Plantilla de Meta"
             hint="El nombre exacto con el que Meta la aprobó"
             control={
               <Input
                 value={hsm?.name ?? ""}
                 placeholder="cobro_recordatorio"
-                aria-label="Nombre de la plantilla aprobada de Meta"
+                aria-label="Nombre de la plantilla de Meta"
                 onChange={(event) => patchHsm({ name: event.target.value })}
                 className="h-9 w-full sm:w-[220px]"
               />
@@ -485,16 +486,14 @@ function TemplateEditor({
             control={
               <Input
                 value={hsm?.language ?? "es"}
-                aria-label="Idioma de la plantilla aprobada"
+                aria-label="Idioma de la plantilla de Meta"
                 onChange={(event) => patchHsm({ language: event.target.value })}
                 className="h-9 w-20"
               />
             }
           />
           <Note>
-            WhatsApp solo deja escribir libremente durante 24 horas desde el
-            último mensaje del cliente. Pasadas esas horas sale esta plantilla;
-            sin ella, el aviso no sale.
+            {HSM_WINDOW_RULE} Pasadas, sale esta; sin ella, el aviso no sale.
           </Note>
         </Card>
 
@@ -548,7 +547,7 @@ function TemplateEditor({
               className="mt-0.5 size-3.5 shrink-0"
             />
             <span>
-              Fuera de la ventana de 24 h sale{" "}
+              Pasadas las 24 h sale{" "}
               <b className="font-medium text-foreground">{hsm.name}</b>, y su
               texto lo fija Meta: lo de arriba no se le aplica.
             </span>

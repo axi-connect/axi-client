@@ -1,5 +1,6 @@
 "use client"
 
+import { HSM_COST_NOTE, META_TEMPLATES_HREF } from "@/core/lib/hsm-copy"
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react"
 import Link from "next/link"
 import { ChevronLeft, FileText, LayoutTemplate, Loader2, MessageSquareText, MousePointerClick, SendHorizonal, Sparkles, Zap } from "lucide-react"
@@ -20,7 +21,7 @@ const GROUP_TITLES: Record<QuickActionType, string> = {
   canned_response: "Respuestas rápidas",
   media_resource: "Recursos",
   interactive: "Interactivos",
-  whatsapp_template: "Plantillas de WhatsApp",
+  whatsapp_template: "Plantillas de Meta",
 }
 
 const GROUP_ORDER: QuickActionType[] = ["canned_response", "media_resource", "interactive", "whatsapp_template"]
@@ -180,9 +181,12 @@ function QuickActionsPanel({
         ) : (
           <CommandEmpty>
             <div className="flex flex-col items-center gap-1 py-2 text-sm text-muted-foreground">
-              {mode === "templates" ? "No hay plantillas aprobadas configuradas" : "Aún no hay acciones rápidas"}
-              <Link href="/settings/quick-actions" className="font-medium text-foreground underline underline-offset-2">
-                Configúralas en Ajustes
+              {mode === "templates" ? "No hay plantillas de Meta como acción rápida" : "Aún no hay acciones rápidas"}
+              <Link
+                href={mode === "templates" ? META_TEMPLATES_HREF : "/settings/quick-actions"}
+                className="font-medium text-foreground underline underline-offset-2"
+              >
+                {mode === "templates" ? "Ver tus plantillas de Meta" : "Configúralas en Ajustes"}
               </Link>
             </div>
           </CommandEmpty>
@@ -318,7 +322,7 @@ function ActionPreview({ action }: { action: QuickActionDTO }) {
         </div>
         <p className="flex items-start gap-2 rounded-2xl bg-muted px-3 py-2 text-xs leading-relaxed text-foreground/80">
           <Sparkles className="mt-0.5 size-3.5 shrink-0 text-accent-violet" aria-hidden />
-          El texto de la plantilla lo guarda Meta; aquí se ve su nombre y su idioma. Meta cobra cada plantilla enviada.
+          El texto de la plantilla lo guarda Meta; aquí se ve su nombre y su idioma. {HSM_COST_NOTE}{" "}
           Cuando el cliente responda, la ventana se abre y puedes escribir libremente.
         </p>
       </div>

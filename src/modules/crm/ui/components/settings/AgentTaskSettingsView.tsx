@@ -1,5 +1,6 @@
 "use client";
 
+import { META_TEMPLATES_HREF } from "@/core/lib/hsm-copy";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Info, PauseCircle, Power, Sparkles } from "lucide-react";
@@ -334,7 +335,7 @@ export function AgentTaskSettingsView() {
               responde, retoma el objetivo en ese mismo chat; si no, la tarea cierra como{" "}
               <strong className="whitespace-nowrap text-foreground">«Enviado · sin respuesta»</strong>.{" "}
               <Link
-                href="/marketing/settings/meta-templates"
+                href={META_TEMPLATES_HREF}
                 className="inline-flex min-h-6 items-center gap-1 font-medium text-foreground underline-offset-4 hover:underline"
               >
                 Gestionar plantillas <ArrowRight aria-hidden className="size-3" />

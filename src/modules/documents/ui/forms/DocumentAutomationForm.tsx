@@ -1,5 +1,6 @@
 "use client";
 
+import { HSM_WINDOW_RULE } from "@/core/lib/hsm-copy";
 import { useMemo } from "react";
 import { useForm, useWatch, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -340,10 +341,9 @@ function SendTile({ control, set }: { control: Control<Values>; set: Setter }) {
 
 function HsmTile({ control }: { control: Control<Values> }) {
   return (
-    <BentoTile label="Plantilla de respaldo">
+    <BentoTile label="Plantilla de Meta pasadas las 24 h">
       <p className="text-[12.5px] leading-relaxed text-muted-foreground">
-        WhatsApp solo deja escribir libremente durante 24 h desde el último
-        mensaje del cliente. Pasadas, sale esta plantilla aprobada de Meta y{" "}
+        {HSM_WINDOW_RULE} Pasadas, sale esta y{" "}
         <b className="font-medium whitespace-nowrap text-foreground">
           el PDF cuando responda
         </b>

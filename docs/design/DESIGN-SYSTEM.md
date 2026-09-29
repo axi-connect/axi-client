@@ -423,7 +423,7 @@ Los primitivos viven en `shared/components/ui/` (shadcn) y los features en `shar
 | Aviso de que algo pasó (guardado, error, evento) | `useAlert().showAlert` — o `notify` de `@/core/notifications` para una promesa (§9.4) |
 | Confirmación (una decisión que bloquea) | `useAlert().showModal` |
 | Estado de la vista que dura (solo lectura, pausado, error al cargar) | `Alert` en línea (`shared/components/ui/alert.tsx`) |
-| Selección múltiple | `MultiSelect` |
+| Selección múltiple | `MultiSelect` (`features/multi-select`): un campo con el aspecto de `Input`; fichas neutras de 24 px con la «x» como botón real de 16 px, cruz centrada por `grid` y zona táctil de 24 px por `::before`; el combobox es el botón del chevron, hermano de las fichas (nunca un control dentro de otro `button`); casillas del listado en tinta; el consumidor le da el nombre con `aria-label`/`<label htmlFor>` |
 | Avatar / logo con fallback | `Avatar` (`shared/components/ui/avatar.tsx`) — inicial sobre `bg-muted` si no hay URL o falla la carga |
 | Icono de canal por `kind` (WhatsApp/Instagram/Messenger) | `ChannelKindIcon` (`channels/public`) — única implementación del mapa kind → logo |
 | Fechas estilo mensajería (lista, separadores de día, hora de burbuja) | `core/lib/day-label.ts` (`formatConversationTime`, `formatDayLabel`, `formatClockTime`) |

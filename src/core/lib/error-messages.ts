@@ -1,3 +1,4 @@
+import { HSM_WINDOW_REASON } from "@/core/lib/hsm-copy";
 import type { FieldValues, Path, UseFormReturn } from "react-hook-form";
 import { API_ERROR_CODES, isHttpError } from "@/core/api/problem";
 
@@ -24,7 +25,7 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   [API_ERROR_CODES.supportSessionEnded]: "La sesión de soporte terminó",
   [API_ERROR_CODES.capabilityNotGranted]: "Tu plan no incluye esta función. Puedes ampliarlo desde Facturación",
   [API_ERROR_CODES.usageLimitExceeded]: "Alcanzaste el límite de uso del plan",
-  [API_ERROR_CODES.outsideServiceWindow]: "Fuera de la ventana de 24 h de WhatsApp: se requiere plantilla",
+  [API_ERROR_CODES.outsideServiceWindow]: HSM_WINDOW_REASON,
   // Envío de documentos (F9 Cobros). Dicen qué hacer, no qué falló.
   [API_ERROR_CODES.documentContactWithoutEmail]:
     "El contacto no tiene correo en su ficha. Añádelo allí o usa otro correo solo esta vez",
@@ -264,7 +265,7 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   "marketing/automation_not_found": "La regla ya no existe",
   "marketing/automation_name_taken": "Ya existe una regla con ese nombre",
   "marketing/automation_hsm_required":
-    "Esta regla escribe fuera de las 24 h: elige una plantilla de Meta aprobada para poder encenderla",
+    "Esta regla escribe pasadas las 24 h: elige una plantilla de Meta aprobada para poder encenderla",
   "marketing/promotion_not_found": "La promoción ya no existe",
   "marketing/promotion_name_taken": "Ya existe una promoción con ese nombre",
   "marketing/promotion_shared_code_taken": "Ese código compartido ya está en uso",

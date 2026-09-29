@@ -5,6 +5,7 @@ import { ChevronDown, Download, Pencil, Plus, Trash2, Users } from "lucide-react
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { exportContactsUrl } from "@/modules/crm/infrastructure/services/imports-service.adapter";
 import { cn } from "@/core/lib/utils";
+import { plural } from "@/core/lib/plural";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { Button } from "@/shared/components/ui/button";
@@ -21,6 +22,7 @@ import {
 } from "@/modules/crm/domain/segment";
 import { AudienceFilterBuilder } from "@/modules/crm/ui/components/segments/AudienceFilterBuilder";
 import { BulkFollowUpButton } from "@/modules/crm/ui/components/BulkFollowUpButton";
+import { SendTemplateButton } from "@/modules/marketing/public";
 import { EnrollInSequenceButton } from "@/modules/crm/ui/components/EnrollInSequenceButton";
 import {
   createSegment,
@@ -49,10 +51,12 @@ function SegmentBuilder({
   const [description, setDescription] = useState(segment?.description ?? "");
   const [filters, setFilters] = useState<SegmentFilters>(initial);
   const [saving, setSaving] = useState(false);
+  const [nameMissing, setNameMissing] = useState(false);
 
   const handleSave = async () => {
     const trimmed = name.trim();
     if (!trimmed) {
+      setNameMissing(true);
       showAlert({ tone: "error", title: "Ponle un nombre al segmento" });
       return;
     }
@@ -75,37 +79,56 @@ function SegmentBuilder({
   };
 
   return (
-    <div className="@container space-y-4 rounded-3xl border border-border bg-card p-5">
-      <h2 className="truncate font-heading text-base font-bold">
-        {segment !== null ? `Editar «${segment.name}»` : "Nuevo segmento"}
-      </h2>
-
-      <div className="grid gap-3">
-        <div className="space-y-1.5">
-          <label htmlFor="seg-name" className="text-xs font-medium text-muted-foreground">Nombre</label>
-          <Input id="seg-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Leads calientes" />
-        </div>
-        <div className="space-y-1.5">
-          <label htmlFor="seg-desc" className="text-xs font-medium text-muted-foreground">Descripción (opcional)</label>
-          <Input id="seg-desc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Lead con score alto listo para llamar" />
-        </div>
-
+    <form
+      aria-label={segment !== null ? `Editar «${segment.name}»` : "Nuevo segmento"}
+      className="flex min-w-0 flex-col rounded-3xl border border-border bg-card"
+      onSubmit={(e) => {
+        e.preventDefault();
+        void handleSave();
+      }}
+    >
+      <div className="flex flex-col gap-1 px-5 pt-5">
+        <h2 className="truncate font-heading text-[17px] font-bold">
+          {segment !== null ? `Editar «${segment.name}»` : "Nuevo segmento"}
+        </h2>
+        <p className="text-xs text-pretty text-muted-foreground">
+          Elige quién entra. El segmento se mantiene al día solo.
+        </p>
       </div>
 
-      <AudienceFilterBuilder
-        value={filters}
-        onChange={setFilters}
-        tags={tags}
-        idPrefix="seg"
-      />
+      <div className="flex flex-col gap-5 px-5 py-4">
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="seg-name" className="text-xs font-medium text-muted-foreground">Nombre</label>
+            <Input
+              id="seg-name"
+              value={name}
+              aria-invalid={nameMissing || undefined}
+              onChange={(e) => {
+                setName(e.target.value);
+                setNameMissing(false);
+              }}
+              placeholder="Leads calientes"
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="seg-desc" className="text-xs font-medium text-muted-foreground">
+              Descripción <span className="font-normal">· opcional</span>
+            </label>
+            <Input id="seg-desc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Score alto, listos para llamar" />
+          </div>
+        </div>
 
-      <div className="flex justify-end gap-2">
-        <Button variant="ghost" className="rounded-full" onClick={onCancel}>Cancelar</Button>
-        <Button className="rounded-full" disabled={saving} onClick={() => void handleSave()}>
+        <AudienceFilterBuilder value={filters} onChange={setFilters} tags={tags} idPrefix="seg" />
+      </div>
+
+      <div className="flex items-center justify-end gap-2 border-t border-border px-5 py-3.5">
+        <Button type="button" variant="ghost" className="rounded-full" onClick={onCancel}>Cancelar</Button>
+        <Button type="submit" className="rounded-full" disabled={saving}>
           {saving ? "Guardando…" : "Guardar segmento"}
         </Button>
       </div>
-    </div>
+    </form>
   );
 }
 
@@ -232,7 +255,7 @@ function SegmentCard({
               className="inline-flex h-7 max-w-full min-w-0 items-center gap-1 rounded-full border border-border px-3 text-xs"
             >
               <span className="shrink-0 text-muted-foreground">{chip.label}</span>
-              <span className="truncate font-medium">{chip.value}</span>
+              <span className="truncate font-medium" title={chip.value}>{chip.value}</span>
             </span>
           ))
         )}
@@ -242,6 +265,7 @@ function SegmentCard({
         {/* F4a: el segmento deja de ser solo una lista que se mira. Se
             resuelve AL PROGRAMAR: los que entren después no reciben nada de
             ese lote — para eso están las secuencias. */}
+        <SendTemplateButton audience={{ mode: "segment", segmentId: segment.id, label: `Del segmento «${segment.name}»` }} />
         <BulkFollowUpButton
           audience={{ source: "segment", segment_id: segment.id }}
           audienceLabel={`Del segmento «${segment.name}»`}
@@ -338,7 +362,7 @@ export function SegmentsManager() {
       <div className="grid min-w-0 items-start gap-4 @min-[60rem]:grid-cols-[minmax(0,1fr)_minmax(20rem,26rem)]">
         <section className="min-w-0 space-y-3" aria-label="Segmentos">
           <p className="px-1 text-xs text-muted-foreground">
-            {segments.length} {segments.length === 1 ? "segmento" : "segmentos"} · se recalculan solos cuando cambian los contactos
+            {plural(segments.length, "segmento", "segmentos")} · se recalculan solos cuando cambian los contactos
           </p>
           {segments.length === 0 ? (
             <p className="rounded-3xl border border-dashed border-border px-5 py-8 text-center text-sm text-pretty text-muted-foreground">
@@ -360,7 +384,9 @@ export function SegmentsManager() {
           )}
         </section>
 
-        <div className="min-w-0 @min-[60rem]:sticky @min-[60rem]:top-4">
+        {/* En una columna el formulario va ARRIBA de la lista: abrirlo y que
+            quede escondido bajo diez tarjetas es como se pierde un clic. */}
+        <div className={cn("min-w-0 @min-[60rem]:sticky @min-[60rem]:top-4", editing !== null && "order-first @min-[60rem]:order-none")}>
           {editing !== null ? (
             <SegmentBuilder
               key={editing === "new" ? "new" : editing.id}

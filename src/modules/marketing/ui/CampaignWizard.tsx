@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Check, Clock, MessageSquare } from "lucide-react";
 import { cn } from "@/core/lib/utils";
+import { plural } from "@/core/lib/plural";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { useAuth } from "@/shared/auth/auth.hooks";
@@ -38,6 +39,8 @@ import {
   WIZARD_STEP_LABELS,
   type AudienceEstimate,
   type CampaignDraft,
+  type PresetAudience,
+  draftFromPreset,
   type WizardStep,
 } from "@/modules/marketing/domain/campaign-draft";
 import {
@@ -65,6 +68,7 @@ import {
   type HsmTemplateDTO,
   type MessagingWindowDTO,
 } from "@/modules/marketing/domain/template-catalog";
+import { takePreset } from "@/modules/marketing/infrastructure/preset-handoff";
 import { HsmTemplatePicker } from "@/modules/marketing/ui/components/HsmTemplatePicker";
 import { renderHsmPreview } from "@/modules/marketing/domain/hsm-preview";
 import { hsmPreviewValue } from "@/modules/marketing/domain/hsm-params";
@@ -95,14 +99,32 @@ const STEP_QUESTIONS: Record<WizardStep, string> = {
  * resumen y «Cambiar», el actual abierto, y la navegación en una barra de tinta
  * pegada abajo (§9.7 y §9.5.1).
  */
-export function CampaignWizard({ resumeId = null }: { resumeId?: string | null }) {
+export function CampaignWizard({
+  resumeId = null,
+  preset = null,
+  presetKey = null,
+}: {
+  resumeId?: string | null;
+  /** F6: la audiencia ya decidida en el CRM («Enviar plantilla»). Solo sin `resumeId`. */
+  preset?: PresetAudience | null;
+  /** F6/C2: la misma audiencia, guardada en sessionStorage por ser una lista larga. */
+  presetKey?: string | null;
+}) {
   const { hasPermission } = useAuth();
   const canManage = hasPermission("marketing:manage");
   const { showAlert, showModal, closeModal } = useAlert();
   const router = useRouter();
 
   const [step, setStep] = useState<WizardStep>("audiencia");
-  const [draft, setDraft] = useState<CampaignDraft>(EMPTY_DRAFT);
+  const [draft, setDraft] = useState<CampaignDraft>(() =>
+    preset !== null && resumeId === null ? draftFromPreset(preset) : EMPTY_DRAFT,
+  );
+  // La lista larga se lee tras montar (sessionStorage no existe en el servidor).
+  useEffect(() => {
+    if (presetKey === null || resumeId !== null) return;
+    const stored = takePreset(window.sessionStorage, presetKey);
+    if (stored !== null) setDraft(draftFromPreset(stored));
+  }, [presetKey, resumeId]);
   /** Id del borrador ya creado en el backend; `null` hasta salir del paso 1. */
   const [campaignId, setCampaignId] = useState<string | null>(null);
   const [estimate, setEstimate] = useState<AudienceEstimate | null>(null);
@@ -370,7 +392,9 @@ export function CampaignWizard({ resumeId = null }: { resumeId?: string | null }
           ? selectedSegment
             ? `Segmento «${selectedSegment.name}»`
             : "Segmento sin elegir"
-          : "Filtros a medida") +
+          : draft.audienceMode === "contacts" || draft.audienceMode === "import"
+            ? (draft.audienceLabel ?? "Lista del CRM")
+            : "Filtros a medida") +
       (estimate ? ` · ≈ ${estimate.estimatedReach.toLocaleString("es-CO")} personas` : ""),
     contenido:
       [selectedTemplate ? `«${selectedTemplate.name}»` : null, selectedHsm ? `plantilla de Meta «${selectedHsm.name}»` : null]
@@ -458,7 +482,15 @@ export function CampaignWizard({ resumeId = null }: { resumeId?: string | null }
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-2">
+                  {(draft.audienceMode === "contacts" || draft.audienceMode === "import") && (
+                    <PresetAudienceCard
+                      label={draft.audienceLabel ?? "Lista del CRM"}
+                      count={draft.audienceMode === "contacts" ? (draft.filters.contact_ids?.length ?? 0) : null}
+                      onChange={() => patch({ audienceMode: "segment", filters: {}, audienceLabel: null })}
+                    />
+                  )}
+
+                  <div className={cn("flex flex-col gap-2", (draft.audienceMode === "contacts" || draft.audienceMode === "import") && "hidden")}>
                     <AudienceOption
                       checked={draft.audienceMode === "all"}
                       onSelect={() => patch({ audienceMode: "all" })}
@@ -914,6 +946,37 @@ function MessageHalf({
       </header>
       <div className="flex min-w-0 flex-col gap-3 p-4">{children}</div>
     </section>
+  );
+}
+
+/**
+ * F6: la audiencia llegó decidida desde el CRM. No se edita aquí — se
+ * cambia de fuente y punto — porque una lista de 40 ids marcados a mano no
+ * tiene un formulario razonable, y el operador ya la vio en la tabla.
+ */
+function PresetAudienceCard({
+  label,
+  count,
+  onChange,
+}: {
+  label: string;
+  count: number | null;
+  onChange: () => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-foreground/40 bg-muted/50 px-4 py-3">
+      <div className="min-w-0">
+        <span className="block text-sm font-medium">{label}</span>
+        <span className="text-muted-foreground mt-0.5 block text-xs text-pretty">
+          {count === null
+            ? "Los contactos que creó ese import, menos quienes pidieron no recibir promociones."
+            : `${plural(count, "contacto", "contactos")}, menos quienes pidieron no recibir promociones.`}
+        </span>
+      </div>
+      <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={onChange}>
+        Elegir otra audiencia
+      </Button>
+    </div>
   );
 }
 

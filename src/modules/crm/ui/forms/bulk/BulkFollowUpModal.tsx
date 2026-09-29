@@ -1,6 +1,8 @@
 "use client";
 
+import { META_TEMPLATES_HREF } from "@/core/lib/hsm-copy";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import {
   CircleDollarSign,
   Gauge,
@@ -8,10 +10,12 @@ import {
   LoaderCircle,
   Sparkles,
   TriangleAlert,
-  UserRoundX,
 } from "lucide-react";
+import { cn } from "@/core/lib/utils";
+import { plural as n } from "@/core/lib/plural";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
+import { Button } from "@/shared/components/ui/button";
 import { Callout } from "@/shared/components/ui/callout";
 import { Input } from "@/shared/components/ui/input";
 import { Modal } from "@/shared/components/ui/modal";
@@ -67,14 +71,21 @@ const DEFAULT_TZ = "America/Bogota";
 const NO_TEMPLATE = "__none__";
 const OBJECTIVE_MIN = 12;
 
+
 /**
- * «Pon al agente a trabajar con estos N contactos» (F4a).
+ * «Pon al agente a trabajar con estos N contactos» (F4a, rediseñada 2026-09-28).
  *
  * Es el flujo de F2 con el contacto sustituido por una audiencia, más las dos
- * cosas que solo existen en lote y que el mockup puso en el centro: el REPARTO
- * en el tiempo —sin él, 268 aperturas salen de golpe y Meta baja el límite del
- * número— y el recuento de a quién NO se le va a escribir, con su motivo, antes
- * de confirmar. Ese recuento sale del mismo servicio que luego aplica el job.
+ * cosas que solo existen en lote: el REPARTO en el tiempo —sin él, 268
+ * aperturas salen de golpe y Meta baja el límite del número— y el recuento de
+ * a quién NO se le va a escribir, con su motivo, antes de confirmar.
+ *
+ * Lo que cambió en el rediseño: el recuento es un bloque siempre visible
+ * («Quién recibe esto») y no un `<details>` que en el móvil no se abría; el
+ * servidor ahora distingue a quien NUNCA ha escrito (F5: se alcanza por
+ * teléfono, pero Meta exige plantilla) y la modal lo cuenta en cifras y hace
+ * la plantilla obligatoria solo para ellos; y con 0 elegibles se explica qué
+ * pasó y qué hacer en vez de ofrecer «Programar 0 seguimientos».
  */
 export function BulkFollowUpModal({
   open,
@@ -166,6 +177,9 @@ export function BulkFollowUpModal({
   }, [open, audience.source, audienceKey]);
 
   const eligible = preview?.eligible ?? 0;
+  const needsOpening = preview?.needs_opening ?? 0;
+  const counted = preview !== null && preview.within_limit;
+  const nobody = counted && eligible === 0;
   const startsAtIso = when === undefined ? "" : businessDateTimeToIso(when.date, when.time, tz);
   const finishes =
     startsAtIso === "" ? null : bulkFinishesAt(new Date(startsAtIso), perHour, eligible);
@@ -175,19 +189,29 @@ export function BulkFollowUpModal({
       ? null
       : quietHoursShift(when.date, when.time, settings.quiet_start_hour, settings.quiet_end_hour);
   const selectedTemplate = templates.find((template) => template.id === templateId);
-  const openingCost =
-    selectedTemplate === undefined ? null : bulkOpeningCost(eligible, selectedTemplate.category);
   const agentName = agents.find((agent) => agent.id === agentId)?.name ?? "El agente";
+  // La plantilla es obligatoria cuando hay quien NUNCA ha escrito: Meta no deja
+  // abrir sin una (F5). Para el resto sigue siendo opcional: solo sale si la
+  // ventana está cerrada cuando la tarea corra.
+  const templateRequired = medium !== "call" && needsOpening > 0;
+  const templateMissing = templateRequired && selectedTemplate === undefined;
+  const openingCost =
+    selectedTemplate === undefined
+      ? null
+      : {
+          atLeast: bulkOpeningCost(needsOpening, selectedTemplate.category),
+          atMost: bulkOpeningCost(eligible, selectedTemplate.category),
+        };
 
   const tooLate = when !== undefined && isInPast(when.date, when.time, tz, now);
   const canSubmit =
     !saving &&
-    preview !== null &&
-    preview.within_limit &&
+    counted &&
     eligible > 0 &&
     agentId !== "" &&
     objective.trim().length >= OBJECTIVE_MIN &&
     !tooLate &&
+    !templateMissing &&
     (templateId === NO_TEMPLATE || topic.trim().length > 0 || !usesTopic(selectedTemplate));
 
   const submit = useCallback(async () => {
@@ -216,7 +240,8 @@ export function BulkFollowUpModal({
     } catch (err) {
       showAlert({
         tone: "error",
-        title: errorMessage(err, "No se pudo programar el lote"),
+        title: "No se pudo programar el lote",
+        description: errorMessage(err, "Inténtalo de nuevo en un momento"),
       });
     } finally {
       setSaving(false);
@@ -242,167 +267,49 @@ export function BulkFollowUpModal({
       open={open}
       onOpenChange={onOpenChange}
       config={{
-        title: preview === null ? "Seguimiento en lote" : `Seguimiento para ${String(eligible)} contactos`,
+        title: counted ? `Seguimiento para ${n(eligible, "contacto", "contactos")}` : "Seguimiento en lote",
         description: audienceLabel,
-        className: "sm:max-w-2xl",
+        // UN solo scroller (auditoría B2): el diálogo es una columna flex a la
+        // altura real de la pantalla; cabecera, recuento y botones quedan
+        // fijos y solo el formulario scrollea. Sin esto el diálogo scrolleaba
+        // por fuera y el formulario por dentro, con «Programar» fuera de la
+        // pantalla a 1280×800 y en cualquier celular.
+        className: "flex max-h-[calc(100dvh-2rem)] flex-col overflow-hidden sm:max-w-2xl",
+        // El recuento va FUERA del área que scrollea: Radix enfoca el primer
+        // control al abrir y, dentro, el scroll se lo llevaba por arriba —el
+        // operador veía «Agente» y nunca a quién le iba a escribir. En el
+        // celular va compacto (tres chips) y el detalle de exclusiones baja
+        // al área que scrollea, para que el formulario tenga sitio.
+        body: counted ? <AudiencePanel preview={preview} /> : undefined,
         actions: [
           { label: "Cancelar", variant: "outline" },
           {
-            label: saving ? "Programando…" : `Programar ${String(eligible)} seguimientos`,
+            label: saving
+              ? "Programando…"
+              : eligible > 0
+                ? `Programar ${n(eligible, "seguimiento", "seguimientos")}`
+                : "Programar",
             // Quien pide no cerrar es quien cierra: el submit cierra al terminar.
             keepOpen: true,
+            disabled: !canSubmit,
             onClick: () => void submit(),
           },
         ],
       }}
     >
-      <div className="grid max-h-[65vh] gap-4 overflow-y-auto pr-1">
-        {previewError !== null && <p className="text-sm text-destructive">{previewError}</p>}
+      <div className="grid min-h-0 min-w-0 flex-1 content-start gap-4 overflow-x-hidden overflow-y-auto pr-1 axi-scroll">
+        {counted && preview.skipped.length > 0 && <ExclusionsDetails preview={preview} className="sm:hidden" />}
+        {previewError !== null && (
+          <Callout tone="warn" icon={TriangleAlert}>
+            {previewError}
+          </Callout>
+        )}
         {preview !== null && !preview.within_limit && (
           <Callout tone="warn" icon={TriangleAlert}>
             Esa audiencia tiene <strong>{preview.total}</strong> contactos y el tope de un lote son{" "}
             <strong>{preview.max}</strong>. Divídela en segmentos más pequeños: un lote que tarda
             semanas en salir es una secuencia, y eso se configura aparte.
           </Callout>
-        )}
-
-        <ExclusionsPanel preview={preview} />
-
-        <Field label="Agente">
-          <Select value={agentId || undefined} onValueChange={setAgentId}>
-            <SelectTrigger aria-label="Agente">
-              <SelectValue placeholder="Elige el agente" />
-            </SelectTrigger>
-            <SelectContent>
-              {agents.map((agent) => (
-                <SelectItem key={agent.id} value={agent.id}>
-                  <span className="flex items-center gap-2">
-                    <Sparkles aria-hidden className="size-3.5 text-accent-violet" />
-                    {agent.name}
-                  </span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
-
-        <Field label="Cómo contacta">
-          <MediumPicker value={medium} available={media} onChange={setMedium} />
-        </Field>
-
-        <Field label="Objetivo">
-          <ObjectiveField value={objective} onChange={setObjective} />
-        </Field>
-
-        <Field label="Cuándo empieza y a qué ritmo">
-          <div className="grid gap-2 rounded-xl bg-secondary/70 p-3 sm:grid-cols-3">
-            <label className="grid gap-1 text-xs text-muted-foreground">
-              Empieza
-              <Input
-                type="date"
-                value={when?.date ?? ""}
-                onChange={(e) => setWhen((prev) => ({ ...prev!, date: e.target.value }))}
-              />
-            </label>
-            <label className="grid gap-1 text-xs text-muted-foreground">
-              Hora ({tz.replace(/_/g, " ")})
-              <Input
-                type="time"
-                value={when?.time ?? ""}
-                onChange={(e) => setWhen((prev) => ({ ...prev!, time: e.target.value }))}
-              />
-            </label>
-            <label className="grid gap-1 text-xs text-muted-foreground">
-              Ritmo
-              <Select value={String(perHour)} onValueChange={(v) => setPerHour(Number(v))}>
-                <SelectTrigger aria-label="Ritmo">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {BULK_RATES.map((rate) => (
-                    <SelectItem key={rate.value} value={String(rate.value)}>
-                      {rate.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </label>
-          </div>
-          {tooLate && <p className="text-xs text-destructive">Esa hora ya pasó.</p>}
-          {finishes !== null && eligible > 0 && (
-            <p className="flex items-start gap-2 text-xs text-muted-foreground">
-              <Gauge aria-hidden className="mt-0.5 size-3.5 shrink-0 text-info" />
-              <span>
-                {eligible} contactos a {perHour} por hora: la última sale el{" "}
-                <strong className="font-medium text-foreground">
-                  {finishes.toLocaleString("es-CO", {
-                    timeZone: tz,
-                    weekday: "long",
-                    day: "numeric",
-                    month: "short",
-                    hour: "numeric",
-                    minute: "2-digit",
-                  })}
-                </strong>
-                .
-              </span>
-            </p>
-          )}
-          {cap.exceeds && (
-            <Callout tone="warn" icon={TriangleAlert}>
-              Tu cupo diario son <strong>{settings.daily_cap}</strong> tareas, así que el lote cruza a{" "}
-              <strong>{cap.days} días</strong>. El agente no se lo salta: lo que sobra sale al día
-              siguiente, no se pierde.
-            </Callout>
-          )}
-          {quiet !== null && quiet.quiet && (
-            <Callout tone="info" icon={Info}>
-              A esa hora el agente no escribe (horario silencioso {quiet.window}). Las primeras
-              saldrán a las <strong>{quiet.resumes_at.time}</strong>.
-            </Callout>
-          )}
-        </Field>
-
-        {medium !== "call" && templates.length > 0 && (
-          <Field label="Con qué abre a quien lleve más de 24 h sin escribir">
-            <Select value={templateId} onValueChange={setTemplateId}>
-              <SelectTrigger aria-label="Plantilla de apertura">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NO_TEMPLATE}>Sin plantilla · esperar a que escriban</SelectItem>
-                {templates.map((template) => (
-                  <SelectItem key={template.id} value={template.id}>
-                    {template.name} · {template.language}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {selectedTemplate !== undefined && usesTopic(selectedTemplate) && (
-              <Input
-                aria-label="Tema"
-                placeholder="el tema del que le escribes, ej. tu pedido de septiembre"
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-              />
-            )}
-            {selectedTemplate !== undefined && (
-              <Callout tone={openingCost?.category === "marketing" ? "warn" : "info"} icon={CircleDollarSign}>
-                Solo se cobra a quien la reciba de verdad: los que hayan escrito en las últimas 24 h
-                siguen por mensaje normal. Como mucho, {eligible} ×{" "}
-                {formatUsd(openingCost?.unit_usd ?? 0, 4)} ≈{" "}
-                <strong>{formatUsd(openingCost?.total_usd ?? 0)}</strong>
-                {openingCost?.category === "marketing" && (
-                  <>
-                    {" "}
-                    — es una plantilla de <strong>marketing</strong>, unas 25 veces más cara que una
-                    utility.
-                  </>
-                )}
-                .
-              </Callout>
-            )}
-          </Field>
         )}
 
         {preview === null && previewError === null && (
@@ -412,20 +319,212 @@ export function BulkFollowUpModal({
           </p>
         )}
 
-        {eligible > 0 && when !== undefined && (
-          <p className="flex items-start gap-2 rounded-xl border border-border p-3 text-sm">
-            <Sparkles aria-hidden className="mt-0.5 size-4 shrink-0 text-accent-violet" />
-            <span>
-              {bulkPromise({
-                agentName,
-                eligible,
-                medium,
-                startLabel: `${when.date} a las ${when.time}`,
-                perHour,
-              })}{" "}
-              Puedes pararlo entero mientras no haya salido.
-            </span>
-          </p>
+        {nobody && (
+          <div className="flex flex-col items-start gap-1.5 rounded-2xl border border-dashed border-border p-4">
+            <span className="font-heading text-[15px] font-bold">Nadie puede recibir este seguimiento todavía</span>
+            <p className="text-sm text-pretty text-muted-foreground">
+              {preview.skipped.some((group) => group.reason === "no_channel")
+                ? "Hay contactos sin teléfono ni WhatsApp: complétales el teléfono o importa una lista con teléfonos y vuelve a intentarlo."
+                : "Todos los contactos de esta audiencia quedan fuera por los motivos de arriba."}
+            </p>
+            <div className="mt-1.5 flex flex-wrap gap-2">
+              <Button asChild size="sm" variant="contrast" className="rounded-full">
+                <Link href="/crm/contacts">Ver contactos</Link>
+              </Button>
+              <Button asChild size="sm" variant="outline" className="rounded-full">
+                <Link href="/crm/settings/imports">Importar contactos</Link>
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {counted && !nobody && (
+          <>
+            <Field label="Agente">
+              <Select value={agentId || undefined} onValueChange={setAgentId}>
+                <SelectTrigger className="w-full" aria-label="Agente">
+                  <SelectValue placeholder="Elige el agente" />
+                </SelectTrigger>
+                <SelectContent>
+                  {agents.map((agent) => (
+                    <SelectItem key={agent.id} value={agent.id}>
+                      <span className="flex items-center gap-2">
+                        <Sparkles aria-hidden className="size-3.5 text-accent-violet" />
+                        {agent.name}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+
+            <Field label="Cómo contacta">
+              <MediumPicker value={medium} available={media} onChange={setMedium} />
+            </Field>
+
+            <Field label="Objetivo">
+              <ObjectiveField value={objective} onChange={setObjective} />
+            </Field>
+
+            <Field label="Cuándo empieza y a qué ritmo">
+              <div className="grid min-w-0 gap-2 rounded-xl bg-secondary/70 p-3 sm:grid-cols-[repeat(3,minmax(0,1fr))]">
+                <label className="grid min-w-0 gap-1 text-xs text-muted-foreground">
+                  Empieza
+                  <Input
+                    type="date"
+                    value={when?.date ?? ""}
+                    onChange={(e) => setWhen((prev) => ({ ...prev!, date: e.target.value }))}
+                  />
+                </label>
+                <label className="grid min-w-0 gap-1 text-xs text-muted-foreground">
+                  Hora · {tzCity(tz)}
+                  <Input
+                    type="time"
+                    value={when?.time ?? ""}
+                    onChange={(e) => setWhen((prev) => ({ ...prev!, time: e.target.value }))}
+                  />
+                </label>
+                <label className="grid min-w-0 gap-1 text-xs text-muted-foreground">
+                  Ritmo
+                  <Select value={String(perHour)} onValueChange={(v) => setPerHour(Number(v))}>
+                    <SelectTrigger className="w-full min-w-0" aria-label="Ritmo">
+                      {/* En el disparador solo la cifra: la pista («recomendado») vive en la lista. */}
+                      <SelectValue>{`${String(perHour)} por hora`}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {BULK_RATES.map((rate) => (
+                        <SelectItem key={rate.value} value={String(rate.value)}>
+                          {rate.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </label>
+              </div>
+              {tooLate && <p className="text-xs text-destructive">Esa hora ya pasó.</p>}
+              {finishes !== null && eligible > 0 && (
+                <p className="flex items-start gap-2 text-xs text-muted-foreground">
+                  <Gauge aria-hidden className="mt-0.5 size-3.5 shrink-0 text-info" />
+                  <span>
+                    {n(eligible, "contacto", "contactos")} a {perHour} por hora: la última sale el{" "}
+                    <strong className="font-medium text-foreground">
+                      {finishes.toLocaleString("es-CO", {
+                        timeZone: tz,
+                        weekday: "long",
+                        day: "numeric",
+                        month: "short",
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })}
+                    </strong>
+                    .
+                  </span>
+                </p>
+              )}
+              {cap.exceeds && (
+                <Callout tone="warn" icon={TriangleAlert}>
+                  Tu cupo diario son <strong>{settings.daily_cap}</strong> tareas, así que el lote cruza a{" "}
+                  <strong>{cap.days} días</strong>. El agente no se lo salta: lo que sobra sale al día
+                  siguiente, no se pierde.
+                </Callout>
+              )}
+              {quiet !== null && quiet.quiet && (
+                <Callout tone="info" icon={Info}>
+                  A esa hora el agente no escribe (horario silencioso {quiet.window}). Las primeras
+                  saldrán a las <strong>{quiet.resumes_at.time}</strong>.
+                </Callout>
+              )}
+            </Field>
+
+            {medium !== "call" && (
+              <Field
+                label={
+                  templateRequired
+                    ? "Con qué abre a quien nunca te ha escrito"
+                    : "Con qué abre a quien lleve más de 24 h sin escribir"
+                }
+                hint={templateRequired ? `obligatoria para ${String(needsOpening)}` : "opcional"}
+              >
+                {templates.length === 0 ? (
+                  <Callout tone={templateRequired ? "warn" : "info"} icon={templateRequired ? TriangleAlert : Info}>
+                    {templateRequired
+                      ? `${n(needsOpening, "contacto nunca te ha escrito", "contactos nunca te han escrito")} y no hay ninguna plantilla de Meta aprobada para abrirles. `
+                      : "No hay plantillas de Meta aprobadas: a quien lleve más de 24 h sin escribir se le esperará. "}
+                    <Link href={META_TEMPLATES_HREF} className="font-medium underline underline-offset-4">
+                      Ver plantillas de Meta
+                    </Link>
+                  </Callout>
+                ) : (
+                  <>
+                    <Select value={templateId} onValueChange={setTemplateId}>
+                      <SelectTrigger
+                        className="w-full"
+                        aria-label="Plantilla de apertura"
+                        aria-invalid={templateMissing || undefined}
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={NO_TEMPLATE} disabled={templateRequired}>
+                          {templateRequired ? "Elige una plantilla" : "Sin plantilla · esperar a que escriban"}
+                        </SelectItem>
+                        {templates.map((template) => (
+                          <SelectItem key={template.id} value={template.id}>
+                            {template.name} · {template.language}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {selectedTemplate !== undefined && usesTopic(selectedTemplate) && (
+                      <Input
+                        aria-label="Tema"
+                        placeholder="el tema del que le escribes, ej. tu pedido de septiembre"
+                        value={topic}
+                        onChange={(e) => setTopic(e.target.value)}
+                      />
+                    )}
+                    {openingCost !== null && (
+                      <Callout tone={openingCost.atMost.category === "marketing" ? "warn" : "info"} icon={CircleDollarSign}>
+                        Meta cobra solo las que entrega.{" "}
+                        {needsOpening > 0 && (
+                          <>
+                            Seguro para los {needsOpening} que nunca te han escrito:{" "}
+                            <strong>{formatUsd(openingCost.atLeast.total_usd)}</strong>.{" "}
+                          </>
+                        )}
+                        Como mucho, {eligible} × {formatUsd(openingCost.atMost.unit_usd, 4)} ≈{" "}
+                        <strong>{formatUsd(openingCost.atMost.total_usd)}</strong>
+                        {openingCost.atMost.category === "marketing" && (
+                          <>
+                            {" "}
+                            — es una plantilla de <strong>marketing</strong>, unas 25 veces más cara que una de
+                            utilidad.
+                          </>
+                        )}
+                        .
+                      </Callout>
+                    )}
+                  </>
+                )}
+              </Field>
+            )}
+
+            {eligible > 0 && when !== undefined && (
+              <p className="flex items-start gap-2 rounded-xl border border-border p-3 text-sm">
+                <Sparkles aria-hidden className="mt-0.5 size-4 shrink-0 text-accent-violet" />
+                <span>
+                  {bulkPromise({
+                    agentName,
+                    eligible,
+                    medium,
+                    startLabel: `${when.date} a las ${when.time}`,
+                    perHour,
+                  })}{" "}
+                  Puedes pararlo entero mientras no haya salido.
+                </span>
+              </p>
+            )}
+          </>
         )}
       </div>
     </Modal>
@@ -447,38 +546,101 @@ function usesTopic(template: HsmTemplateDTO | undefined): boolean {
   return template !== undefined && template.body.includes("{{2}}");
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+/** «America/Bogota» → «Bogotá» no se puede adivinar; «Bogota» sí se lee. */
+function tzCity(tz: string): string {
+  return (tz.split("/").at(-1) ?? tz).replace(/_/g, " ");
+}
+
+function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
-    <div className="grid gap-1.5">
-      <span className="text-xs font-medium">{label}</span>
+    <div className="grid min-w-0 gap-1.5">
+      <span className="text-xs font-medium">
+        {label}
+        {hint && <span className="font-normal text-muted-foreground"> · {hint}</span>}
+      </span>
       {children}
     </div>
   );
 }
 
-/** Quién queda fuera y por qué, ANTES de confirmar. Es lo que evita que el
- *  operador cuente 300 y reciba 268 sin entender la diferencia. */
-function ExclusionsPanel({ preview }: { preview: BulkPreviewDTO | null }) {
-  if (preview === null || preview.skipped.length === 0) return null;
+/**
+ * «Quién recibe esto»: siempre visible, en cifras, ANTES de confirmar. Es lo
+ * que evita que el operador cuente 300 y reciba 268 sin entender la diferencia,
+ * y lo que le dice que a 12 se les abrirá con plantilla porque nunca han escrito.
+ */
+function AudiencePanel({ preview }: { preview: BulkPreviewDTO }) {
   const out = preview.total - preview.eligible;
   return (
-    <details className="overflow-hidden rounded-xl border border-border">
-      <summary className="flex cursor-pointer flex-wrap items-center gap-2 bg-secondary/70 px-3 py-2 text-xs">
-        <UserRoundX aria-hidden className="size-3.5 text-muted-foreground" />
-        <strong className="tabular-nums">{out}</strong> de {preview.total} no van a recibir nada —
-        mira por qué
-      </summary>
-      <ul className="divide-y divide-border">
-        {preview.skipped.map((group) => (
-          <li key={group.reason} className="flex flex-wrap items-baseline gap-2 px-3 py-2 text-xs">
-            <strong className="min-w-6 text-right tabular-nums">{group.count}</strong>
-            <span>{BULK_SKIP_LABELS[group.reason]}</span>
+    <section aria-label="Quién recibe esto" className="shrink-0 overflow-hidden rounded-2xl border border-border">
+      {/* Tres cifras en fila; en el celular con etiquetas cortas, que a 375 px
+          la columna no da ni para la palabra «seguimiento». */}
+      <dl className="grid grid-cols-[repeat(3,minmax(0,1fr))] divide-x divide-border bg-secondary/70">
+        <Figure value={preview.eligible} label="recibirán seguimiento" short="reciben" />
+        <Figure value={preview.needs_opening} label="nunca te han escrito · abre con plantilla" short="abren con plantilla" />
+        <Figure value={out} label="quedan fuera" short="fuera" muted />
+      </dl>
+      {preview.skipped.length > 0 && <ExclusionsList preview={preview} className="hidden border-t border-border sm:block" />}
+    </section>
+  );
+}
+
+function Figure({ value, label, short, muted = false }: { value: number; label: string; short: string; muted?: boolean }) {
+  return (
+    // En el DOM va dt→dd (lo exige el HTML); la cifra se pinta primero por CSS.
+    <div className="flex min-w-0 flex-col-reverse justify-end gap-0.5 px-2.5 py-2 sm:px-3.5 sm:py-3">
+      <dt className="min-w-0 text-[11px] leading-snug text-pretty text-muted-foreground sm:text-[11.5px]">
+        <span className="sm:hidden">{short}</span>
+        <span className="hidden sm:inline">{label}</span>
+      </dt>
+      <dd className={cn("m-0 font-heading text-lg leading-none font-bold tabular-nums sm:text-[22px]", muted && "text-muted-foreground")}>
+        {value}
+      </dd>
+    </div>
+  );
+}
+
+/** Quién queda fuera y por qué, con su acción. Fijo desde `sm`; plegado en el celular. */
+function ExclusionsList({ preview, className }: { preview: BulkPreviewDTO; className?: string }) {
+  return (
+    <ul className={cn("divide-y divide-border", className)}>
+      {preview.skipped.map((group) => (
+        <li key={group.reason} className="grid grid-cols-[1.75rem_minmax(0,1fr)] items-start gap-x-2 gap-y-1 px-3.5 py-2 text-xs">
+          <strong className="text-right leading-6 tabular-nums">{group.count}</strong>
+          <span className="min-w-0 leading-6 text-pretty">
+            {BULK_SKIP_LABELS[group.reason]}
             {BULK_SKIP_HINTS[group.reason] !== null && (
-              <span className="text-muted-foreground">{BULK_SKIP_HINTS[group.reason]}</span>
+              <span className="text-muted-foreground"> · {BULK_SKIP_HINTS[group.reason]}</span>
             )}
-          </li>
-        ))}
-      </ul>
+          </span>
+          {group.reason === "no_channel" && (
+            <Link
+              href={group.count === 1 && group.contact_ids[0] ? `/crm/contacts/${group.contact_ids[0]}` : "/crm/contacts"}
+              className="col-start-2 inline-flex min-h-6 w-fit items-center font-medium underline underline-offset-4"
+            >
+              Completar teléfono
+            </Link>
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function ExclusionsDetails({ preview, className }: { preview: BulkPreviewDTO; className?: string }) {
+  const out = preview.total - preview.eligible;
+  // La lista solo se monta abierta: cerrada, un <details> sigue midiendo su
+  // contenido y el arnés lo lee como un desborde que no existe.
+  const [open, setOpen] = useState(false);
+  return (
+    <details
+      className={cn("rounded-2xl border border-border", className)}
+      open={open}
+      onToggle={(event) => setOpen(event.currentTarget.open)}
+    >
+      <summary className="cursor-pointer px-3.5 py-2 text-xs font-medium">
+        {n(out, "contacto queda fuera", "contactos quedan fuera")} · ver por qué
+      </summary>
+      {open && <ExclusionsList preview={preview} className="border-t border-border" />}
     </details>
   );
 }

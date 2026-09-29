@@ -2,6 +2,9 @@ import type { AudiencePreviewDTO, CampaignDTO } from "../campaign";
 import {
   blockerForStep,
   campaignEditHref,
+  draftFromPreset,
+  presetFromSearchParams,
+  presetToSearchParams,
   EMPTY_DRAFT,
   fromCampaignDTO,
   resumeStep,
@@ -268,5 +271,40 @@ describe("retomar y duplicar", () => {
 
   it("el enlace de edición escapa el id", () => {
     expect(campaignEditHref("a b")).toBe("/marketing/campaigns/new?campaign=a%20b");
+  });
+});
+
+describe("audiencia decidida en el CRM (F6)", () => {
+  it("la lista marcada viaja como audience_filters.contact_ids y nada más", () => {
+    const d = draftFromPreset({ mode: "contacts", contactIds: ["a", "b"], label: "2 contactos que marcaste" });
+    expect(d.audienceMode).toBe("contacts");
+    expect(toCreateCampaignDTO({ ...d, name: "Promo" })).toMatchObject({
+      segment_id: null,
+      audience_filters: { contact_ids: ["a", "b"] },
+    });
+    expect(blockerForStep("audiencia", { ...d, name: "Promo" })).toBeNull();
+  });
+
+  it("un import viaja como import_job_id; sin él, el paso no deja avanzar", () => {
+    const d = draftFromPreset({ mode: "import", importJobId: "job-1", label: "Del import x.csv" });
+    expect(toCreateCampaignDTO({ ...d, name: "Promo" })).toMatchObject({
+      audience_filters: { import_job_id: "job-1" },
+    });
+    expect(blockerForStep("audiencia", { ...d, name: "Promo", filters: {} })).toContain("import");
+  });
+
+  it("la URL va y vuelve sin perder nada", () => {
+    const preset = { mode: "contacts" as const, contactIds: ["a", "b"], label: "2 contactos" };
+    const params = Object.fromEntries(presetToSearchParams(preset).entries());
+    expect(presetFromSearchParams(params)).toEqual(preset);
+    expect(presetFromSearchParams({ audience: "contacts", contact_ids: "" })).toBeNull();
+    expect(presetFromSearchParams({})).toBeNull();
+  });
+
+  it("al retomar, una campaña con lista o import vuelve a su modo", () => {
+    const base = { segment_id: null, template: null, hsm_channel_template_id: null, hsm_param_mapping: null, scheduled_at: null, name: "x", description: null };
+    expect(fromCampaignDTO({ ...base, audience_filters: { contact_ids: ["a"] } } as never).audienceMode).toBe("contacts");
+    expect(fromCampaignDTO({ ...base, audience_filters: { import_job_id: "j" } } as never).audienceMode).toBe("import");
+    expect(fromCampaignDTO({ ...base, audience_filters: { city: "Cali" } } as never).audienceMode).toBe("filters");
   });
 });

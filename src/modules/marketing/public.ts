@@ -16,6 +16,9 @@ export {
 } from "./infrastructure/services/templates-service.adapter";
 export {
   isUsableAsOpening,
+  isUsableAs,
+  whyUnusableAs,
+  type HsmPurpose,
   whyUnusableAsOpening,
   isUsableForMarketing,
   whyUnusable,
@@ -33,3 +36,5 @@ export {
   type BulkOpeningCost,
 } from "./domain/template-cost";
 export { MarketingHeader } from "./ui/components/MarketingHeader";
+export { SendTemplateButton } from "./ui/components/SendTemplateButton";
+export { presetToSearchParams, type PresetAudience } from "./domain/campaign-draft";

@@ -463,7 +463,7 @@ describe("ReceivablesView (F4: la cartera abre con la respuesta)", () => {
     render(<ReceivablesView />);
 
     expect(await screen.findByText(/No salió ayer/)).toBeInTheDocument();
-    expect(screen.getByText(/sin plantilla aprobada/i)).toBeInTheDocument();
+    expect(screen.getByText(/no había plantilla de Meta/i)).toBeInTheDocument();
     // Y quien no ha recibido nada lo dice, en vez de callar.
     expect(screen.getByText("Sin avisos todavía")).toBeInTheDocument();
   });
