@@ -116,6 +116,7 @@ export const TASK_RUN_REASON_LABELS: Partial<Record<string, string>> = {
   internal_error: "Error interno; se reintenta solo",
   // F1 — apertura con plantilla de Meta
   opening_template_unavailable: "La plantilla de apertura ya no está aprobada en Meta",
+  opening_field_missing: "Al contacto le falta un dato de su ficha para rellenar la plantilla: complétalo y se reintenta",
   no_reply: "El cliente no respondió a la apertura",
   // F3 — llamadas (el dominio ya las conoce)
   calls_disabled: "Las llamadas están apagadas en esta empresa",

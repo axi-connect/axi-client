@@ -13496,7 +13496,7 @@ export interface components {
                     channel_id: string;
                     name: string;
                     language: string;
-                    params: ("first_name" | "full_name" | "company_name" | "topic")[];
+                    params: string[];
                     topic: string | null;
                 } | null;
                 /** Format: date-time */
@@ -13586,7 +13586,7 @@ export interface components {
                 channel_id: string;
                 name: string;
                 language: string;
-                params: ("first_name" | "full_name" | "company_name" | "topic")[];
+                params: string[];
                 topic: string | null;
             } | null;
             /** Format: date-time */
@@ -17569,6 +17569,9 @@ export interface components {
             segment_id?: string | null;
             /** Format: uuid */
             import_job_id?: string | null;
+            opening_template?: {
+                params: string[];
+            } | null;
         };
         BulkPreviewDto: {
             total: number;
@@ -17579,6 +17582,10 @@ export interface components {
                 reason: "opted_out" | "task_open" | "no_channel" | "contact_not_found" | "error";
                 count: number;
                 contact_ids: string[];
+            }[];
+            missing_fields: {
+                code: string;
+                count: number;
             }[];
             within_limit: boolean;
             max: number;

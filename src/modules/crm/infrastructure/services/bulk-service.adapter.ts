@@ -16,8 +16,13 @@ export type BulkAudience =
  * Acción masiva del agente (F4a). El preflight y el alta comparten audiencia:
  * lo que el recuento promete es lo que el lote aplica.
  */
-export function previewBulk(audience: BulkAudience): Promise<BulkPreviewDTO> {
-  return http.post<BulkPreviewDTO>("/crm/agent-tasks/bulk/preview", audience);
+export function previewBulk(
+  body: BulkAudience & {
+    /** Solo los `params` de la plantilla: para contar a quién le falta cada campo del contacto. */
+    opening_template?: { params: string[] };
+  },
+): Promise<BulkPreviewDTO> {
+  return http.post<BulkPreviewDTO>("/crm/agent-tasks/bulk/preview", body);
 }
 
 /** 202: el lote queda encolado. Las tareas aparecen según se materializan. */

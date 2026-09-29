@@ -4,6 +4,7 @@ import { META_TEMPLATES_HREF } from "@/core/lib/hsm-copy";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
+  CircleAlert,
   CircleDollarSign,
   Gauge,
   Info,
@@ -187,6 +188,31 @@ export function BulkFollowUpModal({
     // `audienceKey` resume la audiencia: el objeto cambia de identidad en cada render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, audience.source, audienceKey]);
+
+  // Hotfix 2026-09-29: a quién le falta cada campo del contacto que pide la
+  // plantilla, ANTES del botón. Va en un segundo preflight, solo cuando hay
+  // huecos «Campo del contacto» decididos: cambiar un texto fijo no recuenta.
+  const fieldCodesKey = [...new Set(holes.flatMap((hole) => (hole.kind === "custom_field" && hole.code !== "" ? [hole.code] : [])))]
+    .sort()
+    .join(",");
+  const [missingFields, setMissingFields] = useState<BulkPreviewDTO["missing_fields"]>([]);
+  useEffect(() => {
+    if (!open || fieldCodesKey === "") {
+      setMissingFields([]);
+      return;
+    }
+    let alive = true;
+    previewBulk({
+      ...audience,
+      opening_template: { params: fieldCodesKey.split(",").map((code) => `custom_field:${code}`) },
+    })
+      .then((fresh) => alive && setMissingFields(fresh.missing_fields))
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, audience.source, audienceKey, fieldCodesKey]);
 
   const eligible = preview?.eligible ?? 0;
   const needsOpening = preview?.needs_opening ?? 0;
@@ -515,6 +541,19 @@ export function BulkFollowUpModal({
                         }}
                         previewName="cada contacto (con «Ana» de ejemplo)"
                       />
+                    )}
+                    {missingFields.length > 0 && (
+                      <Callout tone="warn" icon={CircleAlert}>
+                        {missingFields.map((entry, index) => (
+                          <span key={entry.code}>
+                            {index === 0 ? "A " : index === missingFields.length - 1 ? " y a " : ", a "}
+                            <strong>{n(entry.count, "contacto", "contactos")}</strong>{" "}
+                            {entry.count === 1 ? "le" : "les"} falta «
+                            {fields.find((field) => field.code === entry.code)?.label ?? entry.code}»
+                          </span>
+                        ))}
+                        : su seguimiento quedará en espera hasta que alguien complete la ficha, y se reintenta solo.
+                      </Callout>
                     )}
                     {openingCost !== null && (
                       <Callout tone={openingCost.atMost.category === "marketing" ? "warn" : "info"} icon={CircleDollarSign}>

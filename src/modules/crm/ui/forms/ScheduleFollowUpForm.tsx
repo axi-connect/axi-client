@@ -1,6 +1,6 @@
 "use client";
 
-import { useContactFieldCatalog } from "@/modules/crm/infrastructure/hooks/use-contact-field-catalog";
+import { CONTACT_COLUMN_FIELDS, useContactFieldCatalog } from "@/modules/crm/infrastructure/hooks/use-contact-field-catalog";
 import { META_TEMPLATES_HREF } from "@/core/lib/hsm-copy";
 import { useEffect, useMemo, useState } from "react";
 import { CircleUser, Sparkles } from "lucide-react";
@@ -142,8 +142,13 @@ export function ScheduleFollowUpForm({
           setContact({
             first_name: fresh.first_name,
             full_name: fresh.full_name,
-            // La ficha entera (campos personalizados + columnas): de ahí leen los huecos.
-            custom_fields: { ...((fresh as { custom_fields?: Record<string, unknown> }).custom_fields ?? {}), city: fresh.city, email: fresh.email, phone: fresh.phone },
+            // La ficha entera, con la misma precedencia que el servidor: si el
+            // código es una columna, manda la columna (aunque esté vacía); si
+            // no, custom_fields.
+            custom_fields: {
+              ...fresh.custom_fields,
+              ...Object.fromEntries(CONTACT_COLUMN_FIELDS.map((column) => [column.code, fresh[column.code]])),
+            },
           }),
       )
       .catch(() => undefined);

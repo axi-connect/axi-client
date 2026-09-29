@@ -1,6 +1,5 @@
 import type { Schemas } from "@/core/api/types";
 import { relativeTime } from "@/core/lib/relative-time";
-import { renderHsmPreview, type PreviewSegment } from "@/modules/marketing/public";
 import {
   addDaysToKey,
   businessDayKey,
@@ -252,50 +251,6 @@ export function windowNotice(
     needs_template: false,
     waits_for_customer: true,
   };
-}
-
-/* ─────────────────── Plantilla de apertura ─────────────────── */
-
-export const OPENING_PARAM_LABELS: Record<OpeningTemplateParam, string> = {
-  first_name: "nombre",
-  full_name: "nombre completo",
-  company_name: "empresa",
-  topic: "tema",
-};
-
-export type { PreviewSegment };
-
-/**
- * Vista previa con los datos reales. El troceado del cuerpo lo hace
- * `renderHsmPreview` (compartido con el asistente de campañas); aquí solo se
- * dice qué va en cada hueco. Misma regla de relleno que el backend
- * (`renderOpeningComponents`): el primer nombre cae al nombre completo y este a
- * «Hola»; el tema en blanco se ve en blanco a propósito — es lo que falta.
- */
-export function renderTemplatePreview(
-  body: string,
-  params: readonly OpeningTemplateParam[],
-  sources: { first_name: string | null; full_name: string | null; company_name: string; topic: string },
-): PreviewSegment[] {
-  const firstName =
-    sources.first_name?.trim() || sources.full_name?.trim().split(/\s+/)[0] || "Hola";
-  const values: Record<OpeningTemplateParam, string> = {
-    first_name: firstName,
-    full_name: sources.full_name?.trim() || firstName,
-    company_name: sources.company_name,
-    topic: sources.topic,
-  };
-  return renderHsmPreview(body, (index) => {
-    const source = params[index - 1];
-    return source === undefined ? null : values[source] || "…";
-  });
-}
-
-/** Sugerencia de origen para cada `{{n}}`: {{1}} nombre, {{2}} tema, el resto empresa. */
-export function defaultOpeningParams(count: number): OpeningTemplateParam[] {
-  return Array.from({ length: count }, (_, index) =>
-    index === 0 ? "first_name" : index === 1 ? "topic" : "company_name",
-  );
 }
 
 /* ─────────────────── La promesa del footer ─────────────────── */

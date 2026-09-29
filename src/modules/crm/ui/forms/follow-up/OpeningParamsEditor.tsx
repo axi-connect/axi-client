@@ -45,7 +45,6 @@ export function OpeningParamsEditor({
   sources,
   previewName,
   idPrefix = "hole",
-  compact = false,
 }: {
   body: string;
   holes: readonly OpeningHole[];
@@ -57,8 +56,6 @@ export function OpeningParamsEditor({
   /** A quién se le muestra la vista previa («Ana», «el contacto»). */
   previewName: string;
   idPrefix?: string;
-  /** Sin vista previa (la muestra el padre). */
-  compact?: boolean;
 }) {
   const update = (index: number, hole: OpeningHole) =>
     onHolesChange(holes.map((current, position) => (position === index ? hole : current)));
@@ -85,7 +82,16 @@ export function OpeningParamsEditor({
                   {String(index + 1)}
                   {"}}"}
                 </span>
-                <div className={cn("grid min-w-0 gap-1.5", needsValue(hole) && "sm:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]")}>
+                <div
+                  className={cn(
+                    "grid min-w-0 gap-1.5",
+                    // Con dos selectores, el origen («Campo del contacto», el más largo)
+                    // se lleva más: a partes iguales truncaba 17 px a 1280 y 768. Con un
+                    // valor escrito, es el texto el que necesita el sitio.
+                    hole.kind === "custom_field" && "sm:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]",
+                    hole.kind === "static" && "sm:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]",
+                  )}
+                >
                   <Select value={choice} onValueChange={(next) => update(index, holeFromChoice(next, hole))}>
                     <SelectTrigger className="w-full" aria-label={`Origen del hueco ${String(index + 1)}`}>
                       <SelectValue />
@@ -125,7 +131,7 @@ export function OpeningParamsEditor({
                   )}
                   {hole.kind === "static" && (
                     <Input
-                      type={hole.type === "date" ? "date" : hole.type === "time" ? "time" : hole.type === "url" ? "url" : hole.type === "number" || hole.type === "money" ? "text" : "text"}
+                      type={hole.type === "date" || hole.type === "time" || hole.type === "url" ? hole.type : "text"}
                       inputMode={hole.type === "money" || hole.type === "number" ? "decimal" : undefined}
                       value={hole.raw}
                       aria-label={`Valor del hueco ${String(index + 1)}`}
@@ -170,8 +176,7 @@ export function OpeningParamsEditor({
         </p>
       </div>
 
-      {!compact && (
-        <div className="rounded-2xl border border-border bg-muted/60 p-3.5">
+      <div className="rounded-2xl border border-border bg-muted/60 p-3.5">
           <p className="mb-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
             <MessageCircle aria-hidden className="size-3.5" />
             Así le llega a {previewName} · vista previa
@@ -191,11 +196,6 @@ export function OpeningParamsEditor({
             )}
           </div>
         </div>
-      )}
     </div>
   );
-}
-
-function needsValue(hole: OpeningHole): boolean {
-  return hole.kind === "static" || hole.kind === "custom_field";
 }
