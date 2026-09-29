@@ -192,6 +192,7 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   "contacts/not_found": "El contacto ya no existe",
   "contacts/duplicate_identity": "Ya existe un contacto con ese teléfono o correo",
   "contacts/merge_self": "No puedes fusionar un contacto consigo mismo",
+  "contacts/outreach_blocked": "Este contacto pidió no ser contactado: no puede recibir plantillas",
   "contacts/outreach_hours_out_of_bounds":
     "El horario solo puede estrecharse dentro del criterio prudente (lun–vie 7:00–19:00, sáb 8:00–15:00)",
   // CRM (F0) — pipelines, deals, actividades, tags, segmentos, import/export
