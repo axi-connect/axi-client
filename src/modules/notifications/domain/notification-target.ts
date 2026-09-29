@@ -22,6 +22,10 @@ const EXACT: Record<string, TargetResolver> = {
       : typeof d.deal_id === "string"
         ? `/crm/pipeline/deal/${d.deal_id}`
         : "/crm/pipeline",
+  // Hotfix plantillas: «Un seguimiento no llegó a Cristian» → el chat, donde
+  // está el mensaje con su motivo y «Reenviar». Sin conversación, las tareas.
+  "crm.task_opening_failed": (d) =>
+    typeof d.conversation_id === "string" ? `/workspace/inbox/${d.conversation_id}` : "/crm/tasks",
   // Recorrido (F4): «La cadencia de Ana se agotó» → su ficha, donde la card
   // «Recorrido» dice qué pasó y deja reactivar. `crm.journey_` no es familia
   // `crm.deal_`: sin esta entrada el clic solo la marcaba leída (Y1).

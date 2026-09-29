@@ -61,6 +61,8 @@ export const AWAITING_REPLY_LABEL = "Esperando respuesta";
 /** F1: la apertura salió, nadie respondió en el plazo: el seguimiento se hizo. */
 export const NO_REPLY_LABEL = "Enviado · sin respuesta";
 export const OPENED_WITH_TEMPLATE_LABEL = "Enviado con plantilla";
+/** Hotfix plantillas: la apertura salió de aquí pero Meta no la entregó. */
+export const OPENING_NOT_DELIVERED_LABEL = "No llegó";
 
 /**
  * `deferred` va en **info**, nunca en warning ni destructive.
@@ -118,6 +120,8 @@ export const TASK_RUN_REASON_LABELS: Partial<Record<string, string>> = {
   opening_template_unavailable: "La plantilla de apertura ya no está aprobada en Meta",
   opening_field_missing: "Al contacto le falta un dato de su ficha para rellenar la plantilla: complétalo y se reintenta",
   no_reply: "El cliente no respondió a la apertura",
+  // Hotfix plantillas (2026-09-29): Meta la aceptó y después la rechazó
+  opening_rejected: "La plantilla de apertura no llegó: Meta la rechazó",
   // F3 — llamadas (el dominio ya las conoce)
   calls_disabled: "Las llamadas están apagadas en esta empresa",
   no_phone_number: "La empresa no tiene un número para llamar",
@@ -206,6 +210,18 @@ export function taskDisplayState(
     };
   }
 
+  // Hotfix plantillas: la apertura no llegó y la tarea espera a que alguien la
+  // reenvíe. Va antes que la espera: el motor ya la dejó sin espera ni cita.
+  if (task.last_run_status === "failed" && task.last_run_reason === "opening_rejected") {
+    return {
+      ...base,
+      label: OPENING_NOT_DELIVERED_LABEL,
+      tone: "destructive",
+      transient: false,
+      reason: "Meta rechazó la plantilla de apertura. Reenvíala desde Programados o desde el chat.",
+    };
+  }
+
   // F1: abierta y esperando al cliente tras la apertura con plantilla. Manda
   // sobre el último desenlace (que fue `done`, el de la plantilla): lo que el
   // operador necesita saber es que la pelota está del lado del cliente.
@@ -288,13 +304,38 @@ export const TASK_RUN_TIMELINE_TONES: Record<
  */
 export function taskRunTitle(
   run: Pick<TaskRunDTO, "status" | "attempt"> &
-    Partial<Pick<TaskRunDTO, "medium" | "opened_with_template">>,
+    Partial<Pick<TaskRunDTO, "medium" | "opened_with_template" | "reason">>,
 ): string {
   const label =
-    run.opened_with_template === true && run.status === "done"
-      ? OPENED_WITH_TEMPLATE_LABEL
-      : runStatusLabel(run.status, run.medium ?? "message");
+    run.status === "failed" && run.reason === "opening_rejected"
+      ? OPENING_NOT_DELIVERED_LABEL
+      : run.opened_with_template === true && run.status === "done"
+        ? OPENED_WITH_TEMPLATE_LABEL
+        : runStatusLabel(run.status, run.medium ?? "message");
   return `Intento ${String(run.attempt)} · ${label}`;
+}
+
+/**
+ * El recibo de la apertura de un intento (hotfix plantillas): «Leída», «Entregada»,
+ * «Enviada» o «No llegó». `null` si el intento no abrió con plantilla o si es
+ * anterior al hotfix y no tiene recibo.
+ */
+export function runDeliveryLabel(
+  run: Pick<TaskRunDTO, "opened_with_template" | "delivery_status">,
+): string | null {
+  if (!run.opened_with_template) return null;
+  switch (run.delivery_status) {
+    case "read":
+      return "Leída";
+    case "delivered":
+      return "Entregada";
+    case "sent":
+      return "Enviada";
+    case "failed":
+      return OPENING_NOT_DELIVERED_LABEL;
+    default:
+      return null;
+  }
 }
 
 /**
