@@ -42,7 +42,7 @@ export const OPENING_HOLE_CHOICES: ReadonlyArray<{
   { value: "static:number", label: "Número", group: "fijo" },
   { value: "static:url", label: "Enlace", group: "fijo" },
   { value: "company_name", label: "Tu empresa", group: "otros" },
-  { value: "topic", label: "Tema (lo escribes una vez)", group: "otros" },
+  { value: "topic", label: "Tema", group: "otros" },
 ];
 
 export const STATIC_TYPE_HINT: Record<StaticType, string> = {

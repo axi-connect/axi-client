@@ -72,15 +72,15 @@ export function OpeningParamsEditor({
           Qué va en cada hueco
           <span className="font-normal text-muted-foreground"> · {holes.length === 1 ? "1 hueco" : `${String(holes.length)} huecos`}</span>
         </span>
-        <ol className="divide-y divide-border rounded-2xl border border-border">
+        <ol className="min-w-0 divide-y divide-border overflow-hidden rounded-2xl border border-border">
           {holes.map((hole, index) => {
             const issue = holeIssue(hole, topic);
             const value = holeValue(hole, sources);
             const choice = choiceOfHole(hole);
             const rowId = `${idPrefix}-${String(index + 1)}`;
             return (
-              <li key={rowId} className="grid grid-cols-[2rem_minmax(0,1fr)] items-start gap-x-2 gap-y-1.5 px-3 py-2.5 sm:grid-cols-[2.25rem_minmax(0,1fr)_9.5rem] sm:items-center">
-                <span className="pt-2 font-mono text-xs text-muted-foreground sm:pt-0" aria-hidden>
+              <li key={rowId} className="grid min-w-0 grid-cols-[2.5rem_minmax(0,1fr)] items-start gap-x-2 gap-y-1.5 px-3 py-2.5 sm:grid-cols-[2.5rem_minmax(0,1fr)_9.5rem] sm:items-center">
+                <span className="pt-2 font-mono text-[11px] text-muted-foreground sm:pt-0" aria-hidden>
                   {"{{"}
                   {String(index + 1)}
                   {"}}"}
