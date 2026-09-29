@@ -44,3 +44,29 @@ Continuidad con `docs/design/mockups/inbox-premium/f2/` (burbuja en tinta, estad
 - Unitarios del dominio con los valores reales del incidente (131042 con el payload de `sesion_en_vivo_v2`).
 - Los dos signos: un `delivered` tardío no baja un `read`; un `failed` sí manda sobre `read`.
 - Render 390 → 1440, claro y oscuro, parámetros largos, plantilla con cabecera de imagen y botones.
+
+## 5. Estado de la implementación (2026-09-29)
+
+Rama `hotfix/plantillas-seguimiento`, base `669cd6e5` (= `origin/main`, sin movimiento al cerrar).
+
+| Pieza | Commit |
+|---|---|
+| Lienzo aprobado, fuentes en `docs/design/mockups/hotfix-plantillas/` | `c7d8fc73` |
+| C1–C2 dominio y estado vivo | `7db410ae` |
+| C3–C4 burbuja de plantilla, motivo y «Reenviar» | `11e00844` |
+| C5–C7 Programados, Ejecuciones y campanita | `84da16c2` |
+
+**Hallazgo que explica el «mini div»:** la apertura del CRM sale con `sender_type: "system"` y la burbuja la trataba como la píldora central de avisos internos, con `body` vacío. La rama de plantilla va antes de ese caso.
+
+**Decisiones tomadas al implementar:**
+- **Texto del reenvío:** «Se reenvió a las…» y no «La reenviaste», porque puede reenviarla otra persona del equipo. El autor del mensaje nuevo sí distingue «Tú · reenvío» de «El equipo · reenvío».
+- **Adaptador del CRM:** el reenvío de la agenda llama `…/resend` desde el adaptador del CRM, como ya hace la reachability. Así `crm` no importa `inbox` y no se crea un ciclo.
+- **Caída del aviso:** sin conversación, el aviso abre `/crm/tasks`. `?view=scheduled` no existe todavía.
+
+**Verificación:**
+- `tsc`: exit 0.
+- Lint: sin errores.
+- Jest: 4476 pasan. El único fallo es `Composer.recording.test.tsx:104`, que **también falla en `main` 669cd6e5**: es previo.
+- `next build`: compila.
+- Falsificación de la precedencia: cae `inbox.store.test.ts:160` (esperaba `read` y recibe `delivered`).
+- **Pendiente:** render medido 390 → 1440 en claro y oscuro (mandamiento 11), con datos reales.
