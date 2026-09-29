@@ -2532,6 +2532,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/contacts/outreach-policy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ContactsController_outreachPolicy_v1"];
+        put: operations["ContactsController_updateOutreachPolicy_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contacts/{id}/consent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ContactsController_recordConsent_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/contacts/duplicates": {
         parameters: {
             query?: never;
@@ -11693,6 +11725,216 @@ export interface components {
             /** @enum {string} */
             reminder_channel?: "whatsapp" | "call" | "both";
         };
+        OutreachPolicyViewDto: {
+            policy: {
+                /** @enum {number} */
+                version: 1;
+                channels: {
+                    whatsapp_cloud: {
+                        enabled: boolean;
+                        /** @enum {string} */
+                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                        daily_cap: number;
+                    };
+                    whatsapp_web: {
+                        enabled: boolean;
+                        /** @enum {string} */
+                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                        daily_cap: number;
+                    };
+                    email: {
+                        enabled: boolean;
+                        /** @enum {string} */
+                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                        daily_cap: number;
+                    };
+                    sms: {
+                        enabled: boolean;
+                        /** @enum {string} */
+                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                        daily_cap: number;
+                    };
+                    call: {
+                        enabled: boolean;
+                        /** @enum {string} */
+                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                        daily_cap: number;
+                    };
+                    instagram_dm: {
+                        enabled: boolean;
+                        /** @enum {string} */
+                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                        daily_cap: number;
+                    };
+                    facebook_messenger: {
+                        enabled: boolean;
+                        /** @enum {string} */
+                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                        daily_cap: number;
+                    };
+                    manual: {
+                        enabled: boolean;
+                        /** @enum {string} */
+                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                        daily_cap: number;
+                    };
+                };
+                hours: {
+                    weekdays: {
+                        start: string;
+                        end: string;
+                    };
+                    saturday: {
+                        start: string;
+                        end: string;
+                    } | null;
+                };
+            };
+            defaults: {
+                /** @enum {number} */
+                version: 1;
+                channels: {
+                    whatsapp_cloud: {
+                        enabled: boolean;
+                        /** @enum {string} */
+                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                        daily_cap: number;
+                    };
+                    whatsapp_web: {
+                        enabled: boolean;
+                        /** @enum {string} */
+                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                        daily_cap: number;
+                    };
+                    email: {
+                        enabled: boolean;
+                        /** @enum {string} */
+                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                        daily_cap: number;
+                    };
+                    sms: {
+                        enabled: boolean;
+                        /** @enum {string} */
+                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                        daily_cap: number;
+                    };
+                    call: {
+                        enabled: boolean;
+                        /** @enum {string} */
+                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                        daily_cap: number;
+                    };
+                    instagram_dm: {
+                        enabled: boolean;
+                        /** @enum {string} */
+                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                        daily_cap: number;
+                    };
+                    facebook_messenger: {
+                        enabled: boolean;
+                        /** @enum {string} */
+                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                        daily_cap: number;
+                    };
+                    manual: {
+                        enabled: boolean;
+                        /** @enum {string} */
+                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                        daily_cap: number;
+                    };
+                };
+                hours: {
+                    weekdays: {
+                        start: string;
+                        end: string;
+                    };
+                    saturday: {
+                        start: string;
+                        end: string;
+                    } | null;
+                };
+            };
+            floor: {
+                weekdays: {
+                    start: string;
+                    end: string;
+                };
+                saturday: {
+                    start: string;
+                    end: string;
+                } | null;
+            };
+            pending_legal_review: ("ley_2300_b2b" | "corporate_data_as_consent")[];
+        };
+        UpdateOutreachPolicyDto: {
+            /** @enum {number} */
+            version: 1;
+            channels: {
+                whatsapp_cloud: {
+                    enabled: boolean;
+                    /** @enum {string} */
+                    mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                    daily_cap: number;
+                };
+                whatsapp_web: {
+                    enabled: boolean;
+                    /** @enum {string} */
+                    mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                    daily_cap: number;
+                };
+                email: {
+                    enabled: boolean;
+                    /** @enum {string} */
+                    mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                    daily_cap: number;
+                };
+                sms: {
+                    enabled: boolean;
+                    /** @enum {string} */
+                    mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                    daily_cap: number;
+                };
+                call: {
+                    enabled: boolean;
+                    /** @enum {string} */
+                    mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                    daily_cap: number;
+                };
+                instagram_dm: {
+                    enabled: boolean;
+                    /** @enum {string} */
+                    mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                    daily_cap: number;
+                };
+                facebook_messenger: {
+                    enabled: boolean;
+                    /** @enum {string} */
+                    mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                    daily_cap: number;
+                };
+                manual: {
+                    enabled: boolean;
+                    /** @enum {string} */
+                    mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                    daily_cap: number;
+                };
+            };
+            hours: {
+                weekdays: {
+                    start: string;
+                    end: string;
+                };
+                saturday: {
+                    start: string;
+                    end: string;
+                } | null;
+            };
+        };
+        RecordConsentDto: {
+            /** @enum {string} */
+            channel: "whatsapp_cloud" | "whatsapp_web" | "email" | "sms" | "call" | "instagram_dm" | "facebook_messenger" | "manual";
+            note: string;
+        };
         DuplicatesListDto: {
             data: {
                 /** Format: uuid */
@@ -11743,6 +11985,12 @@ export interface components {
                 /** Format: date-time */
                 last_seen_at: string | null;
             }[];
+            /** @enum {string} */
+            legal_basis: "consent_form" | "consent_ad" | "public_business_data" | "referral" | "unknown" | "inbound";
+            /** Format: date-time */
+            consent_at: string | null;
+            consent_channel: string | null;
+            allowed_channels_snapshot: string[];
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
@@ -11800,6 +12048,12 @@ export interface components {
                     /** Format: date-time */
                     last_seen_at: string | null;
                 }[];
+                /** @enum {string} */
+                legal_basis: "consent_form" | "consent_ad" | "public_business_data" | "referral" | "unknown" | "inbound";
+                /** Format: date-time */
+                consent_at: string | null;
+                consent_channel: string | null;
+                allowed_channels_snapshot: string[];
                 /** Format: date-time */
                 created_at: string;
                 /** Format: date-time */
@@ -26664,6 +26918,71 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["SchedulingSettingsDto"];
                 };
+            };
+        };
+    };
+    ContactsController_outreachPolicy_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OutreachPolicyViewDto"];
+                };
+            };
+        };
+    };
+    ContactsController_updateOutreachPolicy_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateOutreachPolicyDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OutreachPolicyViewDto"];
+                };
+            };
+        };
+    };
+    ContactsController_recordConsent_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordConsentDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
