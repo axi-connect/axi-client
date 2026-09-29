@@ -31,6 +31,7 @@ import { loadMyCompanyOnce } from "@/modules/companies/public";
 import { listChannels } from "@/modules/channels/public";
 import {
   bulkOpeningCost,
+  countTemplateVariables,
   formatUsd,
   isUsableAsOpening,
   listHsmTemplates,
@@ -59,6 +60,14 @@ import {
 } from "@/modules/crm/domain/schedule-follow-up";
 import { availableMedia } from "@/modules/crm/ui/forms/config/schedule-follow-up.config";
 import { MediumPicker, ObjectiveField } from "@/modules/crm/ui/forms/follow-up/ScheduleFollowUpFields";
+import { OpeningParamsEditor } from "@/modules/crm/ui/forms/follow-up/OpeningParamsEditor";
+import {
+  defaultOpeningHoles,
+  encodeOpeningHoles,
+  unresolvedHoles,
+  type OpeningHole,
+} from "@/modules/crm/domain/opening-params";
+import { useContactFieldCatalog } from "@/modules/crm/infrastructure/hooks/use-contact-field-catalog";
 import { getAgentTaskSettings } from "@/modules/crm/infrastructure/services/agent-task-settings-service.adapter";
 import {
   createBulk,
@@ -120,6 +129,9 @@ export function BulkFollowUpModal({
   const [perHour, setPerHour] = useState(20);
   const [templateId, setTemplateId] = useState(NO_TEMPLATE);
   const [topic, setTopic] = useState("");
+  /** Qué va en cada `{{n}}` de la plantilla elegida (hotfix 2026-09-29). */
+  const [holes, setHoles] = useState<OpeningHole[]>([]);
+  const fields = useContactFieldCatalog();
   const [saving, setSaving] = useState(false);
 
   const tz = company.tz;
@@ -195,6 +207,7 @@ export function BulkFollowUpModal({
   // ventana está cerrada cuando la tarea corra.
   const templateRequired = medium !== "call" && needsOpening > 0;
   const templateMissing = templateRequired && selectedTemplate === undefined;
+  const pendingHoles = selectedTemplate === undefined ? [] : unresolvedHoles(holes, topic);
   const openingCost =
     selectedTemplate === undefined
       ? null
@@ -212,7 +225,7 @@ export function BulkFollowUpModal({
     objective.trim().length >= OBJECTIVE_MIN &&
     !tooLate &&
     !templateMissing &&
-    (templateId === NO_TEMPLATE || topic.trim().length > 0 || !usesTopic(selectedTemplate));
+    pendingHoles.length === 0;
 
   const submit = useCallback(async () => {
     if (!canSubmit || when === undefined) return;
@@ -230,8 +243,8 @@ export function BulkFollowUpModal({
           : {
               opening_template: {
                 channel_template_id: selectedTemplate.id,
-                params: ["first_name", "topic"] as const,
-                topic: topic.trim(),
+                params: encodeOpeningHoles(holes),
+                ...(holes.some((hole) => hole.kind === "topic") ? { topic: topic.trim() } : {}),
               },
             }),
       });
@@ -256,6 +269,7 @@ export function BulkFollowUpModal({
     tz,
     perHour,
     selectedTemplate,
+    holes,
     topic,
     onScheduled,
     onOpenChange,
@@ -456,7 +470,14 @@ export function BulkFollowUpModal({
                   </Callout>
                 ) : (
                   <>
-                    <Select value={templateId} onValueChange={setTemplateId}>
+                    <Select
+                      value={templateId}
+                      onValueChange={(next) => {
+                        setTemplateId(next);
+                        const chosen = templates.find((template) => template.id === next);
+                        setHoles(chosen === undefined ? [] : defaultOpeningHoles(countTemplateVariables(chosen.body) ?? 0));
+                      }}
+                    >
                       <SelectTrigger
                         className="w-full"
                         aria-label="Plantilla de apertura"
@@ -475,12 +496,24 @@ export function BulkFollowUpModal({
                         ))}
                       </SelectContent>
                     </Select>
-                    {selectedTemplate !== undefined && usesTopic(selectedTemplate) && (
-                      <Input
-                        aria-label="Tema"
-                        placeholder="el tema del que le escribes, ej. tu pedido de septiembre"
-                        value={topic}
-                        onChange={(e) => setTopic(e.target.value)}
+                    {selectedTemplate !== undefined && holes.length > 0 && (
+                      <OpeningParamsEditor
+                        idPrefix="bulk-hole"
+                        body={selectedTemplate.body}
+                        holes={holes}
+                        onHolesChange={setHoles}
+                        topic={topic}
+                        onTopicChange={setTopic}
+                        fields={fields}
+                        // En un lote no hay UN contacto: la vista previa enseña de dónde sale cada dato.
+                        sources={{
+                          first_name: "Ana",
+                          full_name: "Ana",
+                          company_name: company.name || "tu empresa",
+                          topic,
+                          custom_fields: Object.fromEntries(fields.map((field) => [field.code, `«${field.label}»`])),
+                        }}
+                        previewName="cada contacto (con «Ana» de ejemplo)"
                       />
                     )}
                     {openingCost !== null && (
@@ -540,10 +573,6 @@ function audienceBody(audience: BulkAudience) {
     return { source: "segment" as const, segment_id: audience.segment_id };
   }
   return { source: "import" as const, import_job_id: audience.import_job_id };
-}
-
-function usesTopic(template: HsmTemplateDTO | undefined): boolean {
-  return template !== undefined && template.body.includes("{{2}}");
 }
 
 /** «America/Bogota» → «Bogotá» no se puede adivinar; «Bogota» sí se lee. */

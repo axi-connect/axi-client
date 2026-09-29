@@ -1,11 +1,17 @@
 "use client";
 
+import {
+  decodeOpeningParams,
+  encodeOpeningHoles,
+  resizeOpeningHoles,
+  unresolvedHoles,
+  type OpeningHole,
+} from "@/modules/crm/domain/opening-params";
 import { z } from "zod";
 import type { ActivityDTO, CreateAgentTaskDTO, UpdateAgentTaskDTO } from "@/modules/crm/domain/activity";
 import {
   businessDateTimeToIso,
-  defaultOpeningParams,
-  isInPast,
+    isInPast,
   isoToBusinessDateTime,
   windowNotice,
   type ContactReachabilityDTO,
@@ -45,6 +51,8 @@ export type ScheduleFollowUpValues = {
   /** `NO_TEMPLATE` = sin apertura. */
   opening_template_id: string;
   topic: string;
+  /** Qué va en cada `{{n}}` de la plantilla elegida (hotfix 2026-09-29). */
+  opening_holes: OpeningHole[];
 };
 
 /**
@@ -75,6 +83,7 @@ export function buildScheduleFollowUpSchema(rules: {
       time: z.string(),
       opening_template_id: z.string(),
       topic: z.string(),
+      opening_holes: z.array(z.custom<OpeningHole>()),
     })
     .superRefine((values, ctx) => {
       if (values.agent_id === NO_AGENT || values.agent_id === "") {
@@ -122,12 +131,16 @@ export function buildScheduleFollowUpSchema(rules: {
         });
       }
       const template = rules.templates.find((item) => item.id === values.opening_template_id);
-      if (
-        template !== undefined &&
-        defaultOpeningParams((countTemplateVariables(template.body) ?? 0)).includes("topic") &&
-        values.topic.trim().length < 2
-      ) {
-        ctx.addIssue({ code: "custom", path: ["topic"], message: "Escribe el tema que rellena la plantilla" });
+      if (template !== undefined) {
+        const holes = resizeOpeningHoles(values.opening_holes, countTemplateVariables(template.body) ?? 0);
+        const pending = unresolvedHoles(holes, values.topic);
+        if (pending.length > 0) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["opening_template_id"],
+            message: `Falta decidir qué va en ${pending.map((n) => `{{${String(n)}}}`).join(" y ")}`,
+          });
+        }
       }
     }) as unknown as z.ZodType<ScheduleFollowUpValues>;
 }
@@ -146,6 +159,7 @@ export function defaultScheduleFollowUpValues(preset: {
     time: preset.shortcut?.time ?? "09:00",
     opening_template_id: NO_TEMPLATE,
     topic: "",
+    opening_holes: [],
   };
 }
 
@@ -168,26 +182,26 @@ export function editScheduleFollowUpValues(
     time: when.time,
     opening_template_id: task.opening_template?.channel_template_id ?? NO_TEMPLATE,
     topic: task.opening_template?.topic ?? "",
+    opening_holes: decodeOpeningParams(task.opening_template?.params ?? []),
   };
 }
 
 /**
- * Los `params` de la plantilla se derivan de su cuerpo con la regla fija
- * {{1}} nombre · {{2}} tema · resto empresa: el operador solo escribe el tema.
- * Es la misma decisión que el backend impone — variables deterministas, jamás
- * texto del modelo.
+ * Los `params` son lo que el operador decidió hueco por hueco (texto fijo,
+ * fecha, campo del contacto, tema…), codificados como los espera el servidor.
+ * Siguen siendo datos deterministas: jamás texto del modelo.
  */
 export function openingTemplateInput(
   values: ScheduleFollowUpValues,
   template: HsmTemplateDTO | undefined,
 ): OpeningTemplateInput | null {
   if (values.opening_template_id === NO_TEMPLATE || template === undefined) return null;
-  const params = defaultOpeningParams((countTemplateVariables(template.body) ?? 0));
+  const holes = resizeOpeningHoles(values.opening_holes, countTemplateVariables(template.body) ?? 0);
   const topic = values.topic.trim();
   return {
     channel_template_id: template.id,
-    params,
-    ...(params.includes("topic") ? { topic } : {}),
+    params: encodeOpeningHoles(holes),
+    ...(holes.some((hole) => hole.kind === "topic") ? { topic } : {}),
   };
 }
 

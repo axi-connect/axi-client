@@ -19,6 +19,7 @@ function values(over: Partial<ScheduleFollowUpValues> = {}): ScheduleFollowUpVal
     time: "09:00",
     opening_template_id: "__none__",
     topic: "",
+    opening_holes: [],
     ...over,
   };
 }

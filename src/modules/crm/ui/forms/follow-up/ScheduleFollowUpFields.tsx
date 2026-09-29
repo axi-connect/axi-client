@@ -7,7 +7,6 @@ import {
   CircleCheck,
   Clock,
   Info,
-  MessageCircle,
   MessageSquare,
   Phone,
   PhoneCall,
@@ -29,11 +28,8 @@ import {
   dateShortcuts,
   FOLLOW_UP_MEDIA,
   OBJECTIVE_EXAMPLES,
-  OPENING_PARAM_LABELS,
   promiseSentence,
   quietHoursShift,
-  renderTemplatePreview,
-  defaultOpeningParams,
   windowNotice,
   type ContactReachabilityDTO,
   type FollowUpMedium,
@@ -41,6 +37,9 @@ import {
 } from "@/modules/crm/domain/schedule-follow-up";
 import type { AgentTaskSettings } from "@/modules/crm/domain/agent-task-settings";
 import { countTemplateVariables, formatTemplateCost, type HsmTemplateDTO } from "@/modules/marketing/public";
+import { defaultOpeningHoles, resizeOpeningHoles, type OpeningHole } from "@/modules/crm/domain/opening-params";
+import type { ContactFieldOption } from "@/modules/crm/infrastructure/hooks/use-contact-field-catalog";
+import { OpeningParamsEditor } from "./OpeningParamsEditor";
 import { NO_TEMPLATE, OBJECTIVE_MAX, type ScheduleFollowUpValues } from "../config/schedule-follow-up.config";
 
 /**
@@ -287,7 +286,7 @@ export function WindowNoticeCard({
   );
 }
 
-/** Selector de plantilla + tema + vista previa con los datos reales del contacto. */
+/** Selector de plantilla + qué va en cada hueco + vista previa con los datos reales del contacto. */
 export function OpeningTemplatePicker({
   control,
   templates,
@@ -295,38 +294,38 @@ export function OpeningTemplatePicker({
   onChange,
   contact,
   companyName,
+  fields,
 }: {
   control: Control<ScheduleFollowUpValues>;
   templates: readonly HsmTemplateDTO[];
-  values: { opening_template_id: string; topic: string };
-  onChange: (next: Partial<{ opening_template_id: string; topic: string }>) => void;
-  contact: { first_name: string | null; full_name: string | null };
+  values: { opening_template_id: string; topic: string; opening_holes: OpeningHole[] };
+  onChange: (next: Partial<{ opening_template_id: string; topic: string; opening_holes: OpeningHole[] }>) => void;
+  contact: { first_name: string | null; full_name: string | null; custom_fields?: Record<string, unknown> | null };
   companyName: string;
+  fields: readonly ContactFieldOption[];
 }) {
-  const [templateId, topic] = useWatch({ control, name: ["opening_template_id", "topic"] });
+  const [templateId, topic, watchedHoles] = useWatch({ control, name: ["opening_template_id", "topic", "opening_holes"] });
   const { errors: formErrors } = useFormState({ control, name: ["opening_template_id", "topic"] });
   const errors = {
     opening_template_id: formErrors.opening_template_id?.message,
     topic: formErrors.topic?.message,
   };
   const selected = templates.find((template) => template.id === (templateId || values.opening_template_id));
-  const params = selected === undefined ? [] : defaultOpeningParams((countTemplateVariables(selected.body) ?? 0));
-  const usesTopic = params.includes("topic");
-  const preview =
-    selected === undefined
-      ? []
-      : renderTemplatePreview(selected.body, params, {
-          first_name: contact.first_name,
-          full_name: contact.full_name,
-          company_name: companyName,
-          topic: (topic || values.topic).trim(),
-        });
+  const count = selected === undefined ? 0 : (countTemplateVariables(selected.body) ?? 0);
+  const holes = resizeOpeningHoles(watchedHoles ?? values.opening_holes, count);
+  const firstName = contact.first_name?.trim() || contact.full_name?.trim().split(/\s+/)[0] || "el contacto";
   return (
     <div className="space-y-3">
       <div className="space-y-1">
         <Select
           value={templateId === NO_TEMPLATE ? undefined : templateId}
-          onValueChange={(next) => onChange({ opening_template_id: next })}
+          onValueChange={(next) => {
+            const chosen = templates.find((template) => template.id === next);
+            onChange({
+              opening_template_id: next,
+              opening_holes: defaultOpeningHoles(chosen === undefined ? 0 : (countTemplateVariables(chosen.body) ?? 0)),
+            });
+          }}
         >
           <SelectTrigger id="fu-template" aria-label="Plantilla de apertura" aria-invalid={Boolean(errors.opening_template_id)}>
             <SelectValue placeholder="Elige la plantilla con la que abre" />
@@ -347,58 +346,30 @@ export function OpeningTemplatePicker({
 
       {selected !== undefined && (
         <>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {usesTopic && (
-              <div className="space-y-1">
-                <label htmlFor="fu-topic" className="text-xs font-medium">
-                  Tema (rellena {"{{"}
-                  {String(params.indexOf("topic") + 1)}
-                  {"}}"})
-                </label>
-                <Input
-                  id="fu-topic"
-                  value={topic}
-                  aria-invalid={Boolean(errors.topic)}
-                  placeholder="la cotización del plan anual"
-                  onChange={(event) => onChange({ topic: event.target.value })}
-                />
-                {errors.topic && <p className="text-xs text-destructive">{errors.topic}</p>}
-              </div>
-            )}
-            <div className="space-y-1">
-              <span className="text-xs font-medium">Variables</span>
-              <div className="flex flex-wrap gap-1.5">
-                {params.map((param, index) => (
-                  <span key={`${param}-${String(index)}`} className="rounded-full border border-border px-2 py-0.5 font-mono text-[11px] text-muted-foreground">
-                    {"{{"}
-                    {String(index + 1)}
-                    {"}}"} → {OPENING_PARAM_LABELS[param]}
-                  </span>
-                ))}
-                {params.length === 0 && <span className="text-xs text-muted-foreground">Sin variables</span>}
-              </div>
-            </div>
-          </div>
-          <div className="rounded-2xl border border-border bg-muted/60 p-3.5">
-            <p className="mb-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-              <MessageCircle aria-hidden className="size-3.5" />
-              Así lo verá {contact.first_name?.trim() || contact.full_name?.trim().split(/\s+/)[0] || "el contacto"} · vista previa
-            </p>
-            <div className="max-w-md rounded-[14px_14px_14px_4px] border border-border bg-background px-3 py-2.5 text-sm leading-relaxed shadow-float">
-              {preview.map((segment, index) =>
-                segment.variable ? (
-                  <mark key={String(index)} className="rounded bg-accent px-0.5 text-foreground">
-                    {segment.text}
-                  </mark>
-                ) : (
-                  <span key={String(index)}>{segment.text}</span>
-                ),
-              )}
-            </div>
-            <p className="mt-2 text-xs text-muted-foreground">
-              La plantilla abre; cuando responda, el agente continúa con tu objetivo en el mismo chat.
-            </p>
-          </div>
+          {holes.length > 0 ? (
+            <OpeningParamsEditor
+              idPrefix="fu-hole"
+              body={selected.body}
+              holes={holes}
+              onHolesChange={(next) => onChange({ opening_holes: next })}
+              topic={topic || values.topic}
+              onTopicChange={(next) => onChange({ topic: next })}
+              fields={fields}
+              sources={{
+                first_name: contact.first_name,
+                full_name: contact.full_name,
+                company_name: companyName,
+                topic: topic || values.topic,
+                custom_fields: contact.custom_fields ?? null,
+              }}
+              previewName={firstName}
+            />
+          ) : (
+            <p className="text-xs text-muted-foreground">Sin variables: sale tal cual la aprobó Meta.</p>
+          )}
+          <p className="text-xs text-muted-foreground">
+            La plantilla abre; cuando responda, el agente continúa con tu objetivo en el mismo chat.
+          </p>
         </>
       )}
     </div>

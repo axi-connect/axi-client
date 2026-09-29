@@ -1,5 +1,6 @@
 "use client";
 
+import { useContactFieldCatalog } from "@/modules/crm/infrastructure/hooks/use-contact-field-catalog";
 import { META_TEMPLATES_HREF } from "@/core/lib/hsm-copy";
 import { useEffect, useMemo, useState } from "react";
 import { CircleUser, Sparkles } from "lucide-react";
@@ -98,10 +99,16 @@ export function ScheduleFollowUpForm({
   const [company, setCompany] = useState<{ tz: string; name: string }>({ tz: DEFAULT_TZ, name: "" });
   const [settings, setSettings] = useState<AgentTaskSettings | null>(null);
   const [contactId, setContactId] = useState<string | null>(presetContact?.id ?? task?.contact_id ?? null);
-  const [contact, setContact] = useState<{ first_name: string | null; full_name: string | null }>({
+  const [contact, setContact] = useState<{
+    first_name: string | null;
+    full_name: string | null;
+    custom_fields: Record<string, unknown> | null;
+  }>({
     first_name: null,
     full_name: presetContact?.label ?? null,
+    custom_fields: null,
   });
+  const fieldCatalog = useContactFieldCatalog();
   const [reach, setReach] = useState<ContactReachabilityDTO | null>(null);
   const [templates, setTemplates] = useState<readonly HsmTemplateDTO[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>(
@@ -129,7 +136,16 @@ export function ScheduleFollowUpForm({
       .then((fresh) => alive && setReach(fresh))
       .catch(() => undefined);
     getContact(contactId)
-      .then((fresh) => alive && setContact({ first_name: fresh.first_name, full_name: fresh.full_name }))
+      .then(
+        (fresh) =>
+          alive &&
+          setContact({
+            first_name: fresh.first_name,
+            full_name: fresh.full_name,
+            // La ficha entera (campos personalizados + columnas): de ahí leen los huecos.
+            custom_fields: { ...((fresh as { custom_fields?: Record<string, unknown> }).custom_fields ?? {}), city: fresh.city, email: fresh.email, phone: fresh.phone },
+          }),
+      )
       .catch(() => undefined);
     return () => {
       alive = false;
@@ -299,16 +315,18 @@ export function ScheduleFollowUpForm({
               <OpeningTemplatePicker
                 control={control}
                 templates={templates}
-                values={{ opening_template_id: value as string, topic: "" }}
+                values={{ opening_template_id: value as string, topic: "", opening_holes: [] }}
                 onChange={(next) => {
                   if (next.opening_template_id !== undefined) {
                     setValue("opening_template_id", next.opening_template_id);
                     setSelectedTemplateId(next.opening_template_id);
                   }
                   if (next.topic !== undefined) setValue("topic", next.topic);
+                  if (next.opening_holes !== undefined) setValue("opening_holes", next.opening_holes);
                 }}
                 contact={contact}
                 companyName={company.name}
+                fields={fieldCatalog}
               />
             )}
           </div>
@@ -336,7 +354,7 @@ export function ScheduleFollowUpForm({
         { colSpan: { base: 1, md: 2 } },
       ),
     ],
-    [agents, presetContact, editing, contact, reach, templates, media, tz, now, settings, company.name, firstName],
+    [agents, presetContact, editing, contact, reach, templates, media, tz, now, settings, company.name, firstName, fieldCatalog],
   );
 
   return (

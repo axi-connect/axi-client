@@ -13686,7 +13686,7 @@ export interface components {
             opening_template?: {
                 /** Format: uuid */
                 channel_template_id: string;
-                params: ("first_name" | "full_name" | "company_name" | "topic")[];
+                params: string[];
                 topic?: string | null;
             } | null;
             /** @enum {string} */
@@ -13702,7 +13702,7 @@ export interface components {
             opening_template?: {
                 /** Format: uuid */
                 channel_template_id: string;
-                params: ("first_name" | "full_name" | "company_name" | "topic")[];
+                params: string[];
                 topic?: string | null;
             } | null;
             /** @enum {string} */
@@ -14047,7 +14047,7 @@ export interface components {
                 opening_template?: {
                     /** Format: uuid */
                     channel_template_id: string;
-                    params: ("first_name" | "full_name" | "company_name" | "topic")[];
+                    params: string[];
                     topic?: string | null;
                 } | null;
             }[];
@@ -17602,7 +17602,7 @@ export interface components {
             opening_template?: {
                 /** Format: uuid */
                 channel_template_id: string;
-                params: ("first_name" | "full_name" | "company_name" | "topic")[];
+                params: string[];
                 topic?: string | null;
             } | null;
             /** Format: date-time */
@@ -17632,7 +17632,7 @@ export interface components {
                 channel_id: string;
                 name: string;
                 language: string;
-                params: ("first_name" | "full_name" | "company_name" | "topic")[];
+                params: string[];
                 topic: string | null;
             } | null;
             /** Format: date-time */
