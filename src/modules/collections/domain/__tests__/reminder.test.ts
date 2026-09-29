@@ -1,3 +1,4 @@
+import { HSM_WINDOW_REASON_NO_TEMPLATE } from "@/core/lib/hsm-copy";
 import {
   lastReminderLine,
   manualStageOf,
@@ -42,7 +43,7 @@ describe("lastReminderLine", () => {
     // los «entregado» es exactamente lo que no queremos.
     expect(line.tone).toBe("warning");
     expect(line.text).toContain("No salió hace 2 días");
-    expect(line.text).toContain("sin plantilla aprobada");
+    expect(line.text).toContain(HSM_WINDOW_REASON_NO_TEMPLATE);
   });
 
   it("uno entregado es contexto, no alarma", () => {

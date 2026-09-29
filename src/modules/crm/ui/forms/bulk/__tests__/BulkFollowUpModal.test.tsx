@@ -76,11 +76,15 @@ describe("BulkFollowUpModal — quién recibe esto (F4/F5)", () => {
     expect(await screen.findByRole("heading", { name: "Seguimiento para 2 contactos" })).toBeInTheDocument();
     const panel = screen.getByRole("region", { name: "Quién recibe esto" });
     // En el DOM va dt→dd (C3): la etiqueta antes que la cifra; la cifra se pinta primero por CSS.
-    expect(panel).toHaveTextContent("recibirán seguimiento2");
-    expect(panel).toHaveTextContent("nunca te han escrito · abre con plantilla1");
-    expect(panel).toHaveTextContent("quedan fuera1");
+    // (la etiqueta corta del celular va delante de la larga)
+    expect(panel).toHaveTextContent(/recibirán seguimiento\s*2/);
+    expect(panel).toHaveTextContent(/abre con plantilla\s*1/);
+    expect(panel).toHaveTextContent(/quedan fuera\s*1/);
     expect(panel).toHaveTextContent("Sin teléfono ni WhatsApp");
-    expect(screen.getByRole("link", { name: "Completar teléfono" })).toHaveAttribute("href", "/crm/contacts/c3");
+    // Dos copias del detalle: la fija (≥ sm) y la plegada del celular; las dos con la misma acción.
+    for (const link of screen.getAllByRole("link", { name: "Completar teléfono" })) {
+      expect(link).toHaveAttribute("href", "/crm/contacts/c3");
+    }
   });
 
   it("con alguien que nunca escribió, la plantilla es obligatoria y bloquea «Programar»", async () => {

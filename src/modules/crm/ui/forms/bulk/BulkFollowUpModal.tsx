@@ -269,10 +269,17 @@ export function BulkFollowUpModal({
       config={{
         title: counted ? `Seguimiento para ${n(eligible, "contacto", "contactos")}` : "Seguimiento en lote",
         description: audienceLabel,
-        className: "sm:max-w-2xl",
+        // UN solo scroller (auditoría B2): el diálogo es una columna flex a la
+        // altura real de la pantalla; cabecera, recuento y botones quedan
+        // fijos y solo el formulario scrollea. Sin esto el diálogo scrolleaba
+        // por fuera y el formulario por dentro, con «Programar» fuera de la
+        // pantalla a 1280×800 y en cualquier celular.
+        className: "flex max-h-[calc(100dvh-2rem)] flex-col overflow-hidden sm:max-w-2xl",
         // El recuento va FUERA del área que scrollea: Radix enfoca el primer
         // control al abrir y, dentro, el scroll se lo llevaba por arriba —el
-        // operador veía «Agente» y nunca a quién le iba a escribir.
+        // operador veía «Agente» y nunca a quién le iba a escribir. En el
+        // celular va compacto (tres chips) y el detalle de exclusiones baja
+        // al área que scrollea, para que el formulario tenga sitio.
         body: counted ? <AudiencePanel preview={preview} /> : undefined,
         actions: [
           { label: "Cancelar", variant: "outline" },
@@ -290,7 +297,8 @@ export function BulkFollowUpModal({
         ],
       }}
     >
-      <div className="grid max-h-[55vh] min-w-0 gap-4 overflow-x-hidden overflow-y-auto pr-1">
+      <div className="grid min-h-0 min-w-0 flex-1 content-start gap-4 overflow-x-hidden overflow-y-auto pr-1 sidebar-scroll">
+        {counted && preview.skipped.length > 0 && <ExclusionsDetails preview={preview} className="sm:hidden" />}
         {previewError !== null && (
           <Callout tone="warn" icon={TriangleAlert}>
             {previewError}
@@ -563,49 +571,76 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
 function AudiencePanel({ preview }: { preview: BulkPreviewDTO }) {
   const out = preview.total - preview.eligible;
   return (
-    <section aria-label="Quién recibe esto" className="overflow-hidden rounded-2xl border border-border">
-      {/* Tres cifras en fila desde `sm`; en el celular, tres renglones: a 375 px
+    <section aria-label="Quién recibe esto" className="shrink-0 overflow-hidden rounded-2xl border border-border">
+      {/* Tres cifras en fila; en el celular con etiquetas cortas, que a 375 px
           la columna no da ni para la palabra «seguimiento». */}
-      <dl className="grid grid-cols-1 divide-y divide-border bg-secondary/70 sm:grid-cols-[repeat(3,minmax(0,1fr))] sm:divide-x sm:divide-y-0">
-        <Figure value={preview.eligible} label="recibirán seguimiento" />
-        <Figure value={preview.needs_opening} label="nunca te han escrito · abre con plantilla" />
-        <Figure value={out} label="quedan fuera" muted />
+      <dl className="grid grid-cols-[repeat(3,minmax(0,1fr))] divide-x divide-border bg-secondary/70">
+        <Figure value={preview.eligible} label="recibirán seguimiento" short="reciben" />
+        <Figure value={preview.needs_opening} label="nunca te han escrito · abre con plantilla" short="abren con plantilla" />
+        <Figure value={out} label="quedan fuera" short="fuera" muted />
       </dl>
-      {preview.skipped.length > 0 && (
-        <ul className="divide-y divide-border border-t border-border">
-          {preview.skipped.map((group) => (
-            <li key={group.reason} className="grid grid-cols-[1.75rem_minmax(0,1fr)] items-start gap-x-2 gap-y-1 px-3.5 py-2 text-xs">
-              <strong className="text-right leading-6 tabular-nums">{group.count}</strong>
-              <span className="min-w-0 leading-6 text-pretty">
-                {BULK_SKIP_LABELS[group.reason]}
-                {BULK_SKIP_HINTS[group.reason] !== null && (
-                  <span className="text-muted-foreground"> · {BULK_SKIP_HINTS[group.reason]}</span>
-                )}
-              </span>
-              {group.reason === "no_channel" && (
-                <Link
-                  href={group.count === 1 && group.contact_ids[0] ? `/crm/contacts/${group.contact_ids[0]}` : "/crm/contacts"}
-                  className="col-start-2 inline-flex min-h-6 w-fit items-center font-medium underline underline-offset-4"
-                >
-                  Completar teléfono
-                </Link>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
+      {preview.skipped.length > 0 && <ExclusionsList preview={preview} className="hidden border-t border-border sm:block" />}
     </section>
   );
 }
 
-function Figure({ value, label, muted = false }: { value: number; label: string; muted?: boolean }) {
+function Figure({ value, label, short, muted = false }: { value: number; label: string; short: string; muted?: boolean }) {
   return (
     // En el DOM va dt→dd (lo exige el HTML); la cifra se pinta primero por CSS.
-    <div className="flex min-w-0 flex-row-reverse items-baseline justify-end gap-2 px-3.5 py-2.5 sm:flex-col-reverse sm:gap-0.5 sm:py-3">
-      <dt className="min-w-0 text-[11.5px] leading-snug text-pretty text-muted-foreground">{label}</dt>
-      <dd className={cn("m-0 font-heading text-[22px] leading-none font-bold tabular-nums", muted && "text-muted-foreground")}>
+    <div className="flex min-w-0 flex-col-reverse gap-0.5 px-2.5 py-2 sm:px-3.5 sm:py-3">
+      <dt className="min-w-0 text-[11px] leading-snug text-pretty text-muted-foreground sm:text-[11.5px]">
+        <span className="sm:hidden">{short}</span>
+        <span className="hidden sm:inline">{label}</span>
+      </dt>
+      <dd className={cn("m-0 font-heading text-lg leading-none font-bold tabular-nums sm:text-[22px]", muted && "text-muted-foreground")}>
         {value}
       </dd>
     </div>
+  );
+}
+
+/** Quién queda fuera y por qué, con su acción. Fijo desde `sm`; plegado en el celular. */
+function ExclusionsList({ preview, className }: { preview: BulkPreviewDTO; className?: string }) {
+  return (
+    <ul className={cn("divide-y divide-border", className)}>
+      {preview.skipped.map((group) => (
+        <li key={group.reason} className="grid grid-cols-[1.75rem_minmax(0,1fr)] items-start gap-x-2 gap-y-1 px-3.5 py-2 text-xs">
+          <strong className="text-right leading-6 tabular-nums">{group.count}</strong>
+          <span className="min-w-0 leading-6 text-pretty">
+            {BULK_SKIP_LABELS[group.reason]}
+            {BULK_SKIP_HINTS[group.reason] !== null && (
+              <span className="text-muted-foreground"> · {BULK_SKIP_HINTS[group.reason]}</span>
+            )}
+          </span>
+          {group.reason === "no_channel" && (
+            <Link
+              href={group.count === 1 && group.contact_ids[0] ? `/crm/contacts/${group.contact_ids[0]}` : "/crm/contacts"}
+              className="col-start-2 inline-flex min-h-6 w-fit items-center font-medium underline underline-offset-4"
+            >
+              Completar teléfono
+            </Link>
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function ExclusionsDetails({ preview, className }: { preview: BulkPreviewDTO; className?: string }) {
+  const out = preview.total - preview.eligible;
+  // La lista solo se monta abierta: cerrada, un <details> sigue midiendo su
+  // contenido y el arnés lo lee como un desborde que no existe.
+  const [open, setOpen] = useState(false);
+  return (
+    <details
+      className={cn("rounded-2xl border border-border", className)}
+      open={open}
+      onToggle={(event) => setOpen(event.currentTarget.open)}
+    >
+      <summary className="cursor-pointer px-3.5 py-2 text-xs font-medium">
+        {n(out, "contacto queda fuera", "contactos quedan fuera")} · ver por qué
+      </summary>
+      {open && <ExclusionsList preview={preview} className="border-t border-border" />}
+    </details>
   );
 }
