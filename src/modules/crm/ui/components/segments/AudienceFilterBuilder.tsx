@@ -243,7 +243,7 @@ export function AudienceFilterBuilder({
                 title={`${chip.label}: ${chip.value}`}
               >
                 <span className="shrink-0 text-muted-foreground">{chip.label}</span>
-                <span className="truncate font-medium">{chip.value}</span>
+                <span className="truncate font-medium" title={chip.value}>{chip.value}</span>
               </span>
             ))
           )}

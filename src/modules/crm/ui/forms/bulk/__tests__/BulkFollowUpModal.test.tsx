@@ -42,10 +42,11 @@ jest.mock("@/shared/components/ui/modal", () => ({
     config,
   }: {
     children: React.ReactNode;
-    config: { title: string; actions: { label: string; disabled?: boolean }[] };
+    config: { title: string; body?: React.ReactNode; actions: { label: string; disabled?: boolean }[] };
   }) => (
     <div>
       <h2>{config.title}</h2>
+      {config.body}
       {children}
       {config.actions.map((action) => (
         <button key={action.label} disabled={action.disabled}>
@@ -74,9 +75,10 @@ describe("BulkFollowUpModal — quién recibe esto (F4/F5)", () => {
 
     expect(await screen.findByRole("heading", { name: "Seguimiento para 2 contactos" })).toBeInTheDocument();
     const panel = screen.getByRole("region", { name: "Quién recibe esto" });
-    expect(panel).toHaveTextContent("2recibirán seguimiento");
-    expect(panel).toHaveTextContent("1nunca te han escrito · abre con plantilla");
-    expect(panel).toHaveTextContent("1quedan fuera");
+    // En el DOM va dt→dd (C3): la etiqueta antes que la cifra; la cifra se pinta primero por CSS.
+    expect(panel).toHaveTextContent("recibirán seguimiento2");
+    expect(panel).toHaveTextContent("nunca te han escrito · abre con plantilla1");
+    expect(panel).toHaveTextContent("quedan fuera1");
     expect(panel).toHaveTextContent("Sin teléfono ni WhatsApp");
     expect(screen.getByRole("link", { name: "Completar teléfono" })).toHaveAttribute("href", "/crm/contacts/c3");
   });

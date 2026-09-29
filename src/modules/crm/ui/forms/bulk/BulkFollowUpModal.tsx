@@ -1,5 +1,6 @@
 "use client";
 
+import { META_TEMPLATES_HREF } from "@/core/lib/hsm-copy";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
@@ -11,6 +12,7 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import { cn } from "@/core/lib/utils";
+import { plural as n } from "@/core/lib/plural";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { Button } from "@/shared/components/ui/button";
@@ -69,7 +71,6 @@ const DEFAULT_TZ = "America/Bogota";
 const NO_TEMPLATE = "__none__";
 const OBJECTIVE_MIN = 12;
 
-const n = (value: number, one: string, many: string) => `${String(value)} ${value === 1 ? one : many}`;
 
 /**
  * «Pon al agente a trabajar con estos N contactos» (F4a, rediseñada 2026-09-28).
@@ -269,6 +270,10 @@ export function BulkFollowUpModal({
         title: counted ? `Seguimiento para ${n(eligible, "contacto", "contactos")}` : "Seguimiento en lote",
         description: audienceLabel,
         className: "sm:max-w-2xl",
+        // El recuento va FUERA del área que scrollea: Radix enfoca el primer
+        // control al abrir y, dentro, el scroll se lo llevaba por arriba —el
+        // operador veía «Agente» y nunca a quién le iba a escribir.
+        body: counted ? <AudiencePanel preview={preview} /> : undefined,
         actions: [
           { label: "Cancelar", variant: "outline" },
           {
@@ -285,7 +290,7 @@ export function BulkFollowUpModal({
         ],
       }}
     >
-      <div className="grid max-h-[65vh] min-w-0 gap-4 overflow-x-hidden overflow-y-auto pr-1">
+      <div className="grid max-h-[55vh] min-w-0 gap-4 overflow-x-hidden overflow-y-auto pr-1">
         {previewError !== null && (
           <Callout tone="warn" icon={TriangleAlert}>
             {previewError}
@@ -305,8 +310,6 @@ export function BulkFollowUpModal({
             Contando la audiencia…
           </p>
         )}
-
-        {counted && <AudiencePanel preview={preview} />}
 
         {nobody && (
           <div className="flex flex-col items-start gap-1.5 rounded-2xl border border-dashed border-border p-4">
@@ -376,8 +379,9 @@ export function BulkFollowUpModal({
                 <label className="grid min-w-0 gap-1 text-xs text-muted-foreground">
                   Ritmo
                   <Select value={String(perHour)} onValueChange={(v) => setPerHour(Number(v))}>
-                    <SelectTrigger className="w-full min-w-0 *:data-[slot=select-value]:truncate" aria-label="Ritmo">
-                      <SelectValue />
+                    <SelectTrigger className="w-full min-w-0" aria-label="Ritmo">
+                      {/* En el disparador solo la cifra: la pista («recomendado») vive en la lista. */}
+                      <SelectValue>{`${String(perHour)} por hora`}</SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {BULK_RATES.map((rate) => (
@@ -438,7 +442,7 @@ export function BulkFollowUpModal({
                     {templateRequired
                       ? `${n(needsOpening, "contacto nunca te ha escrito", "contactos nunca te han escrito")} y no hay ninguna plantilla de Meta aprobada para abrirles. `
                       : "No hay plantillas de Meta aprobadas: a quien lleve más de 24 h sin escribir se le esperará. "}
-                    <Link href="/marketing/settings/meta-templates" className="font-medium underline underline-offset-4">
+                    <Link href={META_TEMPLATES_HREF} className="font-medium underline underline-offset-4">
                       Ver plantillas de Meta
                     </Link>
                   </Callout>
@@ -560,7 +564,9 @@ function AudiencePanel({ preview }: { preview: BulkPreviewDTO }) {
   const out = preview.total - preview.eligible;
   return (
     <section aria-label="Quién recibe esto" className="overflow-hidden rounded-2xl border border-border">
-      <dl className="grid grid-cols-[repeat(3,minmax(0,1fr))] bg-secondary/70">
+      {/* Tres cifras en fila desde `sm`; en el celular, tres renglones: a 375 px
+          la columna no da ni para la palabra «seguimiento». */}
+      <dl className="grid grid-cols-1 divide-y divide-border bg-secondary/70 sm:grid-cols-[repeat(3,minmax(0,1fr))] sm:divide-x sm:divide-y-0">
         <Figure value={preview.eligible} label="recibirán seguimiento" />
         <Figure value={preview.needs_opening} label="nunca te han escrito · abre con plantilla" />
         <Figure value={out} label="quedan fuera" muted />
@@ -568,26 +574,21 @@ function AudiencePanel({ preview }: { preview: BulkPreviewDTO }) {
       {preview.skipped.length > 0 && (
         <ul className="divide-y divide-border border-t border-border">
           {preview.skipped.map((group) => (
-            <li
-              key={group.reason}
-              className="grid grid-cols-[1.75rem_minmax(0,1fr)_auto] items-center gap-2 px-3.5 py-2 text-xs"
-            >
-              <strong className="text-right tabular-nums">{group.count}</strong>
-              <span className="min-w-0">
+            <li key={group.reason} className="grid grid-cols-[1.75rem_minmax(0,1fr)] items-start gap-x-2 gap-y-1 px-3.5 py-2 text-xs">
+              <strong className="text-right leading-6 tabular-nums">{group.count}</strong>
+              <span className="min-w-0 leading-6 text-pretty">
                 {BULK_SKIP_LABELS[group.reason]}
                 {BULK_SKIP_HINTS[group.reason] !== null && (
                   <span className="text-muted-foreground"> · {BULK_SKIP_HINTS[group.reason]}</span>
                 )}
               </span>
-              {group.reason === "no_channel" ? (
+              {group.reason === "no_channel" && (
                 <Link
                   href={group.count === 1 && group.contact_ids[0] ? `/crm/contacts/${group.contact_ids[0]}` : "/crm/contacts"}
-                  className="font-medium whitespace-nowrap underline underline-offset-4"
+                  className="col-start-2 inline-flex min-h-6 w-fit items-center font-medium underline underline-offset-4"
                 >
                   Completar teléfono
                 </Link>
-              ) : (
-                <span />
               )}
             </li>
           ))}
@@ -599,11 +600,12 @@ function AudiencePanel({ preview }: { preview: BulkPreviewDTO }) {
 
 function Figure({ value, label, muted = false }: { value: number; label: string; muted?: boolean }) {
   return (
-    <div className="flex min-w-0 flex-col gap-0.5 px-3.5 py-3 not-last:border-r not-last:border-border">
+    // En el DOM va dt→dd (lo exige el HTML); la cifra se pinta primero por CSS.
+    <div className="flex min-w-0 flex-row-reverse items-baseline justify-end gap-2 px-3.5 py-2.5 sm:flex-col-reverse sm:gap-0.5 sm:py-3">
+      <dt className="min-w-0 text-[11.5px] leading-snug text-pretty text-muted-foreground">{label}</dt>
       <dd className={cn("m-0 font-heading text-[22px] leading-none font-bold tabular-nums", muted && "text-muted-foreground")}>
         {value}
       </dd>
-      <dt className="text-[11.5px] leading-snug text-pretty text-muted-foreground">{label}</dt>
     </div>
   );
 }

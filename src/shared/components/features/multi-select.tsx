@@ -3,6 +3,7 @@
 import * as React from "react";
 import { CheckIcon, ChevronDown, X } from "lucide-react";
 import { cn } from "@/core/lib/utils";
+import { plural } from "@/core/lib/plural";
 import {
   Popover,
   PopoverAnchor,
@@ -93,10 +94,6 @@ function sameSet(a: readonly string[], b: readonly string[]): boolean {
   return [...a].sort().every((value, index) => value === sorted[index]);
 }
 
-function plural(n: number, one: string, many: string): string {
-  return `${String(n)} ${n === 1 ? one : many}`;
-}
-
 /** El aspecto del campo: el de `Input`, con altura mínima y no fija. */
 const fieldClass = cn(
   "flex min-h-9 w-full min-w-0 cursor-pointer items-center gap-1 rounded-md border border-input bg-transparent py-1 pr-1 pl-1 text-left text-sm shadow-xs transition-[color,box-shadow] dark:bg-input/30",
@@ -179,6 +176,10 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
     const [search, setSearch] = React.useState("");
     const [announcement, setAnnouncement] = React.useState("");
     const buttonRef = React.useRef<HTMLButtonElement>(null);
+    // C1: con el popover abierto, el pointerdown sobre el campo (fuera del
+    // contenido) ya lo cierra por Radix; el click que sigue NO debe reabrirlo.
+    // Se recuerda cómo estaba en el pointerdown y el click solo abre si estaba cerrado.
+    const openAtPointerDown = React.useRef(false);
     const prevDefault = React.useRef<string[]>(defaultValue);
     const id = React.useId();
     const listboxId = `${id}-listbox`;
@@ -325,8 +326,12 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
             className={cn(fieldClass, className)}
             data-slot="multi-select"
             data-state={open ? "open" : "closed"}
+            onPointerDown={() => {
+              openAtPointerDown.current = open;
+            }}
             onClick={() => {
-              if (!disabled) setOpen((current) => !current);
+              if (disabled || openAtPointerDown.current) return;
+              setOpen(true);
             }}
           >
             {selected.length === 0 ? (
@@ -382,9 +387,8 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
                 aria-controls={open ? listboxId : undefined}
                 aria-describedby={selected.length > 0 ? selectionId : undefined}
                 onClick={(event) => {
-                  // El div de fuera ya conmuta: que el botón no lo haga dos veces.
+                  // Radix conmuta desde el Trigger; el div de fuera no debe volver a hacerlo.
                   event.stopPropagation();
-                  setOpen((current) => !current);
                   props.onClick?.(event);
                 }}
                 className="grid h-7 w-8 shrink-0 place-items-center rounded-sm text-muted-foreground outline-none"

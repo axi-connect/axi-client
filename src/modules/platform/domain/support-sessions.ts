@@ -59,9 +59,7 @@ export function formatSupportDuration(seconds: number | null): string {
   return `${Math.max(1, Math.round(seconds / 60))} min`;
 }
 
-export function plural(count: number, one: string, many: string): string {
-  return `${count} ${count === 1 ? one : many}`;
-}
+export { plural } from "@/core/lib/plural";
 
 // ─── Auditoría del tenant (D2 y O11) ────────────────────────────────────────
 

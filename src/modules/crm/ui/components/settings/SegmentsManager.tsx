@@ -5,6 +5,7 @@ import { ChevronDown, Download, Pencil, Plus, Trash2, Users } from "lucide-react
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { exportContactsUrl } from "@/modules/crm/infrastructure/services/imports-service.adapter";
 import { cn } from "@/core/lib/utils";
+import { plural } from "@/core/lib/plural";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { Button } from "@/shared/components/ui/button";
@@ -254,7 +255,7 @@ function SegmentCard({
               className="inline-flex h-7 max-w-full min-w-0 items-center gap-1 rounded-full border border-border px-3 text-xs"
             >
               <span className="shrink-0 text-muted-foreground">{chip.label}</span>
-              <span className="truncate font-medium">{chip.value}</span>
+              <span className="truncate font-medium" title={chip.value}>{chip.value}</span>
             </span>
           ))
         )}
@@ -361,7 +362,7 @@ export function SegmentsManager() {
       <div className="grid min-w-0 items-start gap-4 @min-[60rem]:grid-cols-[minmax(0,1fr)_minmax(20rem,26rem)]">
         <section className="min-w-0 space-y-3" aria-label="Segmentos">
           <p className="px-1 text-xs text-muted-foreground">
-            {segments.length} {segments.length === 1 ? "segmento" : "segmentos"} · se recalculan solos cuando cambian los contactos
+            {plural(segments.length, "segmento", "segmentos")} · se recalculan solos cuando cambian los contactos
           </p>
           {segments.length === 0 ? (
             <p className="rounded-3xl border border-dashed border-border px-5 py-8 text-center text-sm text-pretty text-muted-foreground">

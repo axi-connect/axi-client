@@ -31,6 +31,7 @@ import { ImportExportMenu } from "@/modules/crm/ui/components/imports/ImportExpo
 import { compactSegmentFilters } from "@/modules/crm/domain/segment";
 import { BulkFollowUpButton } from "@/modules/crm/ui/components/BulkFollowUpButton";
 import { SendTemplateButton } from "@/modules/marketing/public";
+import { plural } from "@/core/lib/plural";
 import { useAlert } from "@/core/providers/alert-provider";
 import { ContactsSummary } from "@/modules/crm/ui/components/contacts/ContactsSummary";
 
@@ -272,7 +273,7 @@ export default function CrmContactsPage() {
                         audience={{
                           mode: "contacts",
                           contactIds: [...selected],
-                          label: `${String(count)} ${count === 1 ? "contacto que marcaste" : "contactos que marcaste"} en la lista`,
+                          label: `${plural(count, "contacto que marcaste", "contactos que marcaste")} en la lista`,
                         }}
                       />
                       <BulkFollowUpButton
@@ -280,7 +281,7 @@ export default function CrmContactsPage() {
                           source: "contacts",
                           contact_ids: [...selected],
                         }}
-                        audienceLabel={`${String(count)} ${count === 1 ? "contacto que marcaste" : "contactos que marcaste"} en la lista`}
+                        audienceLabel={`${plural(count, "contacto que marcaste", "contactos que marcaste")} en la lista`}
                         label={`Poner al agente a trabajar con ${String(count)}`}
                       />
                     </>

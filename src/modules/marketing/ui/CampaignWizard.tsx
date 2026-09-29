@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Check, Clock, MessageSquare } from "lucide-react";
 import { cn } from "@/core/lib/utils";
+import { plural } from "@/core/lib/plural";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { useAuth } from "@/shared/auth/auth.hooks";
@@ -67,6 +68,7 @@ import {
   type HsmTemplateDTO,
   type MessagingWindowDTO,
 } from "@/modules/marketing/domain/template-catalog";
+import { takePreset } from "@/modules/marketing/infrastructure/preset-handoff";
 import { HsmTemplatePicker } from "@/modules/marketing/ui/components/HsmTemplatePicker";
 import { renderHsmPreview } from "@/modules/marketing/domain/hsm-preview";
 import { hsmPreviewValue } from "@/modules/marketing/domain/hsm-params";
@@ -100,10 +102,13 @@ const STEP_QUESTIONS: Record<WizardStep, string> = {
 export function CampaignWizard({
   resumeId = null,
   preset = null,
+  presetKey = null,
 }: {
   resumeId?: string | null;
   /** F6: la audiencia ya decidida en el CRM («Enviar plantilla»). Solo sin `resumeId`. */
   preset?: PresetAudience | null;
+  /** F6/C2: la misma audiencia, guardada en sessionStorage por ser una lista larga. */
+  presetKey?: string | null;
 }) {
   const { hasPermission } = useAuth();
   const canManage = hasPermission("marketing:manage");
@@ -114,6 +119,12 @@ export function CampaignWizard({
   const [draft, setDraft] = useState<CampaignDraft>(() =>
     preset !== null && resumeId === null ? draftFromPreset(preset) : EMPTY_DRAFT,
   );
+  // La lista larga se lee tras montar (sessionStorage no existe en el servidor).
+  useEffect(() => {
+    if (presetKey === null || resumeId !== null) return;
+    const stored = takePreset(window.sessionStorage, presetKey);
+    if (stored !== null) setDraft(draftFromPreset(stored));
+  }, [presetKey, resumeId]);
   /** Id del borrador ya creado en el backend; `null` hasta salir del paso 1. */
   const [campaignId, setCampaignId] = useState<string | null>(null);
   const [estimate, setEstimate] = useState<AudienceEstimate | null>(null);
@@ -959,7 +970,7 @@ function PresetAudienceCard({
         <span className="text-muted-foreground mt-0.5 block text-xs text-pretty">
           {count === null
             ? "Los contactos que creó ese import, menos quienes pidieron no recibir promociones."
-            : `${String(count)} ${count === 1 ? "contacto" : "contactos"}, menos quienes pidieron no recibir promociones.`}
+            : `${plural(count, "contacto", "contactos")}, menos quienes pidieron no recibir promociones.`}
         </span>
       </div>
       <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={onChange}>
