@@ -20,8 +20,9 @@ describe("calendar-range", () => {
 
     const day = rangeForView("day", "2026-08-08", BOGOTA, LIST);
     expect(day.days).toEqual(["2026-08-08"]);
-    expect(day.fromUtc).toBe("2026-08-08T05:00:00.000Z");
-    expect(day.toUtc).toBe("2026-08-09T04:59:59.999Z");
+    // Pinta un día pero carga su semana (lunes 3 → domingo 9).
+    expect(day.fromUtc).toBe("2026-08-03T05:00:00.000Z");
+    expect(day.toUtc).toBe("2026-08-10T04:59:59.999Z");
   });
 
   it("lista → clampa a 92 días (el límite del backend)", () => {

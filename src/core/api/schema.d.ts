@@ -11922,7 +11922,11 @@ export interface components {
                 /** @enum {string} */
                 created_by_type: "user" | "ai_agent";
                 /** Format: uuid */
+                created_by_user_id: string | null;
+                /** Format: uuid */
                 conversation_id: string | null;
+                /** Format: uuid */
+                call_session_id: string | null;
                 /** Format: date-time */
                 cancelled_at: string | null;
                 cancellation_reason: string | null;
@@ -11951,7 +11955,11 @@ export interface components {
             /** @enum {string} */
             created_by_type: "user" | "ai_agent";
             /** Format: uuid */
+            created_by_user_id: string | null;
+            /** Format: uuid */
             conversation_id: string | null;
+            /** Format: uuid */
+            call_session_id: string | null;
             /** Format: date-time */
             cancelled_at: string | null;
             cancellation_reason: string | null;
@@ -13987,6 +13995,8 @@ export interface components {
                 deal_id: string | null;
                 /** Format: uuid */
                 conversation_id: string | null;
+                /** Format: uuid */
+                call_session_id: string | null;
                 /** @enum {string} */
                 kind: "note" | "call" | "meeting" | "task";
                 title: string | null;
@@ -14097,6 +14107,8 @@ export interface components {
             deal_id: string | null;
             /** Format: uuid */
             conversation_id: string | null;
+            /** Format: uuid */
+            call_session_id: string | null;
             /** @enum {string} */
             kind: "note" | "call" | "meeting" | "task";
             title: string | null;

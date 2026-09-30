@@ -34,3 +34,24 @@ describe("buildCrumbs: nombres, nunca slugs ni identificadores", () => {
     ).toEqual(["Pedidos", "Reserva"]);
   });
 });
+
+describe("buildCrumbs: la agenda", () => {
+  it("el detalle de la cita termina en «Cita», sin «Cita › Detalle»", () => {
+    // La misma forma que SCHEDULING_BREADCRUMBS (shared no importa de modules).
+    const config = {
+      unlinked: ["/scheduling/calendar/appointment"],
+      hidden: ["/scheduling/calendar/appointment"],
+      children: { "/scheduling/calendar/appointment": { "*": "Cita" } },
+    };
+    const labels = buildCrumbs("/scheduling/calendar/appointment/01a0dbab-fcd8-72f8-b7be-5ef9d4441e01", [
+      config,
+    ]).map((c) => c.label);
+    expect(labels).toEqual(["Agenda", "Calendario", "Cita"]);
+    // Sin la config del módulo, el intermedio sí se ve (nada se oculta por defecto).
+    expect(buildCrumbs("/scheduling/calendar/appointment/01a0dbab-fcd8-72f8-b7be-5ef9d4441e01")).toHaveLength(4);
+  });
+
+  it("dice Agenda › Calendario, no scheduling › calendar", () => {
+    expect(buildCrumbs("/scheduling/calendar").map((c) => c.label)).toEqual(["Agenda", "Calendario"]);
+  });
+});
