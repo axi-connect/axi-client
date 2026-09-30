@@ -8,7 +8,7 @@ jest.mock("@/modules/calls/infrastructure/realtime/use-calls-socket", () => ({ u
 jest.mock("@/modules/calls/infrastructure/realtime/use-live-call-preview", () => ({
   useLiveCallPreview: () => ({ mode: "agent", pulse: {}, line: { role: "agent", text: "Te confirmo la cita del jueves." } }),
 }));
-jest.mock("@/modules/calls/ui/components/TestCallDialog", () => ({ TestCallDialog: () => null }));
+jest.mock("@/modules/calls/ui/components/CallLauncherDialog", () => ({ CallLauncherDialog: () => null }));
 
 const live = {
   id: "call-live",
@@ -42,10 +42,32 @@ const overview = {
 };
 const getCallsOverview = jest.fn();
 const listCallSessions = jest.fn();
+const getCallsFunnel = jest.fn();
 jest.mock("@/modules/calls/infrastructure/services/calls-service.adapter", () => ({
   getCallsOverview: (...args: unknown[]) => getCallsOverview(...args),
   listCallSessions: (...args: unknown[]) => listCallSessions(...args),
+  getCallsFunnel: (...args: unknown[]) => getCallsFunnel(...args),
 }));
+
+/** Plan de modos: 16 llamadas de venta, 8 se quedan entre propuesta y objeciones. */
+const funnel = {
+  period: { start: new Date().toISOString(), end: new Date().toISOString() },
+  types: [
+    {
+      call_type: "sales_followup",
+      label: "Venta y seguimiento comercial",
+      total: 16,
+      goal_met: 5,
+      stages: [
+        { key: "apertura", label: "Apertura", reached: 16 },
+        { key: "propuesta", label: "Propuesta", reached: 14 },
+        { key: "objeciones", label: "Objeciones", reached: 6 },
+        { key: "cierre", label: "Cierre", reached: 5 },
+      ],
+    },
+    { call_type: "collections", label: "Cobranza", total: 0, goal_met: 0, stages: [] },
+  ],
+};
 
 /** Una ficha del bento por su etiqueta (h2); la sección no lleva nombre propio. */
 function tile(name: string): HTMLElement {
@@ -64,6 +86,7 @@ describe("CallsMonitorView (premium F5)", () => {
   beforeEach(() => {
     storeState = { calls: [live], initialized: true, error: null, fetchLive: jest.fn(() => Promise.resolve()) };
     getCallsOverview.mockResolvedValue(overview);
+    getCallsFunnel.mockResolvedValue(funnel);
     listCallSessions.mockImplementation((params: { outcome?: string }) =>
       Promise.resolve(
         params.outcome === "callback_requested"
@@ -104,4 +127,23 @@ describe("CallsMonitorView (premium F5)", () => {
     expect(screen.queryByText("Todo al día")).not.toBeInTheDocument();
     expect(screen.getByText("Nadie está al teléfono")).toBeInTheDocument();
   });
+
+  it("plan de modos: «Dónde se caen las llamadas» dice cuántas cumplieron y dónde se quedaron", async () => {
+    render(<CallsMonitorView />);
+    await flush();
+    const card = tile("Dónde se caen las llamadas");
+    expect(within(card).getByText(/5 de 16 cumplieron su objetivo/)).toBeInTheDocument();
+    expect(within(card).getByText(/8 se quedaron entre propuesta y objeciones/)).toBeInTheDocument();
+    // Solo los tipos con llamadas: sin selector con un único tipo.
+    expect(within(card).queryByRole("radiogroup", { name: "Tipo de llamada" })).toBeNull();
+  });
+
+  it("plan de modos: «Lo próximo» propone revisar la etapa donde más se quedan", async () => {
+    render(<CallsMonitorView />);
+    await flush();
+    const island = screen.getByRole("region", { name: "Lo próximo" });
+    // F-4: 14 llegaron a propuesta y 6 a objeciones: 8 se quedaron EN propuesta.
+    expect(within(island).getByText(/se quedaron en propuesta/)).toBeInTheDocument();
+  });
 });
+

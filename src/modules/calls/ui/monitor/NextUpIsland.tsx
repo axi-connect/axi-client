@@ -27,6 +27,7 @@ export function NextUpIsland({
   callbacks,
   failed,
   minutes,
+  funnelDrop = null,
   className,
 }: {
   /** No se pudo leer lo pendiente: se dice, jamás «Todo al día» sin haber mirado. */
@@ -36,6 +37,8 @@ export function NextUpIsland({
   callbacks: { total: number; names: string[] } | null;
   failed: number | null;
   minutes: MinutesOutlook | null;
+  /** Plan de modos: la etapa donde más se quedan las proactivas del ciclo. */
+  funnelDrop?: { type: string; from: string; to: string; lost: number } | null;
   className?: string;
 }) {
   const loading = callbacks === null || failed === null || minutes === null;
@@ -59,6 +62,16 @@ export function NextUpIsland({
         detail: "en este ciclo · mira el motivo en el historial",
         href: "/calls/history",
         dot: "destructive",
+      });
+    }
+    if (funnelDrop !== null) {
+      rows.push({
+        key: "funnel",
+        figure: String(funnelDrop.lost),
+        title: `llamadas de ${funnelDrop.type.toLowerCase()} se quedaron en ${funnelDrop.from.toLowerCase()}`,
+        detail: "revisa esa etapa del marco",
+        href: "/calls/playbooks",
+        dot: "warning",
       });
     }
     if (minutes.remainingMinutes !== null && minutes.tone !== "success") {

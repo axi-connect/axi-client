@@ -24,8 +24,14 @@ export type CallOutcome = NonNullable<CallSessionRowDTO["outcome"]>;
 export type CallAnsweredBy = NonNullable<CallSessionRowDTO["answered_by"]>;
 export type CallsOverviewGranularity = "day" | "week" | "month";
 
+export type CallMode = CallSessionRowDTO["mode"];
+export type LaunchCallInput = Schemas["LaunchCallDto"];
+
 export type ListCallSessionsParams = OffsetQuery & {
   direction?: CallDirection;
+  /** Plan de modos: filtrar por modo y por tipo de conversación. */
+  mode?: CallMode;
+  call_type?: string;
   status?: CallSessionStatus;
   outcome?: CallOutcome;
   purpose?: CallPurpose;
@@ -37,6 +43,17 @@ export type ListCallSessionsParams = OffsetQuery & {
   contact_id?: string;
   /** Nombre del contacto o dígitos del número. */
   q?: string;
+};
+
+export const MODE_LABELS: Record<CallMode, string> = {
+  reactive: "Reactivo",
+  proactive: "Proactivo",
+};
+
+/** Qué hace cada modo, en una línea (diálogo «Llamar»). */
+export const MODE_HINTS: Record<CallMode, string> = {
+  proactive: "Dice el motivo apenas contesten y lleva la llamada por el marco.",
+  reactive: "Saluda y escucha. El cliente lleva la conversación.",
 };
 
 export const DIRECTION_LABELS: Record<CallDirection, string> = {
@@ -125,6 +142,10 @@ export type CallRow = {
   contact_name: string | null;
   phone: string;
   purpose: CallPurpose;
+  /** Plan de modos: modo, tipo de conversación y CLAVE de la etapa alcanzada. */
+  mode: CallMode;
+  call_type: string | null;
+  last_stage: string | null;
   agent: string | null;
   status: CallSessionStatus;
   outcome: CallSessionRowDTO["outcome"];
@@ -144,6 +165,9 @@ export function mapSessionToRow(dto: CallSessionRowDTO): CallRow {
     // El teléfono del CLIENTE: en salientes es el destino, en entrantes el origen
     phone: dto.direction === "outbound" ? dto.to_number : dto.from_number,
     purpose: dto.purpose,
+    mode: dto.mode,
+    call_type: dto.call_type,
+    last_stage: dto.last_stage,
     agent: dto.ai_agent_name,
     status: dto.status,
     outcome: dto.outcome,

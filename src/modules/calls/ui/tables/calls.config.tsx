@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowDownLeft, ArrowUpRight, Mic } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Mic, Route } from "lucide-react";
 import type { ListQuery } from "@/shared/api/query";
 import type { Paginated } from "@/core/api/types";
 import { StatePill } from "@/shared/components/features/bento";
@@ -10,11 +10,14 @@ import { RelativeDate } from "@/shared/components/ui/relative-date";
 import {
   callResultPill,
   CALL_PURPOSE_LABELS,
+  MODE_LABELS,
   DIRECTION_LABELS,
   mapSessionToRow,
   type CallRow,
   type ListCallSessionsParams,
 } from "@/modules/calls/domain/call";
+import { callTypeLabel } from "@/modules/calls/domain/playbooks";
+import { usePlaybookLabels } from "@/modules/calls/infrastructure/hooks/use-playbook-labels";
 import { listCallSessions } from "@/modules/calls/infrastructure/services/calls-service.adapter";
 import { formatCallClock, formatCallCost } from "@/modules/calls/ui/lib/call-format";
 
@@ -63,9 +66,17 @@ export const callColumns: ColumnDef<CallRow>[] = [
     searchable: false,
     cell: ({ row }) => (
       <span className="flex flex-col whitespace-nowrap">
-        <span className="text-sm">{CALL_PURPOSE_LABELS[row.original.purpose]}</span>
-        {row.original.attempt > 1 && (
-          <span className="text-xs text-muted-foreground">intento {row.original.attempt}</span>
+        <span className="text-sm">
+          {row.original.mode === "proactive" && row.original.call_type !== null
+            ? callTypeLabel(row.original.call_type)
+            : CALL_PURPOSE_LABELS[row.original.purpose]}
+        </span>
+        <span className="text-xs text-muted-foreground">
+          {MODE_LABELS[row.original.mode].toLowerCase()}
+          {row.original.attempt > 1 ? ` · intento ${row.original.attempt}` : ""}
+        </span>
+        {row.original.mode === "proactive" && row.original.last_stage !== null && (
+          <StageReached callType={row.original.call_type} stageKey={row.original.last_stage} />
         )}
       </span>
     ),
@@ -119,3 +130,16 @@ export const callColumns: ColumnDef<CallRow>[] = [
     ),
   },
 ];
+
+/** «Llegó a Propuesta»: el nombre que el negocio le puso a la etapa en Marcos. */
+function StageReached({ callType, stageKey }: { callType: string | null; stageKey: string }) {
+  const labels = usePlaybookLabels();
+  const label = (callType === null ? undefined : labels.get(callType)?.get(stageKey)) ?? stageKey;
+  return (
+    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+      <Route aria-hidden className="size-3 text-accent-violet" />
+      llegó a {label.toLowerCase()}
+    </span>
+  );
+}
+

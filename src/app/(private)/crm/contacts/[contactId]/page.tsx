@@ -24,6 +24,7 @@ import { subscribeJourneyChanged } from "@/modules/crm/infrastructure/journey-ev
 import { useJourneyRealtime } from "@/modules/crm/infrastructure/realtime/use-journey-realtime";
 import { ContactDataPanel } from "@/modules/crm/ui/components/contact-data/ContactDataPanel";
 import { Contact360Header } from "@/modules/crm/ui/components/contact-detail/Contact360Header";
+import { CallContactButton } from "@/modules/calls/public";
 import { CopilotPanel } from "@/modules/crm/ui/components/contact-detail/CopilotPanel";
 import { ContactDealsCard } from "@/modules/crm/ui/components/contact-detail/ContactDealsCard";
 import { ContactOrdersDocumentsCard } from "@/modules/crm/ui/components/contact-detail/ContactOrdersDocumentsCard";
@@ -150,6 +151,17 @@ export default function Contact360Page({
   return (
     <div className="space-y-5">
       <Contact360Header contact={bundle.contact} profile={bundle.profile} users={bundle.users} />
+      {/* Plan de modos §7: «Llamar» con tipo y modo; se oculta sin calls:place o sin el módulo. */}
+      <div className="-mt-2 flex justify-end empty:hidden">
+        <CallContactButton
+          className="rounded-full"
+          contact={{
+            id: bundle.contact.id,
+            name: contactDisplayName(bundle.contact),
+            phone: bundle.contact.phone ?? null,
+          }}
+        />
+      </div>
 
       {/* El bento (§9.5; lienzo F2, tablero 4). Se dimensiona por el ancho del
           CONTENIDO (`@container`): cuatro columnas solo desde 68 rem, porque el

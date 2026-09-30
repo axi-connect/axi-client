@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { Route } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { CALL_PURPOSE_LABELS, CALL_STATUS_MAP, type CallSessionRowDTO } from "@/modules/calls/domain/call";
+import { callTypeLabel } from "@/modules/calls/domain/playbooks";
 import { useLiveCallPreview } from "@/modules/calls/infrastructure/realtime/use-live-call-preview";
 import { CallAura } from "@/modules/calls/ui/components/aura/CallAura";
 import { formatCallClock } from "@/modules/calls/ui/lib/call-format";
@@ -22,7 +24,7 @@ const MODE_DOT = {
  * llamada en vivo. `now` viene del padre: UN intervalo para toda la parrilla.
  */
 export function LiveCallCard({ call, now }: { call: CallSessionRowDTO; now: number }) {
-  const { mode, line } = useLiveCallPreview(call);
+  const { mode, line, stage } = useLiveCallPreview(call);
   const phone = call.direction === "outbound" ? call.to_number : call.from_number;
   const ringing = call.status !== "in_progress";
   const elapsed =
@@ -50,9 +52,17 @@ export function LiveCallCard({ call, now }: { call: CallSessionRowDTO; now: numb
           </span>
         </span>
         <span className="truncate text-xs text-muted-foreground">
+          {/* F-8: el tipo SE SUMA al motivo; sustituirlo perdía de dónde salió la llamada. */}
           {CALL_PURPOSE_LABELS[call.purpose]}
+          {call.call_type !== null && call.mode === "proactive" ? ` · ${callTypeLabel(call.call_type)}` : ""}
           {call.ai_agent_name !== null ? ` · ${call.ai_agent_name}` : ""}
         </span>
+        {stage !== null && !ringing && (
+          <span className="inline-flex min-w-0 items-center gap-1.5 text-xs font-medium">
+            <Route aria-hidden className="size-3 shrink-0 text-accent-violet" />
+            <span className="truncate">{stage}</span>
+          </span>
+        )}
         <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
           <span aria-hidden className={cn("size-1.5 rounded-full", MODE_DOT[mode])} />
           {whoLabel(mode, names, ringing)}

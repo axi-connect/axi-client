@@ -6,3 +6,5 @@
  */
 
 export { ContactCallsList } from "@/modules/calls/ui/components/ContactCallsList";
+// Plan de modos §7: «Llamar» a un contacto desde la ficha, el inbox o Cobros.
+export { CallContactButton } from "@/modules/calls/ui/components/CallContactButton";

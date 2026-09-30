@@ -18,6 +18,10 @@ const LABELS: Record<string, string> = {
 	"settings": "Configuración",
 	// /crm/settings/segments (segmentos premium 2026-09-28): salía «segments» crudo.
 	"segments": "Segmentos",
+	// Llamadas (auditoría fase 2 E1, F-11): «calls > playbooks» salía crudo.
+	"calls": "Llamadas",
+	"playbooks": "Marcos",
+	"history": "Historial",
 	"marketing": "Marketing",
 	"campaigns": "Campañas",
 	"automations": "Recuperación",

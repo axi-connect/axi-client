@@ -95,6 +95,13 @@ export function CallDetailView({ callId }: { callId: string }) {
     onPhase: (event) => dispatchPulse({ type: "phase", phase: event.phase }),
     onAgentText: (event) =>
       dispatchPulse({ type: "agent_text", generation: event.generation, text: event.text }),
+    onStage: (event) => {
+      // La píldora cambia al instante; la ruta y las marcas de la
+      // conversación salen del detalle, que se re-lee con el mismo debounce
+      // de los huecos del transcript (≤ 7 cambios por llamada).
+      dispatchPulse({ type: "stage", stage: event.stage });
+      scheduleGapReload();
+    },
     onSegment: (segment) => {
       dispatchPulse({ type: "segment", role: segment.role, generation: segment.generation });
       setCall((prev) => {

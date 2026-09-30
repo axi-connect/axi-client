@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { Fragment, useEffect, useRef } from "react";
 import { cn } from "@/core/lib/utils";
 import { StatePill } from "@/shared/components/features/bento";
+import { StageMark } from "@/modules/calls/ui/components/StageMark";
 import type { CallTranscriptSegment } from "@/modules/calls/domain/call";
 import { formatCallClock } from "@/modules/calls/ui/lib/call-format";
 
@@ -32,9 +33,12 @@ export function LiveConversation({
   segments,
   draft,
   names,
+  stageMarks = null,
   className,
 }: {
   segments: readonly CallTranscriptSegment[];
+  /** Plan de modos: `seq → etapa` para las marcas «Etapa · X» (proactivas). */
+  stageMarks?: ReadonlyMap<number, string> | null;
   /** Texto del agente mientras suena, o null. */
   draft: string | null;
   names: { agent: string; caller: string };
@@ -76,9 +80,15 @@ export function LiveConversation({
         ) : (
           <>
             <ol aria-live="polite" className="flex min-h-full flex-col justify-end gap-0.5 pt-12">
-              {rows.map((row) => (
-                <ConversationRow key={row.key} row={row} />
-              ))}
+              {rows.map((row) => {
+                const mark = stageMarks?.get(Number(row.key));
+                return (
+                  <Fragment key={row.key}>
+                    {mark !== undefined && <StageMark label={mark} />}
+                    <ConversationRow row={row} />
+                  </Fragment>
+                );
+              })}
             </ol>
             {draft !== null && (
               <div aria-hidden>

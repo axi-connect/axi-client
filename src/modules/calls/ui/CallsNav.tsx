@@ -1,13 +1,15 @@
 "use client";
 
-import { Activity, History, Settings } from "lucide-react";
+import { Activity, History, Route, Settings } from "lucide-react";
 import { NavTabs, type NavTabItem } from "@/shared/components/layout/nav-tabs";
 
-// Las tres pestañas se ven con `calls:read` (Configuración es de solo lectura
+// Las cuatro pestañas se ven con `calls:read` (Configuración es de solo lectura
 // sin `calls:manage`, dentro de la propia vista): no hay filtro por permiso.
 const NAV_ITEMS: readonly NavTabItem[] = [
   { href: "/calls", label: "Monitoreo", icon: Activity, exact: true },
   { href: "/calls/history", label: "Historial", icon: History },
+  // Plan de modos §5: el único lugar donde se ven y ajustan los marcos.
+  { href: "/calls/playbooks", label: "Marcos", icon: Route },
   { href: "/calls/settings", label: "Configuración", icon: Settings },
 ];
 

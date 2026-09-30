@@ -1,7 +1,10 @@
 import {
   INITIAL_LIVE_CALL_PULSE,
   auraModeFor,
+  currentStage,
   liveCallPulseReducer,
+  routeSteps,
+  stageMarks,
   type LiveCallPulse,
   type LiveCallPulseAction,
 } from "@/modules/calls/domain/live-call";
@@ -89,5 +92,44 @@ describe("pulso de la llamada en vivo (premium F2)", () => {
       { type: "phase", phase: "ending" },
     );
     expect(pulse.draft).toBeNull();
+  });
+});
+
+describe("plan de modos · etapas en vivo", () => {
+  const stages = [
+    { key: "apertura", label: "Apertura" },
+    { key: "descubrimiento", label: "Descubrimiento" },
+    { key: "cierre", label: "Cierre" },
+  ];
+
+  it("el reductor guarda la etapa del evento y no cambia si se repite", () => {
+    const first = liveCallPulseReducer(INITIAL_LIVE_CALL_PULSE, { type: "stage", stage: "descubrimiento" });
+    expect(first.stage).toBe("descubrimiento");
+    expect(liveCallPulseReducer(first, { type: "stage", stage: "descubrimiento" })).toBe(first);
+  });
+
+  it("currentStage: el evento en vivo manda; sin él, la última de la ruta del detalle", () => {
+    expect(currentStage(INITIAL_LIVE_CALL_PULSE, ["apertura", "descubrimiento"])).toBe("descubrimiento");
+    expect(currentStage({ ...INITIAL_LIVE_CALL_PULSE, stage: "cierre" }, ["apertura"])).toBe("cierre");
+    expect(currentStage(INITIAL_LIVE_CALL_PULSE, [])).toBeNull();
+  });
+
+  it("routeSteps marca recorridas, la actual y las que faltan", () => {
+    expect(routeSteps(stages, "descubrimiento").map((s) => s.state)).toEqual(["done", "now", "next"]);
+    expect(routeSteps(stages, null).map((s) => s.state)).toEqual(["next", "next", "next"]);
+  });
+
+  it("stageMarks pone la primera etapa antes del primer turno del agente y cada cambio en su turno", () => {
+    const segments = [
+      { seq: 1, role: "system", at_ms: 0 },
+      { seq: 2, role: "agent", at_ms: 5_000 },
+      { seq: 3, role: "caller", at_ms: 9_000 },
+      { seq: 4, role: "agent", at_ms: 12_000 },
+    ];
+    const events = [{ type: "stage_changed", payload: { to: "descubrimiento", at_ms: 12_400 } }];
+    const marks = stageMarks(segments, events, stages);
+    expect(marks.get(2)).toBe("Apertura");
+    expect(marks.get(4)).toBe("Descubrimiento");
+    expect(marks.has(3)).toBe(false);
   });
 });

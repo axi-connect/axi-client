@@ -23,6 +23,9 @@ function call(overrides: Partial<CallSessionDetailDTO> = {}): CallSessionDetailD
     id: "call-1",
     direction: "outbound",
     purpose: "appointment_reminder",
+    mode: "reactive",
+    call_type: null,
+    last_stage: null,
     status: "completed",
     outcome: "goal_met",
     answered_by: "human",
@@ -52,6 +55,8 @@ function call(overrides: Partial<CallSessionDetailDTO> = {}): CallSessionDetailD
       { type: "turn_completed", payload: { latency: { total_turn_ms: 4_600 } }, created_at: AT },
       { type: "goal_assessment", payload: { met: true, confidence: 0.9, reason: "aceptó el horario" }, created_at: AT },
     ],
+    playbook: null,
+    stage_route: [],
     ...overrides,
   };
 }
@@ -111,4 +116,69 @@ describe("FinishedCallView (premium F4)", () => {
     expect(screen.queryByRole("region", { name: "Así fue la llamada" })).not.toBeInTheDocument();
     expect(screen.getByText("Esta llamada no tiene conversación: no hubo diálogo con el agente.")).toBeInTheDocument();
   });
+
+  describe("plan de modos: la ruta de etapas", () => {
+    const stage = (key: string, label: string) => ({ key, label, goal: "Meta.", advance_when: "Responde.", must: [], never: [] });
+    const playbook = {
+      call_type: "sales_followup",
+      label: "Venta",
+      version: 1,
+      opening_guidance: "Saluda.",
+      stages: [stage("apertura", "Apertura"), stage("propuesta", "Propuesta"), stage("cierre", "Cierre")],
+    };
+
+    it("A1: una proactiva que dejó mensaje en el buzón no «llegó» a ninguna etapa aunque la ruta traiga la sembrada", async () => {
+      await renderView(
+        call({
+          mode: "proactive",
+          call_type: "sales_followup",
+          outcome: "voicemail",
+          playbook,
+          stage_route: ["apertura"],
+          last_stage: null,
+        }),
+      );
+      const island = screen.getAllByRole("region", { name: "Así fue la llamada" })[0] as HTMLElement;
+      expect(within(island).queryByText(/Llegó a/)).toBeNull();
+      expect(within(island).queryByText(/Se cortó en/)).toBeNull();
+    });
+
+    it("F-1: sin resumen ni veredicto, la ruta igual dice dónde se cortó", async () => {
+      await renderView(
+        call({
+          mode: "proactive",
+          call_type: "sales_followup",
+          outcome: "hangup",
+          summary: null,
+          events: [],
+          ended_at: "2026-09-20T10:00:00.000Z",
+          playbook,
+          stage_route: ["apertura", "propuesta"],
+          last_stage: "propuesta",
+        }),
+      );
+      const island = screen.getAllByRole("region", { name: "Así fue la llamada" })[0] as HTMLElement;
+      expect(within(island).getByText("Se cortó en")).toBeInTheDocument();
+      expect(within(island).getByText("Propuesta · 2 de 3")).toBeInTheDocument();
+    });
+
+    it("B3: si no cumplió, UNA fila «Se cortó en» con su posición", async () => {
+      await renderView(
+        call({
+          mode: "proactive",
+          call_type: "sales_followup",
+          outcome: "agent_closed",
+          events: [],
+          playbook,
+          stage_route: ["apertura", "propuesta"],
+          last_stage: "propuesta",
+        }),
+      );
+      const island = screen.getAllByRole("region", { name: "Así fue la llamada" })[0] as HTMLElement;
+      expect(within(island).getByText("Se cortó en")).toBeInTheDocument();
+      expect(within(island).getByText("Propuesta · 2 de 3")).toBeInTheDocument();
+      expect(within(island).queryByText("Llegó a")).toBeNull();
+    });
+  });
 });
+

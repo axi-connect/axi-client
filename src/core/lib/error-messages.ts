@@ -41,6 +41,11 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   "collections/invalid_template_variables":
     "Un aviso usa variables que no existen y saldrían tal cual en el mensaje del cliente. Corrígelas antes de guardar",
   "documents/already_superseded": "Este documento fue reemplazado: envía el vigente",
+  // Llamadas: marcos y «Llamar» (plan de modos). Dicen qué hacer, no qué falló.
+  "calls/contact_not_found": "Ese contacto ya no existe en tu CRM. Recarga y elige otro",
+  "calls/playbook_invalid": "El marco tiene algo por corregir. Revisa las etapas marcadas",
+  "calls/playbook_no_proposal": "Esa propuesta de Alba ya no está: se aplicó o se descartó. Recarga los marcos",
+  "calls/playbook_type_unknown": "Ese tipo de llamada no tiene marco. Recarga la pantalla",
   [API_ERROR_CODES.invalidTransition]: "La conversación no admite esa transición",
   [API_ERROR_CODES.handoffConflict]: "Otro operador tomó la conversación primero",
   [API_ERROR_CODES.notFound]: "El recurso ya no existe",

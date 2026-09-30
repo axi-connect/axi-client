@@ -5476,6 +5476,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/platform/calls/proactive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformCallsController_getProactive_v1"];
+        put: operations["PlatformCallsController_setProactive_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/platform/calls/providers": {
         parameters: {
             query?: never;
@@ -5700,6 +5716,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/calls/overview/funnel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CallsAdminController_getFunnel_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/calls/sessions": {
         parameters: {
             query?: never;
@@ -5780,6 +5812,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/calls/launch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CallsAdminController_launch_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/calls/test-call": {
         parameters: {
             query?: never;
@@ -5806,6 +5854,102 @@ export interface paths {
         get: operations["CallsAdminController_listNumbers_v1"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/playbooks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CallPlaybooksController_list_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/playbooks/{type}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["CallPlaybooksController_save_v1"];
+        post?: never;
+        delete: operations["CallPlaybooksController_reset_v1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/playbooks/propose": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CallPlaybooksController_proposeAll_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/playbooks/{type}/proposal/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CallPlaybooksController_applyProposal_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/playbooks/{type}/proposal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["CallPlaybooksController_discardProposal_v1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/playbooks/{type}/preview-opening": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CallPlaybooksController_previewOpening_v1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -17747,6 +17891,13 @@ export interface components {
                 contact_ids: string[];
             }[];
         };
+        ProactiveSwitchDto: {
+            enabled: boolean;
+            locked_by_env: boolean;
+        };
+        SetProactiveSwitchDto: {
+            enabled: boolean;
+        };
         CallProviderAccountDto: {
             /** Format: uuid */
             id: string;
@@ -17933,6 +18084,25 @@ export interface components {
                 outbound: number;
             }[];
         };
+        CallsFunnelDto: {
+            period: {
+                /** Format: date-time */
+                start: string;
+                /** Format: date-time */
+                end: string;
+            };
+            types: {
+                call_type: string;
+                label: string;
+                total: number;
+                goal_met: number;
+                stages: {
+                    key: string;
+                    label: string;
+                    reached: number;
+                }[];
+            }[];
+        };
         CallSessionsListDto: {
             data: {
                 /** Format: uuid */
@@ -17941,6 +18111,11 @@ export interface components {
                 direction: "outbound" | "inbound";
                 /** @enum {string} */
                 purpose: "inbound" | "appointment_reminder" | "crm_task" | "campaign" | "manual";
+                /** @enum {string} */
+                mode: "reactive" | "proactive";
+                call_type: string | null;
+                /** @description CLAVE de la etapa más avanzada del marco (p. ej. «descubrimiento»), no su etiqueta: se cruza con `playbook.stages` del detalle o con GET /calls/playbooks para mostrar el nombre. Null en reactivas y en llamadas anteriores al plan de modos. */
+                last_stage: string | null;
                 /** @enum {string} */
                 status: "queued" | "initiated" | "ringing" | "in_progress" | "completed" | "no_answer" | "busy" | "failed" | "canceled";
                 /** @enum {string|null} */
@@ -17983,6 +18158,11 @@ export interface components {
                 /** @enum {string} */
                 purpose: "inbound" | "appointment_reminder" | "crm_task" | "campaign" | "manual";
                 /** @enum {string} */
+                mode: "reactive" | "proactive";
+                call_type: string | null;
+                /** @description CLAVE de la etapa más avanzada del marco (p. ej. «descubrimiento»), no su etiqueta: se cruza con `playbook.stages` del detalle o con GET /calls/playbooks para mostrar el nombre. Null en reactivas y en llamadas anteriores al plan de modos. */
+                last_stage: string | null;
+                /** @enum {string} */
                 status: "queued" | "initiated" | "ringing" | "in_progress" | "completed" | "no_answer" | "busy" | "failed" | "canceled";
                 /** @enum {string|null} */
                 outcome: "goal_met" | "callback_requested" | "voicemail" | "hangup" | "no_answer" | "error" | "transferred" | "agent_closed" | "silence_timeout" | "max_duration" | "quota_exhausted" | "system_error" | null;
@@ -18017,6 +18197,11 @@ export interface components {
             direction: "outbound" | "inbound";
             /** @enum {string} */
             purpose: "inbound" | "appointment_reminder" | "crm_task" | "campaign" | "manual";
+            /** @enum {string} */
+            mode: "reactive" | "proactive";
+            call_type: string | null;
+            /** @description CLAVE de la etapa más avanzada del marco (p. ej. «descubrimiento»), no su etiqueta: se cruza con `playbook.stages` del detalle o con GET /calls/playbooks para mostrar el nombre. Null en reactivas y en llamadas anteriores al plan de modos. */
+            last_stage: string | null;
             /** @enum {string} */
             status: "queued" | "initiated" | "ringing" | "in_progress" | "completed" | "no_answer" | "busy" | "failed" | "canceled";
             /** @enum {string|null} */
@@ -18062,6 +18247,15 @@ export interface components {
                 /** Format: date-time */
                 created_at: string;
             }[];
+            playbook: {
+                call_type: string;
+                label: string;
+                stages: {
+                    key: string;
+                    label: string;
+                }[];
+            } | null;
+            stage_route: string[];
         };
         CallRecordingUrlDto: {
             /** Format: uri */
@@ -18087,15 +18281,30 @@ export interface components {
             /** @default 15 */
             silence_hangup_seconds: number;
         };
+        LaunchCallDto: {
+            /** Format: uuid */
+            contact_id: string;
+            /** @enum {string} */
+            call_type: "appointment_reminder" | "sales_followup" | "collections" | "reactivation" | "followup";
+            objective?: string;
+            /** Format: uuid */
+            ai_agent_id?: string;
+            /** @enum {string} */
+            mode?: "reactive" | "proactive";
+        };
+        TestCallResultDto: {
+            /** Format: uuid */
+            call_session_id: string;
+        };
         TestCallDto: {
             to: string;
             /** Format: uuid */
             ai_agent_id?: string;
             objective?: string;
-        };
-        TestCallResultDto: {
-            /** Format: uuid */
-            call_session_id: string;
+            /** @enum {string} */
+            call_type?: "appointment_reminder" | "sales_followup" | "collections" | "reactivation" | "followup";
+            /** @enum {string} */
+            mode?: "reactive" | "proactive";
         };
         TenantCallNumberDto: {
             /** Format: uuid */
@@ -18109,6 +18318,127 @@ export interface components {
             inbound_enabled: boolean;
             /** Format: date-time */
             assigned_at: string | null;
+        };
+        CallPlaybookListDto: {
+            /** @enum {string} */
+            call_type: "appointment_reminder" | "sales_followup" | "collections" | "reactivation" | "followup";
+            label: string;
+            enabled: boolean;
+            customized: boolean;
+            base_version: number;
+            playbook: {
+                call_type: string;
+                label: string;
+                version: number;
+                opening_guidance: string;
+                stages: {
+                    key: string;
+                    label: string;
+                    goal: string;
+                    advance_when: string;
+                    must: string[];
+                    never: string[];
+                }[];
+            };
+            proposal: {
+                call_type: string;
+                label: string;
+                version: number;
+                opening_guidance: string;
+                stages: {
+                    key: string;
+                    label: string;
+                    goal: string;
+                    advance_when: string;
+                    must: string[];
+                    never: string[];
+                }[];
+            } | null;
+            /** Format: date-time */
+            proposed_at: string | null;
+            /** Format: date-time */
+            updated_at: string | null;
+        }[];
+        SaveCallPlaybookDto: {
+            enabled: boolean;
+            opening_guidance: string;
+            stages: {
+                key: string;
+                label: string;
+                goal: string;
+                advance_when: string;
+                must: string[];
+                never: string[];
+            }[];
+        };
+        CallPlaybookViewDto: {
+            /** @enum {string} */
+            call_type: "appointment_reminder" | "sales_followup" | "collections" | "reactivation" | "followup";
+            label: string;
+            enabled: boolean;
+            customized: boolean;
+            base_version: number;
+            playbook: {
+                call_type: string;
+                label: string;
+                version: number;
+                opening_guidance: string;
+                stages: {
+                    key: string;
+                    label: string;
+                    goal: string;
+                    advance_when: string;
+                    must: string[];
+                    never: string[];
+                }[];
+            };
+            proposal: {
+                call_type: string;
+                label: string;
+                version: number;
+                opening_guidance: string;
+                stages: {
+                    key: string;
+                    label: string;
+                    goal: string;
+                    advance_when: string;
+                    must: string[];
+                    never: string[];
+                }[];
+            } | null;
+            /** Format: date-time */
+            proposed_at: string | null;
+            /** Format: date-time */
+            updated_at: string | null;
+        };
+        ProposeCallPlaybooksDto: {
+            call_types?: ("appointment_reminder" | "sales_followup" | "collections" | "reactivation" | "followup")[];
+        };
+        ProposeCallPlaybooksResultDto: {
+            proposed: ("appointment_reminder" | "sales_followup" | "collections" | "reactivation" | "followup")[];
+            results: {
+                /** @enum {string} */
+                call_type: "appointment_reminder" | "sales_followup" | "collections" | "reactivation" | "followup";
+                /** @enum {string} */
+                status: "saved" | "unchanged" | "discarded" | "failed";
+            }[];
+        };
+        PreviewOpeningDto: {
+            opening_guidance?: string;
+            stages?: {
+                key: string;
+                label: string;
+                goal: string;
+                advance_when: string;
+                must: string[];
+                never: string[];
+            }[];
+        };
+        PreviewOpeningResultDto: {
+            text: string;
+            /** @enum {string} */
+            source: "generated" | "fallback";
+            agent_name: string | null;
         };
         CmoSendMessageDto: {
             /** @description Lo que el dueño le pregunta o le pide a Axel */
@@ -32435,6 +32765,48 @@ export interface operations {
             };
         };
     };
+    PlatformCallsController_getProactive_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProactiveSwitchDto"];
+                };
+            };
+        };
+    };
+    PlatformCallsController_setProactive_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetProactiveSwitchDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProactiveSwitchDto"];
+                };
+            };
+        };
+    };
     PlatformCallsController_listProviders_v1: {
         parameters: {
             query?: never;
@@ -32773,6 +33145,25 @@ export interface operations {
             };
         };
     };
+    CallsAdminController_getFunnel_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallsFunnelDto"];
+                };
+            };
+        };
+    };
     CallsAdminController_listSessions_v1: {
         parameters: {
             query?: {
@@ -32780,6 +33171,8 @@ export interface operations {
                 status?: "queued" | "initiated" | "ringing" | "in_progress" | "completed" | "no_answer" | "busy" | "failed" | "canceled";
                 outcome?: "goal_met" | "callback_requested" | "voicemail" | "hangup" | "no_answer" | "error" | "transferred" | "agent_closed" | "silence_timeout" | "max_duration" | "quota_exhausted" | "system_error";
                 purpose?: "inbound" | "appointment_reminder" | "crm_task" | "campaign" | "manual";
+                mode?: "reactive" | "proactive";
+                call_type?: "appointment_reminder" | "sales_followup" | "collections" | "reactivation" | "followup" | "inbound_attention";
                 ai_agent_id?: string;
                 contact_id?: string;
                 from?: string;
@@ -32905,6 +33298,46 @@ export interface operations {
             };
         };
     };
+    CallsAdminController_launch_v1: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Misma clave = misma llamada (24 h). Recomendada en cada clic de «Llamar». */
+                "idempotency-key"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LaunchCallDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TestCallResultDto"];
+                };
+            };
+            /** @description calls/contact_not_found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description calls/launch_skipped — details.reason: already_in_call | contact_unreachable | no_phone_number | no_agent | calls_disabled | company_suspended | calls_paused | limit_exceeded */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     CallsAdminController_placeTestCall_v1: {
         parameters: {
             query?: never;
@@ -32943,6 +33376,161 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TenantCallNumberDto"][];
+                };
+            };
+        };
+    };
+    CallPlaybooksController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallPlaybookListDto"];
+                };
+            };
+        };
+    };
+    CallPlaybooksController_save_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                type: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveCallPlaybookDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallPlaybookViewDto"];
+                };
+            };
+        };
+    };
+    CallPlaybooksController_reset_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                type: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallPlaybookViewDto"];
+                };
+            };
+        };
+    };
+    CallPlaybooksController_proposeAll_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProposeCallPlaybooksDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposeCallPlaybooksResultDto"];
+                };
+            };
+        };
+    };
+    CallPlaybooksController_applyProposal_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                type: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallPlaybookViewDto"];
+                };
+            };
+        };
+    };
+    CallPlaybooksController_discardProposal_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                type: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallPlaybookViewDto"];
+                };
+            };
+        };
+    };
+    CallPlaybooksController_previewOpening_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                type: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PreviewOpeningDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreviewOpeningResultDto"];
                 };
             };
         };

@@ -5,6 +5,7 @@ import type {
   CallAgentTextEvent,
   CallPhaseChangedEvent,
   CallSpeakerChangedEvent,
+  CallStageChangedEvent,
   CallTranscriptSegmentEvent,
 } from "@/core/realtime/events";
 import { socketManager } from "@/core/realtime/socket-manager";
@@ -35,6 +36,7 @@ export function useLiveCall({
   onSpeaker,
   onPhase,
   onAgentText,
+  onStage,
 }: {
   callSessionId: string;
   enabled: boolean;
@@ -45,6 +47,8 @@ export function useLiveCall({
   onSpeaker?: (event: CallSpeakerChangedEvent) => void;
   onPhase?: (event: CallPhaseChangedEvent) => void;
   onAgentText?: (event: CallAgentTextEvent) => void;
+  /** Plan de modos: la llamada proactiva avanzó de etapa. */
+  onStage?: (event: CallStageChangedEvent) => void;
 }) {
   const { socket } = useSocket("inbox");
   const joinedRef = useRef<string | null>(null);
@@ -61,6 +65,8 @@ export function useLiveCall({
   onSpeakerRef.current = onSpeaker;
   onPhaseRef.current = onPhase;
   onAgentTextRef.current = onAgentText;
+  const onStageRef = useRef(onStage);
+  onStageRef.current = onStage;
 
   useSocketEvent(socket, "call.transcript_segment", (payload) => {
     if (payload.call_session_id === callSessionId) onSegmentRef.current(payload);
@@ -73,6 +79,9 @@ export function useLiveCall({
   });
   useSocketEvent(socket, "call.agent_text", (payload) => {
     if (payload.call_session_id === callSessionId) onAgentTextRef.current?.(payload);
+  });
+  useSocketEvent(socket, "call.stage_changed", (payload) => {
+    if (payload.call_session_id === callSessionId) onStageRef.current?.(payload);
   });
   useSocketEvent(socket, "call.status_changed", (payload) => {
     if (payload.call_session_id === callSessionId) onChangedRef.current();

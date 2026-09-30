@@ -15,6 +15,9 @@ function call(overrides: Partial<CallSessionDetailDTO> = {}): CallSessionDetailD
     id: "call-1",
     direction: "outbound",
     purpose: "appointment_reminder",
+    mode: "reactive",
+    call_type: null,
+    last_stage: null,
     status: "in_progress",
     outcome: null,
     answered_by: "human",
@@ -39,6 +42,8 @@ function call(overrides: Partial<CallSessionDetailDTO> = {}): CallSessionDetailD
       { seq: 2, role: "caller", text: "Sí, con ella.", at_ms: 9_000, spoken_at_ms: 7_000, interrupted: false },
     ],
     events: [],
+    playbook: null,
+    stage_route: [],
     ...overrides,
   };
 }
@@ -97,4 +102,37 @@ describe("LiveCallView (premium F3)", () => {
     expect(screen.getByRole("heading", { level: 1, name: "+573002194410" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Ver contacto" })).not.toBeInTheDocument();
   });
+
+  it("plan de modos: una proactiva muestra la ruta, la etapa en el escenario y la cuarta ficha «Etapa»", () => {
+    const playbook = {
+      call_type: "sales_followup",
+      label: "Venta y seguimiento comercial",
+      stages: [
+        { key: "apertura", label: "Apertura" },
+        { key: "descubrimiento", label: "Descubrimiento" },
+        { key: "propuesta", label: "Propuesta" },
+        { key: "cierre", label: "Cierre" },
+      ],
+    };
+    render(
+      <LiveCallView
+        call={call({ mode: "proactive", call_type: "sales_followup", playbook, stage_route: ["apertura"] })}
+        pulse={{ ...INITIAL_LIVE_CALL_PULSE, phase: "listening", stage: "descubrimiento" }}
+      />,
+    );
+    const route = screen.getByRole("navigation", { name: "Etapas de la llamada" });
+    expect(within(route).getByText("Descubrimiento").closest("[aria-current='step']")).not.toBeNull();
+    // F-3: el nombre puede recortarse, «2 de 4» nunca.
+    expect(screen.getByText("· 2 de 4")).toHaveClass("shrink-0");
+    expect(screen.getByRole("heading", { level: 2, name: "Etapa" })).toBeInTheDocument();
+    expect(screen.getByText(/faltan propuesta y cierre/)).toBeInTheDocument();
+  });
+
+  it("plan de modos: una reactiva conserva sus tres fichas, sin ruta ni «Etapa»", () => {
+    render(<LiveCallView call={call()} pulse={{ ...INITIAL_LIVE_CALL_PULSE, phase: "listening" }} />);
+    expect(screen.queryByRole("navigation", { name: "Etapas de la llamada" })).toBeNull();
+    expect(screen.queryByRole("heading", { level: 2, name: "Etapa" })).toBeNull();
+    expect(screen.getByRole("heading", { level: 2, name: "Número" })).toBeInTheDocument();
+  });
 });
+
