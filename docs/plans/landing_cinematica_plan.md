@@ -489,3 +489,129 @@ La dueña archiva el hilo de luz (§10, §11, §13, §14): «está generando o v
 - Cierre: el isotipo se arma con sus propias fibras. Se diseña en la tanda 4.
 
 **Presupuesto:** el hilo va en el chunk diferido del motor. Con el hilo apagado, `thread-gl` (el renderer) debe cargarse con `import()` solo si `enabled`, para que no pese. Si hoy se importa de forma estática, pasarlo a dinámico (tarea de axi-14).
+
+## 16. Tanda 4 · La meta, precios, preguntas y cierre (aprobada el 2026-09-30)
+
+Lienzos aprobados por la dueña («aprobado todo, me encanta»):
+- La meta: https://claude.ai/artifact/BHNrvKryyFQrBHqRLdA9nF
+- Precios, preguntas y cierre: https://claude.ai/artifact/KH9Qcs6qZJ87hxdRoZ6nq8
+
+El hilo está archivado (§15): nada de esta tanda depende de él. Los progresos van de 0 a 1 y cada tramo usa `ease` cúbico de salida, salvo donde se indica otra cosa.
+
+### 16.1 La meta (fijada en escritorio; sigue en `PINNED`)
+
+**Qué es:** una navegación nocturna en tinta hacia la meta del mes. Reemplaza el mapa plano actual de `GoalScene`.
+
+**Mundo.** Un plano de 2400 × 1500 con una ciudad en rejilla:
+- manzanas de 82 px en celdas de 100, con rx 8, relleno blanco al 2,2 %, filete al 5,5 % y alrededor de un 5 % de parques al 4,5 %;
+- un río: una banda de 90 px al 3,5 %;
+- un viñeteado radial hacia el fondo.
+
+Todo en un solo SVG estático, sin nada por frame.
+
+**Ruta.** Va por los ejes de las calles, con esquinas redondeadas (r 46):
+- puntos (291,1391) → (291,1091) → (691,1091) → (691,891) → (1091,891) → (1091,691) → (1491,691) → (1491,491) → (1891,491) → (1891,291) → (2191,291);
+- geometría pura en `domain/film/route-map.ts`, que sustituye la carretera actual: muestreo por longitud y `slice(a,b)` para los tramos, con tests;
+- las fracciones y cifras siguen saliendo de `route-scenario.ts` (63 % recorrido, 71,7 % esperado, 82 % proyectado y 91 % con la ruta de Axi), así que cuadran por nicho.
+
+**Capas de la ruta:**
+- carril de 30 px al 7 %;
+- plan punteado (1 13) al 32 %;
+- recorrido en blanco de 8 px más un brillo de 20 px desenfocado;
+- tramo lento en gris `#8e8e96`, punteado (2 12);
+- proyección blanca discontinua (10 12);
+- ruta de Axi en violeta de 7 px con brillo, que pasa a blanco al aprobarla.
+
+Cada capa es su propio `<path>`. El avance se hace con `stroke-dasharray` sobre `pathLength=1`, nunca regenerando la `d` en cada frame. El lienzo usa `slice` solo por comodidad.
+
+**Cámara.** Un solo `transform` sobre el plano, con `perspective: 1300px` en el contenedor y `transform-origin: 0 0`:
+`translate(foco) rotateX(inclinación) rotateZ(giro) scale(s) translate(−centro)`.
+- Foco en escritorio: (600, 600). El centro sigue al coche.
+- Las marcas HTML (coche, «Vas aquí», anillos, bandera, etiquetas) se proyectan con la misma matriz: función pura `project(cam, punto)` con tests. Así quedan de frente y no se tuercen.
+
+**Coreografía (progreso del pin):**
+
+| Tramo | Cámara | Qué pasa |
+|---|---|---|
+| 0–0,12 | inclinación 0 → 52°, escala 0,42 → 1, giro 0 → −7°, del centro del mapa a la salida | Aparecen el titular y el panel (0,08–0,2). «Salida · 1 oct». |
+| 0,12–0,5 | sigue al coche (escala 1, 52°) | El coche va de 0 a 63 % (`ease` cúbico de entrada y salida). El recorrido blanco se dibuja detrás. «Vas aquí» cuenta de $ 0 a $ 18,9 M · 63 %, y la barra del panel avanza igual. El coche apunta en la dirección de la ruta proyectada. |
+| 0,5–0,58 | fija | Tramo lento gris hasta 71,7 %, con el anillo gris «Tramo lento · vas $ 2,6 M por debajo». En el panel se enciende «Ritmo bajo». |
+| 0,6–0,72 | se aleja: escala 0,66, 42°, centro al 62 % entre el coche y el 80 % de la ruta | Proyección discontinua hasta 82 %, con el anillo y la etiqueta blanca «82 % · Si sigues así llegas a $ 24,6 M». Aparece la bandera «Meta · $ 30 M». Entra la opción «Seguir al ritmo de hoy · 82 %». |
+| 0,7–0,8 | fija | Habla Axi (violeta): píldora «Axi recalculó tu ruta» junto al coche y ruta violeta hasta 91 %. En el panel entra «Retomar 14 cotizaciones frías · 91 %» con borde violeta y «Aprobar ruta». |
+| 0,82–0,84 | — | El botón se hunde (escala 0,94). |
+| 0,84–0,9 | — | Aprobada: la ruta violeta pasa a blanca, el anillo va de 82 % a 91 % y la etiqueta cambia a «Con la ruta de Axi llegas a $ 27,3 M». El botón queda en «Ruta aprobada ✓». |
+| 0,92–0,97 | — | Se apaga la píldora. |
+
+**Panel** (derecha, 360 px, tinta):
+- «Destino · octubre / Vender $ 30.000.000» y la píldora «Ritmo bajo» punteada, en gris y no ámbar.
+- La maniobra en una tarjeta blanca: icono de giro, «Cierra 2 ventas hoy» y «Faltan $ 11,1 M en 6 días hábiles».
+- «Luego: envía 5 cotizaciones · agenda 3 entregas».
+- La barra del mes, con relleno blanco, tramo lento punteado y el anillo de llegada, y debajo «Vas en … / Llegada estimada …».
+- «Rutas · las prepara Axi» y la nota «Axi propone; tú apruebas».
+- Todos los textos salen de `film-content` (`route`) por nicho.
+
+**Colores:** el coral solo en el coche. El violeta solo mientras Axi propone. Todo lo demás, en tinta.
+
+**Móvil** (no se fija):
+- Franja de mapa de 390 × 430 entre el titular y el panel. Foco (170, 250), el mismo mundo y la misma cámara.
+- La línea va de la escena en «top 70 %» a «bottom top», con los mismos tramos.
+- Panel compacto: la maniobra, la barra y la ruta de Axi con su botón. Sin «Tramo lento» ni «Salida».
+
+**Rendimiento:**
+- Por frame solo cambian un `transform` en el plano, `stroke-dasharray` en cinco trazados y unas diez marcas con `transform`.
+- La cifra se escribe con `setText` solo cuando cambia.
+- Nada de `getPointAtLength` por frame: los puntos salen de la tabla muestreada.
+
+### 16.2 Precios (sin fijar; se compara y se lee)
+
+Se mantiene `PricingPlans` (lo comparte `/precios`: no romperlo). Para la película se le añade una variante visual, sin tocar datos ni lógica:
+- Tarjetas en tinta (`#161618` → `#111113`, filete al 10 %, r 28).
+- Crecimiento («Más elegido») va invertido en blanco, con la píldora negra y el CTA negro. Las otras dos llevan CTA blanco. En precios no hay coral.
+- Cada tarjeta, en este orden: nombre (Nexa 22), frase, precio (Nexa 46, cifras tabulares) con «COP/mes», la nota del periodo, la caja de volumen con el icono de conversaciones («**500** conversaciones al mes»), «Todo lo de X, y además», viñetas con check, CTA «Comienza tus 7 días gratis» y el microtexto.
+- Selector Mensual/Anual en píldora, con la opción activa en blanco y la insignia «1 mes gratis». En anual: el precio mensual equivalente y «Pagas $ X al año · 1 mes gratis». Las cifras y los tramos siguen saliendo del catálogo.
+- Enterprise va en una franja aparte: «Desde $ 2.900.000 COP/mes · Hablar con ventas». Debajo: «No cobramos por usuario…».
+- Entrada, una sola vez con `IntersectionObserver` y sin scrub: titular (0–0,3); tarjetas escalonadas cada 0,12, subiendo de y 48 a 0; la recomendada se eleva 14 px al final. Con movimiento reducido, todo en su sitio.
+
+### 16.3 Preguntas (sin fijar)
+
+- Dos columnas: 400 px a la izquierda y el resto a la derecha.
+- Izquierda:
+  - «Lo que nos / preguntan.»;
+  - el texto;
+  - botón blanco «Pregúntale a nuestro agente», con icono de WhatsApp y `salesWhatsAppUrl`;
+  - «Axi atiende ahora · responde en segundos», con un punto violeta. Es la voz del agente.
+- Derecha:
+  - lista con filetes al 10 %, número 01–09 tabular al 40 %, pregunta de 17 px y un botón circular más/menos que se invierte a blanco al abrirse;
+  - se sigue usando `<details>` nativo, sin JS, con el texto en el HTML y el JSON-LD FAQPage;
+  - los textos son los de `FAQ` en `landing.content.ts` (el lienzo resume algunas respuestas; manda el contenido real);
+  - la primera va abierta.
+
+### 16.4 Cierre (sin fijar; scrub desde «top 80 %» hasta «center center»)
+
+| Tramo | Qué pasa |
+|---|---|
+| 0–0,38 | Las tres cintas del isotipo se dibujan con un trazo blanco de 2 px (`pathLength=1`), escalonadas: coral 0–0,3, violeta 0,06–0,34 y ámbar 0,12–0,38. El isotipo escala de 0,92 a 1. |
+| 0,3–0,54 | Se llenan con sus degradados (`BrandMark`: coral 0,3, violeta 0,35 y ámbar 0,4) y el trazo se apaga. |
+| 0,4–0,7 | Florece: un halo radial coral → violeta → ámbar, desenfocado 40 px, que escala de 0,7 a 1. |
+| 0,5–0,72 | «Tu próxima venta» (0,5) y «ya está escribiendo.» (0,58) suben 26 px. |
+| 0,68–0,78 | Burbuja «Andrés está escribiendo», con avatar AG y tres puntos que parpadean. El nombre sale del nicho (`FILM_CONTENT[n].chat`). |
+| 0,8–0,92 | CTA coral «Prueba 7 días gratis», «Habla con nuestro agente» y «Sin tarjeta…». |
+
+- Es el único momento de color pleno.
+- `BrandMark` necesita que cada cinta se pueda dibujar: ya tiene `data-ribbon`, así que se le pasa el trazo por CSS (`stroke`, `stroke-dasharray` y `fill-opacity` por cinta). No se duplican los paths.
+- Móvil: el isotipo a 160 px, titular de 42 px y CTAs a todo lo ancho, con la misma línea.
+
+### 16.5 Cabecera a 1024 px (aprobada con la tanda)
+
+Entre `lg` y 1200 px la cabecera cabía mal: el logo, «Iniciar sesión» y el CTA se partían. En ese rango:
+- el selector de tema pasa al menú desplegable;
+- el CTA dice «Prueba gratis»;
+- el logo e «Iniciar sesión» llevan `whitespace-nowrap`.
+
+Por encima de 1200 px y en móvil queda igual. Es el único cambio permitido en el nav.
+
+### 16.6 Orden de construcción
+
+hero A (§14) → §11 (cobrar, ordenar, Axel y medir) → §13 (tanda 3) → §16 (meta, precios, preguntas, cierre y cabecera).
+
+Después de cada paso, QA de axi-13 a 390, 768, 1024 y 1440 px.
