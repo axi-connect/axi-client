@@ -271,7 +271,7 @@ El módulo no importa gsap ni lenis: recibe el scroll y los pins como números. 
 - Retirar `Ribbon`, `ribbons()` y las `<Ribbon>` de las escenas.
 - Marcar el protagonista de cada escena con `data-thread-target`.
 - En la meta, colocar «vas aquí» con `onHead` (o quitar la carretera animada del SVG y dejar la punteada como fantasma).
-- Anclas del hero: nacen en las crestas de HeroSky (x 50 %, del 70 % al 86 % del alto, datos de axi-14). Las crestas ondulan, así que el nacimiento se afina en QA.
+- Anclas del hero (actualizadas tras quitar las dunas, e34d5636): en escritorio, el haz nace bajo el CTA (x 50 %, 75 % del alto) y baja por el hueco central de las cifras (90 %); en móvil, nace en el borde inferior (97 %). Se afina en QA.
 - QA visual a 390, 768, 1024 y 1440 px, ajustando los números de `thread-path.ts`.
 
 ## 11. Cobrar, ordenar, Axel y medir · rediseño (aprobado el 2026-09-30)

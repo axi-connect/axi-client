@@ -61,9 +61,10 @@ export const FILM_THREAD: ThreadPath = {
   enabled: true,
 
   desktop: [
-    // El haz nace en las crestas de las dunas (HeroSky, en x = 50 %: violeta ~64 %,
-    // ámbar ~75 % y coral ~85 % del alto) y baja por el hueco central de las cifras.
-    { scene: "hero", points: [p(50, 70, 1), p(50, 86, 1), p(56, 100, 0.8)] },
+    // El haz nace bajo el CTA («Sin tarjeta…» termina hacia el 71 % del alto a 900 px),
+    // encima del gradiente vivo, y baja por el hueco central entre las cifras 2 y 3
+    // (rejilla de 4 columnas centrada). El hero ya no tiene dunas (e34d5636).
+    { scene: "hero", points: [p(50, 75, 1), p(50, 90, 1), p(56, 100, 0.8)] },
     { scene: "niche", points: [p(94, 24), p(72, 70, 0, true), p(50, 100)] },
     { scene: "radar", points: [p(90, 22), p(70, 52, 0, true), p(94, 96)] },
     { scene: "followup", points: [p(96, 40), p(80, 97, 0, true), p(30, 100)] },
@@ -92,7 +93,9 @@ export const FILM_THREAD: ThreadPath = {
   // En móvil el texto ocupa todo el ancho: el hilo va por los márgenes y cruza
   // entre escenas. Sin carretera: el mapa es una ventana propia (escena `goal`).
   mobile: [
-    { scene: "hero", points: [p(50, 70, 1), p(50, 86, 1), p(60, 100, 0.8)] },
+    // En móvil el texto y las cifras (2 × 2) llenan el hero: el haz nace en su borde
+    // inferior, por el hueco central de las cifras, y entra al nicho.
+    { scene: "hero", points: [p(50, 97, 1), p(60, 100, 0.8)] },
     { scene: "niche", points: [p(5, 50, 0, true), p(20, 100)] },
     { scene: "radar", points: [p(95, 50, 0, true)] },
     { scene: "followup", points: [p(5, 50, 0, true)] },
