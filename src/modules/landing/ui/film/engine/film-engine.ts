@@ -25,7 +25,7 @@ import { roadPercentAt } from "@/modules/landing/domain/film/route-map";
 import { formatMillions, formatPercent, ROUTE_FRACTIONS } from "@/modules/landing/domain/film/route-scenario";
 import { createThread } from "@/modules/landing/ui/film/thread/thread";
 
-export type FilmEngine = { stop(): void; scrollTo(target: string): void; refresh(): void };
+export type FilmEngine = { stop(): void; scrollTo(target: string): void; setNiche(): void };
 
 /** `pins`: el ScrollTrigger de cada escena fijada, para el hilo de luz. */
 type Ctx = { desktop: boolean; pins: Map<string, ScrollTrigger> };
@@ -35,16 +35,37 @@ type Scene = (section: HTMLElement, ctx: Ctx) => void;
 
 const all = (scope: ParentNode, sel: string) => Array.from(scope.querySelectorAll<HTMLElement>(sel));
 
+/** El nicho que se ve: el `data-niche` del raíz de la película. */
+function activeNiche(section: HTMLElement): string {
+  return section.closest<HTMLElement>("[data-niche]")?.dataset.niche ?? FILM_NICHES[0];
+}
+
 /**
- * Los elementos de `sel` agrupados por nicho. Las escenas traen las cuatro
- * variantes en el HTML; cada grupo se anima con los MISMOS tiempos, así el
- * nicho visible siempre está sincronizado con el scroll aunque cambie a mitad
- * de la película. Si la escena no tiene variantes, un único grupo.
+ * Los elementos de `sel` que se ven: los de la escena fuera de variantes y los
+ * de la variante del nicho activo. Las escenas traen las cuatro variantes en el
+ * HTML, pero solo se anima la visible (§12, reglas de construcción); al cambiar
+ * de nicho el motor rehace las líneas (`setNiche`).
+ */
+function visible(section: HTMLElement, sel: string): HTMLElement[] {
+  const niche = activeNiche(section);
+  return all(section, sel).filter((el) => {
+    const variant = el.closest<HTMLElement>("[data-only]");
+    return !variant || (variant.dataset.only ?? "").split(" ").includes(niche);
+  });
+}
+
+/**
+ * Lo mismo, como un único grupo (la forma que usan las escenas: un grupo por
+ * nicho con los mismos tiempos). Vacío si no hay nada que animar.
  */
 function perNiche(section: HTMLElement, sel: string): HTMLElement[][] {
-  const groups = FILM_NICHES.map((n) => all(section, `[data-only~="${n}"]`).flatMap((w) => all(w, sel)));
-  if (groups.some((g) => g.length > 0)) return groups.filter((g) => g.length > 0);
-  return [all(section, sel)];
+  const group = visible(section, sel);
+  return group.length ? [group] : [];
+}
+
+/** Escribe texto solo si cambió: en un scrub, `onUpdate` corre en cada frame. */
+function setText(el: HTMLElement, text: string) {
+  if (el.textContent !== text) el.textContent = text;
 }
 
 /**
@@ -98,7 +119,7 @@ function countUp(tl: gsap.core.Timeline, el: HTMLElement, at: number) {
       v: target,
       ease: "power1.out",
       onUpdate: () => {
-        el.textContent = prefix + Math.round(proxy.v).toLocaleString("es-CO");
+        setText(el, prefix + Math.round(proxy.v).toLocaleString("es-CO"));
       },
     },
     at,
@@ -110,21 +131,21 @@ function countUp(tl: gsap.core.Timeline, el: HTMLElement, at: number) {
 const hero: Scene = (section) => {
   // Al bajar, el texto se despide hacia arriba; el hilo de luz nace bajo el CTA.
   const tl = gsap.timeline({ scrollTrigger: { trigger: section, start: "top top", end: "bottom top", scrub: true } });
-  tl.to(all(section, "[data-anim=copy]"), { y: -80, opacity: 0, ease: "none" }, 0);
-  tl.to(all(section, "[data-anim=stats]"), { y: 40, opacity: 0, ease: "none" }, 0);
+  tl.to(visible(section, "[data-anim=copy]"), { y: -80, opacity: 0, ease: "none" }, 0);
+  tl.to(visible(section, "[data-anim=stats]"), { y: 40, opacity: 0, ease: "none" }, 0);
 };
 
 const niche: Scene = (section, ctx) => {
   const tl = sceneTimeline(section, ctx, 70);
-  tl.from(all(section, "[data-anim=niche]"), { ...reveal, y: 60, stagger: 0.12 }, 0.3);
+  tl.from(visible(section, "[data-anim=niche]"), { ...reveal, y: 60, stagger: 0.12 }, 0.3);
 };
 
 const radar: Scene = (section, ctx) => {
   const tl = sceneTimeline(section, ctx, 140);
-  tl.fromTo(all(section, "[data-anim=sweep]"), { rotation: 0 }, { rotation: 540, ease: "none", duration: 4 }, 0);
-  tl.from(all(section, "[data-anim=dot]"), { scale: 0, stagger: 0.08, duration: 0.3 }, 0.2);
-  tl.from(all(section, "[data-anim=hit]"), { scale: 0, stagger: 0.3, duration: 0.4 }, 1);
-  tl.from(all(section, "[data-anim=target]"), { scale: 0, duration: 0.4 }, 1.8);
+  tl.fromTo(visible(section, "[data-anim=sweep]"), { rotation: 0 }, { rotation: 540, ease: "none", duration: 4 }, 0);
+  tl.from(visible(section, "[data-anim=dot]"), { scale: 0, stagger: 0.08, duration: 0.3 }, 0.2);
+  tl.from(visible(section, "[data-anim=hit]"), { scale: 0, stagger: 0.3, duration: 0.4 }, 1);
+  tl.from(visible(section, "[data-anim=target]"), { scale: 0, duration: 0.4 }, 1.8);
   for (const group of perNiche(section, "[data-anim=lead]")) tl.from(group, { opacity: 0, x: 40 }, 2);
   for (const group of perNiche(section, "[data-anim=axis]")) tl.from(group, { scaleX: 0, transformOrigin: "left", stagger: 0.12 }, 2.4);
   for (const group of perNiche(section, "[data-anim=source]")) tl.from(group, { opacity: 0.15, stagger: 0.25, duration: 0.4 }, 2.6);
@@ -242,26 +263,26 @@ const photo: Scene = (section, ctx) => {
 
 const call: Scene = (section, ctx) => {
   const tl = sceneTimeline(section, ctx, 130);
-  tl.from(all(section, "[data-anim=aura]"), { scale: 0.8, opacity: 0.4 }, 0);
+  tl.from(visible(section, "[data-anim=aura]"), { scale: 0.8, opacity: 0.4 }, 0);
   for (const group of perNiche(section, "[data-anim=line]")) tl.from(group, { opacity: 0, y: 12, stagger: 0.6, duration: 0.5 }, 0.5);
-  tl.from(all(section, "[data-anim=stage-line]"), { scaleX: 0, transformOrigin: "left", ease: "none", duration: 2.4 }, 0.6);
-  tl.from(all(section, "[data-anim=stage]"), { opacity: 0.2, stagger: 0.4, duration: 0.4 }, 0.6);
+  tl.from(visible(section, "[data-anim=stage-line]"), { scaleX: 0, transformOrigin: "left", ease: "none", duration: 2.4 }, 0.6);
+  tl.from(visible(section, "[data-anim=stage]"), { opacity: 0.2, stagger: 0.4, duration: 0.4 }, 0.6);
   for (const group of perNiche(section, "[data-anim=outcome]")) tl.from(group, { opacity: 0, y: 16 }, 3.2);
 };
 
 const vault: Scene = (section, ctx) => {
   const tl = sceneTimeline(section, ctx, 110);
-  tl.from(all(section, "[data-anim=ring]"), { scale: 0.6, opacity: 0, stagger: 0.15 }, 0.2);
+  tl.from(visible(section, "[data-anim=ring]"), { scale: 0.6, opacity: 0, stagger: 0.15 }, 0.2);
   for (const group of perNiche(section, "[data-anim=msg]")) {
     tl.from(group[0], reveal, 0.6);
     tl.from(group.slice(1), reveal, 2.4);
   }
-  tl.from(all(section, "[data-anim=lock]"), { opacity: 0, y: 16, stagger: 0.3, duration: 0.5 }, 1.2);
+  tl.from(visible(section, "[data-anim=lock]"), { opacity: 0, y: 16, stagger: 0.3, duration: 0.5 }, 1.2);
 };
 
 const team: Scene = (section, ctx) => {
   const tl = sceneTimeline(section, ctx, 120);
-  tl.from(all(section, "[data-anim=mode]"), { opacity: 0.25, stagger: 0.7, duration: 0.5 }, 0.2);
+  tl.from(visible(section, "[data-anim=mode]"), { opacity: 0.25, stagger: 0.7, duration: 0.5 }, 0.2);
   for (const group of perNiche(section, "[data-anim=inbox]")) tl.from(group, { opacity: 0, y: 30 }, 0);
   for (const group of perNiche(section, "[data-anim=msg]")) tl.from(group, { ...reveal, stagger: 0.7 }, 0.6);
   for (const group of perNiche(section, "[data-anim=return]")) tl.from(group, { opacity: 0, scale: 0.9 }, 2.8);
@@ -295,11 +316,18 @@ const pipeline: Scene = (section, ctx) => {
  * anclada en su fracción inicial (`data-fraction`) y se desplaza la diferencia,
  * medida en px del lienzo actual.
  */
+/** El tamaño de cada lienzo del mapa, medido una vez por refresh (no por frame). */
+let mapBoxes = new WeakMap<HTMLElement, { w: number; h: number }>();
+const forgetMapBoxes = () => {
+  mapBoxes = new WeakMap();
+};
+
 function moveMark(mark: HTMLElement, fraction: number) {
   const canvas = mark.closest<HTMLElement>("[data-anim=map]");
   if (!canvas) return;
-  const w = canvas.offsetWidth;
-  const h = canvas.offsetHeight;
+  let box = mapBoxes.get(canvas);
+  if (!box) mapBoxes.set(canvas, (box = { w: canvas.offsetWidth, h: canvas.offsetHeight }));
+  const { w, h } = box;
   const from = roadPercentAt(Number(mark.dataset.fraction ?? 0));
   const to = roadPercentAt(fraction);
   const dx = ((parseFloat(to.left) - parseFloat(from.left)) / 100) * w;
@@ -312,34 +340,34 @@ const goal: Scene = (section, ctx) => {
   for (const group of perNiche(section, "[data-anim=navpanel]")) tl.from(group, { opacity: 0, x: ctx.desktop ? 60 : 0, y: ctx.desktop ? 0 : 40 }, 0.2);
 
   // «Vas aquí» avanza por la carretera: el trazo recorrido y la marca se mueven juntos.
-  const roads = all(section, "[data-anim=road], [data-anim=road-glow]");
-  const heres = all(section, "[data-anim=here]");
-  const values = all(section, "[data-anim=here-value]");
+  const roads = visible(section, "[data-anim=road], [data-anim=road-glow]");
+  const heres = visible(section, "[data-anim=here]");
+  const values = visible(section, "[data-anim=here-value]");
   const progress = { p: 0 };
   const paint = () => {
     const p = progress.p;
     for (const r of roads) r.style.strokeDasharray = `${p} 2`;
     for (const h of heres) moveMark(h, p);
-    for (const v of values) v.textContent = `${formatMillions(Number(v.dataset.goal) * p)} · ${formatPercent(p)}`;
+    for (const v of values) setText(v, `${formatMillions(Number(v.dataset.goal) * p)} · ${formatPercent(p)}`);
   };
   tl.fromTo(progress, { p: 0 }, { p: ROUTE_FRACTIONS.done, ease: "power1.inOut", duration: 2.2, onUpdate: paint }, 0.2);
 
-  tl.from(all(section, "[data-anim=should]"), { opacity: 0, scale: 0.5 }, 2.2);
-  tl.from(all(section, "[data-anim=road-slow], [data-anim=slow]"), { opacity: 0 }, 2.4);
-  tl.from(all(section, "[data-anim=projection]"), { opacity: 0 }, 2.7);
+  tl.from(visible(section, "[data-anim=should]"), { opacity: 0, scale: 0.5 }, 2.2);
+  tl.from(visible(section, "[data-anim=road-slow], [data-anim=slow]"), { opacity: 0 }, 2.4);
+  tl.from(visible(section, "[data-anim=projection]"), { opacity: 0 }, 2.7);
   for (const group of perNiche(section, "[data-anim=step]")) tl.from(group, { opacity: 0.2, x: 12, stagger: 0.2, duration: 0.4 }, 1);
 
   // Axi propone otra ruta y la llegada sube (82 % → 91 %).
-  const projections = all(section, "[data-anim=projection]");
-  const pcts = all(section, "[data-anim=projection-pct]");
-  const pvalues = all(section, "[data-anim=projection-value]");
+  const projections = visible(section, "[data-anim=projection]");
+  const pcts = visible(section, "[data-anim=projection-pct]");
+  const pvalues = visible(section, "[data-anim=projection-value]");
   const route = { p: ROUTE_FRACTIONS.projected };
   const paintRoute = () => {
     for (const m of projections) moveMark(m, route.p);
-    for (const el of pcts) el.textContent = formatPercent(route.p);
-    for (const el of pvalues) el.textContent = formatMillions(Number(el.dataset.goal) * route.p);
+    for (const el of pcts) setText(el, formatPercent(route.p));
+    for (const el of pvalues) setText(el, formatMillions(Number(el.dataset.goal) * route.p));
   };
-  tl.from(all(section, "[data-anim=route-axi]"), { opacity: 0.35, scale: 0.97, duration: 0.5 }, 3.2);
+  tl.from(visible(section, "[data-anim=route-axi]"), { opacity: 0.35, scale: 0.97, duration: 0.5 }, 3.2);
   tl.fromTo(route, { p: ROUTE_FRACTIONS.projected }, { p: ROUTE_FRACTIONS.projectedWithRoute, duration: 0.9, onUpdate: paintRoute }, 3.5);
   tl.to({}, { duration: 0.5 });
 };
@@ -359,7 +387,7 @@ const measure: Scene = (section, ctx) => {
 
 const close: Scene = (section) => {
   const tl = gsap.timeline({ scrollTrigger: { trigger: section, start: "top 85%", end: "top 25%", scrub: true } });
-  tl.from(all(section, "[data-anim=alpha-close]"), { scale: 0.7, opacity: 0, ease: "power2.out" }, 0);
+  tl.from(visible(section, "[data-anim=alpha-close]"), { scale: 0.7, opacity: 0, ease: "power2.out" }, 0);
 };
 
 const SCENES: Record<string, Scene> = { hero, niche, radar, followup, chat, photo, call, vault, team, collect, pipeline, goal, axel, measure, close };
@@ -391,23 +419,31 @@ export function startFilm(root: HTMLElement): FilmEngine {
   if (scroller) ScrollTrigger.defaults({ scroller, pinType: "fixed" });
 
   // Los pins de la media activa; al cruzar el corte se rehacen (matchMedia).
+  // Las escenas se construyen para el nicho visible; `setNiche` las rehace.
   const pins = new Map<string, ScrollTrigger>();
   const desktopQuery = window.matchMedia("(min-width: 1024px)");
-  const mm = gsap.matchMedia(root);
-  mm.add({ desktop: "(min-width: 1024px)", mobile: "(max-width: 1023px)" }, (context) => {
-    const ctx: Ctx = { desktop: Boolean(context.conditions?.desktop), pins };
-    for (const section of all(root, "[data-scene]")) {
-      const build = SCENES[section.dataset.scene ?? ""];
-      if (build) build(section, ctx);
-    }
-    return () => pins.clear();
-  });
+  const mount = () => {
+    const media = gsap.matchMedia(root);
+    media.add({ desktop: "(min-width: 1024px)", mobile: "(max-width: 1023px)" }, (context) => {
+      const ctx: Ctx = { desktop: Boolean(context.conditions?.desktop), pins };
+      for (const section of all(root, "[data-scene]")) {
+        const build = SCENES[section.dataset.scene ?? ""];
+        if (build) build(section, ctx);
+      }
+      return () => pins.clear();
+    });
+    return media;
+  };
+  let mm = mount();
+  ScrollTrigger.addEventListener("refreshInit", forgetMapBoxes);
 
   // El hilo de luz, después de los pins: mide las escenas ya fijadas en cada
   // refresh y dibuja en el ticker de gsap (en reposo no hace nada).
   const thread = createThread({
     root,
-    getScroll: () => (scroller ? scroller.scrollTop : window.scrollY),
+    // El número de Lenis, no `scrollTop`: leerlo en el ticker, después de que
+    // gsap escribió estilos, forzaría un layout en cada frame.
+    getScroll: () => lenis.scroll,
     getPin: (scene) => {
       const st = pins.get(scene);
       return st ? { start: st.start, end: st.end } : null;
@@ -425,6 +461,7 @@ export function startFilm(root: HTMLElement): FilmEngine {
   return {
     stop() {
       ScrollTrigger.removeEventListener("refresh", thread.refresh);
+      ScrollTrigger.removeEventListener("refreshInit", forgetMapBoxes);
       gsap.ticker.remove(thread.frame);
       thread.destroy();
       mm.revert();
@@ -435,7 +472,13 @@ export function startFilm(root: HTMLElement): FilmEngine {
     scrollTo(target: string) {
       lenis.scrollTo(target, { duration: 1.4 });
     },
-    // Cambiar de nicho cambia alturas (el hilo del chat mide sus turnos).
-    refresh,
+    // Otro nicho: se rehacen las líneas para animar solo la variante visible
+    // (el HTML ya trae las cuatro; esto no toca el DOM de las escenas). Mismo
+    // scroll, mismos pins: el visitante no nota el cambio de andamio.
+    setNiche() {
+      mm.revert();
+      mm = mount();
+      ScrollTrigger.refresh();
+    },
   };
 }

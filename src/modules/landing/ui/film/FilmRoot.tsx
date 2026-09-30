@@ -24,7 +24,7 @@ import {
  *   reducido. Sin motor, cada escena se ve en su fotograma final.
  */
 
-type Engine = { stop(): void; scrollTo(target: string): void; refresh(): void };
+type Engine = { stop(): void; scrollTo(target: string): void; setNiche(): void };
 
 type FilmContextValue = {
   niche: FilmNiche;
@@ -80,10 +80,10 @@ export function FilmRoot({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Otro nicho es otro texto y otras alturas: el motor vuelve a medir (el hilo
-  // del chat, por ejemplo, se desplaza lo que miden sus turnos).
+  // Otro nicho: el motor anima solo la variante visible, así que rehace sus
+  // líneas (y vuelve a medir: otro texto, otras alturas).
   useEffect(() => {
-    engineRef.current?.refresh();
+    engineRef.current?.setNiche();
   }, [niche]);
 
   const goTo = useCallback((target: string) => {
@@ -120,16 +120,28 @@ export function FilmRoot({ children }: { children: ReactNode }) {
     // «encima» de los precios sin cruzarlos, no avisa.
     const after = root.querySelector<HTMLElement>('[data-scene="pricing"]');
     let afterTop = Infinity;
+    // Dónde empieza la película en el scroll y cuánto mide: se miden al cambiar
+    // de tamaño. Por frame solo se usa `scrollTop`, leído en el evento de scroll
+    // (antes de que el motor escriba estilos en su frame: leerlo después
+    // forzaría un layout en cada frame).
+    let filmTop = 0;
+    let filmHeight = 1;
+    let viewHeight = el.clientHeight;
+    let scrollTop = el.scrollTop;
     const measure = () => {
-      if (after) afterTop = after.getBoundingClientRect().top - root.getBoundingClientRect().top;
+      const top = root.getBoundingClientRect().top;
+      filmTop = top - el.getBoundingClientRect().top + el.scrollTop;
+      filmHeight = root.offsetHeight;
+      viewHeight = el.clientHeight;
+      if (after) afterTop = after.getBoundingClientRect().top - top;
     };
     const update = () => {
       frame = 0;
-      const rect = root.getBoundingClientRect();
-      const span = Math.max(1, rect.height - el.clientHeight);
-      root.style.setProperty("--film-progress", Math.min(1, Math.max(0, -rect.top / span)).toFixed(4));
-      const nowBeyond = -rect.top > el.clientHeight * 1.2;
-      const nowPast = -rect.top + el.clientHeight * 0.85 > afterTop;
+      const into = scrollTop - filmTop;
+      const span = Math.max(1, filmHeight - viewHeight);
+      root.style.setProperty("--film-progress", Math.min(1, Math.max(0, into / span)).toFixed(4));
+      const nowBeyond = into > viewHeight * 1.2;
+      const nowPast = into + viewHeight * 0.85 > afterTop;
       if (nowBeyond !== beyondHero || nowPast !== pastFilm) {
         beyondHero = nowBeyond;
         pastFilm = nowPast;
@@ -137,7 +149,12 @@ export function FilmRoot({ children }: { children: ReactNode }) {
       }
     };
     const onScroll = () => {
+      scrollTop = el.scrollTop;
       if (!frame) frame = requestAnimationFrame(update);
+    };
+    const onResize = () => {
+      measure();
+      onScroll();
     };
 
     const marks = TICKS.map((t) => root.querySelector<HTMLElement>(`[data-chapter="${t}"]`));
@@ -163,12 +180,12 @@ export function FilmRoot({ children }: { children: ReactNode }) {
     measure();
     update();
     el.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
+    window.addEventListener("resize", onResize);
     return () => {
       chapterIo.disconnect();
       ro.disconnect();
       el.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
+      window.removeEventListener("resize", onResize);
       if (frame) cancelAnimationFrame(frame);
     };
   }, []);
