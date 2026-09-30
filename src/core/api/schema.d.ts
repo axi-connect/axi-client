@@ -33855,7 +33855,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description calls/launch_skipped — details.reason: already_in_call | contact_unreachable | no_phone_number | no_agent | calls_disabled | company_suspended | calls_paused | limit_exceeded */
+            /** @description calls/launch_skipped — details.reason: already_in_call | contact_unreachable | no_phone_number | no_agent | calls_disabled | company_suspended | calls_paused | limit_exceeded · calls/collections_disabled — con plan_id y la función Cobranza apagada */
             409: {
                 headers: {
                     [name: string]: unknown;

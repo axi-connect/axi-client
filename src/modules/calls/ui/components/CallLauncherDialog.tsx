@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Ear, LoaderCircle, Megaphone, PhoneOutgoing, Sparkles } from "lucide-react";
+import { Check, Ear, LoaderCircle, Megaphone, PhoneOutgoing, Sparkles, TriangleAlert } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/core/lib/utils";
 import { formatMoney, formatShortDate } from "@/core/lib/format";
@@ -339,7 +339,12 @@ function AgentKnows({ summary, name }: { summary: CollectionsCallSummary; name: 
         {due !== null && (
           <>
             <dt className="text-muted-foreground">{due.label}</dt>
-            <dd className={cn("font-medium tabular-nums", due.late && "text-destructive")}>{due.value}</dd>
+            {/* F3 fase 2: el rojo como texto sobre bg-muted daba 4,39:1 en claro;
+                el dato va en tinta y la alerta en el icono (basta 3:1). */}
+            <dd className="flex min-w-0 items-center gap-1.5 font-medium tabular-nums">
+              {due.late && <TriangleAlert aria-hidden className="size-3.5 shrink-0 text-destructive" />}
+              <span className="min-w-0">{due.value}</span>
+            </dd>
           </>
         )}
         <dt className="text-muted-foreground">Promesa de pago</dt>

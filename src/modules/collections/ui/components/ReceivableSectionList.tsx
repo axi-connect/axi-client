@@ -149,7 +149,9 @@ function Row({
           {reminder.text}
         </span>
       </span>
-      <span className="col-start-2 flex items-center justify-between gap-3 md:contents">
+      {/* F3 fase 2: en el celular las acciones bajan a su propia línea; con
+          «Llamar» ya no cabían junto a la mora y el monto (se recortaban a 375). */}
+      <span className="col-start-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 md:contents">
         <span className="text-left md:self-center md:text-right">
           <span className="block text-[15px] font-semibold tracking-[-0.015em] whitespace-nowrap tabular-nums">
             {formatMoney(row.balance_cents, row.currency)}
@@ -184,7 +186,7 @@ function Row({
             )}
           </span>
         </span>
-        <span className="relative z-[1] flex items-center justify-end gap-1">
+        <span className="relative z-[1] flex items-center justify-end gap-1 max-sm:w-full">
           <Button
             variant="outline"
             size="sm"

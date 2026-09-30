@@ -203,5 +203,27 @@ describe("FinishedCallView (premium F4)", () => {
     expect(within(island).getByRole("heading", { level: 2, name: "Dejó un recado" })).toBeInTheDocument();
     expect(within(island).getByText(/Recado transcrito por Axi/)).toBeInTheDocument();
   });
+
+  it("F5 fase 2 (4): el recado de un número oculto no promete una tarea que no existe", async () => {
+    await renderView(
+      call({
+        direction: "inbound",
+        purpose: "inbound",
+        contact: null,
+        from_number: "anonymous",
+        inbound_message: true,
+        inbound_message_reason: "anonymous_caller",
+        ai_agent_id: null,
+        ai_agent_name: null,
+        outcome: "callback_requested",
+        summary: "Dejó un recado: «llámenme a este número»",
+        segments: [{ seq: 1, role: "caller", text: "llámenme a este número", at_ms: 0, spoken_at_ms: null, interrupted: false }],
+        events: [],
+      }),
+    );
+    const island = screen.getAllByRole("region", { name: "Así fue la llamada" })[0] as HTMLElement;
+    expect(within(island).getByText(/número oculto: no hay a quién devolver la llamada/)).toBeInTheDocument();
+    expect(within(island).queryByText(/quedó en el CRM/)).toBeNull();
+  });
 });
 

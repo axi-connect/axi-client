@@ -5,6 +5,7 @@ import {
   callResultPill,
   confidenceLabel,
   isInboundMessage,
+  mapSessionToRow,
   parseGoalAssessment,
   parseTurnLatency,
   summaryWaitRemainingMs,
@@ -133,3 +134,43 @@ describe("recado de una entrante (Entrega 2)", () => {
     );
   });
 });
+
+describe("Historial: la fila que pinta la tabla (auditoría F5 fase 2)", () => {
+  it("mapSessionToRow conserva inbound_message y la píldora dice «Dejó un recado»", () => {
+    const dto = {
+      id: "s1",
+      direction: "inbound",
+      purpose: "inbound",
+      mode: "reactive",
+      call_type: "inbound_attention",
+      last_stage: null,
+      status: "completed",
+      outcome: "callback_requested",
+      answered_by: "human",
+      inbound_message: true,
+      inbound_message_reason: "relay_unavailable",
+      contact: { id: "c1", name: "Laura" },
+      from_number: "+573002194410",
+      to_number: "+576015803300",
+      ai_agent_id: "a-1",
+      ai_agent_name: "Sofía",
+      attempt: 1,
+      duration_seconds: 14,
+      has_recording: true,
+      cost_estimate_usd: null,
+      started_at: null,
+      ended_at: null,
+      created_at: "2026-09-30T10:00:00.000Z",
+    } as unknown as Parameters<typeof mapSessionToRow>[0];
+    const row = mapSessionToRow(dto);
+    expect(row.inbound_message).toBe(true);
+    expect(callResultPill(row).label).toBe("Dejó un recado");
+  });
+
+  it("una llamada que pidió que la llamen, sin recado, lo dice en palabras", () => {
+    expect(callResultPill({ status: "completed", outcome: "callback_requested", inbound_message: false }).label).toBe(
+      "Pidió que lo llamen",
+    );
+  });
+});
+

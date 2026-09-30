@@ -84,8 +84,12 @@ export function CallSummaryIsland({ call, className }: { call: CallSessionDetail
       )}
       <p className="mt-1 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
         <Sparkles aria-hidden className="size-3.5" />
+        {/* La tarea solo existe si hay a quién devolver la llamada: un número
+            oculto no tiene contacto y no tiene tarea (B1 de F4). */}
         {isInboundMessage(call)
-          ? "Recado transcrito por Axi · la tarea «Devolver llamada» quedó en el CRM"
+          ? call.contact !== null
+            ? "Recado transcrito por Axi · la tarea «Devolver llamada» quedó en el CRM"
+            : "Recado transcrito por Axi · número oculto: no hay a quién devolver la llamada"
           : "Resumen escrito por Axi al colgar"}
       </p>
     </InkIsland>
