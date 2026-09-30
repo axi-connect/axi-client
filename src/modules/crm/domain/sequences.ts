@@ -32,12 +32,48 @@ export const STOP_REASON_LABELS: Record<EnrollmentStopReason, string> = {
   stopped_by_user: "La paró alguien del equipo",
 };
 
+/**
+ * P3a: además de mensaje y llamada, una secuencia escribe correo, manda SMS o
+ * deja una tarea manual (Instagram, LinkedIn, una visita). El correo y el SMS
+ * salen de un texto fijo con huecos, nunca del agente.
+ */
+export type SequenceMedium = FollowUpMedium | "email" | "sms" | "manual";
+
+/** Medios cuyo texto se escribe en el paso. */
+export const TEMPLATED_SEQUENCE_MEDIA: readonly SequenceMedium[] = ["email", "sms", "manual"];
+
+/** Espejo de los límites del servidor (outreach `message_template`). */
+export const MESSAGE_LIMITS = { subject: 150, body: 5_000, sms_body: 600 } as const;
+
+/** Los huecos que el texto admite (espejo de outreach `MESSAGE_TEMPLATE_PLACEHOLDERS`). */
+export const MESSAGE_VARIABLES = ["first_name", "business_name", "job_title", "sender_name"] as const;
+export type MessageVariable = (typeof MESSAGE_VARIABLES)[number];
+export const MESSAGE_VARIABLE_LABELS: Record<MessageVariable, string> = {
+  first_name: "Nombre",
+  business_name: "Su empresa",
+  job_title: "Su cargo",
+  sender_name: "Tu negocio",
+};
+
 /** Un paso en el editor, antes de tener id. */
 export type DraftStep = {
   offset_hours: number;
-  task_channel: FollowUpMedium;
+  task_channel: SequenceMedium;
   objective: string;
+  /** Solo correo. */
+  subject?: string;
+  /** Correo y SMS: el texto; manual: el texto listo para copiar (opcional). */
+  body?: string;
 };
+
+/** Segmentos de SMS que se cobran: 160 caracteres, o 70 si hay tildes o emoji. */
+export function smsSegments(text: string): number {
+  if (text.length === 0) return 0;
+  const gsm = /^[\x00-\x7F]*$/.test(text);
+  const single = gsm ? 160 : 70;
+  const multi = gsm ? 153 : 67;
+  return text.length <= single ? 1 : Math.ceil(text.length / multi);
+}
 
 /** Tres puntos de partida, ya redactados: una secuencia en blanco es la
  *  pantalla donde la gente abandona. */
@@ -64,6 +100,58 @@ export const SEQUENCE_TEMPLATES: readonly {
     steps: [
       { offset_hours: 0, task_channel: "message", objective: "Presentarnos y explicar en qué podemos ayudar" },
       { offset_hours: 72, task_channel: "message", objective: "Retomar y preguntar si le interesa una cita" },
+    ],
+  },
+  {
+    key: "radar_b2b",
+    name: "Radar B2B · 14 días · 8 toques",
+    description:
+      "Para empresas que aún no te conocen: correo con un dato de su negocio, LinkedIn, llamada y SMS, sin insistir de más.",
+    steps: [
+      {
+        offset_hours: 0,
+        task_channel: "email",
+        objective: "Presentarnos con un dato concreto de su negocio",
+        subject: "Una idea para {{business_name}}",
+        body:
+          "Hola {{first_name}}:\n\nAyudamos a negocios como {{business_name}} a responder a sus clientes por WhatsApp en segundos, también fuera de horario.\n\n¿Te sirve que te muestre en 15 minutos cómo se vería en tu negocio?\n\n{{sender_name}}",
+      },
+      {
+        offset_hours: 24,
+        task_channel: "manual",
+        objective: "Conectar por LinkedIn con una nota corta",
+        body: "Hola {{first_name}}, te escribí por correo sobre {{business_name}}. Me gustaría conectar por aquí.",
+      },
+      { offset_hours: 72, task_channel: "call", objective: "Llamar para saber si vio el correo y ofrecer la demo" },
+      {
+        offset_hours: 120,
+        task_channel: "email",
+        objective: "Hacer una pregunta sobre cómo atienden hoy",
+        subject: "Una pregunta rápida sobre {{business_name}}",
+        body:
+          "Hola {{first_name}}:\n\n¿Cuánto tardan hoy en contestar un WhatsApp de un cliente nuevo? Si te sirve, te muestro en 15 minutos cómo se vería contestar en segundos en {{business_name}}.\n\n{{sender_name}}",
+      },
+      {
+        offset_hours: 168,
+        task_channel: "manual",
+        objective: "Comentar o escribir por Instagram si el negocio lo usa",
+        body: "Hola, soy de {{sender_name}}. Les escribí por correo con una idea para {{business_name}}; ¿a quién le puedo contar?",
+      },
+      { offset_hours: 216, task_channel: "call", objective: "Segunda llamada: resolver la duda que frena la decisión" },
+      {
+        offset_hours: 264,
+        task_channel: "sms",
+        objective: "Recordatorio breve con la propuesta de cita",
+        body: "Hola {{first_name}}, soy de {{sender_name}}. ¿Te sirve una llamada de 15 min esta semana para ver la idea para {{business_name}}?",
+      },
+      {
+        offset_hours: 336,
+        task_channel: "email",
+        objective: "Cerrar con elegancia y dejar la puerta abierta",
+        subject: "¿Lo dejamos para más adelante?",
+        body:
+          "Hola {{first_name}}:\n\nNo quiero llenarte el correo. Si ahora no es el momento, lo entiendo; te escribo en unos meses. Si te interesa antes, solo responde este correo.\n\n{{sender_name}}",
+      },
     ],
   },
   {
@@ -131,6 +219,17 @@ export function validateSequence(input: {
     ) {
       problems.push({ index, message: "La espera va entre 0 h y 90 días" });
     }
+    if (step.task_channel === "email") {
+      if ((step.subject ?? "").trim().length === 0) problems.push({ index, message: "El correo necesita un asunto" });
+      if ((step.body ?? "").trim().length === 0) problems.push({ index, message: "El correo necesita un texto" });
+    }
+    if (step.task_channel === "sms") {
+      const body = (step.body ?? "").trim();
+      if (body.length === 0) problems.push({ index, message: "El SMS necesita un texto" });
+      if (body.length > MESSAGE_LIMITS.sms_body) {
+        problems.push({ index, message: `Un SMS de secuencia tiene como mucho ${String(MESSAGE_LIMITS.sms_body)} caracteres` });
+      }
+    }
     // Las esperas se miden desde la INSCRIPCIÓN: si no crecen, dos pasos caen
     // a la vez y el cliente recibe dos mensajes seguidos.
     const previous = input.steps[index - 1];
@@ -160,8 +259,18 @@ export function toUpsertDTO(input: {
       offset_hours: step.offset_hours,
       task_channel: step.task_channel,
       objective: step.objective.trim(),
+      message_template: messageTemplateOf(step),
     })),
   };
+}
+
+/** El texto del paso, solo donde aplica (correo, SMS o el texto listo de la manual). */
+export function messageTemplateOf(step: DraftStep): { subject: string | null; body: string } | null {
+  if (!TEMPLATED_SEQUENCE_MEDIA.includes(step.task_channel)) return null;
+  const body = (step.body ?? "").trim();
+  if (body.length === 0) return null;
+  const subject = step.task_channel === "email" ? (step.subject ?? "").trim() : "";
+  return { subject: subject.length === 0 ? null : subject, body };
 }
 
 /**

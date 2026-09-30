@@ -47,7 +47,18 @@ export const ACTIVITY_KIND_LABELS: Record<ActivityKind, string> = {
   call: "Llamada",
   meeting: "Reunión",
   task: "Tarea",
+  // P3a: el correo y el SMS en frío. Los apunta el sistema; no se crean a mano.
+  email: "Correo",
+  sms: "SMS",
 };
+
+/** Lo que una persona puede registrar a mano (el correo y el SMS los apunta el sistema). */
+export type CreatableActivityKind = CreateActivityDTO["kind"];
+export const CREATABLE_ACTIVITY_KINDS: readonly CreatableActivityKind[] = ["note", "call", "meeting", "task"];
+
+export function isCreatableActivityKind(kind: ActivityKind): kind is CreatableActivityKind {
+  return (CREATABLE_ACTIVITY_KINDS as readonly string[]).includes(kind);
+}
 
 export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
   open: "Abierta",

@@ -66,6 +66,9 @@ export const OVERAGE_METRIC_LABELS: Record<OverageMetric, string> = {
   embedding_pixels: "Píxeles de reconocimiento (Voyage)",
   // P1b: la comercial del motor de decisiones (cupo, sin tarifa propia).
   ai_decisions: "Clasificadores",
+  // P3a: el correo y el SMS en frío (el SMS por segmento, que es lo que cobra Twilio).
+  emails_sent: "Correos de prospección",
+  sms_sent: "SMS de prospección (segmentos)",
 };
 
 export const OVERAGE_METRICS = Object.keys(

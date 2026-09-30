@@ -5,8 +5,10 @@ import type { FieldConfig } from "@/shared/components/features/dynamic-form";
 import { createCustomField, createInputField } from "@/shared/components/features/dynamic-form";
 import {
   ACTIVITY_KIND_LABELS,
+  CREATABLE_ACTIVITY_KINDS,
+  isCreatableActivityKind,
   type ActivityDTO,
-  type ActivityKind,
+  type CreatableActivityKind,
   type CreateActivityDTO,
   type CreateAgentTaskDTO,
   type UpdateActivityDTO,
@@ -99,7 +101,7 @@ export type ActivityFormValues = z.infer<typeof activityFormSchema>;
 
 export function defaultActivityFormValues(preset?: {
   contact?: { id: string; label: string };
-  kind?: ActivityKind;
+  kind?: CreatableActivityKind;
   executor?: "user" | "agent";
 }): ActivityFormValues {
   return {
@@ -157,13 +159,13 @@ export function buildActivityFormFields(options: {
       "kind",
       ({ value, setValue }) => (
         <select
-          value={value as ActivityKind}
-          onChange={(e) => setValue("kind", e.target.value as ActivityKind)}
+          value={value as CreatableActivityKind}
+          onChange={(e) => setValue("kind", e.target.value as CreatableActivityKind)}
           disabled={options.locked === true}
           className="h-9 w-full rounded-md border border-border bg-background px-2 text-sm disabled:opacity-60"
           aria-label="Tipo de actividad"
         >
-          {(Object.keys(ACTIVITY_KIND_LABELS) as ActivityKind[]).map((kind) => (
+          {CREATABLE_ACTIVITY_KINDS.map((kind) => (
             <option key={kind} value={kind}>
               {ACTIVITY_KIND_LABELS[kind]}
             </option>
@@ -327,7 +329,8 @@ export function editActivityFormValues(
   const executor = task.assignee_type === "agent" ? "agent" : "user";
   return {
     contact: contact ?? { id: task.contact_id, label: "" },
-    kind: task.kind,
+    // El correo y el SMS los apunta el sistema y no se editan como actividad.
+    kind: isCreatableActivityKind(task.kind) ? task.kind : "note",
     title: task.title ?? "",
     body: task.body ?? "",
     // La de agente se edita sobre `due_at`: `next_run_at` incluye los

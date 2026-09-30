@@ -5556,22 +5556,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/platform/calls/proactive": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["PlatformCallsController_getProactive_v1"];
-        put: operations["PlatformCallsController_setProactive_v1"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/platform/calls/providers": {
         parameters: {
             query?: never;
@@ -5796,22 +5780,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/calls/overview/funnel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["CallsAdminController_getFunnel_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/calls/sessions": {
         parameters: {
             query?: never;
@@ -5892,22 +5860,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/calls/launch": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["CallsAdminController_launch_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/calls/test-call": {
         parameters: {
             query?: never;
@@ -5940,14 +5892,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/calls/playbooks": {
+    "/api/v1/outreach/sender": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["CallPlaybooksController_list_v1"];
+        get: operations["OutreachSenderController_sender_v1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5956,80 +5908,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/calls/playbooks/{type}": {
+    "/api/public/outreach/unsubscribe/{token}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        put: operations["CallPlaybooksController_save_v1"];
-        post?: never;
-        delete: operations["CallPlaybooksController_reset_v1"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/calls/playbooks/propose": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
+        get: operations["PublicOutreachController_view[0]"];
         put?: never;
-        post: operations["CallPlaybooksController_proposeAll_v1"];
+        post: operations["PublicOutreachController_unsubscribe[0]"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/calls/playbooks/{type}/proposal/apply": {
+    "/api/v1/public/outreach/unsubscribe/{token}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        get: operations["PublicOutreachController_view[1]_v1"];
         put?: never;
-        post: operations["CallPlaybooksController_applyProposal_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/calls/playbooks/{type}/proposal": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete: operations["CallPlaybooksController_discardProposal_v1"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/calls/playbooks/{type}/preview-opening": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["CallPlaybooksController_previewOpening_v1"];
+        post: operations["PublicOutreachController_unsubscribe[1]_v1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -8300,7 +8204,7 @@ export interface components {
             ai_paused: boolean;
             metrics: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                 used: number;
                 limit: {
                     value: number;
@@ -8332,7 +8236,7 @@ export interface components {
             data: {
                 id: string;
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                 quantity: number;
                 cost_usd: number | null;
                 provider: string | null;
@@ -8364,7 +8268,7 @@ export interface components {
                     /** Format: uuid */
                     id: string;
                     /** @enum {string} */
-                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                     /** @enum {string} */
                     period: "day" | "billing_cycle";
                     /** @enum {string} */
@@ -8853,7 +8757,7 @@ export interface components {
         TenantLimitsDto: {
             data: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                 /** @enum {string} */
                 period: "day" | "billing_cycle";
                 limit_value: number;
@@ -8877,7 +8781,7 @@ export interface components {
         ReplaceTenantLimitsDto: {
             limits: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                 /** @enum {string} */
                 period: "day" | "billing_cycle";
                 limit_value: number;
@@ -8897,7 +8801,7 @@ export interface components {
         PricingListDto: {
             data: {
                 /** @enum {string} */
-                provider: "openai_compatible" | "anthropic" | "elevenlabs" | "twilio" | "groq" | "voyage" | "meta" | "typesafe";
+                provider: "openai_compatible" | "anthropic" | "elevenlabs" | "twilio" | "groq" | "voyage" | "meta" | "typesafe" | "resend";
                 model: string;
                 /**
                  * @default tokens
@@ -8920,7 +8824,7 @@ export interface components {
         };
         CreatePricingDto: {
             /** @enum {string} */
-            provider: "openai_compatible" | "anthropic" | "elevenlabs" | "twilio" | "groq" | "voyage" | "meta" | "typesafe";
+            provider: "openai_compatible" | "anthropic" | "elevenlabs" | "twilio" | "groq" | "voyage" | "meta" | "typesafe" | "resend";
             model: string;
             /**
              * @default tokens
@@ -9027,7 +8931,7 @@ export interface components {
                 tier: "sbs" | "enterprise";
                 default_limits: {
                     /** @enum {string} */
-                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                     /** @enum {string} */
                     period: "day" | "billing_cycle";
                     limit_value: number;
@@ -9066,7 +8970,7 @@ export interface components {
             /** @default [] */
             default_limits: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                 /** @enum {string} */
                 period: "day" | "billing_cycle";
                 limit_value: number;
@@ -9093,7 +8997,7 @@ export interface components {
             /** @default [] */
             default_limits: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                 /** @enum {string} */
                 period: "day" | "billing_cycle";
                 limit_value: number;
@@ -9120,7 +9024,7 @@ export interface components {
                 tier: "sbs" | "enterprise";
                 default_limits: {
                     /** @enum {string} */
-                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                     /** @enum {string} */
                     period: "day" | "billing_cycle";
                     limit_value: number;
@@ -9154,7 +9058,7 @@ export interface components {
             billing_cycle_anchor: string | null;
             limits: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                 /** @enum {string} */
                 period: "day" | "billing_cycle";
                 limit_value: number;
@@ -13988,7 +13892,7 @@ export interface components {
                 /** Format: uuid */
                 conversation_id: string | null;
                 /** @enum {string} */
-                kind: "note" | "call" | "meeting" | "task";
+                kind: "note" | "call" | "meeting" | "task" | "email" | "sms";
                 title: string | null;
                 body: string | null;
                 /** Format: date-time */
@@ -14033,9 +13937,9 @@ export interface components {
                 /** Format: date-time */
                 awaiting_reply_until: string | null;
                 /** @enum {string|null} */
-                task_channel: "message" | "call" | "call_then_message" | null;
+                task_channel: "message" | "call" | "call_then_message" | "email" | "sms" | "manual" | null;
                 /** @enum {string|null} */
-                task_medium: "message" | "call" | null;
+                task_medium: "message" | "call" | "email" | "sms" | "manual" | null;
                 /** Format: uuid */
                 bulk_id: string | null;
                 last_opening: {
@@ -14097,7 +14001,7 @@ export interface components {
             /** Format: uuid */
             conversation_id: string | null;
             /** @enum {string} */
-            kind: "note" | "call" | "meeting" | "task";
+            kind: "note" | "call" | "meeting" | "task" | "email" | "sms";
             title: string | null;
             body: string | null;
             /** Format: date-time */
@@ -14142,9 +14046,9 @@ export interface components {
             /** Format: date-time */
             awaiting_reply_until: string | null;
             /** @enum {string|null} */
-            task_channel: "message" | "call" | "call_then_message" | null;
+            task_channel: "message" | "call" | "call_then_message" | "email" | "sms" | "manual" | null;
             /** @enum {string|null} */
-            task_medium: "message" | "call" | null;
+            task_medium: "message" | "call" | "email" | "sms" | "manual" | null;
             /** Format: uuid */
             bulk_id: string | null;
             last_opening: {
@@ -14306,9 +14210,11 @@ export interface components {
                 message_id: string | null;
                 detail: string | null;
                 /** @enum {string} */
-                medium: "message" | "call";
+                medium: "message" | "call" | "email" | "sms" | "manual";
                 /** Format: uuid */
                 call_session_id: string | null;
+                /** Format: uuid */
+                outreach_message_id: string | null;
                 opened_with_template: boolean;
                 /** @enum {string|null} */
                 delivery_status: "sent" | "delivered" | "read" | "failed" | null;
@@ -14344,9 +14250,11 @@ export interface components {
                 message_id: string | null;
                 detail: string | null;
                 /** @enum {string} */
-                medium: "message" | "call";
+                medium: "message" | "call" | "email" | "sms" | "manual";
                 /** Format: uuid */
                 call_session_id: string | null;
+                /** Format: uuid */
+                outreach_message_id: string | null;
                 opened_with_template: boolean;
                 /** @enum {string|null} */
                 delivery_status: "sent" | "delivered" | "read" | "failed" | null;
@@ -14550,7 +14458,7 @@ export interface components {
                     position: number;
                     offset_hours: number;
                     /** @enum {string} */
-                    task_channel: "message" | "call" | "call_then_message";
+                    task_channel: "message" | "call" | "call_then_message" | "email" | "sms" | "manual";
                     objective: string;
                     opening_template: {
                         /** Format: uuid */
@@ -14561,6 +14469,10 @@ export interface components {
                         language: string;
                         params: string[];
                         topic: string | null;
+                    } | null;
+                    message_template: {
+                        subject: string | null;
+                        body: string;
                     } | null;
                 }[];
                 active_enrollments: number;
@@ -14584,7 +14496,7 @@ export interface components {
                 position: number;
                 offset_hours: number;
                 /** @enum {string} */
-                task_channel: "message" | "call" | "call_then_message";
+                task_channel: "message" | "call" | "call_then_message" | "email" | "sms" | "manual";
                 objective: string;
                 opening_template: {
                     /** Format: uuid */
@@ -14595,6 +14507,10 @@ export interface components {
                     language: string;
                     params: string[];
                     topic: string | null;
+                } | null;
+                message_template: {
+                    subject: string | null;
+                    body: string;
                 } | null;
             }[];
             active_enrollments: number;
@@ -14618,13 +14534,17 @@ export interface components {
                  * @default message
                  * @enum {string}
                  */
-                task_channel: "message" | "call" | "call_then_message";
+                task_channel: "message" | "call" | "call_then_message" | "email" | "sms" | "manual";
                 objective: string;
                 opening_template?: {
                     /** Format: uuid */
                     channel_template_id: string;
                     params: string[];
                     topic?: string | null;
+                } | null;
+                message_template?: {
+                    subject?: string | null;
+                    body: string;
                 } | null;
             }[];
         };
@@ -15536,7 +15456,7 @@ export interface components {
                     email: string | null;
                 };
                 /** @enum {string} */
-                source: "inbound_keyword" | "manual" | "import" | "habeas_data" | "email_unsubscribe" | "sms_stop";
+                source: "inbound_keyword" | "manual" | "import" | "habeas_data" | "email_unsubscribe" | "sms_stop" | "email_bounce";
                 channel: string | null;
                 keyword_text: string | null;
                 /** Format: uuid */
@@ -18272,13 +18192,6 @@ export interface components {
                 contact_ids: string[];
             }[];
         };
-        ProactiveSwitchDto: {
-            enabled: boolean;
-            locked_by_env: boolean;
-        };
-        SetProactiveSwitchDto: {
-            enabled: boolean;
-        };
         CallProviderAccountDto: {
             /** Format: uuid */
             id: string;
@@ -18465,25 +18378,6 @@ export interface components {
                 outbound: number;
             }[];
         };
-        CallsFunnelDto: {
-            period: {
-                /** Format: date-time */
-                start: string;
-                /** Format: date-time */
-                end: string;
-            };
-            types: {
-                call_type: string;
-                label: string;
-                total: number;
-                goal_met: number;
-                stages: {
-                    key: string;
-                    label: string;
-                    reached: number;
-                }[];
-            }[];
-        };
         CallSessionsListDto: {
             data: {
                 /** Format: uuid */
@@ -18492,11 +18386,6 @@ export interface components {
                 direction: "outbound" | "inbound";
                 /** @enum {string} */
                 purpose: "inbound" | "appointment_reminder" | "crm_task" | "campaign" | "manual";
-                /** @enum {string} */
-                mode: "reactive" | "proactive";
-                call_type: string | null;
-                /** @description CLAVE de la etapa más avanzada del marco (p. ej. «descubrimiento»), no su etiqueta: se cruza con `playbook.stages` del detalle o con GET /calls/playbooks para mostrar el nombre. Null en reactivas y en llamadas anteriores al plan de modos. */
-                last_stage: string | null;
                 /** @enum {string} */
                 status: "queued" | "initiated" | "ringing" | "in_progress" | "completed" | "no_answer" | "busy" | "failed" | "canceled";
                 /** @enum {string|null} */
@@ -18539,11 +18428,6 @@ export interface components {
                 /** @enum {string} */
                 purpose: "inbound" | "appointment_reminder" | "crm_task" | "campaign" | "manual";
                 /** @enum {string} */
-                mode: "reactive" | "proactive";
-                call_type: string | null;
-                /** @description CLAVE de la etapa más avanzada del marco (p. ej. «descubrimiento»), no su etiqueta: se cruza con `playbook.stages` del detalle o con GET /calls/playbooks para mostrar el nombre. Null en reactivas y en llamadas anteriores al plan de modos. */
-                last_stage: string | null;
-                /** @enum {string} */
                 status: "queued" | "initiated" | "ringing" | "in_progress" | "completed" | "no_answer" | "busy" | "failed" | "canceled";
                 /** @enum {string|null} */
                 outcome: "goal_met" | "callback_requested" | "voicemail" | "hangup" | "no_answer" | "error" | "transferred" | "agent_closed" | "silence_timeout" | "max_duration" | "quota_exhausted" | "system_error" | null;
@@ -18578,11 +18462,6 @@ export interface components {
             direction: "outbound" | "inbound";
             /** @enum {string} */
             purpose: "inbound" | "appointment_reminder" | "crm_task" | "campaign" | "manual";
-            /** @enum {string} */
-            mode: "reactive" | "proactive";
-            call_type: string | null;
-            /** @description CLAVE de la etapa más avanzada del marco (p. ej. «descubrimiento»), no su etiqueta: se cruza con `playbook.stages` del detalle o con GET /calls/playbooks para mostrar el nombre. Null en reactivas y en llamadas anteriores al plan de modos. */
-            last_stage: string | null;
             /** @enum {string} */
             status: "queued" | "initiated" | "ringing" | "in_progress" | "completed" | "no_answer" | "busy" | "failed" | "canceled";
             /** @enum {string|null} */
@@ -18628,15 +18507,6 @@ export interface components {
                 /** Format: date-time */
                 created_at: string;
             }[];
-            playbook: {
-                call_type: string;
-                label: string;
-                stages: {
-                    key: string;
-                    label: string;
-                }[];
-            } | null;
-            stage_route: string[];
         };
         CallRecordingUrlDto: {
             /** Format: uri */
@@ -18662,30 +18532,15 @@ export interface components {
             /** @default 15 */
             silence_hangup_seconds: number;
         };
-        LaunchCallDto: {
-            /** Format: uuid */
-            contact_id: string;
-            /** @enum {string} */
-            call_type: "appointment_reminder" | "sales_followup" | "collections" | "reactivation" | "followup";
-            objective?: string;
-            /** Format: uuid */
-            ai_agent_id?: string;
-            /** @enum {string} */
-            mode?: "reactive" | "proactive";
-        };
-        TestCallResultDto: {
-            /** Format: uuid */
-            call_session_id: string;
-        };
         TestCallDto: {
             to: string;
             /** Format: uuid */
             ai_agent_id?: string;
             objective?: string;
-            /** @enum {string} */
-            call_type?: "appointment_reminder" | "sales_followup" | "collections" | "reactivation" | "followup";
-            /** @enum {string} */
-            mode?: "reactive" | "proactive";
+        };
+        TestCallResultDto: {
+            /** Format: uuid */
+            call_session_id: string;
         };
         TenantCallNumberDto: {
             /** Format: uuid */
@@ -18700,126 +18555,17 @@ export interface components {
             /** Format: date-time */
             assigned_at: string | null;
         };
-        CallPlaybookListDto: {
+        OutreachSenderDto: {
+            address: string;
+            from_name: string;
+            paused: boolean;
+            pause_reason: string | null;
+        };
+        UnsubscribeViewDto: {
+            sender_name: string;
             /** @enum {string} */
-            call_type: "appointment_reminder" | "sales_followup" | "collections" | "reactivation" | "followup";
-            label: string;
-            enabled: boolean;
-            customized: boolean;
-            base_version: number;
-            playbook: {
-                call_type: string;
-                label: string;
-                version: number;
-                opening_guidance: string;
-                stages: {
-                    key: string;
-                    label: string;
-                    goal: string;
-                    advance_when: string;
-                    must: string[];
-                    never: string[];
-                }[];
-            };
-            proposal: {
-                call_type: string;
-                label: string;
-                version: number;
-                opening_guidance: string;
-                stages: {
-                    key: string;
-                    label: string;
-                    goal: string;
-                    advance_when: string;
-                    must: string[];
-                    never: string[];
-                }[];
-            } | null;
-            /** Format: date-time */
-            proposed_at: string | null;
-            /** Format: date-time */
-            updated_at: string | null;
-        }[];
-        SaveCallPlaybookDto: {
-            enabled: boolean;
-            opening_guidance: string;
-            stages: {
-                key: string;
-                label: string;
-                goal: string;
-                advance_when: string;
-                must: string[];
-                never: string[];
-            }[];
-        };
-        CallPlaybookViewDto: {
-            /** @enum {string} */
-            call_type: "appointment_reminder" | "sales_followup" | "collections" | "reactivation" | "followup";
-            label: string;
-            enabled: boolean;
-            customized: boolean;
-            base_version: number;
-            playbook: {
-                call_type: string;
-                label: string;
-                version: number;
-                opening_guidance: string;
-                stages: {
-                    key: string;
-                    label: string;
-                    goal: string;
-                    advance_when: string;
-                    must: string[];
-                    never: string[];
-                }[];
-            };
-            proposal: {
-                call_type: string;
-                label: string;
-                version: number;
-                opening_guidance: string;
-                stages: {
-                    key: string;
-                    label: string;
-                    goal: string;
-                    advance_when: string;
-                    must: string[];
-                    never: string[];
-                }[];
-            } | null;
-            /** Format: date-time */
-            proposed_at: string | null;
-            /** Format: date-time */
-            updated_at: string | null;
-        };
-        ProposeCallPlaybooksDto: {
-            call_types?: ("appointment_reminder" | "sales_followup" | "collections" | "reactivation" | "followup")[];
-        };
-        ProposeCallPlaybooksResultDto: {
-            proposed: ("appointment_reminder" | "sales_followup" | "collections" | "reactivation" | "followup")[];
-            results: {
-                /** @enum {string} */
-                call_type: "appointment_reminder" | "sales_followup" | "collections" | "reactivation" | "followup";
-                /** @enum {string} */
-                status: "saved" | "unchanged" | "discarded" | "failed";
-            }[];
-        };
-        PreviewOpeningDto: {
-            opening_guidance?: string;
-            stages?: {
-                key: string;
-                label: string;
-                goal: string;
-                advance_when: string;
-                must: string[];
-                never: string[];
-            }[];
-        };
-        PreviewOpeningResultDto: {
-            text: string;
-            /** @enum {string} */
-            source: "generated" | "fallback";
-            agent_name: string | null;
+            channel: "email" | "sms";
+            destination_masked: string;
         };
         CmoSendMessageDto: {
             /** @description Lo que el dueño le pregunta o le pide a Axel */
@@ -19382,7 +19128,7 @@ export interface components {
                 is_current: boolean;
                 overage_rates: {
                     /** @enum {string} */
-                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                     included_quantity: number | null;
                     unit_size: number;
                     amount_cents_per_unit: number;
@@ -19440,7 +19186,7 @@ export interface components {
             /** @default [] */
             overage_rates: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                 /** @default null */
                 included_quantity: number | null;
                 unit_size: number;
@@ -23171,7 +22917,7 @@ export interface operations {
     UsageController_history_v1: {
         parameters: {
             query: {
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                 granularity?: "hour" | "day";
                 from?: string;
                 to?: string;
@@ -23195,7 +22941,7 @@ export interface operations {
     UsageController_events_v1: {
         parameters: {
             query?: {
-                metric?: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                metric?: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                 from?: string;
                 to?: string;
                 page?: number;
@@ -29742,7 +29488,7 @@ export interface operations {
             query?: {
                 contact_id?: string;
                 deal_id?: string;
-                kind?: "note" | "call" | "meeting" | "task";
+                kind?: "note" | "call" | "meeting" | "task" | "email" | "sms";
                 page?: number;
                 page_size?: number;
             };
@@ -33276,48 +33022,6 @@ export interface operations {
             };
         };
     };
-    PlatformCallsController_getProactive_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProactiveSwitchDto"];
-                };
-            };
-        };
-    };
-    PlatformCallsController_setProactive_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SetProactiveSwitchDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProactiveSwitchDto"];
-                };
-            };
-        };
-    };
     PlatformCallsController_listProviders_v1: {
         parameters: {
             query?: never;
@@ -33656,25 +33360,6 @@ export interface operations {
             };
         };
     };
-    CallsAdminController_getFunnel_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CallsFunnelDto"];
-                };
-            };
-        };
-    };
     CallsAdminController_listSessions_v1: {
         parameters: {
             query?: {
@@ -33682,8 +33367,6 @@ export interface operations {
                 status?: "queued" | "initiated" | "ringing" | "in_progress" | "completed" | "no_answer" | "busy" | "failed" | "canceled";
                 outcome?: "goal_met" | "callback_requested" | "voicemail" | "hangup" | "no_answer" | "error" | "transferred" | "agent_closed" | "silence_timeout" | "max_duration" | "quota_exhausted" | "system_error";
                 purpose?: "inbound" | "appointment_reminder" | "crm_task" | "campaign" | "manual";
-                mode?: "reactive" | "proactive";
-                call_type?: "appointment_reminder" | "sales_followup" | "collections" | "reactivation" | "followup" | "inbound_attention";
                 ai_agent_id?: string;
                 contact_id?: string;
                 from?: string;
@@ -33809,46 +33492,6 @@ export interface operations {
             };
         };
     };
-    CallsAdminController_launch_v1: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Misma clave = misma llamada (24 h). Recomendada en cada clic de «Llamar». */
-                "idempotency-key"?: string;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LaunchCallDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TestCallResultDto"];
-                };
-            };
-            /** @description calls/contact_not_found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description calls/launch_skipped — details.reason: already_in_call | contact_unreachable | no_phone_number | no_agent | calls_disabled | company_suspended | calls_paused | limit_exceeded */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     CallsAdminController_placeTestCall_v1: {
         parameters: {
             query?: never;
@@ -33891,7 +33534,7 @@ export interface operations {
             };
         };
     };
-    CallPlaybooksController_list_v1: {
+    OutreachSenderController_sender_v1: {
         parameters: {
             query?: never;
             header?: never;
@@ -33905,42 +33548,17 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CallPlaybookListDto"];
+                    "application/json": components["schemas"]["OutreachSenderDto"];
                 };
             };
         };
     };
-    CallPlaybooksController_save_v1: {
+    "PublicOutreachController_view[0]": {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                type: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SaveCallPlaybookDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CallPlaybookViewDto"];
-                };
-            };
-        };
-    };
-    CallPlaybooksController_reset_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                type: string;
+                token: string;
             };
             cookie?: never;
         };
@@ -33951,40 +33569,17 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CallPlaybookViewDto"];
+                    "application/json": components["schemas"]["UnsubscribeViewDto"];
                 };
             };
         };
     };
-    CallPlaybooksController_proposeAll_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ProposeCallPlaybooksDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProposeCallPlaybooksResultDto"];
-                };
-            };
-        };
-    };
-    CallPlaybooksController_applyProposal_v1: {
+    "PublicOutreachController_unsubscribe[0]": {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                type: string;
+                token: string;
             };
             cookie?: never;
         };
@@ -33995,17 +33590,17 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CallPlaybookViewDto"];
+                    "application/json": components["schemas"]["UnsubscribeViewDto"];
                 };
             };
         };
     };
-    CallPlaybooksController_discardProposal_v1: {
+    "PublicOutreachController_view[1]_v1": {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                type: string;
+                token: string;
             };
             cookie?: never;
         };
@@ -34016,32 +33611,28 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CallPlaybookViewDto"];
+                    "application/json": components["schemas"]["UnsubscribeViewDto"];
                 };
             };
         };
     };
-    CallPlaybooksController_previewOpening_v1: {
+    "PublicOutreachController_unsubscribe[1]_v1": {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                type: string;
+                token: string;
             };
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PreviewOpeningDto"];
-            };
-        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PreviewOpeningResultDto"];
+                    "application/json": components["schemas"]["UnsubscribeViewDto"];
                 };
             };
         };

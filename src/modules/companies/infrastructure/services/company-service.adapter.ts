@@ -1,6 +1,7 @@
 import { http } from "@/core/services/http";
 import type {
   CompanyDTO,
+  OutreachSenderDTO,
   ReplaceSchedulesDTO,
   UpdateCompanyDTO,
 } from "@/modules/companies/domain/company";
@@ -18,4 +19,9 @@ export function updateMyCompany(dto: UpdateCompanyDTO): Promise<void> {
 /** Reemplaza el horario de atención completo (weekday 0-6, HH:mm); 204. */
 export function replaceSchedules(dto: ReplaceSchedulesDTO): Promise<void> {
   return http.put<void>("/companies/me/schedules", dto);
+}
+
+/** P3a (D1): desde qué dirección salen los correos de prospección (`GET /outreach/sender`). */
+export function getOutreachSender(): Promise<OutreachSenderDTO> {
+  return http.get<OutreachSenderDTO>("/outreach/sender");
 }

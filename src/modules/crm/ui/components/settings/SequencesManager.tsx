@@ -4,8 +4,11 @@ import { useCallback, useEffect, useState } from "react";
 import {
   CircleCheck,
   CircleDollarSign,
+  ClipboardList,
   Info,
+  Mail,
   MessageSquare,
+  MessageSquareText,
   Pencil,
   Phone,
   PhoneCall,
@@ -22,6 +25,7 @@ import { cn } from "@/core/lib/utils";
 import { useAlert } from "@/core/providers/alert-provider";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { EmptyState } from "@/shared/components/features/empty-state";
+import { TemplateTextField } from "@/shared/components/features/template-text-field/TemplateTextField";
 import { TableSkeleton } from "@/shared/components/features/loading";
 import { InkIsland, StatePill } from "@/shared/components/features/bento";
 import { Button } from "@/shared/components/ui/button";
@@ -34,9 +38,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
-import type { FollowUpMedium } from "@/modules/crm/domain/schedule-follow-up";
 import {
   lastStepAt,
+  MESSAGE_LIMITS,
+  MESSAGE_VARIABLE_LABELS,
+  MESSAGE_VARIABLES,
+  smsSegments,
   offsetLabel,
   sequenceStory,
   SEQUENCE_LIMITS,
@@ -45,6 +52,7 @@ import {
   validateSequence,
   type DraftStep,
   type SequenceDTO,
+  type SequenceMedium,
 } from "@/modules/crm/domain/sequences";
 import { availableMedia } from "@/modules/crm/ui/forms/config/schedule-follow-up.config";
 import { SequenceEnrollmentsSheet } from "@/modules/crm/ui/components/settings/SequenceEnrollmentsSheet";
@@ -56,16 +64,24 @@ import {
 } from "@/modules/crm/infrastructure/services/sequences-service.adapter";
 import { useEntitlements } from "@/shared/auth/entitlements.hooks";
 
-const MEDIUM_ICONS: Record<FollowUpMedium, React.ComponentType<{ className?: string }>> = {
+const MEDIUM_ICONS: Record<SequenceMedium, React.ComponentType<{ className?: string }>> = {
   message: MessageSquare,
   call: PhoneCall,
   call_then_message: Phone,
+  email: Mail,
+  sms: MessageSquareText,
+  manual: ClipboardList,
 };
-const MEDIUM_LABELS: Record<FollowUpMedium, string> = {
+const MEDIUM_LABELS: Record<SequenceMedium, string> = {
   message: "Mensaje",
   call: "Llamada",
   call_then_message: "Llamada y si no, mensaje",
+  email: "Correo",
+  sms: "SMS",
+  manual: "Tarea manual",
 };
+/** P3a: siempre disponibles; el correo y el SMS se miden aparte y el SMS pide número. */
+const OUTREACH_MEDIA: readonly SequenceMedium[] = ["email", "sms", "manual"];
 
 type Draft = {
   id: string | null;
@@ -301,12 +317,14 @@ function toDraft(sequence: SequenceDTO): Draft {
       offset_hours: step.offset_hours,
       task_channel: step.task_channel,
       objective: step.objective,
+      subject: step.message_template?.subject ?? "",
+      body: step.message_template?.body ?? "",
     })),
   };
 }
 
 /** El camino de la secuencia: un punto por paso, con su día y su medio. */
-function StepFlow({ steps }: { steps: readonly { offset_hours: number; task_channel: FollowUpMedium; objective?: string }[] }) {
+function StepFlow({ steps }: { steps: readonly { offset_hours: number; task_channel: SequenceMedium; objective?: string }[] }) {
   return (
     <ol className="sidebar-scroll flex min-w-0 gap-0 overflow-x-auto pb-1" aria-label="Pasos">
       {steps.map((step, index) => {
@@ -355,7 +373,7 @@ function SequenceEditor({
   onSave: () => void;
 }) {
   const { hasCapability } = useEntitlements();
-  const media = availableMedia(hasCapability("calls"));
+  const media: SequenceMedium[] = [...availableMedia(hasCapability("calls")), ...OUTREACH_MEDIA];
   const problems = validateSequence(draft);
   const last = lastStepAt(draft.steps, new Date());
   const patchStep = (index: number, patch: Partial<DraftStep>) =>
@@ -371,7 +389,8 @@ function SequenceEditor({
       <div className="grid min-w-0 items-start gap-4 @min-[56rem]:grid-cols-[minmax(0,1fr)_minmax(18rem,22rem)]">
         <div className="flex min-w-0 flex-col gap-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="grid flex-1 gap-2">
+            {/* min-w: en el móvil los botones bajan de línea en vez de aplastar los campos. */}
+            <div className="grid min-w-[min(100%,16rem)] flex-1 gap-2">
               <Input
                 aria-label="Nombre de la secuencia"
                 placeholder="Post-captación"
@@ -404,7 +423,7 @@ function SequenceEditor({
                 checked={draft.stop_on_reply}
                 icon={CircleCheck}
                 title="Para si responde"
-                description="En cuanto el cliente escribe o contesta la llamada, los pasos que quedan se cancelan."
+                description="En cuanto el cliente escribe, contesta la llamada o responde el correo o el SMS, los pasos que quedan se cancelan."
                 onToggle={() => onChange({ ...draft, stop_on_reply: !draft.stop_on_reply })}
               />
               <StopRule
@@ -430,7 +449,8 @@ function SequenceEditor({
               const stepProblems = problems.filter((problem) => problem.index === index);
               return (
                 <div key={index} className="grid gap-3 rounded-3xl border border-border bg-card p-4 @min-[36rem]:grid-cols-[8rem_minmax(0,1fr)]">
-                  <div className="grid gap-1">
+                  {/* content-start: en un paso alto (correo, SMS) la espera va arriba, no repartida. */}
+                  <div className="grid content-start gap-1">
                     <span className="text-xs text-muted-foreground">Espera</span>
                     <Input
                       type="number"
@@ -446,7 +466,7 @@ function SequenceEditor({
                     <div className="flex flex-wrap items-center gap-2">
                       <Select
                         value={step.task_channel}
-                        onValueChange={(value) => patchStep(index, { task_channel: value as FollowUpMedium })}
+                        onValueChange={(value) => patchStep(index, { task_channel: value as SequenceMedium })}
                       >
                         <SelectTrigger aria-label={`Medio del paso ${String(index + 1)}`} className="w-full min-w-0 @min-[36rem]:w-auto @min-[36rem]:min-w-52">
                           <SelectValue />
@@ -472,11 +492,26 @@ function SequenceEditor({
                       )}
                     </div>
                     <Input
-                      aria-label={`Objetivo del paso ${String(index + 1)}`}
-                      placeholder="Una meta en tus palabras, no un guion"
+                      aria-label={
+                        step.task_channel === "manual"
+                          ? `Qué hacer en el paso ${String(index + 1)}`
+                          : `Objetivo del paso ${String(index + 1)}`
+                      }
+                      placeholder={
+                        step.task_channel === "manual"
+                          ? "Qué hacer: «Escríbele por Instagram», «Conecta por LinkedIn»…"
+                          : "Una meta en tus palabras, no un guion"
+                      }
                       value={step.objective}
                       onChange={(e) => patchStep(index, { objective: e.target.value })}
                     />
+                    {(step.task_channel === "email" || step.task_channel === "sms" || step.task_channel === "manual") && (
+                      <StepMessageFields
+                        index={index}
+                        step={step}
+                        onPatch={(patch) => patchStep(index, patch)}
+                      />
+                    )}
                     {stepProblems.map((problem) => (
                       <p key={problem.message} className="text-xs text-destructive">
                         {problem.message}
@@ -597,5 +632,65 @@ function StopRule({
       <span className="text-sm font-medium">{title}</span>
       <span className="text-xs leading-snug text-muted-foreground">{description}</span>
     </button>
+  );
+}
+
+/**
+ * P3a · el texto de un paso de correo, SMS o tarea manual. Huecos fijos
+ * (`{{first_name}}`…) que se insertan con un clic: el texto sale igual para
+ * todos, con el nombre de cada uno, y nunca lo improvisa el agente.
+ */
+function StepMessageFields({
+  index,
+  step,
+  onPatch,
+}: {
+  index: number;
+  step: DraftStep;
+  onPatch: (patch: Partial<DraftStep>) => void;
+}) {
+  const body = step.body ?? "";
+  const number = String(index + 1);
+  const segments = step.task_channel === "sms" ? smsSegments(body) : 0;
+  return (
+    <div className="grid gap-2 rounded-2xl bg-muted/40 p-3">
+      {step.task_channel === "email" && (
+        <Input
+          aria-label={`Asunto del correo del paso ${number}`}
+          placeholder="Asunto"
+          maxLength={MESSAGE_LIMITS.subject}
+          value={step.subject ?? ""}
+          onChange={(e) => onPatch({ subject: e.target.value })}
+        />
+      )}
+      <TemplateTextField
+        label={step.task_channel === "manual" ? `Texto sugerido del paso ${number}` : `Texto del paso ${number}`}
+        placeholder={
+          step.task_channel === "manual"
+            ? "Texto listo para copiar (opcional)"
+            : step.task_channel === "sms"
+              ? "Hola {{first_name}}, …"
+              : "Hola {{first_name}}: …"
+        }
+        rows={step.task_channel === "sms" ? 3 : 5}
+        maxLength={step.task_channel === "sms" ? MESSAGE_LIMITS.sms_body : MESSAGE_LIMITS.body}
+        variables={MESSAGE_VARIABLES}
+        labels={MESSAGE_VARIABLE_LABELS}
+        value={body}
+        onChange={(next) => onPatch({ body: next })}
+      />
+      {step.task_channel === "sms" && (
+        <span className="text-xs text-muted-foreground tabular-nums">
+          {String(segments)} {segments === 1 ? "segmento" : "segmentos"} de SMS
+        </span>
+      )}
+      <p className="text-xs text-pretty text-muted-foreground">
+        {step.task_channel === "email"
+          ? "Sale desde la dirección de tu negocio en axi, con la baja en un clic al pie. Si responde, la secuencia se detiene y te dejamos la tarea de contestar."
+          : step.task_channel === "sms"
+            ? "Sale por tu número de Twilio y termina con «Responde BAJA para no recibir más». Sin un número que admita SMS, este paso se omite y la secuencia sigue."
+            : "Se crea una tarea en tu bandeja con este texto. La secuencia sigue su calendario sin esperarla."}
+      </p>
+    </div>
   );
 }

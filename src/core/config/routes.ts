@@ -41,6 +41,10 @@ export const PUBLIC_PATHS = [
   // bienvenida y el dueño lo abre sin sesión —aún no ha creado su contraseña—.
   // Lo autoriza el token de la ruta. El prefijo cubre `/bienvenida/:token`.
   "/bienvenida",
+  // Baja en un clic del correo o SMS en frío (P3a del piloto de captación): la
+  // abre el CLIENTE del negocio desde su buzón, sin cuenta. Lo autoriza el
+  // token firmado de la ruta. El prefijo cubre `/baja/:token`.
+  "/baja",
   // Infraestructura y estáticos
   "/api",
   "/_next",

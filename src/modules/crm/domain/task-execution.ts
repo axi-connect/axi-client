@@ -43,6 +43,10 @@ export type TaskMedium = TaskRunDTO["medium"];
 export const TASK_MEDIUM_LABELS: Record<TaskMedium, string> = {
   message: "Mensaje",
   call: "Llamada",
+  // P3a: pasos de secuencia.
+  email: "Correo",
+  sms: "SMS",
+  manual: "Tarea manual",
 };
 
 /** Las etiquetas de mensajería no sirven para una llamada: «Enviando» una

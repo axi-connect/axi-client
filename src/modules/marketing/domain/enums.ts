@@ -144,4 +144,5 @@ export const OPT_OUT_SOURCE_LABELS: Record<OptOutSource, string> = {
   habeas_data: "El titular ejerció habeas data",
   email_unsubscribe: "Se dio de baja desde el correo",
   sms_stop: "Respondió STOP a un SMS",
+  email_bounce: "Su correo rebotó (el buzón no existe)",
 };
