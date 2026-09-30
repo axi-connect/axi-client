@@ -11,10 +11,11 @@ const FOLD_AFTER = 2;
 
 const NODE: Record<StageStepState, string> = {
   done: "bg-accent-violet/15 text-accent-violet ring-1 ring-accent-violet/35",
-  reached: "bg-accent-violet/20 text-accent-violet ring-1 ring-accent-violet/50",
-  met: "bg-success/15 text-success ring-1 ring-success/50",
-  // F-7: el ámbar como icono no pasa AA en claro; va de fondo y el icono en tinta.
-  fell: "bg-warning/30 text-foreground ring-1 ring-warning/60",
+  // Sólidos como en el tablero aprobado: el icono va en `--axi-on-color`, el
+  // color pensado para ir sobre relleno (blanco en claro, tinta en oscuro).
+  reached: "bg-accent-violet text-[var(--axi-on-color)]",
+  met: "bg-success text-success-foreground",
+  fell: "bg-warning text-warning-foreground",
   pending: "border-[1.5px] border-dashed border-muted-foreground/60",
   skipped: "border-[1.5px] border-dashed border-muted-foreground/60",
 };
@@ -62,7 +63,9 @@ export function StageTimeline({
   if (steps.length === 0) return null;
   const skipped = tail.length > 0 && tail.every((step) => step.state === "skipped");
   const foldText = open
-    ? "Ocultar las etapas sin recorrer"
+    ? skipped
+      ? "Ocultar las que no hicieron falta"
+      : "Ocultar las etapas sin recorrer"
     : skipped
       ? `${String(tail.length)} etapas no hicieron falta`
       : `${String(tail.length)} etapas sin recorrer · ${tail.map((step) => step.label).join(", ")}`;
@@ -86,7 +89,7 @@ export function StageTimeline({
                   ) : step.state === "done" || step.state === "met" ? (
                     <Check className="size-3" strokeWidth={3} />
                   ) : step.state === "reached" ? (
-                    <span className="size-2 rounded-full bg-accent-violet" />
+                    <span className="size-2 rounded-full bg-current" />
                   ) : null}
                 </span>
                 {!isLast ? (

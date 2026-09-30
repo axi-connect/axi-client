@@ -3,7 +3,7 @@ import type { StageStep, StageStepState } from "@/modules/calls/domain/live-call
 
 const SEGMENT: Record<StageStepState, string> = {
   done: "bg-accent-violet",
-  reached: "bg-accent-violet ring-3 ring-accent-violet/20",
+  reached: "bg-accent-violet",
   met: "bg-success",
   fell: "bg-warning",
   pending: "bg-foreground/10",
@@ -20,10 +20,13 @@ const SEGMENT: Record<StageStepState, string> = {
 export function StageMeter({
   steps,
   label,
+  live = false,
   className,
 }: {
   steps: readonly StageStep[];
   label: string;
+  /** En vivo la etapa actual lleva un halo: es la que está corriendo ahora. */
+  live?: boolean;
   className?: string;
 }) {
   if (steps.length === 0) return null;
@@ -35,7 +38,15 @@ export function StageMeter({
       style={{ gridTemplateColumns: `repeat(${String(steps.length)}, minmax(0, 1fr))` }}
     >
       {steps.map((step) => (
-        <span key={step.key} aria-hidden className={cn("h-1.5 rounded-full", SEGMENT[step.state])} />
+        <span
+          key={step.key}
+          aria-hidden
+          className={cn(
+            "h-1.5 rounded-full",
+            SEGMENT[step.state],
+            live && step.state === "reached" && "ring-3 ring-accent-violet/20",
+          )}
+        />
       ))}
     </div>
   );

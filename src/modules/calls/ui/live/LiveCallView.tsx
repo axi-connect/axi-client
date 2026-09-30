@@ -117,7 +117,7 @@ export function LiveCallView({
       {/* Rediseño de la ruta (2026-09-30): el medidor a lo ancho, sin tira que scrollee. */}
       {progress !== null && stageText !== null && (
         <div className="flex flex-col gap-2">
-          <StageMeter steps={progress.steps} label={progress.position} />
+          <StageMeter steps={progress.steps} label={progress.position} live />
           <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-sm">
             <p className="flex min-w-0 items-baseline gap-2">
               <span className="text-muted-foreground">Etapa</span>
