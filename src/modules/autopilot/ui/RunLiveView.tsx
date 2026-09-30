@@ -126,7 +126,9 @@ export function RunLiveView({ runId }: { runId: string }) {
       />
 
       <div className="grid gap-4 @container @[52rem]:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-        <BentoTile label={`Ejecución · ${formatShortDateTime(run.created_at)}`} aside={<StatePill tone={status.tone}>{status.label}</StatePill>}>
+        <BentoTile label="Ejecución" aside={<StatePill tone={status.tone}>{status.label}</StatePill>}>
+          {/* La fecha va en su línea: junto al estado se cortaba en el móvil. */}
+          <p className="text-muted-foreground text-xs tabular-nums">{formatShortDateTime(run.created_at)}</p>
           <p className="text-sm font-medium">
             {live
               ? `Paso ${String(Math.min(done + 1, RUN_STEPS.length))} de ${String(RUN_STEPS.length)} · ${current?.label ?? ""}`
@@ -238,7 +240,7 @@ export function RunLiveView({ runId }: { runId: string }) {
           <ol className="divide-border flex flex-col divide-y">
             {events.map((event) => (
               <li key={event.id} className="flex gap-3 py-2 text-sm">
-                <span className="text-muted-foreground w-14 shrink-0 font-mono text-xs tabular-nums">
+                <span className="text-muted-foreground w-20 shrink-0 font-mono text-xs whitespace-nowrap tabular-nums">
                   {new Date(event.created_at).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}
                 </span>
                 <span className="min-w-0 text-pretty">{eventLine(event)}</span>
@@ -249,8 +251,11 @@ export function RunLiveView({ runId }: { runId: string }) {
       </BentoTile>
 
       {canManage && routine !== null && (
-        <InkIsland label="Acciones del piloto" className="sticky bottom-3 z-10 flex flex-wrap items-center gap-2 p-3 sm:rounded-full">
-          <span className="min-w-0 flex-1 truncate pl-2 text-sm font-semibold">{routine.name}</span>
+        <InkIsland label="Acciones del piloto" className="sticky bottom-3 z-10 flex-row flex-wrap items-center gap-2 p-3 sm:rounded-full">
+          {/* En el móvil el nombre ocupa su línea y los botones bajan: cortado a «Restau…» no decía nada. */}
+          <span className="w-full min-w-0 pl-2 text-sm font-semibold text-pretty sm:w-auto sm:flex-1 sm:truncate" title={routine.name}>
+            {routine.name}
+          </span>
           <Button
             variant="contrast"
             size="sm"
@@ -341,16 +346,17 @@ function BatchPanel({
                 checked={approved.has(item.id)}
                 disabled={!canManage}
                 aria-label={`Aprobar ${itemTitle(item)}`}
-                onCheckedChange={(value) =>
+                onChange={(event) =>
                   setApproved((current) => {
                     const next = new Set(current);
-                    if (value === true) next.add(item.id);
+                    if (event.target.checked) next.add(item.id);
                     else next.delete(item.id);
                     return next;
                   })
                 }
               />
-              <span className="min-w-0 flex-1 truncate font-medium">{itemTitle(item)}</span>
+              {/* Aprobar exige leer a quién: el nombre va completo, no cortado. */}
+              <span className="min-w-0 flex-1 font-medium text-pretty break-words">{itemTitle(item)}</span>
               {item.score !== null && <span className="text-muted-foreground text-xs tabular-nums">Puntaje {String(item.score)}</span>}
             </label>
           </li>

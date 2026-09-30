@@ -55,6 +55,9 @@ describe("autopilot — lo que se ve de una ejecución", () => {
     expect(eventLine({ ...base, kind: "run_finished", payload: { status: "budget_exhausted" } })).toBe(
       "Terminó la ejecución · Se acabó el tope",
     );
+    // Un evento nuevo del motor nunca asoma su clave cruda.
+    expect(eventLine({ ...base, kind: "item_discarded", payload: {} })).toBe("Novedad de la ejecución");
+    expect(eventLine({ ...base, kind: "item_discarded", payload: { detail: "Puntaje bajo" } })).toBe("Puntaje bajo");
   });
 
   it("qué busca, en una línea", () => {

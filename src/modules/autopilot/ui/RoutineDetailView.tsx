@@ -137,15 +137,18 @@ export function RoutineDetailView({ routineId }: { routineId: string }) {
                 <li key={run.id}>
                   <Link
                     href={`/marketing/autopilot/runs/${run.id}`}
-                    className="hover:bg-muted/40 -mx-2 flex min-h-12 items-center gap-3 rounded-xl px-2 py-2 text-sm"
+                    className="hover:bg-muted/40 -mx-2 grid min-h-12 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 rounded-xl px-2 py-2 text-sm"
                   >
-                    <span className="w-36 shrink-0 tabular-nums">{formatShortDateTime(run.created_at)}</span>
-                    <StatePill tone={meta.tone}>{meta.label}</StatePill>
-                    <span className="text-muted-foreground min-w-0 flex-1 truncate text-xs">
+                    {/* Fecha y estado arriba, la cifra debajo: en el móvil nada se sale ni se corta. */}
+                    <span className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+                      <span className="whitespace-nowrap tabular-nums">{formatShortDateTime(run.created_at)}</span>
+                      <StatePill tone={meta.tone}>{meta.label}</StatePill>
+                    </span>
+                    <ChevronRight aria-hidden className="text-muted-foreground row-span-2 size-4 shrink-0" />
+                    <span className="text-muted-foreground text-xs text-pretty">
                       {String(run.counters.found ?? 0)} encontradas · {String(run.counters.qualified ?? 0)} calificadas ·{" "}
                       {String(run.counters.contacted ?? 0)} contactadas · {String(run.credits_spent)} créditos
                     </span>
-                    <ChevronRight aria-hidden className="text-muted-foreground size-4 shrink-0" />
                   </Link>
                 </li>
               );

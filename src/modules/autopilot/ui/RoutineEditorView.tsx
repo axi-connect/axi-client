@@ -12,7 +12,6 @@ import { UnsavedChangesDock } from "@/shared/components/features/island";
 import { OptionsInput } from "@/shared/components/features/options-input";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Input } from "@/shared/components/ui/input";
-import { SegmentedControl } from "@/shared/components/ui/segmented";
 import {
   Select,
   SelectContent,
@@ -53,6 +52,11 @@ import {
  * una dice qué va a pasar y cuánto cuesta. La estimación sale del MISMO
  * cálculo del servidor (`POST /autopilot/estimate`), no de una copia aquí.
  */
+const MODE_OPTIONS: readonly { value: RoutineInput["mode"]; label: string; hint: string }[] = [
+  { value: "assisted", label: "Asistido", hint: "Te pide aprobar el lote antes de escribirle a nadie." },
+  { value: "autonomous", label: "Autónomo", hint: "Contacta sin esperar, siempre dentro de tu política y tus topes." },
+];
+
 export function RoutineEditorView({ routineId }: { routineId: string | null }) {
   const router = useRouter();
   const { showAlert } = useAlert();
@@ -302,6 +306,26 @@ export function RoutineEditorView({ routineId }: { routineId: string | null }) {
       </Section>
 
       <Section index={3} title="Cómo contacta" hint="Siempre dentro de tu política de contacto">
+        {/* El modo decide si se contacta sin mirar: va aquí, con su explicación entera. */}
+        <fieldset className="grid gap-2 @container @[36rem]:grid-cols-2">
+          <legend className="mb-1 text-sm font-medium">Antes de contactar</legend>
+          {MODE_OPTIONS.map((option) => (
+            <label key={option.value} className="border-border flex min-h-11 cursor-pointer items-start gap-3 rounded-2xl border p-3 text-sm has-[:checked]:border-primary">
+              <input
+                type="radio"
+                name="autopilot-mode"
+                value={option.value}
+                checked={draft.mode === option.value}
+                onChange={() => set({ mode: option.value })}
+                className="accent-primary mt-0.5 size-4 shrink-0"
+              />
+              <span className="grid min-w-0 gap-0.5">
+                <span className="font-medium">{option.label}</span>
+                <span className="text-muted-foreground text-xs text-pretty">{option.hint}</span>
+              </span>
+            </label>
+          ))}
+        </fieldset>
         <fieldset className="grid gap-2 @container @[36rem]:grid-cols-2">
           <legend className="sr-only">Canales</legend>
           {CONTACT_CHANNEL_OPTIONS.map((option) => {
@@ -310,11 +334,11 @@ export function RoutineEditorView({ routineId }: { routineId: string | null }) {
               <label key={option.value} className="border-border flex min-h-11 cursor-pointer items-start gap-3 rounded-2xl border p-3 text-sm">
                 <Checkbox
                   checked={checked}
-                  onCheckedChange={(value) =>
+                  onChange={(event) =>
                     set({
                       contact: {
                         ...draft.contact,
-                        channels: value === true
+                        channels: event.target.checked
                           ? [...draft.contact.channels, option.value]
                           : draft.contact.channels.filter((channel) => channel !== option.value),
                       },
@@ -480,16 +504,6 @@ export function RoutineEditorView({ routineId }: { routineId: string | null }) {
           )}
         </div>
       </Section>
-
-      <SegmentedControl
-        label="Modo del piloto"
-        value={draft.mode}
-        onValueChange={(mode) => set({ mode })}
-        items={[
-          { value: "assisted", label: "Asistido · te pide aprobar el lote" },
-          { value: "autonomous", label: "Autónomo · contacta sin esperar" },
-        ]}
-      />
 
       {canManage && (
         <UnsavedChangesDock

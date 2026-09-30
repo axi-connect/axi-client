@@ -306,8 +306,9 @@ export function eventLine(event: RunEvent): string {
     const meta = (RUN_STATUS_META as Record<string, { label: string } | undefined>)[status];
     return `Terminó la ejecución · ${meta?.label ?? status}`;
   }
+  // Un evento que el motor aún no narraba: se cuenta su detalle, nunca la clave cruda.
   const detail = typeof payload.detail === "string" ? payload.detail : "";
-  return detail === "" ? event.kind : `${event.kind} · ${detail}`;
+  return detail === "" ? "Novedad de la ejecución" : detail;
 }
 
 /** Válido para guardar: lo que el servidor rechazaría, dicho antes. */
