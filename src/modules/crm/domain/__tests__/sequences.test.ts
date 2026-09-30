@@ -100,6 +100,9 @@ describe("sequences — plantillas de partida", () => {
     relationship?.steps.forEach((step, index) => {
       expect(flagged.has(index)).toBe(step.task_channel === "email" || step.task_channel === "sms");
     });
+    // Ningún toque repite objetivo: copiar y pegar no le manda tres veces lo mismo.
+    const objectives = relationship?.steps.map((step) => step.objective) ?? [];
+    expect(new Set(objectives).size).toBe(objectives.length);
     // Un toque al mes: 30, 60… 360 días.
     expect(relationship?.steps.map((step) => step.offset_hours / 24)).toEqual(
       Array.from({ length: 12 }, (_, i) => (i + 1) * 30),

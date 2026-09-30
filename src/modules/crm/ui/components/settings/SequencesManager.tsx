@@ -252,7 +252,7 @@ export function SequencesManager() {
                   {sequence.stop_on_conversion && <Rule icon={CircleDollarSign}>Para si compra</Rule>}
                   {sequence.next_sequence_id !== null && (
                     <Rule icon={Repeat}>
-                      Luego: {sequences.find((other) => other.id === sequence.next_sequence_id)?.name ?? "otra secuencia"}
+                      Luego: {nextRuleLabel(sequences.find((other) => other.id === sequence.next_sequence_id))}
                     </Rule>
                   )}
                 </div>
@@ -303,6 +303,20 @@ export function SequencesManager() {
       <SequenceEnrollmentsSheet sequence={inspecting} onOpenChange={(open) => !open && setInspecting(null)} />
     </div>
   );
+}
+
+/**
+ * P3b-2: una siguiente en BORRADOR no recibe a nadie (el servidor no inscribe
+ * en un borrador). La plantilla de relación nace así, y enlazarla sin activarla
+ * perdería en silencio a todo el que termine sin responder: se dice.
+ */
+function nextSequenceLabel(sequence: Pick<SequenceDTO, "name" | "is_active">): string {
+  return sequence.is_active ? sequence.name : `${sequence.name} (borrador: no recibe a nadie hasta activarla)`;
+}
+
+function nextRuleLabel(sequence: Pick<SequenceDTO, "name" | "is_active"> | undefined): string {
+  if (sequence === undefined) return "otra secuencia";
+  return sequence.is_active ? sequence.name : `${sequence.name} · en borrador, no recibe a nadie`;
 }
 
 function emptyDraft(): Draft {
@@ -474,7 +488,7 @@ function SequenceEditor({
                   <SelectItem value={NO_NEXT}>A ninguna: termina aquí</SelectItem>
                   {others.map((sequence) => (
                     <SelectItem key={sequence.id} value={sequence.id}>
-                      {sequence.name}
+                      {nextSequenceLabel(sequence)}
                     </SelectItem>
                   ))}
                 </SelectContent>
