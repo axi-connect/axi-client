@@ -28,7 +28,10 @@ export function CallSummaryIsland({ call, className }: { call: CallSessionDetail
   const result = callResultPill(call);
   // Plan de modos §4: hasta dónde llegó una proactiva y, si no cumplió, dónde se cortó.
   const stages = call.playbook?.stages ?? [];
-  const reachedKey = call.last_stage ?? call.stage_route.at(-1) ?? null;
+  // Solo `last_stage`: el servidor la escribe al CONTESTAR. `stage_route` trae
+  // sembrada la primera etapa desde el timbre, y una no contestada (buzón, no
+  // contestó) no «llegó» a nada — el embudo tampoco la cuenta (auditoría A1).
+  const reachedKey = call.last_stage;
   const reachedIndex = stages.findIndex((stage) => stage.key === reachedKey);
   const reached = reachedIndex === -1 ? null : stages[reachedIndex];
   const goalMet = call.outcome === "goal_met" || assessment?.met === true;
@@ -51,17 +54,12 @@ export function CallSummaryIsland({ call, className }: { call: CallSessionDetail
       {reached !== null && reached !== undefined && (
         <div className="mt-1 flex flex-col gap-2">
           <StageRoute steps={steps} fellAt={fellAt} label="Etapas que recorrió la llamada" />
+          {/* Una sola fila: si no cumplió, la etapa a la que llegó ES donde se cortó (B3). */}
           <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1 text-sm">
-            <dt className="text-muted-foreground">Llegó a</dt>
+            <dt className="text-muted-foreground">{fellAt === null ? "Llegó a" : "Se cortó en"}</dt>
             <dd className="font-medium">
               {reached.label} · {reachedIndex + 1} de {stages.length}
             </dd>
-            {fellAt !== null && (
-              <>
-                <dt className="text-muted-foreground">Se cortó en</dt>
-                <dd className="font-medium">{reached.label}</dd>
-              </>
-            )}
           </dl>
         </div>
       )}

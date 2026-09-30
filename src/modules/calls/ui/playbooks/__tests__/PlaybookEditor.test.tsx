@@ -111,10 +111,43 @@ describe("PlaybookEditor (plan de modos §5)", () => {
     expect(applyPlaybookProposal).toHaveBeenCalledWith("followup");
   });
 
-  it("sin calls:manage es de solo lectura: ni barra, ni añadir, ni Oír", () => {
+  it("sin calls:manage es de solo lectura: ni barra, ni añadir, ni vista previa", () => {
     render(<PlaybookEditor view={view()} canManage={false} onSaved={jest.fn()} />);
     expect(screen.queryByRole("button", { name: /Añadir una etapa/ })).toBeNull();
-    expect(screen.queryByRole("button", { name: /Escuchar cómo abriría/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Ver cómo abriría/ })).toBeNull();
     expect(screen.getByRole("switch")).toBeDisabled();
   });
+
+  it("A2: una recarga de la vista (p. ej. tras «Proponer con Alba») no pisa un borrador sin guardar", () => {
+    const onDirtyChange = jest.fn();
+    const { rerender } = render(
+      <PlaybookEditor view={view()} canManage onSaved={jest.fn()} onDirtyChange={onDirtyChange} />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Abrir «Retomar el tema»" }));
+    fireEvent.change(screen.getByLabelText(/Objetivo/), { target: { value: "Pregunta si ya decidió." } });
+    expect(onDirtyChange).toHaveBeenLastCalledWith(true);
+
+    rerender(<PlaybookEditor view={view({ proposed_at: "2026-09-29T10:00:00Z" })} canManage onSaved={jest.fn()} onDirtyChange={onDirtyChange} />);
+    expect(screen.getByLabelText(/Objetivo/)).toHaveValue("Pregunta si ya decidió.");
+    expect(screen.getByRole("contentinfo", { name: "Cambios sin guardar" })).toBeInTheDocument();
+  });
+
+  it("A2: sin cambios, la vista nueva del servidor sí se adopta", () => {
+    const { rerender } = render(<PlaybookEditor view={view()} canManage onSaved={jest.fn()} />);
+    const next = view();
+    next.playbook.opening_guidance = "Apertura nueva del servidor.";
+    rerender(<PlaybookEditor view={next} canManage onSaved={jest.fn()} />);
+    expect(screen.getByLabelText(/Cómo abre la llamada/)).toHaveValue("Apertura nueva del servidor.");
+    expect(screen.queryByRole("contentinfo", { name: "Cambios sin guardar" })).toBeNull();
+  });
+
+  it("M2: con el borrador inválido no se pide la vista previa y se dice por qué", () => {
+    render(<PlaybookEditor view={view()} canManage onSaved={jest.fn()} />);
+    fireEvent.click(screen.getByRole("button", { name: "Abrir «Retomar el tema»" }));
+    fireEvent.change(screen.getByLabelText(/Objetivo/), { target: { value: "" } });
+    const island = screen.getByRole("region", { name: "Así abriría" });
+    expect(within(island).getByRole("button", { name: /cómo abriría/ })).toBeDisabled();
+    expect(within(island).getByText(/Corrige el marco para ver cómo abriría/)).toBeInTheDocument();
+  });
 });
+

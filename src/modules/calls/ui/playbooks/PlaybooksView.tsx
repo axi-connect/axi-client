@@ -53,11 +53,11 @@ const STATE_TONE: Record<PlaybookState, StatePillTone> = {
  * Llamadas → Marcos (plan de modos §5): el ÚNICO lugar de la plataforma donde
  * se ve y se ajusta cómo lleva el agente cada tipo de llamada proactiva. Los
  * cinco tipos ya traen el marco de axi: el negocio solo cambia lo que quiera.
- * Lectura con `calls:read`; editar, proponer y oír la apertura, `calls:manage`.
+ * Lectura con `calls:read`; editar, proponer y ver la apertura, `calls:manage`.
  */
 export function PlaybooksView() {
   const { hasPermission } = useAuth();
-  const { showAlert } = useAlert();
+  const { showAlert, showModal, closeModal } = useAlert();
   const canManage = hasPermission("calls:manage");
   const [views, setViews] = useState<PlaybookView[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -65,6 +65,35 @@ export function PlaybooksView() {
   // En el celular se ve la lista O el editor; en escritorio, los dos.
   const [mobileEditing, setMobileEditing] = useState(false);
   const [proposing, setProposing] = useState(false);
+  // El editor avisa si hay cambios sin guardar: cambiar de tipo o proponer
+  // con Alba los perdería, así que antes se pregunta (auditoría A2).
+  const [dirty, setDirty] = useState(false);
+
+  const guarded = (action: () => void) => {
+    if (!dirty) {
+      action();
+      return;
+    }
+    showModal({
+      title: "Tienes cambios sin guardar",
+      description: "Si sigues, se pierden los cambios de este marco.",
+      actions: [
+        { label: "Seguir editando", variant: "outline", asClose: true, id: "playbook-stay" },
+        {
+          label: "Descartar cambios",
+          variant: "destructive",
+          asClose: false,
+          id: "playbook-leave",
+          onClick: () => {
+            closeModal();
+            setDirty(false);
+            action();
+          },
+        },
+      ],
+      className: "sm:max-w-md",
+    });
+  };
 
   const load = useCallback(() => {
     setError(null);
@@ -117,7 +146,7 @@ export function PlaybooksView() {
             variant="outline"
             className="rounded-full border-accent-violet/30 text-accent-violet hover:bg-accent-violet/10 hover:text-accent-violet"
             disabled={proposing || views === null}
-            onClick={() => void propose()}
+            onClick={() => guarded(() => void propose())}
           >
             {proposing ? <LoaderCircle aria-hidden className="animate-spin" /> : <Sparkles aria-hidden />}
             Proponer con Alba
@@ -169,10 +198,16 @@ export function PlaybooksView() {
                   <button
                     key={view.call_type}
                     type="button"
-                    aria-current={active ? "page" : undefined}
+                    aria-pressed={active}
                     onClick={() => {
-                      setSelected(view.call_type);
-                      setMobileEditing(true);
+                      if (active) {
+                        setMobileEditing(true);
+                        return;
+                      }
+                      guarded(() => {
+                        setSelected(view.call_type);
+                        setMobileEditing(true);
+                      });
                     }}
                     className={cn(
                       "grid grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border bg-card p-3.5 text-left transition-colors hover:bg-muted/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
@@ -210,7 +245,13 @@ export function PlaybooksView() {
           {current === null ? (
             <Skeleton className="h-[520px] rounded-3xl" />
           ) : (
-            <PlaybookEditor key={current.call_type} view={current} canManage={canManage} onSaved={replace} />
+            <PlaybookEditor
+              key={current.call_type}
+              view={current}
+              canManage={canManage}
+              onSaved={replace}
+              onDirtyChange={setDirty}
+            />
           )}
         </div>
       </div>

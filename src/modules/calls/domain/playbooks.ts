@@ -92,6 +92,9 @@ export function newStageKey(label: string, taken: ReadonlySet<string>): string {
 
 /** Problemas del marco en edición (espejo de `playbookIssues` del servidor). */
 export function playbookIssues(stages: readonly PlaybookStage[], opening: string): string[] {
+  // Espejo COMPLETO de `playbookIssues` del servidor (playbook_patch.ts), mismos
+  // textos: la barra dice lo mismo que diría el 422 (auditoría M5). La clave
+  // de una etapa nueva la pone `newStageKey` y siempre cumple el patrón.
   const issues: string[] = [];
   if (stages.length < PLAYBOOK_LIMITS.min_stages || stages.length > PLAYBOOK_LIMITS.max_stages) {
     issues.push(
@@ -100,8 +103,11 @@ export function playbookIssues(stages: readonly PlaybookStage[], opening: string
   }
   if (stages[0]?.key !== "apertura") issues.push("La primera etapa es la apertura.");
   if (stages.at(-1)?.key !== "cierre") issues.push("La última etapa es el cierre.");
+  const seen = new Set<string>();
   stages.forEach((stage, index) => {
     const name = stage.label.trim() === "" ? `La etapa ${String(index + 1)}` : `«${stage.label.trim()}»`;
+    if (seen.has(stage.key)) issues.push(`${name} repite la clave «${stage.key.slice(0, 40)}».`);
+    seen.add(stage.key);
     if (stage.label.trim() === "" || stage.label.length > PLAYBOOK_LIMITS.label) {
       issues.push(`${name} necesita un nombre de hasta ${String(PLAYBOOK_LIMITS.label)} caracteres.`);
     }
@@ -109,7 +115,18 @@ export function playbookIssues(stages: readonly PlaybookStage[], opening: string
       issues.push(`${name} necesita un objetivo de hasta ${String(PLAYBOOK_LIMITS.text)} caracteres.`);
     }
     if (stage.advance_when.trim() === "" || stage.advance_when.length > PLAYBOOK_LIMITS.text) {
-      issues.push(`${name} necesita decir cuándo avanza.`);
+      issues.push(`${name} necesita decir cuándo avanza (hasta ${String(PLAYBOOK_LIMITS.text)} caracteres).`);
+    }
+    for (const [list, label] of [
+      [stage.must, "Siempre"],
+      [stage.never, "Nunca"],
+    ] as const) {
+      if (list.length > PLAYBOOK_LIMITS.list_items) {
+        issues.push(`${name}: «${label}» admite hasta ${String(PLAYBOOK_LIMITS.list_items)} reglas.`);
+      }
+      if (list.some((item) => item.trim() === "" || item.length > PLAYBOOK_LIMITS.list_item)) {
+        issues.push(`${name}: cada regla de «${label}» va de 1 a ${String(PLAYBOOK_LIMITS.list_item)} caracteres.`);
+      }
     }
   });
   if (opening.length > PLAYBOOK_LIMITS.opening) {

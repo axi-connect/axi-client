@@ -3,6 +3,7 @@
 import { Ear, LoaderCircle, Megaphone, PhoneOutgoing } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/core/lib/utils";
+import { useRadioGroup } from "@/core/hooks/use-radio-group";
 import { errorMessage } from "@/core/lib/error-messages";
 import { isHttpError } from "@/core/api/problem";
 import { useAlert } from "@/core/providers/alert-provider";
@@ -24,6 +25,7 @@ import { CALL_TYPE_LABELS, PROACTIVE_CALL_TYPES, type ProactiveCallType } from "
 import { launchCall, placeTestCall } from "@/modules/calls/infrastructure/services/calls-service.adapter";
 
 const DEFAULT_AGENT = "__default__";
+const MODES = ["proactive", "reactive"] as const;
 
 /** Por qué no salió la llamada (`calls/launch_skipped` → `details.reason`), en palabras. */
 const SKIP_REASONS: Record<string, string> = {
@@ -74,8 +76,14 @@ export function CallLauncherDialog({
   const [agents, setAgents] = useState<AssignableAgent[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
-  // Una clave por apertura del diálogo: reintentar o hacer doble clic devuelve la MISMA llamada.
-  const idempotencyKey = useMemo(() => (open ? crypto.randomUUID() : ""), [open]);
+  // Una clave por apertura y por pedido: reintentar o hacer doble clic devuelve
+  // la MISMA llamada; cambiar tipo, modo, agente u objetivo es otro pedido (B5).
+  const idempotencyKey = useMemo(
+    () => (open ? crypto.randomUUID() : ""),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- los campos solo renuevan la clave
+    [open, type, mode, agentId, objective],
+  );
+  const modeProps = useRadioGroup(MODES, mode, setMode);
 
   useEffect(() => {
     if (!open) return;
@@ -96,7 +104,9 @@ export function CallLauncherDialog({
   }, [open, defaultType, defaultObjective]);
 
   const needsNumber = target.kind === "number";
-  const canSubmit = !submitting && (!needsNumber || to.trim().length >= 7);
+  // Sin teléfono no hay llamada: se dice antes de enviar, no con un 409 después (M4).
+  const noPhone = target.kind === "contact" && (target.phone === null || target.phone.trim() === "");
+  const canSubmit = !submitting && !noPhone && (!needsNumber || to.trim().length >= 7);
 
   const submit = async () => {
     if (!canSubmit) return;
@@ -146,7 +156,7 @@ export function CallLauncherDialog({
           {target.kind === "contact" ? (
             <p className="flex items-center justify-between gap-3 rounded-xl border border-border px-3 py-2.5 text-sm">
               <span className="min-w-0 truncate font-medium">{target.name ?? "Contacto sin nombre"}</span>
-              <span className="shrink-0 font-mono text-xs text-muted-foreground">{target.phone ?? "sin teléfono"}</span>
+              <span className="shrink-0 font-mono text-xs text-muted-foreground">{noPhone ? "sin teléfono" : target.phone}</span>
             </p>
           ) : (
             <div className="grid gap-1.5">
@@ -211,7 +221,7 @@ export function CallLauncherDialog({
           <fieldset className="grid gap-1.5">
             <legend className="mb-1.5 text-sm font-medium">Modo</legend>
             <div role="radiogroup" aria-label="Modo de la llamada" className="grid gap-2 sm:grid-cols-2">
-              {(["proactive", "reactive"] as const).map((item) => {
+              {MODES.map((item) => {
                 const Icon = item === "proactive" ? Megaphone : Ear;
                 const checked = mode === item;
                 return (
@@ -220,6 +230,7 @@ export function CallLauncherDialog({
                     type="button"
                     role="radio"
                     aria-checked={checked}
+                    {...modeProps(item)}
                     onClick={() => setMode(item)}
                     className={cn(
                       "flex flex-col items-start gap-0.5 rounded-xl border p-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
@@ -237,6 +248,11 @@ export function CallLauncherDialog({
             </div>
           </fieldset>
 
+          {noPhone && (
+            <p role="status" className="rounded-xl bg-muted px-3 py-2.5 text-sm">
+              {SKIP_REASONS.contact_unreachable} Añádelo en su ficha para poder llamar.
+            </p>
+          )}
           {problem !== null && (
             <p role="alert" className="rounded-xl bg-muted px-3 py-2.5 text-sm">
               {problem}

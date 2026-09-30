@@ -1,7 +1,7 @@
 "use client";
 
 import { LoaderCircle, Megaphone, Plus, RefreshCw, RotateCcw, Sparkles } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/core/lib/utils";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
@@ -53,10 +53,13 @@ export function PlaybookEditor({
   view,
   canManage,
   onSaved,
+  onDirtyChange,
 }: {
   view: PlaybookView;
   canManage: boolean;
   onSaved: (next: PlaybookView) => void;
+  /** La vista confirma antes de cambiar de tipo o de proponer con cambios sin guardar. */
+  onDirtyChange?: (dirty: boolean) => void;
 }) {
   const { showAlert } = useAlert();
   const [draft, setDraft] = useState<Draft>(() => draftOf(view));
@@ -65,13 +68,20 @@ export function PlaybookEditor({
   const [busy, setBusy] = useState<"reset" | "apply" | "discard" | null>(null);
   const [serverIssues, setServerIssues] = useState<string[]>([]);
 
-  // Otro tipo o una respuesta del servidor: el borrador vuelve a lo guardado.
+  // Una vista nueva del servidor (p. ej. la recarga tras «Proponer con Alba»)
+  // solo pisa el borrador si NO había cambios sin guardar (auditoría A2). Tras
+  // un guardado propio, quien guarda ya dejó el borrador en lo guardado.
+  const base = useRef(view);
   useEffect(() => {
-    setDraft(draftOf(view));
-    setServerIssues([]);
+    const previous = base.current;
+    base.current = view;
+    if (previous === view) return;
+    setDraft((current) => (playbookDirty(previous, current) ? current : draftOf(view)));
   }, [view]);
 
   const dirty = playbookDirty(view, draft);
+  useEffect(() => onDirtyChange?.(dirty), [dirty, onDirtyChange]);
+  useEffect(() => () => onDirtyChange?.(false), [onDirtyChange]);
   const issues = useMemo(() => playbookIssues(draft.stages, draft.opening_guidance), [draft]);
   const savedByKey = useMemo(
     () => new Map(view.playbook.stages.map((stage) => [stage.key, JSON.stringify(stage)])),
@@ -106,6 +116,7 @@ export function PlaybookEditor({
       });
       const next = await savePlaybook(view.call_type, { ...draft, stages });
       invalidatePlaybookLabels();
+      setDraft(draftOf(next));
       onSaved(next);
       showAlert({ tone: "success", title: "Marco guardado", description: "Lo usan las próximas llamadas." });
     } catch (error) {
@@ -122,6 +133,8 @@ export function PlaybookEditor({
     try {
       const next = await action();
       invalidatePlaybookLabels();
+      setDraft(draftOf(next));
+      setServerIssues([]);
       onSaved(next);
       showAlert({ tone: "success", title: done });
     } catch (error) {
@@ -197,6 +210,7 @@ export function PlaybookEditor({
       <OpeningIsland
         type={view.call_type}
         draft={dirty ? draft : null}
+        invalidReason={issues[0] ?? null}
         disabled={!draft.enabled}
         canPreview={canManage}
       />
@@ -332,11 +346,14 @@ function ProposalNotice({
 function OpeningIsland({
   type,
   draft,
+  invalidReason,
   disabled,
   canPreview,
 }: {
   type: PlaybookView["call_type"];
   draft: Draft | null;
+  /** Con un borrador inválido el servidor respondería 422: no se pide (M2). */
+  invalidReason: string | null;
   disabled: boolean;
   canPreview: boolean;
 }) {
@@ -355,7 +372,13 @@ function OpeningIsland({
         ),
       );
     } catch (error) {
-      showAlert({ tone: "error", title: errorMessage(error, "No pudimos generar la apertura") });
+      const issues = isHttpError(error) ? (error.problem?.details?.issues as unknown) : undefined;
+      const first = Array.isArray(issues) ? issues.find((i): i is string => typeof i === "string") : undefined;
+      showAlert({
+        tone: "error",
+        title: errorMessage(error, "No pudimos generar la apertura"),
+        ...(first === undefined ? {} : { description: first }),
+      });
     } finally {
       setLoading(false);
     }
@@ -368,12 +391,23 @@ function OpeningIsland({
           Así abriría{preview?.agent_name ? ` ${preview.agent_name}` : ""}
         </Kicker>
         {canPreview && !disabled && (
-          <Button variant="glass" size="sm" onClick={() => void listen()} disabled={loading}>
+          <Button
+            variant="glass"
+            size="sm"
+            onClick={() => void listen()}
+            disabled={loading || invalidReason !== null}
+            aria-describedby={invalidReason === null ? undefined : "opening-preview-blocked"}
+          >
             {loading ? <LoaderCircle aria-hidden className="animate-spin" /> : <RefreshCw aria-hidden />}
-            {preview === null ? "Escuchar cómo abriría" : "Oír otra"}
+            {preview === null ? "Ver cómo abriría" : "Otra versión"}
           </Button>
         )}
       </div>
+      {!disabled && canPreview && invalidReason !== null && (
+        <p id="opening-preview-blocked" className="text-xs text-muted-foreground">
+          Corrige el marco para ver cómo abriría: {invalidReason}
+        </p>
+      )}
       {disabled ? (
         <p className="text-sm text-muted-foreground">
           Con el marco apagado, estas llamadas saludan y escuchan: no hay apertura.
@@ -392,7 +426,7 @@ function OpeningIsland({
       ) : (
         <p className="text-sm text-muted-foreground">
           {canPreview
-            ? "Escucha la primera frase que diría el agente con este marco, con un contacto de ejemplo."
+            ? "Mira la primera frase que diría el agente con este marco, con un contacto de ejemplo."
             : "La primera frase la genera el agente con este marco al marcar."}
         </p>
       )}

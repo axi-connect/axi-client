@@ -79,4 +79,39 @@ describe("CallLauncherDialog (plan de modos §7)", () => {
     expect(placeTestCall).toHaveBeenCalledWith(expect.objectContaining({ to: "+57 300 123 4567", mode: "reactive" }));
     expect(launchCall).not.toHaveBeenCalled();
   });
+
+  it("M4: un contacto sin teléfono no deja llamar y lo dice antes", async () => {
+    render(<CallLauncherDialog open onOpenChange={jest.fn()} target={{ ...CONTACT, phone: null }} />);
+    await flush();
+    expect(screen.getByRole("button", { name: "Llamar" })).toBeDisabled();
+    expect(screen.getByRole("status")).toHaveTextContent("no tiene un teléfono");
+  });
+
+  it("B1: las flechas mueven el modo (un solo tabulador en el grupo)", async () => {
+    render(<CallLauncherDialog open onOpenChange={jest.fn()} target={CONTACT} />);
+    await flush();
+    const proactive = screen.getByRole("radio", { name: /Proactivo/ });
+    const reactive = screen.getByRole("radio", { name: /Reactivo/ });
+    expect(proactive).toHaveAttribute("tabindex", "0");
+    expect(reactive).toHaveAttribute("tabindex", "-1");
+    fireEvent.keyDown(proactive, { key: "ArrowRight" });
+    expect(reactive).toHaveAttribute("aria-checked", "true");
+  });
+
+  it("B5: cambiar un campo es otro pedido (otra clave); repetir el mismo, la misma", async () => {
+    launchCall.mockRejectedValue(new Error("red"));
+    render(<CallLauncherDialog open onOpenChange={jest.fn()} target={CONTACT} />);
+    await flush();
+    fireEvent.click(screen.getByRole("button", { name: "Llamar" }));
+    await flush();
+    fireEvent.click(screen.getByRole("button", { name: "Llamar" }));
+    await flush();
+    fireEvent.click(screen.getByRole("radio", { name: /Reactivo/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Llamar" }));
+    await flush();
+    const keys = launchCall.mock.calls.map((c) => (c as [unknown, string])[1]);
+    expect(keys[0]).toBe(keys[1]);
+    expect(keys[2]).not.toBe(keys[1]);
+  });
 });
+
