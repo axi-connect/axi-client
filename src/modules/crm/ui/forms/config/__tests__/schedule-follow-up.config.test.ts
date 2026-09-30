@@ -14,6 +14,7 @@ function values(over: Partial<ScheduleFollowUpValues> = {}): ScheduleFollowUpVal
     contact: { id: "ct-1", label: "Ana" },
     agent_id: "ag-1",
     medium: "message",
+    call_type: "followup",
     objective: "Retomar la cotización del plan anual",
     date: "2026-09-18",
     time: "09:00",
@@ -76,3 +77,37 @@ describe("schedule-follow-up.config — medios (F3)", () => {
     expect(editScheduleFollowUpValues(task, TZ).medium).toBe("message");
   });
 });
+
+describe("schedule-follow-up.config — marco de la llamada (plan de modos §7)", () => {
+  it("si el medio llama, el marco viaja al crear y al editar", () => {
+    const create = toCreateFollowUpDTO(values({ medium: "call", call_type: "collections" }), {
+      tz: TZ,
+      template: undefined,
+    });
+    expect(create.call_type).toBe("collections");
+    const update = toUpdateFollowUpDTO(values({ medium: "call_then_message", call_type: "sales_followup" }), {
+      tz: TZ,
+      template: undefined,
+    });
+    expect(update.call_type).toBe("sales_followup");
+  });
+
+  it("con solo mensajes no se crea marco, y al editar se limpia (null)", () => {
+    const create = toCreateFollowUpDTO(values({ call_type: "collections" }), { tz: TZ, template: undefined });
+    expect(create).not.toHaveProperty("call_type");
+    const update = toUpdateFollowUpDTO(values({ call_type: "collections" }), { tz: TZ, template: undefined });
+    expect(update.call_type).toBeNull();
+  });
+
+  it("al editar se parte del marco guardado; sin uno válido, el de siempre", () => {
+    const base = { id: "a", contact_id: "c", due_at: null, assigned_agent_id: "g", objective: "x", opening_template: null, task_channel: "call" };
+    expect(editScheduleFollowUpValues({ ...base, call_type: "collections" } as unknown as ActivityDTO, TZ).call_type).toBe(
+      "collections",
+    );
+    expect(editScheduleFollowUpValues({ ...base, call_type: null } as unknown as ActivityDTO, TZ).call_type).toBe("followup");
+    expect(editScheduleFollowUpValues({ ...base, call_type: "inventado" } as unknown as ActivityDTO, TZ).call_type).toBe(
+      "followup",
+    );
+  });
+});
+

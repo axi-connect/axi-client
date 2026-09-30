@@ -14036,6 +14036,7 @@ export interface components {
                 task_channel: "message" | "call" | "call_then_message" | null;
                 /** @enum {string|null} */
                 task_medium: "message" | "call" | null;
+                call_type: string | null;
                 /** Format: uuid */
                 bulk_id: string | null;
                 last_opening: {
@@ -14145,6 +14146,7 @@ export interface components {
             task_channel: "message" | "call" | "call_then_message" | null;
             /** @enum {string|null} */
             task_medium: "message" | "call" | null;
+            call_type: string | null;
             /** Format: uuid */
             bulk_id: string | null;
             last_opening: {
@@ -14259,6 +14261,8 @@ export interface components {
             } | null;
             /** @enum {string} */
             task_channel?: "message" | "call" | "call_then_message";
+            /** @enum {string|null} */
+            call_type?: "appointment_reminder" | "sales_followup" | "collections" | "reactivation" | "followup" | null;
         };
         UpdateAgentTaskDto: {
             objective?: string;
@@ -14275,6 +14279,8 @@ export interface components {
             } | null;
             /** @enum {string} */
             task_channel?: "message" | "call" | "call_then_message";
+            /** @enum {string|null} */
+            call_type?: "appointment_reminder" | "sales_followup" | "collections" | "reactivation" | "followup" | null;
         };
         RunNowDto: {
             /** Format: date-time */
@@ -14551,6 +14557,7 @@ export interface components {
                     offset_hours: number;
                     /** @enum {string} */
                     task_channel: "message" | "call" | "call_then_message";
+                    call_type: string | null;
                     objective: string;
                     opening_template: {
                         /** Format: uuid */
@@ -14585,6 +14592,7 @@ export interface components {
                 offset_hours: number;
                 /** @enum {string} */
                 task_channel: "message" | "call" | "call_then_message";
+                call_type: string | null;
                 objective: string;
                 opening_template: {
                     /** Format: uuid */
@@ -14619,6 +14627,8 @@ export interface components {
                  * @enum {string}
                  */
                 task_channel: "message" | "call" | "call_then_message";
+                /** @enum {string|null} */
+                call_type?: "appointment_reminder" | "sales_followup" | "collections" | "reactivation" | "followup" | null;
                 objective: string;
                 opening_template?: {
                     /** Format: uuid */
@@ -18195,6 +18205,8 @@ export interface components {
              * @enum {string}
              */
             task_channel: "message" | "call" | "call_then_message";
+            /** @enum {string|null} */
+            call_type?: "appointment_reminder" | "sales_followup" | "collections" | "reactivation" | "followup" | null;
             opening_template?: {
                 /** Format: uuid */
                 channel_template_id: string;
@@ -18221,6 +18233,7 @@ export interface components {
             objective: string;
             /** @enum {string} */
             task_channel: "message" | "call" | "call_then_message";
+            call_type: string | null;
             opening_template: {
                 /** Format: uuid */
                 channel_template_id: string;

@@ -53,6 +53,8 @@ import {
   WhenPicker,
   WindowNoticeCard,
 } from "./follow-up/ScheduleFollowUpFields";
+import { useWatch, type Control } from "react-hook-form";
+import { CallTypeSelect, type ProactiveCallType } from "@/modules/calls/public";
 
 const TEMPLATES_HREF = META_TEMPLATES_HREF;
 const DEFAULT_TZ = "America/Bogota";
@@ -271,6 +273,18 @@ export function ScheduleFollowUpForm({
         ),
         { label: "Cómo contacta", colSpan: { base: 1, md: 2 } },
       ),
+      // Plan de modos §7: solo si el canal llama, el marco de esa llamada.
+      createCustomField<ScheduleFollowUpValues>(
+        "call_type",
+        ({ control, value, setValue }) => (
+          <CallTypeForMedium
+            control={control}
+            value={value as ScheduleFollowUpValues["call_type"]}
+            onChange={(next) => setValue("call_type", next)}
+          />
+        ),
+        { colSpan: { base: 1, md: 2 } },
+      ),
       createCustomField<ScheduleFollowUpValues>(
         "objective",
         ({ value, setValue, getError }) => (
@@ -394,3 +408,19 @@ export function ScheduleFollowUpForm({
     />
   );
 }
+
+/** El selector del marco, visible solo mientras el canal elegido llama. */
+function CallTypeForMedium({
+  control,
+  value,
+  onChange,
+}: {
+  control: Control<ScheduleFollowUpValues>;
+  value: ProactiveCallType;
+  onChange: (next: ProactiveCallType) => void;
+}) {
+  const medium = useWatch({ control, name: "medium" });
+  if (medium === "message") return null;
+  return <CallTypeSelect value={value} onChange={onChange} />;
+}
+
