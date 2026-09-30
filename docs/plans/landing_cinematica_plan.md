@@ -1,0 +1,213 @@
+# Programa «Landing cinematográfica» — la home como una película
+
+> **Estado:** APROBADO por la dueña el 2026-09-30 («me gusta mucho… procede»). Los desbordes y cortes de las cintas del mockup se corrigen en la implementación. En curso: F0.
+>
+> - Storyboard (22 fotogramas, notas de coreografía): https://claude.ai/artifact/2myumdsep5j96YpEUGDy87
+> - Prototipo con scroll real (GSAP + Lenis; apertura, nicho, chat, meta, cierre): https://claude.ai/artifact/D6gTZLXqNa9zRTfZgFNMH9
+> - Fuentes: `docs/design/mockups/landing-cinema/` (`storyboard.build.py`, `prototype.template.html`, `prototype.build.py`).
+> - Rama: `feat/landing-cinema` (worktree `.claude/worktrees/landing-cinema`), desde `origin/main` a850347b.
+> - La home actual queda archivada en el tag **`landing-v1-archive`** (a850347b, local; se sube con la primera entrega).
+
+---
+
+## 1. Por qué
+
+La home actual no convierte. Diagnóstico de la dueña, en sus palabras:
+
+1. Nadie la lee: no porque no sea interesante, sino porque no comunica bien.
+2. No tiene el design system nuevo (islas, bento, tinta, la voz del progreso).
+3. No comunica todo lo que tiene el producto (Cobros, Comercial, Captación, Radar, llamadas… no aparecen).
+4. No es psicológicamente persuasiva.
+5. Tiene problemas de rendimiento.
+
+## 2. Decisiones (alineadas el 2026-09-30)
+
+| # | Decisión |
+|---|---|
+| D1 | **Una sola conversión: «Prueba 7 días gratis» → `/comenzar`.** WhatsApp con el agente de Axi es la vía secundaria. La demo agendada sale de la home (sigue en `/contacto`). |
+| D2 | **Mecánica híbrida:** scroll vertical con escenas fijadas (*pin*) que el scroll reproduce (*scrub*); algunos tramos pasan en horizontal. Una **cinta de luz** guía toda la película (ver §3). |
+| D3 | **Una sola película continua**, sin índice por actos. La guía de progreso es un riel (escritorio) o una barra bajo la cabecera (móvil); no es navegación. |
+| D4 | **Personalizada por nicho.** El nicho llega por `?nicho=` (campañas) o se elige en la **escena 2** («¿Quién te escribe hoy?»), no en el hero: los primeros 5 segundos son para entender qué es Axi. Una píldora flotante permite cambiarlo. El nicho viaja a `/comenzar`. |
+| D5 | **Cuatro nichos en la primera entrega:** Restaurantes, **Tecnología** (en lugar de Moda: la brecha de productos con variantes sigue abierta, KB §6.4), Salud y belleza, Servicios y B2B. El resto ve un negocio de ejemplo. Ampliable por datos. |
+| D6 | **Escenas de los cuatro grupos:** captar (Radar del decisor, seguimiento), vender (chat, foto, llamada, garantías, equipo), cobrar, ordenar, crecer (el mapa de la meta, Axel) y medir. |
+| D7 | **Todo se dibuja como UI recreada en código** (HTML/SVG, animada por scroll). Sin video. El estilo de referencia es el del escáner de reconocimiento y el chat actuales, que la dueña aprobó. |
+| D8 | **Escenario oscuro** (la película ocurre de noche): tokens oscuros de `globals.css`, luz tricolor. El cromo (header, footer) sigue respetando claro/oscuro. |
+| D9 | Además de la película: **precios** (del catálogo público), **garantías de la IA** (como escena, la bóveda) y **FAQ**. **Sin prueba social** en esta entrega. |
+| D10 | **Móvil:** la misma película, vertical y más corta, sin tramos horizontales. |
+| D11 | **Copy:** lo propone Claude, verificado contra el producto (nada 🚧); la dueña lo aprueba en el storyboard. `axi/docs/business/landing-copy.md` se actualiza como nueva fuente. |
+| D12 | **Archivo:** tag `landing-v1-archive` + se borra lo que la home deje de usar. Se conserva lo que usan `/productos`, `/precios`, `/casos`, `/integraciones` y onboarding. |
+| D13 | **Librerías:** GSAP (+ ScrollTrigger) y Lenis, **solo** en la home y cargadas diferidas. |
+| D14 | **Alcance: solo la home `/`.** Las demás páginas públicas se retocan después con el mismo lenguaje. |
+| D15 | **Rendimiento transversal:** cada paquete se carga solo en la ruta que lo usa, para que el panel y `/platform` sigan fluidos. Dentro de este programa: línea base, presupuesto por ruta, verjas y limpieza de la capa raíz y pública. Lo interno del panel va en un programa aparte (§6.4). |
+| D16 | **El Radar del decisor se muestra:** la dueña lo termina en otra sesión y se despliega antes que la landing. Su vocabulario se verifica contra esa rama antes de cerrar la escena 3. |
+
+## 3. El concepto: la cinta de luz
+
+El isotipo son tres cintas (coral, ámbar, violeta) que forman la α. En la película esas tres cintas **son la luz que guía el scroll**:
+
+1. **Apertura:** la α se arma y sus cintas se desenrollan hacia abajo.
+2. Cada escena se ilumina cuando la cinta llega a ella, y la cinta la atraviesa **por detrás del texto, nunca encima**.
+3. **Clímax (escena 12):** la cinta aterriza y se vuelve la **carretera del mapa de la meta**. Lo que te guió por la película es el camino hacia tu meta del mes.
+4. **Cierre:** las cintas vuelven y se cierran en la α.
+
+Es premium por continuidad, no por efectos: una sola idea de marca ejecutada con precisión, tipografía Nexa grande (200 + 700 en la misma frase), superficies de cristal y tinta, y ningún tile de vanidad.
+
+## 4. El guion (17 escenas)
+
+Cada escena tiene una frase y una animación. Las cifras son de ejemplo y lo dicen donde haga falta.
+
+| # | Escena | Frase | Qué se ve (y qué hace el scroll) | Estado real / límite honesto |
+|---|---|---|---|---|
+| 1 | Apertura | «Vende en cada conversación.» | La α se arma; burbujas de muchos clientes en profundidad; la cinta cae. CTA: prueba gratis y hablar con el agente. | — |
+| 2 | ¿Quién te escribe hoy? | «¿Quién te escribe hoy?» | Cuatro fichas-mensaje; elegir reescribe la película. | Datos del nicho en código (§5.3). |
+| 3 | Captar · Radar | «Encuentra a quien te va a comprar.» | Barrido de radar, un negocio se abre, las fuentes se encienden, índice 86/100, **Decisor**. | Captación viva (Google Maps, OSM, buscador web). WhatsApp solo con permiso: se muestra «Puedo contactar por: Correo · Llamada». Radar del decisor: D16. En nichos de consumo la escena muestra leads de anuncios Click-to-WhatsApp. |
+| 4 | Captar · Seguimiento | «Nadie se queda esperando.» | **Tramo horizontal:** carrito → plantilla → leída → respuesta → venta recuperada. | Plantilla aprobada por Meta, solo WhatsApp; se detiene cuando responde; las reglas nacen apagadas. |
+| 5 | Vender · Chat | «Responde en segundos. Con tus precios reales.» | El teléfono se fija y el scroll escribe la conversación; remata «Venta pagada». | Pago «reportado», lo verifica el equipo. Producto sin variantes. |
+| 6 | Vender · Foto | «Una foto basta.» | La captura se escanea y el catálogo se ordena por similitud; match en violeta. | Reconocimiento activable por empresa. |
+| 7 | Vender · Llamada | «Y cuando hay que llamar, llama.» | Aura, transcripción palabra a palabra, etapas del marco hasta «Objetivo cumplido». | Solo llamadas salientes. Nada de entrantes ni de cobranza por llamada. |
+| 8 | Garantías · Bóveda | «Nunca inventa un precio.» | La petición choca con la bóveda; cuatro candados: precio, descuento, total, pago. | KB §6.3. |
+| 9 | Vender · Equipo | «Cuando hace falta una persona, entra tu equipo.» | Axi atiende → En cola → Contigo; «Devolver a Axi». | Inbox real. |
+| 10 | Cobrar | «Cada venta, cobrada.» | El medidor se llena por abonos, el recordatorio como conversación, la promesa pausa avisos, el recibo en PDF. | Cobros va por nicho (flag). Factura DIAN y remisión **no** existen: no se nombran. |
+| 11 | Ordenar | «Todo queda en su lugar.» | «La abrió Axi» salta a Compromiso; la cita se asienta con su recordatorio. | CRM + agenda. |
+| 12 | Crecer · Meta | «Tú pones la meta. Axi traza la ruta.» | **El clímax:** el mapa tipo Waze (`RouteMap`): «Vas aquí», tramo lento en ámbar, «Rutas · las prepara Axi», la llegada sube de 82 % a 91 %. «Nada se envía sin tu aprobación.» | En «aprendiendo» no hay rutas: la escena lo evita con datos de ejemplo coherentes (63 % de 30 M = 18,9 M). |
+| 13 | Crecer · Axel | «Cada mañana, un plan.» | El informe se escribe y se vuelve tarjetas de propuesta. | «Nada sale sin tu aprobación.» |
+| 14 | Medir | «Sabes cuánto te vendió cada conversación.» | Embudo que crece, cifras que cuentan una vez; calidad 92/100 «evaluada por una IA supervisora». | «Cifras de ejemplo». |
+| 15 | Precios | «Empieza gratis. Crece a tu ritmo.» | Paquetes por tramo de conversaciones. | Cifras del catálogo público (ISR). |
+| 16 | Preguntas | «Lo que nos preguntan.» | Acordeón; sigue emitiendo FAQPage. | — |
+| 17 | Cierre | «Tu próxima venta ya está escribiendo.» | Las cintas vuelven a la α; CTA final. | — |
+
+**Vocabulario prohibido en titulares** (se mantiene de `landing-copy.md`): «omnicanal», «IA-native», «CRM», «chatbot», «plataforma», «solución integral», «automatización inteligente».
+
+## 5. Arquitectura
+
+### 5.1 Dónde vive
+
+```
+src/modules/landing/
+├── domain/
+│   ├── public-catalog.ts          # (existe) precios del catálogo público
+│   └── film/                      # NUEVO — TypeScript puro
+│       ├── niches.ts              # NicheKey, parseNiche(url), fallback «ejemplo»
+│       └── scenes.ts              # contenido por escena × nicho (copy y cifras de ejemplo)
+├── ui/
+│   ├── film/                      # NUEVO — la película (única carpeta que importa gsap/lenis)
+│   │   ├── FilmPage.tsx           # RSC: monta las escenas; el hero es HTML servido
+│   │   ├── engine/                # "use client": useFilmEngine (Lenis + ScrollTrigger), NicheProvider
+│   │   ├── scenes/                # una escena por archivo, cada una isla cliente diferida
+│   │   └── parts/                 # Ribbon, Rail, NichePill, PhoneFrame, RouteMap (landing)
+│   ├── sections/                  # se quedan solo las que usan otras páginas públicas
+│   └── content/landing.content.ts # se parte: copy de la película → domain/film; lo público → public.ts
+└── public.ts                      # solo datos puros (sin componentes, §6.3)
+```
+
+- **Verja:** regla ESLint `no-restricted-imports` que permite `gsap` y `lenis` **solo** bajo `modules/landing/ui/film/**`.
+- `src/app/(public)/page.tsx` monta `FilmPage` y sigue emitiendo el JSON-LD (Organization, WebSite, FAQPage).
+
+### 5.2 El motor
+
+- **Scroll:** hoy la capa pública no hace scroll en `window`, sino en `div[data-app-scroll]` de `(public)/layout.tsx`. Lenis se instancia con `wrapper` y `content` sobre ese contenedor, y ScrollTrigger con `scroller` apuntando a él (`ScrollTrigger.defaults`). Si el pin da problemas dentro de un scroller propio, la alternativa es que la home haga scroll en `window`. Se decide en F1 con una prueba medida, sin tocar las otras rutas públicas.
+- **Carga:** el hero es HTML servido y pintado sin JS (LCP). El motor se importa con `import()` tras el primer frame (`requestIdleCallback`). Cada escena registra su timeline al acercarse (`IntersectionObserver`, margen de una pantalla) y se destruye al alejarse: nunca 17 timelines vivas.
+- **Movimiento reducido:** sin Lenis ni pins; cada escena muestra su fotograma final (el prototipo ya lo hace). Lo mismo si GSAP no carga.
+- **Solo `transform` y `opacity`**, nada de loops en reposo (DESIGN-SYSTEM §6). El aura de la llamada vive solo mientras la escena está en pantalla.
+
+### 5.3 El nicho
+
+- `parseNiche(searchParams)` → `restaurants | tech | beauty | b2b | example`. Se guarda en `localStorage` (con try/catch) como conveniencia del visitante.
+- Los CTA llevan `?plan=free_trial&nicho=<clave>`. **Pendiente:** hoy `/comenzar` lee `?plan=` y `?modulo=` (`onboarding/domain/signup-draft.ts:161,178`) pero no `?nicho=`. Hay que añadir la lectura y preseleccionar el tipo de negocio (mapeo a `NICHES` de onboarding: `restaurants`, `retail_fashion`→`tech`?, `health_beauty`, `b2b_distribution` / `professional_services`). Onboarding no tiene hoy un nicho «tecnología»: el mapeo se decide en F1.
+- Analítica: `track("film_niche", { niche, source: "url" | "choice" })`, `track("film_scene", { scene })` una vez por escena y el CTA por delegación de eventos (`core/analytics/outbound.ts`).
+
+### 5.4 Qué se borra (D12)
+
+Se borra lo que la home deja de usar, salvo lo que usan otras rutas:
+
+- **Se borran** (solo los usa la home): `LandingHero`, `LandingSocialProof`, `LandingProblem`, `LandingHowItWorks`, `LandingMetrics`, `LandingTeamControl`, `LandingTerminal`, `LandingFinalCta` y sus hojas exclusivas (`BrandGradientCanvas` si no queda consumidor, `TerminalMockup`, `LaptopMockup`, `FunnelPreview`, `VaultRevealCard`, `ParallaxLayer`…). La lista exacta se saca en F1 con una búsqueda de importaciones.
+- **Se conservan:** `RecognitionScanner` y `LandingRecognition` (los usan `/integraciones` y `/casos`), `PricingPlans` y `ModulePlans` (`/precios`), `Reveal`, `DemoLeadForm` (`/contacto`), `LegalDocument` y el contenido de `/productos`.
+- También se borra el backup `shared/components/layout/site/legacy/LegacyLandingPage.tsx`: el tag lo sustituye.
+
+## 6. Rendimiento
+
+### 6.1 Línea base (build de producción, 2026-09-30, a850347b)
+
+JavaScript de primera carga (comprimido), según `next build`:
+
+| Ruta | Primera carga |
+|---|---|
+| Común a todas | 100 kB |
+| `/` (landing actual) | **267 kB** |
+| `/comenzar` | 277 kB |
+| `/precios` | 201 kB |
+| `/productos` | 194 kB |
+| `/auth/login` | 169 kB |
+| `/platform` | 172 kB |
+| `/dashboard` | 356 kB |
+| `/onboarding` | 368 kB |
+| `/orders` | 394 kB |
+| `/workspace/inbox` | **487 kB** |
+
+### 6.2 Diagnóstico (auditoría estática del 2026-09-30)
+
+Lo que hoy viaja a **todas** las rutas desde el layout raíz:
+
+- **`socket.io-client`**: `AuthProvider` importa `socketManager` de forma estática (`core/providers/auth-provider.tsx:5` → `core/realtime/socket-manager.ts:3`), y en la capa pública solo llama `halt()` y `reset()`.
+- **framer-motion completo**: `AlertProvider` monta `Modal` (`ui/dialog.tsx:6`, `motion` + `AnimatePresence`) y `NotificationsToaster`, y `sileo` importa `motion/react`. Por eso `LazyMotion` en el código propio no bastaría: hay que diferir el toaster y el modal.
+- **`CompanySuspendedScreen`** y un `fetch("/api/auth/session")` al montar, también en rutas públicas.
+
+En la capa pública:
+
+- `(public)/layout.tsx` es `"use client"` solo por un `useRef`.
+- `SiteFooter` es cliente sin hooks.
+- `SiteNavMobile` (Radix Dialog y Accordion) se carga siempre, también en escritorio.
+
+En la home actual:
+
+- Las 13 secciones se importan estáticas.
+- `LandingFinalCta` hidrata `DemoLeadForm` (react-hook-form, zod, Radix Select) y un segundo canvas.
+
+Filtración a `/comenzar`:
+
+- `landing/public.ts` reexporta `MODULE_ICONS` desde `ModuleCard.tsx` (arrastra TiltCard y framer-motion) y el `landing.content.ts` entero (1.201 líneas).
+
+### 6.3 Qué entra en este programa (capa raíz y pública)
+
+1. `socket-manager` con `import()` diferido; la capa pública no lo carga.
+2. `NotificationsToaster` y `Modal` de `AlertProvider` con `next/dynamic` (cargados al primer aviso o modal).
+3. `MotionProvider` con `LazyMotion` + `domAnimation`; migrar a `m` lo global y público (SiteHeader, Reveal, splash, dialog).
+4. `(public)/layout.tsx`, `SiteFooter`, `KodecolBanner` y `SocialIcon` a RSC; `SiteNavMobile` diferido hasta abrirse.
+5. `landing/public.ts` solo con datos puros: `MODULE_ICONS` sale de `ModuleCard`, el copy se parte.
+6. `/api/auth/session` no se pide en rutas públicas si no hay cookie de sesión.
+7. `@next/bundle-analyzer` (en `devDependencies`) y `optimizePackageImports: ["framer-motion"]`. Quitar `@heroicons/react`, que no tiene usos.
+8. **Presupuesto por ruta en CI:** script `scripts/check-bundle-budget.mjs` que lee los manifiestos del build y falla si una ruta supera su techo. Techos iniciales, que se fijan con la medición de F0:
+   - `/` ≤ 200 kB **con el motor incluido** (GSAP + ScrollTrigger ≈ 45 kB y Lenis ≈ 5 kB comprimidos; el motor no entra en la primera carga si se difiere).
+   - Común a todas ≤ 85 kB.
+   - Ninguna ruta del panel crece por este programa.
+9. **Metas de la home:** LCP < 2,5 s, CLS < 0,1, INP < 200 ms y Lighthouse móvil ≥ 90 (throttling por defecto). Medidas en build de producción.
+
+### 6.4 Programa aparte (panel y /platform), propuesto
+
+- `prefetch={false}` o prefetch al pasar el ratón en el sidebar (`nav-item.tsx:170`, `nav-flyout.tsx`): hoy precarga cada enlace visible del menú.
+- `@dnd-kit` con `next/dynamic` en tableros y editores (13 archivos; `RuleList` en shared es el más transversal).
+- framer-motion en shared del panel (nav-item, RowCollapse, DetailSheet, FilterPanel, pagination) → `m` o CSS.
+- `cmdk` diferido.
+- Ya están bien: `recharts` (diferido), `react-query` y `openapi-fetch` (aislados en /platform).
+
+## 7. Fases
+
+Cada fase se entrega con: tests (jest, `--maxWorkers=2`), `npm run typecheck`, `next build` verde con la verja de ESLint, **render medido a 390, 768, 1024 y 1440 px** con el arnés de capturas y el protocolo «listo F<N>» para el auditor. Una tarea pesada a la vez (límite de RAM de la máquina).
+
+| Fase | Contenido | Sale cuando |
+|---|---|---|
+| **F0 · Rendimiento base** | §6.3 puntos 1–8; bundle analyzer; script de presupuesto; nueva línea base. Sin cambios visuales. | El JS común baja y ninguna ruta sube; tests y build verdes. |
+| **F1 · Motor y apertura** | `domain/film` (nichos y escenas), motor (Lenis + ScrollTrigger diferidos), riel, píldora, escenas 1, 2 y 17, `?nicho=` en `/comenzar`, borrado de la home vieja (§5.4), JSON-LD. Decide el scroller (§5.2). | La home nueva abre, el nicho reescribe la película y los CTA llevan a `/comenzar` con el nicho. |
+| **F2 · Vender** | Escenas 5, 6, 7, 8 y 9. | Coreografía como el storyboard, en los 4 nichos. |
+| **F3 · Captar** | Escenas 3 y 4, con el tramo horizontal. Radar verificado contra su rama (D16). | Vocabulario del Radar igual al producto. |
+| **F4 · Cobrar, ordenar, crecer, medir** | Escenas 10, 11, 12, 13 y 14. El mapa reutiliza la geometría de `commercial/domain/route-map.ts` (solo el dominio puro, vía barrel) o una copia documentada. | El clímax funciona en escritorio y móvil. |
+| **F5 · Cierre y calidad** | Precios (catálogo ISR), FAQ, analítica de escenas, reduced-motion, Lighthouse y presupuesto en CI, QA visual completa, `landing-copy.md` actualizado. | Metas de §6.3.9 medidas; aprobación de la dueña; despliegue. |
+
+## 8. Pendientes y riesgos
+
+- **Radar del decisor:** confirmar nombres y estados en la rama de la dueña antes de F3.
+- **Cobros por nicho:** hoy el flag se enciende para turismo, educación, inmobiliaria y SaaS. Hay que decidir si la escena 10 se muestra en los 4 nichos de la película o solo donde aplica.
+- **`?nicho=` en `/comenzar`:** el mapeo a los nichos de onboarding (no hay «tecnología» allí).
+- **Cifras de ejemplo:** todas coherentes entre sí y marcadas; ninguna se presenta como un caso real.
+- **Pin dentro de un scroller propio** (§5.2): riesgo técnico principal; se mide en F1 antes de construir el resto.
+- `knowledge-base.md` es del 10-ago y no incluye Cobros, Comercial, Axel ni Alba: el copy se verificó contra el código y los planes.
