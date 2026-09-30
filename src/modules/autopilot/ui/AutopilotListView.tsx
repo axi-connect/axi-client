@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Bot, Pause, Play, Plus, Rocket, Zap } from "lucide-react";
 
@@ -32,6 +32,7 @@ import {
   resumeRoutine,
   runRoutineNow,
 } from "../infrastructure/autopilot-service.adapter";
+import { PilotProposals } from "./proposals/PilotProposals";
 
 /**
  * Marketing › Automatización (tablero 1 del lienzo P0): los pilotos del
@@ -49,6 +50,10 @@ export function AutopilotListView() {
   const [unavailable, setUnavailable] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const routineNames = useMemo(
+    () => new Map((routines ?? []).map((routine) => [routine.id, routine.name])),
+    [routines],
+  );
 
   const load = useCallback(() => {
     listRoutines()
@@ -136,17 +141,21 @@ export function AutopilotListView() {
           }
         />
       ) : (
-        <section className="flex flex-col gap-4" aria-label="Tus pilotos">
-          {routines.map((routine) => (
-            <RoutineCard
-              key={routine.id}
-              routine={routine}
-              canManage={canManage}
-              busy={busy === routine.id}
-              onAct={(action) => void act(routine, action)}
-            />
-          ))}
-        </section>
+        <>
+          {/* P6b: «Axi propone», solo si hay algo que decidir */}
+          <PilotProposals routineNames={routineNames} canManage={canManage} />
+          <section className="flex flex-col gap-4" aria-label="Tus pilotos">
+            {routines.map((routine) => (
+              <RoutineCard
+                key={routine.id}
+                routine={routine}
+                canManage={canManage}
+                busy={busy === routine.id}
+                onAct={(action) => void act(routine, action)}
+              />
+            ))}
+          </section>
+        </>
       )}
     </div>
   );
