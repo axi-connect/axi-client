@@ -229,3 +229,47 @@ Cada fase se entrega con: tests (jest, `--maxWorkers=2`), `npm run typecheck`, `
 - Moda sustituida por Tecnología; en B2B el ejemplo son cajas de guantes (sin tallas).
 
 **Pendiente conocido fuera del programa:** `integrations/.../PromocionesTab.test.tsx` falla desde hoy también en `main` (su fixture usa una promoción que vence el 2026-09-30).
+
+## 10. El hilo de luz · haz de fibra óptica (aprobado el 2026-09-30)
+
+Sustituye las cintas por escena (`Ribbon` + `ribbons()` del motor). Esas cintas eran 7 SVG sueltos, recortados por el `overflow: clip` de cada escena y ocultos en móvil. Por construcción no podían pasar de una escena a otra, y por eso aparecían de golpe.
+
+- **Concepto:** un solo haz recorre toda la home, a partir de la referencia de fibra óptica que aportó la dueña.
+  - Va apretado en la cabeza, que es la luz que guía, y se abre detrás en cientos de fibras que se cruzan.
+  - En las escenas de trabajo es blanco (tinta). Solo se abre en coral, ámbar y violeta en la apertura, en la meta (donde es la carretera y «vas aquí» va en la cabeza) y en el cierre (donde termina en la α).
+  - Cuando la luz llega al protagonista de una escena, este se enciende.
+- **Prototipos:** https://claude.ai/artifact/WMQETzbwdQNjWNa2QCkPdN (v2 fibra óptica) y el teléfono A, https://claude.ai/artifact/JSyuEbPxE2RyDZ1ZNjUxNq. Fuentes en `/root/axi/qa/landing/fuentes-diseno/`.
+
+**Dónde vive (se borra quitando esto y nada más):**
+
+| Archivo | Qué es |
+|---|---|
+| `domain/film/thread-path.ts` | El recorrido, en DATOS: anclas por `data-scene` (en % de la caja de la escena), variantes de escritorio y móvil, e interruptor `enabled`. La meta calcula sus puntos sobre `route-map` con la misma regla «cover» del mapa. |
+| `domain/film/thread-geometry.ts` | Matemática pura, con tests: tiempos de las anclas, posición de la escena con o sin pin, muestreo Catmull-Rom y columna del haz. |
+| `ui/film/thread/thread.ts` | API pública `createThread({ root, getScroll, getPin, isDesktop, onHead? })` que devuelve `{ refresh, frame, destroy }`. Crea y quita su propio canvas. |
+| `ui/film/thread/thread-gl.ts` | Renderer WebGL 1. Maneja la pérdida y recuperación del contexto y tiene niveles de calidad. |
+| `ui/film/thread/thread-2d.ts` | Respaldo cuando no hay WebGL: un hilo en tinta con cabeza. |
+| `ui/film/thread/thread.css` | El canvas fijo y el encendido: la sección recibe `[data-thread-lit]` y su protagonista, marcado con `[data-thread-target]`, se enciende. |
+
+**Integración en el motor:** tres líneas.
+1. `createThread` después de construir los pins.
+2. `ScrollTrigger.addEventListener("refresh", thread.refresh)` y `gsap.ticker.add(thread.frame)`.
+3. En `stop()`: quitar los dos oyentes y llamar a `thread.destroy()`.
+
+El módulo no importa gsap ni lenis: recibe el scroll y los pins como números. Queda fuera de la verja de ESLint y no depende de dónde se haga el scroll (`window` o `[data-app-scroll]`). Con Lenis sobre `window`: `getScroll = () => lenis.scroll` y `getPin = (scene) => ({ start: st.start, end: st.end })` del ScrollTrigger del pin de esa escena, o `null`.
+
+**Rendimiento:**
+- La geometría es estática y se sube una vez: 220 fibras (140 en móvil) en UNA llamada `LINES`, y el brillo y las chispas en una llamada `POINTS`. Por frame solo se sube la columna del haz (96 × 4 floats).
+- Para cada frame, las posiciones salen de aritmética, sin `getBoundingClientRect`. `refresh` mide una vez.
+- Solo dibuja si cambió el scroll, la ventana o el puntero. En reposo, `frame()` compara números y sale. Pasada la película, el canvas se oculta.
+- Tras 45 frames lentos (>24 ms) baja un nivel de calidad (220 → 140 → 80 fibras) en vez de trabarse. DPR con techo de 1,5 en escritorio y 1,25 en móvil.
+- Medido en el prototipo a 1440 px: ~0,4 ms de CPU por frame y 60 fps. Va en el chunk diferido del motor, así que no suma a la primera carga.
+- Con movimiento reducido el motor no se carga y el hilo no existe (fotogramas finales).
+
+**Pendiente de integrar (axi-14):**
+- Conectar las tres líneas.
+- Retirar `Ribbon`, `ribbons()` y las `<Ribbon>` de las escenas.
+- Marcar el protagonista de cada escena con `data-thread-target`.
+- En la meta, colocar «vas aquí» con `onHead` (o quitar la carretera animada del SVG y dejar la punteada como fantasma).
+- Anclas del hero: nacen en las crestas de HeroSky (x 50 %, del 70 % al 86 % del alto, datos de axi-14). Las crestas ondulan, así que el nacimiento se afina en QA.
+- QA visual a 390, 768, 1024 y 1440 px, ajustando los números de `thread-path.ts`.
