@@ -301,3 +301,71 @@ Lienzo aprobado: https://claude.ai/artifact/PyDHa1EJ5YRVcVB9Tnrete (cuatro escen
 - Añadir `axel` y `measure` a `PINNED`, que hoy no se fijan. Sin pin, el horizonte y las fibras se cruzan en unos píxeles de scroll y los `pin` del hilo no cuentan. Cobrar y ordenar funcionan libres.
 - Poner `data-thread-target` en el recibo, la tarjeta, la línea del horizonte y la cifra producida.
 - Revisar en QA dos cruces que ya existían en móvil: de equipo a cobrar y de ordenar a la meta, que pueden rozar un titular.
+
+## 12. Plan maestro del upgrade · diseño (axi-13) y construcción (axi-14)
+
+Reparto: **axi-13 diseña y planifica** (lienzo aprobado por la dueña, recorrido del hilo, dominio puro y contrato de cada escena). **axi-14 construye** exactamente lo aprobado, sin rediseñar. Si algo del lienzo no se puede construir con el presupuesto de rendimiento, se avisa antes de improvisar.
+
+### Estado por escena
+
+| # | Escena | Diseño | Construcción |
+|---|---|---|---|
+| 1 | Hero | axi-14 (entregado, en correcciones de la dueña) | axi-14 |
+| 2 | Nicho «¿Quién te escribe hoy?» | Tanda 3 | pendiente |
+| 3 | Radar «Encuentra a quien te va a comprar» | Tanda 3 | pendiente |
+| 4 | Seguimiento «Nadie se queda esperando» | Tanda 3 | pendiente |
+| 5 | Chat «Responde en segundos» | Teléfono A, aprobado | pendiente |
+| 6 | Foto «Una foto basta» | Tanda 3 | pendiente |
+| 7 | Llamada «Y cuando hay que llamar, llama» | Tanda 3 | pendiente |
+| 8 | Bóveda «Nunca inventa un precio» | Tanda 3 | pendiente |
+| 9 | Equipo «Entra tu equipo» | Tanda 3 | pendiente |
+| 10–11 | Cobrar, Ordenar | Aprobado (§11) | pendiente |
+| 12 | Meta «Tú pones la meta» | Tanda 4 | pendiente |
+| 13–14 | Axel, Medir | Aprobado (§11) | pendiente |
+| 15–17 | Precios, Preguntas, Cierre | Tanda 4 | pendiente |
+| — | Marco: cabecera, píldora de nicho, riel de capítulos, pie | Tanda 4 | pendiente |
+| — | Hilo de luz | Aprobado (§10) | pendiente (tras la orden de la dueña) |
+
+**Orden de construcción:** teléfono A → hilo + scroll en `window` → aligerar el motor → §11 → tanda 3 → tanda 4.
+
+### Tanda 3 · Captar y vender (en diseño)
+
+Lienzo: https://claude.ai/artifact/UoGDRZeneinMckaYVDNrCW (siete escenas con barra de scroll, el recorrido encadenado y móvil 390). Pendiente de la aprobación de la dueña; al aprobarse, axi-13 escribe su recorrido en `thread-path.ts` y la tabla de coreografía aquí.
+
+Cada escena tiene un objeto real como protagonista, igual que el teléfono A y el recibo:
+
+- **Nicho:** cuatro notificaciones entrantes en profundidad. La elegida viene al frente y se vuelve blanca; el hilo la enciende.
+- **Radar:** un instrumento de precisión: esfera con marcas de reloj, barrido blanco y los hallazgos como puntos. La ficha del cliente sale del punto con una línea guía, y la calificación 88 va en grande.
+- **Seguimiento:** una regla de tiempo, como la línea de edición de un video. El hilo es el cabezal de reproducción y pasa de la noche del martes a la mañana del miércoles; los mensajes aparecen en su minuto.
+- **Foto:** la captura del cliente como una lámina en perspectiva. El hilo la cruza como haz de escaneo; del catálogo, dispuesto en estante, se levanta el producto exacto (similitud 0,93).
+- **Llamada:** el hilo se vuelve la onda de la voz. La transcripción aparece por turnos y las seis etapas avanzan sobre la onda.
+- **Bóveda:** una etiqueta de precio colgada del hilo, con el precio grabado. El cliente regatea y la etiqueta no cambia; el cupón imprime el total del sistema.
+- **Equipo:** un portátil en perspectiva, hermano del teléfono A, con la bandeja abierta. La conversación pasa de Axi a Laura y vuelve.
+
+### Tanda 4 · Crecer y cerrar (siguiente)
+
+- **Meta:** el mapa en tinta. Carretera blanca, «vas aquí» como único punto de marca, el tramo lento en gris punteado; el hilo es la carretera (§11).
+- **Precios:** tarjetas en tinta, con el plan recomendado invertido en blanco. Sin cristal.
+- **Preguntas:** lectura limpia; el hilo pasa por el margen derecho.
+- **Cierre:** las fibras se juntan en la marca de Axi. Es el único momento a todo color: el haz se abre en coral, ámbar y violeta.
+- **Marco:** cabecera, píldora de nicho y riel de capítulos en tinta, coherentes con el escenario oscuro.
+
+### Contrato de entrega por escena
+
+La entrega de cada escena a axi-14 incluye:
+
+1. El lienzo aprobado, con barra de scroll: la coreografía está en el tablero.
+2. La tabla de coreografía: qué pasa en cada tramo del progreso (0–1) de la escena.
+3. El recorrido del hilo ya escrito en `thread-path.ts`, con los momentos `pin` si la escena se fija, y el protagonista que lleva `data-thread-target`.
+4. Si se fija (`PINNED`) y su longitud en `sceneTimeline`.
+5. La versión móvil 390.
+
+**Reglas de construcción** (valen para todas las escenas):
+- Solo `transform` y `opacity` en lo que se mueve con scroll.
+- Sin `backdrop-filter` sobre escenas animadas.
+- Sin medir el DOM por frame.
+- Solo se anima el nicho activo.
+- El texto sale de `film-content.ts`: nada inventado.
+- Con movimiento reducido se muestra el fotograma final.
+- Presupuesto: `/` ≤ 200 kB (`npm run budget`).
+- Color en tinta: marca solo en apertura, meta y cierre; violeta solo cuando habla el agente (Axi o Axel).
