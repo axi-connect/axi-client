@@ -19901,7 +19901,7 @@ export interface components {
                 query_shape: "map" | "web" | "registry" | "people";
                 available: boolean;
                 /** @enum {string|null} */
-                unavailable_reason: "no_account" | "disabled" | "unhealthy" | "capped_day" | "capped_month" | "no_tenant_key" | "plan_without_api" | null;
+                unavailable_reason: "no_account" | "disabled" | "unhealthy" | "capped_day" | "capped_month" | "no_tenant_key" | "plan_without_api" | "out_of_credits" | null;
                 free: boolean;
                 allowed_channels: ("whatsapp" | "email" | "manual")[];
                 attribution: string | null;

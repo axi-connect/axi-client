@@ -2,7 +2,7 @@ import { act, renderHook } from "@testing-library/react";
 
 import { useLeadRooms } from "../use-lead-rooms";
 
-const emitWithAck = jest.fn((_socket: unknown, _event: string, _payload: { lead_id: string }) =>
+const emitWithAck = jest.fn<Promise<{ ok: boolean }>, [unknown, string, { lead_id: string }]>(() =>
   Promise.resolve({ ok: true }),
 );
 jest.mock("@/core/realtime/socket-manager", () => ({
