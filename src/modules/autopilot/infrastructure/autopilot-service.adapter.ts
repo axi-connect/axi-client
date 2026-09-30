@@ -2,6 +2,7 @@ import { HttpError } from "@/core/api/problem";
 import { http } from "@/core/services/http";
 
 import type {
+  BatchDecision,
   BatchItem,
   Estimate,
   Routine,
@@ -62,7 +63,7 @@ export function getBatch(runId: string): Promise<{ items: BatchItem[] }> {
   return http.get(`/autopilot/runs/${encodeURIComponent(runId)}/batch`);
 }
 
-export function decideBatch(runId: string, decision: { approve: string[]; skip: string[] }): Promise<void> {
+export function decideBatch(runId: string, decision: BatchDecision): Promise<void> {
   return http.post(`/autopilot/runs/${encodeURIComponent(runId)}/batch`, decision);
 }
 

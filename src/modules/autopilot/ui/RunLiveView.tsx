@@ -111,10 +111,12 @@ export function RunLiveView({ runId }: { runId: string }) {
   const status = RUN_STATUS_META[run.status];
   const done = stepsDone(run.step);
   const live = run.status === "running" || run.status === "queued";
+  const waiting = run.status === "awaiting_approval";
   const current = RUN_STEPS[Math.min(done, RUN_STEPS.length - 1)];
 
   return (
-    <div className="flex min-w-0 flex-col gap-6 pb-24">
+    <div className="flex min-w-0 flex-col gap-6 pb-36">
+      {/* pb-36: la isla fija no tapa la última tarjeta al llegar al pliegue. */}
       <MarketingHeader
         kicker="Marketing · Automatización · ejecución"
         title={routine?.name ?? "Ejecución del piloto"}
@@ -140,6 +142,8 @@ export function RunLiveView({ runId }: { runId: string }) {
             {RUN_STEPS.map((step, index) => {
               const finished = index < done;
               const active = live && index === done;
+              // El paso que sigue al lote por aprobar no está vacío: está esperando.
+              const blocked = waiting && index === done;
               return (
                 <li key={step.key} className="flex min-w-0 flex-col gap-1.5">
                   <span
@@ -152,6 +156,7 @@ export function RunLiveView({ runId }: { runId: string }) {
                   <span className={cn("text-xs", finished || active ? "font-medium" : "text-muted-foreground")}>
                     {step.label}
                   </span>
+                  {blocked && <span className="text-muted-foreground text-[11px] text-pretty">Espera tu aprobación</span>}
                 </li>
               );
             })}
@@ -274,7 +279,9 @@ export function RunLiveView({ runId }: { runId: string }) {
             variant="contrast"
             size="sm"
             className="rounded-full"
-            disabled={live || routine.status === "paused"}
+            // Con el lote esperando aprobación, el servidor respondería 409: se dice antes.
+            disabled={live || waiting || routine.status === "paused"}
+            title={waiting ? "Aprueba primero el lote que espera" : undefined}
             onClick={() =>
               void runRoutineNow(routine.id)
                 .then(() => showAlert({ tone: "success", title: "Ejecución en camino" }))

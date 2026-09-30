@@ -196,6 +196,7 @@ function RoutineCard({
         <div className="flex min-w-0 flex-col gap-1">
           <Link
             href={`/marketing/autopilot/${routine.id}`}
+            title={routine.name}
             className="font-heading block min-h-6 truncate text-xl font-bold hover:underline"
           >
             {routine.name}
@@ -271,7 +272,9 @@ function RoutineCard({
             variant="ghost"
             size="sm"
             className="rounded-full"
-            disabled={busy || live || routine.status === "paused"}
+            // Con un lote esperando aprobación, el servidor respondería 409: se dice antes.
+            disabled={busy || live || waiting || routine.status === "paused"}
+            title={waiting ? "Aprueba primero el lote que espera" : undefined}
             onClick={() => onAct("run")}
           >
             <Zap aria-hidden className="size-4" />
