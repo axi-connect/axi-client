@@ -118,16 +118,17 @@ describe("calls · espera del resumen (auditoría F4, P2)", () => {
 });
 
 describe("recado de una entrante (Entrega 2)", () => {
-  it("una entrante sin agente en callback_requested es un recado", () => {
-    const row = { status: "completed" as const, outcome: "callback_requested" as const, direction: "inbound" as const, ai_agent_id: null };
-    expect(isInboundMessage(row)).toBe(true);
-    expect(callResultPill(row)).toEqual({ label: "Dejó un recado", tone: "warning" });
+  it("lo dice el servidor: un recado es «Dejó un recado», con o sin agente (relay no disponible)", () => {
+    for (const ai_agent_id of [null, "a-1"]) {
+      const row = { status: "completed" as const, outcome: "callback_requested" as const, inbound_message: true, ai_agent_id };
+      expect(isInboundMessage(row)).toBe(true);
+      expect(callResultPill(row)).toEqual({ label: "Dejó un recado", tone: "warning" });
+    }
   });
 
-  it("una entrante que atendió el agente, o una saliente, no lo es", () => {
-    expect(isInboundMessage({ outcome: "callback_requested", direction: "inbound", ai_agent_id: "a-1" })).toBe(false);
-    expect(isInboundMessage({ outcome: "callback_requested", direction: "outbound", ai_agent_id: null })).toBe(false);
-    expect(callResultPill({ status: "completed", outcome: "callback_requested", direction: "inbound", ai_agent_id: "a-1" }).label).not.toBe(
+  it("sin la marca del servidor no se infiere nada, aunque falte el agente", () => {
+    expect(isInboundMessage({ inbound_message: false })).toBe(false);
+    expect(callResultPill({ status: "completed", outcome: "callback_requested", inbound_message: false }).label).not.toBe(
       "Dejó un recado",
     );
   });

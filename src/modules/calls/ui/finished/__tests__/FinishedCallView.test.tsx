@@ -29,6 +29,8 @@ function call(overrides: Partial<CallSessionDetailDTO> = {}): CallSessionDetailD
     status: "completed",
     outcome: "goal_met",
     answered_by: "human",
+    inbound_message: false,
+    inbound_message_reason: null,
     contact: { id: "contact-1", name: "Laura Gómez" },
     from_number: "+576015803300",
     to_number: "+573002194410",
@@ -186,8 +188,11 @@ describe("FinishedCallView (premium F4)", () => {
       call({
         direction: "inbound",
         purpose: "inbound",
-        ai_agent_id: null,
-        ai_agent_name: null,
+        // M1: un recado por relay caído SÍ tiene agente; manda la marca del servidor.
+        ai_agent_id: "agent-1",
+        ai_agent_name: "Sofía",
+        inbound_message: true,
+        inbound_message_reason: "relay_unavailable",
         outcome: "callback_requested",
         summary: "Dejó un recado: «quiero cambiar mi cita del jueves»",
         segments: [{ seq: 1, role: "caller", text: "quiero cambiar mi cita del jueves", at_ms: 0, spoken_at_ms: null, interrupted: false }],

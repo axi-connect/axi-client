@@ -21,6 +21,8 @@ function call(overrides: Partial<CallSessionDetailDTO> = {}): CallSessionDetailD
     status: "in_progress",
     outcome: null,
     answered_by: "human",
+    inbound_message: false,
+    inbound_message_reason: null,
     contact: { id: "contact-1", name: "Laura Gómez" },
     from_number: "+576015803300",
     to_number: "+573002194410",

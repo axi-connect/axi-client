@@ -231,11 +231,10 @@ export function parseTurnLatency(payload: unknown): TurnLatency | null {
 export function callResultPill(row: {
   status: CallSessionStatus;
   outcome: CallSessionRowDTO["outcome"];
-  direction?: CallSessionRowDTO["direction"];
-  ai_agent_id?: string | null;
+  inbound_message?: boolean;
 }): { label: string; tone: "success" | "warning" | "destructive" | "neutral" } {
-  // Entrega 2: una entrante que nadie atendió y dejó recado (sin agente en la
-  // sesión) no «pidió callback» a un agente: dejó un mensaje para devolverle.
+  // Entrega 2: una entrante que el agente no atendió no «pidió callback» a un
+  // agente: dejó un recado para que le devuelvan la llamada.
   if (isInboundMessage(row)) return { label: "Dejó un recado", tone: "warning" };
   const { status, map } = callResultBadge(row);
   const entry = map[status];
@@ -247,16 +246,12 @@ export function callResultPill(row: {
 }
 
 /**
- * ¿Es el recado de una entrante que el agente no atendió? La sesión de un
- * recado nace sin agente (`ai_agent_id` null) y el postprocess la deja en
- * `callback_requested` con la transcripción como resumen.
+ * ¿Es el recado de una entrante que el agente no atendió? Lo dice el SERVIDOR
+ * (`inbound_message`, guardado al contestar): antes se infería de «sin
+ * agente», y un recado por relay caído sí tiene agente (auditoría F5, M1).
  */
-export function isInboundMessage(row: {
-  outcome: CallSessionRowDTO["outcome"];
-  direction?: CallSessionRowDTO["direction"];
-  ai_agent_id?: string | null;
-}): boolean {
-  return row.direction === "inbound" && row.ai_agent_id === null && row.outcome === "callback_requested";
+export function isInboundMessage(row: { inbound_message?: boolean }): boolean {
+  return row.inbound_message === true;
 }
 
 /** Veredicto del juez de objetivo (evento `goal_assessment` del postprocess). */

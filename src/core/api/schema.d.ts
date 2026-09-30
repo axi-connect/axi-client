@@ -4836,6 +4836,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/conversations/{id}/messages/{messageId}/resend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConversationsController_resend_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/conversations/{id}/uploads": {
         parameters: {
             query?: never;
@@ -9603,14 +9619,14 @@ export interface components {
                 /** @enum {string} */
                 kind: "tool_called";
                 /** @enum {string} */
-                name: "advance_stage" | "apply_promotion" | "book_appointment" | "catalog_lookup" | "close_conversation" | "confirm_appointment" | "create_order" | "get_branches" | "get_business_policies" | "get_order_status" | "get_payment_methods" | "human_handoff" | "log_crm_activity" | "open_deal" | "quote_order" | "report_payment" | "reschedule_appointment" | "save_contact_data" | "schedule_availability" | "schedule_follow_up" | "send_product_images" | "send_resource" | "set_delivery" | "validate_coupon";
+                name: "advance_stage" | "apply_promotion" | "book_appointment" | "catalog_lookup" | "close_conversation" | "confirm_appointment" | "create_order" | "get_branches" | "get_business_policies" | "get_order_status" | "get_payment_methods" | "human_handoff" | "log_crm_activity" | "open_deal" | "quote_order" | "register_payment_promise" | "report_payment" | "reschedule_appointment" | "save_contact_data" | "schedule_availability" | "schedule_follow_up" | "send_payment_link" | "send_product_images" | "send_resource" | "set_delivery" | "validate_coupon";
                 /** @default 1 */
                 min: number;
             } | {
                 /** @enum {string} */
                 kind: "tool_not_called";
                 /** @enum {string} */
-                name: "advance_stage" | "apply_promotion" | "book_appointment" | "catalog_lookup" | "close_conversation" | "confirm_appointment" | "create_order" | "get_branches" | "get_business_policies" | "get_order_status" | "get_payment_methods" | "human_handoff" | "log_crm_activity" | "open_deal" | "quote_order" | "report_payment" | "reschedule_appointment" | "save_contact_data" | "schedule_availability" | "schedule_follow_up" | "send_product_images" | "send_resource" | "set_delivery" | "validate_coupon";
+                name: "advance_stage" | "apply_promotion" | "book_appointment" | "catalog_lookup" | "close_conversation" | "confirm_appointment" | "create_order" | "get_branches" | "get_business_policies" | "get_order_status" | "get_payment_methods" | "human_handoff" | "log_crm_activity" | "open_deal" | "quote_order" | "register_payment_promise" | "report_payment" | "reschedule_appointment" | "save_contact_data" | "schedule_availability" | "schedule_follow_up" | "send_payment_link" | "send_product_images" | "send_resource" | "set_delivery" | "validate_coupon";
             } | {
                 /** @enum {string} */
                 kind: "no_unverified_prices";
@@ -9769,14 +9785,14 @@ export interface components {
                 /** @enum {string} */
                 kind: "tool_called";
                 /** @enum {string} */
-                name: "advance_stage" | "apply_promotion" | "book_appointment" | "catalog_lookup" | "close_conversation" | "confirm_appointment" | "create_order" | "get_branches" | "get_business_policies" | "get_order_status" | "get_payment_methods" | "human_handoff" | "log_crm_activity" | "open_deal" | "quote_order" | "report_payment" | "reschedule_appointment" | "save_contact_data" | "schedule_availability" | "schedule_follow_up" | "send_product_images" | "send_resource" | "set_delivery" | "validate_coupon";
+                name: "advance_stage" | "apply_promotion" | "book_appointment" | "catalog_lookup" | "close_conversation" | "confirm_appointment" | "create_order" | "get_branches" | "get_business_policies" | "get_order_status" | "get_payment_methods" | "human_handoff" | "log_crm_activity" | "open_deal" | "quote_order" | "register_payment_promise" | "report_payment" | "reschedule_appointment" | "save_contact_data" | "schedule_availability" | "schedule_follow_up" | "send_payment_link" | "send_product_images" | "send_resource" | "set_delivery" | "validate_coupon";
                 /** @default 1 */
                 min: number;
             } | {
                 /** @enum {string} */
                 kind: "tool_not_called";
                 /** @enum {string} */
-                name: "advance_stage" | "apply_promotion" | "book_appointment" | "catalog_lookup" | "close_conversation" | "confirm_appointment" | "create_order" | "get_branches" | "get_business_policies" | "get_order_status" | "get_payment_methods" | "human_handoff" | "log_crm_activity" | "open_deal" | "quote_order" | "report_payment" | "reschedule_appointment" | "save_contact_data" | "schedule_availability" | "schedule_follow_up" | "send_product_images" | "send_resource" | "set_delivery" | "validate_coupon";
+                name: "advance_stage" | "apply_promotion" | "book_appointment" | "catalog_lookup" | "close_conversation" | "confirm_appointment" | "create_order" | "get_branches" | "get_business_policies" | "get_order_status" | "get_payment_methods" | "human_handoff" | "log_crm_activity" | "open_deal" | "quote_order" | "register_payment_promise" | "report_payment" | "reschedule_appointment" | "save_contact_data" | "schedule_availability" | "schedule_follow_up" | "send_payment_link" | "send_product_images" | "send_resource" | "set_delivery" | "validate_coupon";
             } | {
                 /** @enum {string} */
                 kind: "no_unverified_prices";
@@ -13966,6 +13982,7 @@ export interface components {
                 /** Format: uuid */
                 contact_id: string;
                 contact_name: string | null;
+                contact_phone: string | null;
                 /** Format: uuid */
                 deal_id: string | null;
                 /** Format: uuid */
@@ -14019,6 +14036,24 @@ export interface components {
                 task_channel: "message" | "call" | "call_then_message" | null;
                 /** @enum {string|null} */
                 task_medium: "message" | "call" | null;
+                /** Format: uuid */
+                bulk_id: string | null;
+                last_opening: {
+                    /** Format: uuid */
+                    run_id: string;
+                    /** Format: uuid */
+                    message_id: string | null;
+                    /** Format: uuid */
+                    conversation_id: string | null;
+                    /** Format: date-time */
+                    sent_at: string | null;
+                    /** @enum {string|null} */
+                    delivery_status: "sent" | "delivered" | "read" | "failed" | null;
+                    /** Format: date-time */
+                    delivery_updated_at: string | null;
+                    failed_reason: string | null;
+                    failed_detail: string | null;
+                } | null;
                 /** Format: date-time */
                 created_at: string;
                 /** Format: date-time */
@@ -14056,6 +14091,7 @@ export interface components {
             /** Format: uuid */
             contact_id: string;
             contact_name: string | null;
+            contact_phone: string | null;
             /** Format: uuid */
             deal_id: string | null;
             /** Format: uuid */
@@ -14109,6 +14145,24 @@ export interface components {
             task_channel: "message" | "call" | "call_then_message" | null;
             /** @enum {string|null} */
             task_medium: "message" | "call" | null;
+            /** Format: uuid */
+            bulk_id: string | null;
+            last_opening: {
+                /** Format: uuid */
+                run_id: string;
+                /** Format: uuid */
+                message_id: string | null;
+                /** Format: uuid */
+                conversation_id: string | null;
+                /** Format: date-time */
+                sent_at: string | null;
+                /** @enum {string|null} */
+                delivery_status: "sent" | "delivered" | "read" | "failed" | null;
+                /** Format: date-time */
+                delivery_updated_at: string | null;
+                failed_reason: string | null;
+                failed_detail: string | null;
+            } | null;
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
@@ -14256,6 +14310,10 @@ export interface components {
                 /** Format: uuid */
                 call_session_id: string | null;
                 opened_with_template: boolean;
+                /** @enum {string|null} */
+                delivery_status: "sent" | "delivered" | "read" | "failed" | null;
+                /** Format: date-time */
+                delivery_updated_at: string | null;
                 /** Format: date-time */
                 created_at: string;
             }[];
@@ -14290,6 +14348,10 @@ export interface components {
                 /** Format: uuid */
                 call_session_id: string | null;
                 opened_with_template: boolean;
+                /** @enum {string|null} */
+                delivery_status: "sent" | "delivered" | "read" | "failed" | null;
+                /** Format: date-time */
+                delivery_updated_at: string | null;
                 /** Format: date-time */
                 created_at: string;
             }[];
@@ -18443,6 +18505,9 @@ export interface components {
                 outcome: "goal_met" | "callback_requested" | "voicemail" | "hangup" | "no_answer" | "error" | "transferred" | "agent_closed" | "silence_timeout" | "max_duration" | "quota_exhausted" | "system_error" | null;
                 /** @enum {string|null} */
                 answered_by: "human" | "machine" | "unknown" | "fax" | null;
+                inbound_message: boolean;
+                /** @enum {string|null} */
+                inbound_message_reason: "inbound_disabled" | "no_agent" | "company_suspended" | "calls_disabled" | "calls_paused" | "limit_exceeded" | "line_busy" | "relay_unavailable" | "anonymous_caller" | null;
                 contact: {
                     /** Format: uuid */
                     id: string;
@@ -18489,6 +18554,9 @@ export interface components {
                 outcome: "goal_met" | "callback_requested" | "voicemail" | "hangup" | "no_answer" | "error" | "transferred" | "agent_closed" | "silence_timeout" | "max_duration" | "quota_exhausted" | "system_error" | null;
                 /** @enum {string|null} */
                 answered_by: "human" | "machine" | "unknown" | "fax" | null;
+                inbound_message: boolean;
+                /** @enum {string|null} */
+                inbound_message_reason: "inbound_disabled" | "no_agent" | "company_suspended" | "calls_disabled" | "calls_paused" | "limit_exceeded" | "line_busy" | "relay_unavailable" | "anonymous_caller" | null;
                 contact: {
                     /** Format: uuid */
                     id: string;
@@ -18529,6 +18597,9 @@ export interface components {
             outcome: "goal_met" | "callback_requested" | "voicemail" | "hangup" | "no_answer" | "error" | "transferred" | "agent_closed" | "silence_timeout" | "max_duration" | "quota_exhausted" | "system_error" | null;
             /** @enum {string|null} */
             answered_by: "human" | "machine" | "unknown" | "fax" | null;
+            inbound_message: boolean;
+            /** @enum {string|null} */
+            inbound_message_reason: "inbound_disabled" | "no_agent" | "company_suspended" | "calls_disabled" | "calls_paused" | "limit_exceeded" | "line_busy" | "relay_unavailable" | "anonymous_caller" | null;
             contact: {
                 /** Format: uuid */
                 id: string;
@@ -32073,6 +32144,28 @@ export interface operations {
             };
         };
     };
+    ConversationsController_resend_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                messageId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnqueuedMessageDto"];
+                };
+            };
+        };
+    };
     ConversationsController_upload_v1: {
         parameters: {
             query?: never;
@@ -33755,7 +33848,7 @@ export interface operations {
                     "application/json": components["schemas"]["TestCallResultDto"];
                 };
             };
-            /** @description calls/contact_not_found */
+            /** @description calls/contact_not_found | calls/collection_plan_not_found */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -33764,6 +33857,13 @@ export interface operations {
             };
             /** @description calls/launch_skipped — details.reason: already_in_call | contact_unreachable | no_phone_number | no_agent | calls_disabled | company_suspended | calls_paused | limit_exceeded */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description calls/collection_plan_invalid — details.reason: contact_mismatch | not_collections */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
