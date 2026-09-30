@@ -39,11 +39,14 @@ import {
   probePaysLlm,
   type DatasetKind,
 } from "../../../../../domain/quality-datasets";
+import { groupOptions, targetKey } from "../../../../../domain/decisions";
+import { useDecisionRoutesQuery } from "../../../../../infrastructure/api/hooks/use-decisions";
 import { useDatasetsQuery } from "../../../../../infrastructure/api/hooks/use-quality-datasets";
 import { useScenariosQuery } from "../../../../../infrastructure/api/hooks/use-quality-scenarios";
 import { useSuitesQuery } from "../../../../../infrastructure/api/hooks/use-quality-suites";
 import {
   configOccupancySeconds,
+  MAX_DECISION_TARGETS,
   validateRunConfig,
   type QaScopeMode,
   type RunConfigValues,
@@ -84,6 +87,16 @@ function ProbeConfig({
   const datasets = datasetsQuery.data?.data ?? [];
   const chosen = datasets.find((dataset) => dataset.id === values.datasetId) ?? null;
   const paysLlm = probePaysLlm(values.probeKind);
+  // P1b: los pares elegibles del motor (registrados y con tarifa), por proveedor.
+  const decisionRoutes = useDecisionRoutesQuery();
+  const decisionOptions = useMemo(
+    () =>
+      groupOptions(decisionRoutes.data?.options ?? []).map((group) => ({
+        heading: group.provider,
+        options: group.options.map((option) => ({ label: option.display_name, value: targetKey(option) })),
+      })),
+    [decisionRoutes.data],
+  );
   const itemsToRun = chosen ? Math.min(chosen.labeled_count, values.limitItems ?? PROBE_MAX_ITEMS) : 0;
 
   return (
@@ -190,6 +203,25 @@ function ProbeConfig({
           </p>
         </div>
       </div>
+
+      {values.probeKind === "intent" && (
+        <div className="space-y-1.5">
+          <Label htmlFor="probe-compare">Comparar con</Label>
+          <MultiSelect
+            id="probe-compare"
+            aria-label="Proveedores del motor de decisiones a comparar"
+            options={decisionOptions}
+            defaultValue={values.decisionTargets}
+            maxCount={MAX_DECISION_TARGETS}
+            onValueChange={(decisionTargets) => patch({ decisionTargets: decisionTargets.slice(0, MAX_DECISION_TARGETS) })}
+            placeholder="Opcional · elige proveedores del motor de decisiones"
+          />
+          <p className="text-xs text-muted-foreground text-pretty">
+            Opcional, hasta {MAX_DECISION_TARGETS} pares con tarifa. Cada proveedor decide los mismos textos y se
+            compara con la etiqueta y con el clasificador actual. Lo paga plataforma.
+          </p>
+        </div>
+      )}
 
       <Alert variant="info">
         <AlertDescription>

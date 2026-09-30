@@ -56,6 +56,7 @@ export const USAGE_METRIC_LABELS: Record<string, string> = {
   conversations_active: "Conversaciones activas",
   storage_bytes: "Almacenamiento",
   tts_characters: "Caracteres de voz",
+  ai_decisions: "Clasificadores",
 };
 
 // La fuente canónica de los labels de ciclo de vida es el slice crm (F1).
