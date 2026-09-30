@@ -52,4 +52,4 @@ export {
   type PublicCatalog,
 } from "@/modules/landing/domain/public-catalog";
 
-export { MODULE_ICONS } from "@/modules/landing/ui/components/ModuleCard";
+export { MODULE_ICONS } from "@/modules/landing/ui/content/module-icons";

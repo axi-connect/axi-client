@@ -32,15 +32,21 @@ import {
 export default function SiteHeader({
     scrollContainerRef,
 }: {
-    scrollContainerRef: React.RefObject<HTMLDivElement | null>;
-}) {
+    /**
+     * El contenedor que hace scroll. Opcional: por defecto es el
+     * `[data-app-scroll]` del layout público, que así puede seguir siendo un
+     * Server Component en vez de volverse cliente solo para pasar una ref.
+     */
+    scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
+} = {}) {
     const { status, user } = useAuthContext();
     const splash = useSplashOptional();
     const [isScrolled, setIsScrolled] = useState(false);
     const session = SITE_NAV_SESSION[status];
 
     useEffect(() => {
-        const currentElement = scrollContainerRef.current;
+        const currentElement =
+            scrollContainerRef?.current ?? document.querySelector<HTMLElement>('[data-app-scroll]');
         if (!currentElement) return;
         const handleScroll = () => setIsScrolled(currentElement.scrollTop > 20);
         // `passive`: el handler no cancela el gesto, y así el navegador no tiene

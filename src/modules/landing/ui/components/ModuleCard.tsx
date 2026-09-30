@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarClock, Check, Phone, Radar, Users, type LucideIcon } from "lucide-react";
+import { Check } from "lucide-react";
 
 import { formatInteger, formatQuantity, unitLabel } from "@/core/lib/commercial-units";
 import { Button } from "@/shared/components/ui/button";
@@ -7,20 +7,9 @@ import { TiltCard } from "@/shared/components/ui/tilt-card";
 import {
   MODULES_SECTION,
   formatCop,
-  type ModuleId,
   type ModuleOffer,
 } from "@/modules/landing/ui/content/landing.content";
-
-/**
- * Icono de cada Módulo. Mapa cerrado por `id` a propósito: un nombre de icono
- * en el content obligaría a un diccionario dinámico y a arrastrar todo lucide.
- */
-export const MODULE_ICONS: Record<ModuleId, LucideIcon> = {
-  calls: Phone,
-  leads: Radar,
-  crm: Users,
-  scheduling: CalendarClock,
-};
+import { MODULE_ICONS } from "@/modules/landing/ui/content/module-icons";
 
 /**
  * Tarjeta de un Módulo (mockup F0-A v3, aprobado 2026-09-01).

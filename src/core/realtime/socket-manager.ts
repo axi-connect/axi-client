@@ -3,6 +3,7 @@
 import { io, type Socket } from "socket.io-client";
 import { WS_BASE_URL } from "@/core/config/env";
 import { API_ERROR_CODES, SUPPORT_SESSION_EVENT } from "@/core/api/problem";
+import { registerRealtimeControl } from "./realtime-control";
 import {
   REALTIME_NAMESPACES,
   type ClientEventsOf,
@@ -251,3 +252,7 @@ class SocketManager {
 
 /** Singleton de la app. Los slices lo consumen vía hooks (`use-socket`), nunca directo desde UI. */
 export const socketManager = new SocketManager();
+
+// `AuthProvider` lo controla por `realtime-control` para no cargar socket.io en
+// todas las rutas; una suspensión anterior a esta carga se aplica aquí mismo.
+registerRealtimeControl(socketManager);

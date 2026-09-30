@@ -2,7 +2,7 @@
  * F15 — AuthProvider ante la suspensión de la empresa:
  * - hydrate con `code: auth/company_suspended` → pantalla bloqueante, NUNCA login.
  * - el CustomEvent `COMPANY_SUSPENDED_EVENT` corta una sesión ya autenticada
- *   (frena el tiempo real vía socketManager.halt()).
+ *   (frena el tiempo real vía `haltRealtime()`, sin cargar socket.io).
  * - el "sin sesión" genérico sigue yendo al login (sin regresión).
  */
 import { act, render, screen, waitFor } from "@testing-library/react";
@@ -11,11 +11,9 @@ import { COMPANY_SUSPENDED_EVENT } from "@/core/api/problem";
 const haltMock = jest.fn();
 const resetMock = jest.fn();
 
-jest.mock("@/core/realtime/socket-manager", () => ({
-  socketManager: {
-    halt: (...args: unknown[]) => haltMock(...args),
-    reset: (...args: unknown[]) => resetMock(...args),
-  },
+jest.mock("@/core/realtime/realtime-control", () => ({
+  haltRealtime: (...args: unknown[]) => haltMock(...args),
+  resetRealtime: (...args: unknown[]) => resetMock(...args),
 }));
 
 import { AuthProvider } from "../auth-provider";
