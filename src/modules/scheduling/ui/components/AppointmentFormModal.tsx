@@ -4,7 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
-import { Modal } from "@/shared/components/ui/modal";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/shared/components/ui/dialog";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { getAppointment } from "@/modules/scheduling/infrastructure/services/appointments-service.adapter";
 import {
@@ -12,26 +17,18 @@ import {
   hydrateServiceNames,
 } from "@/modules/scheduling/infrastructure/services/entity-names.cache";
 import { useCompanySchedule } from "@/modules/scheduling/infrastructure/hooks/use-company-schedule";
-import {
-  hhmmToMinutes,
-  isWithinOpenHours,
-  openHoursLabel,
-  readCreatePrefill,
-} from "@/modules/scheduling/domain/time-grid";
-import { todayKey } from "@/core/lib/business-time";
-import { dayHeading } from "./calendar/AppointmentsList";
-import {
-  AppointmentForm,
-  APPOINTMENT_FORM_ID,
-  type AppointmentFormMode,
-} from "../forms/AppointmentForm";
+import { readCreatePrefill } from "@/modules/scheduling/domain/time-grid";
+import { AppointmentComposer, type ComposerMode } from "./appointment-form/AppointmentComposer";
 
 /**
  * Modal de crear/reagendar cita (ruta /scheduling/calendar/create, con
- * `?reschedule=<id>` para el modo reagendar). `open` se deriva del pathname:
- * en App Router un slot paralelo conserva su último contenido en la
- * navegación suave, así que el modal debe cerrarse solo cuando la URL deja
- * de ser /create (mismo patrón que el rail de detalle).
+ * `?reschedule=<id>` para reagendar y `?date=&time=` para el hueco tocado).
+ * `open` se deriva del pathname: en App Router un slot paralelo conserva su
+ * último contenido en la navegación suave, así que el modal se cierra solo
+ * cuando la URL deja de ser /create.
+ *
+ * Lienzo Agenda premium F2: ancho de dos columnas en computador y pantalla
+ * completa en el celular.
  */
 export function AppointmentFormModal({
   closeBehavior,
@@ -43,30 +40,18 @@ export function AppointmentFormModal({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { showAlert } = useAlert();
+  const { timezone, schedules, loading: scheduleLoading } = useCompanySchedule();
 
   const rescheduleId = searchParams.get("reschedule");
-  const { timezone, schedules, loading: scheduleLoading } = useCompanySchedule();
-  // Hueco tocado en el calendario: `?date=&time=` (lienzo F1).
   const prefillKey = `${searchParams.get("date") ?? ""}|${searchParams.get("time") ?? ""}`;
-  const prefill = useMemo(() => {
-    const read = readCreatePrefill(searchParams);
-    if (read === null) return null;
-    const inside = isWithinOpenHours(schedules, read.date, hhmmToMinutes(read.time));
-    return {
-      ...read,
-      outsideHours: inside ? null : { time: read.time, openHours: openHoursLabel(schedules, read.date) },
-    };
-    // Solo cambia con la URL y el horario; `searchParams` es una instancia nueva por render.
+  const prefill = useMemo(
+    () => readCreatePrefill(searchParams),
+    // `searchParams` es una instancia nueva por render; manda la URL.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prefillKey, schedules]);
-  const [rescheduleMode, setMode] = useState<AppointmentFormMode | null>(null);
-  // Crear no espera nada, salvo el horario cuando hay hueco (para saber si
-  // cae fuera); el formulario se monta una vez con sus valores iniciales.
-  const waitingSchedule = prefill !== null && scheduleLoading;
-  const createMode = useMemo<AppointmentFormMode | null>(
-    () => (waitingSchedule ? null : { kind: "create", prefill }),
-    [waitingSchedule, prefill],
+    [prefillKey],
   );
+  const [rescheduleMode, setRescheduleMode] = useState<ComposerMode | null>(null);
+  const createMode = useMemo<ComposerMode>(() => ({ kind: "create", prefill }), [prefill]);
   const mode = rescheduleId !== null ? rescheduleMode : createMode;
 
   const open = pathname !== null && pathname.endsWith("/create");
@@ -86,13 +71,11 @@ export function AppointmentFormModal({
         const names = await hydrateContactNames([appointment.contact_id]);
         let serviceName: string | null = null;
         if (appointment.product_id !== null) {
-          const services = await hydrateServiceNames().catch(
-            () => new Map<string, string>(),
-          );
+          const services = await hydrateServiceNames().catch(() => new Map<string, string>());
           serviceName = services.get(appointment.product_id) ?? "Servicio";
         }
         if (alive) {
-          setMode({
+          setRescheduleMode({
             kind: "reschedule",
             appointment,
             contactLabel: names[appointment.contact_id] ?? "Contacto",
@@ -100,10 +83,7 @@ export function AppointmentFormModal({
           });
         }
       } catch (err) {
-        showAlert({
-          tone: "error",
-          title: errorMessage(err, "La cita ya no existe"),
-        });
+        showAlert({ tone: "error", title: errorMessage(err, "La cita ya no existe") });
         close();
       }
     })();
@@ -115,53 +95,50 @@ export function AppointmentFormModal({
   }, [rescheduleId]);
 
   const isReschedule = rescheduleId !== null;
-  const prefillDescription =
-    prefill !== null && timezone !== null
-      ? `${dayHeading(prefill.date, todayKey(new Date(), timezone))} · ${prefill.time.replace(/^0/, "")}`
-      : null;
+  const subtitle =
+    isReschedule && mode?.kind === "reschedule"
+      ? [mode.contactLabel, mode.serviceName].filter((x) => x !== null).join(" · ")
+      : "Elige quién, qué y cuándo. La hora es la del negocio.";
+  const ready = mode !== null && timezone !== null && !scheduleLoading;
 
   return (
-    <Modal
+    <Dialog
       open={open}
       onOpenChange={(next) => {
         if (!next) close();
       }}
-      config={{
-        title: isReschedule ? "Reagendar cita" : "Nueva cita",
-        description: isReschedule
-          ? "Se revalida el cupo y los recordatorios automáticos se regeneran."
-          : (prefillDescription ?? "La cita se agenda en la zona horaria del negocio."),
-        className: "sm:max-w-2xl",
-        actions: [
-          { label: "Cancelar", variant: "outline", asClose: true, id: "appointment-cancel" },
-          {
-            label: isReschedule ? "Reagendar" : "Agendar cita",
-            variant: "default",
-            asClose: false,
-            id: "appointment-save",
-            onClick: () =>
-              (
-                document.getElementById(APPOINTMENT_FORM_ID) as HTMLFormElement | null
-              )?.requestSubmit(),
-          },
-        ],
-      }}
     >
-      {mode === null ? (
-        <div className="space-y-3" role="status" aria-label="Cargando cita">
-          <Skeleton className="h-9 w-full rounded-md" />
-          <Skeleton className="h-9 w-full rounded-md" />
-          <Skeleton className="h-28 w-full rounded-xl" />
+      <DialogContent
+        className="flex max-h-[calc(100dvh-3rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-[56rem] max-sm:inset-0 max-sm:top-0 max-sm:left-0 max-sm:h-dvh max-sm:max-h-none max-sm:max-w-none max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-none max-sm:border-0"
+      >
+        <div className="shrink-0 px-5 pt-5 pb-4 pr-16 md:px-7 md:pt-6">
+          <DialogTitle className="font-heading text-2xl leading-tight font-bold tracking-tight">
+            {isReschedule ? "Reagendar la cita" : "Nueva cita"}
+          </DialogTitle>
+          <DialogDescription className="mt-1 text-sm text-muted-foreground">{subtitle}</DialogDescription>
         </div>
-      ) : (
-        <AppointmentForm
-          key={prefillKey}
-          mode={mode}
-          onSuccess={(fresh) =>
-            router.replace(`/scheduling/calendar/appointment/${fresh.id}`)
-          }
-        />
-      )}
-    </Modal>
+        {ready ? (
+          <div className="sidebar-scroll flex min-h-0 flex-1 flex-col overflow-y-auto">
+            <AppointmentComposer
+              key={`${rescheduleId ?? "new"}|${prefillKey}`}
+              mode={mode}
+              timezone={timezone}
+              schedules={schedules}
+              onCancel={close}
+              onSuccess={(fresh) => router.replace(`/scheduling/calendar/appointment/${fresh.id}`)}
+            />
+          </div>
+        ) : (
+          <div className="grid gap-4 border-t border-border p-6 md:grid-cols-2" role="status" aria-label="Cargando">
+            <div className="space-y-3">
+              <Skeleton className="h-11 w-full rounded-xl" />
+              <Skeleton className="h-11 w-full rounded-xl" />
+              <Skeleton className="h-24 w-full rounded-xl" />
+            </div>
+            <Skeleton className="h-72 w-full rounded-2xl" />
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }

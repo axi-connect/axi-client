@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { LoaderCircle } from "lucide-react";
+import Link from "next/link";
+import { LoaderCircle, UserRound } from "lucide-react";
 import { isHttpError } from "@/core/api/problem";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
@@ -10,7 +11,6 @@ import { cn } from "@/core/lib/utils";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { Button } from "@/shared/components/ui/button";
 import { DetailSheet } from "@/shared/components/features/detail-sheet";
-import { FieldList } from "@/shared/components/features/field-list/FieldList";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import {
   APPOINTMENT_STATUS_DOT,
@@ -22,7 +22,6 @@ import { fmtClockRange } from "@/modules/scheduling/domain/time-grid";
 import { dayHeading } from "@/modules/scheduling/ui/components/calendar/AppointmentsList";
 import {
   businessDayKey,
-  fmtDayLong,
   fmtTime,
   todayKey as computeTodayKey,
 } from "@/core/lib/business-time";
@@ -38,6 +37,8 @@ import {
 import { useCalendarStore } from "@/modules/scheduling/infrastructure/stores/calendar.store";
 import { AppointmentOriginCard } from "./AppointmentOriginCard";
 import { QuickReschedule } from "./QuickReschedule";
+import { AppointmentNotes } from "./AppointmentNotes";
+import { AppointmentReminders } from "./AppointmentReminders";
 import { StatusActions } from "./StatusActions";
 
 function durationMinutes(appointment: AppointmentDTO): number {
@@ -168,9 +169,9 @@ export function AppointmentSheetRoute({
   };
 
   const minutes = appointment !== null ? durationMinutes(appointment) : null;
-  const subtitle =
+  const serviceLine =
     appointment === null
-      ? undefined
+      ? null
       : appointment.product_id !== null
         ? `${serviceName ?? "Servicio"} · ${minutes} min`
         : `${minutes} min`;
@@ -182,7 +183,25 @@ export function AppointmentSheetRoute({
       onOpenChange={(next) => {
         if (!next) close();
       }}
-      size="md"
+      size={460}
+      heroTitle
+      headerExtra={
+        appointment !== null ? (
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            <span className="inline-flex h-7 items-center gap-2 rounded-full bg-secondary px-3 text-sm font-medium">
+              <span aria-hidden className={cn("size-2 rounded-full", APPOINTMENT_STATUS_DOT[appointment.status])} />
+              {APPOINTMENT_STATUS_LABELS[appointment.status]}
+            </span>
+            <Link
+              href={`/crm/contacts/${appointment.contact_id}`}
+              className="inline-flex min-h-7 items-center gap-1.5 rounded-full text-sm font-medium hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            >
+              <UserRound aria-hidden className="size-3.5" />
+              Ver contacto
+            </Link>
+          </div>
+        ) : null
+      }
       renderFooter={() =>
         appointment === null || !canManage ? null : rescheduling ? (
           <div className="flex w-full items-center gap-2">
@@ -216,7 +235,6 @@ export function AppointmentSheetRoute({
         )
       }
       title={contactName ?? "Cita"}
-      subtitle={subtitle}
       fetchDetail={fetchDetail}
       skeleton={
         <div className="space-y-3 p-1" role="status" aria-label="Cargando cita">
@@ -228,52 +246,40 @@ export function AppointmentSheetRoute({
     >
       {appointment !== null && tz !== null && today !== null && (
         <div className="flex flex-col gap-5">
-          <span className="inline-flex h-7 items-center gap-2 self-start rounded-full bg-secondary px-3 text-sm font-medium">
-            <span aria-hidden className={cn("size-2 rounded-full", APPOINTMENT_STATUS_DOT[appointment.status])} />
-            {APPOINTMENT_STATUS_LABELS[appointment.status]}
-          </span>
+          {/* Cuándo: el dato que más se mira, en grande (lienzo F2). */}
+          <div className="flex flex-col gap-1 rounded-2xl border border-border bg-background px-4 py-3.5">
+            <span className="text-xs text-muted-foreground">
+              {dayHeading(businessDayKey(appointment.starts_at, tz), today)}
+            </span>
+            <span className="font-heading text-2xl leading-tight font-bold tracking-tight tabular-nums">
+              {fmtClockRange(appointment.starts_at, appointment.ends_at, tz)}
+            </span>
+            {serviceLine !== null && <span className="text-sm text-foreground/80">{serviceLine}</span>}
+          </div>
 
-          <FieldList
-            items={[
-              {
-                label: "Fecha",
-                value: dayHeading(businessDayKey(appointment.starts_at, tz), today),
-              },
-              {
-                label: "Hora",
-                value: (
-                  <span className="tabular-nums">
-                    {fmtClockRange(appointment.starts_at, appointment.ends_at, tz)}{" "}
-                    <span className="text-muted-foreground">· {minutes} min</span>
-                  </span>
-                ),
-              },
-              { label: "Notas", value: appointment.notes, block: true },
-            ]}
-          />
+          {appointment.status === "cancelled" && (
+            <div className="rounded-2xl border border-border bg-background p-3.5 text-sm">
+              <p className="flex items-center gap-2 font-semibold">
+                <span aria-hidden className="size-2 rounded-full bg-destructive" />
+                Cancelada
+                {appointment.cancelled_at !== null &&
+                  ` el ${dayHeading(businessDayKey(appointment.cancelled_at, tz), today).split(" · ").pop()?.replace(/^\w/, (c) => c.toLowerCase())}, ${fmtTime(appointment.cancelled_at, tz)}`}
+              </p>
+              {appointment.cancellation_reason !== null && (
+                <p className="mt-2 text-sm text-foreground/80">«{appointment.cancellation_reason}»</p>
+              )}
+            </div>
+          )}
+
+          <AppointmentReminders appointment={appointment} timezone={tz} />
+
+          <AppointmentNotes appointment={appointment} canManage={canManage} onUpdated={onUpdated} />
 
           <AppointmentOriginCard
             appointment={appointment}
             currentUserId={user?.id ?? null}
             timezone={tz}
           />
-
-          {appointment.status === "cancelled" && (
-            <div className="rounded-2xl border border-border bg-background p-3.5 text-sm">
-              <p className="flex items-center gap-2 font-semibold">
-                <span aria-hidden className="size-2 rounded-full bg-destructive" />
-                Cita cancelada
-              </p>
-              {appointment.cancelled_at !== null && (
-                <p className="mt-1 text-xs text-muted-foreground first-letter:uppercase">
-                  {fmtDayLong(businessDayKey(appointment.cancelled_at, tz))} · {fmtTime(appointment.cancelled_at, tz)}
-                </p>
-              )}
-              {appointment.cancellation_reason !== null && (
-                <p className="mt-2 text-sm text-foreground/80">{appointment.cancellation_reason}</p>
-              )}
-            </div>
-          )}
 
           {rescheduling && (
             <QuickReschedule
