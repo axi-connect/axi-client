@@ -29,6 +29,15 @@ describe("leadLabel", () => {
     expect(leadLabel("2026-09-30T15:30:00.000Z", START)).toBe("30 minutos antes");
     expect(leadLabel(START, START)).toBe("a la hora de la cita");
   });
+
+  it("lo que no es exacto se redondea a la unidad que se lee", () => {
+    // 1185 min antes → 20 horas (no «1185 minutos»)
+    expect(leadLabel("2026-09-29T20:15:00.000Z", START)).toBe("20 horas antes");
+    // 90 min se dice exacto, no «2 horas»
+    expect(leadLabel("2026-09-30T14:30:00.000Z", START)).toBe("90 minutos antes");
+    // 2 días y 3 horas → 2 días
+    expect(leadLabel("2026-09-28T13:00:00.000Z", START)).toBe("2 días antes");
+  });
 });
 
 describe("appointmentReminderRows", () => {

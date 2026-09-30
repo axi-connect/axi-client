@@ -284,7 +284,7 @@ export default function DetailSheet<Id extends string | number = string | number
                   {renderHeader ? renderHeader() : null}
 
                   {/* Body */}
-                  <div className={cn("min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain", heroTitle ? "px-6 pt-1 pb-5" : "p-4")}>
+                  <div className={cn("min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain", heroTitle ? "sidebar-scroll px-6 pt-1 pb-5" : "p-4")}>
                     {loading && skeleton ? skeleton : children}
                   </div>
 

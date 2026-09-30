@@ -50,7 +50,7 @@ export function ServiceOptions({
                 aria-hidden
                 className={cn(
                   "size-4 shrink-0 rounded-full",
-                  selected ? "shadow-[inset_0_0_0_5px_var(--foreground)]" : "shadow-[inset_0_0_0_1.5px_var(--border)]",
+                  selected ? "ring-[5px] ring-foreground ring-inset" : "ring-[1.5px] ring-foreground/35 ring-inset",
                 )}
               />
               <span className="min-w-0 flex-1 truncate">{option.name}</span>

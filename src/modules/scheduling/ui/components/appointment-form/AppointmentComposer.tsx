@@ -93,12 +93,9 @@ export function AppointmentComposer({
   const today = computeTodayKey(new Date(), timezone);
   const resched = mode.kind === "reschedule" ? mode.appointment : null;
 
-  const initialDate: DayKey | "" =
-    mode.kind === "create"
-      ? (mode.prefill?.date ?? "")
-      : businessDayKey(mode.appointment.starts_at, timezone) < today
-        ? today
-        : businessDayKey(mode.appointment.starts_at, timezone);
+  // Sin hueco tocado, el día lo elige el primer horario libre (también al
+  // reagendar: la cita ya tiene su hora, se busca la siguiente disponible).
+  const initialDate: DayKey | "" = mode.kind === "create" ? (mode.prefill?.date ?? "") : "";
   const initialTime = mode.kind === "create" ? (mode.prefill?.time ?? "") : "";
   const prefillOutside =
     mode.kind === "create" && mode.prefill !== null
@@ -112,6 +109,8 @@ export function AppointmentComposer({
   const [productId, setProductId] = useState<string>(resched?.product_id ?? "");
   const [duration, setDuration] = useState<number>(resched !== null ? durationOf(resched) : 30);
   const [anchor, setAnchor] = useState<DayKey>(initialDate === "" ? today : initialDate);
+  // Si el mes en curso ya no tiene horarios, se abre el siguiente (una sola vez).
+  const [autoAdvanced, setAutoAdvanced] = useState(false);
   const [date, setDate] = useState<DayKey | "">(initialDate);
   const [time, setTime] = useState(initialTime);
   const [custom, setCustom] = useState(prefillOutside);
@@ -181,7 +180,12 @@ export function AppointmentComposer({
   useEffect(() => {
     if (ready === null || date !== "") return;
     const first = firstAvailableDay(ready.byDay, range?.from ?? today);
-    if (first !== null) setDate(first);
+    if (first !== null) {
+      setDate(first);
+    } else if (!autoAdvanced && ready.configured) {
+      setAutoAdvanced(true);
+      setAnchor(addMonthsToKey(anchor, 1));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, date]);
 
@@ -204,8 +208,8 @@ export function AppointmentComposer({
     if (!custom) setTime("");
   };
   const stepMonth = (delta: 1 | -1) => {
-    const next = addMonthsToKey(anchor, delta);
-    setAnchor(next);
+    setAutoAdvanced(true); // el usuario ya navega: no se le mueve el mes
+    setAnchor(addMonthsToKey(anchor, delta));
   };
 
   const outside =
@@ -275,8 +279,8 @@ export function AppointmentComposer({
     );
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <div className="grid min-h-0 flex-1 border-t border-border md:grid-cols-[minmax(0,1fr)_22.5rem]">
+    <div className="flex flex-col">
+      <div className="grid border-t border-border md:grid-cols-[minmax(0,1fr)_22.5rem]">
         {/* Quién y qué */}
         <div className="flex min-w-0 flex-col gap-5 px-5 py-5 md:px-7">
           {resched === null ? (
@@ -508,7 +512,8 @@ export function AppointmentComposer({
         </div>
       </div>
 
-      <div className="flex flex-col gap-3 border-t border-border px-5 py-4 sm:flex-row sm:items-center md:px-7">
+      {/* Pegado abajo: la acción siempre a la vista, también en el celular. */}
+      <div className="sticky bottom-0 z-10 flex flex-col gap-3 border-t border-border bg-card px-5 py-4 sm:flex-row sm:items-center md:px-7">
         <p className="min-w-0 flex-1 text-sm text-foreground/80">{summary}</p>
         <div className="flex gap-2 max-sm:flex-col-reverse">
           <Button variant="ghost" className="rounded-full" onClick={onCancel} disabled={saving}>

@@ -231,6 +231,7 @@ export function AppointmentSheetRoute({
             appointment={appointment}
             onUpdated={onUpdated}
             onReschedule={() => setRescheduling(true)}
+            contactName={contactName}
           />
         )
       }

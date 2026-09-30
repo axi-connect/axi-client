@@ -60,7 +60,13 @@ describe("AppointmentComposer · nueva cita", () => {
     jest.setSystemTime(new Date("2026-09-30T15:40:00.000Z"));
     getAvailability.mockReset();
     createAppointment.mockReset();
-    getAvailability.mockResolvedValue({ timezone: BOGOTA, duration_minutes: 45, schedule_configured: true, slots: OCT1 });
+    // Septiembre (solo hoy) sin horarios; octubre con dos el día 1.
+    getAvailability.mockImplementation(async (params: { date_from: string }) => ({
+      timezone: BOGOTA,
+      duration_minutes: 45,
+      schedule_configured: true,
+      slots: params.date_from.startsWith("2026-10") ? OCT1 : [],
+    }));
   });
   afterEach(() => jest.useRealTimers());
 
@@ -70,9 +76,12 @@ describe("AppointmentComposer · nueva cita", () => {
     await waitFor(() => expect(getAvailability).toHaveBeenCalledWith(
       expect.objectContaining({ date_from: "2026-09-30", date_to: "2026-09-30", product_id: "svc-1" }),
     ));
-    // El mes de septiembre solo tiene hoy: sin horarios. Se pasa a octubre.
-    fireEvent.click(screen.getByRole("button", { name: "Mes siguiente" }));
+    // Septiembre solo tiene hoy y no quedan horarios: el formulario abre octubre solo.
+    await waitFor(() => expect(getAvailability).toHaveBeenCalledWith(
+      expect.objectContaining({ date_from: "2026-10-01", date_to: "2026-10-31" }),
+    ));
     await screen.findByText(/2 horarios libres/);
+    expect(screen.getByRole("heading", { name: /octubre 2026/i })).toBeInTheDocument();
 
     const submit = screen.getByRole("button", { name: "Agendar cita" });
     expect(submit).toBeDisabled();
@@ -93,7 +102,6 @@ describe("AppointmentComposer · nueva cita", () => {
 
   it("409: no cierra, limpia la hora, lo dice y vuelve a consultar", async () => {
     const { onSuccess } = renderComposer();
-    fireEvent.click(await screen.findByRole("button", { name: "Mes siguiente" }));
     await screen.findByText(/2 horarios libres/);
     fireEvent.click(screen.getByRole("button", { name: "elegir contacto" }));
     fireEvent.click(screen.getByRole("button", { name: "10:00" }));
@@ -111,7 +119,6 @@ describe("AppointmentComposer · nueva cita", () => {
 
   it("otra hora fuera del horario: lo avisa y deja agendar", async () => {
     renderComposer();
-    fireEvent.click(await screen.findByRole("button", { name: "Mes siguiente" }));
     await screen.findByText(/2 horarios libres/);
     fireEvent.click(screen.getByRole("button", { name: "Otra hora…" }));
     fireEvent.change(screen.getByLabelText("Hora de la cita"), { target: { value: "18:30" } });

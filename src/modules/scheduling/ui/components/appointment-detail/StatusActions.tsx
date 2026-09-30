@@ -39,8 +39,11 @@ export function StatusActions({
   appointment,
   onUpdated,
   onReschedule,
+  contactName = null,
 }: {
   appointment: AppointmentDTO;
+  /** Para decir a quién se le cancela («¿Cancelar la cita de Camila?»). */
+  contactName?: string | null;
   onUpdated: (fresh: AppointmentDTO) => void;
   onReschedule: () => void;
 }) {
@@ -97,20 +100,26 @@ export function StatusActions({
   };
 
   if (cancelOpen) {
+    const firstName = contactName?.trim().split(/\s+/)[0];
     return (
-      <div className="w-full space-y-2.5">
-        <p className="text-sm font-semibold">Cancelar esta cita</p>
-        <p className="text-xs text-muted-foreground">
-          El contacto no recibirá los recordatorios pendientes.
-        </p>
-        <Textarea
-          value={reason}
-          onChange={(e) => setReason(e.target.value)}
-          maxLength={CANCEL_REASON_MAX}
-          rows={2}
-          placeholder="Motivo (opcional)"
-          aria-label="Motivo de la cancelación"
-        />
+      <div className="flex w-full flex-col gap-3">
+        <div className="flex flex-col gap-2.5 rounded-2xl border border-destructive/35 bg-destructive/6 p-3.5">
+          <p className="text-sm font-semibold">
+            {firstName ? `¿Cancelar la cita de ${firstName}?` : "¿Cancelar esta cita?"}
+          </p>
+          <p className="text-sm text-foreground/80">
+            Axi deja de enviarle los recordatorios. Si quieres, di por qué: queda en la cita.
+          </p>
+          <Textarea
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            maxLength={CANCEL_REASON_MAX}
+            rows={2}
+            placeholder="Motivo (opcional)"
+            aria-label="Motivo de la cancelación"
+            className="rounded-xl bg-card"
+          />
+        </div>
         <div className="flex justify-end gap-2">
           <Button
             variant="ghost"

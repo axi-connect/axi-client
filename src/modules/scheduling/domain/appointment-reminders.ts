@@ -23,12 +23,19 @@ function plural(n: number, one: string, many: string): string {
   return `${n} ${n === 1 ? one : many}`;
 }
 
-/** Cuánto antes de `startsAt` sale el recordatorio, en palabras. */
+/**
+ * Cuánto antes de `startsAt` sale el recordatorio, en palabras. Lo exacto se
+ * dice exacto («1 día», «2 horas», «30 minutos»); lo que no, se redondea a la
+ * unidad que se lee («20 horas», nunca «1185 minutos»).
+ */
 export function leadLabel(atIso: string, startsAtIso: string): string {
   const minutes = Math.round((new Date(startsAtIso).getTime() - new Date(atIso).getTime()) / 60_000);
   if (minutes <= 0) return "a la hora de la cita";
-  if (minutes % 1440 === 0) return `${plural(minutes / 1440, "día", "días")} antes`;
-  if (minutes % 60 === 0) return `${plural(minutes / 60, "hora", "horas")} antes`;
+  if (minutes % 1440 === 0 || minutes >= 36 * 60) return `${plural(Math.round(minutes / 1440), "día", "días")} antes`;
+  // Hasta 3 h lo no redondo se dice en minutos («90 minutos», no «2 horas»).
+  if (minutes >= 60 && (minutes % 60 === 0 || minutes >= 180)) {
+    return `${plural(Math.round(minutes / 60), "hora", "horas")} antes`;
+  }
   return `${plural(minutes, "minuto", "minutos")} antes`;
 }
 
