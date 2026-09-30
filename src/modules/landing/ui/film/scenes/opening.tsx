@@ -7,7 +7,7 @@ import { FILM_CONTENT } from "@/modules/landing/domain/film/film-content";
 import { FILM_NICHES } from "@/modules/landing/domain/film/niches";
 import { WA_MESSAGES } from "@/modules/landing/ui/content/landing.content";
 import { FilmCta } from "@/modules/landing/ui/film/parts/FilmCta";
-import { HeroGradientLazy, HeroSkyLazy } from "@/modules/landing/ui/film/parts/HeroSkyLazy";
+import { HeroFibersLazy } from "@/modules/landing/ui/film/parts/HeroFibersLazy";
 import { HeroStats } from "@/modules/landing/ui/film/parts/HeroStats";
 import { FILM_ICONS } from "@/modules/landing/ui/film/parts/film-icons";
 import { NicheChoice } from "@/modules/landing/ui/film/parts/NicheChoice";
@@ -33,58 +33,70 @@ function TalkToAgent({ className }: { className?: string }) {
 }
 
 /**
- * El hero: un solo pantallazo sobre el gradiente de marca «con vida» del hero
- * original (el fondo que la dueña pidió conservar, 2026-09-30), con
- * conversaciones que flotan y suben (HeroSky). Titular en Nexa, CTA coral y
- * cifras que son hechos del producto. La cinta baja con el scroll hacia la
- * escena siguiente.
+ * El hero A, «Mil conversaciones, un hilo» (plan §14, elegido por la dueña el
+ * 2026-09-30): sobre tinta, las conversaciones entran por los bordes como fibras
+ * (`HeroFibers`, diferido) y convergen en un nudo bajo el CTA, donde se
+ * enciende la marca. El titular, el texto, los CTA y las cifras no cambian.
+ *
+ * Las posiciones van en % del alto (titular al 19 %, nudo al 68 %, cifras al
+ * 87 %). El nudo cae sobre la primera ancla del hilo de luz (`thread-path`),
+ * archivado por ahora (plan §15): si vuelve, nace ahí.
  */
 export function HeroScene() {
   return (
-    <section id="hero" data-scene="hero" aria-label="Axi Connect" className="relative flex h-[100svh] min-h-[640px] w-full flex-col overflow-clip">
-      <div className="film-hero-glow absolute inset-x-0 top-0 h-[640px] blur-2xl" aria-hidden="true" />
-      <HeroGradientLazy className="absolute inset-0 h-full w-full" speed={1} grain={0.6} opacity={0.55} />
-      <HeroSkyLazy className="absolute inset-0 size-full" />
+    <section
+      id="hero"
+      data-scene="hero"
+      aria-label="Axi Connect"
+      className="relative h-[100svh] min-h-[640px] w-full overflow-x-clip max-lg:min-h-[740px]"
+    >
+      <div className="film-hero-halo" data-anim="halo" aria-hidden="true" />
+      {/* Más alto que el hero: al salir, el nudo baja y no debe cortarse en su borde. */}
+      <HeroFibersLazy className="pointer-events-none absolute inset-x-0 top-0 h-[calc(100%+40vh)] w-full" />
 
-      <div className="relative z-[2] flex flex-1 flex-col items-center px-4 pt-[clamp(96px,14vh,132px)] pb-[clamp(18px,3vh,32px)]">
-        <div data-anim="copy" className="flex flex-1 flex-col items-center justify-center text-center">
-          <h1 className="film-h text-[clamp(40px,6.4vw,88px)] leading-[1.05]">
-            <span className="film-line block t" style={{ "--d": "0.12s" } as React.CSSProperties}>
-              Vende en
-            </span>
-            <span className="film-line block" style={{ "--d": "0.3s" } as React.CSSProperties}>
-              cada conversación.
-            </span>
-          </h1>
+      <div data-anim="copy" className="film-hero-copy z-[2]">
+        <h1 className="film-h text-[clamp(46px,7.2vw,104px)] leading-[0.98] tracking-[-0.045em]">
+          <span className="film-line block" style={{ "--d": "0.12s" } as React.CSSProperties}>
+            Vende en
+          </span>
+          <span className="film-line t block" style={{ "--d": "0.3s" } as React.CSSProperties}>
+            cada conversación.
+          </span>
+        </h1>
 
-          <p className="film-in mt-[clamp(14px,2.4vh,22px)] max-w-[min(540px,92%)] text-[clamp(15px,1.55vw,19px)] leading-[1.55] text-[color-mix(in_srgb,var(--foreground)_78%,transparent)]" style={{ "--d": "0.28s" } as React.CSSProperties}>
-            Axi atiende tu WhatsApp como tu mejor vendedor: responde en segundos, cotiza con tus precios, cobra y te lleva
-            a tu meta del mes.
-          </p>
+        <p
+          className="film-in mx-auto mt-[clamp(16px,2.6vh,26px)] max-w-[min(540px,100%)] text-[clamp(15px,1.3vw,18px)] leading-[1.6] text-[color-mix(in_srgb,var(--foreground)_64%,transparent)]"
+          style={{ "--d": "0.28s" } as React.CSSProperties}
+        >
+          Axi atiende tu WhatsApp como tu mejor vendedor: responde en segundos, cotiza con tus precios, cobra y te lleva
+          a tu meta del mes.
+        </p>
 
-          <div className="film-in mt-[clamp(18px,3vh,30px)] flex flex-wrap items-center justify-center gap-x-6 gap-y-3" style={{ "--d": "0.4s" } as React.CSSProperties}>
-            <FilmCta className="film-glow h-auto rounded-full px-[clamp(22px,3vw,30px)] py-[clamp(12px,1.7vh,14px)] text-[clamp(14px,1.5vw,15.5px)]">
-              Prueba 7 días gratis
-            </FilmCta>
-            <a
-              href={salesWhatsAppUrl(WA_MESSAGES.hero)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group inline-flex items-center gap-1.5 text-sm font-medium text-[color-mix(in_srgb,var(--foreground)_80%,transparent)] transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-            >
-              <MessageCircle className="size-4" aria-hidden="true" />
-              Habla con nuestro agente
-              <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
-            </a>
-          </div>
-          <p className="film-in film-dim mt-3 text-[12.5px]" style={{ "--d": "0.46s" } as React.CSSProperties}>
-            Sin tarjeta. Tu cuenta queda lista hoy.
-          </p>
+        <div
+          className="film-in mt-[clamp(18px,3vh,30px)] flex flex-wrap items-center justify-center gap-x-[26px] gap-y-3"
+          style={{ "--d": "0.4s" } as React.CSSProperties}
+        >
+          <FilmCta className="film-glow h-auto rounded-full px-[clamp(22px,3vw,30px)] py-[clamp(12px,1.7vh,15px)] text-[clamp(14px,1.5vw,15.5px)]">
+            Prueba 7 días gratis
+          </FilmCta>
+          <a
+            href={salesWhatsAppUrl(WA_MESSAGES.hero)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group inline-flex items-center gap-1.5 text-sm font-medium text-[color-mix(in_srgb,var(--foreground)_78%,transparent)] transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          >
+            <MessageCircle className="size-4" aria-hidden="true" />
+            Habla con nuestro agente
+            <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+          </a>
         </div>
+        <p className="film-in film-dim mt-3 text-[12.5px]" style={{ "--d": "0.46s" } as React.CSSProperties}>
+          Sin tarjeta. Tu cuenta queda lista hoy.
+        </p>
+      </div>
 
-        <div data-anim="stats" className="w-full max-w-[920px] shrink-0">
-          <HeroStats />
-        </div>
+      <div data-anim="stats" className="film-hero-stats z-[2]">
+        <HeroStats />
       </div>
     </section>
   );

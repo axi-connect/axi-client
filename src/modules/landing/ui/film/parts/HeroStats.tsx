@@ -13,11 +13,11 @@ import { Clock, Gift, MessagesSquare, Wrench, type LucideIcon } from "lucide-rea
  * JS cuentan desde cero una sola vez; mientras tanto están ocultas por la
  * entrada escalonada del hero, así que el cambio a 0 no se ve.
  */
-const STATS: readonly { Icon: LucideIcon; value: number; suffix: string; label: string }[] = [
-  { Icon: Clock, value: 24, suffix: "/7", label: "Atiende sin pausa" },
-  { Icon: Wrench, value: 18, suffix: "", label: "Herramientas del agente" },
-  { Icon: MessagesSquare, value: 3, suffix: "", label: "Canales: WhatsApp, Instagram y Messenger" },
-  { Icon: Gift, value: 7, suffix: " días", label: "De prueba, sin tarjeta" },
+const STATS: readonly { Icon: LucideIcon; value: number; suffix: string; label: string; short: string }[] = [
+  { Icon: Clock, value: 24, suffix: "/7", label: "Atiende sin pausa", short: "Atiende sin pausa" },
+  { Icon: Wrench, value: 18, suffix: "", label: "Herramientas del agente", short: "Herramientas" },
+  { Icon: MessagesSquare, value: 3, suffix: "", label: "Canales: WhatsApp, Instagram y Messenger", short: "Canales" },
+  { Icon: Gift, value: 7, suffix: " días", label: "De prueba, sin tarjeta", short: "Prueba sin tarjeta" },
 ];
 
 const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
@@ -63,14 +63,23 @@ export function HeroStats() {
     };
   }, []);
 
+  // Una fila con filete y un hueco central por donde baja el hilo; en móvil,
+  // 2 × 2 con etiquetas cortas (film.css, «las cifras»).
   return (
-    <dl ref={ref} className="grid w-full max-w-[920px] grid-cols-4 gap-6 max-md:grid-cols-2 max-md:gap-x-4 max-md:gap-y-5">
-      {STATS.map(({ Icon, value, suffix, label }, i) => (
-        <div key={label} className="film-in flex flex-col items-center gap-1.5 text-center" style={{ "--d": `${0.5 + i * 0.08}s` } as React.CSSProperties}>
-          <Icon className="size-[clamp(20px,2.4vw,26px)] text-foreground" strokeWidth={1.6} aria-hidden="true" />
+    <dl ref={ref} className="film-hero-dl">
+      {STATS.map(({ Icon, value, suffix, label, short }, i) => (
+        <div key={label} className="film-hero-stat film-in" style={{ "--d": `${0.5 + i * 0.08}s` } as React.CSSProperties}>
+          <Icon
+            className="size-[clamp(20px,2.4vw,26px)] text-[color-mix(in_srgb,var(--foreground)_70%,transparent)] max-md:size-[18px]"
+            strokeWidth={1.6}
+            aria-hidden="true"
+          />
           {/* En el DOM el término va antes que su valor (semántica de <dl>); el orden visual lo pone flex. */}
-          <dt className="film-dim order-3 text-[clamp(11px,1.2vw,12.5px)] leading-snug">{label}</dt>
-          <dd className="film-h order-2 text-[clamp(18px,2.2vw,26px)] tabular-nums">
+          <dt className="film-dim order-3 text-[clamp(11px,1.1vw,12.5px)] leading-snug">
+            <span className="max-md:hidden">{label}</span>
+            <span className="md:hidden">{short}</span>
+          </dt>
+          <dd className="film-h order-2 text-[clamp(20px,2vw,28px)] tracking-[-0.02em] tabular-nums">
             <span data-count={value}>{value}</span>
             {suffix}
           </dd>

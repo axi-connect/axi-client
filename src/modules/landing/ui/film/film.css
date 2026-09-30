@@ -241,18 +241,70 @@
     0 0 28px color-mix(in srgb, var(--axi-brand) 55%, transparent),
     0 0 60px color-mix(in srgb, var(--axi-brand) 22%, transparent);
 }
-/* El brillo estático del hero original (landing-v1-archive, LandingHero): se ve
-   al instante y queda de respaldo si el gradiente vivo (WebGL) no llega. */
-.film-hero-glow {
-  background:
-    radial-gradient(60% 70% at 18% 18%, color-mix(in srgb, var(--axi-brand) 22%, transparent), transparent 70%),
-    radial-gradient(50% 60% at 82% 8%, color-mix(in srgb, var(--axi-violet) 18%, transparent), transparent 70%),
-    radial-gradient(45% 55% at 60% 80%, color-mix(in srgb, var(--axi-amber) 12%, transparent), transparent 70%);
+/* Hero A «Mil conversaciones, un hilo» (plan §14). Tinta; el único color es
+   el nudo (canvas) y este halo, que se enciende con él. Sin JS, el hero es el
+   titular sobre tinta con el halo: completo. */
+@keyframes film-halo-in { from { opacity: 0; } to { opacity: 1; } }
+.film-hero-halo {
+  position: absolute;
+  left: 50%;
+  top: 68%;
+  width: 800px;
+  height: 640px;
+  margin: -320px 0 0 -400px;
+  pointer-events: none;
+}
+/* La entrada va en el pseudo: una animación CSS ganaría a la opacidad que el
+   motor escribe en el elemento al salir con el scroll. */
+.film-hero-halo::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in srgb, var(--axi-brand) 10%, transparent),
+    color-mix(in srgb, var(--axi-violet) 4%, transparent) 60%,
+    transparent
+  );
+  animation: film-halo-in 0.7s ease-out 1.4s both;
+}
+.film-hero-copy { position: absolute; inset-inline: 0; top: 19%; padding-inline: 16px; text-align: center; }
+/* Al 87 % del alto, pero sin salirse por abajo: «Canales: WhatsApp, Instagram
+   y Messenger» ocupa dos líneas (la fila mide ~120 px). */
+.film-hero-stats { position: absolute; inset-inline: 0; top: min(87%, calc(100% - 128px)); padding-inline: 16px; }
+@media (max-width: 1023px) {
+  .film-hero-halo { top: 69%; }
+  .film-hero-copy { top: 15%; }
+  .film-hero-stats { top: min(83%, calc(100% - 148px)); }
 }
 
+/* Las cifras: una fila de cuatro con filete; entre la 2 y la 3, un hueco de
+   120 px por donde baja el hilo. En móvil, 2 × 2 con un hueco central de 72 px. */
+.film-hero-dl { display: flex; justify-content: center; margin: 0; }
+.film-hero-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: clamp(140px, 15vw, 230px);
+  margin-inline: clamp(8px, 1.4vw, 20px);
+  padding-top: 18px;
+  border-top: 1px solid color-mix(in srgb, var(--foreground) 12%, transparent);
+  text-align: center;
+}
+.film-hero-stat:nth-child(2) { margin-right: 60px; }
+.film-hero-stat:nth-child(3) { margin-left: 60px; }
+@media (max-width: 767px) {
+  .film-hero-dl { display: grid; grid-template-columns: 1fr 1fr; column-gap: 72px; row-gap: 18px; }
+  .film-hero-stat { width: auto; margin: 0; padding-top: 0; border-top: 0; gap: 4px; }
+  .film-hero-stat:nth-child(odd) { align-items: flex-end; text-align: right; }
+  .film-hero-stat:nth-child(even) { align-items: flex-start; text-align: left; }
+  .film-hero-stat:nth-child(2), .film-hero-stat:nth-child(3) { margin: 0; }
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .film-in, .film-line, .film-glow { animation: none; }
+  .film-in, .film-line, .film-glow, .film-hero-halo::before { animation: none; }
   .film-glow { transition: none; }
 }
 

@@ -23,7 +23,8 @@ import Lenis from "lenis";
 import { FILM_NICHES } from "@/modules/landing/domain/film/niches";
 import { roadPercentAt } from "@/modules/landing/domain/film/route-map";
 import { formatMillions, formatPercent, ROUTE_FRACTIONS } from "@/modules/landing/domain/film/route-scenario";
-import { createThread } from "@/modules/landing/ui/film/thread/thread";
+import { FILM_THREAD } from "@/modules/landing/domain/film/thread-path";
+import type { FilmThread } from "@/modules/landing/ui/film/thread/thread";
 
 export type FilmEngine = { stop(): void; scrollTo(target: string): void; setNiche(): void };
 
@@ -129,10 +130,13 @@ function countUp(tl: gsap.core.Timeline, el: HTMLElement, at: number) {
 /* ─────────────────────────────── escenas ─────────────────────────────── */
 
 const hero: Scene = (section) => {
-  // Al bajar, el texto se despide hacia arriba; el hilo de luz nace bajo el CTA.
+  // Al bajar, el texto se despide hacia arriba y el nudo (HeroFibers) baja y se apaga.
   const tl = gsap.timeline({ scrollTrigger: { trigger: section, start: "top top", end: "bottom top", scrub: true } });
-  tl.to(visible(section, "[data-anim=copy]"), { y: -80, opacity: 0, ease: "none" }, 0);
-  tl.to(visible(section, "[data-anim=stats]"), { y: 40, opacity: 0, ease: "none" }, 0);
+  // Plan §14: el texto sube 140 px y se apaga hacia 0,6; las cifras, hacia
+  // 0,45; el halo se va con el nudo (las fibras las recoge su propio canvas).
+  tl.to(visible(section, "[data-anim=copy]"), { y: -140, opacity: 0, ease: "none", duration: 0.6 }, 0);
+  tl.to(visible(section, "[data-anim=stats]"), { y: -80, opacity: 0, ease: "none", duration: 0.45 }, 0);
+  tl.to(visible(section, "[data-anim=halo]"), { opacity: 0, ease: "none", duration: 1 }, 0);
 };
 
 const niche: Scene = (section, ctx) => {
@@ -437,22 +441,33 @@ export function startFilm(root: HTMLElement): FilmEngine {
   let mm = mount();
   ScrollTrigger.addEventListener("refreshInit", forgetMapBoxes);
 
-  // El hilo de luz, después de los pins: mide las escenas ya fijadas en cada
-  // refresh y dibuja en el ticker de gsap (en reposo no hace nada).
-  const thread = createThread({
-    root,
-    // El número de Lenis, no `scrollTop`: leerlo en el ticker, después de que
-    // gsap escribió estilos, forzaría un layout en cada frame.
-    getScroll: () => lenis.scroll,
-    getPin: (scene) => {
-      const st = pins.get(scene);
-      return st ? { start: st.start, end: st.end } : null;
-    },
-    isDesktop: () => desktopQuery.matches,
-  });
-  ScrollTrigger.addEventListener("refresh", thread.refresh);
-  gsap.ticker.add(thread.frame);
   ScrollTrigger.refresh();
+
+  // El hilo de luz, archivado por la dueña (plan §15): con `enabled: false` su
+  // módulo (renderer WebGL incluido) ni se descarga. Encendido, llega después
+  // de los pins, mide las escenas ya fijadas en cada refresh y dibuja en el
+  // ticker de gsap (en reposo no hace nada).
+  let thread: FilmThread | null = null;
+  let stopped = false;
+  if (FILM_THREAD.enabled) {
+    void import("@/modules/landing/ui/film/thread/thread").then(({ createThread }) => {
+      if (stopped) return;
+      thread = createThread({
+        root,
+        // El número de Lenis, no `scrollTop`: leerlo en el ticker, después de
+        // que gsap escribió estilos, forzaría un layout en cada frame.
+        getScroll: () => lenis.scroll,
+        getPin: (scene) => {
+          const st = pins.get(scene);
+          return st ? { start: st.start, end: st.end } : null;
+        },
+        isDesktop: () => desktopQuery.matches,
+      });
+      ScrollTrigger.addEventListener("refresh", thread.refresh);
+      gsap.ticker.add(thread.frame);
+      thread.refresh();
+    });
+  }
 
   // Las fuentes o las imágenes pueden cambiar alturas después de medir.
   const refresh = () => ScrollTrigger.refresh();
@@ -460,10 +475,13 @@ export function startFilm(root: HTMLElement): FilmEngine {
 
   return {
     stop() {
-      ScrollTrigger.removeEventListener("refresh", thread.refresh);
+      stopped = true;
+      if (thread) {
+        ScrollTrigger.removeEventListener("refresh", thread.refresh);
+        gsap.ticker.remove(thread.frame);
+        thread.destroy();
+      }
       ScrollTrigger.removeEventListener("refreshInit", forgetMapBoxes);
-      gsap.ticker.remove(thread.frame);
-      thread.destroy();
       mm.revert();
       gsap.ticker.remove(tick);
       lenis.destroy();
