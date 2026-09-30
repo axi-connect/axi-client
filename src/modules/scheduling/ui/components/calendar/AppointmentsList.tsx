@@ -73,7 +73,8 @@ export function AppointmentsList({
           type="date"
           value={listRange.from}
           aria-label="Desde"
-          className="h-9 w-fit rounded-full tabular-nums"
+          classNameContainer="w-40 shrink-0"
+          className="h-9 rounded-full tabular-nums"
           onChange={(e) => {
             if (e.target.value) onRangeChange(e.target.value, listRange.to);
           }}
@@ -83,7 +84,8 @@ export function AppointmentsList({
           type="date"
           value={listRange.to}
           aria-label="Hasta"
-          className="h-9 w-fit rounded-full tabular-nums"
+          classNameContainer="w-40 shrink-0"
+          className="h-9 rounded-full tabular-nums"
           onChange={(e) => {
             if (e.target.value) onRangeChange(listRange.from, e.target.value);
           }}
@@ -103,7 +105,7 @@ export function AppointmentsList({
           </p>
         </div>
       ) : (
-        <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="sidebar-scroll min-h-0 flex-1 overflow-y-auto">
           {groups.map(([day, items], index) => {
             const active = items.filter((a) => a.status !== "cancelled").length;
             return (

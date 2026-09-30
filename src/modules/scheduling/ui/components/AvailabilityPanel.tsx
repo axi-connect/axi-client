@@ -7,7 +7,8 @@ import { cn } from "@/core/lib/utils";
 import { errorMessage } from "@/core/lib/error-messages";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import type { AvailabilityDTO } from "@/modules/scheduling/domain/availability";
-import { fmtTime, hhmmFromInstant, type DayKey } from "@/core/lib/business-time";
+import { hhmmFromInstant, type DayKey } from "@/core/lib/business-time";
+import { fmtClock } from "@/modules/scheduling/domain/time-grid";
 import { getAvailability } from "@/modules/scheduling/infrastructure/services/availability-service.adapter";
 
 /**
@@ -136,7 +137,7 @@ export function AvailabilityPanel({
                 full && "cursor-not-allowed line-through opacity-45",
               )}
             >
-              {fmtTime(slot.starts_at, timezone)}
+              {fmtClock(slot.starts_at, timezone)}
               {/* "quedan N" es aviso funcional (familia warning), no acento de vista. */}
               {slot.remaining_capacity > 1 && (
                 <span

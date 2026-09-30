@@ -259,13 +259,15 @@ export function TimeGrid({
       </div>
 
       {/* Cuerpo scrolleable (el único scroll del área) */}
-      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto">
+      <div ref={scrollRef} className="sidebar-scroll min-h-0 flex-1 overflow-y-auto">
         <div ref={columnsRef} className="grid" style={columnsTemplate}>
           {/* Gutter de horas */}
           <div aria-hidden className="relative" style={{ height: 24 * HOUR_PX }}>
             {Array.from({ length: 23 }, (_, i) => i + 1).map((hour) => (
+              // La etiqueta de «ahora» manda: la hora que pisaría se esconde.
               <span
                 key={hour}
+                hidden={days.includes(todayKey) && Math.abs(hour * 60 - nowMin) < 15}
                 className="absolute right-2.5 -translate-y-1/2 text-xs whitespace-nowrap text-muted-foreground tabular-nums"
                 style={{ top: hour * HOUR_PX }}
               >

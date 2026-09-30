@@ -9,7 +9,11 @@ import {
 import { dayNumber, fmtClock } from "@/modules/scheduling/domain/time-grid";
 import { fmtDayLong, monthOfKey, type DayKey } from "@/core/lib/business-time";
 
-const MAX_CHIPS = 3;
+/**
+ * Dos citas por día y «N más»: con chips de 24 px (el mínimo táctil) caben seis
+ * semanas en la altura de la vista sin que el mes scrollee a 1440 × 900.
+ */
+const MAX_CHIPS = 2;
 
 const WEEKDAY_HEADER = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
@@ -30,7 +34,7 @@ function AppointmentChip({
       type="button"
       onClick={() => onOpen(appointment.id)}
       className={cn(
-        "flex h-6 w-full min-w-0 items-center gap-1.5 rounded-lg px-1.5 text-left text-xs",
+        "flex h-6 w-full min-w-0 shrink-0 items-center gap-1.5 rounded-lg px-1.5 text-left text-xs",
         "transition-colors hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
       )}
     >
@@ -47,7 +51,7 @@ function AppointmentChip({
 
 /**
  * Vista Mes (lienzo F1): 42 celdas (6 semanas, lunes primero). Cada día
- * muestra hasta 3 citas con su punto de estado y «N más», que abre el día.
+ * muestra hasta 2 citas con su punto de estado y «N más», que abre el día.
  * Hoy va en tinta. Las canceladas sí se ven aquí, tachadas (decisión D1).
  */
 export function MonthGrid({
@@ -82,7 +86,7 @@ export function MonthGrid({
           </div>
         ))}
       </div>
-      <div className="grid min-h-0 flex-1 auto-rows-fr grid-cols-7 overflow-y-auto">
+      <div className="sidebar-scroll grid min-h-0 flex-1 auto-rows-[minmax(7rem,1fr)] grid-cols-7 overflow-y-auto">
         {days.map((day, index) => {
           const inMonth = monthOfKey(day) === anchorMonth;
           const isToday = day === todayKey;
@@ -92,7 +96,7 @@ export function MonthGrid({
               key={day}
               aria-current={isToday ? "date" : undefined}
               className={cn(
-                "flex min-h-24 min-w-0 flex-col gap-0.5 border-t border-border p-2",
+                "flex min-w-0 flex-col gap-0.5 overflow-hidden border-t border-border p-1.5",
                 index % 7 !== 0 && "border-l",
               )}
             >
@@ -101,7 +105,7 @@ export function MonthGrid({
                 onClick={() => onSelectDay(day)}
                 aria-label={`Ver el ${fmtDayLong(day)}`}
                 className={cn(
-                  "inline-flex size-7 items-center justify-center rounded-full font-heading text-sm font-semibold tabular-nums transition-colors",
+                  "inline-flex size-7 shrink-0 items-center justify-center rounded-full font-heading text-sm font-semibold tabular-nums transition-colors",
                   "hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
                   isToday
                     ? "bg-foreground text-background hover:bg-foreground"
@@ -126,7 +130,7 @@ export function MonthGrid({
                 <button
                   type="button"
                   onClick={() => onSelectDay(day)}
-                  className="self-start rounded-md px-1.5 text-xs font-medium text-foreground/80 underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                  className="inline-flex min-h-6 shrink-0 items-center self-start rounded-md px-1.5 text-xs font-medium text-foreground/80 underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                 >
                   {entries.length - MAX_CHIPS} más
                 </button>

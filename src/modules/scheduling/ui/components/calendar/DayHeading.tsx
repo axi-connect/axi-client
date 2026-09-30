@@ -33,7 +33,7 @@ export function DayHeading({
           <button
             type="button"
             onClick={onToday}
-            className="rounded-full text-xs font-medium underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            className="inline-flex min-h-6 items-center rounded-full text-xs font-medium underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
           >
             Ir a hoy
           </button>

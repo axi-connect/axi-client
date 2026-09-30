@@ -123,14 +123,14 @@ export function MobileMonth({
 
       <section
         aria-label={`Citas del ${fmtDayLong(anchor)}`}
-        className="mt-2 flex min-h-0 flex-1 flex-col overflow-y-auto border-t border-border bg-card"
+        className="sidebar-scroll mt-2 flex min-h-0 flex-1 flex-col overflow-y-auto border-t border-border bg-card"
       >
         <div className="flex items-baseline justify-between gap-3 px-4 pt-3.5 pb-2.5">
           <h3 className="min-w-0 truncate text-sm font-semibold">{dayHeading(anchor, todayKey)}</h3>
           <button
             type="button"
             onClick={() => onOpenDay(anchor)}
-            className="shrink-0 rounded-full text-xs font-medium underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            className="inline-flex min-h-6 shrink-0 items-center rounded-full text-xs font-medium underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
           >
             Ver el día
           </button>

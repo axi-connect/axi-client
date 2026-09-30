@@ -41,7 +41,7 @@ export function QuickReschedule({
         <h3 className="text-sm font-semibold">Reagendar · {day === todayKey ? "hoy" : "el mismo día"}</h3>
         <Link
           href={`/scheduling/calendar/create?reschedule=${appointment.id}`}
-          className="inline-flex items-center gap-1 rounded-full text-sm font-medium underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          className="inline-flex min-h-6 items-center gap-1 rounded-full text-sm font-medium underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
         >
           Otro día
           <ArrowRight aria-hidden className="size-3.5" />
