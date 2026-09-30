@@ -29,6 +29,8 @@ function appointment(id: string, startsAt: string): AppointmentDTO {
     notes: null,
     created_by_type: "user",
     conversation_id: null,
+    call_session_id: null,
+    created_by_user_id: null,
     cancelled_at: null,
     cancellation_reason: null,
     created_at: startsAt,

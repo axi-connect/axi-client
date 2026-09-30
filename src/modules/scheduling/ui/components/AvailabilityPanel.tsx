@@ -7,7 +7,8 @@ import { cn } from "@/core/lib/utils";
 import { errorMessage } from "@/core/lib/error-messages";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import type { AvailabilityDTO } from "@/modules/scheduling/domain/availability";
-import { fmtTime, hhmmFromInstant, type DayKey } from "@/core/lib/business-time";
+import { hhmmFromInstant, type DayKey } from "@/core/lib/business-time";
+import { fmtClock } from "@/modules/scheduling/domain/time-grid";
 import { getAvailability } from "@/modules/scheduling/infrastructure/services/availability-service.adapter";
 
 /**
@@ -93,7 +94,7 @@ export function AvailabilityPanel({
         <span>
           La empresa aún no tiene horario de atención configurado: no hay horarios sugeridos, pero
           puedes elegir una hora libre.{" "}
-          <Link href="/scheduling/settings" className="font-medium text-brand hover:underline">
+          <Link href="/scheduling/settings" className="font-medium underline underline-offset-2">
             Configurar horario
           </Link>
         </span>
@@ -127,21 +128,22 @@ export function AvailabilityPanel({
               aria-pressed={selected}
               onClick={() => onPickSlot(time)}
               className={cn(
-                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium tabular-nums transition-colors",
+                "inline-flex h-9 min-w-18 items-center justify-center gap-1.5 rounded-full border px-3 text-sm font-medium tabular-nums transition-colors",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                // Tinta en la selección (lienzo F1): el coral queda para las acciones.
                 selected
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-card hover:border-brand",
+                  ? "border-transparent bg-foreground text-background"
+                  : "border-border bg-card hover:border-foreground/50",
                 full && "cursor-not-allowed line-through opacity-45",
               )}
             >
-              {fmtTime(slot.starts_at, timezone)}
+              {fmtClock(slot.starts_at, timezone)}
               {/* "quedan N" es aviso funcional (familia warning), no acento de vista. */}
               {slot.remaining_capacity > 1 && (
                 <span
                   className={cn(
-                    "text-[10px] font-bold",
-                    selected ? "text-primary-foreground" : "text-warning",
+                    "text-xs font-semibold",
+                    selected ? "text-background/80" : "text-warning",
                   )}
                 >
                   quedan {slot.remaining_capacity}

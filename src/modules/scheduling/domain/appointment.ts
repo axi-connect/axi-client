@@ -28,21 +28,64 @@ export type ListAppointmentsParams = {
 export const APPOINTMENT_MAX_RANGE_DAYS = 92;
 
 export const APPOINTMENT_STATUS_LABELS: Record<AppointmentStatus, string> = {
-  scheduled: "Programada",
+  scheduled: "Agendada",
   confirmed: "Confirmada",
   completed: "Completada",
   cancelled: "Cancelada",
   no_show: "No asistió",
 };
 
-/** Clases del `Badge` por estado (tokens semánticos; destructivo ≠ coral). */
-export const APPOINTMENT_STATUS_BADGE_CLASSES: Record<AppointmentStatus, string> = {
-  scheduled: "border-transparent bg-info/12 text-info",
-  confirmed: "border-transparent bg-success/12 text-success",
-  completed: "border-transparent bg-secondary text-secondary-foreground",
-  cancelled: "border-transparent bg-destructive/10 text-destructive",
-  no_show: "border-transparent bg-warning/12 text-warning",
+/**
+ * Tono de cada estado: el ÚNICO mapa de color de la agenda (lienzo Agenda
+ * premium F1). El color vive en el punto, nunca en el texto ni en franjas:
+ * el bloque, el chip del mes, la fila de la lista y la píldora del detalle
+ * leen de aquí.
+ */
+export const APPOINTMENT_STATUS_DOT: Record<AppointmentStatus, string> = {
+  scheduled: "bg-info",
+  confirmed: "bg-success",
+  completed: "bg-muted-foreground",
+  cancelled: "bg-destructive",
+  no_show: "bg-warning",
 };
+
+/** Ya pasó: el bloque se apaga (fondo de página en vez de tarjeta). */
+export function isSettledStatus(status: AppointmentStatus): boolean {
+  return status === "completed" || status === "no_show";
+}
+
+/**
+ * Las canceladas no ocupan columna en Semana y Día (decisión D1 del lienzo):
+ * solo aparecen en la rejilla si el filtro pide justo «Cancelada».
+ */
+export function showsInTimeGrid(
+  status: AppointmentStatus,
+  statusFilter: AppointmentStatus | "all",
+): boolean {
+  return status !== "cancelled" || statusFilter === "cancelled";
+}
+
+/** De dónde viene la cita: decide «Ver llamada», «Ver conversación» o nada. */
+export type AppointmentOrigin =
+  | { kind: "call"; callSessionId: string }
+  | { kind: "conversation"; conversationId: string }
+  | { kind: "team" };
+
+export function appointmentOrigin(
+  appointment: Pick<AppointmentDTO, "call_session_id" | "conversation_id">,
+): AppointmentOrigin {
+  // `!= null` a propósito: con un servidor anterior a origen-llamada el campo
+  // llega AUSENTE (undefined), y `!== null` pintaba toda cita de chat como
+  // «Ver llamada» hacia /calls/undefined. La llamada manda: una cita agendada
+  // en voz nunca tiene conversación.
+  if (appointment.call_session_id != null) {
+    return { kind: "call", callSessionId: appointment.call_session_id };
+  }
+  if (appointment.conversation_id != null) {
+    return { kind: "conversation", conversationId: appointment.conversation_id };
+  }
+  return { kind: "team" };
+}
 
 /** Estados terminales: sin acciones de transición en la UI. */
 export function isTerminalStatus(status: AppointmentStatus): boolean {
