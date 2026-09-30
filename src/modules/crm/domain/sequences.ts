@@ -9,9 +9,10 @@ export type EnrollmentStopReason = NonNullable<EnrollmentDTO["stop_reason"]>;
 
 /** Espejo de los CHECK de la tabla: el editor impone lo mismo antes de enviar. */
 export const SEQUENCE_LIMITS = {
-  steps: { min: 1, max: 8 },
-  /** 90 días. Más allá, lo que haya que decirle al cliente ya no es esto. */
-  offset_hours: { min: 0, max: 2160 },
+  /** P3b-2: 12, para la pista de relación (un toque al mes durante un año). */
+  steps: { min: 1, max: 12 },
+  /** 365 días (P3b-2): la relación dura un año; el ancla es la inscripción. */
+  offset_hours: { min: 0, max: 8760 },
 } as const;
 
 export const ENROLLMENT_STATUS_MAP = {
@@ -176,6 +177,62 @@ export const SEQUENCE_TEMPLATES: readonly {
       { offset_hours: 240, task_channel: "call_then_message", objective: "Llamar para cerrar o despedirse con elegancia" },
     ],
   },
+  {
+    key: "relationship",
+    name: "Relación · 12 meses · un toque al mes",
+    description:
+      "Para quien terminó la persecución sin responder: un toque de valor al mes, alternando canal. Se para sola si responde. Completa los corchetes con lo tuyo.",
+    steps: [
+      {
+        offset_hours: 720,
+        task_channel: "email",
+        objective: "Compartir algo útil de su sector, sin vender",
+        subject: "Algo que te puede servir, {{first_name}}",
+        body: "Hola {{first_name}}:\n\n[Comparte aquí un dato o una idea útil para negocios como {{business_name}}. Sin pedir nada a cambio.]\n\n{{sender_name}}",
+      },
+      { offset_hours: 1440, task_channel: "manual", objective: "Comentar o reaccionar a algo que publicaron", body: "Hola {{first_name}}, vi lo que publicaron sobre [tema]. [Un comentario corto y sincero.]" },
+      {
+        offset_hours: 2160,
+        task_channel: "email",
+        objective: "Contar un caso de un negocio parecido",
+        subject: "Cómo lo resolvió un negocio como {{business_name}}",
+        body: "Hola {{first_name}}:\n\n[Cuenta un caso REAL de un cliente tuyo, con su permiso: qué problema tenía y qué cambió.]\n\n{{sender_name}}",
+      },
+      { offset_hours: 2880, task_channel: "sms", objective: "Saludo breve y una pregunta abierta", body: "Hola {{first_name}}, soy de {{sender_name}}. ¿Cómo les va con [tema] este mes?" },
+      {
+        offset_hours: 3600,
+        task_channel: "email",
+        objective: "Compartir algo útil de su sector, sin vender",
+        subject: "Algo que te puede servir, {{first_name}}",
+        body: "Hola {{first_name}}:\n\n[Comparte aquí un dato o una idea útil para negocios como {{business_name}}. Sin pedir nada a cambio.]\n\n{{sender_name}}",
+      },
+      { offset_hours: 4320, task_channel: "manual", objective: "Comentar o reaccionar a algo que publicaron", body: "Hola {{first_name}}, vi lo que publicaron sobre [tema]. [Un comentario corto y sincero.]" },
+      {
+        offset_hours: 5040,
+        task_channel: "email",
+        objective: "Contar un caso de un negocio parecido",
+        subject: "Cómo lo resolvió un negocio como {{business_name}}",
+        body: "Hola {{first_name}}:\n\n[Cuenta un caso REAL de un cliente tuyo, con su permiso: qué problema tenía y qué cambió.]\n\n{{sender_name}}",
+      },
+      { offset_hours: 5760, task_channel: "sms", objective: "Saludo breve y una pregunta abierta", body: "Hola {{first_name}}, soy de {{sender_name}}. ¿Cómo les va con [tema] este mes?" },
+      {
+        offset_hours: 6480,
+        task_channel: "email",
+        objective: "Compartir algo útil de su sector, sin vender",
+        subject: "Algo que te puede servir, {{first_name}}",
+        body: "Hola {{first_name}}:\n\n[Comparte aquí un dato o una idea útil para negocios como {{business_name}}. Sin pedir nada a cambio.]\n\n{{sender_name}}",
+      },
+      { offset_hours: 7200, task_channel: "manual", objective: "Comentar o reaccionar a algo que publicaron", body: "Hola {{first_name}}, vi lo que publicaron sobre [tema]. [Un comentario corto y sincero.]" },
+      {
+        offset_hours: 7920,
+        task_channel: "email",
+        objective: "Contar un caso de un negocio parecido",
+        subject: "Cómo lo resolvió un negocio como {{business_name}}",
+        body: "Hola {{first_name}}:\n\n[Cuenta un caso REAL de un cliente tuyo, con su permiso: qué problema tenía y qué cambió.]\n\n{{sender_name}}",
+      },
+      { offset_hours: 8640, task_channel: "sms", objective: "Saludo breve y una pregunta abierta", body: "Hola {{first_name}}, soy de {{sender_name}}. ¿Cómo les va con [tema] este mes?" },
+    ],
+  },
 ];
 
 const HOUR_MS = 3_600_000;
@@ -186,6 +243,8 @@ export function offsetLabel(hours: number): string {
   if (hours === 0) return "Al inscribir";
   if (hours < DAY_HOURS) return `+${String(hours)} h`;
   const days = Math.round(hours / DAY_HOURS);
+  // P3b-2: la pista de relación se cuenta en meses («+11 meses», no «+330 días»).
+  if (days >= 60 && days % 30 === 0) return `+${String(days / 30)} meses`;
   return `+${String(days)} ${days === 1 ? "día" : "días"}`;
 }
 
@@ -217,7 +276,7 @@ export function validateSequence(input: {
   if (input.steps.length > SEQUENCE_LIMITS.steps.max) {
     problems.push({
       index: null,
-      message: `Máximo ${String(SEQUENCE_LIMITS.steps.max)} pasos: más que eso es una campaña de goteo`,
+      message: `Máximo ${String(SEQUENCE_LIMITS.steps.max)} pasos: un toque al mes durante un año`,
     });
   }
   input.steps.forEach((step, index) => {
@@ -229,7 +288,7 @@ export function validateSequence(input: {
       step.offset_hours < SEQUENCE_LIMITS.offset_hours.min ||
       step.offset_hours > SEQUENCE_LIMITS.offset_hours.max
     ) {
-      problems.push({ index, message: "La espera va entre 0 h y 90 días" });
+      problems.push({ index, message: "La espera va entre 0 h y 365 días" });
     }
     if (step.task_channel === "email") {
       if ((step.subject ?? "").trim().length === 0) problems.push({ index, message: "El correo necesita un asunto" });
@@ -242,6 +301,12 @@ export function validateSequence(input: {
         problems.push({ index, message: `Un SMS de secuencia tiene como mucho ${String(MESSAGE_LIMITS.sms_body)} caracteres` });
       }
     }
+    // P3b-2: las plantillas dejan huecos «[…]» para que el negocio ponga lo
+    // suyo. Uno sin completar le llegaría tal cual a un cliente real. La tarea
+    // manual no: la hace una persona que lo lee.
+    if ((step.task_channel === "email" || step.task_channel === "sms") && hasUnfilledBracket(`${step.subject ?? ""} ${step.body ?? ""}`)) {
+      problems.push({ index, message: "Completa el texto entre corchetes antes de guardar" });
+    }
     // Las esperas se miden desde la INSCRIPCIÓN: si no crecen, dos pasos caen
     // a la vez y el cliente recibe dos mensajes seguidos.
     const previous = input.steps[index - 1];
@@ -252,6 +317,11 @@ export function validateSequence(input: {
   return problems;
 }
 
+/** Un hueco de plantilla sin completar: «[tema]», «[Cuenta aquí…]». Espejo del servidor. */
+export function hasUnfilledBracket(text: string): boolean {
+  return /\[[^\]\n]{2,}\]/.test(text);
+}
+
 /** Las esperas viajan tal cual; el orden de la lista ES la posición. */
 export function toUpsertDTO(input: {
   name: string;
@@ -259,6 +329,8 @@ export function toUpsertDTO(input: {
   stop_on_reply: boolean;
   stop_on_conversion: boolean;
   is_active: boolean;
+  /** P3b-2: SIEMPRE viaja (null incluido): guardar sin él borraría el encadenado. */
+  next_sequence_id: string | null;
   steps: readonly DraftStep[];
 }): UpsertSequenceDTO {
   return {
@@ -267,6 +339,7 @@ export function toUpsertDTO(input: {
     stop_on_reply: input.stop_on_reply,
     stop_on_conversion: input.stop_on_conversion,
     is_active: input.is_active,
+    next_sequence_id: input.next_sequence_id,
     steps: input.steps.map((step) => ({
       offset_hours: step.offset_hours,
       task_channel: step.task_channel,
