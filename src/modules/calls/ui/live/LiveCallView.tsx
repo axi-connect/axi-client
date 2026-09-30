@@ -16,12 +16,12 @@ import {
 import {
   auraModeFor,
   currentStage,
-  routeSteps,
+  stageProgress,
   stageMarks,
   type LiveCallPulse,
 } from "@/modules/calls/domain/live-call";
 import { callTypeLabel } from "@/modules/calls/domain/playbooks";
-import { StageRoute } from "@/modules/calls/ui/components/StageRoute";
+import { StageMeter } from "@/modules/calls/ui/components/StageMeter";
 import { formatCallClock } from "@/modules/calls/ui/lib/call-format";
 import { LiveCallStage } from "./LiveCallStage";
 import { LiveConversation } from "./LiveConversation";
@@ -71,12 +71,12 @@ export function LiveCallView({
   // Plan de modos §4: en una proactiva, el marco y la etapa en la que va.
   const stages = call.playbook?.stages ?? [];
   const stageKey = call.playbook === null ? null : currentStage(pulse, call.stage_route);
-  const steps = routeSteps(stages, stageKey);
-  const stageIndex = stages.findIndex((stage) => stage.key === stageKey);
+  const progress = stageProgress(stages, stageKey, { goalMet: false, finished: false });
+  const stageIndex = progress?.reachedIndex ?? -1;
   const stageNow = stageIndex === -1 ? null : stages[stageIndex];
   const stageText = stageNow === undefined || stageNow === null ? null : stageNow.label;
-  const stagePosition =
-    stageText === null ? null : `${String(stageIndex + 1)} de ${String(stages.length)}`;
+  const stagePosition = progress === null ? null : `${String(stageIndex + 1)} de ${String(progress.total)}`;
+  const stageNext = stageIndex === -1 ? undefined : stages[stageIndex + 1];
   const pending = stages.slice(stageIndex + 1).map((stage) => stage.label.toLowerCase());
 
   return (
@@ -114,7 +114,20 @@ export function LiveCallView({
         )}
       </header>
 
-      {steps.length > 0 && <StageRoute steps={steps} />}
+      {/* Rediseño de la ruta (2026-09-30): el medidor a lo ancho, sin tira que scrollee. */}
+      {progress !== null && stageText !== null && (
+        <div className="flex flex-col gap-2">
+          <StageMeter steps={progress.steps} label={progress.position} />
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-sm">
+            <p className="flex min-w-0 items-baseline gap-2">
+              <span className="text-muted-foreground">Etapa</span>
+              <span className="font-semibold">{stageText}</span>
+              <span className="font-mono text-xs text-muted-foreground tabular-nums">{stagePosition}</span>
+            </p>
+            {stageNext !== undefined && <p className="text-muted-foreground">Sigue: {stageNext.label}</p>}
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_400px]">
         <div className="flex min-w-0 flex-col gap-4">

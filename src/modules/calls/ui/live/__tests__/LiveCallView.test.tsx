@@ -122,8 +122,9 @@ describe("LiveCallView (premium F3)", () => {
         pulse={{ ...INITIAL_LIVE_CALL_PULSE, phase: "listening", stage: "descubrimiento" }}
       />,
     );
-    const route = screen.getByRole("navigation", { name: "Etapas de la llamada" });
-    expect(within(route).getByText("Descubrimiento").closest("[aria-current='step']")).not.toBeNull();
+    // Rediseño de la ruta: el medidor a lo ancho, sin tira que scrollee.
+    expect(screen.getByRole("img", { name: "Descubrimiento · 2 de 4" })).toBeInTheDocument();
+    expect(screen.getByText("Sigue: Propuesta")).toBeInTheDocument();
     // F-3: el nombre puede recortarse, «2 de 4» nunca.
     expect(screen.getByText("· 2 de 4")).toHaveClass("shrink-0");
     expect(screen.getByRole("heading", { level: 2, name: "Etapa" })).toBeInTheDocument();
@@ -132,7 +133,7 @@ describe("LiveCallView (premium F3)", () => {
 
   it("plan de modos: una reactiva conserva sus tres fichas, sin ruta ni «Etapa»", () => {
     render(<LiveCallView call={call()} pulse={{ ...INITIAL_LIVE_CALL_PULSE, phase: "listening" }} />);
-    expect(screen.queryByRole("navigation", { name: "Etapas de la llamada" })).toBeNull();
+    expect(screen.queryByRole("img", { name: /de \d+$/ })).toBeNull();
     expect(screen.queryByRole("heading", { level: 2, name: "Etapa" })).toBeNull();
     expect(screen.getByRole("heading", { level: 2, name: "Número" })).toBeInTheDocument();
   });

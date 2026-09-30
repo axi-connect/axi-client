@@ -9,8 +9,9 @@ import {
   summaryWaitRemainingMs,
   type CallSessionDetailDTO,
 } from "@/modules/calls/domain/call";
-import { routeSteps } from "@/modules/calls/domain/live-call";
-import { StageRoute } from "@/modules/calls/ui/components/StageRoute";
+import { stageEntries, stageProgress } from "@/modules/calls/domain/live-call";
+import { StageMeter } from "@/modules/calls/ui/components/StageMeter";
+import { StageTimeline } from "@/modules/calls/ui/components/StageTimeline";
 
 /**
  * «Así fue la llamada» (canvas, tablero 6): la isla de la vista — cristal con
@@ -25,15 +26,13 @@ export function CallSummaryIsland({ call, className }: { call: CallSessionDetail
   // Solo `last_stage`: el servidor la escribe al CONTESTAR. `stage_route` trae
   // sembrada la primera etapa desde el timbre, y una no contestada (buzón, no
   // contestó) no «llegó» a nada — el embudo tampoco la cuenta (auditoría A1).
-  const stages = call.playbook?.stages ?? [];
-  const reachedKey = call.last_stage;
-  const reachedIndex = stages.findIndex((stage) => stage.key === reachedKey);
-  const reached = reachedIndex === -1 ? null : (stages[reachedIndex] ?? null);
   const goalMet = call.outcome === "goal_met" || assessment?.met === true;
-  const fellAt = reached !== null && !goalMet && reachedIndex < stages.length - 1 ? reached.key : null;
-  const steps = routeSteps(stages, reachedKey).map((step) =>
-    step.state === "now" ? { ...step, state: "done" as const } : step,
-  );
+  const progress = stageProgress(call.playbook?.stages ?? [], call.last_stage, {
+    goalMet,
+    finished: true,
+    entries: stageEntries(call.events),
+  });
+  const reached = progress === null ? null : (progress.steps[progress.reachedIndex] ?? null);
   // F-1: la ruta se muestra aunque no haya resumen ni veredicto — «dónde se
   // cortó» es justo lo que el dueño viene a buscar en una llamada sin resumen.
   const hadConversation = call.segments.some((segment) => segment.role !== "system");
@@ -54,16 +53,20 @@ export function CallSummaryIsland({ call, className }: { call: CallSessionDetail
           Axi está escribiendo el resumen. Aparece aquí en cuanto esté listo.
         </p>
       ) : null}
-      {reached !== null && (
-        <div className="mt-1 flex flex-col gap-2">
-          <StageRoute steps={steps} fellAt={fellAt} label="Etapas que recorrió la llamada" />
+      {progress !== null && reached !== null && (
+        <div className="mt-1 flex flex-col gap-3 rounded-2xl border border-border/60 bg-foreground/[0.03] p-3.5">
           {/* Una sola fila: si no cumplió, la etapa a la que llegó ES donde se cortó (B3). */}
-          <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1 text-sm">
-            <dt className="text-muted-foreground">{fellAt === null ? "Llegó a" : "Se cortó en"}</dt>
-            <dd className="font-medium">
-              {reached.label} · {reachedIndex + 1} de {stages.length}
-            </dd>
-          </dl>
+          <div className="flex items-baseline justify-between gap-3">
+            <dl className="flex min-w-0 items-baseline gap-2 text-sm">
+              <dt className="shrink-0 text-muted-foreground">{reached.state === "fell" ? "Se cortó en" : "Llegó a"}</dt>
+              <dd className="min-w-0 font-semibold">{reached.label}</dd>
+            </dl>
+            <span className="shrink-0 font-mono text-xs text-muted-foreground tabular-nums">
+              {progress.reachedIndex + 1} de {progress.total}
+            </span>
+          </div>
+          <StageMeter steps={progress.steps} label={progress.position} />
+          <StageTimeline steps={progress.steps} label="Etapas que recorrió la llamada" className="mt-1" />
         </div>
       )}
       {assessment !== null && (

@@ -3,8 +3,9 @@ import {
   auraModeFor,
   currentStage,
   liveCallPulseReducer,
-  routeSteps,
+  stageEntries,
   stageMarks,
+  stageProgress,
   type LiveCallPulse,
   type LiveCallPulseAction,
 } from "@/modules/calls/domain/live-call";
@@ -114,9 +115,39 @@ describe("plan de modos · etapas en vivo", () => {
     expect(currentStage(INITIAL_LIVE_CALL_PULSE, [])).toBeNull();
   });
 
-  it("routeSteps marca recorridas, la actual y las que faltan", () => {
-    expect(routeSteps(stages, "descubrimiento").map((s) => s.state)).toEqual(["done", "now", "next"]);
-    expect(routeSteps(stages, null).map((s) => s.state)).toEqual(["next", "next", "next"]);
+  it("stageProgress en vivo: recorridas, la actual y las que faltan; sin etapa no hay progreso", () => {
+    const live = stageProgress(stages, "descubrimiento", { goalMet: false, finished: false });
+    expect(live?.steps.map((s) => s.state)).toEqual(["done", "reached", "pending"]);
+    expect(live?.position).toBe("Descubrimiento · 2 de 3");
+    expect(stageProgress(stages, null, { goalMet: false, finished: false })).toBeNull();
+    expect(stageProgress(stages, "otra", { goalMet: false, finished: false })).toBeNull();
+  });
+
+  it("stageProgress terminada: se cortó antes de la última; cumplida, lo que falta no hizo falta", () => {
+    const fell = stageProgress(stages, "descubrimiento", { goalMet: false, finished: true });
+    expect(fell?.steps.map((s) => s.state)).toEqual(["done", "fell", "pending"]);
+    const met = stageProgress(stages, "apertura", { goalMet: true, finished: true });
+    expect(met?.steps.map((s) => s.state)).toEqual(["met", "skipped", "skipped"]);
+    // En la última etapa sin veredicto no «se cortó»: llegó al final.
+    const end = stageProgress(stages, "cierre", { goalMet: false, finished: true });
+    expect(end?.steps.at(-1)?.state).toBe("reached");
+  });
+
+  it("stageEntries: el primer stage_changed de cada etapa, en segundos; la primera entra en 0", () => {
+    const entries = stageEntries([
+      { type: "stage_changed", payload: { to: "descubrimiento", at_ms: 34_900 } },
+      { type: "turn_completed", payload: {} },
+      { type: "stage_changed", payload: { to: "apertura", at_ms: 50_000 } },
+      { type: "stage_changed", payload: { to: "descubrimiento", at_ms: 61_000 } },
+      { type: "stage_changed", payload: { to: 3 } },
+    ]);
+    expect([...entries]).toEqual([["descubrimiento", 34], ["apertura", 50]]);
+    const progress = stageProgress(stages, "descubrimiento", {
+      goalMet: false,
+      finished: true,
+      entries: new Map([["descubrimiento", 34]]),
+    });
+    expect(progress?.steps.map((s) => s.entered_s)).toEqual([0, 34, null]);
   });
 
   it("stageMarks pone la primera etapa antes del primer turno del agente y cada cambio en su turno", () => {
