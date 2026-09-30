@@ -1,27 +1,39 @@
 "use client";
 
 import { useMemo } from "react";
-import { Sparkles } from "lucide-react";
+import { MessageSquareText, Phone, UserRound } from "lucide-react";
 import { cn } from "@/core/lib/utils";
-import { Badge } from "@/shared/components/ui/badge";
 import { Input } from "@/shared/components/ui/input";
 import {
-  APPOINTMENT_STATUS_BADGE_CLASSES,
+  APPOINTMENT_STATUS_DOT,
   APPOINTMENT_STATUS_LABELS,
+  appointmentOrigin,
   type AppointmentDTO,
 } from "@/modules/scheduling/domain/appointment";
-import {
-  businessDayKey,
-  fmtDayLong,
-  fmtTimeRange,
-  type DayKey,
-} from "@/core/lib/business-time";
+import { fmtClockRange } from "@/modules/scheduling/domain/time-grid";
+import { addDaysToKey, businessDayKey, fmtDayLong, type DayKey } from "@/core/lib/business-time";
 import { LIST_MAX_DAYS } from "@/modules/scheduling/domain/calendar-range";
 import { GlassGlyph } from "@/shared/components/ui/glyphs";
 
+const ORIGIN_LABEL = {
+  call: { icon: Phone, label: "Por llamada" },
+  conversation: { icon: MessageSquareText, label: "Por chat" },
+  team: { icon: UserRound, label: "Equipo" },
+} as const;
+
+/** «Hoy · Miércoles 30 de septiembre»: sin coma ni año. */
+export function dayHeading(day: DayKey, todayKey: DayKey): string {
+  const raw = fmtDayLong(day).replace(", ", " ").replace(/ de \d{4}$/, "");
+  const long = raw.charAt(0).toUpperCase() + raw.slice(1);
+  if (day === todayKey) return `Hoy · ${long}`;
+  if (day === addDaysToKey(todayKey, 1)) return `Mañana · ${long}`;
+  return long;
+}
+
 /**
- * Vista Lista: citas del rango agrupadas por día (headers sticky). El rango
- * es manual y el backend lo limita a 92 días; el clamp lo aplica el store.
+ * Vista Lista (lienzo F1): citas del rango agrupadas por día. Cada fila dice
+ * la hora, el estado en su punto, quién y qué servicio, y de dónde vino. El
+ * rango es manual y el backend lo limita a 92 días; el clamp lo aplica el store.
  */
 export function AppointmentsList({
   appointments,
@@ -54,31 +66,29 @@ export function AppointmentsList({
   }, [appointments, timezone]);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-card">
-      <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-2.5 text-sm">
-        <span className="text-muted-foreground">Rango:</span>
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-xs">
+      <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3 text-sm md:px-6">
+        <span className="text-muted-foreground">Del</span>
         <Input
           type="date"
           value={listRange.from}
           aria-label="Desde"
-          className="h-8 w-fit tabular-nums"
+          className="h-9 w-fit rounded-full tabular-nums"
           onChange={(e) => {
             if (e.target.value) onRangeChange(e.target.value, listRange.to);
           }}
         />
-        <span aria-hidden className="text-muted-foreground">
-          →
-        </span>
+        <span className="text-muted-foreground">al</span>
         <Input
           type="date"
           value={listRange.to}
           aria-label="Hasta"
-          className="h-8 w-fit tabular-nums"
+          className="h-9 w-fit rounded-full tabular-nums"
           onChange={(e) => {
             if (e.target.value) onRangeChange(listRange.from, e.target.value);
           }}
         />
-        <span className="text-xs text-muted-foreground">(máximo {LIST_MAX_DAYS} días)</span>
+        <span className="text-xs text-muted-foreground">Hasta {LIST_MAX_DAYS} días</span>
         <span className="ml-auto text-xs text-muted-foreground tabular-nums">
           {appointments.length === 1 ? "1 cita" : `${appointments.length} citas`}
         </span>
@@ -87,78 +97,77 @@ export function AppointmentsList({
       {groups.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 p-8 text-center">
           <GlassGlyph kind="noresults" tier="sm" />
-          <p className="text-sm font-medium">Sin citas en el rango</p>
-          <p className="text-xs text-muted-foreground">
-            Ajusta las fechas o cambia el filtro de estado.
+          <p className="font-heading text-lg font-bold">Sin citas en estos días</p>
+          <p className="max-w-xs text-sm text-muted-foreground">
+            Cambia las fechas o el filtro de estado. Cuando Axi o tu equipo agenden, las verás aquí.
           </p>
         </div>
       ) : (
         <div className="min-h-0 flex-1 overflow-y-auto">
-          {groups.map(([day, items]) => (
-            <section key={day} aria-label={fmtDayLong(day)}>
-              <h3
-                className={cn(
-                  "sticky top-0 z-[1] border-b border-border bg-secondary/80 px-4 py-1.5 text-xs font-semibold backdrop-blur",
-                  day === todayKey ? "text-brand" : "text-muted-foreground",
-                )}
-              >
-                {day === todayKey && "Hoy · "}
-                <span className="capitalize">{fmtDayLong(day)}</span>
-              </h3>
-              <ul>
-                {items.map((appointment) => (
-                  <li key={appointment.id}>
-                    <button
-                      type="button"
-                      onClick={() => onOpen(appointment.id)}
-                      className="grid w-full grid-cols-[110px_1.4fr_120px] items-center gap-3 border-b border-border px-4 py-2.5 text-left text-sm transition-colors hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring md:grid-cols-[150px_1.4fr_1fr_130px_120px]"
-                    >
-                      <span className="font-semibold tabular-nums">
-                        {fmtTimeRange(appointment.starts_at, appointment.ends_at, timezone)}
-                      </span>
-                      <span className="flex min-w-0 items-center gap-1.5">
-                        {appointment.created_by_type === "ai_agent" && (
-                          <Sparkles
-                            aria-label="Agendada por el asistente"
-                            className="size-3.5 shrink-0 text-accent-violet"
-                          />
-                        )}
-                        <span className="truncate font-medium">
-                          {contactNames[appointment.contact_id] ?? "Contacto"}
-                        </span>
-                      </span>
-                      <span className="hidden truncate text-muted-foreground md:inline">
-                        {appointment.product_id !== null
-                          ? (productNames[appointment.product_id] ?? "Servicio")
-                          : "—"}
-                      </span>
-                      <span className="hidden md:inline-flex">
-                        <Badge className={APPOINTMENT_STATUS_BADGE_CLASSES[appointment.status]}>
-                          {APPOINTMENT_STATUS_LABELS[appointment.status]}
-                        </Badge>
-                      </span>
-                      <span className="inline-flex justify-end md:justify-start">
-                        <Badge
-                          className={cn(
-                            "md:hidden",
-                            APPOINTMENT_STATUS_BADGE_CLASSES[appointment.status],
-                          )}
+          {groups.map(([day, items], index) => {
+            const active = items.filter((a) => a.status !== "cancelled").length;
+            return (
+              <section key={day} aria-label={fmtDayLong(day)}>
+                <h3
+                  className={cn(
+                    "sticky top-0 z-[1] flex items-baseline justify-between gap-3 bg-card px-4 pt-4 pb-2.5 md:px-6",
+                    index > 0 && "border-t border-border",
+                  )}
+                >
+                  <span className="font-heading text-base font-bold md:text-lg">
+                    {dayHeading(day, todayKey)}
+                  </span>
+                  <span className="shrink-0 text-xs font-normal text-muted-foreground tabular-nums">
+                    {active === 1 ? "1 cita" : `${active} citas`}
+                  </span>
+                </h3>
+                <ul>
+                  {items.map((appointment) => {
+                    const origin = ORIGIN_LABEL[appointmentOrigin(appointment).kind];
+                    const OriginIcon = origin.icon;
+                    const cancelled = appointment.status === "cancelled";
+                    return (
+                      <li key={appointment.id}>
+                        <button
+                          type="button"
+                          onClick={() => onOpen(appointment.id)}
+                          className="grid w-full grid-cols-[88px_8px_minmax(0,1fr)_auto] items-center gap-3 border-t border-border px-4 py-3 text-left text-sm transition-colors hover:bg-secondary/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset md:grid-cols-[110px_8px_minmax(0,1fr)_auto_auto] md:gap-4 md:px-6"
                         >
-                          {APPOINTMENT_STATUS_LABELS[appointment.status]}
-                        </Badge>
-                        <Badge
-                          variant="secondary"
-                          className="hidden text-muted-foreground md:inline-flex"
-                        >
-                          {appointment.created_by_type === "ai_agent" ? "Asistente" : "Manual"}
-                        </Badge>
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ))}
+                          <span className="font-mono text-xs whitespace-nowrap md:text-sm">
+                            {fmtClockRange(appointment.starts_at, appointment.ends_at, timezone)}
+                          </span>
+                          <span aria-hidden className={cn("size-2 rounded-full", APPOINTMENT_STATUS_DOT[appointment.status])} />
+                          <span className="min-w-0">
+                            <span
+                              className={cn(
+                                "block truncate font-semibold",
+                                cancelled && "text-muted-foreground line-through",
+                              )}
+                            >
+                              {contactNames[appointment.contact_id] ?? "Contacto"}
+                            </span>
+                            {appointment.product_id !== null && (
+                              <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+                                {productNames[appointment.product_id] ?? "Servicio"}
+                              </span>
+                            )}
+                          </span>
+                          <span className="hidden items-center gap-1.5 text-xs whitespace-nowrap text-muted-foreground md:inline-flex">
+                            <OriginIcon aria-hidden className="size-3.5" />
+                            {origin.label}
+                          </span>
+                          <span className="inline-flex h-6 items-center gap-1.5 rounded-full bg-secondary px-2.5 text-xs font-medium whitespace-nowrap">
+                            <span aria-hidden className={cn("size-1.5 rounded-full", APPOINTMENT_STATUS_DOT[appointment.status])} />
+                            {APPOINTMENT_STATUS_LABELS[appointment.status]}
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            );
+          })}
         </div>
       )}
     </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
@@ -11,6 +11,15 @@ import {
   hydrateContactNames,
   hydrateServiceNames,
 } from "@/modules/scheduling/infrastructure/services/entity-names.cache";
+import { useCompanySchedule } from "@/modules/scheduling/infrastructure/hooks/use-company-schedule";
+import {
+  hhmmToMinutes,
+  isWithinOpenHours,
+  openHoursLabel,
+  readCreatePrefill,
+} from "@/modules/scheduling/domain/time-grid";
+import { todayKey } from "@/core/lib/business-time";
+import { dayHeading } from "./calendar/AppointmentsList";
 import {
   AppointmentForm,
   APPOINTMENT_FORM_ID,
@@ -36,9 +45,29 @@ export function AppointmentFormModal({
   const { showAlert } = useAlert();
 
   const rescheduleId = searchParams.get("reschedule");
-  const [mode, setMode] = useState<AppointmentFormMode | null>(
-    rescheduleId === null ? { kind: "create" } : null,
+  const { timezone, schedules, loading: scheduleLoading } = useCompanySchedule();
+  // Hueco tocado en el calendario: `?date=&time=` (lienzo F1).
+  const prefillKey = `${searchParams.get("date") ?? ""}|${searchParams.get("time") ?? ""}`;
+  const prefill = useMemo(() => {
+    const read = readCreatePrefill(searchParams);
+    if (read === null) return null;
+    const inside = isWithinOpenHours(schedules, read.date, hhmmToMinutes(read.time));
+    return {
+      ...read,
+      outsideHours: inside ? null : { time: read.time, openHours: openHoursLabel(schedules, read.date) },
+    };
+    // Solo cambia con la URL y el horario; `searchParams` es una instancia nueva por render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefillKey, schedules]);
+  const [rescheduleMode, setMode] = useState<AppointmentFormMode | null>(null);
+  // Crear no espera nada, salvo el horario cuando hay hueco (para saber si
+  // cae fuera); el formulario se monta una vez con sus valores iniciales.
+  const waitingSchedule = prefill !== null && scheduleLoading;
+  const createMode = useMemo<AppointmentFormMode | null>(
+    () => (waitingSchedule ? null : { kind: "create", prefill }),
+    [waitingSchedule, prefill],
   );
+  const mode = rescheduleId !== null ? rescheduleMode : createMode;
 
   const open = pathname !== null && pathname.endsWith("/create");
 
@@ -86,6 +115,10 @@ export function AppointmentFormModal({
   }, [rescheduleId]);
 
   const isReschedule = rescheduleId !== null;
+  const prefillDescription =
+    prefill !== null && timezone !== null
+      ? `${dayHeading(prefill.date, todayKey(new Date(), timezone))} · ${prefill.time.replace(/^0/, "")}`
+      : null;
 
   return (
     <Modal
@@ -97,7 +130,7 @@ export function AppointmentFormModal({
         title: isReschedule ? "Reagendar cita" : "Nueva cita",
         description: isReschedule
           ? "Se revalida el cupo y los recordatorios automáticos se regeneran."
-          : "La cita se agenda en la zona horaria del negocio.",
+          : (prefillDescription ?? "La cita se agenda en la zona horaria del negocio."),
         className: "sm:max-w-2xl",
         actions: [
           { label: "Cancelar", variant: "outline", asClose: true, id: "appointment-cancel" },
@@ -122,6 +155,7 @@ export function AppointmentFormModal({
         </div>
       ) : (
         <AppointmentForm
+          key={prefillKey}
           mode={mode}
           onSuccess={(fresh) =>
             router.replace(`/scheduling/calendar/appointment/${fresh.id}`)

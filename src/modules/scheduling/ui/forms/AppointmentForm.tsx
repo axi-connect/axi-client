@@ -31,7 +31,11 @@ import {
 export const APPOINTMENT_FORM_ID = "appointment-form";
 
 export type AppointmentFormMode =
-  | { kind: "create" }
+  | {
+      kind: "create";
+      /** Hueco tocado en el calendario: día y hora puestos (lienzo F1). */
+      prefill?: { date: string; time: string; outsideHours: { time: string; openHours: string | null } | null } | null;
+    }
   | { kind: "reschedule"; appointment: AppointmentDTO; contactLabel: string; serviceName: string | null };
 
 /**
@@ -84,7 +88,7 @@ export function AppointmentForm({
     () =>
       mode.kind === "reschedule" && timezone !== null
         ? rescheduleFormValues(mode.appointment, mode.contactLabel, timezone)
-        : defaultAppointmentFormValues(),
+        : defaultAppointmentFormValues(mode.kind === "create" ? mode.prefill : null),
     [mode, timezone],
   );
 
@@ -98,6 +102,7 @@ export function AppointmentForm({
             timezone,
             lockedServiceName: mode.kind === "reschedule" ? mode.serviceName : undefined,
             refreshKey: availabilityKey,
+            outsideHours: mode.kind === "create" ? (mode.prefill?.outsideHours ?? null) : null,
           }),
     [mode, services, timezone, availabilityKey],
   );

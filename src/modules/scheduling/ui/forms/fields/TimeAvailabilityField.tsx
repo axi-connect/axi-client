@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Clock } from "lucide-react";
 import { useWatch, type Control } from "react-hook-form";
 import { Input } from "@/shared/components/ui/input";
 import { Switch } from "@/shared/components/ui/switch";
@@ -19,6 +20,7 @@ export function TimeAvailabilityField({
   error,
   timezone,
   refreshKey,
+  outsideHours = null,
   onChange,
 }: {
   control: Control<AppointmentFormValues>;
@@ -26,18 +28,32 @@ export function TimeAvailabilityField({
   error?: string;
   timezone: string;
   refreshKey: number;
+  outsideHours?: { time: string; openHours: string | null } | null;
   onChange: (time: string) => void;
 }) {
   const [date, productId, durationMinutes] = useWatch({
     control,
     name: ["date", "product_id", "duration_minutes"],
   });
-  const [customMode, setCustomMode] = useState(false);
+  // El hueco fuera de horario no es un horario sugerido: arranca en «Otra hora».
+  const [customMode, setCustomMode] = useState(outsideHours !== null);
 
   const duration = Number(durationMinutes);
 
   return (
     <div className="space-y-3 rounded-xl border border-border bg-secondary/40 p-3">
+      {outsideHours !== null && customMode && value === outsideHours.time && (
+        <div className="flex items-start gap-2.5 rounded-xl border border-border bg-card p-3 text-sm">
+          <Clock aria-hidden className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+          <p className="text-foreground/80">
+            <span className="font-semibold text-foreground">
+              {outsideHours.time.replace(/^0/, "")} está fuera de tu horario
+            </span>
+            {outsideHours.openHours !== null ? ` (${outsideHours.openHours})` : ""}. Puedes agendarla
+            igual: la cita queda en la agenda y Axi le envía sus recordatorios.
+          </p>
+        </div>
+      )}
       <AvailabilityPanel
         date={(date as DayKey) ?? ""}
         productId={(productId as string) ?? ""}
@@ -73,7 +89,7 @@ export function TimeAvailabilityField({
           />
         )}
       </div>
-      <p className="text-[11px] text-muted-foreground">
+      <p className="text-xs text-muted-foreground">
         El asistente de IA solo ofrece los horarios sugeridos; como operador puedes agendar a
         cualquier hora.
       </p>

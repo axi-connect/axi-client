@@ -1,7 +1,9 @@
 import {
   allowedTransitions,
+  appointmentOrigin,
   groupSegmentsByDay,
   isTerminalStatus,
+  showsInTimeGrid,
   type AppointmentDTO,
 } from "../appointment";
 
@@ -19,6 +21,8 @@ function appointment(overrides: Partial<AppointmentDTO> = {}): AppointmentDTO {
     notes: null,
     created_by_type: "user",
     conversation_id: null,
+    call_session_id: null,
+    created_by_user_id: null,
     cancelled_at: null,
     cancellation_reason: null,
     created_at: "2026-08-01T00:00:00.000Z",
@@ -82,5 +86,41 @@ describe("groupSegmentsByDay", () => {
     expect([...grouped.keys()].sort()).toEqual(["2026-08-10", "2026-08-11"]);
     expect(grouped.get("2026-08-10")?.[0].segment.continuesAfter).toBe(true);
     expect(grouped.get("2026-08-11")?.[0].segment.continuesBefore).toBe(true);
+  });
+});
+
+describe("appointmentOrigin («Ver llamada» / «Ver conversación»)", () => {
+  it("agendada en una llamada → la llamada, aunque haya conversación", () => {
+    expect(appointmentOrigin(appointment({ call_session_id: "cs1" }))).toEqual({
+      kind: "call",
+      callSessionId: "cs1",
+    });
+    expect(
+      appointmentOrigin(appointment({ call_session_id: "cs1", conversation_id: "cv1" })).kind,
+    ).toBe("call");
+  });
+
+  it("agendada en un chat → la conversación", () => {
+    expect(appointmentOrigin(appointment({ conversation_id: "cv1" }))).toEqual({
+      kind: "conversation",
+      conversationId: "cv1",
+    });
+  });
+
+  it("sin ninguna de las dos → el equipo", () => {
+    expect(appointmentOrigin(appointment()).kind).toBe("team");
+  });
+});
+
+describe("showsInTimeGrid (D1: las canceladas no ocupan columna)", () => {
+  it("la cancelada sale de la rejilla con cualquier otro filtro", () => {
+    expect(showsInTimeGrid("cancelled", "all")).toBe(false);
+    expect(showsInTimeGrid("cancelled", "scheduled")).toBe(false);
+  });
+
+  it("vuelve si el filtro pide justo «Cancelada»; el resto siempre se ve", () => {
+    expect(showsInTimeGrid("cancelled", "cancelled")).toBe(true);
+    expect(showsInTimeGrid("scheduled", "all")).toBe(true);
+    expect(showsInTimeGrid("no_show", "all")).toBe(true);
   });
 });

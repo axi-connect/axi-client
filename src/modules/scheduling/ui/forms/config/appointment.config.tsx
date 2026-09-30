@@ -50,12 +50,15 @@ export type ServiceOption = {
   duration_minutes: number | null;
 };
 
-export function defaultAppointmentFormValues(): Partial<AppointmentFormValues> {
+/** `prefill`: el día y la hora del hueco tocado en el calendario (lienzo F1). */
+export function defaultAppointmentFormValues(
+  prefill?: { date: DayKey; time: string } | null,
+): Partial<AppointmentFormValues> {
   return {
     contact: null,
     product_id: "",
-    date: "",
-    time: "",
+    date: prefill?.date ?? "",
+    time: prefill?.time ?? "",
     duration_minutes: 30,
     notes: "",
   };
@@ -90,8 +93,13 @@ export function buildAppointmentFormFields(opts: {
   lockedServiceName?: string | null;
   /** Bump para refrescar la disponibilidad tras un 409 de cupo. */
   refreshKey: number;
+  /**
+   * Hueco tocado fuera del horario de atención: el campo arranca en «Otra
+   * hora» y avisa con el horario del día («8:00 – 18:00»). `null` = dentro.
+   */
+  outsideHours?: { time: string; openHours: string | null } | null;
 }): Array<FieldConfig<AppointmentFormValues>> {
-  const { mode, services, timezone, lockedServiceName, refreshKey } = opts;
+  const { mode, services, timezone, lockedServiceName, refreshKey, outsideHours = null } = opts;
 
   const fields: Array<FieldConfig<AppointmentFormValues>> = [];
 
@@ -200,6 +208,7 @@ export function buildAppointmentFormFields(opts: {
           error={getError()}
           timezone={timezone}
           refreshKey={refreshKey}
+          outsideHours={outsideHours}
           onChange={(time) => setValue("time", time)}
         />
       ),

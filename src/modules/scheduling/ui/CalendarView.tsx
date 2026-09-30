@@ -10,7 +10,9 @@ import {
   groupSegmentsByDay,
   type AppointmentSegment,
 } from "@/modules/scheduling/domain/appointment";
+import { createAtHref } from "@/modules/scheduling/domain/time-grid";
 import {
+  addDaysToKey,
   fmtDayLong,
   fmtMonthTitle,
   fmtWeekTitle,
@@ -21,21 +23,31 @@ import {
   type DayKey,
 } from "@/core/lib/business-time";
 import { useCompanySchedule } from "@/modules/scheduling/infrastructure/hooks/use-company-schedule";
+import { useIsDesktop } from "@/modules/scheduling/infrastructure/hooks/use-is-desktop";
 import { useCalendarStore } from "@/modules/scheduling/infrastructure/stores/calendar.store";
 import { CalendarSkeleton } from "./components/calendar/CalendarSkeleton";
 import { CalendarToolbar } from "./components/calendar/CalendarToolbar";
 import { MonthGrid } from "./components/calendar/MonthGrid";
+import { MobileMonth } from "./components/calendar/MobileMonth";
 import { AppointmentsList } from "./components/calendar/AppointmentsList";
 import { ScheduleUnconfiguredBanner } from "./components/calendar/ScheduleUnconfiguredBanner";
 import { TimeGrid } from "./components/calendar/TimeGrid";
+import { WeekStrip } from "./components/calendar/WeekStrip";
+import { DayHeading } from "./components/calendar/DayHeading";
 
-/** Orquestador de la vista Calendario: toolbar + vista activa + estados. */
+/**
+ * Orquestador de la vista Calendario (lienzo Agenda premium F1): barra, vista
+ * activa y estados. En el celular no hay Semana (no cabe): la preferencia
+ * «semana» se muestra como Día con la tira de la semana encima.
+ */
 export function CalendarView() {
   const router = useRouter();
   const company = useCompanySchedule();
   const { hasPermission } = useAuth();
+  const isDesktop = useIsDesktop();
+  const canManage = hasPermission("scheduling:manage");
 
-  const view = useCalendarStore((s) => s.view);
+  const storedView = useCalendarStore((s) => s.view);
   const anchor = useCalendarStore((s) => s.anchor);
   const listRange = useCalendarStore((s) => s.listRange);
   const statusFilter = useCalendarStore((s) => s.statusFilter);
@@ -57,6 +69,10 @@ export function CalendarView() {
   const setStatusFilter = useCalendarStore((s) => s.setStatusFilter);
   const refresh = useCalendarStore((s) => s.refresh);
 
+  // El Día carga su semana entera, así que el rango de «semana» ya lo cubre:
+  // no hace falta tocar la preferencia guardada (que sigue siendo del computador).
+  const view = !isDesktop && storedView === "week" ? "day" : storedView;
+
   useEffect(() => {
     if (company.timezone !== null) init(company.timezone);
   }, [company.timezone, init]);
@@ -72,10 +88,7 @@ export function CalendarView() {
     [visibleAppointments, timezone],
   );
 
-  const monthDays = useMemo(
-    () => (anchor === "" ? [] : monthMatrix(anchor)),
-    [anchor],
-  );
+  const monthDays = useMemo(() => (anchor === "" ? [] : monthMatrix(anchor)), [anchor]);
 
   if (company.error !== null) {
     return (
@@ -96,12 +109,12 @@ export function CalendarView() {
   const today = computeTodayKey(new Date(), timezone);
   const title =
     view === "month"
-      ? fmtMonthTitle(anchor)
+      ? fmtMonthTitle(anchor).replace(" de ", " ")
       : view === "week"
         ? fmtWeekTitle(weekDays(anchor))
         : view === "day"
-          ? fmtDayLong(anchor)
-          : "Citas por rango";
+          ? fmtDayLong(anchor).replace(", ", " ").replace(/ de \d{4}$/, "")
+          : "Próximas citas";
 
   const openAppointment = (id: string) => {
     router.push(`/scheduling/calendar/appointment/${id}`);
@@ -110,15 +123,18 @@ export function CalendarView() {
     setAnchor(day);
     setView("day");
   };
+  const createAt = canManage
+    ? (day: DayKey, minutes: number) => router.push(createAtHref(day, minutes))
+    : null;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3 p-4 md:gap-4 md:p-6">
+    <div className="flex min-h-0 flex-1 flex-col gap-3 px-4 pt-3 pb-4 md:gap-4 md:px-8 md:pt-5 md:pb-6">
       <CalendarToolbar
         title={title}
         view={view}
+        isDesktop={isDesktop}
         statusFilter={statusFilter}
-        timezone={timezone}
-        canManage={hasPermission("scheduling:manage")}
+        canManage={canManage}
         onToday={goToday}
         onStep={step}
         onViewChange={setView}
@@ -129,26 +145,60 @@ export function CalendarView() {
       {!company.loading && !company.scheduleConfigured && <ScheduleUnconfiguredBanner />}
 
       {error !== null && (
-        <div className="flex items-center gap-3 rounded-2xl border border-destructive/40 bg-destructive/5 px-4 py-2.5 text-sm">
+        <div className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-2.5 text-sm">
+          <CircleAlert aria-hidden className="size-4 shrink-0 text-destructive" />
           <span className="min-w-0 flex-1">{error}</span>
-          <Button variant="outline" size="sm" onClick={() => void refresh()}>
+          <Button variant="outline" size="sm" className="rounded-full" onClick={() => void refresh()}>
             <RotateCcw aria-hidden className="size-3.5" /> Reintentar
           </Button>
         </div>
       )}
 
-      {view === "month" && (
-        <MonthGrid
-          days={monthDays}
-          anchorMonth={monthOfKey(anchor)}
-          todayKey={today}
-          timezone={timezone}
-          segmentsByDay={segmentsByDay}
-          contactNames={contactNames}
-          onOpen={openAppointment}
-          onSelectDay={selectDay}
-        />
+      {view === "day" && !isDesktop && (
+        <div className="-mx-2 flex flex-col gap-2">
+          <WeekStrip
+            anchor={anchor}
+            todayKey={today}
+            segmentsByDay={segmentsByDay}
+            onSelectDay={setAnchor}
+            onStepWeek={(delta) => setAnchor(addDaysToKey(anchor, delta * 7))}
+          />
+          <DayHeading
+            day={anchor}
+            todayKey={today}
+            segments={segmentsByDay.get(anchor) ?? []}
+            onToday={goToday}
+          />
+        </div>
       )}
+
+      {view === "month" &&
+        (isDesktop ? (
+          <MonthGrid
+            days={monthDays}
+            anchorMonth={monthOfKey(anchor)}
+            todayKey={today}
+            timezone={timezone}
+            segmentsByDay={segmentsByDay}
+            contactNames={contactNames}
+            onOpen={openAppointment}
+            onSelectDay={selectDay}
+          />
+        ) : (
+          <MobileMonth
+            days={monthDays}
+            anchor={anchor}
+            todayKey={today}
+            timezone={timezone}
+            segmentsByDay={segmentsByDay}
+            contactNames={contactNames}
+            productNames={productNames}
+            onPickDay={setAnchor}
+            onStepMonth={step}
+            onOpenDay={selectDay}
+            onOpen={openAppointment}
+          />
+        ))}
       {(view === "week" || view === "day") && (
         <TimeGrid
           days={view === "week" ? weekDays(anchor) : [anchor]}
@@ -156,8 +206,13 @@ export function CalendarView() {
           todayKey={today}
           schedules={company.schedules}
           segmentsByDay={segmentsByDay}
+          statusFilter={statusFilter}
           contactNames={contactNames}
+          serviceNames={productNames}
           onOpen={openAppointment}
+          onCreateAt={createAt}
+          compact={!isDesktop}
+          onCreate={canManage ? () => router.push("/scheduling/calendar/create") : null}
         />
       )}
       {view === "list" && (
