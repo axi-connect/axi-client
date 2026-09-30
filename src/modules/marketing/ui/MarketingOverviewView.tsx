@@ -8,6 +8,7 @@ import { useAuth } from "@/shared/auth/auth.hooks";
 import { Button } from "@/shared/components/ui/button";
 import { EmptyState } from "@/shared/components/features/empty-state";
 import { MarketingHeader } from "@/modules/marketing/ui/components/MarketingHeader";
+import { PilotsSummaryCard } from "@/modules/autopilot/public";
 import { useMarketingSocket } from "@/modules/marketing/infrastructure/realtime/use-marketing-socket";
 import { useOverviewStore } from "@/modules/marketing/infrastructure/stores/overview.store";
 import { MarketingNextUpIsland } from "./components/MarketingNextUpIsland";
@@ -148,6 +149,8 @@ export function MarketingOverviewView() {
           <RecoveryFeedTile entries={feed} connected={connected} />
           <PromotionsTile section={promotions} now={now} onRetry={retry} />
           {canReadLeads ? <CaptureTile section={capture} onRetry={retry} /> : null}
+          {/* P6b: lo que trajeron los pilotos; se oculta sola sin captación o sin servidor del piloto. */}
+          <PilotsSummaryCard />
           <OptOutsTile section={optOutsTotal} onRetry={retry} />
           <MetaTemplatesTile section={meta} onRetry={retry} />
           <QuotaTile section={meta} onRetry={retry} />

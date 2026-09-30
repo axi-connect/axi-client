@@ -18577,7 +18577,7 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
-                kind: "campaign" | "recovery" | "repurchase" | "promotion" | "segment" | "agent_tuning" | "insight" | "goal_pace";
+                kind: "campaign" | "recovery" | "repurchase" | "promotion" | "segment" | "agent_tuning" | "insight" | "goal_pace" | "autopilot_tuning";
                 /** @enum {string} */
                 status: "pending" | "approved" | "rejected" | "expired" | "superseded";
                 title: string;
@@ -18591,7 +18591,7 @@ export interface components {
                 risks: string[];
                 artifacts: unknown[];
                 /** @enum {string} */
-                source: "briefing" | "signal" | "chat" | "commercial";
+                source: "briefing" | "signal" | "chat" | "commercial" | "autopilot";
                 expires_at: string | null;
                 decided_at: string | null;
                 reject_reason: string | null;
@@ -18603,7 +18603,7 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
-                kind: "campaign" | "recovery" | "repurchase" | "promotion" | "segment" | "agent_tuning" | "insight" | "goal_pace";
+                kind: "campaign" | "recovery" | "repurchase" | "promotion" | "segment" | "agent_tuning" | "insight" | "goal_pace" | "autopilot_tuning";
                 /** @enum {string} */
                 status: "pending" | "approved" | "rejected" | "expired" | "superseded";
                 title: string;
@@ -18617,7 +18617,7 @@ export interface components {
                 risks: string[];
                 artifacts: unknown[];
                 /** @enum {string} */
-                source: "briefing" | "signal" | "chat" | "commercial";
+                source: "briefing" | "signal" | "chat" | "commercial" | "autopilot";
                 expires_at: string | null;
                 decided_at: string | null;
                 reject_reason: string | null;
@@ -20635,7 +20635,7 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
-                kind: "campaign" | "recovery" | "repurchase" | "promotion" | "segment" | "agent_tuning" | "insight" | "goal_pace";
+                kind: "campaign" | "recovery" | "repurchase" | "promotion" | "segment" | "agent_tuning" | "insight" | "goal_pace" | "autopilot_tuning";
                 /** @enum {string} */
                 status: "pending" | "approved" | "rejected" | "expired" | "superseded";
                 title: string;
@@ -20649,7 +20649,7 @@ export interface components {
                 risks: string[];
                 artifacts: unknown[];
                 /** @enum {string} */
-                source: "briefing" | "signal" | "chat" | "commercial";
+                source: "briefing" | "signal" | "chat" | "commercial" | "autopilot";
                 expires_at: string | null;
                 decided_at: string | null;
                 reject_reason: string | null;
@@ -20667,7 +20667,7 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
-                kind: "campaign" | "recovery" | "repurchase" | "promotion" | "segment" | "agent_tuning" | "insight" | "goal_pace";
+                kind: "campaign" | "recovery" | "repurchase" | "promotion" | "segment" | "agent_tuning" | "insight" | "goal_pace" | "autopilot_tuning";
                 /** @enum {string} */
                 status: "pending" | "approved" | "rejected" | "expired" | "superseded";
                 title: string;
@@ -20681,7 +20681,7 @@ export interface components {
                 risks: string[];
                 artifacts: unknown[];
                 /** @enum {string} */
-                source: "briefing" | "signal" | "chat" | "commercial";
+                source: "briefing" | "signal" | "chat" | "commercial" | "autopilot";
                 expires_at: string | null;
                 decided_at: string | null;
                 reject_reason: string | null;
