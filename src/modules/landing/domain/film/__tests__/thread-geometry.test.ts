@@ -72,6 +72,27 @@ describe("timeAnchors", () => {
     expect(same[2].at).toBeGreaterThan(same[1].at)
   })
 
+  it("un punto con `pin` llega en esa fracción del pin, aunque su `y` diga otra cosa", () => {
+    const flat: SceneThread[] = [{ scene: "a", points: [{ x: 50, y: 70 }] }, { scene: "b", points: [{ x: 5, y: 70, pin: 0.2 }, { x: 95, y: 71, pin: 0.7 }] }]
+    const [, first, second] = timeAnchors(flat, measure, VH)
+    const { start, end } = measures.b.pin!
+    // Sin `pin`, dos anclas a 1 % de altura llegarían con 1 px de diferencia.
+    expect(first.at).toBeCloseTo(start + 0.2 * (end - start))
+    expect(second.at).toBeCloseTo(start + 0.7 * (end - start))
+  })
+
+  it("también fija el tiempo de un punto que está sobre la cabeza (que sin `pin` llegaría antes del pin)", () => {
+    const [a] = timeAnchors([{ scene: "b", points: [{ x: 5, y: 10 }, { x: 5, y: 40, pin: 0.5 }] }], measure, VH).slice(1)
+    expect(a.at).toBeGreaterThan(measures.b.pin!.start)
+  })
+
+  it("en una escena libre, `pin` se ignora", () => {
+    const [a] = timeAnchors([{ scene: "c", points: [{ x: 50, y: 80, pin: 0.9 }] }], measure, VH)
+    expect(a.at).toBe(-1) // primer ancla: se ve al cargar
+    const [, b] = timeAnchors([{ scene: "a", points: [{ x: 1, y: 0 }] }, { scene: "c", points: [{ x: 50, y: 80, pin: 0.9 }] }], measure, VH)
+    expect(b.at).toBe(4000 + 800 - HEAD)
+  })
+
   it("una escena que no está en la página no aporta anclas", () => {
     const only = timeAnchors([...path, { scene: "no-existe", points: [{ x: 1, y: 1 }] }], measure, VH)
     expect(only.map((a) => a.scene)).toEqual(["a", "a", "b", "b", "c"])
@@ -243,6 +264,25 @@ describe("FILM_THREAD", () => {
     // Con 160svh (1440) el mapa mide justo la escena: los % son los del lienzo.
     expect(last.x).toBeCloseTo((road.x / MAP_WIDTH) * 100, 5)
     expect(last.y).toBeCloseTo((road.y / MAP_HEIGHT) * 100, 5)
+  })
+
+  it("en la meta, la luz recorre la carretera al ritmo de su trazo, no de golpe", () => {
+    const goal = FILM_THREAD.desktop.find((s) => s.scene === "goal")!
+    const pts = goal.resolve!({ width: 1440, height: 900, viewportHeight: 900 })
+    const pins = pts.map((q) => q.pin!)
+    expect(pins[0]).toBeCloseTo(0.2 / 4.9, 5)
+    expect(pins[pins.length - 1]).toBeCloseTo(2.4 / 4.9, 5)
+    for (let i = 1; i < pins.length; i++) expect(pins[i]).toBeGreaterThan(pins[i - 1])
+    // Con la escena fijada, los tiempos quedan repartidos por el pin (no a 1 px).
+    const anchors = timeAnchors([goal], () => ({ top: 0, width: 1440, height: 900, pin: { start: 0, end: 4000 } }), 900)
+    expect(anchors[anchors.length - 1].at - anchors[1].at).toBeGreaterThan(1000)
+  })
+
+  it("los momentos fijados de cada escena van en orden", () => {
+    for (const s of FILM_THREAD.desktop) {
+      const pins = (s.points ?? []).map((q) => q.pin).filter((v): v is number => v !== undefined)
+      for (let i = 1; i < pins.length; i++) expect(pins[i]).toBeGreaterThan(pins[i - 1])
+    }
   })
 
   it("en una ventana más ancha que 16:10, el mapa se recorta arriba y abajo y los puntos lo siguen", () => {

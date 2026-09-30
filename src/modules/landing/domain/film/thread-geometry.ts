@@ -25,6 +25,13 @@ export type ThreadPoint = {
   brand?: number;
   /** La escena se «enciende» cuando la luz llega a este punto. */
   ignite?: boolean;
+  /**
+   * Solo si la escena se fija: en qué fracción del pin (0–1) llega la luz aquí.
+   * Por defecto sale de `y`; sirve para un tramo horizontal (el horizonte de Axel,
+   * las fibras de medir), que por su `y` se cruzaría de golpe. En una escena libre
+   * se ignora: ahí la luz llega cuando el punto cruza la cabeza.
+   */
+  pin?: number;
 };
 
 export type SceneBox = { width: number; height: number; viewportHeight: number };
@@ -88,9 +95,11 @@ export function timeAnchors(
     for (const p of points) {
       const localY = (p.y / 100) * m.height;
       let at = m.top + localY - head;
-      if (m.pin && at > m.pin.start) {
-        const f = clamp((localY - head) / Math.max(1, m.height - head));
-        at = m.pin.start + f * (m.pin.end - m.pin.start) * PIN_SHARE;
+      if (m.pin && (p.pin !== undefined || at > m.pin.start)) {
+        // Una fracción explícita es exacta (se sincroniza con la línea de tiempo de la
+        // escena); la que sale de `y` termina antes de soltar el pin (PIN_SHARE).
+        const f = p.pin !== undefined ? clamp(p.pin) : clamp((localY - head) / Math.max(1, m.height - head)) * PIN_SHARE;
+        at = m.pin.start + f * (m.pin.end - m.pin.start);
       }
       out.push({
         scene: s.scene,

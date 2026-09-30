@@ -273,3 +273,31 @@ El módulo no importa gsap ni lenis: recibe el scroll y los pins como números. 
 - En la meta, colocar «vas aquí» con `onHead` (o quitar la carretera animada del SVG y dejar la punteada como fantasma).
 - Anclas del hero: nacen en las crestas de HeroSky (x 50 %, del 70 % al 86 % del alto, datos de axi-14). Las crestas ondulan, así que el nacimiento se afina en QA.
 - QA visual a 390, 768, 1024 y 1440 px, ajustando los números de `thread-path.ts`.
+
+## 11. Cobrar, ordenar, Axel y medir · rediseño (aprobado el 2026-09-30)
+
+Lienzo aprobado: https://claude.ai/artifact/PyDHa1EJ5YRVcVB9Tnrete (cuatro escenas a 1440 con barra de scroll, el recorrido encadenado y móvil 390). Todo en tinta; un objeto real por escena, que el hilo enciende al llegar (`data-thread-target`).
+
+| Escena | Protagonista | Coreografía (progreso de la escena) |
+|---|---|---|
+| Cobrar | Recibo de papel N.º 0142 en perspectiva (`rotateX` 44→26°, `rotateZ` −2→−6°), claro sobre el fondo oscuro | 0–0,46 recordatorio → «Pago el lunes sin falta» → promesa; 0,55–0,8 se llena la cuota 3 y cuentan «Total pagado» y «Falta»; 0,82–0,92 sello «PAGADO» (escala 1,5→1); 0,92–1 «PDF enviado por WhatsApp» |
+| Ordenar | Tarjeta blanca de Andrés sobre el pipeline como mesa (`rotateX` 40°, origen abajo) | 0,2–0,74 la tarjeta se levanta de «Propuesta» (queda el hueco punteado) y aterriza en «Compromiso» (cambian los conteos); 0,76–0,9 se engancha la cita del sábado; el pronóstico cuenta hasta $ 38,2 M |
+| Axel | El horizonte, que es el propio hilo | 0,1–0,46 Axel escribe su resumen con cursor; 0,45–0,8 amanece sobre el horizonte; 0,52–0,96 suben las tres propuestas («Aprobar» / «Ahora no»; el hallazgo, «Ver el detalle»); el violeta queda solo en la marca de Axel |
+| Medir | Fibras, una por conversación, que cruzan cuatro puertas (1.240 → 312 → 148 → 121); las que no llegan se apagan en su puerta | 0,12–0,82 las fibras se revelan de izquierda a derecha y cuentan las cifras; 0,82–0,96 convergen y aparece «$ 48,6 M» con la calidad del agente 92/100 |
+
+**Recorrido del hilo** (ya en `thread-path.ts`):
+- Cobrar entra arriba al centro, pasa por detrás del recibo y sale por la esquina derecha.
+- Ordenar baja por el margen derecho, enciende la tarjeta y sale por debajo de la mesa hacia el arranque de la carretera, abajo a la izquierda.
+- Axel entra por la derecha y se tiende como horizonte hasta la izquierda.
+- Medir entra por la izquierda, se abre en fibras y sale a la derecha hacia precios.
+- En móvil el hilo va por los márgenes y cruza de lado en los bordes entre escenas; en Axel el cruce es el horizonte.
+
+**Nuevo en la geometría: `ThreadPoint.pin`** (0–1). En una escena fijada, un punto llega en esa fracción exacta del pin; en una escena libre, el campo se ignora. Sirve para los tramos horizontales (el horizonte de Axel, las fibras de medir), que por su `y` se cruzarían de golpe. También arregla la meta: la carretera sube por la pantalla y sus puntos caían en el mismo instante, así que la luz la recorría de golpe. Ahora siguen el trazo de la línea de tiempo de `goal`: de 0,2 a 2,4 de 4,9, con `power1.inOut`, en la constante `GOAL_ROAD`. Si esa coreografía cambia, hay que cambiar esa constante.
+
+**Pendiente de axi-14 (implementación):**
+- Llevar las cuatro escenas al lienzo:
+  - El recibo, la mesa y la tarjeta son CSS con transformaciones. Las fibras de medir son un SVG estático (una sola `path` con muchos subtrazos) que se revela con un `clipPath` animado por `scaleX`. Nada de `backdrop-filter`.
+  - La cuota que se llena y el sello van con `transform`/`opacity`.
+- Añadir `axel` y `measure` a `PINNED`, que hoy no se fijan. Sin pin, el horizonte y las fibras se cruzan en unos píxeles de scroll y los `pin` del hilo no cuentan. Cobrar y ordenar funcionan libres.
+- Poner `data-thread-target` en el recibo, la tarjeta, la línea del horizonte y la cifra producida.
+- Revisar en QA dos cruces que ya existían en móvil: de equipo a cobrar y de ordenar a la meta, que pueden rozar un titular.
