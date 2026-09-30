@@ -1,20 +1,10 @@
+import type { Schemas } from "@/core/api/types";
+
 /**
  * La ficha «Lo que trajeron los pilotos» (P6b, mockup aprobado por el dueño):
- * GET /autopilot/summary. Tipos a mano mientras el OpenAPI del piloto no
- * llegue a `schema.d.ts` (mismo criterio que `domain/autopilot.ts`).
+ * GET /autopilot/summary. El tipo sale del contrato (`SummaryDto`).
  */
-export interface PilotsSummaryDTO {
-  /** yyyy-MM en la zona del negocio */
-  month: string;
-  has_routines: boolean;
-  demos: number;
-  demos_previous: number;
-  funnel: { found: number; qualified: number; contacted: number; replied: number; demo: number };
-  credits_month: number;
-  credits_budget_month: number;
-  credits_per_demo: number | null;
-  best_sources: { source: string; credits_per_demo: number }[];
-}
+export type PilotsSummaryDTO = Schemas["SummaryDto"];
 
 const MONTHS = [
   "enero", "febrero", "marzo", "abril", "mayo", "junio",
