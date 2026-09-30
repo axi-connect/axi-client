@@ -8,7 +8,7 @@ import { FILM_CONTENT } from "@/modules/landing/domain/film/film-content";
 import { FILM_NICHES } from "@/modules/landing/domain/film/niches";
 import { WA_MESSAGES } from "@/modules/landing/ui/content/landing.content";
 import { FilmCta } from "@/modules/landing/ui/film/parts/FilmCta";
-import { HeroSky } from "@/modules/landing/ui/film/parts/HeroSky";
+import { HeroSkyLazy } from "@/modules/landing/ui/film/parts/HeroSkyLazy";
 import { HeroStats } from "@/modules/landing/ui/film/parts/HeroStats";
 import { FILM_ICONS } from "@/modules/landing/ui/film/parts/film-icons";
 import { NicheChoice } from "@/modules/landing/ui/film/parts/NicheChoice";
@@ -50,8 +50,8 @@ const CHANNELS = [
  */
 export function HeroScene() {
   return (
-    <section id="hero" data-scene="hero" aria-label="Axi Connect" className="relative flex h-[100svh] min-h-[640px] w-full flex-col overflow-clip">
-      <HeroSky className="absolute inset-0 size-full" />
+    <section id="hero" data-scene="hero" aria-label="Axi Connect" className="film-hero-sky relative flex h-[100svh] min-h-[640px] w-full flex-col overflow-clip">
+      <HeroSkyLazy className="absolute inset-0 size-full" />
       <Ribbon d="M 720 700 C 716 790, 728 860, 720 960" axis="x" spread={6} className="z-[1]" />
 
       <div className="relative z-[2] flex flex-1 flex-col items-center px-4 pt-[clamp(96px,14vh,132px)] pb-[clamp(18px,3vh,32px)]">
