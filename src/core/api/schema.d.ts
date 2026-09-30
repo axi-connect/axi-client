@@ -11072,7 +11072,7 @@ export interface components {
         DecisionRoutesViewDto: {
             routes: {
                 /** @enum {string} */
-                purpose: "intent" | "reply_reaction" | "lead_fit" | "lead_intent" | "message_fit" | "handoff_urgency" | "custom";
+                purpose: "intent" | "reply_reaction" | "lead_fit" | "lead_intent" | "message_fit" | "handoff_urgency" | "voice_utterance" | "custom";
                 /** @enum {string} */
                 mode: "off" | "shadow" | "primary";
                 primary: {
@@ -11108,7 +11108,7 @@ export interface components {
         };
         SavedDecisionRouteDto: {
             /** @enum {string} */
-            purpose: "intent" | "reply_reaction" | "lead_fit" | "lead_intent" | "message_fit" | "handoff_urgency" | "custom";
+            purpose: "intent" | "reply_reaction" | "lead_fit" | "lead_intent" | "message_fit" | "handoff_urgency" | "voice_utterance" | "custom";
             /** @enum {string} */
             mode: "off" | "shadow" | "primary";
             primary: {
@@ -18658,6 +18658,7 @@ export interface components {
                 stages: {
                     key: string;
                     label: string;
+                    goal?: string;
                 }[];
             } | null;
             stage_route: string[];
