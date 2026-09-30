@@ -63,6 +63,11 @@ const LABELS: Record<string, string> = {
 	"contacts": "Contactos",
 	"billing": "Facturación",
 	"invoices": "Facturas",
+	// Agenda premium F1: la miga decía «scheduling › calendar».
+	"scheduling": "Agenda",
+	"calendar": "Calendario",
+	"reminders": "Recordatorios",
+	"appointment": "Cita",
 }
 
 /**

@@ -168,7 +168,8 @@ export function TimeGrid({
     if (opens.length > 0) firstMin = Math.min(firstMin, ...opens);
     for (const day of days) {
       for (const { segment } of visibleByDay.get(day) ?? []) {
-        firstMin = Math.min(firstMin, segment.startMin);
+        // La cola de una cita que cruza la medianoche no arrastra la vista a las 0:00.
+        if (!segment.continuesBefore) firstMin = Math.min(firstMin, segment.startMin);
       }
     }
     el.scrollTop = Math.max(0, (firstMin - 30) * MINUTE_PX);

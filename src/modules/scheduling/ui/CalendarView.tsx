@@ -10,12 +10,11 @@ import {
   groupSegmentsByDay,
   type AppointmentSegment,
 } from "@/modules/scheduling/domain/appointment";
-import { createAtHref } from "@/modules/scheduling/domain/time-grid";
+import { createAtHref, fmtWeekRangeShort } from "@/modules/scheduling/domain/time-grid";
 import {
   addDaysToKey,
   fmtDayLong,
   fmtMonthTitle,
-  fmtWeekTitle,
   monthMatrix,
   monthOfKey,
   todayKey as computeTodayKey,
@@ -111,7 +110,7 @@ export function CalendarView() {
     view === "month"
       ? fmtMonthTitle(anchor).replace(" de ", " ")
       : view === "week"
-        ? fmtWeekTitle(weekDays(anchor))
+        ? fmtWeekRangeShort(weekDays(anchor))
         : view === "day"
           ? fmtDayLong(anchor).replace(", ", " ").replace(/ de \d{4}$/, "")
           : "Próximas citas";

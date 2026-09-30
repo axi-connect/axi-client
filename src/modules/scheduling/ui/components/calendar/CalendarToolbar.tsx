@@ -108,7 +108,7 @@ export function CalendarToolbar({
           items={MOBILE_VIEW_ITEMS}
           treatment="lift"
           surface="inline"
-          className="w-full min-w-0 flex-1 [&_[data-active=true]]:text-foreground [&>button]:flex-1"
+          className="w-full min-w-0 flex-1 [&_[data-active=true]]:text-foreground [&_[data-slot=segmented-pill]]:bg-card [&>button]:flex-1"
         />
         {statusSelect}
         {canManage && (
@@ -161,8 +161,9 @@ export function CalendarToolbar({
           labels="auto"
           treatment="lift"
           surface="inline"
-          // Tinta en la selección: el icono activo no toma el coral de marca.
-          className="[&_[data-active=true]]:text-foreground [&_[data-active=true]_svg]:text-foreground"
+          // Tinta en la selección: el icono activo no toma el coral de marca, y la
+          // pastilla es tarjeta blanca (el fondo de la página privada va teñido).
+          className="[&_[data-active=true]]:text-foreground [&_[data-active=true]_svg]:text-foreground [&_[data-slot=segmented-pill]]:bg-card"
         />
         {canManage && (
           <Button className="h-9 rounded-full px-4" onClick={onCreate}>

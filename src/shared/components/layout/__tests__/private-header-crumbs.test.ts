@@ -34,3 +34,9 @@ describe("buildCrumbs: nombres, nunca slugs ni identificadores", () => {
     ).toEqual(["Pedidos", "Reserva"]);
   });
 });
+
+describe("buildCrumbs: la agenda", () => {
+  it("dice Agenda › Calendario, no scheduling › calendar", () => {
+    expect(buildCrumbs("/scheduling/calendar").map((c) => c.label)).toEqual(["Agenda", "Calendario"]);
+  });
+});

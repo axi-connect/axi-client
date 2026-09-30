@@ -4,6 +4,7 @@ import {
   createAtHref,
   fmtClock,
   fmtClockRange,
+  fmtWeekRangeShort,
   isWithinOpenHours,
   minutesToHhmm,
   openHoursLabel,
@@ -117,5 +118,13 @@ describe("formatos del calendario", () => {
 
   it("día corto sin punto", () => {
     expect(weekdayShort("2026-09-30")).toBe("mié");
+  });
+});
+
+describe("fmtWeekRangeShort", () => {
+  it("compacto dentro del mes, entre meses y entre años", () => {
+    expect(fmtWeekRangeShort(["2026-08-03", "2026-08-09"])).toBe("3 – 9 ago 2026");
+    expect(fmtWeekRangeShort(["2026-09-28", "2026-10-04"])).toBe("28 sep – 4 oct 2026");
+    expect(fmtWeekRangeShort(["2026-12-28", "2027-01-03"])).toBe("28 dic 2026 – 3 ene 2027");
   });
 });

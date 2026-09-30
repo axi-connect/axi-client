@@ -120,3 +120,19 @@ export function fmtClock(utcIso: string, tz: string): string {
 export function fmtClockRange(startIso: string, endIso: string, tz: string): string {
   return `${fmtClock(startIso, tz)} – ${fmtClock(endIso, tz)}`;
 }
+
+const MONTHS_SHORT = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+
+/**
+ * Título compacto de la semana (lienzo F1): «28 sep – 4 oct 2026», o
+ * «3 – 9 ago 2026» dentro del mismo mes. Cabe en la barra a 1280 px sin partirla.
+ */
+export function fmtWeekRangeShort(days: readonly DayKey[]): string {
+  const first = days[0];
+  const last = days[days.length - 1];
+  const [y1, m1, d1] = first.split("-").map(Number);
+  const [y2, m2, d2] = last.split("-").map(Number);
+  if (y1 !== y2) return `${d1} ${MONTHS_SHORT[m1 - 1]} ${y1} – ${d2} ${MONTHS_SHORT[m2 - 1]} ${y2}`;
+  if (m1 === m2) return `${d1} – ${d2} ${MONTHS_SHORT[m2 - 1]} ${y2}`;
+  return `${d1} ${MONTHS_SHORT[m1 - 1]} – ${d2} ${MONTHS_SHORT[m2 - 1]} ${y2}`;
+}
