@@ -58,7 +58,9 @@ function goalRoad({ width, height, viewportHeight }: SceneBox): ThreadPoint[] {
 }
 
 export const FILM_THREAD: ThreadPath = {
-  enabled: true,
+  // ARCHIVADO por la dueña (2026-09-30, plan §15): el hilo no se monta. Se retoma al
+  // terminar la página, con un recorrido diseñado sobre las escenas ya construidas.
+  enabled: false,
 
   desktop: [
     // Hero A «Mil conversaciones, un hilo» (plan §14): el haz nace en el nudo donde

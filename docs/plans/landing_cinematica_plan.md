@@ -468,3 +468,24 @@ Se afinan en QA contra el nudo real: el nudo y la primera ancla deben coincidir 
 - La cabecera sin cambios; su corte a 1024 px está pendiente de la dueña.
 
 **Orden:** va después del paso 2 (hilo + Lenis en window), porque necesita el hilo nuevo. No bloquea las tandas §11 y §13; se puede intercalar cuando el paso 2 esté listo.
+
+## 15. El hilo de luz queda archivado (decisión de la dueña, 2026-09-30)
+
+La dueña archiva el hilo de luz (§10, §11, §13, §14): «está generando o va a generar bastantes problemas». Se retoma cuando la página esté terminada, con un recorrido diseñado sobre las escenas ya construidas. Hasta entonces nadie diseña ni construye en función del hilo.
+
+**Qué significa archivar:**
+- `FILM_THREAD.enabled = false` en `thread-path.ts`. `createThread` devuelve NOOP: no hay canvas ni WebGL, y no se calcula nada por frame. Se enciende con una sola línea.
+- El código se conserva tal cual: `ui/film/thread/`, `thread-geometry.ts`, `thread-path.ts` y sus tests. No se borra ni se sigue afinando: el tope por curvatura y la apertura separada del color, pedidos en el QA del paso 2, quedan congelados.
+- Las anclas y los momentos `pin` de las tablas de §11, §13 y §14 quedan como referencia, no como contrato.
+- `data-thread-target` se puede quedar en el DOM, porque es inerte. Nadie lo mueve más.
+
+**Qué cambia en las escenas:**
+- La coreografía de cada escena ya no espera a que llegue la cabeza del hilo. Cada tramo corre por su progreso de escena, con los mismos rangos de las tablas.
+- Donde una tabla dice «cuando la cabeza pasa…», se usa ese mismo rango del pin.
+- Seguimiento: los eventos aparecen por su tramo del pin. La regla vertical (x 52 %) se dibuja como línea propia, de 1 px blanco al 25 %, y se revela con el progreso.
+- Llamada: la onda se revela con el progreso del pin (`clipPath`), no con la cabeza.
+- Hero A (§14): las fibras y el nudo se quedan. Del nudo ya no nace el hilo: en la salida, el nudo baja, encoge y se apaga.
+- Meta: la ruta blanca del mapa es un trazo propio de la escena (lienzo «Landing · La meta»), no el hilo.
+- Cierre: el isotipo se arma con sus propias fibras. Se diseña en la tanda 4.
+
+**Presupuesto:** el hilo va en el chunk diferido del motor. Con el hilo apagado, `thread-gl` (el renderer) debe cargarse con `import()` solo si `enabled`, para que no pese. Si hoy se importa de forma estática, pasarlo a dinámico (tarea de axi-14).
