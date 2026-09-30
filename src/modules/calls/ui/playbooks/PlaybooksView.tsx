@@ -65,8 +65,8 @@ export function PlaybooksView() {
   // En el celular se ve la lista O el editor; en escritorio, los dos.
   const [mobileEditing, setMobileEditing] = useState(false);
   const [proposing, setProposing] = useState(false);
-  // El editor avisa si hay cambios sin guardar: cambiar de tipo o proponer
-  // con Alba los perdería, así que antes se pregunta (auditoría A2).
+  // El editor avisa si hay cambios sin guardar: cambiar de tipo los perdería
+  // (el editor se desmonta), así que antes se pregunta (auditoría A2).
   const [dirty, setDirty] = useState(false);
 
   const guarded = (action: () => void) => {
@@ -146,7 +146,9 @@ export function PlaybooksView() {
             variant="outline"
             className="rounded-full border-accent-violet/30 text-accent-violet hover:bg-accent-violet/10 hover:text-accent-violet"
             disabled={proposing || views === null}
-            onClick={() => guarded(() => void propose())}
+            // Alba propone sobre lo GUARDADO y su propuesta llega aparte: el
+            // borrador no se toca, así que no hay nada que confirmar (B6).
+            onClick={() => void propose()}
           >
             {proposing ? <LoaderCircle aria-hidden className="animate-spin" /> : <Sparkles aria-hidden />}
             Proponer con Alba
@@ -176,6 +178,11 @@ export function PlaybooksView() {
   return (
     <div className="flex flex-col gap-6">
       {header}
+      {canManage && dirty && (
+        <p role="status" className="-mt-3 text-xs text-muted-foreground sm:text-right">
+          Alba propone sobre lo guardado; tus cambios siguen aquí.
+        </p>
+      )}
       <p className="flex max-w-3xl items-start gap-2.5 rounded-2xl bg-muted/60 px-4 py-3 text-sm">
         <Route aria-hidden className="mt-0.5 size-4 shrink-0 text-accent-violet" />
         <span>
