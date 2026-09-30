@@ -45,9 +45,12 @@ export type FilmContent = {
   ask: string;
   business: string;
   chat: {
+    /** La hora de los dos turnos del chat, como la muestra WhatsApp (sin «p. m.»). */
+    clock: readonly [string, string];
     customer1: string;
     agent1: string;
-    product: Price;
+    /** `note`: la línea corta de la tarjeta del producto (existencias, turno…). */
+    product: Price & { note: string };
     customer2: string;
     agent2: string;
     system: string;
@@ -96,9 +99,10 @@ const RESTAURANTS: FilmContent = {
   ask: "¿Tienen domicilio a Laureles?",
   business: "Fuego & Pan · Medellín",
   chat: {
+    clock: ["9:15", "9:16"],
     customer1: "Hola, ¿tienen domicilio a Laureles?",
     agent1: "¡Sí! Llegamos a Laureles en 35 min. Te comparto el más pedido.",
-    product: { name: "Combo Doble Fuego", price: "$ 38.900", icon: "burger" },
+    product: { name: "Combo Doble Fuego", price: "$ 38.900", icon: "burger", note: "El más pedido" },
     customer2: "Dame 2 combos",
     agent2: "Listo: pedido #1042 por $ 83.800 con domicilio. Pagas por Nequi o al recibir.",
     system: "Pedido confirmado · sale en 5 min",
@@ -191,11 +195,12 @@ const TECH: FilmContent = {
   ask: "¿Tienen el iPhone 17 de 256?",
   business: "Tecnología Medellín",
   chat: {
+    clock: ["8:47", "8:49"],
     customer1: "Hola, ¿tienen el iPhone 17 de 256?",
     agent1: "¡Sí! Nos quedan 3 en tienda. Te comparto la foto.",
-    product: { name: "iPhone 17 · 256 GB", price: "$ 4.899.000", icon: "smartphone" },
+    product: { name: "iPhone 17 · 256 GB", price: "$ 4.899.000", icon: "smartphone", note: "3 en tienda" },
     customer2: "Me lo llevo. ¿Cómo pago?",
-    agent2: "Listo: pedido #2087 por $ 4.899.000. Puedes pagar por Nequi, Bancolombia o link de pago.",
+    agent2: "Listo: pedido #2087 por $ 4.899.000. Puedes pagar por Nequi o Bancolombia.",
     system: "Pago reportado · lo verifica tu equipo",
     sale: { label: "Venta pagada", amount: "$ 4.899.000", caption: "verificada por tu equipo · 8:53 p. m." },
   },
@@ -286,9 +291,10 @@ const BEAUTY: FilmContent = {
   ask: "¿Hay cita para el sábado?",
   business: "Estética Lumière · Bogotá",
   chat: {
+    clock: ["10:58", "10:59"],
     customer1: "Hola, ¿hay cita para el sábado?",
     agent1: "Tengo el sábado a las 10:00 a. m. o a las 3:00 p. m. para limpieza facial.",
-    product: { name: "Limpieza facial profunda", price: "$ 180.000", icon: "sparkles" },
+    product: { name: "Limpieza facial profunda", price: "$ 180.000", icon: "sparkles", note: "Sábado · 10:00 a. m." },
     customer2: "A las 10, porfa",
     agent2: "Quedó agendada el sábado a las 10:00 a. m. Te recuerdo un día antes. Anticipo por Nequi: $ 50.000.",
     system: "Cita agendada · recordatorio 24 h antes",
@@ -381,9 +387,10 @@ const B2B: FilmContent = {
   ask: "¿Me cotizas 200 cajas de guantes?",
   business: "Suministros Andina · Itagüí",
   chat: {
+    clock: ["3:12", "3:14"],
     customer1: "Buenas, ¿me cotizas 200 cajas de guantes de nitrilo?",
     agent1: "Claro. Por volumen, la caja por 100 queda en $ 24.500.",
-    product: { name: "Guantes de nitrilo · caja × 100", price: "$ 24.500 c/u", icon: "box" },
+    product: { name: "Guantes de nitrilo · caja × 100", price: "$ 24.500 c/u", icon: "box", note: "Precio por volumen" },
     customer2: "Mándame la cotización formal",
     agent2: "Listo: cotización COT-0318 por $ 4.900.000 enviada en PDF. ¿La convierto en pedido?",
     system: "Cotización enviada · PDF",

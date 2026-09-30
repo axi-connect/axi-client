@@ -24,7 +24,7 @@ import { FILM_NICHES } from "@/modules/landing/domain/film/niches";
 import { roadPercentAt } from "@/modules/landing/domain/film/route-map";
 import { formatMillions, formatPercent, ROUTE_FRACTIONS } from "@/modules/landing/domain/film/route-scenario";
 
-export type FilmEngine = { stop(): void; scrollTo(target: string): void };
+export type FilmEngine = { stop(): void; scrollTo(target: string): void; refresh(): void };
 
 type Ctx = { desktop: boolean };
 type Scene = (section: HTMLElement, ctx: Ctx) => void;
@@ -63,7 +63,7 @@ const PINNED = new Set(["radar", "followup", "chat", "goal"]);
  * entra en pantalla, para que al fijarse ya se lea de qué trata y la escena no
  * llegue como un escenario vacío.
  */
-function sceneTimeline(section: HTMLElement, ctx: Ctx, length: number): gsap.core.Timeline {
+function sceneTimeline(section: HTMLElement, ctx: Ctx, length: number, passEnd = "bottom 62%"): gsap.core.Timeline {
   const heads = all(section, "[data-anim=head]");
   if (heads.length) {
     gsap.from(heads, { ...reveal, ease: "power2.out", scrollTrigger: { trigger: section, start: "top 88%", end: "top 30%", scrub: true } });
@@ -75,7 +75,7 @@ function sceneTimeline(section: HTMLElement, ctx: Ctx, length: number): gsap.cor
     defaults: { ease: "power2.out", duration: 1 },
     scrollTrigger: fits
       ? { trigger: section, start: "top top", end: `+=${Math.round(length * PACE)}%`, pin: true, scrub: true, anticipatePin: 1, invalidateOnRefresh: true }
-      : { trigger: section, start: "top 78%", end: "bottom 62%", scrub: true, invalidateOnRefresh: true },
+      : { trigger: section, start: "top 78%", end: passEnd, scrub: true, invalidateOnRefresh: true },
   });
 }
 
@@ -138,10 +138,87 @@ const followup: Scene = (section, ctx) => {
   for (const group of perNiche(section, "[data-anim=result]")) tl.from(group, { opacity: 0, scale: 0.94 }, 2.6);
 };
 
+/**
+ * La escena del chat, con los tiempos del lienzo «Teléfono premium» (`p` de 0 a
+ * 1 sobre `CHAT` unidades de línea): el teléfono entra girado y se endereza
+ * mientras Axi escribe, el reflejo cruza el cristal y la venta sale de la
+ * pantalla. Los turnos traen su `data-at` desde el HTML.
+ */
+const CHAT = 10;
+const chatAt = (p: number) => p * CHAT;
+const FEED_GAP = 7; // el `gap` de .film-phone-feed
+
 const chat: Scene = (section, ctx) => {
-  const tl = sceneTimeline(section, ctx, 180);
-  for (const group of perNiche(section, "[data-anim=msg]")) tl.from(group, { opacity: 0, y: 18, stagger: 0.7, duration: 0.5 }, 0.4);
-  for (const group of perNiche(section, "[data-anim=sale]")) tl.from(group, { opacity: 0, y: 30 }, 4.6);
+  // Sin fijar (móvil), la venta sale cuando el teléfono ya está entero en pantalla.
+  const tl = sceneTimeline(section, ctx, 180, "bottom bottom");
+  tl.to({}, { duration: 0 }, CHAT); // la línea dura CHAT aunque el último turno acabe antes
+
+  const one = (sel: string) => section.querySelector<HTMLElement>(sel);
+  const phone = one("[data-anim=phone]");
+  if (phone) {
+    const out = { ease: "power3.out", immediateRender: false };
+    tl.fromTo(phone, { "--rx": "14deg", "--ry": "-30deg", "--rz": "3deg", "--ty": "34px", "--tz": "-60px" }, { ...out, "--rx": "7deg", "--ry": "-16deg", "--rz": "1deg", "--ty": "0px", "--tz": "0px", duration: chatAt(0.55) }, 0);
+    tl.fromTo(phone, { "--rx": "7deg", "--ry": "-16deg" }, { ...out, "--rx": "9deg", "--ry": "-20deg", duration: chatAt(0.2) }, chatAt(0.8));
+    gsap.set(phone, { "--rx": "14deg", "--ry": "-30deg", "--rz": "3deg", "--ty": "34px", "--tz": "-60px" });
+  }
+  const floor = one("[data-anim=phone-floor]");
+  if (floor) tl.fromTo(floor, { opacity: 0.55, scaleX: 0.85 }, { opacity: 0.9, scaleX: 1, ease: "power3.out", duration: chatAt(0.55) }, 0);
+  const glare = one("[data-anim=glare]");
+  if (glare) tl.fromTo(glare, { xPercent: -40 }, { xPercent: 70, ease: "none", duration: CHAT }, 0);
+
+  // Los turnos: los cuatro nichos con los mismos tiempos.
+  for (const group of perNiche(section, "[data-anim=msg]")) {
+    for (const msg of group) {
+      tl.from(msg, { opacity: 0, y: 12, scale: 0.97, duration: chatAt(0.05) }, chatAt(Number(msg.dataset.at ?? 0)));
+    }
+  }
+
+  // «Escribiendo…», entre la pregunta del pago y la respuesta.
+  const typing = one("[data-anim=typing]");
+  const TYPING = [0.54, 0.6] as const;
+  if (typing) {
+    tl.fromTo(typing, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: chatAt(0.03) }, chatAt(TYPING[0]));
+    tl.to(typing, { opacity: 0, duration: chatAt(0.02) }, chatAt(TYPING[1]));
+  }
+  const online = one("[data-anim=status-online]");
+  const writing = one("[data-anim=status-typing]");
+  if (online && writing) {
+    tl.to(online, { opacity: 0, duration: chatAt(0.02) }, chatAt(TYPING[0]));
+    tl.fromTo(writing, { opacity: 0 }, { opacity: 1, duration: chatAt(0.02) }, chatAt(TYPING[0]));
+    tl.to(writing, { opacity: 0, duration: chatAt(0.02) }, chatAt(TYPING[1]));
+    tl.to(online, { opacity: 1, duration: chatAt(0.02) }, chatAt(TYPING[1]));
+  }
+
+  // El hilo baja lo que miden los turnos que aún no llegan: cada mensaje nuevo
+  // entra abajo y empuja a los anteriores. Se mide al construir y en cada
+  // refresh (layout, nunca por frame); los nichos ocultos no miden.
+  const feed = one("[data-anim=feed]");
+  if (feed) {
+    const shown = () => all(feed, "[data-anim=msg]").filter((m) => m.offsetParent !== null);
+    const bottom = (m: HTMLElement) => m.offsetTop + m.offsetHeight;
+    const lift = (k: number, extra = 0) => () => {
+      const msgs = shown();
+      if (!msgs.length) return 0;
+      const end = bottom(msgs[msgs.length - 1]);
+      const ref = k < 0 ? msgs[0].offsetTop - FEED_GAP : bottom(msgs[Math.min(k, msgs.length - 1)]);
+      return Math.max(0, end - ref - extra);
+    };
+    const times = (perNiche(section, "[data-anim=msg]")[0] ?? []).map((m) => Number(m.dataset.at ?? 0));
+    const move = { ease: "power2.out", duration: chatAt(0.05) };
+    tl.fromTo(feed, { y: lift(-1) }, { ...move, y: lift(0) }, chatAt(times[0] ?? 0));
+    times.forEach((t, k) => {
+      if (k === 0) return;
+      // Mientras Axi escribe, el turno anterior sube lo que ocupa la burbuja de «escribiendo…».
+      if (typing && t > TYPING[0] && times[k - 1] < TYPING[0]) {
+        tl.to(feed, { ...move, y: lift(k - 1, typing.offsetHeight + FEED_GAP) }, chatAt(TYPING[0]));
+      }
+      tl.to(feed, { ...move, y: lift(k) }, chatAt(t));
+    });
+  }
+
+  for (const group of perNiche(section, "[data-anim=sale]")) {
+    tl.fromTo(group, { opacity: 0, z: 30, y: 24 }, { opacity: 1, z: 100, y: 0, ease: "power3.out", duration: chatAt(0.14) }, chatAt(0.84));
+  }
 };
 
 const photo: Scene = (section, ctx) => {
@@ -454,5 +531,7 @@ export function startFilm(root: HTMLElement): FilmEngine {
     scrollTo(target: string) {
       lenis.scrollTo(target, { duration: 1.4 });
     },
+    // Cambiar de nicho cambia alturas (el hilo del chat mide sus turnos).
+    refresh,
   };
 }

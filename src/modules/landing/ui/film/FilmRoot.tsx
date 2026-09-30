@@ -24,7 +24,7 @@ import {
  *   reducido. Sin motor, cada escena se ve en su fotograma final.
  */
 
-type Engine = { stop(): void; scrollTo(target: string): void };
+type Engine = { stop(): void; scrollTo(target: string): void; refresh(): void };
 
 type FilmContextValue = {
   niche: FilmNiche;
@@ -79,6 +79,12 @@ export function FilmRoot({ children }: { children: ReactNode }) {
       track({ name: "film_niche_chosen", params: { niche: fromUrl, source: "url" } });
     }
   }, []);
+
+  // Otro nicho es otro texto y otras alturas: el motor vuelve a medir (el hilo
+  // del chat, por ejemplo, se desplaza lo que miden sus turnos).
+  useEffect(() => {
+    engineRef.current?.refresh();
+  }, [niche]);
 
   const goTo = useCallback((target: string) => {
     if (engineRef.current) return engineRef.current.scrollTo(target);

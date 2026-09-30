@@ -2,22 +2,23 @@ import {
   ArrowRight,
   Bot,
   Calculator,
+  Check,
+  CheckCheck,
   CircleCheck,
   Lock,
   PhoneCall,
-  ReceiptText,
   ScanSearch,
   ShieldCheck,
   Tag,
   TicketPercent,
-  Timer,
   UserCheck,
   type LucideIcon,
 } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { cn } from "@/core/lib/utils";
 import { BrandMark } from "@/shared/components/ui/brand-mark";
-import type { Price } from "@/modules/landing/domain/film/film-content";
+import type { FilmContent, Price } from "@/modules/landing/domain/film/film-content";
 import { ByNiche } from "@/modules/landing/ui/film/parts/ByNiche";
 import { Bubble, Phone } from "@/modules/landing/ui/film/parts/chat";
 import { FILM_ICONS } from "@/modules/landing/ui/film/parts/film-icons";
@@ -52,40 +53,121 @@ function ProductTile({ item, big, highlight }: { item: Price; big?: boolean; hig
 
 /* ─────────────────────────────── Chat ─────────────────────────────── */
 
+/**
+ * El guion del chat en la escena, de 0 a 1 (el `p` del lienzo «Teléfono
+ * premium»): cuándo entra cada turno. El «escribiendo…» va de 0,54 a 0,62 y la
+ * venta sale de la pantalla en 0,84; esos dos tiempos viven en el motor.
+ */
+const CHAT_AT = { customer1: 0.04, agent1: 0.16, product: 0.28, customer2: 0.42, agent2: 0.62, system: 0.76 } as const;
+
+/** «Tecnología Medellín» → «TM». */
+function initialsOf(name: string) {
+  return name
+    .split(/\s+/)
+    .filter((w) => /^\p{Lu}/u.test(w))
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("");
+}
+
+function ChatMsg({ side, at, children }: { side: "in" | "out" | "system"; at: number; children: ReactNode }) {
+  return (
+    <div className="film-phone-msg" data-side={side} data-anim="msg" data-at={at}>
+      {children}
+    </div>
+  );
+}
+
+function ChatText({ side, at, time, children }: { side: "in" | "out"; at: number; time: string; children: ReactNode }) {
+  return (
+    <ChatMsg side={side} at={at}>
+      <p className="film-phone-bub">
+        {children}
+        <span className="film-phone-meta">
+          {time}
+          {side === "out" ? <CheckCheck className="size-3" aria-label="leído" /> : null}
+        </span>
+      </p>
+    </ChatMsg>
+  );
+}
+
+/** La tarjeta del producto en el chat. El teléfono se dibuja en CSS; el resto de nichos, con su icono. */
+function ChatProduct({ item }: { item: FilmContent["chat"]["product"] }) {
+  const Icon = FILM_ICONS[item.icon];
+  return (
+    <div className="film-phone-product">
+      <div className="film-phone-product-art" aria-hidden="true">
+        {item.icon === "smartphone" ? (
+          <span className="film-phone-device">
+            <span />
+            <span />
+          </span>
+        ) : (
+          <Icon className="size-11" strokeWidth={1.4} />
+        )}
+      </div>
+      <div className="px-3 pt-[9px] pb-[11px]">
+        <p className="text-[12.5px] font-semibold">{item.name}</p>
+        <p className="flex justify-between gap-2 text-xs tabular-nums opacity-70">
+          <span>{item.price}</span>
+          <span className="truncate">{item.note}</span>
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export function ChatScene() {
   return (
     <section id="vender" data-scene="chat" data-chapter="Vender" aria-labelledby="chat-h" className="film-scene">
       <div className="film-spot top-[0%] left-[0%] size-[900px] bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--axi-brand)_12%,transparent),transparent)]" />
       <Ribbon d="M -40 880 C 160 820, 220 700, 320 640" className="max-lg:hidden" />
-      <div className="film-wrap grid items-center gap-12 lg:grid-cols-2">
-        <div className="max-lg:order-2">
+      <div className="film-wrap grid items-center gap-12 lg:grid-cols-2 max-lg:gap-6">
+        <div className="flex justify-center max-lg:order-2">
           <Phone
-            className="mx-auto h-[min(740px,78svh)] w-[min(372px,86vw)] max-lg:h-[min(560px,66svh)]"
             title={<ByNiche as="span">{(c) => c.business}</ByNiche>}
+            initials={<ByNiche as="span">{(c) => initialsOf(c.business)}</ByNiche>}
             status="agente en línea"
+            overlay={
+              <ByNiche>
+                {(c) => (
+                  <div data-anim="sale" className="film-phone-sale">
+                    <p className="film-eyebrow flex items-center gap-1.5 text-[10px] tracking-[0.18em] opacity-75">
+                      <span className="size-1.5 rounded-full bg-[var(--axi-success)]" aria-hidden="true" />
+                      {c.chat.sale.label}
+                    </p>
+                    <p className="film-h mt-1 text-[30px] whitespace-nowrap tabular-nums">{c.chat.sale.amount}</p>
+                    <p className="text-[11.5px] opacity-65">{c.chat.sale.caption}</p>
+                  </div>
+                )}
+              </ByNiche>
+            }
           >
             <ByNiche>
               {(c) => (
                 <>
-                  <Bubble side="in" meta="8:47 p. m.">
+                  <ChatText side="in" at={CHAT_AT.customer1} time={c.chat.clock[0]}>
                     {c.chat.customer1}
-                  </Bubble>
-                  <Bubble side="out" meta="respondió en 4 s">
+                  </ChatText>
+                  <ChatText side="out" at={CHAT_AT.agent1} time={c.chat.clock[0]}>
                     {c.chat.agent1}
-                  </Bubble>
-                  <div className="flex justify-end" data-anim="msg">
-                    <div className="w-[200px] max-lg:w-[160px]">
-                      <ProductTile item={c.chat.product} big />
-                    </div>
-                  </div>
-                  <Bubble side="in">{c.chat.customer2}</Bubble>
-                  <Bubble side="out">{c.chat.agent2}</Bubble>
-                  <div className="flex justify-center" data-anim="msg">
-                    <span className="film-chip text-xs">
-                      <ReceiptText className="size-3 text-[var(--axi-amber)]" aria-hidden="true" />
+                  </ChatText>
+                  <ChatMsg side="out" at={CHAT_AT.product}>
+                    <ChatProduct item={c.chat.product} />
+                  </ChatMsg>
+                  <ChatText side="in" at={CHAT_AT.customer2} time={c.chat.clock[1]}>
+                    {c.chat.customer2}
+                  </ChatText>
+                  <ChatText side="out" at={CHAT_AT.agent2} time={c.chat.clock[1]}>
+                    {c.chat.agent2}
+                  </ChatText>
+                  <ChatMsg side="system" at={CHAT_AT.system}>
+                    <span className="film-phone-system">
+                      <Check className="size-3" aria-hidden="true" />
                       {c.chat.system}
                     </span>
-                  </div>
+                  </ChatMsg>
                 </>
               )}
             </ByNiche>
@@ -97,20 +179,15 @@ export function ChatScene() {
             eyebrow="Vender"
             strong="Responde en segundos."
             thin="Con tus precios reales."
-            lead="Busca en tu catálogo, cotiza, arma el pedido y comparte tus medios de pago. Como tu mejor vendedor, a cualquier hora."
+            lead={
+              <span className="max-sm:hidden">
+                Busca en tu catálogo, cotiza, arma el pedido y comparte tus medios de pago. Como tu mejor vendedor, a cualquier hora.
+              </span>
+            }
           />
-          <ByNiche>
-            {(c) => (
-              <div data-anim="sale" className="film-glass mt-9 inline-block min-w-[280px] rounded-3xl p-5 max-lg:hidden">
-                <p className="film-eyebrow text-[10px] text-[var(--axi-success)]">{c.chat.sale.label}</p>
-                <p className="film-h mt-1 text-[38px] tabular-nums">{c.chat.sale.amount}</p>
-                <p className="film-dim text-[12.5px]">{c.chat.sale.caption}</p>
-              </div>
-            )}
-          </ByNiche>
-          <p className="mt-4 max-lg:hidden">
+          <p className="mt-7 max-lg:hidden">
             <span className="film-chip">
-              <Timer className="size-3.5 text-[var(--axi-brand)]" aria-hidden="true" />
+              <span className="size-[7px] rounded-full bg-[var(--axi-brand)]" aria-hidden="true" />
               Respondió en 4 s
             </span>
           </p>
