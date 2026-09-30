@@ -42,6 +42,8 @@ import { PromiseDialog } from "./PromiseDialog";
 import { ReminderHistory } from "./ReminderHistory";
 import { RescheduleDialog } from "./RescheduleDialog";
 import { SendReminderDialog } from "./SendReminderDialog";
+import { callSummaryFromPlan, canCallToCollect } from "@/modules/collections/domain/call-to-collect";
+import { CallContactButton, useCanPlaceCalls } from "@/modules/calls/public";
 
 const PROMISE_ICON: Record<
   PromiseTone,
@@ -103,6 +105,7 @@ export function PaymentPlanBlock({
 }) {
   const { hasPermission } = useAuth();
   const canManage = hasPermission("collections:manage");
+  const canPlaceCalls = useCanPlaceCalls();
   // El servidor exige la función `collections` y `collections:read`
   // (collections.controller.ts). Sin ellas NO se pide: el 403 se tragaba en
   // silencio, pero salía igual y ensuciaba la red y la consola. Mientras las
@@ -176,6 +179,15 @@ export function PaymentPlanBlock({
       installment.status !== "paid" && installment.status !== "waived",
   );
   const card = promiseCard(plan);
+  // F3: se ofrece la llamada si el usuario puede llamar y el plan aún cobra.
+  const callable = canPlaceCalls && canCallToCollect(plan);
+  // «el cliente» es el relleno de los diálogos, no un nombre: el de llamar
+  // dice entonces «Llamar a +57…» en vez de «Llamar a el cliente».
+  const callContact = {
+    id: plan.contact_id,
+    name: contactName === "el cliente" ? null : contactName,
+    phone: plan.contact_phone,
+  };
   const history = promiseHistory(plan);
   const note = plan.notes[0] ?? null;
   const CardIcon = card === null ? Handshake : PROMISE_ICON[card.tone];
@@ -245,6 +257,14 @@ export function PaymentPlanBlock({
                   >
                     <MessageCircle className="size-3.5" /> Escribir
                   </Button>
+                ) : null}
+                {card.actions.includes("write") && callable ? (
+                  <CallContactButton
+                    contact={callContact}
+                    collections={callSummaryFromPlan(plan)}
+                    label="Llamar para cobrar"
+                    className="h-[30px] rounded-full px-3 text-xs"
+                  />
                 ) : null}
               </span>
             ) : null}
@@ -338,14 +358,25 @@ export function PaymentPlanBlock({
         </div>
       </div>
 
-      {canManage && canPromise(plan) && card?.tone !== "warning" ? (
-        <Button
-          variant="outline"
-          className="h-11 w-full rounded-full"
-          onClick={() => setDialog("promise")}
-        >
-          <Handshake className="size-4" /> Anotar promesa de pago
-        </Button>
+      {/* F3 (mockup aprobado): la llamada siempre en el mismo sitio, al lado
+          de la promesa; sin llamada posible, la promesa vuelve a todo el ancho. */}
+      {(canManage && canPromise(plan) && card?.tone !== "warning") || callable ? (
+        <div className="flex gap-2 [&>*]:h-11 [&>*]:flex-1 [&>*]:rounded-full">
+          {canManage && canPromise(plan) && card?.tone !== "warning" ? (
+            <Button variant="outline" onClick={() => setDialog("promise")}>
+              <Handshake className="size-4" />
+              {callable ? "Anotar promesa" : "Anotar promesa de pago"}
+            </Button>
+          ) : null}
+          {callable ? (
+            <CallContactButton
+              contact={callContact}
+              collections={callSummaryFromPlan(plan)}
+              label="Llamar para cobrar"
+              shortLabel="Llamar"
+            />
+          ) : null}
+        </div>
       ) : null}
 
       <p className="text-xs leading-relaxed text-muted-foreground">

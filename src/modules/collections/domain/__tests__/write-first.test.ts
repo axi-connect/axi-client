@@ -16,6 +16,7 @@ const row = (overrides: Partial<ReceivableDTO> = {}): ReceivableDTO =>
     order_id: "o1",
     order_number: 42,
     contact_id: "c1",
+    contact_phone: "+573001234567",
     contact_name: "Laura Gómez",
     service_date: null,
     travelled: false,

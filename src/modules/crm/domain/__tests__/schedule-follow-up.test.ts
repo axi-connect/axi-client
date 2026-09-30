@@ -157,4 +157,35 @@ describe("schedule-follow-up — la promesa", () => {
     });
     expect(sentence.headline).toBe("Aria le escribirá a Ana cuando vuelva a escribir.");
   });
+
+  it("una llamada no espera la ventana de 24 h: promete la fecha elegida", () => {
+    const sentence = promiseSentence({
+      agent_name: "Aria",
+      contact_first_name: "Ana",
+      iso: businessDateTimeToIso("2026-09-18", "09:00", TZ),
+      tz: TZ,
+      medium: "call",
+      opens_with_template: false,
+      waits_for_customer: true,
+      quiet_shift: { quiet: false },
+    });
+    expect(sentence.headline).toBe("Aria llamará a Ana el vie 18 sept a las 9:00 a. m.");
+    expect(sentence.headline).not.toContain("vuelva a escribir");
+    expect(sentence.detail).toBe("Lleva la llamada con su tono, su catálogo y sus reglas.");
+  });
+
+  it("llamar y luego escribir: la llamada tiene fecha; solo el mensaje de respaldo espera", () => {
+    const sentence = promiseSentence({
+      agent_name: "Aria",
+      contact_first_name: "Ana",
+      iso: businessDateTimeToIso("2026-09-18", "09:00", TZ),
+      tz: TZ,
+      medium: "call_then_message",
+      opens_with_template: false,
+      waits_for_customer: true,
+      quiet_shift: { quiet: false },
+    });
+    expect(sentence.headline).toBe("Aria llamará y, si no conecta, le escribirá a Ana el vie 18 sept a las 9:00 a. m.");
+    expect(sentence.detail).toBe("Si no conecta, el mensaje queda en espera hasta que vuelva a escribir.");
+  });
 });

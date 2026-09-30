@@ -55,6 +55,8 @@ import {
   updateSequence,
 } from "@/modules/crm/infrastructure/services/sequences-service.adapter";
 import { useEntitlements } from "@/shared/auth/entitlements.hooks";
+import { CallTypeSelect, CRM_CALL_TYPES } from "@/modules/calls/public";
+import { asCrmCallType } from "@/modules/crm/domain/schedule-follow-up";
 
 const MEDIUM_ICONS: Record<FollowUpMedium, React.ComponentType<{ className?: string }>> = {
   message: MessageSquare,
@@ -300,6 +302,7 @@ function toDraft(sequence: SequenceDTO): Draft {
     steps: sequence.steps.map((step) => ({
       offset_hours: step.offset_hours,
       task_channel: step.task_channel,
+      call_type: asCrmCallType(step.call_type),
       objective: step.objective,
     })),
   };
@@ -459,6 +462,16 @@ function SequenceEditor({
                           ))}
                         </SelectContent>
                       </Select>
+                      {step.task_channel !== "message" && (
+                        <div className="w-full min-w-0 @min-[36rem]:w-56">
+                          <CallTypeSelect
+                            compact
+                            types={CRM_CALL_TYPES}
+                            value={step.call_type ?? "followup"}
+                            onChange={(next) => patchStep(index, { call_type: next })}
+                          />
+                        </div>
+                      )}
                       {draft.steps.length > SEQUENCE_LIMITS.steps.min && (
                         <Button
                           variant="ghost"
