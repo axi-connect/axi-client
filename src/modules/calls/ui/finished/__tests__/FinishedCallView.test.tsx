@@ -180,5 +180,23 @@ describe("FinishedCallView (premium F4)", () => {
       expect(within(island).queryByText("Llegó a")).toBeNull();
     });
   });
+
+  it("Entrega 2: el recado de una entrante se titula «Dejó un recado» y dice que la tarea quedó en el CRM", async () => {
+    await renderView(
+      call({
+        direction: "inbound",
+        purpose: "inbound",
+        ai_agent_id: null,
+        ai_agent_name: null,
+        outcome: "callback_requested",
+        summary: "Dejó un recado: «quiero cambiar mi cita del jueves»",
+        segments: [{ seq: 1, role: "caller", text: "quiero cambiar mi cita del jueves", at_ms: 0, spoken_at_ms: null, interrupted: false }],
+        events: [],
+      }),
+    );
+    const island = screen.getAllByRole("region", { name: "Así fue la llamada" })[0] as HTMLElement;
+    expect(within(island).getByRole("heading", { level: 2, name: "Dejó un recado" })).toBeInTheDocument();
+    expect(within(island).getByText(/Recado transcrito por Axi/)).toBeInTheDocument();
+  });
 });
 

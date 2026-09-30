@@ -4,6 +4,7 @@ import {
   callResultBadge,
   callResultPill,
   confidenceLabel,
+  isInboundMessage,
   parseGoalAssessment,
   parseTurnLatency,
   summaryWaitRemainingMs,
@@ -113,5 +114,21 @@ describe("calls · espera del resumen (auditoría F4, P2)", () => {
     expect(summaryWaitRemainingMs({ summary: "Listo.", ended_at: ended, segments: talked }, t0)).toBe(0);
     expect(summaryWaitRemainingMs({ summary: null, ended_at: null, segments: talked }, t0)).toBe(0);
     expect(summaryWaitRemainingMs({ summary: null, ended_at: ended, segments: [] }, t0)).toBe(0);
+  });
+});
+
+describe("recado de una entrante (Entrega 2)", () => {
+  it("una entrante sin agente en callback_requested es un recado", () => {
+    const row = { status: "completed" as const, outcome: "callback_requested" as const, direction: "inbound" as const, ai_agent_id: null };
+    expect(isInboundMessage(row)).toBe(true);
+    expect(callResultPill(row)).toEqual({ label: "Dejó un recado", tone: "warning" });
+  });
+
+  it("una entrante que atendió el agente, o una saliente, no lo es", () => {
+    expect(isInboundMessage({ outcome: "callback_requested", direction: "inbound", ai_agent_id: "a-1" })).toBe(false);
+    expect(isInboundMessage({ outcome: "callback_requested", direction: "outbound", ai_agent_id: null })).toBe(false);
+    expect(callResultPill({ status: "completed", outcome: "callback_requested", direction: "inbound", ai_agent_id: "a-1" }).label).not.toBe(
+      "Dejó un recado",
+    );
   });
 });

@@ -231,7 +231,12 @@ export function parseTurnLatency(payload: unknown): TurnLatency | null {
 export function callResultPill(row: {
   status: CallSessionStatus;
   outcome: CallSessionRowDTO["outcome"];
+  direction?: CallSessionRowDTO["direction"];
+  ai_agent_id?: string | null;
 }): { label: string; tone: "success" | "warning" | "destructive" | "neutral" } {
+  // Entrega 2: una entrante que nadie atendió y dejó recado (sin agente en la
+  // sesión) no «pidió callback» a un agente: dejó un mensaje para devolverle.
+  if (isInboundMessage(row)) return { label: "Dejó un recado", tone: "warning" };
   const { status, map } = callResultBadge(row);
   const entry = map[status];
   const tone = entry?.tone;
@@ -239,6 +244,19 @@ export function callResultPill(row: {
     label: entry?.label ?? status,
     tone: tone === "success" || tone === "warning" || tone === "destructive" ? tone : "neutral",
   };
+}
+
+/**
+ * ¿Es el recado de una entrante que el agente no atendió? La sesión de un
+ * recado nace sin agente (`ai_agent_id` null) y el postprocess la deja en
+ * `callback_requested` con la transcripción como resumen.
+ */
+export function isInboundMessage(row: {
+  outcome: CallSessionRowDTO["outcome"];
+  direction?: CallSessionRowDTO["direction"];
+  ai_agent_id?: string | null;
+}): boolean {
+  return row.direction === "inbound" && row.ai_agent_id === null && row.outcome === "callback_requested";
 }
 
 /** Veredicto del juez de objetivo (evento `goal_assessment` del postprocess). */

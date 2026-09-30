@@ -4,6 +4,7 @@ import { InkIsland, Kicker } from "@/shared/components/features/bento";
 import {
   callResultPill,
   confidenceLabel,
+  isInboundMessage,
   parseGoalAssessment,
   summaryWaitRemainingMs,
   type CallSessionDetailDTO,
@@ -83,7 +84,9 @@ export function CallSummaryIsland({ call, className }: { call: CallSessionDetail
       )}
       <p className="mt-1 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
         <Sparkles aria-hidden className="size-3.5" />
-        Resumen escrito por Axi al colgar
+        {isInboundMessage(call)
+          ? "Recado transcrito por Axi · la tarea «Devolver llamada» quedó en el CRM"
+          : "Resumen escrito por Axi al colgar"}
       </p>
     </InkIsland>
   );
