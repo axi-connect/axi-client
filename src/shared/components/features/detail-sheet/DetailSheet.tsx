@@ -29,6 +29,13 @@ export interface DetailSheetProps<Id extends string | number = string | number> 
   closeOnOverlayClick?: boolean
   renderHeader?: () => React.ReactNode
   renderFooter?: () => React.ReactNode
+  /**
+   * Cabecera de ficha (Agenda premium F2): el título en Nexa grande, sin la
+   * raya de abajo, y `headerExtra` debajo (estado, enlaces). Aditivo: sin él,
+   * la cabecera es la de siempre.
+   */
+  heroTitle?: boolean
+  headerExtra?: React.ReactNode
   onOpenChange: (open: boolean) => void
   portalTarget?: Element | string | null
   side?: "auto" | "left" | "right" | "bottom"
@@ -68,6 +75,8 @@ export default function DetailSheet<Id extends string | number = string | number
     onOpenChange,
     renderHeader,
     renderFooter,
+    heroTitle = false,
+    headerExtra,
     side = "auto",
     initialFocusRef,
     closeOnEsc = true,
@@ -235,11 +244,20 @@ export default function DetailSheet<Id extends string | number = string | number
                   ) : null}
 
                   {/* Header */}
-                  <div className={cn("flex items-start gap-3 p-4 border-b border-border")}> 
+                  <div className={cn("flex items-start gap-3", heroTitle ? "px-6 pt-5 pb-4" : "p-4 border-b border-border")}> 
                     <div className="min-w-0 flex-1">
                       {title ? (
                         <Dialog.Title asChild>
-                          <h3 className="text-foreground font-semibold line-clamp-2">{title}</h3>
+                          <h3
+                            className={cn(
+                              "text-foreground",
+                              heroTitle
+                                ? "font-heading text-2xl leading-tight font-bold tracking-tight [overflow-wrap:anywhere] md:text-[1.75rem]"
+                                : "font-semibold line-clamp-2",
+                            )}
+                          >
+                            {title}
+                          </h3>
                         </Dialog.Title>
                       ) : (
                         <Dialog.Title className="sr-only">Detalle</Dialog.Title>
@@ -251,11 +269,12 @@ export default function DetailSheet<Id extends string | number = string | number
                       ) : (
                         <Dialog.Description className="sr-only">Panel de detalle</Dialog.Description>
                       )}
+                      {headerExtra ? <div className="mt-2.5">{headerExtra}</div> : null}
                     </div>
                     <Dialog.Close asChild>
                       <button
                         aria-label="Cerrar"
-                        className="relative inline-flex size-9 shrink-0 items-center justify-center rounded-md text-foreground/80 outline-none transition-colors hover:bg-secondary hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 after:absolute after:-inset-1 md:after:hidden"
+                        className="relative inline-flex size-10 shrink-0 items-center justify-center rounded-full text-foreground/80 outline-none transition-colors hover:bg-secondary hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 after:absolute after:-inset-1 md:after:hidden"
                       >
                         <X aria-hidden="true" className="size-4" />
                       </button>
@@ -265,13 +284,13 @@ export default function DetailSheet<Id extends string | number = string | number
                   {renderHeader ? renderHeader() : null}
 
                   {/* Body */}
-                  <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain p-4">
+                  <div className={cn("min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain", heroTitle ? "sidebar-scroll px-6 pt-1 pb-5" : "p-4")}>
                     {loading && skeleton ? skeleton : children}
                   </div>
 
                   {/* Footer slot */}
                   {renderFooter ? (
-                    <div className="border-t border-border p-4">{renderFooter()}</div>
+                    <div className={cn("border-t border-border", heroTitle ? "px-5 py-4" : "p-4")}>{renderFooter()}</div>
                   ) : null}
                 </motion.div>
               </Dialog.Content>

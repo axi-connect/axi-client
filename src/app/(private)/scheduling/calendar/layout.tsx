@@ -21,7 +21,10 @@ export default function SchedulingCalendarLayout({
 }) {
   return (
     <div data-app-view className="flex min-h-0 w-full flex-1 overflow-hidden">
-      <div className="min-w-0 flex-1 overflow-hidden">{children}</div>
+      {/* flex-col: sin él, el `flex-1` del calendario no tiene contra qué
+          crecer y la rejilla medía sus 24 h enteras (1536 px) — nada
+          scrolleaba y la vista abría a medianoche en vez del horario. */}
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">{children}</div>
       {sheet}
       {form}
     </div>
