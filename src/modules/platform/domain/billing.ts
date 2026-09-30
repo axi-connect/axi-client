@@ -64,6 +64,8 @@ export const OVERAGE_METRIC_LABELS: Record<OverageMetric, string> = {
   // métrica equivocada.
   product_recognitions: "Reconocimientos de producto",
   embedding_pixels: "Píxeles de reconocimiento (Voyage)",
+  // P1b: la comercial del motor de decisiones (cupo, sin tarifa propia).
+  ai_decisions: "Clasificadores",
 };
 
 export const OVERAGE_METRICS = Object.keys(

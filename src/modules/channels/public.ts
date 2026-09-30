@@ -29,6 +29,10 @@ export {
 
 export { listChannels } from "./infrastructure/services/channels-service.adapter";
 
+// P1 piloto de captación: la política de contacto de marketing enseña la
+// calidad del número de WhatsApp con la MISMA lectura que la ficha del canal.
+export { readQualityRating, type HealthReading } from "./domain/channel-health";
+
 /** Lectura del estado de UN canal (inbox F3: el composer avisa si está caído). */
 export { useChannelStatus } from "./infrastructure/stores/channels.store";
 

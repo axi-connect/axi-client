@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, Settings, UserMinus } from "lucide-react";
+import { FileText, Settings, ShieldCheck, UserMinus } from "lucide-react";
 
 import { NavTabs, type NavTabItem } from "@/shared/components/layout/nav-tabs";
 
@@ -12,7 +12,7 @@ const BASE = "/marketing/settings";
  * una merece una URL compartible y que el back del navegador funcione.
  *
  * El sidebar del tenant llega hasta este nivel; bajar un cuarto nivel al menú
- * lo llenaría de ruido para cuatro pantallas que solo se tocan al configurar.
+ * lo llenaría de ruido para cinco pantallas que solo se tocan al configurar.
  */
 export function MarketingSettingsNav({ optOutCount }: { optOutCount?: number | null }) {
   const items: readonly NavTabItem[] = [
@@ -26,6 +26,8 @@ export function MarketingSettingsNav({ optOutCount }: { optOutCount?: number | n
       icon: UserMinus,
       count: typeof optOutCount === "number" ? optOutCount.toLocaleString("es-CO") : null,
     },
+    // P1 piloto de captación: por dónde puede abrir contacto Axi.
+    { href: `${BASE}/outreach`, label: "Política de contacto", icon: ShieldCheck },
   ];
 
   return <NavTabs items={items} label="Secciones de configuración" surface="inline" prefetch={false} />;
