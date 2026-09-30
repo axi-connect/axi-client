@@ -61,10 +61,10 @@ export const FILM_THREAD: ThreadPath = {
   enabled: true,
 
   desktop: [
-    // El haz nace bajo el CTA («Sin tarjeta…» termina hacia el 71 % del alto a 900 px),
-    // encima del gradiente vivo, y baja por el hueco central entre las cifras 2 y 3
-    // (rejilla de 4 columnas centrada). El hero ya no tiene dunas (e34d5636).
-    { scene: "hero", points: [p(50, 75, 1), p(50, 90, 1), p(56, 100, 0.8)] },
+    // Hero A «Mil conversaciones, un hilo» (plan §14): el haz nace en el nudo donde
+    // convergen las fibras, bajo el CTA (68 % del alto), y baja por el hueco central
+    // entre las cifras 2 y 3.
+    { scene: "hero", points: [p(50, 68, 1), p(50, 88, 1), p(56, 100, 0.8)] },
     // Tanda 3 (lienzo aprobado el 2026-09-30). Nicho: baja por el margen derecho y
     // pasa por debajo de las cuatro notificaciones. Radar: cruza la esfera hasta el
     // hallazgo y sigue por detrás de la ficha. Seguimiento: el hilo es el cabezal de
@@ -101,13 +101,14 @@ export const FILM_THREAD: ThreadPath = {
   // En móvil el texto ocupa todo el ancho: el hilo va por los márgenes y cruza
   // entre escenas. Sin carretera: el mapa es una ventana propia (escena `goal`).
   mobile: [
-    // En móvil el texto y las cifras (2 × 2) llenan el hero: el haz nace en su borde
-    // inferior, por el hueco central de las cifras, y entra al nicho.
-    { scene: "hero", points: [p(50, 97, 1), p(60, 100, 0.8)] },
+    // Hero A en móvil (plan §14): nudo bajo el CTA (69 %) y bajada por el hueco
+    // central de las cifras (2 × 2) hacia el nicho.
+    { scene: "hero", points: [p(50, 69, 1), p(50, 97, 1), p(60, 100, 0.8)] },
     { scene: "niche", points: [p(94, 8), p(94, 82, 0, true), p(6, 99)] },
     { scene: "radar", points: [p(6, 30), p(6, 90, 0, true)] },
     { scene: "followup", points: [p(9, 4), p(9, 92, 0, true)] },
-    { scene: "chat", points: [p(95, 50, 0, true)] },
+    // El chat va por el margen izquierdo: la venta sale del teléfono por la derecha (right −96).
+    { scene: "chat", points: [p(5, 50, 0, true)] },
     { scene: "photo", points: [p(94, 10), p(94, 94, 0, true)] },
     { scene: "call", points: [p(6, 8), p(6, 46), p(50, 47, 0, true), p(94, 49)] },
     { scene: "vault", points: [p(94, 31), p(65, 43, 0, true), p(69, 67), p(94, 88), p(94, 97)] },

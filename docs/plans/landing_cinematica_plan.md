@@ -388,3 +388,81 @@ Reglas propias de esta tanda:
 - El violeta queda solo en la marca de Axi (etiqueta de la transcripción, punto de «Axi atiende», brillo de la llamada, la píldora «Reconocido»).
 - Todo lo demás va en tinta.
 - En móvil no se fija ninguna escena: los momentos `pin` se ignoran y el hilo va por los márgenes (tablero «Móvil 390»).
+
+## 14. El hero · A «Mil conversaciones, un hilo» (elegida el 2026-09-30)
+
+Lienzo: https://claude.ai/artifact/JsezJ3BEVbLjquhaGxTQ5F (tablero «A · Mil conversaciones, un hilo» y «Móvil 390», columna A). La dueña descartó el hero actual: el gradiente WebGL con conversaciones flotando. Las direcciones B (eclipse) y C (primer mensaje) quedan descartadas.
+
+**Idea.** Cada fibra es una conversación que entra por un borde. Todas convergen en un nudo bajo el CTA. Ahí se enciende la marca y nace el hilo que recorre la película. Rima con el cierre, donde las fibras se recogen en el isotipo.
+
+**Sale del hero:** `HeroGradientLazy` (`BrandGradientCanvas`), `HeroSkyLazy`/`HeroSky` y `.film-hero-glow`. Se borran si no queda ningún consumidor; hay que comprobarlo con una búsqueda de importaciones. Así la home pierde el WebGL.
+
+**Se queda, sin cambios de texto:** el `SiteHeader` original, el titular «Vende en / cada conversación.», el texto, el CTA coral «Prueba 7 días gratis», «Habla con nuestro agente →», «Sin tarjeta. Tu cuenta queda lista hoy.» y las cuatro cifras con su conteo.
+
+**Maquetación (escritorio, 1440 × 900):**
+- Fondo tinta.
+- Titular en Nexa a 104 px (`clamp`), centrado, desde el 19 % del alto.
+- CTA hacia el 55 %.
+- Nudo en x 50 %, y 68 %.
+- Cifras en y 87 %, en una sola fila de 4 × 230 px con filete superior de 1 px al 12 %.
+- Entre la cifra 2 y la 3 queda un hueco de 120 px por donde baja el hilo.
+- Un halo radial (coral al 10 % → violeta al 4 %) detrás del nudo.
+
+**Maquetación (móvil, 390):**
+- Titular a 46 px en tres líneas («Vende en / cada / conversación.»).
+- CTA.
+- Nudo en y 69 %.
+- Cifras en 2 × 2, con un hueco central de 72 px para el hilo y etiquetas cortas.
+- Sin fragmentos de texto en las fibras.
+
+**Fibras (un solo `<canvas>` 2D detrás del texto, `aria-hidden`):**
+- Cuántas: 56 en escritorio, 30 por debajo de 1024 px y 0 con movimiento reducido (en ese caso se dibuja una vez el fotograma final).
+- Geometría pura en `domain/film/hero-fibers.ts`, con semilla determinista y tests:
+  - cada fibra es una cuadrática desde un borde hasta el nudo;
+  - en escritorio salen del borde izquierdo, del derecho, de abajo a la izquierda y de abajo a la derecha;
+  - control = nudo + (origen − nudo) × (0,28–0,48), desplazado 60–150 px hacia abajo;
+  - grosor 0,5–1,2 px;
+  - blanco al 10–32 %.
+- Cada fibra lleva una cabeza de luz (radial blanca de r 7) mientras viaja.
+- Ocho fibras de los márgenes llevan una pregunta real, dos por nicho, sacadas de `FILM_CONTENT`: 12,5 px al 62 %, pegadas al borde (x 40 px). Aparecen cuando nace su fibra y se apagan antes de que llegue. Solo desde 1024 px.
+- Nudo: radial blanco → ámbar → coral → violeta, con los colores leídos de los tokens (`--axi-brand`, `--axi-amber`, `--axi-violet`). Es uno de los tres momentos de color pleno, junto con la meta y el cierre.
+
+**Coreografía.** La entrada va por tiempo, al cargar. La salida va por scroll. Equivalencia con el lienzo: su barra de 0 a 0,6 son 2,4 s de carga (p × 4 s), y de 0,62 a 1 es el scroll del hero.
+
+| Tramo | Qué pasa |
+|---|---|
+| 0–0,4 s | Cabecera. Titular y texto con la entrada escalonada de siempre (`film-line`/`film-in`). |
+| 0,4–0,9 s | Las cifras (conteo, como hoy). |
+| 0,1–2 s | Las fibras nacen escalonadas: cada una arranca entre 0,1 y 0,9 s y tarda 1,2 s en llegar (`ease` cúbico de salida). |
+| 1,4–2,1 s | El nudo se enciende: r 30 → 140 y el halo aparece. |
+| 2–2,5 s | El hilo de la película sale del nudo y baja un 22 % de su tramo del hero. |
+| Scroll 0 → 0,6 | El texto sube 140 px y se apaga. Las cifras se apagan hacia 0,45. |
+| Scroll 0 → 0,65 | Las fibras se recogen en el nudo: se dibuja solo el tramo final y la cola avanza. |
+| Scroll 0 → 1 | El nudo baja 330 px, encoge y cede el paso al hilo, que sigue hacia el nicho (anclas en `thread-path.ts`). |
+
+La salida usa el `sceneTimeline` del hero (no se fija). Si el usuario hace scroll antes de que termine la entrada, la entrada salta a su final.
+
+**Rendimiento:**
+- `HeroFibers` se importa con `dynamic` después del primer pintado. El LCP sigue siendo el titular, que es HTML servido. Mientras llega el canvas, el fondo es tinta con el halo en CSS.
+- `Path2D` en caché por fibra. DPR limitado a 2.
+- `requestAnimationFrame` solo mientras dura la entrada o cambia el progreso de salida. Cero dibujado con el hero fuera de pantalla (`IntersectionObserver`).
+- Presupuesto: la home debe quedar por debajo de los 199,3 kB actuales al quitar `BrandGradientCanvas` y `HeroSky`.
+
+**Borrado seguro:**
+- Todo vive en `ui/film/parts/HeroFibers.tsx` y `domain/film/hero-fibers.ts`.
+- Quitar `<HeroFibersLazy />` de `opening.tsx` deja un hero tinta estático que funciona. El hilo no depende de él, porque sus anclas están en `thread-path.ts`.
+
+**El hilo:** las anclas del hero ya están actualizadas en `thread-path.ts`:
+- escritorio: `p(50,68,1)`, `p(50,88,1)`, `p(56,100,0.8)`;
+- móvil: `p(50,69,1)`, `p(50,97,1)`, `p(60,100,0.8)`.
+
+Se afinan en QA contra el nudo real: el nudo y la primera ancla deben coincidir a ±8 px en 390, 768, 1024 y 1440.
+
+**Aceptación:**
+- Cero errores de consola y sin scroll horizontal en los cuatro anchos.
+- Con movimiento reducido se ve el fotograma final estático.
+- Las preguntas no tocan el titular a 1024 px.
+- El hilo pasa por el hueco de las cifras sin cruzar texto.
+- La cabecera sin cambios; su corte a 1024 px está pendiente de la dueña.
+
+**Orden:** va después del paso 2 (hilo + Lenis en window), porque necesita el hilo nuevo. No bloquea las tandas §11 y §13; se puede intercalar cuando el paso 2 esté listo.
