@@ -1,14 +1,30 @@
+import type { Schemas } from "@/core/api/types";
+
 /**
  * El piloto automático de captación, visto desde el cliente (P5).
  *
- * Espejo del contrato §4.3 que implementa P4 (`autopilot` en el servidor, de
- * axi-dev-01). Los tipos se escriben a mano mientras P4 no está en main: en
- * cuanto su OpenAPI llegue a `schema.d.ts`, se cambian por `Schemas[...]` sin
- * tocar nada más.
+ * Los tipos salen del contrato (`Schemas[...]`, el OpenAPI del slice
+ * `autopilot` de P4, axi-dev-01): si el servidor cambia una forma, el
+ * typecheck rompe aquí. Las listas de valores se quedan como constantes para
+ * iterar en la UI, pero `satisfies` las ata al contrato.
  */
 
-export const ROUTINE_MODES = ["assisted", "autonomous"] as const;
-export type RoutineMode = (typeof ROUTINE_MODES)[number];
+export type RoutineInput = Schemas["RoutineInputDto"];
+export type Routine = Schemas["RoutineDto"];
+export type RoutineListItem = Schemas["RoutinesListDto"]["items"][number];
+export type RunSummary = NonNullable<RoutineListItem["last_run"]>;
+export type RunDetail = Schemas["AutopilotRunDetailDto"];
+export type RunItem = RunDetail["items"][number];
+export type RunEvent = Schemas["RunEventsDto"]["items"][number];
+export type BatchItem = Schemas["BatchDto"]["items"][number];
+export type BatchDecision = Schemas["BatchDecisionDto"];
+export type Estimate = Schemas["EstimateDto"];
+
+export type RoutineMode = RoutineInput["mode"];
+export type RunStatus = RunSummary["status"];
+export type RunStage = RunItem["stage"];
+
+export const ROUTINE_MODES = ["assisted", "autonomous"] as const satisfies readonly RoutineMode[];
 
 export const RUN_STATUSES = [
   "queued",
@@ -18,8 +34,7 @@ export const RUN_STATUSES = [
   "done",
   "budget_exhausted",
   "failed",
-] as const;
-export type RunStatus = (typeof RUN_STATUSES)[number];
+] as const satisfies readonly RunStatus[];
 
 export const RUN_STAGES = [
   "searching",
@@ -30,92 +45,7 @@ export const RUN_STAGES = [
   "replied",
   "demo",
   "discarded",
-] as const;
-export type RunStage = (typeof RUN_STAGES)[number];
-
-export type RoutineInput = {
-  name: string;
-  mode: RoutineMode;
-  source: { kind: string; params: Record<string, unknown> };
-  qualify: {
-    icp_id?: string | null;
-    min_score: number;
-    require_decision_maker: boolean;
-    reveal_email: boolean;
-    reveal_phone: boolean;
-  };
-  contact: { channels: string[]; agent_id: string | null; goal: string };
-  follow_up: { sequence_id: string };
-  schedule: { days: number[]; times: string[]; timezone: string; leads_per_run: number };
-  budget: { per_run: number; per_month: number };
-};
-
-export type RunSummary = {
-  id: string;
-  routine_id: string;
-  trigger: string;
-  status: RunStatus;
-  step: string | null;
-  counters: Record<string, number>;
-  credits_spent: number;
-  error: string | null;
-  started_at: string | null;
-  finished_at: string | null;
-  created_at: string;
-};
-
-export type Routine = RoutineInput & {
-  id: string;
-  status: "active" | "paused" | "archived";
-  next_run_at: string | null;
-  last_run_at: string | null;
-  created_at: string;
-  updated_at: string;
-};
-
-export type RoutineListItem = Routine & { last_run: RunSummary | null };
-
-export type RunItem = {
-  id: string;
-  lead_id: string;
-  /** P4 los guarda al calificar (pedido 2026-09-30); opcionales hasta que lleguen. */
-  display_name?: string | null;
-  company_name?: string | null;
-  contact_id: string | null;
-  stage: RunStage;
-  reason: string | null;
-  score: number | null;
-  decision: string | null;
-  updated_at: string;
-};
-
-export type RunDetail = RunSummary & { items: RunItem[] };
-
-export type RunEvent = {
-  id: string;
-  item_id: string | null;
-  kind: string;
-  payload: Record<string, unknown>;
-  request_id: string | null;
-  created_at: string;
-};
-
-export type BatchItem = {
-  id: string;
-  lead_id: string;
-  display_name?: string | null;
-  company_name?: string | null;
-  contact_id: string | null;
-  score: number | null;
-  decision: string | null;
-};
-
-export type Estimate = {
-  credits_per_run: number;
-  credits_per_month: number;
-  runs_per_month: number;
-  leads_revealed_per_run: number;
-};
+] as const satisfies readonly RunStage[];
 
 /* ─────────────────────────── Cómo se dice ─────────────────────────── */
 
