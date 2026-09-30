@@ -121,7 +121,7 @@ export const TASK_RUN_REASON_LABELS: Partial<Record<string, string>> = {
   opening_field_missing: "Al contacto le falta un dato de su ficha para rellenar la plantilla: complétalo y se reintenta",
   no_reply: "El cliente no respondió a la apertura",
   // Hotfix plantillas (2026-09-29): Meta la aceptó y después la rechazó
-  opening_rejected: "La plantilla de apertura no llegó: Meta la rechazó",
+  opening_rejected: "La plantilla de apertura no llegó",
   // F3 — llamadas (el dominio ya las conoce)
   calls_disabled: "Las llamadas están apagadas en esta empresa",
   no_phone_number: "La empresa no tiene un número para llamar",
@@ -218,7 +218,7 @@ export function taskDisplayState(
       label: OPENING_NOT_DELIVERED_LABEL,
       tone: "destructive",
       transient: false,
-      reason: "Meta rechazó la plantilla de apertura. Reenvíala desde Programados o desde el chat.",
+      reason: "La plantilla de apertura no llegó. Reenvíala desde Programados o desde el chat.",
     };
   }
 
@@ -305,6 +305,8 @@ export const TASK_RUN_TIMELINE_TONES: Record<
 export function taskRunTitle(
   run: Pick<TaskRunDTO, "status" | "attempt"> &
     Partial<Pick<TaskRunDTO, "medium" | "opened_with_template" | "reason">>,
+  /** Hotfix plantillas (B6): el reenvío conserva el intento; se rotula aparte. */
+  options: { resend?: boolean } = {},
 ): string {
   const label =
     run.status === "failed" && run.reason === "opening_rejected"
@@ -312,7 +314,27 @@ export function taskRunTitle(
       : run.opened_with_template === true && run.status === "done"
         ? OPENED_WITH_TEMPLATE_LABEL
         : runStatusLabel(run.status, run.medium ?? "message");
-  return `Intento ${String(run.attempt)} · ${label}`;
+  return `Intento ${String(run.attempt)}${options.resend === true ? " · reenvío" : ""} · ${label}`;
+}
+
+/**
+ * Los intentos que son REENVÍO de otro: comparten `attempt` con uno anterior
+ * (el rechazo no gastó presupuesto, así que el número no avanza).
+ */
+export function resendRunIds(runs: readonly Pick<TaskRunDTO, "id" | "attempt" | "created_at">[]): Set<string> {
+  const byAge = [...runs].sort((a, b) => a.created_at.localeCompare(b.created_at));
+  const seen = new Set<number>();
+  const resends = new Set<string>();
+  for (const run of byAge) {
+    if (seen.has(run.attempt)) resends.add(run.id);
+    seen.add(run.attempt);
+  }
+  return resends;
+}
+
+/** Una hora ya termina en punto («p. m.»): la frase no le suma otro. */
+export function endSentence(text: string): string {
+  return text.endsWith(".") ? text : `${text}.`;
 }
 
 /**

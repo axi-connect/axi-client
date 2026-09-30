@@ -81,6 +81,8 @@ type TasksStore = {
   /** F2: tareas de agente abiertas para la agenda, ordenadas por `next_run_at`. */
   agenda: ActivityDTO[];
   agendaLoading: boolean;
+  /** La agenda no se pudo leer: la vista lo dice, no pinta «Nada programado» (auditoría M5). */
+  agendaError: string | null;
 
   setTab: (tab: TasksTab) => void;
   setDue: (due: TaskDueFilter | null) => void;
@@ -135,6 +137,7 @@ export const useTasksStore = create<TasksStore>((set, get) => ({
   view: "list",
   agenda: [],
   agendaLoading: false,
+  agendaError: null,
 
   setTab: (tab) => {
     set({ tab, page: 1 });
@@ -234,7 +237,7 @@ export const useTasksStore = create<TasksStore>((set, get) => ({
    * `next_run_at`. Una sola página grande: es una agenda, no un listado.
    */
   fetchAgenda: async () => {
-    set({ agendaLoading: true });
+    set({ agendaLoading: true, agendaError: null });
     try {
       const res = await listTasks({
         assignee_type: "agent",
@@ -249,8 +252,8 @@ export const useTasksStore = create<TasksStore>((set, get) => ({
         return left.localeCompare(right);
       });
       set({ agenda, agendaLoading: false });
-    } catch {
-      set({ agendaLoading: false });
+    } catch (error) {
+      set({ agendaLoading: false, agendaError: errorMessage(error, "No pudimos leer lo programado") });
     }
   },
 

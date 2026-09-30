@@ -167,7 +167,7 @@ describe("textos de la fila", () => {
         last_opening: { ...REJECTED.last_opening!, failed_detail: "el número no pudo recibir el mensaje" },
       }),
     ).toBe("El número no pudo recibir el mensaje.");
-    expect(failureSentence({ ...REJECTED, last_opening: null })).toBe("Meta rechazó la plantilla de apertura.");
+    expect(failureSentence({ ...REJECTED, last_opening: null })).toBe("La plantilla de apertura no llegó.");
   });
 
   it("taskDisplayState dice «No llegó» y no «No se pudo enviar»", () => {

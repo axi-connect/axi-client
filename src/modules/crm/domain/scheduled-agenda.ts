@@ -113,7 +113,7 @@ export function openingDeliveryLabel(task: ActivityDTO, now: Date, tz: string): 
 /** El motivo del servidor viene como frase («el número no pudo…»): se capitaliza para ir solo. */
 export function failureSentence(task: ActivityDTO): string {
   const detail = task.last_opening?.failed_detail ?? null;
-  if (detail === null || detail.length === 0) return "Meta rechazó la plantilla de apertura.";
+  if (detail === null || detail.length === 0) return "La plantilla de apertura no llegó.";
   const sentence = detail.charAt(0).toUpperCase() + detail.slice(1);
   return /[.!?]$/.test(sentence) ? sentence : `${sentence}.`;
 }

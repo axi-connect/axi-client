@@ -7,6 +7,7 @@ import {
   resentByOf,
   resentFrom,
 } from "@/modules/inbox/domain/template-message";
+import { parsePreview } from "@/modules/inbox/domain/inbox";
 
 // El payload tal cual quedó en producción el 2026-09-29 (incidente de la plantilla rechazada).
 const INCIDENT_PAYLOAD = {
@@ -84,14 +85,25 @@ describe("parseMessageError + failureCopy", () => {
   });
 
   it("sin error guardado todavía, usa el error_code del evento en vivo", () => {
-    expect(failureCopy(null, "131026")).toMatch(/no puede recibir/);
+    expect(failureCopy(null, "131026")).toBe("El número no pudo recibir el mensaje (puede que no tenga WhatsApp).");
   });
 
-  it("un código que no conocemos cae al genérico, nunca al texto en inglés", () => {
+  it("un código que no conocemos cae al genérico, nunca al texto en inglés ni al código crudo", () => {
     const copy = failureCopy(parseMessageError({ code: 999999, title: "Something odd" }));
-    expect(copy).not.toMatch(/Something odd/);
-    expect(copy).toMatch(/Reenvíalo/);
+    expect(copy).not.toMatch(/Something odd|999999/);
+    expect(copy).toBe("Meta no la entregó; reenvíala y, si vuelve a fallar, revisa tu cuenta de WhatsApp Business.");
     expect(failureCopy(null)).toBe(copy);
+  });
+
+  it("un fallo de la plataforma que no conocemos NO se dice como de Meta ni enseña el código", () => {
+    const copy = failureCopy(parseMessageError({ code: "channels/raro", detail: "x" }));
+    expect(copy).not.toMatch(/Meta|channels\//);
+  });
+
+  it("el código de Meta del rechazo síncrono (provider_code) manda sobre el de plataforma", () => {
+    const failure = parseMessageError({ code: "channels/send_failed", detail: "x", provider_code: "132001" });
+    expect(failure?.code).toBe("132001");
+    expect(failureCopy(failure)).toBe("La plantilla no existe en Meta con ese nombre e idioma.");
   });
 
   it("un error sin nada legible no es un error", () => {
@@ -135,5 +147,13 @@ describe("deliveryLabel y resentFrom", () => {
     expect(resentFrom({})).toBeNull();
     expect(resentByOf({ resent_by_user_id: "u1" })).toBe("u1");
     expect(resentByOf(null)).toBeNull();
+  });
+});
+
+describe("parsePreview de una plantilla (B9)", () => {
+  it("«Plantilla: nombre» del servidor y el token viejo se leen, nunca «…»", () => {
+    expect(parsePreview("Plantilla: sesion_en_vivo_v2").text).toBe("Plantilla · sesion_en_vivo_v2");
+    expect(parsePreview("[template]").text).toBe("Plantilla");
+    expect(parsePreview("hola").text).toBe("hola");
   });
 });

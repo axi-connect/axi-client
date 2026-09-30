@@ -37,7 +37,7 @@ describe("parsePreview (tokens de media del backend)", () => {
   })
 
   it("un token desconocido no rompe (queda como texto)", () => {
-    expect(parsePreview("[template]")).toEqual({ kind: null, text: "[template]" })
+    expect(parsePreview("[reaction]")).toEqual({ kind: null, text: "[reaction]" })
   })
 
   it("audio transcrito (🎤 <texto>) → icono audio + texto sin emoji", () => {

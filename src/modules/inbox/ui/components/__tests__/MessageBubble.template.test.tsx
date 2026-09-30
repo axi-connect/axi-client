@@ -133,9 +133,30 @@ describe("MessageBubble — plantilla de Meta (hotfix 2026-09-29)", () => {
     expect(screen.queryByRole("button", { name: /Reenviar/ })).not.toBeInTheDocument()
   })
 
+  it("M4: un saliente ya reconciliado que Meta rechaza DESPUÉS va a «Reenviar», no a «Reintentar»", () => {
+    const reconciled = {
+      ...templateMessage({
+        id: "real-1",
+        content_type: "text",
+        body: "hola",
+        payload: null,
+        sender_type: "user",
+        status: "failed",
+        error: { code: "131026" },
+      }),
+      local_id: "local-1",
+      delivery: "failed" as const,
+    }
+    render(<MessageBubble message={reconciled} conversationId="c1" onRetry={jest.fn()} onResend={jest.fn(async () => {})} />)
+    expect(screen.getByText("No llegó.")).toBeInTheDocument()
+    expect(screen.getByText(/no pudo recibir el mensaje/)).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: /Reenviar/ })).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "Reintentar envío" })).not.toBeInTheDocument()
+  })
+
   it("un optimista local que no salió sigue con «Reintentar», no con «Reenviar»", () => {
     const local = {
-      ...templateMessage({ content_type: "text", body: "hola", payload: null, sender_type: "user", status: "failed" }),
+      ...templateMessage({ id: "l1", content_type: "text", body: "hola", payload: null, sender_type: "user", status: "failed" }),
       local_id: "l1",
       delivery: "failed" as const,
     }

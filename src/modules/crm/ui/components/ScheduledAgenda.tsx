@@ -44,8 +44,8 @@ export function ScheduledAgenda({
   agentNames: ReadonlyMap<string, string>;
   quietHours: { start: number; end: number } | null;
   onInspect: (task: ActivityDTO) => void;
-  /** Reenvía la apertura fallida; la agenda se refresca al terminar. */
-  onResend: (task: ActivityDTO) => Promise<void>;
+  /** Reenvía la apertura fallida; sin él (sin permiso para responder) no hay botón. */
+  onResend?: (task: ActivityDTO) => Promise<void>;
 }) {
   if (loading && tasks.length === 0) return <TableSkeleton rows={5} showHeader={false} />;
   if (tasks.length === 0) {
@@ -141,16 +141,18 @@ function FailedRow({
   task: ActivityDTO;
   now: Date;
   tz: string;
-  onResend: (task: ActivityDTO) => Promise<void>;
+  onResend?: (task: ActivityDTO) => Promise<void>;
 }) {
   const [resending, setResending] = useState(false);
   const opening = task.last_opening;
+  // La hora va FUERA del truncado: a 390–1024 px el nombre de la plantilla se
+  // corta y la hora tiene que seguir a la vista (auditoría B8).
   const meta = [
     task.opening_template ? `Plantilla «${task.opening_template.name}»` : null,
-    opening?.sent_at ? whenLabel(opening.sent_at, now, tz) : null,
     task.bulk_id !== null && task.title ? `lote «${task.title}»` : null,
   ].filter((part): part is string => part !== null);
-  const canResend = opening?.conversation_id != null && opening.message_id != null;
+  const sentAt = opening?.sent_at ? whenLabel(opening.sent_at, now, tz) : null;
+  const canResend = onResend !== undefined && opening?.conversation_id != null && opening.message_id != null;
 
   return (
     <li className="grid grid-cols-[20px_minmax(0,1fr)] items-start gap-x-3 gap-y-3 px-5 py-3.5 md:grid-cols-[20px_minmax(0,0.8fr)_minmax(0,1.6fr)_auto] md:items-center">
@@ -158,7 +160,17 @@ function FailedRow({
       <ContactCell task={task} sub={task.contact_phone} />
       <div className="col-start-2 min-w-0 md:col-start-auto">
         <p className="text-sm text-pretty text-foreground/85">{failureSentence(task)}</p>
-        {meta.length > 0 && <p className="truncate text-xs text-muted-foreground">{meta.join(" · ")}</p>}
+        {(meta.length > 0 || sentAt !== null) && (
+          <p className="flex min-w-0 gap-1 text-xs text-muted-foreground">
+            {meta.length > 0 && <span className="min-w-0 truncate">{meta.join(" · ")}</span>}
+            {sentAt !== null && (
+              <span className="shrink-0 whitespace-nowrap">
+                {meta.length > 0 ? "· " : ""}
+                {sentAt}
+              </span>
+            )}
+          </p>
+        )}
       </div>
       <div className="col-start-2 flex flex-wrap gap-2 md:col-start-auto">
         {canResend && (
@@ -170,7 +182,7 @@ function FailedRow({
             disabled={resending}
             onClick={() => {
               setResending(true);
-              void onResend(task).finally(() => setResending(false));
+              void onResend?.(task).finally(() => setResending(false));
             }}
           >
             <RotateCw aria-hidden className={cn("size-3.5", resending && "animate-spin motion-reduce:animate-none")} />

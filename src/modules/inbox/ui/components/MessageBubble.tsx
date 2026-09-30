@@ -47,6 +47,16 @@ function StatusIcon({ message }: { message: UiMessage }) {
   return <Check className="size-3.5 opacity-60" aria-label="Enviado" />
 }
 
+/**
+ * El optimista que NUNCA obtuvo id real (el envío no se aceptó: sin ack o
+ * rechazado en el acto) conserva `id === local_id`. Uno ya reconciliado guarda
+ * su `local_id` pero tiene el id real: si falla después (Meta lo rechazó), es un
+ * fallo del servidor y va al motivo con «Reenviar» (auditoría M4).
+ */
+export function neverReachedServer(message: UiMessage): boolean {
+  return message.local_id !== undefined && message.id === message.local_id
+}
+
 const RETRY_CLASS =
   "inline-flex h-7 items-center gap-1 rounded-full border border-destructive/35 bg-card px-2.5 text-xs font-medium transition-colors hover:bg-destructive/10 focus-visible:ring-[3px] focus-visible:ring-destructive/40 focus-visible:outline-none"
 
@@ -178,8 +188,8 @@ export function MessageBubble({
         )}
       </div>
       {sentTemplate && <TemplateButtons catalog={catalog} muted={failed} />}
-      {failed && message.local_id ? (
-        // Optimista que nunca salió de aquí: se reintenta el mismo envío.
+      {failed && neverReachedServer(message) ? (
+        // Optimista que nunca obtuvo id real: se reintenta el mismo envío.
         <div className="mt-1.5 flex items-center gap-2 text-xs text-destructive" role="status">
           <AlertCircle aria-hidden className="size-3.5" />
           <span>No se envió</span>

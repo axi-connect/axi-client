@@ -93,6 +93,13 @@ describe("Composer — la voz no queda grabando sin control (auditoría F3-H1)",
 
 describe("Composer — varios adjuntos fuera de ventana (auditoría F3-H2)", () => {
   it("si el servidor cierra la ventana con el primero, no intenta los siguientes", async () => {
+    // La ventana de 24 h se calcula con Date.now(): sin congelar la FECHA el
+    // test caducó el 2026-09-28 (auditoría B5). Solo `Date`: los temporizadores
+    // siguen reales para que `waitFor` avance.
+    jest.useFakeTimers({
+      now: NOW,
+      doNotFake: ["setTimeout", "clearTimeout", "setInterval", "clearInterval", "setImmediate", "clearImmediate", "queueMicrotask", "nextTick", "requestAnimationFrame", "cancelAnimationFrame", "performance"],
+    })
     global.URL.createObjectURL = jest.fn(() => "blob:x")
     const c = conv(H)
     const onSend = jest.fn<Promise<void>, [SendInput]>(async () => {

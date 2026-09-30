@@ -28,6 +28,8 @@ import {
   TASK_RUN_TIMELINE_TONES,
   taskBadgeMap,
   taskDisplayState,
+  endSentence,
+  resendRunIds,
   runDeliveryLabel,
   taskRunReasonLabel,
   taskRunTimestamp,
@@ -105,6 +107,7 @@ export function TaskRunsSheet({
 
   const state = task === null ? null : taskDisplayState(task);
 
+  const resends = resendRunIds(runs ?? []);
   const items: TimelineItem[] =
     runs?.map((run) => {
       const reason = taskRunReasonLabel(run.reason);
@@ -115,7 +118,7 @@ export function TaskRunsSheet({
         tone: TASK_RUN_TIMELINE_TONES[run.status],
         title: (
           <span className="flex flex-wrap items-center gap-1.5">
-            {taskRunTitle(run)}
+            {taskRunTitle(run, { resend: resends.has(run.id) })}
             {/* El medio va en cada intento: una tarea «llamada, y si no conecta,
                 mensaje» tiene intentos de los dos y el rail debe decir cuál fue cuál. */}
             <span className="inline-flex items-center gap-1 rounded-full border border-border px-1.5 text-[10px] font-normal text-muted-foreground">
@@ -125,7 +128,7 @@ export function TaskRunsSheet({
           </span>
         ),
         ...(run.status === "failed" && run.reason === "opening_rejected"
-          ? { description: `${capitalize(run.detail ?? "Meta rechazó la plantilla de apertura")}.` }
+          ? { description: endSentence(capitalize(run.detail ?? "La plantilla de apertura no llegó")) }
           : run.opened_with_template
           ? {
               description:
@@ -232,8 +235,8 @@ export function TaskRunsSheet({
                 <Hourglass aria-hidden className="mt-0.5 size-3.5 shrink-0 text-info" />
                 <span>
                   Espera la respuesta del cliente hasta el{" "}
-                  <strong className="font-medium text-foreground">{formatDayTime(task.awaiting_reply_until)}</strong>
-                  . Si no responde, la tarea cierra como «Enviado · sin respuesta».
+                  <strong className="font-medium text-foreground">{endSentence(formatDayTime(task.awaiting_reply_until))}</strong>{" "}
+                  Si no responde, la tarea cierra como «Enviado · sin respuesta».
                 </span>
               </p>
             ) : (

@@ -208,3 +208,21 @@ describe("tasks.store — parte del agente", () => {
     expect(useTasksStore.getState().error).toBeNull();
   });
 });
+
+describe("fetchAgenda — el error se dice (hotfix plantillas, auditoría M5)", () => {
+  it("si GET /crm/tasks falla, agendaError lleva el motivo y la agenda no se vacía en silencio", async () => {
+    mockedList.mockRejectedValueOnce(new Error("boom"));
+    await useTasksStore.getState().fetchAgenda();
+    const state = useTasksStore.getState();
+    expect(state.agendaError).not.toBeNull();
+    expect(state.agendaLoading).toBe(false);
+  });
+
+  it("un reintento que sale bien limpia el error", async () => {
+    mockedList.mockRejectedValueOnce(new Error("boom"));
+    await useTasksStore.getState().fetchAgenda();
+    mockedList.mockResolvedValueOnce({ data: [], meta: { total: 0, page: 1, page_size: 100 } } as never);
+    await useTasksStore.getState().fetchAgenda();
+    expect(useTasksStore.getState().agendaError).toBeNull();
+  });
+});

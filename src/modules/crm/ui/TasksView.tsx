@@ -132,10 +132,13 @@ export function TasksView() {
 
   const { hasPermission } = useAuth();
   const canAutomate = hasPermission("crm:automate");
+  // El reenvío es `…/resend` de conversations: pide poder responder (B3)
+  const canResend = hasPermission("conversations:reply");
   const view = useTasksStore((s) => s.view);
   const setView = useTasksStore((s) => s.setView);
   const agenda = useTasksStore((s) => s.agenda);
   const agendaLoading = useTasksStore((s) => s.agendaLoading);
+  const agendaError = useTasksStore((s) => s.agendaError);
   const fetchAgenda = useTasksStore((s) => s.fetchAgenda);
   const { showAlert } = useAlert();
 
@@ -302,7 +305,17 @@ export function TasksView() {
         </div>
       </div>
 
-      {view === "scheduled" ? (
+      {view === "scheduled" && agendaError !== null ? (
+        <div role="alert" className="flex flex-col items-center gap-4 rounded-3xl border border-border bg-card p-8 text-center">
+          <div className="max-w-sm space-y-1.5">
+            <p className="font-heading text-xl font-bold">No pudimos leer lo programado</p>
+            <p className="text-sm text-pretty text-muted-foreground">{agendaError}</p>
+          </div>
+          <Button variant="outline" className="rounded-full" onClick={() => void fetchAgenda()}>
+            Reintentar
+          </Button>
+        </div>
+      ) : view === "scheduled" ? (
         <ScheduledAgenda
           tasks={agenda}
           loading={agendaLoading}
@@ -310,7 +323,7 @@ export function TasksView() {
           agentNames={agentNames}
           quietHours={quietHours}
           onInspect={setInspected}
-          onResend={resendOpening}
+          onResend={canResend ? resendOpening : undefined}
         />
       ) : error !== null ? (
         <div role="alert" className="flex flex-col items-center gap-4 rounded-3xl border border-border bg-card p-8 text-center">
@@ -400,7 +413,7 @@ export function TasksView() {
       )}
 
       <TaskRunsSheet
-        onResend={resendOpening}
+        onResend={canResend ? resendOpening : undefined}
         task={inspectedTask}
         onOpenChange={(open) => {
           if (!open) setInspected(null);

@@ -19,7 +19,7 @@ import {
   type MessageStatus,
   type UiMessage,
 } from "@/modules/inbox/domain/inbox"
-import { mergeDeliveryStatus } from "@/modules/inbox/domain/template-message"
+import { extractTemplatePayload, mergeDeliveryStatus } from "@/modules/inbox/domain/template-message"
 import type { FilterValues } from "@/shared/components/features/filter-panel"
 import type {
   AudioTranscription,
@@ -1015,7 +1015,7 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
     get().patchConversation(conversationId, {
       ...inboundAt,
       last_message_at: message.created_at,
-      last_message_preview: message.body ?? `[${message.content_type}]`,
+      last_message_preview: livePreview(message),
       ...(inbound && !isOpen && existing !== undefined
         ? { unread_count: existing.unread_count + 1 }
         : {}),
@@ -1247,4 +1247,12 @@ function sortByCreatedAt(messages: UiMessage[]): UiMessage[] {
     if (diff !== 0 && !Number.isNaN(diff)) return diff
     return a.id.localeCompare(b.id)
   })
+}
+
+/** La vista previa en vivo: el mismo formato que escribe el servidor (B9). */
+function livePreview(message: Message | UiMessage): string {
+  if (message.body !== null && message.body.trim() !== "") return message.body
+  const template = message.content_type === "template" ? extractTemplatePayload(message.payload) : null
+  if (template !== null) return `Plantilla: ${template.name}`
+  return `[${message.content_type}]`
 }

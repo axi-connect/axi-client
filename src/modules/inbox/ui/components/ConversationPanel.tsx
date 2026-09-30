@@ -98,7 +98,10 @@ function OpenConversation({
   const fetchOlderMessages = useInboxStore((s) => s.fetchOlderMessages)
   const fetchMessages = useInboxStore((s) => s.fetchMessages)
   const threadError = useInboxStore((s) => s.error)
-  const meId = useAuth().user?.id ?? null
+  const { user, hasPermission } = useAuth()
+  const meId = user?.id ?? null
+  // «Reenviar» pide lo mismo que el endpoint: responder, en una conversación viva (B3)
+  const canReply = hasPermission("conversations:reply")
   const tz = businessTimeZone(useMyCompany().company?.timezone)
   const now = useMinuteTick()
 
@@ -297,7 +300,7 @@ function OpenConversation({
                             message={item.message}
                             conversationId={conversationId}
                             onRetry={retry}
-                            onResend={resend}
+                            onResend={canReply && !readOnly ? resend : undefined}
                             resentAt={resentAt.get(item.message.id) ?? null}
                             channelId={conversation.channel_id}
                             first={item.first}
