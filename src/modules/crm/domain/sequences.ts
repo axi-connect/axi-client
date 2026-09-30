@@ -16,9 +16,19 @@ export const SEQUENCE_LIMITS = {
 
 export const ENROLLMENT_STATUS_MAP = {
   active: { label: "Activa", tone: "info" as const },
+  // P3b: «ahora no» la duerme sin cerrarla: sigue `active` en el servidor.
+  snoozed: { label: "Dormida", tone: "neutral" as const },
   completed: { label: "Completada", tone: "neutral" as const },
   stopped: { label: "Parada", tone: "success" as const },
 };
+
+/** El estado que se enseña: una activa dormida por «ahora no» se dice «Dormida». */
+export function enrollmentDisplayStatus(enrollment: {
+  status: EnrollmentDTO["status"];
+  snoozed_until: string | null;
+}): keyof typeof ENROLLMENT_STATUS_MAP {
+  return enrollment.status === "active" && enrollment.snoozed_until !== null ? "snoozed" : enrollment.status;
+}
 
 /**
  * Por qué se paró. Las dos primeras son ÉXITOS, y la copia lo dice: una
@@ -30,6 +40,8 @@ export const STOP_REASON_LABELS: Record<EnrollmentStopReason, string> = {
   opted_out: "Se dio de baja",
   task_cancelled: "El paso no pudo salir",
   stopped_by_user: "La paró alguien del equipo",
+  // P3b: contestó que no le interesa. No se insiste.
+  not_interested: "No le interesa",
 };
 
 /**

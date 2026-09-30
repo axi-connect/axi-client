@@ -14560,11 +14560,16 @@ export interface components {
                 status: "active" | "completed" | "stopped";
                 current_position: number;
                 /** @enum {string|null} */
-                stop_reason: "replied" | "converted" | "opted_out" | "task_cancelled" | "stopped_by_user" | null;
+                stop_reason: "replied" | "converted" | "opted_out" | "task_cancelled" | "stopped_by_user" | "not_interested" | null;
                 /** Format: date-time */
                 enrolled_at: string;
                 /** Format: date-time */
                 finished_at: string | null;
+                /**
+                 * Format: date-time
+                 * @description P3b: dormida por «ahora no» hasta esta fecha (sigue `active`); null = despierta.
+                 */
+                snoozed_until: string | null;
             }[];
             meta: {
                 total: number;
