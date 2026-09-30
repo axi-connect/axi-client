@@ -14,6 +14,7 @@ import {
   PhoneCall,
   Play,
   Plus,
+  Repeat,
   Send,
   Sparkles,
   Trash2,
@@ -92,8 +93,13 @@ type Draft = {
   stop_on_reply: boolean;
   stop_on_conversion: boolean;
   is_active: boolean;
+  /** P3b-2: al completarse sin respuesta, pasa a esta (pista de relación). */
+  next_sequence_id: string | null;
   steps: DraftStep[];
 };
+
+/** Sentinela del selector: Radix no admite `value=""`. */
+const NO_NEXT = "none";
 
 /**
  * Secuencias del agente (F4b).
@@ -165,6 +171,7 @@ export function SequencesManager() {
     return (
       <SequenceEditor
         draft={draft}
+        others={(sequences ?? []).filter((sequence) => sequence.id !== draft.id)}
         saving={saving}
         onChange={setDraft}
         onCancel={() => setDraft(null)}
@@ -245,6 +252,11 @@ export function SequencesManager() {
                 <div className="flex min-w-0 flex-wrap gap-1.5">
                   {sequence.stop_on_reply && <Rule icon={CircleCheck}>Para si responde</Rule>}
                   {sequence.stop_on_conversion && <Rule icon={CircleDollarSign}>Para si compra</Rule>}
+                  {sequence.next_sequence_id !== null && (
+                    <Rule icon={Repeat}>
+                      Luego: {nextRuleLabel(sequences.find((other) => other.id === sequence.next_sequence_id))}
+                    </Rule>
+                  )}
                 </div>
                 <Button variant="ghost" size="sm" className="rounded-full" onClick={() => setInspecting(sequence)}>
                   <Users aria-hidden className="size-4" />
@@ -295,6 +307,20 @@ export function SequencesManager() {
   );
 }
 
+/**
+ * P3b-2: una siguiente en BORRADOR no recibe a nadie (el servidor no inscribe
+ * en un borrador). La plantilla de relación nace así, y enlazarla sin activarla
+ * perdería en silencio a todo el que termine sin responder: se dice.
+ */
+function nextSequenceLabel(sequence: Pick<SequenceDTO, "name" | "is_active">): string {
+  return sequence.is_active ? sequence.name : `${sequence.name} (borrador: no recibe a nadie hasta activarla)`;
+}
+
+function nextRuleLabel(sequence: Pick<SequenceDTO, "name" | "is_active"> | undefined): string {
+  if (sequence === undefined) return "otra secuencia";
+  return sequence.is_active ? sequence.name : `${sequence.name} · en borrador, no recibe a nadie`;
+}
+
 function emptyDraft(): Draft {
   return {
     id: null,
@@ -303,6 +329,7 @@ function emptyDraft(): Draft {
     stop_on_reply: true,
     stop_on_conversion: true,
     is_active: false,
+    next_sequence_id: null,
     steps: [{ offset_hours: 0, task_channel: "message", objective: "" }],
   };
 }
@@ -315,6 +342,7 @@ function toDraft(sequence: SequenceDTO): Draft {
     stop_on_reply: sequence.stop_on_reply,
     stop_on_conversion: sequence.stop_on_conversion,
     is_active: sequence.is_active,
+    next_sequence_id: sequence.next_sequence_id,
     steps: sequence.steps.map((step) => ({
       offset_hours: step.offset_hours,
       task_channel: step.task_channel,
@@ -364,12 +392,15 @@ function Rule({ icon: Icon, children }: { icon: React.ComponentType<{ className?
 /** El editor: reglas de parada arriba, pasos en vertical, promesa abajo. */
 function SequenceEditor({
   draft,
+  others,
   saving,
   onChange,
   onCancel,
   onSave,
 }: {
   draft: Draft;
+  /** Las demás secuencias: a cuál pasa el contacto si esta termina sin respuesta. */
+  others: readonly SequenceDTO[];
   saving: boolean;
   onChange: (draft: Draft) => void;
   onCancel: () => void;
@@ -444,6 +475,31 @@ function SequenceEditor({
                 seguimiento y un acoso.
               </p>
             )}
+            {/* P3b-2 · pista de relación: quien termina sin responder no se pierde. */}
+            <div className="grid gap-1.5 border-t border-border pt-3">
+              <label htmlFor="sequence-next" className="text-sm font-medium">
+                Si termina sin respuesta, pasa a
+              </label>
+              <Select
+                value={draft.next_sequence_id ?? NO_NEXT}
+                onValueChange={(value) => onChange({ ...draft, next_sequence_id: value === NO_NEXT ? null : value })}
+              >
+                <SelectTrigger id="sequence-next" className="w-full min-w-0 @min-[36rem]:w-auto @min-[36rem]:min-w-72">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NO_NEXT}>A ninguna: termina aquí</SelectItem>
+                  {others.map((sequence) => (
+                    <SelectItem key={sequence.id} value={sequence.id}>
+                      {nextSequenceLabel(sequence)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground text-pretty">
+                Solo si salen todos los pasos y nadie responde. Si responde, compra o se da de baja, no pasa a ninguna.
+              </p>
+            </div>
           </section>
 
           <section className="grid gap-2">

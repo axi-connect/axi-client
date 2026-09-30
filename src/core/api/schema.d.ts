@@ -14970,6 +14970,8 @@ export interface components {
                 stop_on_reply: boolean;
                 stop_on_conversion: boolean;
                 is_active: boolean;
+                /** Format: uuid */
+                next_sequence_id: string | null;
                 steps: {
                     /** Format: uuid */
                     id: string;
@@ -15009,6 +15011,8 @@ export interface components {
             stop_on_reply: boolean;
             stop_on_conversion: boolean;
             is_active: boolean;
+            /** Format: uuid */
+            next_sequence_id: string | null;
             steps: {
                 /** Format: uuid */
                 id: string;
@@ -15048,6 +15052,8 @@ export interface components {
             stop_on_conversion: boolean;
             /** @default false */
             is_active: boolean;
+            /** Format: uuid */
+            next_sequence_id?: string | null;
             steps: {
                 offset_hours: number;
                 /**
