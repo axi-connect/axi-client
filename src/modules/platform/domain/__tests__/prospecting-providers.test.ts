@@ -10,6 +10,7 @@ const BASE: ProviderAccount = {
   id: "p-1",
   provider: "millionverifier",
   label: "produccion",
+  company_id: null,
   enabled: true,
   capabilities: ["verify_email"],
   priority: 10,

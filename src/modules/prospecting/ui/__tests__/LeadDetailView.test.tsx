@@ -49,6 +49,12 @@ jest.mock("../../infrastructure/services/prospecting-service.adapter", () => ({
   enrichLead: jest.fn(),
   verifyLead: jest.fn(),
   discardLead: jest.fn(),
+  // P2: personas, señales y llaves. Vacíos: la ficha de siempre no depende de ellos.
+  findPeopleForLead: jest.fn(),
+  revealLeads: jest.fn(),
+  getLeadPeople: jest.fn(() => Promise.resolve({ items: [] })),
+  getLeadSignals: jest.fn(() => Promise.resolve({ items: [] })),
+  listMyProviderKeys: jest.fn(() => Promise.resolve({ items: [] })),
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -64,6 +70,14 @@ function lead(over: Partial<LeadDetailDTO> = {}): LeadDetailDTO {
     external_id: null,
     kind: "business",
     display_name: "Spa Piel de Seda",
+    first_name: null,
+    last_name: null,
+    masked: false,
+    parent_lead_id: null,
+    title: null,
+    buying_role: null,
+    decision_maker_confidence: null,
+    parent: null,
     legal_name: "Piel de Seda S.A.S.",
     email: "hola@pieldeseda.co",
     phone: "+57 604 555 0142",

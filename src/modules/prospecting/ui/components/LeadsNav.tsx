@@ -1,6 +1,6 @@
 "use client";
 
-import { Inbox, Radar, Search, ShieldCheck } from "lucide-react";
+import { Inbox, Radar, Search, ShieldCheck, UsersRound } from "lucide-react";
 
 import { NavTabs, type NavTabItem } from "@/shared/components/layout/nav-tabs";
 
@@ -29,6 +29,8 @@ export function LeadsNav({ pendingCount }: { pendingCount?: number | null }) {
           : null,
     },
     { href: `${BASE}/searches`, label: "Búsquedas", icon: Search },
+    // P2: a quién escribirle dentro de cada negocio.
+    { href: `${BASE}/people`, label: "Personas", icon: UsersRound },
     { href: `${BASE}/quality`, label: "Calidad", icon: ShieldCheck },
     { href: `${BASE}/sources`, label: "Fuentes", icon: Radar },
   ];

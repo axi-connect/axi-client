@@ -35,6 +35,9 @@ const LABELS: Record<string, string> = {
 	"autopilot": "Automatización",
 	"runs": "Ejecuciones",
 	"edit": "Editar",
+	// Captación (/marketing/leads/*) y su pestaña Personas (P2 del piloto)
+	"leads": "Captación",
+	"people": "Personas",
 	"new": "Nueva",
 	// Método comercial: /comercial, /comercial/meta, /comercial/acciones/:id,
 	// /comercial/resultados/:key (Q20: salía «comercial» en minúscula). Las

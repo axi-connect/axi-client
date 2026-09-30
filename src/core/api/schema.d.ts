@@ -6964,6 +6964,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/prospecting/searches/{id}/next-page": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProspectingController_nextPage_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/prospecting/searches/delete": {
         parameters: {
             query?: never;
@@ -7054,6 +7070,102 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["ProspectingController_enrichMany_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/leads/{id}/people": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProspectingController_people_v1"];
+        put?: never;
+        post: operations["ProspectingController_peopleOne_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/leads/people": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProspectingController_peopleMany_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/providers/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProspectingController_myProviders_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/providers/{provider}/key": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["ProspectingController_saveProviderKey_v1"];
+        post?: never;
+        delete: operations["ProspectingController_removeProviderKey_v1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/leads/reveal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProspectingController_reveal_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/leads/{id}/signals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProspectingController_signals_v1"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -20175,11 +20287,26 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
-                source: "ctwa" | "meta_lead_ads" | "manual" | "google_places" | "openstreetmap" | "serp";
+                source: "ctwa" | "meta_lead_ads" | "manual" | "google_places" | "openstreetmap" | "serp" | "apollo_people" | "rues_open" | "website";
                 external_id: string | null;
                 /** @enum {string} */
                 kind: "person" | "business";
                 display_name: string | null;
+                first_name: string | null;
+                last_name: string | null;
+                masked: boolean;
+                /** Format: uuid */
+                parent_lead_id: string | null;
+                title: string | null;
+                /** @enum {string|null} */
+                buying_role: "decides" | "approves" | "recommends" | "uses" | "unknown" | null;
+                decision_maker_confidence: number | null;
+                parent: {
+                    /** Format: uuid */
+                    id: string;
+                    display_name: string | null;
+                    city: string | null;
+                } | null;
                 legal_name: string | null;
                 email: string | null;
                 phone: string | null;
@@ -20229,14 +20356,14 @@ export interface components {
         SourcesCatalogDto: {
             items: {
                 /** @enum {string} */
-                source: "google_places" | "openstreetmap" | "serp";
+                source: "google_places" | "openstreetmap" | "serp" | "apollo_people" | "rues_open";
                 provider: string;
                 label: string;
                 /** @enum {string} */
-                query_shape: "map" | "web";
+                query_shape: "map" | "web" | "registry" | "people";
                 available: boolean;
                 /** @enum {string|null} */
-                unavailable_reason: "no_account" | "disabled" | "unhealthy" | "capped_day" | "capped_month" | null;
+                unavailable_reason: "no_account" | "disabled" | "unhealthy" | "capped_day" | "capped_month" | "no_tenant_key" | "plan_without_api" | "out_of_credits" | null;
                 free: boolean;
                 allowed_channels: ("whatsapp" | "email" | "manual")[];
                 attribution: string | null;
@@ -20244,6 +20371,8 @@ export interface components {
             categories: {
                 id: string;
                 label: string;
+                niche_code: string;
+                ciiu: string[];
             }[];
         };
         GeocodeResultsDto: {
@@ -20262,7 +20391,7 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
-                source: "google_places" | "openstreetmap" | "serp";
+                source: "google_places" | "openstreetmap" | "serp" | "apollo_people" | "rues_open";
                 label: string | null;
                 /** @enum {string} */
                 status: "queued" | "running" | "completed" | "partial" | "failed" | "cancelled";
@@ -20285,7 +20414,32 @@ export interface components {
                         verified_only?: boolean;
                         max_records?: number | null;
                     };
+                    person: {
+                        /** @default [] */
+                        titles: string[];
+                        /** @default [] */
+                        seniorities: ("owner" | "founder" | "c_suite" | "partner" | "vp" | "head" | "director" | "manager" | "senior" | "entry")[];
+                        /** @default true */
+                        include_similar: boolean;
+                        /** @default false */
+                        email_verified: boolean;
+                        /** @default false */
+                        hiring: boolean;
+                    } | null;
+                    company: {
+                        /** @default [] */
+                        ciiu: string[];
+                        /** @default [] */
+                        domains: string[];
+                        /** @default [] */
+                        employee_ranges: ("1,10" | "11,50" | "51,200" | "201,500" | "501,1000" | "1001,100000")[];
+                        /** @default null */
+                        keywords: string | null;
+                    } | null;
+                    /** @enum {string} */
+                    mode: "fill" | "browse";
                 };
+                has_more: boolean;
                 found_count: number;
                 new_count: number;
                 duplicate_count: number;
@@ -20317,7 +20471,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            source: "google_places" | "openstreetmap" | "serp";
+            source: "google_places" | "openstreetmap" | "serp" | "apollo_people" | "rues_open";
             label: string | null;
             /** @enum {string} */
             status: "queued" | "running" | "completed" | "partial" | "failed" | "cancelled";
@@ -20340,7 +20494,32 @@ export interface components {
                     verified_only?: boolean;
                     max_records?: number | null;
                 };
+                person: {
+                    /** @default [] */
+                    titles: string[];
+                    /** @default [] */
+                    seniorities: ("owner" | "founder" | "c_suite" | "partner" | "vp" | "head" | "director" | "manager" | "senior" | "entry")[];
+                    /** @default true */
+                    include_similar: boolean;
+                    /** @default false */
+                    email_verified: boolean;
+                    /** @default false */
+                    hiring: boolean;
+                } | null;
+                company: {
+                    /** @default [] */
+                    ciiu: string[];
+                    /** @default [] */
+                    domains: string[];
+                    /** @default [] */
+                    employee_ranges: ("1,10" | "11,50" | "51,200" | "201,500" | "501,1000" | "1001,100000")[];
+                    /** @default null */
+                    keywords: string | null;
+                } | null;
+                /** @enum {string} */
+                mode: "fill" | "browse";
             };
+            has_more: boolean;
             found_count: number;
             new_count: number;
             duplicate_count: number;
@@ -20358,7 +20537,7 @@ export interface components {
         };
         StartSearchDto: {
             /** @enum {string} */
-            source: "google_places" | "openstreetmap" | "serp";
+            source: "google_places" | "openstreetmap" | "serp" | "apollo_people" | "rues_open";
             label?: string;
             text?: string;
             category?: string;
@@ -20379,6 +20558,33 @@ export interface components {
                 verified_only?: boolean;
                 max_records?: number | null;
             };
+            person?: {
+                /** @default [] */
+                titles: string[];
+                /** @default [] */
+                seniorities: ("owner" | "founder" | "c_suite" | "partner" | "vp" | "head" | "director" | "manager" | "senior" | "entry")[];
+                /** @default true */
+                include_similar: boolean;
+                /** @default false */
+                email_verified: boolean;
+                /** @default false */
+                hiring: boolean;
+            };
+            company?: {
+                /** @default [] */
+                ciiu: string[];
+                /** @default [] */
+                domains: string[];
+                /** @default [] */
+                employee_ranges: ("1,10" | "11,50" | "51,200" | "201,500" | "501,1000" | "1001,100000")[];
+                /** @default null */
+                keywords: string | null;
+            };
+            /**
+             * @default fill
+             * @enum {string}
+             */
+            mode: "fill" | "browse";
         };
         StartSearchResultDto: {
             /** Format: uuid */
@@ -20408,11 +20614,26 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            source: "ctwa" | "meta_lead_ads" | "manual" | "google_places" | "openstreetmap" | "serp";
+            source: "ctwa" | "meta_lead_ads" | "manual" | "google_places" | "openstreetmap" | "serp" | "apollo_people" | "rues_open" | "website";
             external_id: string | null;
             /** @enum {string} */
             kind: "person" | "business";
             display_name: string | null;
+            first_name: string | null;
+            last_name: string | null;
+            masked: boolean;
+            /** Format: uuid */
+            parent_lead_id: string | null;
+            title: string | null;
+            /** @enum {string|null} */
+            buying_role: "decides" | "approves" | "recommends" | "uses" | "unknown" | null;
+            decision_maker_confidence: number | null;
+            parent: {
+                /** Format: uuid */
+                id: string;
+                display_name: string | null;
+                city: string | null;
+            } | null;
             legal_name: string | null;
             email: string | null;
             phone: string | null;
@@ -20510,6 +20731,80 @@ export interface components {
         };
         EnrichLeadsDto: {
             lead_ids: string[];
+        };
+        TenantProviderKeysDto: {
+            items: {
+                /** @enum {string} */
+                provider: "millionverifier" | "twilio_lookup" | "rues" | "apollo" | "google_places" | "overpass" | "serper" | "firecrawl" | "site_extractor" | "nominatim";
+                configured: boolean;
+                token_last4: string | null;
+                /** Format: date-time */
+                credential_set_at: string | null;
+                capabilities: string[];
+                all_capabilities: string[];
+                healthy: boolean | null;
+                last_error: string | null;
+                /** Format: date-time */
+                last_checked_at: string | null;
+                credit_costs: {
+                    email: number | null;
+                    phone: number | null;
+                };
+                calls_this_month: number;
+            }[];
+        };
+        SaveTenantProviderKeyDto: {
+            api_key: string;
+        };
+        RevealLeadsDto: {
+            lead_ids: string[];
+            fields: ("email" | "phone")[];
+        };
+        LeadPeopleDto: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                source: string;
+                status: string;
+                display_name: string | null;
+                title: string | null;
+                /** @enum {string} */
+                buying_role: "decides" | "approves" | "recommends" | "uses" | "unknown";
+                decision_maker_confidence: number | null;
+                masked: boolean;
+                has_email: boolean;
+                has_phone: boolean;
+                email: string | null;
+                phone: string | null;
+                in_crm: boolean;
+                evidence: string | null;
+                evidence_provider: string | null;
+                /** @enum {string} */
+                evidence_level: "fact" | "hypothesis";
+                evidence_url: string | null;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+        };
+        LeadSignalsDto: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                account_id: string;
+                kind: string;
+                /** @enum {string} */
+                level: "fact" | "hypothesis" | "validated";
+                source: string;
+                source_url: string | null;
+                /** Format: date-time */
+                observed_at: string;
+                /** Format: date-time */
+                expires_at: string;
+                confidence: number;
+                summary: string;
+                counts_for_intent: boolean;
+            }[];
         };
         DiscardLeadDto: {
             reason?: string;
@@ -20613,7 +20908,7 @@ export interface components {
             data: {
                 /** @enum {string} */
                 provider: "millionverifier" | "twilio_lookup" | "rues" | "apollo" | "google_places" | "overpass" | "serper" | "firecrawl" | "site_extractor" | "nominatim";
-                capabilities: ("verify_email" | "verify_phone" | "identity_lookup" | "enrich_person" | "enrich_company" | "discover" | "extract_site" | "geocode")[];
+                capabilities: ("verify_email" | "verify_phone" | "identity_lookup" | "enrich_person" | "enrich_company" | "discover" | "extract_site" | "geocode" | "find_people")[];
                 /** @enum {string} */
                 credential_mode: "api_key" | "key_secret" | "none";
                 unit_cost: {
@@ -20627,6 +20922,8 @@ export interface components {
             /** @enum {string} */
             provider: "millionverifier" | "twilio_lookup" | "rues" | "apollo" | "google_places" | "overpass" | "serper" | "firecrawl" | "site_extractor" | "nominatim";
             label: string;
+            /** Format: uuid */
+            company_id: string | null;
             enabled: boolean;
             capabilities: string[];
             priority: number;
@@ -20647,6 +20944,8 @@ export interface components {
             /** @enum {string} */
             provider: "millionverifier" | "twilio_lookup" | "rues" | "apollo" | "google_places" | "overpass" | "serper" | "firecrawl" | "site_extractor" | "nominatim";
             label: string;
+            /** Format: uuid */
+            company_id?: string;
             credentials: {
                 /** @enum {string} */
                 mode: "api_key";
@@ -35188,7 +35487,7 @@ export interface operations {
                 page?: number;
                 page_size?: number;
                 status?: ("new" | "enriching" | "qualified" | "rejected" | "promoted" | "discarded" | "suppressed")[];
-                source?: ("ctwa" | "meta_lead_ads" | "manual" | "google_places" | "openstreetmap" | "serp")[];
+                source?: ("ctwa" | "meta_lead_ads" | "manual" | "google_places" | "openstreetmap" | "serp" | "apollo_people" | "rues_open" | "website")[];
                 quality_status?: ("unverified" | "verified" | "risky" | "invalid" | "suppressed")[];
                 allows?: "whatsapp" | "email" | "manual";
                 min_score?: number;
@@ -35201,7 +35500,10 @@ export interface operations {
                 require_mode?: "all" | "any";
                 created_after?: string;
                 created_before?: string;
-                sort?: "score" | "data" | "recent";
+                sort?: "score" | "data" | "recent" | "discovered";
+                search_id?: string;
+                kind?: "person" | "business";
+                masked?: "exclude" | "only" | "include";
             };
             header?: never;
             path?: never;
@@ -35223,7 +35525,7 @@ export interface operations {
         parameters: {
             query?: {
                 status?: ("new" | "enriching" | "qualified" | "rejected" | "promoted" | "discarded" | "suppressed")[];
-                source?: ("ctwa" | "meta_lead_ads" | "manual" | "google_places" | "openstreetmap" | "serp")[];
+                source?: ("ctwa" | "meta_lead_ads" | "manual" | "google_places" | "openstreetmap" | "serp" | "apollo_people" | "rues_open" | "website")[];
                 quality_status?: ("unverified" | "verified" | "risky" | "invalid" | "suppressed")[];
                 allows?: "whatsapp" | "email" | "manual";
                 min_score?: number;
@@ -35236,6 +35538,9 @@ export interface operations {
                 require_mode?: "all" | "any";
                 created_after?: string;
                 created_before?: string;
+                search_id?: string;
+                kind?: "person" | "business";
+                masked?: "exclude" | "only" | "include";
             };
             header?: never;
             path?: never;
@@ -35420,6 +35725,27 @@ export interface operations {
             };
         };
     };
+    ProspectingController_nextPage_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StartSearchResultDto"];
+                };
+            };
+        };
+    };
     ProspectingController_deleteSearches_v1: {
         parameters: {
             query?: never;
@@ -35565,6 +35891,176 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EnrichQueuedDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_people_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeadPeopleDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_peopleOne_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnrichQueuedDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_peopleMany_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EnrichLeadsDto"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnrichQueuedDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_myProviders_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenantProviderKeysDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_saveProviderKey_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: "millionverifier" | "twilio_lookup" | "rues" | "apollo" | "google_places" | "overpass" | "serper" | "firecrawl" | "site_extractor" | "nominatim";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveTenantProviderKeyDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProspectingController_removeProviderKey_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: "millionverifier" | "twilio_lookup" | "rues" | "apollo" | "google_places" | "overpass" | "serper" | "firecrawl" | "site_extractor" | "nominatim";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProspectingController_reveal_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RevealLeadsDto"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnrichQueuedDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_signals_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeadSignalsDto"];
                 };
             };
         };
