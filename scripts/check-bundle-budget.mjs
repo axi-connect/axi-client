@@ -4,8 +4,10 @@
  *
  * Lee los manifiestos de un `next build` ya hecho y calcula, por ruta, el JS
  * de primera carga comprimido con gzip: los chunks raíz (`rootMainFiles`) más
- * los de la página y todos sus layouts, sin repetir. Falla si una ruta supera
- * su techo en `scripts/bundle-budget.json`.
+ * los de la entrada de la página (que ya incluye sus layouts), sin repetir.
+ * Es el mismo cálculo que la columna «First Load JS» de `next build` (gzip
+ * nivel 9, kB de 1000 bytes), verificado contra ella el 2026-09-30. Falla si
+ * una ruta supera su techo en `scripts/bundle-budget.json`.
  *
  * Uso:
  *   npm run build && npm run budget          # comprueba
@@ -40,7 +42,7 @@ const gzCache = new Map();
 function gz(file) {
   if (!gzCache.has(file)) {
     const abs = path.join(NEXT, file);
-    gzCache.set(file, existsSync(abs) ? gzipSync(readFileSync(abs)).length : 0);
+    gzCache.set(file, existsSync(abs) ? gzipSync(readFileSync(abs), { level: 9 }).length : 0);
   }
   return gzCache.get(file);
 }
@@ -55,23 +57,15 @@ function routeOf(entry) {
   return "/" + clean;
 }
 
-/** Los layouts de una página: todos los prefijos de su ruta de archivo. */
-function layoutsOf(entry) {
-  const parts = entry.replace(/\/page$/, "").split("/").filter(Boolean);
-  const out = ["/layout"];
-  for (let i = 1; i <= parts.length; i++) out.push("/" + parts.slice(0, i).join("/") + "/layout");
-  return out.filter((l) => appManifest[l]);
-}
-
 function firstLoad(entry) {
   const files = new Set(rootFiles);
-  for (const key of [...layoutsOf(entry), entry]) for (const f of appManifest[key] ?? []) if (f.endsWith(".js")) files.add(f);
+  for (const f of appManifest[entry] ?? []) if (f.endsWith(".js")) files.add(f);
   let total = 0;
   for (const f of files) total += gz(f);
   return total;
 }
 
-const shared = rootFiles.reduce((n, f) => n + gz(f), 0) + (appManifest["/layout"] ?? []).filter((f) => f.endsWith(".js") && !rootFiles.includes(f)).reduce((n, f) => n + gz(f), 0);
+const shared = rootFiles.reduce((n, f) => n + gz(f), 0);
 
 const pages = Object.keys(appManifest).filter((k) => k.endsWith("/page"));
 const byRoute = new Map();
@@ -81,7 +75,7 @@ for (const entry of pages) {
   byRoute.set(route, Math.max(byRoute.get(route) ?? 0, firstLoad(entry)));
 }
 
-const kb = (n) => (n / 1024).toFixed(1) + " kB";
+const kb = (n) => (n / 1000).toFixed(1) + " kB";
 const budget = existsSync(BUDGET_FILE) ? readJson(BUDGET_FILE) : { shared: null, routes: {} };
 
 const rows = [["(común a todas)", shared, budget.shared]];
@@ -89,7 +83,7 @@ for (const [route, size] of [...byRoute.entries()].sort((a, b) => b[1] - a[1])) 
 
 let failed = 0;
 for (const [route, size, limitKb] of rows) {
-  const over = limitKb != null && size / 1024 > limitKb;
+  const over = limitKb != null && size / 1000 > limitKb;
   if (over) failed++;
   if (reportOnly || limitKb != null) {
     const mark = limitKb == null ? "   " : over ? "✗  " : "✓  ";

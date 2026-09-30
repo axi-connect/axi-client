@@ -1,0 +1,219 @@
+/*
+ * La película de la home (programa «Landing cinematográfica»).
+ *
+ * Solo la importa `FilmPage`, así que no viaja al panel ni a /platform. No
+ * declara colores: consume los tokens de globals.css bajo `.dark` (el escenario
+ * es oscuro en los dos temas, D8), igual que la bóveda y la isla del escáner.
+ *
+ * Tres piezas:
+ * 1. La cinta de luz: tres trazos (coral, ámbar, violeta) con su halo.
+ * 2. El nicho: el HTML trae las cuatro variantes y el atributo `data-niche`
+ *    del raíz decide cuál se ve. Cambiar de nicho no pide JS de las escenas.
+ * 3. Estados de reposo: sin motor (movimiento reducido o JS que no llegó) cada
+ *    escena se ve en su fotograma final.
+ */
+
+.film {
+  --film-ink: var(--background);
+  --film-line: color-mix(in srgb, var(--foreground) 10%, transparent);
+  --film-surface: color-mix(in srgb, var(--foreground) 5%, var(--background));
+  --film-surface-2: color-mix(in srgb, var(--foreground) 9%, var(--background));
+  --film-muted: color-mix(in srgb, var(--foreground) 64%, transparent);
+  --film-dim: color-mix(in srgb, var(--foreground) 46%, transparent);
+  position: relative;
+  width: 100%;
+  background: var(--background);
+  color: var(--foreground);
+  isolation: isolate;
+}
+
+/* ------------------------------------------------------------------ nicho */
+.film[data-niche="restaurants"] [data-only]:not([data-only~="restaurants"]),
+.film[data-niche="tech"] [data-only]:not([data-only~="tech"]),
+.film[data-niche="beauty"] [data-only]:not([data-only~="beauty"]),
+.film[data-niche="b2b"] [data-only]:not([data-only~="b2b"]) {
+  display: none !important;
+}
+
+/* ------------------------------------------------------------------ escena */
+.film-scene {
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  overflow: clip;
+}
+.film-wrap {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
+  padding-inline: clamp(16px, 7vw, 132px) clamp(16px, 4vw, 64px);
+  padding-block: 96px 72px;
+}
+@media (max-width: 1023px) {
+  .film-wrap { padding-inline: 16px; padding-block: 88px 88px; }
+}
+
+.film-h {
+  font-family: var(--font-headings), var(--font-sans), sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.04;
+  text-wrap: balance;
+  margin: 0;
+}
+.film-h .t { font-weight: 200; letter-spacing: -0.03em; }
+.film-eyebrow {
+  font-size: 11.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.film-lead { color: var(--film-muted); text-wrap: pretty; }
+.film-dim { color: var(--film-dim); }
+
+/* Superficies: cristal para lo que flota, sólido para lo que se lee. */
+.film-card {
+  background: var(--film-surface);
+  border: 1px solid var(--film-line);
+  border-radius: 24px;
+}
+.film-glass {
+  background: color-mix(in srgb, var(--film-surface-2) 70%, transparent);
+  border: 1px solid color-mix(in srgb, var(--foreground) 11%, transparent);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+  backdrop-filter: blur(22px) saturate(160%);
+  box-shadow: var(--shadow-overlay);
+}
+@supports not (backdrop-filter: blur(1px)) {
+  .film-glass { background: var(--film-surface-2); }
+}
+.film-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 3px 11px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 500;
+  background: color-mix(in srgb, var(--foreground) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--foreground) 11%, transparent);
+}
+
+/* Burbujas: el cliente en gris, lo que sale del negocio en tinta clara. */
+.film-bub {
+  max-width: 82%;
+  padding: 9px 13px;
+  border-radius: 18px;
+  font-size: 13.5px;
+  line-height: 1.42;
+  overflow-wrap: anywhere;
+}
+.film-bub-in { background: var(--film-surface-2); border-bottom-left-radius: 6px; align-self: flex-start; }
+.film-bub-out { background: var(--foreground); color: var(--background); border-bottom-right-radius: 6px; align-self: flex-end; }
+.film-meta { font-size: 10.5px; color: var(--film-dim); margin-top: 3px; }
+
+/* Luz de fondo de cada escena: elipses, nunca retículas (DESIGN-SYSTEM §5.1). */
+.film-spot {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ------------------------------------------------------------------ la cinta */
+.film-ribbon {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  overflow: visible;
+}
+.film-ribbon path { fill: none; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.film-ribbon .c { stroke: var(--axi-brand); }
+.film-ribbon .a { stroke: var(--axi-amber); }
+.film-ribbon .v { stroke: var(--axi-violet); }
+.film-ribbon .line path { stroke-width: 2.4px; }
+.film-ribbon .halo { opacity: 0.35; filter: blur(12px); }
+.film-ribbon .halo path { stroke-width: 14px; }
+
+/* El isotipo del hero se arma solo con CSS: no espera al motor ni al JS. */
+@keyframes film-rise {
+  from { opacity: 0; transform: translateY(14px) scale(0.92); }
+  to { opacity: 1; transform: none; }
+}
+.film-alpha path { transform-box: fill-box; transform-origin: 50% 50%; animation: film-rise 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.film-alpha path:nth-child(2) { animation-delay: 0.12s; }
+.film-alpha path:nth-child(3) { animation-delay: 0.24s; }
+
+/* Riel de progreso (escritorio) y barra (móvil): la misma cinta, en pequeño. */
+.film-rail {
+  position: fixed;
+  left: clamp(16px, 2.6vw, 40px);
+  top: 50%;
+  height: min(52vh, 480px);
+  transform: translateY(-50%);
+  z-index: 30;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.film-rail[data-on="true"] { opacity: 1; }
+.film-rail .track { position: absolute; left: 4px; top: 0; bottom: 0; width: 2px; border-radius: 2px; background: var(--film-line); }
+.film-rail .lit {
+  position: absolute; left: 4px; top: 0; width: 2px; height: 100%; border-radius: 2px;
+  background: linear-gradient(var(--axi-brand), var(--axi-amber), var(--axi-violet));
+  transform-origin: top; transform: scaleY(var(--film-progress, 0));
+}
+.film-rail .dot {
+  position: absolute; left: -1px; top: 0; width: 12px; height: 12px; margin-top: -6px; border-radius: 50%;
+  background: var(--foreground);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--axi-brand) 25%, transparent), 0 0 20px var(--axi-amber);
+  transform: translateY(calc(var(--film-progress, 0) * min(52vh, 480px)));
+}
+.film-rail .tick { position: absolute; left: 0; display: flex; align-items: center; gap: 12px; transform: translateY(-50%); white-space: nowrap; }
+.film-rail .tick i { display: block; width: 10px; height: 10px; border-radius: 50%; background: color-mix(in srgb, var(--foreground) 22%, transparent); }
+.film-rail .tick span { font-size: 9.5px; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 600; color: var(--film-dim); }
+.film-rail .tick[data-on="true"] i { background: var(--foreground); }
+.film-rail .tick[data-on="true"] span { color: var(--foreground); }
+.film-bar { display: none; }
+@media (max-width: 1023px) {
+  .film-rail { display: none; }
+  .film-bar {
+    display: block; position: fixed; left: 16px; right: 16px; top: calc(64px + env(safe-area-inset-top, 0px)); height: 2px; z-index: 30;
+    border-radius: 2px; background: var(--film-line); pointer-events: none;
+  }
+  .film-bar i {
+    display: block; height: 100%; border-radius: 2px; transform-origin: left; transform: scaleX(var(--film-progress, 0));
+    background: linear-gradient(90deg, var(--axi-brand), var(--axi-amber), var(--axi-violet));
+  }
+}
+
+/* Píldora del nicho: aparece al empezar la película. */
+.film-pill {
+  position: fixed;
+  left: 50%;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  z-index: 35;
+  transform: translate(-50%, 140%);
+  opacity: 0;
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.35s ease;
+}
+.film-pill[data-on="true"] { transform: translate(-50%, 0); opacity: 1; }
+@media (max-width: 1023px) {
+  .film-pill { left: auto; right: 16px; bottom: auto; top: calc(74px + env(safe-area-inset-top, 0px)); transform: translateY(-12px); }
+  .film-pill[data-on="true"] { transform: none; }
+}
+
+/* Marcas del mapa: las coloca el motor sobre la carretera; sin motor, en su sitio final. */
+.film-mark { position: absolute; z-index: 4; transform: translate(-50%, -50%); pointer-events: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .film-alpha path { animation: none; }
+  .film-pill, .film-rail { transition: none; }
+}
