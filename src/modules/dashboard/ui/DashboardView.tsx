@@ -17,6 +17,7 @@ import { ConversationsFlowCard } from "@/modules/dashboard/ui/components/Convers
 import { NewCustomersCard } from "@/modules/dashboard/ui/components/NewCustomersCard";
 import { TopProductsCard } from "@/modules/dashboard/ui/components/TopProductsCard";
 import { GoalProgressBlock } from "@/modules/commercial/public";
+import { PilotsSummaryCard } from "@/modules/autopilot/public";
 import { useMyCompany } from "@/modules/companies/public";
 import type { NextUpSource } from "@/modules/dashboard/domain/next-up";
 import { useEntitlements } from "@/shared/auth/entitlements.hooks";
@@ -109,6 +110,8 @@ export function DashboardView() {
         />
         {/* La meta del mes: autosuficiente; sin capacidad, permiso o meta que mostrar no pinta nada. */}
         <GoalProgressBlock className={WIDE} />
+        {/* Lo que trajeron los pilotos (P6b): autosuficiente; sin captación no pinta nada. */}
+        <PilotsSummaryCard />
         {perms.orders && <SalesTiles section={sales} onRetry={refreshSales} />}
         {perms.conversations && (
           <ConversationsFlowCard section={conversations} period={period} timeZone={timeZone} onRetry={refreshConversations} className={WIDE} />

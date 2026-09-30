@@ -39,6 +39,8 @@ jest.mock("@/modules/marketing/infrastructure/services/templates-service.adapter
   getMessagingWindow: jest.fn(),
 }));
 jest.mock("@/modules/channels/public", () => ({ listChannels: jest.fn() }));
+// La ficha de los pilotos (P6b) es autosuficiente y tiene su propia prueba.
+jest.mock("@/modules/autopilot/public", () => ({ PilotsSummaryCard: () => null }));
 
 /* eslint-disable @typescript-eslint/no-require-imports */
 const automations = require("@/modules/marketing/infrastructure/services/automations-service.adapter") as {
