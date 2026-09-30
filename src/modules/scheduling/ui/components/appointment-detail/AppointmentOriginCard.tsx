@@ -38,7 +38,7 @@ export function AppointmentOriginCard({
 
   if (origin.kind === "team" || !byAgent) {
     const who =
-      appointment.created_by_user_id !== null && appointment.created_by_user_id === currentUserId
+      appointment.created_by_user_id != null && appointment.created_by_user_id === currentUserId
         ? "Creada por ti"
         : byAgent
           ? "Agendada por Axi"

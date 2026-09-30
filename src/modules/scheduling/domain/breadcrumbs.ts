@@ -1,16 +1,17 @@
 /**
  * Las migas de /scheduling para el header privado, en datos (el layout es de
- * servidor). `/scheduling/calendar/appointment` no tiene page.tsx propia (solo
- * `[appointmentId]` debajo): su miga no enlaza. La cita se nombra «Cita», no
- * por su id; el segmento intermedio ya dice lo mismo, así que el id queda
- * como «Detalle».
+ * servidor): «Agenda › Calendario › Cita». `/scheduling/calendar/appointment`
+ * no tiene page.tsx propia (solo `[appointmentId]` debajo) y diría lo mismo
+ * que su hijo, así que no se pinta; la cita se nombra «Cita», no por su id.
  */
 export const SCHEDULING_BREADCRUMBS = {
   unlinked: ["/scheduling/calendar/appointment"],
+  hidden: ["/scheduling/calendar/appointment"],
   children: {
-    "/scheduling/calendar/appointment": { "*": "Detalle" },
+    "/scheduling/calendar/appointment": { "*": "Cita" },
   },
 } as const satisfies {
   unlinked: readonly string[];
+  hidden: readonly string[];
   children: Readonly<Record<string, Readonly<Record<string, string>>>>;
 };

@@ -74,11 +74,14 @@ export type AppointmentOrigin =
 export function appointmentOrigin(
   appointment: Pick<AppointmentDTO, "call_session_id" | "conversation_id">,
 ): AppointmentOrigin {
-  // La llamada manda: una cita agendada en voz nunca tiene conversación.
-  if (appointment.call_session_id !== null) {
+  // `!= null` a propósito: con un servidor anterior a origen-llamada el campo
+  // llega AUSENTE (undefined), y `!== null` pintaba toda cita de chat como
+  // «Ver llamada» hacia /calls/undefined. La llamada manda: una cita agendada
+  // en voz nunca tiene conversación.
+  if (appointment.call_session_id != null) {
     return { kind: "call", callSessionId: appointment.call_session_id };
   }
-  if (appointment.conversation_id !== null) {
+  if (appointment.conversation_id != null) {
     return { kind: "conversation", conversationId: appointment.conversation_id };
   }
   return { kind: "team" };

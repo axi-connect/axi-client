@@ -35,11 +35,9 @@ const DEFAULT_SCROLL_HOUR = 8;
 const QUIET =
   "bg-[repeating-linear-gradient(135deg,var(--color-muted)_0_6px,transparent_6px_12px)]";
 
+/** Eje en 24 h, igual que los bloques y la línea de ahora («8:00», «13:00»). */
 function hourLabel(hour: number): string {
-  if (hour === 0) return "12 a. m.";
-  if (hour < 12) return `${hour} a. m.`;
-  if (hour === 12) return "12 p. m.";
-  return `${hour - 12} p. m.`;
+  return `${hour}:00`;
 }
 
 function hhmm(minutes: number): string {

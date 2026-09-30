@@ -107,6 +107,21 @@ describe("appointmentOrigin («Ver llamada» / «Ver conversación»)", () => {
     });
   });
 
+  it("servidor viejo (campo AUSENTE): nunca inventa una llamada", () => {
+    const legacy = (overrides: Partial<AppointmentDTO>) => {
+      const a = appointment(overrides) as Partial<AppointmentDTO>;
+      delete a.call_session_id;
+      return a as AppointmentDTO;
+    };
+    expect(appointmentOrigin(legacy({ conversation_id: "cv1" }))).toEqual({
+      kind: "conversation",
+      conversationId: "cv1",
+    });
+    expect(appointmentOrigin(legacy({})).kind).toBe("team");
+    // …y con el campo presente, la llamada sigue mandando.
+    expect(appointmentOrigin(appointment({ call_session_id: "cs1", conversation_id: null })).kind).toBe("call");
+  });
+
   it("sin ninguna de las dos → el equipo", () => {
     expect(appointmentOrigin(appointment()).kind).toBe("team");
   });
