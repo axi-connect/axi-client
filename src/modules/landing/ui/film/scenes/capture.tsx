@@ -2,7 +2,6 @@ import { Check, CheckCheck, CircleCheck, Globe, MapPin, Megaphone, MessageCircle
 
 import { ByNiche } from "@/modules/landing/ui/film/parts/ByNiche";
 import { Bubble } from "@/modules/landing/ui/film/parts/chat";
-import { Ribbon } from "@/modules/landing/ui/film/parts/Ribbon";
 import { SceneHead } from "@/modules/landing/ui/film/parts/SceneHead";
 
 /* ───────────────────────────── Radar ───────────────────────────── */
@@ -32,7 +31,6 @@ export function RadarScene() {
   return (
     <section id="captar" data-scene="radar" data-chapter="Captar" aria-labelledby="radar-h" className="film-scene">
       <div className="film-spot top-[10%] right-[-10%] size-[900px] bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--axi-brand)_10%,transparent),transparent)]" />
-      <Ribbon d="M -40 780 C 260 740, 420 560, 640 540 S 860 500, 1010 490" className="max-lg:hidden" />
       <div className="film-wrap grid items-center gap-12 lg:grid-cols-[minmax(0,.85fr)_minmax(0,1.15fr)]">
         <SceneHead
           id="radar-h"
@@ -97,6 +95,7 @@ export function RadarScene() {
             {(c) => (
               <div
                 data-anim="lead"
+                data-thread-target=""
                 className="film-glass relative z-[3] mx-auto mt-6 flex w-full max-w-[380px] flex-col gap-4 rounded-3xl p-5 lg:absolute lg:right-0 lg:bottom-0 lg:mt-0 lg:w-[360px]"
               >
                 <div className="flex items-start justify-between gap-3">
@@ -179,10 +178,10 @@ export function FollowupScene() {
         <ByNiche>
           {(c) => {
             const steps: { when: string; what: string; Icon: LucideIcon; tone: string }[] = [
-              { when: "Mar · 9:12 p. m.", what: c.followup.cart, Icon: ShoppingCart, tone: "film-dim" },
-              { when: "Mié · 10:00 a. m.", what: "Axi retoma con una plantilla aprobada por Meta", Icon: Send, tone: "text-[var(--axi-amber)]" },
-              { when: "10:07 a. m.", what: "Leída", Icon: CheckCheck, tone: "text-[var(--axi-amber)]" },
-              { when: "10:09 a. m.", what: `«${c.followup.reply}»`, Icon: MessageCircle, tone: "text-[var(--axi-success)]" },
+              { when: "Mar · 9:12 p. m.", what: c.followup.cart, Icon: ShoppingCart, tone: "film-dim" },
+              { when: "Mié · 10:00 a. m.", what: "Axi retoma con una plantilla aprobada por Meta", Icon: Send, tone: "text-[var(--axi-amber)]" },
+              { when: "10:07 a. m.", what: "Leída", Icon: CheckCheck, tone: "text-[var(--axi-amber)]" },
+              { when: "10:09 a. m.", what: `«${c.followup.reply}»`, Icon: MessageCircle, tone: "text-[var(--axi-success)]" },
             ];
             return (
               <div data-anim="track" className="relative mt-14 max-lg:mt-10">
@@ -208,11 +207,11 @@ export function FollowupScene() {
                     </Bubble>
                   </div>
                   <div className="flex flex-col lg:items-start">
-                    <Bubble side="in" meta="10:09 a. m.">
+                    <Bubble side="in" meta="10:09 a. m.">
                       {c.followup.reply}
                     </Bubble>
                   </div>
-                  <div data-anim="result" className="film-glass flex items-center gap-3 rounded-2xl px-4 py-3.5">
+                  <div data-anim="result" data-thread-target="" className="film-glass flex items-center gap-3 rounded-2xl px-4 py-3.5">
                     <CircleCheck className="size-5 shrink-0 text-[var(--axi-success)]" aria-hidden="true" />
                     <span>
                       <span className="block font-semibold">{c.followup.recovered}</span>

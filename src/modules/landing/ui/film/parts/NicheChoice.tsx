@@ -16,6 +16,7 @@ export function NicheChoice({ niche, children, className }: { niche: FilmNiche; 
       aria-pressed={selected}
       onClick={() => choose(niche)}
       data-anim="niche"
+      data-thread-target={selected ? "" : undefined}
       className={cn(
         "film-card group relative flex cursor-pointer flex-col justify-between gap-6 p-6 text-left text-foreground transition-[box-shadow,background-color] duration-300",
         "hover:bg-[var(--film-surface-2)] focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",

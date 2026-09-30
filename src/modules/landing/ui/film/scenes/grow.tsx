@@ -75,7 +75,7 @@ export function CollectScene() {
                     </span>
                   </p>
                 </div>
-                <div data-anim="document" className="flex items-center gap-4 lg:flex-col lg:items-start">
+                <div data-anim="document" data-thread-target="" className="flex items-center gap-4 lg:flex-col lg:items-start">
                   <div className="flex h-24 w-[74px] shrink-0 flex-col gap-1.5 rounded-lg bg-foreground p-2.5 shadow-[0_20px_50px_rgb(0_0_0/.6)]" aria-hidden="true">
                     <span className="h-1.5 w-3/5 rounded bg-[color-mix(in_srgb,var(--background)_30%,var(--foreground))]" />
                     <span className="h-1 w-[90%] rounded bg-[color-mix(in_srgb,var(--background)_16%,var(--foreground))]" />
@@ -140,7 +140,7 @@ export function PipelineScene() {
                       {[0, 1, 2].map((k) => {
                         if (ci === 4 && k === 0) {
                           return (
-                            <div key={k} data-anim="deal" className="rounded-2xl border border-[color-mix(in_srgb,var(--axi-brand)_50%,transparent)] bg-[var(--film-surface-2)] p-3 shadow-[0_18px_50px_color-mix(in_srgb,var(--axi-brand)_18%,transparent)]">
+                            <div key={k} data-anim="deal" data-thread-target="" className="rounded-2xl border border-[color-mix(in_srgb,var(--axi-brand)_50%,transparent)] bg-[var(--film-surface-2)] p-3 shadow-[0_18px_50px_color-mix(in_srgb,var(--axi-brand)_18%,transparent)]">
                               <p className="truncate text-[12.5px] font-semibold">{c.pipeline.card.name}</p>
                               <p className="film-dim text-[11.5px]">{c.pipeline.card.detail}</p>
                               <span className="film-chip mt-2 min-h-[22px] px-2 py-0 text-[10.5px]">
@@ -390,7 +390,7 @@ export function AxelScene() {
         />
         <ByNiche>
           {(c) => (
-            <div data-anim="brief" className="min-w-0">
+            <div data-anim="brief" data-thread-target="" className="min-w-0">
               <div className="flex items-center gap-3.5">
                 <span className="flex size-14 shrink-0 items-center justify-center rounded-full bg-[radial-gradient(circle_at_35%_30%,color-mix(in_srgb,var(--axi-violet)_30%,var(--background)),var(--background))] text-xl text-[var(--axi-violet)] shadow-[0_0_0_1px_color-mix(in_srgb,var(--axi-violet)_40%,transparent),0_0_50px_color-mix(in_srgb,var(--axi-violet)_40%,transparent)]" aria-hidden="true">
                   ✦
@@ -461,7 +461,7 @@ export function MeasureScene() {
                       className="block origin-bottom rounded-t-[18px] rounded-b-md border border-[var(--film-line)] bg-[linear-gradient(180deg,color-mix(in_srgb,var(--foreground)_14%,transparent),color-mix(in_srgb,var(--foreground)_3%,transparent))]"
                       style={{ height: `calc(${BAR_HEIGHTS[i]} * min(38svh, 360px))` }}
                     />
-                    <span className="film-h mt-3 text-[clamp(22px,2.8vw,40px)] tabular-nums" data-anim="count">
+                    <span className="film-h mt-3 text-[clamp(22px,2.8vw,40px)] tabular-nums" data-anim="count" data-thread-target="">
                       {value}
                     </span>
                     <span className="film-lead text-[13px] max-sm:text-[11px]">{label}</span>

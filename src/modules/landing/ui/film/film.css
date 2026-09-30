@@ -6,7 +6,7 @@
  * es oscuro en los dos temas, D8), igual que la bóveda y la isla del escáner.
  *
  * Tres piezas:
- * 1. La cinta de luz: tres trazos (coral, ámbar, violeta) con su halo.
+ * 1. El hilo de luz vive en `thread/` (su canvas y su CSS van con el motor).
  * 2. El nicho: el HTML trae las cuatro variantes y el atributo `data-niche`
  *    del raíz decide cuál se ve. Cambiar de nicho no pide JS de las escenas.
  * 3. Estados de reposo: sin motor (movimiento reducido o JS que no llegó) cada
@@ -126,24 +126,6 @@
   pointer-events: none;
   z-index: 0;
 }
-
-/* ------------------------------------------------------------------ la cinta */
-.film-ribbon {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 1;
-  overflow: visible;
-}
-.film-ribbon path { fill: none; stroke-linecap: round; vector-effect: non-scaling-stroke; }
-.film-ribbon .c { stroke: var(--axi-brand); }
-.film-ribbon .a { stroke: var(--axi-amber); }
-.film-ribbon .v { stroke: var(--axi-violet); }
-.film-ribbon .line path { stroke-width: 2.4px; }
-.film-ribbon .halo { opacity: 0.35; filter: blur(12px); }
-.film-ribbon .halo path { stroke-width: 14px; }
 
 /* El isotipo del hero se arma solo con CSS: no espera al motor ni al JS. */
 @keyframes film-rise {
@@ -268,8 +250,6 @@
     radial-gradient(45% 55% at 60% 80%, color-mix(in srgb, var(--axi-amber) 12%, transparent), transparent 70%);
 }
 
-/* La cabeza luminosa de la cinta: la pone el motor en la punta del trazo. */
-.film-ribbon .head { pointer-events: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .film-in, .film-line, .film-glow { animation: none; }
@@ -356,6 +336,7 @@
   transform: translate3d(0, var(--ty), var(--tz)) rotateX(var(--rx)) rotateY(var(--ry)) rotateZ(var(--rz));
   will-change: transform;
 }
+.film-phone-aura { position: absolute; inset: 0; border-radius: 56px; transform: translateZ(-12px); }
 .film-phone-edge {
   position: absolute;
   inset: 0;
@@ -470,7 +451,18 @@
 /* El hilo del chat. `feed` se desplaza entero (el motor lo baja lo que miden
    los mensajes que aún no llegan), así cada mensaje nuevo entra abajo y empuja
    a los anteriores, como en WhatsApp. */
-.film-phone-view { position: relative; display: flex; flex: 1; flex-direction: column; justify-content: flex-end; min-height: 0; overflow: hidden; padding: 10px 11px; }
+.film-phone-view {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 0;
+  overflow: hidden;
+  padding: 10px 11px;
+  /* Los turnos se van por debajo de la cabecera del chat, sin chocar con ella. */
+  mask-image: linear-gradient(to bottom, transparent, black 24px);
+}
 /* Pegado abajo aunque no quepa: lo que sobra se va por arriba, como en un chat. */
 .film-phone-feed { position: relative; display: flex; flex-shrink: 0; flex-direction: column; gap: 7px; }
 .film-phone-day {

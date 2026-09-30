@@ -50,6 +50,7 @@ const KEYS = [
 export function Phone({
   title,
   initials,
+  time,
   status,
   overlay,
   children,
@@ -57,6 +58,8 @@ export function Phone({
 }: {
   title: ReactNode;
   initials: ReactNode;
+  /** La hora de la barra de estado. */
+  time: ReactNode;
   status: string;
   overlay?: ReactNode;
   children: ReactNode;
@@ -68,6 +71,8 @@ export function Phone({
         <div className="film-phone-floor" data-anim="phone-floor" aria-hidden="true" />
         <div className="film-phone-halo" aria-hidden="true" />
         <div className="film-phone-body" data-anim="phone">
+          {/* El halo que enciende el hilo de luz al llegar (thread.css). */}
+          <div className="film-phone-aura" data-thread-target="" aria-hidden="true" />
           {EDGES.map((i) => (
             <div key={i} className="film-phone-edge" style={{ "--i": i } as React.CSSProperties} aria-hidden="true" />
           ))}
@@ -77,7 +82,7 @@ export function Phone({
           <div className="film-phone-frame">
             <div className="film-phone-bezel">
               <div className="film-phone-glass">
-                <StatusBar />
+                <StatusBar time={time} />
                 <div className="film-phone-head">
                   <svg width="10" height="17" viewBox="0 0 10 17" aria-hidden="true">
                     <path d="M8.5 1.5 1.8 8.5l6.7 7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -132,10 +137,10 @@ export function Phone({
 }
 
 /** La barra de estado del teléfono: hora, isla, señal, wifi y batería. */
-function StatusBar() {
+function StatusBar({ time }: { time: ReactNode }) {
   return (
     <div className="film-phone-bar" aria-hidden="true">
-      <span>9:41</span>
+      <span className="tabular-nums">{time}</span>
       <span className="film-phone-island">
         <span />
       </span>

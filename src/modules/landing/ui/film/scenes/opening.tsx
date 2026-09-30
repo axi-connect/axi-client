@@ -11,7 +11,6 @@ import { HeroGradientLazy, HeroSkyLazy } from "@/modules/landing/ui/film/parts/H
 import { HeroStats } from "@/modules/landing/ui/film/parts/HeroStats";
 import { FILM_ICONS } from "@/modules/landing/ui/film/parts/film-icons";
 import { NicheChoice } from "@/modules/landing/ui/film/parts/NicheChoice";
-import { Ribbon } from "@/modules/landing/ui/film/parts/Ribbon";
 
 /** El enlace secundario a WhatsApp, igual en la apertura y en el cierre. */
 function TalkToAgent({ className }: { className?: string }) {
@@ -46,7 +45,6 @@ export function HeroScene() {
       <div className="film-hero-glow absolute inset-x-0 top-0 h-[640px] blur-2xl" aria-hidden="true" />
       <HeroGradientLazy className="absolute inset-0 h-full w-full" speed={1} grain={0.6} opacity={0.55} />
       <HeroSkyLazy className="absolute inset-0 size-full" />
-      <Ribbon d="M 720 700 C 716 790, 728 860, 720 960" axis="x" spread={6} className="z-[1]" />
 
       <div className="relative z-[2] flex flex-1 flex-col items-center px-4 pt-[clamp(96px,14vh,132px)] pb-[clamp(18px,3vh,32px)]">
         <div data-anim="copy" className="flex flex-1 flex-col items-center justify-center text-center">
@@ -96,7 +94,6 @@ export function NicheScene() {
   return (
     <section id="quien" data-scene="niche" aria-labelledby="quien-h" className="film-scene">
       <div className="film-spot top-[30%] left-[calc(50%-560px)] size-[1120px] bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--axi-brand)_9%,transparent),transparent)]" />
-      <Ribbon d="M 720 -40 C 760 80, 1360 90, 1400 330 S 1120 610, 760 640 S 220 570, -40 650" />
       <div className="film-wrap text-center">
         <div data-anim="head">
           <p className="film-eyebrow mb-4 text-[var(--axi-brand)]">Empieza la película</p>
@@ -135,10 +132,8 @@ export function CloseScene() {
   return (
     <section id="demo" data-scene="close" aria-labelledby="cierre-h" className="film-scene">
       <div className="film-spot top-[2%] left-[calc(50%-500px)] size-[1000px] bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--axi-brand)_16%,transparent),transparent)]" />
-      <Ribbon d="M -40 150 C 300 170, 500 330, 660 380" className="max-lg:hidden" />
-      <Ribbon d="M 1480 150 C 1140 170, 940 330, 780 380" className="max-lg:hidden" />
       <div className="film-wrap text-center">
-        <div className="relative mx-auto mb-10 aspect-square w-[min(40vw,220px)]" aria-hidden="true" data-anim="alpha-close">
+        <div className="relative mx-auto mb-10 aspect-square w-[min(40vw,220px)]" aria-hidden="true" data-anim="alpha-close" data-thread-target="">
           <div className="absolute inset-[-20%] rounded-full bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--axi-brand)_30%,transparent),color-mix(in_srgb,var(--axi-violet)_16%,transparent)_55%,transparent_75%)] blur-2xl" />
           <BrandMark className="relative size-full" />
         </div>

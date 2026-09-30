@@ -10,7 +10,8 @@
  *   aprobada; ningún producto con tallas o colores (knowledge-base §6.4).
  * - Las cifras son de ejemplo y coherentes entre sí; las del mapa se calculan
  *   (`route-scenario.ts`), no se escriben.
- * - Los importes van con espacio duro tras «$» para que no se partan.
+ * - Los importes llevan espacio duro tras «$» (`\u00a0`) y las horas entre la cifra
+ *   y «a. m./p. m.», para que no se partan al final de una línea.
  */
 
 import type { FilmNiche } from "./niches";
@@ -45,8 +46,11 @@ export type FilmContent = {
   ask: string;
   business: string;
   chat: {
-    /** La hora de los dos turnos del chat, como la muestra WhatsApp (sin «p. m.»). */
-    clock: readonly [string, string];
+    /**
+     * Las horas del chat, como las muestra WhatsApp (sin «p. m.»): los dos turnos
+     * y la del teléfono, que es la del último momento de la escena (la venta).
+     */
+    clock: readonly [string, string, string];
     customer1: string;
     agent1: string;
     /** `note`: la línea corta de la tarjeta del producto (existencias, turno…). */
@@ -99,28 +103,28 @@ const RESTAURANTS: FilmContent = {
   ask: "¿Tienen domicilio a Laureles?",
   business: "Fuego & Pan · Medellín",
   chat: {
-    clock: ["9:15", "9:16"],
+    clock: ["9:15", "9:16", "9:21"],
     customer1: "Hola, ¿tienen domicilio a Laureles?",
     agent1: "¡Sí! Llegamos a Laureles en 35 min. Te comparto el más pedido.",
-    product: { name: "Combo Doble Fuego", price: "$ 38.900", icon: "burger", note: "El más pedido" },
+    product: { name: "Combo Doble Fuego", price: "$\u00a038.900", icon: "burger", note: "El más pedido" },
     customer2: "Dame 2 combos",
-    agent2: "Listo: pedido #1042 por $ 83.800 con domicilio. Pagas por Nequi o al recibir.",
+    agent2: "Listo: pedido #1042 por $\u00a083.800 con domicilio. Pagas por Nequi o al recibir.",
     system: "Pedido confirmado · sale en 5 min",
-    sale: { label: "Venta pagada", amount: "$ 83.800", caption: "verificada por tu equipo · 9:21 p. m." },
+    sale: { label: "Venta pagada", amount: "$\u00a083.800", caption: "verificada por tu equipo ·\u00a09:21\u00a0p.\u00a0m." },
   },
   photo: {
     handle: "@fuegoypan",
     catalog: [
-      { name: "Combo Clásico", price: "$ 29.900", icon: "burger" },
-      { name: "Combo Doble Fuego", price: "$ 38.900", icon: "burger" },
-      { name: "Combo Pollo Crispy", price: "$ 32.900", icon: "burger" },
-      { name: "Ensalada César", price: "$ 24.900", icon: "salad" },
-      { name: "Limonada de coco", price: "$ 9.900", icon: "cup" },
-      { name: "Malteada", price: "$ 12.900", icon: "cup" },
+      { name: "Combo Clásico", price: "$\u00a029.900", icon: "burger" },
+      { name: "Combo Doble Fuego", price: "$\u00a038.900", icon: "burger" },
+      { name: "Combo Pollo Crispy", price: "$\u00a032.900", icon: "burger" },
+      { name: "Ensalada César", price: "$\u00a024.900", icon: "salad" },
+      { name: "Limonada de coco", price: "$\u00a09.900", icon: "cup" },
+      { name: "Malteada", price: "$\u00a012.900", icon: "cup" },
     ],
     matchIndex: 1,
     similarity: "0,94",
-    reply: "Es el Combo Doble Fuego: $ 38.900. ¿Te lo mando ya?",
+    reply: "Es el Combo Doble Fuego: $\u00a038.900. ¿Te lo mando ya?",
   },
   radar: {
     mode: "ads",
@@ -133,10 +137,10 @@ const RESTAURANTS: FilmContent = {
     contactBy: "WhatsApp: ella escribió primero",
   },
   followup: {
-    cart: "Armó un pedido de $ 83.800 y no lo terminó",
+    cart: "Armó un pedido de $\u00a083.800 y no lo terminó",
     template: "Hola Andrea, tu pedido sigue listo para salir. ¿Te lo enviamos? Responde SÍ y sale en 35 min.",
     reply: "Sí, mándalo",
-    recovered: "Venta recuperada · $ 83.800",
+    recovered: "Venta recuperada · $\u00a083.800",
   },
   call: {
     business: "Fuego & Pan",
@@ -149,23 +153,23 @@ const RESTAURANTS: FilmContent = {
     ],
     outcome: "30 almuerzos confirmados",
   },
-  vault: { ask: "¿Me dejas el combo a 30 mil?", answer: "Puedo aplicarte el cupón VIERNES10: queda en $ 35.010." },
+  vault: { ask: "¿Me dejas el combo a 30 mil?", answer: "Puedo aplicarte el cupón VIERNES10: queda en $\u00a035.010." },
   team: { customer: "Andrea Ruiz", ask: "¿Puedo hablar con una persona? El pedido llegó frío.", reply: "Hola Andrea, soy Laura. Qué pena: te enviamos otro ya mismo, sin costo.", operator: "Laura" },
   collect: {
     order: "Pedido #1098",
     customer: "Almuerzos Grupo Sol · octubre",
-    total: "$ 2.450.000",
-    parts: [["Anticipo · verificado", "$ 1.000.000"], ["Abono 2 · verificado", "$ 800.000"]],
-    remaining: "$ 650.000",
-    reminder: "Hola Andrea, el saldo de los almuerzos de octubre, $ 650.000, vence el viernes 16. Te dejo los medios de pago.",
+    total: "$\u00a02.450.000",
+    parts: [["Anticipo · verificado", "$\u00a01.000.000"], ["Abono 2 · verificado", "$\u00a0800.000"]],
+    remaining: "$\u00a0650.000",
+    reminder: "Hola Andrea, el saldo de los almuerzos de octubre, $\u00a0650.000, vence el viernes 16. Te dejo los medios de pago.",
     promiseReply: "Pago el lunes sin falta",
     promise: "Promesa · lunes 19 · recordatorios en pausa",
     document: "Cuenta de cobro · N.º 0142",
   },
   pipeline: {
-    card: { name: "Andrea Ruiz", detail: "30 almuerzos · $ 1.170.000" },
-    forecast: "$ 9,4 M",
-    appointment: { weekday: "VIE", day: "9", time: "12:30 p. m.", title: "Almuerzo Grupo Sol", who: "Andrea · recordatorio 24 h antes ✓" },
+    card: { name: "Andrea Ruiz", detail: "30 almuerzos · $\u00a01.170.000" },
+    forecast: "$\u00a09,4 M",
+    appointment: { weekday: "VIE", day: "9", time: "12:30\u00a0p.\u00a0m.", title: "Almuerzo Grupo Sol", who: "Andrea · recordatorio 24 h antes ✓" },
   },
   route: {
     goal: 36_000_000,
@@ -185,7 +189,7 @@ const RESTAURANTS: FilmContent = {
       { type: "Ritmo de la meta", title: "Con 53 pedidos al día llegas el 30", meta: "según tu historia", status: "Hallazgo" },
     ],
   },
-  measure: { steps: [["Conversaciones", "3.480"], ["Cotizaciones", "2.310"], ["Pedidos", "1.920"], ["Ventas pagadas", "1.804"]], produced: "$ 75,8 M", quality: Q },
+  measure: { steps: [["Conversaciones", "3.480"], ["Cotizaciones", "2.310"], ["Pedidos", "1.920"], ["Ventas pagadas", "1.804"]], produced: "$\u00a075,8 M", quality: Q },
 };
 
 const TECH: FilmContent = {
@@ -195,28 +199,28 @@ const TECH: FilmContent = {
   ask: "¿Tienen el iPhone 17 de 256?",
   business: "Tecnología Medellín",
   chat: {
-    clock: ["8:47", "8:49"],
+    clock: ["8:47", "8:49", "8:53"],
     customer1: "Hola, ¿tienen el iPhone 17 de 256?",
     agent1: "¡Sí! Nos quedan 3 en tienda. Te comparto la foto.",
-    product: { name: "iPhone 17 · 256 GB", price: "$ 4.899.000", icon: "smartphone", note: "3 en tienda" },
+    product: { name: "iPhone 17 · 256 GB", price: "$\u00a04.899.000", icon: "smartphone", note: "3 en tienda" },
     customer2: "Me lo llevo. ¿Cómo pago?",
-    agent2: "Listo: pedido #2087 por $ 4.899.000. Puedes pagar por Nequi o Bancolombia.",
+    agent2: "Listo: pedido #2087 por $\u00a04.899.000. Puedes pagar por Nequi o Bancolombia.",
     system: "Pago reportado · lo verifica tu equipo",
-    sale: { label: "Venta pagada", amount: "$ 4.899.000", caption: "verificada por tu equipo · 8:53 p. m." },
+    sale: { label: "Venta pagada", amount: "$\u00a04.899.000", caption: "verificada por tu equipo ·\u00a08:53\u00a0p.\u00a0m." },
   },
   photo: {
     handle: "@techmedellin",
     catalog: [
-      { name: "iPhone 16 · 128 GB", price: "$ 3.899.000", icon: "smartphone" },
-      { name: "iPhone 17 · 256 GB", price: "$ 4.899.000", icon: "smartphone" },
-      { name: "iPhone 17 Pro", price: "$ 6.299.000", icon: "smartphone" },
-      { name: "iPad Air", price: "$ 3.499.000", icon: "tablet" },
-      { name: "AirPods Pro", price: "$ 1.249.000", icon: "headphones" },
-      { name: "MacBook Air", price: "$ 5.999.000", icon: "laptop" },
+      { name: "iPhone 16 · 128 GB", price: "$\u00a03.899.000", icon: "smartphone" },
+      { name: "iPhone 17 · 256 GB", price: "$\u00a04.899.000", icon: "smartphone" },
+      { name: "iPhone 17 Pro", price: "$\u00a06.299.000", icon: "smartphone" },
+      { name: "iPad Air", price: "$\u00a03.499.000", icon: "tablet" },
+      { name: "AirPods Pro", price: "$\u00a01.249.000", icon: "headphones" },
+      { name: "MacBook Air", price: "$\u00a05.999.000", icon: "laptop" },
     ],
     matchIndex: 1,
     similarity: "0,93",
-    reply: "Es el iPhone 17 de 256 GB: $ 4.899.000. ¿Te lo aparto?",
+    reply: "Es el iPhone 17 de 256 GB: $\u00a04.899.000. ¿Te lo aparto?",
   },
   radar: {
     mode: "ads",
@@ -229,10 +233,10 @@ const TECH: FilmContent = {
     contactBy: "WhatsApp: él escribió primero",
   },
   followup: {
-    cart: "Cotizó un iPhone 17 de $ 4.899.000 y no confirmó",
+    cart: "Cotizó un iPhone 17 de $\u00a04.899.000 y no confirmó",
     template: "Hola Andrés, tu iPhone 17 sigue apartado hasta hoy. ¿Te lo enviamos? Responde SÍ y lo despachamos.",
     reply: "Sí, envíalo hoy",
-    recovered: "Venta recuperada · $ 4.899.000",
+    recovered: "Venta recuperada · $\u00a04.899.000",
   },
   call: {
     business: "Tecnología Medellín",
@@ -245,23 +249,23 @@ const TECH: FilmContent = {
     ],
     outcome: "pedido confirmado",
   },
-  vault: { ask: "¿Me lo dejas en 4 millones?", answer: "Puedo aplicarte el cupón OCTUBRE10: queda en $ 4.409.100." },
+  vault: { ask: "¿Me lo dejas en 4 millones?", answer: "Puedo aplicarte el cupón OCTUBRE10: queda en $\u00a04.409.100." },
   team: { customer: "Andrés Gómez", ask: "¿Puedo hablar con una persona? Es por la garantía.", reply: "Hola Andrés, soy Laura. Te ayudo con la garantía ahora mismo.", operator: "Laura" },
   collect: {
     order: "Pedido #2087",
     customer: "Andrés Gómez",
-    total: "$ 4.899.000",
-    parts: [["Anticipo · verificado", "$ 1.500.000"], ["Cuota 2 · verificada", "$ 1.700.000"]],
-    remaining: "$ 1.699.000",
-    reminder: "Hola Andrés, la cuota 3 de 3 por $ 1.699.000 vence el viernes 16 de octubre. Te dejo los medios de pago.",
+    total: "$\u00a04.899.000",
+    parts: [["Anticipo · verificado", "$\u00a01.500.000"], ["Cuota 2 · verificada", "$\u00a01.700.000"]],
+    remaining: "$\u00a01.699.000",
+    reminder: "Hola Andrés, la cuota 3 de 3 por $\u00a01.699.000 vence el viernes 16 de octubre. Te dejo los medios de pago.",
     promiseReply: "Pago el lunes sin falta",
     promise: "Promesa · lunes 19 · recordatorios en pausa",
     document: "Recibo de pago · N.º 0142",
   },
   pipeline: {
-    card: { name: "Andrés Gómez", detail: "iPhone 17 · $ 4.899.000" },
-    forecast: "$ 38,2 M",
-    appointment: { weekday: "SÁB", day: "3", time: "10:00 a. m.", title: "Entrega y configuración", who: "Andrés · recordatorio 24 h antes ✓" },
+    card: { name: "Andrés Gómez", detail: "iPhone 17 · $\u00a04.899.000" },
+    forecast: "$\u00a038,2 M",
+    appointment: { weekday: "SÁB", day: "3", time: "10:00\u00a0a.\u00a0m.", title: "Entrega y configuración", who: "Andrés · recordatorio 24 h antes ✓" },
   },
   route: {
     goal: 30_000_000,
@@ -281,7 +285,7 @@ const TECH: FilmContent = {
       { type: "Ritmo de la meta", title: "Con 2 ventas al día llegas el 30", meta: "según tu historia", status: "Hallazgo" },
     ],
   },
-  measure: { steps: [["Conversaciones", "1.240"], ["Cotizaciones", "312"], ["Pedidos", "148"], ["Ventas pagadas", "121"]], produced: "$ 48,6 M", quality: Q },
+  measure: { steps: [["Conversaciones", "1.240"], ["Cotizaciones", "312"], ["Pedidos", "148"], ["Ventas pagadas", "121"]], produced: "$\u00a048,6 M", quality: Q },
 };
 
 const BEAUTY: FilmContent = {
@@ -291,28 +295,28 @@ const BEAUTY: FilmContent = {
   ask: "¿Hay cita para el sábado?",
   business: "Estética Lumière · Bogotá",
   chat: {
-    clock: ["10:58", "10:59"],
+    clock: ["10:58", "10:59", "11:04"],
     customer1: "Hola, ¿hay cita para el sábado?",
-    agent1: "Tengo el sábado a las 10:00 a. m. o a las 3:00 p. m. para limpieza facial.",
-    product: { name: "Limpieza facial profunda", price: "$ 180.000", icon: "sparkles", note: "Sábado · 10:00 a. m." },
+    agent1: "Tengo el sábado a las 10:00\u00a0a.\u00a0m. o a las 3:00\u00a0p.\u00a0m. para limpieza facial.",
+    product: { name: "Limpieza facial profunda", price: "$\u00a0180.000", icon: "sparkles", note: "Sábado ·\u00a010:00\u00a0a.\u00a0m." },
     customer2: "A las 10, porfa",
-    agent2: "Quedó agendada el sábado a las 10:00 a. m. Te recuerdo un día antes. Anticipo por Nequi: $ 50.000.",
+    agent2: "Quedó agendada el sábado a las 10:00\u00a0a.\u00a0m. Te recuerdo un día antes. Anticipo por Nequi: $\u00a050.000.",
     system: "Cita agendada · recordatorio 24 h antes",
-    sale: { label: "Anticipo pagado", amount: "$ 50.000", caption: "verificado por tu equipo · 11:04 a. m." },
+    sale: { label: "Anticipo pagado", amount: "$\u00a050.000", caption: "verificado por tu equipo ·\u00a011:04\u00a0a.\u00a0m." },
   },
   photo: {
     handle: "@lumiere.bogota",
     catalog: [
-      { name: "Limpieza facial", price: "$ 180.000", icon: "sparkles" },
-      { name: "Hidrafacial", price: "$ 260.000", icon: "droplet" },
-      { name: "Peeling químico", price: "$ 220.000", icon: "droplet" },
-      { name: "Manicura spa", price: "$ 65.000", icon: "hand" },
-      { name: "Depilación láser", price: "$ 150.000", icon: "sparkles" },
-      { name: "Masaje relajante", price: "$ 140.000", icon: "hand" },
+      { name: "Limpieza facial", price: "$\u00a0180.000", icon: "sparkles" },
+      { name: "Hidrafacial", price: "$\u00a0260.000", icon: "droplet" },
+      { name: "Peeling químico", price: "$\u00a0220.000", icon: "droplet" },
+      { name: "Manicura spa", price: "$\u00a065.000", icon: "hand" },
+      { name: "Depilación láser", price: "$\u00a0150.000", icon: "sparkles" },
+      { name: "Masaje relajante", price: "$\u00a0140.000", icon: "hand" },
     ],
     matchIndex: 1,
     similarity: "0,91",
-    reply: "Es nuestro Hidrafacial: $ 260.000, 60 minutos. ¿Te busco un horario?",
+    reply: "Es nuestro Hidrafacial: $\u00a0260.000, 60 minutos. ¿Te busco un horario?",
   },
   radar: {
     mode: "ads",
@@ -326,9 +330,9 @@ const BEAUTY: FilmContent = {
   },
   followup: {
     cart: "Preguntó por el Hidrafacial y no agendó",
-    template: "Hola Valentina, nos queda un horario el sábado a las 3:00 p. m. para tu Hidrafacial. ¿Te lo reservo?",
+    template: "Hola Valentina, nos queda un horario el sábado a las 3:00\u00a0p.\u00a0m. para tu Hidrafacial. ¿Te lo reservo?",
     reply: "Sí, resérvamelo",
-    recovered: "Cita recuperada · $ 260.000",
+    recovered: "Cita recuperada · $\u00a0260.000",
   },
   call: {
     business: "Estética Lumière",
@@ -341,23 +345,23 @@ const BEAUTY: FilmContent = {
     ],
     outcome: "cita confirmada",
   },
-  vault: { ask: "¿Me haces el facial a 150?", answer: "Con el cupón PRIMERAVEZ te queda en $ 162.000, el precio de tu primera cita." },
+  vault: { ask: "¿Me haces el facial a 150?", answer: "Con el cupón PRIMERAVEZ te queda en $\u00a0162.000, el precio de tu primera cita." },
   team: { customer: "Valentina Ríos", ask: "¿Puedo hablar con una persona? Tengo una duda de mi piel.", reply: "Hola Valentina, soy Laura, la esteticista. Cuéntame y lo revisamos.", operator: "Laura" },
   collect: {
     order: "Plan #0311",
     customer: "Valentina Ríos · 6 sesiones de láser",
-    total: "$ 900.000",
-    parts: [["Anticipo · verificado", "$ 300.000"], ["Cuota 2 · verificada", "$ 300.000"]],
-    remaining: "$ 300.000",
-    reminder: "Hola Valentina, la cuota 3 de 3 de tu plan de láser, $ 300.000, vence el viernes 16 de octubre.",
+    total: "$\u00a0900.000",
+    parts: [["Anticipo · verificado", "$\u00a0300.000"], ["Cuota 2 · verificada", "$\u00a0300.000"]],
+    remaining: "$\u00a0300.000",
+    reminder: "Hola Valentina, la cuota 3 de 3 de tu plan de láser, $\u00a0300.000, vence el viernes 16 de octubre.",
     promiseReply: "Te pago el lunes",
     promise: "Promesa · lunes 19 · recordatorios en pausa",
     document: "Recibo de pago · N.º 0142",
   },
   pipeline: {
-    card: { name: "Valentina Ríos", detail: "Plan láser · $ 900.000" },
-    forecast: "$ 12,6 M",
-    appointment: { weekday: "SÁB", day: "3", time: "10:00 a. m.", title: "Limpieza facial profunda", who: "Valentina · recordatorio 24 h antes ✓" },
+    card: { name: "Valentina Ríos", detail: "Plan láser · $\u00a0900.000" },
+    forecast: "$\u00a012,6 M",
+    appointment: { weekday: "SÁB", day: "3", time: "10:00\u00a0a.\u00a0m.", title: "Limpieza facial profunda", who: "Valentina · recordatorio 24 h antes ✓" },
   },
   route: {
     goal: 18_000_000,
@@ -377,7 +381,7 @@ const BEAUTY: FilmContent = {
       { type: "Ritmo de la meta", title: "Con 7 citas al día llegas el 30", meta: "según tu historia", status: "Hallazgo" },
     ],
   },
-  measure: { steps: [["Conversaciones", "860"], ["Cotizaciones", "402"], ["Citas agendadas", "221"], ["Citas pagadas", "184"]], produced: "$ 29,4 M", quality: Q },
+  measure: { steps: [["Conversaciones", "860"], ["Cotizaciones", "402"], ["Citas agendadas", "221"], ["Citas pagadas", "184"]], produced: "$\u00a029,4 M", quality: Q },
 };
 
 const B2B: FilmContent = {
@@ -387,28 +391,28 @@ const B2B: FilmContent = {
   ask: "¿Me cotizas 200 cajas de guantes?",
   business: "Suministros Andina · Itagüí",
   chat: {
-    clock: ["3:12", "3:14"],
+    clock: ["3:12", "3:14", "3:16"],
     customer1: "Buenas, ¿me cotizas 200 cajas de guantes de nitrilo?",
-    agent1: "Claro. Por volumen, la caja por 100 queda en $ 24.500.",
-    product: { name: "Guantes de nitrilo · caja × 100", price: "$ 24.500 c/u", icon: "box", note: "Precio por volumen" },
+    agent1: "Claro. Por volumen, la caja por 100 queda en $\u00a024.500.",
+    product: { name: "Guantes de nitrilo · caja × 100", price: "$\u00a024.500 c/u", icon: "box", note: "Precio por volumen" },
     customer2: "Mándame la cotización formal",
-    agent2: "Listo: cotización COT-0318 por $ 4.900.000 enviada en PDF. ¿La convierto en pedido?",
+    agent2: "Listo: cotización COT-0318 por $\u00a04.900.000 enviada en PDF. ¿La convierto en pedido?",
     system: "Cotización enviada · PDF",
-    sale: { label: "Cotización enviada", amount: "$ 4.900.000", caption: "COT-0318 · válida por 15 días" },
+    sale: { label: "Cotización enviada", amount: "$\u00a04.900.000", caption: "COT-0318 · válida por 15 días" },
   },
   photo: {
     handle: "Foto del cliente",
     catalog: [
-      { name: "Guantes de nitrilo", price: "$ 24.500", icon: "box" },
-      { name: "Tapabocas N95 × 20", price: "$ 38.000", icon: "shield" },
-      { name: "Gel antibacterial 1 L", price: "$ 14.900", icon: "droplet" },
-      { name: "Toallas de papel", price: "$ 52.000", icon: "package" },
-      { name: "Bata desechable", price: "$ 3.200", icon: "shield" },
-      { name: "Alcohol 70 % 1 L", price: "$ 9.800", icon: "droplet" },
+      { name: "Guantes de nitrilo", price: "$\u00a024.500", icon: "box" },
+      { name: "Tapabocas N95 × 20", price: "$\u00a038.000", icon: "shield" },
+      { name: "Gel antibacterial 1 L", price: "$\u00a014.900", icon: "droplet" },
+      { name: "Toallas de papel", price: "$\u00a052.000", icon: "package" },
+      { name: "Bata desechable", price: "$\u00a03.200", icon: "shield" },
+      { name: "Alcohol 70 % 1 L", price: "$\u00a09.800", icon: "droplet" },
     ],
     matchIndex: 0,
     similarity: "0,92",
-    reply: "Es nuestra caja de guantes de nitrilo × 100: $ 24.500. ¿Cuántas necesitas?",
+    reply: "Es nuestra caja de guantes de nitrilo × 100: $\u00a024.500. ¿Cuántas necesitas?",
   },
   radar: {
     mode: "prospects",
@@ -424,7 +428,7 @@ const B2B: FilmContent = {
     cart: "Recibió la cotización COT-0318 y no respondió",
     template: "Hola Marta, la cotización COT-0318 vence el viernes. ¿La convertimos en pedido para despachar el lunes?",
     reply: "Sí, háganle",
-    recovered: "Pedido cerrado · $ 4.900.000",
+    recovered: "Pedido cerrado · $\u00a04.900.000",
   },
   call: {
     business: "Suministros Andina",
@@ -437,23 +441,23 @@ const B2B: FilmContent = {
     ],
     outcome: "cotización aprobada",
   },
-  vault: { ask: "¿Me las dejas en 20 mil la caja?", answer: "Desde 500 cajas el precio por volumen es $ 22.900. Para 200 queda en $ 24.500." },
+  vault: { ask: "¿Me las dejas en 20 mil la caja?", answer: "Desde 500 cajas el precio por volumen es $\u00a022.900. Para 200 queda en $\u00a024.500." },
   team: { customer: "Marta Restrepo", ask: "¿Puedo hablar con un asesor? Necesito crédito a 60 días.", reply: "Hola Marta, soy Laura, de cartera. Revisamos tu cupo ahora mismo.", operator: "Laura" },
   collect: {
     order: "Pedido #3120",
     customer: "Clínica Santa Fe",
-    total: "$ 4.900.000",
-    parts: [["Anticipo · verificado", "$ 1.500.000"], ["Abono 2 · verificado", "$ 1.700.000"]],
-    remaining: "$ 1.700.000",
-    reminder: "Hola Marta, el saldo del pedido #3120, $ 1.700.000, vence el viernes 16 de octubre. Te dejo los datos de pago.",
+    total: "$\u00a04.900.000",
+    parts: [["Anticipo · verificado", "$\u00a01.500.000"], ["Abono 2 · verificado", "$\u00a01.700.000"]],
+    remaining: "$\u00a01.700.000",
+    reminder: "Hola Marta, el saldo del pedido #3120, $\u00a01.700.000, vence el viernes 16 de octubre. Te dejo los datos de pago.",
     promiseReply: "Lo giramos el lunes",
     promise: "Promesa · lunes 19 · recordatorios en pausa",
     document: "Estado de cuenta · N.º 0142",
   },
   pipeline: {
-    card: { name: "Clínica Santa Fe", detail: "200 cajas · $ 4.900.000" },
-    forecast: "$ 86,5 M",
-    appointment: { weekday: "MAR", day: "6", time: "9:00 a. m.", title: "Visita de muestras", who: "Marta · recordatorio 24 h antes ✓" },
+    card: { name: "Clínica Santa Fe", detail: "200 cajas · $\u00a04.900.000" },
+    forecast: "$\u00a086,5 M",
+    appointment: { weekday: "MAR", day: "6", time: "9:00\u00a0a.\u00a0m.", title: "Visita de muestras", who: "Marta · recordatorio 24 h antes ✓" },
   },
   route: {
     goal: 120_000_000,
@@ -465,7 +469,7 @@ const B2B: FilmContent = {
   },
   axel: {
     name: "Camila",
-    summary: "Tienes 9 cotizaciones sin respuesta por $ 38 M y 3 clientes que suelen recomprar este mes. Te propongo retomarlas hoy.",
+    summary: "Tienes 9 cotizaciones sin respuesta por $\u00a038 M y 3 clientes que suelen recomprar este mes. Te propongo retomarlas hoy.",
     chips: ["9 cotizaciones abiertas", "3 recompras esperadas"],
     proposals: [
       { type: "Recuperación", title: "Retomar 9 cotizaciones sin respuesta", meta: "Solo mensaje · sin descuento", status: "Por decidir" },
@@ -473,7 +477,7 @@ const B2B: FilmContent = {
       { type: "Ritmo de la meta", title: "Con 2 pedidos al día llegas el 30", meta: "según tu historia", status: "Hallazgo" },
     ],
   },
-  measure: { steps: [["Conversaciones", "420"], ["Cotizaciones", "186"], ["Pedidos", "64"], ["Pedidos pagados", "58"]], produced: "$ 284 M", quality: Q },
+  measure: { steps: [["Conversaciones", "420"], ["Cotizaciones", "186"], ["Pedidos", "64"], ["Pedidos pagados", "58"]], produced: "$\u00a0284 M", quality: Q },
 };
 
 export const FILM_CONTENT: Readonly<Record<FilmNiche, FilmContent>> = {

@@ -22,7 +22,6 @@ import type { FilmContent, Price } from "@/modules/landing/domain/film/film-cont
 import { ByNiche } from "@/modules/landing/ui/film/parts/ByNiche";
 import { Bubble, Phone } from "@/modules/landing/ui/film/parts/chat";
 import { FILM_ICONS } from "@/modules/landing/ui/film/parts/film-icons";
-import { Ribbon } from "@/modules/landing/ui/film/parts/Ribbon";
 import { SceneHead } from "@/modules/landing/ui/film/parts/SceneHead";
 
 function ProductTile({ item, big, highlight }: { item: Price; big?: boolean; highlight?: boolean }) {
@@ -30,6 +29,7 @@ function ProductTile({ item, big, highlight }: { item: Price; big?: boolean; hig
   return (
     <div
       data-anim={highlight ? "match" : "tile"}
+      data-thread-target={highlight ? "" : undefined}
       className={cn(
         "overflow-hidden rounded-2xl border border-[var(--film-line)] bg-[var(--film-surface-2)]",
         highlight && "shadow-[0_0_0_2px_var(--axi-violet),0_0_40px_color-mix(in_srgb,var(--axi-violet)_45%,transparent)]",
@@ -122,12 +122,12 @@ export function ChatScene() {
   return (
     <section id="vender" data-scene="chat" data-chapter="Vender" aria-labelledby="chat-h" className="film-scene">
       <div className="film-spot top-[0%] left-[0%] size-[900px] bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--axi-brand)_12%,transparent),transparent)]" />
-      <Ribbon d="M -40 880 C 160 820, 220 700, 320 640" className="max-lg:hidden" />
       <div className="film-wrap grid items-center gap-12 lg:grid-cols-2 max-lg:gap-6">
         <div className="flex justify-center max-lg:order-2">
           <Phone
             title={<ByNiche as="span">{(c) => c.business}</ByNiche>}
             initials={<ByNiche as="span">{(c) => initialsOf(c.business)}</ByNiche>}
+            time={<ByNiche as="span">{(c) => c.chat.clock[2]}</ByNiche>}
             status="agente en línea"
             overlay={
               <ByNiche>
@@ -244,7 +244,7 @@ export function PhotoScene() {
                   </div>
                 </div>
                 <div className="flex flex-col">
-                  <Bubble side="out" meta="8:51 p. m.">
+                  <Bubble side="out" meta="8:51 p. m.">
                     {c.photo.reply}
                   </Bubble>
                 </div>
@@ -314,7 +314,7 @@ export function CallScene() {
           </ol>
           <ByNiche>
             {(c) => (
-              <p data-anim="outcome" className="film-glass flex items-center gap-2.5 rounded-2xl px-4 py-3 text-sm">
+              <p data-anim="outcome" data-thread-target="" className="film-glass flex items-center gap-2.5 rounded-2xl px-4 py-3 text-sm">
                 <CircleCheck className="size-[18px] text-[var(--axi-success)]" aria-hidden="true" />
                 <strong className="font-semibold">Objetivo cumplido</strong>
                 <span className="film-dim">{c.call.outcome}</span>
@@ -370,6 +370,7 @@ export function VaultScene() {
               <span
                 key={s}
                 data-anim="ring"
+                data-thread-target=""
                 aria-hidden="true"
                 className="absolute rounded-full border"
                 style={{ inset: `${((1 - s) / 2) * 100}%`, borderColor: `color-mix(in srgb, var(--foreground) ${6 + i * 4}%, transparent)` }}
@@ -414,7 +415,6 @@ export function TeamScene() {
   return (
     <section id="equipo" data-scene="team" aria-labelledby="equipo-h" className="film-scene">
       <div className="film-spot top-[20%] right-[0%] size-[900px] bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--axi-brand)_9%,transparent),transparent)]" />
-      <Ribbon d="M -40 880 C 260 870, 460 720, 600 640" className="max-lg:hidden" />
       <div className="film-wrap grid items-center gap-12 lg:grid-cols-[minmax(0,.7fr)_minmax(0,1.3fr)]">
         <SceneHead
           id="equipo-h"
@@ -438,7 +438,7 @@ export function TeamScene() {
           </ol>
           <ByNiche>
             {(c) => (
-              <div data-anim="inbox" className="film-card grid min-h-[440px] grid-cols-[220px_minmax(0,1fr)] overflow-hidden rounded-3xl shadow-[0_40px_120px_rgb(0_0_0/.6)] max-md:grid-cols-1">
+              <div data-anim="inbox" data-thread-target="" className="film-card grid min-h-[440px] grid-cols-[220px_minmax(0,1fr)] overflow-hidden rounded-3xl shadow-[0_40px_120px_rgb(0_0_0/.6)] max-md:grid-cols-1">
                 <div className="flex flex-col gap-1 border-r border-[var(--film-line)] p-3.5 max-md:hidden">
                   <p className="film-eyebrow film-dim px-2 pt-1 pb-2.5 text-[10px]">Bandeja</p>
                   {[c.team.customer, "Valeria Ríos", "Camilo Díaz", "Luisa Mejía"].map((n, i) => (
@@ -460,13 +460,13 @@ export function TeamScene() {
                     </span>
                   </div>
                   <div className="flex flex-1 flex-col justify-end gap-3 p-4">
-                    <Bubble side="in" meta="10:31 a. m.">
+                    <Bubble side="in" meta="10:31 a. m.">
                       {c.team.ask}
                     </Bubble>
                     <p data-anim="msg" className="film-lead self-center rounded-full bg-[color-mix(in_srgb,var(--foreground)_5%,transparent)] px-3 py-1.5 text-center text-[11.5px]">
                       Axi te la pasó: el cliente pidió hablar con una persona · hace 1 min
                     </p>
-                    <Bubble side="out" meta={`${c.team.operator} · 10:32 a. m.`}>
+                    <Bubble side="out" meta={`${c.team.operator} · 10:32 a. m.`}>
                       {c.team.reply}
                     </Bubble>
                   </div>

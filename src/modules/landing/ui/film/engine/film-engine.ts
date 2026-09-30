@@ -23,10 +23,12 @@ import Lenis from "lenis";
 import { FILM_NICHES } from "@/modules/landing/domain/film/niches";
 import { roadPercentAt } from "@/modules/landing/domain/film/route-map";
 import { formatMillions, formatPercent, ROUTE_FRACTIONS } from "@/modules/landing/domain/film/route-scenario";
+import { createThread } from "@/modules/landing/ui/film/thread/thread";
 
 export type FilmEngine = { stop(): void; scrollTo(target: string): void; refresh(): void };
 
-type Ctx = { desktop: boolean };
+/** `pins`: el ScrollTrigger de cada escena fijada, para el hilo de luz. */
+type Ctx = { desktop: boolean; pins: Map<string, ScrollTrigger> };
 type Scene = (section: HTMLElement, ctx: Ctx) => void;
 
 /* ────────────────────────────── utilidades ────────────────────────────── */
@@ -63,7 +65,10 @@ const PINNED = new Set(["radar", "followup", "chat", "goal"]);
  * entra en pantalla, para que al fijarse ya se lea de qué trata y la escena no
  * llegue como un escenario vacío.
  */
-function sceneTimeline(section: HTMLElement, ctx: Ctx, length: number, passEnd = "bottom 62%"): gsap.core.Timeline {
+/** Sin fijar: qué elemento y qué tramo del scroll reproducen la escena. */
+type Pass = { trigger?: Element; start?: string; end?: string };
+
+function sceneTimeline(section: HTMLElement, ctx: Ctx, length: number, pass: Pass = {}): gsap.core.Timeline {
   const heads = all(section, "[data-anim=head]");
   if (heads.length) {
     gsap.from(heads, { ...reveal, ease: "power2.out", scrollTrigger: { trigger: section, start: "top 88%", end: "top 30%", scrub: true } });
@@ -71,12 +76,14 @@ function sceneTimeline(section: HTMLElement, ctx: Ctx, length: number, passEnd =
   // Solo los momentos largos se fijan (chat, radar, seguimiento, la meta); el
   // resto se revela al pasar. Todo fijado daba un ritmo plano y 28.000 px.
   const fits = ctx.desktop && PINNED.has(section.dataset.scene ?? "") && section.offsetHeight <= window.innerHeight * 1.02;
-  return gsap.timeline({
+  const tl = gsap.timeline({
     defaults: { ease: "power2.out", duration: 1 },
     scrollTrigger: fits
       ? { trigger: section, start: "top top", end: `+=${Math.round(length * PACE)}%`, pin: true, scrub: true, anticipatePin: 1, invalidateOnRefresh: true }
-      : { trigger: section, start: "top 78%", end: passEnd, scrub: true, invalidateOnRefresh: true },
+      : { trigger: pass.trigger ?? section, start: pass.start ?? "top 78%", end: pass.end ?? "bottom 62%", scrub: true, invalidateOnRefresh: true },
   });
+  if (fits && tl.scrollTrigger) ctx.pins.set(section.dataset.scene ?? "", tl.scrollTrigger);
+  return tl;
 }
 
 /** Cuenta hacia arriba un número con separador de miles colombiano. */
@@ -101,8 +108,7 @@ function countUp(tl: gsap.core.Timeline, el: HTMLElement, at: number) {
 /* ─────────────────────────────── escenas ─────────────────────────────── */
 
 const hero: Scene = (section) => {
-  // Al bajar, el texto se despide hacia arriba y el cielo (HeroSky) se ocupa
-  // de sus dunas; la cinta que nace de las crestas la dibuja `ribbons()`.
+  // Al bajar, el texto se despide hacia arriba; el hilo de luz nace bajo el CTA.
   const tl = gsap.timeline({ scrollTrigger: { trigger: section, start: "top top", end: "bottom top", scrub: true } });
   tl.to(all(section, "[data-anim=copy]"), { y: -80, opacity: 0, ease: "none" }, 0);
   tl.to(all(section, "[data-anim=stats]"), { y: 40, opacity: 0, ease: "none" }, 0);
@@ -149,8 +155,11 @@ const chatAt = (p: number) => p * CHAT;
 const FEED_GAP = 7; // el `gap` de .film-phone-feed
 
 const chat: Scene = (section, ctx) => {
-  // Sin fijar (móvil), la venta sale cuando el teléfono ya está entero en pantalla.
-  const tl = sceneTimeline(section, ctx, 180, "bottom bottom");
+  // Sin fijar (móvil y pantallas bajas; §13: no se fija lo que no cabe), la
+  // escena sigue al TELÉFONO: empieza con su pantalla ya a la vista y acaba
+  // cuando su borde superior pasa bajo la cabecera, así «escribiendo…» y la
+  // venta ocurren con el teléfono entero en pantalla.
+  const tl = sceneTimeline(section, ctx, 180, { trigger: section.querySelector(".film-phone") ?? section, start: "top 42%", end: "top 64px" });
   tl.to({}, { duration: 0 }, CHAT); // la línea dura CHAT aunque el último turno acabe antes
 
   const one = (sel: string) => section.querySelector<HTMLElement>(sel);
@@ -353,133 +362,6 @@ const close: Scene = (section) => {
   tl.from(all(section, "[data-anim=alpha-close]"), { scale: 0.7, opacity: 0, ease: "power2.out" }, 0);
 };
 
-/* ──────────────────────────── la cinta de luz ──────────────────────────── */
-
-const SVG_NS = "http://www.w3.org/2000/svg";
-
-type RibbonRig = {
-  svg: SVGSVGElement;
-  paths: SVGPathElement[];
-  coral: SVGPathElement[];
-  violet: SVGPathElement[];
-  guide: SVGPathElement;
-  length: number;
-  head: SVGGElement;
-  progress: number;
-};
-
-/**
- * Cada cinta crece MIENTRAS su escena entra en pantalla (no aparece de golpe
- * dentro del pin) y lleva en la punta una cabeza luminosa, la «luz» que guía.
- * Las tres hebras se separan con la velocidad del scroll y se recogen al
- * parar: la cinta responde al gesto en vez de estar pegada. Todo es trazo y
- * `transform` de SVG, sin filtros por frame.
- */
-function ribbons(root: HTMLElement): () => void {
-  const rigs: RibbonRig[] = [];
-  for (const svg of all(root, "svg[data-ribbon]") as unknown as SVGSVGElement[]) {
-    const paths = Array.from(svg.querySelectorAll<SVGPathElement>("[data-ribbon-path]"));
-    const guide = svg.querySelector<SVGPathElement>(".line .a");
-    if (!paths.length || !guide) continue;
-    const head = document.createElementNS(SVG_NS, "g");
-    head.setAttribute("class", "head");
-    head.innerHTML =
-      '<circle r="16" fill="var(--axi-amber)" opacity="0.28"></circle>' +
-      '<circle r="7" fill="var(--axi-brand)" opacity="0.55"></circle>' +
-      '<circle r="3.2" fill="var(--foreground)"></circle>';
-    head.style.opacity = "0";
-    svg.appendChild(head);
-    gsap.set(paths, { strokeDasharray: "1 1", strokeDashoffset: 1 });
-    rigs.push({
-      svg,
-      paths,
-      coral: paths.filter((p) => p.classList.contains("c")),
-      violet: paths.filter((p) => p.classList.contains("v")),
-      guide,
-      length: guide.getTotalLength(),
-      head,
-      progress: 0,
-    });
-  }
-
-  const paint = (rig: RibbonRig) => {
-    const p = rig.progress;
-    for (const path of rig.paths) path.style.strokeDashoffset = String(1 - p);
-    const pt = rig.guide.getPointAtLength(rig.length * p);
-    rig.head.setAttribute("transform", `translate(${pt.x} ${pt.y})`);
-    // La cabeza existe solo mientras la cinta se está dibujando.
-    rig.head.style.opacity = String(p <= 0.01 || p >= 0.995 ? 0 : Math.min(1, p * 12, (1 - p) * 12));
-  };
-
-  const triggers = rigs.map((rig) => {
-    const section = (rig.svg.closest("[data-scene]") as HTMLElement | null) ?? rig.svg.parentElement!;
-    const isHero = section.dataset.scene === "hero";
-    return ScrollTrigger.create({
-      trigger: section,
-      start: isHero ? "top top" : "top 92%",
-      end: isHero ? "bottom 20%" : "top 8%",
-      scrub: true,
-      onUpdate: (self) => {
-        rig.progress = self.progress;
-        paint(rig);
-      },
-      onRefresh: (self) => {
-        rig.progress = self.progress;
-        paint(rig);
-      },
-    });
-  });
-
-  // Qué cintas están en pantalla, sin medir el DOM en cada frame.
-  const visible = new Set<Element>();
-  const io = new IntersectionObserver((entries) => {
-    for (const e of entries) {
-      if (e.isIntersecting) visible.add(e.target);
-      else visible.delete(e.target);
-    }
-  });
-  for (const rig of rigs) io.observe(rig.svg);
-
-  // La separación de las hebras sigue a la velocidad del scroll, con inercia.
-  let spread = 0;
-  let target = 0;
-  const velocity = ScrollTrigger.create({
-    start: 0,
-    end: "max",
-    onUpdate: (self) => {
-      target = Math.min(14, Math.abs(self.getVelocity()) / 260);
-    },
-  });
-  const tick = () => {
-    target *= 0.92;
-    const next = spread + (target - spread) * 0.12;
-    if (Math.abs(next - spread) < 0.01) return;
-    spread = next;
-    for (const rig of rigs) {
-      if (!visible.has(rig.svg)) continue;
-      const x = rig.svg.dataset.axis === "x";
-      const off = (n: number) => (x ? `translate(${n} 0)` : `translate(0 ${n})`);
-      for (const c of rig.coral) c.setAttribute("transform", off(-7 - spread));
-      for (const v of rig.violet) v.setAttribute("transform", off(7 + spread));
-    }
-  };
-  gsap.ticker.add(tick);
-
-  return () => {
-    io.disconnect();
-    gsap.ticker.remove(tick);
-    velocity.kill();
-    for (const t of triggers) t.kill();
-    for (const rig of rigs) {
-      rig.head.remove();
-      gsap.set(rig.paths, { clearProps: "strokeDasharray,strokeDashoffset" });
-      const x = rig.svg.dataset.axis === "x";
-      for (const c of rig.coral) c.setAttribute("transform", x ? "translate(-7 0)" : "translate(0 -7)");
-      for (const v of rig.violet) v.setAttribute("transform", x ? "translate(7 0)" : "translate(0 7)");
-    }
-  };
-}
-
 const SCENES: Record<string, Scene> = { hero, niche, radar, followup, chat, photo, call, vault, team, collect, pipeline, goal, axel, measure, close };
 
 /* ──────────────────────────────── arranque ──────────────────────────────── */
@@ -501,19 +383,39 @@ export function startFilm(root: HTMLElement): FilmEngine {
   const tick = (time: number) => lenis.raf(time * 1000);
   gsap.ticker.add(tick);
   gsap.ticker.lagSmoothing(0);
-  if (scroller) ScrollTrigger.defaults({ scroller });
+  // Pins `fixed` y no `transform` (el defecto con un contenedor propio): el
+  // contenedor ocupa la ventana desde (0, 0) sin transformaciones encima, así
+  // que fijar con `position: fixed` es exacto y no va un frame por detrás del
+  // scroll nativo en táctil. Es lo que pedía «scroll en window» (§12) sin
+  // tocar el layout público, que comparten /productos y el resto.
+  if (scroller) ScrollTrigger.defaults({ scroller, pinType: "fixed" });
 
+  // Los pins de la media activa; al cruzar el corte se rehacen (matchMedia).
+  const pins = new Map<string, ScrollTrigger>();
+  const desktopQuery = window.matchMedia("(min-width: 1024px)");
   const mm = gsap.matchMedia(root);
   mm.add({ desktop: "(min-width: 1024px)", mobile: "(max-width: 1023px)" }, (context) => {
-    const ctx: Ctx = { desktop: Boolean(context.conditions?.desktop) };
+    const ctx: Ctx = { desktop: Boolean(context.conditions?.desktop), pins };
     for (const section of all(root, "[data-scene]")) {
       const build = SCENES[section.dataset.scene ?? ""];
       if (build) build(section, ctx);
     }
+    return () => pins.clear();
   });
 
-  // Después de las escenas: las cintas miden sus secciones ya con los pins puestos.
-  const stopRibbons = ribbons(root);
+  // El hilo de luz, después de los pins: mide las escenas ya fijadas en cada
+  // refresh y dibuja en el ticker de gsap (en reposo no hace nada).
+  const thread = createThread({
+    root,
+    getScroll: () => (scroller ? scroller.scrollTop : window.scrollY),
+    getPin: (scene) => {
+      const st = pins.get(scene);
+      return st ? { start: st.start, end: st.end } : null;
+    },
+    isDesktop: () => desktopQuery.matches,
+  });
+  ScrollTrigger.addEventListener("refresh", thread.refresh);
+  gsap.ticker.add(thread.frame);
   ScrollTrigger.refresh();
 
   // Las fuentes o las imágenes pueden cambiar alturas después de medir.
@@ -522,7 +424,9 @@ export function startFilm(root: HTMLElement): FilmEngine {
 
   return {
     stop() {
-      stopRibbons();
+      ScrollTrigger.removeEventListener("refresh", thread.refresh);
+      gsap.ticker.remove(thread.frame);
+      thread.destroy();
       mm.revert();
       gsap.ticker.remove(tick);
       lenis.destroy();
