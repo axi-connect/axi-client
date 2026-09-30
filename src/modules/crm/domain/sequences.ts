@@ -278,7 +278,11 @@ export function toUpsertDTO(input: {
     steps: input.steps.map((step) => ({
       offset_hours: step.offset_hours,
       task_channel: step.task_channel,
-      ...(step.task_channel === "message" ? {} : { call_type: step.call_type ?? "followup" }),
+      // Solo los pasos que llaman llevan marco: un correo, un SMS o una tarea
+      // manual con call_type dejarían un dato sucio en el paso y la actividad.
+      ...(step.task_channel === "call" || step.task_channel === "call_then_message"
+        ? { call_type: step.call_type ?? "followup" }
+        : {}),
       objective: step.objective.trim(),
       message_template: messageTemplateOf(step),
     })),

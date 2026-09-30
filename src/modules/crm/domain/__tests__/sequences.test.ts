@@ -215,5 +215,16 @@ describe("sequences — marco de la llamada de cada paso (plan de modos §7)", (
     expect(dto.steps[1]).toMatchObject({ call_type: "sales_followup" });
     expect(dto.steps[2]).toMatchObject({ call_type: "followup" });
   });
+
+  it("correo, SMS y tarea manual no llevan marco de llamada (P3a)", () => {
+    const dto = toUpsertDTO(
+      input([
+        { offset_hours: 0, task_channel: "email", objective: "Presentarse", subject: "Hola", body: "Texto" },
+        { offset_hours: 24, task_channel: "sms", objective: "Recordar", body: "Hola" },
+        { offset_hours: 48, task_channel: "manual", objective: "Revisar LinkedIn" },
+      ] as Parameters<typeof toUpsertDTO>[0]["steps"]),
+    );
+    for (const entry of dto.steps) expect(entry).not.toHaveProperty("call_type");
+  });
 });
 
