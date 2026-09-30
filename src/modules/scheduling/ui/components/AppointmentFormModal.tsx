@@ -52,7 +52,15 @@ export function AppointmentFormModal({
   );
   const [rescheduleMode, setRescheduleMode] = useState<ComposerMode | null>(null);
   const createMode = useMemo<ComposerMode>(() => ({ kind: "create", prefill }), [prefill]);
-  const mode = rescheduleId !== null ? rescheduleMode : createMode;
+  // El slot `@form` sigue montado entre navegaciones: el modo guardado puede ser
+  // de OTRA cita (la reagendada antes). Solo vale si es la de la URL; si no,
+  // esqueleto hasta que llegue la nueva — nunca el formulario con la cita vieja.
+  const mode =
+    rescheduleId !== null
+      ? rescheduleMode?.kind === "reschedule" && rescheduleMode.appointment.id === rescheduleId
+        ? rescheduleMode
+        : null
+      : createMode;
 
   const open = pathname !== null && pathname.endsWith("/create");
 
@@ -63,6 +71,7 @@ export function AppointmentFormModal({
 
   // Modo reagendar: precargar la cita + nombres (el DTO no los embebe).
   useEffect(() => {
+    setRescheduleMode(null);
     if (rescheduleId === null) return;
     let alive = true;
     void (async () => {
@@ -120,7 +129,7 @@ export function AppointmentFormModal({
         {ready ? (
           <div className="sidebar-scroll flex min-h-0 flex-1 flex-col overflow-y-auto">
             <AppointmentComposer
-              key={`${rescheduleId ?? "new"}|${prefillKey}`}
+              key={mode.kind === "reschedule" ? `reschedule|${mode.appointment.id}` : `new|${prefillKey}`}
               mode={mode}
               timezone={timezone}
               schedules={schedules}
