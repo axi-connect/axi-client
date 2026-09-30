@@ -99,6 +99,18 @@ function tinted(sprite: Sprite, rgb: Rgb): HTMLCanvasElement {
   return out;
 }
 
+/**
+ * Cuánto brilla un mensaje según su distancia a una zona de texto: 1 fuera,
+ * `floor` dentro, con un borde suave. La zona va en fracciones del lienzo:
+ * centro horizontal `cx`, de `top` a `bottom`, medio ancho `halfW`.
+ */
+function hush(x: number, y: number, W: number, H: number, cx: number, top: number, bottom: number, halfW: number, floor = 0.08) {
+  const dx = Math.max(0, Math.abs(x / W - cx) - halfW) / 0.12;
+  const dy = Math.max(0, top - y / H, y / H - bottom) / 0.08;
+  const t = Math.min(1, Math.hypot(dx, dy));
+  return floor + (1 - floor) * t * t;
+}
+
 /** Escala, velocidad y brillo por profundidad (0 = al fondo, 2 = cerca). */
 const DEPTHS = [
   { scale: 0.78, speed: 0.7, alpha: 0.4, scroll: 0.25 },
@@ -189,11 +201,13 @@ export function HeroSky({ className }: { className?: string }) {
         const fade = Math.min(1, y * 4) * Math.min(1, (1 - y) * 4);
         if (fade <= 0.02) continue;
         const px = p.x * (W + w * 0.4) - w * 0.7 + pointer * (6 + p.depth * 8);
-        // Detrás del titular el cielo se calla: los mensajes se apagan en la
-        // columna central para no competir con el texto.
-        const cx = Math.abs(px + w / 2 - W / 2) / (W / 2);
-        const cy = Math.abs(py - H * 0.46) / (H * 0.3);
-        const quiet = cx < 0.55 && cy < 1 ? 0.12 + 0.88 * Math.max(cx / 0.55, cy) ** 2 : 1;
+        // Detrás del texto el cielo se calla: los mensajes se apagan sobre el
+        // bloque del titular al CTA y sobre la fila de cifras, para no competir.
+        // En móvil el texto ocupa todo el ancho: ahí quedan tenues, no apagados.
+        const quiet = Math.min(
+          hush(px + w / 2, py + h / 2, W, H, 0.5, 0.26, 0.76, W < 640 ? 0.9 : 0.36, W < 640 ? 0.3 : 0.08),
+          hush(px + w / 2, py + h / 2, W, H, 0.5, 0.84, 1, W < 640 ? 0.95 : 0.4, W < 640 ? 0.3 : 0.08),
+        );
         ctx.globalAlpha = p.alpha * d.alpha * fade * quiet;
         ctx.drawImage(tinted(p.sprite, tintOf(p.tint)), px, py, w, h);
       }
