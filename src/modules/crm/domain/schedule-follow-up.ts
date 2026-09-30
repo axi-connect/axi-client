@@ -277,19 +277,26 @@ export function promiseSentence(input: {
   const shifted = input.quiet_shift.quiet
     ? ` Como cae en horario silencioso, saldrá a las ${input.quiet_shift.resumes_at.time.replace(/^0/, "")}.`
     : "";
-  if (input.waits_for_customer) {
+  // La espera por la ventana de 24 h es de MENSAJES: una llamada sale en la
+  // fecha elegida aunque el contacto no haya escrito.
+  if (input.waits_for_customer && input.medium === "message") {
     return {
       headline: `${input.agent_name} ${verb} a ${name} cuando vuelva a escribir.`,
       detail: "Hasta entonces la tarea queda en espera; el objetivo se atiende dentro de esa respuesta.",
     };
   }
+  const detail =
+    input.medium === "call"
+      ? "Lleva la llamada con su tono, su catálogo y sus reglas."
+      : input.medium === "call_then_message" && input.waits_for_customer
+        ? "Si no conecta, el mensaje queda en espera hasta que vuelva a escribir."
+        : input.opens_with_template
+          ? "Abre con la plantilla y retoma el objetivo cuando responda."
+          : "Redacta el mensaje con su tono, su catálogo y sus reglas.";
   return {
     // `when` ya termina en «a. m.» / «p. m.»: no se añade otro punto.
     headline: `${input.agent_name} ${verb} a ${name} el ${when}`,
-    detail:
-      (input.opens_with_template
-        ? "Abre con la plantilla y retoma el objetivo cuando responda."
-        : "Redacta el mensaje con su tono, su catálogo y sus reglas.") + shifted,
+    detail: detail + shifted,
   };
 }
 

@@ -84,6 +84,13 @@ describe("sequences — plantillas de partida", () => {
       expect(validateSequence({ name: template.name, steps: template.steps })).toEqual([]);
     }
   });
+
+  it("«Reactivación de fríos» llama con el marco de Reactivación", () => {
+    const template = SEQUENCE_TEMPLATES.find((candidate) => candidate.key === "reactivation");
+    const callSteps = template?.steps.filter((step) => step.task_channel !== "message") ?? [];
+    expect(callSteps.length).toBeGreaterThan(0);
+    for (const step of callSteps) expect(step.call_type).toBe("reactivation");
+  });
 });
 
 describe("sequences — lo que viaja al backend", () => {

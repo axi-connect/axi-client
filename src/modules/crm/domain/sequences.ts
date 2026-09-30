@@ -76,7 +76,12 @@ export const SEQUENCE_TEMPLATES: readonly {
     steps: [
       { offset_hours: 0, task_channel: "message", objective: "Retomar el contacto y preguntar cómo le fue" },
       { offset_hours: 96, task_channel: "message", objective: "Contarle la novedad que más encaje con lo suyo" },
-      { offset_hours: 240, task_channel: "call_then_message", objective: "Llamar para cerrar o despedirse con elegancia" },
+      {
+        offset_hours: 240,
+        task_channel: "call_then_message",
+        call_type: "reactivation",
+        objective: "Llamar para cerrar o despedirse con elegancia",
+      },
     ],
   },
 ];
