@@ -108,14 +108,25 @@ export function FilmRoot({ children }: { children: ReactNode }) {
     let pastFilm = false;
     let beyondHero = false;
     const sync = () => setStarted(beyondHero && !pastFilm);
+    // Dónde empiezan los precios dentro de la película. Se mide al cambiar de
+    // tamaño (los pins del motor alargan la película al montarse), no por frame;
+    // un IntersectionObserver no sirve aquí: si el scroll salta de «debajo» a
+    // «encima» de los precios sin cruzarlos, no avisa.
+    const after = root.querySelector<HTMLElement>('[data-scene="pricing"]');
+    let afterTop = Infinity;
+    const measure = () => {
+      if (after) afterTop = after.getBoundingClientRect().top - root.getBoundingClientRect().top;
+    };
     const update = () => {
       frame = 0;
       const rect = root.getBoundingClientRect();
       const span = Math.max(1, rect.height - el.clientHeight);
       root.style.setProperty("--film-progress", Math.min(1, Math.max(0, -rect.top / span)).toFixed(4));
       const nowBeyond = -rect.top > el.clientHeight * 1.2;
-      if (nowBeyond !== beyondHero) {
+      const nowPast = -rect.top + el.clientHeight * 0.85 > afterTop;
+      if (nowBeyond !== beyondHero || nowPast !== pastFilm) {
         beyondHero = nowBeyond;
+        pastFilm = nowPast;
         sync();
       }
     };
@@ -137,22 +148,19 @@ export function FilmRoot({ children }: { children: ReactNode }) {
     );
     marks.forEach((m) => m && chapterIo.observe(m));
 
-    const after = root.querySelector<HTMLElement>('[data-scene="pricing"]');
-    const afterIo = new IntersectionObserver(
-      ([entry]) => {
-        pastFilm = entry.isIntersecting || entry.boundingClientRect.top < 0;
-        sync();
-      },
-      { root: el, rootMargin: "0px 0px -15% 0px" },
-    );
-    if (after) afterIo.observe(after);
+    const ro = new ResizeObserver(() => {
+      measure();
+      update();
+    });
+    ro.observe(root);
 
+    measure();
     update();
     el.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
     return () => {
       chapterIo.disconnect();
-      afterIo.disconnect();
+      ro.disconnect();
       el.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
       if (frame) cancelAnimationFrame(frame);
@@ -184,14 +192,18 @@ export function FilmRoot({ children }: { children: ReactNode }) {
         engineRef.current = startFilm(rootRef.current);
       });
     };
-    const idle =
-      typeof window.requestIdleCallback === "function"
-        ? window.requestIdleCallback(start, { timeout: 1500 })
-        : window.setTimeout(start, 400);
+    // Justo después del primer pintado, no «cuando haya reposo»: el cielo del
+    // hero anima a 30 fps y con requestIdleCallback el motor llegaba a los ~7 s
+    // (medido): quien bajaba antes veía la película sin coreografía y luego un
+    // salto al fijarse las escenas.
+    let timer = 0;
+    const raf = requestAnimationFrame(() => {
+      timer = window.setTimeout(start, 0);
+    });
     return () => {
       cancelled = true;
-      if (typeof window.cancelIdleCallback === "function") window.cancelIdleCallback(idle as number);
-      else window.clearTimeout(idle as number);
+      cancelAnimationFrame(raf);
+      window.clearTimeout(timer);
       engineRef.current?.stop();
       engineRef.current = null;
     };
