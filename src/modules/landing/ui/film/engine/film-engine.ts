@@ -53,6 +53,9 @@ const PACE = 0.8;
 
 const reveal = { opacity: 0, y: 24 };
 
+/** Las escenas que se fijan: donde la animación ES el mensaje. */
+const PINNED = new Set(["radar", "followup", "chat", "goal"]);
+
 /**
  * Una línea de tiempo de escena: fijada si cabe, revelada al pasar si no.
  *
@@ -63,23 +66,17 @@ const reveal = { opacity: 0, y: 24 };
 function sceneTimeline(section: HTMLElement, ctx: Ctx, length: number): gsap.core.Timeline {
   const heads = all(section, "[data-anim=head]");
   if (heads.length) {
-    gsap.from(heads, { ...reveal, ease: "power2.out", scrollTrigger: { trigger: section, start: "top 88%", end: "top 30%", scrub: 0.6 } });
+    gsap.from(heads, { ...reveal, ease: "power2.out", scrollTrigger: { trigger: section, start: "top 88%", end: "top 30%", scrub: true } });
   }
-  const fits = ctx.desktop && section.offsetHeight <= window.innerHeight * 1.02;
+  // Solo los momentos largos se fijan (chat, radar, seguimiento, la meta); el
+  // resto se revela al pasar. Todo fijado daba un ritmo plano y 28.000 px.
+  const fits = ctx.desktop && PINNED.has(section.dataset.scene ?? "") && section.offsetHeight <= window.innerHeight * 1.02;
   return gsap.timeline({
     defaults: { ease: "power2.out", duration: 1 },
     scrollTrigger: fits
-      ? { trigger: section, start: "top top", end: `+=${Math.round(length * PACE)}%`, pin: true, scrub: 0.6, anticipatePin: 1 }
-      : { trigger: section, start: "top 78%", end: "bottom 62%", scrub: 0.6 },
+      ? { trigger: section, start: "top top", end: `+=${Math.round(length * PACE)}%`, pin: true, scrub: true, anticipatePin: 1, invalidateOnRefresh: true }
+      : { trigger: section, start: "top 78%", end: "bottom 62%", scrub: true, invalidateOnRefresh: true },
   });
-}
-
-/** Dibuja las cintas de una escena de 0 a 1 (`pathLength=1`). */
-function drawRibbons(tl: gsap.core.Timeline, section: HTMLElement, at: number, duration = 2) {
-  const paths = all(section, "[data-ribbon-path]");
-  if (!paths.length) return;
-  gsap.set(paths, { strokeDasharray: "1 1" });
-  tl.fromTo(paths, { strokeDashoffset: 1 }, { strokeDashoffset: 0, ease: "none", duration }, at);
 }
 
 /** Cuenta hacia arriba un número con separador de miles colombiano. */
@@ -104,25 +101,20 @@ function countUp(tl: gsap.core.Timeline, el: HTMLElement, at: number) {
 /* ─────────────────────────────── escenas ─────────────────────────────── */
 
 const hero: Scene = (section) => {
+  // Al bajar, el texto se despide hacia arriba y el cielo (HeroSky) se ocupa
+  // de sus dunas; la cinta que nace de las crestas la dibuja `ribbons()`.
   const tl = gsap.timeline({ scrollTrigger: { trigger: section, start: "top top", end: "bottom top", scrub: true } });
-  drawRibbons(tl, section, 0, 1);
-  tl.to(all(section, "[data-anim=copy]"), { y: -90, opacity: 0.15, ease: "none" }, 0);
-  tl.to(all(section, "[data-anim=alpha]"), { y: 60, scale: 0.92, ease: "none" }, 0);
-  for (const b of all(section, "[data-anim=bubble]")) {
-    const depth = Number(b.dataset.depth ?? 0);
-    tl.to(b, { y: -110 * (depth + 1), ease: "none" }, 0);
-  }
+  tl.to(all(section, "[data-anim=copy]"), { y: -80, opacity: 0, ease: "none" }, 0);
+  tl.to(all(section, "[data-anim=stats]"), { y: 40, opacity: 0, ease: "none" }, 0);
 };
 
 const niche: Scene = (section, ctx) => {
   const tl = sceneTimeline(section, ctx, 70);
-  drawRibbons(tl, section, 0);
   tl.from(all(section, "[data-anim=niche]"), { ...reveal, y: 60, stagger: 0.12 }, 0.3);
 };
 
 const radar: Scene = (section, ctx) => {
   const tl = sceneTimeline(section, ctx, 140);
-  drawRibbons(tl, section, 0, 1.2);
   tl.fromTo(all(section, "[data-anim=sweep]"), { rotation: 0 }, { rotation: 540, ease: "none", duration: 4 }, 0);
   tl.from(all(section, "[data-anim=dot]"), { scale: 0, stagger: 0.08, duration: 0.3 }, 0.2);
   tl.from(all(section, "[data-anim=hit]"), { scale: 0, stagger: 0.3, duration: 0.4 }, 1);
@@ -148,7 +140,6 @@ const followup: Scene = (section, ctx) => {
 
 const chat: Scene = (section, ctx) => {
   const tl = sceneTimeline(section, ctx, 180);
-  drawRibbons(tl, section, 0, 1);
   for (const group of perNiche(section, "[data-anim=msg]")) tl.from(group, { opacity: 0, y: 18, stagger: 0.7, duration: 0.5 }, 0.4);
   for (const group of perNiche(section, "[data-anim=sale]")) tl.from(group, { opacity: 0, y: 30 }, 4.6);
 };
@@ -156,7 +147,7 @@ const chat: Scene = (section, ctx) => {
 const photo: Scene = (section, ctx) => {
   const tl = sceneTimeline(section, ctx, 120);
   for (const group of perNiche(section, "[data-anim=shot]")) tl.from(group, { opacity: 0, x: -40 }, 0.2);
-  for (const group of perNiche(section, "[data-anim=scan]")) tl.fromTo(group, { yPercent: -9000 }, { yPercent: 7000, ease: "none", duration: 1.6 }, 0.6);
+  for (const group of perNiche(section, "[data-anim=scan]")) tl.fromTo(group, { y: -90 }, { y: 70, ease: "none", duration: 1.6 }, 0.6);
   for (const group of perNiche(section, "[data-anim=tile]")) tl.from(group, { opacity: 0.2, stagger: 0.08, duration: 0.4 }, 0.8);
   for (const group of perNiche(section, "[data-anim=match]")) tl.from(group, { scale: 0.9, opacity: 0.4 }, 2);
   for (const group of perNiche(section, "[data-anim=recognized]")) tl.from(group, { opacity: 0, y: 12 }, 2.3);
@@ -212,6 +203,24 @@ const pipeline: Scene = (section, ctx) => {
   for (const group of perNiche(section, "[data-anim=appointment]")) tl.from(group, reveal, 2.2);
 };
 
+/**
+ * Mueve una marca del mapa a otra fracción de la carretera con `transform`
+ * (compositor) y no con `left`/`top` (layout en cada frame). La marca queda
+ * anclada en su fracción inicial (`data-fraction`) y se desplaza la diferencia,
+ * medida en px del lienzo actual.
+ */
+function moveMark(mark: HTMLElement, fraction: number) {
+  const canvas = mark.closest<HTMLElement>("[data-anim=map]");
+  if (!canvas) return;
+  const w = canvas.offsetWidth;
+  const h = canvas.offsetHeight;
+  const from = roadPercentAt(Number(mark.dataset.fraction ?? 0));
+  const to = roadPercentAt(fraction);
+  const dx = ((parseFloat(to.left) - parseFloat(from.left)) / 100) * w;
+  const dy = ((parseFloat(to.top) - parseFloat(from.top)) / 100) * h;
+  gsap.set(mark, { x: dx, y: dy, xPercent: -50, yPercent: -50 });
+}
+
 const goal: Scene = (section, ctx) => {
   const tl = sceneTimeline(section, ctx, 200);
   for (const group of perNiche(section, "[data-anim=navpanel]")) tl.from(group, { opacity: 0, x: ctx.desktop ? 60 : 0, y: ctx.desktop ? 0 : 40 }, 0.2);
@@ -224,11 +233,7 @@ const goal: Scene = (section, ctx) => {
   const paint = () => {
     const p = progress.p;
     for (const r of roads) r.style.strokeDasharray = `${p} 2`;
-    const pos = roadPercentAt(p);
-    for (const h of heres) {
-      h.style.left = pos.left;
-      h.style.top = pos.top;
-    }
+    for (const h of heres) moveMark(h, p);
     for (const v of values) v.textContent = `${formatMillions(Number(v.dataset.goal) * p)} · ${formatPercent(p)}`;
   };
   tl.fromTo(progress, { p: 0 }, { p: ROUTE_FRACTIONS.done, ease: "power1.inOut", duration: 2.2, onUpdate: paint }, 0.2);
@@ -244,11 +249,7 @@ const goal: Scene = (section, ctx) => {
   const pvalues = all(section, "[data-anim=projection-value]");
   const route = { p: ROUTE_FRACTIONS.projected };
   const paintRoute = () => {
-    const pos = roadPercentAt(route.p);
-    for (const m of projections) {
-      m.style.left = pos.left;
-      m.style.top = pos.top;
-    }
+    for (const m of projections) moveMark(m, route.p);
     for (const el of pcts) el.textContent = formatPercent(route.p);
     for (const el of pvalues) el.textContent = formatMillions(Number(el.dataset.goal) * route.p);
   };
@@ -271,10 +272,136 @@ const measure: Scene = (section, ctx) => {
 };
 
 const close: Scene = (section) => {
-  const tl = gsap.timeline({ scrollTrigger: { trigger: section, start: "top 85%", end: "top 25%", scrub: 0.6 } });
-  drawRibbons(tl, section, 0, 1);
+  const tl = gsap.timeline({ scrollTrigger: { trigger: section, start: "top 85%", end: "top 25%", scrub: true } });
   tl.from(all(section, "[data-anim=alpha-close]"), { scale: 0.7, opacity: 0, ease: "power2.out" }, 0);
 };
+
+/* ──────────────────────────── la cinta de luz ──────────────────────────── */
+
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+type RibbonRig = {
+  svg: SVGSVGElement;
+  paths: SVGPathElement[];
+  coral: SVGPathElement[];
+  violet: SVGPathElement[];
+  guide: SVGPathElement;
+  length: number;
+  head: SVGGElement;
+  progress: number;
+};
+
+/**
+ * Cada cinta crece MIENTRAS su escena entra en pantalla (no aparece de golpe
+ * dentro del pin) y lleva en la punta una cabeza luminosa, la «luz» que guía.
+ * Las tres hebras se separan con la velocidad del scroll y se recogen al
+ * parar: la cinta responde al gesto en vez de estar pegada. Todo es trazo y
+ * `transform` de SVG, sin filtros por frame.
+ */
+function ribbons(root: HTMLElement): () => void {
+  const rigs: RibbonRig[] = [];
+  for (const svg of all(root, "svg[data-ribbon]") as unknown as SVGSVGElement[]) {
+    const paths = Array.from(svg.querySelectorAll<SVGPathElement>("[data-ribbon-path]"));
+    const guide = svg.querySelector<SVGPathElement>(".line .a");
+    if (!paths.length || !guide) continue;
+    const head = document.createElementNS(SVG_NS, "g");
+    head.setAttribute("class", "head");
+    head.innerHTML =
+      '<circle r="16" fill="var(--axi-amber)" opacity="0.28"></circle>' +
+      '<circle r="7" fill="var(--axi-brand)" opacity="0.55"></circle>' +
+      '<circle r="3.2" fill="var(--foreground)"></circle>';
+    head.style.opacity = "0";
+    svg.appendChild(head);
+    gsap.set(paths, { strokeDasharray: "1 1", strokeDashoffset: 1 });
+    rigs.push({
+      svg,
+      paths,
+      coral: paths.filter((p) => p.classList.contains("c")),
+      violet: paths.filter((p) => p.classList.contains("v")),
+      guide,
+      length: guide.getTotalLength(),
+      head,
+      progress: 0,
+    });
+  }
+
+  const paint = (rig: RibbonRig) => {
+    const p = rig.progress;
+    for (const path of rig.paths) path.style.strokeDashoffset = String(1 - p);
+    const pt = rig.guide.getPointAtLength(rig.length * p);
+    rig.head.setAttribute("transform", `translate(${pt.x} ${pt.y})`);
+    // La cabeza existe solo mientras la cinta se está dibujando.
+    rig.head.style.opacity = String(p <= 0.01 || p >= 0.995 ? 0 : Math.min(1, p * 12, (1 - p) * 12));
+  };
+
+  const triggers = rigs.map((rig) => {
+    const section = (rig.svg.closest("[data-scene]") as HTMLElement | null) ?? rig.svg.parentElement!;
+    const isHero = section.dataset.scene === "hero";
+    return ScrollTrigger.create({
+      trigger: section,
+      start: isHero ? "top top" : "top 92%",
+      end: isHero ? "bottom 20%" : "top 8%",
+      scrub: true,
+      onUpdate: (self) => {
+        rig.progress = self.progress;
+        paint(rig);
+      },
+      onRefresh: (self) => {
+        rig.progress = self.progress;
+        paint(rig);
+      },
+    });
+  });
+
+  // Qué cintas están en pantalla, sin medir el DOM en cada frame.
+  const visible = new Set<Element>();
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (e.isIntersecting) visible.add(e.target);
+      else visible.delete(e.target);
+    }
+  });
+  for (const rig of rigs) io.observe(rig.svg);
+
+  // La separación de las hebras sigue a la velocidad del scroll, con inercia.
+  let spread = 0;
+  let target = 0;
+  const velocity = ScrollTrigger.create({
+    start: 0,
+    end: "max",
+    onUpdate: (self) => {
+      target = Math.min(14, Math.abs(self.getVelocity()) / 260);
+    },
+  });
+  const tick = () => {
+    target *= 0.92;
+    const next = spread + (target - spread) * 0.12;
+    if (Math.abs(next - spread) < 0.01) return;
+    spread = next;
+    for (const rig of rigs) {
+      if (!visible.has(rig.svg)) continue;
+      const x = rig.svg.dataset.axis === "x";
+      const off = (n: number) => (x ? `translate(${n} 0)` : `translate(0 ${n})`);
+      for (const c of rig.coral) c.setAttribute("transform", off(-7 - spread));
+      for (const v of rig.violet) v.setAttribute("transform", off(7 + spread));
+    }
+  };
+  gsap.ticker.add(tick);
+
+  return () => {
+    io.disconnect();
+    gsap.ticker.remove(tick);
+    velocity.kill();
+    for (const t of triggers) t.kill();
+    for (const rig of rigs) {
+      rig.head.remove();
+      gsap.set(rig.paths, { clearProps: "strokeDasharray,strokeDashoffset" });
+      const x = rig.svg.dataset.axis === "x";
+      for (const c of rig.coral) c.setAttribute("transform", x ? "translate(-7 0)" : "translate(0 -7)");
+      for (const v of rig.violet) v.setAttribute("transform", x ? "translate(7 0)" : "translate(0 7)");
+    }
+  };
+}
 
 const SCENES: Record<string, Scene> = { hero, niche, radar, followup, chat, photo, call, vault, team, collect, pipeline, goal, axel, measure, close };
 
@@ -282,6 +409,8 @@ const SCENES: Record<string, Scene> = { hero, niche, radar, followup, chat, phot
 
 export function startFilm(root: HTMLElement): FilmEngine {
   gsap.registerPlugin(ScrollTrigger);
+  // En móvil la barra del navegador aparece y desaparece: no es un resize.
+  ScrollTrigger.config({ ignoreMobileResize: true });
 
   // La capa pública no hace scroll en `window` sino en `[data-app-scroll]`
   // (layout público): Lenis y ScrollTrigger apuntan a ese contenedor.
@@ -306,12 +435,17 @@ export function startFilm(root: HTMLElement): FilmEngine {
     }
   });
 
+  // Después de las escenas: las cintas miden sus secciones ya con los pins puestos.
+  const stopRibbons = ribbons(root);
+  ScrollTrigger.refresh();
+
   // Las fuentes o las imágenes pueden cambiar alturas después de medir.
   const refresh = () => ScrollTrigger.refresh();
   void document.fonts?.ready.then(refresh);
 
   return {
     stop() {
+      stopRibbons();
       mm.revert();
       gsap.ticker.remove(tick);
       lenis.destroy();

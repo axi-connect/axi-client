@@ -1,6 +1,6 @@
-import SiteHeader from "@/shared/components/layout/site/SiteHeader";
 import SiteFooter from "@/shared/components/layout/site/SiteFooter";
 import { PublicAnalytics } from "@/core/analytics/ui/PublicAnalytics";
+import { PublicHeader } from "./PublicHeader";
 
 /**
  * Shell de la capa pública. Es un Server Component: antes era `"use client"`
@@ -24,7 +24,7 @@ export default function PublicLayout({
       {/* Solo en la capa pública: montarlo en el layout raíz mandaría a Google
           y a Meta las rutas del panel privado. */}
       <PublicAnalytics />
-      <SiteHeader />
+      <PublicHeader />
       {/* `main` es el landmark que faltaba en toda la capa pública: sin él, ni
           los lectores de pantalla ni los extractores de contenido de los
           buscadores pueden distinguir el contenido de la página del cromo

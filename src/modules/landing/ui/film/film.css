@@ -57,7 +57,10 @@
 }
 
 .film-h {
-  font-family: var(--font-headings), var(--font-sans), sans-serif;
+  /* `--font-nexa` es la variable real de next/font (en el <body>); los tokens
+     `--font-heading(s)` de `@theme inline` no existen en tiempo de ejecución, y
+     con ellos los titulares caían a Poppins sin avisar (visto el 2026-09-30). */
+  font-family: var(--font-nexa), var(--font-poppins), sans-serif;
   font-weight: 700;
   letter-spacing: -0.035em;
   line-height: 1.04;
@@ -82,15 +85,13 @@
   border: 1px solid var(--film-line);
   border-radius: 24px;
 }
+/* «Cristal» sin backdrop-filter: sobre el escenario oscuro un fondo casi
+   opaco se ve igual y no obliga a recomponer el desenfoque en cada frame del
+   scroll (lo que más traba en Safari). */
 .film-glass {
-  background: color-mix(in srgb, var(--film-surface-2) 70%, transparent);
+  background: color-mix(in srgb, var(--film-surface-2) 92%, transparent);
   border: 1px solid color-mix(in srgb, var(--foreground) 11%, transparent);
-  -webkit-backdrop-filter: blur(22px) saturate(160%);
-  backdrop-filter: blur(22px) saturate(160%);
   box-shadow: var(--shadow-overlay);
-}
-@supports not (backdrop-filter: blur(1px)) {
-  .film-glass { background: var(--film-surface-2); }
 }
 .film-chip {
   display: inline-flex;
@@ -223,3 +224,62 @@
 .lenis.lenis-smooth { scroll-behavior: auto !important; }
 .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
 .lenis.lenis-stopped { overflow: hidden; }
+
+/* ------------------------------------------------------------------ hero */
+/* Entrada escalonada (referencia del 2026-09-30): sube, se enfoca y aparece.
+   Solo CSS, para que no espere a la hidratación ni al motor. */
+@keyframes film-reveal {
+  from { opacity: 0; transform: translateY(22px) scale(0.98); filter: blur(6px); }
+  to { opacity: 1; transform: none; filter: blur(0); }
+}
+@keyframes film-line-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes film-glow-in {
+  0% { opacity: 0; transform: translateY(22px) scale(0.98); filter: blur(6px); }
+  70% { opacity: 1; transform: none; filter: blur(0); }
+  85% { transform: scale(1.03); }
+  100% { opacity: 1; transform: none; }
+}
+.film-in { animation: film-reveal 0.85s cubic-bezier(0.22, 1, 0.36, 1) var(--d, 0s) both; }
+.film-line { animation: film-line-in 0.85s cubic-bezier(0.22, 1, 0.36, 1) var(--d, 0s) both; }
+.film-glow {
+  animation: film-glow-in 1s cubic-bezier(0.22, 1, 0.36, 1) 0.4s both;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--axi-brand) 30%, transparent),
+    0 0 22px color-mix(in srgb, var(--axi-brand) 42%, transparent),
+    0 0 44px color-mix(in srgb, var(--axi-brand) 16%, transparent);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+.film-glow:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--axi-brand) 40%, transparent),
+    0 0 28px color-mix(in srgb, var(--axi-brand) 55%, transparent),
+    0 0 60px color-mix(in srgb, var(--axi-brand) 22%, transparent);
+}
+#hero { --ring: clamp(36px, 4.5vw, 42px); }
+@media (max-width: 420px) { #hero { --ring: 34px; } }
+.film-ring { transition: transform 0.35s ease; }
+.film-ring:nth-child(1):hover, .film-ring:nth-child(3):hover { transform: translateY(-2px); }
+.film-ring:nth-child(2):hover { transform: translateY(-4px); }
+
+/* La cabeza luminosa de la cinta: la pone el motor en la punta del trazo. */
+.film-ribbon .head { pointer-events: none; }
+
+/* ------------------------------------------------------------------ cabecera en píldora */
+@keyframes film-slide-down { from { opacity: 0; transform: translateY(-18px); } to { opacity: 1; transform: none; } }
+@keyframes film-overlay-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes film-menu-in { from { opacity: 0; transform: translateY(-10px) scale(0.98); } to { opacity: 1; transform: none; } }
+@keyframes film-link-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.film-header { animation: film-slide-down 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.film-overlay { animation: film-overlay-in 0.28s ease both; }
+.film-menu { animation: film-menu-in 0.38s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.film-menu-link { animation: film-link-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) calc(0.05s + var(--i, 0) * 0.04s) both; }
+body.menu-open [data-app-scroll] { overflow: hidden; }
+
+@media (prefers-reduced-motion: reduce) {
+  .film-in, .film-line, .film-glow, .film-header, .film-overlay, .film-menu, .film-menu-link { animation: none; }
+  .film-ring, .film-glow { transition: none; }
+}

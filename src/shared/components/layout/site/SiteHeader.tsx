@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
@@ -15,7 +14,6 @@ import { SiteNavList, SiteNavShell } from '@/shared/components/layout/site/SiteN
 import { SiteNavMobile } from '@/shared/components/layout/site/SiteNavMobile';
 import {
     SITE_NAV_CTA,
-    SITE_NAV_FILM_CTA,
     SITE_NAV_SESSION,
 } from '@/shared/components/layout/site/site-nav.content';
 
@@ -69,14 +67,9 @@ export default function SiteHeader({
     // Con sesión activa el CTA lleva a la app (y repite el splash de marca);
     // sin sesión lleva a la demo. Un visitante nuevo no quiere el inbox: antes
     // apuntaba a /workspace/inbox y el middleware lo rebotaba al login.
-    // En la home la película ocurre en un escenario oscuro en los dos temas:
-    // la cabecera se pinta con los tokens oscuros (`.dark`) para no ser una
-    // franja clara encima, y su CTA es el de la película.
-    const onFilm = usePathname() === '/';
-    const guestCta = onFilm ? SITE_NAV_FILM_CTA : SITE_NAV_CTA;
     const isAuthenticated = status === 'authenticated';
-    const ctaHref = isAuthenticated ? '/workspace/inbox' : guestCta.href;
-    const ctaLabel = isAuthenticated ? (user?.name ?? 'Ir a la app') : guestCta.label;
+    const ctaHref = isAuthenticated ? '/workspace/inbox' : SITE_NAV_CTA.href;
+    const ctaLabel = isAuthenticated ? (user?.name ?? 'Ir a la app') : SITE_NAV_CTA.label;
     const onCtaClick = () => {
         if (isAuthenticated) splash.start();
     };
@@ -87,7 +80,7 @@ export default function SiteHeader({
         // difuminar la página (ver la regla de montaje en `navigation-menu.tsx`):
         // cualquiera de esas tres propiedades aquí crearía un backdrop root y
         // dejaría al panel sin nada que difuminar.
-        <header className={`fixed top-0 right-0 left-0 z-50${onFilm ? ' dark theme-dark-island text-foreground' : ''}`}>
+        <header className="fixed top-0 right-0 left-0 z-50">
             <SiteNavShell>
                 {/* La barra: aquí sí vive el cristal, y aquí sí anima.
                     El borde de 1px existe SIEMPRE (transparente en reposo):

@@ -14,22 +14,26 @@ export function Ribbon({
   spread = 7,
   viewBox = "0 0 1440 900",
   preserve = "xMidYMid slice",
+  axis = "y",
 }: {
+  /** Hacia dónde se separan las hebras: `x` para cintas casi verticales. */
+  axis?: "x" | "y";
   d: string;
   className?: string;
   spread?: number;
   viewBox?: string;
   preserve?: string;
 }) {
+  const at = (n: number) => (axis === "x" ? `translate(${n} 0)` : `translate(0 ${n})`);
   const strokes = (
     <>
-      <path className="c" d={d} pathLength={1} transform={`translate(0 ${-spread})`} data-ribbon-path="" />
+      <path className="c" d={d} pathLength={1} transform={at(-spread)} data-ribbon-path="" />
       <path className="a" d={d} pathLength={1} data-ribbon-path="" />
-      <path className="v" d={d} pathLength={1} transform={`translate(0 ${spread})`} data-ribbon-path="" />
+      <path className="v" d={d} pathLength={1} transform={at(spread)} data-ribbon-path="" />
     </>
   );
   return (
-    <svg className={cn("film-ribbon", className)} viewBox={viewBox} preserveAspectRatio={preserve} aria-hidden="true" data-ribbon="">
+    <svg className={cn("film-ribbon", className)} viewBox={viewBox} preserveAspectRatio={preserve} aria-hidden="true" data-ribbon="" data-axis={axis}>
       <g className="halo">{strokes}</g>
       <g className="line">{strokes}</g>
     </svg>

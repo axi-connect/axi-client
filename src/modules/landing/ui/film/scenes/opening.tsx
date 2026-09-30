@@ -1,12 +1,15 @@
-import { MessageCircle } from "lucide-react";
+import { ArrowRight, MessageCircle } from "lucide-react";
+import { FaFacebookMessenger, FaInstagram, FaWhatsapp } from "react-icons/fa6";
 
 import { salesWhatsAppUrl } from "@/core/config/env";
 import { cn } from "@/core/lib/utils";
 import { BrandMark } from "@/shared/components/ui/brand-mark";
-import { FILM_CONTENT, HERO_BUBBLES } from "@/modules/landing/domain/film/film-content";
+import { FILM_CONTENT } from "@/modules/landing/domain/film/film-content";
 import { FILM_NICHES } from "@/modules/landing/domain/film/niches";
 import { WA_MESSAGES } from "@/modules/landing/ui/content/landing.content";
 import { FilmCta } from "@/modules/landing/ui/film/parts/FilmCta";
+import { HeroSky } from "@/modules/landing/ui/film/parts/HeroSky";
+import { HeroStats } from "@/modules/landing/ui/film/parts/HeroStats";
 import { FILM_ICONS } from "@/modules/landing/ui/film/parts/film-icons";
 import { NicheChoice } from "@/modules/landing/ui/film/parts/NicheChoice";
 import { Ribbon } from "@/modules/landing/ui/film/parts/Ribbon";
@@ -31,65 +34,83 @@ function TalkToAgent({ className }: { className?: string }) {
   );
 }
 
-/** Posición de cada burbuja alrededor de la α, en % de su caja. La profundidad decide blur y parallax. */
-const BUBBLE_SPOTS = [
-  "left-[-6%] top-[2%]",
-  "right-[-18%] top-[14%]",
-  "left-[-22%] top-[66%]",
-  "right-[-14%] top-[76%]",
-  "left-[18%] top-[98%]",
+/** Los canales por los que escriben los clientes: la fila de confianza del hero. */
+const CHANNELS = [
+  { Icon: FaWhatsapp, label: "WhatsApp" },
+  { Icon: FaInstagram, label: "Instagram" },
+  { Icon: FaFacebookMessenger, label: "Messenger" },
 ] as const;
-const DEPTH = ["", "blur-[1px] opacity-80", "blur-[2px] opacity-55", "blur-[3px] opacity-35"] as const;
 
+/**
+ * El hero: un solo pantallazo sobre un atardecer de dunas del que sube un cielo
+ * de conversaciones (HeroSky). Referencia aprobada el 2026-09-30, adaptada a la
+ * marca: titular en Nexa, CTA coral, canales en vez de logos de empresas y
+ * cifras que son hechos del producto. La cinta de luz nace de las crestas y
+ * baja con el scroll hacia la escena siguiente.
+ */
 export function HeroScene() {
   return (
-    <section id="hero" data-scene="hero" aria-label="Axi Connect" className="film-scene">
-      <div className="film-spot top-[4%] left-[48%] size-[1000px] bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--axi-brand)_14%,transparent),transparent)]" />
-      <div className="film-spot top-[-10%] left-[66%] size-[700px] bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--axi-violet)_10%,transparent),transparent)]" />
-      <Ribbon d="M 1030 600 C 1040 720, 900 800, 720 860 S 320 940, 120 1000" className="max-lg:hidden" />
+    <section id="hero" data-scene="hero" aria-label="Axi Connect" className="relative flex h-[100svh] min-h-[640px] w-full flex-col overflow-clip">
+      <HeroSky className="absolute inset-0 size-full" />
+      <Ribbon d="M 720 700 C 716 790, 728 860, 720 960" axis="x" spread={6} className="z-[1]" />
 
-      <div className="film-wrap grid items-center gap-12 pt-28 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,.9fr)] lg:pt-24">
-        <div data-anim="copy" className="max-lg:order-2">
-          <p className="film-chip mb-7">
-            <MessageCircle className="size-3.5 text-[var(--axi-success)]" aria-hidden="true" />
-            Agentes de IA que venden por WhatsApp
-          </p>
-          <h1 className="film-h text-[clamp(44px,6.6vw,96px)]">
-            <span className="t">Vende en</span>
-            <br />
-            cada conversación.
-          </h1>
-          <p className="film-lead mt-7 max-w-[34rem] text-[clamp(15.5px,1.35vw,19px)] leading-relaxed">
-            Axi atiende tu WhatsApp como tu mejor vendedor: responde en segundos, cotiza con tus precios, cobra y te lleva a
-            tu meta del mes.
-          </p>
-          <div className="mt-9 flex flex-wrap gap-3">
-            <FilmCta>Prueba 7 días gratis</FilmCta>
-            <TalkToAgent />
+      <div className="relative z-[2] flex flex-1 flex-col items-center px-4 pt-[clamp(96px,14vh,132px)] pb-[clamp(18px,3vh,32px)]">
+        <div data-anim="copy" className="flex flex-1 flex-col items-center justify-center text-center">
+          <div className="film-in mb-[clamp(16px,2.5vh,26px)] inline-flex items-center" style={{ "--d": "0.05s" } as React.CSSProperties}>
+            {CHANNELS.map(({ Icon, label }, i) => (
+              <span
+                key={label}
+                className="film-ring grid size-[var(--ring)] place-items-center rounded-full border border-[color-mix(in_srgb,var(--foreground)_40%,transparent)] bg-[color-mix(in_srgb,var(--foreground)_14%,var(--background))] p-[5px]"
+                style={{ zIndex: i === 2 ? 4 : i + 1, marginLeft: i ? "calc(var(--ring) * -0.42)" : undefined }}
+              >
+                <span className="grid size-full place-items-center rounded-full bg-foreground text-background">
+                  <Icon className="size-[calc(var(--ring)*0.34)]" aria-hidden="true" />
+                  <span className="sr-only">{label}</span>
+                </span>
+              </span>
+            ))}
+            <span className="-ml-[calc(var(--ring)*0.42)] inline-flex h-[var(--ring)] items-center rounded-full border border-[color-mix(in_srgb,var(--foreground)_40%,transparent)] bg-[color-mix(in_srgb,var(--foreground)_14%,var(--background))] pr-4 pl-[calc(var(--ring)*0.58)] text-[clamp(12px,1.4vw,13.5px)] font-medium text-[color-mix(in_srgb,var(--foreground)_80%,transparent)]">
+              Tus clientes ya te escriben aquí
+            </span>
           </div>
-          <p className="film-dim mt-4 text-[13.5px]">Sin tarjeta. Tu cuenta queda lista hoy.</p>
-        </div>
 
-        <div className="relative mx-auto aspect-square w-[min(56vw,400px)] max-lg:order-1 max-lg:w-[min(48vw,230px)]" aria-hidden="true">
-          <div className="absolute inset-[-20%] rounded-full bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--axi-brand)_30%,transparent),color-mix(in_srgb,var(--axi-violet)_16%,transparent)_55%,transparent_75%)] blur-2xl" />
-          <BrandMark className="film-alpha relative size-full" data-anim="alpha" />
-          {HERO_BUBBLES.map((b, i) => (
-            <div
-              key={b.text}
-              data-anim="bubble"
-              data-depth={b.depth}
-              className={cn("absolute", BUBBLE_SPOTS[i], DEPTH[b.depth], b.depth >= 2 && "max-lg:hidden")}
+          <h1 className="film-h text-[clamp(40px,6.4vw,88px)] leading-[1.05]">
+            <span className="film-line block t" style={{ "--d": "0.12s" } as React.CSSProperties}>
+              Vende en
+            </span>
+            <span className="film-line block" style={{ "--d": "0.3s" } as React.CSSProperties}>
+              cada conversación.
+            </span>
+          </h1>
+
+          <p className="film-in mt-[clamp(14px,2.4vh,22px)] max-w-[min(540px,92%)] text-[clamp(15px,1.55vw,19px)] leading-[1.55] text-[color-mix(in_srgb,var(--foreground)_78%,transparent)]" style={{ "--d": "0.28s" } as React.CSSProperties}>
+            Axi atiende tu WhatsApp como tu mejor vendedor: responde en segundos, cotiza con tus precios, cobra y te lleva
+            a tu meta del mes.
+          </p>
+
+          <div className="film-in mt-[clamp(18px,3vh,30px)] flex flex-wrap items-center justify-center gap-x-6 gap-y-3" style={{ "--d": "0.4s" } as React.CSSProperties}>
+            <FilmCta className="film-glow h-auto rounded-full px-[clamp(22px,3vw,30px)] py-[clamp(12px,1.7vh,14px)] text-[clamp(14px,1.5vw,15.5px)]">
+              Prueba 7 días gratis
+            </FilmCta>
+            <a
+              href={salesWhatsAppUrl(WA_MESSAGES.hero)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group inline-flex items-center gap-1.5 text-sm font-medium text-[color-mix(in_srgb,var(--foreground)_80%,transparent)] transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
             >
-              <div className="film-bub film-bub-in max-w-none text-sm whitespace-nowrap shadow-[0_18px_40px_rgb(0_0_0/.45)]">{b.text}</div>
-              <div className="film-meta">{b.meta}</div>
-            </div>
-          ))}
+              <MessageCircle className="size-4" aria-hidden="true" />
+              Habla con nuestro agente
+              <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+            </a>
+          </div>
+          <p className="film-in film-dim mt-3 text-[12.5px]" style={{ "--d": "0.46s" } as React.CSSProperties}>
+            Sin tarjeta. Tu cuenta queda lista hoy.
+          </p>
         </div>
-      </div>
 
-      <div className="film-dim absolute bottom-8 left-[clamp(16px,7vw,132px)] z-[2] flex items-center gap-3 text-[12.5px] max-lg:hidden" aria-hidden="true">
-        <span className="block h-9 w-px bg-[linear-gradient(transparent,var(--foreground))]" />
-        Baja y míralo vender
+        <div data-anim="stats" className="w-full max-w-[920px] shrink-0">
+          <HeroStats />
+        </div>
       </div>
     </section>
   );
@@ -99,7 +120,7 @@ export function NicheScene() {
   return (
     <section id="quien" data-scene="niche" aria-labelledby="quien-h" className="film-scene">
       <div className="film-spot top-[30%] left-[calc(50%-560px)] size-[1120px] bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--axi-brand)_9%,transparent),transparent)]" />
-      <Ribbon d="M -40 640 C 300 560, 520 720, 760 630 S 1180 560, 1500 610" />
+      <Ribbon d="M 720 -40 C 760 80, 1360 90, 1400 330 S 1120 610, 760 640 S 220 570, -40 650" />
       <div className="film-wrap text-center">
         <div data-anim="head">
           <p className="film-eyebrow mb-4 text-[var(--axi-brand)]">Empieza la película</p>

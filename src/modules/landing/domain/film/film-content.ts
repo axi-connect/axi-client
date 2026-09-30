@@ -476,11 +476,30 @@ export const FILM_CONTENT: Readonly<Record<FilmNiche, FilmContent>> = {
   b2b: B2B,
 };
 
-/** Las burbujas del hero: muchos clientes a la vez, de varios negocios. */
-export const HERO_BUBBLES: readonly { text: string; meta: string; depth: 0 | 1 | 2 | 3 }[] = [
-  { text: "¿Tienen domicilio a Laureles?", meta: "respondido en 3 s", depth: 2 },
-  { text: "¿Precio del iPhone 17 de 256?", meta: "respondido en 4 s", depth: 0 },
-  { text: "¿Hay cita el sábado a las 10?", meta: "agendada · 10:00 a. m.", depth: 1 },
-  { text: "Necesito 200 cajas de guantes", meta: "cotización enviada", depth: 2 },
-  { text: "¿Me mandas el link de pago?", meta: "pago reportado", depth: 3 },
+/**
+ * El cielo del hero: fragmentos de conversaciones reales del producto que
+ * suben en matriz de puntos. Cortos (≤ 30 caracteres) para que se lean como
+ * mensajes, no como párrafos. Mezclan nichos: son todos los que escriben.
+ */
+export const SKY_FRAGMENTS: readonly string[] = [
+  "¿Tienen domicilio?",
+  "Pedido #2087",
+  "Sí, envíalo hoy",
+  "¿Hay cita el sábado?",
+  "Pago reportado",
+  "Te comparto la foto",
+  "¿Me cotizas 200?",
+  "Me lo llevo",
+  "¿Cómo pago?",
+  "Cita confirmada",
+  "Respondido en 4 s",
+  "¿Precio del iPhone 17?",
+  "Listo, va en camino",
+  "Cotización COT-0318",
+  "¿Tienen envío a Cali?",
+  "Gracias, llegó perfecto",
+  "¿Abren el domingo?",
+  "Quedó agendada",
+  "Nequi o Bancolombia",
+  "¿Me lo apartas?",
 ];

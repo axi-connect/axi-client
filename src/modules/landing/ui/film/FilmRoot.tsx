@@ -96,38 +96,63 @@ export function FilmRoot({ children }: { children: ReactNode }) {
     [goTo],
   );
 
-  // Guía de progreso y píldora: un listener pasivo que escribe una variable CSS.
+  // Guía de progreso y píldora. El progreso es UNA lectura por frame (el raíz)
+  // escrita en una variable CSS; el capítulo y «ya estamos en precios» los
+  // decide un IntersectionObserver, sin medir el DOM en cada frame. Los
+  // setState solo disparan render cuando el valor cambia.
   useEffect(() => {
     const el = scroller();
     const root = rootRef.current;
     if (!el || !root) return;
     let frame = 0;
+    let pastFilm = false;
+    let beyondHero = false;
+    const sync = () => setStarted(beyondHero && !pastFilm);
     const update = () => {
       frame = 0;
       const rect = root.getBoundingClientRect();
-      const viewport = el.clientHeight;
-      const span = Math.max(1, rect.height - viewport);
-      const progress = Math.min(1, Math.max(0, -rect.top / span));
-      root.style.setProperty("--film-progress", progress.toFixed(4));
-      // Visible durante la película: ni en el hero ni desde los precios (ahí
-      // la escena ya no depende del nicho y la píldora taparía las tarjetas).
-      const after = root.querySelector<HTMLElement>('[data-scene="pricing"]');
-      const reachedAfter = after ? after.getBoundingClientRect().top < viewport * 0.85 : false;
-      setStarted(-rect.top > viewport * 1.2 && !reachedAfter);
-      const marks = TICKS.map((t) => root.querySelector<HTMLElement>(`[data-chapter="${t}"]`));
-      let current = -1;
-      marks.forEach((m, i) => {
-        if (m && m.getBoundingClientRect().top < viewport * 0.6) current = i;
-      });
-      setChapter(current);
+      const span = Math.max(1, rect.height - el.clientHeight);
+      root.style.setProperty("--film-progress", Math.min(1, Math.max(0, -rect.top / span)).toFixed(4));
+      const nowBeyond = -rect.top > el.clientHeight * 1.2;
+      if (nowBeyond !== beyondHero) {
+        beyondHero = nowBeyond;
+        sync();
+      }
     };
     const onScroll = () => {
       if (!frame) frame = requestAnimationFrame(update);
     };
+
+    const marks = TICKS.map((t) => root.querySelector<HTMLElement>(`[data-chapter="${t}"]`));
+    const chapterIo = new IntersectionObserver(
+      () => {
+        // Capítulo actual: el último cuya escena ya cruzó el 60 % de la ventana.
+        let current = -1;
+        marks.forEach((m, i) => {
+          if (m && m.getBoundingClientRect().top < el.clientHeight * 0.6) current = i;
+        });
+        setChapter(current);
+      },
+      { root: el, rootMargin: "0px 0px -40% 0px", threshold: [0, 1] },
+    );
+    marks.forEach((m) => m && chapterIo.observe(m));
+
+    const after = root.querySelector<HTMLElement>('[data-scene="pricing"]');
+    const afterIo = new IntersectionObserver(
+      ([entry]) => {
+        pastFilm = entry.isIntersecting || entry.boundingClientRect.top < 0;
+        sync();
+      },
+      { root: el, rootMargin: "0px 0px -15% 0px" },
+    );
+    if (after) afterIo.observe(after);
+
     update();
     el.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
     return () => {
+      chapterIo.disconnect();
+      afterIo.disconnect();
       el.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
       if (frame) cancelAnimationFrame(frame);
