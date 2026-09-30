@@ -142,7 +142,8 @@ describe("CallsMonitorView (premium F5)", () => {
     render(<CallsMonitorView />);
     await flush();
     const island = screen.getByRole("region", { name: "Lo próximo" });
-    expect(within(island).getByText(/se quedaron en objeciones/)).toBeInTheDocument();
+    // F-4: 14 llegaron a propuesta y 6 a objeciones: 8 se quedaron EN propuesta.
+    expect(within(island).getByText(/se quedaron en propuesta/)).toBeInTheDocument();
   });
 });
 

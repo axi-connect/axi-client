@@ -122,7 +122,8 @@ describe("LiveCallView (premium F3)", () => {
     );
     const route = screen.getByRole("navigation", { name: "Etapas de la llamada" });
     expect(within(route).getByText("Descubrimiento").closest("[aria-current='step']")).not.toBeNull();
-    expect(screen.getByText("Descubrimiento · 2 de 4")).toBeInTheDocument();
+    // F-3: el nombre puede recortarse, «2 de 4» nunca.
+    expect(screen.getByText("· 2 de 4")).toHaveClass("shrink-0");
     expect(screen.getByRole("heading", { level: 2, name: "Etapa" })).toBeInTheDocument();
     expect(screen.getByText(/faltan propuesta y cierre/)).toBeInTheDocument();
   });

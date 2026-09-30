@@ -43,6 +43,7 @@ export function LiveCallStage({
   agentName,
   names,
   stage = null,
+  stagePosition = null,
   className,
 }: {
   mode: AuraMode;
@@ -57,6 +58,8 @@ export function LiveCallStage({
   names: { agent: string; caller: string };
   /** Plan de modos: etapa actual de una proactiva («Descubrimiento · 4 de 7»). */
   stage?: string | null;
+  /** «4 de 7»: nunca se recorta, aunque el nombre de la etapa sí (F-3). */
+  stagePosition?: string | null;
   className?: string;
 }) {
   return (
@@ -80,6 +83,11 @@ export function LiveCallStage({
           <span className="order-last inline-flex h-8 min-w-0 items-center gap-2 rounded-full bg-accent-violet/15 px-3 text-xs font-medium ring-1 ring-accent-violet/25 backdrop-blur-md sm:order-none">
             <Route aria-hidden className="size-3.5 shrink-0 text-accent-violet" />
             <span className="truncate">{stage}</span>
+            {stagePosition !== null && (
+              <span className="shrink-0 whitespace-nowrap tabular-nums text-muted-foreground">
+                · {stagePosition}
+              </span>
+            )}
           </span>
         )}
         <span className="inline-flex h-8 min-w-0 items-center gap-2 rounded-full bg-foreground/[0.07] px-3 text-xs font-medium ring-1 ring-foreground/10 backdrop-blur-md">

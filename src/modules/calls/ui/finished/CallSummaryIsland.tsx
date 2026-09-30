@@ -20,25 +20,27 @@ import { StageRoute } from "@/modules/calls/ui/components/StageRoute";
  */
 export function CallSummaryIsland({ call, className }: { call: CallSessionDetailDTO; className?: string }) {
   const assessment = parseGoalAssessment(call.events);
-  const hadConversation = call.segments.some((segment) => segment.role !== "system");
-  if (call.summary === null && assessment === null && !hadConversation) return null;
-  // Sin resumen pasado el rato, el postprocess no lo va a escribir: no se promete.
-  const pending = summaryWaitRemainingMs(call, Date.now()) > 0;
-  if (call.summary === null && assessment === null && !pending) return null;
-  const result = callResultPill(call);
   // Plan de modos §4: hasta dónde llegó una proactiva y, si no cumplió, dónde se cortó.
-  const stages = call.playbook?.stages ?? [];
   // Solo `last_stage`: el servidor la escribe al CONTESTAR. `stage_route` trae
   // sembrada la primera etapa desde el timbre, y una no contestada (buzón, no
   // contestó) no «llegó» a nada — el embudo tampoco la cuenta (auditoría A1).
+  const stages = call.playbook?.stages ?? [];
   const reachedKey = call.last_stage;
   const reachedIndex = stages.findIndex((stage) => stage.key === reachedKey);
-  const reached = reachedIndex === -1 ? null : stages[reachedIndex];
+  const reached = reachedIndex === -1 ? null : (stages[reachedIndex] ?? null);
   const goalMet = call.outcome === "goal_met" || assessment?.met === true;
-  const fellAt = reached !== null && reached !== undefined && !goalMet && reachedIndex < stages.length - 1 ? reached.key : null;
+  const fellAt = reached !== null && !goalMet && reachedIndex < stages.length - 1 ? reached.key : null;
   const steps = routeSteps(stages, reachedKey).map((step) =>
     step.state === "now" ? { ...step, state: "done" as const } : step,
   );
+  // F-1: la ruta se muestra aunque no haya resumen ni veredicto — «dónde se
+  // cortó» es justo lo que el dueño viene a buscar en una llamada sin resumen.
+  const hadConversation = call.segments.some((segment) => segment.role !== "system");
+  if (reached === null && call.summary === null && assessment === null && !hadConversation) return null;
+  // Sin resumen pasado el rato, el postprocess no lo va a escribir: no se promete.
+  const pending = summaryWaitRemainingMs(call, Date.now()) > 0;
+  if (reached === null && call.summary === null && assessment === null && !pending) return null;
+  const result = callResultPill(call);
 
   return (
     <InkIsland label="Así fue la llamada" glow="ai" className={cn("gap-3", className)}>
@@ -51,7 +53,7 @@ export function CallSummaryIsland({ call, className }: { call: CallSessionDetail
           Axi está escribiendo el resumen. Aparece aquí en cuanto esté listo.
         </p>
       ) : null}
-      {reached !== null && reached !== undefined && (
+      {reached !== null && (
         <div className="mt-1 flex flex-col gap-2">
           <StageRoute steps={steps} fellAt={fellAt} label="Etapas que recorrió la llamada" />
           {/* Una sola fila: si no cumplió, la etapa a la que llegó ES donde se cortó (B3). */}

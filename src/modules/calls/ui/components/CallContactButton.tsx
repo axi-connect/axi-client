@@ -1,7 +1,7 @@
 "use client";
 
 import { PhoneOutgoing } from "lucide-react";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { useEntitlements } from "@/shared/auth/entitlements.hooks";
 import { Button } from "@/shared/components/ui/button";
@@ -29,20 +29,30 @@ export function CallContactButton({
   const { hasPermission } = useAuth();
   const { hasCapability } = useEntitlements();
   const [open, setOpen] = useState(false);
+  const reasonId = useId();
   if (!hasPermission("calls:place") || !hasCapability("calls")) return null;
+  const noPhone = contact.phone === null || contact.phone.trim() === "";
   return (
     <>
       <Button
         variant="outline"
         size="sm"
         className={className}
-        disabled={contact.phone === null || contact.phone === ""}
-        title={contact.phone === null || contact.phone === "" ? "El contacto no tiene teléfono" : undefined}
+        disabled={noPhone}
+        title={noPhone ? "El contacto no tiene teléfono" : undefined}
+        // F-6: el motivo no puede vivir solo en `title` (ni el teclado ni el
+        // lector de pantalla lo alcanzan en un botón deshabilitado).
+        aria-describedby={noPhone ? reasonId : undefined}
         onClick={() => setOpen(true)}
       >
         <PhoneOutgoing aria-hidden />
         {label}
       </Button>
+      {noPhone && (
+        <span id={reasonId} className="sr-only">
+          El contacto no tiene teléfono en su ficha.
+        </span>
+      )}
       <CallLauncherDialog
         open={open}
         onOpenChange={setOpen}

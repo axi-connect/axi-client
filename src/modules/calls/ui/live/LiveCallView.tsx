@@ -74,10 +74,9 @@ export function LiveCallView({
   const steps = routeSteps(stages, stageKey);
   const stageIndex = stages.findIndex((stage) => stage.key === stageKey);
   const stageNow = stageIndex === -1 ? null : stages[stageIndex];
-  const stageText =
-    stageNow === undefined || stageNow === null
-      ? null
-      : `${stageNow.label} · ${String(stageIndex + 1)} de ${String(stages.length)}`;
+  const stageText = stageNow === undefined || stageNow === null ? null : stageNow.label;
+  const stagePosition =
+    stageText === null ? null : `${String(stageIndex + 1)} de ${String(stages.length)}`;
   const pending = stages.slice(stageIndex + 1).map((stage) => stage.label.toLowerCase());
 
   return (
@@ -128,9 +127,11 @@ export function LiveCallView({
             agentName={agentName}
             names={names}
             stage={ringing ? null : stageText}
+            stagePosition={ringing ? null : stagePosition}
             className="lg:min-h-[600px] lg:flex-1"
           />
-          <div className={cn("grid gap-4", stageNow ? "sm:grid-cols-2 xl:grid-cols-4" : "sm:grid-cols-3")}>
+          {/* F-3: con la etapa son 4 fichas; en 2×2 hasta 2xl para que ninguna recorte su dato. */}
+          <div className={cn("grid gap-4", stageNow ? "sm:grid-cols-2 2xl:grid-cols-4" : "sm:grid-cols-3")}>
             <BentoTile label="Motivo">
               <p className="truncate text-sm font-semibold">{CALL_PURPOSE_LABELS[call.purpose]}</p>
               <p className="truncate text-xs text-muted-foreground">

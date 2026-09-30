@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, CircleDot, TriangleAlert } from "lucide-react";
+import { useEffect, useRef } from "react";
 import { cn } from "@/core/lib/utils";
 import type { RouteStep } from "@/modules/calls/domain/live-call";
 
@@ -23,9 +24,23 @@ export function StageRoute({
   label?: string;
   className?: string;
 }) {
+  const nav = useRef<HTMLElement>(null);
+  const focusKey = fellAt ?? steps.find((step) => step.state === "now")?.key ?? null;
+  // F-10: la etapa que importa (donde se cortó, o la actual) queda a la vista
+  // dentro de SU contenedor; se mueve el scroll horizontal, nunca la página.
+  useEffect(() => {
+    const container = nav.current;
+    if (container === null || focusKey === null) return;
+    const target = [...container.querySelectorAll<HTMLElement>("[data-step]")].find(
+      (element) => element.dataset.step === focusKey,
+    );
+    if (target === undefined || typeof container.scrollTo !== "function") return;
+    const left = target.offsetLeft - (container.clientWidth - target.offsetWidth) / 2;
+    container.scrollTo({ left: Math.max(0, left) });
+  }, [focusKey]);
   if (steps.length === 0) return null;
   return (
-    <nav aria-label={label} className={cn("axi-scroll -mx-1 overflow-x-auto px-1 pb-1", className)}>
+    <nav ref={nav} aria-label={label} className={cn("axi-scroll -mx-1 overflow-x-auto px-1 pb-1", className)}>
       <ol className="flex w-max items-center gap-1">
         {steps.map((step, index) => {
           const fell = fellAt !== null && step.key === fellAt;
@@ -38,20 +53,24 @@ export function StageRoute({
                 />
               )}
               <span
+                data-step={step.key}
                 aria-current={step.state === "now" ? "step" : undefined}
                 className={cn(
                   "inline-flex h-7 items-center gap-1.5 rounded-full px-2.5 text-xs whitespace-nowrap",
                   fell
-                    ? "bg-warning/15 font-medium text-foreground"
+                    ? "bg-warning/25 font-medium text-foreground"
                     : step.state === "now"
                       ? "bg-accent-violet/15 font-medium text-foreground"
                       : step.state === "done"
                         ? "text-muted-foreground"
-                        : "text-muted-foreground/70",
+                        : // F-7: sin /70 — atenuado bajaba a 3,33:1 en claro.
+                          "text-muted-foreground",
                 )}
               >
                 {fell ? (
-                  <TriangleAlert aria-hidden className="size-3.5 text-warning" />
+                  // F-7: el ámbar como icono no pasaba AA en claro (2,72:1): el
+                  // icono va en tinta y el ámbar queda de fondo de la píldora.
+                  <TriangleAlert aria-hidden className="size-3.5 text-foreground" />
                 ) : step.state === "done" ? (
                   <Check aria-hidden className="size-3.5 text-success" />
                 ) : step.state === "now" ? (

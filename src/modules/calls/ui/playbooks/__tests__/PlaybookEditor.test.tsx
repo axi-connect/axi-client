@@ -13,7 +13,10 @@ jest.mock("@/modules/calls/infrastructure/services/calls-service.adapter", () =>
   previewPlaybookOpening: jest.fn(),
 }));
 const showAlert = jest.fn();
-jest.mock("@/core/providers/alert-provider", () => ({ useAlert: () => ({ showAlert }) }));
+const showModal = jest.fn();
+jest.mock("@/core/providers/alert-provider", () => ({
+  useAlert: () => ({ showAlert, showModal, closeModal: jest.fn() }),
+}));
 
 const stage = (key: string, label: string) => ({
   key,
@@ -151,3 +154,11 @@ describe("PlaybookEditor (plan de modos §5)", () => {
   });
 });
 
+
+describe("PlaybookEditor · F-9", () => {
+  it("«Restablecer» pide confirmación antes de borrar los ajustes", () => {
+    render(<PlaybookEditor view={view({ customized: true })} canManage onSaved={jest.fn()} />);
+    fireEvent.click(screen.getByRole("button", { name: "Restablecer" }));
+    expect(showModal).toHaveBeenCalledWith(expect.objectContaining({ title: "¿Restablecer el marco?" }));
+  });
+});

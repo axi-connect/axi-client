@@ -52,9 +52,9 @@ export function LiveCallCard({ call, now }: { call: CallSessionRowDTO; now: numb
           </span>
         </span>
         <span className="truncate text-xs text-muted-foreground">
-          {call.call_type !== null && call.mode === "proactive"
-            ? callTypeLabel(call.call_type)
-            : CALL_PURPOSE_LABELS[call.purpose]}
+          {/* F-8: el tipo SE SUMA al motivo; sustituirlo perdía de dónde salió la llamada. */}
+          {CALL_PURPOSE_LABELS[call.purpose]}
+          {call.call_type !== null && call.mode === "proactive" ? ` · ${callTypeLabel(call.call_type)}` : ""}
           {call.ai_agent_name !== null ? ` · ${call.ai_agent_name}` : ""}
         </span>
         {stage !== null && !ringing && (

@@ -61,7 +61,7 @@ export function PlaybookEditor({
   /** La vista confirma antes de cambiar de tipo o de proponer con cambios sin guardar. */
   onDirtyChange?: (dirty: boolean) => void;
 }) {
-  const { showAlert } = useAlert();
+  const { showAlert, showModal, closeModal } = useAlert();
   const [draft, setDraft] = useState<Draft>(() => draftOf(view));
   const [open, setOpen] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -179,7 +179,27 @@ export function PlaybookEditor({
               variant="outline"
               size="sm"
               disabled={busy !== null}
-              onClick={() => void run("reset", () => resetPlaybook(view.call_type), "Marco restablecido a la base de axi")}
+              // F-9: restablecer borra los ajustes del negocio: se confirma.
+              onClick={() =>
+                showModal({
+                  title: "¿Restablecer el marco?",
+                  description: `Se borran los ajustes de «${view.label}» y vuelve la base de axi. Las próximas llamadas la usan.`,
+                  actions: [
+                    { label: "Cancelar", variant: "outline", asClose: true, id: "playbook-reset-cancel" },
+                    {
+                      label: "Restablecer",
+                      variant: "destructive",
+                      asClose: false,
+                      id: "playbook-reset-confirm",
+                      onClick: () => {
+                        closeModal();
+                        void run("reset", () => resetPlaybook(view.call_type), "Marco restablecido a la base de axi");
+                      },
+                    },
+                  ],
+                  className: "sm:max-w-md",
+                })
+              }
             >
               {busy === "reset" ? <LoaderCircle aria-hidden className="animate-spin" /> : <RotateCcw aria-hidden />}
               Restablecer

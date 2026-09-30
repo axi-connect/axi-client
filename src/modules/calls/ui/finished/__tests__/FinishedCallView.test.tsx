@@ -143,6 +143,25 @@ describe("FinishedCallView (premium F4)", () => {
       expect(within(island).queryByText(/Se cortó en/)).toBeNull();
     });
 
+    it("F-1: sin resumen ni veredicto, la ruta igual dice dónde se cortó", async () => {
+      await renderView(
+        call({
+          mode: "proactive",
+          call_type: "sales_followup",
+          outcome: "hangup",
+          summary: null,
+          events: [],
+          ended_at: "2026-09-20T10:00:00.000Z",
+          playbook,
+          stage_route: ["apertura", "propuesta"],
+          last_stage: "propuesta",
+        }),
+      );
+      const island = screen.getAllByRole("region", { name: "Así fue la llamada" })[0] as HTMLElement;
+      expect(within(island).getByText("Se cortó en")).toBeInTheDocument();
+      expect(within(island).getByText("Propuesta · 2 de 3")).toBeInTheDocument();
+    });
+
     it("B3: si no cumplió, UNA fila «Se cortó en» con su posición", async () => {
       await renderView(
         call({

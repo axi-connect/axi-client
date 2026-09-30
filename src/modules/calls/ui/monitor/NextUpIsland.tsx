@@ -68,7 +68,7 @@ export function NextUpIsland({
       rows.push({
         key: "funnel",
         figure: String(funnelDrop.lost),
-        title: `llamadas de ${funnelDrop.type.toLowerCase()} se quedaron en ${funnelDrop.to.toLowerCase()}`,
+        title: `llamadas de ${funnelDrop.type.toLowerCase()} se quedaron en ${funnelDrop.from.toLowerCase()}`,
         detail: "revisa esa etapa del marco",
         href: "/calls/playbooks",
         dot: "warning",

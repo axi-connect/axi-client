@@ -25,7 +25,12 @@ const SHORT: Record<ProactiveCallType, string> = {
 export function FunnelTile({ funnel, className }: { funnel: CallsFunnelDTO; className?: string }) {
   const withCalls = funnel.types.filter((type) => type.total > 0);
   const [selected, setSelected] = useState<string | null>(null);
-  const active = withCalls.find((type) => type.call_type === selected) ?? withCalls[0] ?? null;
+  // F-5: abre en el tipo con MÁS llamadas del ciclo, no en el primero de la lista.
+  const busiest = withCalls.reduce<(typeof withCalls)[number] | null>(
+    (best, type) => (best === null || type.total > best.total ? type : best),
+    null,
+  );
+  const active = withCalls.find((type) => type.call_type === selected) ?? busiest;
 
   if (active === null) {
     return (
@@ -42,26 +47,28 @@ export function FunnelTile({ funnel, className }: { funnel: CallsFunnelDTO; clas
   const top = active.stages[0]?.reached ?? active.total;
   const drop = biggestDrop(active);
   const last = active.stages.at(-1);
+  const picker =
+    withCalls.length > 1 ? (
+      <SegmentedControl
+        value={active.call_type}
+        onValueChange={setSelected}
+        label="Tipo de llamada"
+        size="sm"
+        surface="inline"
+        items={withCalls.map((type) => ({
+          value: type.call_type,
+          label: SHORT[type.call_type as ProactiveCallType] ?? type.label,
+        }))}
+      />
+    ) : null;
   return (
     <BentoTile
       label="Dónde se caen las llamadas"
-      aside={
-        withCalls.length > 1 ? (
-          <SegmentedControl
-            value={active.call_type}
-            onValueChange={setSelected}
-            label="Tipo de llamada"
-            size="sm"
-            surface="inline"
-            items={withCalls.map((type) => ({
-              value: type.call_type,
-              label: SHORT[type.call_type as ProactiveCallType] ?? type.label,
-            }))}
-          />
-        ) : undefined
-      }
+      // F-5: en el celular el selector baja al cuerpo; al lado del título lo recortaba.
+      aside={picker === null ? undefined : <span className="max-sm:hidden">{picker}</span>}
       className={className}
     >
+      {picker !== null && <div className="axi-scroll -mx-1 overflow-x-auto px-1 sm:hidden">{picker}</div>}
       <p className="max-w-prose text-sm text-muted-foreground">
         <span className="font-medium text-foreground">
           {active.goal_met} de {active.total} cumplieron su objetivo
