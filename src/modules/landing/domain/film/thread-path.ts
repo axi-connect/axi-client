@@ -65,14 +65,22 @@ export const FILM_THREAD: ThreadPath = {
     // encima del gradiente vivo, y baja por el hueco central entre las cifras 2 y 3
     // (rejilla de 4 columnas centrada). El hero ya no tiene dunas (e34d5636).
     { scene: "hero", points: [p(50, 75, 1), p(50, 90, 1), p(56, 100, 0.8)] },
-    { scene: "niche", points: [p(94, 24), p(72, 70, 0, true), p(50, 100)] },
-    { scene: "radar", points: [p(90, 22), p(70, 52, 0, true), p(94, 96)] },
-    { scene: "followup", points: [p(96, 40), p(80, 97, 0, true), p(30, 100)] },
+    // Tanda 3 (lienzo aprobado el 2026-09-30). Nicho: baja por el margen derecho y
+    // pasa por debajo de las cuatro notificaciones. Radar: cruza la esfera hasta el
+    // hallazgo y sigue por detrás de la ficha. Seguimiento: el hilo es el cabezal de
+    // la regla de tiempo vertical (x 52 %).
+    { scene: "niche", points: [p(94, 24), p(96, 56), p(50, 88, 0, true), p(7, 94), p(5, 100)] },
+    { scene: "radar", points: [p(5, 26), at(0.1, 17, 56), at(0.5, 32, 49, 0, true), at(0.78, 44, 84), at(0.9, 83, 97), p(95, 100)] },
+    { scene: "followup", points: [p(69, 8), p(52, 19), p(52, 56), p(52, 88, 0, true), p(49, 97), p(8, 100)] },
     { scene: "chat", points: [p(6, 34), p(16, 88, 0, true), p(50, 100)] },
-    { scene: "photo", points: [p(5, 40), p(6, 86, 0, true), p(40, 100)] },
-    { scene: "call", points: [p(94, 30), p(94, 82, 0, true), p(60, 100)] },
-    { scene: "vault", points: [p(30, 24), p(50, 62, 0.2, true), p(70, 100)] },
-    { scene: "team", points: [p(94, 30), p(92, 84, 0, true), p(50, 100)] },
+    // Foto: baja entre el titular y la captura y entra por detrás del estante.
+    // Llamada: el hilo ES la onda de la voz (y 52 %), con su momento en el pin.
+    // Bóveda: es el cordón de la etiqueta (ojal en x 71,5 %, y 38 %). Equipo: baja
+    // entre el titular y el portátil y lo enciende por su esquina delantera.
+    { scene: "photo", points: [p(51, 22), p(49, 47), p(39, 62, 0, true), p(21, 94), p(5, 100)] },
+    { scene: "call", points: [p(5, 28), at(0.08, 8, 52), at(0.35, 36, 52.2), at(0.62, 64, 52.3), at(0.88, 92, 52.4, 0, true), p(95, 100)] },
+    { scene: "vault", points: [p(95, 17), p(71.5, 26), p(71.5, 38, 0, true), p(72, 87), p(39, 100)] },
+    { scene: "team", points: [p(41, 31), p(42, 62), p(46, 89, 0, true), p(53, 100)] },
     // Escenas rediseñadas (lienzo aprobado el 2026-09-30): cobrar pasa por detrás
     // del recibo y lo enciende al salir por su esquina; ordenar baja por el margen
     // y enciende la tarjeta que aterriza en «Compromiso», y sale por debajo de la
@@ -96,14 +104,14 @@ export const FILM_THREAD: ThreadPath = {
     // En móvil el texto y las cifras (2 × 2) llenan el hero: el haz nace en su borde
     // inferior, por el hueco central de las cifras, y entra al nicho.
     { scene: "hero", points: [p(50, 97, 1), p(60, 100, 0.8)] },
-    { scene: "niche", points: [p(5, 50, 0, true), p(20, 100)] },
-    { scene: "radar", points: [p(95, 50, 0, true)] },
-    { scene: "followup", points: [p(5, 50, 0, true)] },
+    { scene: "niche", points: [p(94, 8), p(94, 82, 0, true), p(6, 99)] },
+    { scene: "radar", points: [p(6, 30), p(6, 90, 0, true)] },
+    { scene: "followup", points: [p(9, 4), p(9, 92, 0, true)] },
     { scene: "chat", points: [p(95, 50, 0, true)] },
-    { scene: "photo", points: [p(5, 50, 0, true)] },
-    { scene: "call", points: [p(95, 50, 0, true)] },
-    { scene: "vault", points: [p(5, 50, 0.2, true)] },
-    { scene: "team", points: [p(95, 50, 0, true)] },
+    { scene: "photo", points: [p(94, 10), p(94, 94, 0, true)] },
+    { scene: "call", points: [p(6, 8), p(6, 46), p(50, 47, 0, true), p(94, 49)] },
+    { scene: "vault", points: [p(94, 31), p(65, 43, 0, true), p(69, 67), p(94, 88), p(94, 97)] },
+    { scene: "team", points: [p(6, 8), p(6, 94, 0, true), p(50, 100)] },
     { scene: "collect", points: [p(6, 40), p(6, 90, 0, true), p(50, 99)] },
     { scene: "pipeline", points: [p(94, 6), p(94, 60, 0.3, true), p(94, 97)] },
     { scene: "goal", points: [p(5, 40, 0.8), p(50, 96, 1, true)] },

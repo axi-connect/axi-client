@@ -310,15 +310,15 @@ Reparto: **axi-13 diseña y planifica** (lienzo aprobado por la dueña, recorrid
 
 | # | Escena | Diseño | Construcción |
 |---|---|---|---|
-| 1 | Hero | axi-14 (entregado, en correcciones de la dueña) | axi-14 |
-| 2 | Nicho «¿Quién te escribe hoy?» | Tanda 3 | pendiente |
-| 3 | Radar «Encuentra a quien te va a comprar» | Tanda 3 | pendiente |
-| 4 | Seguimiento «Nadie se queda esperando» | Tanda 3 | pendiente |
+| 1 | Hero | axi-14 (cerrado por la dueña el 2026-09-30; mejoras finas, después) | hecho |
+| 2 | Nicho «¿Quién te escribe hoy?» | Aprobado (§13) | pendiente |
+| 3 | Radar «Encuentra a quien te va a comprar» | Aprobado (§13) | pendiente |
+| 4 | Seguimiento «Nadie se queda esperando» | Aprobado (§13) | pendiente |
 | 5 | Chat «Responde en segundos» | Teléfono A, aprobado | pendiente |
-| 6 | Foto «Una foto basta» | Tanda 3 | pendiente |
-| 7 | Llamada «Y cuando hay que llamar, llama» | Tanda 3 | pendiente |
-| 8 | Bóveda «Nunca inventa un precio» | Tanda 3 | pendiente |
-| 9 | Equipo «Entra tu equipo» | Tanda 3 | pendiente |
+| 6 | Foto «Una foto basta» | Aprobado (§13) | pendiente |
+| 7 | Llamada «Y cuando hay que llamar, llama» | Aprobado (§13) | pendiente |
+| 8 | Bóveda «Nunca inventa un precio» | Aprobado (§13) | pendiente |
+| 9 | Equipo «Entra tu equipo» | Aprobado (§13) | pendiente |
 | 10–11 | Cobrar, Ordenar | Aprobado (§11) | pendiente |
 | 12 | Meta «Tú pones la meta» | Tanda 4 | pendiente |
 | 13–14 | Axel, Medir | Aprobado (§11) | pendiente |
@@ -328,9 +328,9 @@ Reparto: **axi-13 diseña y planifica** (lienzo aprobado por la dueña, recorrid
 
 **Orden de construcción:** teléfono A → hilo + scroll en `window` → aligerar el motor → §11 → tanda 3 → tanda 4.
 
-### Tanda 3 · Captar y vender (en diseño)
+### Tanda 3 · Captar y vender (aprobada el 2026-09-30, ver §13)
 
-Lienzo: https://claude.ai/artifact/UoGDRZeneinMckaYVDNrCW (siete escenas con barra de scroll, el recorrido encadenado y móvil 390). Pendiente de la aprobación de la dueña; al aprobarse, axi-13 escribe su recorrido en `thread-path.ts` y la tabla de coreografía aquí.
+Lienzo: https://claude.ai/artifact/UoGDRZeneinMckaYVDNrCW (siete escenas con barra de scroll, el recorrido encadenado y móvil 390). Aprobada; recorrido en `thread-path.ts` y coreografía en §13.
 
 Cada escena tiene un objeto real como protagonista, igual que el teléfono A y el recibo:
 
@@ -369,3 +369,22 @@ La entrega de cada escena a axi-14 incluye:
 - Con movimiento reducido se muestra el fotograma final.
 - Presupuesto: `/` ≤ 200 kB (`npm run budget`).
 - Color en tinta: marca solo en apertura, meta y cierre; violeta solo cuando habla el agente (Axi o Axel).
+
+## 13. Tanda 3 · Captar y vender (aprobada el 2026-09-30)
+
+Lienzo aprobado: https://claude.ai/artifact/UoGDRZeneinMckaYVDNrCW. El recorrido del hilo ya está en `thread-path.ts`, en escritorio y en móvil. Progreso de escena de 0 a 1; cada tramo va con `ease` cúbico de salida.
+
+| Escena | Protagonista (`data-thread-target`) | Coreografía |
+|---|---|---|
+| Nicho | La notificación elegida | 0,04–0,54: las cuatro llegan desde el fondo (`translateZ` −320 → arco con `rotateY` 9/3/−3/−9°), una tras otra. 0,5–0,74: la elegida (la del nicho activo, o Tecnología por defecto) avanza 90 px en Z, se endereza y se vuelve blanca; las demás bajan a 0,4. 0,8–0,95: «O sigue bajando…». Tocar una tarjeta sigue eligiendo el nicho, como hoy. |
+| Radar (fijada) | La ficha blanca de Andrés | 0–0,6: el barrido blanco da dos vueltas y los puntos aparecen al pasar. 0,28–0,48: los tres hallazgos. 0,48–0,56: el objetivo, con escala 2,4 → 1. 0,55–0,65: la línea guía hasta la ficha. 0,6–0,78: entra la ficha. 0,65–0,85: cuenta 88. 0,7–0,9: los ejes. 0,82–0,95: fuentes y «él escribió primero». Esfera con 60 marcas y 12 mayores, en SVG estático. |
+| Seguimiento (fijada) | «Venta recuperada» (tarjeta blanca) | El hilo baja por la regla (x 52 %) y cada evento aparece cuando la cabeza pasa por su altura (`onHead`, o los mismos tramos del pin). Hay un tramo punteado «A la mañana siguiente» y el fondo se aclara hacia la mañana (0,3–0,9). |
+| Foto | El producto exacto (tarjeta blanca que se levanta) | 0,14–0,46: el haz de escaneo baja por la captura, inclinada `rotateY` −16°. 0,46–0,56: la píldora «Reconocido». 0,55–0,72: el iPhone 17 sale del estante (`rotateX` 34°), sube 46 px y se enciende; el resto baja a 0,55. 0,8–0,92: la respuesta de Axi. |
+| Llamada (**añadir a `PINNED`**) | La etapa «Cierre» y «Objetivo cumplido» | El hilo es la onda (barras en SVG estático, reveladas con un `clipPath` que sigue a la cabeza). Seis etapas en x 200/420/640/860/1080/1300 de 1440; se encienden al pasar la cabeza, igual que las cuatro líneas de la transcripción. El reloj cuenta hasta 02:14. |
+| Bóveda | La etiqueta metálica | 0–0,4: la etiqueta se balancea, amortiguada, desde el ojal (16°). 0,34–0,44: «¿Me lo dejas en 4 millones?». 0,45–0,56: la etiqueta solo tiembla, porque el precio no cambia. 0,6–0,7: la respuesta con el cupón. 0,7–0,86: el cupón se imprime debajo con el total del sistema, $ 4.409.100. Las cuatro reglas van grabadas en la etiqueta. |
+| Equipo | El portátil | 0–0,3: la tapa se abre (`rotateX` −76° → 6°, origen en la bisagra; la carcasa se ve hasta −40°). 0,32–0,4: llega la pregunta. 0,45–0,52: «Axi te la pasó», y el modo pasa a «En cola». 0,55: el modo pasa a «Contigo». 0,6–0,78: Laura escribe su respuesta. 0,86–0,9: se pulsa «Devolver a Axi». 0,9–0,97: «Volvió a Axi: sigue donde quedó» y el modo regresa a «Axi atiende». |
+
+Reglas propias de esta tanda:
+- El violeta queda solo en la marca de Axi (etiqueta de la transcripción, punto de «Axi atiende», brillo de la llamada, la píldora «Reconocido»).
+- Todo lo demás va en tinta.
+- En móvil no se fija ninguna escena: los momentos `pin` se ignoran y el hilo va por los márgenes (tablero «Móvil 390»).
