@@ -206,8 +206,7 @@
 }
 .film-pill[data-on="true"] { transform: translate(-50%, 0); opacity: 1; }
 @media (max-width: 1023px) {
-  .film-pill { left: auto; right: 16px; bottom: auto; top: calc(74px + env(safe-area-inset-top, 0px)); transform: translateY(-12px); }
-  .film-pill[data-on="true"] { transform: none; }
+  .film-pill { bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
 }
 
 /* Marcas del mapa: las coloca el motor sobre la carretera; sin motor, en su sitio final. */

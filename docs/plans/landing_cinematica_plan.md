@@ -1,6 +1,6 @@
 # Programa «Landing cinematográfica» — la home como una película
 
-> **Estado:** APROBADO por la dueña el 2026-09-30 («me gusta mucho… procede»). Los desbordes y cortes de las cintas del mockup se corrigen en la implementación. En curso: F0.
+> **Estado (2026-09-30):** APROBADO por la dueña («me gusta mucho… procede»). **F0–F4 implementados** en `feat/landing-cinema` y verificados en navegador (1440 y 390 px). F5 parcial: falta Lighthouse medido, `landing-copy.md` y la revisión de la dueña en el ambiente de pruebas (§9).
 >
 > - Storyboard (22 fotogramas, notas de coreografía): https://claude.ai/artifact/2myumdsep5j96YpEUGDy87
 > - Prototipo con scroll real (GSAP + Lenis; apertura, nicho, chat, meta, cierre): https://claude.ai/artifact/D6gTZLXqNa9zRTfZgFNMH9
@@ -211,3 +211,21 @@ Cada fase se entrega con: tests (jest, `--maxWorkers=2`), `npm run typecheck`, `
 - **Cifras de ejemplo:** todas coherentes entre sí y marcadas; ninguna se presenta como un caso real.
 - **Pin dentro de un scroller propio** (§5.2): riesgo técnico principal; se mide en F1 antes de construir el resto.
 - `knowledge-base.md` es del 10-ago y no incluye Cobros, Comercial, Axel ni Alba: el copy se verificó contra el código y los planes.
+
+## 9. Registro de implementación (2026-09-30)
+
+| Fase | Commits | Qué quedó |
+|---|---|---|
+| F0 | `df941b30`, `ae3e89b0` | socket.io, sileo y el Modal fuera del JS común (`realtime-control`, carga diferida en `AlertProvider`); layout público y footer como RSC; `MODULE_ICONS` sin la tarjeta; fuera `@heroicons/react`; `npm run budget` + `scripts/bundle-budget.json`; verja ESLint de GSAP/Lenis; dominio `domain/film` con tests. |
+| F1–F4 | `8e05367b` y siguientes | Las 17 escenas, `FilmRoot`, motor, nicho hasta `/comenzar` y el onboarding, cabecera/pie oscuros en la home, borrado de la home anterior (tag `landing-v1-archive`). |
+
+**Medido tras F0 (First Load JS, `next build`):** `/comenzar` 277→264 kB, `/auth/login` 169→156, `/dashboard` 356→346, `/orders` 394→386, `/workspace/inbox` 487→479. La home se mide tras F4 (ver el commit de cierre).
+
+**Decisiones tomadas en la implementación:**
+- Los titulares de escena aparecen mientras la escena entra, fuera del pin: al fijarse ya se lee de qué trata (en el primer render la escena llegaba vacía).
+- Ritmo: los pins se acortaron un 20 % (`PACE = 0.8`); con 1 la película de escritorio pasaba de 30.000 px.
+- «Tomar esta ruta · aprobar» del storyboard no es un botón en la landing (no hay nada que aprobar): se dice «Axi propone; tú apruebas».
+- Precios reutiliza `PricingPlans` (catálogo real); preguntas con `<details>` nativo, sin JS.
+- Moda sustituida por Tecnología; en B2B el ejemplo son cajas de guantes (sin tallas).
+
+**Pendiente conocido fuera del programa:** `integrations/.../PromocionesTab.test.tsx` falla desde hoy también en `main` (su fixture usa una promoción que vence el 2026-09-30).

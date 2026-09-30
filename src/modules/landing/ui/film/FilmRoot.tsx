@@ -109,8 +109,11 @@ export function FilmRoot({ children }: { children: ReactNode }) {
       const span = Math.max(1, rect.height - viewport);
       const progress = Math.min(1, Math.max(0, -rect.top / span));
       root.style.setProperty("--film-progress", progress.toFixed(4));
-      // Visible durante la película: no en el hero ni sobre el pie de página.
-      setStarted(-rect.top > viewport * 1.2 && rect.bottom > viewport * 0.6);
+      // Visible durante la película: ni en el hero ni desde los precios (ahí
+      // la escena ya no depende del nicho y la píldora taparía las tarjetas).
+      const after = root.querySelector<HTMLElement>('[data-scene="pricing"]');
+      const reachedAfter = after ? after.getBoundingClientRect().top < viewport * 0.85 : false;
+      setStarted(-rect.top > viewport * 1.2 && !reachedAfter);
       const marks = TICKS.map((t) => root.querySelector<HTMLElement>(`[data-chapter="${t}"]`));
       let current = -1;
       marks.forEach((m, i) => {
@@ -131,15 +134,16 @@ export function FilmRoot({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  // El pie de página también va en el escenario oscuro mientras la película
-  // está montada (la cabecera lo hace sola en `/`, ver SiteHeader). Sin esto
-  // la película terminaba en una franja clara.
+  // Toda la home va en el escenario oscuro mientras la película está montada:
+  // el contenedor de scroll lleva los tokens oscuros, así el pie y el margen
+  // que lo separa de la película no quedan claros. La cabecera lo hace sola en
+  // `/` (SiteHeader), para no esperar a la hidratación.
   useEffect(() => {
-    const footer = scroller()?.querySelector<HTMLElement>(":scope > footer");
-    if (!footer) return;
-    const added = ["dark", "theme-dark-island", "bg-background", "text-foreground"].filter((c) => !footer.classList.contains(c));
-    footer.classList.add(...added);
-    return () => footer.classList.remove(...added);
+    const el = scroller();
+    if (!el) return;
+    const added = ["dark", "theme-dark-island", "bg-background", "text-foreground"].filter((c) => !el.classList.contains(c));
+    el.classList.add(...added);
+    return () => el.classList.remove(...added);
   }, []);
 
   // El motor: diferido y opcional.

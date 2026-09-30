@@ -1,8 +1,8 @@
 {
-  "_doc": "Techos de JS de primera carga por ruta, en kB (1000 bytes, gzip 9), como la columna First Load JS de next build. Se miden con `npm run budget` tras `npm run build`. Fijados el 2026-09-30 (F0 del programa landing cinematográfica): tamaño medido + 3 kB. Bajar un techo cuando una ruta adelgaza; subirlo exige justificarlo en el PR.",
+  "_doc": "Techos de JS de primera carga por ruta, en kB (1000 bytes, gzip 9), como la columna First Load JS de next build. Se miden con `npm run budget` tras `npm run build`. Fijados el 2026-09-30; la home, a 200 kB con la película (196 kB medidos, motor diferido) (F0 del programa landing cinematográfica): tamaño medido + 3 kB. Bajar un techo cuando una ruta adelgaza; subirlo exige justificarlo en el PR.",
   "shared": 103,
   "routes": {
-    "/": 271,
+    "/": 200,
     "/(.)auth/logout": 182,
     "/_not-found": 104,
     "/admin/agents": 257,
