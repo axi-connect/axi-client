@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Ejecuciones · entrega por intento</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&amp;family=Poppins:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#F5F5F7}
+.lt{--bg:#F5F5F7;--card:#FFFFFF;--fg:#0B0B0E;--fg2:#3A3A40;--mut:#6B6B73;--line:rgba(0,0,0,.07);--line2:rgba(0,0,0,.12);--chip:#F0F0F2;--brand:#D13F42;--bad:#DC2626;--ai:#7C3AED}
+a{color:inherit}
+.frame{width:560px;height:1000px;background:var(--bg);color:var(--fg);font-family:Poppins,system-ui,sans-serif;box-sizing:border-box;padding:12px;display:flex}
+.d{font-family:Urbanist,Poppins,sans-serif}
+.sheet{flex:1;background:var(--card);border-radius:24px;border:1px solid var(--line);box-shadow:0 40px 80px -30px rgba(16,16,24,.35);display:flex;flex-direction:column;overflow:hidden}
+.kick{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+.lbl{font-size:12px;color:var(--mut);white-space:nowrap}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:500;background:var(--chip);color:var(--fg);white-space:nowrap}
+.dot{width:6px;height:6px;border-radius:9px;flex-shrink:0;display:inline-block}
+.icb{width:36px;height:36px;border-radius:999px;border:1px solid var(--line2);background:var(--card);display:inline-flex;align-items:center;justify-content:center;padding:0;color:var(--fg)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 16px;border-radius:999px;font:500 13.5px Poppins,sans-serif;border:1px solid var(--line2);background:var(--card);color:var(--fg);white-space:nowrap;flex:1;text-decoration:none}
+.btn-p{background:var(--brand);color:#FFFFFF;border-color:var(--brand)}
+.run{display:grid;grid-template-columns:14px minmax(0,1fr) auto;gap:14px;padding:14px 0;border-top:1px solid var(--line)}
+.rd{width:10px;height:10px;border-radius:999px;margin-top:5px}
+.rt{font-size:13.5px;font-weight:600}
+.rs{font-size:12.5px;color:var(--fg2);line-height:1.5;margin-top:3px}
+.rh{font:500 12px 'Geist Mono',monospace;color:var(--mut);white-space:nowrap}
+.trail{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.lk{font-size:12.5px;font-weight:500;text-decoration:underline;text-underline-offset:3px;margin-top:6px;display:inline-block}
+.aig{color:var(--ai)}
+</style>
+</helmet>
+<div class="frame lt">
+  <aside class="sheet" aria-label="Ejecuciones del seguimiento">
+    <header style="padding:20px 24px 16px;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid var(--line)">
+      <div style="display:flex;justify-content:space-between;align-items:center"><span class="kick" style="display:inline-flex;gap:6px;align-items:center"><svg class="aig" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l1.8 5.4L19 10l-5.2 1.6L12 17l-1.8-5.4L5 10l5.2-1.6z"></path></svg>Ejecuciones</span><button type="button" class="icb" aria-label="Cerrar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"></path></svg></button></div>
+      <h2 class="d" style="margin:0;font-size:22px;font-weight:700;line-height:1.2">Cerrar una agenda para la sesión de configuraciones de estos leads</h2>
+      <div style="display:flex;gap:6px;flex-wrap:wrap"><span class="pill"><span class="dot" style="background:var(--bad)"></span>No llegó</span><span class="pill">Cristian · +57 301 555 0187</span><span class="pill">Lote de 4</span></div>
+      <p style="margin:0;font-size:13px;line-height:1.5;color:var(--fg2)">En pausa: Axi no vuelve a escribir hasta que reenvíes la plantilla. Si la reenvías y llega, espera la respuesta 48 h.</p>
+    </header>
+    <div style="flex:1;min-height:0;overflow:auto;padding:4px 24px 12px">
+      <div class="run" style="border-top:0">
+        <span class="rd" style="background:var(--bad)"></span>
+        <div>
+          <div class="rt">Intento 1 · No llegó</div>
+          <div class="rs">Abrió con la plantilla «sesion_en_vivo_v2». Meta la aceptó y 11 segundos después la rechazó: <b style="font-weight:600;color:var(--fg)">no cobró el envío</b>. Revisa el método de pago de tu cuenta de WhatsApp Business.</div>
+          <div class="trail"><span class="pill"><span class="dot" style="background:var(--mut)"></span>Enviada · 4:05:01</span><span class="pill"><span class="dot" style="background:var(--bad)"></span>No llegó · 4:05:12</span></div>
+          <a class="lk" href="Main.dc.html">Ver el mensaje</a>
+        </div>
+        <span class="rh">hoy 4:05</span>
+      </div>
+      <div class="run">
+        <span class="rd" style="border:2px solid var(--mut);box-sizing:border-box"></span>
+        <div><div class="rt">Programado</div><div class="rs">Lo programó Laura Sofía en un seguimiento en lote a 4 contactos, uno cada 3 minutos.</div></div>
+        <span class="rh">hoy 4:04</span>
+      </div>
+      <p style="margin:18px 0 6px;font-size:12px;color:var(--mut)">Después de reenviarla, el intento nuevo aparece arriba con su propio recorrido:</p>
+      <div class="run">
+        <span class="rd" style="border:2px solid var(--fg);box-sizing:border-box"></span>
+        <div>
+          <div class="rt">Intento 2 · Leída · esperando respuesta</div>
+          <div class="rs">La reenviaste tú desde el chat. Axi espera la respuesta de Cristian hasta el jue 1 oct, 4:12 p. m.</div>
+          <div class="trail"><span class="pill"><span class="dot" style="background:var(--mut)"></span>Enviada · 4:12</span><span class="pill"><span class="dot" style="background:var(--mut)"></span>Entregada · 4:12</span><span class="pill"><span class="dot" style="background:var(--fg)"></span>Leída · 4:15</span></div>
+          <a class="lk" href="Main.dc.html">Ver el mensaje</a>
+        </div>
+        <span class="rh">hoy 4:12</span>
+      </div>
+    </div>
+    <footer style="padding:14px 24px 18px;border-top:1px solid var(--line);display:flex;gap:10px"><a class="btn" href="Main.dc.html">Ver en el chat</a><button type="button" class="btn btn-p">Reenviar la plantilla</button></footer>
+  </aside>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":560,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -12,6 +12,7 @@ import { useSendMessage } from "@/modules/inbox/infrastructure/realtime/use-send
 import { useConversationEvents } from "@/modules/inbox/infrastructure/hooks/use-conversation-events"
 import type { InboxCommands } from "@/modules/inbox/infrastructure/realtime/use-inbox-socket"
 import { isReadOnlyConversation, sentFromBusinessApp, type ConversationDTO, type UiMessage } from "@/modules/inbox/domain/inbox"
+import { resentByOf, resentFrom } from "@/modules/inbox/domain/template-message"
 import { buildEventLines, closedBy, handoffReason } from "@/modules/inbox/domain/conversation-events"
 import { useMinuteTick } from "@/modules/inbox/ui/hooks/use-minute-tick"
 import { MessageBubble } from "./MessageBubble"
@@ -97,7 +98,10 @@ function OpenConversation({
   const fetchOlderMessages = useInboxStore((s) => s.fetchOlderMessages)
   const fetchMessages = useInboxStore((s) => s.fetchMessages)
   const threadError = useInboxStore((s) => s.error)
-  const meId = useAuth().user?.id ?? null
+  const { user, hasPermission } = useAuth()
+  const meId = user?.id ?? null
+  // «Reenviar» pide lo mismo que el endpoint: responder, en una conversación viva (B3)
+  const canReply = hasPermission("conversations:reply")
   const tz = businessTimeZone(useMyCompany().company?.timezone)
   const now = useMinuteTick()
 
@@ -116,11 +120,20 @@ function OpenConversation({
   const [announcement, setAnnouncement] = useState("")
   const announcedRef = useRef<string | null>(null)
 
-  const { send, retry } = useSendMessage(conversationId, commands, socketConnected)
+  const { send, retry, resend } = useSendMessage(conversationId, commands, socketConnected)
   const handoff = useHandoffActions(conversation, commands)
   const { events, loaded: eventsLoaded, reachBack } = useConversationEvents(conversationId)
 
   const messages = useMemo(() => messagesState?.items ?? [], [messagesState])
+  // Fallido → hora de su reenvío: el fallido deja de ofrecer «Reenviar».
+  const resentAt = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const m of messages) {
+      const original = resentFrom(m.payload)
+      if (original) map.set(original, m.created_at)
+    }
+    return map
+  }, [messages])
   const hasOlder = Boolean(messagesState?.next_cursor)
   const lines = useMemo(() => buildEventLines(events, meId), [events, meId])
   const days = useMemo(() => buildTimeline(messages, lines, { hasOlder, dayKey: dayKeyIn(tz) }), [messages, lines, hasOlder, tz])
@@ -204,6 +217,11 @@ function OpenConversation({
   const authorOf = (message: UiMessage): string | null => {
     if (message.direction !== "outbound") return null
     if (message.sender_type === "ai_agent") return "Axi"
+    // Lo que salió solo (apertura del CRM, recordatorio, campaña) y su reenvío
+    if (message.sender_type === "system") {
+      if (resentFrom(message.payload)) return resentByOf(message.payload) === meId ? "Tú · reenvío" : "El equipo · reenvío"
+      return message.content_type === "template" ? "Axi · plantilla" : null
+    }
     if (message.sender_type !== "user") return null
     if (sentFromBusinessApp(message.payload)) return "Desde el celular del negocio"
     return message.sender_user_id !== null && message.sender_user_id === meId ? "Tú" : "El equipo"
@@ -282,6 +300,9 @@ function OpenConversation({
                             message={item.message}
                             conversationId={conversationId}
                             onRetry={retry}
+                            onResend={canReply && !readOnly ? resend : undefined}
+                            resentAt={resentAt.get(item.message.id) ?? null}
+                            channelId={conversation.channel_id}
                             first={item.first}
                             last={item.last}
                             author={authorOf(item.message)}

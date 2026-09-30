@@ -28,6 +28,9 @@ import {
   TASK_RUN_TIMELINE_TONES,
   taskBadgeMap,
   taskDisplayState,
+  endSentence,
+  resendRunIds,
+  runDeliveryLabel,
   taskRunReasonLabel,
   taskRunTimestamp,
   taskRunTitle,
@@ -35,6 +38,8 @@ import {
   type TaskRunStatus,
 } from "@/modules/crm/domain/task-execution";
 import { listTaskRuns } from "@/modules/crm/infrastructure/services/activities-service.adapter";
+import { failureSentence, isOpeningNotDelivered } from "@/modules/crm/domain/scheduled-agenda";
+import { Button } from "@/shared/components/ui/button";
 
 const RUN_ICONS: Record<TaskRunStatus, React.ComponentType<{ className?: string }>> = {
   scheduled: Clock,
@@ -56,11 +61,15 @@ const RUN_ICONS: Record<TaskRunStatus, React.ComponentType<{ className?: string 
 export function TaskRunsSheet({
   task,
   onOpenChange,
+  onResend,
 }: {
   /** `null` = cerrado. Se pasa la tarea entera: el encabezado la necesita. */
   task: ActivityDTO | null;
   onOpenChange: (open: boolean) => void;
+  /** Hotfix plantillas: reenvía la apertura que no llegó. */
+  onResend?: (task: ActivityDTO) => Promise<void>;
 }) {
+  const [resending, setResending] = useState(false);
   const { socket } = useSocket("inbox");
   const [runs, setRuns] = useState<TaskRunDTO[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -98,6 +107,7 @@ export function TaskRunsSheet({
 
   const state = task === null ? null : taskDisplayState(task);
 
+  const resends = resendRunIds(runs ?? []);
   const items: TimelineItem[] =
     runs?.map((run) => {
       const reason = taskRunReasonLabel(run.reason);
@@ -108,7 +118,7 @@ export function TaskRunsSheet({
         tone: TASK_RUN_TIMELINE_TONES[run.status],
         title: (
           <span className="flex flex-wrap items-center gap-1.5">
-            {taskRunTitle(run)}
+            {taskRunTitle(run, { resend: resends.has(run.id) })}
             {/* El medio va en cada intento: una tarea «llamada, y si no conecta,
                 mensaje» tiene intentos de los dos y el rail debe decir cuál fue cuál. */}
             <span className="inline-flex items-center gap-1 rounded-full border border-border px-1.5 text-[10px] font-normal text-muted-foreground">
@@ -117,7 +127,9 @@ export function TaskRunsSheet({
             </span>
           </span>
         ),
-        ...(run.opened_with_template
+        ...(run.status === "failed" && run.reason === "opening_rejected"
+          ? { description: endSentence(capitalize(run.detail ?? "La plantilla de apertura no llegó")) }
+          : run.opened_with_template
           ? {
               description:
                 "El cliente llevaba más de 24 h sin escribir: abrió con la plantilla de Meta. Cuando responda, el agente retoma el objetivo.",
@@ -128,6 +140,23 @@ export function TaskRunsSheet({
         meta: (
           <span className="flex flex-wrap items-center gap-2">
             <span title={formatDayTime(taskRunTimestamp(run))}>{relativeTime(taskRunTimestamp(run))}</span>
+            {runDeliveryLabel(run) !== null && (
+              // El recibo de Meta: la diferencia entre «salió» y «le llegó».
+              <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] text-foreground">
+                <span
+                  aria-hidden
+                  className={
+                    run.delivery_status === "failed"
+                      ? "size-1.5 rounded-full bg-destructive"
+                      : run.delivery_status === "read"
+                        ? "size-1.5 rounded-full bg-foreground"
+                        : "size-1.5 rounded-full bg-muted-foreground"
+                  }
+                />
+                {runDeliveryLabel(run)}
+                {run.delivery_updated_at !== null && ` · ${formatDayTime(run.delivery_updated_at)}`}
+              </span>
+            )}
             {run.conversation_id !== null && run.message_id !== null && (
               // El enlace al mensaje real es lo que cierra el círculo: el
               // operador ve LO QUE se envió, no solo que se envió.
@@ -174,13 +203,40 @@ export function TaskRunsSheet({
             {task.objective !== null && (
               <p className="text-sm leading-relaxed">{task.objective}</p>
             )}
-            {task.task_status === "open" && task.awaiting_reply_until !== null ? (
+            {isOpeningNotDelivered(task) ? (
+              <div className="space-y-2.5">
+                <p className="text-xs text-pretty text-muted-foreground">
+                  {failureSentence(task)} En pausa: el agente no vuelve a escribir hasta que la reenvíes.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {task.last_opening?.conversation_id != null && (
+                    <Button asChild variant="outline" size="sm" className="rounded-full">
+                      <Link href={`/workspace/inbox/${task.last_opening.conversation_id}`}>Ver en el chat</Link>
+                    </Button>
+                  )}
+                  {onResend && task.last_opening?.message_id != null && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="rounded-full"
+                      disabled={resending}
+                      onClick={() => {
+                        setResending(true);
+                        void onResend(task).finally(() => setResending(false));
+                      }}
+                    >
+                      {resending ? "Reenviando…" : "Reenviar la plantilla"}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ) : task.task_status === "open" && task.awaiting_reply_until !== null ? (
               <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
                 <Hourglass aria-hidden className="mt-0.5 size-3.5 shrink-0 text-info" />
                 <span>
                   Espera la respuesta del cliente hasta el{" "}
-                  <strong className="font-medium text-foreground">{formatDayTime(task.awaiting_reply_until)}</strong>
-                  . Si no responde, la tarea cierra como «Enviado · sin respuesta».
+                  <strong className="font-medium text-foreground">{endSentence(formatDayTime(task.awaiting_reply_until))}</strong>{" "}
+                  Si no responde, la tarea cierra como «Enviado · sin respuesta».
                 </span>
               </p>
             ) : (
@@ -213,4 +269,8 @@ export function TaskRunsSheet({
       </div>
     </DetailSheet>
   );
+}
+
+function capitalize(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }

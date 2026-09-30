@@ -2,12 +2,10 @@ import type { ContactReachabilityDTO } from "../schedule-follow-up";
 import {
   businessDateTimeToIso,
   dateShortcuts,
-  defaultOpeningParams,
   isInPast,
   isoToBusinessDateTime,
   promiseSentence,
   quietHoursShift,
-  renderTemplatePreview,
   windowNotice,
 } from "../schedule-follow-up";
 
@@ -129,38 +127,7 @@ describe("schedule-follow-up — estado del contacto", () => {
   });
 });
 
-describe("schedule-follow-up — plantilla y promesa", () => {
-  it("rellena la vista previa con la misma regla que el backend y marca las variables", () => {
-    const segments = renderTemplatePreview(
-      "Hola {{1}}, te escribo por {{2}}. ¿Seguimos?",
-      ["first_name", "topic"],
-      { first_name: null, full_name: "Ana María Gómez", company_name: "Axi", topic: "la cotización" },
-    );
-    expect(segments).toEqual([
-      { text: "Hola ", variable: false },
-      { text: "Ana", variable: true },
-      { text: ", te escribo por ", variable: false },
-      { text: "la cotización", variable: true },
-      { text: ". ¿Seguimos?", variable: false },
-    ]);
-  });
-
-  it("un contacto sin nombre jamás deja la variable vacía; el tema vacío se ve como hueco", () => {
-    const segments = renderTemplatePreview("Hola {{1}}, sobre {{2}}", ["first_name", "topic"], {
-      first_name: null,
-      full_name: null,
-      company_name: "",
-      topic: "",
-    });
-    expect(segments[1]).toEqual({ text: "Hola", variable: true });
-    expect(segments[3]).toEqual({ text: "…", variable: true });
-  });
-
-  it("{{1}} nombre, {{2}} tema, el resto empresa", () => {
-    expect(defaultOpeningParams(3)).toEqual(["first_name", "topic", "company_name"]);
-    expect(defaultOpeningParams(0)).toEqual([]);
-  });
-
+describe("schedule-follow-up — la promesa", () => {
   it("la promesa nombra agente, contacto, día y hora en la zona del negocio", () => {
     const sentence = promiseSentence({
       agent_name: "Aria",

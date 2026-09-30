@@ -305,11 +305,10 @@ export function OpeningTemplatePicker({
   fields: readonly ContactFieldOption[];
 }) {
   const [templateId, topic, watchedHoles] = useWatch({ control, name: ["opening_template_id", "topic", "opening_holes"] });
-  const { errors: formErrors } = useFormState({ control, name: ["opening_template_id", "topic"] });
-  const errors = {
-    opening_template_id: formErrors.opening_template_id?.message,
-    topic: formErrors.topic?.message,
-  };
+  // El tema ya no tiene mensaje propio: un hueco sin resolver (tema incluido)
+  // se reporta sobre la plantilla («Falta decidir qué va en {{n}}»).
+  const { errors: formErrors } = useFormState({ control, name: ["opening_template_id"] });
+  const errors = { opening_template_id: formErrors.opening_template_id?.message };
   const selected = templates.find((template) => template.id === (templateId || values.opening_template_id));
   const count = selected === undefined ? 0 : (countTemplateVariables(selected.body) ?? 0);
   const holes = resizeOpeningHoles(watchedHoles ?? values.opening_holes, count);

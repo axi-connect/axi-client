@@ -79,6 +79,12 @@ export function parsePreview(preview: string | null): {
   if (trimmed.startsWith("📷")) {
     return { kind: "image", text: trimmed.slice("📷".length).trim() };
   }
+  // Plantilla de Meta (hotfix plantillas, B9): el servidor escribe
+  // «Plantilla: <nombre>»; una fila vieja puede traer el token crudo.
+  if (trimmed === "[template]") return { kind: null, text: "Plantilla" };
+  if (trimmed.startsWith("Plantilla: ")) {
+    return { kind: null, text: `Plantilla · ${trimmed.slice("Plantilla: ".length).trim()}` };
+  }
   // Publicación de Instagram compartida sin caption
   if (trimmed.startsWith("📎")) {
     return { kind: "image", text: trimmed.slice("📎".length).trim() };

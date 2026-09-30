@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>CRM · Programados</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&amp;family=Poppins:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#F5F5F7}
+.lt{--bg:#F5F5F7;--card:#FFFFFF;--fg:#0B0B0E;--fg2:#3A3A40;--mut:#6B6B73;--line:rgba(0,0,0,.07);--line2:rgba(0,0,0,.12);--chip:#F0F0F2;--acc:rgba(230,87,89,.12);--ok:#1F9D5B;--bad:#DC2626;--ai:#7C3AED}
+.dk{--bg:#0A0A0A;--card:#141416;--fg:#EDEDED;--fg2:#C4C4CC;--mut:#A1A1AA;--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.14);--chip:rgba(255,255,255,.08);--acc:rgba(251,113,133,.16);--ok:#4ADE80;--bad:#F87171;--ai:#A78BFA}
+a{color:inherit}
+.frame{width:1440px;height:1180px;background:var(--bg);color:var(--fg);font-family:Poppins,system-ui,sans-serif;box-sizing:border-box;padding:36px 48px;display:flex;flex-direction:column;gap:18px}
+.d{font-family:Urbanist,Poppins,sans-serif}
+.card{background:var(--card);border-radius:24px;border:1px solid var(--line);overflow:hidden}
+.lbl{font-size:12px;color:var(--mut);white-space:nowrap}
+.seg{height:30px;padding:0 11px;border-radius:999px;font:500 12.5px Poppins,sans-serif;color:var(--mut);border:0;background:transparent;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center}
+.seg-on{background:var(--acc);color:var(--fg)}
+.tabs{display:flex;gap:2px;padding:3px;border-radius:999px;background:var(--card);border:1px solid var(--line)}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:500;background:var(--chip);color:var(--fg);white-space:nowrap}
+.dot{width:6px;height:6px;border-radius:9px;flex-shrink:0;display:inline-block}
+.dh{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:16px 22px 10px;border-bottom:1px solid var(--line)}
+.grp{display:flex;align-items:center;gap:10px;padding:12px 22px;background:var(--chip);border-top:1px solid var(--line)}
+.it{display:grid;gap:14px;align-items:center;padding:12px 22px;border-top:1px solid var(--line)}
+.it-wait{grid-template-columns:78px 22px minmax(0,1.3fr) 150px minmax(0,1fr) auto}
+.it-fail{grid-template-columns:22px minmax(0,.8fr) minmax(0,1.6fr) auto}
+.it-next{grid-template-columns:78px 22px minmax(0,1.3fr) minmax(0,1.2fr) 150px auto}
+.tm{font:500 13px 'Geist Mono',monospace;text-align:right;white-space:nowrap}
+.nm{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.su{font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.tx{font-size:12.5px;color:var(--fg2);line-height:1.45}
+.aig{color:var(--ai)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--line2);background:var(--card);font:500 12.5px Poppins,sans-serif;color:var(--fg);white-space:nowrap;cursor:pointer;text-decoration:none}
+.btn-ink{border-color:transparent;background:var(--fg);color:var(--bg)}
+.icb{width:32px;height:32px;border-radius:999px;border:0;background:transparent;color:var(--mut);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+</style>
+</helmet>
+<div class="frame {{themeCls}}">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px">
+    <div><h1 class="d" style="margin:0;font-size:34px;font-weight:700;letter-spacing:-.02em">Programados</h1><p style="margin:6px 0 0;font-size:13.5px;color:var(--mut)">Lo que no llegó, lo que espera respuesta y lo que sale después · en hora del negocio (GMT-5)</p></div>
+    <div role="tablist" aria-label="Vista de tareas" class="tabs"><a role="tab" aria-selected="false" class="seg" href="#">Lista</a><button type="button" role="tab" aria-selected="true" class="seg seg-on">Programados</button></div>
+  </div>
+
+  <sc-if value="{{hasFailed}}" hint-placeholder-val="{{ true }}">
+    <section class="card" aria-label="No llegaron">
+      <div class="dh"><span class="d" style="font-size:19px;font-weight:700">No llegaron</span><span class="lbl">1 contacto · el seguimiento queda en pausa hasta que la reenvíes</span></div>
+      <div class="it it-fail">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--bad)" stroke-width="1.9" role="img" aria-label="No llegó"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16h0"></path></svg>
+        <div style="min-width:0"><div class="nm">Cristian</div><div class="su">+57 301 555 0187</div></div>
+        <div style="min-width:0"><div class="tx">Meta no cobró el envío: revisa el método de pago de tu cuenta de WhatsApp Business.</div><div class="su">Plantilla «sesion_en_vivo_v2» · hoy 4:05 p. m. · lote «Cerrar una agenda para la sesión de configuraciones»</div></div>
+        <div style="display:flex;gap:8px"><button type="button" class="btn btn-ink" onClick="{{resend}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5"></path></svg>Reenviar</button><a class="btn" href="Main.dc.html">Ver en el chat</a></div>
+      </div>
+    </section>
+  </sc-if>
+
+  <section class="card" aria-label="Esperando respuesta">
+    <div class="dh"><span class="d" style="font-size:19px;font-weight:700">Esperando respuesta</span><span class="lbl">{{waitCount}} · si responden, Axi retoma la conversación</span></div>
+    <div class="grp">
+      <svg class="aig" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"></path></svg>
+      <div style="min-width:0;flex:1"><div class="nm" style="font-size:13px">Cerrar una agenda para la sesión de configuraciones de estos leads</div><div class="su">Lote de 4 · Laura Sofía · abre con «sesion_en_vivo_v2» · uno cada 3 min</div></div>
+      <a class="btn" href="#">Ver el lote</a>
+    </div>
+    <sc-if value="{{resent}}" hint-placeholder-val="{{ false }}">
+      <div class="it it-wait">
+        <span class="tm">4:12 p. m.</span>
+        <svg class="aig" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" role="img" aria-label="Mensaje"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"></path></svg>
+        <div style="min-width:0"><div class="nm">Cristian</div><div class="su">Reenviada por ti · +57 301 555 0187</div></div>
+        <span><span class="pill"><span class="dot" style="background:{{rDot}}"></span>{{rLabel}}</span></span>
+        <span class="su" style="margin:0">Espera hasta el jue 1 oct · 4:12 p. m.</span>
+        <button type="button" class="icb" aria-label="Ver ejecuciones de Cristian"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5M12 7v5l3 2"></path></svg></button>
+      </div>
+    </sc-if>
+    <sc-for list="{{waiting}}" as="w" hint-placeholder-count="3">
+      <div class="it it-wait">
+        <span class="tm">{{w.at}}</span>
+        <svg class="aig" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" role="img" aria-label="Mensaje"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"></path></svg>
+        <div style="min-width:0"><div class="nm">{{w.name}}</div><div class="su">{{w.sub}}</div></div>
+        <span><span class="pill"><span class="dot" style="background:{{w.dot}}"></span>{{w.state}}</span></span>
+        <span class="su" style="margin:0">{{w.until}}</span>
+        <button type="button" class="icb" aria-label="Ver ejecuciones de {{w.name}}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5M12 7v5l3 2"></path></svg></button>
+      </div>
+    </sc-for>
+    <div class="grp">
+      <svg class="aig" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"></path></svg>
+      <div style="min-width:0;flex:1"><div class="nm" style="font-size:13px">Retomar la propuesta de Cartagena</div><div class="su">Tarea suelta · Axel · abre con «retomar_cotizacion»</div></div>
+    </div>
+    <div class="it it-wait">
+      <span class="tm">Ayer</span>
+      <svg class="aig" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" role="img" aria-label="Mensaje"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"></path></svg>
+      <div style="min-width:0"><div class="nm">Luis Pardo</div><div class="su">+57 315 555 0122 · intento 2 de 3</div></div>
+      <span><span class="pill"><span class="dot" style="background:var(--fg)"></span>Leída · 10:14 a. m.</span></span>
+      <span class="su" style="margin:0">Espera hasta mañana · 10:02 a. m.</span>
+      <button type="button" class="icb" aria-label="Ver ejecuciones de Luis Pardo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5M12 7v5l3 2"></path></svg></button>
+    </div>
+  </section>
+
+  <section class="card" aria-label="Por salir">
+    <div class="dh"><span class="d" style="font-size:19px;font-weight:700">Por salir <span style="font-family:Poppins;font-size:13px;font-weight:400;color:var(--mut)">· hoy y mañana</span></span><span class="lbl">2 mensajes · 1 llamada</span></div>
+    <div class="it it-next">
+      <span class="tm">4:14 p. m.</span>
+      <svg class="aig" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" role="img" aria-label="Mensaje"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"></path></svg>
+      <div style="min-width:0"><div class="nm">Julián Herrera</div><div class="su">Lote «Cerrar una agenda…» · el último de 4</div></div>
+      <div class="su" style="margin:0">Abre con «sesion_en_vivo_v2»</div>
+      <span><span class="pill"><span class="dot" style="background:var(--mut)"></span>Sale hoy</span></span>
+      <button type="button" class="icb" aria-label="Ver ejecuciones de Julián Herrera"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5M12 7v5l3 2"></path></svg></button>
+    </div>
+    <div class="it it-next">
+      <span class="tm">9:00 a. m.</span>
+      <svg class="aig" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" role="img" aria-label="Llamada"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"></path></svg>
+      <div style="min-width:0"><div class="nm">Ana Gómez</div><div class="su">Llamar para cerrar Madrid y Lisboa</div></div>
+      <div class="su" style="margin:0">Llamada · si no contesta, le escribe</div>
+      <span><span class="pill"><span class="dot" style="background:var(--mut)"></span>Mañana</span></span>
+      <button type="button" class="icb" aria-label="Ver ejecuciones de Ana Gómez"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5M12 7v5l3 2"></path></svg></button>
+    </div>
+    <div class="it it-next">
+      <span class="tm">11:00 a. m.</span>
+      <svg class="aig" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" role="img" aria-label="Mensaje"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"></path></svg>
+      <div style="min-width:0"><div class="nm">Diego Salas</div><div class="su">Agradecer la compra y pedir una reseña</div></div>
+      <div class="su" style="margin:0">Abre con «posventa_resena»</div>
+      <span><span class="pill"><span class="dot" style="background:var(--mut)"></span>Mañana</span></span>
+      <button type="button" class="icb" aria-label="Ver ejecuciones de Diego Salas"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5M12 7v5l3 2"></path></svg></button>
+    </div>
+  </section>
+  <sc-if value="{{resent}}" hint-placeholder-val="{{ false }}"><div style="display:flex;justify-content:flex-end"><button type="button" class="btn" onClick="{{reset}}">Volver a ver el fallo</button></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1180}}'>
+class Component extends DCLogic {
+  componentWillUnmount() { clearTimeout(this.t1); }
+  renderVals() {
+    const s = this.state || {};
+    const resent = s.resent === true;
+    const delivered = s.delivered === true;
+    const resend = () => {
+      this.setState({ resent: true, delivered: false });
+      clearTimeout(this.t1);
+      this.t1 = setTimeout(() => this.setState({ delivered: true }), 1500);
+    };
+    const reset = () => { clearTimeout(this.t1); this.setState({ resent: false, delivered: false }); };
+    const waiting = [
+      { at: '4:08 p. m.', name: 'Alejandro Ruiz', sub: '+57 310 555 0144', state: 'Leída · 4:09 p. m.', dot: 'var(--fg)', until: 'Espera hasta el jue 1 oct · 4:08 p. m.' },
+      { at: '4:11 p. m.', name: 'Mónica Salazar', sub: '+57 312 555 0190', state: 'Entregada · 4:11 p. m.', dot: 'var(--mut)', until: 'Espera hasta el jue 1 oct · 4:11 p. m.' }
+    ];
+    return {
+      themeCls: this.props.dark === true ? 'dk' : 'lt',
+      hasFailed: !resent, resent, resend, reset, waiting,
+      waitCount: resent ? '4 contactos' : '3 contactos',
+      rLabel: delivered ? 'Entregada · 4:12 p. m.' : 'Enviando',
+      rDot: delivered ? 'var(--mut)' : 'var(--mut)'
+    };
+  }
+}
+</script>
+</body>
+</html>

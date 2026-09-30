@@ -1,0 +1,114 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-09-29T23:30:00Z"
+  },
+  "title": "Hotfix · Plantillas de seguimiento",
+  "launch": {
+    "view": "canvas"
+  },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 1000,
+      "title": "1 · Chat — la plantilla se ve, dice si llegó y se reenvía (interactivo: pulsa «Reenviar»)",
+      "is_interactive": true
+    },
+    "Burbuja.dc.html": {
+      "x": 1520,
+      "y": 0,
+      "w": 1280,
+      "h": 1120,
+      "title": "2 · La burbuja de plantilla — todos sus estados, claro y oscuro"
+    },
+    "Programados.dc.html": {
+      "x": 0,
+      "y": 1500,
+      "w": 1440,
+      "h": 1180,
+      "title": "3 · Programados — a quién, con qué plantilla y cómo va (interactivo)",
+      "is_interactive": true
+    },
+    "Antes.dc.html": {
+      "x": 1520,
+      "y": 1500,
+      "w": 960,
+      "h": 560,
+      "title": "4 · Programados hoy — lo que se reemplaza"
+    },
+    "Ejecuciones.dc.html": {
+      "x": 2560,
+      "y": 1500,
+      "w": 560,
+      "h": 1000,
+      "title": "5 · Ejecuciones — cada intento dice su entrega"
+    },
+    "Aviso.dc.html": {
+      "x": 1520,
+      "y": 2140,
+      "w": 440,
+      "h": 540,
+      "title": "6 · La campanita — el aviso abre el chat"
+    },
+    "MovilChat.dc.html": {
+      "x": 0,
+      "y": 3040,
+      "w": 390,
+      "h": 844,
+      "title": "7 · Celular — el chat"
+    },
+    "MovilProgramados.dc.html": {
+      "x": 470,
+      "y": 3040,
+      "w": 390,
+      "h": 844,
+      "title": "8 · Celular — Programados"
+    },
+    "Oscuro.dc.html": {
+      "x": 940,
+      "y": 3040,
+      "w": 1440,
+      "h": 1180,
+      "title": "9 · Programados — oscuro"
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Burbuja.dc.html",
+    "Programados.dc.html",
+    "Antes.dc.html",
+    "Ejecuciones.dc.html",
+    "Aviso.dc.html",
+    "MovilChat.dc.html",
+    "MovilProgramados.dc.html",
+    "Oscuro.dc.html"
+  ],
+  "notes": {
+    "t1": {
+      "x": 0,
+      "y": -260,
+      "text": "El inbox: la plantilla se ve y dice qué pasó",
+      "kind": "title1",
+      "maxW": 2800
+    },
+    "t2": {
+      "x": 0,
+      "y": 1240,
+      "text": "La tarea: a quién, con qué y cómo va",
+      "kind": "title1",
+      "maxW": 3120
+    },
+    "t3": {
+      "x": 0,
+      "y": 2780,
+      "text": "Celular y oscuro",
+      "kind": "title1",
+      "maxW": 2380
+    }
+  },
+  "designSystems": []
+}

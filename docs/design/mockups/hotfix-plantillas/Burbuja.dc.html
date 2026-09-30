@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Burbuja de plantilla · estados</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&amp;family=Poppins:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#F5F5F7}
+.lt{--bg:#F5F5F7;--card:#FFFFFF;--fg:#0B0B0E;--fg2:#3A3A40;--mut:#6B6B73;--line:rgba(0,0,0,.07);--line2:rgba(0,0,0,.12);--chip:#F0F0F2;--bad:#DC2626;--ai:#7C3AED;--track:#ECECEF}
+.dk{--bg:#0A0A0A;--card:#141416;--fg:#EDEDED;--fg2:#C4C4CC;--mut:#A1A1AA;--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.14);--chip:rgba(255,255,255,.08);--bad:#F87171;--ai:#A78BFA;--track:rgba(255,255,255,.10)}
+.frame{width:1280px;height:1120px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));font-family:Poppins,system-ui,sans-serif}
+.col{background:var(--bg);color:var(--fg);padding:32px 36px;box-sizing:border-box;display:flex;flex-direction:column;gap:16px}
+.d{font-family:Urbanist,Poppins,sans-serif}
+.st{display:grid;grid-template-columns:128px minmax(0,1fr);gap:16px;align-items:start}
+.cap{font-size:12px;color:var(--mut);padding-top:10px;line-height:1.35}
+.cap b{display:block;color:var(--fg);font-weight:600;font-size:12.5px}
+.tplw{margin-left:auto;max-width:420px;display:flex;flex-direction:column;gap:4px;align-items:stretch}
+.b{padding:8px 12px 6px;border-radius:18px;border-bottom-right-radius:6px;font-size:13px;line-height:1.45;background:var(--fg);color:var(--bg)}
+.tph{display:flex;align-items:center;gap:6px;font-size:11px;margin-bottom:5px}
+.tph>*{opacity:.72}
+.var{font-weight:600}
+.tft{font-size:11px;opacity:.62;margin-top:5px}
+.mt{display:flex;justify-content:flex-end;align-items:center;gap:5px;font-size:10.5px;margin-top:3px;white-space:nowrap}
+.mt>*{opacity:.72}
+.tb{display:flex;justify-content:center;align-items:center;height:32px;border-radius:14px;background:var(--card);border:1px solid var(--line);font-size:12px;font-weight:500;color:var(--fg)}
+.img{height:120px;border-radius:12px;margin:-2px -6px 8px;background:var(--track);display:flex;align-items:center;justify-content:center;font-size:11.5px;color:var(--mut)}
+.fail{display:flex;justify-content:flex-end;align-items:flex-start;gap:10px;margin-top:6px}
+.failt{max-width:300px;text-align:right;font-size:11.5px;line-height:1.45;color:var(--fg2)}
+.failt b{color:var(--bad);font-weight:600}
+.retry{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 11px;border-radius:999px;border:1px solid rgba(220,38,38,.35);background:var(--card);color:var(--bad);font:500 11.5px Poppins,sans-serif;cursor:pointer;flex-shrink:0}
+.params{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.pp{display:inline-flex;height:20px;align-items:center;padding:0 8px;border-radius:999px;background:rgba(127,127,127,.22);font-size:11px}
+</style>
+</helmet>
+<div class="frame">
+  <sc-for list="{{cols}}" as="c" hint-placeholder-count="2">
+    <section class="col {{c.cls}}" aria-label="{{c.name}}">
+      <h2 class="d" style="margin:0 0 4px;font-size:22px;font-weight:700;letter-spacing:-.01em">{{c.name}}</h2>
+      <sc-for list="{{states}}" as="s" hint-placeholder-count="6">
+        <div class="st">
+          <div class="cap"><b>{{s.t}}</b>{{s.d}}</div>
+          <div>
+            <div class="tplw">
+              <div class="b" style="{{s.ring}}">
+                <div class="tph"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg><span>{{s.name}}</span></div>
+                <sc-if value="{{s.image}}" hint-placeholder-val="{{ false }}"><div class="img">Imagen de la plantilla</div></sc-if>
+                <sc-if value="{{s.known}}" hint-placeholder-val="{{ true }}"><div>Hola <span class="var">Cristian</span>, te comparto <span class="var">la lista de planes con precios</span>. ¿Te reservo un cupo para el <span class="var">30 de septiembre</span>?</div></sc-if>
+                <sc-if value="{{s.unknown}}" hint-placeholder-val="{{ false }}"><div style="opacity:.8">Ya no está en tus plantillas de Meta: su texto no se puede mostrar. Se envió con:</div><div class="params"><span class="pp">Cristian</span><span class="pp">Kodecol</span><span class="pp">la lista de planes con precios</span><span class="pp">30 de septiembre</span></div></sc-if>
+                <sc-if value="{{s.footer}}" hint-placeholder-val="{{ false }}"><div class="tft">Responde SALIR si no quieres recibir más mensajes</div></sc-if>
+                <div class="mt"><span style="font-variant-numeric:tabular-nums">4:05 p. m.</span><span>{{s.label}}</span>
+                  <sc-if value="{{s.clock}}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg></sc-if>
+                  <sc-if value="{{s.one}}" hint-placeholder-val="{{ false }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></sc-if>
+                  <sc-if value="{{s.two}}" hint-placeholder-val="{{ false }}"><svg width="15" height="13" viewBox="0 0 28 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true" style="{{s.twoStyle}}"><path d="m2 13 4 4 8-9M12 16l1 1 8-9"></path></svg></sc-if>
+                </div>
+              </div>
+              <sc-if value="{{s.buttons}}" hint-placeholder-val="{{ false }}"><span class="tb">Sí, resérvame</span><span class="tb">Ahora no</span></sc-if>
+            </div>
+            <sc-if value="{{s.failed}}" hint-placeholder-val="{{ false }}"><div class="fail"><span class="failt"><b>No llegó.</b> {{s.why}}</span><button type="button" class="retry"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5"></path></svg>Reenviar</button></div></sc-if>
+          </div>
+        </div>
+      </sc-for>
+    </section>
+  </sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1120}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const base = { name: 'Plantilla · sesion_en_vivo_v2', ring: '', image: false, known: true, unknown: false, footer: false, buttons: false, clock: false, one: false, two: false, twoStyle: '', failed: false, why: '', label: '' };
+    const states = [
+      Object.assign({}, base, { t: 'Enviando', d: 'En la cola, antes de que Meta la acepte.', clock: true, label: 'Enviando' }),
+      Object.assign({}, base, { t: 'Enviada', d: 'Meta la aceptó; aún no confirma que llegó.', one: true, label: 'Enviada' }),
+      Object.assign({}, base, { t: 'Entregada', d: 'Está en el celular del contacto.', two: true, twoStyle: 'opacity:.6', label: 'Entregada' }),
+      Object.assign({}, base, { t: 'Leída', d: 'El contacto la abrió.', two: true, label: 'Leída' }),
+      Object.assign({}, base, { t: 'No llegó', d: 'El motivo de Meta en español y el reenvío a la mano.', ring: 'box-shadow:0 0 0 1.5px var(--bad) inset;opacity:.85', failed: true, why: 'Este número no puede recibir mensajes de WhatsApp.' }),
+      Object.assign({}, base, { t: 'Con imagen, pie y botones', d: 'Cabecera, pie y respuestas rápidas, como las ve el contacto.', image: true, footer: true, buttons: true, two: true, label: 'Leída' }),
+      Object.assign({}, base, { t: 'Ya no está en Meta', d: 'Se borró después de enviarla: se ven los datos con que salió.', name: 'Plantilla · promo_octubre', known: false, unknown: true, two: true, twoStyle: 'opacity:.6', label: 'Entregada' })
+    ];
+    return { states, cols: [{ cls: 'lt', name: 'Claro' }, { cls: 'dk', name: 'Oscuro' }] };
+  }
+}
+</script>
+</body>
+</html>

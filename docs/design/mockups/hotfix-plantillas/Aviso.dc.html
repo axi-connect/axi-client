@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Notificaciones · aviso de plantilla</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&amp;family=Poppins:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#F5F5F7}
+.lt{--bg:#F5F5F7;--card:#FFFFFF;--fg:#0B0B0E;--fg2:#3A3A40;--mut:#6B6B73;--line:rgba(0,0,0,.07);--line2:rgba(0,0,0,.12);--chip:#F0F0F2;--brand:#D13F42;--bad:#DC2626;--ai:#7C3AED}
+a{color:inherit}
+.frame{width:440px;height:540px;background:var(--bg);color:var(--fg);box-sizing:border-box;padding:16px;font-family:Poppins,system-ui,sans-serif;display:flex;flex-direction:column;align-items:flex-end;gap:10px}
+.d{font-family:Urbanist,Poppins,sans-serif}
+.bell{position:relative;width:40px;height:40px;border-radius:999px;border:1px solid var(--line2);background:var(--card);display:inline-flex;align-items:center;justify-content:center;color:var(--fg)}
+.bell .c{position:absolute;top:-2px;right:-2px;min-width:18px;height:18px;border-radius:999px;background:var(--brand);color:#fff;font:600 10.5px Poppins,sans-serif;display:inline-flex;align-items:center;justify-content:center}
+.pop{width:100%;background:rgba(255,255,255,.86);-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);border-radius:20px;border:1px solid var(--line);box-shadow:0 30px 60px -30px rgba(16,16,24,.35);overflow:hidden}
+.n{display:grid;grid-template-columns:32px minmax(0,1fr);gap:12px;padding:14px 18px;border-top:1px solid var(--line);text-decoration:none}
+.ic{width:32px;height:32px;border-radius:999px;background:var(--chip);display:inline-flex;align-items:center;justify-content:center}
+.t{font-size:13.5px;font-weight:600;line-height:1.35}
+.s{font-size:12.5px;color:var(--fg2);line-height:1.45;margin-top:2px}
+.w{font-size:11.5px;color:var(--mut);margin-top:4px}
+</style>
+</helmet>
+<div class="frame lt">
+  <span class="bell" aria-label="Notificaciones, 1 sin leer"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 0 0 3.4 0"></path></svg><span class="c">1</span></span>
+  <section class="pop" aria-label="Notificaciones">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px"><span class="d" style="font-size:17px;font-weight:700">Notificaciones</span><a href="#" style="font-size:12.5px;color:var(--mut)">Marcar todo como leído</a></div>
+    <a class="n" href="Main.dc.html" style="background:rgba(11,11,14,.03)">
+      <span class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--bad)" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16h0"></path></svg></span>
+      <span style="min-width:0"><span class="t" style="display:block">Un seguimiento no llegó a Cristian</span><span class="s" style="display:block">Meta rechazó la plantilla «sesion_en_vivo_v2»: no cobró el envío. Revisa el método de pago y reenvíala desde el chat.</span><span class="w" style="display:block">hace 2 min · Seguimiento «Cerrar una agenda…»</span></span>
+    </a>
+    <a class="n" href="#">
+      <span class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--mut)" stroke-width="2" aria-hidden="true"><circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l2.5 2.5"></path></svg></span>
+      <span style="min-width:0"><span class="t" style="display:block;font-weight:500">Laura Gómez está en cola</span><span class="s" style="display:block">Pidió hablar con una persona.</span><span class="w" style="display:block">hace 25 min</span></span>
+    </a>
+    <p style="margin:0;padding:12px 18px 16px;font-size:12px;color:var(--mut);border-top:1px solid var(--line)">Al pulsarlo se abre la conversación, donde está el mensaje y «Reenviar».</p>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":440,"height":540}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

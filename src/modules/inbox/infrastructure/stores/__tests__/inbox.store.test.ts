@@ -138,15 +138,31 @@ describe("inbox.store — mensajería optimista", () => {
     expect(items[0].id).toBe("real-9")
   })
 
-  it("F9.1: markMessageFailed marca failed por id real (evento message_status)", () => {
+  it("F9.1: applyMessageStatus marca failed por id real y guarda el código de Meta", () => {
     const real = makeMessage({ id: "real-10", direction: "outbound", status: "queued" })
     useInboxStore.getState().appendMessage(CID, real)
 
-    useInboxStore.getState().markMessageFailed(CID, "real-10")
+    useInboxStore.getState().applyMessageStatus(CID, "real-10", "failed", "131042")
 
     const [message] = useInboxStore.getState().messagesById[CID].items
     expect(message.status).toBe("failed")
     expect(message.delivery).toBe("failed")
+    expect(message.error).toEqual({ code: "131042" })
+  })
+
+  it("hotfix: los recibos avanzan la entrega y uno tardío no la baja; message_sent tampoco", () => {
+    useInboxStore.getState().appendMessage(CID, makeMessage({ id: "real-11", direction: "outbound", status: "sent" }))
+    const status = () => useInboxStore.getState().messagesById[CID].items[0].status
+
+    useInboxStore.getState().applyMessageStatus(CID, "real-11", "read")
+    expect(status()).toBe("read")
+    useInboxStore.getState().applyMessageStatus(CID, "real-11", "delivered")
+    expect(status()).toBe("read")
+    useInboxStore.getState().confirmMessage(CID, "real-11")
+    expect(status()).toBe("read")
+    // Meta rechaza después de aceptar: el fallo sí manda
+    useInboxStore.getState().applyMessageStatus(CID, "real-11", "failed")
+    expect(status()).toBe("failed")
   })
 
   it("media optimista (F9): reconcileSent preserva previews locales y payload de retry", () => {

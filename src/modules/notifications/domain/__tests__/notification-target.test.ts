@@ -154,3 +154,17 @@ describe("método comercial (F8)", () => {
     expect(notificationTarget("crm.journey_cadence_exhausted", {})).toBe("/crm/pipeline");
   });
 });
+
+describe("hotfix plantillas de seguimiento", () => {
+  it("«Un seguimiento no llegó» abre el chat, donde está «Reenviar»", () => {
+    expect(
+      notificationTarget("crm.task_opening_failed", {
+        activity_id: "t-1",
+        contact_id: "c-7",
+        conversation_id: "conv-9",
+        message_id: "m-1",
+      }),
+    ).toBe("/workspace/inbox/conv-9");
+    expect(notificationTarget("crm.task_opening_failed", { activity_id: "t-1" })).toBe("/crm/tasks");
+  });
+});

@@ -9,6 +9,9 @@ import { useAuth } from "@/shared/auth/auth.hooks";
 import { getTenantAgents } from "@/modules/agents/public";
 import { loadMyCompanyOnce } from "@/modules/companies/public";
 import { getAgentTaskSettings } from "@/modules/crm/infrastructure/services/agent-task-settings-service.adapter";
+import { resendOpeningMessage } from "@/modules/crm/infrastructure/services/follow-up-service.adapter";
+import { useAlert } from "@/core/providers/alert-provider";
+import { errorMessage } from "@/core/lib/error-messages";
 import { ScheduledAgenda } from "@/modules/crm/ui/components/ScheduledAgenda";
 import { TaskDayList } from "@/modules/crm/ui/components/TaskDayList";
 import { TasksNextUpIsland } from "./components/TasksNextUpIsland";
@@ -129,10 +132,31 @@ export function TasksView() {
 
   const { hasPermission } = useAuth();
   const canAutomate = hasPermission("crm:automate");
+  // El reenvío es `…/resend` de conversations: pide poder responder (B3)
+  const canResend = hasPermission("conversations:reply");
   const view = useTasksStore((s) => s.view);
   const setView = useTasksStore((s) => s.setView);
   const agenda = useTasksStore((s) => s.agenda);
   const agendaLoading = useTasksStore((s) => s.agendaLoading);
+  const agendaError = useTasksStore((s) => s.agendaError);
+  const fetchAgenda = useTasksStore((s) => s.fetchAgenda);
+  const { showAlert } = useAlert();
+
+  /** «Reenviar» de «No llegaron»: el servidor re-enlaza la tarea; la agenda se relee. */
+  const resendOpening = async (task: ActivityDTO) => {
+    const opening = task.last_opening;
+    if (!opening?.conversation_id || !opening.message_id) return;
+    try {
+      await resendOpeningMessage(opening.conversation_id, opening.message_id);
+      showAlert({ tone: "success", title: `Reenviada a ${task.contact_name ?? "el contacto"}` });
+    } catch (err) {
+      showAlert({ tone: "error", title: errorMessage(err, "No se pudo reenviar la plantilla") });
+    } finally {
+      // El re-enlace corre en un job: se relee ya, y otra vez cuando el WS
+      // anuncie la corrida nueva (crm.agent_task_run_finished).
+      void fetchAgenda();
+    }
+  };
 
   // Zona del negocio (la hora absoluta de la bandeja), nombres de los agentes y
   // el horario silencioso para sombrear la agenda. Tres lecturas baratas y
@@ -281,7 +305,17 @@ export function TasksView() {
         </div>
       </div>
 
-      {view === "scheduled" ? (
+      {view === "scheduled" && agendaError !== null ? (
+        <div role="alert" className="flex flex-col items-center gap-4 rounded-3xl border border-border bg-card p-8 text-center">
+          <div className="max-w-sm space-y-1.5">
+            <p className="font-heading text-xl font-bold">No pudimos leer lo programado</p>
+            <p className="text-sm text-pretty text-muted-foreground">{agendaError}</p>
+          </div>
+          <Button variant="outline" className="rounded-full" onClick={() => void fetchAgenda()}>
+            Reintentar
+          </Button>
+        </div>
+      ) : view === "scheduled" ? (
         <ScheduledAgenda
           tasks={agenda}
           loading={agendaLoading}
@@ -289,6 +323,7 @@ export function TasksView() {
           agentNames={agentNames}
           quietHours={quietHours}
           onInspect={setInspected}
+          onResend={canResend ? resendOpening : undefined}
         />
       ) : error !== null ? (
         <div role="alert" className="flex flex-col items-center gap-4 rounded-3xl border border-border bg-card p-8 text-center">
@@ -378,6 +413,7 @@ export function TasksView() {
       )}
 
       <TaskRunsSheet
+        onResend={canResend ? resendOpening : undefined}
         task={inspectedTask}
         onOpenChange={(open) => {
           if (!open) setInspected(null);
