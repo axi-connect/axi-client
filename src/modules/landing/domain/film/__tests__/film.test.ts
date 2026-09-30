@@ -76,3 +76,36 @@ describe("el guion por nicho", () => {
     expect(text).not.toMatch(/\btalla|\bcolor(es)?\b/)
   })
 })
+
+describe("el mapa", () => {
+  // Importación diferida para mantener el bloque autocontenido.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const map = require("../route-map") as typeof import("../route-map")
+
+  it("la carretera empieza y termina donde dice su trazo", () => {
+    const start = map.roadPointAt(0)
+    const end = map.roadPointAt(1)
+    expect(map.ROAD_PATH.startsWith(`M ${start.x.toFixed(1)} ${start.y.toFixed(1)}`)).toBe(true)
+    expect(end.x).toBeGreaterThan(start.x)
+    expect(end.y).toBeLessThan(start.y)
+  })
+
+  it("avanzar en la meta avanza en el camino (monótono en x)", () => {
+    let last = -Infinity
+    for (let f = 0; f <= 1; f += 0.05) {
+      const p = map.roadPointAt(f)
+      expect(p.x).toBeGreaterThan(last)
+      last = p.x
+    }
+  })
+
+  it("las fracciones fuera de rango se acotan", () => {
+    expect(map.roadPointAt(-1)).toEqual(map.roadPointAt(0))
+    expect(map.roadPointAt(2)).toEqual(map.roadPointAt(1))
+  })
+
+  it("la ciudad es determinista (mismo HTML en servidor y cliente)", () => {
+    expect(map.cityBlocks()).toEqual(map.cityBlocks())
+    expect(map.cityBlocks().length).toBeGreaterThan(100)
+  })
+})

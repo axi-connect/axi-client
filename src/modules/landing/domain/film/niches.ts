@@ -61,3 +61,12 @@ export const FILM_NICHE_TO_ONBOARDING: Readonly<Record<FilmNiche, string>> = {
   beauty: "health_beauty",
   b2b: "b2b_distribution",
 };
+
+/**
+ * El código de nicho del onboarding que corresponde a un valor crudo (de la
+ * URL o del almacenamiento). `null` si no es un nicho de la película.
+ */
+export function onboardingNicheFor(raw: string | null | undefined): string | null {
+  const niche = parseFilmNiche(raw);
+  return niche ? FILM_NICHE_TO_ONBOARDING[niche] : null;
+}

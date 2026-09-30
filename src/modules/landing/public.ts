@@ -53,3 +53,11 @@ export {
 } from "@/modules/landing/domain/public-catalog";
 
 export { MODULE_ICONS } from "@/modules/landing/ui/content/module-icons";
+
+// La película de la home recuerda el nicho del visitante; el registro y el
+// onboarding lo usan para preseleccionar el tipo de negocio.
+export {
+  FILM_NICHE_STORAGE_KEY,
+  onboardingNicheFor,
+  parseFilmNiche,
+} from "@/modules/landing/domain/film/niches";

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { rememberFilmNicheFromUrl } from "@/modules/onboarding/infrastructure/film-niche-hint";
 import { AnimatePresence, motion } from "framer-motion";
 import type { UseFormReturn } from "react-hook-form";
 
@@ -115,6 +116,8 @@ export function SignupFunnelView({ catalog }: { catalog: PublicCatalog | null })
   useEffect(() => {
     if (initializedRef.current) return;
     initializedRef.current = true;
+    // El nicho de la película (o de la campaña) se recuerda para el onboarding.
+    rememberFilmNicheFromUrl(window.location.search);
     const stored = readSignupDraft();
     const fromQuery = parseOfferQuery(search, catalog);
     if (fromQuery.redirectTo) {

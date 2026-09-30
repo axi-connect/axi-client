@@ -7,25 +7,12 @@ import { faqSchema, organizationSchema, webSiteSchema } from "@/core/seo/site";
 import { FAQ } from "@/modules/landing/ui/content/landing.content";
 import { loadPublicCatalog } from "@/modules/landing/infrastructure/pricing-catalog.loader";
 
-import LandingHero from "@/modules/landing/ui/sections/LandingHero";
-import LandingSocialProof from "@/modules/landing/ui/sections/LandingSocialProof";
-import LandingProblem from "@/modules/landing/ui/sections/LandingProblem";
-import LandingHowItWorks from "@/modules/landing/ui/sections/LandingHowItWorks";
-import LandingAiGuardrails from "@/modules/landing/ui/sections/LandingAiGuardrails";
-import LandingMetrics from "@/modules/landing/ui/sections/LandingMetrics";
-import LandingRecognition from "@/modules/landing/ui/sections/LandingRecognition";
-import LandingTeamControl from "@/modules/landing/ui/sections/LandingTeamControl";
-import LandingCases from "@/modules/landing/ui/sections/LandingCases";
-import LandingPricing from "@/modules/landing/ui/sections/LandingPricing";
-import LandingFaq from "@/modules/landing/ui/sections/LandingFaq";
-import LandingTerminal from "@/modules/landing/ui/sections/LandingTerminal";
-import LandingFinalCta from "@/modules/landing/ui/sections/LandingFinalCta";
+import { FilmPage } from "@/modules/landing/ui/film/FilmPage";
 
 /**
- * Landing de conversión de Axi Connect.
- * Estructura y copy: `axi/docs/business/landing-copy.md`.
- * La versión anterior quedó como backup en
- * `shared/components/layout/site/legacy/LegacyLandingPage.tsx`.
+ * La home de Axi Connect: una película por scroll (programa «Landing
+ * cinematográfica», `docs/plans/landing_cinematica_plan.md`). La home anterior
+ * quedó archivada en el tag git `landing-v1-archive`.
  */
 const HOME_TITLE = "Axi Connect — El futuro es conversacional";
 const HOME_DESCRIPTION =
@@ -79,20 +66,7 @@ export default async function Home() {
       <JsonLd data={organizationSchema()} />
       <JsonLd data={webSiteSchema()} />
       <JsonLd data={faqSchema(FAQ.items)} />
-      <LandingHero />
-      <LandingSocialProof />
-      <LandingProblem />
-      <LandingHowItWorks />
-      <LandingAiGuardrails />
-      <LandingMetrics />
-      {/* Isla oscura del reconocimiento (F8): entre dos secciones claras a propósito. */}
-      <LandingRecognition />
-      <LandingTeamControl />
-      <LandingCases />
-      <LandingPricing catalog={catalog} />
-      <LandingFaq />
-      <LandingTerminal />
-      <LandingFinalCta />
+      <FilmPage catalog={catalog} />
     </div>
   );
 }
