@@ -61,7 +61,9 @@
   font-weight: 700;
   letter-spacing: -0.035em;
   line-height: 1.04;
-  text-wrap: balance;
+  /* `text-wrap-style` y no el atajo `text-wrap`: el atajo también fija
+     `text-wrap-mode: wrap` y anula el `nowrap` de las cifras («$ 18,9 M · 63 %»). */
+  text-wrap-style: balance;
   margin: 0;
 }
 .film-h .t { font-weight: 200; letter-spacing: -0.03em; }
@@ -71,7 +73,7 @@
   text-transform: uppercase;
   font-weight: 600;
 }
-.film-lead { color: var(--film-muted); text-wrap: pretty; }
+.film-lead { color: var(--film-muted); text-wrap-style: pretty; }
 .film-dim { color: var(--film-dim); }
 
 /* Superficies: cristal para lo que flota, sólido para lo que se lee. */

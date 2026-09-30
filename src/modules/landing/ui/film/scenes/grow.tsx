@@ -197,9 +197,21 @@ function Mark({ fraction, children, className, anim }: { fraction: number; child
 
 export function GoalScene() {
   return (
-    <section id="crecer" data-scene="goal" data-chapter="Crecer" aria-labelledby="meta-h" className="film-scene">
-      {/* El mapa: un lienzo 16:10 que cubre la escena («cover» sin recortar coordenadas). */}
-      <div className="absolute top-1/2 left-1/2 z-0 aspect-[16/10] w-[max(100%,160svh)] -translate-1/2" data-anim="map" aria-hidden="true">
+    <section
+      id="crecer"
+      data-scene="goal"
+      data-chapter="Crecer"
+      aria-labelledby="meta-h"
+      className="film-scene max-lg:!grid max-lg:grid-cols-1 max-lg:content-start max-lg:px-4 max-lg:pt-[88px] max-lg:pb-[88px]"
+    >
+      {/* La ventana del mapa: cubre la escena en escritorio; en móvil es una franja
+          propia entre el titular y el panel, para que «Vas aquí» no quede debajo. */}
+      <div className="absolute inset-0 z-0 overflow-hidden max-lg:relative max-lg:inset-auto max-lg:order-2 max-lg:-mx-4 max-lg:h-[360px]" aria-hidden="true">
+      {/* El lienzo 16:10: «cover» en escritorio sin deformar las coordenadas de las marcas. */}
+      <div
+        className="absolute top-1/2 left-1/2 aspect-[16/10] w-[max(100%,160svh)] -translate-1/2 max-lg:top-[-150px] max-lg:left-[-230px] max-lg:w-[900px] max-lg:translate-none"
+        data-anim="map"
+      >
         <svg viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`} className="absolute inset-0 size-full">
           {BLOCKS.map((b) => (
             <rect key={`${b.x}-${b.y}`} x={b.x} y={b.y} width={b.w} height={b.h} rx={7} className="fill-[color-mix(in_srgb,var(--foreground)_5%,var(--background))]" />
@@ -223,6 +235,8 @@ export function GoalScene() {
           <path d={ROAD_PATH} pathLength={1} data-anim="road" className="fill-none" stroke="url(#film-road)" strokeWidth={8} strokeLinecap="round" strokeDasharray="0.63 2" />
           <path d={ROAD_PATH} pathLength={1} data-anim="road-slow" className="fill-none stroke-[var(--axi-amber)]" strokeWidth={8} strokeLinecap="round" strokeDasharray="0 0.63 0.087 2" />
         </svg>
+        {/* El velo que oscurece la ciudad detrás del titular: por DEBAJO de las marcas. */}
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,color-mix(in_srgb,var(--background)_92%,transparent)_0%,color-mix(in_srgb,var(--background)_50%,transparent)_34%,transparent_60%),linear-gradient(0deg,color-mix(in_srgb,var(--background)_85%,transparent),transparent_26%)] max-lg:hidden" />
 
         <ByNiche>
           {(c) => {
@@ -238,14 +252,14 @@ export function GoalScene() {
                 <Mark fraction={s.expected} anim="should">
                   <span className="block size-5 rounded-full border-2 border-foreground bg-background" />
                 </Mark>
-                <Mark fraction={0.675} anim="slow" className="-translate-x-full -translate-y-[170%]">
+                <Mark fraction={0.675} anim="slow" className="-translate-x-full -translate-y-[170%] max-lg:hidden">
                   <span className="film-chip border-[color-mix(in_srgb,var(--axi-amber)_35%,transparent)] bg-[color-mix(in_srgb,var(--background)_85%,transparent)] text-xs whitespace-nowrap text-[var(--axi-amber)]">
                     Tramo lento · vas {formatMillions(s.behind)} por debajo
                   </span>
                 </Mark>
                 <Mark fraction={s.projected} anim="projection">
                   <span className="block size-[22px] rounded-full border-2 border-dashed border-foreground" />
-                  <span className="absolute top-7 left-[-40px] rounded-xl bg-foreground px-3 py-2 text-xs whitespace-nowrap text-background max-lg:hidden">
+                  <span className="absolute bottom-8 left-[-150px] rounded-xl bg-foreground px-3 py-2 text-xs whitespace-nowrap text-background max-lg:hidden">
                     <strong data-anim="projection-pct">{formatPercent(s.projected)}</strong> · Si sigues así llegas a{" "}
                     <span data-anim="projection-value" data-goal={s.goal}>
                       {formatMillions(s.goal * s.projected)}
@@ -273,22 +287,22 @@ export function GoalScene() {
           }}
         </ByNiche>
       </div>
-      <div className="pointer-events-none absolute inset-0 z-[1] bg-[linear-gradient(90deg,color-mix(in_srgb,var(--background)_92%,transparent)_0%,color-mix(in_srgb,var(--background)_50%,transparent)_34%,transparent_60%),linear-gradient(0deg,color-mix(in_srgb,var(--background)_85%,transparent),transparent_26%)]" />
+      </div>
 
-      <div className="film-wrap grid gap-10 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-center">
+      <div className="film-wrap grid gap-10 max-lg:contents lg:grid-cols-[minmax(0,1fr)_380px] lg:items-center">
         <SceneHead
           id="meta-h"
           eyebrow="Crecer"
           strong="Tú pones la meta."
           thin="Axi traza la ruta."
           lead="Tu meta del mes se vuelve un camino con indicaciones para hoy. Si vas lento, Axi te prepara otra ruta."
-          className="self-start"
+          className="self-start max-lg:order-1"
         />
         <ByNiche>
           {(c) => {
             const s = routeScenario(c.route);
             return (
-              <div data-anim="navpanel" className="film-glass relative z-[3] flex flex-col gap-3 rounded-[26px] p-5 max-lg:mt-[30svh]">
+              <div data-anim="navpanel" className="film-glass relative z-[3] flex flex-col gap-3 rounded-[26px] p-5 max-lg:order-3">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="film-dim text-xs">Destino · octubre</p>

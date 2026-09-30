@@ -16,7 +16,11 @@ export const MAP_HEIGHT = 900;
 export type Point = { x: number; y: number };
 type Segment = readonly [Point, Point, Point, Point];
 
-/** El storyboard, con `translate(20 150) scale(.68)` aplicado. */
+/**
+ * El storyboard, reducido a 0,68 y corrido (−40, +310): la carretera pasa por
+ * DEBAJO del titular y termina antes del panel de navegación, así ninguna
+ * marca cae sobre texto (render del 2026-09-30).
+ */
 const RAW: readonly (readonly [number, number])[][] = [
   [[70, 830], [260, 800], [330, 650], [520, 640]],
   [[520, 640], [700, 630], [720, 470], [880, 440]],
@@ -25,7 +29,7 @@ const RAW: readonly (readonly [number, number])[][] = [
 ];
 
 const SEGMENTS: readonly Segment[] = RAW.map(
-  (seg) => seg.map(([x, y]) => ({ x: 20 + 0.68 * x, y: 150 + 0.68 * y })) as unknown as Segment,
+  (seg) => seg.map(([x, y]) => ({ x: -40 + 0.68 * x, y: 310 + 0.68 * y })) as unknown as Segment,
 );
 
 function bezier([p0, c1, c2, p3]: Segment, t: number): Point {

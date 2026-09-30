@@ -2798,3 +2798,9 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .wa-muted { color: var(--wa-muted); }
 .wa-link { color: var(--wa-link); border-top: 1px solid color-mix(in oklab, var(--wa-muted) 22%, transparent); }
 .wa-mark { background: var(--wa-mark); color: inherit; border-radius: 4px; padding: 0 2px; }
+
+/* `Reveal` (landing): con movimiento reducido se ve en su sitio desde el primer
+   frame. Gana al estilo en línea que framer-motion deja en el HTML del servidor. */
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] { opacity: 1 !important; transform: none !important; }
+}
