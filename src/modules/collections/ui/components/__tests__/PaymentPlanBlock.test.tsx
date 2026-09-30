@@ -1,8 +1,13 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 
 import type { PlanDetailDTO } from "@/modules/collections/domain/payment-plan";
 
 const mockPlan = jest.fn<Promise<PlanDetailDTO>, [string]>();
+// F3: «Llamar para cobrar» mira la capacidad `calls`; apagada, la fila queda como antes.
+let mockCallsOn = false;
+jest.mock("@/shared/auth/entitlements.hooks", () => ({
+  useEntitlements: () => ({ hasCapability: (code: string) => code === "calls" && mockCallsOn }),
+}));
 jest.mock(
   "@/modules/collections/infrastructure/services/collections-service.adapter",
   () => ({
@@ -33,6 +38,7 @@ const plan = (overrides: Partial<PlanDetailDTO> = {}): PlanDetailDTO => ({
   order_id: "o1",
   order_number: 47,
   contact_id: "c1",
+  contact_phone: "+573001234567",
   status: "active",
   currency: "COP",
   total_cents: 1_160_000_000,
@@ -315,4 +321,36 @@ describe("PaymentPlanBlock · promesas, historial y nota (F4b)", () => {
     ).toBeInTheDocument();
     await waitFor(() => expect(mockPlan).toHaveBeenCalledTimes(3));
   });
+
+  describe("F3: «Llamar para cobrar»", () => {
+    afterEach(() => {
+      mockCallsOn = false;
+    });
+
+    it("con promesa viva: junto a «Escribir» en el aviso y sola abajo (la promesa no se ofrece)", async () => {
+      mockCallsOn = true;
+      mockPlan.mockResolvedValue(plan({ active_promise_at: "2026-09-22", promises: [promise()] }));
+      render(<PaymentPlanBlock orderId="o1" contactName="Diana Salazar" />);
+      await screen.findByRole("button", { name: /Escribir/ });
+      expect(screen.getAllByRole("button", { name: /Llamar para cobrar/ }).length).toBeGreaterThanOrEqual(1);
+      expect(screen.queryByRole("button", { name: /Anotar promesa/ })).toBeNull();
+    });
+
+    it("sin promesa: «Anotar promesa» y «Llamar para cobrar» comparten fila", async () => {
+      mockCallsOn = true;
+      mockPlan.mockResolvedValue(plan());
+      render(<PaymentPlanBlock orderId="o1" contactName="Diana Salazar" />);
+      const promiseButton = await screen.findByRole("button", { name: /Anotar promesa$/ });
+      const row = promiseButton.parentElement as HTMLElement;
+      expect(within(row).getByRole("button", { name: /Llamar para cobrar/ })).toBeInTheDocument();
+    });
+
+    it("sin llamadas en el plan, la promesa vuelve a todo el ancho con su texto completo", async () => {
+      mockPlan.mockResolvedValue(plan());
+      render(<PaymentPlanBlock orderId="o1" contactName="Diana Salazar" />);
+      expect(await screen.findByRole("button", { name: /Anotar promesa de pago/ })).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /Llamar para cobrar/ })).toBeNull();
+    });
+  });
 });
+

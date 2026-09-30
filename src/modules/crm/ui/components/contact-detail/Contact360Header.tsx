@@ -11,6 +11,7 @@ import { relativeTime } from "@/core/lib/relative-time";
 import { useAlert } from "@/core/providers/alert-provider";
 import { ChannelKindIcon } from "@/modules/channels/public";
 import { contactDisplayName, primaryChannel, type ContactDTO, type ContactProfileDTO } from "@/modules/crm/domain/contact";
+import { CONTACT_SOURCE_LABELS } from "@/modules/crm/domain/enums";
 import { CONTACT_STAGE_LABELS, CONTACT_STAGE_TONE } from "@/modules/crm/domain/enums";
 import { assignContactOwner, deleteContact } from "@/modules/crm/infrastructure/services/contacts-service.adapter";
 import { useAuth } from "@/shared/auth/auth.hooks";
@@ -91,6 +92,9 @@ export function Contact360Header({
       ? `${CHANNEL_LABEL[channel.channel_kind]}${channel.last_seen_at !== null ? `, escribió ${relativeTime(channel.last_seen_at)}` : ""}`
       : null,
     `desde el ${formatShortDate(contact.created_at)}`,
+    // Auditoría F5 fase 2: de dónde llegó (p. ej. «Llamada entrante»), el mismo
+    // mapa que la columna «Fuente» de la lista.
+    `origen: ${CONTACT_SOURCE_LABELS[contact.source]}`,
   ].filter((part): part is string => part !== null && part !== "");
 
   return (

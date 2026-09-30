@@ -9,6 +9,11 @@ import {
 const mockList = jest.fn<Promise<unknown>, [unknown]>();
 const mockStats = jest.fn<Promise<unknown>, []>();
 const mockPlan = jest.fn<Promise<unknown>, [string]>();
+// F3: «Llamar para cobrar» mira la capacidad `calls`; apagada, la fila queda como antes.
+let mockCallsOn = false;
+jest.mock("@/shared/auth/entitlements.hooks", () => ({
+  useEntitlements: () => ({ hasCapability: (code: string) => code === "calls" && mockCallsOn }),
+}));
 jest.mock(
   "@/modules/collections/infrastructure/services/collections-service.adapter",
   () => ({
@@ -37,6 +42,7 @@ const row = (overrides: Record<string, unknown> = {}) => ({
   order_id: "o1",
   order_number: 42,
   contact_id: "c1",
+  contact_phone: "+573001234567",
   contact_name: "Laura Gómez",
   service_date: null,
   travelled: false,
@@ -484,4 +490,38 @@ describe("ReceivablesView (F4: la cartera abre con la respuesta)", () => {
       await screen.findByText(/Escribir a Laura Gómez/i),
     ).toBeInTheDocument();
   });
+
+  describe("F3: «Llamar» junto a «Escribir»", () => {
+    afterEach(() => {
+      mockCallsOn = false;
+    });
+
+    it("con llamadas en el plan, cada deudor con saldo tiene «Llamar»; sin teléfono, apagado y dice por qué", async () => {
+      mockCallsOn = true;
+      mockList.mockResolvedValue({
+        data: [
+          row({ plan_id: "p1", contact_name: "Laura Gómez", contact_phone: "+573002194410" }),
+          row({ plan_id: "p2", contact_id: "c2", contact_name: "Marta Ríos", contact_phone: null }),
+        ],
+        meta: { total: 2, page: 1, page_size: 25 },
+      });
+      mockStats.mockResolvedValue(stats());
+      render(<ReceivablesView />);
+
+      const calls = await screen.findAllByRole("button", { name: /^Llamar/ });
+      expect(calls).toHaveLength(2);
+      expect(calls[0]).toBeEnabled();
+      expect(calls[1]).toBeDisabled();
+      expect(calls[1]).toHaveAccessibleDescription("Marta no tiene teléfono en su ficha.");
+    });
+
+    it("sin la capacidad de llamadas la fila queda como antes", async () => {
+      mockList.mockResolvedValue({ data: [row()], meta: { total: 1, page: 1, page_size: 25 } });
+      mockStats.mockResolvedValue(stats());
+      render(<ReceivablesView />);
+      await screen.findByRole("button", { name: /Escribir/i });
+      expect(screen.queryByRole("button", { name: /^Llamar/ })).toBeNull();
+    });
+  });
 });
+

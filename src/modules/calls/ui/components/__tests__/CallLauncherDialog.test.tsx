@@ -113,5 +113,60 @@ describe("CallLauncherDialog (plan de modos §7)", () => {
     expect(keys[0]).toBe(keys[1]);
     expect(keys[2]).not.toBe(keys[1]);
   });
+
+  describe("«Llamar para cobrar» (F3)", () => {
+    const PLAN = {
+      plan_id: "p1",
+      order_number: 1042,
+      currency: "COP",
+      balance_cents: 15_000_000,
+      overdue_cents: 5_000_000,
+      days_overdue: 5,
+      next_due_at: "2026-09-25",
+      promised_at: null,
+    };
+
+    it("tipo fijo en Cobranza, lo que sabe el agente y el plan viaja al lanzar", async () => {
+      launchCall.mockResolvedValue({ call_session_id: "s1" });
+      render(
+        <CallLauncherDialog open onOpenChange={jest.fn()} target={{ ...CONTACT, name: "Laura Gómez" }} collections={PLAN} />,
+      );
+      await flush();
+      expect(screen.getByText("Fijo: la llamada cobra el pedido #1042.")).toBeInTheDocument();
+      const knows = screen.getByRole("region", { name: "Lo que sabe tu agente" });
+      expect(knows).toHaveTextContent("Saldo del pedido #1042");
+      expect(knows).toHaveTextContent("hace 5 días");
+      expect(knows).toHaveTextContent("Ninguna viva");
+      expect(knows).toHaveTextContent("Si Laura lo pide o lo acepta");
+
+      fireEvent.click(screen.getByRole("button", { name: "Llamar" }));
+      await flush();
+      expect(launchCall.mock.calls[0]?.[0]).toMatchObject({
+        contact_id: "c1",
+        call_type: "collections",
+        plan_id: "p1",
+      });
+    });
+
+    it("con una promesa viva, el agente la recuerda y no anota otra", async () => {
+      render(
+        <CallLauncherDialog open onOpenChange={jest.fn()} target={CONTACT} collections={{ ...PLAN, promised_at: "2026-10-02" }} />,
+      );
+      await flush();
+      const knows = screen.getByRole("region", { name: "Lo que sabe tu agente" });
+      expect(knows).toHaveTextContent("Prometió pagar el");
+      expect(knows).toHaveTextContent("no anota otra");
+    });
+
+    it("sin plan no hay bloque ni plan_id", async () => {
+      launchCall.mockResolvedValue({ call_session_id: "s1" });
+      render(<CallLauncherDialog open onOpenChange={jest.fn()} target={CONTACT} />);
+      await flush();
+      expect(screen.queryByRole("region", { name: "Lo que sabe tu agente" })).toBeNull();
+      fireEvent.click(screen.getByRole("button", { name: "Llamar" }));
+      await flush();
+      expect(launchCall.mock.calls[0]?.[0]).not.toHaveProperty("plan_id");
+    });
+  });
 });
 

@@ -5556,6 +5556,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/platform/calls/proactive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformCallsController_getProactive_v1"];
+        put: operations["PlatformCallsController_setProactive_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/platform/calls/providers": {
         parameters: {
             query?: never;
@@ -5780,6 +5796,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/calls/overview/funnel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CallsAdminController_getFunnel_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/calls/sessions": {
         parameters: {
             query?: never;
@@ -5860,6 +5892,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/calls/launch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CallsAdminController_launch_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/calls/test-call": {
         parameters: {
             query?: never;
@@ -5886,6 +5934,102 @@ export interface paths {
         get: operations["CallsAdminController_listNumbers_v1"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/playbooks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CallPlaybooksController_list_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/playbooks/{type}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["CallPlaybooksController_save_v1"];
+        post?: never;
+        delete: operations["CallPlaybooksController_reset_v1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/playbooks/propose": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CallPlaybooksController_proposeAll_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/playbooks/{type}/proposal/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CallPlaybooksController_applyProposal_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/playbooks/{type}/proposal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["CallPlaybooksController_discardProposal_v1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/playbooks/{type}/preview-opening": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CallPlaybooksController_previewOpening_v1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -7454,6 +7598,262 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["CommercialProposalsController_reject_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/autopilot/proposals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AutopilotProposalsController_list_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/autopilot/proposals/{proposal_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AutopilotProposalsController_approve_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/autopilot/proposals/{proposal_id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AutopilotProposalsController_reject_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/autopilot/routines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AutopilotController_listRoutines_v1"];
+        put?: never;
+        post: operations["AutopilotController_createRoutine_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/autopilot/routines/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AutopilotController_getRoutine_v1"];
+        put: operations["AutopilotController_updateRoutine_v1"];
+        post?: never;
+        delete: operations["AutopilotController_deleteRoutine_v1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/autopilot/routines/{id}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AutopilotController_pause_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/autopilot/routines/{id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AutopilotController_resume_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/autopilot/routines/{id}/run-now": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AutopilotController_runNow_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/autopilot/routines/{id}/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AutopilotController_listRuns_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/autopilot/runs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AutopilotController_getRun_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/autopilot/runs/{id}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AutopilotController_listEvents_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/autopilot/runs/{id}/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AutopilotController_batch_v1"];
+        put?: never;
+        post: operations["AutopilotController_decideBatch_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/autopilot/estimate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AutopilotController_estimate_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/autopilot/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AutopilotController_summary_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/autopilot/ledger": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AutopilotController_ledger_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/autopilot/funnel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AutopilotController_funnel_v1"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -9635,14 +10035,14 @@ export interface components {
                 /** @enum {string} */
                 kind: "tool_called";
                 /** @enum {string} */
-                name: "advance_stage" | "apply_promotion" | "book_appointment" | "catalog_lookup" | "close_conversation" | "confirm_appointment" | "create_order" | "get_branches" | "get_business_policies" | "get_order_status" | "get_payment_methods" | "human_handoff" | "log_crm_activity" | "open_deal" | "quote_order" | "report_payment" | "reschedule_appointment" | "save_contact_data" | "schedule_availability" | "schedule_follow_up" | "send_product_images" | "send_resource" | "set_delivery" | "validate_coupon";
+                name: "advance_stage" | "apply_promotion" | "book_appointment" | "catalog_lookup" | "close_conversation" | "confirm_appointment" | "create_order" | "get_branches" | "get_business_policies" | "get_order_status" | "get_payment_methods" | "human_handoff" | "log_crm_activity" | "open_deal" | "quote_order" | "register_payment_promise" | "report_payment" | "reschedule_appointment" | "save_contact_data" | "schedule_availability" | "schedule_follow_up" | "send_payment_link" | "send_product_images" | "send_resource" | "set_delivery" | "validate_coupon";
                 /** @default 1 */
                 min: number;
             } | {
                 /** @enum {string} */
                 kind: "tool_not_called";
                 /** @enum {string} */
-                name: "advance_stage" | "apply_promotion" | "book_appointment" | "catalog_lookup" | "close_conversation" | "confirm_appointment" | "create_order" | "get_branches" | "get_business_policies" | "get_order_status" | "get_payment_methods" | "human_handoff" | "log_crm_activity" | "open_deal" | "quote_order" | "report_payment" | "reschedule_appointment" | "save_contact_data" | "schedule_availability" | "schedule_follow_up" | "send_product_images" | "send_resource" | "set_delivery" | "validate_coupon";
+                name: "advance_stage" | "apply_promotion" | "book_appointment" | "catalog_lookup" | "close_conversation" | "confirm_appointment" | "create_order" | "get_branches" | "get_business_policies" | "get_order_status" | "get_payment_methods" | "human_handoff" | "log_crm_activity" | "open_deal" | "quote_order" | "register_payment_promise" | "report_payment" | "reschedule_appointment" | "save_contact_data" | "schedule_availability" | "schedule_follow_up" | "send_payment_link" | "send_product_images" | "send_resource" | "set_delivery" | "validate_coupon";
             } | {
                 /** @enum {string} */
                 kind: "no_unverified_prices";
@@ -9801,14 +10201,14 @@ export interface components {
                 /** @enum {string} */
                 kind: "tool_called";
                 /** @enum {string} */
-                name: "advance_stage" | "apply_promotion" | "book_appointment" | "catalog_lookup" | "close_conversation" | "confirm_appointment" | "create_order" | "get_branches" | "get_business_policies" | "get_order_status" | "get_payment_methods" | "human_handoff" | "log_crm_activity" | "open_deal" | "quote_order" | "report_payment" | "reschedule_appointment" | "save_contact_data" | "schedule_availability" | "schedule_follow_up" | "send_product_images" | "send_resource" | "set_delivery" | "validate_coupon";
+                name: "advance_stage" | "apply_promotion" | "book_appointment" | "catalog_lookup" | "close_conversation" | "confirm_appointment" | "create_order" | "get_branches" | "get_business_policies" | "get_order_status" | "get_payment_methods" | "human_handoff" | "log_crm_activity" | "open_deal" | "quote_order" | "register_payment_promise" | "report_payment" | "reschedule_appointment" | "save_contact_data" | "schedule_availability" | "schedule_follow_up" | "send_payment_link" | "send_product_images" | "send_resource" | "set_delivery" | "validate_coupon";
                 /** @default 1 */
                 min: number;
             } | {
                 /** @enum {string} */
                 kind: "tool_not_called";
                 /** @enum {string} */
-                name: "advance_stage" | "apply_promotion" | "book_appointment" | "catalog_lookup" | "close_conversation" | "confirm_appointment" | "create_order" | "get_branches" | "get_business_policies" | "get_order_status" | "get_payment_methods" | "human_handoff" | "log_crm_activity" | "open_deal" | "quote_order" | "report_payment" | "reschedule_appointment" | "save_contact_data" | "schedule_availability" | "schedule_follow_up" | "send_product_images" | "send_resource" | "set_delivery" | "validate_coupon";
+                name: "advance_stage" | "apply_promotion" | "book_appointment" | "catalog_lookup" | "close_conversation" | "confirm_appointment" | "create_order" | "get_branches" | "get_business_policies" | "get_order_status" | "get_payment_methods" | "human_handoff" | "log_crm_activity" | "open_deal" | "quote_order" | "register_payment_promise" | "report_payment" | "reschedule_appointment" | "save_contact_data" | "schedule_availability" | "schedule_follow_up" | "send_payment_link" | "send_product_images" | "send_resource" | "set_delivery" | "validate_coupon";
             } | {
                 /** @enum {string} */
                 kind: "no_unverified_prices";
@@ -11088,7 +11488,7 @@ export interface components {
         DecisionRoutesViewDto: {
             routes: {
                 /** @enum {string} */
-                purpose: "intent" | "reply_reaction" | "lead_fit" | "lead_intent" | "message_fit" | "handoff_urgency" | "custom";
+                purpose: "intent" | "reply_reaction" | "lead_fit" | "lead_intent" | "message_fit" | "handoff_urgency" | "voice_utterance" | "custom";
                 /** @enum {string} */
                 mode: "off" | "shadow" | "primary";
                 primary: {
@@ -11124,7 +11524,7 @@ export interface components {
         };
         SavedDecisionRouteDto: {
             /** @enum {string} */
-            purpose: "intent" | "reply_reaction" | "lead_fit" | "lead_intent" | "message_fit" | "handoff_urgency" | "custom";
+            purpose: "intent" | "reply_reaction" | "lead_fit" | "lead_intent" | "message_fit" | "handoff_urgency" | "voice_utterance" | "custom";
             /** @enum {string} */
             mode: "off" | "shadow" | "primary";
             primary: {
@@ -12263,7 +12663,7 @@ export interface components {
             /** @enum {string} */
             lifecycle_stage: "prospect" | "lead" | "customer" | "other";
             /** @enum {string} */
-            source: "inbound_conversation" | "manual" | "import" | "lead_conversion" | "integration" | "prospecting" | "forms";
+            source: "inbound_conversation" | "manual" | "import" | "lead_conversion" | "integration" | "prospecting" | "forms" | "inbound_call";
             custom_fields: {
                 [key: string]: unknown;
             };
@@ -12326,7 +12726,7 @@ export interface components {
                 /** @enum {string} */
                 lifecycle_stage: "prospect" | "lead" | "customer" | "other";
                 /** @enum {string} */
-                source: "inbound_conversation" | "manual" | "import" | "lead_conversion" | "integration" | "prospecting" | "forms";
+                source: "inbound_conversation" | "manual" | "import" | "lead_conversion" | "integration" | "prospecting" | "forms" | "inbound_call";
                 custom_fields: {
                     [key: string]: unknown;
                 };
@@ -14052,6 +14452,7 @@ export interface components {
                 task_channel: "message" | "call" | "call_then_message" | "email" | "sms" | "manual" | null;
                 /** @enum {string|null} */
                 task_medium: "message" | "call" | "email" | "sms" | "manual" | null;
+                call_type: string | null;
                 /** Format: uuid */
                 bulk_id: string | null;
                 last_opening: {
@@ -14161,6 +14562,7 @@ export interface components {
             task_channel: "message" | "call" | "call_then_message" | "email" | "sms" | "manual" | null;
             /** @enum {string|null} */
             task_medium: "message" | "call" | "email" | "sms" | "manual" | null;
+            call_type: string | null;
             /** Format: uuid */
             bulk_id: string | null;
             last_opening: {
@@ -14275,6 +14677,8 @@ export interface components {
             } | null;
             /** @enum {string} */
             task_channel?: "message" | "call" | "call_then_message";
+            /** @enum {string|null} */
+            call_type?: "sales_followup" | "reactivation" | "followup" | null;
         };
         UpdateAgentTaskDto: {
             objective?: string;
@@ -14291,6 +14695,8 @@ export interface components {
             } | null;
             /** @enum {string} */
             task_channel?: "message" | "call" | "call_then_message";
+            /** @enum {string|null} */
+            call_type?: "sales_followup" | "reactivation" | "followup" | null;
         };
         RunNowDto: {
             /** Format: date-time */
@@ -14480,7 +14886,7 @@ export interface components {
                 /** @enum {string} */
                 lifecycle_stage: "prospect" | "lead" | "customer" | "other";
                 /** @enum {string} */
-                source: "inbound_conversation" | "manual" | "import" | "lead_conversion" | "integration" | "prospecting" | "forms";
+                source: "inbound_conversation" | "manual" | "import" | "lead_conversion" | "integration" | "prospecting" | "forms" | "inbound_call";
                 /** Format: date-time */
                 created_at: string;
             } & {
@@ -14571,6 +14977,7 @@ export interface components {
                     offset_hours: number;
                     /** @enum {string} */
                     task_channel: "message" | "call" | "call_then_message" | "email" | "sms" | "manual";
+                    call_type: string | null;
                     objective: string;
                     opening_template: {
                         /** Format: uuid */
@@ -14609,6 +15016,7 @@ export interface components {
                 offset_hours: number;
                 /** @enum {string} */
                 task_channel: "message" | "call" | "call_then_message" | "email" | "sms" | "manual";
+                call_type: string | null;
                 objective: string;
                 opening_template: {
                     /** Format: uuid */
@@ -14647,6 +15055,8 @@ export interface components {
                  * @enum {string}
                  */
                 task_channel: "message" | "call" | "call_then_message" | "email" | "sms" | "manual";
+                /** @enum {string|null} */
+                call_type?: "sales_followup" | "reactivation" | "followup" | null;
                 objective: string;
                 opening_template?: {
                     /** Format: uuid */
@@ -14677,10 +15087,7 @@ export interface components {
                 enrolled_at: string;
                 /** Format: date-time */
                 finished_at: string | null;
-                /**
-                 * Format: date-time
-                 * @description P3b: dormida por «ahora no» hasta esta fecha (sigue `active`); null = despierta.
-                 */
+                /** Format: date-time */
                 snoozed_until: string | null;
             }[];
             meta: {
@@ -16431,6 +16838,7 @@ export interface components {
                 /** Format: uuid */
                 contact_id: string;
                 contact_name: string;
+                contact_phone: string | null;
                 /** Format: date */
                 service_date: string | null;
                 travelled: boolean;
@@ -16490,6 +16898,7 @@ export interface components {
             order_number: number | null;
             /** Format: uuid */
             contact_id: string;
+            contact_phone: string | null;
             /** @enum {string} */
             status: "active" | "settled" | "cancelled" | "on_hold";
             currency: string;
@@ -18230,6 +18639,8 @@ export interface components {
              * @enum {string}
              */
             task_channel: "message" | "call" | "call_then_message";
+            /** @enum {string|null} */
+            call_type?: "sales_followup" | "reactivation" | "followup" | null;
             opening_template?: {
                 /** Format: uuid */
                 channel_template_id: string;
@@ -18256,6 +18667,7 @@ export interface components {
             objective: string;
             /** @enum {string} */
             task_channel: "message" | "call" | "call_then_message";
+            call_type: string | null;
             opening_template: {
                 /** Format: uuid */
                 channel_template_id: string;
@@ -18308,6 +18720,13 @@ export interface components {
                 count: number;
                 contact_ids: string[];
             }[];
+        };
+        ProactiveSwitchDto: {
+            enabled: boolean;
+            locked_by_env: boolean;
+        };
+        SetProactiveSwitchDto: {
+            enabled: boolean;
         };
         CallProviderAccountDto: {
             /** Format: uuid */
@@ -18495,6 +18914,25 @@ export interface components {
                 outbound: number;
             }[];
         };
+        CallsFunnelDto: {
+            period: {
+                /** Format: date-time */
+                start: string;
+                /** Format: date-time */
+                end: string;
+            };
+            types: {
+                call_type: string;
+                label: string;
+                total: number;
+                goal_met: number;
+                stages: {
+                    key: string;
+                    label: string;
+                    reached: number;
+                }[];
+            }[];
+        };
         CallSessionsListDto: {
             data: {
                 /** Format: uuid */
@@ -18504,11 +18942,19 @@ export interface components {
                 /** @enum {string} */
                 purpose: "inbound" | "appointment_reminder" | "crm_task" | "campaign" | "manual";
                 /** @enum {string} */
+                mode: "reactive" | "proactive";
+                call_type: string | null;
+                /** @description CLAVE de la etapa más avanzada del marco (p. ej. «descubrimiento»), no su etiqueta: se cruza con `playbook.stages` del detalle o con GET /calls/playbooks para mostrar el nombre. Null en reactivas y en llamadas anteriores al plan de modos. */
+                last_stage: string | null;
+                /** @enum {string} */
                 status: "queued" | "initiated" | "ringing" | "in_progress" | "completed" | "no_answer" | "busy" | "failed" | "canceled";
                 /** @enum {string|null} */
                 outcome: "goal_met" | "callback_requested" | "voicemail" | "hangup" | "no_answer" | "error" | "transferred" | "agent_closed" | "silence_timeout" | "max_duration" | "quota_exhausted" | "system_error" | null;
                 /** @enum {string|null} */
                 answered_by: "human" | "machine" | "unknown" | "fax" | null;
+                inbound_message: boolean;
+                /** @enum {string|null} */
+                inbound_message_reason: "inbound_disabled" | "no_agent" | "company_suspended" | "calls_disabled" | "calls_paused" | "limit_exceeded" | "line_busy" | "relay_unavailable" | "anonymous_caller" | null;
                 contact: {
                     /** Format: uuid */
                     id: string;
@@ -18545,11 +18991,19 @@ export interface components {
                 /** @enum {string} */
                 purpose: "inbound" | "appointment_reminder" | "crm_task" | "campaign" | "manual";
                 /** @enum {string} */
+                mode: "reactive" | "proactive";
+                call_type: string | null;
+                /** @description CLAVE de la etapa más avanzada del marco (p. ej. «descubrimiento»), no su etiqueta: se cruza con `playbook.stages` del detalle o con GET /calls/playbooks para mostrar el nombre. Null en reactivas y en llamadas anteriores al plan de modos. */
+                last_stage: string | null;
+                /** @enum {string} */
                 status: "queued" | "initiated" | "ringing" | "in_progress" | "completed" | "no_answer" | "busy" | "failed" | "canceled";
                 /** @enum {string|null} */
                 outcome: "goal_met" | "callback_requested" | "voicemail" | "hangup" | "no_answer" | "error" | "transferred" | "agent_closed" | "silence_timeout" | "max_duration" | "quota_exhausted" | "system_error" | null;
                 /** @enum {string|null} */
                 answered_by: "human" | "machine" | "unknown" | "fax" | null;
+                inbound_message: boolean;
+                /** @enum {string|null} */
+                inbound_message_reason: "inbound_disabled" | "no_agent" | "company_suspended" | "calls_disabled" | "calls_paused" | "limit_exceeded" | "line_busy" | "relay_unavailable" | "anonymous_caller" | null;
                 contact: {
                     /** Format: uuid */
                     id: string;
@@ -18580,11 +19034,19 @@ export interface components {
             /** @enum {string} */
             purpose: "inbound" | "appointment_reminder" | "crm_task" | "campaign" | "manual";
             /** @enum {string} */
+            mode: "reactive" | "proactive";
+            call_type: string | null;
+            /** @description CLAVE de la etapa más avanzada del marco (p. ej. «descubrimiento»), no su etiqueta: se cruza con `playbook.stages` del detalle o con GET /calls/playbooks para mostrar el nombre. Null en reactivas y en llamadas anteriores al plan de modos. */
+            last_stage: string | null;
+            /** @enum {string} */
             status: "queued" | "initiated" | "ringing" | "in_progress" | "completed" | "no_answer" | "busy" | "failed" | "canceled";
             /** @enum {string|null} */
             outcome: "goal_met" | "callback_requested" | "voicemail" | "hangup" | "no_answer" | "error" | "transferred" | "agent_closed" | "silence_timeout" | "max_duration" | "quota_exhausted" | "system_error" | null;
             /** @enum {string|null} */
             answered_by: "human" | "machine" | "unknown" | "fax" | null;
+            inbound_message: boolean;
+            /** @enum {string|null} */
+            inbound_message_reason: "inbound_disabled" | "no_agent" | "company_suspended" | "calls_disabled" | "calls_paused" | "limit_exceeded" | "line_busy" | "relay_unavailable" | "anonymous_caller" | null;
             contact: {
                 /** Format: uuid */
                 id: string;
@@ -18624,6 +19086,16 @@ export interface components {
                 /** Format: date-time */
                 created_at: string;
             }[];
+            playbook: {
+                call_type: string;
+                label: string;
+                stages: {
+                    key: string;
+                    label: string;
+                    goal?: string;
+                }[];
+            } | null;
+            stage_route: string[];
         };
         CallRecordingUrlDto: {
             /** Format: uri */
@@ -18648,16 +19120,35 @@ export interface components {
             silence_probe_seconds: number;
             /** @default 15 */
             silence_hangup_seconds: number;
+            /** @default En este momento no podemos atenderte. Deja tu mensaje después del tono y te devolvemos la llamada. */
+            inbound_voicemail_text: string;
+        };
+        LaunchCallDto: {
+            /** Format: uuid */
+            contact_id: string;
+            /** @enum {string} */
+            call_type: "appointment_reminder" | "sales_followup" | "collections" | "reactivation" | "followup";
+            objective?: string;
+            /** Format: uuid */
+            ai_agent_id?: string;
+            /** @enum {string} */
+            mode?: "reactive" | "proactive";
+            /** Format: uuid */
+            plan_id?: string;
+        };
+        TestCallResultDto: {
+            /** Format: uuid */
+            call_session_id: string;
         };
         TestCallDto: {
             to: string;
             /** Format: uuid */
             ai_agent_id?: string;
             objective?: string;
-        };
-        TestCallResultDto: {
-            /** Format: uuid */
-            call_session_id: string;
+            /** @enum {string} */
+            call_type?: "appointment_reminder" | "sales_followup" | "collections" | "reactivation" | "followup";
+            /** @enum {string} */
+            mode?: "reactive" | "proactive";
         };
         TenantCallNumberDto: {
             /** Format: uuid */
@@ -18671,6 +19162,127 @@ export interface components {
             inbound_enabled: boolean;
             /** Format: date-time */
             assigned_at: string | null;
+        };
+        CallPlaybookListDto: {
+            /** @enum {string} */
+            call_type: "appointment_reminder" | "sales_followup" | "collections" | "reactivation" | "followup";
+            label: string;
+            enabled: boolean;
+            customized: boolean;
+            base_version: number;
+            playbook: {
+                call_type: string;
+                label: string;
+                version: number;
+                opening_guidance: string;
+                stages: {
+                    key: string;
+                    label: string;
+                    goal: string;
+                    advance_when: string;
+                    must: string[];
+                    never: string[];
+                }[];
+            };
+            proposal: {
+                call_type: string;
+                label: string;
+                version: number;
+                opening_guidance: string;
+                stages: {
+                    key: string;
+                    label: string;
+                    goal: string;
+                    advance_when: string;
+                    must: string[];
+                    never: string[];
+                }[];
+            } | null;
+            /** Format: date-time */
+            proposed_at: string | null;
+            /** Format: date-time */
+            updated_at: string | null;
+        }[];
+        SaveCallPlaybookDto: {
+            enabled: boolean;
+            opening_guidance: string;
+            stages: {
+                key: string;
+                label: string;
+                goal: string;
+                advance_when: string;
+                must: string[];
+                never: string[];
+            }[];
+        };
+        CallPlaybookViewDto: {
+            /** @enum {string} */
+            call_type: "appointment_reminder" | "sales_followup" | "collections" | "reactivation" | "followup";
+            label: string;
+            enabled: boolean;
+            customized: boolean;
+            base_version: number;
+            playbook: {
+                call_type: string;
+                label: string;
+                version: number;
+                opening_guidance: string;
+                stages: {
+                    key: string;
+                    label: string;
+                    goal: string;
+                    advance_when: string;
+                    must: string[];
+                    never: string[];
+                }[];
+            };
+            proposal: {
+                call_type: string;
+                label: string;
+                version: number;
+                opening_guidance: string;
+                stages: {
+                    key: string;
+                    label: string;
+                    goal: string;
+                    advance_when: string;
+                    must: string[];
+                    never: string[];
+                }[];
+            } | null;
+            /** Format: date-time */
+            proposed_at: string | null;
+            /** Format: date-time */
+            updated_at: string | null;
+        };
+        ProposeCallPlaybooksDto: {
+            call_types?: ("appointment_reminder" | "sales_followup" | "collections" | "reactivation" | "followup")[];
+        };
+        ProposeCallPlaybooksResultDto: {
+            proposed: ("appointment_reminder" | "sales_followup" | "collections" | "reactivation" | "followup")[];
+            results: {
+                /** @enum {string} */
+                call_type: "appointment_reminder" | "sales_followup" | "collections" | "reactivation" | "followup";
+                /** @enum {string} */
+                status: "saved" | "unchanged" | "discarded" | "failed";
+            }[];
+        };
+        PreviewOpeningDto: {
+            opening_guidance?: string;
+            stages?: {
+                key: string;
+                label: string;
+                goal: string;
+                advance_when: string;
+                must: string[];
+                never: string[];
+            }[];
+        };
+        PreviewOpeningResultDto: {
+            text: string;
+            /** @enum {string} */
+            source: "generated" | "fallback";
+            agent_name: string | null;
         };
         OutreachSenderDto: {
             address: string;
@@ -21072,6 +21684,356 @@ export interface components {
                 basis: string | null;
                 /** @enum {string|null} */
                 estimate_source: "history" | "declared" | "benchmark" | null;
+            };
+        };
+        RoutinesListDto: {
+            items: {
+                name: string;
+                /** @enum {string} */
+                mode: "assisted" | "autonomous";
+                source: {
+                    kind: string;
+                    params: {
+                        [key: string]: unknown;
+                    };
+                };
+                qualify: {
+                    /** Format: uuid */
+                    icp_id?: string | null;
+                    min_score: number;
+                    require_decision_maker: boolean;
+                    reveal_email: boolean;
+                    reveal_phone: boolean;
+                };
+                contact: {
+                    channels: string[];
+                    /** Format: uuid */
+                    agent_id: string | null;
+                    goal: string;
+                };
+                follow_up: {
+                    /** Format: uuid */
+                    sequence_id: string;
+                };
+                schedule: {
+                    days: number[];
+                    times: string[];
+                    timezone: string;
+                    leads_per_run: number;
+                };
+                budget: {
+                    per_run: number;
+                    per_month: number;
+                };
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                status: "active" | "paused" | "archived";
+                /** Format: date-time */
+                next_run_at: string | null;
+                /** Format: date-time */
+                last_run_at: string | null;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+                last_run: {
+                    /** Format: uuid */
+                    id: string;
+                    /** Format: uuid */
+                    routine_id: string;
+                    trigger: string;
+                    /** @enum {string} */
+                    status: "queued" | "running" | "awaiting_approval" | "paused" | "done" | "budget_exhausted" | "failed";
+                    step: string | null;
+                    counters: {
+                        [key: string]: number;
+                    };
+                    credits_spent: number;
+                    error: string | null;
+                    /** Format: date-time */
+                    started_at: string | null;
+                    /** Format: date-time */
+                    finished_at: string | null;
+                    /** Format: date-time */
+                    created_at: string;
+                } | null;
+            }[];
+        };
+        RoutineInputDto: {
+            name: string;
+            /** @enum {string} */
+            mode: "assisted" | "autonomous";
+            source: {
+                kind: string;
+                params: {
+                    [key: string]: unknown;
+                };
+            };
+            qualify: {
+                /** Format: uuid */
+                icp_id?: string | null;
+                min_score: number;
+                require_decision_maker: boolean;
+                reveal_email: boolean;
+                reveal_phone: boolean;
+            };
+            contact: {
+                channels: string[];
+                /** Format: uuid */
+                agent_id: string | null;
+                goal: string;
+            };
+            follow_up: {
+                /** Format: uuid */
+                sequence_id: string;
+            };
+            schedule: {
+                days: number[];
+                times: string[];
+                timezone: string;
+                leads_per_run: number;
+            };
+            budget: {
+                per_run: number;
+                per_month: number;
+            };
+        };
+        RoutineCreatedDto: {
+            /** Format: uuid */
+            id: string;
+        };
+        RoutineDto: {
+            name: string;
+            /** @enum {string} */
+            mode: "assisted" | "autonomous";
+            source: {
+                kind: string;
+                params: {
+                    [key: string]: unknown;
+                };
+            };
+            qualify: {
+                /** Format: uuid */
+                icp_id?: string | null;
+                min_score: number;
+                require_decision_maker: boolean;
+                reveal_email: boolean;
+                reveal_phone: boolean;
+            };
+            contact: {
+                channels: string[];
+                /** Format: uuid */
+                agent_id: string | null;
+                goal: string;
+            };
+            follow_up: {
+                /** Format: uuid */
+                sequence_id: string;
+            };
+            schedule: {
+                days: number[];
+                times: string[];
+                timezone: string;
+                leads_per_run: number;
+            };
+            budget: {
+                per_run: number;
+                per_month: number;
+            };
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            status: "active" | "paused" | "archived";
+            /** Format: date-time */
+            next_run_at: string | null;
+            /** Format: date-time */
+            last_run_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        RunRefDto: {
+            /** Format: uuid */
+            run_id?: string;
+        };
+        RunsListDto: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                routine_id: string;
+                trigger: string;
+                /** @enum {string} */
+                status: "queued" | "running" | "awaiting_approval" | "paused" | "done" | "budget_exhausted" | "failed";
+                step: string | null;
+                counters: {
+                    [key: string]: number;
+                };
+                credits_spent: number;
+                error: string | null;
+                /** Format: date-time */
+                started_at: string | null;
+                /** Format: date-time */
+                finished_at: string | null;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+            /** Format: uuid */
+            next_cursor: string | null;
+        };
+        AutopilotRunDetailDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            routine_id: string;
+            trigger: string;
+            /** @enum {string} */
+            status: "queued" | "running" | "awaiting_approval" | "paused" | "done" | "budget_exhausted" | "failed";
+            step: string | null;
+            counters: {
+                [key: string]: number;
+            };
+            credits_spent: number;
+            error: string | null;
+            /** Format: date-time */
+            started_at: string | null;
+            /** Format: date-time */
+            finished_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+            items: {
+                /** Format: uuid */
+                id: string;
+                lead_id: string;
+                contact_id: string | null;
+                display_name: string | null;
+                company_name: string | null;
+                /** @enum {string} */
+                stage: "searching" | "enriching" | "qualifying" | "contacting" | "following" | "replied" | "demo" | "discarded";
+                reason: string | null;
+                score: number | null;
+                decision: string | null;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+        };
+        RunEventsDto: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                item_id: string | null;
+                kind: string;
+                payload: {
+                    [key: string]: unknown;
+                };
+                request_id: string | null;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+        };
+        BatchDto: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                lead_id: string;
+                contact_id: string | null;
+                display_name: string | null;
+                company_name: string | null;
+                score: number | null;
+                decision: string | null;
+            }[];
+        };
+        BatchDecisionDto: {
+            approve: string[];
+            /** @default [] */
+            skip: string[];
+        };
+        EstimateDto: {
+            credits_per_run: number;
+            credits_per_month: number;
+            runs_per_month: number;
+            leads_revealed_per_run: number;
+        };
+        SummaryDto: {
+            month: string;
+            has_routines: boolean;
+            demos: number;
+            demos_previous: number;
+            funnel: {
+                found: number;
+                qualified: number;
+                contacted: number;
+                replied: number;
+                demo: number;
+            };
+            credits_month: number;
+            credits_budget_month: number;
+            credits_per_demo: number | null;
+            best_sources: {
+                source: string;
+                credits_per_demo: number;
+            }[];
+        };
+        LedgerDto: {
+            items: {
+                run_id: string;
+                routine_id: string | null;
+                request_id: string;
+                provider: string | null;
+                metric: string;
+                quantity: number;
+                cost_usd: number | null;
+                bill_to: string;
+                /** Format: date-time */
+                occurred_at: string;
+            }[];
+            totals: {
+                provider: string | null;
+                metric: string;
+                bill_to: string;
+                quantity: number;
+                cost_usd: number;
+            }[];
+            truncated: boolean;
+        };
+        FunnelViewDto: {
+            by_routine: {
+                found: number;
+                qualified: number;
+                contactable: number;
+                contacted: number;
+                replied: number;
+                demo: number;
+                won: number;
+                lost: number;
+                discarded_by_reason: {
+                    [key: string]: number;
+                };
+                credits: number;
+                credits_per_qualified: number | null;
+                credits_per_demo: number | null;
+                /** Format: uuid */
+                routine_id: string;
+                name: string;
+                source: string | null;
+            }[];
+            total: {
+                found: number;
+                qualified: number;
+                contactable: number;
+                contacted: number;
+                replied: number;
+                demo: number;
+                won: number;
+                lost: number;
+                discarded_by_reason: {
+                    [key: string]: number;
+                };
+                credits: number;
+                credits_per_qualified: number | null;
+                credits_per_demo: number | null;
             };
         };
         NotificationsListDto: {
@@ -27676,7 +28638,7 @@ export interface operations {
             query?: {
                 q?: string;
                 lifecycle_stage?: "prospect" | "lead" | "customer" | "other";
-                source?: "inbound_conversation" | "manual" | "import" | "lead_conversion" | "integration" | "prospecting" | "forms";
+                source?: "inbound_conversation" | "manual" | "import" | "lead_conversion" | "integration" | "prospecting" | "forms" | "inbound_call";
                 city?: string;
                 created_after?: string;
                 created_before?: string;
@@ -33326,6 +34288,48 @@ export interface operations {
             };
         };
     };
+    PlatformCallsController_getProactive_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProactiveSwitchDto"];
+                };
+            };
+        };
+    };
+    PlatformCallsController_setProactive_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetProactiveSwitchDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProactiveSwitchDto"];
+                };
+            };
+        };
+    };
     PlatformCallsController_listProviders_v1: {
         parameters: {
             query?: never;
@@ -33664,6 +34668,25 @@ export interface operations {
             };
         };
     };
+    CallsAdminController_getFunnel_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallsFunnelDto"];
+                };
+            };
+        };
+    };
     CallsAdminController_listSessions_v1: {
         parameters: {
             query?: {
@@ -33671,6 +34694,8 @@ export interface operations {
                 status?: "queued" | "initiated" | "ringing" | "in_progress" | "completed" | "no_answer" | "busy" | "failed" | "canceled";
                 outcome?: "goal_met" | "callback_requested" | "voicemail" | "hangup" | "no_answer" | "error" | "transferred" | "agent_closed" | "silence_timeout" | "max_duration" | "quota_exhausted" | "system_error";
                 purpose?: "inbound" | "appointment_reminder" | "crm_task" | "campaign" | "manual";
+                mode?: "reactive" | "proactive";
+                call_type?: "appointment_reminder" | "sales_followup" | "collections" | "reactivation" | "followup" | "inbound_attention";
                 ai_agent_id?: string;
                 contact_id?: string;
                 from?: string;
@@ -33796,6 +34821,53 @@ export interface operations {
             };
         };
     };
+    CallsAdminController_launch_v1: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Misma clave = misma llamada (24 h). Recomendada en cada clic de «Llamar». */
+                "idempotency-key"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LaunchCallDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TestCallResultDto"];
+                };
+            };
+            /** @description calls/contact_not_found | calls/collection_plan_not_found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description calls/launch_skipped — details.reason: already_in_call | contact_unreachable | no_phone_number | no_agent | calls_disabled | company_suspended | calls_paused | limit_exceeded · calls/collections_disabled — con plan_id y la función Cobranza apagada */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description calls/collection_plan_invalid — details.reason: contact_mismatch | not_collections */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     CallsAdminController_placeTestCall_v1: {
         parameters: {
             query?: never;
@@ -33834,6 +34906,161 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TenantCallNumberDto"][];
+                };
+            };
+        };
+    };
+    CallPlaybooksController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallPlaybookListDto"];
+                };
+            };
+        };
+    };
+    CallPlaybooksController_save_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                type: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveCallPlaybookDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallPlaybookViewDto"];
+                };
+            };
+        };
+    };
+    CallPlaybooksController_reset_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                type: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallPlaybookViewDto"];
+                };
+            };
+        };
+    };
+    CallPlaybooksController_proposeAll_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProposeCallPlaybooksDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposeCallPlaybooksResultDto"];
+                };
+            };
+        };
+    };
+    CallPlaybooksController_applyProposal_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                type: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallPlaybookViewDto"];
+                };
+            };
+        };
+    };
+    CallPlaybooksController_discardProposal_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                type: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallPlaybookViewDto"];
+                };
+            };
+        };
+    };
+    CallPlaybooksController_previewOpening_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                type: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PreviewOpeningDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreviewOpeningResultDto"];
                 };
             };
         };
@@ -36529,6 +37756,444 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RejectResultDto"];
+                };
+            };
+        };
+    };
+    AutopilotProposalsController_list_v1: {
+        parameters: {
+            query: {
+                status: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposalListDto"];
+                };
+            };
+        };
+    };
+    AutopilotProposalsController_approve_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                proposal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApprovalResultDto"];
+                };
+            };
+        };
+    };
+    AutopilotProposalsController_reject_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                proposal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RejectProposalDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RejectResultDto"];
+                };
+            };
+        };
+    };
+    AutopilotController_listRoutines_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutinesListDto"];
+                };
+            };
+        };
+    };
+    AutopilotController_createRoutine_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoutineInputDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutineCreatedDto"];
+                };
+            };
+        };
+    };
+    AutopilotController_getRoutine_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutineDto"];
+                };
+            };
+        };
+    };
+    AutopilotController_updateRoutine_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoutineInputDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutineDto"];
+                };
+            };
+        };
+    };
+    AutopilotController_deleteRoutine_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AutopilotController_pause_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunRefDto"];
+                };
+            };
+        };
+    };
+    AutopilotController_resume_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunRefDto"];
+                };
+            };
+        };
+    };
+    AutopilotController_runNow_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunRefDto"];
+                };
+            };
+        };
+    };
+    AutopilotController_listRuns_v1: {
+        parameters: {
+            query?: {
+                cursor?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunsListDto"];
+                };
+            };
+        };
+    };
+    AutopilotController_getRun_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AutopilotRunDetailDto"];
+                };
+            };
+        };
+    };
+    AutopilotController_listEvents_v1: {
+        parameters: {
+            query?: {
+                after?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunEventsDto"];
+                };
+            };
+        };
+    };
+    AutopilotController_batch_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BatchDto"];
+                };
+            };
+        };
+    };
+    AutopilotController_decideBatch_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BatchDecisionDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AutopilotController_estimate_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoutineInputDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EstimateDto"];
+                };
+            };
+        };
+    };
+    AutopilotController_summary_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SummaryDto"];
+                };
+            };
+        };
+    };
+    AutopilotController_ledger_v1: {
+        parameters: {
+            query?: {
+                routine_id?: string;
+                run_id?: string;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LedgerDto"];
+                };
+            };
+        };
+    };
+    AutopilotController_funnel_v1: {
+        parameters: {
+            query?: {
+                routine_id?: string;
+                run_id?: string;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FunnelViewDto"];
                 };
             };
         };

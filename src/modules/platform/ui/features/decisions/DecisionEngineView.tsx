@@ -62,7 +62,7 @@ export function DecisionEngineView() {
   return (
     <div className="space-y-5">
       <header>
-        <h1 className="text-3xl font-semibold tracking-tight">Motor de decisiones</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">Decisiones</h1>
         <p className="mt-1 max-w-2xl text-sm text-muted-foreground text-pretty">
           Qué proveedor decide cada tipo de pregunta y quién responde si falla. Solo se ofrecen
           modelos con tarifa en Pricing IA. Los cambios se aplican a todos los tenants en menos de

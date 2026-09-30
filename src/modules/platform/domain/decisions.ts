@@ -33,6 +33,11 @@ export const PURPOSE_META: Record<DecisionPurpose, { label: string; description:
     description: "Si el mensaje encaja con ese lead antes de enviarlo",
   },
   handoff_urgency: { label: "Urgencia de traspaso", description: "Cuándo pasar la conversación a una persona" },
+  // Llamadas F6: Jev clasifica en sombra cada frase del cliente al teléfono.
+  voice_utterance: {
+    label: "Frase en la llamada",
+    description: "Qué dijo el cliente al teléfono: pregunta, objeción, acepta, rechaza o buzón",
+  },
   custom: { label: "Uso libre", description: "Cualquier otra decisión de un módulo" },
 };
 

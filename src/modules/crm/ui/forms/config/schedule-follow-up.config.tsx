@@ -11,6 +11,7 @@ import { z } from "zod";
 import type { ActivityDTO, CreateAgentTaskDTO, UpdateAgentTaskDTO } from "@/modules/crm/domain/activity";
 import {
   asFollowUpMedium,
+  asCrmCallType,
   businessDateTimeToIso,
   isInPast,
   isoToBusinessDateTime,
@@ -20,6 +21,7 @@ import {
   type OpeningTemplateInput,
 } from "@/modules/crm/domain/schedule-follow-up";
 import { countTemplateVariables, type HsmTemplateDTO } from "@/modules/marketing/public";
+import { type CrmCallType } from "@/modules/calls/public";
 
 export const NO_AGENT = "__none__";
 export const NO_TEMPLATE = "__none__";
@@ -45,6 +47,8 @@ export type ScheduleFollowUpValues = {
   contact: { id: string; label: string } | null;
   agent_id: string;
   medium: FollowUpMedium;
+  /** Plan de modos §7: el marco de la llamada; solo cuenta si `medium` llama. */
+  call_type: CrmCallType;
   objective: string;
   /** Fecha y hora de PARED del negocio (zona de la empresa, no del navegador). */
   date: string;
@@ -79,6 +83,7 @@ export function buildScheduleFollowUpSchema(rules: {
         .refine((value) => value !== null, "Selecciona el contacto"),
       agent_id: z.string(),
       medium: z.enum(["message", "call", "call_then_message"]),
+      call_type: z.custom<CrmCallType>(),
       objective: z.string(),
       date: z.string(),
       time: z.string(),
@@ -155,6 +160,7 @@ export function defaultScheduleFollowUpValues(preset: {
     contact: preset.contact ?? null,
     agent_id: NO_AGENT,
     medium: "message",
+    call_type: "followup",
     objective: "",
     date: preset.shortcut?.date ?? "",
     time: preset.shortcut?.time ?? "09:00",
@@ -178,6 +184,7 @@ export function editScheduleFollowUpValues(
     // La POLÍTICA elegida, no el medio en curso: una «llamar, y si no,
     // escribir» que ya va por mensaje sigue siendo esa política al editarla.
     medium: asFollowUpMedium(task.task_channel),
+    call_type: asCrmCallType(task.call_type),
     objective: task.objective ?? "",
     date: when.date,
     time: when.time,
@@ -217,6 +224,7 @@ export function toCreateFollowUpDTO(
     objective: values.objective.trim(),
     due_at: businessDateTimeToIso(values.date, values.time, ctx.tz),
     task_channel: values.medium,
+    ...(values.medium === "message" ? {} : { call_type: values.call_type }),
     ...(ctx.deal_id === undefined ? {} : { deal_id: ctx.deal_id }),
     ...(opening === null ? {} : { opening_template: opening }),
   };
@@ -233,6 +241,8 @@ export function toUpdateFollowUpDTO(
     assigned_agent_id: values.agent_id,
     // Cambiar la política reinicia el medio y su presupuesto en el backend.
     task_channel: values.medium,
+    // Un canal de solo mensajes no guarda marco; `null` vuelve al de siempre.
+    call_type: values.medium === "message" ? null : values.call_type,
     // `null` quita la plantilla; el backend distingue ausente de null.
     opening_template: openingTemplateInput(values, ctx.template),
   };

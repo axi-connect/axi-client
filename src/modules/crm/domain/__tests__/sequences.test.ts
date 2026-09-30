@@ -87,6 +87,13 @@ describe("sequences — plantillas de partida", () => {
       expect(validateSequence({ name: template.name, steps: template.steps })).toEqual([]);
     }
   });
+
+  it("«Reactivación de fríos» llama con el marco de Reactivación", () => {
+    const template = SEQUENCE_TEMPLATES.find((candidate) => candidate.key === "reactivation");
+    const callSteps = template?.steps.filter((step) => step.task_channel !== "message") ?? [];
+    expect(callSteps.length).toBeGreaterThan(0);
+    for (const step of callSteps) expect(step.call_type).toBe("reactivation");
+  });
 });
 
 describe("sequences — lo que viaja al backend", () => {
@@ -185,3 +192,28 @@ describe("sequences — «ahora no» (P3b)", () => {
     expect(enrollmentDisplayStatus({ status: "stopped", snoozed_until: "2026-11-14T15:00:00Z" })).toBe("stopped");
   });
 });
+
+describe("sequences — marco de la llamada de cada paso (plan de modos §7)", () => {
+  const input = (steps: Parameters<typeof toUpsertDTO>[0]["steps"]) => ({
+    name: "Cobro suave",
+    description: "",
+    stop_on_reply: true,
+    stop_on_conversion: true,
+    is_active: false,
+    steps,
+  });
+
+  it("un paso que llama lleva su marco (o el de siempre); uno de mensajes, ninguno", () => {
+    const dto = toUpsertDTO(
+      input([
+        { offset_hours: 0, task_channel: "message", objective: "Recordar la propuesta por WhatsApp", call_type: "sales_followup" },
+        { offset_hours: 48, task_channel: "call", objective: "Llamar para retomar la propuesta", call_type: "sales_followup" },
+        { offset_hours: 96, task_channel: "call_then_message", objective: "Último intento antes de pasarlo al equipo" },
+      ]),
+    );
+    expect(dto.steps[0]).not.toHaveProperty("call_type");
+    expect(dto.steps[1]).toMatchObject({ call_type: "sales_followup" });
+    expect(dto.steps[2]).toMatchObject({ call_type: "followup" });
+  });
+});
+

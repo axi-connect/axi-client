@@ -96,7 +96,7 @@ export const CALL_STATUS_MAP: StatusMap = {
  * enum del contrato obliga a etiquetar cada valor nuevo. */
 const OUTCOME_ENTRIES: Record<CallOutcome, StatusMap[string]> = {
   goal_met: { label: "Objetivo cumplido", tone: "success" },
-  callback_requested: { label: "Pidió callback", tone: "info" },
+  callback_requested: { label: "Pidió que lo llamen", tone: "info" },
   voicemail: { label: "Buzón de voz", tone: "warning" },
   hangup: { label: "Colgó", tone: "neutral" },
   no_answer: { label: "Sin respuesta", tone: "neutral" },
@@ -149,6 +149,8 @@ export type CallRow = {
   agent: string | null;
   status: CallSessionStatus;
   outcome: CallSessionRowDTO["outcome"];
+  /** Entrega 2: la entrante terminó en recado (lo dice el servidor). */
+  inbound_message: boolean;
   duration_seconds: number | null;
   cost_estimate_usd: number | null;
   has_recording: boolean;
@@ -171,6 +173,8 @@ export function mapSessionToRow(dto: CallSessionRowDTO): CallRow {
     agent: dto.ai_agent_name,
     status: dto.status,
     outcome: dto.outcome,
+    // Auditoría F5 fase 2: sin esto el Historial decía «Pidió que lo llamen» en un recado.
+    inbound_message: dto.inbound_message,
     duration_seconds: dto.duration_seconds,
     cost_estimate_usd: dto.cost_estimate_usd,
     has_recording: dto.has_recording,
@@ -231,7 +235,11 @@ export function parseTurnLatency(payload: unknown): TurnLatency | null {
 export function callResultPill(row: {
   status: CallSessionStatus;
   outcome: CallSessionRowDTO["outcome"];
+  inbound_message?: boolean;
 }): { label: string; tone: "success" | "warning" | "destructive" | "neutral" } {
+  // Entrega 2: una entrante que el agente no atendió no «pidió callback» a un
+  // agente: dejó un recado para que le devuelvan la llamada.
+  if (isInboundMessage(row)) return { label: "Dejó un recado", tone: "warning" };
   const { status, map } = callResultBadge(row);
   const entry = map[status];
   const tone = entry?.tone;
@@ -239,6 +247,15 @@ export function callResultPill(row: {
     label: entry?.label ?? status,
     tone: tone === "success" || tone === "warning" || tone === "destructive" ? tone : "neutral",
   };
+}
+
+/**
+ * ¿Es el recado de una entrante que el agente no atendió? Lo dice el SERVIDOR
+ * (`inbound_message`, guardado al contestar): antes se infería de «sin
+ * agente», y un recado por relay caído sí tiene agente (auditoría F5, M1).
+ */
+export function isInboundMessage(row: { inbound_message?: boolean }): boolean {
+  return row.inbound_message === true;
 }
 
 /** Veredicto del juez de objetivo (evento `goal_assessment` del postprocess). */

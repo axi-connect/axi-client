@@ -36,6 +36,14 @@ export const PROACTIVE_CALL_TYPES: readonly ProactiveCallType[] = [
   "followup",
 ];
 
+/**
+ * Los marcos que se eligen desde el CRM (tareas, lotes, secuencias): espejo de
+ * `CRM_CALL_TYPES` del servidor. Cobranza (necesita un plan de Cobros) y
+ * Recordatorio (una cita) tienen su propio origen: Cobros y la agenda.
+ */
+export const CRM_CALL_TYPES = ["sales_followup", "reactivation", "followup"] as const satisfies readonly ProactiveCallType[];
+export type CrmCallType = (typeof CRM_CALL_TYPES)[number];
+
 export const CALL_TYPE_LABELS: Record<ProactiveCallType | "inbound_attention", string> = {
   appointment_reminder: "Recordatorio de cita",
   sales_followup: "Venta y seguimiento comercial",

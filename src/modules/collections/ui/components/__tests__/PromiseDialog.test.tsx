@@ -29,6 +29,7 @@ const plan = (overrides: Partial<PlanDetailDTO> = {}): PlanDetailDTO => ({
   order_id: "o1",
   order_number: 47,
   contact_id: "c1",
+  contact_phone: "+573001234567",
   status: "active",
   currency: "COP",
   total_cents: 1_160_000_000,
