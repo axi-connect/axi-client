@@ -84,6 +84,7 @@ export const METRIC_LABELS: Record<string, string> = {
   // costo cero a propósito, y verla así es correcto, no un hueco de tarifa.
   embedding_pixels: "Píxeles de reconocimiento (Voyage)",
   product_recognitions: "Reconocimientos de producto",
+  ai_decisions: "Clasificadores",
 };
 
 export function metricLabel(metric: string): string {
