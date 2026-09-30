@@ -7,6 +7,7 @@ import { KeyRound, TriangleAlert, UsersRound } from "lucide-react";
 
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
+import { useSocket, useSocketEvent } from "@/core/realtime/use-socket";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { usePaginatedList } from "@/shared/api/use-paginated-list";
 import type { ListQuery } from "@/shared/api/query";
@@ -49,12 +50,8 @@ import {
 import { CaptureHeader } from "./components/CaptureHeader";
 import { PeopleFilters } from "./components/PeopleFilters";
 import { RevealButtons } from "./components/RevealButtons";
+import { useLeadRooms } from "./hooks/use-lead-rooms";
 
-/** Mientras la búsqueda corre se mira la fila: termina en segundos. */
-const SEARCH_POLL_MS = 1_500;
-/** Revelar el correo tarda segundos; el celular, minutos. Se pregunta según lo que se espera. */
-const EMAIL_POLL_MS = 3_000;
-const PHONE_POLL_MS = 15_000;
 /** Pasado esto, el servidor ya cerró la espera («no llegó»): se deja de esperar aquí también. */
 const PHONE_WAIT_MS = 30 * 60_000;
 
@@ -175,11 +172,25 @@ export function PeopleView() {
   useEffect(() => void loadSearch(), [loadSearch]);
 
   const searching = search !== null && isInFlight(search);
+
+  // En vivo, sin sondeo (auditoría B3): la búsqueda avisa en la sala del
+  // tenant; el revelado, en la sala de cada lead que se está esperando.
+  const { socket } = useSocket("inbox");
+  useSocketEvent(socket, "prospecting.search_progress", (payload) => {
+    if (payload.search_id === searchId) void loadSearch();
+  });
+  useSocketEvent(socket, "prospecting.search_completed", (payload) => {
+    if (payload.search_id === searchId) void loadSearch();
+  });
+  // Lo que pasó con el socket caído no llegó: al volver se relee la fila.
   useEffect(() => {
-    if (!searching) return;
-    const timer = setInterval(() => void loadSearch(), SEARCH_POLL_MS);
-    return () => clearInterval(timer);
-  }, [searching, loadSearch]);
+    if (socket === null || !searching) return;
+    const onConnect = () => void loadSearch();
+    socket.on("connect", onConnect);
+    return () => {
+      socket.off("connect", onConnect);
+    };
+  }, [socket, searching, loadSearch]);
 
   // ─── La lista ──────────────────────────────────────────────────────────
   const extraParams = useMemo(
@@ -220,13 +231,16 @@ export function PeopleView() {
     wasSearching.current = searching;
   }, [searching, refresh, pendingPage, setPage]);
 
-  // Mientras se revela, se pregunta: el correo tarda segundos, el celular minutos.
-  useEffect(() => {
-    if (revealing.size === 0 && waitingPhone.size === 0) return;
-    const every = revealing.size > 0 ? EMAIL_POLL_MS : PHONE_POLL_MS;
-    const timer = setInterval(() => void refresh(), every);
-    return () => clearInterval(timer);
-  }, [revealing, waitingPhone, refresh]);
+  // Mientras se revela, se escucha a esas personas: el correo llega en
+  // segundos, el celular en minutos, y cada paso se anuncia en su sala.
+  const watched = useMemo(() => [...new Set([...revealing, ...waitingPhone.keys()])], [revealing, waitingPhone]);
+  const watchedSet = useMemo(() => new Set(watched), [watched]);
+  useLeadRooms(socket, watched, () => void refresh());
+  const onLeadStep = (payload: { lead_id: string }) => {
+    if (watchedSet.has(payload.lead_id)) void refresh();
+  };
+  useSocketEvent(socket, "prospecting.lead_enrichment_progress", onLeadStep);
+  useSocketEvent(socket, "prospecting.lead_enrichment_completed", onLeadStep);
 
   // Lo que ya llegó deja de esperarse.
   useEffect(() => {
@@ -670,11 +684,19 @@ function UnavailableState({ reason }: { reason: string }) {
   return (
     <EmptyState
       icon={KeyRound}
-      title={reason === "no_tenant_key" ? "Pon tu llave de Apollo" : "Apollo no está disponible"}
+      title={
+        reason === "no_tenant_key"
+          ? "Pon tu llave de Apollo"
+          : reason === "out_of_credits"
+            ? "Tu saldo de Apollo se agotó"
+            : "Apollo no está disponible"
+      }
       description={
         reason === "no_tenant_key"
           ? "Personas usa tu propia cuenta de Apollo: buscar es gratis y revelar descuenta de tu saldo. Pégala una vez en Fuentes."
-          : "La fuente de personas está apagada o dando problemas. Revisa su estado en Fuentes."
+          : reason === "out_of_credits"
+            ? "Revelar descuenta de tu saldo en Apollo y ya no queda. Cuando recargues, en unas horas volvemos a intentarlo solos."
+            : "La fuente de personas está apagada o dando problemas. Revisa su estado en Fuentes."
       }
       action={
         <Button asChild>

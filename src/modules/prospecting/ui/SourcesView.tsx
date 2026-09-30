@@ -61,6 +61,7 @@ const UNAVAILABLE_REASONS: Record<string, string> = {
   capped_month: "Esta fuente llegó a su tope del mes.",
   no_tenant_key: "Usa tu propia llave de Apollo: ponla abajo.",
   plan_without_api: "Tu plan de Apollo no incluye la API de personas.",
+  out_of_credits: "Tu saldo de Apollo se agotó. Cuando recargues, en unas horas volvemos a intentarlo solos.",
 };
 
 /** Qué aporta cada fuente, dicho por lo que el dueño va a obtener. */

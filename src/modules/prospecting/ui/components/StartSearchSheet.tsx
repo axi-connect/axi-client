@@ -61,6 +61,7 @@ const UNAVAILABLE_SHORT: Record<string, string> = {
   capped_month: "tope del mes alcanzado",
   no_tenant_key: "falta tu llave",
   plan_without_api: "tu plan no lo incluye",
+  out_of_credits: "sin saldo en Apollo",
 };
 
 /**
