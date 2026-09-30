@@ -178,31 +178,31 @@ export function LeadPeopleSection({
         <>
           <ul className="divide-border divide-y">
             {(people ?? []).map((person) => (
-              <li key={person.id} className="flex flex-wrap items-start gap-3 py-3 first:pt-0">
+              <li key={person.id} className="flex flex-wrap items-start gap-x-3 gap-y-2 py-3 first:pt-0">
                 <span
                   aria-hidden
                   className="bg-muted text-muted-foreground grid size-9 shrink-0 place-items-center rounded-full text-xs font-semibold"
                 >
                   {initialsOf(person.display_name)}
                 </span>
-                <div className="flex min-w-0 flex-1 flex-col gap-1">
+                <div className="flex min-w-0 flex-[1_1_13rem] flex-col gap-1">
                   <Link
                     href={`/marketing/leads/${person.id}`}
-                    className="truncate font-medium hover:underline"
+                    className="inline-flex min-h-6 max-w-full items-center truncate font-medium hover:underline"
                     title={person.display_name ?? undefined}
                   >
                     {person.display_name ?? "Sin nombre"}
                   </Link>
                   <p className="text-muted-foreground text-xs text-pretty">
                     {person.title !== null && <>{person.title} · </>}
-                    <span className="text-foreground font-semibold">{BUYING_ROLE_LABELS[person.buying_role]}</span>
+                    <span className="text-foreground font-semibold whitespace-nowrap">{BUYING_ROLE_LABELS[person.buying_role]}</span>
                     {person.decision_maker_confidence !== null && (
-                      <span className="tabular-nums"> · confianza {person.decision_maker_confidence}</span>
+                      <span className="whitespace-nowrap tabular-nums"> · confianza {person.decision_maker_confidence}</span>
                     )}
                   </p>
                   {person.evidence_provider !== null && (
                     <span
-                      className="bg-muted inline-flex w-fit max-w-full items-center gap-1.5 truncate rounded-full px-2 py-0.5 text-[11px]"
+                      className="bg-muted inline-flex min-h-6 w-fit max-w-full items-center gap-1.5 truncate rounded-full px-2 text-[11px]"
                       title={person.evidence ?? undefined}
                     >
                       <span className="font-semibold">
@@ -214,7 +214,7 @@ export function LeadPeopleSection({
                           href={person.evidence_url}
                           target="_blank"
                           rel="noopener noreferrer nofollow"
-                          className="text-muted-foreground truncate underline-offset-2 hover:underline"
+                          className="text-muted-foreground inline-flex min-h-6 min-w-6 items-center truncate underline-offset-2 hover:underline"
                         >
                           · ver
                         </a>
@@ -222,7 +222,7 @@ export function LeadPeopleSection({
                     </span>
                   )}
                 </div>
-                <div className="flex shrink-0 flex-col items-end gap-1.5">
+                <div className="ml-auto flex shrink-0 flex-col items-end gap-1.5">
                   <RevealButtons
                     target={{
                       id: person.id,

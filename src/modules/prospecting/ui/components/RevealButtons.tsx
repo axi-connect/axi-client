@@ -26,6 +26,10 @@ export interface RevealTarget {
  * apaga cuando Apollo dice que no lo tiene: pagar por nada no es una opción que
  * se ofrezca. Revelado, el dato ocupa el sitio del botón. El celular llega
  * minutos después: mientras tanto, «Esperando a Apollo…».
+ *
+ * `fit="container"` (la tabla de Personas): bajo 28rem de contenedor los
+ * botones se apilan y el correo revelado se resume en «Correo», con la
+ * dirección en `title`; así la columna cabe a 390 sin salirse de la tarjeta.
  */
 export function RevealButtons({
   target,
@@ -34,7 +38,9 @@ export function RevealButtons({
   onReveal,
   disabled,
   costs,
+  fit = "inline",
 }: {
+  fit?: "inline" | "container";
   target: RevealTarget;
   costs: RevealCosts;
   busy: boolean;
@@ -49,11 +55,18 @@ export function RevealButtons({
   const emailButton =
     target.email !== null ? (
       <span
-        className="border-success/50 text-foreground inline-flex h-7 max-w-56 items-center gap-1.5 truncate rounded-full border px-2.5 text-xs font-medium"
+        className="border-success/50 text-foreground inline-flex h-7 max-w-40 items-center gap-1.5 truncate rounded-full border px-2.5 text-xs font-medium"
         title={target.email}
       >
         <Check aria-hidden className="text-success size-3.5 shrink-0" />
-        <span className="truncate">{target.email}</span>
+        {fit === "container" ? (
+          <>
+            <span className="@md:hidden">Correo</span>
+            <span className="hidden truncate @md:inline">{target.email}</span>
+          </>
+        ) : (
+          <span className="truncate">{target.email}</span>
+        )}
       </span>
     ) : target.revealable ? (
       <CostButton
@@ -95,7 +108,13 @@ export function RevealButtons({
 
   if (emailButton === null && phoneButton === null) return null;
   return (
-    <div className="flex flex-wrap items-center justify-end gap-1.5">
+    <div
+      className={
+        fit === "container"
+          ? "flex flex-col items-end gap-1.5 @md:flex-row @md:flex-wrap @md:items-center @md:justify-end"
+          : "flex flex-wrap items-center justify-end gap-1.5"
+      }
+    >
       {emailButton}
       {phoneButton}
     </div>

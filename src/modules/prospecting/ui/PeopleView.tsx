@@ -347,22 +347,21 @@ export function PeopleView() {
         accessorKey: "name",
         header: "Persona",
         alwaysVisible: true,
-        minWidth: 200,
-        cellClassName: "@md:min-w-44",
+        minWidth: 220,
         cell: ({ row }) => <PersonCell row={row.original} />,
       },
       {
         accessorKey: "company",
         header: "Empresa",
-        minWidth: 160,
+        minWidth: 130,
         cell: ({ row }) => (
-          <div className="flex min-w-0 flex-col">
+          <div className="flex max-w-40 min-w-0 flex-col">
             {row.original.company_id === null ? (
               <span className="truncate font-medium">{row.original.company ?? "—"}</span>
             ) : (
               <Link
                 href={`/marketing/leads/${row.original.company_id}`}
-                className="truncate font-medium hover:underline"
+                className="block min-h-6 max-w-full truncate leading-6 font-medium hover:underline"
                 title={row.original.company ?? undefined}
               >
                 {row.original.company ?? "Su negocio"}
@@ -375,18 +374,14 @@ export function PeopleView() {
         ),
       },
       {
-        accessorKey: "role",
-        header: "Decide",
-        minWidth: 120,
-        cell: ({ row }) => <RolePill role={row.original.role} confidence={row.original.confidence} />,
-      },
-      {
         id: "actions",
         header: "Revelar",
         pinned: "end",
+        minWidth: 168,
         cell: ({ row }) => (
           <RevealButtons
             target={row.original}
+            fit="container"
             costs={costs}
             busy={revealing.has(row.original.id)}
             waitingPhone={waitingPhone.has(row.original.id)}
@@ -512,8 +507,14 @@ export function PeopleView() {
                 pagination={{
                   page,
                   pageSize: PEOPLE_PAGE_SIZE,
-                  // Una página más si Apollo tiene más: «Siguiente» la trae.
-                  total: total + (hasMore ? 1 : 0),
+                  // Si Apollo tiene más, hay UNA página más que pedir: «Próximo» la trae.
+                  total: hasMore ? loadedPages * PEOPLE_PAGE_SIZE + 1 : total,
+                }}
+                messages={{
+                  caption: (current) =>
+                    tab === "new" && search?.estimated_total !== null && search?.estimated_total !== undefined
+                      ? `Página ${String(current)} · ${total.toLocaleString("es-CO")} de ${search.estimated_total.toLocaleString("es-CO")} en Apollo`
+                      : `Página ${String(current)} · ${total.toLocaleString("es-CO")} ${total === 1 ? "persona" : "personas"}`,
                 }}
                 onPageChange={(next) => void onPageChange(next)}
                 selection={
@@ -589,11 +590,23 @@ function filtersOf(search: SearchDTO): Filters {
 }
 
 function PersonCell({ row }: { row: PersonRow }) {
+  // Quién decide va junto al nombre (como en «Personas de este negocio»): con
+  // la barra lateral abierta a 1280 no caben cuatro columnas y la que sobraba
+  // acababa en «Ver más» o fuera de la tarjeta. Tope de ancho: la tabla es de
+  // ancho automático y un cargo largo empujaría «Revelar»; el texto completo va
+  // en `title`.
   return (
-    <div className="flex min-w-0 flex-col gap-0.5">
-      <Link href={`/marketing/leads/${row.id}`} className="truncate font-medium hover:underline" title={row.name}>
-        {row.name}
-      </Link>
+    <div className="flex max-w-36 min-w-0 flex-col gap-0.5 @md:max-w-56">
+      <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
+        <Link
+          href={`/marketing/leads/${row.id}`}
+          className="block min-h-6 min-w-0 truncate leading-6 font-medium hover:underline"
+          title={row.name}
+        >
+          {row.name}
+        </Link>
+        <RolePill role={row.role} confidence={row.confidence} />
+      </span>
       {row.title !== null && (
         <span className="text-muted-foreground truncate text-xs" title={row.title}>
           {row.title}
@@ -628,7 +641,7 @@ function RolePill({ role, confidence }: { role: BuyingRole; confidence: number |
   const decides = role === "decides" || role === "approves";
   const label = BUYING_ROLE_LABELS[role];
   return (
-    <span className="bg-muted inline-flex h-6 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium whitespace-nowrap">
+    <span className="bg-muted inline-flex h-6 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium whitespace-nowrap">
       <span aria-hidden className={decides ? "bg-accent-violet size-1.5 rounded-full" : "bg-muted-foreground size-1.5 rounded-full"} />
       {label.charAt(0).toUpperCase() + label.slice(1)}
       {confidence !== null && <span className="tabular-nums">· {confidence}</span>}

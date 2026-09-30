@@ -26,7 +26,8 @@ const LABELS: Record<string, string> = {
 	"templates": "Mensajes",
 	"meta-templates": "Plantillas de Meta",
 	"opt-outs": "Bajas",
-	// Captación › Personas (P2 del piloto)
+	// Captación (/marketing/leads/*) y su pestaña Personas (P2 del piloto)
+	"leads": "Captación",
 	"people": "Personas",
 	"new": "Nueva",
 	// Método comercial: /comercial, /comercial/meta, /comercial/acciones/:id,

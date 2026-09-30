@@ -471,7 +471,7 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
                 <span className="text-muted-foreground tabular-nums"> · confianza {lead.decision_maker_confidence}</span>
               )}{" "}
               en{" "}
-              <Link href={`/marketing/leads/${lead.parent.id}`} className="font-medium underline underline-offset-4">
+              <Link href={`/marketing/leads/${lead.parent.id}`} className="inline-flex min-h-6 items-center font-medium underline underline-offset-4">
                 {lead.parent.display_name ?? "su negocio"}
               </Link>
             </p>

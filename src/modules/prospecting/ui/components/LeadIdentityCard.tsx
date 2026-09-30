@@ -87,7 +87,7 @@ export function LeadIdentityCard({
       value:
         lead.website === null ? null : (
           <a
-            className="text-info hover:underline"
+            className="text-info inline-flex min-h-6 items-center hover:underline"
             href={lead.website}
             rel="noopener noreferrer nofollow"
             target="_blank"
@@ -147,7 +147,7 @@ export function LeadIdentityCard({
                         href={signal.source_url}
                         target="_blank"
                         rel="noopener noreferrer nofollow"
-                        className="underline underline-offset-2"
+                        className="inline-flex min-h-6 min-w-6 items-center underline underline-offset-2"
                       >
                         ver
                       </a>
