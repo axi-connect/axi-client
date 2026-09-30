@@ -12,6 +12,7 @@ import { TableSkeleton } from "@/shared/components/features/loading";
 import {
   ENROLLMENT_STATUS_MAP,
   STOP_REASON_LABELS,
+  enrollmentDisplayStatus,
   type EnrollmentDTO,
   type SequenceDTO,
 } from "@/modules/crm/domain/sequences";
@@ -71,6 +72,7 @@ export function SequenceEnrollmentsSheet({
         {enrollments !== null && enrollments.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             <Chip>{counts.active} activas</Chip>
+            {counts.snoozed > 0 && <Chip>{counts.snoozed} dormidas por «ahora no»</Chip>}
             <Chip>{counts.replied} pararon porque respondieron</Chip>
             <Chip>{counts.converted} pararon porque compraron</Chip>
             <Chip>{counts.completed} completadas sin respuesta</Chip>
@@ -99,7 +101,7 @@ export function SequenceEnrollmentsSheet({
                   </span>
                   <span className="ml-auto">
                     <StatusBadge
-                      status={enrollment.status}
+                      status={enrollmentDisplayStatus(enrollment)}
                       map={ENROLLMENT_STATUS_MAP}
                       appearance="dot"
                     />
@@ -109,6 +111,10 @@ export function SequenceEnrollmentsSheet({
                   Inscrito {relativeTime(enrollment.enrolled_at)}
                   {enrollment.stop_reason !== null && (
                     <> · {STOP_REASON_LABELS[enrollment.stop_reason]}</>
+                  )}
+                  {/* P3b: «ahora no» la duerme sin cerrarla; sin esto se leería como activa. */}
+                  {enrollment.snoozed_until !== null && (
+                    <> · Dijo «ahora no»: vuelve {relativeTime(enrollment.snoozed_until)}</>
                   )}
                 </p>
               </li>
@@ -132,7 +138,8 @@ export function SequenceEnrollmentsSheet({
 
 function summarize(enrollments: readonly EnrollmentDTO[]) {
   return {
-    active: enrollments.filter((item) => item.status === "active").length,
+    active: enrollments.filter((item) => enrollmentDisplayStatus(item) === "active").length,
+    snoozed: enrollments.filter((item) => enrollmentDisplayStatus(item) === "snoozed").length,
     replied: enrollments.filter((item) => item.stop_reason === "replied").length,
     converted: enrollments.filter((item) => item.stop_reason === "converted").length,
     completed: enrollments.filter((item) => item.status === "completed").length,

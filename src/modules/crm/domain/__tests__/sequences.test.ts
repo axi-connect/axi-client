@@ -8,6 +8,7 @@ import {
   validateSequence,
   type DraftStep,
   sequenceStory,
+  enrollmentDisplayStatus,
 } from "../sequences";
 
 const NOW = new Date("2026-09-15T14:00:00.000Z");
@@ -173,5 +174,14 @@ describe("sequences — correo, SMS y tarea manual (P3a)", () => {
     expect(smsSegments("a".repeat(161))).toBe(2);
     expect(smsSegments("á".repeat(70))).toBe(1);
     expect(smsSegments("á".repeat(71))).toBe(2);
+  });
+});
+
+describe("sequences — «ahora no» (P3b)", () => {
+  it("una activa dormida se enseña como «Dormida»; lo demás, como viene", () => {
+    expect(enrollmentDisplayStatus({ status: "active", snoozed_until: "2026-11-14T15:00:00Z" })).toBe("snoozed");
+    expect(enrollmentDisplayStatus({ status: "active", snoozed_until: null })).toBe("active");
+    // Cerrada no hay nada que despertar, aunque quedara la fecha.
+    expect(enrollmentDisplayStatus({ status: "stopped", snoozed_until: "2026-11-14T15:00:00Z" })).toBe("stopped");
   });
 });
