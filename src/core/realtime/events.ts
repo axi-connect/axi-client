@@ -1019,6 +1019,38 @@ export type ProspectingSearchCompletedEvent = {
   units_spent: number;
 };
 
+/**
+ * El piloto automático de captación (P4 del servidor, P5 del cliente). Van a
+ * la sala de la EMPRESA; la vista filtra por `routine_id` o `run_id`. El WS es
+ * comodidad: la verdad vive en la ejecución y la vista la relee al terminar.
+ */
+export type AutopilotRunStartedEvent = { company_id: string; run_id: string; routine_id: string };
+export type AutopilotItemMovedEvent = {
+  company_id: string;
+  run_id: string;
+  routine_id: string;
+  from: string | null;
+  to: string;
+  lead_ids: string[];
+};
+export type AutopilotCreditSpentEvent = {
+  company_id: string;
+  run_id: string;
+  provider: string;
+  metric: string;
+  quantity: number;
+  request_id: string;
+};
+export type AutopilotBatchReadyEvent = { company_id: string; run_id: string; routine_id: string; items: number };
+export type AutopilotRunFinishedEvent = {
+  company_id: string;
+  run_id: string;
+  routine_id: string;
+  status: string;
+  counters: Record<string, number>;
+  credits_spent: number;
+};
+
 export type InboxServerEvents = {
   "conversation.created": (payload: ConversationCreatedEvent) => void;
   "conversation.message_received": (payload: MessageReceivedEvent) => void;
@@ -1079,6 +1111,11 @@ export type InboxServerEvents = {
   "prospecting.search_completed": (
     payload: ProspectingSearchCompletedEvent,
   ) => void;
+  "autopilot.run_started": (payload: AutopilotRunStartedEvent) => void;
+  "autopilot.item_moved": (payload: AutopilotItemMovedEvent) => void;
+  "autopilot.credit_spent": (payload: AutopilotCreditSpentEvent) => void;
+  "autopilot.batch_ready": (payload: AutopilotBatchReadyEvent) => void;
+  "autopilot.run_finished": (payload: AutopilotRunFinishedEvent) => void;
   "cmo.briefing_ready": (payload: CmoBriefingReadyEvent) => void;
   "cmo.proposal_created": (payload: CmoProposalCreatedEvent) => void;
   "cmo.proposal_decided": (payload: CmoProposalDecidedEvent) => void;

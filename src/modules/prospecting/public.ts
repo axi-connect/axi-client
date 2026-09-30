@@ -7,3 +7,10 @@
  */
 export type { ProspectingStatsDTO } from "./domain/lead";
 export { getProspectingStats } from "./infrastructure/services/prospecting-service.adapter";
+
+/**
+ * P5 (piloto automático): el formulario del piloto elige la fuente y sus
+ * categorías con el MISMO catálogo que Captación › Búsquedas.
+ */
+export type { DiscoveryCategoryDTO, SourceCatalogItemDTO } from "./domain/search";
+export { listSources } from "./infrastructure/services/prospecting-service.adapter";

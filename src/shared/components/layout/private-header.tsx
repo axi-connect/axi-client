@@ -26,6 +26,10 @@ const LABELS: Record<string, string> = {
 	"templates": "Mensajes",
 	"meta-templates": "Plantillas de Meta",
 	"opt-outs": "Bajas",
+	// P5 del piloto de captación: /marketing/autopilot, sus pilotos y ejecuciones.
+	"autopilot": "Automatización",
+	"runs": "Ejecuciones",
+	"edit": "Editar",
 	"new": "Nueva",
 	// Método comercial: /comercial, /comercial/meta, /comercial/acciones/:id,
 	// /comercial/resultados/:key (Q20: salía «comercial» en minúscula). Las
@@ -76,6 +80,8 @@ const DETAIL_LABELS: Record<string, string> = {
 	"/settings/channels": "Canal",
 	"/settings/integrations": "Integración",
 	"/marketing/campaigns": "Campaña",
+	"/marketing/autopilot": "Piloto",
+	"/marketing/autopilot/runs": "Ejecución",
 }
 
 /**
