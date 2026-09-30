@@ -24,6 +24,7 @@ import {
   type RunAiMode,
   type RunKind,
 } from "../../../../../domain/quality-runs";
+import { parseTargetKey } from "../../../../../domain/decisions";
 import { MAX_SUITE_SCENARIOS } from "../../../../../domain/quality";
 import {
   DEFAULT_PROBE_SPEND_CAP_USD,
@@ -57,6 +58,8 @@ export type RunConfigValues = {
   /** null = todos los etiquetados (hasta 300) */
   limitItems: number | null;
   probeSpendCapUsd: number;
+  /** P1b: solo intención — pares «proveedor|modelo» del motor a comparar (≤ 5). */
+  decisionTargets: string[];
 };
 
 export const defaultRunConfigValues: RunConfigValues = {
@@ -75,7 +78,11 @@ export const defaultRunConfigValues: RunConfigValues = {
   k: PROBE_DEFAULT_K,
   limitItems: null,
   probeSpendCapUsd: DEFAULT_PROBE_SPEND_CAP_USD,
+  decisionTargets: [],
 };
+
+/** P1b: tope de pares del motor de decisiones en una comparación (igual que el servidor). */
+export const MAX_DECISION_TARGETS = 5;
 
 function isInt(value: number): boolean {
   return Number.isInteger(value) && Number.isFinite(value);
@@ -101,6 +108,9 @@ export function validateRunConfig(values: RunConfigValues): string[] {
     }
     if (values.limitItems !== null && (!isInt(values.limitItems) || values.limitItems < 1 || values.limitItems > PROBE_MAX_ITEMS)) {
       errors.push(`El límite de ítems debe estar entre 1 y ${PROBE_MAX_ITEMS}`);
+    }
+    if (values.probeKind === "intent" && values.decisionTargets.length > MAX_DECISION_TARGETS) {
+      errors.push(`Compara hasta ${String(MAX_DECISION_TARGETS)} proveedores a la vez`);
     }
     if (probePaysLlm(values.probeKind) && (!(values.probeSpendCapUsd > 0) || values.probeSpendCapUsd > PROBE_SPEND_CAP_MAX)) {
       errors.push(`Reconocimiento e intención pagan LLM por ítem: tope de gasto entre 0 y ${PROBE_SPEND_CAP_MAX} USD`);
@@ -170,6 +180,14 @@ export function buildCreateRunDTO(args: {
       k: config.k,
       ...(config.limitItems === null ? {} : { limit_items: config.limitItems }),
       ...(probePaysLlm(config.probeKind) ? { spend_cap_usd: config.probeSpendCapUsd } : {}),
+      ...(config.probeKind === "intent" && config.decisionTargets.length > 0
+        ? {
+            decision_targets: config.decisionTargets.flatMap((key) => {
+              const target = parseTargetKey(key);
+              return target === null ? [] : [target];
+            }),
+          }
+        : {}),
     };
   }
   if (config.kind === "qa") {

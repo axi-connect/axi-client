@@ -26,6 +26,7 @@ import {
   ScrollText,
   type LucideIcon,
   MessageCircleHeart,
+  Split,
 } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { Badge } from "@/shared/components/ui/badge";
@@ -78,6 +79,7 @@ const NAV_ICONS: Record<string, LucideIcon> = {
   phone: Phone,
   plug: Plug,
   "message-circle-heart": MessageCircleHeart,
+  split: Split,
 };
 
 /** Indicador de navegación pendiente (mismo patrón que el sidebar de tenant). */
