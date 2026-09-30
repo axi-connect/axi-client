@@ -1,7 +1,7 @@
 "use client";
 
 import { useLayoutEffect, useRef, useState } from "react";
-import { Bot } from "lucide-react";
+import { Bot, Route } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { Island } from "@/shared/components/features/island";
 import type { AuraMode } from "@/modules/calls/domain/live-call";
@@ -42,6 +42,7 @@ export function LiveCallStage({
   ticking,
   agentName,
   names,
+  stage = null,
   className,
 }: {
   mode: AuraMode;
@@ -54,6 +55,8 @@ export function LiveCallStage({
   ticking: boolean;
   agentName: string;
   names: { agent: string; caller: string };
+  /** Plan de modos: etapa actual de una proactiva («Descubrimiento · 4 de 7»). */
+  stage?: string | null;
   className?: string;
 }) {
   return (
@@ -68,11 +71,17 @@ export function LiveCallStage({
         <CallAura mode={mode} />
       </div>
 
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 sm:flex-nowrap sm:gap-3">
         <span className="inline-flex h-8 items-center gap-2 rounded-full bg-foreground/[0.07] px-3 text-xs font-medium ring-1 ring-foreground/10 backdrop-blur-md">
           <span aria-hidden className={cn("size-1.5 rounded-full", ticking ? "bg-success" : "bg-muted-foreground")} />
           <span className={cn(ticking && "font-mono tabular-nums")}>{clock}</span>
         </span>
+        {stage !== null && (
+          <span className="order-last inline-flex h-8 min-w-0 items-center gap-2 rounded-full bg-accent-violet/15 px-3 text-xs font-medium ring-1 ring-accent-violet/25 backdrop-blur-md sm:order-none">
+            <Route aria-hidden className="size-3.5 shrink-0 text-accent-violet" />
+            <span className="truncate">{stage}</span>
+          </span>
+        )}
         <span className="inline-flex h-8 min-w-0 items-center gap-2 rounded-full bg-foreground/[0.07] px-3 text-xs font-medium ring-1 ring-foreground/10 backdrop-blur-md">
           <Bot aria-hidden className="size-3.5 shrink-0" />
           <span className="truncate">{agentName} · agente IA</span>

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { Fragment, useEffect, useRef } from "react";
+import { StageMark } from "@/modules/calls/ui/components/StageMark";
 import { cn } from "@/core/lib/utils";
 import type { CallEventItem, CallTranscriptSegment } from "@/modules/calls/domain/call";
 import { activeWordIndex, type SegmentWindow } from "@/modules/calls/domain/recording-sync";
@@ -35,6 +36,7 @@ export function SyncedTranscript({
   playing,
   onSeek,
   names,
+  stageMarks = null,
 }: {
   segments: readonly CallTranscriptSegment[];
   events: readonly CallEventItem[];
@@ -44,6 +46,8 @@ export function SyncedTranscript({
   playing: boolean;
   onSeek: ((ms: number) => void) | null;
   names: { agent: string; caller: string };
+  /** Plan de modos: `seq → etapa` para las marcas «Etapa · X» (proactivas). */
+  stageMarks?: ReadonlyMap<number, string> | null;
 }) {
   const latencies = agentTurnLatencies(segments, events);
   const activeRef = useRef<HTMLLIElement | null>(null);
@@ -117,9 +121,11 @@ export function SyncedTranscript({
               </>
             );
 
+            const mark = stageMarks?.get(segment.seq);
             return (
+              <Fragment key={segment.seq}>
+              {mark !== undefined && <StageMark label={mark} />}
               <li
-                key={segment.seq}
                 ref={active ? activeRef : undefined}
                 className={cn("relative rounded-2xl transition-colors", active && "bg-muted")}
               >
@@ -141,6 +147,7 @@ export function SyncedTranscript({
                   </span>
                 )}
               </li>
+              </Fragment>
             );
           })}
         </ol>

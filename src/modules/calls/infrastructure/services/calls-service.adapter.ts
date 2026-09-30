@@ -8,8 +8,17 @@ import type {
   CallsOverviewGranularity,
   CallsSettingsDTO,
   ListCallSessionsParams,
+  LaunchCallInput,
   TenantCallNumberDTO,
 } from "@/modules/calls/domain/call";
+import type {
+  CallsFunnelDTO,
+  PlaybookStage,
+  PlaybookView,
+  PreviewOpeningDTO,
+  ProactiveCallType,
+  ProposeResultDTO,
+} from "@/modules/calls/domain/playbooks";
 
 /** Adapter REST del módulo de llamadas (único punto que toca `http`). */
 
@@ -37,6 +46,9 @@ export function listLiveCallSessions(): Promise<{ data: CallSessionRowDTO[] }> {
 export function placeTestCall(input: {
   to: string;
   objective?: string;
+  call_type?: LaunchCallInput["call_type"];
+  mode?: LaunchCallInput["mode"];
+  ai_agent_id?: string;
 }): Promise<{ call_session_id: string }> {
   return http.post<{ call_session_id: string }>("/calls/test-call", input);
 }
@@ -64,3 +76,60 @@ export function putCallsSettings(dto: CallsSettingsDTO): Promise<void> {
 export function listTenantCallNumbers(): Promise<TenantCallNumberDTO[]> {
   return http.get<TenantCallNumberDTO[]>("/calls/numbers");
 }
+
+// ─── Plan de modos: lanzar, embudo y marcos ─────────────────────────────────
+
+/**
+ * «Llamar» a un contacto (calls:place). `idempotencyKey` = una por intención
+ * del usuario: un doble clic o un reintento devuelven la MISMA llamada.
+ */
+export function launchCall(
+  input: LaunchCallInput,
+  idempotencyKey: string,
+): Promise<{ call_session_id: string }> {
+  return http.post<{ call_session_id: string }>("/calls/launch", input, {
+    headers: { "Idempotency-Key": idempotencyKey },
+  });
+}
+
+/** Hasta qué etapa llegan las proactivas, por tipo, en el ciclo. */
+export function getCallsFunnel(): Promise<CallsFunnelDTO> {
+  return http.get<CallsFunnelDTO>("/calls/overview/funnel");
+}
+
+export function listPlaybooks(): Promise<PlaybookView[]> {
+  return http.get<PlaybookView[]>("/calls/playbooks");
+}
+
+/** Se manda el marco COMPLETO; el servidor guarda solo lo distinto de la base. */
+export function savePlaybook(
+  type: ProactiveCallType,
+  body: { enabled: boolean; opening_guidance: string; stages: PlaybookStage[] },
+): Promise<PlaybookView> {
+  return http.put<PlaybookView>(`/calls/playbooks/${type}`, body);
+}
+
+export function resetPlaybook(type: ProactiveCallType): Promise<PlaybookView> {
+  return http.delete<PlaybookView>(`/calls/playbooks/${type}`);
+}
+
+export function proposePlaybooks(types?: ProactiveCallType[]): Promise<ProposeResultDTO> {
+  return http.post<ProposeResultDTO>("/calls/playbooks/propose", types === undefined ? {} : { call_types: types });
+}
+
+export function applyPlaybookProposal(type: ProactiveCallType): Promise<PlaybookView> {
+  return http.post<PlaybookView>(`/calls/playbooks/${type}/proposal/apply`, {});
+}
+
+export function discardPlaybookProposal(type: ProactiveCallType): Promise<PlaybookView> {
+  return http.delete<PlaybookView>(`/calls/playbooks/${type}/proposal`);
+}
+
+/** «Así abriría»: sin cuerpo = el marco guardado; con cuerpo = el borrador. */
+export function previewPlaybookOpening(
+  type: ProactiveCallType,
+  draft?: { opening_guidance: string; stages: PlaybookStage[] },
+): Promise<PreviewOpeningDTO> {
+  return http.post<PreviewOpeningDTO>(`/calls/playbooks/${type}/preview-opening`, draft ?? {});
+}
+

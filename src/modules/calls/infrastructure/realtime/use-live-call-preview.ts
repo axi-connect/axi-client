@@ -25,9 +25,13 @@ export function useLiveCallPreview(call: CallSessionRowDTO): {
   mode: AuraMode;
   pulse: LiveCallPulse;
   line: Line | null;
+  /** Plan de modos: «Descubrimiento · 4 de 7» en una proactiva; null si no. */
+  stage: string | null;
 } {
   const [pulse, dispatch] = useReducer(liveCallPulseReducer, INITIAL_LIVE_CALL_PULSE);
   const [lastLine, setLastLine] = useState<Line | null>(null);
+  // Nombres de las etapas: vienen en el MISMO detalle que ya se lee una vez.
+  const [route, setRoute] = useState<{ stages: { key: string; label: string }[]; last: string | null } | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -36,6 +40,9 @@ export function useLiveCallPreview(call: CallSessionRowDTO): {
         if (!alive) return;
         const last = [...detail.segments].reverse().find((segment) => segment.role !== "system");
         if (last !== undefined) setLastLine((current) => current ?? { role: last.role, text: last.text });
+        if (detail.playbook !== null) {
+          setRoute({ stages: detail.playbook.stages, last: detail.stage_route.at(-1) ?? null });
+        }
       })
       .catch(() => undefined);
     return () => {
@@ -49,6 +56,7 @@ export function useLiveCallPreview(call: CallSessionRowDTO): {
     onSpeaker: (event) => dispatch({ type: "speaker", speaker: event.speaker, state: event.state }),
     onPhase: (event) => dispatch({ type: "phase", phase: event.phase }),
     onAgentText: (event) => dispatch({ type: "agent_text", generation: event.generation, text: event.text }),
+    onStage: (event) => dispatch({ type: "stage", stage: event.stage }),
     onSegment: (segment) => {
       dispatch({ type: "segment", role: segment.role, generation: segment.generation });
       if (segment.role !== "system") setLastLine({ role: segment.role, text: segment.text });
@@ -59,5 +67,11 @@ export function useLiveCallPreview(call: CallSessionRowDTO): {
 
   const line: Line | null = pulse.draft !== null ? { role: "agent", text: pulse.draft.text } : lastLine;
   const mode = call.status === "in_progress" ? auraModeFor(pulse) : "idle";
-  return { mode, pulse, line };
+  const stageKey = route === null ? null : (pulse.stage ?? route.last ?? call.last_stage);
+  const index = route === null || stageKey === null ? -1 : route.stages.findIndex((s) => s.key === stageKey);
+  const stage =
+    route === null || index === -1
+      ? null
+      : `${route.stages[index]?.label ?? ""} · ${String(index + 1)} de ${String(route.stages.length)}`;
+  return { mode, pulse, line, stage };
 }

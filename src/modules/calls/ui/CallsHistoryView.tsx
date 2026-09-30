@@ -69,6 +69,8 @@ export function CallsHistoryView() {
   const extraParams = useMemo(
     () => ({
       direction: filters.direction,
+      mode: filters.mode,
+      call_type: filters.call_type,
       outcome: filters.outcome,
       ai_agent_id: filters.ai_agent_id,
       from: rangeToFromIso(filters.range),

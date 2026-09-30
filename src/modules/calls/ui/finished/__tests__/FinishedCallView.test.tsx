@@ -23,6 +23,9 @@ function call(overrides: Partial<CallSessionDetailDTO> = {}): CallSessionDetailD
     id: "call-1",
     direction: "outbound",
     purpose: "appointment_reminder",
+    mode: "reactive",
+    call_type: null,
+    last_stage: null,
     status: "completed",
     outcome: "goal_met",
     answered_by: "human",
@@ -52,6 +55,8 @@ function call(overrides: Partial<CallSessionDetailDTO> = {}): CallSessionDetailD
       { type: "turn_completed", payload: { latency: { total_turn_ms: 4_600 } }, created_at: AT },
       { type: "goal_assessment", payload: { met: true, confidence: 0.9, reason: "aceptó el horario" }, created_at: AT },
     ],
+    playbook: null,
+    stage_route: [],
     ...overrides,
   };
 }

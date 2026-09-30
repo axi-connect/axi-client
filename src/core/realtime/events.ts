@@ -944,6 +944,16 @@ export type CallAgentTextEvent = CallRealtimeRef & {
   at_ms: number;
 };
 
+/** Plan de modos · room de la llamada: la llamada proactiva cambió de etapa del marco. */
+export type CallStageChangedEvent = CallRealtimeRef & {
+  stage: string;
+  from: string | null;
+  /** Posición en el marco de ESTA llamada (0 = apertura) y total de etapas. */
+  index: number;
+  total: number;
+  at_ms: number;
+};
+
 /** El resumen post-llamada quedó persistido: el detalle abierto lo re-consulta. */
 export type CallSummaryReadyEvent = CallRealtimeRef;
 
@@ -1104,6 +1114,7 @@ export type InboxServerEvents = {
   "call.speaker_changed": (payload: CallSpeakerChangedEvent) => void;
   "call.phase_changed": (payload: CallPhaseChangedEvent) => void;
   "call.agent_text": (payload: CallAgentTextEvent) => void;
+  "call.stage_changed": (payload: CallStageChangedEvent) => void;
   "call.ended": (payload: CallEndedEvent) => void;
   "call.summary_ready": (payload: CallSummaryReadyEvent) => void;
   "notification.created": (payload: NotificationCreatedEvent) => void;

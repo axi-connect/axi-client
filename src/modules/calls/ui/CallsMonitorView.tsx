@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { PhoneOutgoing, RotateCcw } from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAuth } from "@/shared/auth/auth.hooks";
@@ -14,15 +14,18 @@ import {
   type CallsOverviewDTO,
   type CallsOverviewGranularity,
 } from "@/modules/calls/domain/call";
+import { biggestDrop, type CallsFunnelDTO } from "@/modules/calls/domain/playbooks";
+import { FunnelTile } from "@/modules/calls/ui/monitor/FunnelTile";
 import { useCallsSocket } from "@/modules/calls/infrastructure/realtime/use-calls-socket";
 import {
+  getCallsFunnel,
   getCallsOverview,
   listCallSessions,
 } from "@/modules/calls/infrastructure/services/calls-service.adapter";
 import { useLiveCallsStore } from "@/modules/calls/infrastructure/stores/live-calls.store";
 import { ActivityChart } from "@/modules/calls/ui/components/ActivityChart";
 import { CallsPageHeader } from "@/modules/calls/ui/components/CallsPageHeader";
-import { TestCallDialog } from "@/modules/calls/ui/components/TestCallDialog";
+import { CallLauncherDialog } from "@/modules/calls/ui/components/CallLauncherDialog";
 import { CycleTile } from "@/modules/calls/ui/monitor/CycleTile";
 import { LiveNowTile } from "@/modules/calls/ui/monitor/LiveNowTile";
 import { MinutesTile } from "@/modules/calls/ui/monitor/MinutesTile";
@@ -55,6 +58,8 @@ export function CallsMonitorView() {
   const [callbacks, setCallbacks] = useState<{ total: number; names: string[] } | "error" | null>(null);
   const [recent, setRecent] = useState<CallSessionRowDTO[] | null>(null);
   const [recentError, setRecentError] = useState<string | null>(null);
+  const [funnel, setFunnel] = useState<CallsFunnelDTO | null>(null);
+  const [funnelError, setFunnelError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   const [reloadKey, setReloadKey] = useState(0);
@@ -80,6 +85,28 @@ export function CallsMonitorView() {
       cancelled = true;
     };
   }, [granularity, reloadKey]);
+
+  // Plan de modos §4: hasta qué etapa llegan las proactivas del ciclo.
+  useEffect(() => {
+    let cancelled = false;
+    setFunnelError(null);
+    getCallsFunnel()
+      .then((data) => {
+        if (!cancelled) setFunnel(data);
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) setFunnelError(errorMessage(error));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [reloadKey]);
+  // La mayor caída entre dos etapas, del tipo con más llamadas: la propone «Lo próximo».
+  const funnelDrop = useMemo(() => {
+    const busiest = funnel?.types.filter((type) => type.total >= 5).sort((a, b) => b.total - a.total)[0];
+    const drop = busiest === undefined ? null : biggestDrop(busiest);
+    return busiest === undefined || drop === null || drop.lost < 3 ? null : { type: busiest.label, ...drop };
+  }, [funnel]);
 
   // Quién pidió que lo llamen en este ciclo (desenlace `callback_requested`).
   const periodStart = overview?.period.start ?? null;
@@ -136,7 +163,7 @@ export function CallsMonitorView() {
           canPlace ? (
             <Button className="rounded-full" onClick={() => setDialogOpen(true)}>
               <PhoneOutgoing aria-hidden className="size-4" />
-              Llamada de prueba
+              Llamar
             </Button>
           ) : undefined
         }
@@ -159,6 +186,7 @@ export function CallsMonitorView() {
           callbacks={callbacks === "error" ? null : callbacks}
           failed={overview?.kpis.failed ?? null}
           minutes={outlook}
+          funnelDrop={funnelDrop}
           className="lg:col-start-3 lg:row-span-2 lg:row-start-1"
         />
 
@@ -206,10 +234,26 @@ export function CallsMonitorView() {
           <MinutesTile outlook={outlook} />
         )}
 
+        {funnelError !== null ? (
+          <BentoTile label="Dónde se caen las llamadas" className="lg:col-span-3">
+            <div role="alert" className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+              No pudimos cargar el recorrido de las llamadas. {funnelError}
+              <Button variant="outline" size="sm" className="rounded-full" onClick={() => setReloadKey((k) => k + 1)}>
+                <RotateCcw aria-hidden className="size-3.5" /> Reintentar
+              </Button>
+            </div>
+          </BentoTile>
+        ) : funnel === null ? (
+          <Skeleton className="h-[220px] rounded-3xl lg:col-span-3" />
+        ) : (
+          // Fila propia: Actividad + Minutos ya completan la de arriba.
+          <FunnelTile funnel={funnel} className="lg:col-span-3" />
+        )}
+
         <RecentCallsTile rows={recent} error={recentError} onRetry={loadRecent} className="lg:col-span-3" />
       </div>
 
-      <TestCallDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+      <CallLauncherDialog open={dialogOpen} onOpenChange={setDialogOpen} target={{ kind: "number" }} />
     </div>
   );
 }

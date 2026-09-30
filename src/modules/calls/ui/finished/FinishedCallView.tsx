@@ -12,9 +12,11 @@ import {
   CALL_PURPOSE_LABELS,
   CALL_STATUS_MAP,
   DIRECTION_LABELS,
+  MODE_LABELS,
   callResultPill,
   type CallSessionDetailDTO,
 } from "@/modules/calls/domain/call";
+import { stageMarks } from "@/modules/calls/domain/live-call";
 import { formatCallClock, formatCallCost } from "@/modules/calls/ui/lib/call-format";
 import { speakerFirstName } from "@/modules/calls/ui/live/live-phrase";
 import { CallSummaryIsland } from "./CallSummaryIsland";
@@ -88,6 +90,9 @@ export function FinishedCallView({ call }: { call: CallSessionDetailDTO }) {
             playing={sync.playback.playing}
             onSeek={sync.enabled ? sync.playback.seek : null}
             names={names}
+            stageMarks={
+              call.playbook === null ? null : stageMarks(call.segments, call.events, call.playbook.stages)
+            }
           />
         </div>
 
@@ -109,6 +114,8 @@ export function FinishedCallView({ call }: { call: CallSessionDetailDTO }) {
 
 function buildFields(call: CallSessionDetailDTO): FieldItem[] {
   return [
+    { label: "Modo", value: MODE_LABELS[call.mode] },
+    { label: "Marco", value: call.playbook === null ? null : call.playbook.label },
     { label: "Agente", value: call.ai_agent_name },
     {
       label: "Número de origen",

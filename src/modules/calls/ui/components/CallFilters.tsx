@@ -11,9 +11,12 @@ import {
 import {
   CALL_OUTCOME_MAP,
   DIRECTION_LABELS,
+  MODE_LABELS,
   type CallDirection,
+  type CallMode,
   type CallOutcome,
 } from "@/modules/calls/domain/call";
+import { CALL_TYPE_LABELS, PROACTIVE_CALL_TYPES } from "@/modules/calls/domain/playbooks";
 import { getTenantAgents, type AssignableAgent } from "@/modules/agents/public";
 
 const ALL = "__all__";
@@ -22,6 +25,9 @@ export type CallDateRange = "7d" | "30d";
 
 export type CallFiltersValue = {
   direction?: CallDirection;
+  /** Plan de modos. */
+  mode?: CallMode;
+  call_type?: string;
   outcome?: CallOutcome;
   ai_agent_id?: string;
   range?: CallDateRange;
@@ -75,6 +81,40 @@ export function CallFilters({
           {(Object.keys(DIRECTION_LABELS) as CallDirection[]).map((direction) => (
             <SelectItem key={direction} value={direction}>
               {DIRECTION_LABELS[direction]}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Select
+        value={value.mode ?? ALL}
+        onValueChange={(v: string) => onChange({ ...value, mode: v === ALL ? undefined : (v as CallMode) })}
+      >
+        <SelectTrigger className="h-9 w-full sm:w-36" aria-label="Filtrar por modo">
+          <SelectValue placeholder="Modo" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={ALL}>Todos los modos</SelectItem>
+          {(Object.keys(MODE_LABELS) as CallMode[]).map((mode) => (
+            <SelectItem key={mode} value={mode}>
+              {MODE_LABELS[mode]}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Select
+        value={value.call_type ?? ALL}
+        onValueChange={(v: string) => onChange({ ...value, call_type: v === ALL ? undefined : v })}
+      >
+        <SelectTrigger className="h-9 w-full sm:w-52" aria-label="Filtrar por tipo de llamada">
+          <SelectValue placeholder="Tipo" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={ALL}>Todos los tipos</SelectItem>
+          {PROACTIVE_CALL_TYPES.map((type) => (
+            <SelectItem key={type} value={type}>
+              {CALL_TYPE_LABELS[type]}
             </SelectItem>
           ))}
         </SelectContent>
