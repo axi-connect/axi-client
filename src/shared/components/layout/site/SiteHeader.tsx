@@ -87,7 +87,7 @@ export default function SiteHeader({
         // difuminar la página (ver la regla de montaje en `navigation-menu.tsx`):
         // cualquiera de esas tres propiedades aquí crearía un backdrop root y
         // dejaría al panel sin nada que difuminar.
-        <header className={`fixed top-0 right-0 left-0 z-50${onFilm ? ' dark text-foreground' : ''}`}>
+        <header className={`fixed top-0 right-0 left-0 z-50${onFilm ? ' dark theme-dark-island text-foreground' : ''}`}>
             <SiteNavShell>
                 {/* La barra: aquí sí vive el cristal, y aquí sí anima.
                     El borde de 1px existe SIEMPRE (transparente en reposo):

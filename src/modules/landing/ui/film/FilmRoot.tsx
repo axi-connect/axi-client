@@ -137,7 +137,7 @@ export function FilmRoot({ children }: { children: ReactNode }) {
   useEffect(() => {
     const footer = scroller()?.querySelector<HTMLElement>(":scope > footer");
     if (!footer) return;
-    const added = ["dark", "bg-background", "text-foreground"].filter((c) => !footer.classList.contains(c));
+    const added = ["dark", "theme-dark-island", "bg-background", "text-foreground"].filter((c) => !footer.classList.contains(c));
     footer.classList.add(...added);
     return () => footer.classList.remove(...added);
   }, []);
@@ -173,7 +173,7 @@ export function FilmRoot({ children }: { children: ReactNode }) {
 
   return (
     <FilmContext.Provider value={value}>
-      <div ref={rootRef} className="film dark" data-niche={niche} data-film="">
+      <div ref={rootRef} className="film dark theme-dark-island" data-niche={niche} data-film="">
         {children}
 
         <div className="film-rail" data-on={started} aria-hidden="true">
