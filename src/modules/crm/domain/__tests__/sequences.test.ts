@@ -1,6 +1,8 @@
 import {
   lastStepAt,
+  messageTemplateOf,
   offsetLabel,
+  smsSegments,
   SEQUENCE_TEMPLATES,
   toUpsertDTO,
   validateSequence,
@@ -79,7 +81,7 @@ describe("sequences — qué impide guardar", () => {
 });
 
 describe("sequences — plantillas de partida", () => {
-  it("las tres son válidas tal cual: son el punto de partida, no un borrador roto", () => {
+  it("todas son válidas tal cual: son el punto de partida, no un borrador roto", () => {
     for (const template of SEQUENCE_TEMPLATES) {
       expect(validateSequence({ name: template.name, steps: template.steps })).toEqual([]);
     }
@@ -125,5 +127,51 @@ describe("sequenceStory — la secuencia desde el contacto", () => {
   it("sin parar al responder lo dice; un paso en singular; sin pasos no hay historia", () => {
     expect(sequenceStory({ steps: [step(4)], stop_on_reply: false }, from)?.headline).toBe("Un paso. Sigue aunque responda.");
     expect(sequenceStory({ steps: [], stop_on_reply: true }, from)).toBeNull();
+  });
+});
+
+describe("sequences — correo, SMS y tarea manual (P3a)", () => {
+  it("el correo exige asunto y texto; el SMS, texto y como mucho 600 caracteres", () => {
+    const email = validateSequence({
+      name: "Radar",
+      steps: [step({ task_channel: "email", subject: "", body: "" })],
+    });
+    expect(email.map((problem) => problem.message)).toEqual([
+      "El correo necesita un asunto",
+      "El correo necesita un texto",
+    ]);
+    const sms = validateSequence({ name: "Radar", steps: [step({ task_channel: "sms", body: "x".repeat(601) })] });
+    expect(sms[0]?.message).toMatch(/600 caracteres/);
+  });
+
+  it("el texto viaja solo donde aplica, y el asunto solo en el correo", () => {
+    expect(messageTemplateOf(step({ task_channel: "email", subject: " Hola ", body: " Texto " }))).toEqual({
+      subject: "Hola",
+      body: "Texto",
+    });
+    expect(messageTemplateOf(step({ task_channel: "sms", subject: "ignorado", body: "Hola" }))).toEqual({
+      subject: null,
+      body: "Hola",
+    });
+    // La manual sin texto sugerido no manda nada; un mensaje nunca lleva texto propio.
+    expect(messageTemplateOf(step({ task_channel: "manual", body: "" }))).toBeNull();
+    expect(messageTemplateOf(step({ task_channel: "message", body: "no" }))).toBeNull();
+  });
+
+  it("la plantilla Radar B2B son 8 toques en 14 días y mezcla canales", () => {
+    const radar = SEQUENCE_TEMPLATES.find((template) => template.key === "radar_b2b");
+    expect(radar?.steps).toHaveLength(8);
+    expect(radar?.steps.at(-1)?.offset_hours).toBe(14 * 24);
+    expect(new Set(radar?.steps.map((entry) => entry.task_channel))).toEqual(
+      new Set(["email", "manual", "call", "sms"]),
+    );
+  });
+
+  it("cuenta los segmentos de SMS como Twilio: 160 sin tildes, 70 con ellas", () => {
+    expect(smsSegments("")).toBe(0);
+    expect(smsSegments("a".repeat(160))).toBe(1);
+    expect(smsSegments("a".repeat(161))).toBe(2);
+    expect(smsSegments("á".repeat(70))).toBe(1);
+    expect(smsSegments("á".repeat(71))).toBe(2);
   });
 });

@@ -87,6 +87,9 @@ export const METRIC_LABELS: Record<string, string> = {
   // P1b: el dinero del motor viaja en ai_tokens_input (proveedor typesafe);
   // la decisión aparece con costo cero a propósito, como el reconocimiento.
   ai_decisions: "Clasificadores",
+  // P3a: el correo y el SMS en frío tienen tarifa por envío (el SMS por segmento).
+  emails_sent: "Correos de prospección",
+  sms_sent: "SMS de prospección (segmentos)",
 };
 
 export function metricLabel(metric: string): string {

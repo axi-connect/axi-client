@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { AlertCircle, History, MessageSquare, PhoneCall, RotateCw, Sparkles } from "lucide-react";
+import { AlertCircle, History, Mail, MessageSquare, MessageSquareText, PhoneCall, RotateCw, Sparkles } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { EmptyState } from "@/shared/components/features/empty-state";
 import { TableSkeleton } from "@/shared/components/features/loading";
@@ -295,11 +295,7 @@ function UpcomingDay({
           {/* Conteo por MEDIO: la agenda mezcla mensajes y llamadas (F3). */}
           {mediumCounts(tasks).map(({ medium, count }) => (
             <span key={medium} className="inline-flex items-center gap-1.5">
-              {medium === "call" ? (
-                <PhoneCall aria-hidden className="size-3.5" />
-              ) : (
-                <MessageSquare aria-hidden className="size-3.5" />
-              )}
+              <MediumIcon medium={medium} className="size-3.5" />
               {count} {mediumNoun(medium, count)}
             </span>
           ))}
@@ -313,9 +309,13 @@ function UpcomingDay({
           const how =
             task.task_medium === "call"
               ? "Llamada"
-              : task.opening_template
-                ? `Abre con «${task.opening_template.name}»`
-                : "Mensaje del agente";
+              : task.task_medium === "email"
+                ? "Correo del paso"
+                : task.task_medium === "sms"
+                  ? "SMS del paso"
+                  : task.opening_template
+                    ? `Abre con «${task.opening_template.name}»`
+                    : "Mensaje del agente";
           return (
             <li
               key={task.id}
@@ -329,11 +329,7 @@ function UpcomingDay({
               <div className={cn("font-mono text-sm whitespace-nowrap tabular-nums", quiet && "text-muted-foreground")}>
                 {clock(minutes)}
               </div>
-              {task.task_medium === "call" ? (
-                <PhoneCall aria-hidden className="size-4 text-accent-violet" />
-              ) : (
-                <MessageSquare aria-hidden className="size-4 text-accent-violet" />
-              )}
+              <MediumIcon medium={agendaMediumOf(task)} className="size-4 text-accent-violet" />
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-1.5">
                   <span className="truncate text-sm font-semibold">{task.contact_name ?? "Sin nombre"}</span>
@@ -391,19 +387,33 @@ function dayLabel(day: DayKey): string {
     .replace(/\./g, "");
 }
 
-type AgendaMedium = "message" | "call";
+type AgendaMedium = "message" | "call" | "email" | "sms";
+const AGENDA_MEDIA: readonly AgendaMedium[] = ["message", "call", "email", "sms"];
 
-/** Mensajes primero, llamadas después; solo los medios presentes. */
+/** P3a: el correo y el SMS de una secuencia se cuentan y se pintan como lo que son. */
+function agendaMediumOf(task: ActivityDTO): AgendaMedium {
+  return task.task_medium === "call" || task.task_medium === "email" || task.task_medium === "sms"
+    ? task.task_medium
+    : "message";
+}
+
+/** Mensajes, llamadas, correos y SMS, en ese orden; solo los medios presentes. */
 function mediumCounts(items: readonly ActivityDTO[]): { medium: AgendaMedium; count: number }[] {
-  const calls = items.filter((task) => task.task_medium === "call").length;
-  const messages = items.length - calls;
-  return [
-    ...(messages > 0 ? [{ medium: "message" as const, count: messages }] : []),
-    ...(calls > 0 ? [{ medium: "call" as const, count: calls }] : []),
-  ];
+  return AGENDA_MEDIA.map((medium) => ({
+    medium,
+    count: items.filter((task) => agendaMediumOf(task) === medium).length,
+  })).filter((entry) => entry.count > 0);
 }
 
 function mediumNoun(medium: AgendaMedium, count: number): string {
   if (medium === "call") return count === 1 ? "llamada" : "llamadas";
+  if (medium === "email") return count === 1 ? "correo" : "correos";
+  if (medium === "sms") return "SMS";
   return count === 1 ? "mensaje" : "mensajes";
+}
+
+function MediumIcon({ medium, className }: { medium: AgendaMedium; className?: string }) {
+  const Icon =
+    medium === "call" ? PhoneCall : medium === "email" ? Mail : medium === "sms" ? MessageSquareText : MessageSquare;
+  return <Icon aria-hidden className={className} />;
 }

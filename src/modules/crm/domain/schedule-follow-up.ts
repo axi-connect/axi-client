@@ -40,6 +40,15 @@ export const FOLLOW_UP_MEDIA: ReadonlyArray<{
   },
 ];
 
+/**
+ * La política de una tarea SUELTA. Correo, SMS y tarea manual (P3a) son pasos
+ * de secuencia y no se editan aquí: si llegara una, el formulario la muestra
+ * como mensaje en vez de romper.
+ */
+export function asFollowUpMedium(channel: string | null | undefined): FollowUpMedium {
+  return FOLLOW_UP_MEDIA.some((medium) => medium.value === channel) ? (channel as FollowUpMedium) : "message";
+}
+
 /** Ejemplos que rellenan el objetivo con un clic: enseñan el tono esperado. */
 export const OBJECTIVE_EXAMPLES: readonly string[] = [
   "Preguntarle si recibió la propuesta y qué le pareció",

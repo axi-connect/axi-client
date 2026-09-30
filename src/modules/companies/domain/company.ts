@@ -22,3 +22,9 @@ export const WEEKDAY_LABELS = [
   "Viernes",
   "Sábado",
 ] as const;
+
+/**
+ * P3a (D1): la dirección desde la que salen los correos de prospección del
+ * negocio (`celucambio@axi-connect.co`). No se configura: nace del nombre.
+ */
+export type OutreachSenderDTO = Schemas["OutreachSenderDto"];

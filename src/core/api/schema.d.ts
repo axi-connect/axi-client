@@ -5892,6 +5892,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/outreach/sender": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["OutreachSenderController_sender_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/outreach/unsubscribe/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PublicOutreachController_view[0]"];
+        put?: never;
+        post: operations["PublicOutreachController_unsubscribe[0]"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/outreach/unsubscribe/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PublicOutreachController_view[1]_v1"];
+        put?: never;
+        post: operations["PublicOutreachController_unsubscribe[1]_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/cmo/messages": {
         parameters: {
             query?: never;
@@ -8156,7 +8204,7 @@ export interface components {
             ai_paused: boolean;
             metrics: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                 used: number;
                 limit: {
                     value: number;
@@ -8188,7 +8236,7 @@ export interface components {
             data: {
                 id: string;
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                 quantity: number;
                 cost_usd: number | null;
                 provider: string | null;
@@ -8220,7 +8268,7 @@ export interface components {
                     /** Format: uuid */
                     id: string;
                     /** @enum {string} */
-                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                     /** @enum {string} */
                     period: "day" | "billing_cycle";
                     /** @enum {string} */
@@ -8709,7 +8757,7 @@ export interface components {
         TenantLimitsDto: {
             data: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                 /** @enum {string} */
                 period: "day" | "billing_cycle";
                 limit_value: number;
@@ -8733,7 +8781,7 @@ export interface components {
         ReplaceTenantLimitsDto: {
             limits: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                 /** @enum {string} */
                 period: "day" | "billing_cycle";
                 limit_value: number;
@@ -8753,7 +8801,7 @@ export interface components {
         PricingListDto: {
             data: {
                 /** @enum {string} */
-                provider: "openai_compatible" | "anthropic" | "elevenlabs" | "twilio" | "groq" | "voyage" | "meta" | "typesafe";
+                provider: "openai_compatible" | "anthropic" | "elevenlabs" | "twilio" | "groq" | "voyage" | "meta" | "typesafe" | "resend";
                 model: string;
                 /**
                  * @default tokens
@@ -8776,7 +8824,7 @@ export interface components {
         };
         CreatePricingDto: {
             /** @enum {string} */
-            provider: "openai_compatible" | "anthropic" | "elevenlabs" | "twilio" | "groq" | "voyage" | "meta" | "typesafe";
+            provider: "openai_compatible" | "anthropic" | "elevenlabs" | "twilio" | "groq" | "voyage" | "meta" | "typesafe" | "resend";
             model: string;
             /**
              * @default tokens
@@ -8883,7 +8931,7 @@ export interface components {
                 tier: "sbs" | "enterprise";
                 default_limits: {
                     /** @enum {string} */
-                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                     /** @enum {string} */
                     period: "day" | "billing_cycle";
                     limit_value: number;
@@ -8922,7 +8970,7 @@ export interface components {
             /** @default [] */
             default_limits: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                 /** @enum {string} */
                 period: "day" | "billing_cycle";
                 limit_value: number;
@@ -8949,7 +8997,7 @@ export interface components {
             /** @default [] */
             default_limits: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                 /** @enum {string} */
                 period: "day" | "billing_cycle";
                 limit_value: number;
@@ -8976,7 +9024,7 @@ export interface components {
                 tier: "sbs" | "enterprise";
                 default_limits: {
                     /** @enum {string} */
-                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                     /** @enum {string} */
                     period: "day" | "billing_cycle";
                     limit_value: number;
@@ -9010,7 +9058,7 @@ export interface components {
             billing_cycle_anchor: string | null;
             limits: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                 /** @enum {string} */
                 period: "day" | "billing_cycle";
                 limit_value: number;
@@ -13844,7 +13892,7 @@ export interface components {
                 /** Format: uuid */
                 conversation_id: string | null;
                 /** @enum {string} */
-                kind: "note" | "call" | "meeting" | "task";
+                kind: "note" | "call" | "meeting" | "task" | "email" | "sms";
                 title: string | null;
                 body: string | null;
                 /** Format: date-time */
@@ -13889,9 +13937,9 @@ export interface components {
                 /** Format: date-time */
                 awaiting_reply_until: string | null;
                 /** @enum {string|null} */
-                task_channel: "message" | "call" | "call_then_message" | null;
+                task_channel: "message" | "call" | "call_then_message" | "email" | "sms" | "manual" | null;
                 /** @enum {string|null} */
-                task_medium: "message" | "call" | null;
+                task_medium: "message" | "call" | "email" | "sms" | "manual" | null;
                 /** Format: uuid */
                 bulk_id: string | null;
                 last_opening: {
@@ -13953,7 +14001,7 @@ export interface components {
             /** Format: uuid */
             conversation_id: string | null;
             /** @enum {string} */
-            kind: "note" | "call" | "meeting" | "task";
+            kind: "note" | "call" | "meeting" | "task" | "email" | "sms";
             title: string | null;
             body: string | null;
             /** Format: date-time */
@@ -13998,9 +14046,9 @@ export interface components {
             /** Format: date-time */
             awaiting_reply_until: string | null;
             /** @enum {string|null} */
-            task_channel: "message" | "call" | "call_then_message" | null;
+            task_channel: "message" | "call" | "call_then_message" | "email" | "sms" | "manual" | null;
             /** @enum {string|null} */
-            task_medium: "message" | "call" | null;
+            task_medium: "message" | "call" | "email" | "sms" | "manual" | null;
             /** Format: uuid */
             bulk_id: string | null;
             last_opening: {
@@ -14162,9 +14210,11 @@ export interface components {
                 message_id: string | null;
                 detail: string | null;
                 /** @enum {string} */
-                medium: "message" | "call";
+                medium: "message" | "call" | "email" | "sms" | "manual";
                 /** Format: uuid */
                 call_session_id: string | null;
+                /** Format: uuid */
+                outreach_message_id: string | null;
                 opened_with_template: boolean;
                 /** @enum {string|null} */
                 delivery_status: "sent" | "delivered" | "read" | "failed" | null;
@@ -14200,9 +14250,11 @@ export interface components {
                 message_id: string | null;
                 detail: string | null;
                 /** @enum {string} */
-                medium: "message" | "call";
+                medium: "message" | "call" | "email" | "sms" | "manual";
                 /** Format: uuid */
                 call_session_id: string | null;
+                /** Format: uuid */
+                outreach_message_id: string | null;
                 opened_with_template: boolean;
                 /** @enum {string|null} */
                 delivery_status: "sent" | "delivered" | "read" | "failed" | null;
@@ -14406,7 +14458,7 @@ export interface components {
                     position: number;
                     offset_hours: number;
                     /** @enum {string} */
-                    task_channel: "message" | "call" | "call_then_message";
+                    task_channel: "message" | "call" | "call_then_message" | "email" | "sms" | "manual";
                     objective: string;
                     opening_template: {
                         /** Format: uuid */
@@ -14417,6 +14469,10 @@ export interface components {
                         language: string;
                         params: string[];
                         topic: string | null;
+                    } | null;
+                    message_template: {
+                        subject: string | null;
+                        body: string;
                     } | null;
                 }[];
                 active_enrollments: number;
@@ -14440,7 +14496,7 @@ export interface components {
                 position: number;
                 offset_hours: number;
                 /** @enum {string} */
-                task_channel: "message" | "call" | "call_then_message";
+                task_channel: "message" | "call" | "call_then_message" | "email" | "sms" | "manual";
                 objective: string;
                 opening_template: {
                     /** Format: uuid */
@@ -14451,6 +14507,10 @@ export interface components {
                     language: string;
                     params: string[];
                     topic: string | null;
+                } | null;
+                message_template: {
+                    subject: string | null;
+                    body: string;
                 } | null;
             }[];
             active_enrollments: number;
@@ -14474,13 +14534,17 @@ export interface components {
                  * @default message
                  * @enum {string}
                  */
-                task_channel: "message" | "call" | "call_then_message";
+                task_channel: "message" | "call" | "call_then_message" | "email" | "sms" | "manual";
                 objective: string;
                 opening_template?: {
                     /** Format: uuid */
                     channel_template_id: string;
                     params: string[];
                     topic?: string | null;
+                } | null;
+                message_template?: {
+                    subject?: string | null;
+                    body: string;
                 } | null;
             }[];
         };
@@ -15392,7 +15456,7 @@ export interface components {
                     email: string | null;
                 };
                 /** @enum {string} */
-                source: "inbound_keyword" | "manual" | "import" | "habeas_data" | "email_unsubscribe" | "sms_stop";
+                source: "inbound_keyword" | "manual" | "import" | "habeas_data" | "email_unsubscribe" | "sms_stop" | "email_bounce";
                 channel: string | null;
                 keyword_text: string | null;
                 /** Format: uuid */
@@ -18491,6 +18555,18 @@ export interface components {
             /** Format: date-time */
             assigned_at: string | null;
         };
+        OutreachSenderDto: {
+            address: string;
+            from_name: string;
+            paused: boolean;
+            pause_reason: string | null;
+        };
+        UnsubscribeViewDto: {
+            sender_name: string;
+            /** @enum {string} */
+            channel: "email" | "sms";
+            destination_masked: string;
+        };
         CmoSendMessageDto: {
             /** @description Lo que el dueño le pregunta o le pide a Axel */
             message: string;
@@ -19052,7 +19128,7 @@ export interface components {
                 is_current: boolean;
                 overage_rates: {
                     /** @enum {string} */
-                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                     included_quantity: number | null;
                     unit_size: number;
                     amount_cents_per_unit: number;
@@ -19110,7 +19186,7 @@ export interface components {
             /** @default [] */
             overage_rates: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                 /** @default null */
                 included_quantity: number | null;
                 unit_size: number;
@@ -22841,7 +22917,7 @@ export interface operations {
     UsageController_history_v1: {
         parameters: {
             query: {
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                 granularity?: "hour" | "day";
                 from?: string;
                 to?: string;
@@ -22865,7 +22941,7 @@ export interface operations {
     UsageController_events_v1: {
         parameters: {
             query?: {
-                metric?: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                metric?: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                 from?: string;
                 to?: string;
                 page?: number;
@@ -29412,7 +29488,7 @@ export interface operations {
             query?: {
                 contact_id?: string;
                 deal_id?: string;
-                kind?: "note" | "call" | "meeting" | "task";
+                kind?: "note" | "call" | "meeting" | "task" | "email" | "sms";
                 page?: number;
                 page_size?: number;
             };
@@ -33454,6 +33530,109 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TenantCallNumberDto"][];
+                };
+            };
+        };
+    };
+    OutreachSenderController_sender_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OutreachSenderDto"];
+                };
+            };
+        };
+    };
+    "PublicOutreachController_view[0]": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnsubscribeViewDto"];
+                };
+            };
+        };
+    };
+    "PublicOutreachController_unsubscribe[0]": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnsubscribeViewDto"];
+                };
+            };
+        };
+    };
+    "PublicOutreachController_view[1]_v1": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnsubscribeViewDto"];
+                };
+            };
+        };
+    };
+    "PublicOutreachController_unsubscribe[1]_v1": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnsubscribeViewDto"];
                 };
             };
         };
