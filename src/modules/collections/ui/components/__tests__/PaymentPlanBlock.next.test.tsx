@@ -3,6 +3,8 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import type { PlanDetailDTO } from "@/modules/collections/domain/payment-plan";
 
 const mockPlan = jest.fn<Promise<PlanDetailDTO>, [string]>();
+// F3: «Llamar para cobrar» mira la capacidad `calls`; apagada, la fila queda como antes.
+jest.mock("@/shared/auth/entitlements.hooks", () => ({ useEntitlements: () => ({ hasCapability: () => false }) }));
 jest.mock(
   "@/modules/collections/infrastructure/services/collections-service.adapter",
   () => ({
@@ -33,6 +35,7 @@ const plan = (overrides: Partial<PlanDetailDTO> = {}): PlanDetailDTO => ({
   order_id: "o1",
   order_number: 47,
   contact_id: "c1",
+  contact_phone: "+573001234567",
   status: "active",
   currency: "COP",
   total_cents: 1_160_000_000,

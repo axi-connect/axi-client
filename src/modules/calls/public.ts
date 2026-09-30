@@ -7,4 +7,6 @@
 
 export { ContactCallsList } from "@/modules/calls/ui/components/ContactCallsList";
 // Plan de modos §7: «Llamar» a un contacto desde la ficha, el inbox o Cobros.
-export { CallContactButton } from "@/modules/calls/ui/components/CallContactButton";
+export { CallContactButton, useCanPlaceCalls } from "@/modules/calls/ui/components/CallContactButton";
+// F3: lo que Cobros le pasa a «Llamar para cobrar».
+export type { CollectionsCallSummary } from "@/modules/calls/domain/collections-call";

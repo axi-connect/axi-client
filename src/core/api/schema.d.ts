@@ -15951,6 +15951,7 @@ export interface components {
                 /** Format: uuid */
                 contact_id: string;
                 contact_name: string;
+                contact_phone: string | null;
                 /** Format: date */
                 service_date: string | null;
                 travelled: boolean;
@@ -16010,6 +16011,7 @@ export interface components {
             order_number: number | null;
             /** Format: uuid */
             contact_id: string;
+            contact_phone: string | null;
             /** @enum {string} */
             status: "active" | "settled" | "cancelled" | "on_hold";
             currency: string;
@@ -18229,6 +18231,8 @@ export interface components {
             ai_agent_id?: string;
             /** @enum {string} */
             mode?: "reactive" | "proactive";
+            /** Format: uuid */
+            plan_id?: string;
         };
         TestCallResultDto: {
             /** Format: uuid */

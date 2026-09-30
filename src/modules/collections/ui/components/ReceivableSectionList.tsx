@@ -30,6 +30,8 @@ import {
   type ReceivableSectionKey,
 } from "@/modules/collections/domain/receivable";
 import { initialsOf } from "@/modules/collections/domain/write-first";
+import { callSummaryFromRow, canCallToCollect } from "@/modules/collections/domain/call-to-collect";
+import { CallContactButton } from "@/modules/calls/public";
 
 /** El punto de la prisa del dinero: la sección ya lo dice, la fila lo recuerda al bajar. */
 const MONEY_DOT: Record<ReceivableSectionKey, string> = {
@@ -192,6 +194,17 @@ function Row({
             <Send aria-hidden="true" className="size-3.5" />
             Escribir
           </Button>
+          {/* F3: «Llamar» junto a «Escribir» (mockup aprobado). Sin permiso o
+              sin llamadas en el plan no se pinta; sin teléfono, apagado. En el
+              celular solo el icono, para que quepan el monto y los botones. */}
+          {canCallToCollect(row) ? (
+            <CallContactButton
+              contact={{ id: row.contact_id, name: row.contact_name, phone: row.contact_phone }}
+              collections={callSummaryFromRow(row)}
+              className="rounded-full"
+              labelClassName="max-sm:sr-only"
+            />
+          ) : null}
           {menu ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

@@ -30,6 +30,8 @@ const order = (payments: OrderPaymentDTO[]): OrderDTO =>
     payments,
   }) as unknown as OrderDTO;
 
+// F3: «Llamar para cobrar» mira la capacidad `calls`; apagada, la fila queda como antes.
+jest.mock("@/shared/auth/entitlements.hooks", () => ({ useEntitlements: () => ({ hasCapability: () => false }) }));
 describe("PendingProofIsland (premium P3: lo más accionable del pedido)", () => {
   it("sin comprobantes por revisar no existe: no se inventa otro «lo próximo»", () => {
     const { container } = render(
