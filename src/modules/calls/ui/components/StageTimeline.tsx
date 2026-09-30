@@ -30,7 +30,8 @@ const SR: Record<StageStepState, string> = {
 };
 
 function note(step: StageStep): { text: string; className: string } | null {
-  if (step.state === "met") return { text: "Aquí se cumplió el objetivo", className: "text-success" };
+  // F2-1: el verde a 12 px no pasa AA en claro (3,1:1); el verde va en el nodo.
+  if (step.state === "met") return { text: "Aquí se cumplió el objetivo", className: "font-medium text-foreground" };
   if (step.state === "fell" && step.goal !== null && step.goal.trim() !== "") {
     const goal = step.goal.trim();
     return { text: `Buscaba: ${goal.charAt(0).toLowerCase()}${goal.slice(1)}`, className: "text-muted-foreground" };
