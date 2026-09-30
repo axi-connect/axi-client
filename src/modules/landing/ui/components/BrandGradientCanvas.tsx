@@ -203,7 +203,10 @@ export function BrandGradientCanvas({
     let colorData = new Float32Array(9);
     let bgData: [number, number, number] = [1, 1, 1];
     const resolveColors = () => {
-      const styles = getComputedStyle(document.documentElement);
+      // Del propio canvas y no de <html>: dentro de una isla oscura (la
+      // película de la home, `.dark` en los dos temas) los tokens son los de
+      // la isla; fuera de ella hereda los de <html>, que es lo de siempre.
+      const styles = getComputedStyle(canvas);
       const rgb = colorVars.map(
         (v) => hexToRgb(styles.getPropertyValue(v)) ?? ([0, 0, 0] as [number, number, number]),
       );

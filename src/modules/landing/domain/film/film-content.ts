@@ -480,6 +480,7 @@ export const FILM_CONTENT: Readonly<Record<FilmNiche, FilmContent>> = {
  * El cielo del hero: fragmentos de conversaciones reales del producto que
  * suben en matriz de puntos. Cortos (≤ 30 caracteres) para que se lean como
  * mensajes, no como párrafos. Mezclan nichos: son todos los que escriben.
+ * Suficientes para que el cielo no repita a la vista (30 a la vez en escritorio).
  */
 export const SKY_FRAGMENTS: readonly string[] = [
   "¿Tienen domicilio?",
@@ -502,4 +503,18 @@ export const SKY_FRAGMENTS: readonly string[] = [
   "Quedó agendada",
   "Nequi o Bancolombia",
   "¿Me lo apartas?",
+  "¿Aceptan Nequi?",
+  "Mesa para 4, 8 p. m.",
+  "¿Tienen garantía?",
+  "Ya transferí",
+  "¿Cuánto al por mayor?",
+  "Perfecto, gracias",
+  "¿Me recuerdas mañana?",
+  "Envío gratis desde 150 mil",
+  "¿Tienen parqueadero?",
+  "Uñas + cejas, ¿cuánto?",
+  "Pedido confirmado",
+  "¿A qué hora llega?",
+  "Quiero 3 cajas",
+  "Te paso los datos de pago",
 ];

@@ -5,14 +5,13 @@ import { useEffect, useRef } from "react";
 import { SKY_FRAGMENTS } from "@/modules/landing/domain/film/film-content";
 
 /**
- * El fondo del hero: un atardecer de dunas con grano y un cielo del que suben
- * fragmentos de conversaciones en matriz de puntos (la referencia aprobada
- * el 2026-09-30, rehecha con la marca: sin video de terceros y sin cifras
- * inventadas). Las crestas de las tres dunas brillan en coral, ámbar y violeta:
- * son el nacimiento de la cinta de luz que guía la película.
+ * Las conversaciones que flotan en el hero: fragmentos de mensajes reales del
+ * producto en matriz de puntos, que suben despacio sobre el gradiente de marca
+ * (`BrandGradientCanvas`, el fondo «con vida» del hero original, que la dueña
+ * pidió conservar el 2026-09-30). Tres profundidades: las cercanas son más
+ * grandes, más nítidas y suben más rápido, también con el scroll.
  *
- * Canvas 2D y nada más (≈ 5 kB). Reglas de coste, porque es lo único que se
- * mueve solo en toda la home:
+ * Canvas 2D transparente y nada más. Reglas de coste:
  * - 30 fps como techo y densidad de píxel ≤ 1,5.
  * - Se detiene fuera de pantalla (IntersectionObserver) y con la pestaña oculta.
  * - Con `prefers-reduced-motion` pinta un solo fotograma y no se anima.
@@ -23,7 +22,7 @@ import { SKY_FRAGMENTS } from "@/modules/landing/domain/film/film-content";
 
 type Rgb = [number, number, number];
 type Sprite = { canvas: HTMLCanvasElement; w: number; h: number };
-type Particle = { sprite: Sprite; x: number; y: number; speed: number; alpha: number; tint: number };
+type Particle = { sprite: Sprite; x: number; y: number; speed: number; alpha: number; depth: number; tint: number };
 
 const DOT = 2.1; // separación de la matriz, px CSS
 const MAX_DPR = 1.5;
@@ -79,29 +78,33 @@ function makeSprite(text: string): Sprite {
   return { canvas: out, w: out.width, h: out.height };
 }
 
-/** Grano estático: una textura de ruido que se repite sobre las dunas. */
-function makeGrain(): HTMLCanvasElement {
-  const c = document.createElement("canvas");
-  c.width = c.height = 160;
-  const ctx = c.getContext("2d")!;
-  const img = ctx.createImageData(160, 160);
-  let s = 7;
-  for (let i = 0; i < img.data.length; i += 4) {
-    s = (s * 16807) % 2147483647;
-    const v = (s / 2147483647) * 255;
-    img.data[i] = img.data[i + 1] = img.data[i + 2] = v;
-    img.data[i + 3] = 34;
+/** El sprite blanco teñido con un color de marca; uno por par sprite–color. */
+const tints = new WeakMap<Sprite, Map<string, HTMLCanvasElement>>();
+function tinted(sprite: Sprite, rgb: Rgb): HTMLCanvasElement {
+  const key = rgb.join(",");
+  let byColor = tints.get(sprite);
+  if (!byColor) tints.set(sprite, (byColor = new Map()));
+  let out = byColor.get(key);
+  if (!out) {
+    out = document.createElement("canvas");
+    out.width = sprite.w;
+    out.height = sprite.h;
+    const octx = out.getContext("2d")!;
+    octx.drawImage(sprite.canvas, 0, 0);
+    octx.globalCompositeOperation = "source-in";
+    octx.fillStyle = rgba(rgb, 1);
+    octx.fillRect(0, 0, sprite.w, sprite.h);
+    byColor.set(key, out);
   }
-  ctx.putImageData(img, 0, 0);
-  return c;
+  return out;
 }
 
-/** Las tres dunas: base (fracción del alto), amplitudes y fases de su cresta. */
-const DUNES = [
-  { base: 0.66, amp: [0.055, 0.02], freq: [1.1, 2.7], speed: [0.05, 0.08], phase: 0.4, rim: "violet" as const, parallax: 8 },
-  { base: 0.76, amp: [0.05, 0.025], freq: [1.6, 3.4], speed: [-0.06, 0.07], phase: 2.1, rim: "amber" as const, parallax: 14 },
-  { base: 0.86, amp: [0.045, 0.018], freq: [1.3, 3.9], speed: [0.07, -0.05], phase: 4.2, rim: "brand" as const, parallax: 22 },
-];
+/** Escala, velocidad y brillo por profundidad (0 = al fondo, 2 = cerca). */
+const DEPTHS = [
+  { scale: 0.78, speed: 0.7, alpha: 0.4, scroll: 0.25 },
+  { scale: 1, speed: 1, alpha: 0.62, scroll: 0.45 },
+  { scale: 1.25, speed: 1.35, alpha: 0.85, scroll: 0.7 },
+] as const;
 
 export function HeroSky({ className }: { className?: string }) {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -115,7 +118,7 @@ export function HeroSky({ className }: { className?: string }) {
     const scroller = document.querySelector<HTMLElement>("[data-app-scroll]");
     const style = getComputedStyle(canvas);
     const color = {
-      bg: parseColor(style.getPropertyValue("--background"), [10, 10, 10]),
+      fg: parseColor(style.getPropertyValue("--foreground"), [250, 250, 250]),
       brand: parseColor(style.getPropertyValue("--axi-brand"), [251, 113, 133]),
       amber: parseColor(style.getPropertyValue("--axi-amber"), [251, 191, 36]),
       violet: parseColor(style.getPropertyValue("--axi-violet"), [167, 139, 250]),
@@ -124,8 +127,6 @@ export function HeroSky({ className }: { className?: string }) {
     let W = 0;
     let H = 0;
     let dpr = 1;
-    const grain = makeGrain();
-    const grainPattern = ctx.createPattern(grain, "repeat");
     let sprites: Sprite[] = [];
     let particles: Particle[] = [];
     let pointer = 0;
@@ -135,131 +136,68 @@ export function HeroSky({ className }: { className?: string }) {
     // rehacen cuando llegan, para que la matriz use Poppins y no un respaldo.
     const buildSprites = () => {
       sprites = SKY_FRAGMENTS.map(makeSprite);
-      particles = particles.length ? particles.map((p, i) => ({ ...p, sprite: sprites[i % sprites.length] })) : [];
+      particles = particles.map((p, i) => ({ ...p, sprite: sprites[i % sprites.length] }));
     };
 
+    // Siembra determinista y repartida: cada mensaje en su franja horizontal,
+    // para que el cielo se vea poblado sin montones ni huecos.
     const seed = () => {
       let s = 11;
       const rnd = () => ((s = (s * 16807) % 2147483647), s / 2147483647);
-      const count = W < 640 ? 9 : 16;
+      const count = W < 640 ? 14 : 30;
       particles = Array.from({ length: count }, (_, i) => ({
         sprite: sprites[i % sprites.length],
-        x: rnd(),
+        x: (i + 0.2 + rnd() * 0.6) / count,
         y: rnd(),
-        speed: 0.012 + rnd() * 0.02,
-        alpha: 0.28 + rnd() * 0.4,
+        speed: 0.012 + rnd() * 0.018,
+        alpha: 0.75 + rnd() * 0.25,
+        depth: i % 3,
         tint: rnd(),
       }));
+      // Mezcla el orden de columnas para que la profundidad no forme bandas.
+      for (let i = particles.length - 1; i > 0; i--) {
+        const j = Math.floor(rnd() * (i + 1));
+        [particles[i].x, particles[j].x] = [particles[j].x, particles[i].x];
+      }
+      // De atrás adelante: las cercanas se pintan encima.
+      particles.sort((p, q) => p.depth - q.depth);
     };
 
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
+      const wasNarrow = W < 640;
       W = Math.max(1, rect.width);
       H = Math.max(1, rect.height);
       dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
       canvas.width = Math.round(W * dpr);
       canvas.height = Math.round(H * dpr);
-      if (!particles.length) seed();
+      if (!particles.length || wasNarrow !== W < 640) seed();
     };
 
-    const crest = (d: (typeof DUNES)[number], x: number, t: number, lift: number) =>
-      H * (d.base + lift) +
-      H * d.amp[0] * Math.sin((x / W) * Math.PI * d.freq[0] + t * d.speed[0] + d.phase) +
-      H * d.amp[1] * Math.sin((x / W) * Math.PI * d.freq[1] + t * d.speed[1] + d.phase * 1.7);
+    const tintOf = (t: number) => (t < 0.12 ? color.brand : t < 0.2 ? color.violet : t < 0.26 ? color.amber : color.fg);
 
     const draw = (t: number, scroll: number) => {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const horizon = H * 0.64;
-
-      // Cielo: noche violeta arriba, brillo rosa y ámbar en el horizonte.
-      const sky = ctx.createLinearGradient(0, 0, 0, horizon);
-      sky.addColorStop(0, rgba(color.bg, 1));
-      sky.addColorStop(0.45, rgba(color.violet, 0.16));
-      sky.addColorStop(0.8, rgba(color.brand, 0.3));
-      sky.addColorStop(1, rgba(color.amber, 0.3));
-      // Por debajo del horizonte el gradiente se sostiene hasta que lo tapan las dunas.
-      ctx.fillStyle = rgba(color.bg, 1);
-      ctx.fillRect(0, 0, W, H);
-      ctx.fillStyle = sky;
-      ctx.fillRect(0, 0, W, H);
-      const glow = ctx.createRadialGradient(W / 2, horizon, 0, W / 2, horizon, Math.max(W, H) * 0.55);
-      glow.addColorStop(0, rgba([255, 244, 240], 0.42 * (1 - scroll * 0.6)));
-      glow.addColorStop(0.35, rgba(color.brand, 0.14));
-      glow.addColorStop(1, rgba(color.brand, 0));
-      ctx.fillStyle = glow;
-      ctx.fillRect(0, 0, W, H);
-
-      // Conversaciones que suben desde el horizonte y se apagan arriba.
-      const drift = t * 0.018 + scroll * 0.35;
+      ctx.clearRect(0, 0, W, H);
       for (const p of particles) {
-        const y = 1 - ((p.y + drift * p.speed * 40) % 1); // 1 → 0
-        const py = y * horizon * 0.98;
-        const fade = Math.min(1, y * 3) * Math.min(1, (1 - y) * 4);
+        const d = DEPTHS[p.depth];
+        const w = p.sprite.w * d.scale;
+        const h = p.sprite.h * d.scale;
+        // Suben de abajo arriba; el scroll las empuja según su profundidad.
+        const y = 1 - ((p.y + t * p.speed * d.speed * 0.72 + scroll * d.scroll) % 1); // 1 → 0
+        const py = y * (H + h * 2) - h;
+        const fade = Math.min(1, y * 4) * Math.min(1, (1 - y) * 4);
         if (fade <= 0.02) continue;
-        const px = p.x * (W + p.sprite.w) - p.sprite.w + pointer * 10;
+        const px = p.x * (W + w * 0.4) - w * 0.7 + pointer * (6 + p.depth * 8);
         // Detrás del titular el cielo se calla: los mensajes se apagan en la
         // columna central para no competir con el texto.
-        const cx = Math.abs(px + p.sprite.w / 2 - W / 2) / (W / 2);
-        const cy = Math.abs(py - H * 0.42) / (H * 0.3);
-        const quiet = cx < 0.55 && cy < 1 ? 0.18 + 0.82 * Math.max(cx / 0.55, cy) ** 2 : 1;
-        ctx.globalAlpha = p.alpha * fade * 0.8 * quiet;
-        ctx.drawImage(p.sprite.canvas, px, py - p.sprite.h / 2, p.sprite.w, p.sprite.h);
+        const cx = Math.abs(px + w / 2 - W / 2) / (W / 2);
+        const cy = Math.abs(py - H * 0.46) / (H * 0.3);
+        const quiet = cx < 0.55 && cy < 1 ? 0.12 + 0.88 * Math.max(cx / 0.55, cy) ** 2 : 1;
+        ctx.globalAlpha = p.alpha * d.alpha * fade * quiet;
+        ctx.drawImage(tinted(p.sprite, tintOf(p.tint)), px, py, w, h);
       }
       ctx.globalAlpha = 1;
-
-      // Las dunas, de atrás adelante; al bajar, se hunden un poco (parallax).
-      DUNES.forEach((d, i) => {
-        const lift = scroll * (0.05 + i * 0.05);
-        const shift = pointer * d.parallax;
-        const step = Math.max(6, W / 120);
-        ctx.beginPath();
-        ctx.moveTo(0, H);
-        for (let x = 0; x <= W + step; x += step) ctx.lineTo(x, crest(d, x + shift, t, lift));
-        ctx.lineTo(W, H);
-        ctx.closePath();
-        const top = H * (d.base + lift - d.amp[0] - d.amp[1]);
-        // El cuerpo de la duna, iluminado desde el horizonte: la luz entra por
-        // la cresta y se apaga hacia abajo (la referencia: arena rosada al atardecer).
-        const body = ctx.createLinearGradient(0, top, 0, top + H * 0.42);
-        const rim = color[d.rim];
-        body.addColorStop(0, rgba(rim, d.rim === "amber" ? 0.34 : 0.44));
-        body.addColorStop(0.12, rgba(rim, d.rim === "amber" ? 0.16 : 0.24));
-        body.addColorStop(0.4, rgba(color.brand, 0.08));
-        body.addColorStop(0.75, rgba(color.bg, 0.97));
-        body.addColorStop(1, rgba(color.bg, 1));
-        ctx.fillStyle = body;
-        ctx.fill();
-
-        // La cresta encendida: el origen de la cinta de ese color.
-        ctx.beginPath();
-        for (let x = 0; x <= W + step; x += step) {
-          const y = crest(d, x + shift, t, lift);
-          if (x === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        }
-        ctx.strokeStyle = rgba(rim, 0.22);
-        ctx.lineWidth = 9;
-        ctx.stroke();
-        ctx.strokeStyle = rgba(rim, 0.8);
-        ctx.lineWidth = 1.4;
-        ctx.stroke();
-      });
-
-      // Grano sobre las dunas y fundido a negro abajo, para empalmar con la escena siguiente.
-      if (grainPattern) {
-        ctx.globalCompositeOperation = "overlay";
-        ctx.fillStyle = grainPattern;
-        ctx.fillRect(0, horizon - H * 0.12, W, H);
-        ctx.globalCompositeOperation = "source-over";
-      }
-      // Fundido largo y con curva: el hero no termina en un borde, se apaga.
-      const floor = ctx.createLinearGradient(0, H * 0.66, 0, H);
-      floor.addColorStop(0, rgba(color.bg, 0));
-      floor.addColorStop(0.55, rgba(color.bg, 0.55));
-      floor.addColorStop(0.85, rgba(color.bg, 0.92));
-      floor.addColorStop(1, rgba(color.bg, 1));
-      ctx.fillStyle = floor;
-      ctx.fillRect(0, H * 0.66, W, H * 0.34);
     };
 
     const scrollProgress = () => {

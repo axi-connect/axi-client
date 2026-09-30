@@ -1,5 +1,4 @@
 import { ArrowRight, MessageCircle } from "lucide-react";
-import { FaFacebookMessenger, FaInstagram, FaWhatsapp } from "react-icons/fa6";
 
 import { salesWhatsAppUrl } from "@/core/config/env";
 import { cn } from "@/core/lib/utils";
@@ -8,7 +7,7 @@ import { FILM_CONTENT } from "@/modules/landing/domain/film/film-content";
 import { FILM_NICHES } from "@/modules/landing/domain/film/niches";
 import { WA_MESSAGES } from "@/modules/landing/ui/content/landing.content";
 import { FilmCta } from "@/modules/landing/ui/film/parts/FilmCta";
-import { HeroSkyLazy } from "@/modules/landing/ui/film/parts/HeroSkyLazy";
+import { HeroGradientLazy, HeroSkyLazy } from "@/modules/landing/ui/film/parts/HeroSkyLazy";
 import { HeroStats } from "@/modules/landing/ui/film/parts/HeroStats";
 import { FILM_ICONS } from "@/modules/landing/ui/film/parts/film-icons";
 import { NicheChoice } from "@/modules/landing/ui/film/parts/NicheChoice";
@@ -34,46 +33,23 @@ function TalkToAgent({ className }: { className?: string }) {
   );
 }
 
-/** Los canales por los que escriben los clientes: la fila de confianza del hero. */
-const CHANNELS = [
-  { Icon: FaWhatsapp, label: "WhatsApp" },
-  { Icon: FaInstagram, label: "Instagram" },
-  { Icon: FaFacebookMessenger, label: "Messenger" },
-] as const;
-
 /**
- * El hero: un solo pantallazo sobre un atardecer de dunas del que sube un cielo
- * de conversaciones (HeroSky). Referencia aprobada el 2026-09-30, adaptada a la
- * marca: titular en Nexa, CTA coral, canales en vez de logos de empresas y
- * cifras que son hechos del producto. La cinta de luz nace de las crestas y
- * baja con el scroll hacia la escena siguiente.
+ * El hero: un solo pantallazo sobre el gradiente de marca «con vida» del hero
+ * original (el fondo que la dueña pidió conservar, 2026-09-30), con
+ * conversaciones que flotan y suben (HeroSky). Titular en Nexa, CTA coral y
+ * cifras que son hechos del producto. La cinta baja con el scroll hacia la
+ * escena siguiente.
  */
 export function HeroScene() {
   return (
-    <section id="hero" data-scene="hero" aria-label="Axi Connect" className="film-hero-sky relative flex h-[100svh] min-h-[640px] w-full flex-col overflow-clip">
+    <section id="hero" data-scene="hero" aria-label="Axi Connect" className="relative flex h-[100svh] min-h-[640px] w-full flex-col overflow-clip">
+      <div className="film-hero-glow absolute inset-x-0 top-0 h-[640px] blur-2xl" aria-hidden="true" />
+      <HeroGradientLazy className="absolute inset-0 h-full w-full" speed={1} grain={0.6} opacity={0.55} />
       <HeroSkyLazy className="absolute inset-0 size-full" />
       <Ribbon d="M 720 700 C 716 790, 728 860, 720 960" axis="x" spread={6} className="z-[1]" />
 
       <div className="relative z-[2] flex flex-1 flex-col items-center px-4 pt-[clamp(96px,14vh,132px)] pb-[clamp(18px,3vh,32px)]">
         <div data-anim="copy" className="flex flex-1 flex-col items-center justify-center text-center">
-          <div className="film-in mb-[clamp(16px,2.5vh,26px)] inline-flex items-center" style={{ "--d": "0.05s" } as React.CSSProperties}>
-            {CHANNELS.map(({ Icon, label }, i) => (
-              <span
-                key={label}
-                className="film-ring grid size-[var(--ring)] place-items-center rounded-full border border-[color-mix(in_srgb,var(--foreground)_40%,transparent)] bg-[color-mix(in_srgb,var(--foreground)_14%,var(--background))] p-[5px]"
-                style={{ zIndex: i === 2 ? 4 : i + 1, marginLeft: i ? "calc(var(--ring) * -0.42)" : undefined }}
-              >
-                <span className="grid size-full place-items-center rounded-full bg-foreground text-background">
-                  <Icon className="size-[calc(var(--ring)*0.34)]" aria-hidden="true" />
-                  <span className="sr-only">{label}</span>
-                </span>
-              </span>
-            ))}
-            <span className="-ml-[calc(var(--ring)*0.42)] inline-flex h-[var(--ring)] items-center rounded-full border border-[color-mix(in_srgb,var(--foreground)_40%,transparent)] bg-[color-mix(in_srgb,var(--foreground)_14%,var(--background))] pr-4 pl-[calc(var(--ring)*0.58)] text-[clamp(12px,1.4vw,13.5px)] font-medium text-[color-mix(in_srgb,var(--foreground)_80%,transparent)]">
-              Tus clientes ya te escriben aquí
-            </span>
-          </div>
-
           <h1 className="film-h text-[clamp(40px,6.4vw,88px)] leading-[1.05]">
             <span className="film-line block t" style={{ "--d": "0.12s" } as React.CSSProperties}>
               Vende en

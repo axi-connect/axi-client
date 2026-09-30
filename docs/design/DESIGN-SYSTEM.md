@@ -328,14 +328,17 @@ Reglas:
   tres condiciones que hacían inocua a aquella: vuelta tan lenta que no se
   perciba mirando la pantalla, solo `transform` sobre una capa sin texto encima,
   y `alternate` para que no salte al reiniciar el ciclo.
-- **La excepción de la home (landing, no workspace): el cielo del hero** (`HeroSky`,
-  `modules/landing/ui/film/parts/`, 2026-09-30). Dunas con grano y fragmentos
-  de conversación que suben en matriz de puntos: es lo único que se mueve solo
-  en la película. Condiciones, todas cumplidas en el código: 30 fps de techo y
-  densidad ≤ 1,5; se detiene fuera de pantalla y con la pestaña oculta; con
-  `prefers-reduced-motion` pinta un fotograma y para; sin texto encima que dependa
-  de él (el titular va sobre una columna donde los fragmentos se apagan); colores
-  leídos de los tokens. El resto de la película solo se mueve con el scroll.
+- **La excepción de la home (landing, no workspace): el fondo del hero** (2026-09-30).
+  Dos capas, las únicas que se mueven solas en la película: el gradiente de marca
+  «con vida» del hero original (`BrandGradientCanvas`, WebGL, el mismo de
+  `/productos`) y las conversaciones que flotan encima en matriz de puntos
+  (`HeroSky`, canvas 2D, `modules/landing/ui/film/parts/`). Condiciones, todas
+  cumplidas en el código: se cargan en diferido (no son el LCP) sobre un brillo
+  CSS de respaldo; densidad ≤ 1,5 y, en `HeroSky`, 30 fps de techo; se detienen
+  fuera de pantalla; con `prefers-reduced-motion` pintan un fotograma y paran;
+  sin texto encima que dependa de ellas (los mensajes se apagan detrás del
+  titular); colores leídos de los tokens. El resto de la película solo se mueve
+  con el scroll.
 - **Lo que NO cuenta como excepción**: un efecto que solo corre mientras el
   puntero está encima. En reposo la superficie está quieta, no hay animación ni
   `requestAnimationFrame` vivo, y el usuario decide cuándo empieza y cuándo

@@ -308,3 +308,10 @@ export const SITE_NAV_SESSION: Record<
   // en lugar del árbol; esta entrada solo satisface el tipo.
   suspended: { text: "Iniciar sesión", href: "/auth/login" },
 };
+
+/**
+ * El CTA de la cabecera en la home. La película tiene una sola conversión, la
+ * prueba de 7 días (programa landing cinematográfica, D1); el resto del sitio
+ * conserva el suyo hasta que se rehaga con el mismo lenguaje (D14).
+ */
+export const SITE_NAV_FILM_CTA = { label: "Prueba 7 días gratis", href: "/comenzar?plan=free_trial" } as const;
