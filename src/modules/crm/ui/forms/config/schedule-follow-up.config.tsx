@@ -10,7 +10,7 @@ import {
 import { z } from "zod";
 import type { ActivityDTO, CreateAgentTaskDTO, UpdateAgentTaskDTO } from "@/modules/crm/domain/activity";
 import {
-  asProactiveCallType,
+  asCrmCallType,
   businessDateTimeToIso,
   isInPast,
   isoToBusinessDateTime,
@@ -20,7 +20,7 @@ import {
   type OpeningTemplateInput,
 } from "@/modules/crm/domain/schedule-follow-up";
 import { countTemplateVariables, type HsmTemplateDTO } from "@/modules/marketing/public";
-import { type ProactiveCallType } from "@/modules/calls/public";
+import { type CrmCallType } from "@/modules/calls/public";
 
 export const NO_AGENT = "__none__";
 export const NO_TEMPLATE = "__none__";
@@ -47,7 +47,7 @@ export type ScheduleFollowUpValues = {
   agent_id: string;
   medium: FollowUpMedium;
   /** Plan de modos §7: el marco de la llamada; solo cuenta si `medium` llama. */
-  call_type: ProactiveCallType;
+  call_type: CrmCallType;
   objective: string;
   /** Fecha y hora de PARED del negocio (zona de la empresa, no del navegador). */
   date: string;
@@ -82,7 +82,7 @@ export function buildScheduleFollowUpSchema(rules: {
         .refine((value) => value !== null, "Selecciona el contacto"),
       agent_id: z.string(),
       medium: z.enum(["message", "call", "call_then_message"]),
-      call_type: z.custom<ProactiveCallType>(),
+      call_type: z.custom<CrmCallType>(),
       objective: z.string(),
       date: z.string(),
       time: z.string(),
@@ -183,7 +183,7 @@ export function editScheduleFollowUpValues(
     // La POLÍTICA elegida, no el medio en curso: una «llamar, y si no,
     // escribir» que ya va por mensaje sigue siendo esa política al editarla.
     medium: task.task_channel ?? "message",
-    call_type: asProactiveCallType(task.call_type),
+    call_type: asCrmCallType(task.call_type),
     objective: task.objective ?? "",
     date: when.date,
     time: when.time,

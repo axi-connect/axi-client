@@ -16,14 +16,17 @@ import {
  * un paso de secuencia. Solo se muestra cuando el canal LLAMA; quien la usa
  * decide cuándo. Sin elegir, `followup` (el de una tarea del CRM de siempre).
  */
-export function CallTypeSelect({
+export function CallTypeSelect<T extends ProactiveCallType = ProactiveCallType>({
   value,
   onChange,
   disabled = false,
   compact = false,
+  types = PROACTIVE_CALL_TYPES as readonly T[],
 }: {
-  value: ProactiveCallType;
-  onChange: (next: ProactiveCallType) => void;
+  value: T;
+  onChange: (next: T) => void;
+  /** Qué marcos se ofrecen: el CRM pasa `CRM_CALL_TYPES` (sin Cobranza ni Recordatorio). */
+  types?: readonly T[];
   disabled?: boolean;
   /** Sin la línea de ayuda: para una fila de paso de secuencia. */
   compact?: boolean;
@@ -32,12 +35,12 @@ export function CallTypeSelect({
   return (
     <div className="grid gap-1.5">
       <Label htmlFor={id}>Tipo de llamada</Label>
-      <Select value={value} onValueChange={(next: string) => onChange(next as ProactiveCallType)} disabled={disabled}>
+      <Select value={value} onValueChange={(next: string) => onChange(next as T)} disabled={disabled}>
         <SelectTrigger id={id} className="h-9 w-full" aria-describedby={compact ? undefined : `${id}-hint`}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          {PROACTIVE_CALL_TYPES.map((type) => (
+          {types.map((type) => (
             <SelectItem key={type} value={type}>
               {CALL_TYPE_LABELS[type]}
             </SelectItem>

@@ -54,7 +54,7 @@ import {
   WindowNoticeCard,
 } from "./follow-up/ScheduleFollowUpFields";
 import { useWatch, type Control } from "react-hook-form";
-import { CallTypeSelect, type ProactiveCallType } from "@/modules/calls/public";
+import { CallTypeSelect, CRM_CALL_TYPES, type CrmCallType } from "@/modules/calls/public";
 
 const TEMPLATES_HREF = META_TEMPLATES_HREF;
 const DEFAULT_TZ = "America/Bogota";
@@ -416,11 +416,11 @@ function CallTypeForMedium({
   onChange,
 }: {
   control: Control<ScheduleFollowUpValues>;
-  value: ProactiveCallType;
-  onChange: (next: ProactiveCallType) => void;
+  value: CrmCallType;
+  onChange: (next: CrmCallType) => void;
 }) {
   const medium = useWatch({ control, name: "medium" });
   if (medium === "message") return null;
-  return <CallTypeSelect value={value} onChange={onChange} />;
+  return <CallTypeSelect types={CRM_CALL_TYPES} value={value} onChange={onChange} />;
 }
 

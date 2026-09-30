@@ -1,6 +1,6 @@
 import type { Schemas } from "@/core/api/types";
 import type { FollowUpMedium } from "@/modules/crm/domain/schedule-follow-up";
-import type { ProactiveCallType } from "@/modules/calls/public";
+import type { CrmCallType } from "@/modules/calls/public";
 
 export type SequenceDTO = Schemas["SequenceDto"];
 export type SequenceStepDTO = SequenceDTO["steps"][number];
@@ -38,7 +38,7 @@ export type DraftStep = {
   offset_hours: number;
   task_channel: FollowUpMedium;
   /** Plan de modos §7: el marco de la llamada del paso; solo si el medio llama. */
-  call_type?: ProactiveCallType;
+  call_type?: CrmCallType;
   objective: string;
 };
 

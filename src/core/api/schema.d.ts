@@ -14262,7 +14262,7 @@ export interface components {
             /** @enum {string} */
             task_channel?: "message" | "call" | "call_then_message";
             /** @enum {string|null} */
-            call_type?: "appointment_reminder" | "sales_followup" | "collections" | "reactivation" | "followup" | null;
+            call_type?: "sales_followup" | "reactivation" | "followup" | null;
         };
         UpdateAgentTaskDto: {
             objective?: string;
@@ -14280,7 +14280,7 @@ export interface components {
             /** @enum {string} */
             task_channel?: "message" | "call" | "call_then_message";
             /** @enum {string|null} */
-            call_type?: "appointment_reminder" | "sales_followup" | "collections" | "reactivation" | "followup" | null;
+            call_type?: "sales_followup" | "reactivation" | "followup" | null;
         };
         RunNowDto: {
             /** Format: date-time */
@@ -14628,7 +14628,7 @@ export interface components {
                  */
                 task_channel: "message" | "call" | "call_then_message";
                 /** @enum {string|null} */
-                call_type?: "appointment_reminder" | "sales_followup" | "collections" | "reactivation" | "followup" | null;
+                call_type?: "sales_followup" | "reactivation" | "followup" | null;
                 objective: string;
                 opening_template?: {
                     /** Format: uuid */
@@ -18206,7 +18206,7 @@ export interface components {
              */
             task_channel: "message" | "call" | "call_then_message";
             /** @enum {string|null} */
-            call_type?: "appointment_reminder" | "sales_followup" | "collections" | "reactivation" | "followup" | null;
+            call_type?: "sales_followup" | "reactivation" | "followup" | null;
             opening_template?: {
                 /** Format: uuid */
                 channel_template_id: string;

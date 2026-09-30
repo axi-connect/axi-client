@@ -80,11 +80,11 @@ describe("schedule-follow-up.config — medios (F3)", () => {
 
 describe("schedule-follow-up.config — marco de la llamada (plan de modos §7)", () => {
   it("si el medio llama, el marco viaja al crear y al editar", () => {
-    const create = toCreateFollowUpDTO(values({ medium: "call", call_type: "collections" }), {
+    const create = toCreateFollowUpDTO(values({ medium: "call", call_type: "reactivation" }), {
       tz: TZ,
       template: undefined,
     });
-    expect(create.call_type).toBe("collections");
+    expect(create.call_type).toBe("reactivation");
     const update = toUpdateFollowUpDTO(values({ medium: "call_then_message", call_type: "sales_followup" }), {
       tz: TZ,
       template: undefined,
@@ -93,16 +93,20 @@ describe("schedule-follow-up.config — marco de la llamada (plan de modos §7)"
   });
 
   it("con solo mensajes no se crea marco, y al editar se limpia (null)", () => {
-    const create = toCreateFollowUpDTO(values({ call_type: "collections" }), { tz: TZ, template: undefined });
+    const create = toCreateFollowUpDTO(values({ call_type: "reactivation" }), { tz: TZ, template: undefined });
     expect(create).not.toHaveProperty("call_type");
-    const update = toUpdateFollowUpDTO(values({ call_type: "collections" }), { tz: TZ, template: undefined });
+    const update = toUpdateFollowUpDTO(values({ call_type: "reactivation" }), { tz: TZ, template: undefined });
     expect(update.call_type).toBeNull();
   });
 
   it("al editar se parte del marco guardado; sin uno válido, el de siempre", () => {
     const base = { id: "a", contact_id: "c", due_at: null, assigned_agent_id: "g", objective: "x", opening_template: null, task_channel: "call" };
+    expect(editScheduleFollowUpValues({ ...base, call_type: "sales_followup" } as unknown as ActivityDTO, TZ).call_type).toBe(
+      "sales_followup",
+    );
+    // M1: un marco que el CRM no ofrece (Cobranza) vuelve al de siempre.
     expect(editScheduleFollowUpValues({ ...base, call_type: "collections" } as unknown as ActivityDTO, TZ).call_type).toBe(
-      "collections",
+      "followup",
     );
     expect(editScheduleFollowUpValues({ ...base, call_type: null } as unknown as ActivityDTO, TZ).call_type).toBe("followup");
     expect(editScheduleFollowUpValues({ ...base, call_type: "inventado" } as unknown as ActivityDTO, TZ).call_type).toBe(

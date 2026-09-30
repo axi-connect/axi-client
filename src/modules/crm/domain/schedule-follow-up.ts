@@ -11,7 +11,7 @@ import {
   type DayKey,
 } from "@/core/lib/business-time";
 import { isQuietHour } from "./agent-task-settings";
-import { PROACTIVE_CALL_TYPES, type ProactiveCallType } from "@/modules/calls/public";
+import { CRM_CALL_TYPES, type CrmCallType } from "@/modules/calls/public";
 
 /**
  * «Programar seguimiento» (F2 del seguimiento autónomo): las funciones puras
@@ -307,10 +307,8 @@ function formatWhen(iso: string, tz: string): string {
   return `${get("weekday")} ${get("day")} ${get("month")} a las ${formatBusinessClock(iso, tz)}`;
 }
 
-/** Lo guardado en la tarea, o el marco de siempre si no hay uno válido. */
-export function asProactiveCallType(value: string | null | undefined): ProactiveCallType {
-  return (PROACTIVE_CALL_TYPES as readonly string[]).includes(value ?? "")
-    ? (value as ProactiveCallType)
-    : "followup";
+/** Lo guardado en la tarea si es un marco del CRM; si no, el de siempre. */
+export function asCrmCallType(value: string | null | undefined): CrmCallType {
+  return (CRM_CALL_TYPES as readonly string[]).includes(value ?? "") ? (value as CrmCallType) : "followup";
 }
 

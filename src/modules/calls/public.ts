@@ -14,6 +14,8 @@ export type { CollectionsCallSummary } from "@/modules/calls/domain/collections-
 export { CallTypeSelect } from "@/modules/calls/ui/components/CallTypeSelect";
 export {
   callTypeLabel,
+  CRM_CALL_TYPES,
   PROACTIVE_CALL_TYPES,
+  type CrmCallType,
   type ProactiveCallType,
 } from "@/modules/calls/domain/playbooks";

@@ -141,13 +141,13 @@ describe("sequences — marco de la llamada de cada paso (plan de modos §7)", (
   it("un paso que llama lleva su marco (o el de siempre); uno de mensajes, ninguno", () => {
     const dto = toUpsertDTO(
       input([
-        { offset_hours: 0, task_channel: "message", objective: "Recordar el saldo por WhatsApp", call_type: "collections" },
-        { offset_hours: 48, task_channel: "call", objective: "Llamar para acordar la fecha de pago", call_type: "collections" },
+        { offset_hours: 0, task_channel: "message", objective: "Recordar la propuesta por WhatsApp", call_type: "sales_followup" },
+        { offset_hours: 48, task_channel: "call", objective: "Llamar para retomar la propuesta", call_type: "sales_followup" },
         { offset_hours: 96, task_channel: "call_then_message", objective: "Último intento antes de pasarlo al equipo" },
       ]),
     );
     expect(dto.steps[0]).not.toHaveProperty("call_type");
-    expect(dto.steps[1]).toMatchObject({ call_type: "collections" });
+    expect(dto.steps[1]).toMatchObject({ call_type: "sales_followup" });
     expect(dto.steps[2]).toMatchObject({ call_type: "followup" });
   });
 });
