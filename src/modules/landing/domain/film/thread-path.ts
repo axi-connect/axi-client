@@ -70,8 +70,9 @@ export const FILM_THREAD: ThreadPath = {
     // hallazgo y sigue por detrás de la ficha. Seguimiento: el hilo es el cabezal de
     // la regla de tiempo vertical (x 52 %).
     { scene: "niche", points: [p(94, 24), p(96, 56), p(50, 88, 0, true), p(7, 94), p(5, 100)] },
-    { scene: "radar", points: [p(5, 26), at(0.1, 17, 56), at(0.5, 32, 49, 0, true), at(0.78, 44, 84), at(0.9, 83, 97), p(95, 100)] },
-    { scene: "followup", points: [p(69, 8), p(52, 19), p(52, 56), p(52, 88, 0, true), p(49, 97), p(8, 100)] },
+    { scene: "radar", points: [p(5, 26), at(0.1, 17, 56), at(0.5, 32, 49, 0, true), at(0.78, 44, 84), at(0.9, 80, 97), p(88, 100)] },
+    // Entra girando en arco desde la salida del radar (88 %), sin volver en V sobre sí mismo.
+    { scene: "followup", points: [p(82, 5), p(62, 13), p(52, 26), p(52, 56), p(52, 88, 0, true), p(49, 97), p(8, 100)] },
     { scene: "chat", points: [p(6, 34), p(16, 88, 0, true), p(50, 100)] },
     // Foto: baja entre el titular y la captura y entra por detrás del estante.
     // Llamada: el hilo ES la onda de la voz (y 52 %), con su momento en el pin.
