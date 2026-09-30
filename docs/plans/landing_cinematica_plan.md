@@ -399,6 +399,8 @@ Lienzo: https://claude.ai/artifact/JsezJ3BEVbLjquhaGxTQ5F (tablero «A · Mil co
 
 **Se queda, sin cambios de texto:** el `SiteHeader` original, el titular «Vende en / cada conversación.», el texto, el CTA coral «Prueba 7 días gratis», «Habla con nuestro agente →», «Sin tarjeta. Tu cuenta queda lista hoy.» y las cuatro cifras con su conteo.
 
+**Iconos de las cifras (pedido de la dueña, 2026-09-30):** cada cifra conserva su icono de lucide, como en `HeroStats`: `Clock` (Atiende sin pausa), `Wrench` (Herramientas del agente), `MessagesSquare` (Canales) y `Gift` (De prueba, sin tarjeta). Van encima del número, a 22 px (`clamp(20px,2.4vw,26px)`), trazo 1,6, en tinta al 70 %. En móvil también, a 18 px.
+
 **Maquetación (escritorio, 1440 × 900):**
 - Fondo tinta.
 - Titular en Nexa a 104 px (`clamp`), centrado, desde el 19 % del alto.
