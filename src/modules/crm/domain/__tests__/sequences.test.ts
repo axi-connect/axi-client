@@ -232,6 +232,7 @@ describe("sequences — marco de la llamada de cada paso (plan de modos §7)", (
     stop_on_reply: true,
     stop_on_conversion: true,
     is_active: false,
+    next_sequence_id: null,
     steps,
   });
 
