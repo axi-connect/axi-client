@@ -245,10 +245,12 @@
    el nudo (canvas) y este halo, que se enciende con él. Sin JS, el hero es el
    titular sobre tinta con el halo: completo. */
 @keyframes film-halo-in { from { opacity: 0; } to { opacity: 1; } }
+/* `--knot-y` lo escribe HeroFibers al medir (el nudo evita el texto del CTA);
+   sin JS, el 68 % del alto. */
 .film-hero-halo {
   position: absolute;
   left: 50%;
-  top: 68%;
+  top: var(--knot-y, 68%);
   width: 800px;
   height: 640px;
   margin: -320px 0 0 -400px;
@@ -269,12 +271,34 @@
   );
   animation: film-halo-in 0.7s ease-out 1.4s both;
 }
+/* Las fibras quedan en susurro en la franja de las cifras (el nudo va aparte). */
+.film-hero-fibers { mask-image: linear-gradient(to bottom, black 76%, rgb(0 0 0 / 0.2) 84%); }
+/* El nudo: una capa CSS que HeroFibers mueve con transform y opacity. */
+.film-hero-knot {
+  position: absolute;
+  left: -140px;
+  top: -140px;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    var(--foreground),
+    color-mix(in srgb, var(--axi-amber) 90%, transparent) 18%,
+    color-mix(in srgb, var(--axi-brand) 45%, transparent) 45%,
+    color-mix(in srgb, var(--axi-violet) 14%, transparent) 75%,
+    transparent
+  );
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
 .film-hero-copy { position: absolute; inset-inline: 0; top: 19%; padding-inline: 16px; text-align: center; }
 /* Al 87 % del alto, pero sin salirse por abajo: «Canales: WhatsApp, Instagram
    y Messenger» ocupa dos líneas (la fila mide ~120 px). */
 .film-hero-stats { position: absolute; inset-inline: 0; top: min(87%, calc(100% - 128px)); padding-inline: 16px; }
 @media (max-width: 1023px) {
-  .film-hero-halo { top: 69%; }
+  .film-hero-halo { top: var(--knot-y, 69%); }
   .film-hero-copy { top: 15%; }
   .film-hero-stats { top: min(83%, calc(100% - 148px)); }
 }

@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import { FILM_CONTENT } from "@/modules/landing/domain/film/film-content";
 import {
   HERO_TIMING,
+  assignLabels,
   fiberPoint,
   fiberSegment,
   fiberState,
@@ -27,9 +28,12 @@ import { FILM_NICHES } from "@/modules/landing/domain/film/niches";
  *   scroll del hero (evento, no bucle). Fuera de pantalla, nada.
  * - El scroll se lee en su evento; los tamaños, al cambiar de tamaño: ninguna
  *   medida del DOM por frame.
- * - DPR ≤ 2. La luz de las cabezas y el nudo son sprites pintados una vez.
+ * - DPR ≤ 2. La luz de las cabezas es un sprite pintado una vez.
+ * - El nudo no va en el canvas: es una capa CSS (`.film-hero-knot`) que solo
+ *   cambia `transform` y `opacity`, fuera de la máscara que apaga las fibras
+ *   sobre las cifras.
  * - Con `prefers-reduced-motion`, un solo fotograma: el final.
- * - Colores de los tokens de la isla (`--foreground`, `--axi-*`), sin hex.
+ * - Colores de los tokens de la isla (`--foreground`; el nudo, `--axi-*` en CSS), sin hex.
  */
 
 type Rgb = [number, number, number];
@@ -70,22 +74,36 @@ function radialSprite(radius: number, stops: readonly [number, string][]): HTMLC
 /** Dos preguntas reales por nicho, del guion de la película. */
 const QUESTIONS = FILM_NICHES.flatMap((n) => [FILM_CONTENT[n].ask, FILM_CONTENT[n].vault.ask]);
 
+/** Posición de `el` dentro de `root` por la cadena de `offsetParent` (sin transformaciones: no la mueve la entrada CSS). */
+function offsetWithin(el: HTMLElement, root: HTMLElement): { top: number; left: number } {
+  let top = 0;
+  let left = 0;
+  let node: HTMLElement | null = el;
+  while (node && node !== root) {
+    top += node.offsetTop;
+    left += node.offsetLeft;
+    node = node.offsetParent as HTMLElement | null;
+  }
+  return { top, left };
+}
+
+type Box = { left: number; top: number; right: number; bottom: number };
+
 export function HeroFibers({ className }: { className?: string }) {
   const ref = useRef<HTMLCanvasElement>(null);
+  const knotRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const canvas = ref.current;
+    const knotEl = knotRef.current;
     const ctx = canvas?.getContext("2d");
-    if (!canvas || !ctx) return;
+    if (!canvas || !knotEl || !ctx) return;
     const hero = canvas.closest<HTMLElement>("[data-scene]") ?? canvas.parentElement!;
     const scroller = document.querySelector<HTMLElement>("[data-app-scroll]");
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const style = getComputedStyle(canvas);
     const fg = parseColor(style.getPropertyValue("--foreground"), [237, 237, 237]);
-    const brand = parseColor(style.getPropertyValue("--axi-brand"), [251, 113, 133]);
-    const amber = parseColor(style.getPropertyValue("--axi-amber"), [251, 191, 36]);
-    const violet = parseColor(style.getPropertyValue("--axi-violet"), [167, 139, 250]);
     const font = `12.5px ${style.getPropertyValue("--font-poppins").trim() || "Poppins"}, system-ui, sans-serif`;
 
     const HEAD_R = 7;
@@ -94,52 +112,83 @@ export function HeroFibers({ className }: { className?: string }) {
       [0, rgba(fg, 1)],
       [1, rgba(fg, 0)],
     ]);
-    const knotSprite = radialSprite(KNOT_R, [
-      [0, rgba(fg, 1)],
-      [0.18, rgba(amber, 0.9)],
-      [0.45, rgba(brand, 0.45)],
-      [0.75, rgba(violet, 0.14)],
-      [1, rgba(violet, 0)],
-    ]);
 
-    // W × H es el hero (la geometría); el canvas es más alto (CH) para que el
-    // nudo, al bajar con la salida, no se corte en el borde del hero.
     let W = 0;
     let H = 0;
-    let CH = 0;
     let dpr = 1;
     let desktop = true;
     let fibers: HeroFiber[] = [];
     let knot: Point = { x: 0, y: 0 };
+    let labels = new Map<number, number>();
     let heroHeight = 1;
     let scrollTop = scroller?.scrollTop ?? 0;
     // Si el visitante baja antes de que termine la entrada, la entrada salta a su final.
     let skipped = reduce;
 
+    /** El titular como caja de texto (no de bloque), en px del hero: las preguntas no lo tocan. */
+    const headlineBox = (): Box | null => {
+      const h1 = hero.querySelector("h1");
+      if (!h1) return null;
+      const range = document.createRange();
+      range.selectNodeContents(h1);
+      const heroRect = hero.getBoundingClientRect();
+      const rects = Array.from(range.getClientRects());
+      if (!rects.length) return null;
+      const pad = 16;
+      return {
+        left: Math.min(...rects.map((r) => r.left)) - heroRect.left - pad,
+        right: Math.max(...rects.map((r) => r.right)) - heroRect.left + pad,
+        top: Math.min(...rects.map((r) => r.top)) - heroRect.top - pad,
+        bottom: Math.max(...rects.map((r) => r.bottom)) - heroRect.top + pad,
+      };
+    };
+
+    // Todo lo que depende del layout se mide aquí, al cambiar de tamaño (y al
+    // llegar las fuentes), nunca por frame.
     const resize = () => {
       W = Math.max(1, canvas.clientWidth);
-      CH = Math.max(1, canvas.clientHeight);
+      H = Math.max(1, canvas.clientHeight);
       heroHeight = Math.max(1, hero.offsetHeight);
-      H = heroHeight;
       dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
       canvas.width = Math.round(W * dpr);
-      canvas.height = Math.round(CH * dpr);
+      canvas.height = Math.round(H * dpr);
       desktop = window.innerWidth >= DESKTOP;
-      const layout = { width: W, height: H, desktop };
+
+      // El nudo: bajo «Sin tarjeta…» (+48 px) y por encima de las cifras (−60 px).
+      const fine = hero.querySelector<HTMLElement>("[data-hero-fine]");
+      const stats = hero.querySelector<HTMLElement>("[data-anim=stats]");
+      const layout = {
+        width: W,
+        height: H,
+        desktop,
+        knotMin: fine ? offsetWithin(fine, hero).top + fine.offsetHeight + 48 : undefined,
+        knotMax: stats ? offsetWithin(stats, hero).top - 60 : undefined,
+      };
       fibers = heroFibers(layout);
       knot = knotOf(layout);
+      hero.style.setProperty("--knot-y", `${knot.y}px`);
+
+      // Las preguntas: un hueco fijo por lado, fuera del titular.
+      labels = new Map();
+      if (desktop) {
+        ctx.font = font;
+        const box = headlineBox();
+        const widest = Math.max(...QUESTIONS.map((q) => ctx.measureText(q).width));
+        labels = assignLabels(fibers, layout, (side, y) => {
+          if (!box) return true;
+          const left = side === "left" ? LABEL_EDGE : W - LABEL_EDGE - widest;
+          const right = left + widest;
+          const top = y - 12 - 14;
+          const bottom = y - 12 + 4;
+          return right < box.left || left > box.right || bottom < box.top || top > box.bottom;
+        });
+      }
     };
 
     const draw = (t: number) => {
       const s = Math.min(1, Math.max(0, scrollTop / heroHeight));
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, W, CH);
-
-      // Las fibras y sus preguntas viven dentro del hero (nacen fuera de su borde).
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(0, 0, W, H);
-      ctx.clip();
+      ctx.clearRect(0, 0, W, H);
 
       // Las fibras: solo el tramo que ya llegó y que el scroll todavía no recogió.
       ctx.lineCap = "round";
@@ -155,12 +204,12 @@ export function HeroFibers({ className }: { className?: string }) {
         ctx.strokeStyle = rgba(fg, f.alpha * out);
         ctx.stroke();
       }
-      // La luz que viaja en la punta de cada fibra.
+      // La luz en la punta que se mueve: la que llega y, al salir, la que se recoge.
       ctx.globalAlpha = 0.9;
       for (const f of fibers) {
         const st = fiberState(f, t, s);
-        if (!st.head) continue;
-        const p = fiberPoint(f, knot, st.to);
+        if (st.head === null) continue;
+        const p = fiberPoint(f, knot, st.head);
         ctx.drawImage(head, p.x - HEAD_R, p.y - HEAD_R);
       }
       ctx.globalAlpha = 1;
@@ -169,26 +218,22 @@ export function HeroFibers({ className }: { className?: string }) {
       if (desktop) {
         ctx.font = font;
         ctx.textBaseline = "alphabetic";
-        for (const f of fibers) {
-          if (f.label === null) continue;
+        for (const [i, y] of labels) {
+          const f = fibers[i];
           const a = fiberState(f, t, s).label * 0.62;
-          if (a < 0.01) continue;
+          if (a < 0.01 || f.label === null) continue;
           const left = f.from.x < W / 2;
           ctx.textAlign = left ? "left" : "right";
           ctx.fillStyle = rgba(fg, a);
-          ctx.fillText(QUESTIONS[f.label % QUESTIONS.length], left ? LABEL_EDGE : W - LABEL_EDGE, Math.min(H - 60, Math.max(130, f.from.y)) - 12);
+          ctx.fillText(QUESTIONS[f.label % QUESTIONS.length], left ? LABEL_EDGE : W - LABEL_EDGE, y - 12);
         }
       }
 
-      ctx.restore();
 
-      // El nudo: el momento de color pleno del hero.
+      // El nudo: el momento de color pleno del hero. Capa CSS: solo transform y opacity.
       const k = knotState(knot, t, s);
-      if (k.alpha > 0.01 && k.r > 1) {
-        ctx.globalAlpha = k.alpha;
-        ctx.drawImage(knotSprite, k.x - k.r, k.y - k.r, k.r * 2, k.r * 2);
-        ctx.globalAlpha = 1;
-      }
+      knotEl.style.transform = `translate3d(${k.x.toFixed(1)}px, ${k.y.toFixed(1)}px, 0) scale(${(k.r / KNOT_R).toFixed(4)})`;
+      knotEl.style.opacity = k.alpha.toFixed(3);
     };
 
     let raf = 0;
@@ -225,8 +270,10 @@ export function HeroFibers({ className }: { className?: string }) {
     });
     io.observe(canvas);
 
-    // Las fuentes pueden llegar después: las preguntas se repintan con Poppins.
+    // Las fuentes pueden llegar después: cambian el titular y el texto (el nudo
+    // y los huecos se vuelven a medir) y las preguntas se repintan con Poppins.
     void document.fonts?.ready.then(() => {
+      resize();
       if (!raf) draw(now());
     });
 
@@ -244,5 +291,10 @@ export function HeroFibers({ className }: { className?: string }) {
     };
   }, []);
 
-  return <canvas ref={ref} className={className} aria-hidden="true" data-anim="fibers" />;
+  return (
+    <>
+      <canvas ref={ref} className={className} aria-hidden="true" data-anim="fibers" />
+      <div ref={knotRef} className="film-hero-knot" aria-hidden="true" />
+    </>
+  );
 }

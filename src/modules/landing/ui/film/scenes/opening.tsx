@@ -51,8 +51,7 @@ export function HeroScene() {
       className="relative h-[100svh] min-h-[640px] w-full overflow-x-clip max-lg:min-h-[740px]"
     >
       <div className="film-hero-halo" data-anim="halo" aria-hidden="true" />
-      {/* Más alto que el hero: al salir, el nudo baja y no debe cortarse en su borde. */}
-      <HeroFibersLazy className="pointer-events-none absolute inset-x-0 top-0 h-[calc(100%+40vh)] w-full" />
+      <HeroFibersLazy className="film-hero-fibers pointer-events-none absolute inset-0 size-full" />
 
       <div data-anim="copy" className="film-hero-copy z-[2]">
         <h1 className="film-h text-[clamp(46px,7.2vw,104px)] leading-[0.98] tracking-[-0.045em]">
@@ -90,7 +89,7 @@ export function HeroScene() {
             <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
           </a>
         </div>
-        <p className="film-in film-dim mt-3 text-[12.5px]" style={{ "--d": "0.46s" } as React.CSSProperties}>
+        <p data-hero-fine="" className="film-in film-dim mt-3 text-[12.5px]" style={{ "--d": "0.46s" } as React.CSSProperties}>
           Sin tarjeta. Tu cuenta queda lista hoy.
         </p>
       </div>

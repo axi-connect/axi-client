@@ -5,6 +5,9 @@
  */
 import {
   FIBER_COUNT,
+  HERO_EXIT,
+  assignLabels,
+  labelSlots,
   HERO_TIMING,
   LABEL_COUNT,
   fiberPoint,
@@ -93,12 +96,14 @@ describe("coreografía", () => {
   it("antes de nacer no se ve; al final de la entrada llegó entera", () => {
     expect(fiberState(f, 0, 0).to).toBe(0)
     const end = fiberState(f, HERO_TIMING.end, 0)
-    expect(end).toMatchObject({ from: 0, to: 1, head: false })
+    expect(end).toMatchObject({ from: 0, to: 1, head: null })
   })
 
-  it("con el scroll se recoge en el nudo: a 0,65 ya no queda fibra", () => {
-    expect(fiberState(f, HERO_TIMING.end, 0.3).from).toBeGreaterThan(0)
-    expect(fiberState(f, HERO_TIMING.end, 0.65).from).toBe(1)
+  it("con el scroll se recoge en el nudo: a 0,4 ya no queda fibra", () => {
+    expect(fiberState(f, HERO_TIMING.end, 0.2).from).toBeGreaterThan(0)
+    expect(fiberState(f, HERO_TIMING.end, HERO_EXIT.gather).from).toBe(1)
+    // Mientras se recoge, la punta que se mueve lleva la luz.
+    expect(fiberState(f, HERO_TIMING.end, 0.1).head).toBe(fiberState(f, HERO_TIMING.end, 0.1).from)
     // Recoger no puede adelantar a la fibra que todavía viaja.
     const early = fiberState(f, f.delay + 0.2, 0.5)
     expect(early.from).toBeLessThanOrEqual(early.to)
@@ -115,5 +120,47 @@ describe("coreografía", () => {
     expect(knotState(knot, 0, 0)).toMatchObject({ r: 30, alpha: 0 })
     expect(knotState(knot, 3, 0)).toMatchObject({ y: 612, r: 140, alpha: 1 })
     expect(knotState(knot, 3, 1)).toMatchObject({ y: 942, r: 80, alpha: 0 })
+  })
+
+  it("el nudo no se mueve mientras las fibras se recogen", () => {
+    const knot = knotOf(DESK)
+    expect(knotState(knot, 3, HERO_EXIT.knotFrom)).toMatchObject({ y: 612, r: 140, alpha: 1 })
+    expect(knotState(knot, 3, 0.6).y).toBeGreaterThan(612)
+  })
+})
+
+describe("el nudo respeta el texto y las cifras", () => {
+  it("baja bajo «Sin tarjeta…» y nunca pisa las cifras", () => {
+    expect(knotOf({ ...DESK, knotMin: 655 }).y).toBe(655)
+    expect(knotOf({ ...DESK, knotMin: 500 }).y).toBe(612)
+    expect(knotOf({ ...DESK, knotMin: 760, knotMax: 712 }).y).toBe(712)
+  })
+})
+
+describe("las preguntas van en huecos fijos", () => {
+  it("cuatro por lado desde 1200 px, tres por debajo; nunca bajo el 66 %", () => {
+    expect(labelSlots(1440)).toEqual([0.2, 0.34, 0.48, 0.62])
+    expect(labelSlots(1024)).toEqual([0.2, 0.38, 0.56])
+    for (const w of [1024, 1440]) for (const y of labelSlots(w)) expect(y).toBeLessThan(0.66)
+  })
+
+  it("ninguna comparte hueco y cada una va en su lado", () => {
+    for (const width of [1024, 1440]) {
+      const layout = { width, height: 900, desktop: true }
+      const fibers = heroFibers(layout)
+      const labels = assignLabels(fibers, layout)
+      const perSide = labelSlots(width).length
+      const left = [...labels].filter(([i]) => fibers[i].from.x < width / 2)
+      const right = [...labels].filter(([i]) => fibers[i].from.x >= width / 2)
+      expect(left).toHaveLength(Math.min(perSide, 4))
+      expect(right).toHaveLength(Math.min(perSide, 4))
+      for (const side of [left, right]) expect(new Set(side.map(([, y]) => y)).size).toBe(side.length)
+    }
+  })
+
+  it("un hueco vetado (el titular) no se usa", () => {
+    const fibers = heroFibers(DESK)
+    const labels = assignLabels(fibers, DESK, (side, y) => !(side === "left" && y === 0.2 * DESK.height))
+    for (const [i, y] of labels) if (fibers[i].from.x < 0) expect(y).not.toBe(0.2 * DESK.height)
   })
 })
