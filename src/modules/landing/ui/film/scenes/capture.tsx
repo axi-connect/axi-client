@@ -167,21 +167,21 @@ function Timeline({ c }: { c: FilmContent }) {
       <span className="film-ruler-gap" />
       <p className="film-ruler-gap-label">A la mañana siguiente</p>
       {events.map((e) => (
-        <div key={e.when} className={e.what ? "film-ruler-event" : "film-ruler-event film-ruler-tick"} style={{ top: e.y, order: e.y }} data-anim="ruler-event" data-y={e.y}>
+        <div key={e.when} className={e.what ? "film-ruler-event" : "film-ruler-event film-ruler-tick"} style={{ top: ry(e.y), order: e.y }} data-anim="ruler-event" data-y={e.y}>
           <p className="film-ruler-when">{e.when}</p>
           <span className="film-ruler-dot" />
           {e.what ? <p className="film-ruler-what">{e.what}</p> : null}
         </div>
       ))}
-      <p className="film-ruler-bub film-ruler-out" style={{ top: 282, order: 282 }} data-anim="ruler-event" data-y={282}>
+      <p className="film-ruler-bub film-ruler-out" style={{ top: ry(282), order: 282 }} data-anim="ruler-event" data-y={282}>
         {f.template}
         <span className="mt-1 block text-[10.5px] opacity-50">Plantilla aprobada por Meta · entregada · leída</span>
       </p>
-      <p className="film-ruler-bub film-ruler-in" style={{ top: 516, order: 516 }} data-anim="ruler-event" data-y={516}>
+      <p className="film-ruler-bub film-ruler-in" style={{ top: ry(516), order: 516 }} data-anim="ruler-event" data-y={516}>
         {f.reply}
         <span className="mt-[3px] block text-[10.5px] opacity-45">10:09{" "}a.{" "}m.</span>
       </p>
-      <div className="film-ruler-result" style={{ top: 602, order: 602 }} data-anim="ruler-event" data-y={602} data-thread-target="">
+      <div className="film-ruler-result" style={{ top: ry(602), order: 602 }} data-anim="ruler-event" data-y={602} data-thread-target="">
         <CircleCheck className="size-5 shrink-0" aria-hidden="true" />
         <span>
           <span className="block text-sm font-semibold">{f.recovered}</span>
@@ -191,6 +191,13 @@ function Timeline({ c }: { c: FilmContent }) {
     </div>
   );
 }
+
+/**
+ * La posición en la regla (px de su alto de 660) escalada por `--ry`: a poca
+ * altura la regla se compacta entera sin mover nada de sitio relativo (film.css).
+ * El motor mide por `data-y` / 660, que no cambia.
+ */
+const ry = (y: number) => `calc(${y}px * var(--ry, 1))`;
 
 export function FollowupScene() {
   return (

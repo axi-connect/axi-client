@@ -473,8 +473,12 @@
    isla lo pone `fitToViewport` fuera del zoom. */
 @media (min-width: 1024px) and (max-height: 720px) {
   .film-pilot-layout { padding-top: 0; padding-bottom: 8px; }
-  .film-pilot-cockpit { height: 664px; gap: 6px; padding: 14px; }
-  .film-pilot-dial-face { width: 72px; height: 72px; }
+  .film-pilot-title { font-size: 48px; }
+  /* La columna de la izquierda (titular, ficha y principio) medía más que la
+     cabina por el margen de 52 px bajo el principio: era lo que mandaba. */
+  .film-pilot-principle { margin-bottom: 12px; }
+  .film-pilot-cockpit { height: 640px; gap: 5px; padding: 13px; }
+  .film-pilot-dial-face { width: 66px; height: 66px; }
   .film-pilot-rows .film-pilot-row:nth-child(n + 4) { display: none; }
 }
 

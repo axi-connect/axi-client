@@ -1154,7 +1154,7 @@
 }
 /* La luz de la mañana sube y vuelve a la tinta en el borde: la escena siguiente empieza en `--background`. */
 .film-followup { background: linear-gradient(180deg, var(--background) 45%, color-mix(in srgb, var(--foreground) 3%, var(--background)) 80%, var(--background)); }
-.film-ruler { position: relative; height: 660px; margin-top: 54px; }
+.film-ruler { --ry: 1; position: relative; height: calc(660px * var(--ry)); margin-top: 54px; }
 .film-ruler-line {
   position: absolute;
   left: 149px;
@@ -1164,8 +1164,8 @@
   background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--foreground) 25%, transparent) 8%, color-mix(in srgb, var(--foreground) 25%, transparent) 92%, transparent);
   transform-origin: 50% 0;
 }
-.film-ruler-gap { position: absolute; left: 144px; top: 150px; width: 12px; height: 70px; background: repeating-linear-gradient(180deg, var(--background) 0 5px, transparent 5px 10px); }
-.film-ruler-gap-label { position: absolute; left: 172px; top: 172px; margin: 0; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--film-dim-text); }
+.film-ruler-gap { position: absolute; left: 144px; top: calc(150px * var(--ry)); width: 12px; height: calc(70px * var(--ry)); background: repeating-linear-gradient(180deg, var(--background) 0 5px, transparent 5px 10px); }
+.film-ruler-gap-label { position: absolute; left: 172px; top: calc(172px * var(--ry)); margin: 0; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--film-dim-text); }
 .film-ruler-event { position: absolute; left: 0; right: 0; }
 .film-ruler-when {
   position: absolute;
@@ -1231,6 +1231,14 @@
   [data-scene="followup"] > .film-wrap { padding-block: 0 24px; }
   [data-scene="collect"] > .film-wrap { padding-block: 0 24px; }
   [data-scene="measure"] > .film-wrap { padding-block: 0 20px; }
+  /* Opción (a) de axi-2e: titular de ~60 a 48 px y menos aire entre filas. La
+     regla se compacta entera (--ry); el embudo, con su ancho topado: con
+     `aspect-ratio` y ancho 100 %, el zoom lo hacía más alto, no más bajo. */
+  [data-scene="followup"] [data-anim="head"] h2,
+  [data-scene="measure"] [data-anim="head"] h2,
+  [data-scene="photo"] .film-sell-title { font-size: 48px; }
+  [data-scene="followup"] .film-ruler { --ry: 0.86; margin-top: 24px; }
+  [data-scene="measure"] .film-funnel { width: min(100%, 980px); margin: 0 auto; }
 }
 
 /* La barra de scroll de la home va en tinta, no en coral (el resto del sitio
