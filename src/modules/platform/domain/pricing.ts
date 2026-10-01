@@ -36,6 +36,7 @@ export const PROVIDERS: { value: PricingProvider; label: string }[] = [
   // F1 del seguimiento autónomo: plantillas de WhatsApp por categoría y país
   // (`utility_co`, `marketing_co`…), USD por millón de mensajes entregados.
   { value: "meta", label: "Meta (plantillas de WhatsApp)" },
+  { value: "typesafe", label: "TypeSafe (Jev)" },
 ];
 
 export function providerLabel(provider: PricingProvider): string {

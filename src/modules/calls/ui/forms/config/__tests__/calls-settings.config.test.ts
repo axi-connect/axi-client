@@ -16,6 +16,7 @@ const DTO: CallsSettingsDTO = {
   ring_timeout_seconds: 45,
   silence_probe_seconds: 12,
   silence_hangup_seconds: 15,
+  inbound_voicemail_text: "No podemos atenderte ahora. Deja tu mensaje después del tono.",
 };
 
 describe("calls-settings.config", () => {

@@ -34,6 +34,11 @@ export const callsSettingsFormSchema = z.object({
     .trim()
     .min(10, "Mínimo 10 caracteres — es tu aviso de habeas data")
     .max(500, "Máximo 500 caracteres"),
+  inbound_voicemail_text: z
+    .string()
+    .trim()
+    .min(10, "Mínimo 10 caracteres")
+    .max(300, "Máximo 300 caracteres"),
   max_duration_seconds: z.coerce
     .number({ message: "Requerido" })
     .int("Debe ser un entero")
@@ -71,6 +76,7 @@ export function fromCallsSettingsDto(dto: CallsSettingsDTO): CallsSettingsFormVa
     recording_enabled: dto.recording_enabled,
     hangup_on_machine: dto.hangup_on_machine,
     legal_notice_text: dto.legal_notice_text,
+    inbound_voicemail_text: dto.inbound_voicemail_text,
     max_duration_seconds: dto.max_duration_seconds,
     max_concurrent: dto.max_concurrent,
     ring_timeout_seconds: dto.ring_timeout_seconds,
@@ -87,6 +93,7 @@ export function toCallsSettingsPayload(values: CallsSettingsFormValues): CallsSe
     recording_enabled: values.recording_enabled,
     hangup_on_machine: values.hangup_on_machine,
     legal_notice_text: values.legal_notice_text.trim(),
+    inbound_voicemail_text: values.inbound_voicemail_text.trim(),
     max_duration_seconds: values.max_duration_seconds,
     max_concurrent: values.max_concurrent,
     ring_timeout_seconds: values.ring_timeout_seconds,
@@ -213,6 +220,31 @@ export function buildCallsSettingsFields(opts: {
         label: "Aviso al inicio de la llamada",
         description:
           "Se reproduce siempre antes de conversar: es tu aviso de grabación y tratamiento de datos (habeas data).",
+        colSpan: { base: 1, md: 2 },
+      },
+    ),
+    // Entrega 2: lo que oye quien llama cuando el agente no puede atender.
+    createCustomField<CallsSettingsFormValues>(
+      "inbound_voicemail_text",
+      ({ value, setValue, getError }) => (
+        <div className="space-y-1">
+          <Textarea
+            value={(value as string) ?? ""}
+            onChange={(e) => setValue("inbound_voicemail_text", e.target.value)}
+            disabled={!opts.canManage}
+            rows={2}
+            maxLength={300}
+            aria-label="Mensaje para dejar un recado"
+          />
+          {getError() !== undefined && (
+            <p className="text-destructive text-xs">{getError()}</p>
+          )}
+        </div>
+      ),
+      {
+        label: "Mensaje para dejar un recado",
+        description:
+          "Si alguien llama y tu agente no puede atender (llamadas apagadas, sin minutos o la línea llena), oye este mensaje y deja su recado después del tono. Te llega transcrito como tarea «Devolver llamada».",
         colSpan: { base: 1, md: 2 },
       },
     ),

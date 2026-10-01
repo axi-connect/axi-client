@@ -23,6 +23,7 @@ function plan(dueAt: string) {
     order_id: "o1",
     order_number: 44,
     contact_id: "c1",
+    contact_phone: "+573001234567",
     status: "active",
     currency: "COP",
     total_cents: 9_640_000,

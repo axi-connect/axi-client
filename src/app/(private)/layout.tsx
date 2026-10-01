@@ -13,10 +13,11 @@ import { TrialStatusChip } from "@/modules/companies/ui/components/TrialStatusCh
 import { TrialCountdownBanner } from "@/modules/companies/ui/components/TrialCountdownBanner";
 import { DunningBanner } from "@/modules/billing/ui/DunningBanner";
 import { COMMERCIAL_BREADCRUMBS } from "@/modules/commercial/public";
+import { SCHEDULING_BREADCRUMBS } from "@/modules/scheduling/public";
 import { SupportSessionBar } from "@/modules/support-access/ui/SupportSessionBar";
 
 /** Las migas que conocen los módulos (rutas sin página y segmentos dinámicos). */
-const BREADCRUMBS = [COMMERCIAL_BREADCRUMBS];
+const BREADCRUMBS = [COMMERCIAL_BREADCRUMBS, SCHEDULING_BREADCRUMBS];
 
 /**
  * Precarga del árbol de navegación en el servidor: `http` en server lee la

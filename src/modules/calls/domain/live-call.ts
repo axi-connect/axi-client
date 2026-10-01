@@ -119,24 +119,88 @@ export function currentStage(pulse: LiveCallPulse, stageRoute: readonly string[]
 }
 
 /**
- * Ruta de etapas para pintar: las recorridas (hasta la actual) y las que
- * faltan. Una etapa que la llamada saltó cuenta como recorrida si una
- * posterior ya se alcanzó (el marco es control, no guion).
+ * Cómo le fue a cada etapa, para el medidor y la ruta vertical (rediseño de
+ * la ruta, 2026-09-30). Es la ÚNICA fuente del «n de m»: la terminada y la
+ * vista en vivo lo derivan de aquí. `reached` = la etapa a la que llegó sin
+ * más calificativo (en vivo: la actual; terminada en la última etapa sin
+ * veredicto); `met` = ahí se cumplió el objetivo; `fell` = ahí se cortó;
+ * `skipped` = pendiente que no hizo falta porque el objetivo ya se cumplió.
  */
-export type RouteStep = { key: string; label: string; state: "done" | "now" | "next" };
+export type StageStepState = "done" | "reached" | "met" | "fell" | "pending" | "skipped";
 
-export function routeSteps(
-  stages: readonly { key: string; label: string }[],
-  current: string | null,
-): RouteStep[] {
-  const index = current === null ? -1 : stages.findIndex((stage) => stage.key === current);
-  return stages.map((stage, i) => ({
-    key: stage.key,
-    label: stage.label,
-    state: index === -1 ? "next" : i < index ? "done" : i === index ? "now" : "next",
-  }));
+export type StageStep = {
+  key: string;
+  label: string;
+  goal: string | null;
+  state: StageStepState;
+  /** Segundo de la llamada en que entró; null si no hay registro (no se inventa). */
+  entered_s: number | null;
+};
+
+export type StageProgress = {
+  steps: StageStep[];
+  reachedIndex: number;
+  total: number;
+  /** «Propuesta · 2 de 3» — lo que se lee y lo que anuncia el medidor. */
+  position: string;
+};
+
+export function stageProgress(
+  stages: readonly { key: string; label: string; goal?: string | null }[],
+  reachedKey: string | null,
+  options: { goalMet: boolean; finished: boolean; entries?: ReadonlyMap<string, number> },
+): StageProgress | null {
+  const reachedIndex = reachedKey === null ? -1 : stages.findIndex((stage) => stage.key === reachedKey);
+  const reached = stages[reachedIndex];
+  if (reached === undefined) return null;
+  const last = reachedIndex === stages.length - 1;
+  const reachedState: StageStepState = options.goalMet
+    ? "met"
+    : options.finished && !last
+      ? "fell"
+      : "reached";
+  const steps = stages.map((stage, index): StageStep => {
+    const state: StageStepState =
+      index < reachedIndex
+        ? "done"
+        : index === reachedIndex
+          ? reachedState
+          : options.goalMet && options.finished
+            ? "skipped"
+            : "pending";
+    // La primera etapa se siembra al contestar: entra en el segundo 0.
+    const entered = options.entries?.get(stage.key) ?? (index === 0 ? 0 : null);
+    return {
+      key: stage.key,
+      label: stage.label,
+      goal: stage.goal ?? null,
+      state,
+      entered_s: index <= reachedIndex ? entered : null,
+    };
+  });
+  return {
+    steps,
+    reachedIndex,
+    total: stages.length,
+    position: `${reached.label} · ${String(reachedIndex + 1)} de ${String(stages.length)}`,
+  };
 }
 
+/**
+ * En qué segundo entró la llamada a cada etapa: el PRIMER `stage_changed` de
+ * cada clave (`at_ms`, mismo reloj que los segmentos). Una etapa a la que se
+ * volvió conserva su primera entrada.
+ */
+export function stageEntries(events: readonly { type: string; payload: unknown }[]): Map<string, number> {
+  const entries = new Map<string, number>();
+  for (const event of events) {
+    if (event.type !== "stage_changed") continue;
+    const payload = (event.payload ?? {}) as { to?: unknown; at_ms?: unknown };
+    if (typeof payload.to !== "string" || typeof payload.at_ms !== "number") continue;
+    if (!entries.has(payload.to)) entries.set(payload.to, Math.max(0, Math.floor(payload.at_ms / 1000)));
+  }
+  return entries;
+}
 
 /**
  * Dónde van las marcas «Etapa · X» en una transcripción: antes del primer

@@ -76,6 +76,7 @@ import {
   type BulkAudience,
 } from "@/modules/crm/infrastructure/services/bulk-service.adapter";
 import { useEntitlements } from "@/shared/auth/entitlements.hooks";
+import { CallTypeSelect, CRM_CALL_TYPES, type CrmCallType } from "@/modules/calls/public";
 
 const DEFAULT_TZ = "America/Bogota";
 const NO_TEMPLATE = "__none__";
@@ -125,6 +126,8 @@ export function BulkFollowUpModal({
 
   const [agentId, setAgentId] = useState<string>("");
   const [medium, setMedium] = useState<FollowUpMedium>("message");
+  // Plan de modos §7: el marco de las llamadas del lote (solo si llama).
+  const [callType, setCallType] = useState<CrmCallType>("followup");
   const [objective, setObjective] = useState("");
   const [when, setWhen] = useState(() => dateShortcuts(now, DEFAULT_TZ)[1]);
   const [perHour, setPerHour] = useState(20);
@@ -262,6 +265,7 @@ export function BulkFollowUpModal({
         assigned_agent_id: agentId,
         objective: objective.trim(),
         task_channel: medium,
+        ...(medium === "message" ? {} : { call_type: callType }),
         starts_at: businessDateTimeToIso(when.date, when.time, tz),
         per_hour: perHour,
         ...(selectedTemplate === undefined
@@ -292,6 +296,7 @@ export function BulkFollowUpModal({
     agentId,
     objective,
     medium,
+    callType,
     tz,
     perHour,
     selectedTemplate,
@@ -400,6 +405,11 @@ export function BulkFollowUpModal({
 
             <Field label="Cómo contacta">
               <MediumPicker value={medium} available={media} onChange={setMedium} />
+              {medium !== "message" && (
+                <div className="mt-3">
+                  <CallTypeSelect types={CRM_CALL_TYPES} value={callType} onChange={setCallType} />
+                </div>
+              )}
             </Field>
 
             <Field label="Objetivo">

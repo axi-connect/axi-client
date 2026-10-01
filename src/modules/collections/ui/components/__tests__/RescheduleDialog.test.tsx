@@ -26,6 +26,7 @@ const PLAN: PlanDetailDTO = {
   order_id: "o1",
   order_number: 42,
   contact_id: "c1",
+  contact_phone: "+573001234567",
   status: "active",
   currency: "COP",
   total_cents: 2_170_315_000,
