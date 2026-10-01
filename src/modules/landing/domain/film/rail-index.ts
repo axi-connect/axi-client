@@ -27,7 +27,7 @@ export type RailEntry = {
 /** En el orden de la película. El piloto solo existe con FILM_PILOT=1: el riel lista lo que hay en la página. */
 export const RAIL_INDEX: readonly RailEntry[] = [
   { id: "hero", scene: "hero", chapter: "Empieza", title: "Vende en cada conversación", tone: "dim" },
-  { id: "progreso", scene: "philosophy", chapter: "Empieza", title: "Vendemos progreso", tone: "dim" },
+  { id: "video", scene: "video", chapter: "Empieza", title: "Así se ve un día con Axi", tone: "dim" },
   { id: "quien", scene: "niche", chapter: "Empieza", title: "¿Quién te escribe hoy?", tone: "dim" },
   { id: "captar", scene: "radar", chapter: "Captar", title: "Encuentra a quien te va a comprar", tone: "amber" },
   { id: "piloto", scene: "pilot", chapter: "Captar", title: "Tu captación en piloto automático", tone: "amber" },

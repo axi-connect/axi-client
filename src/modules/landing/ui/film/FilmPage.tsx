@@ -12,10 +12,10 @@ import { MeasureScene } from "@/modules/landing/ui/film/scenes/measure";
 import { PipelineScene } from "@/modules/landing/ui/film/scenes/pipeline";
 import { CloseScene } from "@/modules/landing/ui/film/scenes/close";
 import { HeroScene, NicheScene } from "@/modules/landing/ui/film/scenes/opening";
-import { PhilosophyScene } from "@/modules/landing/ui/film/scenes/philosophy";
 import { FaqScene, PricingScene } from "@/modules/landing/ui/film/scenes/after";
 import { ChatScene } from "@/modules/landing/ui/film/scenes/sell";
 import { CallScene, PhotoScene, TeamScene, VaultScene } from "@/modules/landing/ui/film/scenes/sell-moments";
+import { VideoScene } from "@/modules/landing/ui/film/scenes/video";
 
 /**
  * La home: una película por scroll (plan `landing_cinematica_plan.md`,
@@ -40,7 +40,7 @@ export function FilmPage({ catalog }: { catalog: PublicCatalog | null }) {
   return (
     <FilmRoot>
       <HeroScene />
-      <PhilosophyScene />
+      <VideoScene />
       <NicheScene />
       <RadarScene />
       {PilotScene ? <PilotScene /> : null}

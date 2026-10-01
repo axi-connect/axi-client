@@ -34,7 +34,7 @@ describe("el índice del riel", () => {
 
   it("sigue el orden de la película (FilmPage) y no repite escenas", () => {
     const page = readFileSync(join(__dirname, "../../../ui/film/FilmPage.tsx"), "utf8")
-    const order = ["HeroScene", "PhilosophyScene", "NicheScene", "RadarScene", "PilotScene", "FollowupScene", "ChatScene", "PhotoScene", "CallScene", "VaultScene", "TeamScene", "CollectScene", "PipelineScene", "GoalScene", "AxelScene", "MeasureScene", "PricingScene", "FaqScene", "CloseScene"]
+    const order = ["HeroScene", "VideoScene", "NicheScene", "RadarScene", "PilotScene", "FollowupScene", "ChatScene", "PhotoScene", "CallScene", "VaultScene", "TeamScene", "CollectScene", "PipelineScene", "GoalScene", "AxelScene", "MeasureScene", "PricingScene", "FaqScene", "CloseScene"]
     const positions = order.map((c) => page.indexOf(`<${c}`))
     expect(positions.every((p) => p > 0)).toBe(true)
     for (let i = 1; i < positions.length; i++) expect(positions[i]).toBeGreaterThan(positions[i - 1])
