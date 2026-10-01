@@ -87,3 +87,30 @@ export function philosophyTravel(vw: number, pillars = PHILOSOPHY.pillars.length
   const last = vw + (pillars - 1) * PHILOSOPHY_TRACK.pillar;
   return Math.max(0, last - (vw - PHILOSOPHY_TRACK.pillar) / 2);
 }
+
+/** La pista arranca aquí (antes: el desarme del isotipo y su pausa). */
+export const PHILOSOPHY_TRACK_FROM = 0.2;
+/** La meseta de lectura de cada pilar, en progreso de la escena. */
+export const PHILOSOPHY_PLATEAU = 0.07;
+
+const inOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+
+/**
+ * Los px que ha recorrido la pista para un progreso `p` de la escena: un tramo
+ * por pilar (intro → 1 → 2 → 3) con ease in-out, cada uno seguido de su meseta
+ * con el pilar centrado (`stops`: dónde queda centrado cada uno). Así cada pilar
+ * se lee quieto y el parallax ocurre en las transiciones.
+ */
+export function philosophyMove(p: number, stops: readonly number[]): number {
+  const span = (1 - PHILOSOPHY_TRACK_FROM - stops.length * PHILOSOPHY_PLATEAU) / stops.length;
+  let t = p - PHILOSOPHY_TRACK_FROM;
+  let from = 0;
+  for (const to of stops) {
+    if (t <= span) return t <= 0 ? from : from + (to - from) * inOut(t / span);
+    t -= span;
+    if (t <= PHILOSOPHY_PLATEAU) return to;
+    t -= PHILOSOPHY_PLATEAU;
+    from = to;
+  }
+  return from;
+}

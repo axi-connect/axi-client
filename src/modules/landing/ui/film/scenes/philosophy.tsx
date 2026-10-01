@@ -50,13 +50,6 @@ function Modules({ pillar }: { pillar: PhilosophyPillar }) {
 function Track() {
   return (
     <div className="film-philo-desk">
-      <div className="film-philo-words" data-anim="philo-words" aria-hidden="true">
-        {PHILOSOPHY.pillars.map((p, i) => (
-          <span key={p.name} data-anim="philo-word" data-index={i} style={{ left: `calc(100vw + ${i * 1100 + 40}px)` }}>
-            {p.name}
-          </span>
-        ))}
-      </div>
       <div className="film-philo-track" data-anim="philo-track">
         <div className="film-philo-intro">
           <div className="film-philo-intro-copy">
@@ -86,6 +79,13 @@ function Track() {
         </div>
         {PHILOSOPHY.pillars.map((p, i) => (
           <article key={p.name} className="film-philo-pillar" aria-labelledby={`progreso-${i}`} data-anim="philo-pillar">
+            {/* La palabra gigante: detrás de la columna de texto, recortada a ella,
+                para que nunca pase bajo la pieza. */}
+            <span className="film-philo-word-box" aria-hidden="true">
+              <span data-anim="philo-word" data-index={i}>
+                {p.name}
+              </span>
+            </span>
             <div className="film-philo-copy">
               <Eyebrow pillar={p} />
               <h3 id={`progreso-${i}`} className="film-h text-[clamp(56px,5.3vw,76px)] leading-[1.02] tracking-[-0.045em]">

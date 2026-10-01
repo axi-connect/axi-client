@@ -122,6 +122,10 @@ export function FilmRoot({ children }: { children: ReactNode }) {
     // «encima» de los precios sin cruzarlos, no avisa.
     const after = root.querySelector<HTMLElement>('[data-scene="pricing"]');
     let afterTop = Infinity;
+    // La píldora del nicho y el riel aparecen desde «¿Quién te escribe hoy?»:
+    // antes (hero, «Vendemos progreso») no hay nicho que cambiar ni capítulo.
+    const niche = root.querySelector<HTMLElement>('[data-scene="niche"]');
+    let nicheTop = Infinity;
     // Dónde empieza la película en el scroll y cuánto mide: se miden al cambiar
     // de tamaño. Por frame solo se usa `scrollTop`, leído en el evento de scroll
     // (antes de que el motor escriba estilos en su frame: leerlo después
@@ -136,6 +140,7 @@ export function FilmRoot({ children }: { children: ReactNode }) {
       filmHeight = root.offsetHeight;
       viewHeight = el.clientHeight;
       if (after) afterTop = after.getBoundingClientRect().top - top;
+      if (niche) nicheTop = niche.getBoundingClientRect().top - top;
     };
     const update = () => {
       frame = 0;
@@ -144,7 +149,7 @@ export function FilmRoot({ children }: { children: ReactNode }) {
       const progress = Math.min(1, Math.max(0, into / span));
       root.style.setProperty("--film-progress", progress.toFixed(4));
       announce(chapterNow, Math.round(progress * 100) / 100);
-      const nowBeyond = into > viewHeight * 1.2;
+      const nowBeyond = into + viewHeight * 0.5 > nicheTop;
       const nowPast = into + viewHeight * 0.85 > afterTop;
       if (nowBeyond !== beyondHero || nowPast !== pastFilm) {
         beyondHero = nowBeyond;

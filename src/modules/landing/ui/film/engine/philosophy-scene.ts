@@ -1,80 +1,87 @@
 /**
  * «Vendemos progreso» en el motor (plan §18): en escritorio la escena se fija y
- * el scroll vertical mueve la pista horizontal en tres capas de parallax.
- * Tiempos del lienzo, con `p` de 0 a 1:
- * - 0,03–0,14: el isotipo de la intro se desarma (solo translate) y aparece
- *   «Tres piezas · un solo sistema».
- * - 0,1–1: la pista recorre la intro y los tres pilares. Palabras al 0,6x,
- *   texto al 1x, la pieza de la intro al 0,8x (se apaga entre 0,12 y 0,3) y las
- *   piezas de los pilares al 1,22x, con su opacidad (0,35 → 1) según lo centrado
- *   que esté su pilar. Abajo, la barra de cada pilar se llena en su tercio.
+ * el scroll vertical mueve la pista horizontal. Tiempos (`p` de 0 a 1):
+ *
+ * - 0–0,03 quieto · 0,03–0,14 el isotipo se desarma (solo translate) ·
+ *   0,14–0,2 pausa con «Tres piezas · un solo sistema».
+ * - 0,2–1 la pista, por tramos: de la intro al pilar 1, una meseta de lectura
+ *   con el pilar centrado, del 1 al 2, meseta, del 2 al 3, meseta. Entre pilares
+ *   el tramo va con ease in-out: cada pilar se lee quieto, como una diapositiva,
+ *   y el parallax ocurre en las transiciones (QA del 2026-10-01).
+ *
+ * Todas las capas salen de UN valor (`move`, px recorridos) en un solo pintado:
+ * pista 1x, isotipo de la intro 0,8x (se apaga al salir), piezas 1,22x con la
+ * separación respecto a su sitio acotada a ±120 px, palabras con una deriva
+ * suave dentro de su columna y la barra de cada pilar. Solo transform y opacity.
  * En móvil no hay nada que hacer: las tarjetas son scroll-snap nativo.
  */
 import { gsap } from "gsap";
 
-import { PHILOSOPHY_TRACK, philosophyTravel } from "@/modules/landing/domain/film/philosophy-content";
+import { PHILOSOPHY_TRACK, PHILOSOPHY_TRACK_FROM as TRACK_FROM, philosophyMove, philosophyTravel } from "@/modules/landing/domain/film/philosophy-content";
 import { atP, counter, num, showIn, spanTimeline, visible, type Scene } from "@/modules/landing/ui/film/engine/film-kit";
 
-const TRACK_FROM = 0.1;
-const TRACK_SPAN = 1 - TRACK_FROM;
+/** La pieza no se aparta de su sitio más que esto (px). */
+const PIECE_SLACK = 120;
+const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
 
 export const philosophy: Scene = (section, ctx) => {
   if (!ctx.desktop) return;
-  const tl = spanTimeline(section, ctx, 380);
-  const vw = () => window.innerWidth;
-  const travel = () => philosophyTravel(vw());
+  const tl = spanTimeline(section, ctx, 420);
 
-  // El desarme: cada cinta por su dirección natural. Sin giro ni escala.
+  // 0,03–0,14: el desarme, cada cinta por su dirección natural. 0,14–0,2: pausa.
   for (const el of visible(section, "[data-anim=philo-split]")) {
     tl.fromTo(el, { x: 0, y: 0 }, { x: num(el, "dx"), y: num(el, "dy"), ease: "power3.out", duration: atP(0.11) }, atP(0.03));
   }
-  showIn(tl, visible(section, "[data-anim=philo-split-caption]"), 0.08, 0.14, 6);
+  showIn(tl, visible(section, "[data-anim=philo-split-caption]"), 0.12, 0.18, 6);
 
-  // Las capas: la pista al 1x y las palabras al 0,6x.
-  const track = visible(section, "[data-anim=philo-track]");
-  const words = visible(section, "[data-anim=philo-words]");
-  const along = { ease: "none", duration: atP(TRACK_SPAN) };
-  if (track.length) tl.fromTo(track, { x: 0 }, { ...along, x: () => -travel() }, atP(TRACK_FROM));
-  if (words.length) tl.fromTo(words, { x: 0 }, { ...along, x: () => -travel() * PHILOSOPHY_TRACK.words }, atP(TRACK_FROM));
+  const quick = (el: Element, prop: string, unit?: string) => gsap.quickSetter(el, prop, unit);
+  const track = visible(section, "[data-anim=philo-track]").map((el) => quick(el, "x", "px"));
+  const mark = visible(section, "[data-anim=philo-mark]").map((el) => ({ x: quick(el, "x", "px"), o: quick(el, "opacity") }));
+  const pieces = visible(section, "[data-anim=philo-piece]").map((el) => ({ i: num(el, "index"), x: quick(el, "x", "px"), o: quick(el, "opacity") }));
+  const words = visible(section, "[data-anim=philo-word]").map((el) => ({ i: num(el, "index"), x: quick(el, "x", "px"), o: quick(el, "opacity") }));
+  const bars = visible(section, "[data-anim=philo-bar]").map((el) => quick(el, "scaleX"));
 
-  // La pieza de la intro va dentro de la pista: +0,2x la deja en 0,8x.
-  const mark = visible(section, "[data-anim=philo-mark]");
-  if (mark.length) {
-    tl.fromTo(mark, { x: 0 }, { ...along, x: () => travel() * (1 - PHILOSOPHY_TRACK.introPiece) }, atP(TRACK_FROM));
-    tl.fromTo(mark, { opacity: 1 }, { opacity: 0, ease: "none", duration: atP(0.18) }, atP(0.12));
-  }
+  // Dónde está centrado cada pilar (px de pista); se mide con la ventana.
+  const stops = () => {
+    const vw = window.innerWidth;
+    const n = pieces.length || 3;
+    const travel = philosophyTravel(vw, n);
+    return Array.from({ length: n }, (_, i) => travel - (n - 1 - i) * PHILOSOPHY_TRACK.pillar);
+  };
+  // Se recalculan solo si cambia el ancho (leer innerWidth no fuerza layout).
+  let centers = stops();
+  let width = window.innerWidth;
 
-  // Las piezas de los pilares: 1,22x alrededor del momento en que su pilar está
-  // centrado; ahí la pieza queda en su sitio y con opacidad plena.
-  const pieces = visible(section, "[data-anim=philo-piece]");
-  const extra = PHILOSOPHY_TRACK.pieces - PHILOSOPHY_TRACK.text;
-  const centeredAt = (i: number) => vw() + i * PHILOSOPHY_TRACK.pillar - (vw() - PHILOSOPHY_TRACK.pillar) / 2;
-  const setters = pieces.map((el) => ({ i: num(el, "index"), x: gsap.quickSetter(el, "x", "px"), o: gsap.quickSetter(el, "opacity") }));
-  // Las palabras miden más que un pilar: a 0,6x se montarían unas sobre otras.
-  // Se ve solo la del pilar que está en el centro (mismo criterio que la pieza).
-  const wordSetters = visible(section, "[data-anim=philo-word]").map((el) => ({ i: num(el, "index"), o: gsap.quickSetter(el, "opacity") }));
-  counter(
-    tl,
-    TRACK_FROM,
-    1,
-    (v) => {
-      const move = v * travel();
-      for (const s of setters) {
-        const local = move - centeredAt(s.i);
-        s.x(-extra * local);
-        const centered = 1 - Math.min(1, (Math.abs(local) / (3 * PHILOSOPHY_TRACK.pillar)) * 2.2);
-        s.o(0.35 + 0.65 * Math.max(0, centered));
-      }
-      for (const w of wordSetters) {
-        const local = move - centeredAt(w.i);
-        w.o(Math.max(0, 1 - (Math.abs(local) / (3 * PHILOSOPHY_TRACK.pillar)) * 3.3));
-      }
-    },
-    "none",
-  );
-
-  // La barra de cada pilar se llena en su tercio de la pista.
-  visible(section, "[data-anim=philo-bar]").forEach((el, i) => {
-    tl.fromTo(el, { scaleX: 0 }, { scaleX: 1, ease: "none", duration: atP(TRACK_SPAN / 3) }, atP(TRACK_FROM + (TRACK_SPAN * i) / 3));
-  });
+  const paint = (v: number) => {
+    if (window.innerWidth !== width) {
+      width = window.innerWidth;
+      centers = stops();
+    }
+    const p = TRACK_FROM + (1 - TRACK_FROM) * v;
+    const move = philosophyMove(p, centers);
+    for (const set of track) set(-move);
+    // El isotipo de la intro: 0,8x, y se apaga mientras sale.
+    for (const m of mark) {
+      m.x(move * (1 - PHILOSOPHY_TRACK.introPiece));
+      m.o(1 - clamp(move / (centers[0] * 0.6), 0, 1));
+    }
+    for (const s of pieces) {
+      const local = move - centers[s.i];
+      const extra = PHILOSOPHY_TRACK.pieces - PHILOSOPHY_TRACK.text;
+      s.x(clamp(-extra * local, -PIECE_SLACK, PIECE_SLACK));
+      const centered = 1 - Math.min(1, Math.abs(local) / PHILOSOPHY_TRACK.pillar);
+      s.o(0.35 + 0.65 * centered);
+    }
+    for (const w of words) {
+      const local = move - centers[w.i];
+      // Deriva suave (0,6x relativo a la pista, acotada) dentro de su columna.
+      w.x(clamp(0.4 * local * 0.25, -60, 60));
+      w.o(Math.max(0, 1 - Math.abs(local) / (PHILOSOPHY_TRACK.pillar * 0.6)));
+    }
+    bars.forEach((set, i) => {
+      const from = i === 0 ? 0 : centers[i - 1];
+      set(clamp((move - from) / Math.max(1, centers[i] - from), 0, 1));
+    });
+  };
+  counter(tl, TRACK_FROM, 1, paint, "none");
 };

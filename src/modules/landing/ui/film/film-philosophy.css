@@ -23,11 +23,13 @@
   .film[data-motion="on"] .film-philo-static { display: none; }
 }
 
-/* Capa 1 (0,6x): las palabras gigantes. */
-.film-philo-words { position: absolute; inset: 0; pointer-events: none; will-change: transform; }
-.film-philo-words span {
+/* La palabra gigante de cada pilar: abajo a la izquierda, detrás del texto y
+   recortada a su columna (nunca bajo la pieza). El motor la deriva poco. */
+.film-philo-word-box { position: absolute; left: 40px; bottom: 7%; width: 560px; height: 240px; overflow: hidden; pointer-events: none; }
+.film-philo-word-box > span {
   position: absolute;
-  top: 62%;
+  left: 0;
+  bottom: -40px;
   white-space: nowrap;
   font-family: var(--font-nexa), var(--font-poppins), sans-serif;
   font-size: 280px;
@@ -36,7 +38,9 @@
   letter-spacing: -0.05em;
   text-transform: uppercase;
   color: color-mix(in srgb, var(--foreground) 3.5%, transparent);
+  will-change: transform, opacity;
 }
+.film-philo-copy { z-index: 1; }
 
 /* Capa 2 (1x): la pista — la intro ocupa la ventana, cada pilar 1100 px. */
 .film-philo-track { position: absolute; left: 0; top: 0; display: flex; height: 100%; will-change: transform; }
