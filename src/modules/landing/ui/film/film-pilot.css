@@ -469,10 +469,10 @@
    16) y `fitToViewport` (film-kit) la escala para caber y fijarse siempre. A
    ≤ 720 px de ventana se compacta para que ese zoom no baje de ~0,8: cabina de
    664 px (relojes de 72, tres filas, como en móvil: con cuatro, el lote de la
-   fase de aprobación desbordaba 12 px) y el relleno de arriba en 96, que con el
-   zoom deja la cabina bajo la barra del sitio (la barra no se escala). */
+   fase de aprobación desbordaba 12 px) y sin relleno arriba: el margen bajo la
+   isla lo pone `fitToViewport` fuera del zoom. */
 @media (min-width: 1024px) and (max-height: 720px) {
-  .film-pilot-layout { padding-top: 96px; padding-bottom: 8px; }
+  .film-pilot-layout { padding-top: 0; padding-bottom: 8px; }
   .film-pilot-cockpit { height: 664px; gap: 6px; padding: 14px; }
   .film-pilot-dial-face { width: 72px; height: 72px; }
   .film-pilot-rows .film-pilot-row:nth-child(n + 4) { display: none; }

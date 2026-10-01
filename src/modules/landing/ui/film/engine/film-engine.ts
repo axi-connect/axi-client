@@ -412,7 +412,9 @@ const measure: Scene = (section, ctx) => {
     for (const el of produced) setText(el, formatMillions(num(el, "to") * v));
   });
   const result = visible(section, "[data-anim=measure-result]");
-  if (result.length) tl.fromTo(result, { opacity: 0.2 }, { opacity: 1, ease: "power3.out", duration: atP(0.14) }, atP(0.82));
+  // Oculto hasta su tramo y fundido mientras cuenta (0,82–0,96): antes asomaba
+  // un «$ 0» fantasma a 0,2 desde el principio (decisión de axi-2e, 2026-10-01).
+  if (result.length) tl.fromTo(result, { opacity: 0 }, { opacity: 1, ease: "power2.out", duration: atP(0.14) }, atP(0.82));
   const glow = visible(section, "[data-anim=funnel-glow]");
   if (glow.length) tl.fromTo(glow, { opacity: 0 }, { opacity: 1, ease: "power3.out", duration: atP(0.14) }, atP(0.82));
 };

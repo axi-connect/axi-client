@@ -51,6 +51,30 @@ describe("fijar siempre y caber (la dueña, 2026-10-01)", () => {
   })
 })
 
+describe("el contenido de una escena fijada no empieza bajo la isla (≥ 96 px)", () => {
+  // Un texto cuyo borde sale a `at` px del de la escena más el relleno que se le dé.
+  function at(px: number) {
+    const s = scene("measure", 600)
+    const copy = s.querySelector<HTMLElement>("[data-anim=x]")!
+    copy.getClientRects = () => [{}] as unknown as DOMRectList
+    copy.getBoundingClientRect = () => ({ top: px + (parseFloat(s.style.paddingTop) || 0) }) as DOMRect
+    s.getBoundingClientRect = () => ({ top: 0 }) as DOMRect
+    sceneTimeline(s, { desktop: true, pins: new Map() }, 100)
+    return { s, top: copy.getBoundingClientRect().top }
+  }
+
+  it("si el contenido queda a 20 px, la escena gana relleno hasta 96", () => {
+    const { s, top } = at(20)
+    expect(top).toBeGreaterThanOrEqual(95.5)
+    expect(parseFloat(s.style.paddingTop)).toBeCloseTo(76, 0)
+  })
+
+  it("si ya empieza a 120 px, no se toca", () => {
+    const { s } = at(120)
+    expect(s.style.paddingTop).toBe("")
+  })
+})
+
 describe("escena ya en pantalla al llegar el motor (R4)", () => {
   it("sin fijar y en pantalla: sin scrub, y el motor la lleva al fotograma final", () => {
     const s = scene("pricing", 600)

@@ -180,26 +180,74 @@ function inFlow(el: Element, out: HTMLElement[] = []): HTMLElement[] {
 const FIT_MIN = 0.6;
 
 /**
+ * Lo más alto que se ve del contenido (texto o medios), en px desde el borde
+ * de la escena, en su sitio de reposo. Lo absoluto de fondo no cuenta: va bajo
+ * la isla a propósito. Los transforms en línea (el reveal del titular está en
+ * su `from` durante el refresh, 24 px más abajo) se neutralizan para medir.
+ */
+function contentTop(section: HTMLElement, kids: HTMLElement[]): number {
+  const moved = kids.flatMap((k) => all(k, "[style*='transform']"));
+  const saved = moved.map((el) => el.style.transform);
+  for (const el of moved) el.style.transform = "none";
+  const top0 = section.getBoundingClientRect().top;
+  let top = Infinity;
+  for (const kid of kids) {
+    const walker = document.createTreeWalker(kid, NodeFilter.SHOW_TEXT);
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+      const el = n.parentElement;
+      if (!n.textContent?.trim() || !el?.getClientRects().length) continue;
+      top = Math.min(top, el.getBoundingClientRect().top - top0);
+    }
+    for (const el of kid.querySelectorAll("img, svg, canvas, video")) {
+      const r = el.getBoundingClientRect();
+      if (r.width > 24 && r.height > 24) top = Math.min(top, r.top - top0);
+    }
+  }
+  moved.forEach((el, i) => (el.style.transform = saved[i]));
+  return top;
+}
+
+/** La isla del sitio (con su aviso) ocupa hasta ~70 px: el contenido de una escena fijada empieza por debajo. */
+const SAFE_TOP = 96;
+
+/**
  * Hace caber la escena fijada en la ventana con `zoom` sobre su contenido en
- * el flujo (el piloto ya lo hacía por media query; `zoom` reflowea, así que la
- * escena mide de verdad lo que se ve). Se mide antes de crear el trigger y en
+ * el flujo (`zoom` reflowea, así que la escena mide de verdad lo que se ve) y
+ * cuida que su contenido no empiece bajo la isla (≥ `SAFE_TOP`): si el zoom lo
+ * sube, la escena gana relleno arriba y se vuelve a ajustar. El zoom no siempre
+ * encoge en proporción (hay altos ligados a la ventana, como en medir), así
+ * que se mide y se corrige en bucle. Se hace antes de crear el trigger y en
  * cada `refreshInit` (cambio de tamaño), nunca por frame.
  */
 function fitToViewport(section: HTMLElement) {
   const kids = inFlow(section);
   const fit = () => {
     for (const el of kids) el.style.removeProperty("zoom");
-    const over = section.offsetHeight / window.innerHeight;
-    if (over <= 1) return;
-    const k = Math.max(FIT_MIN, 0.985 / over);
+    section.style.removeProperty("padding-top");
+    section.style.removeProperty("align-items");
     const base = kids.map((el) => parseFloat(getComputedStyle(el).zoom) || 1);
-    kids.forEach((el, i) => (el.style.zoom = String(base[i] * k)));
-    // El zoom no siempre encoge en proporción (hay altos ligados a la ventana,
-    // como en medir): se vuelve a medir y se corrige hasta caber.
-    let total = k;
-    for (let i = 0; i < 3 && section.offsetHeight > window.innerHeight && total > FIT_MIN; i++) {
-      total = Math.max(FIT_MIN, total * ((0.985 * window.innerHeight) / section.offsetHeight));
-      kids.forEach((el, j) => (el.style.zoom = String(base[j] * total)));
+    const pad0 = parseFloat(getComputedStyle(section).paddingTop) || 0;
+    const vh = window.innerHeight;
+    let k = 1;
+    let pad = pad0;
+    // Primero el margen bajo la isla, luego caber; hasta que ninguno cambie.
+    for (let i = 0; i < 12; i++) {
+      let changed = false;
+      const gap = SAFE_TOP - contentTop(section, kids);
+      if (gap > 0.5) {
+        // Centrada, el relleno solo la bajaría la mitad: se alinea arriba.
+        section.style.alignItems = "flex-start";
+        pad += gap;
+        section.style.paddingTop = `${pad}px`;
+        changed = true;
+      }
+      const over = section.offsetHeight / vh;
+      if (over > 1 && k > FIT_MIN) {
+        k = Math.max(FIT_MIN, (k * 0.985) / over);
+        kids.forEach((el, j) => (el.style.zoom = String(base[j] * k)));
+        changed = true;
+      }
+      if (!changed) break;
     }
   };
   fit();
@@ -207,6 +255,8 @@ function fitToViewport(section: HTMLElement) {
   gsap.context()?.add(() => () => {
     ScrollTrigger.removeEventListener("refreshInit", fit);
     for (const el of kids) el.style.removeProperty("zoom");
+    section.style.removeProperty("padding-top");
+    section.style.removeProperty("align-items");
   });
 }
 
