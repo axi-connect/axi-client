@@ -401,8 +401,10 @@ html:not(.dark) .film-photo-tile:not([data-anim="photo-slot"]) {
   content: ""; position: absolute; left: 50%; top: 0; z-index: 3; width: 74px; height: 13px; margin-left: -37px;
   border-radius: 0 0 9px 9px; background: radial-gradient(circle at 50% 46%, #23252e 0 2.4px, #3d4150 2.6px 3.2px, #0b0b0d 3.4px);
 }
+/* La base va absoluta bajo la tapa: sin `position`, `top` y `left` se ignoraban y
+   el labio quedaba en el flujo, arriba y de borde a borde (QA de temas, 13). */
 .film-team-base {
-  left: -7%; width: 114%; top: calc(100% - 46px); height: 15px;
+  position: absolute; left: -7%; width: 114%; top: calc(100% - 46px); height: 15px;
   transform: none; border-radius: 1px 1px 16px 16px / 1px 1px 12px 12px;
   background: linear-gradient(180deg,
     color-mix(in srgb, var(--foreground) 36%, var(--background)) 0,
@@ -464,6 +466,8 @@ html:not(.dark) .film-photo-tile:not([data-anim="photo-slot"]) {
 .film-team-in { align-self: flex-start; background: color-mix(in srgb, var(--foreground) 12.5%, var(--background)); border-radius: 16px 16px 16px 5px; }
 .film-team-out { align-self: flex-end; background: color-mix(in srgb, var(--background) 4.8%, var(--foreground)); color: var(--background); border-radius: 16px 16px 5px 16px; }
 .film-team-meta { display: block; margin-top: 3px; font-size: 9.5px; color: var(--film-dim-text, var(--film-dim)); }
+/* Sobre la burbuja gris del cliente el tono atenuado común no llega (4,3:1). */
+.film-team-in .film-team-meta { color: color-mix(in srgb, var(--foreground) 66%, transparent); }
 .film-team-out .film-team-meta { color: color-mix(in srgb, color-mix(in srgb, var(--foreground) 6.9%, var(--background)) 72%, transparent); text-align: right; }
 .film-team-note,
 .film-team-back { align-self: center; margin: 0; padding: 5px 11px; border-radius: 999px; font-size: 10px; text-align: center; }
