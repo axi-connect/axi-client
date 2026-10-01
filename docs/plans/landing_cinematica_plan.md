@@ -850,3 +850,14 @@ Las cifras de ejemplo deben cuadrar entre sí y en cada nicho (test como `film.t
    - cada texto contra el vocabulario de §19.3–§19.4, palabra por palabra, y ninguna promesa de §19.6;
    - accesibilidad: `aria-label` en la escena y su texto también en el DOM.
 5. Se publica solo cuando el piloto esté en producción (bloqueo de §19).
+
+### 19.9 Lienzo aprobado y construcción (2026-10-01)
+
+- Lienzo: https://claude.ai/artifact/2zaACPdErU4EU6Gvaong1Y (Main, Mobile, Frames). Lo aprobó la dueña con la cabina en instrumentos:
+  - tres relojes (encontró, calificó y contactó, sobre lo encontrado);
+  - una pantalla de ruta con el paso y el siguiente;
+  - tres testigos con el vocabulario de la UI;
+  - «Dentro del tope» como medidor de combustible de 20 segmentos.
+- Todo va en blanco sobre tinta. IBM Plex Mono solo en cifras y en la pantalla de ruta.
+- Construye `cinematic-film-landing-page`. La escena queda apagada con `FILM_FEATURES.pilot = false` hasta que el piloto esté en producción.
+- Fusión de la rama `wip` (8a186c3e): `npm run budget` falla en 21 rutas del panel por el crecimiento de main. No es una regresión de la landing (`/` pesa 151,3 kB). Se resuelve en el programa aparte de §6.4; los topes no se suben en esta rama.
