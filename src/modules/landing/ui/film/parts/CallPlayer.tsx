@@ -14,8 +14,8 @@ import { CALL_COPY, CALL_START, CALL_TOTAL, CALL_TRACKS, callClock } from "@/mod
  * - Web Audio nativo: un `AnalyserNode` que nace al primer toque; antes no se
  *   descarga nada (`preload="none"`).
  * - Un `requestAnimationFrame` que solo existe mientras suena: lee 8 bandas de
- *   voz y escribe 13 variables CSS en la sección. Todo lo que se mueve son
- *   `transform` y `opacity` de capas ya pintadas.
+ *   voz y escribe `transform` y `opacity` directos en ~16 capas ya pintadas
+ *   (sin variables CSS por frame) más 64 trazos en el canvas de la corona.
  * - Palabras, reloj, notas y etapas se tocan solo al cambiar (~40 veces por llamada).
  * - Se pausa al salir de pantalla o de la pestaña. Con movimiento reducido no se
  *   escriben bandas: el audio y los subtítulos siguen igual.
@@ -24,8 +24,6 @@ import { CALL_COPY, CALL_START, CALL_TOTAL, CALL_TRACKS, callClock } from "@/mod
 /** Bordes de las 8 bandas en bins de un fftSize 256 (~187 Hz por bin a 48 kHz) y su ganancia. */
 const EDGES = [1, 2, 3, 4, 6, 8, 11, 15, 21];
 const GAIN = [0.9, 1, 1, 1.08, 1.2, 1.35, 1.6, 1.9];
-const BANDS = ["--b0", "--b1", "--b2", "--b3", "--b4", "--b5", "--b6", "--b7"];
-const VARS = [...BANDS, "--lo", "--mid", "--hi", "--e"];
 const GLYPH = {
   play: "M9.2 5.9v12.2c0 .5.5.8.9.5l9.6-6.1a.6.6 0 0 0 0-1l-9.6-6.1a.6.6 0 0 0-.9.5z",
   pause: "M8.5 5.5h2.6v13H8.5zM12.9 5.5h2.6v13h-2.6z",
@@ -57,30 +55,91 @@ export function CallPlayer() {
     const status = q("[data-call=status]");
     const glyph = pearl.querySelector("path");
 
-    // Cada variable se escribe SOLO en los elementos que la leen: escrita en la
-    // sección, invalidaba el estilo de toda la escena en cada frame (perfil del
-    // 2026-10-01 con CPU × 4: p50 de 83 ms sonando). Y solo si cambió.
-    type Sink = { el: HTMLElement; vars: string[]; last: Map<string, string> };
-    const sinks: Sink[] = [];
-    const sink = (sel: string, vars: string[]) => {
-      for (const el of q(sel)) sinks.push({ el, vars, last: new Map() });
+    // Lo que late con la voz: transform y opacity escritos directo, solo si
+    // cambian, en ~16 capas. Sin variables CSS por frame: una variable que
+    // alimenta calc() o gradientes recalculaba estilos caros en toda la escena
+    // (perfil del 2026-10-01 con CPU × 4: 22 ms por recálculo sonando).
+    const last = new Map<HTMLElement, Record<string, string>>();
+    const put = (el: HTMLElement | undefined, prop: "transform" | "opacity", v: string) => {
+      if (!el) return;
+      let seen = last.get(el);
+      if (!seen) last.set(el, (seen = {}));
+      if (seen[prop] === v) return;
+      seen[prop] = v;
+      el.style[prop] = v;
     };
-    sink(".film-call-cor", BANDS);
-    sink(".film-call-fields", ["--lo", "--mid", "--hi", "--e"]);
-    q(".film-call-orbit").forEach((el, i) => sinks.push({ el, vars: [["--lo", "--mid", "--hi"][i] ?? "--e"], last: new Map() }));
-    sink(".film-call-reflect, .film-call-ripples, .film-call-bloom, .film-call-core", ["--e"]);
-    sink(".film-call-wave", ["--p"]);
-    const values = new Map<string, string>();
-    const set = (k: string, v: string) => values.set(k, v);
-    const flush = () => {
-      for (const s of sinks) {
-        for (const k of s.vars) {
-          const v = values.get(k);
-          if (v === undefined || s.last.get(k) === v) continue;
-          s.last.set(k, v);
-          s.el.style.setProperty(k, v);
-        }
+    const one = (sel: string) => section.querySelector<HTMLElement>(sel) ?? undefined;
+    const fld = { c: one(".film-call-f-c"), v: one(".film-call-f-v"), a: one(".film-call-f-a"), s: one(".film-call-f-s") };
+    const reflect = one(".film-call-reflect");
+    const ripples = one(".film-call-ripples");
+    const bloomA = one(".film-call-bl-a > i");
+    const bloomS = one(".film-call-bl-s > i");
+    const cores = q(".film-call-core");
+    const orbits = q(".film-call-orbit");
+    const reveal = one(".film-call-reveal");
+    const revealIn = one(".film-call-reveal > div");
+    const head = one(".film-call-head-line");
+    const corona = section.querySelector<HTMLCanvasElement>(".film-call-corona");
+    const cctx = corona?.getContext("2d") ?? null;
+
+    /** La corona: 64 marcas en espejo (graves arriba, agudos abajo), color por ángulo. */
+    const BRAND = ["#FF7A6E", "#E65759", "#B48BFF", "#9A4FFF", "#FFC04D", "#FFD580"];
+    const TICKS = Array.from({ length: 64 }, (_, i) => {
+      const x = Math.sin(i * 127.1 + 311.7) * 43758.5453;
+      const a = (i * Math.PI * 2) / 64 - Math.PI / 2;
+      return {
+        cos: Math.cos(a),
+        sin: Math.sin(a),
+        band: Math.min(7, Math.floor((Math.min(i, 64 - i) / 32) * 8)),
+        w: 2.6 * (0.8 + (x - Math.floor(x)) * 0.45),
+        color: BRAND[Math.floor((((i + 4) % 64) / 64) * 6)],
+      };
+    });
+    const drawCorona = () => {
+      if (!corona || !cctx) return;
+      const k = corona.width / 280;
+      cctx.setTransform(k, 0, 0, k, 140 * k, 140 * k);
+      cctx.clearRect(-140, -140, 280, 280);
+      cctx.lineWidth = 2;
+      cctx.lineCap = "round";
+      cctx.globalAlpha = playing ? 0.85 : 0.22;
+      const brand = (playing && track === 1) || done;
+      if (!brand) cctx.strokeStyle = "#f5f5f7";
+      for (const t of TICKS) {
+        const len = 10 * (0.35 + lv[t.band] * t.w);
+        if (brand) cctx.strokeStyle = t.color;
+        cctx.beginPath();
+        cctx.moveTo(t.cos * 98, t.sin * 98);
+        cctx.lineTo(t.cos * (98 + len), t.sin * (98 + len));
+        cctx.stroke();
       }
+    };
+
+    /** Escribe el fotograma de la voz: niveles lv[0..7] y avance p. */
+    const pulse = (p: number) => {
+      const lo = (lv[0] + lv[1] + lv[2]) / 3;
+      const mid = (lv[3] + lv[4] + lv[5]) / 3;
+      const hi = (lv[6] + lv[7]) / 2;
+      let e = 0;
+      for (const v of lv) e += v / 8;
+      const n = (v: number) => v.toFixed(3);
+      put(fld.c, "transform", `translate(-16%, 2%) scale(${n(0.82 + lo * 0.5)})`);
+      put(fld.v, "transform", `translate(15%, -5%) scale(${n(0.82 + mid * 0.55)})`);
+      put(fld.a, "transform", `translate(2%, 16%) scale(${n(0.78 + hi * 0.7)})`);
+      put(fld.s, "transform", `scale(${n(0.75 + e * 0.5)})`);
+      put(reflect, "transform", `scaleX(${n(0.8 + e * 0.35)})`);
+      put(reflect, "opacity", n(0.08 + e * 0.9));
+      put(ripples, "opacity", n(Math.min(1, e * 1.8)));
+      put(bloomA, "transform", `scale(${n(0.82 + e * 0.45)})`);
+      put(bloomA, "opacity", n(Math.min(1, 0.32 + e * 1.1)));
+      put(bloomS, "transform", `scale(${n(0.8 + e * 0.4)})`);
+      put(bloomS, "opacity", n(Math.min(1, 0.25 + e * 1.1)));
+      for (const c of cores) put(c, "transform", `scale(${n(0.86 + e * 0.4)})`);
+      orbits.forEach((o, i) => put(o, "transform", `${o.dataset.tilt} scale(${n(1 + [lo, mid, hi][i] * Number(o.dataset.amp))})`));
+      put(reveal, "transform", `translateX(${n((p - 1) * 100)}%)`);
+      put(revealIn, "transform", `translateX(${n((1 - p) * 100)}%)`);
+      put(head, "transform", `translateX(${n((p - 1) * 100)}%)`);
+      drawCorona();
     };
 
     let ctx: AudioContext | undefined;
@@ -92,6 +151,7 @@ export function CallPlayer() {
     let track = 0;
     let playing = false;
     let done = false;
+    let progress = 0;
 
     /** Pinta el estado discreto (quién habla, palabras, notas, etapas, reloj). */
     const paint = (t: number) => {
@@ -124,9 +184,7 @@ export function CallPlayer() {
       if (raf) cancelAnimationFrame(raf);
       raf = 0;
       lv.fill(0);
-      for (const k of VARS) set(k, "0");
-      if (end) set("--p", "1");
-      flush();
+      pulse(end ? 1 : progress);
     };
 
     const loop = () => {
@@ -135,24 +193,17 @@ export function CallPlayer() {
       const step = () => {
         const local = audio[track].currentTime;
         const t = Math.min(CALL_TOTAL, CALL_START[track] + local);
-        set("--p", (t / CALL_TOTAL).toFixed(3));
+        progress = t / CALL_TOTAL;
         if (an && bins && !calm) {
           an.getByteFrequencyData(bins);
-          let sum = 0;
           for (let k = 0; k < 8; k++) {
             let a = 0;
             for (let i = EDGES[k]; i < EDGES[k + 1]; i++) a += bins[i];
             const v = clamp01(((a / (EDGES[k + 1] - EDGES[k]) / 255) * GAIN[k] - 0.3) / 0.6);
             lv[k] += (v - lv[k]) * (v > lv[k] ? 0.55 : 0.16);
-            sum += lv[k];
-            set(BANDS[k], lv[k].toFixed(2));
           }
-          set("--lo", ((lv[0] + lv[1] + lv[2]) / 3).toFixed(2));
-          set("--mid", ((lv[3] + lv[4] + lv[5]) / 3).toFixed(2));
-          set("--hi", ((lv[6] + lv[7]) / 2).toFixed(2));
-          set("--e", (sum / 8).toFixed(2));
         }
-        flush();
+        pulse(progress);
         // Lo discreto solo se repinta al cambiar: palabra, segundo, nota o etapa.
         const lit = words[track].filter((w) => at(w) <= local).length;
         const next = `${track}|${lit}|${Math.floor(t)}|${notes.filter((n) => at(n) <= t).length}|${stages.filter((s) => at(s) <= t).length}`;
@@ -199,8 +250,8 @@ export function CallPlayer() {
         done = false;
         key = "";
         section.toggleAttribute("data-started", true);
-        set("--p", "0");
-        flush();
+        progress = 0;
+        pulse(0);
       }
       playing = true;
       paint(CALL_START[track] + audio[track].currentTime);
@@ -220,6 +271,11 @@ export function CallPlayer() {
       paint(CALL_TOTAL);
     };
 
+    if (corona) {
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      corona.width = corona.height = Math.round(280 * dpr);
+    }
+    drawCorona();
     pearl.addEventListener("click", toggle);
     a0.addEventListener("ended", ended0);
     a1.addEventListener("ended", ended1);

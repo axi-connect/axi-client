@@ -27,28 +27,12 @@ import { CallPlayer } from "@/modules/landing/ui/film/parts/CallPlayer";
  * notas completas, la onda tenue y la invitación a escuchar.
  */
 
-/** Las órbitas: radio, giro en pantalla, inclinación, banda, amplitud, duración, desfase, color, punto, sentido. */
+/** Las órbitas (graves, medios, agudos): radio, giro en pantalla, inclinación, amplitud, duración, desfase, color, punto, sentido. */
 const RINGS = [
-  { r: 150, z: -16, x: 72, band: "lo", amp: 0.12, d: 15, dl: -2, color: "#E65759", dot: "#FF7A6E", rev: false, sw: 1.8 },
-  { r: 178, z: 22, x: 76, band: "mid", amp: 0.14, d: 21, dl: -9, color: "#9A4FFF", dot: "#B48BFF", rev: true, sw: 1.5 },
-  { r: 206, z: -4, x: 80, band: "hi", amp: 0.16, d: 29, dl: -17, color: "#FFC04D", dot: "#FFD580", rev: false, sw: 1.2 },
+  { r: 150, z: -16, x: 72, amp: 0.12, d: 15, dl: -2, color: "#E65759", dot: "#FF7A6E", rev: false, sw: 1.8 },
+  { r: 178, z: 22, x: 76, amp: 0.14, d: 21, dl: -9, color: "#9A4FFF", dot: "#B48BFF", rev: true, sw: 1.5 },
+  { r: 206, z: -4, x: 80, amp: 0.16, d: 29, dl: -17, color: "#FFC04D", dot: "#FFD580", rev: false, sw: 1.2 },
 ] as const;
-
-/** La corona: 64 marcas, espectro en espejo (graves arriba, agudos abajo), color por ángulo. */
-const BRAND = ["#FF7A6E", "#E65759", "#B48BFF", "#9A4FFF", "#FFC04D", "#FFD580"];
-const seeded = (i: number) => {
-  const x = Math.sin(i * 127.1 + 311.7) * 43758.5453;
-  return x - Math.floor(x);
-};
-const CORONA = Array.from({ length: 64 }, (_, i) => {
-  const band = Math.min(7, Math.floor((Math.min(i, 64 - i) / 32) * 8));
-  return {
-    "--a": `${(i * 5.625).toFixed(3)}deg`,
-    "--v": `var(--b${band})`,
-    "--w": (2.6 * (0.8 + seeded(i) * 0.45)).toFixed(2),
-    "--c": BRAND[Math.floor((((i + 4) % 64) / 64) * 6)],
-  } as CSSProperties;
-});
 
 /** La onda real como dos trazos (cliente y Axi) sobre un viewBox de 1000 × 36. */
 const WAVE = (() => {
@@ -108,14 +92,15 @@ export function CallScene() {
               <i />
               <i />
             </span>
-            <span className="film-call-bloom film-call-bl-a" aria-hidden="true" />
-            <span className="film-call-bloom film-call-bl-s" aria-hidden="true" />
+            <span className="film-call-bloom film-call-bl-a" aria-hidden="true">
+              <i />
+            </span>
+            <span className="film-call-bloom film-call-bl-s" aria-hidden="true">
+              <i />
+            </span>
+            {/* La corona la dibuja CallPlayer: 64 marcas, espectro en espejo (graves arriba, agudos abajo). */}
+            <canvas className="film-call-corona" width={560} height={560} aria-hidden="true" />
             <div className="film-call-gyro">
-              <span className="film-call-cor" aria-hidden="true">
-                {CORONA.map((style, i) => (
-                  <i key={i} style={style} />
-                ))}
-              </span>
               {RINGS.map((r, i) => {
                 const timing = { "--d": `${r.d}s`, "--dl": `${r.dl}s` } as CSSProperties;
                 return (
@@ -123,7 +108,9 @@ export function CallScene() {
                     key={i}
                     className="film-call-orbit"
                     aria-hidden="true"
-                    style={{ transform: `rotateZ(${r.z}deg) rotateX(${r.x}deg) scale(calc(1 + var(--${r.band}) * ${r.amp}))` }}
+                    data-tilt={`rotateZ(${r.z}deg) rotateX(${r.x}deg)`}
+                    data-amp={r.amp}
+                    style={{ transform: `rotateZ(${r.z}deg) rotateX(${r.x}deg)` }}
                   >
                     <div className={r.rev ? "film-call-spin film-call-rev" : "film-call-spin"} style={timing}>
                       {/* El arco es un div (conic + máscara): el SVG en 3D se descoloca en Firefox. */}
