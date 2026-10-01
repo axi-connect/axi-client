@@ -27,6 +27,7 @@ import { emitFilmEvent, FILM_ACTIVITY_EVENT, type FilmActivityDetail } from "@/m
 import { close } from "@/modules/landing/ui/film/engine/close-scene";
 import { goal } from "@/modules/landing/ui/film/engine/goal-scene";
 import { philosophy } from "@/modules/landing/ui/film/engine/philosophy-scene";
+import { pilot } from "@/modules/landing/ui/film/engine/pilot-scene";
 import { pricing } from "@/modules/landing/ui/film/engine/pricing-scene";
 import { call, photo, team, vault } from "@/modules/landing/ui/film/engine/sell-scenes";
 import {
@@ -396,7 +397,7 @@ const measure: Scene = (section, ctx) => {
   if (glow.length) tl.fromTo(glow, { opacity: 0 }, { opacity: 1, ease: "power3.out", duration: atP(0.14) }, atP(0.82));
 };
 
-const SCENES: Record<string, Scene> = { hero, philosophy, niche, radar, followup, chat, photo, call, vault, team, collect, pipeline, goal, axel, measure, pricing, close };
+const SCENES: Record<string, Scene> = { hero, philosophy, niche, radar, pilot, followup, chat, photo, call, vault, team, collect, pipeline, goal, axel, measure, pricing, close };
 
 /* ──────────────────────────────── arranque ──────────────────────────────── */
 

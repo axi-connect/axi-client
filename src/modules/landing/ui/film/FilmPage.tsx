@@ -1,5 +1,7 @@
 import "./film.css";
 
+import { lazy } from "react";
+
 import type { PublicCatalog } from "@/modules/landing/domain/public-catalog";
 import { FilmRoot } from "@/modules/landing/ui/film/FilmRoot";
 import { FollowupScene, RadarScene } from "@/modules/landing/ui/film/scenes/capture";
@@ -23,6 +25,17 @@ import { CallScene, PhotoScene, TeamScene, VaultScene } from "@/modules/landing/
  * fotograma final. `FilmRoot` es la única isla cliente (nicho, guía de progreso
  * y carga diferida del motor de animación).
  */
+/**
+ * El piloto automático (plan §19): construido, pero fuera de la página hasta
+ * que el piloto esté en producción (D11, `FILM_FEATURES.pilot`). La condición
+ * es el literal que inlina `next.config.ts` y no `FILM_FEATURES`, y va en una
+ * rama: solo así webpack descarta el `import()` apagado, y con él el CSS y la
+ * fuente de la escena (con un valor importado, o tras un `return`, quedaban
+ * enlazados en `/`).
+ */
+const PilotScene =
+  process.env.FILM_PILOT === "1" ? lazy(() => import("@/modules/landing/ui/film/scenes/pilot").then((m) => ({ default: m.PilotScene }))) : null;
+
 export function FilmPage({ catalog }: { catalog: PublicCatalog | null }) {
   return (
     <FilmRoot>
@@ -30,6 +43,7 @@ export function FilmPage({ catalog }: { catalog: PublicCatalog | null }) {
       <PhilosophyScene />
       <NicheScene />
       <RadarScene />
+      {PilotScene ? <PilotScene /> : null}
       <FollowupScene />
       <ChatScene />
       <PhotoScene />

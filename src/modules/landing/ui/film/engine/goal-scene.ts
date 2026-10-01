@@ -14,39 +14,7 @@ import { gsap } from "gsap";
 
 import { goalFrame } from "@/modules/landing/domain/film/goal-camera";
 import { formatMillions, formatPercent, ROUTE_FRACTIONS } from "@/modules/landing/domain/film/route-scenario";
-import { SPAN, all, sceneTimeline, setText, visible, type Scene } from "@/modules/landing/ui/film/engine/film-kit";
-
-/**
- * Escribe una propiedad de estilo solo si cambió (el scrub llama en cada
- * frame). Guarda el `style` original de cada elemento que toca: `restore` lo
- * devuelve, así que al parar el motor la escena vuelve a su fotograma final
- * del servidor, como las que animan con tweens de gsap.
- */
-function writer() {
-  const last = new Map<HTMLElement | SVGElement, Record<string, string>>();
-  const original = new Map<HTMLElement | SVGElement, string | null>();
-  const write = (els: readonly (HTMLElement | SVGElement)[], prop: "transform" | "opacity" | "strokeDasharray", value: string) => {
-    for (const el of els) {
-      let seen = last.get(el);
-      if (!seen) {
-        last.set(el, (seen = {}));
-        original.set(el, el.getAttribute("style"));
-      }
-      if (seen[prop] === value) continue;
-      seen[prop] = value;
-      el.style[prop] = value;
-    }
-  };
-  const restore = () => {
-    for (const [el, style] of original) {
-      if (style === null) el.removeAttribute("style");
-      else el.setAttribute("style", style);
-    }
-    last.clear();
-    original.clear();
-  };
-  return { write, restore };
-}
+import { SPAN, all, sceneTimeline, setText, visible, writer, type Scene } from "@/modules/landing/ui/film/engine/film-kit";
 
 const px = (v: number) => v.toFixed(1);
 const o = (v: number) => v.toFixed(3);

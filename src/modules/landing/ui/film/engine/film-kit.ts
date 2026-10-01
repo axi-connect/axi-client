@@ -53,6 +53,71 @@ export function setText(el: HTMLElement, text: string) {
 }
 
 /**
+ * Escribe una propiedad de estilo solo si cambió (el scrub llama en cada
+ * frame). Guarda el `style` original de cada elemento que toca: `restore` lo
+ * devuelve, así que al parar el motor la escena vuelve a su fotograma final
+ * del servidor, como las que animan con tweens de gsap.
+ *
+ * `flag` hace lo mismo con un atributo (presente o no, o con un valor) y
+ * `text` con el texto: también vuelven al HTML del servidor con `restore`.
+ * Lo usan las escenas que pintan un fotograma puro por frame (la meta, el piloto).
+ */
+export function writer() {
+  type El = HTMLElement | SVGElement;
+  const last = new Map<El, Record<string, string>>();
+  const original = new Map<El, string | null>();
+  const attrs = new Map<El, Map<string, string | null>>();
+  const texts = new Map<HTMLElement, string>();
+  const write = (els: readonly El[], prop: "transform" | "opacity" | "strokeDasharray", value: string) => {
+    for (const el of els) {
+      let seen = last.get(el);
+      if (!seen) {
+        last.set(el, (seen = {}));
+        original.set(el, el.getAttribute("style"));
+      }
+      if (seen[prop] === value) continue;
+      seen[prop] = value;
+      el.style[prop] = value;
+    }
+  };
+  const flag = (els: readonly El[], name: string, value: string | boolean) => {
+    const next = value === false ? null : value === true ? "" : value;
+    for (const el of els) {
+      let saved = attrs.get(el);
+      if (!saved) attrs.set(el, (saved = new Map()));
+      if (!saved.has(name)) saved.set(name, el.getAttribute(name));
+      if (el.getAttribute(name) === next) continue;
+      if (next === null) el.removeAttribute(name);
+      else el.setAttribute(name, next);
+    }
+  };
+  const text = (els: readonly HTMLElement[], value: string) => {
+    for (const el of els) {
+      if (!texts.has(el)) texts.set(el, el.textContent ?? "");
+      setText(el, value);
+    }
+  };
+  const restore = () => {
+    for (const [el, style] of original) {
+      if (style === null) el.removeAttribute("style");
+      else el.setAttribute("style", style);
+    }
+    for (const [el, saved] of attrs) {
+      for (const [name, value] of saved) {
+        if (value === null) el.removeAttribute(name);
+        else el.setAttribute(name, value);
+      }
+    }
+    for (const [el, value] of texts) setText(el, value);
+    last.clear();
+    original.clear();
+    attrs.clear();
+    texts.clear();
+  };
+  return { write, flag, text, restore };
+}
+
+/**
  * Ritmo de la película: multiplica la longitud de cada pin. Medido en el render
  * del 2026-09-30: con 1 la película de escritorio pasaba de 30.000 px.
  */
@@ -61,7 +126,7 @@ export const PACE = 0.8;
 export const reveal = { opacity: 0, y: 24 };
 
 /** Las escenas que se fijan: donde la animación ES el mensaje. */
-export const PINNED = new Set(["philosophy", "radar", "followup", "chat", "call", "goal", "axel", "measure"]);
+export const PINNED = new Set(["philosophy", "radar", "pilot", "followup", "chat", "call", "goal", "axel", "measure"]);
 
 /**
  * Una línea de tiempo de escena: fijada si cabe, revelada al pasar si no.

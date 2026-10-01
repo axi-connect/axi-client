@@ -1,0 +1,497 @@
+/*
+ * El piloto automático (plan §19, lienzo aprobado el 2026-10-01): la carta de
+ * navegación nocturna y la cabina en instrumentos.
+ *
+ * Sin hex: todo sale de los tokens de la película (`--foreground` y
+ * `--background` bajo `.dark`, el violeta de marca `--axi-violet`). Blanco y
+ * grises sobre tinta; el violeta solo en el «Ajuste del piloto».
+ *
+ * Por frame solo cambian `transform`, `opacity` y `stroke-dasharray` (los
+ * escribe `engine/pilot-scene.ts`). Lo que cambia por tramos (fase de la
+ * cabina, estado, fijos encendidos, etapas) son atributos: el CSS decide.
+ */
+
+.film-pilot {
+  /* El foco de la cámara: (520, 600) de 1440 × 900. */
+  --fx: 36.111%;
+  --fy: 66.667%;
+  --pl-fg: var(--foreground);
+  --pl-ink: var(--background);
+  --pl-90: color-mix(in srgb, var(--foreground) 90%, transparent);
+  --pl-80: color-mix(in srgb, var(--foreground) 80%, transparent);
+  --pl-75: color-mix(in srgb, var(--foreground) 75%, transparent);
+  --pl-66: color-mix(in srgb, var(--foreground) 66%, transparent);
+  --pl-62: color-mix(in srgb, var(--foreground) 62%, transparent);
+  /* ≥ 47 % para 4,5:1 sobre la tinta (como `--film-dim`). */
+  --pl-dim: color-mix(in srgb, var(--foreground) 52%, transparent);
+  --pl-line: color-mix(in srgb, var(--foreground) 10%, transparent);
+  --pl-line-2: color-mix(in srgb, var(--foreground) 16%, transparent);
+  --pl-line-3: color-mix(in srgb, var(--foreground) 22%, transparent);
+  --pl-fill: color-mix(in srgb, var(--foreground) 3%, transparent);
+  --pl-fill-2: color-mix(in srgb, var(--foreground) 7%, transparent);
+  --pl-panel-a: color-mix(in srgb, var(--foreground) 6%, var(--background));
+  --pl-panel-b: color-mix(in srgb, var(--foreground) 2.5%, var(--background));
+  --pl-screen: color-mix(in srgb, var(--background), black 32%);
+  --pl-shadow: color-mix(in srgb, black 60%, transparent);
+  --pl-violet: var(--axi-violet);
+  --pl-violet-text: color-mix(in srgb, var(--axi-violet) 38%, var(--foreground));
+  --pl-mono: var(--font-plex-mono), ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color: var(--pl-fg);
+}
+/* `.film-scene.film-pilot` y no `.film-pilot`: este CSS llega con el `import()`
+   de la escena, antes que film.css, y a igual especificidad ganaba `.film-scene`. */
+.film-scene.film-pilot { align-items: stretch; }
+.film-pilot .film-pilot-mob { display: none; }
+
+/* ─────────────────────────────── el mapa ─────────────────────────────── */
+.film-pilot-map { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
+.film-pilot-view { position: absolute; inset: 0; perspective: 1300px; perspective-origin: var(--fx) var(--fy); }
+.film-pilot-plane {
+  position: absolute;
+  left: var(--fx);
+  top: var(--fy);
+  width: 2400px;
+  height: 1500px;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+.film-pilot-plane svg { position: absolute; inset: 0; overflow: visible; }
+/* El paisaje en su propia capa: los trazos que avanzan no lo vuelven a rasterizar (como la ciudad de la meta). */
+.film-pilot-land { will-change: transform; }
+.film-pilot-plane path,
+.film-pilot-plane circle,
+.film-pilot-plane line { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+.film-pilot-grid { stroke: color-mix(in srgb, var(--pl-fg) 3%, transparent); stroke-width: 1; stroke-linecap: butt !important; }
+.film-pilot-river { stroke: color-mix(in srgb, var(--pl-fg) 3%, transparent); stroke-width: 70; }
+.film-pilot-contour { stroke: color-mix(in srgb, var(--pl-fg) 6%, transparent); stroke-width: 1; }
+.film-pilot-lights { stroke: var(--pl-fg); }
+.film-pilot-hatch { stroke: color-mix(in srgb, var(--pl-fg) 10%, transparent); stroke-width: 2; }
+.film-pilot-plane .film-pilot-zone { fill: url(#pilot-hatch); stroke: var(--pl-line-3); stroke-width: 1.5; stroke-dasharray: 7 7; }
+.film-pilot-tower { opacity: 0.3; }
+.film-pilot-tower circle { stroke: var(--pl-fg); stroke-width: 1; }
+.film-pilot-tower circle[data-ring="0"] { stroke-width: 1.5; }
+.film-pilot-tower circle[data-ring="2"] { stroke-dasharray: 2 6; }
+.film-pilot-sweep {
+  stroke: color-mix(in srgb, var(--pl-fg) 30%, transparent);
+  stroke-width: 2;
+  transform-box: view-box;
+  transform-origin: 300px 1290px;
+}
+.film-pilot-plane .film-pilot-blip { fill: var(--pl-fg); }
+.film-pilot-airway { stroke: color-mix(in srgb, var(--pl-fg) 30%, transparent); stroke-width: 2; stroke-dasharray: 1 12; }
+.film-pilot-hold { stroke: color-mix(in srgb, var(--pl-fg) 35%, transparent); stroke-width: 2; stroke-dasharray: 4 8; }
+.film-pilot-done-glow { stroke: color-mix(in srgb, var(--pl-fg) 8%, transparent); stroke-width: 14; }
+.film-pilot-done { stroke: var(--pl-fg); stroke-width: 3; }
+.film-pilot-airport circle { stroke: color-mix(in srgb, var(--pl-fg) 50%, transparent); stroke-width: 1.5; }
+.film-pilot-airport line { stroke: color-mix(in srgb, var(--pl-fg) 35%, transparent); stroke-width: 6; }
+.film-pilot-apt { stroke: var(--pl-fg); stroke-width: 2; }
+.film-pilot[data-landed] .film-pilot-plane .film-pilot-apt { fill: var(--pl-fg); }
+
+.film-pilot-veil {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 90% at 35% 60%, transparent 40%, color-mix(in srgb, var(--pl-ink) 85%, transparent) 100%),
+    linear-gradient(180deg, var(--pl-ink) 6%, transparent 34%, transparent 84%, var(--pl-ink)),
+    linear-gradient(90deg, transparent 62%, var(--pl-ink) 76%);
+}
+
+/* ──────────────────────────── las marcas ──────────────────────────── */
+.film-pilot-anchor { position: absolute; left: var(--fx); top: var(--fy); width: 0; height: 0; z-index: 3; }
+.film-pilot-mark { position: absolute; left: 0; top: 0; pointer-events: none; }
+.film-pilot-mark > * { position: absolute; }
+.film-pilot-tag {
+  white-space: nowrap;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--pl-62);
+}
+.film-pilot-tag-k { font-size: 9.5px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--pl-62); }
+
+.film-pilot-fix { left: -8px; top: -9px; overflow: visible; }
+.film-pilot-fix path { fill: transparent; stroke: var(--pl-fg); stroke-width: 1.5; stroke-linejoin: round; }
+.film-pilot-fix-tag { left: 14px; top: 6px; }
+.film-pilot-mark[data-lit] .film-pilot-fix path { fill: var(--pl-fg); }
+.film-pilot-mark[data-lit] .film-pilot-fix-tag { color: var(--pl-fg); }
+
+.film-pilot-tower-tag { left: -44px; top: 26px; }
+/* A la izquierda del aeropuerto: al final queda junto a la cabina y a la derecha se cortaba. */
+.film-pilot-apt-tag { right: 22px; top: -48px; color: var(--pl-fg); }
+.film-pilot-zone-box { left: -110px; top: -34px; width: 220px; display: flex; flex-direction: column; gap: 4px; text-align: center; }
+.film-pilot-zone-near { font-size: 12px; font-weight: 500; }
+.film-pilot-zone-passed { font-size: 11.5px; color: var(--pl-75); }
+.film-pilot-hold-tag { left: -70px; top: -30px; color: var(--pl-fg); }
+
+.film-pilot-sources { left: -60px; top: -112px; display: flex; flex-direction: column; gap: 6px; }
+.film-pilot-source {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  font-size: 11.5px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: var(--pl-panel-a);
+  border: 1px solid var(--pl-line-2);
+}
+.film-pilot-source i { width: 6px; height: 6px; border-radius: 50%; background: var(--pl-fg); box-shadow: 0 0 10px var(--pl-fg); }
+
+.film-pilot-people { left: 0; top: 0; }
+.film-pilot-guide {
+  position: absolute;
+  left: 0;
+  top: -150px;
+  width: 1px;
+  height: 140px;
+  background: linear-gradient(transparent, color-mix(in srgb, var(--pl-fg) 50%, transparent));
+}
+.film-pilot-person {
+  position: absolute;
+  left: -40px;
+  top: -262px;
+  width: 270px;
+  box-sizing: border-box;
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--pl-fg);
+  color: var(--pl-ink);
+  box-shadow: 0 30px 70px var(--pl-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.film-pilot-person-k { font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: color-mix(in srgb, var(--pl-ink) 62%, transparent); }
+.film-pilot-person-roles { font-size: 12px; color: color-mix(in srgb, var(--pl-ink) 70%, transparent); }
+.film-pilot-person-row { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+.film-pilot-person-row b { font-size: 13.5px; }
+.film-pilot-person-av {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--pl-ink);
+  color: var(--pl-fg);
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.film-pilot-person-role { font-size: 12px; color: color-mix(in srgb, var(--pl-ink) 66%, transparent); }
+
+.film-pilot-bubble { left: -250px; top: -150px; width: 250px; display: flex; flex-direction: column; gap: 6px; }
+.film-pilot-bubble-text {
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 11px 13px;
+  border-radius: 16px 16px 5px 16px;
+  background: color-mix(in srgb, var(--pl-fg) 8%, var(--pl-ink));
+  border: 1px solid color-mix(in srgb, var(--pl-fg) 14%, transparent);
+}
+
+.film-pilot-craft { left: -14px; top: -14px; width: 28px; height: 28px; overflow: visible; }
+.film-pilot-craft path { fill: var(--pl-fg); }
+
+/* ───────────────────────────── el encuadre ───────────────────────────── */
+.film-pilot-layout {
+  position: relative;
+  z-index: 4;
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+  /* Arriba, la barra del sitio (80 px): la cabina empieza debajo. */
+  padding: 88px clamp(16px, 2.8vw, 40px) 16px clamp(16px, 8.3vw, 120px);
+  display: grid;
+  grid-template-columns: minmax(0, 600px) 370px;
+  justify-content: space-between;
+  gap: 32px;
+}
+.film-pilot-left { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; padding-top: 16px; min-width: 0; }
+.film-pilot-head { grid-area: 1 / 1; display: flex; flex-direction: column; gap: 16px; }
+.film-pilot-head .film-eyebrow { margin: 0; }
+.film-pilot-title { font-size: clamp(40px, 4.45vw, 64px); line-height: 1.02; letter-spacing: -0.045em; }
+.film-pilot-lead { margin: 0; max-width: 500px; font-size: 16px; line-height: 1.6; color: var(--pl-66); }
+.film-pilot-principle { grid-row: 3; margin: 0 0 52px; max-width: 520px; font-size: 13px; color: var(--pl-62); }
+
+/* La ficha del mes: sube sobre el mapa al aterrizar, bajo el titular. */
+.film-pilot-results {
+  grid-area: 1 / 1 / 3 / 2;
+  align-self: start;
+  margin-top: 226px;
+  width: min(560px, 100%);
+  box-sizing: border-box;
+  padding: 22px;
+  border-radius: 24px;
+  background: color-mix(in srgb, var(--pl-fg) 3%, var(--pl-ink));
+  border: 1px solid color-mix(in srgb, var(--pl-fg) 12%, transparent);
+  box-shadow: 0 40px 90px var(--pl-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.film-pilot:not([data-landed]) .film-pilot-results { visibility: hidden; }
+.film-pilot-results-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.film-pilot-results-title { font-family: var(--font-nexa), var(--font-poppins), sans-serif; font-weight: 700; font-size: 20px; }
+.film-pilot-sample { flex: none; font-size: 11px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--pl-line-3); color: var(--pl-75); }
+.film-pilot-funnel { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.film-pilot-funnel li { display: grid; grid-template-columns: 120px minmax(0, 1fr) 44px; align-items: center; gap: 12px; font-size: 13px; }
+.film-pilot-funnel-l { color: var(--pl-75); }
+.film-pilot-funnel-bar { position: relative; height: 8px; border-radius: 9px; background: color-mix(in srgb, var(--pl-fg) 8%, transparent); overflow: hidden; }
+.film-pilot-funnel-bar i { position: absolute; inset: 0; border-radius: 9px; background: var(--pl-fg); transform-origin: left; }
+.film-pilot-funnel b { text-align: right; font-variant-numeric: tabular-nums; }
+.film-pilot-tune {
+  margin-top: 4px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--pl-violet) 55%, transparent);
+  background: color-mix(in srgb, var(--pl-violet) 10%, transparent);
+  box-shadow: 0 0 40px color-mix(in srgb, var(--pl-violet) 18%, transparent);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.film-pilot-tune-title { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; color: var(--pl-violet-text); }
+.film-pilot-tune-note { font-size: 12.5px; color: var(--pl-75); }
+.film-pilot-tune-what { font-size: 12.5px; color: var(--pl-90); }
+.film-pilot-dim { color: var(--pl-62); }
+
+/* ───────────────────────────── la cabina ───────────────────────────── */
+.film-pilot-cockpit {
+  /* Alto fijo: la cabina no cambia de tamaño entre fases (la escena está fijada). */
+  height: 784px;
+  box-sizing: border-box;
+  padding: 16px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, var(--pl-panel-a), var(--pl-panel-b));
+  border: 1px solid var(--pl-line);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--pl-fg) 6%, transparent);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  /* Instrumentos: interlineado de cabina (el 1,5 del sitio no cabía en 784 px). */
+  line-height: 1.3;
+}
+.film-pilot-k { font-size: 9.5px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--pl-62); }
+.film-pilot-mono { font-family: var(--pl-mono); font-size: 12px; font-variant-numeric: tabular-nums; }
+.film-pilot-cockpit-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.film-pilot-cockpit-title { font-family: var(--font-nexa), var(--font-poppins), sans-serif; font-weight: 700; font-size: 17px; white-space: nowrap; }
+.film-pilot-mode { display: flex; gap: 2px; padding: 3px; border-radius: 999px; background: color-mix(in srgb, var(--pl-fg) 6%, transparent); font-size: 11.5px; font-weight: 600; flex: none; }
+.film-pilot-mode span { padding: 5px 9px; border-radius: 999px; color: var(--pl-62); }
+.film-pilot-mode [aria-current] { background: var(--pl-fg); color: var(--pl-ink); }
+.film-pilot-mode-note { margin: -3px 0 0; font-size: 12px; color: var(--pl-62); }
+
+.film-pilot-dials {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  padding: 6px 4px 4px;
+  border-radius: 16px;
+  background: radial-gradient(120% 100% at 50% 0%, color-mix(in srgb, var(--pl-fg) 5%, transparent), transparent 70%);
+  border: 1px solid color-mix(in srgb, var(--pl-fg) 7%, transparent);
+}
+.film-pilot-dial { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.film-pilot-dial-face { position: relative; width: 88px; height: 88px; }
+.film-pilot-dial-face svg { position: absolute; inset: 0; overflow: visible; }
+.film-pilot-dial-face path, .film-pilot-dial-face circle, .film-pilot-dial-face line { fill: none; stroke-linecap: round; }
+.film-pilot-bezel { stroke: var(--pl-fg); stroke-width: 1.2; stroke-opacity: 0.25; stroke-linecap: butt !important; }
+.film-pilot-bezel[data-major] { stroke-opacity: 0.7; }
+.film-pilot-arc-track { stroke: color-mix(in srgb, var(--pl-fg) 8%, transparent); stroke-width: 3; stroke-dasharray: 0.75 1; stroke-linecap: butt !important; }
+.film-pilot-arc { stroke: var(--pl-fg); stroke-width: 3; }
+.film-pilot-needle { stroke: var(--pl-fg); stroke-width: 1.6; transform-box: view-box; transform-origin: 44px 44px; }
+.film-pilot-dial-face .film-pilot-hub { fill: var(--pl-fg); }
+.film-pilot-dial-v {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 8px;
+  text-align: center;
+  font-family: var(--pl-mono);
+  font-weight: 500;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+.film-pilot-screen {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 12px;
+  border-radius: 12px;
+  background: var(--pl-screen);
+  border: 1px solid var(--pl-line);
+  font-family: var(--pl-mono);
+}
+.film-pilot-screen-k { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--pl-62); }
+.film-pilot-screen-v { font-size: 13px; font-weight: 500; }
+.film-pilot-screen-next { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.film-pilot-screen-n { font-size: 11.5px; color: var(--pl-80); }
+.film-pilot-pill {
+  font-family: var(--font-poppins), sans-serif;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  padding: 6px 8px;
+  border-radius: 7px;
+  background: var(--pl-fg);
+  color: var(--pl-ink);
+}
+
+.film-pilot-annun { display: grid; grid-template-columns: 1fr 1.35fr 1fr; gap: 6px; }
+.film-pilot-annun span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 28px;
+  padding: 3px 6px;
+  border-radius: 8px;
+  font-size: 9.5px;
+  line-height: 1.2;
+  letter-spacing: 0.12em;
+  font-weight: 600;
+  text-transform: uppercase;
+  border: 1px solid color-mix(in srgb, var(--pl-fg) 12%, transparent);
+  color: var(--pl-dim);
+}
+.film-pilot[data-status="running"] .film-pilot-annun [data-of="running"],
+.film-pilot[data-status="waiting"] .film-pilot-annun [data-of="waiting"],
+.film-pilot[data-status="done"] .film-pilot-annun [data-of="done"] {
+  background: var(--pl-fg);
+  border-color: transparent;
+  color: var(--pl-ink);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--pl-fg) 25%, transparent);
+}
+
+.film-pilot-cap { display: flex; flex-direction: column; gap: 6px; }
+.film-pilot-cap-top { display: flex; justify-content: space-between; align-items: baseline; }
+.film-pilot-fuel { display: grid; grid-template-columns: repeat(20, minmax(0, 1fr)); gap: 3px; }
+.film-pilot-fuel i { height: 8px; border-radius: 2px; background: color-mix(in srgb, var(--pl-fg) 8%, transparent); }
+.film-pilot-fuel i[data-on] { background: var(--pl-fg); }
+.film-pilot-fuel-scale { display: flex; justify-content: space-between; font-family: var(--pl-mono); font-size: 9.5px; color: var(--pl-dim); }
+
+.film-pilot-board { display: flex; flex-direction: column; gap: 6px; }
+.film-pilot-rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+.film-pilot-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 10px;
+  border-radius: 9px;
+  background: var(--pl-fill);
+  perspective: 400px;
+}
+.film-pilot-row[data-skipped] { opacity: 0.55; }
+.film-pilot-row-name { font-size: 12.5px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.film-pilot-chip {
+  flex: none;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 7px;
+  transform-origin: 50% 50%;
+  background: var(--pl-fill-2);
+  color: var(--pl-90);
+  border: 1px solid transparent;
+}
+.film-pilot-chip[data-stage="demo"] { background: var(--pl-fg); color: var(--pl-ink); }
+.film-pilot-chip[data-stage="discarded"] { background: transparent; border: 1px dashed color-mix(in srgb, var(--pl-fg) 30%, transparent); color: var(--pl-62); }
+
+.film-pilot-phases { flex: 1; min-height: 0; }
+.film-pilot-phase { display: flex; flex-direction: column; gap: 7px; }
+.film-pilot:not([data-phase="log"]) [data-phase-of="log"],
+.film-pilot:not([data-phase="lot"]) [data-phase-of="lot"],
+.film-pilot:not([data-phase="sent"]) [data-phase-of="sent"] { display: none; }
+.film-pilot-log { font-size: 12px; color: color-mix(in srgb, var(--pl-fg) 72%, transparent); }
+.film-pilot-lot { gap: 5px; padding: 10px 12px; border-radius: 16px; border: 1px solid var(--pl-line-3); background: color-mix(in srgb, var(--pl-fg) 4%, transparent); }
+.film-pilot-lot-title { font-size: 13px; font-weight: 600; }
+.film-pilot-lot-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.film-pilot-lot-list li { display: flex; align-items: center; gap: 9px; font-size: 12px; }
+.film-pilot-box { position: relative; width: 15px; height: 15px; flex: none; box-sizing: border-box; border-radius: 4px; border: 1.5px solid var(--pl-fg); }
+.film-pilot-lot-list li[data-on] .film-pilot-box { background: var(--pl-fg); }
+.film-pilot-lot-list li[data-on] .film-pilot-box::after {
+  content: "";
+  position: absolute;
+  left: 3.5px;
+  top: 0.5px;
+  width: 4px;
+  height: 8px;
+  border: solid var(--pl-ink);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+.film-pilot-lot-actions { display: flex; align-items: center; gap: 10px; margin-top: 2px; font-size: 11.5px; }
+.film-pilot-approve {
+  display: inline-block;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--pl-fg);
+  color: var(--pl-ink);
+}
+.film-pilot-runnow { font-size: 11px; color: var(--pl-dim); }
+.film-pilot-runnow-k { font-size: 11.5px; font-weight: 600; margin-right: 2px; }
+.film-pilot-sent { font-size: 12.5px; font-weight: 600; }
+.film-pilot-channels { display: flex; gap: 6px; flex-wrap: wrap; }
+.film-pilot-channel { font-size: 11.5px; padding: 5px 10px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--pl-fg) 18%, transparent); color: var(--pl-62); }
+.film-pilot-channel[data-on] { background: var(--pl-fg); border-color: transparent; color: var(--pl-ink); }
+.film-pilot-foot { font-size: 11.5px; color: var(--pl-dim); }
+
+/* Portátiles de poca altura: la escena mide 888 px (barra 88 + cabina 784 +
+   16) y baja un escalón para caber y fijarse. El zoom también encoge el
+   relleno de arriba, pero la barra del sitio no cambia: se compensa (88 / zoom).
+   Nunca por debajo de 0,82; si aun así no cabe (1280 × 720), va sin pin. */
+@media (min-width: 1024px) and (max-height: 870px) {
+  .film-pilot-layout { zoom: 0.94; padding-top: 94px; }
+}
+@media (min-width: 1024px) and (max-height: 823px) {
+  .film-pilot-layout { zoom: 0.88; padding-top: 100px; }
+}
+@media (min-width: 1024px) and (max-height: 776px) {
+  .film-pilot-layout { zoom: 0.82; padding-top: 107px; }
+}
+
+/* ── móvil: no se fija; titular, franja del mapa de 430 px y cabina compacta ── */
+@media (max-width: 1023px) {
+  .film-scene.film-pilot {
+    /* (170, 250) de la franja de 390 × 430. */
+    --fx: 43.59%;
+    --fy: 58.14%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    padding-block: 88px;
+  }
+  .film-pilot-desk { display: none !important; }
+  .film-pilot .film-pilot-mob { display: revert; }
+  .film-pilot-layout, .film-pilot-left { display: contents; }
+  .film-pilot-head { order: 1; padding: 0 16px; gap: 12px; }
+  .film-pilot-title { font-size: 38px; line-height: 1.04; }
+  .film-pilot-lead { font-size: 14px; line-height: 1.55; }
+  .film-pilot-results, .film-pilot-principle { display: none; }
+  .film-pilot-map { position: relative; inset: auto; order: 2; height: 430px; margin-top: 12px; }
+  .film-pilot-veil { background: linear-gradient(180deg, var(--pl-ink), transparent 16%, transparent 82%, var(--pl-ink)); }
+  .film-pilot-fix { left: -7px; top: -8px; width: 14px; height: 12px; }
+  .film-pilot-fix-tag { left: 10px; top: 4px; font-size: 9px; }
+  .film-pilot-fix-name { display: none; }
+  .film-pilot-zone-tag { left: -60px; top: -6px; font-size: 9px; }
+  .film-pilot-craft { left: -12px; top: -12px; width: 24px; height: 24px; }
+
+  .film-pilot-cockpit { order: 3; height: auto; margin: 12px 16px 0; padding: 16px; border-radius: 22px; gap: 12px; }
+  @media (min-width: 552px) { .film-pilot-cockpit { margin-inline: auto; width: calc(100% - 32px); max-width: 520px; } }
+  .film-pilot-rows .film-pilot-row:nth-child(n + 4) { display: none; }
+  .film-pilot-row { padding: 8px 10px; border-radius: 10px; }
+  .film-pilot-cap-top .film-pilot-k { font-size: 9.5px; }
+  /* El botón reserva su sitio siempre: la cabina no cambia de alto al hacer scroll. */
+  .film-pilot .film-pilot-approve-mob { display: block; text-align: center; font-size: 14px; padding: 13px; visibility: hidden; }
+  .film-pilot[data-phase="lot"] .film-pilot-approve-mob { visibility: visible; }
+}

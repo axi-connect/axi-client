@@ -13,8 +13,13 @@
  */
 import type { FilmNiche } from "./niches";
 
-/** El interruptor de la escena (§19, D11): apagada hasta que el piloto esté en producción. */
-export const FILM_FEATURES = { pilot: false } as const;
+/**
+ * El interruptor de la escena (§19, D11): apagada hasta que el piloto esté en
+ * producción. Lo fija `FILM_PILOT` en tiempo de build (`next.config.ts`, `env`);
+ * sin él, apagada. `FilmPage` compara el mismo literal para que webpack
+ * descarte la escena entera (CSS y fuente incluidos) cuando está apagada.
+ */
+export const FILM_FEATURES = { pilot: process.env.FILM_PILOT === "1" } as const;
 
 /** Las etapas de una cuenta, como las nombra la UI del piloto. */
 export const PILOT_STAGES = {
@@ -104,53 +109,48 @@ export type PilotNicheContent = {
   target: string;
   /** Las cinco cuentas del tablero, en orden. Nombres genéricos: ninguno coincide con una empresa real (salvo los del Radar aprobado). */
   accounts: readonly [string, string, string, string, string];
-  /** Cuáles van marcadas en el lote. La que no, se omite y termina en «Descartado». */
-  lot: readonly [boolean, boolean, boolean, boolean, boolean];
   /** Quién decide en la primera cuenta (fijo 3). */
   decisor: { initials: string; name: string; role: string };
-  /** La ejecución del día: lo que muestran los relojes y el tope. */
-  run: { found: number; qualified: number; cap: number };
   /** El embudo del mes de la ficha, en el orden de `PILOT_COPY.results.stages`. Solo conteos. */
   funnel: readonly [number, number, number, number, number];
 };
 
-const RUN = { found: 25, qualified: 9, cap: 40 } as const;
+/**
+ * La ejecución del día, igual en los cuatro nichos (la cabina se pinta una sola
+ * vez): lo que muestran los relojes y el tope.
+ */
+export const PILOT_RUN = { found: 25, qualified: 9, cap: 40 } as const;
+
+/** Cuáles van marcadas en el lote. La que no, se omite y termina en «Descartado». */
+export const PILOT_LOT: readonly boolean[] = [true, true, true, true, false];
+
 const FUNNEL = [120, 46, 32, 11, 4] as const;
-const LOT = [true, true, true, true, false] as const;
 
 export const PILOT_CONTENT: Readonly<Record<FilmNiche, PilotNicheContent>> = {
   restaurants: {
     target: "Empresas cercanas para almuerzos corporativos",
     accounts: ["Grupo Sol", "Seguros del Parque", "Notaría 21", "Constructora Norte", "Oficinas Calle 93"],
-    lot: LOT,
     // Andrea Ruiz es la de los «30 almuerzos confirmados» de la llamada.
     decisor: { initials: "AR", name: "Andrea Ruiz", role: "Jefa administrativa · decide" },
-    run: RUN,
     funnel: FUNNEL,
   },
   tech: {
     target: "Empresas que renuevan equipos",
     accounts: ["Contadores del Centro", "Logística del Sur", "Inmobiliaria Los Robles", "Estudio de Diseño 45", "Abogados Calle 10"],
-    lot: LOT,
     decisor: { initials: "CM", name: "Carolina Mejía", role: "Gerente administrativa · decide" },
-    run: RUN,
     funnel: FUNNEL,
   },
   beauty: {
     target: "Empresas con plan de bienestar para su equipo",
     accounts: ["Transportes del Valle", "Editorial Brisa", "Contact Center del Norte", "Fondo de Empleados Calle 80", "Distribuidora La Esquina"],
-    lot: LOT,
     decisor: { initials: "JT", name: "Juliana Torres", role: "Directora de talento humano · decide" },
-    run: RUN,
     funnel: FUNNEL,
   },
   b2b: {
     target: "Tu cliente ideal",
     accounts: ["Clínica Santa Fe", "Consultorio Dental Norte", "Laboratorio del Parque", "Centro Médico 93", "Fisioterapia Calle 50"],
-    lot: LOT,
     // El decisor del Radar en B2B.
     decisor: { initials: "MR", name: "Marta Restrepo", role: "Directora de compras · decide" },
-    run: RUN,
     funnel: FUNNEL,
   },
 };

@@ -23,6 +23,8 @@ import {
   PILOT_ANNUNCIATORS,
   PILOT_CONTENT,
   PILOT_COPY,
+  PILOT_LOT,
+  PILOT_RUN,
   PILOT_STAGES,
   PILOT_STATUS,
   lotCounts,
@@ -30,7 +32,7 @@ import {
 import { PILOT_BOARD, boardRow, capSegments, dial, pilotCamera, pilotFrame, planeAt } from "../pilot-frame"
 
 const close = (a: number, b: number, eps = 0.5) => Math.abs(a - b) <= eps
-const run = (n: (typeof FILM_NICHES)[number]) => ({ ...PILOT_CONTENT[n].run, approved: lotCounts(PILOT_CONTENT[n].lot).approved })
+const RUN = { ...PILOT_RUN, approved: lotCounts(PILOT_LOT).approved }
 
 describe("la aerovía", () => {
   it("sale de la torre, pasa por cada punto de control y llega al aeropuerto", () => {
@@ -131,7 +133,7 @@ describe("el vuelo", () => {
 
   it("el avión va en el foco: la cámara lo sigue y su marca cae donde el plano lo pinta", () => {
     for (const p of [0.2, 0.4, 0.75]) {
-      const fr = pilotFrame(p, run("b2b"))
+      const fr = pilotFrame(p, RUN)
       expect(close(fr.marks.plane.x, 0, 1e-6) && close(fr.marks.plane.y, 0, 1e-6)).toBe(true)
       const fix = project(fr.cam, flightPointAt(FLIGHT_FIXES[0]))
       expect(fr.marks.fixes[0]).toEqual(fix)
@@ -139,30 +141,30 @@ describe("el vuelo", () => {
   })
 
   it("los fijos se encienden al pasar y la pantalla de ruta va un paso por delante", () => {
-    const start = pilotFrame(0.05, run("b2b"))
+    const start = pilotFrame(0.05, RUN)
     expect(start.lit.every((l) => !l)).toBe(true)
     expect([start.step, start.next]).toEqual([0, 1])
-    const end = pilotFrame(1, run("b2b"))
+    const end = pilotFrame(1, RUN)
     expect(end.lit.every(Boolean)).toBe(true)
     expect([end.step, end.next]).toEqual([5, null])
   })
 
   it("el estado usa el vocabulario de la UI: lista → en ejecución → espera → en ejecución → terminada", () => {
-    const seq = [0.05, 0.3, 0.58, 0.7, 0.95].map((p) => pilotFrame(p, run("b2b")).status)
+    const seq = [0.05, 0.3, 0.58, 0.7, 0.95].map((p) => pilotFrame(p, RUN).status)
     expect(seq).toEqual(["ready", "running", "waiting", "running", "done"])
     expect(PILOT_ANNUNCIATORS.map((s) => PILOT_STATUS[s])).toEqual(["En ejecución", "Espera tu aprobación", "Terminada"])
   })
 
   it("la cabina pasa de la bitácora al lote y del lote a los canales", () => {
-    expect(pilotFrame(0.4, run("b2b")).phase).toBe("log")
-    expect(pilotFrame(0.6, run("b2b")).phase).toBe("lot")
-    const sent = pilotFrame(0.8, run("b2b"))
+    expect(pilotFrame(0.4, RUN).phase).toBe("log")
+    expect(pilotFrame(0.6, RUN).phase).toBe("lot")
+    const sent = pilotFrame(0.8, RUN)
     expect(sent.phase).toBe("sent")
     expect(sent.channels).toBe(PILOT_COPY.cockpit.channels.length)
   })
 
   it("el fotograma final (servidor y movimiento reducido) es el aterrizaje completo", () => {
-    const fr = pilotFrame(1, run("b2b"))
+    const fr = pilotFrame(1, RUN)
     expect([fr.done, fr.status, fr.airportLit, fr.results, fr.funnel, fr.tune]).toEqual([1, "done", true, 1, 1, 1])
     expect([fr.found, fr.qualified, fr.contacted]).toEqual([25, 9, 4])
     expect(fr.board.map((r) => [r.stage, r.flip])).toEqual([
@@ -201,15 +203,15 @@ describe("el guion por nicho", () => {
 
   it.each(FILM_NICHES)("%s: las cifras cuadran y no hay porcentajes", (n) => {
     const c = PILOT_CONTENT[n]
-    const { approved, skipped } = lotCounts(c.lot)
+    const { approved, skipped } = lotCounts(PILOT_LOT)
     expect(new Set(c.accounts).size).toBe(5)
-    expect(c.lot).toHaveLength(c.accounts.length)
+    expect(PILOT_LOT).toHaveLength(c.accounts.length)
     expect(approved + skipped).toBe(c.accounts.length)
     // La ejecución del día: encontró ≥ calificó ≥ las cuentas del lote ≥ contactó, y el tope por encima.
-    expect(c.run.found).toBeGreaterThanOrEqual(c.run.qualified)
-    expect(c.run.qualified).toBeGreaterThanOrEqual(c.accounts.length)
-    expect(c.run.cap).toBeGreaterThanOrEqual(approved)
-    expect(c.run.found).toBeLessThanOrEqual(25)
+    expect(PILOT_RUN.found).toBeGreaterThanOrEqual(PILOT_RUN.qualified)
+    expect(PILOT_RUN.qualified).toBeGreaterThanOrEqual(c.accounts.length)
+    expect(PILOT_RUN.cap).toBeGreaterThanOrEqual(approved)
+    expect(PILOT_RUN.found).toBeLessThanOrEqual(25)
     // El embudo del mes: encontradas ≥ calificadas ≥ contactadas ≥ respondieron ≥ demos > 0.
     c.funnel.forEach((v, i) => i && expect(v).toBeLessThanOrEqual(c.funnel[i - 1]))
     expect(c.funnel[4]).toBeGreaterThan(0)
@@ -217,9 +219,10 @@ describe("el guion por nicho", () => {
     expect(text).not.toMatch(/%/)
   })
 
-  it.each(FILM_NICHES)("%s: la cuenta que se omite del lote es la que termina en «Descartado», y solo ella", (n) => {
-    const final = pilotFrame(1, run(n)).board
-    PILOT_CONTENT[n].lot.forEach((on, i) => expect(final[i].stage === "discarded").toBe(!on))
+  // El lote y el tablero son los mismos en los cuatro nichos (cambian los nombres).
+  it("la cuenta que se omite del lote es la que termina en «Descartado», y solo ella", () => {
+    const final = pilotFrame(1, RUN).board
+    PILOT_LOT.forEach((on, i) => expect(final[i].stage === "discarded").toBe(!on))
     expect(final[0].stage).toBe("demo")
   })
 
@@ -233,7 +236,7 @@ describe("el guion por nicho", () => {
     // Las frases con cifra son funciones: JSON.stringify no las ve, así que se pintan aquí.
     const c = PILOT_COPY.cockpit
     const rendered = [c.step(3, 6), c.approveOne("X"), c.approve(4), c.skipped(1), c.sent(4)]
-    const all = JSON.stringify({ PILOT_COPY, PILOT_CONTENT, PILOT_STAGES, PILOT_STATUS, rendered })
+    const all = JSON.stringify({ PILOT_COPY, PILOT_CONTENT, PILOT_RUN, PILOT_STAGES, PILOT_STATUS, rendered })
     expect(all).not.toMatch(/whatsapp|instagram|linkedin|2300|cumple|apollo|cr[ée]dito|garantiza|%/i)
     expect(PILOT_COPY.cockpit.channels).toEqual(["Correo", "Llamada del agente", "SMS"])
     expect(PILOT_COPY.zone.passed).toContain("Registro de Números Excluidos")
