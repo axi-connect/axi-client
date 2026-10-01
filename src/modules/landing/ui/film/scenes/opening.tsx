@@ -59,7 +59,7 @@ export function HeroScene() {
             href={salesWhatsAppUrl(WA_MESSAGES.hero)}
             target="_blank"
             rel="noopener noreferrer"
-            className="group inline-flex items-center gap-1.5 text-sm font-medium text-[color-mix(in_srgb,var(--foreground)_78%,transparent)] transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            className="group inline-flex items-center gap-1.5 text-sm font-medium text-[color-mix(in_srgb,var(--foreground)_78%,transparent)] transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
           >
             <MessageCircle className="size-4" aria-hidden="true" />
             Habla con nuestro agente

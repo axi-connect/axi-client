@@ -20,7 +20,7 @@ export function FilmCta({ children, className, size = "lg" }: { children: ReactN
       className={cn(
         "inline-flex items-center justify-center gap-2 rounded-xl bg-primary font-semibold text-primary-foreground whitespace-nowrap",
         "shadow-[0_18px_50px_color-mix(in_srgb,var(--axi-brand)_32%,transparent)] transition-[transform,background-color] duration-150 active:scale-[.97]",
-        "hover:bg-[color-mix(in_srgb,var(--axi-brand)_88%,white)] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none",
+        "hover:bg-[color-mix(in_srgb,var(--axi-brand)_88%,white)] focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none",
         size === "lg" ? "h-[54px] px-7 text-base" : "h-11 px-5 text-sm",
         className,
       )}

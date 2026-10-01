@@ -65,6 +65,7 @@ const TICKS = ["Captar", "Vender", "Cobrar", "Crecer"] as const;
 export function FilmRoot({ children }: { children: ReactNode }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<Engine | null>(null);
+  const pillRef = useRef<HTMLDivElement>(null);
   const [niche, setNiche] = useState<FilmNiche>(DEFAULT_FILM_NICHE);
   const [started, setStarted] = useState(false);
   const [chapter, setChapter] = useState(-1);
@@ -148,8 +149,22 @@ export function FilmRoot({ children }: { children: ReactNode }) {
         sync();
       }
     };
+    // La píldora del nicho se aparta mientras se baja y vuelve al subir o al
+    // quedar quieto 900 ms. Solo el sentido del scroll, sin medir el DOM; el CSS
+    // decide que pase solo en móvil (film.css, data-hide).
+    let hidden = false;
+    let rest = 0;
+    const setHidden = (on: boolean) => {
+      if (on === hidden) return;
+      hidden = on;
+      pillRef.current?.setAttribute("data-hide", on ? "true" : "false");
+    };
     const onScroll = () => {
-      scrollTop = el.scrollTop;
+      const next = el.scrollTop;
+      if (next !== scrollTop) setHidden(next > scrollTop);
+      window.clearTimeout(rest);
+      rest = window.setTimeout(() => setHidden(false), 900);
+      scrollTop = next;
       if (!frame) frame = requestAnimationFrame(update);
     };
     const onResize = () => {
@@ -187,6 +202,7 @@ export function FilmRoot({ children }: { children: ReactNode }) {
       el.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);
       if (frame) cancelAnimationFrame(frame);
+      window.clearTimeout(rest);
     };
   }, []);
 
@@ -255,7 +271,7 @@ export function FilmRoot({ children }: { children: ReactNode }) {
           <i />
         </div>
 
-        <div className="film-pill" data-on={started}>
+        <div ref={pillRef} className="film-pill" data-on={started}>
           <div className="film-glass flex h-11 items-center gap-2.5 rounded-full py-1 pr-1.5 pl-4 text-[13px]">
             <span className="film-dim max-lg:hidden">Viendo como</span>
             <strong className="font-semibold" aria-live="polite">

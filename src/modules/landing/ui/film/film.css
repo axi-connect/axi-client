@@ -19,7 +19,8 @@
   --film-surface: color-mix(in srgb, var(--foreground) 5%, var(--background));
   --film-surface-2: color-mix(in srgb, var(--foreground) 9%, var(--background));
   --film-muted: color-mix(in srgb, var(--foreground) 64%, transparent);
-  --film-dim: color-mix(in srgb, var(--foreground) 46%, transparent);
+  /* ≥ 47 % para 4,5:1 sobre el fondo (pasada de accesibilidad del 2026-09-30). */
+  --film-dim: color-mix(in srgb, var(--foreground) 50%, transparent);
   position: relative;
   width: 100%;
   background: var(--background);
@@ -195,6 +196,9 @@
 .film-pill[data-on="true"] { transform: translate(-50%, 0); opacity: 1; }
 @media (max-width: 1023px) {
   .film-pill { bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
+  /* En móvil se aparta mientras se baja (tapa contenido) y vuelve al subir o al
+     quedar quieto (FilmRoot, data-hide). Quitarlo es borrar esta regla. */
+  .film-pill[data-on="true"][data-hide="true"] { transform: translate(-50%, 120%); opacity: 0; transition-duration: 0.2s; }
 }
 
 /* Marcas del mapa: las coloca el motor sobre la carretera; sin motor, en su sitio final. */
@@ -576,7 +580,7 @@
   float: right;
   margin: 5px 0 -2px 10px;
   font-size: 9.5px;
-  color: color-mix(in srgb, var(--background) 58%, var(--ph-out));
+  color: color-mix(in srgb, var(--background) 64%, var(--ph-out));
 }
 .film-phone-msg[data-side="in"] .film-phone-meta { color: var(--ph-grey); }
 .film-phone-system {
@@ -675,7 +679,7 @@
   border-radius: 16px;
   border: 1px solid color-mix(in srgb, var(--foreground) 8%, transparent);
   background: color-mix(in srgb, var(--foreground) 6%, transparent);
-  color: color-mix(in srgb, var(--foreground) 36%, transparent);
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
   font-size: 12.5px;
 }
 .film-phone-home { display: grid; flex-shrink: 0; place-items: center; height: 18px; }
@@ -739,7 +743,7 @@
     0 0 0 1px color-mix(in srgb, var(--foreground) 8%, transparent),
     0 50px 100px color-mix(in srgb, var(--background) 75%, transparent);
 }
-.film-receipt-muted { color: color-mix(in srgb, var(--background) 55%, transparent); }
+.film-receipt-muted { color: color-mix(in srgb, var(--background) 62%, transparent); }
 .film-receipt-rule { height: 1px; flex-shrink: 0; background: color-mix(in srgb, var(--background) 14%, transparent); }
 .film-receipt-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 14px; align-items: baseline; }
 .film-receipt-bar { display: flex; gap: 4px; height: 8px; }
@@ -827,7 +831,7 @@
   color: var(--background);
   box-shadow: 0 24px 50px color-mix(in srgb, var(--background) 70%, transparent);
 }
-.film-deal-muted { color: color-mix(in srgb, var(--background) 60%, transparent); }
+.film-deal-muted { color: color-mix(in srgb, var(--background) 62%, transparent); }
 .film-deal-chip {
   display: inline-flex;
   align-items: center;
@@ -972,7 +976,8 @@
 
 /* ------------------------------------------------------- §13 · captar */
 /* Tinta sobre papel claro (fichas, resultado): el texto es --background. */
-.film-ink-muted { color: color-mix(in srgb, var(--background) 58%, transparent); }
+/* Tinta sobre papel claro: ≥ 60 % para 4,5:1. */
+.film-ink-muted { color: color-mix(in srgb, var(--background) 62%, transparent); }
 .film-ink-chip {
   flex-shrink: 0;
   padding: 4px 10px;
@@ -1023,7 +1028,7 @@
 .film-notif[aria-pressed="true"] { --sel: 1; }
 .film-notif::before { content: ""; position: absolute; inset: 0; background: linear-gradient(165deg, var(--foreground), color-mix(in srgb, var(--foreground) 91%, var(--background))); opacity: var(--w); }
 .film-notif:hover { border-color: color-mix(in srgb, var(--foreground) 22%, transparent); }
-.film-notif:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
+.film-notif:focus-visible { outline: 2px solid var(--foreground); outline-offset: 2px; }
 .film-notif-icon {
   display: flex;
   align-items: center;
@@ -1034,7 +1039,7 @@
   background: color-mix(in srgb, var(--background) calc(var(--w) * 100%), var(--foreground));
   color: color-mix(in srgb, var(--foreground) calc(var(--w) * 100%), var(--background));
 }
-.film-notif-dim { opacity: 0.55; }
+.film-notif-dim { opacity: 0.65; }
 @media (max-width: 1023px) {
   .film-notifs { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; perspective: none; }
   .film-notif { min-height: 150px; gap: 8px; padding: 13px; border-radius: 20px; transform: none; opacity: calc(1 - (1 - var(--sel)) * 0.4 * var(--choose)); }
@@ -1114,7 +1119,7 @@
   transform-origin: 50% 0;
 }
 .film-ruler-gap { position: absolute; left: 144px; top: 150px; width: 12px; height: 70px; background: repeating-linear-gradient(180deg, var(--background) 0 5px, transparent 5px 10px); }
-.film-ruler-gap-label { position: absolute; left: 172px; top: 172px; margin: 0; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: color-mix(in srgb, var(--foreground) 40%, transparent); }
+.film-ruler-gap-label { position: absolute; left: 172px; top: 172px; margin: 0; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: color-mix(in srgb, var(--foreground) 50%, transparent); }
 .film-ruler-event { position: absolute; left: 0; right: 0; }
 .film-ruler-when {
   position: absolute;
@@ -1154,4 +1159,23 @@
   .film-ruler-what { position: static; margin-top: 3px; font-size: 13.5px; line-height: 1.4; }
   .film-ruler-event:has(.film-ruler-what:empty), .film-ruler-event:not(:has(.film-ruler-what)) { display: none; }
   .film-ruler-bub { max-width: 100%; font-size: 13px; }
+}
+
+/* Portátiles de poca altura (1024×768, 1366×768, 1280×720): las escenas que se
+   fijan bajan un escalón para caber en la ventana y fijarse. Nunca por debajo
+   de 0,82 (más pequeño se lee mal): si aun así no cabe, va sin pin. */
+@media (min-width: 1024px) and (max-height: 860px) {
+  [data-scene="radar"] > .film-wrap,
+  [data-scene="followup"] > .film-wrap { padding-block: 72px 32px; zoom: 0.94; }
+  [data-scene="call"] > .film-call-layout { zoom: 0.94; }
+}
+@media (min-width: 1024px) and (max-height: 800px) {
+  [data-scene="radar"] > .film-wrap,
+  [data-scene="followup"] > .film-wrap,
+  [data-scene="call"] > .film-call-layout { zoom: 0.88; }
+}
+@media (min-width: 1024px) and (max-height: 740px) {
+  [data-scene="radar"] > .film-wrap,
+  [data-scene="followup"] > .film-wrap,
+  [data-scene="call"] > .film-call-layout { zoom: 0.82; }
 }

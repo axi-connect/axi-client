@@ -59,8 +59,8 @@ function RadarCard({ c }: { c: FilmContent }) {
       </p>
       <div className="flex flex-col gap-[7px] max-lg:hidden">
         {r.axes.map(([name, value]) => (
-          <div key={name} className="grid grid-cols-[minmax(0,1fr)_110px_24px] items-center gap-2.5 text-xs">
-            <span className="film-ink-muted truncate">{name}</span>
+          <div key={name} className="grid grid-cols-[minmax(0,1fr)_clamp(64px,7vw,110px)_24px] items-center gap-2.5 text-xs">
+            <span className="film-ink-muted leading-tight">{name}</span>
             <span className="h-1 rounded-sm bg-[color-mix(in_srgb,var(--background)_10%,transparent)]">
               <span data-anim="axis" className="block h-full origin-left rounded-sm bg-[var(--background)]" style={{ width: `${value}%` }} />
             </span>
