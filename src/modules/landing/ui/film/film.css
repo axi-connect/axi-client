@@ -180,7 +180,8 @@
 @media (max-width: 1023px) {
   .film-rail { display: none; }
   .film-bar {
-    display: block; position: fixed; left: 16px; right: 16px; top: calc(64px + env(safe-area-inset-top, 0px)); height: 2px; z-index: 30;
+    /* Bajo la isla del nav (12 + 54 px, §18.1), no sobre su borde. */
+    display: block; position: fixed; left: 24px; right: 24px; top: calc(74px + env(safe-area-inset-top, 0px)); height: 2px; z-index: 30;
     border-radius: 2px; background: var(--film-line); pointer-events: none;
   }
   .film-bar i {

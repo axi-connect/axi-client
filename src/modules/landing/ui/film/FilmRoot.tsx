@@ -67,6 +67,11 @@ export function FilmRoot({ children }: { children: ReactNode }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<Engine | null>(null);
   const pillRef = useRef<HTMLDivElement>(null);
+  // El avance se escribe en el riel y en la barra de móvil, no en el raíz: una
+  // variable cambiada en el raíz invalida el estilo de TODA la película en cada
+  // frame (perfil del 2026-10-01: segundos de «Recalculate style» por escena).
+  const railRef = useRef<HTMLDivElement>(null);
+  const barRef = useRef<HTMLDivElement>(null);
   const [niche, setNiche] = useState<FilmNiche>(DEFAULT_FILM_NICHE);
   const [started, setStarted] = useState(false);
   const [chapter, setChapter] = useState(-1);
@@ -158,7 +163,9 @@ export function FilmRoot({ children }: { children: ReactNode }) {
       const into = scrollTop - filmTop;
       const span = Math.max(1, filmHeight - viewHeight);
       const progress = Math.min(1, Math.max(0, into / span));
-      root.style.setProperty("--film-progress", progress.toFixed(4));
+      const p = progress.toFixed(4);
+      railRef.current?.style.setProperty("--film-progress", p);
+      barRef.current?.style.setProperty("--film-progress", p);
       // Capítulo actual: el último cuya escena ya cruzó el 60 % de la ventana.
       let current = -1;
       chapterTops.forEach((t, i) => {
@@ -307,7 +314,7 @@ export function FilmRoot({ children }: { children: ReactNode }) {
       <div ref={rootRef} className="film dark theme-dark-island" data-niche={niche} data-film="">
         {children}
 
-        <div className="film-rail" data-on={started} aria-hidden="true">
+        <div ref={railRef} className="film-rail" data-on={started} aria-hidden="true">
           <div className="track" />
           <div className="lit" />
           <div className="dot" />
@@ -318,7 +325,7 @@ export function FilmRoot({ children }: { children: ReactNode }) {
             </div>
           ))}
         </div>
-        <div className="film-bar" aria-hidden="true">
+        <div ref={barRef} className="film-bar" aria-hidden="true">
           <i />
         </div>
 
