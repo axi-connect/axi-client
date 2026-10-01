@@ -125,8 +125,14 @@ export const PACE = 0.8;
 
 export const reveal = { opacity: 0, y: 24 };
 
-/** Las escenas que se fijan: donde la animación ES el mensaje. */
-export const PINNED = new Set(["philosophy", "radar", "pilot", "followup", "chat", "goal", "axel", "measure"]);
+/**
+ * Las escenas que se fijan (en escritorio, si caben): toda escena con una
+ * animación que contar. La dueña, 2026-10-02: «si es necesario esperar y
+ * detenerse un momento para ir ejecutando la animación… da la sensación de que
+ * es más guiado». Sin fijar, la animación empezaba con la escena apenas asomando
+ * y terminaba a media pantalla.
+ */
+export const PINNED = new Set(["philosophy", "radar", "pilot", "followup", "chat", "photo", "vault", "team", "collect", "pipeline", "goal", "axel", "measure"]);
 
 /**
  * Una línea de tiempo de escena: fijada si cabe, revelada al pasar si no.
@@ -194,8 +200,14 @@ export const easeOut3 = (t: number) => 1 - Math.pow(1 - t, 3);
  * 2026-09-30: con «bottom 62%» el sello, la cita o la cifra llegaban cuando la
  * escena ya se iba bajo la cabecera).
  */
-export const PASS_DESKTOP: Pass = { start: "top 85%", end: "center 50%" };
-export const PASS_MOBILE: Pass = { start: "top 80%", end: "bottom 95%" };
+/*
+ * Y la animación corre mientras la escena ya se ve (dueña, 2026-10-02): con
+ * «top 85 %» arrancaba con la escena apenas asomando, y en móvil «bottom 95 %»
+ * la terminaba cuando ya casi se iba. Ahora empieza con la escena a media
+ * pantalla y acaba con ella entera a la vista.
+ */
+export const PASS_DESKTOP: Pass = { start: "top 55%", end: "top top" };
+export const PASS_MOBILE: Pass = { start: "top 55%", end: "center 45%" };
 
 export function spanTimeline(section: HTMLElement, ctx: Ctx, length: number, pass?: Pass) {
   const tl = sceneTimeline(section, ctx, length, pass ?? (ctx.desktop ? PASS_DESKTOP : PASS_MOBILE));

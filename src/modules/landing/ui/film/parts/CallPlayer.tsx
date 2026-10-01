@@ -147,6 +147,7 @@ export function CallPlayer() {
     let done = false;
     let progress = 0;
     let frame = 0;
+    let unlocked = false;
 
     /** Pinta el estado discreto (quién habla, palabras, notas, etapas, reloj). */
     const paint = (t: number) => {
@@ -171,7 +172,8 @@ export function CallPlayer() {
       const text = done ? CALL_COPY.status.done : !playing ? CALL_COPY.status.paused : track ? CALL_COPY.status.axi : CALL_COPY.status.client;
       for (const s of status) s.firstChild!.textContent = `${text} · `;
       glyph?.setAttribute("d", playing ? GLYPH.pause : done ? GLYPH.again : GLYPH.play);
-      pearl.setAttribute("aria-label", playing ? CALL_COPY.pause : done ? CALL_COPY.again : CALL_COPY.play);
+      // Un solo anuncio: el estado lo dice aria-pressed; la etiqueta solo cambia al terminar.
+      pearl.setAttribute("aria-label", done ? CALL_COPY.again : CALL_COPY.play);
       pearl.setAttribute("aria-pressed", String(playing));
     };
 
@@ -252,14 +254,39 @@ export function CallPlayer() {
       }
       playing = true;
       paint(CALL_START[track] + audio[track].currentTime);
-      void audio[track].play();
+      start(audio[track]);
+      // iOS solo deja sonar lo que arrancó un gesto: la 2.ª pista se desbloquea ya,
+      // en silencio, para que el «ended» de la 1.ª pueda encadenarla.
+      if (!unlocked) {
+        unlocked = true;
+        a1.muted = true;
+        a1.play().then(() => {
+          if (track === 0) a1.pause();
+          a1.currentTime = 0;
+          a1.muted = false;
+        }, () => {
+          a1.muted = false;
+        });
+      }
+    };
+
+    /** Reproduce y, si el navegador no deja (red, política de audio), vuelve a «Lista» sin dejar el bucle girando. */
+    const start = (a: HTMLAudioElement) => {
       loop();
+      a.play().catch(fail);
+    };
+    const fail = () => {
+      if (!playing) return;
+      playing = false;
+      stop(false);
+      paint(Math.min(CALL_TOTAL, CALL_START[track] + audio[track].currentTime));
     };
 
     const ended0 = () => {
       track = 1;
       a1.currentTime = 0;
-      void a1.play();
+      a1.muted = false;
+      start(a1);
     };
     const ended1 = () => {
       playing = false;
@@ -276,6 +303,7 @@ export function CallPlayer() {
     pearl.addEventListener("click", toggle);
     a0.addEventListener("ended", ended0);
     a1.addEventListener("ended", ended1);
+    for (const a of audio) a.addEventListener("error", fail);
     // Fuera de pantalla o de la pestaña, la llamada se pausa (y el bucle se va con ella).
     const io = new IntersectionObserver(([entry]) => {
       if (!entry.isIntersecting) pause();
@@ -289,6 +317,7 @@ export function CallPlayer() {
       pearl.removeEventListener("click", toggle);
       a0.removeEventListener("ended", ended0);
       a1.removeEventListener("ended", ended1);
+      for (const a of audio) a.removeEventListener("error", fail);
       io.disconnect();
       document.removeEventListener("visibilitychange", onHide);
       for (const a of audio) a.pause();

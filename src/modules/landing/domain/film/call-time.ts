@@ -25,6 +25,7 @@ export const CALL_COPY = {
   live: "Llamada entrante",
   sample: "audio de ejemplo",
   notes: "Lo que Axi anota",
+  transcript: "Transcripción de la llamada de ejemplo",
   intro: "Alguien vio un reel y llama a preguntar por unas gafas. Toca la esfera y escucha cómo contesta Axi.",
   timeline: "Línea de tiempo de la llamada",
   play: "Escuchar la llamada",

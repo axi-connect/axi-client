@@ -6,6 +6,7 @@ import {
   CALL_COPY,
   CALL_NOTES,
   CALL_PEAKS,
+  CALL_PHRASES,
   CALL_STAGES,
   CALL_TOTAL,
   CALL_TRACKS,
@@ -203,9 +204,18 @@ export function CallScene() {
         </div>
 
         <div className="film-call-cap" data-pill-avoid="always">
+          {/* La transcripción entera para lectores de pantalla; lo visible se enciende palabra a palabra. */}
+          <div className="sr-only">
+            <p>{CALL_COPY.transcript}</p>
+            {CALL_TRACKS.map((tr, track) => (
+              <p key={tr.who}>
+                {tr.who}: {CALL_PHRASES[track].map(([, , text]) => text).join(" ")}
+              </p>
+            ))}
+          </div>
           <p className="film-call-intro">{CALL_COPY.intro}</p>
           {CALL_TRACKS.map((tr, track) => (
-            <div key={tr.who} className="film-call-line" data-call-track={track}>
+            <div key={tr.who} className="film-call-line" data-call-track={track} aria-hidden="true">
               <span className="film-call-who">
                 {track ? (
                   <span className="film-call-avatar film-call-avatar-axi" aria-hidden="true">
