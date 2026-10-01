@@ -44,8 +44,8 @@ export type SiteNavCard = {
 
 /**
  * Los tres menús por intención del nav en isla (lienzo aprobado el 2026-09-30).
- * Cada intención es un pilar de «Vendemos progreso» y una cinta del isotipo,
- * con su color: coral, ámbar y violeta. Las tarjetas son las del lienzo con los
+ * Cada intención lleva su pilar (lo que promete) y una cinta del isotipo, con
+ * su color: coral, ámbar y violeta. Las tarjetas son las del lienzo con los
  * `href` reales del sitio (la REGLA DURA de arriba: el lienzo traía «/#medicion»,
  * que no existe; es «/#medir»).
  */

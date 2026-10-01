@@ -2,14 +2,14 @@
  * La isla cliente de la película: el nicho decide qué variante se ve y viaja
  * en el CTA. El motor de animación no se carga con movimiento reducido.
  */
-import { fireEvent, render, screen } from "@testing-library/react"
+import { act, fireEvent, render, screen } from "@testing-library/react"
 
 const track = jest.fn()
 jest.mock("@/core/analytics/track", () => ({ track: (...a: unknown[]) => track(...a) }))
 const startFilm = jest.fn(() => ({ stop: jest.fn(), scrollTo: jest.fn() }))
 jest.mock("../engine/film-engine", () => ({ startFilm: (...a: unknown[]) => startFilm(...(a as [])) }))
 
-import { FilmRoot } from "../FilmRoot"
+import { ENGINE_REST_MS, FilmRoot } from "../FilmRoot"
 import { FilmCta } from "../parts/FilmCta"
 import { NicheChoice } from "../parts/NicheChoice"
 
@@ -83,6 +83,38 @@ it("sin movimiento reducido el motor no se evalúa en la carga: arranca con la p
   fireEvent.wheel(window)
   await new Promise((r) => setTimeout(r, 50))
   expect(startFilm).toHaveBeenCalledTimes(1)
+})
+
+it("sin intención, el motor espera 2,5 s de reposo tras la carga y después el primer hueco (M5)", async () => {
+  setReducedMotion(false)
+  jest.useFakeTimers()
+  try {
+    const ric = jest.fn((cb: IdleRequestCallback) => {
+      setTimeout(() => cb({ didTimeout: false, timeRemaining: () => 50 } as IdleDeadline), 0)
+      return 7
+    })
+    window.requestIdleCallback = ric as unknown as typeof window.requestIdleCallback
+    render(<Film />)
+    // Signo 1: justo antes del reposo, ni se pidió el hueco ni arrancó.
+    await act(async () => {
+      jest.advanceTimersByTime(ENGINE_REST_MS - 10)
+    })
+    expect(ric).not.toHaveBeenCalled()
+    expect(startFilm).not.toHaveBeenCalled()
+    // Signo 2: cumplido el reposo, con el primer hueco arranca.
+    await act(async () => {
+      jest.advanceTimersByTime(20)
+    })
+    expect(ric).toHaveBeenCalledWith(expect.any(Function), { timeout: 1000 })
+    await act(async () => {
+      jest.runOnlyPendingTimers()
+    })
+    jest.useRealTimers()
+    await new Promise((r) => setTimeout(r, 50))
+    expect(startFilm).toHaveBeenCalledTimes(1)
+  } finally {
+    jest.useRealTimers()
+  }
 })
 
 it("si la página llega con un ancla, el motor arranca en el acto (M1: realinea al terminar)", async () => {

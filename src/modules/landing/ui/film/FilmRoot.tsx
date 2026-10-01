@@ -66,6 +66,9 @@ function scroller(): HTMLElement | null {
 
 const TICKS = ["Captar", "Vender", "Cobrar", "Crecer"] as const;
 
+/** Reposo mínimo tras `load` antes de que el motor arranque solo (sin intención). */
+export const ENGINE_REST_MS = 2500;
+
 /**
  * La píldora fuera de la vista sale del teclado (`inert`): antes de aparecer,
  * apartada en móvil (data-hide solo actúa ahí) o cediendo el sitio en
@@ -165,7 +168,7 @@ export function FilmRoot({ children }: { children: ReactNode }) {
     const after = root.querySelector<HTMLElement>('[data-scene="pricing"]');
     let afterTop = Infinity;
     // La píldora del nicho y el riel aparecen desde «¿Quién te escribe hoy?»:
-    // antes (hero, «Vendemos progreso») no hay nicho que cambiar ni capítulo.
+    // antes (hero y video) no hay nicho que cambiar ni capítulo.
     const niche = root.querySelector<HTMLElement>('[data-scene="niche"]');
     let nicheTop = Infinity;
     // Dónde empieza la película en el scroll y cuánto mide: se miden al cambiar
@@ -390,9 +393,6 @@ export function FilmRoot({ children }: { children: ReactNode }) {
     const start = () => {
       void import(/* webpackPrefetch: true */ "./engine/film-engine").then(({ startFilm }) => {
         if (cancelled || !rootRef.current) return;
-        // Antes de que el motor mida: las escenas con presentación propia para el
-        // motor (la pista de «Vendemos progreso») la activan con este atributo.
-        rootRef.current.setAttribute("data-motion", "on");
         engineRef.current = startFilm(rootRef.current, { moved: () => moved });
       });
     };
@@ -405,7 +405,7 @@ export function FilmRoot({ children }: { children: ReactNode }) {
     //   arriba abajo, así la escena que asoma ya está montada cuando llega;
     // - en el acto si la página llega con un ancla o con el scroll ya
     //   restaurado (M1: el motor realinea el ancla al terminar);
-    // - un rato de reposo tras `load`, con tope de 3 s.
+    // - 2,5 s de reposo tras `load` y el primer hueco libre después (tope de 1 s).
     // El chunk se precarga (`webpackPrefetch`) para no esperar a la red al
     // primer giro de rueda. Antes arrancaba justo tras el primer pintado.
     const scroller = document.querySelector<HTMLElement>("[data-app-scroll]");
@@ -430,9 +430,15 @@ export function FilmRoot({ children }: { children: ReactNode }) {
     const hashed = Boolean(window.location.hash);
     if (hashed) for (const ev of INTENTS) window.addEventListener(ev, onMove, { capture: true, passive: true });
     scroller?.addEventListener("scroll", onScroll, { passive: true });
+    // requestIdleCallback solo no esperaba nada: con el cielo a 30 fps hay hueco
+    // en cada frame y el motor entraba justo tras `load`, dentro de la ventana
+    // de TBT (ronda 2, R3). Ahora: 2,5 s de reposo y después el primer hueco.
     const whenIdle = () => {
-      if (typeof window.requestIdleCallback === "function") idle = window.requestIdleCallback(go, { timeout: 3000 });
-      else timer = window.setTimeout(go, 3000);
+      timer = window.setTimeout(() => {
+        timer = 0;
+        if (typeof window.requestIdleCallback === "function") idle = window.requestIdleCallback(go, { timeout: 1000 });
+        else go();
+      }, ENGINE_REST_MS);
     };
     if (window.location.hash || (scroller && scroller.scrollTop > 0)) go();
     else if (document.readyState === "complete") whenIdle();
@@ -447,7 +453,6 @@ export function FilmRoot({ children }: { children: ReactNode }) {
       if (timer) window.clearTimeout(timer);
       engineRef.current?.stop();
       engineRef.current = null;
-      root.removeAttribute("data-motion");
     };
   }, []);
 
