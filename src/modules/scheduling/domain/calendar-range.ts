@@ -51,8 +51,11 @@ export function rangeForView(
     }
   }
 
-  const fromUtc = instantFromBusiness(days[0], "00:00", tz);
-  const endExclusive = instantFromBusiness(addDaysToKey(days[days.length - 1], 1), "00:00", tz);
+  // El Día carga su semana entera: la tira de la semana del celular pinta los
+  // puntos de los siete días, y pasar al día siguiente no vuelve a pedir.
+  const fetched = view === "day" ? weekDays(anchor) : days;
+  const fromUtc = instantFromBusiness(fetched[0], "00:00", tz);
+  const endExclusive = instantFromBusiness(addDaysToKey(fetched[fetched.length - 1], 1), "00:00", tz);
   const toUtc = new Date(new Date(endExclusive).getTime() - 1).toISOString();
   return { fromUtc, toUtc, days };
 }

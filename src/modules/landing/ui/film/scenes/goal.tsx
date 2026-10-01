@@ -79,9 +79,6 @@ function GoalMap() {
           {/* La ruta: cada capa es su `<path>` y avanza con `stroke-dasharray`. */}
           <svg className="film-goal-route" width={GOAL_WORLD.w} height={GOAL_WORLD.h} viewBox={`0 0 ${GOAL_WORLD.w} ${GOAL_WORLD.h}`}>
             <defs>
-              <filter id="goal-glow" x="-10%" y="-10%" width="120%" height="120%">
-                <feGaussianBlur stdDeviation="9" />
-              </filter>
               <mask id="goal-slow-mask" maskUnits="userSpaceOnUse" x="0" y="0" width={GOAL_WORLD.w} height={GOAL_WORLD.h}>
                 <path d={SLOW_PATH} pathLength={1} className="film-goal-reveal" data-anim="goal-slow" style={{ strokeDasharray: f.dash.slow }} />
               </mask>
@@ -89,11 +86,11 @@ function GoalMap() {
                 <path d={PROJECTION_PATH} pathLength={1} className="film-goal-reveal" data-anim="goal-projection" style={{ strokeDasharray: f.dash.projection }} />
               </mask>
             </defs>
-            <path d={GOAL_ROUTE_PATH} pathLength={1} className="film-goal-axi-glow" filter="url(#goal-glow)" data-anim="goal-axi-glow" style={{ strokeDasharray: f.dash.axi, opacity: f.axiGlow * f.axiLine }} />
+            <path d={GOAL_ROUTE_PATH} pathLength={1} className="film-goal-axi-glow" data-anim="goal-axi-glow" style={{ strokeDasharray: f.dash.axi, opacity: f.axiGlow * f.axiLine }} />
             <path d={GOAL_ROUTE_PATH} pathLength={1} className="film-goal-axi" data-anim="goal-axi" style={{ strokeDasharray: f.dash.axi, opacity: f.axiLine }} />
             <path d={PROJECTION_PATH} className="film-goal-projection" mask="url(#goal-projection-mask)" data-anim="goal-projection-line" style={op(f.projection)} />
             <path d={SLOW_PATH} className="film-goal-slow" mask="url(#goal-slow-mask)" />
-            <path d={GOAL_ROUTE_PATH} pathLength={1} className="film-goal-done-glow" filter="url(#goal-glow)" data-anim="goal-done" style={{ strokeDasharray: f.dash.done, opacity: f.doneLine }} />
+            <path d={GOAL_ROUTE_PATH} pathLength={1} className="film-goal-done-glow" data-anim="goal-done" style={{ strokeDasharray: f.dash.done, opacity: f.doneLine }} />
             <path d={GOAL_ROUTE_PATH} pathLength={1} className="film-goal-done" data-anim="goal-done" style={{ strokeDasharray: f.dash.done, opacity: f.doneLine }} />
           </svg>
         </div>

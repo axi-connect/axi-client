@@ -63,6 +63,11 @@ const LABELS: Record<string, string> = {
 	"contacts": "Contactos",
 	"billing": "Facturación",
 	"invoices": "Facturas",
+	// Agenda premium F1: la miga decía «scheduling › calendar».
+	"scheduling": "Agenda",
+	"calendar": "Calendario",
+	"reminders": "Recordatorios",
+	"appointment": "Cita",
 }
 
 /**
@@ -90,6 +95,8 @@ const DETAIL_LABELS: Record<string, string> = {
 export type BreadcrumbConfig = {
 	/** Rutas sin page.tsx propia: su miga se pinta sin enlace (enlazarla era un 404). */
 	unlinked?: readonly string[]
+	/** Rutas intermedias que no se pintan: su hijo ya dice lo mismo («Cita › Detalle»). */
+	hidden?: readonly string[]
 	/** Etiqueta del segmento hijo de una ruta: `{ "/x/resultados": { sales: "Ventas", "*": "Resultado" } }`. */
 	children?: Readonly<Record<string, Readonly<Record<string, string>>>>
 }
@@ -100,13 +107,14 @@ type Crumb = { href: string; label: string; linked: boolean }
 export function buildCrumbs(pathname: string, config: readonly BreadcrumbConfig[] = []): Crumb[] {
 	const parts = pathname.split("/").filter(Boolean)
 	const unlinked = new Set(config.flatMap((entry) => entry.unlinked ?? []))
-	return parts.map((seg, idx) => {
+	const hidden = new Set(config.flatMap((entry) => entry.hidden ?? []))
+	return parts.flatMap((seg, idx) => {
 		const href = "/" + parts.slice(0, idx + 1).join("/")
 		const parent = "/" + parts.slice(0, idx).join("/")
 		const childLabels = config.map((entry) => entry.children?.[parent]).find((labels) => labels !== undefined)
 		const idLabel = ID_SEGMENT.test(seg) ? (DETAIL_LABELS[parent] ?? "Detalle") : undefined
 		const label = childLabels?.[seg] ?? childLabels?.["*"] ?? LABELS[seg] ?? idLabel ?? seg
-		return { href, label, linked: !unlinked.has(href) }
+		return hidden.has(href) ? [] : [{ href, label, linked: !unlinked.has(href) }]
 	})
 }
 

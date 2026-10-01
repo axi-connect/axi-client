@@ -325,6 +325,7 @@ Reparto: **axi-13 diseña y planifica** (lienzo aprobado por la dueña, recorrid
 | 15–17 | Precios, Preguntas, Cierre | Tanda 4 | pendiente |
 | — | Marco: cabecera, píldora de nicho, riel de capítulos, pie | Tanda 4 | pendiente |
 | — | Hilo de luz | Aprobado (§10) | pendiente (tras la orden de la dueña) |
+| 3b | Piloto automático «Pon tu captación en piloto automático» (F6, §19) | Propuesto; falta lienzo | pendiente · se publica cuando el piloto esté en producción |
 
 **Orden de construcción:** teléfono A → hilo + scroll en `window` → aligerar el motor → §11 → tanda 3 → tanda 4.
 
@@ -723,3 +724,129 @@ Escena `philosophy` con el id `progreso`. Va entre el hero y el nicho.
   - un reflejo invertido al 14 %, con máscara que se apaga al 42 %;
   - la leyenda «PIEZA 01 · CORAL».
 - **Asignación:** Prosperidad = coral, Crecimiento = ámbar, Libertad = violeta.
+
+## 19. Fase F6 · El piloto automático de captación (propuesta del 2026-09-30, pendiente de lienzo)
+
+Pedido del dueño: que la película muestre el **piloto automático de captación**, «así de dinámico como el mapa de comercial», con un avión o una ruta aérea. Fuente de verdad del producto: servidor `integ/pilot-server` (2b94d08d) y cliente `integ/pilot-client` (09899767; cabeza actual 2cb17f3d, con la errata del RNE corregida), certificados por axi-ad. Plan del producto: `axi/docs/plans/autopilot_captacion_plan.md`. Vocabulario y límites confirmados por axi-ad el 2026-09-30, citando el código.
+
+Lienzos del producto que sirven de referencia:
+- canvas P0 del piloto (17 tableros: Recorrido, EnVivo, Trayecto, Decisor, Créditos, Política, Lenguaje…): https://claude.ai/artifact/HT2EbEhcUFuzNK6BZuUFEW, fuente en `docs/design/mockups/captacion-piloto/`;
+- ficha P6: https://claude.ai/artifact/6Js5mCWFT2MN4u5amoBq5x (`docs/design/mockups/pilotos-panel`);
+- «Axi propone»: https://claude.ai/artifact/DVH69tX1Gj9XEmwMEm8xPt (`docs/design/mockups/pilotos-propone`).
+
+En el producto, el «Trayecto de la ejecución» ya es una línea de ruta (la `RouteLine` de Comercial). La ruta aérea es su versión de película, con los seis pasos como escalas.
+
+> **Bloqueo de publicación.** La escena se construye en esta rama, pero **no se publica antes de que el piloto llegue a producción**: la landing no muestra nada 🚧 (D11). Si la landing sale antes, la escena queda fuera de `FilmPage` (es el borrado seguro de §17.2: FilmPage, `SCENES` y `PINNED`).
+
+### 19.1 Dónde va y qué cuenta
+
+- **Lugar:** escena `pilot`, id `#piloto`, entre el Radar y el Seguimiento: `RadarScene → PilotScene → FollowupScene`. Sigue en el capítulo «Captar» (no lleva `data-chapter` propio).
+- **Continuidad:** el Radar es la **torre de control**. Encuentra y califica. El piloto es el **vuelo**: lleva a esa cuenta, paso a paso, hasta la demo.
+- **Titular:** «Pon tu captación en **piloto automático**.» (Nexa 200 + 700).
+- **Bajada:** «Tú eliges cómo vuela: Asistido, apruebas cada lote; Autónomo, siempre dentro de tu política y tus topes.»
+- **Principio que se cita** (plan del piloto §7): «Si no aumenta la relevancia, la confianza o la claridad, no se envía.»
+
+### 19.2 El objeto protagonista: una carta de navegación aérea nocturna
+
+Es la hermana de la meta (§16.1): la misma tinta, la misma cámara en perspectiva y la misma manera de avanzar con `stroke-dasharray`. Pero no es una ciudad en rejilla, es **el paisaje visto desde el aire**:
+
+- **Mundo** (un SVG estático de 2400 × 1500):
+  - **curvas de nivel** del terreno (6–8 contornos orgánicos de 1 px al 6 %, es la «naturaleza que computa»);
+  - un río en banda de 70 px al 3 %;
+  - **luces de pueblos** como puntos de 2–3 px al 18–40 %;
+  - una retícula de longitud y latitud cada 300 px al 3 %;
+  - un viñeteado radial.
+  - Nada se recalcula por frame.
+- **La aerovía:** un arco suave con seis **fijos de navegación**, triángulos de 14 px con su etiqueta en mayúsculas espaciadas. Son los seis pasos del piloto:
+  1. `BUSCAR` · 2. `COMPLETAR DATOS` · 3. `CALIFICAR Y REVELAR` · 4. `PASAR AL CRM` · 5. `REVISAR LA POLÍTICA` · 6. `INSCRIBIR EN LA SECUENCIA`
+  - Termina en el **aeropuerto de destino**: «Demo agendada».
+- **Espacio aéreo restringido:** un polígono rayado a 45° (filete discontinuo al 22 %) que la ruta **rodea**. Es la política de contacto: «Lo que se respeta siempre». La etiqueta dice «Fuera de horario hábil» y, al pasar, «Bajas · lista de supresión · Registro de Números Excluidos». **No se nombra la Ley 2300** ni se dice «cumple»: en la UI es «Criterio prudente adoptado» y el servidor la tiene en `pending_legal_review`.
+- **El avión:** una silueta blanca de 26 px vista desde arriba, que apunta en la tangente de la ruta. **Es el único elemento sólido.** Detrás va su estela: un trazo blanco de 3 px que se apaga en degradado.
+- **Torre de control:** abajo a la izquierda, el anillo del radar de la escena anterior, en miniatura (el mismo dibujo, al 30 %). De él sale la ruta.
+
+**Colores** (regla de la tinta): todo en blanco y grises. El violeta aparece **solo** cuando Axi propone el «Ajuste del piloto». El coral no aparece (la marca solo va en apertura, meta y cierre).
+
+### 19.3 El panel: la cabina (derecha, 360 px, tinta)
+
+De arriba a abajo:
+
+1. **Cabecera:** «Ejecución del piloto» y un **conmutador** «Asistido | Autónomo» en píldora. En la película queda en **Asistido** (la opción activa en blanco), con su frase debajo: «Te pide aprobar el lote antes de escribirle a nadie.»
+2. **Instrumentos:**
+   - «Paso **3 de 6** · Calificar y revelar», que cambia con el avión;
+   - los contadores en vivo «encontró / calificó / contactó»;
+   - el medidor «**Dentro del tope**», una barra blanca;
+   - el estado de la ejecución, con el vocabulario de la UI: «En ejecución» → «**Espera tu aprobación**» → «En ejecución» → «Terminada».
+3. **Tablero de llegadas** («Cuentas por etapa», como el de un aeropuerto): cinco cuentas con su etapa. Las etapas cambian una por una con un **volteo de paleta** (`rotateX` de la fila, solo `transform`). Vocabulario de la UI: Buscando · Completando datos · Calificando · Contactando · En seguimiento · Respondió · Demo agendada · Descartado. **Una fila termina en «Descartado»**: es honestidad, no todas las cuentas aterrizan.
+4. **El lote** (como en `RunLiveView.tsx:376` de `integ/pilot-client`): la tarjeta «El lote espera tu aprobación» con cinco casillas, cada una con la etiqueta «Aprobar <nombre de la cuenta>». Cuatro van marcadas. El botón dice «**Aprobar 4 y contactar**» (en blanco, `contrast`) y al lado, en pequeño, «1 se omiten». N y M salen de las casillas, no se escriben a mano. Mientras espera, «Ejecutar ahora» va deshabilitado con su motivo.
+5. Pie: «Ver en vivo · Bitácora de la ejecución» (texto, no enlace: la landing no lleva al panel).
+
+### 19.4 Coreografía (progreso del pin)
+
+Escena **fijada** en escritorio (`PINNED`), con una longitud parecida a la de la meta (`sceneTimeline` 3,2 aprox.; se ajusta con `PACE`).
+
+| Tramo | Cámara | Qué pasa |
+|---|---|---|
+| 0–0,1 | Desde arriba (inclinación 0°, escala 0,45) sobre la torre | El radar en miniatura da un barrido y un punto se enciende: es la cuenta del Radar. Entran el titular y la cabina. |
+| 0,1–0,3 | Inclinación 0 → 48°, escala 0,45 → 1, giro −6°. La cámara se pone detrás del avión | **Despegue:** el avión sale de la torre. Se dibuja la estela. Fijos 1 y 2 (`BUSCAR`, `COMPLETAR DATOS`) se encienden al pasar (el triángulo se rellena de blanco). En el tablero, dos filas voltean a «Completando datos». |
+| 0,2–0,3 | — | En el fijo 1 se encienden las fuentes como balizas: «Google Maps · RUES abierto · Buscador web». Apollo no se muestra como fuente estrella. |
+| 0,3–0,42 | Sigue al avión | Fijo 3 `CALIFICAR Y REVELAR`: una tarjeta sale del fijo con una línea guía: «Personas de este negocio · quién decide, quién recomienda, quién usa» y «Marta Restrepo · Directora de compras» (el decisor del Radar en B2B). |
+| 0,42–0,52 | Sigue al avión | La ruta **rodea el espacio restringido**. La etiqueta «Fuera de horario hábil» se enciende al acercarse y se apaga al pasar. |
+| 0,52–0,64 | Se aleja un poco (escala 0,8) | **Espera:** en el fijo 5 `REVISAR LA POLÍTICA` el avión entra en un **circuito de espera** (un óvalo de 120 × 60 px que recorre una vez). En la cabina: «Espera tu aprobación» y «El lote espera tu aprobación». |
+| 0,64–0,68 | Fija | «Aprobar 4 y contactar» se hunde (escala 0,94). La cuenta omitida se apaga en el tablero y el estado vuelve a «En ejecución». |
+| 0,68–0,82 | Sigue al avión | Sale del circuito hacia el fijo 6 `INSCRIBIR EN LA SECUENCIA`. Los canales se encienden en la cabina: «Correo · Llamada del agente · SMS». Sobre la ruta aparece una burbuja del primer mensaje con la **franqueza del agente**: «Tu empresa aparece en información pública de negocios». Es el agente diciendo de dónde salió el contacto, contado como franqueza y no como argumento legal. El tablero voltea: «Contactando» → «En seguimiento» → «Respondió», y una fila a «Descartado». |
+| 0,82–0,9 | Desciende: inclinación 48 → 30°, escala 1,15 | **Aterrizaje** en «Demo agendada». La última fila del tablero voltea a «**Demo agendada**». |
+| 0,9–1 | Se aleja a toda la ruta (escala 0,55) | **Aterrizó:** la ficha «Lo que trajeron los pilotos · octubre» sube sobre el mapa con su «Embudo del mes» (Encontradas → Calificadas → Contactadas → Respondieron → Demos), solo conteos y rotulado «Cifras de ejemplo». Habla Axi (violeta): «Ajuste del piloto», con «Con los números de tus pilotos, sin inventar nada» y una sola línea de «Qué cambia si lo aplicas» (por ejemplo, «Horario»). El estado pasa a «Terminada». |
+
+Cada tramo usa `ease` cúbico de salida, salvo el vuelo (entrada y salida), como en la meta.
+
+### 19.5 Contenido por nicho (`domain/film`, a validar con el dueño)
+
+El piloto busca **empresas**. En los nichos de consumo, el Radar muestra leads de anuncios, así que aquí el piloto cuenta el lado B2B de ese mismo negocio:
+
+| Nicho | Destino del piloto (lo que busca) | Ejemplo en el tablero |
+|---|---|---|
+| Restaurantes | Empresas cercanas para almuerzos corporativos (empalma con «30 almuerzos confirmados» de la llamada) | 5 oficinas de la zona |
+| Tecnología | Empresas que renuevan equipos | 5 pymes |
+| Salud y belleza | Empresas con plan de bienestar para su equipo | 5 empresas |
+| Servicios y B2B | Su cliente ideal; el decisor del Radar (Clínica Santa Fe · Marta Restrepo) | 5 cuentas |
+
+Las cifras de ejemplo deben cuadrar entre sí y en cada nicho (test como `film.test`): `encontradas ≥ calificadas ≥ contactadas ≥ respondieron ≥ demos`, y el tope del día mayor o igual que los contactados. **No se muestra ningún porcentaje de conversión.**
+
+### 19.6 Límites honestos (lo que la escena no dice)
+
+- **WhatsApp:** en el producto existe «Plantilla aprobada; sin opt-in solo si tu política lo permite». La escena no lo dibuja, para no sugerir que escribe a cualquiera. Los canales que se ven son «Correo · Llamada del agente · SMS».
+- Instagram, LinkedIn y la visita son «Tarea manual»: no se dibujan como envío automático.
+- **Nunca «contacta sin permiso»:** en Asistido no sale nada sin aprobación, y siempre se respetan la baja, el habeas data, la lista de supresión, el Registro de Números Excluidos, el horario y el tope diario.
+- **Ley 2300:** no se nombra ni se dice que se cumple (`pending_legal_review`).
+- **Apollo:** buscar no gasta créditos y revelar sí, con la llave del negocio; el spike pagado sigue pendiente. La escena no habla de Apollo ni de créditos.
+- Ningún porcentaje de conversión ni «X demos garantizadas»: la ficha muestra conteos.
+- No existe la página de diagnóstico ni ningún canal fuera de la lista.
+- Las reglas fijas («Estas reglas no tienen interruptor») se muestran como espacio restringido, nunca como algo que se apaga.
+- El nombre del registro es «Registro de Números Excluidos (RNE)». Quedó corregido en `integ/pilot-client` 2cb17f3d, que sustituye a 09899767 como cabeza del cliente.
+
+### 19.7 Arquitectura (sigue §5 y §17.2)
+
+- **Dominio puro y con tests:**
+  - `domain/film/flight-route.ts`: la aerovía, sus fijos, el circuito de espera y el polígono restringido. Muestreo por longitud con la misma utilidad de `route-map.ts`, sin duplicarla: se extrae a un módulo común si hace falta.
+  - `domain/film/pilot-content.ts`: los textos por nicho y el vocabulario de la UI del piloto.
+- **Cámara:** se reutiliza `goal-camera.ts`: `project`, `planeTransform`, `seg` y las curvas. Si hace falta parametrizar la ruta o el foco, se generaliza; no se copia.
+- **Escena:** `scenes/pilot.tsx` (Server Component, fotograma final en el HTML) y `engine/pilot-scene.ts` (builder en `SCENES`). Estilos en `film-pilot.css`, **con tokens o variables del alcance de la película**, sin hex sueltos (la revisión de diseño del 2026-09-30 ya marcó ese defecto en `film-sell.css` y `film-tanda4.css`).
+- **Rendimiento** (como §16.1): por frame solo cambian un `transform` del plano, el `stroke-dasharray` de dos trazos (estela y ruta recorrida), el `transform` del avión y unas diez marcas. Las etapas del tablero se escriben con `setText` solo cuando cambian. Nada de `getPointAtLength` por frame. Sin `filter` ni `backdrop-filter`. Presupuesto: `/` ≤ 200 kB.
+- **Movimiento reducido:** el fotograma final (avión aterrizado, tablero completo, ficha de resultados y ajuste propuesto).
+- **Móvil** (no se fija): franja de mapa de 390 × 430 entre el titular y una cabina compacta (paso, tope, tablero de tres filas y botón). La misma línea que la meta en móvil («top 40 %»).
+- **Accesibilidad:** el mapa es decorativo (`aria-hidden`); la cabina lleva el texto real. El tablero no lleva `aria-live`.
+
+### 19.8 Orden de trabajo
+
+1. **Lienzo** (mockup HTML con barra de scroll, escritorio y 390) → aprobación del dueño. Regla del proyecto: no se codifica sin lienzo aprobado.
+2. Dominio (`flight-route.ts`, `pilot-content.ts`) con tests.
+3. Escena, builder y CSS; QA a 390, 768, 1024 y 1440.
+4. Auditoría y certificación de axi-ad (calidad, experiencia y salud de datos) antes de fusionar. Lo que axi-ad medirá en la escena:
+   - 375, 390, 768 y 1280 px, en claro y oscuro, sin scroll horizontal ni nada recortado;
+   - el scroll se recorre de ida y de vuelta, y el último fotograma se lee completo sin animación;
+   - `prefers-reduced-motion`: el estado final, sin movimiento;
+   - solo `transform` y `opacity`, sin layout por frame ni long tasks, y un LCP que no empeore frente a la landing actual;
+   - contraste AA en las etiquetas sobre el mapa y los degradados;
+   - cada texto contra el vocabulario de §19.3–§19.4, palabra por palabra, y ninguna promesa de §19.6;
+   - accesibilidad: `aria-label` en la escena y su texto también en el DOM.
+5. Se publica solo cuando el piloto esté en producción (bloqueo de §19).

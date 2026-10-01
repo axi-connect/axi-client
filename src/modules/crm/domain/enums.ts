@@ -81,4 +81,6 @@ export const CONTACT_SOURCE_LABELS: Record<ContactSource, string> = {
   // Se registró él mismo en un formulario de tu sitio. Se distingue de
   // «Captación» a propósito: aquí hubo consentimiento explícito y fechado.
   forms: "Formulario web",
+  // Llamó al número del negocio y no estaba en el CRM (llamadas, Entrega 2).
+  inbound_call: "Llamada entrante",
 };

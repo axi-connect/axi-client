@@ -1,8 +1,9 @@
 "use client";
 
-import { Ear, LoaderCircle, Megaphone, PhoneOutgoing } from "lucide-react";
+import { Check, Ear, LoaderCircle, Megaphone, PhoneOutgoing, Sparkles, TriangleAlert } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/core/lib/utils";
+import { formatMoney, formatShortDate } from "@/core/lib/format";
 import { useRadioGroup } from "@/core/hooks/use-radio-group";
 import { errorMessage } from "@/core/lib/error-messages";
 import { isHttpError } from "@/core/api/problem";
@@ -21,6 +22,7 @@ import { Label } from "@/shared/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
 import { getTenantAgents, type AssignableAgent } from "@/modules/agents/public";
 import { MODE_HINTS, MODE_LABELS, type CallMode } from "@/modules/calls/domain/call";
+import { balanceLabel, orderRef, type CollectionsCallSummary } from "@/modules/calls/domain/collections-call";
 import { CALL_TYPE_LABELS, PROACTIVE_CALL_TYPES, type ProactiveCallType } from "@/modules/calls/domain/playbooks";
 import { launchCall, placeTestCall } from "@/modules/calls/infrastructure/services/calls-service.adapter";
 
@@ -58,6 +60,7 @@ export function CallLauncherDialog({
   target,
   defaultType = "followup",
   defaultObjective = "",
+  collections,
   onLaunched,
 }: {
   open: boolean;
@@ -65,8 +68,11 @@ export function CallLauncherDialog({
   target: CallLauncherTarget;
   defaultType?: ProactiveCallType;
   defaultObjective?: string;
+  /** «Llamar para cobrar» (F3): la llamada va atada a este plan y el tipo queda fijo en Cobranza. */
+  collections?: CollectionsCallSummary;
   onLaunched?: (callSessionId: string) => void;
 }) {
+  const fixedType = collections === undefined ? null : ("collections" as const);
   const { showAlert } = useAlert();
   const [to, setTo] = useState("");
   const [type, setType] = useState<ProactiveCallType>(defaultType);
@@ -87,7 +93,7 @@ export function CallLauncherDialog({
 
   useEffect(() => {
     if (!open) return;
-    setType(defaultType);
+    setType(fixedType ?? defaultType);
     setObjective(defaultObjective);
     setMode("proactive");
     setAgentId(DEFAULT_AGENT);
@@ -101,7 +107,7 @@ export function CallLauncherDialog({
     return () => {
       alive = false;
     };
-  }, [open, defaultType, defaultObjective]);
+  }, [open, defaultType, defaultObjective, fixedType]);
 
   const needsNumber = target.kind === "number";
   // Sin teléfono no hay llamada: se dice antes de enviar, no con un 409 después (M4).
@@ -113,7 +119,7 @@ export function CallLauncherDialog({
     setSubmitting(true);
     setProblem(null);
     const common = {
-      call_type: type,
+      call_type: fixedType ?? type,
       mode,
       objective: objective.trim() || undefined,
       ai_agent_id: agentId === DEFAULT_AGENT ? undefined : agentId,
@@ -121,7 +127,14 @@ export function CallLauncherDialog({
     try {
       const { call_session_id } =
         target.kind === "contact"
-          ? await launchCall({ contact_id: target.contact_id, ...common }, idempotencyKey)
+          ? await launchCall(
+              {
+                contact_id: target.contact_id,
+                ...common,
+                ...(collections === undefined ? {} : { plan_id: collections.plan_id }),
+              },
+              idempotencyKey,
+            )
           : await placeTestCall({ to: to.trim(), ...common });
       showAlert({
         tone: "success",
@@ -175,8 +188,16 @@ export function CallLauncherDialog({
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="grid gap-1.5">
               <Label htmlFor="launch-type">Tipo de llamada</Label>
-              <Select value={type} onValueChange={(value: string) => setType(value as ProactiveCallType)}>
-                <SelectTrigger id="launch-type" className="h-9 w-full">
+              <Select
+                value={fixedType ?? type}
+                onValueChange={(value: string) => setType(value as ProactiveCallType)}
+                disabled={fixedType !== null}
+              >
+                <SelectTrigger
+                  id="launch-type"
+                  className="h-9 w-full"
+                  aria-describedby={collections === undefined ? undefined : "launch-type-fixed"}
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -187,6 +208,11 @@ export function CallLauncherDialog({
                   ))}
                 </SelectContent>
               </Select>
+              {collections !== undefined && (
+                <p id="launch-type-fixed" className="text-xs text-muted-foreground">
+                  Fijo: la llamada cobra {orderRef(collections)}.
+                </p>
+              )}
             </div>
             <div className="grid gap-1.5">
               <Label htmlFor="launch-agent">Agente</Label>
@@ -206,6 +232,8 @@ export function CallLauncherDialog({
             </div>
           </div>
 
+          {collections !== undefined && <AgentKnows summary={collections} name={target.kind === "contact" ? target.name : null} />}
+
           <div className="grid gap-1.5">
             <Label htmlFor="launch-objective">Objetivo (opcional)</Label>
             <Input
@@ -215,7 +243,11 @@ export function CallLauncherDialog({
               placeholder="Ej.: retomar la cotización de blanqueamiento"
               maxLength={500}
             />
-            <p className="text-xs text-muted-foreground">Lo concreto de esta llamada. El marco del tipo hace el resto.</p>
+            <p className="text-xs text-muted-foreground">
+              {collections === undefined
+                ? "Lo concreto de esta llamada. El marco del tipo hace el resto."
+                : "Se suma a lo anterior. El marco de Cobranza hace el resto."}
+            </p>
           </div>
 
           <fieldset className="grid gap-1.5">
@@ -275,5 +307,65 @@ export function CallLauncherDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/**
+ * «Lo que sabe tu agente» (mockup F3 aprobado): las cifras del plan tal como
+ * las verá el agente y lo que puede hacer en la llamada. La fuente de verdad
+ * es el servidor, que las vuelve a leer con `plan_id` al lanzar.
+ */
+function AgentKnows({ summary, name }: { summary: CollectionsCallSummary; name: string | null }) {
+  const who = name?.trim() ? name.trim().split(/\s+/)[0] : "el cliente";
+  const due =
+    summary.overdue_cents > 0
+      ? {
+          label: "Vencido",
+          value: `${formatMoney(summary.overdue_cents, summary.currency)} · hace ${String(summary.days_overdue)} ${summary.days_overdue === 1 ? "día" : "días"}`,
+          late: true,
+        }
+      : summary.next_due_at !== null
+        ? { label: "Próximo vencimiento", value: formatShortDate(summary.next_due_at), late: false }
+        : null;
+  return (
+    <section aria-labelledby="launch-knows" className="grid gap-2.5 rounded-2xl bg-muted px-4 py-3.5">
+      <h3 id="launch-knows" className="flex items-center gap-2 text-[13px] font-semibold">
+        <Sparkles aria-hidden className="size-4 text-accent-violet" />
+        Lo que sabe tu agente
+      </h3>
+      <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1 text-[13px]">
+        <dt className="text-muted-foreground">{balanceLabel(summary)}</dt>
+        <dd className="font-medium tabular-nums">{formatMoney(summary.balance_cents, summary.currency)}</dd>
+        {due !== null && (
+          <>
+            <dt className="text-muted-foreground">{due.label}</dt>
+            {/* F3 fase 2: el rojo como texto sobre bg-muted daba 4,39:1 en claro;
+                el dato va en tinta y la alerta en el icono (basta 3:1). */}
+            <dd className="flex min-w-0 items-center gap-1.5 font-medium tabular-nums">
+              {due.late && <TriangleAlert aria-hidden className="size-3.5 shrink-0 text-destructive" />}
+              <span className="min-w-0">{due.value}</span>
+            </dd>
+          </>
+        )}
+        <dt className="text-muted-foreground">Promesa de pago</dt>
+        <dd className="font-medium">
+          {summary.promised_at === null ? "Ninguna viva" : `Prometió pagar el ${formatShortDate(summary.promised_at)}`}
+        </dd>
+      </dl>
+      <ul className="grid gap-1.5 text-[12.5px] text-muted-foreground">
+        {[
+          `Si ${who} lo pide o lo acepta, le envía por WhatsApp el saldo con los medios de pago. Uno por llamada.`,
+          summary.promised_at === null
+            ? "Si da una fecha, anota el compromiso de pago (hasta 60 días) y los recordatorios se pausan hasta entonces."
+            : "Ya hay una promesa viva: se la recuerda y no anota otra.",
+          "Nunca dice el monto antes de confirmar que habla con el titular.",
+        ].map((line) => (
+          <li key={line} className="grid grid-cols-[16px_minmax(0,1fr)] gap-2">
+            <Check aria-hidden className="mt-0.5 size-3.5 text-foreground" />
+            <span>{line}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

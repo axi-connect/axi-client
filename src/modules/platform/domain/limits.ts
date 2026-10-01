@@ -43,6 +43,7 @@ export const METRICS: { value: LimitMetric; label: string; unit: MetricUnit }[] 
   // Voz (§10.5 F3): período recomendado billing_cycle, acción degrade — agotar
   // la voz solo pausa la voz, jamás la IA completa
   { value: "tts_characters", label: "Caracteres de voz", unit: "characters" },
+  { value: "ai_decisions", label: "Clasificadores", unit: "count" },
 ];
 
 export function metricInfo(metric: LimitMetric): { label: string; unit: MetricUnit } {

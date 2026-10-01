@@ -135,7 +135,10 @@ export function CallsSettingsView() {
                                 ? "sin agente configurado"
                                 : (agentNames.get(number.default_ai_agent_id) ?? "agente IA")}
                               {" · Entrantes "}
-                              {number.inbound_enabled ? "habilitadas" : "deshabilitadas"}
+                              {number.inbound_enabled
+                                ? // Entrega 2: la entrante siempre en reactivo (escucha y atiende).
+                                  "habilitadas, en modo Reactivo"
+                                : "deshabilitadas"}
                               {hasCallerId && " · Recibe las entrantes"}
                             </>
                           )}

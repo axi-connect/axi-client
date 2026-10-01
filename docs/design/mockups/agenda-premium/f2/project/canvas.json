@@ -1,0 +1,107 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-09-30T19:42:14Z"
+  },
+  "title": "Agenda premium · F2 La cita",
+  "launch": {
+    "view": "canvas"
+  },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 1000,
+      "title": "1 · La cita — cuándo, recordatorios, notas y de dónde viene; controles: estado y origen (interactivo)",
+      "is_interactive": true
+    },
+    "Oscuro.dc.html": {
+      "x": 1520,
+      "y": 0,
+      "w": 1440,
+      "h": 1000,
+      "title": "2 · La cita en oscuro (interactivo)",
+      "is_interactive": true
+    },
+    "Acciones.dc.html": {
+      "x": 3040,
+      "y": 0,
+      "w": 1600,
+      "h": 1000,
+      "title": "3 · Actuar — el menú «…», cancelar dentro del panel y editar la nota"
+    },
+    "Nueva.dc.html": {
+      "x": 0,
+      "y": 1420,
+      "w": 1440,
+      "h": 1000,
+      "title": "4 · Nueva cita — quién y qué a la izquierda, cuándo a la derecha; control: completa, vacía, otra hora (interactivo)",
+      "is_interactive": true
+    },
+    "Reagendar.dc.html": {
+      "x": 1520,
+      "y": 1420,
+      "w": 1440,
+      "h": 1000,
+      "title": "5 · Reagendar — el antes y el después, el servicio fijo"
+    },
+    "Estados.dc.html": {
+      "x": 3040,
+      "y": 1420,
+      "w": 1600,
+      "h": 1000,
+      "title": "6 · Cuándo: se ocupó, sin cupo, sin horario, otra hora, cargando y error"
+    },
+    "MovilCita.dc.html": {
+      "x": 0,
+      "y": 2840,
+      "w": 390,
+      "h": 844,
+      "title": "7 · Celular — la cita sube desde abajo"
+    },
+    "MovilNueva.dc.html": {
+      "x": 470,
+      "y": 2840,
+      "w": 390,
+      "h": 844,
+      "title": "8 · Celular — nueva cita a pantalla completa, un solo paso"
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Oscuro.dc.html",
+    "Acciones.dc.html",
+    "Nueva.dc.html",
+    "Reagendar.dc.html",
+    "Estados.dc.html",
+    "MovilCita.dc.html",
+    "MovilNueva.dc.html"
+  ],
+  "notes": {
+    "rowA": {
+      "x": 0,
+      "y": -300,
+      "text": "El detalle de la cita",
+      "kind": "title1",
+      "maxW": 4640
+    },
+    "rowB": {
+      "x": 0,
+      "y": 1120,
+      "text": "Crear y reagendar",
+      "kind": "title1",
+      "maxW": 4640
+    },
+    "rowC": {
+      "x": 0,
+      "y": 2540,
+      "text": "Celular",
+      "kind": "title1",
+      "maxW": 860
+    }
+  },
+  "designSystems": []
+}

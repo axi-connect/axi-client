@@ -3,6 +3,8 @@ import { render, screen } from "@testing-library/react";
 // Deuda D1: sin la función `collections` (o sin `collections:read`, o sin que
 // hayan cargado las funciones) el bloque NO pide el plan: el 403 salía igual.
 const mockPlan = jest.fn<Promise<never>, [string]>(() => new Promise(() => {}));
+// F3: «Llamar para cobrar» mira la capacidad `calls`; apagada, la fila queda como antes.
+jest.mock("@/shared/auth/entitlements.hooks", () => ({ useEntitlements: () => ({ hasCapability: () => false }) }));
 jest.mock("@/modules/collections/infrastructure/services/collections-service.adapter", () => ({
   getPlanByOrder: (orderId: string) => mockPlan(orderId),
 }));

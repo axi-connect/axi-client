@@ -1,5 +1,6 @@
 import type { Schemas } from "@/core/api/types";
 import type { FollowUpMedium } from "@/modules/crm/domain/schedule-follow-up";
+import type { CrmCallType } from "@/modules/calls/public";
 
 export type SequenceDTO = Schemas["SequenceDto"];
 export type SequenceStepDTO = SequenceDTO["steps"][number];
@@ -36,6 +37,8 @@ export const STOP_REASON_LABELS: Record<EnrollmentStopReason, string> = {
 export type DraftStep = {
   offset_hours: number;
   task_channel: FollowUpMedium;
+  /** Plan de modos §7: el marco de la llamada del paso; solo si el medio llama. */
+  call_type?: CrmCallType;
   objective: string;
 };
 
@@ -73,7 +76,12 @@ export const SEQUENCE_TEMPLATES: readonly {
     steps: [
       { offset_hours: 0, task_channel: "message", objective: "Retomar el contacto y preguntar cómo le fue" },
       { offset_hours: 96, task_channel: "message", objective: "Contarle la novedad que más encaje con lo suyo" },
-      { offset_hours: 240, task_channel: "call_then_message", objective: "Llamar para cerrar o despedirse con elegancia" },
+      {
+        offset_hours: 240,
+        task_channel: "call_then_message",
+        call_type: "reactivation",
+        objective: "Llamar para cerrar o despedirse con elegancia",
+      },
     ],
   },
 ];
@@ -159,6 +167,7 @@ export function toUpsertDTO(input: {
     steps: input.steps.map((step) => ({
       offset_hours: step.offset_hours,
       task_channel: step.task_channel,
+      ...(step.task_channel === "message" ? {} : { call_type: step.call_type ?? "followup" }),
       objective: step.objective.trim(),
     })),
   };
