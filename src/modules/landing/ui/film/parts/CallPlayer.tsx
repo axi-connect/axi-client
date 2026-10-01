@@ -309,7 +309,10 @@ export function CallPlayer() {
     };
     for (const a of audio) a.addEventListener("error", onError);
     // Fuera de pantalla o de la pestaña, la llamada se pausa (y el bucle se va con ella).
+    // `data-near` enciende la respiración del giroscopio solo en pantalla: infinita
+    // y fuera de ella recalculaba estilos en cada frame desde el hero (perfil de arranque).
     const io = new IntersectionObserver(([entry]) => {
+      flag(section, "data-near", entry.isIntersecting);
       if (!entry.isIntersecting) pause();
     });
     io.observe(section);

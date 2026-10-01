@@ -138,7 +138,9 @@
 .film-call[data-speaker="client"] .film-call-bl-a { opacity: 0.19; }
 .film-call[data-speaker="client"] .film-call-bl-s { opacity: 1; }
 
-.film-call-gyro { width: 0; height: 0; animation: film-call-breathe 5.5s ease-in-out infinite; }
+.film-call-gyro { width: 0; height: 0; }
+/* Respira solo en pantalla (`data-near`, CallPlayer): infinita fuera de ella costaba un recálculo de estilos por frame. */
+.film-call[data-near] .film-call-gyro { animation: film-call-breathe 5.5s ease-in-out infinite; }
 .film-call[data-playing] .film-call-gyro,
 .film-call[data-done] .film-call-gyro { animation: none; }
 @keyframes film-call-breathe { 50% { transform: scale(1.04); } }

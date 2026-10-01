@@ -86,9 +86,13 @@ export default function SiteHeader() {
             if (subRef.current && subRef.current.textContent !== sub) subRef.current.textContent = sub;
             ringRef.current?.style.setProperty('stroke-dasharray', `${Math.max(0.0001, ring).toFixed(3)} 2`);
         };
+        // Solo cuando cruza el umbral: llamar a setIsland en cada frame del scroll
+        // pasaba por React aunque el valor no cambiara (perfil de arranque).
+        let shown: boolean | null = null;
         const update = () => {
             frame = 0;
-            setIsland(el.scrollTop > ISLAND_AT);
+            const next = el.scrollTop > ISLAND_AT;
+            if (next !== shown) setIsland((shown = next));
             if (!onFilm) {
                 const t = islandOnPage(pathname, readProgress(el.scrollTop, el.scrollHeight, el.clientHeight));
                 paint(t.title, t.sub, t.ring);
