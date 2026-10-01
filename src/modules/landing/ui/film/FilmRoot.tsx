@@ -246,6 +246,9 @@ export function FilmRoot({ children }: { children: ReactNode }) {
     const start = () => {
       void import("./engine/film-engine").then(({ startFilm }) => {
         if (cancelled || !rootRef.current) return;
+        // Antes de que el motor mida: las escenas con presentación propia para el
+        // motor (la pista de «Vendemos progreso») la activan con este atributo.
+        rootRef.current.setAttribute("data-motion", "on");
         engineRef.current = startFilm(rootRef.current);
       });
     };
@@ -263,6 +266,7 @@ export function FilmRoot({ children }: { children: ReactNode }) {
       window.clearTimeout(timer);
       engineRef.current?.stop();
       engineRef.current = null;
+      root.removeAttribute("data-motion");
     };
   }, []);
 

@@ -61,7 +61,7 @@ export const PACE = 0.8;
 export const reveal = { opacity: 0, y: 24 };
 
 /** Las escenas que se fijan: donde la animación ES el mensaje. */
-export const PINNED = new Set(["radar", "followup", "chat", "call", "goal", "axel", "measure"]);
+export const PINNED = new Set(["philosophy", "radar", "followup", "chat", "call", "goal", "axel", "measure"]);
 
 /**
  * Una línea de tiempo de escena: fijada si cabe, revelada al pasar si no.
