@@ -18,8 +18,10 @@ export function AxiCoin({ size = 36, live = false, paused = false, className, st
       aria-hidden
       data-axi={live ? "live" : paused ? "paused" : "still"}
       className={cn(
-        "bg-background relative grid place-items-center rounded-full shadow-[0_0_0_1px_var(--border),0_6px_18px_-4px_rgb(0_0_0/0.25)]",
-        paused && "shadow-[0_0_0_1px_var(--border),0_0_0_6px_color-mix(in_srgb,var(--foreground)_8%,transparent)]",
+        // El disco se ve por su filo y su sombra (el fondo es el de la tarjeta). La sombra como `rgba(…)` con comas:
+        // `rgb(0_0_0/0.25)` no generaba la clase y la moneda quedaba en un α suelto.
+        "bg-background ring-border relative grid place-items-center rounded-full shadow-[0_6px_18px_-4px_rgba(0,0,0,0.25)] ring-1",
+        paused && "shadow-[0_0_0_6px_color-mix(in_srgb,var(--foreground)_8%,transparent)]",
         className,
       )}
       style={{ width: size, height: size, ...style }}

@@ -49,7 +49,8 @@ export function MarketingHeader({
   return (
     <header className={cn("flex min-w-0 flex-col gap-5", className)}>
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
-        <div className="flex min-w-0 flex-col gap-1.5">
+        {/* Base de 24 rem que encoge: con un título largo, el título parte su línea y las acciones siguen a su derecha; en el celular bajan. */}
+        <div className="flex min-w-0 flex-[1_1_24rem] flex-col gap-1.5">
           <p className="text-muted-foreground text-[11px] font-semibold tracking-[0.14em] uppercase">{kicker}</p>
           <h1 className="font-heading text-[1.9rem] leading-[1.05] font-bold tracking-tight text-balance sm:text-[2.5rem]">
             {title}
