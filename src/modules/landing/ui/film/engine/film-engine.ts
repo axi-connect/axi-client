@@ -523,6 +523,18 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
     }
   };
   ScrollTrigger.addEventListener("refresh", onRefreshed);
+  // Cada refresh completo deja su coste en `performance` («film:refresh»): el
+  // de escritorio con 13 pins era la tarea larga mayor (M5).
+  let refreshAt = 0;
+  const onRefreshInit = () => {
+    refreshAt = performance.now();
+  };
+  const onRefreshDone = () => {
+    if (refreshAt) performance.measure?.("film:refresh", { start: refreshAt });
+    refreshAt = 0;
+  };
+  ScrollTrigger.addEventListener("refreshInit", onRefreshInit);
+  ScrollTrigger.addEventListener("refresh", onRefreshDone);
   let firstMount = true;
   const mount = () => {
     const media = gsap.matchMedia(root);
@@ -719,6 +731,8 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
         thread.destroy();
       }
       ScrollTrigger.removeEventListener("refresh", onRefreshed);
+      ScrollTrigger.removeEventListener("refreshInit", onRefreshInit);
+      ScrollTrigger.removeEventListener("refresh", onRefreshDone);
       mm.revert();
       channel.port1.close();
       for (const ev of INTENTS) window.removeEventListener(ev, onIntent);

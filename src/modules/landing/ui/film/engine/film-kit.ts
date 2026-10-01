@@ -173,20 +173,56 @@ export function sceneTimeline(section: HTMLElement, ctx: Ctx, length: number, pa
     ctx.finals?.push(tl);
     return tl;
   }
+  // Fijar es CSS, no el `pin` de GSAP: la escena va `sticky` dentro de un
+  // envoltorio tan alto como su recorrido (clase `pin-spacer`, la que buscan
+  // las anclas, el riel y R4). Con `pin`, cada escena fijada encolaba un
+  // refresh completo de ScrollTrigger en el frame siguiente que revertía y
+  // volvía a medir todos los pins: 11–13 refrescos de 300–700 ms con CPU ×4 al
+  // construir (M5). Sin `pin` no hay nada que revertir y el refresh es barato.
+  const spacer = fits ? stick(section, length * PACE) : null;
   if (heads.length) {
-    gsap.from(heads, { ...reveal, ease: "power2.out", scrollTrigger: { trigger: section, start: "top 88%", end: "top 30%", scrub: true } });
+    gsap.from(heads, { ...reveal, ease: "power2.out", scrollTrigger: { trigger: spacer ?? section, start: "top 88%", end: "top 30%", scrub: true } });
   }
   // Solo los momentos largos se fijan (chat, radar, seguimiento, la meta, Axel
   // y medir, cuyo horizonte y fibras se cruzarían en unos píxeles); el
   // resto se revela al pasar. Todo fijado daba un ritmo plano y 28.000 px.
   const tl = gsap.timeline({
     defaults: { ease: "power2.out", duration: 1 },
-    scrollTrigger: fits
-      ? { trigger: section, start: "top top", end: `+=${Math.round(length * PACE)}%`, pin: true, scrub: true, anticipatePin: 1, invalidateOnRefresh: true }
+    scrollTrigger: spacer
+      ? { trigger: spacer, start: "top top", end: "bottom bottom", scrub: true, invalidateOnRefresh: true }
       : { trigger: pass.trigger ?? section, start: pass.start ?? "top 78%", end: pass.end ?? "bottom 62%", scrub: true, invalidateOnRefresh: true },
   });
   if (fits && tl.scrollTrigger) ctx.pins.set(section.dataset.scene ?? "", tl.scrollTrigger);
   return tl;
+}
+
+/**
+ * Envuelve la escena en su recorrido fijado: un `div.pin-spacer` con la escena
+ * `sticky` arriba y, detrás, un relleno de `travel` % del alto de la ventana
+ * (lo mismo que el `+=N%` de antes; en `vh`, así sigue a la ventana sin
+ * medir). Relleno y no `padding-bottom`: el sticky solo se mueve dentro de la
+ * caja de contenido de su contenedor, y el padding no cuenta. El contexto de
+ * gsap lo deshace al revertir.
+ */
+function stick(section: HTMLElement, travel: number): HTMLElement {
+  const spacer = document.createElement("div");
+  spacer.className = "pin-spacer film-stick";
+  const fill = document.createElement("div");
+  fill.setAttribute("aria-hidden", "true");
+  fill.style.height = `${Math.round(travel)}vh`;
+  section.before(spacer);
+  spacer.append(section, fill);
+  section.style.position = "sticky";
+  section.style.top = "0px";
+  gsap.context()?.add(() => () => {
+    section.style.removeProperty("position");
+    section.style.removeProperty("top");
+    if (spacer.parentNode) {
+      spacer.before(section);
+      spacer.remove();
+    }
+  });
+  return spacer;
 }
 
 /** Cuenta hacia arriba un número con separador de miles colombiano. */
