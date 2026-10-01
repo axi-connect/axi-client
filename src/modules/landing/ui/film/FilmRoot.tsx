@@ -380,13 +380,20 @@ export function FilmRoot({ children }: { children: ReactNode }) {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
     if (reduce.matches) return;
     let cancelled = false;
+    // Lo que haga el visitante mientras baja el motor también cuenta: si entra
+    // por /#medir y se mueve antes de que termine, el motor no lo devuelve al
+    // ancla (ronda 2, R5).
+    let moved = false;
+    const onMove = () => {
+      moved = true;
+    };
     const start = () => {
       void import(/* webpackPrefetch: true */ "./engine/film-engine").then(({ startFilm }) => {
         if (cancelled || !rootRef.current) return;
         // Antes de que el motor mida: las escenas con presentación propia para el
         // motor (la pista de «Vendemos progreso») la activan con este atributo.
         rootRef.current.setAttribute("data-motion", "on");
-        engineRef.current = startFilm(rootRef.current);
+        engineRef.current = startFilm(rootRef.current, { moved: () => moved });
       });
     };
     // El motor NO se evalúa durante la carga: era la tarea larga que más pesaba en
@@ -407,7 +414,10 @@ export function FilmRoot({ children }: { children: ReactNode }) {
     const onScroll = () => {
       if (scroller && scroller.scrollTop > 0) go();
     };
+    // Ids separados: cancelar un id de requestIdleCallback con clearTimeout
+    // podía cancelar un temporizador ajeno con el mismo número (ronda 2, R10).
     let idle = 0;
+    let timer = 0;
     const go = () => {
       if (fired) return;
       fired = true;
@@ -416,9 +426,13 @@ export function FilmRoot({ children }: { children: ReactNode }) {
       start();
     };
     for (const ev of INTENTS) window.addEventListener(ev, go, { capture: true, passive: true });
+    // Con ancla el motor arranca en el acto: lo que llegue después es moverse.
+    const hashed = Boolean(window.location.hash);
+    if (hashed) for (const ev of INTENTS) window.addEventListener(ev, onMove, { capture: true, passive: true });
     scroller?.addEventListener("scroll", onScroll, { passive: true });
     const whenIdle = () => {
-      idle = typeof window.requestIdleCallback === "function" ? window.requestIdleCallback(go, { timeout: 3000 }) : window.setTimeout(go, 3000);
+      if (typeof window.requestIdleCallback === "function") idle = window.requestIdleCallback(go, { timeout: 3000 });
+      else timer = window.setTimeout(go, 3000);
     };
     if (window.location.hash || (scroller && scroller.scrollTop > 0)) go();
     else if (document.readyState === "complete") whenIdle();
@@ -428,8 +442,9 @@ export function FilmRoot({ children }: { children: ReactNode }) {
       for (const ev of INTENTS) window.removeEventListener(ev, go, true);
       scroller?.removeEventListener("scroll", onScroll);
       window.removeEventListener("load", whenIdle);
-      if (typeof window.cancelIdleCallback === "function") window.cancelIdleCallback(idle);
-      window.clearTimeout(idle);
+      for (const ev of INTENTS) window.removeEventListener(ev, onMove, true);
+      if (idle && typeof window.cancelIdleCallback === "function") window.cancelIdleCallback(idle);
+      if (timer) window.clearTimeout(timer);
       engineRef.current?.stop();
       engineRef.current = null;
       root.removeAttribute("data-motion");

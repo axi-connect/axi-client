@@ -31,7 +31,13 @@ import { philosophy } from "@/modules/landing/ui/film/engine/philosophy-scene";
 // literal que inlina next.config deja que webpack lo pode cuando está apagado
 // (auditoría, m11: antes pilot-content y pilot-frame viajaban igual).
 const pilotScene: Promise<Scene> | null =
-  process.env.FILM_PILOT === "1" ? import("@/modules/landing/ui/film/engine/pilot-scene").then((m) => m.pilot) : null;
+  process.env.FILM_PILOT === "1"
+    ? import("@/modules/landing/ui/film/engine/pilot-scene")
+        .then((m) => m.pilot)
+        // Si el chunk no llega, la escena queda en su fotograma final y la
+        // construcción sigue: sin esto se paraba para siempre (ronda 2, R9).
+        .catch((): Scene => () => {})
+    : null;
 import { pricing } from "@/modules/landing/ui/film/engine/pricing-scene";
 import { call, photo, team, vault } from "@/modules/landing/ui/film/engine/sell-scenes";
 import {
@@ -412,7 +418,15 @@ const SCENES: Record<string, Scene> = { hero, philosophy, niche, radar, followup
 
 /* ──────────────────────────────── arranque ──────────────────────────────── */
 
-export function startFilm(root: HTMLElement): FilmEngine {
+export type FilmStartOptions = {
+  /**
+   * Si el visitante ya se movió antes de que llegara el motor (FilmRoot lo
+   * escucha desde el montaje): entonces no se le devuelve al ancla.
+   */
+  moved?: () => boolean;
+};
+
+export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): FilmEngine {
   gsap.registerPlugin(ScrollTrigger);
   // En móvil la barra del navegador aparece y desaparece: no es un resize.
   ScrollTrigger.config({ ignoreMobileResize: true });
@@ -429,7 +443,8 @@ export function startFilm(root: HTMLElement): FilmEngine {
   // Anclas profundas (/#medir desde otra página o al recargar): el navegador
   // salta al ancla antes de que existan los pins, que luego la empujan hasta
   // diez pantallas más abajo (auditoría, M1). Al terminar la construcción se
-  // realinea, salvo que el visitante ya se haya movido. Si la escena se fija,
+  // realinea, salvo que el visitante ya se haya movido (también mientras bajaba
+  // el chunk: `options.moved`, ronda 2, R5). Si la escena se fija,
   // el destino es su pin-spacer: la escena misma está en `position: fixed`.
   let moved = false;
   const onIntent = () => {
@@ -439,7 +454,7 @@ export function startFilm(root: HTMLElement): FilmEngine {
   for (const ev of INTENTS) window.addEventListener(ev, onIntent, { passive: true, once: true });
   const landOnHash = () => {
     const id = decodeURIComponent(window.location.hash.slice(1));
-    if (!id || moved) return;
+    if (!id || moved || options.moved?.()) return;
     const el = document.getElementById(id);
     if (!el || !root.contains(el)) return;
     const box = el.parentElement?.classList.contains("pin-spacer") ? el.parentElement : el;

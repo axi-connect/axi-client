@@ -94,6 +94,20 @@ it("si la página llega con un ancla, el motor arranca en el acto (M1: realinea 
   expect(startFilm).toHaveBeenCalledTimes(1)
 })
 
+it("con ancla, si el visitante se mueve mientras baja el motor, el motor lo sabe y no lo devuelve (R5)", async () => {
+  setReducedMotion(false)
+  window.requestIdleCallback = jest.fn(() => 1) as unknown as typeof window.requestIdleCallback
+  window.history.replaceState(null, "", "/#medir")
+  render(<Film />)
+  await new Promise((r) => setTimeout(r, 50))
+  const options = (startFilm.mock.calls[0] as unknown as [HTMLElement, { moved: () => boolean }])[1]
+  // Signo 1: quieto, el motor puede realinear el ancla.
+  expect(options.moved()).toBe(false)
+  // Signo 2: tras una rueda, ya no.
+  fireEvent.wheel(window)
+  expect(options.moved()).toBe(true)
+})
+
 it("emite «film:chapter» para la isla de la cabecera, y solo cuando cambia", () => {
   window.IntersectionObserver = jest.fn(() => ({ observe: jest.fn(), disconnect: jest.fn(), unobserve: jest.fn() })) as unknown as typeof IntersectionObserver
   window.ResizeObserver = jest.fn(() => ({ observe: jest.fn(), disconnect: jest.fn(), unobserve: jest.fn() })) as unknown as typeof ResizeObserver
