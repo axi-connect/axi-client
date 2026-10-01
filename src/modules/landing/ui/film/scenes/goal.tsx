@@ -68,8 +68,12 @@ function GoalMap() {
                 width={b.w}
                 height={b.h}
                 rx={8}
-                fill={b.park ? "rgb(255 255 255 / .045)" : "rgb(255 255 255 / .022)"}
-                stroke={b.park ? "rgb(255 255 255 / .09)" : "rgb(255 255 255 / .055)"}
+                // La ciudad en tinta del tema (en claro, con blancos fijos desaparecía).
+                style={
+                  b.park
+                    ? { fill: "color-mix(in srgb, var(--foreground) 4.5%, transparent)", stroke: "color-mix(in srgb, var(--foreground) 9%, transparent)" }
+                    : { fill: "color-mix(in srgb, var(--foreground) 2.2%, transparent)", stroke: "color-mix(in srgb, var(--foreground) 5.5%, transparent)" }
+                }
               />
             ))}
             <rect width={GOAL_WORLD.w} height={GOAL_WORLD.h} fill="url(#goal-fade)" />

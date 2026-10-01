@@ -449,8 +449,9 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
   // salta al ancla antes de que existan los pins, que luego la empujan hasta
   // diez pantallas más abajo (auditoría, M1). Al terminar la construcción se
   // realinea, salvo que el visitante ya se haya movido (también mientras bajaba
-  // el chunk: `options.moved`, ronda 2, R5). Si la escena se fija,
-  // el destino es su pin-spacer: la escena misma está en `position: fixed`.
+  // el chunk: `options.moved`, ronda 2, R5). Si la escena se fija, el destino
+  // es su pin-spacer: la escena va `sticky` dentro y, pegada, su caja no dice
+  // dónde empieza.
   let moved = false;
   // Cuántas intenciones van: la posición del visitante solo se restaura (R4) si
   // no se movió mientras se construía.
@@ -480,12 +481,10 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
   const tick = (time: number) => lenis.raf(time * 1000);
   gsap.ticker.add(tick);
   gsap.ticker.lagSmoothing(0);
-  // Pins `fixed` y no `transform` (el defecto con un contenedor propio): el
-  // contenedor ocupa la ventana desde (0, 0) sin transformaciones encima, así
-  // que fijar con `position: fixed` es exacto y no va un frame por detrás del
-  // scroll nativo en táctil. Es lo que pedía «scroll en window» (§12) sin
-  // tocar el layout público, que comparten /productos y el resto.
-  if (scroller) ScrollTrigger.defaults({ scroller, pinType: "fixed" });
+  // Los ScrollTrigger miden contra el contenedor propio del layout público
+  // (no `window`), que comparten /productos y el resto. Fijar no es cosa de
+  // GSAP: las escenas van `sticky` (`sceneTimeline`).
+  if (scroller) ScrollTrigger.defaults({ scroller });
 
   // Los pins de la media activa; al cruzar el corte se rehacen (matchMedia).
   // Las escenas se construyen para el nicho visible; `setNiche` las rehace.
@@ -504,14 +503,10 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
     queue.push(fn);
     channel.port2.postMessage(0);
   };
-  // 40 ms: por debajo de los 50 que cuentan como tarea larga (TBT) y con pocas
-  // tandas. GSAP encola un refresh completo por frame cuando nace un pin
-  // (`_queueRefreshAll`): con tandas de 12 ms caía un frame entre casi cada
-  // escena fijada y el contenido se recalculaba ~7 veces (auditoría, m1).
-  // 30 ms y no 40: se comprueba ANTES de cada escena, así que una tanda dura
-  // eso más la escena siguiente; con CPU ×4 la meta o medir la pasaban de
-  // 50 ms (ronda 2, R8). Cada escena deja su coste en `performance`
-  // («film:<escena>», lo lee qa/qa-perfil.mjs).
+  // 30 ms: por debajo de los 50 que cuentan como tarea larga (TBT). Se comprueba
+  // ANTES de cada escena, así que una tanda dura eso más la escena siguiente
+  // (ronda 2, R8). Cada escena deja su coste en `performance` («film:<escena>»,
+  // lo leen qa/qa-perfil.mjs y qa/qa-perfil-refresh.mjs).
   const SLICE_MS = 30;
   // Si el visitante cambia solo el alto de la ventana y una escena deja de caber
   // (o vuelve a caber), la película se rehace (R6). Lo de cada escena al construir:
@@ -737,8 +732,7 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
       if (scroller) ScrollTrigger.defaults({ scroller: window });
     },
     // El destino es el del aterrizaje de anclas (M1): el pin-spacer si la escena
-    // se fija (la escena en sí está en `position: fixed` mientras dura) y con el
-    // límite de Lenis al día. Lo usan el CTA del nicho y el riel temario.
+    // se fija (la escena va `sticky` dentro) y con el límite de Lenis al día. Lo usan el CTA del nicho y el riel temario.
     scrollTo(target: string, options: FilmScrollOptions = {}) {
       const el = document.querySelector<HTMLElement>(target);
       if (!el) return;

@@ -16,17 +16,21 @@
 .film {
   --film-ink: var(--background);
   --film-line: color-mix(in srgb, var(--foreground) 10%, transparent);
-  --film-surface: color-mix(in srgb, var(--foreground) 5%, var(--background));
   --film-surface-2: color-mix(in srgb, var(--foreground) 9%, var(--background));
   --film-muted: color-mix(in srgb, var(--foreground) 64%, transparent);
-  /* ≥ 47 % para 4,5:1 sobre el fondo (pasada de accesibilidad del 2026-09-30). */
-  --film-dim: color-mix(in srgb, var(--foreground) 50%, transparent);
+  /* El gris de cejas, notas y metadatos: 4,5:1 sobre el fondo en los dos temas.
+     En claro hace falta más tinta (62 %) que en oscuro (50 %; ≥ 47 %, pasada de
+     accesibilidad del 2026-09-30). Lo usan --film-dim y los grises de las escenas. */
+  --film-dim-text: color-mix(in srgb, var(--foreground) 62%, transparent);
+  --film-dim: var(--film-dim-text);
   position: relative;
   width: 100%;
   background: var(--background);
   color: var(--foreground);
   isolation: isolate;
 }
+
+.dark .film { --film-dim-text: color-mix(in srgb, var(--foreground) 50%, transparent); }
 
 /* La pose del teléfono (chat) y del recibo (cobrar): el motor anima estas
    variables en cada frame y solo las lee el `transform` del propio elemento.
@@ -118,12 +122,6 @@
 .film-lead { color: var(--film-muted); text-wrap-style: pretty; }
 .film-dim { color: var(--film-dim); }
 
-/* Superficies: cristal para lo que flota, sólido para lo que se lee. */
-.film-card {
-  background: var(--film-surface);
-  border: 1px solid var(--film-line);
-  border-radius: 24px;
-}
 /* «Cristal» sin backdrop-filter: sobre el escenario oscuro un fondo casi
    opaco se ve igual y no obliga a recomponer el desenfoque en cada frame del
    scroll (lo que más traba en Safari). */
@@ -171,15 +169,6 @@
 @media (max-width: 1023px) {
   [data-scene="niche"] > .film-spot { top: calc(50% - 450px); }
 }
-
-/* El isotipo del hero se arma solo con CSS: no espera al motor ni al JS. */
-@keyframes film-rise {
-  from { opacity: 0; transform: translateY(14px) scale(0.92); }
-  to { opacity: 1; transform: none; }
-}
-.film-alpha path { transform-box: fill-box; transform-origin: 50% 50%; animation: film-rise 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
-.film-alpha path:nth-child(2) { animation-delay: 0.12s; }
-.film-alpha path:nth-child(3) { animation-delay: 0.24s; }
 
 /* Riel de progreso (escritorio) y barra (móvil): la misma cinta, en pequeño. */
 .film-rail {
@@ -248,11 +237,7 @@
   .film-pill[data-on="true"][data-hide="true"] { transform: translate(-50%, 120%); opacity: 0; transition-duration: 0.2s; }
 }
 
-/* Marcas del mapa: las coloca el motor sobre la carretera; sin motor, en su sitio final. */
-.film-mark { position: absolute; z-index: 4; transform: translate(-50%, -50%); pointer-events: none; }
-
 @media (prefers-reduced-motion: reduce) {
-  .film-alpha path { animation: none; }
   .film-pill, .film-rail { transition: none; }
 }
 
@@ -335,9 +320,10 @@
   width: 280px;
   height: 280px;
   border-radius: 50%;
+  /* El núcleo es luz: blanco en los dos temas (con --foreground, en claro era negro). */
   background: radial-gradient(
     closest-side,
-    var(--foreground),
+    white,
     color-mix(in srgb, var(--axi-amber) 90%, transparent) 18%,
     color-mix(in srgb, var(--axi-brand) 45%, transparent) 45%,
     color-mix(in srgb, var(--axi-violet) 14%, transparent) 75%,
@@ -403,7 +389,7 @@
   --ph-screen: color-mix(in srgb, var(--foreground) 1%, var(--background));
   --ph-in: color-mix(in srgb, var(--foreground) 9%, var(--background));
   --ph-out: color-mix(in srgb, var(--foreground) 95%, var(--background));
-  --ph-grey: color-mix(in srgb, var(--foreground) 55%, var(--background));
+  --ph-grey: var(--film-dim-text);
   position: relative;
   flex-shrink: 0;
   width: calc(360px * var(--s));
@@ -717,7 +703,7 @@
 @media (max-width: 639px) { .film-phone-sale { right: -96px; } }
 
 .film-phone-compose { display: flex; flex-shrink: 0; align-items: center; gap: 8px; padding: 6px 11px 8px; }
-.film-phone-plus { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: color-mix(in srgb, var(--foreground) 8%, transparent); }
+.film-phone-plus { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: color-mix(in srgb, var(--foreground) 8%, transparent); color: var(--ph-grey); }
 .film-phone-input {
   display: flex;
   flex: 1;
@@ -1178,7 +1164,7 @@
   transform-origin: 50% 0;
 }
 .film-ruler-gap { position: absolute; left: 144px; top: 150px; width: 12px; height: 70px; background: repeating-linear-gradient(180deg, var(--background) 0 5px, transparent 5px 10px); }
-.film-ruler-gap-label { position: absolute; left: 172px; top: 172px; margin: 0; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: color-mix(in srgb, var(--foreground) 50%, transparent); }
+.film-ruler-gap-label { position: absolute; left: 172px; top: 172px; margin: 0; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--film-dim-text); }
 .film-ruler-event { position: absolute; left: 0; right: 0; }
 .film-ruler-when {
   position: absolute;

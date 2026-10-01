@@ -156,7 +156,8 @@ export function goalFrame(p: number, route: SampledRoute = GOAL_ROUTE) {
     carMark: land,
     here: easeOut(seg(p, 0.14, 0.2)),
     start: land * (1 - easeOut(seg(p, 0.4, 0.5))),
-    should: slow * (1 - 0.6 * ok),
+    // Tras aprobar, el tramo lento queda de fondo, no lavado (en claro, a 0,4 no se leía).
+    should: slow * (1 - 0.45 * ok),
     slowChip: slow * (1 - ok),
     ring: Math.max(proj, ok),
     flag: proj,
