@@ -382,12 +382,19 @@ html:not(.dark) .film-photo-tile:not([data-anim="photo-slot"]) {
 /* El portátil de frente, como en una foto de producto: pantalla de vidrio negro con su
    cámara, marco de aluminio fino y el labio de la base con su muesca. Aluminio en los dos
    temas (gris espacial en oscuro, plata en claro); el vidrio y el bisel, negros siempre. */
-.film-team-laptop { perspective: 1800px; perspective-origin: 50% 10%; padding-bottom: 46px; }
+/* `position: relative`: la base y la sombra se colocan contra el portátil. En
+   escritorio lo hacía de rebote la `perspective`; en móvil (sin ella) la base caía
+   88 px por debajo, contra la sección. */
+.film-team-laptop { position: relative; perspective: 1800px; perspective-origin: 50% 10%; padding-bottom: 46px; }
 .film-team-laptop::after {
   content: ""; position: absolute; left: 4%; right: 4%; bottom: 4px; height: 44px; z-index: -1; pointer-events: none;
   background: radial-gradient(50% 50% at 50% 50%, rgb(0 0 0 / 0.42), rgb(0 0 0 / 0));
 }
+/* El bisel llena la tapa: sin `inset: 0` quedaba 86 px más corto (escritorio) o
+   se desbordaba 50 px (móvil), con un hueco hasta la base. */
 .film-team-bezel {
+  position: absolute;
+  inset: 0;
   padding: 12px 12px 16px;
   border-radius: 20px 20px 6px 6px;
   background: #0b0b0d;
