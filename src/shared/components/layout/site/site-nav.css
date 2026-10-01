@@ -58,9 +58,14 @@
   pointer-events: none;
   background: radial-gradient(120% 90% at 20% -30%, color-mix(in srgb, white 16%, transparent), transparent 55%);
 }
-/* Las superficies grandes (panel y hoja) llevan más tinta detrás: se leen encima de cualquier escena. */
+/* Las superficies grandes (panel y hoja) llevan texto encima de cualquier escena:
+   su legibilidad no depende del desenfoque (QA de axi-2e). Sin composición
+   (Firefox y WebKit sin GPU) al 84–90 % se leían los titulares de detrás, y aun
+   al 97 % quedaban siluetas sobre el blanco del hero: van OPACAS, con un
+   degradado de la propia tinta. El cristal (filete, brillo interior y reflejo)
+   se conserva; el translúcido queda para la barra y la isla. */
 .site-glass-deep {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--background) 84%, transparent), color-mix(in srgb, var(--background) 90%, transparent));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--foreground) 4%, var(--background)), var(--background));
 }
 /* Tema claro fuera de la home: el mismo cristal, en blanco. */
 html:not(.dark) .site-nav:not(.dark) .site-glass {

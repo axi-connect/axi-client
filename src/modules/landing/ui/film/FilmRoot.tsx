@@ -201,7 +201,10 @@ export function FilmRoot({ children }: { children: ReactNode }) {
       scrolling = on;
       apply();
     };
+    // `data-pill-avoid="always"` la aparta también en escritorio (data-avoid): la
+    // onda de la llamada vive abajo al centro, donde está la píldora.
     const avoiding = new Set<Element>();
+    let always = false;
     const pillIo = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
@@ -209,6 +212,11 @@ export function FilmRoot({ children }: { children: ReactNode }) {
           else avoiding.delete(e.target);
         }
         avoid = avoiding.size > 0;
+        const nowAlways = [...avoiding].some((n) => (n as HTMLElement).dataset.pillAvoid === "always");
+        if (nowAlways !== always) {
+          always = nowAlways;
+          pillRef.current?.setAttribute("data-avoid", always ? "true" : "false");
+        }
         apply();
       },
       { root: el, rootMargin: "-88% 0px 0px 0px" },

@@ -201,6 +201,8 @@
   transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.35s ease;
 }
 .film-pill[data-on="true"] { transform: translate(-50%, 0); opacity: 1; }
+/* En cualquier ancho: mientras algo con data-pill-avoid="always" ocupa la franja de abajo (FilmRoot). */
+.film-pill[data-on="true"][data-avoid="true"] { transform: translate(-50%, 120%); opacity: 0; transition-duration: 0.2s; }
 @media (max-width: 1023px) {
   .film-pill { bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
   /* En móvil se aparta mientras se baja (tapa contenido) y vuelve al subir o al
@@ -394,9 +396,10 @@
   width: 290px;
   height: 44px;
   border-radius: 50%;
-  background: radial-gradient(closest-side, color-mix(in srgb, var(--background) 85%, transparent), transparent);
-  filter: blur(6px);
+  /* Sin `filter: blur` (se anima: el desenfoque se rasterizaba en cada frame). */
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--background) 85%, transparent), color-mix(in srgb, var(--background) 40%, transparent) 60%, transparent);
   opacity: 0.9;
+  will-change: transform, opacity;
 }
 .film-phone-halo {
   position: absolute;
@@ -713,9 +716,10 @@
   bottom: 34px;
   height: 80px;
   border-radius: 50%;
-  background: radial-gradient(closest-side, color-mix(in srgb, var(--background) 95%, transparent), transparent);
-  filter: blur(12px);
+  /* Sin `filter: blur` (se anima: el desenfoque se rasterizaba en cada frame). */
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--background) 95%, transparent), color-mix(in srgb, var(--background) 45%, transparent) 55%, transparent);
   opacity: 0.95;
+  will-change: transform, opacity;
 }
 .film-receipt {
   --ty: 0px;
@@ -859,9 +863,12 @@
   width: 210px;
   height: 60px;
   border-radius: 50%;
-  background: radial-gradient(closest-side, color-mix(in srgb, var(--background) 90%, transparent), transparent);
-  filter: blur(10px);
+  /* Sin `filter: blur`: la sombra se mueve y escala en cada frame y el desenfoque
+     se volvía a rasterizar cada vez (perfil del 2026-10-01). El degradado ya
+     difumina; en su propia capa solo la compone la GPU. */
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--background) 90%, transparent), color-mix(in srgb, var(--background) 45%, transparent) 55%, transparent);
   opacity: 0.9;
+  will-change: transform, opacity;
 }
 .film-appt {
   display: flex;

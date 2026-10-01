@@ -95,3 +95,37 @@ it("emite «film:chapter» para la isla de la cabecera, y solo cuando cambia", (
   window.removeEventListener("film:chapter", listen)
   scroller.remove()
 })
+
+it("la píldora se aparta en cualquier ancho solo con data-pill-avoid=\"always\"; el resto, solo en móvil", () => {
+  // El observador de la franja de abajo: se captura su callback para simular lo que entra en ella.
+  const observers: { cb: IntersectionObserverCallback; opts?: IntersectionObserverInit }[] = []
+  window.IntersectionObserver = jest.fn((cb: IntersectionObserverCallback, opts?: IntersectionObserverInit) => {
+    observers.push({ cb, opts })
+    return { observe: jest.fn(), disconnect: jest.fn(), unobserve: jest.fn() }
+  }) as unknown as typeof IntersectionObserver
+  window.ResizeObserver = jest.fn(() => ({ observe: jest.fn(), disconnect: jest.fn(), unobserve: jest.fn() })) as unknown as typeof ResizeObserver
+  const scroller = document.createElement("div")
+  scroller.setAttribute("data-app-scroll", "")
+  document.body.appendChild(scroller)
+  const { container, unmount } = render(<Film />, { container: scroller })
+  const pill = container.querySelector<HTMLElement>(".film-pill")!
+  const band = observers.find((o) => o.opts?.rootMargin === "-88% 0px 0px 0px")!
+  const plain = document.createElement("div")
+  plain.dataset.pillAvoid = ""
+  const always = document.createElement("div")
+  always.dataset.pillAvoid = "always"
+  const enter = (target: Element, isIntersecting: boolean) =>
+    band.cb([{ target, isIntersecting } as IntersectionObserverEntry], {} as IntersectionObserver)
+
+  // Signo 1: la cabina del piloto (data-pill-avoid a secas) la aparta en móvil (data-hide), no en escritorio.
+  enter(plain, true)
+  expect(pill).toHaveAttribute("data-hide", "true")
+  expect(pill.getAttribute("data-avoid")).not.toBe("true")
+  // Signo 2: la onda de la llamada (always) la aparta también en escritorio, y al salir vuelve.
+  enter(always, true)
+  expect(pill).toHaveAttribute("data-avoid", "true")
+  enter(always, false)
+  expect(pill).toHaveAttribute("data-avoid", "false")
+  unmount()
+  scroller.remove()
+})
