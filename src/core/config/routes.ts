@@ -53,12 +53,13 @@ export const PUBLIC_PATHS = [
   // opcionales: el matcher del middleware solo exime `favicon.ico` de este
   // grupo, así que sin registrarlas aquí Googlebot y los scrapers de enlaces
   // (WhatsApp, LinkedIn, X, Facebook) reciben un 307 al login en vez del
-  // archivo. Era el estado real de `/opengraph-image.png` en producción: la
+  // archivo. Era el estado real de la imagen OG en producción: la
   // imagen existía en el repo y no llegaba a ningún preview.
   "/robots.txt",
   "/sitemap.xml",
   "/manifest.webmanifest",
-  "/opengraph-image.png",
+  // La imagen OG la genera `app/opengraph-image.tsx` (sin extensión).
+  "/opengraph-image",
   "/icon.svg",
   "/apple-icon.png",
 ];

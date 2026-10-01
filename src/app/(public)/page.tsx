@@ -14,14 +14,15 @@ import { FilmPage } from "@/modules/landing/ui/film/FilmPage";
  * cinematográfica», `docs/plans/landing_cinematica_plan.md`). La home anterior
  * quedó archivada en el tag git `landing-v1-archive`.
  */
-const HOME_TITLE = "Axi Connect — El futuro es conversacional";
+const HOME_TITLE = "Axi Connect · Vende en cada conversación";
+// El lead del hero, tal cual (título y descripción salen de la película).
 const HOME_DESCRIPTION =
-  "Axi Connect pone a tu mejor vendedor en cada conversación: responde en segundos, cotiza con tus precios reales, arma el pedido y te muestra —en pesos— lo que produjo cada chat.";
+  "Axi atiende tu WhatsApp como tu mejor vendedor: responde en segundos, cotiza con tus precios, cobra y te lleva a tu meta del mes.";
 
 /**
  * `title.absolute` y no un string suelto: el template del layout raíz
  * (`"%s — Axi Connect"`) se aplica a los títulos hijos, así que este mismo
- * texto renderizaba "Axi Connect — El futuro es conversacional — Axi Connect".
+ * texto se renderizaría con «— Axi Connect» repetido al final.
  */
 export const metadata: Metadata = {
   title: { absolute: HOME_TITLE },
@@ -60,9 +61,8 @@ export default async function Home() {
   return (
     <div className="w-full">
       {/* La identidad de la marca se declara una sola vez, en la home. El
-          FAQPage es indispensable aquí: el acordeón desmonta las respuestas
-          cerradas, así que este bloque es la única vía por la que ese copy
-          llega a Google. */}
+          FAQPage repite las preguntas de `FAQ`, las mismas que pinta la escena
+          de preguntas con `<details>` (el texto ya está en el HTML). */}
       <JsonLd data={organizationSchema()} />
       <JsonLd data={webSiteSchema()} />
       <JsonLd data={faqSchema(FAQ.items)} />

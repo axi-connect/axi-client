@@ -22,7 +22,8 @@ import { routeLabel } from "@/core/seo/routes";
  * (no hay buscador).
  */
 /**
- * Imagen de las tarjetas de enlace (1200×630, `src/app/opengraph-image.png`).
+ * Imagen de las tarjetas de enlace (1200×630), generada con `next/og` en
+ * `src/app/opengraph-image.tsx`.
  *
  * Se declara explícitamente en cada página en vez de confiar en la convención
  * de archivo de Next: en cuanto una página define su propio `openGraph`, la
@@ -31,10 +32,10 @@ import { routeLabel } from "@/core/seo/routes";
  * y X, que es justo lo que se quería arreglar.
  */
 export const OG_IMAGE = {
-  url: siteUrl("/opengraph-image.png"),
+  url: siteUrl("/opengraph-image"),
   width: 1200,
   height: 630,
-  alt: "Axi Connect — atención y ventas por WhatsApp con agentes de IA",
+  alt: "Axi Connect · Vende en cada conversación",
 } as const;
 
 export const SITE = {
@@ -42,7 +43,7 @@ export const SITE = {
   url: SITE_URL,
   logo: siteUrl("/images/brand/logo-horizontal.png"),
   description:
-    "Atención al cliente omnicanal con IA: WhatsApp, Instagram y Messenger en un solo inbox, con agentes inteligentes y handoff humano.",
+    "Axi atiende tu WhatsApp, Instagram y Messenger como tu mejor vendedor: cotiza con tus precios, cobra y te lleva a tu meta del mes.",
 } as const;
 
 /**
