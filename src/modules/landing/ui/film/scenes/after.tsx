@@ -24,7 +24,7 @@ export function PricingScene({ catalog }: { catalog: PublicCatalog | null }) {
       <div className="film-price-spot" aria-hidden="true" />
       <div className="relative z-[2] mx-auto w-full max-w-[1200px] px-4 py-24 sm:px-6">
         <div data-anim="price-head" className="text-center">
-          <p className="film-eyebrow film-dim mb-[18px]">{FILM_PRICING.eyebrow}</p>
+          <p className="film-eyebrow film-sell-dim mb-[18px]">{FILM_PRICING.eyebrow}</p>
           <h2 id="precios-h" className="film-h text-[clamp(38px,4.6vw,64px)]">
             {FILM_PRICING.title} <span className="t">{FILM_PRICING.titleThin}</span>
           </h2>
@@ -43,7 +43,7 @@ export function PricingScene({ catalog }: { catalog: PublicCatalog | null }) {
 function PricingUnavailable() {
   return (
     <div data-testid="pricing-unavailable" className="film-price-ent mx-auto mt-12 max-w-[720px] flex-col !items-center text-center">
-      <p className="film-eyebrow film-dim">Precios a consulta</p>
+      <p className="film-eyebrow film-sell-dim">Precios a consulta</p>
       <p className="film-h text-2xl">Estamos actualizando el catálogo. Te lo enviamos hoy mismo.</p>
       <p className="film-lead text-sm leading-relaxed">
         Los precios se publican desde nuestro catálogo en vivo y ahora mismo no está disponible. Escríbenos y te mandamos el plan
@@ -77,7 +77,7 @@ export function FaqScene() {
     <section id={LANDING_ANCHORS.faq} data-scene="faq" aria-labelledby="faq-h" className="relative w-full scroll-mt-24 overflow-clip">
       <div className="film-faq relative z-[2] mx-auto w-full max-w-[1200px] px-4 py-24 sm:px-6">
         <div className="film-faq-side">
-          <p className="film-eyebrow film-dim">{FILM_FAQ.eyebrow}</p>
+          <p className="film-eyebrow film-sell-dim">{FILM_FAQ.eyebrow}</p>
           <h2 id="faq-h" className="film-h text-[clamp(36px,4vw,56px)]">
             {FILM_FAQ.title}
             <br />

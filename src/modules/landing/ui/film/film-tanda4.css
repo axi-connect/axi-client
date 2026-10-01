@@ -159,7 +159,9 @@
 .film-price-cta:hover { filter: brightness(0.92); }
 .film-price-card[data-featured] .film-price-cta { background: #0a0a0b; color: #f5f5f7; }
 .film-price-card[data-featured] .film-price-cta:hover { filter: brightness(1.4); }
-.film-price-cta:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+/* Foco en tinta: anillo blanco de 2 px a 2 px; sobre la tarjeta blanca, negro. */
+.film-price-cta:focus-visible { outline: 2px solid #f5f5f7; outline-offset: 2px; }
+.film-price-card[data-featured] .film-price-cta:focus-visible { outline-color: #0a0a0b; }
 .film-price-micro { margin: -8px 0 0; text-align: center; font-size: 12px; color: var(--dim); }
 
 .film-price-ent {
@@ -189,6 +191,7 @@
   transition: background-color 0.2s;
 }
 .film-price-ent-cta:hover { background: rgb(255 255 255 / 0.06); }
+.film-price-ent-cta:focus-visible { outline: 2px solid #f5f5f7; outline-offset: 2px; }
 .film-price-peruser { margin: 18px 0 0; text-align: center; font-size: 12.5px; color: rgb(245 245 247 / 0.5); }
 
 @media (max-width: 1023px) {
@@ -222,7 +225,7 @@
   transition: filter 0.2s;
 }
 .film-faq-cta:hover { filter: brightness(0.92); }
-.film-faq-cta:focus-visible { outline: 2px solid #f5f5f7; outline-offset: 3px; }
+.film-faq-cta:focus-visible { outline: 2px solid #f5f5f7; outline-offset: 2px; }
 /* La voz del agente: el único violeta de la sección. */
 .film-faq-live { margin: -8px 0 0; display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: rgb(245 245 247 / 0.5); }
 .film-faq-live-dot { width: 7px; height: 7px; border-radius: 50%; background: #a78bfa; box-shadow: 0 0 12px rgb(167 139 250 / 0.8); }
@@ -243,7 +246,7 @@
 .film-faq-item summary::-webkit-details-marker { display: none; }
 .film-faq-item summary:focus-visible { outline: 2px solid #f5f5f7; outline-offset: 2px; border-radius: 6px; }
 .film-faq-item[open] summary { color: #f5f5f7; }
-.film-faq-n { width: 26px; flex: none; font-size: 12px; font-variant-numeric: tabular-nums; color: rgb(245 245 247 / 0.4); }
+.film-faq-n { width: 26px; flex: none; font-size: 12px; font-variant-numeric: tabular-nums; color: rgb(245 245 247 / 0.5); }
 .film-faq-q { flex: 1; }
 /* Más/menos: la barra vertical se apaga y el círculo se invierte al abrir. */
 .film-faq-sign {
@@ -366,7 +369,9 @@
   transition: background-color 0.2s;
 }
 .film-close-agent:hover { background: rgb(255 255 255 / 0.1); }
-.film-close-agent:focus-visible { outline: 2px solid #f5f5f7; outline-offset: 3px; }
+.film-close-agent:focus-visible { outline: 2px solid #f5f5f7; outline-offset: 2px; }
+/* El CTA coral del cierre es el FilmCta compartido (anillo de marca): aquí, el de tinta. */
+.film-close .film-close-cta:focus-visible { box-shadow: none; outline: 2px solid #f5f5f7; outline-offset: 2px; }
 .film-close-micro { margin: 0; font-size: 13px; color: rgb(245 245 247 / 0.5); }
 
 @media (max-width: 1023px) {
@@ -557,7 +562,7 @@
   background: #f5f5f7; color: #0a0a0b; border: 1px solid transparent;
 }
 .film-goal[data-approved] .film-goal-approve { background: transparent; color: #f5f5f7; border-color: rgb(255 255 255 / 0.3); }
-.film-goal-note { font-size: 11px; color: rgb(245 245 247 / 0.45); text-align: center; }
+.film-goal-note { font-size: 11px; color: rgb(245 245 247 / 0.5); text-align: center; }
 
 /* ── móvil: no se fija; titular, franja del mapa de 430 px y panel compacto ── */
 @media (max-width: 1023px) {
