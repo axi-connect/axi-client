@@ -412,17 +412,22 @@
   will-change: transform;
 }
 .film-goal-plane svg { position: absolute; inset: 0; overflow: visible; }
+/* La ciudad en su propia capa: los trazos que avanzan no la vuelven a
+   rasterizar (perfil del scroll: 4,9 s de raster en la meta con una sola capa). */
+.film-goal-city { will-change: transform; }
 
 .film-goal-plane path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
 .film-goal-lane { stroke: rgb(255 255 255 / 0.07); stroke-width: 30; }
 .film-goal-plan { stroke: rgb(255 255 255 / 0.32); stroke-width: 3; stroke-dasharray: 1 13; }
 .film-goal-reveal { stroke: #fff; stroke-width: 16; stroke-linecap: butt !important; }
-.film-goal-axi-glow { stroke: #a78bfa; stroke-width: 22; }
+/* Los brillos son trazos anchos y tenues, sin feGaussianBlur: el filtro sobre
+   una ruta de 2400 px se recalculaba en cada frame del scrub. */
+.film-goal-axi-glow { stroke: #a78bfa; stroke-width: 26; stroke-opacity: 0.35; }
 .film-goal-axi { stroke: #a78bfa; stroke-width: 7; transition: stroke 0.3s; }
 .film-goal[data-approved] .film-goal-axi { stroke: #f5f5f7; }
 .film-goal-projection { stroke: #f5f5f7; stroke-width: 4; stroke-dasharray: 10 12; }
 .film-goal-slow { stroke: #8e8e96; stroke-width: 7; stroke-dasharray: 2 12; }
-.film-goal-done-glow { stroke: #fff; stroke-width: 20; stroke-opacity: 0.22; }
+.film-goal-done-glow { stroke: #fff; stroke-width: 22; stroke-opacity: 0.12; }
 .film-goal-done { stroke: #fff; stroke-width: 8; }
 
 .film-goal-veil {
