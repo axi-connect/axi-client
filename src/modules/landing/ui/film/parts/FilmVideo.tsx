@@ -44,8 +44,19 @@ export function FilmVideo({ desktop, mobile }: { desktop: Sources; mobile: Sourc
       // pedía tarde (pantalla negra al llegar).
       { root: video.closest("[data-app-scroll]"), rootMargin: "100% 0px" },
     );
-    near.observe(video);
-    return () => near.disconnect();
+    // Y nunca antes del load: el video está a una pantalla del hero y no debe
+    // competir con su LCP. Tras el load, en el primer hueco libre.
+    let idle = 0;
+    const arm = () => {
+      idle = window.setTimeout(() => near.observe(video), 0);
+    };
+    if (document.readyState === "complete") arm();
+    else window.addEventListener("load", arm, { once: true });
+    return () => {
+      window.removeEventListener("load", arm);
+      window.clearTimeout(idle);
+      near.disconnect();
+    };
   }, [desktop, mobile]);
 
   // En pantalla suena (si puede); fuera de ella o con la pestaña oculta, pausa.
