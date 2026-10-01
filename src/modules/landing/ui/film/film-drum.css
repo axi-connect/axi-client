@@ -62,8 +62,8 @@
   left: 8px;
   right: 8px;
   top: 50%;
-  height: 48px;
-  margin-top: -24px;
+  height: 62px;
+  margin-top: -31px;
   border-radius: 14px;
   background: color-mix(in srgb, var(--foreground) 7%, transparent);
   box-shadow: inset 0 1px 0 color-mix(in srgb, var(--foreground) 8%, transparent);
@@ -95,6 +95,8 @@
   transform-origin: 16px 50%;
   transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.42s ease;
 }
+/* La del centro se lee entera: su título puede ir en dos líneas. */
+.film-drum-row[data-centered] { height: 60px; margin-top: -30px; }
 .film-drum-row:focus-visible { outline: 2px solid var(--foreground); outline-offset: -2px; border-radius: 12px; }
 .film-drum-row[data-tone="coral"] { --tone: var(--axi-brand); }
 .film-drum-row[data-tone="amber"] { --tone: var(--axi-amber); }
@@ -106,7 +108,17 @@
 .film-drum-chapter { display: none; font-size: 9.5px; letter-spacing: 0.18em; font-weight: 600; text-transform: uppercase; color: color-mix(in srgb, var(--foreground) 52%, transparent); }
 .film-drum-row[data-centered] .film-drum-chapter { display: block; }
 .film-drum-title { font-size: 14.5px; font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.film-drum-row[data-centered] .film-drum-title { font-weight: 600; }
+.film-drum-row[data-centered] .film-drum-title {
+  font-weight: 600;
+  white-space: normal;
+  text-wrap: balance;
+  /* Aire para la tinta: con 1,15 el recorte de line-clamp comía las colas (g, p) de la 2.ª línea. */
+  line-height: 1.2;
+  padding-bottom: 2px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
 .film-drum-key { margin-left: auto; font-size: 10.5px; color: color-mix(in srgb, var(--foreground) 55%, transparent); opacity: 0; }
 .film-drum-row[data-centered] .film-drum-key { opacity: 1; }
 

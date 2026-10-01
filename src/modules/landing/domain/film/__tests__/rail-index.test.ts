@@ -46,10 +46,12 @@ describe("el tambor", () => {
   it("la del centro va a tamaño y nítida; con la distancia se achica y se apaga", () => {
     expect(drumPose(0)).toEqual({ y: 0, scale: 1, opacity: 1, hidden: false })
     const one = drumPose(1)
-    expect(one.y).toBe(DRUM.row)
+    // La del centro es más alta: las vecinas se apartan `bump` además de su fila.
+    expect(one.y).toBe(DRUM.row + DRUM.bump)
     expect(one.scale).toBeCloseTo(0.88)
     expect(one.opacity).toBeCloseTo(0.7)
-    expect(drumPose(-2).y).toBe(-2 * DRUM.row)
+    expect(drumPose(-2).y).toBe(-2 * DRUM.row - DRUM.bump)
+    expect(drumPose(2).y - drumPose(1).y).toBe(DRUM.row)
     // Cinco a la vista (−2…2); más allá, oculta.
     expect(drumPose(2).hidden).toBe(false)
     expect(drumPose(3.5).hidden).toBe(true)

@@ -162,7 +162,7 @@ export function FilmDrum({
                   <span className="film-drum-title">{e.title}</span>
                 </span>
                 <span className="film-drum-key" aria-hidden="true">
-                  {RAIL_COPY.enter} ↵
+                  ↵
                 </span>
               </button>
             );

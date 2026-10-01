@@ -50,12 +50,15 @@ export const RAIL_INDEX: readonly RailEntry[] = [
 export const RAIL_COPY = {
   label: "Escenas de la película",
   open: "Ir a una escena",
-  enter: "Intro",
   toward: "Hacia",
 } as const;
 
 /** El tambor (lienzo v2): 272 × 236, filas de 46 px, cinco a la vista. */
-export const DRUM = { width: 272, height: 236, row: 46, wheelStep: 60, snapMs: 420 } as const;
+/**
+ * `bump`: la fila del centro es más alta (su título puede ir en dos líneas,
+ * pedido de diseño del 2026-10-01) y aparta a las demás esa distancia.
+ */
+export const DRUM = { width: 272, height: 236, row: 46, bump: 8, wheelStep: 60, snapMs: 420 } as const;
 
 /** Más allá de esto la fila no se ve (y no se anima). */
 const HIDDEN_AT = 3.4;
@@ -65,8 +68,9 @@ export type DrumPose = { y: number; scale: number; opacity: number; hidden: bool
 /** La pose de una fila a `d` filas del centro: −12 % de escala y −30 % de opacidad por paso. */
 export function drumPose(d: number): DrumPose {
   const a = Math.abs(d);
-  if (a > HIDDEN_AT) return { y: d * DRUM.row, scale: 0.72, opacity: 0, hidden: true };
-  return { y: d * DRUM.row, scale: Math.max(0.72, 1 - 0.12 * a), opacity: Math.max(0, 1 - 0.3 * a), hidden: false };
+  const y = d * DRUM.row + Math.sign(d) * DRUM.bump;
+  if (a > HIDDEN_AT) return { y, scale: 0.72, opacity: 0, hidden: true };
+  return { y, scale: Math.max(0.72, 1 - 0.12 * a), opacity: Math.max(0, 1 - 0.3 * a), hidden: false };
 }
 
 /**

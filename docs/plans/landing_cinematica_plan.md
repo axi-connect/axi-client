@@ -1040,3 +1040,4 @@ Lienzo: https://claude.ai/artifact/TAMCLKyh5AdP3xKremX4w9 (v2). La dueña lo apr
   - el recorrido en `FilmRoot`;
   - `scrollTo(target, { duration, easing, onComplete })` y `offsetOf()` en el motor.
 - **Solo escritorio:** el riel no existe por debajo de 1024 px. El piloto aparece en la lista solo con `FILM_PILOT=1`, porque el riel lista lo que hay en la página.
+- **Ajuste del 2026-10-01 (revisión de diseño):** la escena del centro se lee entera. Su fila mide 60 px y su título puede ir en dos líneas (`line-clamp: 2`, `text-wrap: balance`). La tecla queda en «↵» y las vecinas se apartan `DRUM.bump` = 8 px. Medido a tamaño real: el título más largo («Tu captación en piloto automático») ocupa unos 270 px y la columna deja unos 141 px. Las filas de alrededor siguen en una línea, con elipsis.
