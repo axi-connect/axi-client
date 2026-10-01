@@ -55,6 +55,15 @@ const nextConfig: NextConfig = {
    */
   async redirects() {
     return [
+      // La imagen OG era un PNG estático; hoy la genera `app/opengraph-image.tsx`
+      // (sin extensión). Sin esto, los rastreadores con la URL vieja recibían un
+      // 307 al login (el middleware no la conoce): auditoría de la landing, m9.
+      // Los redirects de next.config corren ANTES que el middleware.
+      {
+        source: "/opengraph-image.png",
+        destination: "/opengraph-image",
+        permanent: true,
+      },
       // `/precios` YA NO redirige: es página propia desde el rediseño del nav
       // (docs/plans/navigation_standardization_plan.md). Dejar el redirect aquí
       // haría inalcanzable la página, porque el redirect gana a la ruta.
