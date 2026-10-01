@@ -604,7 +604,7 @@ Se mantiene `PricingPlans` (lo comparte `/precios`: no romperlo). Para la pelíc
 ### 16.5 Cabecera a 1024 px (aprobada con la tanda)
 
 Entre `lg` y 1200 px la cabecera cabía mal: el logo, «Iniciar sesión» y el CTA se partían. En ese rango:
-- el selector de tema pasa al menú desplegable;
+- el selector de tema se oculta solo donde la cabecera es oscura forzada (la home), porque allí no tiene efecto; en el resto de páginas se queda (ajuste del 2026-09-30: no hay desplegable propio en ese rango y no se añade una segunda hamburguesa);
 - el CTA dice «Prueba gratis»;
 - el logo e «Iniciar sesión» llevan `whitespace-nowrap`.
 
