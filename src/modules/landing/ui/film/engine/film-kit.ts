@@ -153,7 +153,7 @@ export const PINNED = new Set(["video", "radar", "pilot", "followup", "chat", "p
  * llegue como un escenario vacío.
  */
 /** Sin fijar: qué elemento y qué tramo del scroll reproducen la escena. */
-export type Pass = { trigger?: Element; start?: string; end?: string };
+export type Pass = { trigger?: Element; start?: string | (() => string); end?: string | (() => string) };
 
 /**
  * Si la escena se fija: en escritorio, en la lista y si cabe en la ventana. El
