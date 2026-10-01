@@ -10,8 +10,9 @@ type Sources = { mp4: string; poster: string };
  * El video de la película (plan §23): Cloudinary en streaming progresivo, sin
  * librerías ni framer-motion (no entra en el JS de /).
  *
- * - Nada se pide hasta que la escena está a una pantalla (IntersectionObserver
- *   sobre el contenedor de scroll): ni el póster ni el video compiten con el LCP.
+ * - Nada se pide antes del load y de la primera intención (scroll, rueda, toque
+ *   o tecla), y solo con la escena a una pantalla (IntersectionObserver sobre el
+ *   contenedor de scroll): ni el póster ni el video compiten con la carga.
  * - Escritorio/móvil en el MISMO umbral que /productos (768 px): cada máster con
  *   su póster, elegido tras hidratar.
  * - Autoplay en silencio y en bucle; se pausa fuera de pantalla y con la pestaña
@@ -44,17 +45,31 @@ export function FilmVideo({ desktop, mobile }: { desktop: Sources; mobile: Sourc
       // pedía tarde (pantalla negra al llegar).
       { root: video.closest("[data-app-scroll]"), rootMargin: "100% 0px" },
     );
-    // Y nunca antes del load: el video está a una pantalla del hero y no debe
-    // competir con su LCP. Tras el load, en el primer hueco libre.
-    let idle = 0;
+    // Y solo con intención: el primer scroll, rueda, toque o tecla tras el load.
+    // El video pesa ~25 MB y a 1440 queda a menos de una pantalla del hero;
+    // pedirlo sin que nadie baje competía con todo lo demás (y con el LCP).
+    const scroller = video.closest("[data-app-scroll]");
+    const INTENT = ["wheel", "touchstart", "pointerdown", "keydown"] as const;
+    let armed = false;
     const arm = () => {
-      idle = window.setTimeout(() => near.observe(video), 0);
+      if (armed || document.readyState !== "complete") return;
+      armed = true;
+      for (const ev of INTENT) window.removeEventListener(ev, arm);
+      scroller?.removeEventListener("scroll", arm);
+      near.observe(video);
     };
-    if (document.readyState === "complete") arm();
-    else window.addEventListener("load", arm, { once: true });
+    const listen = () => {
+      for (const ev of INTENT) window.addEventListener(ev, arm, { passive: true });
+      scroller?.addEventListener("scroll", arm, { passive: true });
+      // Ya bajado al llegar (ancla o recarga a mitad de página): no hay que esperar.
+      if ((scroller?.scrollTop ?? 0) > 0) arm();
+    };
+    if (document.readyState === "complete") listen();
+    else window.addEventListener("load", listen, { once: true });
     return () => {
-      window.removeEventListener("load", arm);
-      window.clearTimeout(idle);
+      window.removeEventListener("load", listen);
+      for (const ev of INTENT) window.removeEventListener(ev, arm);
+      scroller?.removeEventListener("scroll", arm);
       near.disconnect();
     };
   }, [desktop, mobile]);
