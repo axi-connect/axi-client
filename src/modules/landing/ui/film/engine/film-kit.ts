@@ -11,35 +11,24 @@ import type { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import { FILM_NICHES } from "@/modules/landing/domain/film/niches";
 
-/** `pins`: el ScrollTrigger de cada escena fijada, para el hilo de luz. */
-export type Ctx = { desktop: boolean; pins: Map<string, ScrollTrigger> };
+/**
+ * `pins`: el ScrollTrigger de cada escena fijada, para el hilo de luz.
+ * `settled`: escenas que ya estaban en pantalla cuando el motor llegó con el
+ * visitante a mitad de página. No vuelven al inicio de su scrub (se apagaban y
+ * reaparecían: el «salto», ronda 2, R4): su línea queda en el fotograma final
+ * (`finals`, el motor la lleva a 1 al terminar de construir la escena).
+ */
+export type Ctx = {
+  desktop: boolean;
+  pins: Map<string, ScrollTrigger>;
+  settled?: ReadonlySet<Element>;
+  finals?: gsap.core.Timeline[];
+};
 export type Scene = (section: HTMLElement, ctx: Ctx) => void;
 
 /* ────────────────────────────── utilidades ────────────────────────────── */
 
 export const all = (scope: ParentNode, sel: string) => Array.from(scope.querySelectorAll<HTMLElement>(sel));
-
-/**
- * Saca del orden de tabulación lo enfocable de `scope` (o lo devuelve), sin
- * sacarlo del árbol de accesibilidad: el lector sigue leyendo encabezados y
- * texto de lo que está fuera de cuadro; solo el foco no cae en algo invisible.
- * (`inert` hacía las dos cosas: auditoría ronda 2, R2.) Respeta un tabindex
- * propio que ya tuviera el elemento.
- */
-export function untabbable(scope: ParentNode, off: boolean) {
-  for (const el of all(scope, "a[href], button, input, select, textarea, [tabindex]")) {
-    if (off) {
-      if (el.dataset.filmTab !== undefined) continue;
-      el.dataset.filmTab = el.getAttribute("tabindex") ?? "";
-      el.tabIndex = -1;
-    } else if (el.dataset.filmTab !== undefined) {
-      const was = el.dataset.filmTab;
-      delete el.dataset.filmTab;
-      if (was === "") el.removeAttribute("tabindex");
-      else el.setAttribute("tabindex", was);
-    }
-  }
-}
 
 /** El nicho que se ve: el `data-niche` del raíz de la película. */
 export function activeNiche(section: HTMLElement): string {
@@ -154,7 +143,7 @@ export const reveal = { opacity: 0, y: 24 };
  * es más guiado». Sin fijar, la animación empezaba con la escena apenas asomando
  * y terminaba a media pantalla.
  */
-export const PINNED = new Set(["philosophy", "radar", "pilot", "followup", "chat", "photo", "vault", "team", "collect", "pipeline", "goal", "axel", "measure"]);
+export const PINNED = new Set(["video", "radar", "pilot", "followup", "chat", "photo", "vault", "team", "collect", "pipeline", "goal", "axel", "measure"]);
 
 /**
  * Una línea de tiempo de escena: fijada si cabe, revelada al pasar si no.
@@ -166,15 +155,30 @@ export const PINNED = new Set(["philosophy", "radar", "pilot", "followup", "chat
 /** Sin fijar: qué elemento y qué tramo del scroll reproducen la escena. */
 export type Pass = { trigger?: Element; start?: string; end?: string };
 
+/**
+ * Si la escena se fija: en escritorio, en la lista y si cabe en la ventana. El
+ * motor lo vuelve a preguntar tras cada refresh: si cambia solo el alto de la
+ * ventana (DevTools, 1280 × 720) la película se rehace (ronda 2, R6).
+ */
+export function pinFits(section: HTMLElement, desktop: boolean): boolean {
+  return desktop && PINNED.has(section.dataset.scene ?? "") && section.offsetHeight <= window.innerHeight * 1.02;
+}
+
 export function sceneTimeline(section: HTMLElement, ctx: Ctx, length: number, pass: Pass = {}): gsap.core.Timeline {
   const heads = all(section, "[data-anim=head]");
+  const fits = pinFits(section, ctx.desktop);
+  // Ya en pantalla al llegar el motor (R4) y sin fijar: sin scrub, al final.
+  if (!fits && ctx.settled?.has(section)) {
+    const tl = gsap.timeline({ defaults: { ease: "power2.out", duration: 1 }, paused: true });
+    ctx.finals?.push(tl);
+    return tl;
+  }
   if (heads.length) {
     gsap.from(heads, { ...reveal, ease: "power2.out", scrollTrigger: { trigger: section, start: "top 88%", end: "top 30%", scrub: true } });
   }
   // Solo los momentos largos se fijan (chat, radar, seguimiento, la meta, Axel
   // y medir, cuyo horizonte y fibras se cruzarían en unos píxeles); el
   // resto se revela al pasar. Todo fijado daba un ritmo plano y 28.000 px.
-  const fits = ctx.desktop && PINNED.has(section.dataset.scene ?? "") && section.offsetHeight <= window.innerHeight * 1.02;
   const tl = gsap.timeline({
     defaults: { ease: "power2.out", duration: 1 },
     scrollTrigger: fits

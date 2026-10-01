@@ -26,7 +26,6 @@ import type { FilmThread } from "@/modules/landing/ui/film/thread/thread";
 import { emitFilmEvent, FILM_ACTIVITY_EVENT, type FilmActivityDetail } from "@/modules/landing/ui/film/film-events";
 import { close } from "@/modules/landing/ui/film/engine/close-scene";
 import { goal } from "@/modules/landing/ui/film/engine/goal-scene";
-import { philosophy } from "@/modules/landing/ui/film/engine/philosophy-scene";
 // El piloto (§19) solo entra en el motor con FILM_PILOT=1: la rama con el
 // literal que inlina next.config deja que webpack lo pode cuando está apagado
 // (auditoría, m11: antes pilot-content y pilot-frame viajaban igual).
@@ -40,6 +39,7 @@ const pilotScene: Promise<Scene> | null =
     : null;
 import { pricing } from "@/modules/landing/ui/film/engine/pricing-scene";
 import { call, photo, team, vault } from "@/modules/landing/ui/film/engine/sell-scenes";
+import { video } from "@/modules/landing/ui/film/engine/video-scene";
 import {
   SPAN,
   all,
@@ -49,6 +49,8 @@ import {
   lerp,
   num,
   perNiche,
+  PINNED,
+  pinFits,
   sceneTimeline,
   segP,
   setText,
@@ -414,7 +416,7 @@ const measure: Scene = (section, ctx) => {
   if (glow.length) tl.fromTo(glow, { opacity: 0 }, { opacity: 1, ease: "power3.out", duration: atP(0.14) }, atP(0.82));
 };
 
-const SCENES: Record<string, Scene> = { hero, philosophy, niche, radar, followup, chat, photo, call, vault, team, collect, pipeline, goal, axel, measure, pricing, close };
+const SCENES: Record<string, Scene> = { hero, video, niche, radar, followup, chat, photo, call, vault, team, collect, pipeline, goal, axel, measure, pricing, close };
 
 /* ──────────────────────────────── arranque ──────────────────────────────── */
 
@@ -447,16 +449,21 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
   // el chunk: `options.moved`, ronda 2, R5). Si la escena se fija,
   // el destino es su pin-spacer: la escena misma está en `position: fixed`.
   let moved = false;
+  // Cuántas intenciones van: la posición del visitante solo se restaura (R4) si
+  // no se movió mientras se construía.
+  let intents = 0;
   const onIntent = () => {
     moved = true;
+    intents++;
   };
   const INTENTS = ["wheel", "touchstart", "keydown", "pointerdown"] as const;
-  for (const ev of INTENTS) window.addEventListener(ev, onIntent, { passive: true, once: true });
-  const landOnHash = () => {
+  for (const ev of INTENTS) window.addEventListener(ev, onIntent, { passive: true });
+  /** Realinea el ancla; `true` si lo hizo. */
+  const landOnHash = (): boolean => {
     const id = decodeURIComponent(window.location.hash.slice(1));
-    if (!id || moved || options.moved?.()) return;
+    if (!id || moved || options.moved?.()) return false;
     const el = document.getElementById(id);
-    if (!el || !root.contains(el)) return;
+    if (!el || !root.contains(el)) return false;
     const box = el.parentElement?.classList.contains("pin-spacer") ? el.parentElement : el;
     // Lenis guarda el límite de scroll de ANTES de los pins (lo actualiza con un
     // ResizeObserver, a destiempo): sin esto el destino se recortaba a ese techo
@@ -464,6 +471,7 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
     lenis.resize();
     lenis.scrollTo(box, { immediate: true, force: true });
     ScrollTrigger.update();
+    return true;
   };
   lenis.on("scroll", ScrollTrigger.update);
   const tick = (time: number) => lenis.raf(time * 1000);
@@ -497,12 +505,53 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
   // tandas. GSAP encola un refresh completo por frame cuando nace un pin
   // (`_queueRefreshAll`): con tandas de 12 ms caía un frame entre casi cada
   // escena fijada y el contenido se recalculaba ~7 veces (auditoría, m1).
-  const SLICE_MS = 40;
+  // 30 ms y no 40: se comprueba ANTES de cada escena, así que una tanda dura
+  // eso más la escena siguiente; con CPU ×4 la meta o medir la pasaban de
+  // 50 ms (ronda 2, R8). Cada escena deja su coste en `performance`
+  // («film:<escena>», lo lee qa/qa-perfil.mjs).
+  const SLICE_MS = 30;
+  // Si el visitante cambia solo el alto de la ventana y una escena deja de caber
+  // (o vuelve a caber), la película se rehace (R6). Lo de cada escena al construir:
+  const fitsAtBuild = new Map<HTMLElement, boolean>();
+  let rebuild = () => {};
+  const onRefreshed = () => {
+    for (const [section, fits] of fitsAtBuild) {
+      if (pinFits(section, desktopQuery.matches) !== fits) {
+        rebuild();
+        return;
+      }
+    }
+  };
+  ScrollTrigger.addEventListener("refresh", onRefreshed);
+  let firstMount = true;
   const mount = () => {
     const media = gsap.matchMedia(root);
+    const first = firstMount;
+    firstMount = false;
     media.add({ desktop: "(min-width: 1024px)", mobile: "(max-width: 1023px)" }, (context) => {
-      const ctx: Ctx = { desktop: Boolean(context.conditions?.desktop), pins };
       const sections = all(root, "[data-scene]");
+      // El motor llega con el visitante a mitad de página (R4): lo que ya está en
+      // pantalla se queda en su fotograma final en vez de volver al inicio de su
+      // scrub, y la escena de arriba vuelve a su sitio si los pins la empujaron.
+      // Con ancla no: ahí el que colocó la página fue el navegador y `landOnHash`
+      // la realinea; congelar la escena del ancla la dejaba sin animación.
+      const late = first && !window.location.hash && (scroller ? scroller.scrollTop : window.scrollY) > 0;
+      const settled = new Set<Element>();
+      let anchor: { box: HTMLElement; top: number } | null = null;
+      if (late) {
+        const vh = window.innerHeight;
+        for (const s of sections) {
+          const r = s.getBoundingClientRect();
+          if (r.top < vh && r.bottom > 0) settled.add(s);
+          // El ancla es la escena que se lee (la que cruza el centro), no la
+          // primera que asoma: si esa se fija, su pin empujaba a la de debajo.
+          if (r.top <= vh / 2 && r.bottom > vh / 2) anchor = { box: s, top: r.top };
+        }
+      }
+      const intentsAtStart = intents;
+      const finals: gsap.core.Timeline[] = [];
+      const ctx: Ctx = { desktop: Boolean(context.conditions?.desktop), pins, settled, finals };
+      fitsAtBuild.clear();
       let next = 0;
       let alive = true;
       const slice = () => {
@@ -522,12 +571,18 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
           }
           next++;
           const build = SCENES[name];
-          if (build) context.add(() => build(section, ctx));
+          if (build) {
+            const t = performance.now();
+            context.add(() => build(section, ctx));
+            for (const tl of finals.splice(0)) tl.progress(1);
+            performance.measure?.(`film:${name}`, { start: t });
+          }
         }
         if (next < sections.length) yieldThen(slice);
         else {
           ScrollTrigger.refresh();
-          landOnHash();
+          if (!landOnHash() && anchor && intents === intentsAtStart) restore(anchor);
+          for (const s of sections) if (PINNED.has(s.dataset.scene ?? "")) fitsAtBuild.set(s, pinFits(s, ctx.desktop));
           root.setAttribute("data-film-ready", "");
         }
       };
@@ -539,7 +594,28 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
     });
     return media;
   };
+  /** La escena que estaba arriba vuelve a donde estaba en pantalla (R4). */
+  const restore = ({ box, top }: { box: HTMLElement; top: number }) => {
+    const el = box.parentElement?.classList.contains("pin-spacer") ? box.parentElement : box;
+    const drift = el.getBoundingClientRect().top - top;
+    if (Math.abs(drift) < 2) return;
+    lenis.resize();
+    lenis.scrollTo(lenis.scroll + drift, { immediate: true, force: true });
+    ScrollTrigger.update();
+  };
   let mm = mount();
+  // Fuera del evento de refresh (revertir dentro de él deja a ScrollTrigger a medias).
+  let rebuilding = false;
+  rebuild = () => {
+    if (rebuilding) return;
+    rebuilding = true;
+    requestAnimationFrame(() => {
+      rebuilding = false;
+      if (stopped) return;
+      mm.revert();
+      mm = mount();
+    });
+  };
 
   // El hilo de luz, archivado por la dueña (plan §15): con `enabled: false` su
   // módulo (renderer WebGL incluido) ni se descarga. Encendido, llega después
@@ -595,6 +671,7 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
         gsap.ticker.remove(thread.frame);
         thread.destroy();
       }
+      ScrollTrigger.removeEventListener("refresh", onRefreshed);
       mm.revert();
       channel.port1.close();
       for (const ev of INTENTS) window.removeEventListener(ev, onIntent);
