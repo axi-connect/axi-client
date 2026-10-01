@@ -1,39 +1,36 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Bot, CircleCheck, LoaderCircle, Pause, Pencil, Zap } from "lucide-react";
+import { Bot, Pause, Pencil, Zap } from "lucide-react";
 
 import { errorMessage } from "@/core/lib/error-messages";
 import { formatShortDateTime } from "@/core/lib/format";
-import { cn } from "@/core/lib/utils";
 import { useAlert } from "@/core/providers/alert-provider";
 import { useSocket, useSocketEvent } from "@/core/realtime/use-socket";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { BentoTile, InkIsland, StatePill } from "@/shared/components/features/bento";
 import { EmptyState } from "@/shared/components/features/empty-state";
 import { Button } from "@/shared/components/ui/button";
-import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import { getTenantAgents } from "@/modules/agents/public";
+import { listSequences } from "@/modules/crm/public";
 import { MarketingHeader } from "@/modules/marketing/ui/components/MarketingHeader";
 
 import {
-  funnelOf,
-  itemTitle,
-  RUN_STAGE_LABELS,
-  RUN_STAGES,
+  CONTACT_CHANNEL_OPTIONS,
   RUN_STATUS_META,
-  RUN_STEPS,
   scheduleLabel,
-  stepsDone,
+  sourceLabel,
+  sourceSummary,
   type BatchItem,
   type Routine,
   type RunDetail,
   type RunEvent,
 } from "../domain/autopilot";
-import { eventLine } from "../domain/copy";
+import { eventLine, nextLine, nowLine } from "../domain/copy";
+import { runTrajectory } from "../domain/trajectory";
 import {
-  decideBatch,
   getBatch,
   getRoutine,
   getRun,
@@ -42,17 +39,19 @@ import {
   pauseRoutine,
   runRoutineNow,
 } from "../infrastructure/autopilot-service.adapter";
-
-/** Etapas que se pintan como carriles, en el orden del recorrido. */
-const LANES = RUN_STAGES.filter((stage) => stage !== "discarded");
+import { NowIsland } from "./recorrido/NowIsland";
+import { RunAccounts } from "./recorrido/RunAccounts";
+import { RunTrajectoryMap } from "./recorrido/RunTrajectoryMap";
 
 /**
- * Una ejecución de un piloto, en vivo (tablero 3 del lienzo P0).
+ * Una ejecución de un piloto, en vivo (upgrade «el recorrido», 2026-10-01).
  *
- * Arriba, en qué paso va y qué lleva gastado; en medio, las cuentas en su
- * carril; abajo, la bitácora. Si el piloto es asistido y la ejecución espera,
- * el lote para aprobar ocupa el primer plano. Se mueve con `autopilot.*`
- * (sala de la empresa, filtrado por esta ejecución) y la fila es la verdad.
+ * El recorrido de seis paradas (siete si es asistido) con cuántas cuentas pasan
+ * por cada una y por dónde salió cada descartada; al lado, la isla «Ahora»
+ * —qué hace el piloto y qué viene— que se convierte en el lote cuando la
+ * ejecución espera tu aprobación. Debajo, las cuentas filtrables por etapa y la
+ * bitácora. Se mueve con `autopilot.*` (sala de la empresa, filtrado por esta
+ * ejecución) y la fila es la verdad: cada evento relee la ejecución.
  */
 export function RunLiveView({ runId }: { runId: string }) {
   const { hasPermission } = useAuth();
@@ -63,13 +62,16 @@ export function RunLiveView({ runId }: { runId: string }) {
   const [events, setEvents] = useState<RunEvent[]>([]);
   const [batch, setBatch] = useState<BatchItem[] | null>(null);
   const [failure, setFailure] = useState<"unavailable" | string | null>(null);
+  const [names, setNames] = useState<{ sequenceName: string | null; agentName: string | null }>({
+    sequenceName: null,
+    agentName: null,
+  });
 
   const load = useCallback(async () => {
     try {
       const [detail, log] = await Promise.all([getRun(runId), listRunEvents(runId)]);
       setRun(detail);
       setEvents(log.items);
-      setRoutine((current) => current ?? null);
       if (detail.status === "awaiting_approval") setBatch((await getBatch(runId)).items);
       else setBatch(null);
       setFailure(null);
@@ -86,8 +88,23 @@ export function RunLiveView({ runId }: { runId: string }) {
     });
   }, [load]);
 
+  // La secuencia y el agente, por su nombre: una lectura de cada lista, y si falla se dice sin nombre.
+  const sequenceId = routine?.follow_up.sequence_id ?? null;
+  const agentId = routine?.contact.agent_id ?? null;
+  useEffect(() => {
+    if (sequenceId === null) return;
+    void Promise.all([listSequences().catch(() => null), agentId === null ? null : getTenantAgents().catch(() => null)]).then(
+      ([sequences, agents]) =>
+        setNames({
+          sequenceName: sequences?.data.find((entry) => entry.id === sequenceId)?.name ?? null,
+          agentName: agents?.find((entry) => entry.id === agentId)?.name ?? null,
+        }),
+    );
+  }, [sequenceId, agentId]);
+
   const { socket } = useSocket("inbox");
   const mine = (payload: { run_id: string }) => payload.run_id === runId;
+  // `item_moved` y el paso solo mueven la parada: se relee la ejecución y el avión viaja solo.
   useSocketEvent(socket, "autopilot.item_moved", (payload) => mine(payload) && void load());
   useSocketEvent(socket, "autopilot.credit_spent", (payload) => mine(payload) && void load());
   useSocketEvent(socket, "autopilot.batch_ready", (payload) => mine(payload) && void load());
@@ -108,11 +125,14 @@ export function RunLiveView({ runId }: { runId: string }) {
     );
   }
 
-  const status = RUN_STATUS_META[run.status];
-  const done = stepsDone(run.step);
   const live = run.status === "running" || run.status === "queued";
   const waiting = run.status === "awaiting_approval";
-  const current = RUN_STEPS[Math.min(done, RUN_STEPS.length - 1)];
+  const status = RUN_STATUS_META[run.status];
+  const channels = (routine?.contact.channels ?? []).map(
+    (channel) => CONTACT_CHANNEL_OPTIONS.find((option) => option.value === channel)?.label ?? channel,
+  );
+  const trajectory = routine === null ? null : runTrajectory(run, routine);
+  const source = routine === null ? null : sourceLabel(routine.source.kind);
 
   return (
     <div className="flex min-w-0 flex-col gap-6 pb-36">
@@ -127,117 +147,48 @@ export function RunLiveView({ runId }: { runId: string }) {
         }
       />
 
-      <div className="grid gap-4 @container @[52rem]:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-        <BentoTile label="Ejecución" aside={<StatePill tone={status.tone}>{status.label}</StatePill>}>
-          {/* La fecha va en su línea: junto al estado se cortaba en el móvil. */}
-          <p className="text-muted-foreground text-xs tabular-nums">{formatShortDateTime(run.created_at)}</p>
-          <p className="text-sm font-medium">
-            {live
-              ? `Paso ${String(Math.min(done + 1, RUN_STEPS.length))} de ${String(RUN_STEPS.length)} · ${current?.label ?? ""}`
-              : run.status === "done"
-                ? "Los seis pasos terminaron"
-                : status.label}
-          </p>
-          <ol className="grid grid-cols-3 gap-2 @[36rem]:grid-cols-6" aria-label="Pasos">
-            {RUN_STEPS.map((step, index) => {
-              const finished = index < done;
-              const active = live && index === done;
-              // El paso que sigue al lote por aprobar no está vacío: está esperando.
-              const blocked = waiting && index === done;
-              return (
-                <li key={step.key} className="flex min-w-0 flex-col gap-1.5">
-                  <span
-                    aria-hidden
-                    className={cn(
-                      "h-1.5 rounded-full",
-                      finished ? "bg-success" : active ? "bg-accent-violet animate-pulse motion-reduce:animate-none" : "bg-muted",
-                    )}
-                  />
-                  <span className={cn("text-xs", finished || active ? "font-medium" : "text-muted-foreground")}>
-                    {step.label}
-                  </span>
-                  {blocked && <span className="text-muted-foreground text-[11px] text-pretty">Espera tu aprobación</span>}
-                </li>
-              );
-            })}
-          </ol>
-          <dl className="grid grid-cols-3 gap-3">
-            {funnelOf(run.counters).map((entry) => (
-              <div key={entry.key} className="flex flex-col">
-                <dt className="text-muted-foreground order-2 text-xs">{entry.label}</dt>
-                <dd className="font-heading order-1 text-2xl font-bold tabular-nums">{String(entry.value)}</dd>
-              </div>
-            ))}
-          </dl>
-          {run.error !== null && <p className="text-destructive text-sm text-pretty">{run.error}</p>}
-        </BentoTile>
+      {/* La cabecera del mapa: cuándo arrancó, en qué modo y en qué estado va. */}
+      <p className="text-muted-foreground -mb-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+        <span className="tabular-nums">Ejecución · {formatShortDateTime(run.created_at)}</span>
+        {routine !== null && <span>· {routine.mode === "assisted" ? "Asistido" : "Autónomo"}</span>}
+        <StatePill tone={status.tone}>{status.label}</StatePill>
+      </p>
 
-        <BentoTile
-          label="Créditos de esta ejecución"
-          aside={
-            routine !== null && run.credits_spent >= routine.budget.per_run ? (
-              <StatePill tone="warning">Llegó al tope</StatePill>
+      <div className="@container/live">
+        <div className="grid gap-4 @[60rem]/live:grid-cols-[minmax(0,1fr)_22rem] @[60rem]/live:items-start">
+          <div className="order-2 min-w-0 @[60rem]/live:order-none">
+            {trajectory === null || source === null || routine === null ? (
+              <Skeleton className="aspect-[860/420] w-full rounded-3xl" />
             ) : (
-              <StatePill tone="success">Dentro del tope</StatePill>
-            )
-          }
-        >
-          <p className="flex items-baseline gap-2">
-            <span className="font-heading text-4xl font-bold tabular-nums">{String(run.credits_spent)}</span>
-            <span className="text-muted-foreground text-sm">
-              {routine === null ? "créditos" : `de ${String(routine.budget.per_run)} · ${String(Math.max(0, routine.budget.per_run - run.credits_spent))} de reserva`}
-            </span>
-          </p>
-          <p className="text-muted-foreground text-xs text-pretty">
-            Solo cuesta revelar: 1 crédito el correo y 8 el celular, de tu saldo en Apollo y solo si lo encuentra.
-          </p>
-        </BentoTile>
+              <RunTrajectoryMap
+                trajectory={trajectory}
+                source={{ ...source, summary: sourceSummary(routine.source.params) }}
+                flying={run.status === "running"}
+              />
+            )}
+          </div>
+          <div className="order-1 min-w-0 @[60rem]/live:order-none">
+            <NowIsland
+              run={run}
+              routine={routine}
+              now={routine === null ? { title: status.label, detail: run.error ?? "" } : nowLine(run, routine, names)}
+              next={routine === null ? null : nextLine(run, routine)}
+              batch={batch}
+              channels={channels}
+              sequenceName={names.sequenceName}
+              canManage={canManage}
+              onDecided={() => {
+                showAlert({ tone: "success", title: "Lote decidido", description: "La ejecución sigue con lo que aprobaste." });
+                void load();
+              }}
+            />
+          </div>
+        </div>
       </div>
 
-      {batch !== null && (
-        <BatchPanel
-          runId={runId}
-          items={batch}
-          canManage={canManage}
-          onDecided={() => {
-            showAlert({ tone: "success", title: "Lote decidido", description: "La ejecución sigue con lo que aprobaste." });
-            void load();
-          }}
-        />
-      )}
-
-      <section aria-label="Cuentas por etapa" className="axi-scroll -mx-1 overflow-x-auto px-1 pb-2">
-        <div className="grid min-w-[56rem] grid-cols-7 gap-3">
-          {LANES.map((stage) => {
-            const items = run.items.filter((item) => item.stage === stage);
-            return (
-              <div key={stage} className="border-border bg-card flex min-w-0 flex-col gap-2 rounded-2xl border p-3">
-                <header className="flex items-baseline justify-between gap-2">
-                  <h3 className="text-xs font-semibold">{RUN_STAGE_LABELS[stage]}</h3>
-                  <span className="text-muted-foreground text-xs tabular-nums">{String(items.length)}</span>
-                </header>
-                <ul className="flex flex-col gap-1.5">
-                  {items.slice(0, 8).map((item) => (
-                    <li key={item.id} className="bg-muted/40 rounded-xl px-2.5 py-2 text-xs">
-                      <span className="block truncate font-medium" title={itemTitle(item)}>
-                        {itemTitle(item)}
-                      </span>
-                      <span className="text-muted-foreground block truncate">
-                        {item.score === null ? "" : `Puntaje ${String(item.score)}`}
-                        {item.reason === null ? "" : `${item.score === null ? "" : " · "}${item.reason}`}
-                      </span>
-                    </li>
-                  ))}
-                  {items.length > 8 && (
-                    <li className="text-muted-foreground px-1 text-xs">+ {String(items.length - 8)} más</li>
-                  )}
-                </ul>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
+      <div className="@container/below">
+        <div className="grid gap-4 @[60rem]/below:grid-cols-[minmax(0,1fr)_22rem] @[60rem]/below:items-start">
+          <RunAccounts items={run.items} routine={routine} />
       <BentoTile label="Bitácora de la ejecución">
         {events.length === 0 ? (
           <p className="text-muted-foreground text-sm">Todavía no pasó nada.</p>
@@ -248,12 +199,14 @@ export function RunLiveView({ runId }: { runId: string }) {
                 <span className="text-muted-foreground w-20 shrink-0 font-mono text-xs whitespace-nowrap tabular-nums">
                   {new Date(event.created_at).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}
                 </span>
-                <span className="min-w-0 text-pretty">{eventLine(event)}</span>
+                <span className="min-w-0 text-pretty">{eventLine(event, routine ?? undefined)}</span>
               </li>
             ))}
           </ol>
         )}
       </BentoTile>
+        </div>
+      </div>
 
       {canManage && routine !== null && (
         <InkIsland label="Acciones del piloto" className="sticky bottom-3 z-10 flex-row flex-wrap items-center gap-2 p-3 sm:rounded-full">
@@ -300,84 +253,5 @@ export function RunLiveView({ runId }: { runId: string }) {
         </InkIsland>
       )}
     </div>
-  );
-}
-
-/**
- * El lote de un piloto ASISTIDO: la ejecución se detuvo antes de contactar y
- * espera a que el dueño apruebe a quién. Lo que no se aprueba se omite.
- */
-function BatchPanel({
-  runId,
-  items,
-  canManage,
-  onDecided,
-}: {
-  runId: string;
-  items: BatchItem[];
-  canManage: boolean;
-  onDecided: () => void;
-}) {
-  const { showAlert } = useAlert();
-  const [approved, setApproved] = useState<ReadonlySet<string>>(() => new Set(items.map((item) => item.id)));
-  const [sending, setSending] = useState(false);
-  const skipped = useMemo(() => items.filter((item) => !approved.has(item.id)).map((item) => item.id), [items, approved]);
-
-  async function decide() {
-    setSending(true);
-    try {
-      await decideBatch(runId, { approve: [...approved], skip: skipped });
-      onDecided();
-    } catch (caught) {
-      showAlert({ tone: "error", title: "No se guardó la decisión", description: errorMessage(caught) });
-    } finally {
-      setSending(false);
-    }
-  }
-
-  return (
-    <BentoTile
-      label="El lote espera tu aprobación"
-      aside={<StatePill tone="warning">{String(items.length)} cuentas</StatePill>}
-      className="border-warning/40"
-    >
-      <p className="text-muted-foreground text-sm text-pretty">
-        Axi calificó estas cuentas y pasó la política de contacto. Quita las que no quieras y aprueba: las demás se
-        inscriben en la secuencia.
-      </p>
-      <ul className="divide-border divide-y">
-        {items.map((item) => (
-          <li key={item.id}>
-            <label className="flex min-h-11 cursor-pointer items-center gap-3 py-2 text-sm">
-              <Checkbox
-                checked={approved.has(item.id)}
-                disabled={!canManage}
-                aria-label={`Aprobar ${itemTitle(item)}`}
-                onChange={(event) =>
-                  setApproved((current) => {
-                    const next = new Set(current);
-                    if (event.target.checked) next.add(item.id);
-                    else next.delete(item.id);
-                    return next;
-                  })
-                }
-              />
-              {/* Aprobar exige leer a quién: el nombre va completo, no cortado. */}
-              <span className="min-w-0 flex-1 font-medium text-pretty break-words">{itemTitle(item)}</span>
-              {item.score !== null && <span className="text-muted-foreground text-xs tabular-nums">Puntaje {String(item.score)}</span>}
-            </label>
-          </li>
-        ))}
-      </ul>
-      {canManage && (
-        <div className="flex flex-wrap items-center gap-2">
-          <Button className="rounded-full" disabled={sending} onClick={() => void decide()}>
-            {sending ? <LoaderCircle aria-hidden className="size-4 animate-spin" /> : <CircleCheck aria-hidden className="size-4" />}
-            Aprobar {String(approved.size)} y contactar
-          </Button>
-          <span className="text-muted-foreground text-xs">{String(skipped.length)} se omiten</span>
-        </div>
-      )}
-    </BentoTile>
   );
 }

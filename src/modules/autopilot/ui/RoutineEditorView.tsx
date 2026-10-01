@@ -39,6 +39,7 @@ import {
   type Estimate,
   type RoutineInput,
 } from "../domain/autopilot";
+import { previewStops } from "../domain/copy";
 import {
   createRoutine,
   estimateRoutine,
@@ -46,6 +47,7 @@ import {
   isAutopilotUnavailable,
   updateRoutine,
 } from "../infrastructure/autopilot-service.adapter";
+import { FlightPreview } from "./recorrido/FlightPreview";
 
 /**
  * Crear o editar un piloto (tablero 2 del lienzo P0): seis decisiones, y cada
@@ -162,6 +164,14 @@ export function RoutineEditorView({ routineId }: { routineId: string | null }) {
   }
 
   const set = (patch: Partial<RoutineInput>) => setDraft({ ...draft, ...patch });
+  const preview = previewStops(draft, {
+    sourceLabel: sourceLabel(draft.source.kind).label,
+    sequenceName: sequences.find((entry) => entry.id === draft.follow_up.sequence_id)?.name ?? null,
+    agentName: agents.find((entry) => entry.id === draft.contact.agent_id)?.name ?? null,
+    channelLabels: draft.contact.channels.map(
+      (channel) => CONTACT_CHANNEL_OPTIONS.find((option) => option.value === channel)?.label ?? channel,
+    ),
+  });
   const dirty = JSON.stringify(draft) !== initial;
   const isApollo = draft.source.kind === "apollo_people";
   const params = draft.source.params;
@@ -197,6 +207,11 @@ export function RoutineEditorView({ routineId }: { routineId: string | null }) {
         description="Seis decisiones. Cada una muestra qué va a pasar y cuánto cuesta."
       />
 
+      {/* Las seis decisiones a la izquierda; «Así vuela tu piloto» a la derecha (fija al bajar) o al final en el celular. */}
+      <div className="@container/ed">
+        <div className="grid gap-6 @[60rem]/ed:grid-cols-[minmax(0,1fr)_22rem] @[60rem]/ed:items-start">
+          <div className="flex min-w-0 flex-col gap-6">
+
       <Section index={1} title="Dónde busca" hint={isApollo ? "Buscar en Apollo no gasta créditos; revelar sí" : "Buscar es gratis o va por uso de la fuente"}>
         <label className="grid gap-1.5 text-sm">
           <span className="font-medium">Nombre del piloto</span>
@@ -207,7 +222,7 @@ export function RoutineEditorView({ routineId }: { routineId: string | null }) {
             onChange={(event) => set({ name: event.target.value })}
           />
         </label>
-        <div className="grid gap-3 @container @[36rem]:grid-cols-2">
+        <div className="grid gap-3 @[36rem]:grid-cols-2">
           <label className="grid gap-1.5 text-sm">
             <span className="font-medium">Fuente</span>
             <Select value={draft.source.kind} onValueChange={(kind) => set({ source: { kind, params: {} } })}>
@@ -307,7 +322,7 @@ export function RoutineEditorView({ routineId }: { routineId: string | null }) {
 
       <Section index={3} title="Cómo contacta" hint="Siempre dentro de tu política de contacto">
         {/* El modo decide si se contacta sin mirar: va aquí, con su explicación entera. */}
-        <fieldset className="grid gap-2 @container @[36rem]:grid-cols-2">
+        <fieldset className="grid gap-2 @[36rem]:grid-cols-2">
           <legend className="mb-1 text-sm font-medium">Antes de contactar</legend>
           {MODE_OPTIONS.map((option) => (
             <label key={option.value} className="border-border flex min-h-11 cursor-pointer items-start gap-3 rounded-2xl border p-3 text-sm has-[:checked]:border-primary">
@@ -326,7 +341,7 @@ export function RoutineEditorView({ routineId }: { routineId: string | null }) {
             </label>
           ))}
         </fieldset>
-        <fieldset className="grid gap-2 @container @[36rem]:grid-cols-2">
+        <fieldset className="grid gap-2 @[36rem]:grid-cols-2">
           <legend className="sr-only">Canales</legend>
           {CONTACT_CHANNEL_OPTIONS.map((option) => {
             const checked = draft.contact.channels.includes(option.value);
@@ -354,7 +369,7 @@ export function RoutineEditorView({ routineId }: { routineId: string | null }) {
             );
           })}
         </fieldset>
-        <div className="grid gap-3 @container @[36rem]:grid-cols-2">
+        <div className="grid gap-3 @[36rem]:grid-cols-2">
           <label className="grid gap-1.5 text-sm">
             <span className="font-medium">Quién conversa cuando responden</span>
             <Select
@@ -469,7 +484,7 @@ export function RoutineEditorView({ routineId }: { routineId: string | null }) {
       </Section>
 
       <Section index={6} title="Hasta cuánto gasta" hint="Nunca pasa del tope; si se acaba, la ejecución termina y te avisa">
-        <div className="grid gap-3 @container @[36rem]:grid-cols-2">
+        <div className="grid gap-3 @[36rem]:grid-cols-2">
           <label className="grid gap-1.5 text-sm">
             <span className="font-medium">Tope por ejecución (créditos)</span>
             <Input
@@ -504,6 +519,10 @@ export function RoutineEditorView({ routineId }: { routineId: string | null }) {
           )}
         </div>
       </Section>
+          </div>
+          <FlightPreview stops={preview} estimate={estimate} className="@[60rem]/ed:sticky @[60rem]/ed:top-4" />
+        </div>
+      </div>
 
       {canManage && (
         <UnsavedChangesDock
@@ -533,7 +552,8 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="border-border bg-card flex min-w-0 flex-col gap-4 rounded-3xl border p-5" aria-labelledby={`section-${String(index)}`}>
+    // `@container` en la sección: sus rejillas consultan a su padre (una consulta no se mide a sí misma).
+    <section className="border-border bg-card @container flex min-w-0 flex-col gap-4 rounded-3xl border p-5" aria-labelledby={`section-${String(index)}`}>
       <header className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id={`section-${String(index)}`} className="font-heading text-lg font-bold">
           <span className="text-muted-foreground tabular-nums">{String(index)} · </span>

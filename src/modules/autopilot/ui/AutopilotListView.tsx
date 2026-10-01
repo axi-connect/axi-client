@@ -16,7 +16,6 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import { MarketingHeader } from "@/modules/marketing/ui/components/MarketingHeader";
 
 import {
-  funnelOf,
   RUN_STATUS_META,
   RUN_STEPS,
   scheduleLabel,
@@ -25,6 +24,8 @@ import {
   stepsDone,
   type RoutineListItem,
 } from "../domain/autopilot";
+import { ahoraMismo } from "../domain/copy";
+import { runTrajectory } from "../domain/trajectory";
 import {
   isAutopilotUnavailable,
   listRoutines,
@@ -33,6 +34,8 @@ import {
   runRoutineNow,
 } from "../infrastructure/autopilot-service.adapter";
 import { PilotProposals } from "./proposals/PilotProposals";
+import { AhoraMismo } from "./recorrido/AhoraMismo";
+import { MiniTrajectory } from "./recorrido/MiniTrajectory";
 
 /**
  * Marketing › Automatización (tablero 1 del lienzo P0): los pilotos del
@@ -50,6 +53,7 @@ export function AutopilotListView() {
   const [unavailable, setUnavailable] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const ahora = useMemo(() => (routines === null ? null : ahoraMismo(routines)), [routines]);
   const routineNames = useMemo(
     () => new Map((routines ?? []).map((routine) => [routine.id, routine.name])),
     [routines],
@@ -142,6 +146,8 @@ export function AutopilotListView() {
         />
       ) : (
         <>
+          {/* «Ahora mismo»: solo si hay algo en vuelo o esperando. */}
+          {ahora !== null && <AhoraMismo ahora={ahora} />}
           {/* P6b: «Axi propone», solo si hay algo que decidir */}
           <PilotProposals routineNames={routineNames} canManage={canManage} />
           <section className="flex flex-col gap-4" aria-label="Tus pilotos">
@@ -176,7 +182,6 @@ function RoutineCard({
   const live = run !== null && (run.status === "running" || run.status === "queued");
   const waiting = run !== null && run.status === "awaiting_approval";
   const source = sourceLabel(routine.source.kind);
-  const funnel = funnelOf(run?.counters ?? {});
   const pill =
     routine.status === "paused" ? (
       <StatePill tone="neutral">Pausado</StatePill>
@@ -191,7 +196,7 @@ function RoutineCard({
     );
 
   return (
-    <BentoTile label={routine.mode === "assisted" ? "Piloto asistido" : "Piloto autónomo"} aside={pill} className="gap-4">
+    <BentoTile label={routine.mode === "assisted" ? "Piloto asistido" : "Piloto autónomo"} aside={pill} className="@container gap-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-1">
           <Link
@@ -216,7 +221,10 @@ function RoutineCard({
         )}
       </div>
 
-      <div className="grid gap-3 @container @[44rem]:grid-cols-3">
+      {/* La última ejecución, contada como recorrido: las cifras van en sus paradas. */}
+      {run !== null && <MiniTrajectory trajectory={runTrajectory(run, routine)} flying={run.status === "running"} />}
+
+      <div className="grid gap-3 @[44rem]:grid-cols-3">
         <div className="bg-muted/40 flex min-w-0 flex-col gap-1.5 rounded-2xl p-4">
           <span className="text-muted-foreground text-xs font-semibold">Busca</span>
           <span className="flex min-w-0 items-center gap-2 text-sm font-medium">
@@ -242,16 +250,14 @@ function RoutineCard({
                 : formatShortDateTime(routine.next_run_at)}
           </span>
         </div>
-        <div className="bg-muted/40 flex min-w-0 flex-col gap-1.5 rounded-2xl p-4">
-          <span className="text-muted-foreground text-xs font-semibold">Última ejecución</span>
-          <dl className="grid grid-cols-3 gap-2">
-            {funnel.map((step) => (
-              <div key={step.key} className="flex min-w-0 flex-col">
-                <dt className="text-muted-foreground order-2 text-xs">{step.label}</dt>
-                <dd className="font-heading order-1 text-xl font-bold tabular-nums">{String(step.value)}</dd>
-              </div>
-            ))}
-          </dl>
+        <div className="bg-muted/40 hidden min-w-0 flex-col gap-1.5 rounded-2xl p-4 @[44rem]:flex">
+          <span className="text-muted-foreground text-xs font-semibold">Modo</span>
+          <span className="text-sm font-medium">{routine.mode === "assisted" ? "Asistido" : "Autónomo"}</span>
+          <span className="text-muted-foreground text-xs text-pretty">
+            {routine.mode === "assisted"
+              ? "Te pide aprobar el lote antes de escribirle a nadie."
+              : "Contacta sin esperar tu aprobación, siempre dentro de tu política y tus topes."}
+          </span>
         </div>
       </div>
 

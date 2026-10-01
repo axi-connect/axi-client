@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Bot, ChevronRight, Pencil } from "lucide-react";
 
 import { errorMessage } from "@/core/lib/error-messages";
+import { cn } from "@/core/lib/utils";
 import { formatShortDateTime } from "@/core/lib/format";
 import { useSocket, useSocketEvent } from "@/core/realtime/use-socket";
 import { useAuth } from "@/shared/auth/auth.hooks";
@@ -85,8 +86,10 @@ export function RoutineDetailView({ routineId }: { routineId: string }) {
   }
 
   const source = sourceLabel(routine.source.kind);
+  const widest = Math.max(1, ...runs.map((run) => run.counters.found ?? 0));
   return (
-    <div className="flex min-w-0 flex-col gap-6">
+    // `@container` aquí: la rejilla de las tres fichas consulta a su padre (una consulta no se mide a sí misma).
+    <div className="@container flex min-w-0 flex-col gap-6">
       <MarketingHeader
         kicker="Marketing · Automatización · piloto"
         title={routine.name}
@@ -103,7 +106,7 @@ export function RoutineDetailView({ routineId }: { routineId: string }) {
         }
       />
 
-      <div className="grid gap-4 @container @[44rem]:grid-cols-3">
+      <div className="grid gap-4 @[44rem]:grid-cols-3">
         <BentoTile label="Busca">
           <p className="text-sm font-medium">{source.label}</p>
           <p className="text-muted-foreground text-xs text-pretty">{sourceSummary(routine.source.params)}</p>
@@ -133,6 +136,9 @@ export function RoutineDetailView({ routineId }: { routineId: string }) {
           <ul className="divide-border divide-y">
             {runs.map((run) => {
               const meta = RUN_STATUS_META[run.status];
+              const found = run.counters.found ?? 0;
+              const qualified = run.counters.qualified ?? 0;
+              const contacted = run.counters.contacted ?? 0;
               return (
                 <li key={run.id}>
                   <Link
@@ -145,9 +151,17 @@ export function RoutineDetailView({ routineId }: { routineId: string }) {
                       <StatePill tone={meta.tone}>{meta.label}</StatePill>
                     </span>
                     <ChevronRight aria-hidden className="text-muted-foreground row-span-2 size-4 shrink-0" />
-                    <span className="text-muted-foreground text-xs text-pretty">
-                      {String(run.counters.found ?? 0)} encontradas · {String(run.counters.qualified ?? 0)} calificadas ·{" "}
-                      {String(run.counters.contacted ?? 0)} contactadas · {String(run.credits_spent)} créditos
+                    <span className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+                      {/* Las barras, a escala de la ejecución con más encontradas de la lista: se comparan sin abrirlas. */}
+                      <span aria-hidden className="flex w-full max-w-56 shrink-0 items-center gap-1 sm:w-56">
+                        <RunBar kind="found" value={found} of={widest} className="bg-muted-foreground/35" />
+                        <RunBar kind="qualified" value={qualified} of={widest} className="bg-muted-foreground/70" />
+                        <RunBar kind="contacted" value={contacted} of={widest} className="bg-foreground" />
+                      </span>
+                      <span className="text-muted-foreground text-xs text-pretty">
+                        {String(found)} encontradas · {String(qualified)} calificadas · {String(contacted)} contactadas ·{" "}
+                        {String(run.credits_spent)} créditos
+                      </span>
                     </span>
                   </Link>
                 </li>
@@ -162,5 +176,18 @@ export function RoutineDetailView({ routineId }: { routineId: string }) {
         )}
       </BentoTile>
     </div>
+  );
+}
+
+/** Una barra del embudo de una ejecución: su largo es su parte de la más ancha; cero se ve como una marca. */
+function RunBar({ kind, value, of, className }: { kind: string; value: number; of: number; className: string }) {
+  const share = Math.min(1, value / of);
+  return (
+    <span
+      data-bar={kind}
+      className={cn("block h-1.5 shrink-0 rounded-full", className)}
+      // Tres barras a lo sumo del 32 % cada una: con los dos huecos caben en la franja.
+      style={{ width: value === 0 ? "2px" : `${String(share * 32)}%` }}
+    />
   );
 }
