@@ -341,8 +341,9 @@ function Phases() {
 function Cockpit() {
   const f = FINAL;
   const lit = capSegments(f.contacted, RUN.cap);
+  // `data-pill-avoid`: en móvil la píldora del nicho se aparta mientras la cabina ocupa la franja de abajo.
   return (
-    <aside className="film-pilot-cockpit" data-anim="pilot-panel" aria-label={C.title} style={op(f.panel)}>
+    <aside className="film-pilot-cockpit" data-anim="head" data-pill-avoid="" aria-label={C.title} style={op(f.panel)}>
       <div className="film-pilot-cockpit-top film-pilot-desk">
         <span className="film-pilot-cockpit-title">{C.title}</span>
         <span className="film-pilot-mode" role="group" aria-label={C.modeLabel}>
@@ -467,7 +468,8 @@ export function PilotScene() {
     >
       <PilotMap />
       <div className="film-pilot-layout">
-        <div className="film-pilot-left">
+        {/* data-anim="head": entra con el scroll de antes del pin (sceneTimeline). */}
+        <div className="film-pilot-left" data-anim="head">
           {/* En el HTML, a pleno: el motor lo atenúa al final mientras sube la ficha. */}
           <div className="film-pilot-head" data-anim="pilot-head">
             <p className="film-eyebrow film-dim">{PILOT_COPY.eyebrow}</p>

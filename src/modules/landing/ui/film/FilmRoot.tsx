@@ -160,13 +160,36 @@ export function FilmRoot({ children }: { children: ReactNode }) {
     // La píldora del nicho se aparta mientras se baja y vuelve al subir o al
     // quedar quieto 900 ms. Solo el sentido del scroll, sin medir el DOM; el CSS
     // decide que pase solo en móvil (film.css, data-hide).
+    // Además se aparta, quieta o no, mientras algo marcado con `data-pill-avoid`
+    // (la cabina del piloto) ocupa la franja de abajo de la pantalla: un
+    // IntersectionObserver sobre esa franja, sin medir por frame.
     let hidden = false;
+    let scrolling = false;
+    let avoid = false;
     let rest = 0;
-    const setHidden = (on: boolean) => {
+    const apply = () => {
+      const on = scrolling || avoid;
       if (on === hidden) return;
       hidden = on;
       pillRef.current?.setAttribute("data-hide", on ? "true" : "false");
     };
+    const setHidden = (on: boolean) => {
+      scrolling = on;
+      apply();
+    };
+    const avoiding = new Set<Element>();
+    const pillIo = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) avoiding.add(e.target);
+          else avoiding.delete(e.target);
+        }
+        avoid = avoiding.size > 0;
+        apply();
+      },
+      { root: el, rootMargin: "-88% 0px 0px 0px" },
+    );
+    root.querySelectorAll("[data-pill-avoid]").forEach((n) => pillIo.observe(n));
     const onScroll = () => {
       const next = el.scrollTop;
       if (next !== scrollTop) setHidden(next > scrollTop);
@@ -220,6 +243,7 @@ export function FilmRoot({ children }: { children: ReactNode }) {
     window.addEventListener("resize", onResize);
     return () => {
       chapterIo.disconnect();
+      pillIo.disconnect();
       ro.disconnect();
       el.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);

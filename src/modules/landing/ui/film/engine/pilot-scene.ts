@@ -62,7 +62,6 @@ export const pilot: Scene = (section, ctx) => {
 
   const head = one("[data-anim=pilot-head]");
   const principle = one("[data-anim=pilot-principle]");
-  const panel = one("[data-anim=pilot-panel]");
   const arcs = one("[data-anim=pilot-arc]");
   const needles = one("[data-anim=pilot-needle]");
   const dialValues = all(section, "[data-anim=pilot-dial-v]");
@@ -131,12 +130,11 @@ export const pilot: Scene = (section, ctx) => {
     set(craft, "opacity", o(f.planeIn));
     set(heading, "transform", `rotate(${f.heading.toFixed(1)}deg)`);
 
-    // El titular y la cabina: en móvil se ven siempre (la escena entra desde abajo, sin pin).
+    // El titular se atenúa al final (en escritorio, donde la ficha sube encima).
+    // Su entrada y la de la cabina son el `reveal` de sceneTimeline.
     if (ctx.desktop) {
       set(head, "opacity", o(f.head));
       set(principle, "opacity", o(f.head));
-      set(panel, "opacity", o(f.panel));
-      set(panel, "transform", `translateY(${px(24 * (1 - f.panel))}px)`);
     }
 
     // Los instrumentos.

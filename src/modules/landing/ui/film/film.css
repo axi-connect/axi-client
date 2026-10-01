@@ -127,6 +127,12 @@
   pointer-events: none;
   z-index: 0;
 }
+/* En móvil la escena del nicho mide una ventana y la luz (900 px desde el 29 %)
+   llegaba entera al borde inferior: el `overflow: clip` la cortaba con una
+   costura sobre el Radar (barrido, 390). Centrada, se apaga antes de los bordes. */
+@media (max-width: 1023px) {
+  [data-scene="niche"] > .film-spot { top: calc(50% - 450px); }
+}
 
 /* El isotipo del hero se arma solo con CSS: no espera al motor ni al JS. */
 @keyframes film-rise {
@@ -1105,9 +1111,13 @@
   height: 800px;
   border-radius: 50%;
   background: radial-gradient(closest-side, color-mix(in srgb, var(--foreground) 8%, transparent), transparent);
+  /* Se apaga antes del borde inferior de la escena: el `overflow: clip` lo
+     cortaba en seco y dejaba una costura con el chat (barrido, 1440). */
+  mask-image: linear-gradient(180deg, black 20%, transparent 38%);
   pointer-events: none;
 }
-.film-followup { background: linear-gradient(180deg, var(--background) 45%, color-mix(in srgb, var(--foreground) 3%, var(--background))); }
+/* La luz de la mañana sube y vuelve a la tinta en el borde: la escena siguiente empieza en `--background`. */
+.film-followup { background: linear-gradient(180deg, var(--background) 45%, color-mix(in srgb, var(--foreground) 3%, var(--background)) 80%, var(--background)); }
 .film-ruler { position: relative; height: 660px; margin-top: 54px; }
 .film-ruler-line {
   position: absolute;

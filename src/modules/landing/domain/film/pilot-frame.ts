@@ -238,8 +238,12 @@ export function pilotFrame(p: number, run: PilotRun, view: PilotView = {}) {
     sweep: (p * 900) % 360,
     airportLit: p >= 0.88,
     /** Opacidades. */
-    head: easeOut(seg(p, 0, 0.08)) * (1 - 0.85 * easeOut(seg(p, 0.88, 0.92))),
-    panel: easeOut(seg(p, 0.04, 0.12)),
+    // El titular y la cabina ya llegan a pleno al pin: entran con el scroll de
+    // antes (el `reveal` de `sceneTimeline`, data-anim="head"). Con la entrada
+    // dentro del pin (0–0,12) la escena llegaba arriba vacía (barrido, 1024).
+    // Aquí solo queda la atenuación del final, mientras sube la ficha.
+    head: 1 - 0.85 * easeOut(seg(p, 0.88, 0.92)),
+    panel: 1,
     fixesIn: easeOut(seg(p, 0.06, 0.16)),
     planeIn: easeOut(seg(p, 0.08, 0.12)),
     blip: fade(p, 0.04, 0.08, 0.2, 0.3),
