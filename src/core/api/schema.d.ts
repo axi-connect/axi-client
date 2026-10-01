@@ -16031,6 +16031,16 @@ export interface components {
             /** Format: uuid */
             id: string;
             upgraded: boolean;
+            /** @enum {string} */
+            outcome: "created" | "upgraded";
+        };
+        RevokeOptOutDto: {
+            /** @description true: confirmo que revoco una solicitud de habeas data del titular */
+            acknowledge_habeas?: boolean;
+        };
+        RevokedOptOutDto: {
+            /** @enum {string} */
+            revoked_source: "habeas_data" | "other";
         };
         MarketingSettingsDto: {
             attribution_window_hours: number;
@@ -32647,13 +32657,19 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RevokeOptOutDto"];
+            };
+        };
         responses: {
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["RevokedOptOutDto"];
+                };
             };
         };
     };

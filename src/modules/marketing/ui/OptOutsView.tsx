@@ -72,9 +72,9 @@ export function OptOutsView() {
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-  async function revoke(optOut: OptOutDTO) {
+  async function revoke(optOut: OptOutDTO, acknowledgeHabeas = false) {
     try {
-      await revokeOptOut(optOut.id);
+      await revokeOptOut(optOut.id, { acknowledge_habeas: acknowledgeHabeas });
       await refresh();
       showAlert({ tone: "success", title: "Baja revocada" });
     } catch (err) {
@@ -112,7 +112,8 @@ export function OptOutsView() {
           label: "Volver a incluir",
           variant: "destructive",
           disabled: !confirmed,
-          onClick: () => void revoke(optOut),
+          // La casilla marcada viaja a la API: sin ella el servidor responde 422.
+          onClick: () => void revoke(optOut, confirmed),
         },
       ],
     });
