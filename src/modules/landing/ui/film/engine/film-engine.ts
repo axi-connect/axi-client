@@ -39,6 +39,7 @@ import {
   lerp,
   num,
   perNiche,
+  prefit,
   sceneTimeline,
   segP,
   setText,
@@ -550,6 +551,9 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
           if (r.top <= vh / 2 && r.bottom > vh / 2) anchor = { box: s, top: r.top };
         }
       }
+      // Las fijadas se ajustan a la ventana todas juntas, antes de construir
+      // (después de medir lo que ya estaba en pantalla, R4).
+      const unprefit = prefit(sections, Boolean(context.conditions?.desktop));
       const intentsAtStart = intents;
       const finals: gsap.core.Timeline[] = [];
       const ctx: Ctx = { desktop: Boolean(context.conditions?.desktop), pins, settled, finals };
@@ -632,6 +636,7 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
       slice();
       return () => {
         alive = false;
+        unprefit();
         io?.disconnect();
         for (const s of sections) s.removeAttribute("data-stick");
         pins.clear();

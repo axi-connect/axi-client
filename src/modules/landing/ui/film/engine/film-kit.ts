@@ -300,12 +300,36 @@ function fitAll(list: Iterable<Fit>) {
 
 const onFitRefresh = () => fitAll(fits);
 
+/** Las ajustadas por `prefit` que aún no se construyeron. */
+const prefitted = new Map<HTMLElement, Fit>();
+
+/**
+ * Ajusta de una vez todas las escenas que se fijarán, antes de construir
+ * ninguna: en lotes de 3 o 4 layouts para todas, y no esos mismos por escena
+ * (31 layouts, 293 ms con CPU ×1 a 1366 × 657, repartidos por la construcción).
+ * Cada escena, al construirse, encuentra su ajuste hecho para esta ventana.
+ * Devuelve cómo deshacer lo que no llegó a construirse.
+ */
+export function prefit(sections: readonly HTMLElement[], desktop: boolean): () => void {
+  const list = sections.filter((s) => pinFits(s, desktop)).map((section): Fit => ({ section, kids: inFlow(section), key: "" }));
+  for (const f of list) prefitted.set(f.section, f);
+  fitAll(list);
+  return () => {
+    for (const f of list) {
+      if (prefitted.get(f.section) !== f) continue;
+      prefitted.delete(f.section);
+      unfit(f);
+    }
+  };
+}
+
 /**
  * Registra la escena para ajustarse: ya, antes de crear su trigger, y en cada
  * `refreshInit` (cambio de tamaño), todas juntas y nunca por frame.
  */
 function fitToViewport(section: HTMLElement) {
-  const fit: Fit = { section, kids: inFlow(section), key: "" };
+  const fit: Fit = prefitted.get(section) ?? { section, kids: inFlow(section), key: "" };
+  prefitted.delete(section);
   fitAll([fit]);
   if (!fits.size) ScrollTrigger.addEventListener("refreshInit", onFitRefresh);
   fits.add(fit);

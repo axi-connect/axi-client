@@ -5,7 +5,7 @@
 import { gsap } from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 
-import { pinFits, sceneTimeline, type Ctx } from "../film-kit"
+import { pinFits, prefit, sceneTimeline, type Ctx } from "../film-kit"
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -67,6 +67,33 @@ describe("el ajuste no se repite si la ventana no cambió (arranque, 2026-10-01)
     sceneTimeline(s, { desktop: true, pins: new Map() }, 100)
     return { s, reads }
   }
+
+  it("ajustadas juntas antes de construir: al construirse ya no se mide; sin ese ajuste previo, sí", () => {
+    const tall = () => {
+      const s = scene("photo", 0)
+      const copy = s.querySelector<HTMLElement>("[data-anim=x]")!
+      const reads = { n: 0 }
+      Object.defineProperty(s, "offsetHeight", { configurable: true, get: () => (reads.n++, 300 + 900 * (Number(copy.style.zoom) || 1)) })
+      return { s, reads }
+    }
+    const a = tall()
+    const b = tall()
+    const undo = prefit([a.s, b.s], true)
+    const afterPrefit = a.reads.n
+    expect(afterPrefit).toBeGreaterThan(0)
+    sceneTimeline(a.s, { desktop: true, pins: new Map() }, 100)
+    expect(a.reads.n).toBe(afterPrefit)
+    expect(a.s.offsetHeight).toBeLessThanOrEqual(900)
+    // Lo que no llegó a construirse se deshace (jsdom no sabe quitar `zoom`:
+    // se ve en que, construida después, vuelve a medirse).
+    undo()
+    const beforeB = b.reads.n
+    sceneTimeline(b.s, { desktop: true, pins: new Map() }, 100)
+    expect(b.reads.n).toBeGreaterThan(beforeB)
+    const c = tall()
+    sceneTimeline(c.s, { desktop: true, pins: new Map() }, 100)
+    expect(c.reads.n).toBeGreaterThan(0)
+  })
 
   it("cabe en pocas vueltas aunque no encoja en proporción (antes, hasta 12 por escena)", () => {
     const { s, reads } = counted()
