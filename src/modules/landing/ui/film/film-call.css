@@ -63,7 +63,7 @@
 .film-call-head .film-sell-title { font-size: clamp(32px, 4vw, 58px); letter-spacing: -0.045em; }
 .film-call-head .film-sell-lead { max-width: 640px; margin: 18px auto 0; }
 
-.film-call-stagebox { grid-area: stage; position: relative; width: 460px; height: 460px; margin: -56px 0 -64px; }
+.film-call-stagebox { grid-area: stage; position: relative; width: 460px; height: 460px; margin: -56px 0 -28px; }
 .film-call-meta { grid-area: meta; justify-self: start; display: flex; flex-direction: column; gap: 14px; padding-left: clamp(0px, 4vw, 40px); }
 .film-call-notes { grid-area: notes; justify-self: end; width: min(250px, 100%); }
 .film-call-cap { grid-area: cap; justify-self: center; width: min(760px, 100%); min-height: 100px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
@@ -89,7 +89,7 @@
   }
   .film-call-head { justify-self: stretch; text-align: left; }
   .film-call-head .film-sell-lead { margin-inline: 0; }
-  .film-call-stagebox { width: 340px; height: 340px; margin: -24px auto -36px; }
+  .film-call-stagebox { width: 340px; height: 340px; margin: -24px auto -8px; }
   .film-call-stage { transform: scale(0.739); transform-origin: 0 0; }
   .film-call-meta { gap: 8px; }
   .film-call-cap { align-items: flex-start; text-align: left; min-height: 120px; }
