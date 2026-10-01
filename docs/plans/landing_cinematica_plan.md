@@ -980,11 +980,15 @@ Cifras finales sobre la **build de producción** (`next build` sin `FILM_PILOT`,
 | Escritorio | **92** (antes 78) | 1,51 s | 0,51 s | 144 ms (antes 350) | 0,003 | 100 · 100 · 100 |
 
 - **Lo que se arregló esta noche:** el motor construía las 19 escenas en una sola tarea (1,2 s con CPU de gama media). Ahora va por tandas de ≤ 12 ms cediendo el hilo (272bbda5). Precios, preguntas y cierre llevan `content-visibility: auto`.
-- **Lo que queda en el LCP móvil (4,2 s), con su causa medida:** el 89 % es retraso de render. El elemento LCP es texto en **Nexa** (el nombre de la marca o las cifras del hero). Se pinta con la fuente de respaldo en el FCP y se repinta cuando llega Nexa, hacia los 4,2 s en 4G lento. Compiten **7 fuentes precargadas** (4 pesos de Poppins, 2 de Nexa y Geist Mono) y 80 kB de CSS bloqueante (5 archivos; el de la película pesa 56 kB). Las palancas viven en el **layout raíz de toda la app** (`src/app/layout.tsx`), así que es decisión aparte:
-  1. no precargar Geist Mono ni los pesos de Poppins que la home no usa arriba;
-  2. `font-display: optional` solo para Nexa;
-  3. partir `film.css` para que solo el CSS del hero bloquee.
-- **Recomendación siguiente:** `content-visibility` en las escenas fijadas, que bajaría el estilo y layout inicial (4.879 nodos). Exige recalcular los pins tras el primer render de cada escena; no se hizo esta noche por el riesgo de saltos.
+- **Lo que queda en el LCP móvil (4,2 s), con su causa medida:** el 89 % es retraso de render. El elemento LCP es texto en **Nexa** (el nombre de la marca o las cifras del hero), que se pinta con la fuente de respaldo en el FCP y se repinta cuando llega Nexa, hacia los 4,2 s en 4G lento. Compiten **7 fuentes precargadas** (4 pesos de Poppins, 2 de Nexa y Geist Mono) y 80 kB de CSS bloqueante en 7 hojas (la de la película, 52 kB).
+- **Probado y descartado esta noche:**
+  - **Geist Mono sin precarga** (`preload: false` en `src/app/layout.tsx`): el móvil EMPEORA en dos medianas seguidas (rendimiento 69 → 62 y 63; LCP 4,17 → 4,88 y 5,44 s), aunque el escritorio mejora (LCP 1,51 → 1,20 s). La home sí usa Geist Mono (las cifras de la llamada, §20): sin precarga se pide tarde y compite en el momento crítico. Revertido; el presupuesto del panel no cambiaba.
+  - **Recortar `film.css`** quitando solo lo PROBADO muerto (clases que no aparecen en ningún TS/TSX): son 674 bytes de 52 kB (1,3 %, unos 200 bytes comprimidos: `.film-alpha`, `.film-card`, `.film-mark`). Muy por debajo del ruido del móvil headless (±5 puntos), así que no puede dar los 2 puntos estables que se pedían. No se aplicó. Lo demás lo usa alguna escena o el motor.
+- **Palancas pendientes, para decidir con la dueña:**
+  1. `font-display: optional` solo en Nexa. El LCP pasaría a ser el FCP, pero quien entra por primera vez con red lenta vería la marca en la fuente de respaldo: cambia la primera impresión de la marca.
+  2. Los pesos de Poppins (hoy 4, en una sola instancia de next/font en el layout raíz): precargar solo los que pinta el hero.
+  3. CSS de las escenas fuera del `<head>`: cargarlo con JS más `<noscript>`. En el App Router todo el CSS importado bloquea, así que hay que sacarlo de su cadena, con riesgo de FOUC si se baja antes de que llegue. Solo en una rama aparte, con 3 medianas y el barrido completo.
+  4. `content-visibility` en las escenas fijadas: bajaría el estilo y layout inicial (4.879 nodos), pero exige recalcular los pins tras el primer render de cada una, con riesgo de saltos.
 
 ### 21.3 Perfil de scroll (`qa/qa-perfil.mjs`, Chromium headless 1440, rueda real con Lenis)
 
