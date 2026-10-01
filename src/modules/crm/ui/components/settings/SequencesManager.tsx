@@ -253,9 +253,7 @@ export function SequencesManager() {
                   {sequence.stop_on_reply && <Rule icon={CircleCheck}>Para si responde</Rule>}
                   {sequence.stop_on_conversion && <Rule icon={CircleDollarSign}>Para si compra</Rule>}
                   {sequence.next_sequence_id !== null && (
-                    <Rule icon={Repeat}>
-                      Luego: {nextRuleLabel(sequences.find((other) => other.id === sequence.next_sequence_id))}
-                    </Rule>
+                    <NextRule next={sequences.find((other) => other.id === sequence.next_sequence_id)} />
                   )}
                 </div>
                 <Button variant="ghost" size="sm" className="rounded-full" onClick={() => setInspecting(sequence)}>
@@ -313,12 +311,27 @@ export function SequencesManager() {
  * perdería en silencio a todo el que termine sin responder: se dice.
  */
 function nextSequenceLabel(sequence: Pick<SequenceDTO, "name" | "is_active">): string {
-  return sequence.is_active ? sequence.name : `${sequence.name} (borrador: no recibe a nadie hasta activarla)`;
+  return sequence.is_active ? sequence.name : `${sequence.name} · borrador`;
 }
 
-function nextRuleLabel(sequence: Pick<SequenceDTO, "name" | "is_active"> | undefined): string {
-  if (sequence === undefined) return "otra secuencia";
-  return sequence.is_active ? sequence.name : `${sequence.name} · en borrador, no recibe a nadie`;
+/**
+ * «Luego: …» en la tarjeta. El nombre puede ser largo y se trunca (con title);
+ * el aviso de borrador va APARTE y nunca se corta: es lo que no puede perderse.
+ */
+function NextRule({ next }: { next: Pick<SequenceDTO, "name" | "is_active"> | undefined }) {
+  const name = next?.name ?? "otra secuencia";
+  return (
+    <>
+      <Rule icon={Repeat} className="max-w-full min-w-0">
+        <span className="min-w-0 truncate" title={name}>
+          Luego: {name}
+        </span>
+      </Rule>
+      {next !== undefined && !next.is_active && (
+        <StatePill tone="warning">En borrador: no recibe a nadie</StatePill>
+      )}
+    </>
+  );
 }
 
 function emptyDraft(): Draft {
@@ -380,9 +393,17 @@ function StepFlow({ steps }: { steps: readonly { offset_hours: number; task_chan
   );
 }
 
-function Rule({ icon: Icon, children }: { icon: React.ComponentType<{ className?: string }>; children: React.ReactNode }) {
+function Rule({
+  icon: Icon,
+  children,
+  className,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <span className="inline-flex h-6 items-center gap-1.5 rounded-full bg-muted px-2.5 text-xs font-medium whitespace-nowrap">
+    <span className={cn("inline-flex h-6 items-center gap-1.5 rounded-full bg-muted px-2.5 text-xs font-medium whitespace-nowrap", className)}>
       <Icon aria-hidden className="size-3 text-muted-foreground" />
       {children}
     </span>
@@ -484,18 +505,30 @@ function SequenceEditor({
                 value={draft.next_sequence_id ?? NO_NEXT}
                 onValueChange={(value) => onChange({ ...draft, next_sequence_id: value === NO_NEXT ? null : value })}
               >
-                <SelectTrigger id="sequence-next" className="w-full min-w-0 @min-[36rem]:w-auto @min-[36rem]:min-w-72">
+                {/* El valor del trigger compartido es `flex` y no recorta: aquí se trunca (el nombre entero en title). */}
+                <SelectTrigger
+                  id="sequence-next"
+                  title={others.find((sequence) => sequence.id === draft.next_sequence_id)?.name}
+                  className="w-full min-w-0 *:data-[slot=select-value]:block *:data-[slot=select-value]:min-w-0 *:data-[slot=select-value]:truncate @min-[36rem]:w-auto @min-[36rem]:min-w-72"
+                >
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                {/* Acotado al ancho de la pantalla: en el móvil un nombre largo parte, no se sale. */}
+                <SelectContent className="max-w-[calc(100vw-2rem)]">
                   <SelectItem value={NO_NEXT}>A ninguna: termina aquí</SelectItem>
                   {others.map((sequence) => (
-                    <SelectItem key={sequence.id} value={sequence.id}>
+                    <SelectItem key={sequence.id} value={sequence.id} className="whitespace-normal">
                       {nextSequenceLabel(sequence)}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {others.find((sequence) => sequence.id === draft.next_sequence_id)?.is_active === false && (
+                <p className="flex items-start gap-2 text-xs text-warning text-pretty">
+                  <TriangleAlert aria-hidden className="mt-0.5 size-3.5 shrink-0" />
+                  Esa secuencia está en borrador: nadie pasa a ella hasta que la actives.
+                </p>
+              )}
               <p className="text-xs text-muted-foreground text-pretty">
                 Solo si salen todos los pasos y nadie responde. Si responde, compra o se da de baja, no pasa a ninguna.
               </p>
