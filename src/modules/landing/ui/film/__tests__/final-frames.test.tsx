@@ -16,7 +16,8 @@ jest.mock("@/core/analytics/track", () => ({ track: jest.fn() }))
 
 import { FIXTURE_CATALOG } from "@/modules/landing/domain/testing/catalog.fixture"
 import { goalFrame } from "@/modules/landing/domain/film/goal-camera"
-import { FILM_CALL, VAULT_RECEIPTS } from "@/modules/landing/domain/film/tanda3-content"
+import { CALL_NOTES, CALL_STAGES } from "@/modules/landing/domain/film/call-audio"
+import { VAULT_RECEIPTS } from "@/modules/landing/domain/film/tanda3-content"
 import { FilmRoot } from "../FilmRoot"
 import { FaqScene, PricingScene } from "../scenes/after"
 import { CloseScene } from "../scenes/close"
@@ -98,14 +99,15 @@ it("la meta termina con la ruta de Axi aprobada", () => {
   expect(plane.style.transform).toBe(goalFrame(1).plane)
 })
 
-it("la llamada termina con todas las etapas, los turnos y el reloj en 02:14", () => {
+it("la llamada sin reproducir: etapas y notas completas, la esfera lista y el audio sin descargar", () => {
   const { container } = renderFilm()
   const call = container.querySelector<HTMLElement>("[data-scene=call]")!
-  const stages = call.querySelectorAll("[data-anim=call-stage]")
-  expect(stages).toHaveLength(FILM_CALL.stages.length)
-  stages.forEach((s) => expect(s).toHaveAttribute("data-on"))
-  call.querySelectorAll("[data-anim=call-line]").forEach((l) => expect(l).toHaveAttribute("data-on"))
-  expect(call.querySelector("[data-anim=call-clock]")).toHaveTextContent("02:14")
+  const stages = call.querySelectorAll(".film-call-stages [data-on]")
+  expect(stages).toHaveLength(CALL_STAGES.length)
+  expect(call.querySelectorAll(".film-call-note[data-on]")).toHaveLength(CALL_NOTES.length)
+  expect(call.querySelector("button.film-call-pearl")).toHaveAccessibleName("Escuchar la llamada")
+  call.querySelectorAll("audio").forEach((a) => expect(a).toHaveAttribute("preload", "none"))
+  expect(call).not.toHaveAttribute("data-playing")
 })
 
 it("la meta y el piloto: titular y panel llegan a pleno al pin y entran con el reveal de antes", () => {

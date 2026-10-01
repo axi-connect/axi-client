@@ -213,108 +213,7 @@
   .film-photo-reply { justify-self: end; max-width: 280px; font-size: 13px; margin: 0; }
 }
 
-/* ────────────────────────────── llamada ────────────────────────────── */
-
-.film-call-spot { right: -8%; bottom: -30%; width: 700px; height: 700px; background: radial-gradient(closest-side, rgb(167 139 250 / 0.1), transparent); }
-.film-call-layout {
-  position: relative;
-  z-index: 2;
-  width: 100%;
-  max-width: 1440px;
-  margin-inline: auto;
-  padding: clamp(88px, 12vh, 110px) clamp(16px, 8.3vw, 120px) 72px;
-  display: grid;
-  grid-template-columns: minmax(0, 640px) minmax(0, 380px);
-  grid-template-areas: "head head" "band band" "lines side";
-  justify-content: space-between;
-  row-gap: 36px;
-}
-.film-call-head { grid-area: head; max-width: 760px; }
-.film-call-head .film-sell-title { font-size: clamp(36px, 4.4vw, 64px); }
-.film-call-head .film-sell-lead { max-width: none; }
-/* La banda ocupa el ancho de la pantalla, como la onda del lienzo. */
-.film-call-band { grid-area: band; position: relative; height: 140px; margin-inline: calc(-1 * clamp(16px, 8.3vw, 120px)); }
-.film-call-stages { position: absolute; inset: 0; margin: 0; padding: 0; list-style: none; z-index: 2; }
-.film-call-stages li { position: absolute; top: 0; width: 140px; margin-left: -70px; display: flex; flex-direction: column; align-items: center; gap: 0; text-align: center; }
-.film-call-stage-name { font-size: 11.5px; color: rgb(245 245 247 / 0.5); transition: color 0.2s; }
-.film-call-stage-dot {
-  margin-top: 46px;
-  width: 13px;
-  height: 13px;
-  box-sizing: border-box;
-  border-radius: 50%;
-  border: 1.5px solid rgb(255 255 255 / 0.3);
-  background: #0a0a0b;
-}
-.film-call-stages li[data-on] .film-call-stage-name { color: #f5f5f7; }
-.film-call-stages li[data-on] .film-call-stage-dot { border: 0; background: #f5f5f7; }
-.film-call-stages li[data-on][data-last] .film-call-stage-dot { background: #fff; box-shadow: 0 0 0 6px rgb(255 255 255 / 0.14), 0 0 24px #fff; }
-.film-call-wave { position: absolute; left: 0; top: 4px; width: 100%; height: 120px; overflow: visible; }
-.film-call-wave path { fill: none; stroke-width: 2; stroke-linecap: round; vector-effect: non-scaling-stroke; }
-.film-call-wave-base { stroke: rgb(255 255 255 / 0.12); }
-/* La onda encendida: se revela con `clip-path` al ritmo de la llamada. */
-.film-call-wave-lit path { stroke: #f5f5f7; opacity: 0.8; }
-.film-call-wave-lit { clip-path: inset(0 0 0 0); }
-
-.film-call-lines { grid-area: lines; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 14px; }
-.film-call-lines li { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 12px; font-size: 15px; line-height: 1.55; opacity: 0.12; transition: opacity 0.25s; }
-.film-call-lines li[data-on] { opacity: 1; }
-.film-call-who,
-.film-call-who-axi { padding-top: 3px; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 600; color: rgb(245 245 247 / 0.5); }
-/* La voz de Axi: violeta. */
-.film-call-who-axi { color: #c4b5fd; }
-
-.film-call-side { grid-area: side; display: flex; flex-direction: column; align-items: center; gap: 18px; }
-.film-call-aura {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #3a3a40, #0a0a0b 75%);
-  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.12), 0 0 80px rgb(167 139 250 / 0.4);
-}
-.film-call-live {
-  margin: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  padding: 7px 14px;
-  border-radius: 999px;
-  border: 1px solid rgb(255 255 255 / 0.12);
-  background: rgb(255 255 255 / 0.05);
-  font-variant-numeric: tabular-nums;
-}
-.film-call-live-dot { width: 7px; height: 7px; border-radius: 50%; background: #f5f5f7; }
-.film-call-outcome {
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  border-radius: 16px;
-  background: linear-gradient(165deg, #fafafa, #e9e9ec);
-  color: #0a0a0b;
-  font-size: 14px;
-  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.9), 0 0 50px rgb(255 255 255 / 0.18);
-}
-.film-call-outcome-note { color: rgb(10 10 11 / 0.6); }
-
-@media (max-width: 1023px) {
-  .film-call-layout { padding: 88px 16px; grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "band" "lines" "side"; row-gap: 28px; }
-  .film-call-band { margin-inline: -16px; height: 120px; }
-  .film-call-stages li { width: 90px; margin-left: -45px; }
-  .film-call-stage-name { font-size: 9.5px; }
-  /* En móvil solo se nombran apertura, propuesta y cierre. */
-  .film-call-stages li:nth-child(2) .film-call-stage-name,
-  .film-call-stages li:nth-child(3) .film-call-stage-name,
-  .film-call-stages li:nth-child(5) .film-call-stage-name { visibility: hidden; }
-  .film-call-stage-dot { margin-top: 38px; width: 11px; height: 11px; }
-  .film-call-wave { height: 100px; }
-  .film-call-lines li { grid-template-columns: 60px minmax(0, 1fr); font-size: 13px; gap: 8px; }
-  .film-call-side { align-items: flex-start; gap: 12px; }
-  .film-call-aura { display: none; }
-  .film-call-outcome { font-size: 12.5px; padding: 10px 13px; flex-wrap: wrap; }
-}
+/* La llamada vive en film-call.css (plan §20). */
 
 /* ─────────────────────────────── bóveda ─────────────────────────────── */
 
@@ -554,5 +453,5 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .film-call-stage-name, .film-call-lines li, .film-team-mode, .film-team-return { transition: none; }
+  .film-team-mode, .film-team-return { transition: none; }
 }

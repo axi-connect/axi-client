@@ -1,10 +1,9 @@
 import "../film-sell.css";
 
-import { Bot, CircleCheck, Lock, ScanSearch } from "lucide-react";
+import { Bot, Lock, ScanSearch } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
 import {
-  FILM_CALL,
   FILM_PHOTO,
   FILM_TEAM,
   FILM_VAULT,
@@ -179,125 +178,8 @@ export function PhotoScene() {
 
 /* ────────────────────────────── Llamada ────────────────────────────── */
 
-/**
- * La onda de la voz: barras verticales con una envolvente fija (la del lienzo),
- * en un SVG estático. Se revela con un `clip-path` que avanza con la escena.
- */
-const WAVE = (() => {
-  let d = "";
-  for (let x = 124; x <= 1316; x += 7) {
-    const env =
-      0.35 + 0.65 * Math.abs(Math.sin(x / 97) * Math.sin(x / 31 + 1.3));
-    const gap = Math.sin(x / 210 + 0.6) > 0.82 ? 0.15 : 1;
-    const h = 4 + 34 * env * gap;
-    d += `M${x} ${(60 - h).toFixed(1)}V${(60 + h).toFixed(1)}`;
-  }
-  return d;
-})();
-
-export function CallScene() {
-  const last = FILM_CALL.stages.length - 1;
-  return (
-    <section
-      id="llamada"
-      data-scene="call"
-      aria-labelledby="llamada-h"
-      className="film-scene film-call"
-    >
-      <div className="film-sell-spot film-call-spot" aria-hidden="true" />
-      <div className="film-call-layout">
-        <Head
-          id="llamada-h"
-          eyebrow={FILM_CALL.eyebrow}
-          title={FILM_CALL.title}
-          thin={FILM_CALL.titleThin}
-          lead={FILM_CALL.lead}
-          className="film-call-head"
-        />
-
-        <div className="film-call-band">
-          <ol className="film-call-stages" aria-label={FILM_CALL.stagesLabel}>
-            {FILM_CALL.stages.map((stage, i) => (
-              <li
-                key={stage}
-                data-anim="call-stage"
-                data-x={FILM_CALL.stageX[i]}
-                data-last={i === last ? "" : undefined}
-                data-on=""
-                style={{ left: `${(FILM_CALL.stageX[i] * 100).toFixed(3)}%` }}
-              >
-                <span className="film-call-stage-name">{stage}</span>
-                <span className="film-call-stage-dot" aria-hidden="true" />
-              </li>
-            ))}
-          </ol>
-          <svg
-            className="film-call-wave"
-            viewBox="0 0 1440 120"
-            preserveAspectRatio="none"
-            aria-hidden="true"
-          >
-            <path d={WAVE} className="film-call-wave-base" />
-          </svg>
-          <svg
-            className="film-call-wave film-call-wave-lit"
-            viewBox="0 0 1440 120"
-            preserveAspectRatio="none"
-            aria-hidden="true"
-            data-anim="call-wave"
-          >
-            <path d={WAVE} />
-          </svg>
-        </div>
-
-        <ByNiche>
-          {(c) => (
-            <ol className="film-call-lines" aria-label={FILM_CALL.transcript}>
-              {c.call.lines.map(([who, text], i) => (
-                <li
-                  key={i}
-                  data-anim="call-line"
-                  data-x={FILM_CALL.lineX[i] ?? 1}
-                  data-on=""
-                >
-                  <span
-                    className={
-                      who === "axi" ? "film-call-who-axi" : "film-call-who"
-                    }
-                  >
-                    {who === "axi" ? "Axi" : c.call.customer}
-                  </span>
-                  <span>{text}</span>
-                </li>
-              ))}
-            </ol>
-          )}
-        </ByNiche>
-
-        <div className="film-call-side">
-          <span
-            className="film-call-aura"
-            data-anim="call-aura"
-            aria-hidden="true"
-          />
-          <p className="film-call-live">
-            <span className="film-call-live-dot" aria-hidden="true" />
-            {FILM_CALL.live} · <span data-anim="call-clock">02:14</span>
-          </p>
-          <ByNiche>
-            {(c) => (
-              <p className="film-call-outcome" data-anim="call-outcome">
-                <CircleCheck className="size-[18px]" aria-hidden="true" />
-                <strong className="font-semibold">{FILM_CALL.done}</strong>
-                <span className="film-call-outcome-note">{c.call.outcome}</span>
-              </p>
-            )}
-          </ByNiche>
-        </div>
-      </div>
-    </section>
-  );
-}
+/** La llamada se escucha (plan §20): es un componente de cliente con su audio. */
+export { CallScene } from "./call-scene";
 
 /* ─────────────────────────────── Bóveda ─────────────────────────────── */
 

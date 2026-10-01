@@ -1,0 +1,256 @@
+/*
+ * Escucha la llamada (plan §20, lienzo v4 aprobado el 2026-10-01).
+ *
+ * El analizador escribe trece variables en la sección (`--b0…--b7`, `--lo`,
+ * `--mid`, `--hi`, `--e` y el avance `--p`); todo lo demás es CSS estático. Lo
+ * que se mueve son `transform` y `opacity` de capas ya pintadas: sin `filter`,
+ * sin blur, sin grano (§17.1). Los giros son animaciones CSS en pausa hasta que
+ * suena (`[data-playing]`).
+ *
+ * Las cifras van en la mono del sitio (Geist Mono, ya cargada en el layout): cero
+ * fuentes nuevas para esta escena.
+ *
+ * Quién habla cambia la escena: con el cliente, plata; cuando contesta Axi,
+ * entran el coral, el violeta y el ámbar.
+ */
+
+.film-call {
+  --p: 0;
+  --b0: 0; --b1: 0; --b2: 0; --b3: 0; --b4: 0; --b5: 0; --b6: 0; --b7: 0;
+  --lo: 0; --mid: 0; --hi: 0; --e: 0;
+  --call-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* ───────────────────────────── fondo ───────────────────────────── */
+
+/* Campos de luz centrados en la esfera; se funden con --background arriba y abajo (sin costuras). */
+.film-call-fields {
+  position: absolute;
+  left: 50%;
+  top: 56%;
+  width: min(1100px, 150vw);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  pointer-events: none;
+  z-index: 0;
+}
+.film-call-fld { position: absolute; inset: 0; border-radius: 50%; will-change: transform; transition: opacity 1.1s var(--call-ease); }
+.film-call-f-c { background: radial-gradient(closest-side, rgb(230 87 89 / 0.42), rgb(230 87 89 / 0)); transform: translate(-16%, 2%) scale(calc(0.82 + var(--lo) * 0.5)); opacity: 0.2; }
+.film-call-f-v { background: radial-gradient(closest-side, rgb(154 79 255 / 0.42), rgb(154 79 255 / 0)); transform: translate(15%, -5%) scale(calc(0.82 + var(--mid) * 0.55)); opacity: 0.2; }
+.film-call-f-a { inset: 8%; background: radial-gradient(closest-side, rgb(255 192 77 / 0.26), rgb(255 192 77 / 0)); transform: translate(2%, 16%) scale(calc(0.78 + var(--hi) * 0.7)); opacity: 0.16; }
+.film-call-f-s { inset: 12%; background: radial-gradient(closest-side, rgb(206 214 255 / 0.2), rgb(206 214 255 / 0)); transform: scale(calc(0.75 + var(--e) * 0.5)); opacity: 0; }
+.film-call[data-speaker="axi"] :is(.film-call-f-c, .film-call-f-v, .film-call-f-a) { opacity: 1; }
+.film-call[data-speaker="client"] :is(.film-call-f-c, .film-call-f-v, .film-call-f-a) { opacity: 0.1; }
+.film-call[data-speaker="client"] .film-call-f-s { opacity: 1; }
+
+/* ───────────────────────────── composición ───────────────────────────── */
+
+.film-call-layout {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+  padding: clamp(88px, 11vh, 104px) clamp(16px, 5vw, 80px) 64px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 460px minmax(0, 1fr);
+  grid-template-areas: "head head head" "meta stage notes" "cap cap cap" "time time time";
+  align-items: center;
+  column-gap: 40px;
+}
+.film-call-head { grid-area: head; justify-self: center; max-width: 980px; text-align: center; }
+.film-call-head .film-eyebrow { margin-bottom: 16px; }
+.film-call-head .film-sell-title { font-size: clamp(32px, 4vw, 58px); letter-spacing: -0.045em; }
+.film-call-head .film-sell-lead { max-width: 640px; margin: 18px auto 0; }
+
+.film-call-stagebox { grid-area: stage; position: relative; width: 460px; height: 460px; margin: -56px 0 -64px; }
+.film-call-meta { grid-area: meta; justify-self: start; display: flex; flex-direction: column; gap: 14px; padding-left: clamp(0px, 4vw, 40px); }
+.film-call-notes { grid-area: notes; justify-self: end; width: min(250px, 100%); }
+.film-call-cap { grid-area: cap; justify-self: center; width: min(760px, 100%); min-height: 100px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
+.film-call-time { grid-area: time; justify-self: center; width: min(1000px, 100%); margin-top: 18px; }
+
+@media (max-width: 1023px) {
+  .film-call-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas: "head head" "stage stage" "meta notes" "cap cap" "time time";
+    row-gap: 24px;
+  }
+  .film-call-stagebox { justify-self: center; }
+  .film-call-meta { padding-left: 0; }
+  .film-call-notes { justify-self: stretch; width: auto; }
+}
+
+@media (max-width: 639px) {
+  .film-call-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "head" "stage" "meta" "cap" "time" "notes";
+    padding-top: 72px;
+    row-gap: 20px;
+  }
+  .film-call-head { justify-self: stretch; text-align: left; }
+  .film-call-head .film-sell-lead { margin-inline: 0; }
+  .film-call-stagebox { width: 340px; height: 340px; margin: -24px auto -36px; }
+  .film-call-stage { transform: scale(0.739); transform-origin: 0 0; }
+  .film-call-meta { gap: 8px; }
+  .film-call-cap { align-items: flex-start; text-align: left; min-height: 120px; }
+  .film-call-cap p { font-size: 17px; }
+  .film-call-clock { font-size: 30px; }
+}
+
+/* ───────────────────────────── escenario 3D ───────────────────────────── */
+
+/* Perspectiva real: las órbitas atraviesan la esfera y pasan por detrás. */
+.film-call-stage { position: absolute; left: 0; top: 0; width: 460px; height: 460px; perspective: 1050px; perspective-origin: 50% 34%; }
+.film-call-stage > * { position: absolute; left: 50%; top: 50%; }
+.film-call-horizon { width: 880px; height: 1px; margin-left: -440px; top: calc(50% + 168px); background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.1) 30%, rgb(255 255 255 / 0.16) 50%, rgb(255 255 255 / 0.1) 70%, transparent); }
+.film-call-shadow { width: 300px; height: 56px; margin: 150px 0 0 -150px; border-radius: 50%; background: radial-gradient(closest-side, rgb(0 0 0 / 0.75), rgb(0 0 0 / 0)); }
+.film-call-reflect { width: 360px; height: 70px; margin: 142px 0 0 -180px; border-radius: 50%; background: radial-gradient(closest-side, rgb(154 79 255 / 0.5), rgb(230 87 89 / 0.2) 55%, rgb(0 0 0 / 0)); opacity: calc(0.08 + var(--e) * 0.9); transform: scaleX(calc(0.8 + var(--e) * 0.35)); will-change: transform, opacity; }
+.film-call[data-speaker="client"] .film-call-reflect { background: radial-gradient(closest-side, rgb(220 226 255 / 0.35), rgb(0 0 0 / 0)); }
+
+.film-call-ripples { width: 0; height: 0; top: calc(50% + 168px); opacity: calc(var(--e) * 1.8); }
+.film-call-ripples i { position: absolute; width: 360px; height: 360px; margin: -180px; border-radius: 50%; border: 1px solid; transform: scaleY(0.16) scale(0.4); opacity: 0; animation: film-call-ripple 2.8s cubic-bezier(0.2, 0.6, 0.3, 1) infinite paused; }
+.film-call-ripples i:nth-child(1) { border-color: rgb(255 122 110 / 0.7); }
+.film-call-ripples i:nth-child(2) { border-color: rgb(180 139 255 / 0.7); animation-delay: -0.93s; }
+.film-call-ripples i:nth-child(3) { border-color: rgb(255 213 128 / 0.6); animation-delay: -1.86s; }
+.film-call[data-speaker="client"] .film-call-ripples i { border-color: rgb(235 238 255 / 0.55); }
+.film-call[data-playing] .film-call-ripples i { animation-play-state: running; }
+@keyframes film-call-ripple {
+  0% { transform: scaleY(0.16) scale(0.4); opacity: 0; }
+  18% { opacity: 0.9; }
+  100% { transform: scaleY(0.16) scale(1.55); opacity: 0; }
+}
+
+.film-call-bloom { width: 420px; height: 420px; margin: -210px; border-radius: 50%; will-change: transform, opacity; transition: opacity 1s; }
+.film-call-bl-a { background: radial-gradient(closest-side, rgb(154 79 255 / 0.42), rgb(230 87 89 / 0.22) 45%, rgb(255 192 77 / 0.08) 70%, rgb(0 0 0 / 0)); opacity: calc(0.32 + var(--e) * 1.1); transform: scale(calc(0.82 + var(--e) * 0.45)); }
+.film-call-bl-s { background: radial-gradient(closest-side, rgb(220 226 255 / 0.3), rgb(0 0 0 / 0)); opacity: 0; transform: scale(calc(0.8 + var(--e) * 0.4)); }
+.film-call[data-speaker="client"] .film-call-bl-a { opacity: 0.06; }
+.film-call[data-speaker="client"] .film-call-bl-s { opacity: calc(0.25 + var(--e) * 1.1); }
+
+.film-call-gyro { width: 0; height: 0; transform-style: preserve-3d; animation: film-call-breathe 5.5s ease-in-out infinite; }
+.film-call[data-playing] .film-call-gyro,
+.film-call[data-done] .film-call-gyro { animation: none; }
+@keyframes film-call-breathe { 50% { transform: scale(1.04); } }
+.film-call-gyro > *,
+.film-call-orbit div { position: absolute; left: 0; top: 0; transform-style: preserve-3d; }
+.film-call-orbit svg { position: absolute; overflow: visible; }
+.film-call-orbit { transition: opacity 0.9s; will-change: transform; }
+.film-call[data-speaker="client"] .film-call-orbit { opacity: 0.32; }
+
+.film-call-spin { animation: film-call-spin var(--d) linear infinite paused; animation-delay: var(--dl); }
+.film-call-rev { animation-direction: reverse; }
+/* El punto de luz contrarrota: siempre mira a cámara, aunque su órbita esté inclinada. */
+.film-call-counter { animation: film-call-spin var(--d) linear infinite paused reverse; animation-delay: var(--dl); }
+.film-call-rev .film-call-counter { animation-direction: normal; }
+.film-call[data-playing] :is(.film-call-spin, .film-call-counter) { animation-play-state: running; }
+@keyframes film-call-spin { to { transform: rotate(360deg); } }
+.film-call-sat { position: absolute; width: 30px; height: 30px; margin: -15px; border-radius: 50%; background: radial-gradient(closest-side, var(--dc) 0, var(--dc) 22%, color-mix(in srgb, var(--dc) 35%, transparent) 38%, transparent); }
+.film-call[data-speaker="client"] .film-call-sat { --dc: #eef0ff !important; }
+
+/* La corona: el espectro de la voz alrededor de la esfera. */
+.film-call-cor { width: 0; height: 0; }
+.film-call-cor i {
+  position: absolute;
+  width: 2px;
+  height: 10px;
+  margin: -10px 0 0 -1px;
+  border-radius: 2px;
+  transform-origin: 50% 100%;
+  transform: rotate(var(--a)) translateY(-98px) scaleY(calc(0.35 + var(--v) * var(--w)));
+  background: var(--tc, #f5f5f7);
+  opacity: 0.22;
+  transition: opacity 0.8s, background-color 0.8s;
+  will-change: transform;
+}
+.film-call[data-playing] .film-call-cor i { opacity: 0.85; }
+.film-call:is([data-speaker="axi"], [data-done]) .film-call-cor i { --tc: var(--c); }
+
+/* La esfera: es el botón. */
+.film-call-pearl {
+  all: unset;
+  box-sizing: border-box;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 168px;
+  height: 168px;
+  margin: -84px;
+  border-radius: 50%;
+  cursor: pointer;
+  overflow: hidden;
+  isolation: isolate;
+  background: radial-gradient(circle at 50% 38%, #1b1b21, #09090b 74%);
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.09), 0 50px 90px -30px rgb(0 0 0 / 0.95);
+  transition: transform 0.45s var(--call-ease);
+}
+.film-call-pearl:hover { transform: scale(1.035); }
+.film-call-pearl:active { transform: scale(0.97); }
+.film-call-pearl:focus-visible { outline: 2px solid #f5f5f7; outline-offset: 10px; }
+.film-call-pearl > span { position: absolute; border-radius: 50%; pointer-events: none; }
+.film-call-core { inset: -22%; transform: scale(calc(0.86 + var(--e) * 0.4)); will-change: transform; transition: opacity 1s; }
+.film-call-core > span { position: absolute; inset: 0; border-radius: 50%; animation: film-call-spin 16s linear infinite paused; }
+.film-call[data-playing] .film-call-core > span { animation-play-state: running; }
+.film-call-brand { opacity: 0.55; }
+.film-call-brand > span { background: radial-gradient(circle at 32% 34%, rgb(230 87 89 / 0.95), rgb(230 87 89 / 0) 34%), radial-gradient(circle at 70% 38%, rgb(154 79 255 / 0.95), rgb(154 79 255 / 0) 36%), radial-gradient(circle at 50% 72%, rgb(255 192 77 / 0.85), rgb(255 192 77 / 0) 34%); }
+.film-call-silver { opacity: 0; }
+.film-call-silver > span { background: radial-gradient(circle at 34% 36%, rgb(255 255 255 / 0.7), rgb(255 255 255 / 0) 34%), radial-gradient(circle at 68% 62%, rgb(190 200 255 / 0.6), rgb(190 200 255 / 0) 36%); animation-duration: 22s; }
+.film-call[data-speaker="axi"] .film-call-brand { opacity: 1; }
+.film-call[data-speaker="client"] .film-call-brand { opacity: 0.08; }
+.film-call[data-speaker="client"] .film-call-silver { opacity: 1; }
+.film-call-vol { inset: 0; background: radial-gradient(circle at 50% 46%, rgb(8 8 10 / 0) 26%, rgb(8 8 10 / 0.5) 64%, rgb(8 8 10 / 0.94) 100%); }
+.film-call-spec {
+  inset: 0;
+  background: radial-gradient(56% 34% at 50% 9%, rgb(255 255 255 / 0.55), rgb(255 255 255 / 0) 72%), radial-gradient(70% 26% at 50% 104%, rgb(255 255 255 / 0.14), rgb(255 255 255 / 0) 70%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.5), inset 0 0 0 1px rgb(255 255 255 / 0.06);
+}
+.film-call-glyph { position: absolute; left: 50%; top: 50%; width: 34px; height: 34px; margin: -17px; color: #fff; transition: opacity 0.4s, transform 0.45s var(--call-ease); }
+/* Mientras suena, la pausa solo aparece al pasar o al enfocar. */
+.film-call[data-playing] .film-call-glyph { opacity: 0.001; transform: scale(0.8); }
+.film-call[data-playing] .film-call-pearl:is(:hover, :focus-visible) .film-call-glyph { opacity: 0.9; transform: none; }
+
+/* ───────────────────────────── texto vivo ───────────────────────────── */
+
+.film-call-label { display: flex; align-items: center; gap: 10px; font-size: 11px; letter-spacing: 0.24em; text-transform: uppercase; font-weight: 600; color: rgb(245 245 247 / 0.5); }
+.film-call-live { width: 7px; height: 7px; border-radius: 50%; background: #ff7a6e; box-shadow: 0 0 0 4px rgb(255 122 110 / 0.14); opacity: 0.3; transition: opacity 0.4s; }
+.film-call[data-playing] .film-call-live { opacity: 1; animation: film-call-blink 1.6s ease-in-out infinite; }
+@keyframes film-call-blink { 50% { opacity: 0.35; } }
+.film-call-clock { font-family: var(--font-mono), ui-monospace, monospace; font-variant-numeric: tabular-nums; font-size: 46px; line-height: 1; letter-spacing: -0.02em; }
+.film-call-clock > span { color: rgb(245 245 247 / 0.28); }
+.film-call-status { font-size: 13px; color: rgb(245 245 247 / 0.62); }
+.film-call-status > span { color: rgb(245 245 247 / 0.4); }
+
+.film-call-notes dl { margin: 10px 0 0; }
+.film-call-note { display: grid; gap: 3px; padding: 12px 0; border-top: 1px solid rgb(255 255 255 / 0.08); }
+.film-call-note dt { font-family: var(--font-mono), ui-monospace, monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: rgb(245 245 247 / 0.36); transition: color 0.5s; }
+.film-call-note dd { margin: 0; font-size: 14px; color: #f5f5f7; opacity: 0.001; transform: translateY(6px); transition: opacity 0.6s var(--call-ease), transform 0.6s var(--call-ease); }
+.film-call-note[data-on] dt { color: rgb(245 245 247 / 0.62); }
+.film-call-note[data-on] dd { opacity: 1; transform: none; }
+
+.film-call-cap p { margin: 0; font-size: clamp(17px, 1.6vw, 22px); line-height: 1.45; font-weight: 300; letter-spacing: -0.005em; }
+.film-call-intro { color: rgb(245 245 247 / 0.62); }
+.film-call-who { display: flex; align-items: center; gap: 9px; font-size: 12px; font-weight: 500; color: rgb(245 245 247 / 0.6); }
+.film-call-avatar { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #e9ebf3; color: #0a0a0b; font-size: 9px; font-weight: 600; }
+.film-call-avatar-axi { background: #0d0d10; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14); }
+.film-call-w { color: rgb(245 245 247 / 0.24); transition: color 0.35s; }
+.film-call-w[data-on] { color: #f5f5f7; }
+.film-call[data-speaker="axi"] .film-call-w[data-now] { background: linear-gradient(90deg, #ff9a8f, #c9a6ff); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+
+/* ───────────────────────────── línea de tiempo ───────────────────────────── */
+
+.film-call-stages { position: relative; height: 16px; font-family: var(--font-mono), ui-monospace, monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; }
+.film-call-stages span { position: absolute; top: 0; padding-left: 8px; border-left: 1px solid rgb(255 255 255 / 0.14); color: rgb(245 245 247 / 0.3); white-space: nowrap; transition: color 0.5s, border-color 0.5s; }
+.film-call-stages span[data-on] { color: #f5f5f7; border-color: rgb(255 255 255 / 0.55); }
+.film-call-wave { position: relative; height: 36px; margin-top: 10px; }
+.film-call-wave svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.film-call-wave path { fill: none; stroke-width: 2.2; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.film-call-wave-base { stroke: rgb(245 245 247 / 0.16); }
+@media (max-width: 639px) { .film-call-wave path { stroke-width: 1.2; } }
+/* El avance: dos traslaciones opuestas revelan la onda encendida sin repintarla. */
+.film-call-reveal { position: absolute; inset: 0; overflow: hidden; transform: translateX(calc((var(--p) - 1) * 100%)); will-change: transform; }
+.film-call-reveal > div { position: absolute; inset: 0; transform: translateX(calc((1 - var(--p)) * 100%)); will-change: transform; }
+.film-call-head-line { position: absolute; inset: -6px 0; transform: translateX(calc((var(--p) - 1) * 100%)); will-change: transform; opacity: 0; transition: opacity 0.4s; }
+.film-call[data-playing] .film-call-head-line { opacity: 1; }
+.film-call-head-line i { position: absolute; right: 0; top: 0; bottom: 0; width: 1.5px; background: #fff; box-shadow: 0 0 12px rgb(255 255 255 / 0.7); }
+
+@media (prefers-reduced-motion: reduce) {
+  .film-call :is(.film-call-spin, .film-call-counter, .film-call-core > span, .film-call-ripples i, .film-call-gyro, .film-call-live) { animation: none !important; }
+}

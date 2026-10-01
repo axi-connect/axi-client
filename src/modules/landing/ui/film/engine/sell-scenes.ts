@@ -12,7 +12,6 @@
  */
 import { gsap } from "gsap";
 
-import { FILM_CALL } from "@/modules/landing/domain/film/tanda3-content";
 import { SPAN, atP, segP, setText, showIn, spanTimeline, visible, type Ctx, type Scene } from "@/modules/landing/ui/film/engine/film-kit";
 
 
@@ -59,50 +58,17 @@ export const photo: Scene = (section: HTMLElement, ctx: Ctx) => {
 
 /* ────────────────────────────── llamada ────────────────────────────── */
 
-/** La onda va de x 124 a 1316 de 1440 mientras la llamada avanza (0,2–0,85). */
-const WAVE_FROM = 124 / 1440;
-const WAVE_TO = 1316 / 1440;
-/** Margen para encender una etapa justo cuando la onda llega a su punto. */
-const REACH = 6 / 1440;
-const LAST_STAGE = FILM_CALL.stageX[FILM_CALL.stageX.length - 1];
-
-const clock = (seconds: number) => `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
-
+/**
+ * La llamada se escucha (plan §20): ya no se fija ni se reproduce con el
+ * scroll. Al pasar solo entran la esfera, los costados y la línea de tiempo;
+ * la voz la pone el visitante con la esfera (`scenes/call-scene.tsx`).
+ */
 export const call: Scene = (section: HTMLElement, ctx: Ctx) => {
-  // Se fija en escritorio (añadida a PINNED); en móvil corre al pasar.
-  const tl = spanTimeline(section, ctx, 140);
-  const waves = Array.from(section.querySelectorAll<HTMLElement>("[data-anim=call-wave]"));
-  const stages = Array.from(section.querySelectorAll<HTMLElement>("[data-anim=call-stage]"));
-  const lines = visible(section, "[data-anim=call-line]");
-  const clocks = Array.from(section.querySelectorAll<HTMLElement>("[data-anim=call-clock]"));
-  const outcomes = visible(section, "[data-anim=call-outcome]");
-  const finalClock = clock(FILM_CALL.seconds);
-
-  const lit = (el: HTMLElement, x: number) => {
-    const on = x >= Number(el.dataset.x ?? 1) - REACH;
-    if (el.hasAttribute("data-on") !== on) el.toggleAttribute("data-on", on);
-  };
-
-  painter(
-    tl,
-    (p) => {
-      const x = p >= 1 ? 1 : WAVE_FROM + (WAVE_TO - WAVE_FROM) * segP(p, 0.2, 0.85);
-      const shown = p >= 1 ? 100 : Math.max(0, x * 100);
-      for (const w of waves) w.style.clipPath = `inset(0 ${(100 - shown).toFixed(2)}% 0 0)`;
-      for (const s of stages) lit(s, x);
-      for (const l of lines) lit(l, x);
-      const seconds = Math.round(FILM_CALL.seconds * Math.min(1, x / LAST_STAGE));
-      for (const c of clocks) setText(c, clock(seconds));
-      const done = x >= LAST_STAGE - REACH;
-      for (const o of outcomes) o.style.opacity = done ? "1" : "0";
-    },
-    () => {
-      for (const w of waves) w.style.removeProperty("clip-path");
-      for (const el of [...stages, ...lines]) el.setAttribute("data-on", "");
-      for (const c of clocks) setText(c, finalClock);
-      for (const o of outcomes) o.style.removeProperty("opacity");
-    },
-  );
+  const tl = spanTimeline(section, ctx, 100);
+  const orb = visible(section, "[data-anim=call-orb]");
+  if (orb.length) tl.fromTo(orb, { opacity: 0, scale: 0.92 }, { opacity: 1, scale: 1, ease: "power3.out", duration: atP(0.45) }, 0);
+  showIn(tl, visible(section, "[data-anim=call-side]"), 0.25, 0.65);
+  showIn(tl, visible(section, "[data-anim=call-time]"), 0.45, 0.85);
 };
 
 /* ─────────────────────────────── bóveda ─────────────────────────────── */

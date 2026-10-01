@@ -20,24 +20,6 @@ export const FILM_PHOTO = {
   time: "8:51 p. m.",
 } as const;
 
-export const FILM_CALL = {
-  eyebrow: "Vender",
-  title: "Y cuando hay que llamar,",
-  titleThin: "llama.",
-  lead: "Retoma cotizaciones, confirma citas y lleva la llamada por etapas.",
-  stages: ["Apertura", "Motivo", "Descubrimiento", "Propuesta", "Objeciones", "Cierre"],
-  /** Dónde va cada etapa sobre la onda, en fracción del ancho (x 200…1300 de 1440). */
-  stageX: [200 / 1440, 420 / 1440, 640 / 1440, 860 / 1440, 1080 / 1440, 1300 / 1440],
-  /** Dónde se enciende cada turno de la transcripción (x de su etapa). */
-  lineX: [200 / 1440, 640 / 1440, 1080 / 1440, 1300 / 1440],
-  live: "En conversación",
-  /** La duración de la llamada de ejemplo, en segundos (02:14). */
-  seconds: 134,
-  done: "Objetivo cumplido",
-  transcript: "Transcripción de ejemplo",
-  stagesLabel: "Etapas de la llamada",
-} as const;
-
 export const FILM_VAULT = {
   eyebrow: "Vender, con reglas",
   title: "Nunca inventa",
