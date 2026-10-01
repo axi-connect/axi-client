@@ -25,10 +25,7 @@ export function SiteMenuSheet({
     ctaHref,
     ctaLabel,
     onCtaClick,
-    dark,
 }: {
-    /** En la home el escenario es oscuro en los dos temas: la hoja también (`.dark`). */
-    dark: boolean;
     session: { text: string; href: string };
     ctaHref: string;
     ctaLabel: string;
@@ -85,7 +82,7 @@ export function SiteMenuSheet({
             </Dialog.Trigger>
             <Dialog.Portal>
                 <Dialog.Content
-                    className={`site-nav-sheet site-sheet site-glass site-glass-deep${dark ? ' dark' : ''}`}
+                    className="site-nav-sheet site-sheet site-glass site-glass-deep"
                     aria-describedby={undefined}
                     // Al cerrar, Radix devuelve el foco al botón del menú (m10).
                 >

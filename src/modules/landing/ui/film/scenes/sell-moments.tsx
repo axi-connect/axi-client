@@ -74,7 +74,7 @@ export function PhotoScene() {
           className="film-photo-head"
         />
         <ByNiche>
-          {(c) => {
+          {(c, niche) => {
             const match = c.photo.catalog[c.photo.matchIndex];
             const MatchIcon = FILM_ICONS[match.icon];
             return (
@@ -134,7 +134,18 @@ export function PhotoScene() {
                       </span>
                     </div>
                     <div className="film-photo-shot">
-                      <MatchIcon strokeWidth={0.7} />
+                      {/* La foto que manda el cliente (Unsplash, licencia libre; plan §24).
+                          Diferida: las de los nichos ocultos no se piden. */}
+                      {/* eslint-disable-next-line @next/next/no-img-element -- ya va optimizada (WebP 640×800, 13–32 kB) y lejos del LCP */}
+                      <img
+                        className="film-photo-img"
+                        src={`/assets/film/photo/${niche}.webp`}
+                        alt=""
+                        width={640}
+                        height={800}
+                        loading="lazy"
+                        decoding="async"
+                      />
                     </div>
                     <p className="film-photo-caption">{FILM_PHOTO.caption}</p>
                     <div className="film-photo-scan" data-anim="photo-scan" />
@@ -146,7 +157,7 @@ export function PhotoScene() {
                   data-anim="photo-recognized"
                 >
                   <ScanSearch
-                    className="size-[15px] shrink-0 text-[#c4b5fd]"
+                    className="size-[15px] shrink-0 text-[color-mix(in_srgb,var(--axi-violet)_38%,var(--foreground))]"
                     aria-hidden="true"
                   />
                   {/* Dos líneas, sin elipsis: «Reconocido» y la referencia con su similitud. */}
@@ -301,7 +312,8 @@ export function TeamScene() {
                     height="14"
                     viewBox="0 0 24 24"
                     fill="none"
-                    stroke="rgb(245 245 247 / .4)"
+                    stroke="currentColor"
+                    className="text-foreground/40"
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -316,10 +328,7 @@ export function TeamScene() {
 
           {/* El portátil: la tapa se abre desde la bisagra; la base es un plano tendido. */}
           <div className="film-team-laptop">
-            <div className="film-team-base" aria-hidden="true">
-              <div className="film-team-keys" />
-              <div className="film-team-pad" />
-            </div>
+            <div className="film-team-base" aria-hidden="true" />
             <div className="film-team-lid" data-anim="team-lid">
               <div className="film-team-bezel">
                 <ByNiche>

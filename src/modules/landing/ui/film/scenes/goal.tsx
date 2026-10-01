@@ -54,11 +54,12 @@ function GoalMap() {
           <svg className="film-goal-city" width={GOAL_WORLD.w} height={GOAL_WORLD.h} viewBox={`0 0 ${GOAL_WORLD.w} ${GOAL_WORLD.h}`}>
             <defs>
               <radialGradient id="goal-fade" cx="50%" cy="50%" r="60%">
-                <stop offset=".55" stopColor="#0a0a0b" stopOpacity="0" />
-                <stop offset="1" stopColor="#0a0a0b" />
+                {/* El fundido al fondo del tema (en style: var() en un atributo de presentación no es fiable). */}
+                <stop offset=".55" style={{ stopColor: "var(--background)", stopOpacity: 0 }} />
+                <stop offset="1" style={{ stopColor: "var(--background)" }} />
               </radialGradient>
             </defs>
-            <path d={GOAL_RIVER_PATH} fill="none" stroke="rgb(255 255 255 / .035)" strokeWidth={90} />
+            <path d={GOAL_RIVER_PATH} fill="none" style={{ stroke: "color-mix(in srgb, var(--foreground) 3.5%, transparent)" }} strokeWidth={90} />
             {BLOCKS.map((b) => (
               <rect
                 key={`${b.x}-${b.y}`}
@@ -184,7 +185,7 @@ function GoalPanel() {
 
             <div className="film-goal-turn">
               <span className="film-goal-turn-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f5f5f7" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-foreground" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M9 20V9a4 4 0 0 1 4-4h7M16 1l4 4-4 4" />
                 </svg>
               </span>
@@ -257,6 +258,8 @@ export function GoalScene() {
       className="film-scene film-goal"
       data-approved={FINAL.approved ? "" : undefined}
     >
+      {/* En escritorio no pinta caja; en móvil, con el motor, es la franja pegada (stickyStrip). */}
+      <div className="film-strip">
       <GoalMap />
       <div className="film-goal-layout">
         <div className="film-goal-head" data-anim="head">
@@ -269,6 +272,7 @@ export function GoalScene() {
           <p className="film-lead film-goal-lead max-lg:hidden">{GOAL_COPY.lead}</p>
         </div>
         <GoalPanel />
+      </div>
       </div>
     </section>
   );

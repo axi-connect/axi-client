@@ -193,3 +193,19 @@ it("la píldora se aparta en cualquier ancho solo con data-pill-avoid=\"always\"
   unmount()
   scroller.remove()
 })
+
+it("la película sigue el tema del sitio: no fuerza el oscuro ni en ella ni en el contenedor de scroll (modo claro)", () => {
+  const scroller = document.createElement("div")
+  scroller.setAttribute("data-app-scroll", "")
+  document.body.appendChild(scroller)
+  const { container, unmount } = render(<Film />)
+  const film = container.querySelector("[data-film]")!
+  expect(film.classList.contains("dark")).toBe(false)
+  expect(film.classList.contains("theme-dark-island")).toBe(false)
+  // El contenedor sí pinta el fondo del tema (pie y márgenes), sin forzar cuál.
+  expect(scroller.classList.contains("bg-background")).toBe(true)
+  expect(scroller.classList.contains("dark")).toBe(false)
+  unmount()
+  expect(scroller.classList.contains("bg-background")).toBe(false)
+  scroller.remove()
+})

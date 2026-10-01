@@ -15,7 +15,7 @@
   width: 800px;
   height: 700px;
   border-radius: 50%;
-  background: radial-gradient(closest-side, rgb(255 255 255 / 0.05), transparent);
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--foreground) 5%, transparent), transparent);
   pointer-events: none;
 }
 
@@ -25,8 +25,8 @@
   gap: 4px;
   padding: 4px;
   border-radius: 999px;
-  background: #151517;
-  border: 1px solid rgb(255 255 255 / 0.1);
+  background: color-mix(in srgb, var(--foreground) 8.5%, var(--background));
+  border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
 }
 .film-price-switch button {
   display: inline-flex;
@@ -37,20 +37,20 @@
   border-radius: 999px;
   font-size: 13.5px;
   font-weight: 600;
-  color: rgb(245 245 247 / 0.7);
+  color: color-mix(in srgb, var(--foreground) 70%, transparent);
   transition: background-color 0.2s, color 0.2s;
 }
-.film-price-switch button[data-on] { background: #f5f5f7; color: #0a0a0b; }
-.film-price-switch button:focus-visible { outline: 2px solid #f5f5f7; outline-offset: 2px; }
+.film-price-switch button[data-on] { background: var(--foreground); color: var(--background); }
+.film-price-switch button:focus-visible { outline: 2px solid var(--foreground); outline-offset: 2px; }
 .film-price-switch-badge {
   font-size: 11px;
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 999px;
-  background: rgb(255 255 255 / 0.1);
-  color: #f5f5f7;
+  background: color-mix(in srgb, var(--foreground) 10%, transparent);
+  color: var(--foreground);
 }
-.film-price-switch button[data-on] .film-price-switch-badge { background: #0a0a0b; color: #f5f5f7; }
+.film-price-switch button[data-on] .film-price-switch-badge { background: var(--background); color: var(--foreground); }
 
 .film-price-grid {
   margin: 48px auto 0;
@@ -63,25 +63,25 @@
 }
 
 .film-price-card {
-  --dim: rgb(245 245 247 / 0.55);
+  --dim: color-mix(in srgb, var(--foreground) 55%, transparent);
   display: flex;
   flex-direction: column;
   gap: 18px;
   padding: 26px;
   border-radius: 28px;
-  background: linear-gradient(180deg, #161618, #111113);
-  border: 1px solid rgb(255 255 255 / 0.1);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--foreground) 8.9%, var(--background)), var(--background));
+  border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
   box-shadow: 0 30px 70px rgb(0 0 0 / 0.45);
-  color: #f5f5f7;
+  color: var(--foreground);
 }
 /* La recomendada, invertida en blanco. En escritorio queda 14 px más alta:
    la entrada del motor la eleva al final, y sin motor ya está arriba. */
 .film-price-card[data-featured] {
-  --dim: rgb(10 10 11 / 0.6);
-  background: linear-gradient(170deg, #fafafa, #e9e9ec);
-  border-color: rgb(255 255 255 / 0.9);
+  --dim: color-mix(in srgb, var(--background) 60%, transparent);
+  background: linear-gradient(170deg, var(--foreground), color-mix(in srgb, var(--background) 8.2%, var(--foreground)));
+  border-color: color-mix(in srgb, var(--foreground) 90%, transparent);
   box-shadow: 0 40px 90px rgb(0 0 0 / 0.55);
-  color: #0a0a0b;
+  color: var(--background);
 }
 @media (min-width: 1024px) {
   .film-price-card[data-featured] { transform: translateY(-14px); }
@@ -101,8 +101,8 @@
   letter-spacing: 0.04em;
   padding: 5px 11px;
   border-radius: 999px;
-  background: #0a0a0b;
-  color: #f5f5f7;
+  background: var(--background);
+  color: var(--foreground);
   white-space: nowrap;
 }
 .film-price-tagline { margin: -8px 0 0; font-size: 14px; line-height: 1.5; min-height: 42px; color: var(--dim); }
@@ -135,11 +135,11 @@
   gap: 10px;
   padding: 12px 14px;
   border-radius: 14px;
-  background: rgb(255 255 255 / 0.05);
+  background: color-mix(in srgb, var(--foreground) 5%, transparent);
   font-size: 14px;
 }
 .film-price-volume b { font-variant-numeric: tabular-nums; }
-.film-price-card[data-featured] .film-price-volume { background: rgb(10 10 11 / 0.06); }
+.film-price-card[data-featured] .film-price-volume { background: color-mix(in srgb, var(--background) 6%, transparent); }
 .film-price-inherits { margin: 0; font-size: 12.5px; font-weight: 600; color: var(--dim); }
 .film-price-bullets { margin: -6px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
 .film-price-bullets li { display: flex; gap: 10px; font-size: 14px; line-height: 1.45; }
@@ -152,16 +152,16 @@
   font-weight: 600;
   padding: 14px;
   border-radius: 999px;
-  background: #f5f5f7;
-  color: #0a0a0b;
+  background: var(--foreground);
+  color: var(--background);
   transition: filter 0.2s;
 }
 .film-price-cta:hover { filter: brightness(0.92); }
-.film-price-card[data-featured] .film-price-cta { background: #0a0a0b; color: #f5f5f7; }
+.film-price-card[data-featured] .film-price-cta { background: var(--background); color: var(--foreground); }
 .film-price-card[data-featured] .film-price-cta:hover { filter: brightness(1.4); }
 /* Foco en tinta: anillo blanco de 2 px a 2 px; sobre la tarjeta blanca, negro. */
-.film-price-cta:focus-visible { outline: 2px solid #f5f5f7; outline-offset: 2px; }
-.film-price-card[data-featured] .film-price-cta:focus-visible { outline-color: #0a0a0b; }
+.film-price-cta:focus-visible { outline: 2px solid var(--foreground); outline-offset: 2px; }
+.film-price-card[data-featured] .film-price-cta:focus-visible { outline-color: var(--background); }
 .film-price-micro { margin: -8px 0 0; text-align: center; font-size: 12px; color: var(--dim); }
 
 .film-price-ent {
@@ -172,27 +172,27 @@
   gap: 12px 28px;
   padding: 20px 26px;
   border-radius: 22px;
-  border: 1px solid rgb(255 255 255 / 0.1);
-  background: #111113;
-  color: #f5f5f7;
+  border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+  background: var(--background);
+  color: var(--foreground);
 }
 .film-price-ent-name { margin: 0; font-family: var(--font-nexa), var(--font-poppins), sans-serif; font-weight: 700; font-size: 20px; }
-.film-price-ent-text { margin: 0; flex: 1 1 260px; font-size: 13.5px; color: rgb(245 245 247 / 0.62); }
-.film-price-ent-from { margin: 0; font-size: 13px; color: rgb(245 245 247 / 0.62); white-space: nowrap; }
-.film-price-ent-from b { font-family: var(--font-nexa), var(--font-poppins), sans-serif; font-size: 20px; color: #f5f5f7; font-variant-numeric: tabular-nums; }
+.film-price-ent-text { margin: 0; flex: 1 1 260px; font-size: 13.5px; color: color-mix(in srgb, var(--foreground) 62%, transparent); }
+.film-price-ent-from { margin: 0; font-size: 13px; color: color-mix(in srgb, var(--foreground) 62%, transparent); white-space: nowrap; }
+.film-price-ent-from b { font-family: var(--font-nexa), var(--font-poppins), sans-serif; font-size: 20px; color: var(--foreground); font-variant-numeric: tabular-nums; }
 .film-price-ent-cta {
   font-size: 13.5px;
   font-weight: 600;
   padding: 11px 18px;
   border-radius: 999px;
-  border: 1px solid rgb(255 255 255 / 0.3);
-  color: #f5f5f7;
+  border: 1px solid color-mix(in srgb, var(--foreground) 30%, transparent);
+  color: var(--foreground);
   white-space: nowrap;
   transition: background-color 0.2s;
 }
-.film-price-ent-cta:hover { background: rgb(255 255 255 / 0.06); }
-.film-price-ent-cta:focus-visible { outline: 2px solid #f5f5f7; outline-offset: 2px; }
-.film-price-peruser { margin: 18px 0 0; text-align: center; font-size: 12.5px; color: rgb(245 245 247 / 0.5); }
+.film-price-ent-cta:hover { background: color-mix(in srgb, var(--foreground) 6%, transparent); }
+.film-price-ent-cta:focus-visible { outline: 2px solid var(--foreground); outline-offset: 2px; }
+.film-price-peruser { margin: 18px 0 0; text-align: center; font-size: 12.5px; color: color-mix(in srgb, var(--foreground) 50%, transparent); }
 
 @media (max-width: 1023px) {
   .film-price-ent { max-width: 520px; margin-inline: auto; flex-direction: column; align-items: flex-start; padding: 18px; border-radius: 20px; }
@@ -208,11 +208,11 @@
    (QA 4506afbf). Se pinta encima del componente compartido con /precios, que
    no cambia: fondo #111113 con filete al 10 %, ceja al 55 %, dígitos y barra
    blancos. */
-.film-founders .bg-founders-slab { background: #111113; border-color: rgb(255 255 255 / 0.1); }
-.film-founders p.text-accent-amber { color: rgb(245 245 247 / 0.55); }
-.film-founders .text-accent-amber { color: #f5f5f7; }
-.film-founders .bar-neon { background: #f5f5f7; box-shadow: none; }
-.film-founders .bar-neon::after { background: #f5f5f7; box-shadow: none; }
+.film-founders .bg-founders-slab { background: var(--background); border-color: color-mix(in srgb, var(--foreground) 10%, transparent); }
+.film-founders p.text-accent-amber { color: color-mix(in srgb, var(--foreground) 55%, transparent); }
+.film-founders .text-accent-amber { color: var(--foreground); }
+.film-founders .bar-neon { background: var(--foreground); box-shadow: none; }
+.film-founders .bar-neon::after { background: var(--foreground); box-shadow: none; }
 
 /* ──────────────────────────── preguntas (§16.3) ──────────────────────────── */
 
@@ -228,20 +228,20 @@
   min-height: 44px;
   padding: 0 20px;
   border-radius: 999px;
-  background: #f5f5f7;
-  color: #0a0a0b;
+  background: var(--foreground);
+  color: var(--background);
   font-size: 14.5px;
   font-weight: 600;
   transition: filter 0.2s;
 }
 .film-faq-cta:hover { filter: brightness(0.92); }
-.film-faq-cta:focus-visible { outline: 2px solid #f5f5f7; outline-offset: 2px; }
+.film-faq-cta:focus-visible { outline: 2px solid var(--foreground); outline-offset: 2px; }
 /* La voz del agente: el único violeta de la sección. */
-.film-faq-live { margin: -8px 0 0; display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: rgb(245 245 247 / 0.5); }
+.film-faq-live { margin: -8px 0 0; display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: color-mix(in srgb, var(--foreground) 50%, transparent); }
 .film-faq-live-dot { width: 7px; height: 7px; border-radius: 50%; background: #a78bfa; box-shadow: 0 0 12px rgb(167 139 250 / 0.8); }
 
-.film-faq-list { border-top: 1px solid rgb(255 255 255 / 0.1); }
-.film-faq-item { border-bottom: 1px solid rgb(255 255 255 / 0.1); }
+.film-faq-list { border-top: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent); }
+.film-faq-item { border-bottom: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent); }
 .film-faq-item summary {
   display: flex;
   align-items: center;
@@ -251,12 +251,12 @@
   list-style: none;
   font-size: 17px;
   font-weight: 500;
-  color: rgb(245 245 247 / 0.86);
+  color: color-mix(in srgb, var(--foreground) 86%, transparent);
 }
 .film-faq-item summary::-webkit-details-marker { display: none; }
-.film-faq-item summary:focus-visible { outline: 2px solid #f5f5f7; outline-offset: 2px; border-radius: 6px; }
-.film-faq-item[open] summary { color: #f5f5f7; }
-.film-faq-n { width: 26px; flex: none; font-size: 12px; font-variant-numeric: tabular-nums; color: rgb(245 245 247 / 0.5); }
+.film-faq-item summary:focus-visible { outline: 2px solid var(--foreground); outline-offset: 2px; border-radius: 6px; }
+.film-faq-item[open] summary { color: var(--foreground); }
+.film-faq-n { width: 26px; flex: none; font-size: 12px; font-variant-numeric: tabular-nums; color: color-mix(in srgb, var(--foreground) 50%, transparent); }
 .film-faq-q { flex: 1; }
 /* Más/menos: la barra vertical se apaga y el círculo se invierte al abrir. */
 .film-faq-sign {
@@ -265,8 +265,8 @@
   height: 28px;
   flex: none;
   border-radius: 50%;
-  border: 1px solid rgb(255 255 255 / 0.18);
-  color: #f5f5f7;
+  border: 1px solid color-mix(in srgb, var(--foreground) 18%, transparent);
+  color: var(--foreground);
   transition: background-color 0.2s, color 0.2s, border-color 0.2s;
 }
 .film-faq-sign::before,
@@ -280,9 +280,9 @@
 }
 .film-faq-sign::before { width: 11px; height: 1.5px; }
 .film-faq-sign::after { width: 1.5px; height: 11px; transition: opacity 0.2s; }
-.film-faq-item[open] .film-faq-sign { background: #f5f5f7; border-color: #f5f5f7; color: #0a0a0b; }
+.film-faq-item[open] .film-faq-sign { background: var(--foreground); border-color: var(--foreground); color: var(--background); }
 .film-faq-item[open] .film-faq-sign::after { opacity: 0; }
-.film-faq-a { margin: -6px 0 0 52px; padding: 0 60px 22px 0; font-size: 15px; line-height: 1.7; color: rgb(245 245 247 / 0.66); }
+.film-faq-a { margin: -6px 0 0 52px; padding: 0 60px 22px 0; font-size: 15px; line-height: 1.7; color: color-mix(in srgb, var(--foreground) 66%, transparent); }
 
 @media (max-width: 1023px) {
   .film-faq-item summary { gap: 12px; padding: 16px 0; font-size: 15px; }
@@ -327,7 +327,7 @@
 /* Cada cinta lleva su trazo de luz apagado: el motor lo dibuja
    (`stroke-dasharray` sobre `pathLength=1`) y lo apaga al llenarse. */
 .film-close-iso [data-ribbon] {
-  stroke: #fff;
+  stroke: var(--foreground);
   stroke-width: 4;
   stroke-opacity: 0;
   stroke-dasharray: 1 2;
@@ -341,17 +341,17 @@
   gap: 10px;
   padding: 10px 16px 10px 12px;
   border-radius: 18px 18px 18px 6px;
-  background: #1b1b1e;
-  border: 1px solid rgb(255 255 255 / 0.1);
-  color: rgb(245 245 247 / 0.8);
+  background: color-mix(in srgb, var(--foreground) 11%, var(--background));
+  border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+  color: color-mix(in srgb, var(--foreground) 80%, transparent);
   font-size: 13.5px;
 }
 .film-close-avatar {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: #f5f5f7;
-  color: #0a0a0b;
+  background: var(--foreground);
+  color: var(--background);
   font-size: 10.5px;
   font-weight: 600;
   display: inline-flex;
@@ -359,7 +359,7 @@
   justify-content: center;
 }
 .film-close-dots { display: inline-flex; gap: 4px; }
-.film-close-dots i { display: block; width: 6px; height: 6px; border-radius: 50%; background: #f5f5f7; opacity: 0.7; }
+.film-close-dots i { display: block; width: 6px; height: 6px; border-radius: 50%; background: var(--foreground); opacity: 0.7; }
 .film-close-ctas { margin-top: 30px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
 .film-close-buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; }
 .film-close .film-close-cta { height: auto; border-radius: 999px; padding: 16px 30px; font-size: 15.5px; }
@@ -370,19 +370,19 @@
   gap: 9px;
   padding: 15px 24px;
   border-radius: 999px;
-  border: 1px solid rgb(255 255 255 / 0.2);
-  background: rgb(255 255 255 / 0.05);
-  color: #f5f5f7;
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  background: color-mix(in srgb, var(--foreground) 5%, transparent);
+  color: var(--foreground);
   font-size: 15px;
   font-weight: 600;
   white-space: nowrap;
   transition: background-color 0.2s;
 }
-.film-close-agent:hover { background: rgb(255 255 255 / 0.1); }
-.film-close-agent:focus-visible { outline: 2px solid #f5f5f7; outline-offset: 2px; }
+.film-close-agent:hover { background: color-mix(in srgb, var(--foreground) 10%, transparent); }
+.film-close-agent:focus-visible { outline: 2px solid var(--foreground); outline-offset: 2px; }
 /* El CTA coral del cierre es el FilmCta compartido (anillo de marca): aquí, el de tinta. */
-.film-close .film-close-cta:focus-visible { box-shadow: none; outline: 2px solid #f5f5f7; outline-offset: 2px; }
-.film-close-micro { margin: 0; font-size: 13px; color: rgb(245 245 247 / 0.5); }
+.film-close .film-close-cta:focus-visible { box-shadow: none; outline: 2px solid var(--foreground); outline-offset: 2px; }
+.film-close-micro { margin: 0; font-size: 13px; color: color-mix(in srgb, var(--foreground) 50%, transparent); }
 
 @media (max-width: 1023px) {
   .film-close-stage { padding-top: 56px; }
@@ -417,27 +417,27 @@
 .film-goal-city { will-change: transform; }
 
 .film-goal-plane path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
-.film-goal-lane { stroke: rgb(255 255 255 / 0.07); stroke-width: 30; }
-.film-goal-plan { stroke: rgb(255 255 255 / 0.32); stroke-width: 3; stroke-dasharray: 1 13; }
-.film-goal-reveal { stroke: #fff; stroke-width: 16; stroke-linecap: butt !important; }
+.film-goal-lane { stroke: color-mix(in srgb, var(--foreground) 7%, transparent); stroke-width: 30; }
+.film-goal-plan { stroke: color-mix(in srgb, var(--foreground) 32%, transparent); stroke-width: 3; stroke-dasharray: 1 13; }
+.film-goal-reveal { stroke: var(--foreground); stroke-width: 16; stroke-linecap: butt !important; }
 /* Los brillos son trazos anchos y tenues, sin feGaussianBlur: el filtro sobre
    una ruta de 2400 px se recalculaba en cada frame del scrub. */
 .film-goal-axi-glow { stroke: #a78bfa; stroke-width: 26; stroke-opacity: 0.35; }
 .film-goal-axi { stroke: #a78bfa; stroke-width: 7; transition: stroke 0.3s; }
-.film-goal[data-approved] .film-goal-axi { stroke: #f5f5f7; }
-.film-goal-projection { stroke: #f5f5f7; stroke-width: 4; stroke-dasharray: 10 12; }
+.film-goal[data-approved] .film-goal-axi { stroke: var(--foreground); }
+.film-goal-projection { stroke: var(--foreground); stroke-width: 4; stroke-dasharray: 10 12; }
 .film-goal-slow { stroke: #8e8e96; stroke-width: 7; stroke-dasharray: 2 12; }
-.film-goal-done-glow { stroke: #fff; stroke-width: 22; stroke-opacity: 0.12; }
-.film-goal-done { stroke: #fff; stroke-width: 8; }
+.film-goal-done-glow { stroke: var(--foreground); stroke-width: 22; stroke-opacity: 0.12; }
+.film-goal-done { stroke: var(--foreground); stroke-width: 8; }
 
 .film-goal-veil {
   position: absolute;
   inset: 0;
   pointer-events: none;
   background:
-    linear-gradient(90deg, rgb(10 10 11 / 0.94) 0%, rgb(10 10 11 / 0.55) 30%, rgb(10 10 11 / 0) 52%),
-    linear-gradient(0deg, rgb(10 10 11 / 0.8), rgb(10 10 11 / 0) 22%),
-    linear-gradient(180deg, rgb(10 10 11 / 0.85), rgb(10 10 11 / 0) 18%);
+    linear-gradient(90deg, color-mix(in srgb, var(--background) 94%, transparent) 0%, color-mix(in srgb, var(--background) 55%, transparent) 30%, color-mix(in srgb, var(--background) 0%, transparent) 52%),
+    linear-gradient(0deg, color-mix(in srgb, var(--background) 80%, transparent), color-mix(in srgb, var(--background) 0%, transparent) 22%),
+    linear-gradient(180deg, color-mix(in srgb, var(--background) 85%, transparent), color-mix(in srgb, var(--background) 0%, transparent) 18%);
 }
 
 /* Lo que propone Axi y lo aprobado: dos textos en el HTML, uno visible. */
@@ -446,47 +446,47 @@
 
 /* ── marcas ── */
 .film-goal-anchor { position: absolute; left: var(--fx); top: var(--fy); width: 0; height: 0; z-index: 3; }
-.film-goal-mark { position: absolute; left: 0; top: 0; pointer-events: none; color: #f5f5f7; }
+.film-goal-mark { position: absolute; left: 0; top: 0; pointer-events: none; color: var(--foreground); }
 .film-goal-mark > span { position: absolute; white-space: nowrap; }
 .film-goal-start {
   left: 14px; top: -14px;
   font-size: 12px; padding: 6px 11px; border-radius: 999px;
-  background: rgb(20 20 22 / 0.9); border: 1px solid rgb(255 255 255 / 0.12); color: rgb(245 245 247 / 0.75);
+  background: color-mix(in srgb, color-mix(in srgb, var(--foreground) 8.1%, var(--background)) 90%, transparent); border: 1px solid color-mix(in srgb, var(--foreground) 12%, transparent); color: color-mix(in srgb, var(--foreground) 75%, transparent);
 }
-.film-goal-should-dot { left: -9px; top: -9px; width: 14px; height: 14px; border-radius: 50%; border: 2px solid #8e8e96; background: #0a0a0b; }
+.film-goal-should-dot { left: -9px; top: -9px; width: 14px; height: 14px; border-radius: 50%; border: 2px solid #8e8e96; background: var(--background); }
 .film-goal-should-label {
   left: 16px; top: -40px;
   font-size: 12px; padding: 7px 12px; border-radius: 12px;
-  background: rgb(20 20 22 / 0.92); border: 1px dashed rgb(255 255 255 / 0.22); color: rgb(245 245 247 / 0.82);
+  background: color-mix(in srgb, color-mix(in srgb, var(--foreground) 8.1%, var(--background)) 92%, transparent); border: 1px dashed color-mix(in srgb, var(--foreground) 22%, transparent); color: color-mix(in srgb, var(--foreground) 82%, transparent);
 }
-.film-goal-ring { left: -13px; top: -13px; width: 22px; height: 22px; border-radius: 50%; border: 2px dashed rgb(245 245 247 / 0.8); background: rgb(10 10 11 / 0.8); }
-.film-goal[data-approved] .film-goal-ring { border-color: #f5f5f7; }
+.film-goal-ring { left: -13px; top: -13px; width: 22px; height: 22px; border-radius: 50%; border: 2px dashed color-mix(in srgb, var(--foreground) 80%, transparent); background: color-mix(in srgb, var(--background) 80%, transparent); }
+.film-goal[data-approved] .film-goal-ring { border-color: var(--foreground); }
 .film-goal-ring-label {
   left: -110px; top: -58px;
   font-size: 12.5px; padding: 8px 12px; border-radius: 12px;
-  background: #f5f5f7; color: #0a0a0b; box-shadow: 0 14px 30px rgb(0 0 0 / 0.5);
+  background: var(--foreground); color: var(--background); box-shadow: 0 14px 30px rgb(0 0 0 / 0.5);
 }
 .film-goal-ring-label b { font-variant-numeric: tabular-nums; }
 .film-goal-flag {
   left: -20px; top: -46px; width: 40px; height: 40px;
   border-radius: 50% 50% 50% 4px; transform: rotate(-45deg);
-  background: #f5f5f7; color: #0a0a0b;
+  background: var(--foreground); color: var(--background);
   display: flex; align-items: center; justify-content: center;
 }
 .film-goal-flag svg { transform: rotate(45deg); }
-.film-goal-flag-label { left: 26px; top: -40px; font-size: 12px; color: rgb(245 245 247 / 0.7); }
+.film-goal-flag-label { left: 26px; top: -40px; font-size: 12px; color: color-mix(in srgb, var(--foreground) 70%, transparent); }
 .film-goal-pulse { left: -46px; top: -46px; width: 92px; height: 92px; border-radius: 50%; background: radial-gradient(closest-side, rgb(230 87 89 / 0.35), rgb(230 87 89 / 0)); }
 /* El coral de la escena: solo el coche. */
 .film-goal-car {
   left: -17px; top: -17px; width: 34px; height: 34px; border-radius: 50%;
   background: #e65759;
-  box-shadow: 0 0 0 5px rgb(10 10 11 / 0.9), 0 0 30px rgb(230 87 89 / 0.8);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--background) 90%, transparent), 0 0 30px rgb(230 87 89 / 0.8);
   display: flex; align-items: center; justify-content: center;
 }
 .film-goal-here {
   left: -28px; top: 30px;
   padding: 10px 14px; border-radius: 16px;
-  background: rgb(20 20 22 / 0.94); border: 1px solid rgb(255 255 255 / 0.12); box-shadow: 0 18px 40px rgb(0 0 0 / 0.5);
+  background: color-mix(in srgb, color-mix(in srgb, var(--foreground) 8.1%, var(--background)) 94%, transparent); border: 1px solid color-mix(in srgb, var(--foreground) 12%, transparent); box-shadow: 0 18px 40px rgb(0 0 0 / 0.5);
 }
 .film-goal-here-k { display: block; font-size: 9.5px; letter-spacing: 0.18em; font-weight: 600; text-transform: uppercase; color: #f07a6e; }
 .film-goal-here-v { font-family: var(--font-nexa), var(--font-poppins), sans-serif; font-weight: 700; font-size: 21px; font-variant-numeric: tabular-nums; }
@@ -514,7 +514,7 @@
   align-items: start;
   gap: 32px;
 }
-.film-goal-dim { color: rgb(245 245 247 / 0.5); }
+.film-goal-dim { color: color-mix(in srgb, var(--foreground) 50%, transparent); }
 .film-goal-head { padding-top: 8px; }
 .film-goal-title { font-size: clamp(38px, 4.4vw, 64px); line-height: 1.02; letter-spacing: -0.04em; }
 .film-goal-lead { margin: 20px 0 0; max-width: 460px; font-size: 17px; line-height: 1.6; }
@@ -523,28 +523,28 @@
   box-sizing: border-box;
   padding: 20px;
   border-radius: 26px;
-  background: linear-gradient(180deg, #151517, #0f0f11);
-  border: 1px solid rgb(255 255 255 / 0.1);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--foreground) 8.5%, var(--background)), color-mix(in srgb, var(--foreground) 6.1%, var(--background)));
+  border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
   box-shadow: 0 40px 90px rgb(0 0 0 / 0.6);
   display: flex;
   flex-direction: column;
   gap: 14px;
-  color: #f5f5f7;
+  color: var(--foreground);
 }
 .film-goal-panel p { margin: 0; }
 .film-goal-panel-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .film-goal-sell { margin-top: 2px !important; font-family: var(--font-nexa), var(--font-poppins), sans-serif; font-weight: 700; font-size: 25px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 .film-goal-slow-chip {
   font-size: 11px; padding: 5px 10px; border-radius: 999px; white-space: nowrap;
-  border: 1px dashed rgb(255 255 255 / 0.3); color: rgb(245 245 247 / 0.75);
+  border: 1px dashed color-mix(in srgb, var(--foreground) 30%, transparent); color: color-mix(in srgb, var(--foreground) 75%, transparent);
 }
-.film-goal-turn { display: flex; gap: 14px; align-items: center; padding: 14px; border-radius: 18px; background: #f5f5f7; color: #0a0a0b; }
-.film-goal-turn-icon { width: 44px; height: 44px; flex: none; border-radius: 12px; background: #0a0a0b; display: flex; align-items: center; justify-content: center; }
+.film-goal-turn { display: flex; gap: 14px; align-items: center; padding: 14px; border-radius: 18px; background: var(--foreground); color: var(--background); }
+.film-goal-turn-icon { width: 44px; height: 44px; flex: none; border-radius: 12px; background: var(--background); display: flex; align-items: center; justify-content: center; }
 .film-goal-turn-title { font-family: var(--font-nexa), var(--font-poppins), sans-serif; font-weight: 700; font-size: 19px; letter-spacing: -0.01em; }
-.film-goal-turn-sub { font-size: 12.5px; color: rgb(10 10 11 / 0.6); }
-.film-goal-then { margin-top: -4px !important; font-size: 12px; color: rgb(245 245 247 / 0.5); }
-.film-goal-bar { position: relative; height: 8px; border-radius: 99px; background: rgb(255 255 255 / 0.08); }
-.film-goal-bar-fill { position: absolute; inset: 0; border-radius: 99px; background: #fff; transform-origin: left; }
+.film-goal-turn-sub { font-size: 12.5px; color: color-mix(in srgb, var(--background) 60%, transparent); }
+.film-goal-then { margin-top: -4px !important; font-size: 12px; color: color-mix(in srgb, var(--foreground) 50%, transparent); }
+.film-goal-bar { position: relative; height: 8px; border-radius: 99px; background: color-mix(in srgb, var(--foreground) 8%, transparent); }
+.film-goal-bar-fill { position: absolute; inset: 0; border-radius: 99px; background: var(--foreground); transform-origin: left; }
 .film-goal-bar-slow { position: absolute; top: 0; bottom: 0; }
 .film-goal-bar-slow > div {
   width: 100%; height: 100%; border-radius: 99px; transform-origin: left;
@@ -553,40 +553,41 @@
 .film-goal-bar-track { position: absolute; inset: 0; pointer-events: none; }
 .film-goal-bar-ring {
   position: absolute; left: -7px; top: -3px; width: 14px; height: 14px; box-sizing: border-box;
-  border-radius: 50%; border: 2px dashed rgb(245 245 247 / 0.8); background: #0f0f11;
+  border-radius: 50%; border: 2px dashed color-mix(in srgb, var(--foreground) 80%, transparent); background: color-mix(in srgb, var(--foreground) 6.1%, var(--background));
 }
-.film-goal[data-approved] .film-goal-bar-ring { border-color: #f5f5f7; }
-.film-goal-bar-legend { display: flex; justify-content: space-between; margin-top: 10px; font-size: 12px; color: rgb(245 245 247 / 0.55); }
+.film-goal[data-approved] .film-goal-bar-ring { border-color: var(--foreground); }
+.film-goal-bar-legend { display: flex; justify-content: space-between; margin-top: 10px; font-size: 12px; color: color-mix(in srgb, var(--foreground) 55%, transparent); }
 .film-goal-bar-legend b, .film-goal-panel b { color: inherit; font-variant-numeric: tabular-nums; }
-.film-goal-bar-legend b { color: #f5f5f7; }
-.film-goal-rule { height: 1px; background: rgb(255 255 255 / 0.08); }
-.film-goal-routes { font-size: 10px; letter-spacing: 0.18em; font-weight: 600; text-transform: uppercase; color: rgb(245 245 247 / 0.5); }
+.film-goal-bar-legend b { color: var(--foreground); }
+.film-goal-rule { height: 1px; background: color-mix(in srgb, var(--foreground) 8%, transparent); }
+.film-goal-routes { font-size: 10px; letter-spacing: 0.18em; font-weight: 600; text-transform: uppercase; color: color-mix(in srgb, var(--foreground) 50%, transparent); }
 .film-goal-route-now {
   display: flex; justify-content: space-between; align-items: center; gap: 12px;
-  padding: 11px 13px; border-radius: 14px; border: 1px solid rgb(255 255 255 / 0.1); font-size: 13px;
+  padding: 11px 13px; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent); font-size: 13px;
 }
 .film-goal-route-axi {
   display: flex; flex-direction: column; gap: 10px;
   padding: 12px 13px; border-radius: 14px; font-size: 13px;
   border: 1px solid rgb(167 139 250 / 0.7); background: rgb(124 58 237 / 0.1); box-shadow: 0 0 30px rgb(124 58 237 / 0.25);
 }
-.film-goal[data-approved] .film-goal-route-axi { border-color: rgb(255 255 255 / 0.5); background: rgb(255 255 255 / 0.06); box-shadow: none; }
+.film-goal[data-approved] .film-goal-route-axi { border-color: color-mix(in srgb, var(--foreground) 50%, transparent); background: color-mix(in srgb, var(--foreground) 6%, transparent); box-shadow: none; }
 .film-goal-approve {
   align-self: flex-start;
   font-size: 12.5px; font-weight: 600; padding: 8px 14px; border-radius: 999px;
-  background: #f5f5f7; color: #0a0a0b; border: 1px solid transparent;
+  background: var(--foreground); color: var(--background); border: 1px solid transparent;
 }
-.film-goal[data-approved] .film-goal-approve { background: transparent; color: #f5f5f7; border-color: rgb(255 255 255 / 0.3); }
-.film-goal-note { font-size: 11px; color: rgb(245 245 247 / 0.5); text-align: center; }
+.film-goal[data-approved] .film-goal-approve { background: transparent; color: var(--foreground); border-color: color-mix(in srgb, var(--foreground) 30%, transparent); }
+.film-goal-note { font-size: 11px; color: color-mix(in srgb, var(--foreground) 50%, transparent); text-align: center; }
 
 /* ── móvil: no se fija; titular, franja del mapa de 430 px y panel compacto ── */
 @media (max-width: 1023px) {
-  .film-goal { --fx: 43.59%; --fy: 58.14%; display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; padding-block: 88px; }
+  /* La rejilla es la de `.film-strip` (film.css), que también la deja pegada. */
+  .film-goal { --fx: 43.59%; --fy: 58.14%; display: block; padding-block: 88px; }
   .film-goal-layout { display: contents; }
   .film-goal-head { order: 1; padding: 0 16px; }
   .film-goal-title { font-size: 38px; line-height: 1.04; }
   .film-goal-map { position: relative; inset: auto; order: 2; height: 430px; margin-top: 16px; }
-  .film-goal-veil { background: linear-gradient(180deg, #0a0a0b, rgb(10 10 11 / 0) 18%, rgb(10 10 11 / 0) 80%, #0a0a0b); }
+  .film-goal-veil { background: linear-gradient(180deg, var(--background), color-mix(in srgb, var(--background) 0%, transparent) 18%, color-mix(in srgb, var(--background) 0%, transparent) 80%, var(--background)); }
   .film-goal-panel { order: 3; margin: 16px 16px 0; padding: 16px; border-radius: 22px; gap: 12px; max-width: 520px; box-shadow: none; }
   @media (min-width: 552px) { .film-goal-panel { margin-inline: auto; width: calc(100% - 32px); } }
   /* Panel compacto: maniobra, barra y ruta de Axi. Lo de escritorio se esconde
@@ -604,7 +605,7 @@
 
   .film-goal-ring-label { left: -40px; top: -44px; font-size: 11.5px; padding: 6px 10px; border-radius: 10px; }
   .film-goal-flag { left: -16px; top: -38px; width: 32px; height: 32px; }
-  .film-goal-car { left: -15px; top: -15px; width: 30px; height: 30px; box-shadow: 0 0 0 4px rgb(10 10 11 / 0.9), 0 0 26px rgb(230 87 89 / 0.8); }
+  .film-goal-car { left: -15px; top: -15px; width: 30px; height: 30px; box-shadow: 0 0 0 4px color-mix(in srgb, var(--background) 90%, transparent), 0 0 26px rgb(230 87 89 / 0.8); }
   .film-goal-here { left: -40px; top: 26px; padding: 8px 12px; border-radius: 14px; }
   .film-goal-here-k { font-size: 9px; }
   .film-goal-here-v { font-size: 17px; }

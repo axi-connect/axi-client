@@ -363,15 +363,14 @@ export function FilmRoot({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  // Toda la home va en el escenario oscuro mientras la película está montada:
-  // el contenedor de scroll lleva los tokens oscuros, así el pie y el margen
-  // que lo separa de la película no quedan claros. La cabecera lo hace sola en
-  // `/` (SiteHeader), para no esperar a la hidratación.
+  // La película sigue el tema del sitio (claro, oscuro o sistema; lienzo del
+  // modo claro, 2026-10-01): mismos componentes, otros tokens. El contenedor de
+  // scroll pinta el fondo del tema para que el pie y los márgenes casen.
   useEffect(() => {
     const el = scroller();
     if (!el) return;
     // `film-scroller`: la barra de scroll en tinta mientras está la película (film.css).
-    const added = ["dark", "theme-dark-island", "bg-background", "text-foreground", "film-scroller"].filter((c) => !el.classList.contains(c));
+    const added = ["bg-background", "text-foreground", "film-scroller"].filter((c) => !el.classList.contains(c));
     el.classList.add(...added);
     return () => el.classList.remove(...added);
   }, []);
@@ -461,7 +460,7 @@ export function FilmRoot({ children }: { children: ReactNode }) {
 
   return (
     <FilmContext.Provider value={value}>
-      <div ref={rootRef} className="film dark theme-dark-island" data-niche={niche} data-film="">
+      <div ref={rootRef} className="film" data-niche={niche} data-film="">
         {children}
 
         {/* El riel: el dibujo es decorativo; su botón y la ruleta (FilmDrum) no. Fuera de la vista, inerte. */}

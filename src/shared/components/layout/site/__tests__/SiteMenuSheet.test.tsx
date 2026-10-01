@@ -28,7 +28,7 @@ beforeEach(() => {
 })
 
 function sheet() {
-  render(<SiteMenuSheet dark session={{ text: "Iniciar sesión", href: "/auth/login" }} ctaHref="/comenzar" ctaLabel="Prueba 7 días gratis" onCtaClick={jest.fn()} />)
+  render(<SiteMenuSheet session={{ text: "Iniciar sesión", href: "/auth/login" }} ctaHref="/comenzar" ctaLabel="Prueba 7 días gratis" onCtaClick={jest.fn()} />)
   fireEvent.click(screen.getByRole("button", { name: "Abrir menú" }))
 }
 

@@ -162,7 +162,7 @@ export default function SiteHeader() {
         // En la home la película es oscura en los dos temas: el nav usa los tokens oscuros.
         <header
             ref={navRef}
-            className={`site-nav${onFilm ? ' dark theme-dark-island' : ''}`}
+            className="site-nav"
             data-island={island ? '' : undefined}
         >
             <nav aria-label="Principal">
@@ -255,14 +255,14 @@ export default function SiteHeader() {
                     <Link prefetch={false} href={ctaHref} className="site-cta" onClick={onCtaClick}>
                         {ctaShort}
                     </Link>
-                    <SiteMenuSheet dark={onFilm} session={session} ctaHref={ctaHref} ctaLabel={ctaLabel} onCtaClick={onCtaClick} />
+                    <SiteMenuSheet session={session} ctaHref={ctaHref} ctaLabel={ctaLabel} onCtaClick={onCtaClick} />
                 </div>
 
                 {open ? <SiteMenuPanel id={panelId} active={active} onPick={setOpen} onNavigate={close} ctaHref={ctaHref} ctaLabel={ctaLabel} /> : null}
             </nav>
 
             {/* El tema: en escritorio, fuera de la home (allí el escenario es oscuro en los dos temas). */}
-            {onFilm ? null : <SiteThemeChoice className="site-theme-pill site-glass" label={SITE_ISLAND.theme} />}
+            <SiteThemeChoice className="site-theme-pill site-glass" label={SITE_ISLAND.theme} />
         </header>
     );
 }

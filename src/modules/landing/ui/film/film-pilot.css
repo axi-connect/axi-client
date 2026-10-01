@@ -42,7 +42,6 @@
    de la escena, antes que film.css, y a igual especificidad ganaba `.film-scene`. */
 .film-scene.film-pilot { align-items: stretch; }
 .film-pilot .film-pilot-mob { display: none; }
-.film-pilot-stick { display: contents; }
 
 /* ─────────────────────────────── el mapa ─────────────────────────────── */
 .film-pilot-map { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
@@ -207,8 +206,10 @@
   width: 100%;
   max-width: 1440px;
   margin-inline: auto;
-  /* Arriba, la barra del sitio (80 px): la cabina empieza debajo. */
-  padding: 88px clamp(16px, 2.8vw, 40px) 16px clamp(16px, 8.3vw, 120px);
+  /* Arriba, la barra del sitio (80 px): la cabina empieza debajo. A la derecha,
+     sitio para la píldora de tema fija (18 + 46 px + aire; modo claro,
+     2026-10-01): la cabina quedaba debajo de ella. */
+  padding: 88px 80px 16px clamp(16px, 8.3vw, 120px);
   display: grid;
   grid-template-columns: minmax(0, 600px) 370px;
   justify-content: space-between;
@@ -472,19 +473,7 @@
     display: block;
     padding-block: 88px;
   }
-  .film-pilot-stick {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    align-content: start;
-  }
-  /* Con el motor (lo pone pilot-scene, nunca con movimiento reducido): la escena
-     mide 560svh (la franja mide ~960 px; quedan ~3.600 px de vuelo, el ritmo de
-     escritorio por meseta) y la franja (titular, mapa y cabina) se queda pegada
-     mientras el scroll recorre el vuelo y sus mesetas. `--pilot-stick-top` lo
-     mide el motor al construir y al cambiar de tamaño: mapa y cabina centrados,
-     el titular sale por arriba (dueña, 2026-10-01: «que el usuario pueda leer»). */
-  .film-scene.film-pilot[data-stick] { min-height: 560svh; }
-  .film-pilot[data-stick] .film-pilot-stick { position: sticky; top: var(--pilot-stick-top, 0px); }
+
   .film-pilot-desk { display: none !important; }
   .film-pilot .film-pilot-mob { display: revert; }
   .film-pilot-layout, .film-pilot-left { display: contents; }
