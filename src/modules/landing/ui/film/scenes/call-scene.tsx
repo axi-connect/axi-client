@@ -117,10 +117,6 @@ export function CallScene() {
                 ))}
               </span>
               {RINGS.map((r, i) => {
-                const a0 = (-115 * Math.PI) / 180;
-                const c = r.r + 2;
-                const sx = c + r.r * Math.cos(a0);
-                const sy = c + r.r * Math.sin(a0);
                 const timing = { "--d": `${r.d}s`, "--dl": `${r.dl}s` } as CSSProperties;
                 return (
                   <div
@@ -130,17 +126,8 @@ export function CallScene() {
                     style={{ transform: `rotateZ(${r.z}deg) rotateX(${r.x}deg) scale(calc(1 + var(--${r.band}) * ${r.amp}))` }}
                   >
                     <div className={r.rev ? "film-call-spin film-call-rev" : "film-call-spin"} style={timing}>
-                      <svg width={2 * c} height={2 * c} viewBox={`0 0 ${2 * c} ${2 * c}`} style={{ left: -c, top: -c }}>
-                        <defs>
-                          <linearGradient id={`${id}r${i}`} gradientUnits="userSpaceOnUse" x1={sx.toFixed(1)} y1={sy.toFixed(1)} x2={2 * c} y2={c}>
-                            <stop stopColor={r.color} stopOpacity="0" />
-                            <stop offset=".7" stopColor={r.color} stopOpacity=".75" />
-                            <stop offset="1" stopColor={r.dot} />
-                          </linearGradient>
-                        </defs>
-                        <circle cx={c} cy={c} r={r.r} fill="none" stroke="rgb(255 255 255 / 0.075)" strokeWidth="1" />
-                        <path d={`M${sx.toFixed(1)} ${sy.toFixed(1)}A${r.r} ${r.r} 0 0 1 ${2 * c} ${c}`} fill="none" stroke={`url(#${id}r${i})`} strokeWidth={r.sw} strokeLinecap="round" />
-                      </svg>
+                      {/* El arco es un div (conic + máscara): el SVG en 3D se descoloca en Firefox. */}
+                      <i className="film-call-arc" style={{ "--r": `${r.r}px`, "--col": r.color, "--dot": r.dot, "--sw": `${r.sw}px` } as CSSProperties} />
                       <div style={{ transform: `translateX(${r.r}px)` }}>
                         <div className="film-call-counter" style={timing}>
                           <div style={{ transform: `rotateX(-${r.x}deg)` }}>
@@ -201,7 +188,7 @@ export function CallScene() {
           </dl>
         </div>
 
-        <div className="film-call-cap">
+        <div className="film-call-cap" data-pill-avoid="">
           <p className="film-call-intro">{CALL_COPY.intro}</p>
           {CALL_TRACKS.map((tr, track) => (
             <div key={tr.who} className="film-call-line" data-call-track={track}>
@@ -228,7 +215,7 @@ export function CallScene() {
           ))}
         </div>
 
-        <div className="film-call-time" role="group" aria-label={CALL_COPY.timeline} data-anim="call-time">
+        <div className="film-call-time" data-pill-avoid="" role="group" aria-label={CALL_COPY.timeline} data-anim="call-time">
           <div className="film-call-stages">
             {CALL_STAGES.map(([name, at]) => (
               <span key={name} style={{ left: pct(at) }} data-at={at} data-on="">

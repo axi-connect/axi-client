@@ -134,7 +134,23 @@
 @keyframes film-call-breathe { 50% { transform: scale(1.04); } }
 .film-call-gyro > *,
 .film-call-orbit div { position: absolute; left: 0; top: 0; transform-style: preserve-3d; }
-.film-call-orbit svg { position: absolute; overflow: visible; }
+/* El arco: la pista tenue y una estela que nace transparente y acaba en el punto (a las 3). */
+.film-call-arc {
+  position: absolute;
+  width: calc(var(--r) * 2);
+  height: calc(var(--r) * 2);
+  margin: calc(var(--r) * -1);
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.075);
+}
+.film-call-arc::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(from -25deg, transparent 0deg, color-mix(in srgb, var(--col) 75%, transparent) 80deg, var(--dot) 115deg, transparent 115.5deg);
+  mask: radial-gradient(closest-side, transparent calc(100% - var(--sw) - 0.5px), #000 calc(100% - var(--sw)), #000 99.5%, transparent);
+}
 .film-call-orbit { transition: opacity 0.9s; will-change: transform; }
 .film-call[data-speaker="client"] .film-call-orbit { opacity: 0.32; }
 
