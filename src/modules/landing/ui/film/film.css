@@ -28,6 +28,16 @@
   isolation: isolate;
 }
 
+/* La pose del teléfono (chat) y del recibo (cobrar): el motor anima estas
+   variables en cada frame y solo las lee el `transform` del propio elemento.
+   Registradas sin herencia, cambiarlas no invalida el estilo de todo lo que
+   cuelga del teléfono (el hilo del chat): perfil del 2026-10-01, CPU × 4. */
+@property --rx { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+@property --ry { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+@property --rz { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+@property --ty { syntax: "<length>"; inherits: false; initial-value: 0px; }
+@property --tz { syntax: "<length>"; inherits: false; initial-value: 0px; }
+
 /* ------------------------------------------------------------------ nicho */
 .film[data-niche="restaurants"] [data-only]:not([data-only~="restaurants"]),
 .film[data-niche="tech"] [data-only]:not([data-only~="tech"]),
