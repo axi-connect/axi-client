@@ -89,16 +89,20 @@ export default function SiteHeader() {
         // Solo cuando cruza el umbral: llamar a setIsland en cada frame del scroll
         // pasaba por React aunque el valor no cambiara (perfil de arranque).
         let shown: boolean | null = null;
+        // El scroll se lee en su evento (ahí el estilo ya está al día) y no en el
+        // rAF, donde gsap ya escribió estilos y la lectura forzaba un recálculo.
+        let top = el.scrollTop;
         const update = () => {
             frame = 0;
-            const next = el.scrollTop > ISLAND_AT;
+            const next = top > ISLAND_AT;
             if (next !== shown) setIsland((shown = next));
             if (!onFilm) {
-                const t = islandOnPage(pathname, readProgress(el.scrollTop, el.scrollHeight, el.clientHeight));
+                const t = islandOnPage(pathname, readProgress(top, el.scrollHeight, el.clientHeight));
                 paint(t.title, t.sub, t.ring);
             }
         };
         const onScroll = () => {
+            top = el.scrollTop;
             if (!frame) frame = requestAnimationFrame(update);
         };
         const onChapter = (e: Event) => {
