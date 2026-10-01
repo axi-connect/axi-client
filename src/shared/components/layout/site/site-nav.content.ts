@@ -124,7 +124,7 @@ export const SITE_NAV: readonly SiteNavItem[] = [
         name: "Medición en pesos",
         /* La sección vive en la home (§6, LandingMetrics): /productos retiró
            su copia por duplicada — no recrear el ancla allí sin mover esto. */
-        href: "/#medicion",
+        href: "/#medir",
         description: "Cuánto vendió cada conversación, con hechos de tu base de datos.",
         icon: BarChart3,
       },
@@ -132,7 +132,7 @@ export const SITE_NAV: readonly SiteNavItem[] = [
     side: {
       title: "Empezar por aquí",
       rows: [
-        { name: "Cómo funciona", href: "/#como-funciona", icon: PlayCircle },
+        { name: "Cómo funciona", href: "/#quien", icon: PlayCircle },
         { name: "Preguntas frecuentes", href: "/#preguntas", icon: MessagesSquare },
         { name: "Marketplace", href: "/marketplace", icon: Store, badge: "Pronto" },
         { name: "Ver todo el producto", href: "/productos", icon: Package },
@@ -258,7 +258,7 @@ export const SITE_FOOTER_COLUMNS: readonly {
   {
     title: "Producto",
     links: [
-      { name: "Cómo funciona", href: "/#como-funciona" },
+      { name: "Cómo funciona", href: "/#quien" },
       { name: "Productos", href: "/productos" },
       { name: "Soluciones", href: "/soluciones" },
       { name: "Integraciones", href: "/integraciones" },

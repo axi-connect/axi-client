@@ -502,7 +502,7 @@ export const CAPABILITIES: readonly CapabilityItem[] = [
     title: "Medición en pesos",
     description: "Ventas atribuidas del hola al pago verificado.",
     /* La medición vive en la home (§6) — /productos retiró su copia. */
-    href: "/#medicion",
+    href: "/#medir",
   },
 ];
 
@@ -721,7 +721,7 @@ export interface RecognitionCandidate {
 
 /**
  * La sección de medición se retiró de esta página (duplicaba la §6 de la
- * home — el ancla del mega-menú apunta ahora a `/#medicion`). En su lugar,
+ * home — el ancla del mega-menú apunta ahora a `/#medir`). En su lugar,
  * el muro 3D de conversaciones: mensajes de clientes y respuestas del agente
  * en negocios FICTICIOS de retail, comida y moda (jamás clientes reales sin
  * permiso), con la voz del producto.

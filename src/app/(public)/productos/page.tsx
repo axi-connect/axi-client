@@ -24,7 +24,7 @@ import ProductosFinalCta from "@/modules/landing/ui/sections/productos/Productos
  * Las anclas `#agente #inbox #crm #catalogo #reconocimiento` están enlazadas desde el
  * mega-menú y el footer: si se renombra una, hay que actualizar
  * `site-nav.content.ts` en el mismo commit. `#medicion` ya no vive aquí:
- * duplicaba la §6 de la home y su entrada del nav apunta a `/#medicion`.
+ * duplicaba la §6 de la home y su entrada del nav apunta a `/#medir`.
  *
  * La raíz es `w-full` (el `<main>` del layout centra con `items-center`) y
  * NINGÚN wrapper de página lleva overflow: el pin de `#agente` depende de que
