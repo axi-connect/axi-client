@@ -27,11 +27,11 @@ import { CallPlayer } from "@/modules/landing/ui/film/parts/CallPlayer";
  * notas completas, la onda tenue y la invitación a escuchar.
  */
 
-/** Las órbitas (graves, medios, agudos): radio, giro en pantalla, inclinación, amplitud, duración, desfase, color, punto, sentido. */
+/** Las órbitas (graves, medios, agudos): radio, giro en pantalla, inclinación, duración, desfase, color, punto, sentido. */
 const RINGS = [
-  { r: 150, z: -16, x: 72, amp: 0.12, d: 15, dl: -2, color: "#E65759", dot: "#FF7A6E", rev: false, sw: 1.8 },
-  { r: 178, z: 22, x: 76, amp: 0.14, d: 21, dl: -9, color: "#9A4FFF", dot: "#B48BFF", rev: true, sw: 1.5 },
-  { r: 206, z: -4, x: 80, amp: 0.16, d: 29, dl: -17, color: "#FFC04D", dot: "#FFD580", rev: false, sw: 1.2 },
+  { r: 150, z: -16, x: 72, d: 15, dl: -2, color: "#E65759", dot: "#FF7A6E", rev: false, sw: 1.8 },
+  { r: 178, z: 22, x: 76, d: 21, dl: -9, color: "#9A4FFF", dot: "#B48BFF", rev: true, sw: 1.5 },
+  { r: 206, z: -4, x: 80, d: 29, dl: -17, color: "#FFC04D", dot: "#FFD580", rev: false, sw: 1.2 },
 ] as const;
 
 /** La onda real como dos trazos (cliente y Axi) sobre un viewBox de 1000 × 36. */
@@ -65,10 +65,8 @@ export function CallScene() {
   return (
     <section id="llamada" data-scene="call" aria-labelledby="llamada-h" className="film-scene film-call">
       <div className="film-call-fields" aria-hidden="true">
-        <span className="film-call-fld film-call-f-c" />
-        <span className="film-call-fld film-call-f-v" />
-        <span className="film-call-fld film-call-f-a" />
-        <span className="film-call-fld film-call-f-s" />
+        <span className="film-call-fld film-call-fld-brand" />
+        <span className="film-call-fld film-call-fld-silver" />
       </div>
 
       <div className="film-call-layout">
@@ -101,31 +99,33 @@ export function CallScene() {
             {/* La corona la dibuja CallPlayer: 64 marcas, espectro en espejo (graves arriba, agudos abajo). */}
             <canvas className="film-call-corona" width={560} height={560} aria-hidden="true" />
             <div className="film-call-gyro">
-              {RINGS.map((r, i) => {
-                const timing = { "--d": `${r.d}s`, "--dl": `${r.dl}s` } as CSSProperties;
-                return (
-                  <div
-                    key={i}
-                    className="film-call-orbit"
-                    aria-hidden="true"
-                    data-tilt={`rotateZ(${r.z}deg) rotateX(${r.x}deg)`}
-                    data-amp={r.amp}
-                    style={{ transform: `rotateZ(${r.z}deg) rotateX(${r.x}deg)` }}
-                  >
-                    <div className={r.rev ? "film-call-spin film-call-rev" : "film-call-spin"} style={timing}>
-                      {/* El arco es un div (conic + máscara): el SVG en 3D se descoloca en Firefox. */}
-                      <i className="film-call-arc" style={{ "--r": `${r.r}px`, "--col": r.color, "--dot": r.dot, "--sw": `${r.sw}px` } as CSSProperties} />
-                      <div style={{ transform: `translateX(${r.r}px)` }}>
-                        <div className="film-call-counter" style={timing}>
-                          <div style={{ transform: `rotateX(-${r.x}deg)` }}>
-                            <i className="film-call-sat" style={{ "--dc": r.dot } as CSSProperties} />
+              {(["back"] as ("back" | "front")[]).flatMap((half) =>
+                RINGS.map((r, i) => {
+                  // Algo más abierta que cos(x): la perspectiva desde arriba del lienzo abría las elipses.
+                  const k = (Math.cos((r.x * Math.PI) / 180) * 1.45).toFixed(4);
+                  const box = r.r + 20;
+                  const timing = { "--d": `${r.d}s`, "--dl": `${r.dl}s` } as CSSProperties;
+                  return (
+                    <div key={`${half}${i}`} className="film-call-orbit" aria-hidden="true" style={{ transform: `rotate(${r.z}deg)` }}>
+                      {/* Media órbita: la de atrás va bajo la esfera; la de delante, encima. */}
+                      <div className="film-call-half" style={{ left: -box, top: half === "back" ? -box : 0, width: 2 * box, height: box }}>
+                        <div style={{ transform: `translate(${box}px, ${half === "back" ? box : 0}px) scaleY(${k})` }}>
+                          <div className={r.rev ? "film-call-spin film-call-rev" : "film-call-spin"} style={timing}>
+                            <i className="film-call-arc" style={{ "--r": `${r.r}px`, "--col": r.color, "--dot": r.dot, "--sw": `${r.sw}px` } as CSSProperties} />
+                            <div style={{ transform: `translateX(${r.r}px)` }}>
+                              <div className="film-call-counter" style={timing}>
+                                <div style={{ transform: `scaleY(${(1 / Number(k)).toFixed(4)})` }}>
+                                  <i className="film-call-sat" style={{ "--dc": r.dot } as CSSProperties} />
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                }),
+              )}
               <button
                 type="button"
                 className="film-call-pearl"
@@ -144,6 +144,33 @@ export function CallScene() {
                   <path d={GLYPH_PLAY} />
                 </svg>
               </button>
+              {(["front"] as ("back" | "front")[]).flatMap((half) =>
+                RINGS.map((r, i) => {
+                  // Algo más abierta que cos(x): la perspectiva desde arriba del lienzo abría las elipses.
+                  const k = (Math.cos((r.x * Math.PI) / 180) * 1.45).toFixed(4);
+                  const box = r.r + 20;
+                  const timing = { "--d": `${r.d}s`, "--dl": `${r.dl}s` } as CSSProperties;
+                  return (
+                    <div key={`${half}${i}`} className="film-call-orbit" aria-hidden="true" style={{ transform: `rotate(${r.z}deg)` }}>
+                      {/* Media órbita: la de atrás va bajo la esfera; la de delante, encima. */}
+                      <div className="film-call-half" style={{ left: -box, top: half === "back" ? -box : 0, width: 2 * box, height: box }}>
+                        <div style={{ transform: `translate(${box}px, ${half === "back" ? box : 0}px) scaleY(${k})` }}>
+                          <div className={r.rev ? "film-call-spin film-call-rev" : "film-call-spin"} style={timing}>
+                            <i className="film-call-arc" style={{ "--r": `${r.r}px`, "--col": r.color, "--dot": r.dot, "--sw": `${r.sw}px` } as CSSProperties} />
+                            <div style={{ transform: `translateX(${r.r}px)` }}>
+                              <div className="film-call-counter" style={timing}>
+                                <div style={{ transform: `scaleY(${(1 / Number(k)).toFixed(4)})` }}>
+                                  <i className="film-call-sat" style={{ "--dc": r.dot } as CSSProperties} />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }),
+              )}
             </div>
           </div>
         </div>
