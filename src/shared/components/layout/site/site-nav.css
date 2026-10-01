@@ -237,6 +237,18 @@ html:not(.dark) .site-nav:not(.dark) .site-glass::before { display: none; }
   transition: opacity 0.3s;
 }
 .site-island[data-toast] .site-toast { opacity: 1; transition-delay: 0.15s; }
+/* Pantallas bajas (1366 × 657, el portátil de la dueña): crecer 58 px tapaba los
+   titulares de las escenas fijadas. Por debajo de 760 px de alto el aviso no crece
+   la isla: su título y su detalle ocupan las dos líneas del capítulo mientras dura. */
+.site-island-alert { display: none; }
+@media (max-height: 759px) {
+  .site-island[data-toast] { clip-path: inset(0 28px 58px 28px round 26px); }
+  .site-island[data-toast] .site-toast { opacity: 0; transition-delay: 0s; }
+  .site-island[data-toast] .site-island-text > .site-island-title,
+  .site-island[data-toast] .site-island-text > .site-island-sub { display: none; }
+  .site-island[data-toast] .site-island-alert { display: contents; }
+  .site-island-alert .site-island-sub { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+}
 .site-toast-check {
   width: 30px;
   height: 30px;
@@ -289,10 +301,10 @@ html:not(.dark) .site-nav:not(.dark) .site-glass::before { display: none; }
    cristal, con un halo de su color. La tesela va por tokens: en oscuro es
    blanca translúcida y en claro sale invertida, sin reglas aparte. */
 .intent-icon {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   flex: none;
-  border-radius: 10px;
+  border-radius: 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -427,12 +439,19 @@ html:not(.dark) .site-nav:not(.dark) .site-glass::before { display: none; }
 @media (min-width: 1024px) {
   .site-mobile { display: none; }
 }
-/* Entre 1024 y 1200 la barra mide 976 px: CTA corto (como en §16.5). */
-@media (max-width: 1199px) {
+/* La barra con los íconos de intención (QA nav r2, medido a 1024–1440):
+   - hasta 1279, CTA corto: con el largo la fila se pasaba 24 px de los 1000;
+   - entre 1024 y 1199 la barra mide 976 px: los ítems, 2 px más ceñidos;
+   - desde 1280 la barra pasa a 1040 px para que el largo quepa con holgura. */
+@media (max-width: 1279px) {
   .site-cta .site-cta-long { display: none; }
 }
-@media (min-width: 1200px) {
+@media (min-width: 1280px) {
   .site-cta .site-cta-short { display: none; }
+  .site-bar { width: min(1040px, calc(100vw - 48px)); }
+}
+@media (max-width: 1199px) {
+  .site-bar > .site-btn { padding: 0 9px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

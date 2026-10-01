@@ -215,6 +215,11 @@ export default function SiteHeader() {
                         <span className="site-island-text" aria-live="off">
                             <span className="site-island-title">{islandTitle || SITE_ISLAND.fallback}</span>
                             <span ref={subRef} className="site-island-sub" />
+                            {/* En pantallas bajas el aviso no crece la isla: ocupa estas dos líneas (site-nav.css). */}
+                            <span className="site-island-alert" aria-hidden="true">
+                                <span className="site-island-title">{toast?.title}</span>
+                                <span className="site-island-sub">{toast?.detail}</span>
+                            </span>
                         </span>
                         <span className="site-spacer flex-1" />
                         <button

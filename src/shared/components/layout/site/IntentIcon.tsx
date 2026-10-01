@@ -17,7 +17,8 @@ export const INTENT_OF = { vender: "sell", crecer: "grow", atender: "attend" } a
  * - «Crecer»: la cinta ámbar del isotipo.
  * - «Atender»: la cinta violeta del isotipo.
  *
- * La misma pieza en la barra (`sm`, 24 px) y en el panel (`lg`, 44 px). La
+ * La misma pieza en la barra (`sm`, tesela compacta de 20 px) y en el panel
+ * (`lg`, 44 px). La
  * tesela va por tokens (`site-nav.css`): en claro sale invertida sola.
  */
 const ART: Record<Intent, { viewBox: string; from: string; to: string; path?: string }> = {
@@ -40,7 +41,7 @@ export function IntentIcon({ intent, size = "sm", className }: { intent: Intent;
   // Un id por instancia: el mismo ícono sale en la barra y en el panel a la vez.
   const id = `intent-${useId()}`;
   const art = ART[intent];
-  const glyph = size === "lg" ? 26 : 16;
+  const glyph = size === "lg" ? 26 : 14;
 
   return (
     <span className={cn("intent-icon", className)} data-intent={intent} data-size={size} aria-hidden="true">

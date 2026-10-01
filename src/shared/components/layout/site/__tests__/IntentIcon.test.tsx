@@ -29,7 +29,7 @@ it.each([
   expect(Array.from(container.querySelectorAll("stop")).map((s) => s.getAttribute("stop-color"))).toEqual(colors)
 })
 
-it("tesela de 24 en sm y de 44 en lg (el glifo, 16 y 26)", () => {
+it("tesela compacta de 20 en sm y de 44 en lg (el glifo, 14 y 26)", () => {
   const { container } = render(
     <>
       <IntentIcon intent="sell" size="sm" />
@@ -38,7 +38,7 @@ it("tesela de 24 en sm y de 44 en lg (el glifo, 16 y 26)", () => {
   )
   const [sm, lg] = Array.from(container.querySelectorAll<HTMLElement>(".intent-icon"))
   expect(sm.dataset.size).toBe("sm")
-  expect(sm.querySelector("svg")).toHaveAttribute("width", "16")
+  expect(sm.querySelector("svg")).toHaveAttribute("width", "14")
   expect(lg.dataset.size).toBe("lg")
   expect(lg.querySelector("svg")).toHaveAttribute("width", "26")
 })
