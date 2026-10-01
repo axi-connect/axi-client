@@ -727,7 +727,7 @@ Escena `philosophy` con el id `progreso`. Va entre el hero y el nicho.
 
 ## 19. Fase F6 · El piloto automático de captación (propuesta del 2026-09-30, pendiente de lienzo)
 
-Pedido del dueño: que la película muestre el **piloto automático de captación**, «así de dinámico como el mapa de comercial», con un avión o una ruta aérea. Fuente de verdad del producto: servidor `integ/pilot-server` (2b94d08d) y cliente `integ/pilot-client` (09899767), certificados por axi-ad. Plan del producto: `axi/docs/plans/autopilot_captacion_plan.md`. Vocabulario y límites confirmados por axi-ad el 2026-09-30, citando el código.
+Pedido del dueño: que la película muestre el **piloto automático de captación**, «así de dinámico como el mapa de comercial», con un avión o una ruta aérea. Fuente de verdad del producto: servidor `integ/pilot-server` (2b94d08d) y cliente `integ/pilot-client` (09899767; cabeza actual 2cb17f3d, con la errata del RNE corregida), certificados por axi-ad. Plan del producto: `axi/docs/plans/autopilot_captacion_plan.md`. Vocabulario y límites confirmados por axi-ad el 2026-09-30, citando el código.
 
 Lienzos del producto que sirven de referencia:
 - canvas P0 del piloto (17 tableros: Recorrido, EnVivo, Trayecto, Decisor, Créditos, Política, Lenguaje…): https://claude.ai/artifact/HT2EbEhcUFuzNK6BZuUFEW, fuente en `docs/design/mockups/captacion-piloto/`;
@@ -777,7 +777,7 @@ De arriba a abajo:
    - el medidor «**Dentro del tope**», una barra blanca;
    - el estado de la ejecución, con el vocabulario de la UI: «En ejecución» → «**Espera tu aprobación**» → «En ejecución» → «Terminada».
 3. **Tablero de llegadas** («Cuentas por etapa», como el de un aeropuerto): cinco cuentas con su etapa. Las etapas cambian una por una con un **volteo de paleta** (`rotateX` de la fila, solo `transform`). Vocabulario de la UI: Buscando · Completando datos · Calificando · Contactando · En seguimiento · Respondió · Demo agendada · Descartado. **Una fila termina en «Descartado»**: es honestidad, no todas las cuentas aterrizan.
-4. **Aviso y botón:** «El lote espera tu aprobación» y el botón de aprobar (en blanco, `contrast`). **El texto exacto del botón se copia de `integ/pilot-client` al hacer el lienzo**: axi-ad no lo listó y no se inventa. Mientras espera, «Ejecutar ahora» va deshabilitado con su motivo.
+4. **El lote** (como en `RunLiveView.tsx:376` de `integ/pilot-client`): la tarjeta «El lote espera tu aprobación» con cinco casillas, cada una con la etiqueta «Aprobar <nombre de la cuenta>». Cuatro van marcadas. El botón dice «**Aprobar 4 y contactar**» (en blanco, `contrast`) y al lado, en pequeño, «1 se omiten». N y M salen de las casillas, no se escriben a mano. Mientras espera, «Ejecutar ahora» va deshabilitado con su motivo.
 5. Pie: «Ver en vivo · Bitácora de la ejecución» (texto, no enlace: la landing no lleva al panel).
 
 ### 19.4 Coreografía (progreso del pin)
@@ -792,7 +792,7 @@ Escena **fijada** en escritorio (`PINNED`), con una longitud parecida a la de la
 | 0,3–0,42 | Sigue al avión | Fijo 3 `CALIFICAR Y REVELAR`: una tarjeta sale del fijo con una línea guía: «Personas de este negocio · quién decide, quién recomienda, quién usa» y «Marta Restrepo · Directora de compras» (el decisor del Radar en B2B). |
 | 0,42–0,52 | Sigue al avión | La ruta **rodea el espacio restringido**. La etiqueta «Fuera de horario hábil» se enciende al acercarse y se apaga al pasar. |
 | 0,52–0,64 | Se aleja un poco (escala 0,8) | **Espera:** en el fijo 5 `REVISAR LA POLÍTICA` el avión entra en un **circuito de espera** (un óvalo de 120 × 60 px que recorre una vez). En la cabina: «Espera tu aprobación» y «El lote espera tu aprobación». |
-| 0,64–0,68 | Fija | El botón de aprobar se hunde (escala 0,94). El estado vuelve a «En ejecución». |
+| 0,64–0,68 | Fija | «Aprobar 4 y contactar» se hunde (escala 0,94). La cuenta omitida se apaga en el tablero y el estado vuelve a «En ejecución». |
 | 0,68–0,82 | Sigue al avión | Sale del circuito hacia el fijo 6 `INSCRIBIR EN LA SECUENCIA`. Los canales se encienden en la cabina: «Correo · Llamada del agente · SMS». Sobre la ruta aparece una burbuja del primer mensaje con la **franqueza del agente**: «Tu empresa aparece en información pública de negocios». Es el agente diciendo de dónde salió el contacto, contado como franqueza y no como argumento legal. El tablero voltea: «Contactando» → «En seguimiento» → «Respondió», y una fila a «Descartado». |
 | 0,82–0,9 | Desciende: inclinación 48 → 30°, escala 1,15 | **Aterrizaje** en «Demo agendada». La última fila del tablero voltea a «**Demo agendada**». |
 | 0,9–1 | Se aleja a toda la ruta (escala 0,55) | **Aterrizó:** la ficha «Lo que trajeron los pilotos · octubre» sube sobre el mapa con su «Embudo del mes» (Encontradas → Calificadas → Contactadas → Respondieron → Demos), solo conteos y rotulado «Cifras de ejemplo». Habla Axi (violeta): «Ajuste del piloto», con «Con los números de tus pilotos, sin inventar nada» y una sola línea de «Qué cambia si lo aplicas» (por ejemplo, «Horario»). El estado pasa a «Terminada». |
@@ -822,7 +822,7 @@ Las cifras de ejemplo deben cuadrar entre sí y en cada nicho (test como `film.t
 - Ningún porcentaje de conversión ni «X demos garantizadas»: la ficha muestra conteos.
 - No existe la página de diagnóstico ni ningún canal fuera de la lista.
 - Las reglas fijas («Estas reglas no tienen interruptor») se muestran como espacio restringido, nunca como algo que se apaga.
-- La errata «Registro de No Excluidos» de `outreach-reasons.ts:12` (P1, 1bbae51d) no se copia: dev-01 la corrige.
+- El nombre del registro es «Registro de Números Excluidos (RNE)». Quedó corregido en `integ/pilot-client` 2cb17f3d, que sustituye a 09899767 como cabeza del cliente.
 
 ### 19.7 Arquitectura (sigue §5 y §17.2)
 
