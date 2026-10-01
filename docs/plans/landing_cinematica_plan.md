@@ -961,3 +961,54 @@ La construyó axi-2e porque el 2.º constructor quedó detenido en un permiso. C
 - **Píldora del nicho.** `data-pill-avoid="always"` en los subtítulos y la línea de tiempo: se aparta en cualquier ancho.
 - **Órbitas en Firefox:** el SVG en 3D se descolocaba. Los arcos son div con conic-gradient y máscara.
 - **QA:** `qa/qa-llamada.mjs` en Chromium, WebKit y Firefox a 1440, 1024, 768 y 390, más movimiento reducido: suena, cambia de quién habla, las bandas se mueven, se llenan las notas, 0 errores y sin scroll horizontal. Evidencia en `qa/evidencia/landing-llamada/`.
+
+## 21. Cierre de la noche (2026-10-01)
+
+Cifras finales sobre la **build de producción** (`next build` sin `FILM_PILOT`, rama `feat/landing-cinema` en 272bbda5). Evidencia en `axi/qa/evidencia/landing-final/` (Lighthouse JSON y HTML, presupuesto, copia extraída).
+
+### 21.1 Presupuesto (`npm run budget`)
+
+- **Capa pública en verde:** `/` 154,2 kB (tope 200), común 100,9 (103), /precios 200,5 (204), /productos 195,0 (198), /contacto 178,5 (184), /casos 154,6 (158), /soluciones y /integraciones 149,4 (152), /marketplace 109,8 (113), legales 101,5 (104).
+- El script sale en rojo por 21 rutas **del panel** que vienen de main (§6.4, programa aparte): no son de la landing y sus topes no se tocan en esta rama.
+- Con el piloto apagado no viaja nada suyo: ni CSS, ni fuente, ni HTML, ni código de servidor (§19, interruptor `FILM_PILOT` en `next.config.ts`).
+
+### 21.2 Lighthouse de `/` (mediana de 3, Chromium headless)
+
+| | Rendimiento | LCP | FCP | TBT | CLS | Accesibilidad · Buenas prácticas · SEO |
+|---|---|---|---|---|---|---|
+| Móvil | **69** (antes 56) | 4,17 s | 2,14 s | 508 ms (antes 1334) | 0 | 100 · 100 · 100 |
+| Escritorio | **92** (antes 78) | 1,51 s | 0,51 s | 144 ms (antes 350) | 0,003 | 100 · 100 · 100 |
+
+- **Lo que se arregló esta noche:** el motor construía las 19 escenas en una sola tarea (1,2 s con CPU de gama media). Ahora va por tandas de ≤ 12 ms cediendo el hilo (272bbda5). Precios, preguntas y cierre llevan `content-visibility: auto`.
+- **Lo que queda en el LCP móvil (4,2 s), con su causa medida:** el 89 % es retraso de render. El elemento LCP es texto en **Nexa** (el nombre de la marca o las cifras del hero). Se pinta con la fuente de respaldo en el FCP y se repinta cuando llega Nexa, hacia los 4,2 s en 4G lento. Compiten **7 fuentes precargadas** (4 pesos de Poppins, 2 de Nexa y Geist Mono) y 80 kB de CSS bloqueante (5 archivos; el de la película pesa 56 kB). Las palancas viven en el **layout raíz de toda la app** (`src/app/layout.tsx`), así que es decisión aparte:
+  1. no precargar Geist Mono ni los pesos de Poppins que la home no usa arriba;
+  2. `font-display: optional` solo para Nexa;
+  3. partir `film.css` para que solo el CSS del hero bloquee.
+- **Recomendación siguiente:** `content-visibility` en las escenas fijadas, que bajaría el estilo y layout inicial (4.879 nodos). Exige recalcular los pins tras el primer render de cada escena; no se hizo esta noche por el riesgo de saltos.
+
+### 21.3 Perfil de scroll (`qa/qa-perfil.mjs`, Chromium headless 1440, rueda real con Lenis)
+
+- `--film-progress` se escribía en el raíz en cada frame (ba2fa22b). Con eso fuera, el recálculo de estilo baja de segundos a decenas de ms por escena, las tareas > 50 ms quedan en 0 en todas y el frame p50 es 16,7 ms en 15 de 19 escenas. La tabla de antes y después está en el mensaje del commit.
+- Con CPU × 4: 60 fps en 16 de 19 escenas. Quedan en 33 ms el hero (la entrada con blur, de una sola vez), el chat (la pose del teléfono va ya sin herencia, dbdc7859) y la llamada sonando (§20).
+- Sin `filter: blur` en nada que se anime por frame (1ded1020; bóveda en 85c2d868).
+
+### 21.4 Barrido de calidad (`qa/qa-barrido.mjs`, `qa/qa-costuras.mjs`)
+
+3 motores × 390, 768, 1024 y 1440 × tema claro y oscuro (24 configuraciones):
+- 0 errores de página y 0 scroll horizontal;
+- pins sin saltos (deriva ≤ 1,5 px);
+- 0 escenas que entran tarde, tras arreglar la meta (eb58b4f4) y el piloto (c6b774b5);
+- 0 solapes y cortes de texto (el de la llamada a 390 lo resolvió 6dc5af69);
+- las costuras de fondo arregladas (seguimiento→chat y nicho→radar).
+
+### 21.5 Lo que quedó hecho esta noche
+
+- Piloto automático §19: dominio, escena, cabina y QA aprobada; apagado hasta producción.
+- Nav en isla §18.1: cdde0c0f, aprobado; el panel y la hoja son opacos para leerse sin desenfoque (1ded1020).
+- Copia de la película en `axi/docs/business/landing-copy.md`, extraída del navegador.
+- Llamada con audio §20, del 2.º carril.
+
+**Pendiente:**
+- la decisión de fuentes y CSS del LCP móvil (§21.2);
+- el presupuesto del panel (§6.4);
+- la revisión de la dueña en :3320.
