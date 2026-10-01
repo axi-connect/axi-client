@@ -85,8 +85,10 @@ describe("drum-sound", () => {
     primeDrumSound()
     gesture()
     drumSelect()
-    drumTick(1000)
     expect(played.oscillators).toBe(3)
+    drumTick(1000)
+    // El tic suma su «toc» (un oscilador) y su filo de ruido (una fuente).
+    expect(played.oscillators).toBe(4)
     expect(played.contexts).toBe(1)
   })
 
@@ -143,8 +145,9 @@ describe("la ruleta suena", () => {
     })
     expect(played.sources).toBe(2)
     now.mockRestore()
+    const beforeSelect = played.oscillators
     fireEvent.keyDown(row(), { key: "Enter" })
     expect(onTravel).toHaveBeenCalled()
-    expect(played.oscillators).toBe(3)
+    expect(played.oscillators - beforeSelect).toBe(3)
   })
 })

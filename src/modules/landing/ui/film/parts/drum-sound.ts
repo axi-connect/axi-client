@@ -15,7 +15,8 @@
 type AudioCtor = typeof AudioContext;
 
 const TICK_GAP_MS = 35;
-const TICK_GAIN = 0.06;
+/** Pico del tic. Con el ruido en paso banda (Q 6) a 0,06 apenas llegaba energía: no se oía. */
+const TICK_GAIN = 0.18;
 const SELECT_GAIN = 0.05;
 
 let ctx: AudioContext | null = null;
@@ -68,10 +69,10 @@ export function primeDrumSound(): void {
   }
 }
 
-/** 10 ms de ruido blanco, una vez: la materia del clic. */
+/** 12 ms de ruido blanco, una vez: la textura del clic. */
 function noiseBuffer(a: AudioContext): AudioBuffer {
   if (noise) return noise;
-  const length = Math.max(1, Math.round(a.sampleRate * 0.01));
+  const length = Math.max(1, Math.round(a.sampleRate * 0.012));
   noise = a.createBuffer(1, length, a.sampleRate);
   const data = noise.getChannelData(0);
   for (let i = 0; i < length; i++) data[i] = Math.random() * 2 - 1;
@@ -79,8 +80,9 @@ function noiseBuffer(a: AudioContext): AudioBuffer {
 }
 
 /**
- * Un paso de la ruleta: ruido filtrado en paso banda (~2,1 kHz, ±3 % por
- * paso para que no suene robótico) con una envolvente exponencial de ~8 ms.
+ * Un paso de la ruleta, como el diente de un tambor: un «toc» de triángulo que
+ * cae de ~1,9 a ~0,9 kHz en 18 ms (±3 % por paso para que no suene robótico) y
+ * un soplo de ruido en paso alto que le da el filo mecánico. Unos 30 ms en total.
  */
 export function drumTick(now: number = typeof performance !== "undefined" ? performance.now() : Date.now()): void {
   if (now - lastTick < TICK_GAP_MS) return;
@@ -88,19 +90,33 @@ export function drumTick(now: number = typeof performance !== "undefined" ? perf
   const a = audio();
   if (!a) return;
   lastTick = now;
-  const t = a.currentTime;
+  // Un respiro de 5 ms: programar en currentTime exacto puede caer ya en el pasado.
+  const t = a.currentTime + 0.005;
+  const drift = 1 + (Math.random() * 2 - 1) * 0.03;
+
+  const osc = a.createOscillator();
+  osc.type = "triangle";
+  osc.frequency.setValueAtTime(1900 * drift, t);
+  osc.frequency.exponentialRampToValueAtTime(900 * drift, t + 0.018);
+  const body = a.createGain();
+  body.gain.setValueAtTime(0.0001, t);
+  body.gain.exponentialRampToValueAtTime(TICK_GAIN, t + 0.0015);
+  body.gain.exponentialRampToValueAtTime(0.0001, t + 0.03);
+  osc.connect(body).connect(a.destination);
+  osc.start(t);
+  osc.stop(t + 0.035);
+
   const src = a.createBufferSource();
   src.buffer = noiseBuffer(a);
-  const band = a.createBiquadFilter();
-  band.type = "bandpass";
-  band.frequency.value = 2100 * (1 + (Math.random() * 2 - 1) * 0.03);
-  band.Q.value = 6;
-  const gain = a.createGain();
-  gain.gain.setValueAtTime(TICK_GAIN, t);
-  gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.008);
-  src.connect(band).connect(gain).connect(a.destination);
+  const high = a.createBiquadFilter();
+  high.type = "highpass";
+  high.frequency.value = 2500;
+  const edge = a.createGain();
+  edge.gain.setValueAtTime(TICK_GAIN * 0.45, t);
+  edge.gain.exponentialRampToValueAtTime(0.0001, t + 0.012);
+  src.connect(high).connect(edge).connect(a.destination);
   src.start(t);
-  src.stop(t + 0.01);
+  src.stop(t + 0.013);
 }
 
 /**
