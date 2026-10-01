@@ -234,7 +234,9 @@ export function SiteNavList() {
         {SITE_NAV.map((item) =>
           item.kind === "mega" ? (
             <NavigationMenuItem key={item.name}>
-              <NavigationMenuTrigger>{item.name}</NavigationMenuTrigger>
+              {/* Entre `lg` y 1200 px los disparadores se aprietan (px 14 → 10)
+                  para que la cabecera quepa a 1024 (plan §16.5). */}
+              <NavigationMenuTrigger className="max-[1199px]:px-2.5">{item.name}</NavigationMenuTrigger>
               <MegaPanel item={item} />
             </NavigationMenuItem>
           ) : (
@@ -243,7 +245,7 @@ export function SiteNavList() {
                 <Link
                   href={item.href}
                   prefetch={false}
-                  className="hover:bg-accent/60 flex-row items-center gap-2 rounded-md px-3.5 py-2 text-sm font-medium"
+                  className="hover:bg-accent/60 flex-row items-center gap-2 rounded-md px-3.5 py-2 text-sm font-medium max-[1199px]:px-2.5"
                 >
                   {item.name}
                   {item.badge ? (

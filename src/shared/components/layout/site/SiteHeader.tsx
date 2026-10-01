@@ -108,7 +108,9 @@ export default function SiteHeader({
                             : 'bg-transparent shadow-none [-webkit-backdrop-filter:saturate(100%)_blur(0px)] [backdrop-filter:saturate(100%)_blur(0px)]'
                     }`}
                 >
-                    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                    {/* Entre `lg` y 1200 px el gutter baja a 24 px para que la fila
+                        quepa entera (plan §16.5). */}
+                    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-6 min-[1200px]:px-8">
                         <div className="flex h-16 items-center justify-between gap-4 lg:h-20">
                             <motion.div
                                 className="flex items-center space-x-2"
@@ -123,7 +125,7 @@ export default function SiteHeader({
 
                             <SiteNavList />
 
-                            <div className="hidden items-center gap-4 lg:flex">
+                            <div className="hidden items-center gap-3 lg:flex min-[1200px]:gap-4">
                                 {/* En la home la cabecera es oscura forzada y el tema no se
                                     ve: entre `lg` y 1200 px el selector cede su sitio (§16.5). */}
                                 <div className={onFilm ? 'hidden min-[1200px]:contents' : 'contents'}>
@@ -140,7 +142,7 @@ export default function SiteHeader({
                                     <Link
                                         prefetch={false}
                                         href={ctaHref}
-                                        className="bg-brand-gradient text-primary-foreground inline-flex items-center space-x-2 rounded-full px-6 py-2.5 font-medium whitespace-nowrap transition-all duration-200 hover:brightness-110"
+                                        className="bg-brand-gradient text-primary-foreground inline-flex items-center space-x-2 rounded-full px-[18px] py-2.5 min-[1200px]:px-6 font-medium whitespace-nowrap transition-all duration-200 hover:brightness-110"
                                         onClick={onCtaClick}
                                     >
                                         {ctaShortLabel ? (
