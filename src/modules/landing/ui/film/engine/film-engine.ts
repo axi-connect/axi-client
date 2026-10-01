@@ -554,12 +554,64 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
       fitsAtBuild.clear();
       let next = 0;
       let alive = true;
+      const buildOne = (section: HTMLElement) => {
+        const name = section.dataset.scene ?? "";
+        const build = SCENES[name];
+        if (!build) return;
+        const t = performance.now();
+        context.add(() => build(section, ctx));
+        for (const tl of finals.splice(0)) tl.progress(1);
+        performance.measure?.(`film:${name}`, { start: t });
+      };
+      // En móvil no hay pins: el orden no mueve ninguna posición, así que solo
+      // se construye lo que está cerca (1,5 pantallas por arriba y por abajo) y
+      // el resto cuando se acerca, una escena por tarea. Construirlas todas al
+      // arrancar eran las tareas largas del TBT de Lighthouse móvil (M5: la meta
+      // sola, 108 ms con CPU ×4). En escritorio, todas y en orden: cada pin se
+      // calcula sobre los de encima.
+      const vh = window.innerHeight;
+      const near = (s: HTMLElement) => {
+        const r = s.getBoundingClientRect();
+        return r.top < vh * 2.5 && r.bottom > -vh * 1.5;
+      };
+      const lazy = !ctx.desktop && typeof IntersectionObserver === "function";
+      const io = lazy
+        ? new IntersectionObserver(
+            (entries) => {
+              for (const e of entries) {
+                if (!e.isIntersecting) continue;
+                const section = e.target as HTMLElement;
+                io?.unobserve(section);
+                const later = () => {
+                  if (!alive) return;
+                  const h = section.offsetHeight;
+                  buildOne(section);
+                  // El piloto cambia su alto al construirse (franja pegada): lo de
+                  // debajo se recoloca.
+                  if (section.offsetHeight !== h) ScrollTrigger.refresh();
+                };
+                if (section.dataset.scene === "pilot" && !SCENES.pilot && pilotScene) {
+                  void pilotScene.then((build) => {
+                    SCENES.pilot = build;
+                    yieldThen(later);
+                  });
+                } else yieldThen(later);
+              }
+            },
+            { root: scroller, rootMargin: "150% 0px" },
+          )
+        : null;
       const slice = () => {
         if (!alive) return;
         const t0 = performance.now();
         while (next < sections.length && performance.now() - t0 < SLICE_MS) {
           const section = sections[next];
           const name = section.dataset.scene ?? "";
+          if (io && !near(section)) {
+            next++;
+            io.observe(section);
+            continue;
+          }
           // El piloto llega en su propio chunk: si aún no está, la construcción
           // espera aquí y sigue en orden (los pins de debajo dependen de él).
           if (name === "pilot" && !SCENES.pilot && pilotScene) {
@@ -570,13 +622,7 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
             return;
           }
           next++;
-          const build = SCENES[name];
-          if (build) {
-            const t = performance.now();
-            context.add(() => build(section, ctx));
-            for (const tl of finals.splice(0)) tl.progress(1);
-            performance.measure?.(`film:${name}`, { start: t });
-          }
+          buildOne(section);
         }
         if (next < sections.length) yieldThen(slice);
         else {
@@ -589,6 +635,7 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
       slice();
       return () => {
         alive = false;
+        io?.disconnect();
         pins.clear();
       };
     });
