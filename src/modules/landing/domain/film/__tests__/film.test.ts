@@ -77,15 +77,20 @@ describe("el guion por nicho", () => {
   })
 })
 
-describe("el mapa", () => {
+describe("la carretera del hilo archivado (§15)", () => {
   // Importación diferida para mantener el bloque autocontenido.
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const map = require("../route-map") as typeof import("../route-map")
 
-  it("la carretera empieza y termina donde dice su trazo", () => {
+  it("la carretera sube de abajo a la izquierda hacia arriba a la derecha, dentro del lienzo", () => {
     const start = map.roadPointAt(0)
     const end = map.roadPointAt(1)
-    expect(map.ROAD_PATH.startsWith(`M ${start.x.toFixed(1)} ${start.y.toFixed(1)}`)).toBe(true)
+    for (const p of [start, end]) {
+      expect(p.x).toBeGreaterThanOrEqual(0)
+      expect(p.x).toBeLessThanOrEqual(map.MAP_WIDTH)
+      expect(p.y).toBeGreaterThanOrEqual(0)
+      expect(p.y).toBeLessThanOrEqual(map.MAP_HEIGHT)
+    }
     expect(end.x).toBeGreaterThan(start.x)
     expect(end.y).toBeLessThan(start.y)
   })
@@ -102,10 +107,5 @@ describe("el mapa", () => {
   it("las fracciones fuera de rango se acotan", () => {
     expect(map.roadPointAt(-1)).toEqual(map.roadPointAt(0))
     expect(map.roadPointAt(2)).toEqual(map.roadPointAt(1))
-  })
-
-  it("la ciudad es determinista (mismo HTML en servidor y cliente)", () => {
-    expect(map.cityBlocks()).toEqual(map.cityBlocks())
-    expect(map.cityBlocks().length).toBeGreaterThan(100)
   })
 })

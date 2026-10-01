@@ -5,14 +5,14 @@
  * estas funciones y el motor de animación anima con las mismas, así que el
  * HTML y la animación nunca discrepan.
  *
- * Dos mapas conviven mientras se integra la tanda 4:
+ * Dos mapas:
  * - **La ciudad en rejilla** (plan §16.1, lienzo «Landing · La meta»): un
  *   mundo de 2400 × 1500 con manzanas, río y una ruta por los ejes de las
- *   calles. Es el de la escena nueva (`scenes/goal.tsx`) y lo mira la cámara
- *   de `goal-camera.ts`.
- * - **La carretera del storyboard** (abajo, «legado»): la usan el goal actual
- *   y el hilo de luz archivado (§15). Se retira cuando el goal nuevo sustituya
- *   al viejo y el hilo se rediseñe.
+ *   calles. Es el de la escena (`scenes/goal.tsx`) y lo mira la cámara de
+ *   `goal-camera.ts`.
+ * - **La carretera del storyboard** (abajo): solo la usa el hilo de luz
+ *   archivado (§15, `thread-path.ts`). Se conserva para que el hilo pueda
+ *   volver; se retira cuando se rediseñe su recorrido.
  */
 
 export type Point = { x: number; y: number };
@@ -166,7 +166,7 @@ export function goalCityBlocks(): CityBlock[] {
   return out;
 }
 
-/* ───────────────────── legado: la carretera del storyboard ───────────────────── */
+/* ─────────────── la carretera del storyboard (hilo archivado, §15) ─────────────── */
 
 export const MAP_WIDTH = 1440;
 export const MAP_HEIGHT = 900;
@@ -225,43 +225,4 @@ export function roadPointAt(fraction: number): Point {
   const span = lengths[lo] - lengths[lo - 1] || 1;
   const k = (target - lengths[lo - 1]) / span;
   return { x: points[lo - 1].x + (points[lo].x - points[lo - 1].x) * k, y: points[lo - 1].y + (points[lo].y - points[lo - 1].y) * k };
-}
-
-/** El mismo punto, en porcentaje del lienzo: para colocar marcas HTML encima del SVG. */
-export function roadPercentAt(fraction: number): { left: string; top: string } {
-  const p = roadPointAt(fraction);
-  return { left: `${((p.x / MAP_WIDTH) * 100).toFixed(3)}%`, top: `${((p.y / MAP_HEIGHT) * 100).toFixed(3)}%` };
-}
-
-/** El atributo `d` de la carretera. */
-export const ROAD_PATH: string = (() => {
-  const f = (p: Point) => `${p.x.toFixed(1)} ${p.y.toFixed(1)}`;
-  let d = `M ${f(SEGMENTS[0][0])}`;
-  for (const [, c1, c2, p3] of SEGMENTS) d += ` C ${f(c1)}, ${f(c2)}, ${f(p3)}`;
-  return d;
-})();
-
-export type Block = { x: number; y: number; w: number; h: number };
-
-/**
- * Las manzanas de la ciudad: una rejilla con huecos y tamaños deterministas
- * (generador de Park–Miller con semilla fija). Mismo resultado en servidor y
- * cliente: nada de `Math.random()`, que rompería la hidratación.
- */
-export function cityBlocks(seed = 3, cell = 74, gap = 12): Block[] {
-  let s = seed;
-  const rnd = () => {
-    s = (s * 16807) % 2147483647;
-    return s / 2147483647;
-  };
-  const out: Block[] = [];
-  for (let x = 0; x < MAP_WIDTH; x += cell) {
-    for (let y = 0; y < MAP_HEIGHT; y += cell) {
-      if (rnd() < 0.12) continue;
-      const w = cell - gap - [0, 0, 10, 20][Math.floor(rnd() * 4)];
-      const h = cell - gap - [0, 0, 10][Math.floor(rnd() * 3)];
-      out.push({ x, y, w, h });
-    }
-  }
-  return out;
 }
