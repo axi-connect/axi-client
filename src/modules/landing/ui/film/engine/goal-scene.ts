@@ -12,15 +12,20 @@
  */
 import { gsap } from "gsap";
 
+import { goalStory } from "@/modules/landing/domain/film/goal-story";
 import { goalFrame } from "@/modules/landing/domain/film/goal-camera";
 import { formatMillions, formatPercent, ROUTE_FRACTIONS } from "@/modules/landing/domain/film/route-scenario";
-import { SPAN, all, sceneTimeline, setText, visible, writer, type Scene } from "@/modules/landing/ui/film/engine/film-kit";
+import { SPAN, all, sceneTimeline, setText, stickyStrip, visible, writer, type Scene } from "@/modules/landing/ui/film/engine/film-kit";
 
 const px = (v: number) => v.toFixed(1);
 const o = (v: number) => v.toFixed(3);
 
 export const goal: Scene = (section, ctx) => {
-  const tl = sceneTimeline(section, ctx, 200, { start: ctx.desktop ? "top 70%" : "top 40%", end: "bottom top" });
+  // 480 y no 200, con las mesetas de `goalStory` (un alto en cada momento) y,
+  // en móvil, la franja pegada: la información se lee y la animación se ve
+  // entera (dueña, 2026-10-01).
+  const strip = stickyStrip(section, ctx, { top: ".film-goal-map", bottom: ".film-goal-panel" });
+  const tl = sceneTimeline(section, ctx, 480, strip ?? { start: "top 70%", end: "bottom top" });
   const { write: set, restore } = writer();
   const approvedAtStart = section.hasAttribute("data-approved");
   // Al revertir el contexto del motor (parar, cambiar de media o de nicho), la
@@ -70,8 +75,9 @@ export const goal: Scene = (section, ctx) => {
   const slowSpan = ROUTE_FRACTIONS.expected - ROUTE_FRACTIONS.done;
   let approved: boolean | null = null;
 
+  // `p` es el scroll; la historia (con sus mesetas) es `goalStory(p)`.
   const paint = (p: number) => {
-    const f = goalFrame(p);
+    const f = goalFrame(goalStory(p));
     set(plane, "transform", f.plane);
     set(done, "strokeDasharray", f.dash.done);
     set(done, "opacity", o(f.doneLine));

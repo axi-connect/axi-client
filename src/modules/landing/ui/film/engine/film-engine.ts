@@ -26,17 +26,7 @@ import type { FilmThread } from "@/modules/landing/ui/film/thread/thread";
 import { emitFilmEvent, FILM_ACTIVITY_EVENT, type FilmActivityDetail } from "@/modules/landing/ui/film/film-events";
 import { close } from "@/modules/landing/ui/film/engine/close-scene";
 import { goal } from "@/modules/landing/ui/film/engine/goal-scene";
-// El piloto (§19) solo entra en el motor con FILM_PILOT=1: la rama con el
-// literal que inlina next.config deja que webpack lo pode cuando está apagado
-// (auditoría, m11: antes pilot-content y pilot-frame viajaban igual).
-const pilotScene: Promise<Scene> | null =
-  process.env.FILM_PILOT === "1"
-    ? import("@/modules/landing/ui/film/engine/pilot-scene")
-        .then((m) => m.pilot)
-        // Si el chunk no llega, la escena queda en su fotograma final y la
-        // construcción sigue: sin esto se paraba para siempre (ronda 2, R9).
-        .catch((): Scene => () => {})
-    : null;
+import { pilot } from "@/modules/landing/ui/film/engine/pilot-scene";
 import { pricing } from "@/modules/landing/ui/film/engine/pricing-scene";
 import { call, photo, team, vault } from "@/modules/landing/ui/film/engine/sell-scenes";
 import { video } from "@/modules/landing/ui/film/engine/video-scene";
@@ -102,7 +92,8 @@ const niche: Scene = (section, ctx) => {
 
 /** Radar: el barrido da dos vueltas, aparecen los hallazgos, el objetivo y la ficha. */
 const radar: Scene = (section, ctx) => {
-  const tl = spanTimeline(section, ctx, 140);
+  // 240 y no 140: con 140 se leían sus 11 textos en 300 px de scroll (qa/qa-ritmo.mjs; referencia, el piloto: ~120 px por texto, 2026-10-01).
+  const tl = spanTimeline(section, ctx, 240);
   // El barrido: 720° en 0–0,6 (empieza en 20°). Cada punto aparece cuando lo pasa.
   const sweep = visible(section, "[data-anim=sweep]");
   if (sweep.length) {
@@ -166,6 +157,15 @@ const chat: Scene = (section, ctx) => {
   tl.to({}, { duration: 0 }, CHAT); // la línea dura CHAT aunque el último turno acabe antes
 
   const one = (sel: string) => section.querySelector<HTMLElement>(sel);
+  // Fijada, el teléfono entra con la escena (opacidad y una subida corta
+  // mientras su envoltorio sube de «top 80 %» a «top 15 %»): antes asomaba
+  // entero y cortado por el borde de abajo sobre la escena anterior (la dueña,
+  // 2026-10-01: «aparece a mitad de pantalla, cortado»).
+  const stage = one(".film-phone");
+  const spacer = tl.scrollTrigger?.trigger;
+  if (stage && spacer && spacer !== section && spacer !== stage) {
+    gsap.fromTo(stage, { opacity: 0, y: 70 }, { opacity: 1, y: 0, ease: "sine.inOut", scrollTrigger: { trigger: spacer, start: "top 80%", end: "top 15%", scrub: true } });
+  }
   const phone = one("[data-anim=phone]");
   if (phone) {
     const out = { ease: "power3.out", immediateRender: false };
@@ -238,7 +238,8 @@ const chat: Scene = (section, ctx) => {
 
 /** Cobrar: el recibo entra, se llena el último pago, se sella y sale el PDF. */
 const collect: Scene = (section, ctx) => {
-  const tl = spanTimeline(section, ctx, 130);
+  // 330 y no 130: con 130 se leían 19 textos en 300 px (qa/qa-ritmo.mjs; referencia, el piloto: ~120 px por texto, 2026-10-01).
+  const tl = spanTimeline(section, ctx, 330);
   showIn(tl, visible(section, "[data-anim=cobro-msg]"), 0.04, 0.16);
   showIn(tl, visible(section, "[data-anim=cobro-reply]"), 0.22, 0.34);
   showIn(tl, visible(section, "[data-anim=cobro-promise]"), 0.36, 0.46);
@@ -293,7 +294,8 @@ const collect: Scene = (section, ctx) => {
 
 /** Ordenar: la tarjeta se levanta de «Propuesta», vuela y aterriza en «Compromiso». */
 const pipeline: Scene = (section, ctx) => {
-  const tl = spanTimeline(section, ctx, 120);
+  // 160 y no 120: con 120 se leían ~79 px por texto (qa/qa-ritmo.mjs; referencia, el piloto: ~120 px por texto, 2026-10-01).
+  const tl = spanTimeline(section, ctx, 160);
   const forecast = visible(section, "[data-anim=forecast]");
   counter(tl, 0, 0.5, (v) => {
     for (const el of forecast) setText(el, formatMillions(num(el, "to") * v));
@@ -352,7 +354,8 @@ const pipeline: Scene = (section, ctx) => {
 
 /** Axel escribe su resumen, amanece sobre el horizonte y suben sus propuestas. */
 const axel: Scene = (section, ctx) => {
-  const tl = spanTimeline(section, ctx, 140);
+  // 240 y no 140: con 140 se leían 13 textos en 300 px (qa/qa-ritmo.mjs; referencia, el piloto: ~120 px por texto, 2026-10-01).
+  const tl = spanTimeline(section, ctx, 240);
   const typed = visible(section, "[data-anim=axel-typed]");
   const rest = visible(section, "[data-anim=axel-rest]");
   const carets = visible(section, "[data-anim=axel-caret]");
@@ -416,7 +419,7 @@ const measure: Scene = (section, ctx) => {
   if (glow.length) tl.fromTo(glow, { opacity: 0 }, { opacity: 1, ease: "power3.out", duration: atP(0.14) }, atP(0.82));
 };
 
-const SCENES: Record<string, Scene> = { hero, video, niche, radar, followup, chat, photo, call, vault, team, collect, pipeline, goal, axel, measure, pricing, close };
+const SCENES: Record<string, Scene> = { hero, video, niche, radar, pilot, followup, chat, photo, call, vault, team, collect, pipeline, goal, axel, measure, pricing, close };
 
 /* ──────────────────────────────── arranque ──────────────────────────────── */
 
@@ -587,6 +590,11 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
         return r.top < vh * 2.5 && r.bottom > -vh * 1.5;
       };
       const lazy = !ctx.desktop && typeof IntersectionObserver === "function";
+      // Las escenas con franja pegada (piloto, meta) crecen ~3.600 px al
+      // construirse (`stickyStrip`): toman ese alto YA, antes de construir nada.
+      // Construidas tarde por el observador, empujaban de golpe lo de debajo y la
+      // vista saltaba (el teléfono del chat a miles de px, 2026-10-01).
+      if (!ctx.desktop) for (const s of sections) if (s.querySelector(".film-strip")) s.setAttribute("data-stick", "");
       const io = lazy
         ? new IntersectionObserver(
             (entries) => {
@@ -602,12 +610,7 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
                   // debajo se recoloca.
                   if (section.offsetHeight !== h) ScrollTrigger.refresh();
                 };
-                if (section.dataset.scene === "pilot" && !SCENES.pilot && pilotScene) {
-                  void pilotScene.then((build) => {
-                    SCENES.pilot = build;
-                    yieldThen(later);
-                  });
-                } else yieldThen(later);
+                yieldThen(later);
               }
             },
             { root: scroller, rootMargin: "150% 0px" },
@@ -618,20 +621,10 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
         const t0 = performance.now();
         while (next < sections.length && performance.now() - t0 < SLICE_MS) {
           const section = sections[next];
-          const name = section.dataset.scene ?? "";
           if (io && !near(section)) {
             next++;
             io.observe(section);
             continue;
-          }
-          // El piloto llega en su propio chunk: si aún no está, la construcción
-          // espera aquí y sigue en orden (los pins de debajo dependen de él).
-          if (name === "pilot" && !SCENES.pilot && pilotScene) {
-            void pilotScene.then((build) => {
-              SCENES.pilot = build;
-              yieldThen(slice);
-            });
-            return;
           }
           next++;
           buildOne(section);
@@ -648,6 +641,7 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
       return () => {
         alive = false;
         io?.disconnect();
+        for (const s of sections) s.removeAttribute("data-stick");
         pins.clear();
       };
     });

@@ -27,13 +27,6 @@ const nextConfig: NextConfig = {
   // La versión de Next no aporta nada al cliente y sí a quien busca exploits.
   poweredByHeader: false,
 
-  // Interruptores de la home en tiempo de build (landing_cinematica_plan.md §19):
-  // `env` los inlina como literales, así que una escena apagada ni entra en el
-  // grafo (webpack descarta el `import()` muerto con su CSS y su fuente).
-  // El piloto automático sale apagado hasta que el piloto esté en producción;
-  // para QA local: `FILM_PILOT=1 next build`.
-  env: { FILM_PILOT: process.env.FILM_PILOT === "1" ? "1" : "0" },
-
   experimental: {
     // Importa solo los módulos de framer-motion que se usan (Next ya lo hace
     // de serie con lucide, date-fns, recharts y react-icons, no con este).

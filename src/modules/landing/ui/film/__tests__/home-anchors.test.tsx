@@ -14,6 +14,8 @@ import { render } from "@testing-library/react"
 
 jest.mock("../engine/film-engine", () => ({ startFilm: jest.fn(() => ({ stop: jest.fn(), scrollTo: jest.fn(), setNiche: jest.fn() })) }))
 jest.mock("@/core/analytics/track", () => ({ track: jest.fn() }))
+// La escena del piloto carga su fuente con next/font (solo existe en el build de Next).
+jest.mock("next/font/google", () => ({ IBM_Plex_Mono: () => ({ className: "", variable: "", style: {} }) }))
 
 import { FIXTURE_CATALOG } from "@/modules/landing/domain/testing/catalog.fixture"
 import { CAPABILITIES } from "@/modules/landing/ui/content/productos.content"

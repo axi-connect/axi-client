@@ -24,7 +24,7 @@ export type RailEntry = {
   tone: RailTone;
 };
 
-/** En el orden de la película. El piloto solo existe con FILM_PILOT=1: el riel lista lo que hay en la página. */
+/** En el orden de la película (el riel lista lo que hay en la página). */
 export const RAIL_INDEX: readonly RailEntry[] = [
   { id: "hero", scene: "hero", chapter: "Empieza", title: "Vende en cada conversación", tone: "dim" },
   { id: "video", scene: "video", chapter: "Empieza", title: "Así se ve un día con Axi", tone: "dim" },

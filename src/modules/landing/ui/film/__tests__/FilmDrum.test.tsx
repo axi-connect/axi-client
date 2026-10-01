@@ -8,7 +8,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react"
 import { RAIL_INDEX } from "@/modules/landing/domain/film/rail-index"
 import { FilmDrum } from "../parts/FilmDrum"
 
-const ENTRIES = RAIL_INDEX.filter((e) => e.scene !== "pilot")
+const ENTRIES = RAIL_INDEX
 const centered = () => document.querySelector<HTMLButtonElement>(".film-drum-row[data-centered]")!
 
 beforeAll(() => {
@@ -80,4 +80,34 @@ it("la escena actual lleva aria-current; un clic en otra la trae al centro sin v
   fireEvent.click(document.querySelector<HTMLButtonElement>('.film-drum-row[data-index="4"]')!)
   expect(onTravel).not.toHaveBeenCalled()
   expect(centered().textContent).toContain(ENTRIES[4].title)
+})
+
+it("abierta por hover, ↑ ↓ e Intro funcionan sin tabular; cerrada, las flechas son de la página", () => {
+  const { trigger, onTravel } = drum(5)
+  // Signo 1: cerrada, una flecha en la página no la mueve ni se la queda.
+  const closed = new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true, cancelable: true })
+  act(() => {
+    document.body.dispatchEvent(closed)
+  })
+  expect(closed.defaultPrevented).toBe(false)
+  expect(trigger).toHaveAttribute("aria-expanded", "false")
+  // Signo 2: abierta por hover (foco fuera), ↓ ↓ giran e Intro viaja.
+  fireEvent.mouseEnter(trigger.parentElement!)
+  act(() => {
+    document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true, cancelable: true }))
+    document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true, cancelable: true }))
+  })
+  expect(centered().textContent).toContain(ENTRIES[7].title)
+  act(() => {
+    document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }))
+  })
+  expect(onTravel).toHaveBeenCalledWith(ENTRIES[7])
+  expect(trigger).toHaveAttribute("aria-expanded", "false")
+  // Y Esc la cierra sin viajar.
+  fireEvent.mouseEnter(trigger.parentElement!)
+  act(() => {
+    document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }))
+  })
+  expect(trigger).toHaveAttribute("aria-expanded", "false")
+  expect(onTravel).toHaveBeenCalledTimes(1)
 })

@@ -17,7 +17,7 @@ import { gsap } from "gsap";
 
 import { PILOT_COPY, PILOT_LOT, PILOT_RUN, PILOT_STAGES, PILOT_STATUS, lotCounts } from "@/modules/landing/domain/film/pilot-content";
 import { PILOT_DIAL_MAX, PILOT_FOCUS, PILOT_OVERVIEW, capSegments, dial, pilotFrame, pilotStory } from "@/modules/landing/domain/film/pilot-frame";
-import { SPAN, all, sceneTimeline, visible, writer, type Scene } from "@/modules/landing/ui/film/engine/film-kit";
+import { SPAN, all, sceneTimeline, stickyStrip, visible, writer, type Scene } from "@/modules/landing/ui/film/engine/film-kit";
 
 const px = (v: number) => v.toFixed(1);
 const o = (v: number) => v.toFixed(3);
@@ -29,49 +29,9 @@ export const pilot: Scene = (section, ctx) => {
   // unas seis pantallas y cada paso de la cabina se lee sin scroll fino
   // (dueña, 2026-10-01). Sin pin, el pase empieza con la escena asomando
   // («top 70 %») para que las mesetas tengan recorrido también en el teléfono.
-  // En móvil la franja va pegada (sticky, sin pin de GSAP): el pase es el tramo
-  // en que está pegada, de cuando se pega a cuando la escena la suelta.
-  const stick = ctx.desktop ? null : (section.querySelector<HTMLElement>("[data-anim=pilot-stick]") ?? null);
-  let stickTop = 0;
-  const placeStick = () => {
-    if (!stick) return;
-    const map = stick.querySelector<HTMLElement>(".film-pilot-map");
-    const cockpit = stick.querySelector<HTMLElement>(".film-pilot-cockpit");
-    if (!map || !cockpit) return;
-    // Mapa y cabina centrados en la ventana; si no caben, la cabina entera abajo.
-    // Con rects y no offsetTop: pegada, la franja es el offsetParent del mapa.
-    const s = stick.getBoundingClientRect();
-    const m = map.getBoundingClientRect();
-    const head = m.top - s.top;
-    const body = cockpit.getBoundingClientRect().bottom - m.top;
-    const vh = window.innerHeight;
-    stickTop = Math.round(Math.min((vh - body) / 2, vh - 8 - body) - head);
-    section.style.setProperty("--pilot-stick-top", `${stickTop}px`);
-  };
-  if (stick) {
-    section.setAttribute("data-stick", "");
-    placeStick();
-    window.addEventListener("resize", placeStick);
-    gsap.context()?.add(() => () => {
-      window.removeEventListener("resize", placeStick);
-      section.removeAttribute("data-stick");
-      section.style.removeProperty("--pilot-stick-top");
-    });
-  }
-  const padTop = () => parseFloat(getComputedStyle(section).paddingTop) || 0;
-  const tl = sceneTimeline(
-    section,
-    ctx,
-    800,
-    stick
-      ? {
-          // Se pega cuando el borde de la escena (más su padding) llega a `stickTop`;
-          // la suelta cuando el fondo de su contenido llega al fondo de la franja.
-          start: () => `top ${stickTop - padTop()}px`,
-          end: () => `bottom ${stickTop + stick.offsetHeight + padTop()}px`,
-        }
-      : { start: "top 70%", end: "bottom bottom" },
-  );
+  // En móvil, la franja pegada (stickyStrip) con las mismas mesetas.
+  const strip = stickyStrip(section, ctx, { top: ".film-pilot-map", bottom: ".film-pilot-cockpit" });
+  const tl = sceneTimeline(section, ctx, 800, strip ?? { start: "top 70%", end: "bottom bottom" });
   const { write: set, flag, text, restore } = writer();
   gsap.context()?.add(() => () => restore());
 

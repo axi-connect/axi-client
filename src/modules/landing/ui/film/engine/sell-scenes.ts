@@ -105,7 +105,8 @@ export const vault: Scene = (section: HTMLElement, ctx: Ctx) => {
 const modeAt = (p: number) => (p >= 0.9 ? 0 : p >= 0.55 ? 2 : p >= 0.45 ? 1 : 0);
 
 export const team: Scene = (section: HTMLElement, ctx: Ctx) => {
-  const tl = spanTimeline(section, ctx, 130);
+  // 190 y no 130: con 130 se leían ~72 px por texto (qa/qa-ritmo.mjs; referencia, el piloto: ~120).
+  const tl = spanTimeline(section, ctx, 190);
 
   // 0–0,3: la tapa se abre desde la bisagra (−76° → 6°). Solo en escritorio:
   // en móvil el portátil se ve de frente. El dorso se ve hasta −40° y la

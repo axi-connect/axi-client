@@ -17,6 +17,9 @@ import { RAIL_COPY, clampIndex, drumPose, wheelStep, type RailEntry } from "@/mo
  *   cada 60 px; `data-lenis-prevent` y un `wheel` no pasivo). ↑ ↓ igual.
  * - Intro o clic en una escena inicia el recorrido (`onTravel`, FilmRoot).
  *   Esc cierra y devuelve el foco al botón del riel.
+ * - Abierta por hover, ↑ ↓ Intro y Esc funcionan sin tabular hasta ella (pedido
+ *   de la dueña, 2026-10-01). El oyente del documento solo existe mientras
+ *   está abierta: cerrada, las flechas son de la página.
  * - Solo transform y opacity en las filas.
  */
 export function FilmDrum({
@@ -31,6 +34,9 @@ export function FilmDrum({
 }) {
   const [open, setOpen] = useState(false);
   const [sel, setSel] = useState(current);
+  // La selección para el oyente del documento (que no se rehace en cada giro).
+  const selRef = useRef(sel);
+  selRef.current = sel;
   const zoneRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -71,6 +77,28 @@ export function FilmDrum({
     zone.addEventListener("wheel", onWheel, { passive: false });
     return () => zone.removeEventListener("wheel", onWheel);
   }, [open, entries.length]);
+
+  // Abierta por hover, con el foco fuera: el teclado también la mueve.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (zoneRef.current?.contains(t)) return;
+      if (t?.closest("input, textarea, select, [contenteditable='true']")) return;
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        e.preventDefault();
+        setSel((s) => clampIndex(s + (e.key === "ArrowDown" ? 1 : -1), entries.length));
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        setOpen(false);
+        onTravel(entries[selRef.current]);
+      } else if (e.key === "Escape") {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, entries, onTravel]);
 
   const move = (to: number) => {
     const next = clampIndex(to, entries.length);

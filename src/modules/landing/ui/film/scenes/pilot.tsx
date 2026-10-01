@@ -470,7 +470,7 @@ export function PilotScene() {
     >
       {/* En escritorio no pinta caja (`display: contents`); en móvil, con el motor,
           es la franja que se queda pegada mientras se lee el vuelo (film-pilot.css). */}
-      <div className="film-pilot-stick" data-anim="pilot-stick">
+      <div className="film-strip">
       <PilotMap />
       <div className="film-pilot-layout">
         {/* data-anim="head": entra con el scroll de antes del pin (sceneTimeline). */}

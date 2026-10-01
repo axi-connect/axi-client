@@ -13,14 +13,6 @@
  */
 import type { FilmNiche } from "./niches";
 
-/**
- * El interruptor de la escena (§19, D11): apagada hasta que el piloto esté en
- * producción. Lo fija `FILM_PILOT` en tiempo de build (`next.config.ts`, `env`);
- * sin él, apagada. `FilmPage` compara el mismo literal para que webpack
- * descarte la escena entera (CSS y fuente incluidos) cuando está apagada.
- */
-export const FILM_FEATURES = { pilot: process.env.FILM_PILOT === "1" } as const;
-
 /** Las etapas de una cuenta, como las nombra la UI del piloto. */
 export const PILOT_STAGES = {
   searching: "Buscando",

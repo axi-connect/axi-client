@@ -19,7 +19,6 @@ import {
 import { project } from "../goal-camera"
 import { FILM_NICHES } from "../niches"
 import {
-  FILM_FEATURES,
   PILOT_ANNUNCIATORS,
   PILOT_CONTENT,
   PILOT_COPY,
@@ -245,10 +244,6 @@ describe("el tablero y los instrumentos", () => {
 })
 
 describe("el guion por nicho", () => {
-  it("la escena está apagada hasta que el piloto esté en producción", () => {
-    expect(FILM_FEATURES.pilot).toBe(false)
-  })
-
   it.each(FILM_NICHES)("%s: las cifras cuadran y no hay porcentajes", (n) => {
     const c = PILOT_CONTENT[n]
     const { approved, skipped } = lotCounts(PILOT_LOT)

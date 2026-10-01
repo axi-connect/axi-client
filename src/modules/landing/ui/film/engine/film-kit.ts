@@ -225,6 +225,53 @@ function stick(section: HTMLElement, travel: number): HTMLElement {
   return spacer;
 }
 
+/**
+ * La franja pegada de móvil (piloto, meta): sin pin de GSAP, la escena mide
+ * varias pantallas (`data-stick`, film.css) y su `.film-strip` (titular, mapa
+ * y panel) va `sticky`. Su `top` se mide al construir y al cambiar de tamaño,
+ * no por frame: `top` (el mapa) y `bottom` (el panel) quedan centrados en la
+ * ventana y, si no caben, el panel entero abajo; el titular sale por arriba.
+ * Devuelve el pase (de cuando se pega a cuando la escena la suelta) o `null`
+ * en escritorio. Sin motor o con movimiento reducido no hay `data-stick`: la
+ * escena conserva su alto y su fotograma final.
+ */
+export function stickyStrip(section: HTMLElement, ctx: Ctx, parts: { top: string; bottom: string }): Pass | null {
+  const strip = ctx.desktop ? null : section.querySelector<HTMLElement>(".film-strip");
+  if (!strip) return null;
+  let top = 0;
+  // La variante del nicho que se ve: las escenas traen las cuatro en el HTML
+  // y las ocultas miden 0 (con la primera, la meta se centraba mal).
+  const shown = (sel: string) => all(strip, sel).find((el) => el.getClientRects().length > 0);
+  const place = () => {
+    const a = shown(parts.top);
+    const b = shown(parts.bottom);
+    if (!a || !b) return;
+    // Con rects y no offsetTop: pegada, la franja es el offsetParent de lo de dentro.
+    const s = strip.getBoundingClientRect();
+    const t = a.getBoundingClientRect();
+    const head = t.top - s.top;
+    const body = b.getBoundingClientRect().bottom - t.top;
+    const vh = window.innerHeight;
+    top = Math.round(Math.min((vh - body) / 2, vh - 8 - body) - head);
+    section.style.setProperty("--strip-top", `${top}px`);
+  };
+  section.setAttribute("data-stick", "");
+  place();
+  window.addEventListener("resize", place);
+  gsap.context()?.add(() => () => {
+    window.removeEventListener("resize", place);
+    section.removeAttribute("data-stick");
+    section.style.removeProperty("--strip-top");
+  });
+  const pad = () => parseFloat(getComputedStyle(section).paddingTop) || 0;
+  return {
+    // Se pega cuando el borde de la escena (más su padding) llega a `top`; la
+    // suelta cuando el fondo de su contenido llega al fondo de la franja.
+    start: () => `top ${top - pad()}px`,
+    end: () => `bottom ${top + strip.offsetHeight + pad()}px`,
+  };
+}
+
 /** Cuenta hacia arriba un número con separador de miles colombiano. */
 export function countUp(tl: gsap.core.Timeline, el: HTMLElement, at: number) {
   const target = Number((el.textContent ?? "").replace(/[^\d]/g, ""));

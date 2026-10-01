@@ -19,6 +19,7 @@ import {
 } from "./flight-route";
 import { easeInOut, easeOut, planeTransform, project, seg, type GoalCamera } from "./goal-camera";
 import { PILOT_COPY, type PilotStage, type PilotStatus } from "./pilot-content";
+import { storyAt, storyPlateaus, type StoryKnot } from "./story";
 
 const PILOT_STEP_NAMES: readonly string[] = PILOT_COPY.steps;
 import type { Point } from "./route-map";
@@ -80,7 +81,7 @@ export function planeAt(p: number): PlaneState {
  * espera usa 0,53, ya con el circuito encendido y el avión sobre el fijo, y el
  * lote aprobado, 0,67: el botón ya se hundió y el avión sigue sobre el fijo 5.
  */
-const STORY_KNOTS: readonly (readonly [story: number, flight: number, hold: number])[] = [
+const STORY_KNOTS: readonly StoryKnot[] = [
   [0, 0, 0],
   [fixStory(0), 1.6, 1.1],
   [fixStory(1), 0.6, 0.9],
@@ -106,31 +107,9 @@ function fixStory(i: number): number {
 }
 
 /** Las mesetas en `p` (para los tests y el QA): [desde, hasta, instante de la historia]. */
-export const PILOT_PLATEAUS: readonly (readonly [from: number, to: number, story: number])[] = (() => {
-  const total = STORY_KNOTS.reduce((acc, [, flight, hold]) => acc + flight + hold, 0);
-  const out: [number, number, number][] = [];
-  let at = 0;
-  for (const [story, flight, hold] of STORY_KNOTS.slice(1)) {
-    at += flight / total;
-    out.push([at, at + hold / total, story]);
-    at += hold / total;
-  }
-  return out;
-})();
+export const PILOT_PLATEAUS = storyPlateaus(STORY_KNOTS);
 
-export function pilotStory(p: number): number {
-  if (p <= 0) return 0;
-  if (p >= 1) return 1;
-  let from = 0;
-  let story = 0;
-  for (const [a, b, s] of PILOT_PLATEAUS) {
-    if (p < a) return lerp(story, s, easeInOut(seg(p, from, a)));
-    if (p <= b) return s;
-    from = b;
-    story = s;
-  }
-  return 1;
-}
+export const pilotStory = (p: number): number => storyAt(p, PILOT_PLATEAUS);
 
 /**
  * Adónde mira la cámara al alejarse al final. En escritorio, a toda la ruta;
