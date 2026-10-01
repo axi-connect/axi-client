@@ -150,11 +150,14 @@ export function PhotoScene() {
                     className="size-[15px] shrink-0 text-[#c4b5fd]"
                     aria-hidden="true"
                   />
-                  <strong className="font-semibold">
-                    {FILM_PHOTO.recognized}
-                  </strong>
-                  <span className="film-sell-muted">
-                    {FILM_PHOTO.match(match.name, c.photo.similarity)}
+                  {/* Dos líneas, sin elipsis: «Reconocido» y la referencia con su similitud. */}
+                  <span className="film-photo-recognized-text">
+                    <strong className="font-semibold">
+                      {FILM_PHOTO.recognized}
+                    </strong>
+                    <span className="film-sell-muted">
+                      {FILM_PHOTO.match(match.name, c.photo.similarity)}
+                    </span>
                   </span>
                 </p>
 
