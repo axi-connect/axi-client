@@ -204,10 +204,11 @@ export const easeOut3 = (t: number) => 1 - Math.pow(1 - t, 3);
  * Y la animación corre mientras la escena ya se ve (dueña, 2026-10-02): con
  * «top 85 %» arrancaba con la escena apenas asomando, y en móvil «bottom 95 %»
  * la terminaba cuando ya casi se iba. Ahora empieza con la escena a media
- * pantalla y acaba con ella entera a la vista.
+ * pantalla y acaba con ella entera a la vista, bajo la cabecera fija (auditoría R7).
  */
-export const PASS_DESKTOP: Pass = { start: "top 55%", end: "top top" };
-export const PASS_MOBILE: Pass = { start: "top 55%", end: "center 45%" };
+export const PASS_DESKTOP: Pass = { start: "top 55%", end: "top 12%" };
+// En móvil la escena puede ser más alta que la pantalla: acaba cuando su pie entra.
+export const PASS_MOBILE: Pass = { start: "top 55%", end: "bottom bottom" };
 
 export function spanTimeline(section: HTMLElement, ctx: Ctx, length: number, pass?: Pass) {
   const tl = sceneTimeline(section, ctx, length, pass ?? (ctx.desktop ? PASS_DESKTOP : PASS_MOBILE));
