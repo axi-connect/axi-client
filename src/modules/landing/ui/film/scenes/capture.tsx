@@ -167,7 +167,7 @@ function Timeline({ c }: { c: FilmContent }) {
       <span className="film-ruler-gap" />
       <p className="film-ruler-gap-label">A la mañana siguiente</p>
       {events.map((e) => (
-        <div key={e.when} className="film-ruler-event" style={{ top: e.y, order: e.y }} data-anim="ruler-event" data-y={e.y}>
+        <div key={e.when} className={e.what ? "film-ruler-event" : "film-ruler-event film-ruler-tick"} style={{ top: e.y, order: e.y }} data-anim="ruler-event" data-y={e.y}>
           <p className="film-ruler-when">{e.when}</p>
           <span className="film-ruler-dot" />
           {e.what ? <p className="film-ruler-what">{e.what}</p> : null}

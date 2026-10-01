@@ -1157,7 +1157,9 @@
   .film-ruler-when { position: static; font-size: 11px; }
   .film-ruler-dot { left: -27px; top: 2px; }
   .film-ruler-what { position: static; margin-top: 3px; font-size: 13.5px; line-height: 1.4; }
-  .film-ruler-event:has(.film-ruler-what:empty), .film-ruler-event:not(:has(.film-ruler-what)) { display: none; }
+  /* La marca sin texto (la hora de la respuesta) la lleva ya la burbuja. Clase y
+     no :has(), que Safari < 15.4 y Firefox < 121 no entienden. */
+  .film-ruler-tick { display: none; }
   .film-ruler-bub { max-width: 100%; font-size: 13px; }
 }
 
@@ -1166,16 +1168,19 @@
    de 0,82 (más pequeño se lee mal): si aun así no cabe, va sin pin. */
 @media (min-width: 1024px) and (max-height: 860px) {
   [data-scene="radar"] > .film-wrap,
-  [data-scene="followup"] > .film-wrap { padding-block: 72px 32px; zoom: 0.94; }
+  [data-scene="followup"] > .film-wrap,
+  [data-scene="measure"] > .film-wrap { padding-block: 72px 32px; zoom: 0.94; }
   [data-scene="call"] > .film-call-layout { zoom: 0.94; }
 }
 @media (min-width: 1024px) and (max-height: 800px) {
   [data-scene="radar"] > .film-wrap,
   [data-scene="followup"] > .film-wrap,
+  [data-scene="measure"] > .film-wrap,
   [data-scene="call"] > .film-call-layout { zoom: 0.88; }
 }
 @media (min-width: 1024px) and (max-height: 740px) {
   [data-scene="radar"] > .film-wrap,
   [data-scene="followup"] > .film-wrap,
+  [data-scene="measure"] > .film-wrap,
   [data-scene="call"] > .film-call-layout { zoom: 0.82; }
 }
