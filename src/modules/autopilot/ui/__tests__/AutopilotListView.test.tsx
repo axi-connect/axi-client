@@ -56,7 +56,14 @@ describe("AutopilotListView · Tus rutas", () => {
     expect(screen.getByRole("heading", { name: "Axi sale a buscar clientes por ti" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Nueva ruta/ })).toHaveAttribute("href", "/marketing/autopilot/new");
     expect(screen.getByRole("img", { name: /^Ruta de la última salida: Buscar 25/ })).toBeInTheDocument();
-    expect(screen.getByText("Google Maps · Restaurantes · Medellín")).toBeInTheDocument();
+    // La tarjeta del dueño: «Ruta · modo», la última salida en una línea, el botón de cristal líquido, las tres zonas y el avión en la línea.
+    expect(screen.getByText("Ruta · con tu aprobación")).toBeInTheDocument();
+    expect(screen.getByText(/^Espera tu aprobación · .* · 0 contactados · 0 créditos$/)).toBeInTheDocument();
+    const lot = screen.getAllByRole("link", { name: /Revisar el lote/ });
+    expect(lot.some((link) => link.className.includes("glass-control"))).toBe(true);
+    for (const zone of ["Busca", "Cuándo y cuánto", "Modo"]) expect(screen.getByText(zone)).toBeInTheDocument();
+    expect(screen.getByText("Restaurantes · Medellín")).toBeInTheDocument();
+    expect(document.querySelector('[data-plane="still"]')).not.toBeNull();
     expect(screen.getAllByText("Espera tu aprobación").length).toBeGreaterThan(0);
     expect(within(screen.getByRole("group", { name: "Acciones de la ruta" })).getByRole("button", { name: /Salir ahora/ })).toBeDisabled();
   });
@@ -75,7 +82,8 @@ describe("AutopilotListView · Tus rutas", () => {
       items: [listItemFixture({ last_run: summaryFixture({ status: "failed", step: "await_search", error: "search_timeout", counters: { found: 0 } }) })],
     });
     render(<AutopilotListView />);
-    expect(await screen.findByText(/^Falló/)).toBeInTheDocument();
+    // La píldora dice «Falló» y la línea de la última salida también lo cuenta.
+    expect((await screen.findAllByText(/^Falló/)).length).toBe(2);
     expect(screen.queryByText("Programada")).not.toBeInTheDocument();
     expect(screen.queryByRole("region", { name: "Ahora mismo" })).not.toBeInTheDocument();
   });

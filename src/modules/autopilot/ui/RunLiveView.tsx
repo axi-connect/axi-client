@@ -39,7 +39,7 @@ import { ActionCapsule } from "./recorrido/ActionCapsule";
 import { BatchIsland } from "./recorrido/BatchIsland";
 import { RunAccounts } from "./recorrido/RunAccounts";
 import { RunTrajectoryMap } from "./recorrido/RunTrajectoryMap";
-import { departureLabel, whenLabel } from "./recorrido/when";
+import { departureLabel, hourIn, whenLabel } from "./recorrido/when";
 
 /**
  * Una salida de una ruta, en vivo (Rutas de captación, R1, mockup aprobado el
@@ -167,6 +167,7 @@ export function RunLiveView({ runId }: { runId: string }) {
           paused={run.status === "paused"}
           status={{ label: status.label, tone: status.tone, live: run.status === "running" }}
           startedLabel={departureLabel(run.started_at ?? run.created_at, timeZone)}
+          departedHour={run.started_at === null ? null : hourIn(run.started_at, timeZone)}
           modeLabel={ROUTINE_MODE_META[routine.mode].label}
           now={now}
           failed={run.status === "failed"}

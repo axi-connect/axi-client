@@ -23,6 +23,12 @@ export function relativeDay(at: Date, now: Date, timeZone: string): string {
   return `${part("weekday")} ${part("day")} ${part("month")}`;
 }
 
+/** «8:00»: la hora de un instante en la zona de la ruta. */
+export function hourIn(iso: string, timeZone: string): string | null {
+  const at = new Date(iso);
+  return Number.isNaN(at.getTime()) ? null : hour(at, timeZone);
+}
+
 /** «hoy, 14:00». */
 export function whenLabel(iso: string, timeZone: string, now: Date = new Date()): string {
   const at = new Date(iso);

@@ -68,7 +68,7 @@ const awaiting = () =>
 afterEach(() => jest.clearAllMocks());
 
 describe("RunLiveView · Rutas de captación", () => {
-  it("en ruta: la frase de ahora encabeza el mapa, Axi late y cada parada dice su cifra", async () => {
+  it("en ruta: la frase de ahora encabeza el mapa, el avión late y cada fijo dice su cifra", async () => {
     given(runFixture({ step: "await_enrich", counters: { found: 25, qualified: 6 }, credits_spent: 6 }));
     render(<RunLiveView runId="run-1" />);
 
@@ -79,7 +79,7 @@ describe("RunLiveView · Rutas de captación", () => {
     expect(within(card).getByRole("meter", { name: "Créditos de esta salida" })).toHaveAttribute("aria-valuenow", "6");
     expect(within(card).getByText(/6 de 40 créditos/)).toBeInTheDocument();
     expect(within(card).getByRole("button", { name: /^Calificar: 6 cuentas, en curso\. Filtrar/ })).toBeInTheDocument();
-    expect(document.querySelector('[data-axi="live"]')).not.toBeNull();
+    expect(document.querySelector('[data-plane="live"]')).not.toBeNull();
     // Sin lote no hay isla: la frase ya encabeza el mapa.
     expect(screen.queryByRole("region", { name: "Ahora" })).not.toBeInTheDocument();
     expect(screen.queryByRole("region", { name: "Tu aprobación" })).not.toBeInTheDocument();
@@ -146,6 +146,12 @@ describe("RunLiveView · Rutas de captación", () => {
     expect(within(filter).getByRole("radio", { name: /Se quedaron/ })).toHaveAttribute("aria-checked", "true");
     expect(screen.getByText(/Las 7 por aprobar están en la isla/)).toBeInTheDocument();
     expect(screen.getAllByText("16 no pasaron tu filtro").length).toBeGreaterThan(0);
+    // La carta: el circuito de espera sobre «Tu aprobación», el espacio restringido con sus frenadas y los créditos en la hora de «Calificar».
+    expect(screen.getByText("EN ESPERA")).toBeInTheDocument();
+    expect(document.querySelector('[data-plane="holding"]')).not.toBeNull();
+    expect(screen.getByText(/Tu política · 2 frenadas aquí/)).toBeInTheDocument();
+    expect(screen.getByTitle(/Revelar el correo: 1 crédito por cuenta/)).toHaveTextContent("9 créditos");
+    expect(screen.getByRole("region", { name: "La ruta de esta salida" })).toHaveClass("surface-dark");
     fireEvent.click(screen.getByRole("button", { name: /Ver las 18/ }));
     expect(screen.getAllByText(/Puntaje por debajo de 60/).length).toBe(12);
     expect(document.body.textContent).not.toMatch(/policy_|below_min_score|no_decision_maker|skipped_in_batch/);
@@ -166,7 +172,7 @@ describe("RunLiveView · Rutas de captación", () => {
     expect(screen.queryByText(/Llegaron a/)).not.toBeInTheDocument();
   });
 
-  it("terminada: «Lo que viene» cuenta seguimiento, respuestas y demos; Axi llegó", async () => {
+  it("terminada: «Lo que viene» cuenta seguimiento, respuestas y demos; el avión llegó", async () => {
     given(
       runFixture({
         status: "done",
@@ -186,7 +192,7 @@ describe("RunLiveView · Rutas de captación", () => {
     expect(screen.getAllByText("Lo que viene").length).toBe(2);
     expect(screen.getByText("Respondieron")).toBeInTheDocument();
     expect(screen.getByText("4 en seguimiento · 2 respondieron · 1 demo agendada")).toBeInTheDocument();
-    expect(document.querySelector('[data-axi="live"]')).toBeNull();
+    expect(document.querySelector('[data-plane="live"]')).toBeNull();
   });
 
   it("falló: el error en palabras y «Salir de nuevo»", async () => {
@@ -229,7 +235,7 @@ describe("RunLiveView · Rutas de captación", () => {
     expect(screen.getByText(/^Calificar terminó/)).toBeInTheDocument();
   });
 
-  it("con movimiento reducido Axi salta: no se anima con requestAnimationFrame", async () => {
+  it("con movimiento reducido el avión salta: no se anima con requestAnimationFrame", async () => {
     const original = window.matchMedia;
     window.matchMedia = ((query: string) => ({ matches: query.includes("reduce"), media: query, addEventListener() {}, removeEventListener() {} })) as never;
     const raf = jest.spyOn(window, "requestAnimationFrame");
@@ -237,7 +243,7 @@ describe("RunLiveView · Rutas de captación", () => {
       given(runFixture({ step: "await_enrich", counters: { found: 25, qualified: 6 } }));
       render(<RunLiveView runId="run-1" />);
       await screen.findByRole("region", { name: "La ruta de esta salida" });
-      await waitFor(() => expect(document.querySelector("[data-axi]")).not.toBeNull());
+      await waitFor(() => expect(document.querySelector("[data-plane]")).not.toBeNull());
       expect(raf).not.toHaveBeenCalled();
     } finally {
       raf.mockRestore();

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { ArrowRight, Coins, Flag, Zap } from "lucide-react";
+import { ArrowRight, Zap } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
 import type { StatePillTone } from "@/shared/components/features/bento";
@@ -9,26 +9,8 @@ import { Button } from "@/shared/components/ui/button";
 
 import { destinationRows, exitTitle } from "../../domain/copy";
 import type { StopKey, StopState, Trajectory, TrajectoryExit, TrajectoryStop } from "../../domain/trajectory";
-import { AxiCoin } from "./AxiCoin";
-import {
-  AXI_AT,
-  cityDots,
-  contourPaths,
-  cubicPath,
-  DEST_POINT,
-  emptyBranch,
-  EXIT_W,
-  exitBranch,
-  exitCenters,
-  flowWidth,
-  MAP_H,
-  MAP_W,
-  pct,
-  pointAt,
-  SOURCE_POINT,
-  splitAt,
-  stopPoints,
-} from "./geometry";
+import { AIRPORT, airway, CHART_H, CHART_W, headingOf, LAND, RESTRICTED, TOP_PLANE_PATH, TOWER } from "./airChart";
+import { AXI_AT, cubicPath, EXIT_W, exitCenters, flowWidth, pct, splitCubic, type Cubic, type Point } from "./geometry";
 import { StatusDot } from "./StatusDot";
 
 export interface RunTrajectoryMapProps {
@@ -53,6 +35,8 @@ export interface RunTrajectoryMapProps {
   agentName: string | null;
   /** El tope de grosor: la parada más concurrida (o las cuentas por salida). */
   maxFlow: number;
+  /** «8:00»: a qué hora salió (el rótulo de la torre). */
+  departedHour: string | null;
   selected: StopKey | null;
   onSelect: (key: StopKey) => void;
   /** «Salir de nuevo» tras un fallo; sin permiso, no se pinta. */
@@ -60,20 +44,26 @@ export interface RunTrajectoryMapProps {
 }
 
 /**
- * La tarjeta de la ruta de una salida (Rutas de captación, R1): arriba la
- * frase de ahora en grande; en medio el mapa —un tramo por parada, tan grueso
- * como las cuentas que pasan, con sus desvíos a las cajas de motivos, el peaje
- * de calificar y «Lo que viene»— y abajo el tope, lo que sigue y la próxima
- * salida. Con la caja por debajo de 760 px la ruta se pone de pie.
+ * La tarjeta de la ruta de una salida (Rutas de captación, delta v4): una carta
+ * de navegación aérea nocturna, en su propia superficie oscura en los dos temas
+ * (`.surface-dark`). Arriba, la frase de ahora en grande; en medio la carta —la
+ * aerovía continua de la torre al aeropuerto, los fijos (las paradas), el
+ * espacio restringido de tu política que la ruta rodea, el circuito de espera
+ * sobre «Tu aprobación», el avión con su estela y los desvíos a sus cajas— y
+ * abajo el tope, lo que sigue y la próxima salida. Por debajo de 760 px, la ruta
+ * vertical sobre la misma superficie.
  *
- * Un solo trazo por tramo (pedido del dueño): detrás de Axi sólido, delante
- * punteado, partido justo en él. Cada parada es un botón que filtra las cuentas.
+ * Un solo trazo por tramo (pedido del dueño): detrás del avión sólido, delante
+ * punteado, partido justo en él. Cada fijo es un botón que filtra las cuentas.
  */
 export function RunTrajectoryMap(props: RunTrajectoryMapProps) {
   const { status, startedLabel, modeLabel, now, failed, source, credits, next, nextDeparture, onRetry } = props;
   const atCap = credits.cap !== null && credits.spent >= credits.cap;
   return (
-    <section aria-label="La ruta de esta salida" className="@container/trip bg-card border-border min-w-0 overflow-hidden rounded-3xl border">
+    <section
+      aria-label="La ruta de esta salida"
+      className="surface-dark @container/trip border-border text-foreground min-w-0 overflow-hidden rounded-3xl border bg-[radial-gradient(120%_90%_at_20%_0%,color-mix(in_srgb,var(--foreground)_6%,var(--background))_0%,var(--background)_55%)]"
+    >
       <div className="relative z-[3] flex flex-wrap items-start justify-between gap-x-5 gap-y-3 px-[18px] pt-5 @[47.5rem]/trip:px-[26px] @[47.5rem]/trip:pt-6">
         <div className="min-w-0 max-w-[40rem]">
           <p className="text-muted-foreground flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px]">
@@ -106,7 +96,7 @@ export function RunTrajectoryMap(props: RunTrajectoryMapProps) {
       </div>
 
       <div className="hidden @[47.5rem]/trip:block">
-        <WideMap {...props} />
+        <NightChart {...props} />
       </div>
       <div className="px-[18px] pt-2 pb-1.5 @[47.5rem]/trip:hidden">
         <VerticalRoute {...props} />
@@ -180,26 +170,21 @@ function stopSpeech(stop: TrajectoryStop): string {
   return `${stop.label}: ${count}${state[stop.state]}${time}`;
 }
 
-/** Hasta dónde va el trazo sólido y dónde va Axi (tramo + fracción). */
-function routeTargets(trajectory: Trajectory, running: boolean): { solid: number; axi: number } {
-  const n = trajectory.stops.length;
-  const current = trajectory.currentIndex;
-  if (current >= n) return { solid: n + 1, axi: n + 1 };
-  if (current < 0) return { solid: 0, axi: 0 };
-  return { solid: running ? current + AXI_AT : current + 1, axi: current + AXI_AT };
+function prefersReducedMotion(): boolean {
+  return typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
 /**
- * La posición animada: cuando la salida avanza, Axi viaja en 1,2 s y el trazo
- * sólido avanza con él; con movimiento reducido salta de parada en parada.
+ * La posición animada en la aerovía (tramo + fracción): cuando la salida
+ * avanza, el avión viaja en 1,2 s y lo volado avanza con él; con movimiento
+ * reducido salta de fijo en fijo.
  */
 function useTravel(target: number): number {
   const [at, setAt] = useState(target);
   const current = useRef(target);
   useEffect(() => {
     const from = current.current;
-    const reduced = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced || target <= from || typeof window.requestAnimationFrame !== "function") {
+    if (prefersReducedMotion() || target <= from || typeof window.requestAnimationFrame !== "function") {
       current.current = target;
       setAt(target);
       return;
@@ -219,128 +204,213 @@ function useTravel(target: number): number {
   return at;
 }
 
-const NODE: Record<StopState, string> = {
-  done: "border-foreground bg-foreground",
-  now: "border-brand bg-card shadow-[0_0_0_6px_color-mix(in_srgb,var(--axi-brand)_18%,transparent)]",
-  wait: "border-warning bg-card shadow-[0_0_0_6px_color-mix(in_srgb,var(--axi-warning)_20%,transparent)]",
-  fail: "border-destructive bg-card shadow-[0_0_0_6px_color-mix(in_srgb,var(--axi-destructive)_16%,transparent)]",
-  todo: "border-foreground/35 bg-card",
-};
-/** Pausada: el nodo de la parada en curso, sin color de estado. */
-const NODE_PAUSED = "border-foreground bg-card shadow-[0_0_0_6px_color-mix(in_srgb,var(--foreground)_10%,transparent)]";
-
-/** Las paradas por donde puede salir alguien: su desvío va punteado aunque no salga nadie. */
-const EXIT_STOPS: readonly StopKey[] = ["qualify", "promote", "gate", "approve", "contact"];
-
-function WideMap({ trajectory, running, paused, credits, agentName, maxFlow, selected, onSelect }: RunTrajectoryMapProps) {
-  const gradient = useId();
-  const { stops, exits, currentIndex } = trajectory;
-  const points = stopPoints(stops.length);
-  const indexOf = (key: StopKey) => stops.findIndex((stop) => stop.key === key);
-  const finished = currentIndex >= stops.length;
-  const targets = routeTargets(trajectory, running);
-  const at = useTravel(targets.solid);
-  const { solid, todo } = splitAt(points, at);
-  const axi = pointAt(points, Math.min(at, targets.axi));
-  const widths = [...stops.map((stop) => flowWidth(stop.count, maxFlow)), flowWidth(stops.at(-1)?.count ?? null, maxFlow)];
-  // Cada parada lleva su anchura de etiqueta: el hueco entre paradas, en `cqw` del mapa.
-  const labelWidth = `${String((((points[1]?.x ?? MAP_W) - (points[0]?.x ?? 0)) * 0.98 * 100) / MAP_W)}cqw`;
-
-  const branches = exits.map((exit) => ({ exit, ...exitBranch(points[indexOf(exit.at)] ?? SOURCE_POINT) }));
-  const centers = exitCenters(branches.map((branch) => branch.x));
-  const empty = EXIT_STOPS.filter((key) => {
-    const index = indexOf(key);
-    return index >= 0 && stops[index]?.state === "done" && !exits.some((exit) => exit.at === key);
+/** Cada tramo, partido en `at`: lo volado y lo que falta (un solo trazo que se vuelve sólido en el avión). */
+function splitSegments(segments: readonly Cubic[], at: number): { flown: (Cubic | null)[]; ahead: (Cubic | null)[] } {
+  const flown: (Cubic | null)[] = [];
+  const ahead: (Cubic | null)[] = [];
+  segments.forEach((cubic, index) => {
+    const t = Math.min(1, Math.max(0, at - index));
+    if (t >= 1) {
+      flown.push(cubic);
+      ahead.push(null);
+    } else if (t <= 0) {
+      flown.push(null);
+      ahead.push(cubic);
+    } else {
+      const [behind, rest] = splitCubic(cubic, t);
+      flown.push(behind);
+      ahead.push(rest);
+    }
   });
+  return { flown, ahead };
+}
+
+/** Los fijos, como triángulos (16 × 14): hecho blanco, en curso coral, espera ámbar, falla rojo, pausa hueco. */
+const FIX: Record<StopState, string> = {
+  done: "fill-foreground stroke-foreground",
+  now: "fill-brand stroke-brand drop-shadow-[0_0_6px_var(--axi-brand)]",
+  wait: "fill-warning stroke-warning drop-shadow-[0_0_6px_var(--axi-warning)]",
+  fail: "fill-destructive stroke-destructive",
+  todo: "fill-background stroke-foreground/55",
+};
+const FIX_PAUSED = "fill-background stroke-foreground";
+
+function NightChart({ trajectory, running, paused, failed, agentName, maxFlow, selected, onSelect, source, departedHour }: RunTrajectoryMapProps) {
+  const ids = useId();
+  const flowGradient = `${ids}-flow`;
+  const hatch = `${ids}-hatch`;
+  const vignette = `${ids}-vignette`;
+  const trailGradient = `${ids}-trail`;
+  const { stops, exits, currentIndex } = trajectory;
+  const n = stops.length;
+  const { fixes, segments } = airway(n);
+  const indexOf = (key: StopKey) => stops.findIndex((stop) => stop.key === key);
+  const finished = currentIndex >= n;
+  const waiting = stops[currentIndex]?.state === "wait" && stops[currentIndex]?.key === "approve";
+  const target = finished ? n + 1 : currentIndex < 0 ? 0 : running ? currentIndex + AXI_AT : currentIndex + 1;
+  const at = useTravel(target);
+  const { flown, ahead } = splitSegments(segments, at);
+  const widths = [...stops.map((stop) => flowWidth(stop.count, maxFlow)), flowWidth(stops.at(-1)?.count ?? null, maxFlow)];
+  const labelWidth = `${String((((fixes[1]?.x ?? CHART_W) - (fixes[0]?.x ?? 0)) * 0.98 * 100) / CHART_W)}cqw`;
+  const reduced = prefersReducedMotion();
+
+  // El avión: en ruta al 80 % del tramo de llegada (con su estela); esperando, en el circuito; terminado, en el aeropuerto.
+  const approveIndex = indexOf("approve");
+  const approveFix = fixes[approveIndex];
+  let plane: { at: Point; heading: number } = { at: TOWER, heading: -45 };
+  let trail: Cubic | null = null;
+  if (waiting && approveFix !== undefined) {
+    plane = { at: { x: approveFix.x - 22, y: approveFix.y - 44 }, heading: 180 };
+  } else if (finished) {
+    const last = segments.at(-1);
+    plane = { at: AIRPORT, heading: last === undefined ? 0 : headingOf(last) };
+  } else if (currentIndex >= 0) {
+    const segment = segments[currentIndex];
+    if (segment !== undefined) {
+      const t = Math.max(0.001, Math.min(AXI_AT, at - currentIndex));
+      const [upto] = splitCubic(segment, t);
+      plane = { at: upto[3], heading: headingOf(upto) };
+      trail = splitCubic(upto, 0.2)[1];
+    }
+  }
+
+  const branches = exits.map((exit) => {
+    const from = fixes[indexOf(exit.at)] ?? TOWER;
+    const x = from.x + (exit.at === "gate" ? 0 : 54);
+    return {
+      exit,
+      x,
+      d: `M${fmt(from.x)} ${fmt(from.y)} C${fmt(from.x + 30)} ${fmt(from.y + 10)} ${fmt(x)} ${fmt(from.y + 30)} ${fmt(x)} ${fmt(from.y + 80)} L${fmt(x)} ${fmt(CHART_H + 2)}`,
+    };
+  });
+  const centers = exitCenters(branches.map((branch) => (branch.x / CHART_W) * 1000));
+  const blocked = exits.find((exit) => exit.at === "gate")?.total ?? 0;
   const found = stops[0]?.count ?? 0;
   const qualified = stops.find((stop) => stop.key === "qualify")?.count ?? 0;
-  const qualifyIndex = indexOf("qualify");
-  const toll =
-    trajectory.credits !== null && trajectory.credits > 0 && qualifyIndex >= 0
-      ? { from: points[qualifyIndex] ?? SOURCE_POINT, to: points[qualifyIndex + 1] ?? DEST_POINT }
-      : null;
   const destination = destinationRows(trajectory.destination, agentName ?? undefined);
 
   return (
     <>
-      <div className="relative w-full" style={{ aspectRatio: `${String(MAP_W)} / ${String(MAP_H)}` }}>
-        <svg aria-hidden viewBox={`0 0 ${String(MAP_W)} ${String(MAP_H)}`} preserveAspectRatio="none" className="absolute inset-0 size-full overflow-visible">
+      <div className="relative w-full" style={{ aspectRatio: `${String(CHART_W)} / ${String(CHART_H)}` }}>
+        <svg aria-hidden viewBox={`0 0 ${String(CHART_W)} ${String(CHART_H)}`} preserveAspectRatio="none" className="absolute inset-0 size-full overflow-visible">
           <defs>
-            <linearGradient id={gradient} x1="0" x2="1">
+            <linearGradient id={flowGradient} x1="0" x2="1">
               <stop offset="0" stopColor="var(--axi-brand)" />
               <stop offset="1" stopColor="var(--axi-brand-2)" />
             </linearGradient>
+            <pattern id={hatch} width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <line x1="0" y1="0" x2="0" y2="9" strokeWidth={2} className="stroke-foreground/10" />
+            </pattern>
+            <radialGradient id={vignette} cx="50%" cy="45%" r="75%">
+              <stop offset="55%" style={{ stopColor: "var(--background)", stopOpacity: 0 }} />
+              <stop offset="100%" style={{ stopColor: "var(--background)", stopOpacity: 0.55 }} />
+            </radialGradient>
+            {trail !== null && (
+              <linearGradient id={trailGradient} gradientUnits="userSpaceOnUse" x1={trail[0].x} y1={trail[0].y} x2={trail[3].x} y2={trail[3].y}>
+                <stop offset="0" style={{ stopColor: "var(--foreground)", stopOpacity: 0 }} />
+                <stop offset="1" style={{ stopColor: "var(--foreground)", stopOpacity: 0.7 }} />
+              </linearGradient>
+            )}
           </defs>
-          <g>
-            {contourPaths().map((contour, index) => (
-              <path key={index} d={contour.d} fill="none" strokeWidth={1} className={contour.soft ? "stroke-foreground/[0.03]" : "stroke-foreground/5"} />
+
+          {/* El paisaje, estático y tenue. */}
+          <g fill="none">
+            <path d={LAND.grid} strokeWidth={1} className="stroke-foreground/[0.035]" />
+            <path d={LAND.river} strokeWidth={34} strokeLinecap="round" className="stroke-foreground/[0.03]" />
+            <path d={LAND.contours} strokeWidth={1} className="stroke-foreground/[0.06]" />
+            {LAND.farAirways.map((d) => (
+              <path key={d} d={d} strokeWidth={1} strokeDasharray="2 6" className="stroke-foreground/10" />
             ))}
           </g>
           <g>
-            {cityDots(found > 0 ? found : 25).map((dot, index) => (
-              <circle key={index} cx={dot.x} cy={dot.y} r={2.2} className={found > 0 && index < qualified ? "fill-brand" : "fill-foreground/40"} />
+            {LAND.lights.map((light, index) => (
+              <circle key={index} cx={light.x} cy={light.y} r={light.glow > 0.8 ? 1.6 : 1} className="fill-foreground" opacity={0.14 + light.glow * 0.3} />
             ))}
           </g>
+
+          {/* El espacio restringido: tu política, que la ruta rodea. */}
+          <path d={LAND.zone} fill={`url(#${hatch})`} strokeWidth={1} strokeDasharray="5 4" className="stroke-foreground/[0.22]" />
+
+          {/* La torre: los anillos del radar, la barrida quieta y los negocios encontrados. */}
+          <g fill="none">
+            {[16, 30, 44].map((r) => (
+              <circle key={r} cx={TOWER.x} cy={TOWER.y} r={r} strokeWidth={1} className="stroke-foreground/[0.16]" />
+            ))}
+            <line x1={TOWER.x} y1={TOWER.y} x2={TOWER.x + 31} y2={TOWER.y - 31} strokeWidth={1.2} className="stroke-foreground/[0.32]" />
+          </g>
+          {Array.from({ length: Math.min(found > 0 ? found : 25, 30) }, (_, index) => {
+            const a = index * 2.399;
+            const r = 5 + Math.sqrt(index) * 6;
+            return (
+              <circle
+                key={index}
+                cx={TOWER.x + r * Math.cos(a)}
+                cy={TOWER.y + r * Math.sin(a)}
+                r={1.6}
+                className={found > 0 && index < qualified ? "fill-brand" : "fill-foreground/50"}
+              />
+            );
+          })}
+
+          {/* Los desvíos: ramas de un pelo que bajan a sus cajas. */}
           {branches.map(({ exit, d }) => (
-            <path key={exit.at} data-exit="taken" d={d} fill="none" strokeWidth={1.5} strokeLinecap="round" className="stroke-foreground/[0.16]" />
+            <path key={exit.at} data-exit="taken" d={d} fill="none" strokeWidth={1.2} className="stroke-foreground/[0.22]" />
           ))}
-          {empty.map((key) => (
-            <path
-              key={key}
-              data-exit="empty"
-              d={emptyBranch(points[indexOf(key)] ?? SOURCE_POINT)}
-              fill="none"
-              strokeWidth={1.5}
-              strokeDasharray="3 6"
-              className="stroke-foreground/[0.22]"
-            />
-          ))}
-          {todo.map((cubic, index) =>
-            cubic === null ? null : (
+
+          {/* La aerovía: lo que falta, punteado; el tramo siguiente avanza solo mientras la salida va en ruta. */}
+          {ahead.map((cubic, index) => {
+            if (cubic === null) return null;
+            const next = running && index === currentIndex;
+            return (
               <path
-                key={`todo-${String(index)}`}
+                key={`ahead-${String(index)}`}
                 d={cubicPath(cubic)}
                 fill="none"
-                strokeWidth={2}
-                strokeDasharray="2 8"
+                strokeWidth={1.6}
+                strokeDasharray="3 6"
                 strokeLinecap="round"
-                className="stroke-foreground/35"
-                opacity={index === stops.length ? 0.6 : 1}
-              />
-            ),
+                className={next ? "stroke-brand/80" : "stroke-foreground/[0.32]"}
+              >
+                {next && !reduced && <animate attributeName="stroke-dashoffset" from="9" to="0" dur="1.2s" repeatCount="indefinite" />}
+              </path>
+            );
+          })}
+          {waiting && approveFix !== undefined && (
+            <ellipse cx={approveFix.x} cy={approveFix.y - 34} rx={34} ry={13} fill="none" strokeWidth={1.2} strokeDasharray="4 4" className="stroke-foreground/50" />
           )}
           <g data-flows>
-            {solid.map((cubic, index) =>
+            {flown.map((cubic, index) =>
               cubic === null ? null : (
-                <path
-                  key={`flow-${String(index)}`}
-                  d={cubicPath(cubic)}
-                  fill="none"
-                  stroke={`url(#${gradient})`}
-                  strokeLinecap="round"
-                  strokeWidth={Math.max(2, widths[index] ?? 2)}
-                />
+                <g key={`flown-${String(index)}`}>
+                  <path d={cubicPath(cubic)} fill="none" strokeLinecap="round" strokeWidth={(widths[index] ?? 2) + 5} className="stroke-brand opacity-[0.18] blur-[4px]" />
+                  <path d={cubicPath(cubic)} fill="none" stroke={`url(#${flowGradient})`} strokeLinecap="round" strokeWidth={Math.max(2, widths[index] ?? 2)} />
+                </g>
               ),
             )}
           </g>
+          {trail !== null && <path d={cubicPath(trail)} fill="none" stroke={`url(#${trailGradient})`} strokeWidth={2.4} strokeLinecap="round" />}
+          <rect width={CHART_W} height={CHART_H} fill={`url(#${vignette})`} />
         </svg>
 
         {stops.map((stop, index) => {
-          const point = points[index] ?? SOURCE_POINT;
+          const point = fixes[index] ?? TOWER;
           const previous = stops[index - 1]?.count ?? null;
-          const node = paused && index === currentIndex ? NODE_PAUSED : NODE[stop.state];
+          const holding = waiting && stop.key === "approve";
+          const fix = paused && index === currentIndex ? FIX_PAUSED : FIX[stop.state];
+          const fuel = stop.key === "qualify" && trajectory.credits !== null && trajectory.credits > 0 ? trajectory.credits : null;
           return (
             <div
               key={stop.key}
               data-state={stop.state}
               className="absolute z-[2] grid -translate-x-1/2 -translate-y-1/2 place-items-center"
-              style={{ left: pct(point.x, MAP_W), top: pct(point.y, MAP_H) }}
+              style={{ left: pct(point.x, CHART_W), top: pct(point.y, CHART_H) }}
             >
               <span
                 aria-hidden
                 className={cn(
-                  "absolute bottom-[calc(100%+8px)] left-1/2 -translate-x-1/2 leading-none whitespace-nowrap tabular-nums",
-                  stop.state === "todo" ? "text-muted-foreground text-base" : "font-heading text-[26px] font-bold tracking-[-0.02em]",
+                  "absolute left-1/2 -translate-x-1/2 leading-none whitespace-nowrap tabular-nums [text-shadow:0_0_8px_var(--background),0_0_3px_var(--background)]",
+                  holding ? "bottom-[calc(100%+44px)]" : "bottom-[calc(100%+8px)]",
+                  stop.state === "todo" ? "text-foreground/45 text-base" : "font-heading text-2xl font-bold tracking-[-0.02em]",
                 )}
               >
                 {stop.count === null ? "—" : String(stop.count)}
@@ -355,53 +425,67 @@ function WideMap({ trajectory, running, paused, credits, agentName, maxFlow, sel
                 onClick={() => onSelect(stop.key)}
                 className="focus-visible:outline-ring relative grid size-6 place-items-center rounded-full before:absolute before:-inset-2.5 focus-visible:outline-2 focus-visible:outline-offset-4"
               >
-                <span
-                  className={cn(
-                    "block border-2",
-                    stop.gate ? "size-3.5 rotate-45 rounded-[4px]" : "size-4 rounded-full",
-                    node,
-                    selected === stop.key && "outline-foreground outline-2 outline-offset-4",
-                  )}
-                />
+                <svg viewBox="0 0 16 14" width={16} height={14} className={cn("overflow-visible", fix, selected === stop.key && "drop-shadow-[0_0_4px_var(--foreground)]")}>
+                  <path d="M8 1 15 13H1Z" strokeWidth={1.5} strokeLinejoin="round" />
+                </svg>
               </button>
-              <span
-                aria-hidden
-                className="pointer-events-none absolute top-[calc(100%+6px)] left-1/2 -translate-x-1/2 text-center leading-tight"
-                style={{ width: labelWidth }}
-              >
-                <b className={cn("block text-[12.5px] text-balance", stop.state === "todo" ? "text-muted-foreground font-normal" : "font-medium")}>{stop.label}</b>
-                <span className="text-muted-foreground block text-[11px] text-balance">{stop.sub}</span>
-                {stop.time !== null && <span className="text-muted-foreground block font-mono text-[10.5px]">{stop.time}</span>}
+              <span aria-hidden className="pointer-events-none absolute top-[calc(100%+6px)] left-1/2 -translate-x-1/2 text-center leading-tight" style={{ width: labelWidth }}>
+                <b className={cn("block text-[12.5px] text-balance", stop.state === "todo" ? "text-foreground/60 font-normal" : "font-medium")}>{stop.label}</b>
+                <span className="text-foreground/60 block text-[11px] text-balance">{stop.sub}</span>
+                {(stop.time !== null || fuel !== null) && (
+                  <span className="text-muted-foreground block font-mono text-[10.5px]">
+                    {stop.time}
+                    {fuel !== null && (
+                      <i
+                        className="text-[var(--axi-amber)] not-italic"
+                        title="Revelar el correo: 1 crédito por cuenta y el celular, 8; de tu saldo en Apollo y solo si lo encuentra"
+                      >
+                        {stop.time !== null ? " · " : ""}
+                        {String(fuel)} {fuel === 1 ? "crédito" : "créditos"}
+                      </i>
+                    )}
+                  </span>
+                )}
               </span>
             </div>
           );
         })}
 
-        {toll !== null && (
+        {/* Los rótulos de la carta. */}
+        <span
+          aria-hidden
+          className="text-foreground/55 pointer-events-none absolute z-[2] -translate-x-1/2 -translate-y-1/2 text-center text-[10.5px] leading-snug whitespace-nowrap"
+          style={{ left: pct(Math.max(TOWER.x, 70), CHART_W), top: pct(TOWER.y + 52, CHART_H) }}
+        >
+          <b className="text-foreground/80 block text-[10px] font-semibold tracking-[0.16em]">TORRE</b>
+          {[source?.label, departedHour === null ? null : `salió ${departedHour}`].filter(Boolean).join(" · ")}
+        </span>
+        <span
+          aria-hidden
+          className="text-foreground/55 pointer-events-none absolute z-[2] -translate-x-1/2 -translate-y-1/2 text-center text-[10.5px] leading-snug whitespace-nowrap"
+          style={{ left: pct(RESTRICTED.x, CHART_W), top: pct(RESTRICTED.y, CHART_H) }}
+        >
+          <b className="text-foreground/80 block text-[10px] font-semibold tracking-[0.16em]">ESPACIO RESTRINGIDO</b>
+          Tu política · {blocked > 0 ? `${String(blocked)} ${blocked === 1 ? "frenada" : "frenadas"} aquí` : "bajas, habeas data, RNE, horario"}
+        </span>
+        {waiting && approveFix !== undefined && (
           <span
-            className="bg-background border-border absolute z-[2] inline-flex h-[22px] -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full border px-2 text-[11px] whitespace-nowrap shadow-[var(--shadow-float)]"
-            // Un poco pasada la mitad del tramo: a la mitad pisaba la cifra de «Calificar» en cajas de ~950 px.
-            style={{ left: pct(toll.from.x + (toll.to.x - toll.from.x) * 0.58, MAP_W), top: pct((toll.from.y + toll.to.y) / 2 - 30, MAP_H) }}
-            title="Revelar el correo: 1 crédito por cuenta y el celular, 8; de tu saldo en Apollo y solo si lo encuentra"
+            aria-hidden
+            className="text-warning pointer-events-none absolute z-[2] -translate-x-1/2 -translate-y-1/2 text-[9.5px] font-semibold tracking-[0.16em] whitespace-nowrap"
+            style={{ left: pct(approveFix.x + 46, CHART_W), top: pct(approveFix.y - 52, CHART_H) }}
           >
-            <Coins aria-hidden className="size-3 text-[var(--axi-amber)]" />
-            {String(trajectory.credits)} {trajectory.credits === 1 ? "crédito" : "créditos"}
+            EN ESPERA
           </span>
         )}
 
         <div
           className="absolute z-[2] w-32 -translate-x-1/2 text-center"
-          style={{ left: `min(${pct(DEST_POINT.x, MAP_W)}, calc(100% - 4.25rem))`, top: pct(DEST_POINT.y - 15, MAP_H) }}
+          style={{ left: `min(${pct(AIRPORT.x, CHART_W)}, calc(100% - 4.25rem))`, top: pct(AIRPORT.y - 14, CHART_H) }}
         >
-          <span
-            aria-hidden
-            className={cn(
-              "bg-background mx-auto mb-1.5 grid size-[30px] place-items-center rounded-full border-[1.5px]",
-              finished ? "border-foreground text-foreground border-solid" : "border-foreground/35 text-muted-foreground border-dashed",
-            )}
-          >
-            <Flag className="size-3.5" />
-          </span>
+          <svg aria-hidden viewBox="0 0 30 30" className={cn("mx-auto mb-1.5 size-[30px] fill-none stroke-[1.5]", finished ? "stroke-foreground" : "stroke-foreground/55")}>
+            <circle cx="15" cy="15" r="11" />
+            <line x1="4" y1="21" x2="26" y2="9" />
+          </svg>
           <b className="block text-[12.5px] font-medium">Lo que viene</b>
           {destination.rows.length > 0 ? (
             <ul className="text-muted-foreground mt-1.5 text-[11.5px]">
@@ -417,12 +501,22 @@ function WideMap({ trajectory, running, paused, credits, agentName, maxFlow, sel
           )}
         </div>
 
-        <AxiCoin
-          live={running}
-          paused={paused}
-          className="absolute z-[4] -translate-x-1/2 -translate-y-1/2"
-          style={{ left: pct(axi.x, MAP_W), top: pct(axi.y, MAP_H) }}
-        />
+        {/* Tráfico: dos avionetas lejanas, quietas. */}
+        <TopPlane aria-hidden size={12} heading={-12} className="text-foreground/[0.28] absolute z-[1] -translate-x-1/2 -translate-y-1/2" style={{ left: pct(300, CHART_W), top: pct(24, CHART_H) }} />
+        <TopPlane aria-hidden size={11} heading={-14} className="text-foreground/[0.28] absolute z-[1] -translate-x-1/2 -translate-y-1/2" style={{ left: pct(860, CHART_W), top: pct(300, CHART_H) }} />
+
+        <span
+          aria-hidden
+          data-plane={running ? "live" : paused ? "paused" : failed ? "grounded" : waiting ? "holding" : "still"}
+          className={cn(
+            "absolute z-[4] grid size-[34px] -translate-x-1/2 -translate-y-1/2 place-items-center drop-shadow-[0_0_6px_color-mix(in_srgb,var(--foreground)_35%,transparent)]",
+            paused ? "text-foreground/55" : failed ? "text-destructive" : "text-foreground",
+          )}
+          style={{ left: pct(plane.at.x, CHART_W), top: pct(plane.at.y, CHART_H) }}
+        >
+          {running && <span className="border-foreground/60 absolute inset-0 rounded-full border-[1.5px] motion-safe:animate-ping motion-reduce:opacity-40" />}
+          <TopPlane size={26} heading={plane.heading} />
+        </span>
       </div>
 
       {/* Las cajas de desvío, bajo su rama: en flujo, crecen con su texto y no se pisan ni se salen. */}
@@ -431,14 +525,30 @@ function WideMap({ trajectory, running, paused, credits, agentName, maxFlow, sel
           const left = (centers[order] ?? 0) - EXIT_W / 2;
           const previous = centers[order - 1];
           const gap = left - (previous === undefined ? 0 : previous + EXIT_W / 2);
-          return <ExitCard key={exit.at} exit={exit} className="shrink-0" style={{ marginLeft: pct(gap, MAP_W), width: pct(EXIT_W, MAP_W) }} />;
+          return <ExitCard key={exit.at} exit={exit} className="shrink-0" style={{ marginLeft: pct(gap, 1000), width: pct(EXIT_W, 1000) }} />;
         })}
       </div>
-      {/* Sin desvíos, el mapa cierra con su respiro. */}
-      {branches.length === 0 && credits.cap === null && <span className="block h-2" />}
     </>
   );
 }
+
+/** El avión visto desde arriba (la silueta de la landing), girado a su rumbo. */
+function TopPlane({
+  size,
+  heading,
+  className,
+  style,
+  ...rest
+}: { size: number; heading: number; className?: string; style?: React.CSSProperties } & React.AriaAttributes) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} className={cn("overflow-visible", className)} style={{ ...style, rotate: `${String(heading + 90)}deg` }} {...rest}>
+      <path d={TOP_PLANE_PATH} fill="currentColor" />
+    </svg>
+  );
+}
+
+const fmt = (value: number) => String(Math.round(value * 10) / 10);
+
 
 function ExitCard({ exit, className, style }: { exit: TrajectoryExit; className?: string; style?: React.CSSProperties }) {
   return (
@@ -492,7 +602,11 @@ function VerticalRoute({ trajectory, paused, running, agentName, maxFlow }: RunT
                 style={{ width: nextSolid ? bar : undefined }}
               />
               <span className={cn("relative z-[1] mt-[3px] block size-4 border-2", stop.gate ? "scale-90 rotate-45 rounded-[4px]" : "rounded-full", node)} />
-              {index === currentIndex && <AxiCoin live={running} paused={paused} className="absolute -top-[9px] left-0.5 z-[3]" />}
+              {index === currentIndex && (
+                <span aria-hidden data-plane={running ? "live" : "still"} className={cn("bg-background absolute -top-[9px] left-0.5 z-[3] grid size-9 place-items-center rounded-full", paused ? "text-foreground/55" : "text-foreground")}>
+                  <TopPlane size={22} heading={90} />
+                </span>
+              )}
             </span>
             <span aria-hidden className="min-w-0">
               <b className={cn("block text-sm", stop.state === "todo" ? "text-muted-foreground font-normal" : "font-medium")}>{stop.label}</b>
@@ -509,7 +623,11 @@ function VerticalRoute({ trajectory, paused, running, agentName, maxFlow }: RunT
       <li data-state={finished ? "done" : "todo"} className="relative grid min-h-[54px] grid-cols-[40px_minmax(0,1fr)_auto] items-start gap-x-2.5">
         <span aria-hidden className="relative flex justify-center self-stretch">
           <span className="border-foreground/35 bg-card relative z-[1] mt-[3px] block size-4 rounded-full border-2 border-dashed" />
-          {finished && <AxiCoin className="absolute -top-[9px] left-0.5 z-[3]" />}
+          {finished && (
+            <span aria-hidden className="bg-background text-foreground absolute -top-[9px] left-0.5 z-[3] grid size-9 place-items-center rounded-full">
+              <TopPlane size={22} heading={90} />
+            </span>
+          )}
         </span>
         <span className="min-w-0">
           <b className="block text-sm font-medium">Lo que viene</b>

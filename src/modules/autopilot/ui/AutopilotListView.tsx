@@ -12,7 +12,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { MarketingHeader } from "@/modules/marketing/ui/components/MarketingHeader";
 
-import { ROUTINE_MODE_META, scheduleLabel, sourceLabel, sourceSummary, type RoutineListItem } from "../domain/autopilot";
+import { ROUTINE_MODE_META, RUN_STATUS_META, scheduleLabel, sourceLabel, sourceSummary, type RoutineListItem } from "../domain/autopilot";
 import { ahoraMismo, routineStatusLine } from "../domain/copy";
 import { runTrajectory } from "../domain/trajectory";
 import { isAutopilotUnavailable, listRoutines } from "../infrastructure/autopilot-service.adapter";
@@ -145,51 +145,41 @@ function RoutineCard({ routine, canManage, onChanged }: { routine: RoutineListIt
   const live = run !== null && (run.status === "running" || run.status === "queued");
   const waiting = run !== null && run.status === "awaiting_approval";
   const source = sourceLabel(routine.source.kind);
-  const summary = sourceSummary(routine.source.params);
   const status = routineStatusLine(routine);
+  const mode = ROUTINE_MODE_META[routine.mode];
   const trajectory = run === null ? null : runTrajectory(run, routine);
-  const next =
-    routine.status === "paused" ? "al reanudar" : routine.next_run_at === null ? "sin programar" : whenLabel(routine.next_run_at, routine.schedule.timezone);
-  const meta = [`${source.label} · ${summary}`, scheduleLabel(routine.schedule), ROUTINE_MODE_META[routine.mode].label];
+  const timeZone = routine.schedule.timezone;
+  const next = routine.status === "paused" ? "al reanudar" : routine.next_run_at === null ? "sin programar" : whenLabel(routine.next_run_at, timeZone);
+  // «Espera tu aprobación · hoy, 8:00 · 0 contactados · 9 créditos»: la última salida en una línea.
+  const lastLine =
+    run === null
+      ? "Todavía no ha salido."
+      : [
+          RUN_STATUS_META[run.status].label,
+          whenLabel(run.created_at, timeZone),
+          `${String(run.counters.contacted ?? 0)} contactados`,
+          `${String(run.credits_spent)} ${run.credits_spent === 1 ? "crédito" : "créditos"}`,
+        ].join(" · ");
 
   return (
-    <article className="bg-card border-border flex min-w-0 flex-col gap-3 rounded-3xl border p-5 sm:px-[22px]">
-      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
-        <div className="min-w-0">
-          <h3 className="font-heading text-xl leading-tight font-bold tracking-[-0.02em]">
-            <Link href={`/marketing/autopilot/${routine.id}`} className="break-words hover:underline">
-              {routine.name}
-            </Link>
-          </h3>
-          <p className="text-muted-foreground mt-1.5 flex flex-wrap gap-x-2 gap-y-0.5 text-[13px]">
-            {meta.map((part, index) => (
-              <span key={part} className="flex gap-2">
-                {index > 0 && <span aria-hidden>·</span>}
-                {part}
-              </span>
-            ))}
-          </p>
-          <p className="text-muted-foreground mt-0.5 text-xs text-pretty">
-            {String(routine.schedule.leads_per_run)} cuentas y hasta {String(routine.budget.per_run)} créditos por salida · próxima salida: {next}
-          </p>
-        </div>
+    <article className="bg-card border-border @container/card flex min-w-0 flex-col gap-4 rounded-3xl border p-5 sm:px-[22px]">
+      <div className="flex items-center justify-between gap-2.5">
+        <span className="text-muted-foreground text-xs">Ruta · {mode.label.toLowerCase()}</span>
         <StatusDot tone={status.tone} live={status.live}>
           {status.label}
         </StatusDot>
       </div>
-
-      {trajectory !== null && (
-        <MiniTrajectory
-          trajectory={trajectory}
-          running={run?.status === "running"}
-          maxFlow={Math.max(routine.schedule.leads_per_run, ...trajectory.stops.map((stop) => stop.count ?? 0))}
-        />
-      )}
-
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        {canManage ? <ActionCapsule routine={routine} lastRun={run?.status ?? null} withEdit={false} onChanged={onChanged} /> : <span />}
+      <div className="flex flex-col items-start justify-between gap-3.5 @[38.75rem]/card:flex-row">
+        <div className="min-w-0">
+          <h3 className="font-heading text-[21px] leading-tight font-bold tracking-[-0.02em]">
+            <Link href={`/marketing/autopilot/${routine.id}`} className="break-words hover:underline">
+              {routine.name}
+            </Link>
+          </h3>
+          <p className="text-muted-foreground mt-1 text-[13.5px] text-pretty">{lastLine}</p>
+        </div>
         {run !== null && (
-          <Button asChild variant={waiting ? "default" : "outline"} className="rounded-full">
+          <Button asChild variant="glass" className="h-[38px] shrink-0 px-[18px]">
             <Link href={`/marketing/autopilot/runs/${run.id}`}>
               {waiting ? "Revisar el lote" : live ? "Ver en vivo" : "Ver la salida"}
               <ArrowRight aria-hidden className="size-3.5" />
@@ -197,6 +187,50 @@ function RoutineCard({ routine, canManage, onChanged }: { routine: RoutineListIt
           </Button>
         )}
       </div>
+
+      {trajectory !== null && run !== null && (
+        <MiniTrajectory
+          trajectory={trajectory}
+          running={run.status === "running"}
+          showPlane={run.status === "running" || run.status === "awaiting_approval" || run.status === "paused"}
+        />
+      )}
+
+      <div className="grid gap-2.5 @[38.75rem]/card:grid-cols-3">
+        <Zone title="Busca" lines={[sourceSummary(routine.source.params)]}>
+          <span aria-hidden className="bg-foreground text-background grid size-5 shrink-0 place-items-center rounded-full text-[10.5px] font-semibold">
+            {source.initial}
+          </span>
+          {source.label}
+        </Zone>
+        <Zone title="Cuándo y cuánto" lines={[`${String(routine.schedule.leads_per_run)} cuentas y hasta ${String(routine.budget.per_run)} créditos por salida`, `Próxima salida: ${next}`]}>
+          {scheduleLabel(routine.schedule)}
+        </Zone>
+        <Zone title="Modo" lines={[mode.hint]}>
+          {mode.label}
+        </Zone>
+      </div>
+
+      {canManage && (
+        <div>
+          <ActionCapsule routine={routine} lastRun={run?.status ?? null} withEdit={false} onChanged={onChanged} />
+        </div>
+      )}
     </article>
+  );
+}
+
+/** Una zona de la tarjeta: Busca · Cuándo y cuánto · Modo. */
+function Zone({ title, lines = [], children }: { title: string; lines?: string[]; children: React.ReactNode }) {
+  return (
+    <div className="bg-foreground/[0.04] min-w-0 rounded-2xl px-4 py-3.5">
+      <p className="text-muted-foreground text-xs font-medium">{title}</p>
+      <p className="mt-1.5 flex min-w-0 items-center gap-2 text-[14.5px] font-semibold break-words">{children}</p>
+      {lines.map((line) => (
+        <p key={line} className="text-muted-foreground mt-[3px] text-[12.5px] text-pretty">
+          {line}
+        </p>
+      ))}
+    </div>
   );
 }
