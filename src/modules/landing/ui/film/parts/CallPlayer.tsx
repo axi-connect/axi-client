@@ -49,7 +49,6 @@ export function CallPlayer() {
     const pearl = section?.querySelector<HTMLButtonElement>(".film-call-pearl");
     if (!a0 || !a1 || !section || !pearl) return;
     const audio = [a0, a1];
-    const st = section.style;
     const q = <T extends Element = HTMLElement>(sel: string) => Array.from(section.querySelectorAll<T & HTMLElement>(sel));
     const words = [q(`[data-call-track="0"] .film-call-w`), q(`[data-call-track="1"] .film-call-w`)];
     const notes = q(".film-call-note");
@@ -57,6 +56,32 @@ export function CallPlayer() {
     const clock = q("[data-call=clock]");
     const status = q("[data-call=status]");
     const glyph = pearl.querySelector("path");
+
+    // Cada variable se escribe SOLO en los elementos que la leen: escrita en la
+    // sección, invalidaba el estilo de toda la escena en cada frame (perfil del
+    // 2026-10-01 con CPU × 4: p50 de 83 ms sonando). Y solo si cambió.
+    type Sink = { el: HTMLElement; vars: string[]; last: Map<string, string> };
+    const sinks: Sink[] = [];
+    const sink = (sel: string, vars: string[]) => {
+      for (const el of q(sel)) sinks.push({ el, vars, last: new Map() });
+    };
+    sink(".film-call-cor", BANDS);
+    sink(".film-call-fields", ["--lo", "--mid", "--hi", "--e"]);
+    q(".film-call-orbit").forEach((el, i) => sinks.push({ el, vars: [["--lo", "--mid", "--hi"][i] ?? "--e"], last: new Map() }));
+    sink(".film-call-reflect, .film-call-ripples, .film-call-bloom, .film-call-core", ["--e"]);
+    sink(".film-call-wave", ["--p"]);
+    const values = new Map<string, string>();
+    const set = (k: string, v: string) => values.set(k, v);
+    const flush = () => {
+      for (const s of sinks) {
+        for (const k of s.vars) {
+          const v = values.get(k);
+          if (v === undefined || s.last.get(k) === v) continue;
+          s.last.set(k, v);
+          s.el.style.setProperty(k, v);
+        }
+      }
+    };
 
     let ctx: AudioContext | undefined;
     let an: AnalyserNode | undefined;
@@ -99,8 +124,9 @@ export function CallPlayer() {
       if (raf) cancelAnimationFrame(raf);
       raf = 0;
       lv.fill(0);
-      for (const k of VARS) st.setProperty(k, "0");
-      if (end) st.setProperty("--p", "1");
+      for (const k of VARS) set(k, "0");
+      if (end) set("--p", "1");
+      flush();
     };
 
     const loop = () => {
@@ -109,7 +135,7 @@ export function CallPlayer() {
       const step = () => {
         const local = audio[track].currentTime;
         const t = Math.min(CALL_TOTAL, CALL_START[track] + local);
-        st.setProperty("--p", (t / CALL_TOTAL).toFixed(4));
+        set("--p", (t / CALL_TOTAL).toFixed(3));
         if (an && bins && !calm) {
           an.getByteFrequencyData(bins);
           let sum = 0;
@@ -119,13 +145,14 @@ export function CallPlayer() {
             const v = clamp01(((a / (EDGES[k + 1] - EDGES[k]) / 255) * GAIN[k] - 0.3) / 0.6);
             lv[k] += (v - lv[k]) * (v > lv[k] ? 0.55 : 0.16);
             sum += lv[k];
-            st.setProperty(BANDS[k], lv[k].toFixed(3));
+            set(BANDS[k], lv[k].toFixed(2));
           }
-          st.setProperty("--lo", ((lv[0] + lv[1] + lv[2]) / 3).toFixed(3));
-          st.setProperty("--mid", ((lv[3] + lv[4] + lv[5]) / 3).toFixed(3));
-          st.setProperty("--hi", ((lv[6] + lv[7]) / 2).toFixed(3));
-          st.setProperty("--e", (sum / 8).toFixed(3));
+          set("--lo", ((lv[0] + lv[1] + lv[2]) / 3).toFixed(2));
+          set("--mid", ((lv[3] + lv[4] + lv[5]) / 3).toFixed(2));
+          set("--hi", ((lv[6] + lv[7]) / 2).toFixed(2));
+          set("--e", (sum / 8).toFixed(2));
         }
+        flush();
         // Lo discreto solo se repinta al cambiar: palabra, segundo, nota o etapa.
         const lit = words[track].filter((w) => at(w) <= local).length;
         const next = `${track}|${lit}|${Math.floor(t)}|${notes.filter((n) => at(n) <= t).length}|${stages.filter((s) => at(s) <= t).length}`;
@@ -172,7 +199,8 @@ export function CallPlayer() {
         done = false;
         key = "";
         section.toggleAttribute("data-started", true);
-        st.setProperty("--p", "0");
+        set("--p", "0");
+        flush();
       }
       playing = true;
       paint(CALL_START[track] + audio[track].currentTime);
