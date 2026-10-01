@@ -7,7 +7,7 @@
  * `engine/`, importa gsap y solo lo carga el motor diferido (verja de ESLint).
  */
 import { gsap } from "gsap";
-import type { ScrollTrigger } from "gsap/ScrollTrigger";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import { FILM_NICHES } from "@/modules/landing/domain/film/niches";
 
@@ -156,12 +156,58 @@ export const PINNED = new Set(["video", "radar", "pilot", "followup", "chat", "p
 export type Pass = { trigger?: Element; start?: string | (() => string); end?: string | (() => string) };
 
 /**
- * Si la escena se fija: en escritorio, en la lista y si cabe en la ventana. El
- * motor lo vuelve a preguntar tras cada refresh: si cambia solo el alto de la
- * ventana (DevTools, 1280 × 720) la película se rehace (ronda 2, R6).
+ * Si la escena se fija: en escritorio y en la lista, SIEMPRE. Si no cabe en la
+ * ventana, su contenido se escala hasta caber (`fitToViewport`). Antes, en un
+ * portátil bajo (1366 × 768 de pantalla son ~650 px de ventana) el piloto, la
+ * meta, la foto o cobrar caían al pase sin fijar: la animación empezaba con la
+ * escena asomando y acababa antes de encuadrarse (la dueña, 2026-10-01).
  */
 export function pinFits(section: HTMLElement, desktop: boolean): boolean {
-  return desktop && PINNED.has(section.dataset.scene ?? "") && section.offsetHeight <= window.innerHeight * 1.02;
+  return desktop && PINNED.has(section.dataset.scene ?? "");
+}
+
+/** Lo que va en el flujo de la escena (lo absoluto, como los mapas de fondo, ya llena la ventana). */
+function inFlow(el: Element, out: HTMLElement[] = []): HTMLElement[] {
+  for (const child of el.children) {
+    const cs = getComputedStyle(child);
+    if (cs.display === "contents") inFlow(child, out);
+    else if (cs.position !== "absolute" && cs.position !== "fixed" && cs.display !== "none") out.push(child as HTMLElement);
+  }
+  return out;
+}
+
+/** Escala mínima: por debajo, el texto deja de leerse; mejor que asome el pie. */
+const FIT_MIN = 0.6;
+
+/**
+ * Hace caber la escena fijada en la ventana con `zoom` sobre su contenido en
+ * el flujo (el piloto ya lo hacía por media query; `zoom` reflowea, así que la
+ * escena mide de verdad lo que se ve). Se mide antes de crear el trigger y en
+ * cada `refreshInit` (cambio de tamaño), nunca por frame.
+ */
+function fitToViewport(section: HTMLElement) {
+  const kids = inFlow(section);
+  const fit = () => {
+    for (const el of kids) el.style.removeProperty("zoom");
+    const over = section.offsetHeight / window.innerHeight;
+    if (over <= 1) return;
+    const k = Math.max(FIT_MIN, 0.985 / over);
+    const base = kids.map((el) => parseFloat(getComputedStyle(el).zoom) || 1);
+    kids.forEach((el, i) => (el.style.zoom = String(base[i] * k)));
+    // El zoom no siempre encoge en proporción (hay altos ligados a la ventana,
+    // como en medir): se vuelve a medir y se corrige hasta caber.
+    let total = k;
+    for (let i = 0; i < 3 && section.offsetHeight > window.innerHeight && total > FIT_MIN; i++) {
+      total = Math.max(FIT_MIN, total * ((0.985 * window.innerHeight) / section.offsetHeight));
+      kids.forEach((el, j) => (el.style.zoom = String(base[j] * total)));
+    }
+  };
+  fit();
+  ScrollTrigger.addEventListener("refreshInit", fit);
+  gsap.context()?.add(() => () => {
+    ScrollTrigger.removeEventListener("refreshInit", fit);
+    for (const el of kids) el.style.removeProperty("zoom");
+  });
 }
 
 export function sceneTimeline(section: HTMLElement, ctx: Ctx, length: number, pass: Pass = {}): gsap.core.Timeline {
@@ -179,6 +225,7 @@ export function sceneTimeline(section: HTMLElement, ctx: Ctx, length: number, pa
   // refresh completo de ScrollTrigger en el frame siguiente que revertía y
   // volvía a medir todos los pins: 11–13 refrescos de 300–700 ms con CPU ×4 al
   // construir (M5). Sin `pin` no hay nada que revertir y el refresh es barato.
+  if (fits) fitToViewport(section);
   const spacer = fits ? stick(section, length * PACE) : null;
   if (heads.length) {
     gsap.from(heads, { ...reveal, ease: "power2.out", scrollTrigger: { trigger: spacer ?? section, start: "top 88%", end: "top 30%", scrub: true } });

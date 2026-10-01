@@ -39,8 +39,6 @@ import {
   lerp,
   num,
   perNiche,
-  PINNED,
-  pinFits,
   sceneTimeline,
   segP,
   setText,
@@ -508,19 +506,9 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
   // (ronda 2, R8). Cada escena deja su coste en `performance` («film:<escena>»,
   // lo leen qa/qa-perfil.mjs y qa/qa-perfil-refresh.mjs).
   const SLICE_MS = 30;
-  // Si el visitante cambia solo el alto de la ventana y una escena deja de caber
-  // (o vuelve a caber), la película se rehace (R6). Lo de cada escena al construir:
-  const fitsAtBuild = new Map<HTMLElement, boolean>();
-  let rebuild = () => {};
-  const onRefreshed = () => {
-    for (const [section, fits] of fitsAtBuild) {
-      if (pinFits(section, desktopQuery.matches) !== fits) {
-        rebuild();
-        return;
-      }
-    }
-  };
-  ScrollTrigger.addEventListener("refresh", onRefreshed);
+  // Si cambia solo el alto de la ventana, las escenas fijadas siguen fijadas:
+  // su contenido se reescala en cada refresh (`fitToViewport`, kit), así que no
+  // hace falta rehacer la película (R6).
   // Cada refresh completo deja su coste en `performance` («film:refresh»): el
   // de escritorio con 13 pins era la tarea larga mayor (M5).
   let refreshAt = 0;
@@ -561,7 +549,6 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
       const intentsAtStart = intents;
       const finals: gsap.core.Timeline[] = [];
       const ctx: Ctx = { desktop: Boolean(context.conditions?.desktop), pins, settled, finals };
-      fitsAtBuild.clear();
       let next = 0;
       let alive = true;
       const buildOne = (section: HTMLElement) => {
@@ -628,7 +615,6 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
         else {
           ScrollTrigger.refresh();
           if (!landOnHash() && anchor && intents === intentsAtStart) restore(anchor);
-          for (const s of sections) if (PINNED.has(s.dataset.scene ?? "")) fitsAtBuild.set(s, pinFits(s, ctx.desktop));
           root.setAttribute("data-film-ready", "");
         }
       };
@@ -652,18 +638,6 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
     ScrollTrigger.update();
   };
   let mm = mount();
-  // Fuera del evento de refresh (revertir dentro de él deja a ScrollTrigger a medias).
-  let rebuilding = false;
-  rebuild = () => {
-    if (rebuilding) return;
-    rebuilding = true;
-    requestAnimationFrame(() => {
-      rebuilding = false;
-      if (stopped) return;
-      mm.revert();
-      mm = mount();
-    });
-  };
 
   // El hilo de luz, archivado por la dueña (plan §15): con `enabled: false` su
   // módulo (renderer WebGL incluido) ni se descarga. Encendido, llega después
@@ -719,7 +693,6 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
         gsap.ticker.remove(thread.frame);
         thread.destroy();
       }
-      ScrollTrigger.removeEventListener("refresh", onRefreshed);
       ScrollTrigger.removeEventListener("refreshInit", onRefreshInit);
       ScrollTrigger.removeEventListener("refresh", onRefreshDone);
       mm.revert();

@@ -78,8 +78,8 @@
 /* La franja pegada de móvil (piloto, meta; `stickyStrip` en el kit). En
    escritorio no pinta caja. En móvil es la rejilla de la escena y, con el
    motor (`data-stick`, nunca con movimiento reducido), la escena mide 560svh:
-   la franja mide ~960 px y quedan ~3.600 px para leer las mesetas (dueña,
-   2026-10-01: «que el usuario pueda leer»). */
+   la franja mide ~960 px y quedan ~3.600 px de recorrido con la franja ya
+   pegada, que es cuando corre la animación (dueña, 2026-10-01). */
 .film-strip { display: contents; }
 @media (max-width: 1023px) {
   .film-strip { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; }
@@ -1209,26 +1209,26 @@
   .film-ruler-bub { max-width: 100%; font-size: 13px; }
 }
 
-/* Portátiles de poca altura (1024×768, 1366×768, 1280×720): las escenas que se
-   fijan bajan un escalón para caber en la ventana y fijarse. Nunca por debajo
-   de 0,82 (más pequeño se lee mal): si aun así no cabe, va sin pin. */
+/* Portátiles de poca altura (1366 × 768 de pantalla son ~657 px de ventana).
+   Las escenas fijadas caben solas: `fitToViewport` (film-kit) escala su
+   contenido lo justo. Aquí solo se compacta para que ese zoom no baje de ~0,8
+   (más pequeño se lee mal). La llamada no se fija: conserva sus escalones. */
 @media (min-width: 1024px) and (max-height: 860px) {
   [data-scene="radar"] > .film-wrap,
-  [data-scene="followup"] > .film-wrap,
-  [data-scene="measure"] > .film-wrap { padding-block: 72px 32px; zoom: 0.94; }
+  [data-scene="measure"] > .film-wrap { padding-block: 72px 32px; }
+  [data-scene="followup"] > .film-wrap { padding-block: 72px 32px; }
   [data-scene="call"] > .film-call-layout { zoom: 0.94; }
 }
 @media (min-width: 1024px) and (max-height: 800px) {
-  [data-scene="radar"] > .film-wrap,
-  [data-scene="followup"] > .film-wrap,
-  [data-scene="measure"] > .film-wrap,
   [data-scene="call"] > .film-call-layout { zoom: 0.88; }
 }
 @media (min-width: 1024px) and (max-height: 740px) {
-  [data-scene="radar"] > .film-wrap,
-  [data-scene="followup"] > .film-wrap,
-  [data-scene="measure"] > .film-wrap,
   [data-scene="call"] > .film-call-layout { zoom: 0.82; }
+}
+@media (min-width: 1024px) and (max-height: 720px) {
+  [data-scene="followup"] > .film-wrap { padding-block: 56px 24px; }
+  [data-scene="collect"] > .film-wrap { padding-block: 64px 24px; }
+  [data-scene="measure"] > .film-wrap { padding-block: 56px 20px; }
 }
 
 /* La barra de scroll de la home va en tinta, no en coral (el resto del sitio

@@ -19,7 +19,6 @@ import {
 } from "./flight-route";
 import { easeInOut, easeOut, planeTransform, project, seg, type GoalCamera } from "./goal-camera";
 import { PILOT_COPY, type PilotStage, type PilotStatus } from "./pilot-content";
-import { storyAt, storyPlateaus, type StoryKnot } from "./story";
 
 const PILOT_STEP_NAMES: readonly string[] = PILOT_COPY.steps;
 import type { Point } from "./route-map";
@@ -63,53 +62,6 @@ export function planeAt(p: number): PlaneState {
   const f = lerp(FLIGHT_HOLD_FRACTION, 1, easeInOut(seg(p, 0.68, 0.9)));
   return { f, at: flightPointAt(f), hold: null };
 }
-
-/**
- * El guion de lectura (pedido de la dueña, 2026-10-01: «la animación avanza muy
- * rápido y me pierdo casi toda la info»): el scroll `p` del pin no recorre la
- * historia a ritmo fijo. `pilotStory(p)` devuelve el instante de la historia
- * (lo que recibe `pilotFrame`) con:
- * - una meseta en cada fijo: el avión se detiene encima mientras la cabina
- *   muestra ese paso (≈ 45–60 % del tramo de scroll del fijo);
- * - la meseta más larga en la espera sobre el fijo 5, con la política y el lote;
- * - una meseta final (aterrizado, la ficha y el ajuste) antes de soltar el pin;
- * - entre mesetas, vuelo con ease de entrada y de salida: sin saltos.
- *
- * Cada nudo es [instante de la historia, peso del vuelo hasta él, peso de su
- * meseta]; los pesos se reparten el scroll. Los instantes de los fijos son los
- * de `planeAt` (el avión cruza el fijo k cuando `f` = `FLIGHT_FIXES[k]`); la
- * espera usa 0,53, ya con el circuito encendido y el avión sobre el fijo, y el
- * lote aprobado, 0,67: el botón ya se hundió y el avión sigue sobre el fijo 5.
- */
-const STORY_KNOTS: readonly StoryKnot[] = [
-  [0, 0, 0],
-  [fixStory(0), 1.6, 1.1],
-  [fixStory(1), 0.6, 0.9],
-  [fixStory(2), 0.5, 0.9],
-  [fixStory(3), 0.8, 0.9],
-  [0.53, 1.2, 1.8],
-  [0.67, 1.0, 0.9],
-  [fixStory(5), 1.2, 0.9],
-  [1, 1.4, 1.0],
-];
-
-/** El instante en que el avión cruza el fijo `i` (búsqueda binaria sobre `planeAt`, que solo avanza). */
-function fixStory(i: number): number {
-  const target = FLIGHT_FIXES[i];
-  let lo = i < 5 ? 0.1 : 0.68;
-  let hi = i < 5 ? 0.52 : 0.9;
-  for (let k = 0; k < 40; k++) {
-    const m = (lo + hi) / 2;
-    if (planeAt(m).f < target) lo = m;
-    else hi = m;
-  }
-  return hi;
-}
-
-/** Las mesetas en `p` (para los tests y el QA): [desde, hasta, instante de la historia]. */
-export const PILOT_PLATEAUS = storyPlateaus(STORY_KNOTS);
-
-export const pilotStory = (p: number): number => storyAt(p, PILOT_PLATEAUS);
 
 /**
  * Adónde mira la cámara al alejarse al final. En escritorio, a toda la ruta;
@@ -297,8 +249,7 @@ export function pilotFrame(p: number, run: PilotRun, view: PilotView = {}) {
     /** Los canales encendidos (Correo, Llamada del agente, SMS), uno cada 0,03. */
     channels: [0.7, 0.73, 0.76].filter((t) => p >= t).length,
     /** Las líneas de la bitácora, cada una con su opacidad. */
-    // Cada línea termina de entrar antes de la meseta de su fijo (1 y 4): una
-    // línea a medio fundir y quieta parecía un error.
+    // Cada línea termina de entrar cuando el avión llega a su fijo (1 y 4).
     log: [0.12, 0.21, 0.34, 0.46].map((t) => easeOut(seg(p, t, t + 0.04))),
     /** El botón «Aprobar N y contactar» se hunde. */
     pressScale: 1 - 0.06 * press,
@@ -317,7 +268,7 @@ export function pilotFrame(p: number, run: PilotRun, view: PilotView = {}) {
     blip: fade(p, 0.04, 0.08, 0.2, 0.3),
     // Las tarjetas: su tramo y, además, el borde (sus bordes izquierdos: −60, −40 y −250 px de su marca).
     sourcesIn: fade(p, 0.2, 0.24, 0.32, 0.36) * edge(marks.sources.x - 60),
-    // Entra después del fijo 3 (su meseta deja a la vista solo las fuentes).
+    // Entra después del fijo 3: las fuentes y el decisor no se pisan.
     people: fade(p, 0.32, 0.35, 0.44, 0.48) * edge(marks.people.x - 40),
     zone: 0.6 + 0.4 * fade(p, 0.4, 0.44, 0.52, 0.58),
     /** La rotulación de la zona, con la misma regla del borde: la caja de escritorio (−110 px) y la etiqueta de móvil (−60 px). */

@@ -23,15 +23,31 @@ beforeEach(() => {
   Object.defineProperty(window, "innerHeight", { configurable: true, value: 900 })
 })
 
-describe("pinFits (R6)", () => {
-  it("se fija en escritorio si está en la lista y cabe; con la ventana más baja, ya no", () => {
-    const s = scene("chat", 880)
-    expect(pinFits(s, true)).toBe(true)
-    expect(pinFits(s, false)).toBe(false)
+describe("fijar siempre y caber (la dueña, 2026-10-01)", () => {
+  it("en escritorio, una escena de la lista se fija aunque no quepa; en móvil o fuera de la lista, no", () => {
+    expect(pinFits(scene("pilot", 1200), true)).toBe(true)
+    expect(pinFits(scene("pilot", 1200), false)).toBe(false)
     expect(pinFits(scene("pricing", 500), true)).toBe(false)
-    // Solo cambia el alto de la ventana: 900 → 720.
-    Object.defineProperty(window, "innerHeight", { configurable: true, value: 720 })
-    expect(pinFits(s, true)).toBe(false)
+  })
+
+  it("si no cabe, su contenido en el flujo se escala hasta caber, aunque no encoja en proporción; si cabe, no se toca", () => {
+    const tall = scene("goal", 0)
+    const copy = tall.querySelector<HTMLElement>("[data-anim=x]")!
+    // Como medir: 300 px no encogen con el zoom (altos ligados a la ventana) y 900 sí.
+    Object.defineProperty(tall, "offsetHeight", { configurable: true, get: () => 300 + 900 * (Number(copy.style.zoom) || 1) })
+    const map = document.createElement("div")
+    map.style.position = "absolute"
+    tall.prepend(map)
+    sceneTimeline(tall, { desktop: true, pins: new Map() }, 100)
+    // Cabe (con el aire de 0,985) y no se pasa de escala: el mínimo es 0,6.
+    expect(tall.offsetHeight).toBeLessThanOrEqual(900)
+    expect(Number(copy.style.zoom)).toBeGreaterThan(0.6)
+    // El mapa de fondo (absoluto) ya llena la ventana: no se escala.
+    expect(map.style.zoom || "").toBe("")
+    expect(tall.parentElement?.classList.contains("pin-spacer")).toBe(true)
+    const fits = scene("chat", 880)
+    sceneTimeline(fits, { desktop: true, pins: new Map() }, 100)
+    expect(fits.querySelector<HTMLElement>("[data-anim=x]")!.style.zoom || "").toBe("")
   })
 })
 

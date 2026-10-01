@@ -1,9 +1,6 @@
 /**
- * La meta (plan §16.1): fijada en escritorio, con la línea de `sceneTimeline`.
- * Si no cabe en escritorio no se fija y corre de «top 70 %» a «bottom top».
- * En móvil empieza en «top 40 %»: con «top 70 %» la franja del mapa aún estaba
- * bajo el pliegue cuando el coche arrancaba, y «Vas aquí» quedaba debajo de la
- * píldora del nicho (QA 4506afbf, 390).
+ * La meta (plan §16.1): siempre fijada en escritorio, con la línea de
+ * `sceneTimeline` (si no cabe, se escala) y, en móvil, con la franja pegada.
  *
  * Por frame solo se escriben: el `transform` del plano, el `stroke-dasharray`
  * de las capas de la ruta, el `transform`/`opacity` de unas diez marcas y,
@@ -12,7 +9,6 @@
  */
 import { gsap } from "gsap";
 
-import { goalStory } from "@/modules/landing/domain/film/goal-story";
 import { goalFrame } from "@/modules/landing/domain/film/goal-camera";
 import { formatMillions, formatPercent, ROUTE_FRACTIONS } from "@/modules/landing/domain/film/route-scenario";
 import { SPAN, all, sceneTimeline, setText, stickyStrip, visible, writer, type Scene } from "@/modules/landing/ui/film/engine/film-kit";
@@ -21,11 +17,12 @@ const px = (v: number) => v.toFixed(1);
 const o = (v: number) => v.toFixed(3);
 
 export const goal: Scene = (section, ctx) => {
-  // 480 y no 200, con las mesetas de `goalStory` (un alto en cada momento) y,
-  // en móvil, la franja pegada: la información se lee y la animación se ve
-  // entera (dueña, 2026-10-01).
+  // Siempre fijada en escritorio (si no cabe, se escala) y, en móvil, con la
+  // franja pegada: la animación corre solo con la escena encuadrada, continua,
+  // y acaba al soltarse (la dueña, 2026-10-01). 480 y no 200: el recorrido largo
+  // es el que deja leer la ruta, la proyección y la aprobación.
   const strip = stickyStrip(section, ctx, { top: ".film-goal-map", bottom: ".film-goal-panel" });
-  const tl = sceneTimeline(section, ctx, 480, strip ?? { start: "top 70%", end: "bottom top" });
+  const tl = sceneTimeline(section, ctx, 480, strip ?? undefined);
   const { write: set, restore } = writer();
   const approvedAtStart = section.hasAttribute("data-approved");
   // Al revertir el contexto del motor (parar, cambiar de media o de nicho), la
@@ -75,9 +72,8 @@ export const goal: Scene = (section, ctx) => {
   const slowSpan = ROUTE_FRACTIONS.expected - ROUTE_FRACTIONS.done;
   let approved: boolean | null = null;
 
-  // `p` es el scroll; la historia (con sus mesetas) es `goalStory(p)`.
   const paint = (p: number) => {
-    const f = goalFrame(goalStory(p));
+    const f = goalFrame(p);
     set(plane, "transform", f.plane);
     set(done, "strokeDasharray", f.dash.done);
     set(done, "opacity", o(f.doneLine));

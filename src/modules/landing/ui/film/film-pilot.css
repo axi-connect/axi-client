@@ -465,18 +465,17 @@
 .film-pilot-channel[data-on] { background: var(--pl-fg); border-color: transparent; color: var(--pl-ink); }
 .film-pilot-foot { font-size: 11.5px; color: var(--pl-dim); }
 
-/* Portátiles de poca altura: la escena mide 888 px (barra 88 + cabina 784 +
-   16) y baja un escalón para caber y fijarse. El zoom también encoge el
-   relleno de arriba, pero la barra del sitio no cambia: se compensa (88 / zoom).
-   Nunca por debajo de 0,82; si aun así no cabe (1280 × 720), va sin pin. */
-@media (min-width: 1024px) and (max-height: 870px) {
-  .film-pilot-layout { zoom: 0.94; padding-top: 94px; }
-}
-@media (min-width: 1024px) and (max-height: 823px) {
-  .film-pilot-layout { zoom: 0.88; padding-top: 100px; }
-}
-@media (min-width: 1024px) and (max-height: 776px) {
-  .film-pilot-layout { zoom: 0.82; padding-top: 107px; }
+/* Portátiles de poca altura: la escena mide ~900 px (barra 88 + cabina 784 +
+   16) y `fitToViewport` (film-kit) la escala para caber y fijarse siempre. A
+   ≤ 720 px de ventana se compacta para que ese zoom no baje de ~0,8: cabina de
+   664 px (relojes de 72, tres filas, como en móvil: con cuatro, el lote de la
+   fase de aprobación desbordaba 12 px) y el relleno de arriba en 96, que con el
+   zoom deja la cabina bajo la barra del sitio (la barra no se escala). */
+@media (min-width: 1024px) and (max-height: 720px) {
+  .film-pilot-layout { padding-top: 96px; padding-bottom: 8px; }
+  .film-pilot-cockpit { height: 664px; gap: 6px; padding: 14px; }
+  .film-pilot-dial-face { width: 72px; height: 72px; }
+  .film-pilot-rows .film-pilot-row:nth-child(n + 4) { display: none; }
 }
 
 /* ── móvil: no se fija; titular, franja del mapa de 430 px y cabina compacta ── */
