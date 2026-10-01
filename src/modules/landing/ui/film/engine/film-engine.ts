@@ -653,9 +653,11 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
         else if (typeof window.requestIdleCallback === "function") window.requestIdleCallback(finish, { timeout: 500 });
         else yieldThen(finish);
       };
-      // En su propia tarea: con el chunk ya evaluado, el arranque llega dentro
-      // del evento de la rueda que lo pidió.
-      yieldThen(slice);
+      // El primer arranque, en su propia tarea: con el chunk ya evaluado, llega
+      // dentro del evento de la rueda que lo pidió. Al cambiar de nicho, en el
+      // acto: lo que está en pantalla se rehace sin un fotograma de por medio.
+      if (first) yieldThen(slice);
+      else slice();
       return () => {
         alive = false;
         for (const undo of unfits) undo();
