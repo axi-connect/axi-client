@@ -63,8 +63,8 @@ export const PHILOSOPHY = {
       tone: "Violeta",
       strong: "Tu tiempo",
       thin: "vuelve a ser tuyo.",
-      // Ajuste de honestidad (2026-10-01): las llamadas son salientes; Axi no contesta llamadas.
-      body: "WhatsApp, Instagram y agenda se atienden de día y de noche, y Axi llama cuando hay que llamar. Tu equipo entra cuando hace falta criterio, no para responder lo mismo cien veces.",
+      // El texto del lienzo: la atención de llamadas entrantes ya está en producción (confirmado por la dueña el 2026-10-01).
+      body: "WhatsApp, Instagram, llamadas y agenda se atienden de día y de noche. Tu equipo entra cuando hace falta criterio, no para responder lo mismo cien veces.",
       modules: ["Inbox compartido", "Llamadas", "Agenda y citas"],
       intent: "Atender",
       href: "#equipo",

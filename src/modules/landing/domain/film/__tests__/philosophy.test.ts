@@ -42,6 +42,9 @@ describe("philosophyMove", () => {
 
   it("tres pilares con su texto", () => {
     expect(PHILOSOPHY.pillars).toHaveLength(3)
-    for (const p of PHILOSOPHY.pillars) expect(p.body.toLowerCase()).not.toContain("llamadas y agenda se atienden")
+    // Libertad, tal cual el lienzo: las llamadas entrantes se atienden (en producción desde el 2026-10-01).
+    expect(PHILOSOPHY.pillars[2].body).toBe(
+      "WhatsApp, Instagram, llamadas y agenda se atienden de día y de noche. Tu equipo entra cuando hace falta criterio, no para responder lo mismo cien veces.",
+    )
   })
 })
