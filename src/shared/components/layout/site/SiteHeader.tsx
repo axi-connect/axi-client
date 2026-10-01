@@ -77,6 +77,8 @@ export default function SiteHeader({
     const isAuthenticated = status === 'authenticated';
     const ctaHref = isAuthenticated ? '/workspace/inbox' : guestCta.href;
     const ctaLabel = isAuthenticated ? (user?.name ?? 'Ir a la app') : guestCta.label;
+    // Entre `lg` y 1200 px la etiqueta larga de la película no cabía (§16.5).
+    const ctaShortLabel = !isAuthenticated && 'shortLabel' in guestCta ? guestCta.shortLabel : null;
     const onCtaClick = () => {
         if (isAuthenticated) splash.start();
     };
@@ -116,17 +118,21 @@ export default function SiteHeader({
                                 {/* Lockup compartido (SVG inline, no <Image> remota: el
                                     isotipo se servía desde Cloudinary en el critical path
                                     del LCP). Es la misma pieza que pinta /comenzar. */}
-                                <BrandLockup />
+                                <BrandLockup className="whitespace-nowrap" />
                             </motion.div>
 
                             <SiteNavList />
 
                             <div className="hidden items-center gap-4 lg:flex">
-                                <ThemeToggle />
+                                {/* En la home la cabecera es oscura forzada y el tema no se
+                                    ve: entre `lg` y 1200 px el selector cede su sitio (§16.5). */}
+                                <div className={onFilm ? 'hidden min-[1200px]:contents' : 'contents'}>
+                                    <ThemeToggle />
+                                </div>
                                 <Link
                                     prefetch={false}
                                     href={session.href}
-                                    className="text-foreground hover:text-brand font-medium transition-colors duration-200"
+                                    className="text-foreground hover:text-brand font-medium whitespace-nowrap transition-colors duration-200"
                                 >
                                     {session.text}
                                 </Link>
@@ -134,10 +140,17 @@ export default function SiteHeader({
                                     <Link
                                         prefetch={false}
                                         href={ctaHref}
-                                        className="bg-brand-gradient text-primary-foreground inline-flex items-center space-x-2 rounded-full px-6 py-2.5 font-medium transition-all duration-200 hover:brightness-110"
+                                        className="bg-brand-gradient text-primary-foreground inline-flex items-center space-x-2 rounded-full px-6 py-2.5 font-medium whitespace-nowrap transition-all duration-200 hover:brightness-110"
                                         onClick={onCtaClick}
                                     >
-                                        <span>{ctaLabel}</span>
+                                        {ctaShortLabel ? (
+                                            <>
+                                                <span className="min-[1200px]:hidden">{ctaShortLabel}</span>
+                                                <span className="hidden min-[1200px]:inline">{ctaLabel}</span>
+                                            </>
+                                        ) : (
+                                            <span>{ctaLabel}</span>
+                                        )}
                                         <ArrowRight aria-hidden="true" className="h-4 w-4" />
                                     </Link>
                                 </motion.div>

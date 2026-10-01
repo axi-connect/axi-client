@@ -313,5 +313,11 @@ export const SITE_NAV_SESSION: Record<
  * El CTA de la cabecera en la home. La película tiene una sola conversión, la
  * prueba de 7 días (programa landing cinematográfica, D1); el resto del sitio
  * conserva el suyo hasta que se rehaga con el mismo lenguaje (D14).
+ * `shortLabel` es la versión entre `lg` y 1200 px, donde la etiqueta larga
+ * partía la cabecera en dos líneas (plan §16.5).
  */
-export const SITE_NAV_FILM_CTA = { label: "Prueba 7 días gratis", href: "/comenzar?plan=free_trial" } as const;
+export const SITE_NAV_FILM_CTA = {
+  label: "Prueba 7 días gratis",
+  shortLabel: "Prueba gratis",
+  href: "/comenzar?plan=free_trial",
+} as const;
