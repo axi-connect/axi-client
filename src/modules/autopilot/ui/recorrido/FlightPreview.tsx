@@ -10,8 +10,8 @@ import { flowWidth } from "./geometry";
 const BEFORE_QUALIFY = new Set(["search", "enrich"]);
 
 /**
- * «Así sale tu ruta» (R3): una frase con lo que trae y a cuántas les escribe
- * (del estimado), el mismo carril de la ruta en vertical con las cifras que
+ * «Así sale tu piloto» (R3): una frase con lo que trae y a cuántas les escribe
+ * (del estimado), el mismo carril de la aerovía en vertical con las cifras que
  * estima el servidor, y el estimado (`POST /autopilot/estimate`). No pide nada
  * nuevo: lee el borrador y la estimación que ya existen.
  */
@@ -33,8 +33,8 @@ export function FlightPreview({
   const widthOf = (key: string) =>
     Math.max(4, flowWidth(BEFORE_QUALIFY.has(key) ? leadsPerRun : (revealed ?? 0), Math.max(1, leadsPerRun)) * 0.8);
   return (
-    <Island as="aside" aria-label="Así sale tu ruta" className={cn("flex min-w-0 flex-col p-[22px]", className)}>
-      <Kicker>Así sale tu ruta</Kicker>
+    <Island as="aside" aria-label="Así sale tu piloto" className={cn("flex min-w-0 flex-col p-[22px]", className)}>
+      <Kicker>Así sale tu piloto</Kicker>
       <p className="font-heading mt-2 text-[22px] leading-tight font-bold tracking-[-0.02em] text-pretty" aria-live="polite">
         {headline}
       </p>
@@ -64,7 +64,7 @@ export function FlightPreview({
       <div className="border-foreground/10 mt-3 flex flex-col gap-1 border-t pt-3" aria-live="polite">
         <span className="text-muted-foreground text-xs">Estimado del servidor</span>
         {estimate === null ? (
-          <span className="text-muted-foreground text-sm text-pretty">Completa la ruta para ver cuánto gastaría.</span>
+          <span className="text-muted-foreground text-sm text-pretty">Completa el piloto para ver cuánto gastaría.</span>
         ) : (
           <>
             <span className="font-heading mt-1 flex flex-wrap items-baseline gap-x-1.5 text-[30px] leading-none font-bold tabular-nums">

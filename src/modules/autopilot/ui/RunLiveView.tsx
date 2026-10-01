@@ -42,11 +42,11 @@ import { RunTrajectoryMap } from "./recorrido/RunTrajectoryMap";
 import { departureLabel, hourIn, whenLabel } from "./recorrido/when";
 
 /**
- * Una salida de una ruta, en vivo (Rutas de captación, R1, mockup aprobado el
+ * Una salida de un piloto, en vivo (Piloto, R1, mockup aprobado el
  * 2026-10-01).
  *
  * Arriba, el encabezado con la cápsula de acciones (Pausar ↔ Reanudar · Salir
- * ahora · Editar). Luego la tarjeta de la ruta a todo el ancho: la frase de
+ * ahora · Editar). Luego la tarjeta del piloto a todo el ancho: la frase de
  * ahora en grande, el mapa y su pie. Debajo, si hay un lote, la isla «Tu
  * aprobación» junto a las cuentas; si no, las cuentas a todo el ancho. Se
  * mueve con `autopilot.*` (sala de la empresa, filtrado por esta salida) y la
@@ -114,7 +114,7 @@ export function RunLiveView({ runId }: { runId: string }) {
   useSocketEvent(socket, "autopilot.run_finished", (payload) => mine(payload) && void load());
 
   if (failure === "unavailable") {
-    return <EmptyState icon={Bot} title="Las rutas llegan con la próxima versión" description="Tu servidor todavía no trae el motor de las rutas de captación." />;
+    return <EmptyState icon={Bot} title="Los pilotos llegan con la próxima versión" description="Tu servidor todavía no trae el motor de los pilotos." />;
   }
   if (failure !== null) {
     return <EmptyState icon={Bot} title="No pudimos leer la salida" description={failure} action={<Button onClick={() => void load()}>Reintentar</Button>} />;
@@ -146,8 +146,8 @@ export function RunLiveView({ runId }: { runId: string }) {
   return (
     <div className="flex min-w-0 flex-col gap-5">
       <MarketingHeader
-        kicker="Marketing · Rutas · salida"
-        title={routine?.name ?? "Salida de la ruta"}
+        kicker="Marketing · Pilotos · salida"
+        title={routine?.name ?? "Salida del piloto"}
         description={
           routine === null
             ? undefined

@@ -1,8 +1,8 @@
 import type { Schemas } from "@/core/api/types";
 
 /**
- * Las rutas de captación (el piloto automático, P5), vistas desde el cliente.
- * En pantalla se dice «ruta» y «salida» (upgrade «Rutas de captación»,
+ * Los pilotos de captación (el piloto automático, P5), vistos desde el cliente.
+ * En pantalla se dice «piloto» y «salida» (upgrade «Piloto»,
  * 2026-10-01); en el código y en el contrato siguen `routine` y `run`.
  *
  * Los tipos salen del contrato (`Schemas[...]`, el OpenAPI del slice
@@ -51,7 +51,7 @@ export const RUN_STAGES = [
 
 /* ─────────────────────────── Cómo se dice ─────────────────────────── */
 
-/** Dónde busca una ruta (`source.kind`, las fuentes de captación de P2). */
+/** Dónde busca un piloto (`source.kind`, las fuentes de captación de P2). */
 export const SOURCE_KIND_LABELS: Record<string, { label: string; initial: string }> = {
   apollo_people: { label: "Apollo · personas", initial: "A" },
   rues_open: { label: "RUES abierto", initial: "R" },
@@ -85,7 +85,7 @@ export function sourceHints(kind: string): { search: string; revealEmail: string
   };
 }
 
-/** «Dueño, gerente · Restaurantes · Medellín»: lo que la ruta busca, en una línea. */
+/** «Dueño, gerente · Restaurantes · Medellín»: lo que el piloto busca, en una línea. */
 export function sourceSummary(params: Record<string, unknown>): string {
   const parts: string[] = [];
   const person = params.person as { titles?: unknown } | undefined;
@@ -101,7 +101,7 @@ export function sourceSummary(params: Record<string, unknown>): string {
 
 export const RUN_STATUS_META: Record<RunStatus, { label: string; tone: "info" | "success" | "warning" | "neutral" | "destructive" }> = {
   queued: { label: "En cola", tone: "neutral" },
-  running: { label: "En ruta", tone: "info" },
+  running: { label: "En vuelo", tone: "info" },
   awaiting_approval: { label: "Espera tu aprobación", tone: "warning" },
   paused: { label: "Pausada", tone: "neutral" },
   done: { label: "Terminada", tone: "success" },
@@ -123,7 +123,7 @@ export const RUN_STAGE_LABELS: Record<RunStage, string> = {
 /**
  * Los pasos del motor, en su orden real (P4 §8). Las esperas no se enseñan
  * como pasos: son parte del paso anterior. `label` es el corto de la parada y
- * `sub` lo que hace, debajo; los de calificar y escribirles dependen de la ruta
+ * `sub` lo que hace, debajo; los de calificar y escribirles dependen del piloto
  * (qué revela y qué secuencia), y los arma `trajectory.ts`.
  */
 export const RUN_STEPS = [
@@ -160,17 +160,9 @@ export const STEP_ORDER = [
   "contact",
 ];
 
-/** Cuántos de los seis pasos ya terminaron, según el último paso completado. */
-export function stepsDone(step: string | null): number {
-  const reached = step === null ? -1 : STEP_ORDER.indexOf(step);
-  // Un paso está hecho cuando se alcanzó su ÚLTIMO cierre (buscar termina al
-  // acabar la búsqueda, no al lanzarla). `approve` —el lote de una ruta «Con
-  // tu aprobación»— va entre la política y escribirles, y no es un paso propio.
-  return RUN_STEPS.filter((entry) => STEP_ORDER.indexOf(entry.done_after.at(-1) ?? "") <= reached).length;
-}
 
 /**
- * Por dónde puede escribir la ruta (los `OutreachChannel` de P1), con lo
+ * Por dónde puede escribir el piloto (los `OutreachChannel` de P1), con lo
  * que cada uno implica. La política de contacto del tenant manda encima.
  */
 export const CONTACT_CHANNEL_OPTIONS: readonly { value: string; label: string; hint: string }[] = [
@@ -182,7 +174,7 @@ export const CONTACT_CHANNEL_OPTIONS: readonly { value: string; label: string; h
 ];
 
 /**
- * Una ruta nueva, con valores prudentes: con tu aprobación (te pide aprobar el lote
+ * Un piloto nuevo, con valores prudentes: con tu aprobación (te pide aprobar el lote
  * antes de contactar), correo, de lunes a viernes a las 8:00, 25 cuentas y
  * tope de 40 créditos por salida.
  */
@@ -199,7 +191,7 @@ export function defaultRoutineInput(timezone: string): RoutineInput {
   };
 }
 
-/** Lo editable de una ruta: lo mismo que se manda al guardar. */
+/** Lo editable de un piloto: lo mismo que se manda al guardar. */
 export function toRoutineInput(routine: Routine): RoutineInput {
   return {
     name: routine.name,
@@ -242,14 +234,6 @@ export function hourLabel(hhmm: string): string {
   return `${String(Number(hours))}:${minutes}`;
 }
 
-/** El embudo de una salida desde sus contadores (los del motor de P4). */
-export function funnelOf(counters: Record<string, number>): { key: string; label: string; value: number }[] {
-  return [
-    { key: "found", label: "encontró", value: counters.found ?? 0 },
-    { key: "qualified", label: "calificó", value: counters.qualified ?? 0 },
-    { key: "contacted", label: "contactó", value: counters.contacted ?? 0 },
-  ];
-}
 
 /** «Carolina Ruiz · La Brasa Parrilla»; «Cuenta sin nombre» si no llegó el nombre. */
 export function itemTitle(item: { display_name?: string | null; company_name?: string | null }): string {
@@ -262,7 +246,7 @@ export function itemTitle(item: { display_name?: string | null; company_name?: s
 /** Válido para guardar: lo que el servidor rechazaría, dicho antes. */
 export function validateRoutine(input: RoutineInput): { field: string; message: string }[] {
   const problems: { field: string; message: string }[] = [];
-  if (input.name.trim().length === 0) problems.push({ field: "name", message: "Ponle un nombre a la ruta" });
+  if (input.name.trim().length === 0) problems.push({ field: "name", message: "Ponle un nombre al piloto" });
   if (input.contact.channels.length === 0) problems.push({ field: "contact", message: "Elige al menos un canal" });
   if (input.contact.goal.trim().length === 0) problems.push({ field: "contact", message: "Di qué debe lograr la conversación" });
   if (input.follow_up.sequence_id === "") problems.push({ field: "follow_up", message: "Elige la secuencia de seguimiento" });

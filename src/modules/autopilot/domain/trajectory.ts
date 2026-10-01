@@ -11,9 +11,9 @@ import {
 import { reasonShortLabel, reasonStop } from "./reasons";
 
 /**
- * Una salida contada como ruta (mockups «el recorrido» y «Rutas de captación»,
+ * Una salida contada como aerovía (mockups del recorrido y de captación,
  * aprobados el 2026-10-01): las seis paradas del motor, más «Tu aprobación»
- * entre tu política y escribirles cuando la ruta es «Con tu aprobación». Cada
+ * entre tu política y escribirles cuando el piloto es «Con tu aprobación». Cada
  * parada lleva cuántas cuentas salieron de ella y a qué hora cerró, y cada
  * cuenta que se quedó en el camino sale por la parada donde se quedó, con su
  * motivo.
@@ -38,7 +38,7 @@ export interface TrajectoryStop {
   /** Lo que hace, debajo del nombre: «gratis», «revela el correo», «"Primer contacto"». */
   sub: string;
   /**
-   * La hora a la que cerró («8:06», en la zona de la ruta), «ahora» si es la
+   * La hora a la que cerró («8:06», en la zona del piloto), «ahora» si es la
    * parada en curso de una salida que corre, y `null` si no hay dato (aún no
    * llega, o la bitácora no lo trae: «Tu aprobación» no se narra).
    */
@@ -58,7 +58,7 @@ export interface TrajectoryExit {
   rows: ExitRow[];
 }
 
-/** «Lo que viene», al final de la ruta: dónde van las que siguieron. */
+/** «Lo que viene», al final del piloto: dónde van las que siguieron. */
 export interface TrajectoryDestination {
   following: number;
   replied: number;
@@ -125,7 +125,7 @@ function stopsOf(routine: RoutineShape, ctx: TrajectoryContext): StopShape[] {
   return stops;
 }
 
-/** «8:06» en la zona de la ruta (o la del navegador si no se conoce). */
+/** «8:06» en la zona del piloto (o la del navegador si no se conoce). */
 function clock(iso: string, timeZone: string | undefined): string | null {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return null;
@@ -282,13 +282,3 @@ export function runTrajectory(run: RunLike, routine: RoutineShape, ctx: Trajecto
   return { stops, exits, currentIndex, credits, destination: destinationOf(run) };
 }
 
-/**
- * «Paso X de N» de la tarjeta: las mismas paradas que la miniatura (con «Tu
- * aprobación» si la ruta la tiene). `null` si la salida no está en curso.
- */
-export function stepProgress(run: RunLike, routine: RoutineShape): { current: number; total: number } | null {
-  if (run.status === "queued" || run.status === "done") return null;
-  const trajectory = runTrajectory(run, routine);
-  const total = trajectory.stops.length;
-  return { current: Math.min(Math.max(trajectory.currentIndex, 0) + 1, total), total };
-}

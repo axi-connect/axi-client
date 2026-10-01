@@ -10,10 +10,10 @@ const DOT: Record<StatePillTone, string> = {
 };
 
 /**
- * El estado en texto con su punto, sin fondo (Rutas de captación): la
+ * El estado en texto con su punto, sin fondo (Piloto): la
  * `StatePill` sin su píldora, para las líneas de estado y las tarjetas. El
  * color vive en el punto, nunca en el texto (§10). `live` le pone el halo de
- * «en ruta».
+ * «en vuelo».
  */
 export function StatusDot({ tone, live = false, children, className }: { tone: StatePillTone; live?: boolean; children: React.ReactNode; className?: string }) {
   return (

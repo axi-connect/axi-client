@@ -20,7 +20,7 @@ const routine = routineFixture();
 const autonomous = routineFixture({ mode: "autonomous" });
 
 describe("copy — la frase de ahora", () => {
-  it("cada parada en ruta dice qué hace", () => {
+  it("cada parada en vuelo dice qué hace", () => {
     const line = (step: string | null, counters: Record<string, number> = {}) => nowLine(runFixture({ step, counters }), routine);
     expect(line(null)).toEqual({
       title: "Buscando restaurantes en Medellín",
@@ -50,13 +50,13 @@ describe("copy — la frase de ahora", () => {
     expect(revealCredits({ reveal_email: false, reveal_phone: false })).toBe(0);
   });
 
-  it("los estados que no son «en ruta» tienen su frase", () => {
+  it("los estados que no son «en vuelo» tienen su frase", () => {
     expect(nowLine(runFixture({ status: "queued" }), routine)).toEqual({
       title: "Sale en un momento",
       detail: "Cuando arranque, verás aquí cada parada con sus cifras.",
     });
     expect(nowLine(runFixture({ status: "paused", step: "await_search" }), routine)).toEqual({
-      title: "Pausaste la ruta",
+      title: "Pausaste el piloto",
       detail: "Quedó en «Completar datos». Sigue donde iba cuando la reanudes.",
     });
     expect(nowLine(runFixture({ status: "budget_exhausted", step: "qualify", credits_spent: 40, counters: { qualified: 9 } }), routine)).toEqual({
@@ -93,13 +93,13 @@ describe("copy — la frase de ahora", () => {
     expect(other).not.toMatch(/TypeError/);
   });
 
-  it("si la ruta no cargó, el error también va en palabras", () => {
+  it("si el piloto no cargó, el error también va en palabras", () => {
     const failed = (error: string) => runFixture({ status: "failed", step: "promote", error });
     expect(failureLine(failed("search_failed"), null)).toBe("No se pudo leer la fuente: no respondió. No se gastó nada más; puedes salir de nuevo.");
     expect(failureLine(failed("promote: ProspectingLeadNotIdentifiableError: El lead…"), null)).toBe(
       "Algo falló en esta salida. No se gastó nada más; puedes salir de nuevo.",
     );
-    expect(failureLine(failed("routine_deleted"), null)).toBe("La ruta se eliminó mientras la salida corría.");
+    expect(failureLine(failed("routine_deleted"), null)).toBe("El piloto se eliminó mientras la salida corría.");
   });
 
   it("terminada, con y sin cuentas, en singular y plural", () => {
@@ -188,14 +188,14 @@ describe("copy — los desvíos", () => {
 describe("copy — «Ahora mismo»", () => {
   const now = new Date("2026-10-01T15:00:00Z"); // 10:00 en Bogotá
 
-  it("nada en ruta ni esperando: no se pinta", () => {
+  it("nada en vuelo ni esperando: no se pinta", () => {
     const doneRun = summaryFixture({ status: "done" });
     const idle = listItemFixture({ next_run_at: "2026-10-01T19:00:00Z", last_run: doneRun });
     expect(ahoraMismo([idle], now)).toBeNull();
     expect(ahoraMismo([], now)).toBeNull();
   });
 
-  it("una ruta en ruta, un lote que espera y la próxima salida", () => {
+  it("un piloto en vuelo, un lote que espera y la próxima salida del piloto que se nombra", () => {
     const flyingRun = summaryFixture({ id: "run-fly", step: "await_search", counters: { found: 25 } });
     const waitingRun = summaryFixture({ id: "run-lot", status: "awaiting_approval", step: "approve", counters: { awaiting: 7 } });
     const result = ahoraMismo(
@@ -207,17 +207,31 @@ describe("copy — «Ahora mismo»", () => {
     );
     expect(result).toEqual({
       headline: "7 cuentas esperan tu aprobación",
-      context: "Restaurantes de Medellín · decisores · además, 1 ruta va completando datos · próxima salida hoy a las 14:00",
+      // La de las 14:00 es de «Clínicas»: la frase nombra a Restaurantes, así que dice la suya.
+      context: "Restaurantes de Medellín · decisores · además, 1 piloto va completando datos · próxima salida mañana a las 8:00",
       facts: [
-        { key: "in_flight", value: "1", text: "en ruta · completar datos" },
+        { key: "in_flight", value: "1", text: "en vuelo · completar datos" },
         { key: "awaiting", value: "1", text: "lote espera tu aprobación · 7 cuentas" },
-        { key: "next", value: "14:00", text: "próxima salida · hoy" },
+        { key: "next", value: "8:00", text: "próxima salida · mañana" },
       ],
       action: { kind: "batch", run_id: "run-lot" },
     });
   });
 
-  it("varias en ruta y la salida de mañana; una ruta pausada no cuenta como salida", () => {
+  it("si el piloto que se nombra no tiene próxima salida, la de otro dice de cuál", () => {
+    const waitingRun = summaryFixture({ id: "run-lot", status: "awaiting_approval", step: "approve", counters: { awaiting: 2 } });
+    const result = ahoraMismo(
+      [
+        listItemFixture({ id: "r-1", name: "Ferreterías de Barranquilla", last_run: waitingRun, next_run_at: null }),
+        listItemFixture({ id: "r-2", name: "Restaurantes", last_run: null, next_run_at: "2026-10-02T13:00:00Z" }),
+      ],
+      now,
+    );
+    expect(result?.context).toBe("Ferreterías de Barranquilla · próxima salida de «Restaurantes» mañana a las 8:00");
+    expect(result?.facts.at(-1)).toEqual({ key: "next", value: "8:00", text: "próxima salida de «Restaurantes» · mañana" });
+  });
+
+  it("varias en vuelo y la salida de mañana; un piloto pausado no cuenta como salida", () => {
     const queued = summaryFixture({ id: "q", status: "queued" });
     const running = summaryFixture({ id: "run-2", step: "gate" });
     const result = ahoraMismo(
@@ -227,11 +241,12 @@ describe("copy — «Ahora mismo»", () => {
       ],
       now,
     );
-    expect(result?.headline).toBe("2 rutas en marcha");
-    expect(result?.context).toBe("próxima salida mañana a las 8:00");
+    expect(result?.headline).toBe("2 pilotos en marcha");
+    // Ninguno se nombra: la salida dice de qué piloto es.
+    expect(result?.context).toBe("próxima salida de «Restaurantes de Medellín · decisores» mañana a las 8:00");
     expect(result?.facts).toEqual([
-      { key: "in_flight", value: "2", text: "en ruta" },
-      { key: "next", value: "8:00", text: "próxima salida · mañana" },
+      { key: "in_flight", value: "2", text: "en vuelo" },
+      { key: "next", value: "8:00", text: "próxima salida de «Restaurantes de Medellín · decisores» · mañana" },
     ]);
     expect(result?.action).toEqual({ kind: "live", run_id: "q" });
   });
@@ -240,12 +255,12 @@ describe("copy — «Ahora mismo»", () => {
     const queued = summaryFixture({ id: "q", status: "queued" });
     const result = ahoraMismo([listItemFixture({ last_run: queued, next_run_at: "2026-10-05T13:00:00Z" })], now);
     expect(result?.headline).toBe("«Restaurantes de Medellín · decisores» sale en un momento");
-    expect(result?.facts[0]?.text).toBe("en ruta · en cola");
+    expect(result?.facts[0]?.text).toBe("en vuelo · en cola");
     expect(result?.facts[1]?.text).toMatch(/^próxima salida · lun 5 oct$/);
   });
 });
 
-describe("copy — «Así sale tu ruta»", () => {
+describe("copy — «Así sale tu piloto»", () => {
   const ctx = { sourceLabel: "Google Maps", sequenceName: "Primer contacto · 4 pasos", agentName: "Sofía", channelLabels: ["Correo", "Llamada del agente"] };
   const draft = {
     ...defaultRoutineInput("America/Bogota"),
@@ -360,7 +375,7 @@ describe("copy — el lote", () => {
     const none = batchCopy({ total: 7, approved: 0, routine: assisted });
     expect(none.cta).toBe("Omitir todas y seguir");
     expect(none.skippedNote).toBe("7 se omiten");
-    expect(batchCopy({ total: 2, approved: 2, routine: assisted }).detail).toMatch(/y siguen la secuencia de la ruta\.$/);
+    expect(batchCopy({ total: 2, approved: 2, routine: assisted }).detail).toMatch(/y siguen la secuencia del piloto\.$/);
   });
 });
 
@@ -394,12 +409,12 @@ describe("copy — la píldora de la tarjeta", () => {
     expect(routineStatusLine(withRun({ status: "budget_exhausted" }))).toEqual({ label: "Se acabó el tope", tone: "warning", live: false });
     expect(routineStatusLine(withRun({ status: "awaiting_approval", step: "approve" })).label).toBe("Espera tu aprobación");
     expect(routineStatusLine(withRun({ status: "done", step: "contact" })).label).toBe("Terminada");
-    expect(routineStatusLine(withRun({ step: "await_enrich" }))).toEqual({ label: "En ruta · calificando", tone: "info", live: true });
+    expect(routineStatusLine(withRun({ step: "await_enrich" }))).toEqual({ label: "En vuelo · calificando", tone: "info", live: true });
   });
 
-  it("pausada en femenino, como la ruta; sin salidas, programada o sin salidas aún", () => {
-    expect(routineStatusLine(listItemFixture({ status: "paused", last_run: summaryFixture({ status: "failed" }) })).label).toBe("Pausada");
-    expect(routineStatusLine(listItemFixture({ next_run_at: "2026-10-02T13:00:00Z" })).label).toBe("Programada");
+  it("pausado en masculino, como el piloto; sin salidas, programado o sin salidas aún", () => {
+    expect(routineStatusLine(listItemFixture({ status: "paused", last_run: summaryFixture({ status: "failed" }) })).label).toBe("Pausado");
+    expect(routineStatusLine(listItemFixture({ next_run_at: "2026-10-02T13:00:00Z" })).label).toBe("Programado");
     expect(routineStatusLine(listItemFixture()).label).toBe("Sin salidas aún");
   });
 });

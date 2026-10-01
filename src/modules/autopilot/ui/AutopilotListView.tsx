@@ -25,9 +25,9 @@ import { whenLabel } from "./recorrido/when";
 import { PilotsSummaryCard } from "./summary/PilotsSummaryCard";
 
 /**
- * Marketing › Rutas (Rutas de captación, R2): «Ahora mismo» si algo pide tu
- * atención, lo que trajeron tus rutas este mes, «Axi propone» y cada ruta en
- * su tarjeta —una línea con fuente, horario y modo, su ruta en miniatura y la
+ * Marketing › Pilotos (Piloto, R2): «Ahora mismo» si algo pide tu
+ * atención, lo que trajeron tus pilotos este mes, «Axi propone» y cada piloto en
+ * su tarjeta —una línea con fuente, horario y modo, su aerovía en miniatura y la
  * cápsula de acciones—.
  *
  * Se refresca por los eventos `autopilot.*` de la sala de la empresa, también
@@ -70,13 +70,13 @@ export function AutopilotListView() {
     <div className="flex min-w-0 flex-col gap-5">
       <MarketingHeader
         title="Axi sale a buscar clientes por ti"
-        description="Cada ruta sale a su hora, trae negocios que encajan contigo y les escribe a quien decide. Tú pones el tope."
+        description="Cada piloto sale a su hora, trae negocios que encajan contigo y les escribe a quien decide. Tú pones el tope."
         actions={
           canManage && !unavailable ? (
             <Button asChild className="rounded-full">
               <Link href="/marketing/autopilot/new">
                 <Route aria-hidden className="size-4" />
-                Nueva ruta
+                Nuevo piloto
               </Link>
             </Button>
           ) : undefined
@@ -86,27 +86,27 @@ export function AutopilotListView() {
       {unavailable ? (
         <EmptyState
           icon={Bot}
-          title="Las rutas llegan con la próxima versión"
-          description="Tu servidor todavía no trae el motor de las rutas de captación. En cuanto se actualice, aquí programas tus rutas."
+          title="Los pilotos llegan con la próxima versión"
+          description="Tu servidor todavía no trae el motor de los pilotos. En cuanto se actualice, aquí programas tus pilotos."
         />
       ) : error !== null ? (
-        <EmptyState icon={Bot} title="No pudimos leer tus rutas" description={error} action={<Button onClick={load}>Reintentar</Button>} />
+        <EmptyState icon={Bot} title="No pudimos leer tus pilotos" description={error} action={<Button onClick={load}>Reintentar</Button>} />
       ) : routines === null ? (
-        <div className="grid gap-4" role="status" aria-label="Cargando rutas">
+        <div className="grid gap-4" role="status" aria-label="Cargando pilotos">
           <Skeleton className="h-56 w-full rounded-3xl" />
           <Skeleton className="h-56 w-full rounded-3xl" />
         </div>
       ) : routines.length === 0 ? (
         <EmptyState
           icon={Route}
-          title="Tu primera ruta"
+          title="Tu primer piloto"
           description="Elige dónde buscar, a quién dejar pasar, cómo escribirles y hasta cuánto gastar. Axi sale solo, en tu horario, y te avisa cuando alguien responde."
           action={
             canManage ? (
               <Button asChild>
                 <Link href="/marketing/autopilot/new">
                   <Plus aria-hidden className="size-4" />
-                  Crear una ruta
+                  Crear un piloto
                 </Link>
               </Button>
             ) : undefined
@@ -114,19 +114,19 @@ export function AutopilotListView() {
         />
       ) : (
         <>
-          {/* «Ahora mismo»: solo si hay algo en ruta o esperando. */}
+          {/* «Ahora mismo»: solo si hay algo en vuelo o esperando. */}
           {ahora !== null && <AhoraMismo ahora={ahora} />}
-          {/* «Lo que trajeron tus rutas»: la misma ficha del Panel; se oculta sola sin permiso o sin datos. */}
+          {/* «Lo que trajeron tus pilotos»: la misma ficha del Panel; se oculta sola sin permiso o sin datos. */}
           <PilotsSummaryCard />
           {/* P6b: «Axi propone», solo si hay algo que decidir */}
           <PilotProposals routineNames={routineNames} canManage={canManage} />
           <section className="flex flex-col gap-3.5" aria-labelledby="routes-title">
             <div className="mt-1 flex items-baseline justify-between gap-3">
               <h2 id="routes-title" className="text-[17px] font-semibold tracking-[-0.01em]">
-                Tus rutas
+                Tus pilotos
               </h2>
               <span className="text-muted-foreground text-[13px]">
-                {routines.length === 1 ? "1 ruta" : `${String(routines.length)} rutas`}
+                {routines.length === 1 ? "1 piloto" : `${String(routines.length)} pilotos`}
                 {inMotion > 0 && ` · ${String(inMotion)} en marcha`}
               </span>
             </div>
@@ -164,7 +164,7 @@ function RoutineCard({ routine, canManage, onChanged }: { routine: RoutineListIt
   return (
     <article className="bg-card border-border @container/card flex min-w-0 flex-col gap-4 rounded-3xl border p-5 sm:px-[22px]">
       <div className="flex items-center justify-between gap-2.5">
-        <span className="text-muted-foreground text-xs">Ruta · {mode.label.toLowerCase()}</span>
+        <span className="text-muted-foreground text-xs">Piloto · {mode.label.toLowerCase()}</span>
         <StatusDot tone={status.tone} live={status.live}>
           {status.label}
         </StatusDot>

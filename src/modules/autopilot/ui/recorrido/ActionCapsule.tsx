@@ -14,17 +14,17 @@ import { pauseRoutine, resumeRoutine, runRoutineNow } from "../../infrastructure
 
 export interface ActionCapsuleProps {
   routine: { id: string; status: "active" | "paused" | "archived" };
-  /** El estado de la última salida: en ruta o esperando, «Salir ahora» no se puede. */
+  /** El estado de la última salida: en vuelo o esperando, «Salir ahora» no se puede. */
   lastRun: RunStatus | null;
   /** Con «Editar» (en vivo y la ficha); la tarjeta de la lista no lo lleva. */
   withEdit?: boolean;
-  /** Tras pausar, reanudar o salir: quien la monta relee la ruta (el estado de la ruta no se queda viejo). */
+  /** Tras pausar, reanudar o salir: quien la monta relee el piloto (el estado del piloto no se queda viejo). */
   onChanged: () => void;
   className?: string;
 }
 
 /**
- * La cápsula de acciones de una ruta (Rutas de captación): Pausar ↔ Reanudar ·
+ * La cápsula de acciones de un piloto (Piloto): Pausar ↔ Reanudar ·
  * Salir ahora · Editar, como botones `ghost` en una píldora con borde y
  * `shadow-float`, separados por un filo. «Salir ahora» dice por qué no se puede
  * (el servidor respondería 409 con un lote esperando).
@@ -38,9 +38,9 @@ export function ActionCapsule({ routine, lastRun, withEdit = true, onChanged, cl
   const blockedWhy = waiting
     ? "Aprueba primero el lote que espera"
     : live
-      ? "Ya va en ruta"
+      ? "Ya va en vuelo"
       : paused
-        ? "Reanuda la ruta primero"
+        ? "Reanuda el piloto primero"
         : undefined;
 
   async function act(action: "pause" | "resume" | "run") {
@@ -51,7 +51,7 @@ export function ActionCapsule({ routine, lastRun, withEdit = true, onChanged, cl
       else await runRoutineNow(routine.id);
       showAlert({
         tone: "success",
-        title: action === "pause" ? "Ruta pausada" : action === "resume" ? "Ruta reanudada" : "Sale en un momento",
+        title: action === "pause" ? "Piloto pausado" : action === "resume" ? "Piloto reanudado" : "Sale en un momento",
       });
       onChanged();
     } catch (caught) {
@@ -65,7 +65,7 @@ export function ActionCapsule({ routine, lastRun, withEdit = true, onChanged, cl
   return (
     <div
       role="group"
-      aria-label="Acciones de la ruta"
+      aria-label="Acciones del piloto"
       className={cn(
         "border-border bg-background inline-flex h-10 max-w-full shrink-0 items-center rounded-full border px-1 shadow-[var(--shadow-float)]",
         className,

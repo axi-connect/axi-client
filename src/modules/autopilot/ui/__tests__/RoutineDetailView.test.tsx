@@ -4,7 +4,7 @@ import { routineFixture, summaryFixture } from "@/modules/autopilot/domain/__tes
 import { RoutineDetailView } from "../RoutineDetailView";
 
 /**
- * La ficha de la ruta (R4): la cápsula de acciones que aquí faltaba, las tres
+ * La ficha del piloto (R4): la cápsula de acciones que aquí faltaba, las tres
  * fichas (Busca · Antes de escribirles · Próxima salida) y cada salida con su
  * cinta de embudo; «Falló» lo dice en palabras.
  */
@@ -27,7 +27,7 @@ const api = require("@/modules/autopilot/infrastructure/autopilot-service.adapte
 
 afterEach(() => jest.clearAllMocks());
 
-describe("RoutineDetailView · la ficha de la ruta", () => {
+describe("RoutineDetailView · la ficha del piloto", () => {
   it("la cápsula, las fichas y una cinta por salida; la que falló lo dice en palabras", async () => {
     api.getRoutine.mockResolvedValue(routineFixture());
     api.listRuns.mockResolvedValue({
@@ -39,7 +39,7 @@ describe("RoutineDetailView · la ficha de la ruta", () => {
     });
     render(<RoutineDetailView routineId="r-1" />);
 
-    const actions = await screen.findByRole("group", { name: "Acciones de la ruta" });
+    const actions = await screen.findByRole("group", { name: "Acciones del piloto" });
     expect(within(actions).getByRole("button", { name: /Pausar/ })).toBeInTheDocument();
     expect(within(actions).getByRole("button", { name: /Salir ahora/ })).toBeEnabled();
     expect(screen.getByText("Antes de escribirles")).toBeInTheDocument();

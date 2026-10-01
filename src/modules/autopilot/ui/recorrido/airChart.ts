@@ -1,5 +1,5 @@
 /**
- * La carta de navegación aérea nocturna de una salida (Rutas de captación,
+ * La carta de navegación aérea nocturna de una salida (Piloto,
  * delta v4, mockup aprobado el 2026-10-01): la geometría literal del mockup
  * (`chartGeom`, `chartLand`), en unidades de un `viewBox` de 1000×380. Es el
  * mismo lenguaje que el mapa de la landing (§19.2).
@@ -8,11 +8,11 @@ import type { Cubic, Point } from "./geometry";
 
 export const CHART_W = 1000;
 export const CHART_H = 380;
-/** La torre: la fuente, de donde despega la ruta. */
+/** La torre: la fuente, de donde despega el piloto. */
 export const TOWER: Point = { x: 84, y: 318 };
 /** El aeropuerto: «Lo que viene». */
 export const AIRPORT: Point = { x: 936, y: 92 };
-/** El espacio restringido (tu política), que la ruta rodea. */
+/** El espacio restringido (tu política), que la aerovía rodea. */
 export const RESTRICTED: Point = { x: 612, y: 300 };
 
 /** Los fijos: con tu aprobación son 7 paradas; por su cuenta, 6. */

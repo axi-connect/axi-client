@@ -10,6 +10,7 @@ import { useAuth } from "@/shared/auth/auth.hooks";
 import { EmptyState } from "@/shared/components/features/empty-state";
 import { UnsavedChangesDock } from "@/shared/components/features/island";
 import { OptionsInput } from "@/shared/components/features/options-input";
+import { StepCard } from "@/shared/components/features/step-card";
 import { Input } from "@/shared/components/ui/input";
 import {
   Select,
@@ -52,13 +53,12 @@ import {
 } from "../infrastructure/autopilot-service.adapter";
 import { FlightPreview } from "./recorrido/FlightPreview";
 import { Group, Row, Rows } from "./recorrido/GroupedList";
-import { StepCard } from "./recorrido/StepCard";
 
 /**
- * Crear o editar una ruta (Rutas de captación, R3): cuatro preguntas en pasos
+ * Crear o editar un piloto (Piloto, R3): cuatro preguntas en pasos
  * plegables (§9.7) —cerrado, cada paso dice lo elegido; se abre el que tenga un
  * error— con listas agrupadas tipo Ajustes dentro, y al lado «Así sale tu
- * ruta». Los campos, límites, valores por defecto y validaciones son los de
+ * piloto». Los campos, límites, valores por defecto y validaciones son los de
  * siempre. La estimación sale del MISMO cálculo del servidor
  * (`POST /autopilot/estimate`) y se dice en la isla y en la barra.
  */
@@ -79,7 +79,7 @@ export function RoutineEditorView({ routineId }: { routineId: string | null }) {
   const [estimate, setEstimate] = useState<Estimate | null>(null);
   const [saving, setSaving] = useState(false);
   const [unavailable, setUnavailable] = useState(false);
-  // Uno abierto a la vez. Una ruta nueva abre el primero; una que se edita, ninguno (los resúmenes son la revisión).
+  // Uno abierto a la vez. Un piloto nuevo abre el primero; uno que se edita, ninguno (los resúmenes son la revisión).
   const [openStep, setOpenStep] = useState<"where" | "who" | "how" | "when" | null>(routineId === null ? "where" : null);
 
   // Catálogos: fuentes, secuencias y agentes. Una sola vez.
@@ -96,7 +96,7 @@ export function RoutineEditorView({ routineId }: { routineId: string | null }) {
       );
   }, [showAlert]);
 
-  // El borrador: la ruta que se edita, o una nueva con valores prudentes.
+  // El borrador: el piloto que se edita, o uno nuevo con valores prudentes.
   useEffect(() => {
     if (routineId === null) {
       if (company === null || company === undefined) return;
@@ -113,7 +113,7 @@ export function RoutineEditorView({ routineId }: { routineId: string | null }) {
       })
       .catch((caught: unknown) => {
         if (isAutopilotUnavailable(caught)) setUnavailable(true);
-        else showAlert({ tone: "error", title: "No pudimos abrir la ruta", description: errorMessage(caught) });
+        else showAlert({ tone: "error", title: "No pudimos abrir el piloto", description: errorMessage(caught) });
       });
   }, [routineId, company, showAlert]);
 
@@ -136,7 +136,7 @@ export function RoutineEditorView({ routineId }: { routineId: string | null }) {
 
   const problems = useMemo(() => (draft === null ? [] : validateRoutine(draft)), [draft]);
 
-  // Al abrir una ruta con algo por corregir, se abre ese paso (la barra no deja guardar y lo dice).
+  // Al abrir un piloto con algo por corregir, se abre ese paso (la barra no deja guardar y lo dice).
   useEffect(() => {
     if (initial === "") return;
     const first = validateRoutine(JSON.parse(initial) as RoutineInput)[0];
@@ -162,14 +162,14 @@ export function RoutineEditorView({ routineId }: { routineId: string | null }) {
     return (
       <EmptyState
         icon={Bot}
-        title="Las rutas llegan con la próxima versión"
-        description="Tu servidor todavía no trae el motor de las rutas de captación."
+        title="Los pilotos llegan con la próxima versión"
+        description="Tu servidor todavía no trae el motor de los pilotos."
       />
     );
   }
   if (draft === null) {
     return (
-      <div className="flex flex-col gap-4" role="status" aria-label="Cargando la ruta">
+      <div className="flex flex-col gap-4" role="status" aria-label="Cargando el piloto">
         <Skeleton className="h-24 w-full rounded-3xl" />
         <Skeleton className="h-72 w-full rounded-3xl" />
       </div>
@@ -194,8 +194,8 @@ export function RoutineEditorView({ routineId }: { routineId: string | null }) {
   const titles = Array.isArray((params.person as { titles?: unknown } | undefined)?.titles)
     ? ((params.person as { titles: string[] }).titles ?? [])
     : [];
-  const stepState = (step: StepId): "done" | "error" =>
-    problems.some((problem) => STEP_OF_FIELD[problem.field] === step) ? "error" : "done";
+  const stepState = (step: StepId): "done" | "blocked" =>
+    problems.some((problem) => STEP_OF_FIELD[problem.field] === step) ? "blocked" : "done";
   const toggle = (step: StepId) => setOpenStep((current) => (current === step ? null : step));
 
   async function save() {
@@ -209,15 +209,15 @@ export function RoutineEditorView({ routineId }: { routineId: string | null }) {
     try {
       if (routineId === null) {
         const created = await createRoutine(draft);
-        showAlert({ tone: "success", title: "Ruta creada", description: "Sale sola en su horario." });
+        showAlert({ tone: "success", title: "Piloto creado", description: "Sale solo en su horario." });
         router.push(`/marketing/autopilot/${created.id}`);
       } else {
         await updateRoutine(routineId, draft);
         setInitial(JSON.stringify(draft));
-        showAlert({ tone: "success", title: "Ruta actualizada" });
+        showAlert({ tone: "success", title: "Piloto actualizado" });
       }
     } catch (caught) {
-      showAlert({ tone: "error", title: "No se guardó la ruta", description: errorMessage(caught) });
+      showAlert({ tone: "error", title: "No se guardó el piloto", description: errorMessage(caught) });
     } finally {
       setSaving(false);
     }
@@ -226,16 +226,16 @@ export function RoutineEditorView({ routineId }: { routineId: string | null }) {
   return (
     <div className="flex min-w-0 flex-col gap-5 pb-24">
       <MarketingHeader
-        kicker="Marketing · Rutas"
-        title={routineId === null ? "Nueva ruta" : draft.name || "Ruta"}
+        kicker="Marketing · Pilotos"
+        title={routineId === null ? "Nuevo piloto" : draft.name || "Piloto"}
         description="Cuatro preguntas. Cada una dice qué va a pasar y cuánto cuesta."
       />
 
-      {/* Los cuatro pasos a la izquierda; «Así sale tu ruta» a la derecha (fija al bajar) o al final en el celular. */}
+      {/* Los cuatro pasos a la izquierda; «Así sale tu piloto» a la derecha (fija al bajar) o al final en el celular. */}
       <div className="@container/ed">
         <div className="grid gap-4 @[60rem]/ed:grid-cols-[minmax(0,1fr)_20rem] @[60rem]/ed:items-start">
           <div className="flex min-w-0 flex-col gap-3">
-            <StepCard index={1} title="¿Dónde busca?" summary={summaries.where} state={stepState("where")} open={openStep === "where"} onToggle={() => toggle("where")}>
+            <StepCard {...STEP_LOOK} index={1} title="¿Dónde busca?" summary={summaries.where} state={stepState("where")} open={openStep === "where"} onToggle={() => toggle("where")}>
               <Group foot={hints.search}>
                 <Rows>
                   <Row label="Nombre" htmlFor="route-name" stack>
@@ -310,7 +310,7 @@ export function RoutineEditorView({ routineId }: { routineId: string | null }) {
               </Group>
             </StepCard>
 
-            <StepCard index={2} title="¿A quién deja pasar?" summary={summaries.who} state={stepState("who")} open={openStep === "who"} onToggle={() => toggle("who")}>
+            <StepCard {...STEP_LOOK} index={2} title="¿A quién deja pasar?" summary={summaries.who} state={stepState("who")} open={openStep === "who"} onToggle={() => toggle("who")}>
               <Group foot="Lo que no califica no gasta contacto.">
                 <Rows>
                   <Row label="Puntaje mínimo" stack>
@@ -349,7 +349,7 @@ export function RoutineEditorView({ routineId }: { routineId: string | null }) {
               </Group>
             </StepCard>
 
-            <StepCard index={3} title="¿Cómo les escribe?" summary={summaries.how} state={stepState("how")} open={openStep === "how"} onToggle={() => toggle("how")}>
+            <StepCard {...STEP_LOOK} index={3} title="¿Cómo les escribe?" summary={summaries.how} state={stepState("how")} open={openStep === "how"} onToggle={() => toggle("how")}>
               <Group title="Antes de escribirles" foot={ROUTINE_MODE_META[draft.mode].hint}>
                 <SegmentedControl
                   label="Antes de escribirles"
@@ -436,6 +436,7 @@ export function RoutineEditorView({ routineId }: { routineId: string | null }) {
             </StepCard>
 
             <StepCard
+              {...STEP_LOOK}
               index={4}
               title="¿Cuándo sale y cuánto gasta?"
               summary={summaries.when}
@@ -542,7 +543,7 @@ export function RoutineEditorView({ routineId }: { routineId: string | null }) {
           submitting={saving}
           invalid={problems.length > 0}
           invalidReason={problems[0]?.message}
-          submitLabel={routineId === null ? "Crear ruta" : "Guardar cambios"}
+          submitLabel={routineId === null ? "Crear piloto" : "Guardar cambios"}
           detail={estimate === null ? undefined : `~${String(estimate.credits_per_month)} créditos al mes`}
           onSave={() => void save()}
           onDiscard={routineId === null ? () => router.push("/marketing/autopilot") : () => setDraft(JSON.parse(initial) as RoutineInput)}
@@ -553,6 +554,9 @@ export function RoutineEditorView({ routineId }: { routineId: string | null }) {
 }
 
 type StepId = "where" | "who" | "how" | "when";
+
+/** La cara de los pasos del editor (la del mockup): chevrón, y «!» dicho como algo por corregir. */
+const STEP_LOOK = { id: "pilot-step", variant: "chevron", blockedHint: "tiene algo por corregir" } as const;
 
 /** En qué paso se arregla cada error de `validateRoutine`. */
 const STEP_OF_FIELD: Record<string, StepId | undefined> = {

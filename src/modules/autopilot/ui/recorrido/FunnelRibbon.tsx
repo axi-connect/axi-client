@@ -1,7 +1,7 @@
 import { useId } from "react";
 
 /**
- * La cinta de embudo de una salida (ficha de la ruta): encontradas →
+ * La cinta de embudo de una salida (ficha del piloto): encontradas →
  * calificadas → contactadas, que se adelgaza como el mapa. El grosor es su
  * parte de la salida más ancha de la lista, así se comparan sin abrirlas; un
  * cero sigue viéndose como un hilo.

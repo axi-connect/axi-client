@@ -16,8 +16,8 @@ import { decideBatch } from "../../infrastructure/autopilot-service.adapter";
 import { StatusDot } from "./StatusDot";
 
 /**
- * «Tu aprobación» (Rutas de captación, R1): la isla de cristal del lote de una
- * ruta CON TU APROBACIÓN. La salida se detuvo antes de escribirles y espera a
+ * «Tu aprobación» (Piloto, R1): la isla de cristal del lote de una
+ * piloto CON TU APROBACIÓN. La salida se detuvo antes de escribirles y espera a
  * que apruebes a quién; lo que no se aprueba se omite. Es la única isla de En
  * vivo: la frase de ahora ya encabeza el mapa.
  */

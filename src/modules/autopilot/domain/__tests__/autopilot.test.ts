@@ -1,11 +1,9 @@
 import {
   defaultRoutineInput,
-  funnelOf,
   hourLabel,
   itemTitle,
   scheduleLabel,
   sourceSummary,
-  stepsDone,
   validateRoutine,
 } from "../autopilot";
 
@@ -24,22 +22,8 @@ describe("autopilot — cómo se dice un horario", () => {
   });
 });
 
-describe("autopilot — en qué paso va", () => {
-  it("un paso está hecho al alcanzar su ÚLTIMO cierre: buscar termina al acabar la búsqueda", () => {
-    expect(stepsDone(null)).toBe(0);
-    expect(stepsDone("search")).toBe(0);
-    expect(stepsDone("await_search")).toBe(1);
-    expect(stepsDone("gate")).toBe(5);
-    // El lote de un piloto asistido no es un paso propio.
-    expect(stepsDone("approve")).toBe(5);
-    expect(stepsDone("contact")).toBe(6);
-  });
-});
 
 describe("autopilot — lo que se ve de una ejecución", () => {
-  it("el embudo sale de los contadores del motor, en cero si falta alguno", () => {
-    expect(funnelOf({ found: 48, qualified: 19 }).map((entry) => entry.value)).toEqual([48, 19, 0]);
-  });
 
   it("una cuenta sin nombre no se enseña como un id", () => {
     expect(itemTitle({ display_name: "Carolina Ruiz", company_name: "La Brasa Parrilla" })).toBe(

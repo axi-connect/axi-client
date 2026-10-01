@@ -5,12 +5,12 @@ import { RoutineEditorView } from "../RoutineEditorView";
 
 /**
  * El editor (R3): cuatro pasos plegables con su resumen, listas agrupadas
- * dentro, el modo en un SegmentedControl y «Así sale tu ruta» con la frase del
+ * dentro, el modo en un SegmentedControl y «Así sale tu piloto» con la frase del
  * estimado. Al guardar con un error se abre su paso.
  */
 jest.mock("next/navigation", () => ({ usePathname: () => "/marketing/autopilot/r-1/edit", useRouter: () => ({ push: jest.fn() }) }));
 jest.mock("@/shared/auth/auth.hooks", () => ({ useAuth: () => ({ hasPermission: () => true }) }));
-// Estables entre renders, como los de verdad: el editor relee la ruta si cambian.
+// Estables entre renders, como los de verdad: el editor relee el piloto si cambian.
 const alert = { showAlert: jest.fn() };
 const myCompany = { company: { timezone: "America/Bogota" } };
 jest.mock("@/core/providers/alert-provider", () => ({ useAlert: () => alert }));
@@ -42,7 +42,7 @@ beforeEach(() => {
 });
 afterEach(() => jest.clearAllMocks());
 
-describe("RoutineEditorView · Rutas de captación", () => {
+describe("RoutineEditorView · Piloto", () => {
   it("cuatro pasos cerrados con su resumen; abrir uno muestra sus listas", async () => {
     render(<RoutineEditorView routineId="r-1" />);
     const where = await screen.findByRole("button", { name: /¿Dónde busca\?/ });
@@ -56,9 +56,9 @@ describe("RoutineEditorView · Rutas de captación", () => {
     expect(screen.getByRole("checkbox", { name: "Correo" })).toBeChecked();
   });
 
-  it("«Así sale tu ruta»: la frase del estimado, la ruta vertical y el estimado del servidor", async () => {
+  it("«Así sale tu piloto»: la frase del estimado, la aerovía vertical y el estimado del servidor", async () => {
     render(<RoutineEditorView routineId="r-1" />);
-    const preview = await screen.findByRole("complementary", { name: "Así sale tu ruta" });
+    const preview = await screen.findByRole("complementary", { name: "Así sale tu piloto" });
     expect(await within(preview).findByText("~396", { exact: false }, { timeout: 2000 })).toBeInTheDocument();
     expect(within(preview).getByText(/De 25 negocios/)).toBeInTheDocument();
     expect(within(preview).getByText("Tu aprobación")).toBeInTheDocument();
@@ -70,13 +70,13 @@ describe("RoutineEditorView · Rutas de captación", () => {
 
   it("«Por su cuenta» quita la parada de tu aprobación", async () => {
     render(<RoutineEditorView routineId="r-1" />);
-    const preview = await screen.findByRole("complementary", { name: "Así sale tu ruta" });
+    const preview = await screen.findByRole("complementary", { name: "Así sale tu piloto" });
     fireEvent.click(screen.getByRole("button", { name: /¿Cómo les escribe\?/ }));
     fireEvent.click(screen.getByRole("radio", { name: "Por su cuenta" }));
     expect(within(preview).queryByText("Tu aprobación")).not.toBeInTheDocument();
   });
 
-  it("una ruta con algo por corregir abre ese paso y lo marca", async () => {
+  it("un piloto con algo por corregir abre ese paso y lo marca", async () => {
     api.getRoutine.mockResolvedValue(routineFixture({ contact: { channels: [], agent_id: "a-1", goal: "Agendar" } }));
     render(<RoutineEditorView routineId="r-1" />);
     const how = await screen.findByRole("button", { name: /¿Cómo les escribe\?/ });

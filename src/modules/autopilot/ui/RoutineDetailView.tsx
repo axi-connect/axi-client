@@ -46,7 +46,7 @@ function spentThisMonth(runs: readonly RunSummary[], hasMore: boolean, timeZone:
 }
 
 /**
- * Una ruta (Rutas de captación, R4): la cápsula de acciones que aquí faltaba
+ * Un piloto (Piloto, R4): la cápsula de acciones que aquí faltaba
  * (Pausar ↔ Reanudar · Salir ahora · Editar), qué busca, cómo escribe y cuándo
  * sale, y sus salidas una a una, cada una con su cinta de embudo para
  * compararlas sin abrirlas.
@@ -93,14 +93,14 @@ export function RoutineDetailView({ routineId }: { routineId: string }) {
   }
 
   if (unavailable) {
-    return <EmptyState icon={Bot} title="Las rutas llegan con la próxima versión" description="Tu servidor todavía no trae el motor de las rutas de captación." />;
+    return <EmptyState icon={Bot} title="Los pilotos llegan con la próxima versión" description="Tu servidor todavía no trae el motor de los pilotos." />;
   }
   if (failure !== null) {
-    return <EmptyState icon={Bot} title="No pudimos leer la ruta" description={failure} action={<Button onClick={load}>Reintentar</Button>} />;
+    return <EmptyState icon={Bot} title="No pudimos leer el piloto" description={failure} action={<Button onClick={load}>Reintentar</Button>} />;
   }
   if (routine === null || runs === null) {
     return (
-      <div className="flex flex-col gap-4" role="status" aria-label="Cargando la ruta">
+      <div className="flex flex-col gap-4" role="status" aria-label="Cargando el piloto">
         <Skeleton className="h-24 w-full rounded-3xl" />
         <Skeleton className="h-64 w-full rounded-3xl" />
       </div>
@@ -118,7 +118,7 @@ export function RoutineDetailView({ routineId }: { routineId: string }) {
     // `@container` aquí: la rejilla de las tres fichas consulta a su padre (una consulta no se mide a sí misma).
     <div className="@container flex min-w-0 flex-col gap-5">
       <MarketingHeader
-        kicker="Marketing · Rutas"
+        kicker="Marketing · Pilotos"
         title={routine.name}
         description={`${scheduleLabel(routine.schedule)} · ${String(routine.schedule.leads_per_run)} cuentas y hasta ${String(routine.budget.per_run)} créditos por salida`}
         actions={canManage ? <ActionCapsule routine={routine} lastRun={lastRun} onChanged={load} /> : undefined}

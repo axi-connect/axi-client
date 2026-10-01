@@ -5,8 +5,8 @@ import type { RunDetail, RunEvent } from "@/modules/autopilot/domain/autopilot";
 import { RunLiveView } from "../RunLiveView";
 
 /**
- * En vivo (Rutas de captación, R1): la cápsula de acciones en el encabezado
- * (con Reanudar), la tarjeta de la ruta con la frase de ahora en grande, las
+ * En vivo (Piloto, R1): la cápsula de acciones en el encabezado
+ * (con Reanudar), la tarjeta del piloto con la frase de ahora en grande, las
  * paradas que filtran las cuentas, la isla «Tu aprobación» como única isla, las
  * cuentas con su SegmentedControl y «Paso a paso» plegado.
  */
@@ -67,14 +67,14 @@ const awaiting = () =>
 
 afterEach(() => jest.clearAllMocks());
 
-describe("RunLiveView · Rutas de captación", () => {
-  it("en ruta: la frase de ahora encabeza el mapa, el avión late y cada fijo dice su cifra", async () => {
+describe("RunLiveView · Piloto", () => {
+  it("en vuelo: la frase de ahora encabeza el mapa, el avión late y cada fijo dice su cifra", async () => {
     given(runFixture({ step: "await_enrich", counters: { found: 25, qualified: 6 }, credits_spent: 6 }));
     render(<RunLiveView runId="run-1" />);
 
-    const card = await screen.findByRole("region", { name: "La ruta de esta salida" });
+    const card = await screen.findByRole("region", { name: "La carta de esta salida" });
     expect(await within(card).findByRole("heading", { level: 2 })).toHaveTextContent(/Calificando/);
-    expect(within(card).getByText("En ruta")).toBeInTheDocument();
+    expect(within(card).getByText("En vuelo")).toBeInTheDocument();
     expect(within(card).getByText("Con tu aprobación")).toBeInTheDocument();
     expect(within(card).getByRole("meter", { name: "Créditos de esta salida" })).toHaveAttribute("aria-valuenow", "6");
     expect(within(card).getByText(/6 de 40 créditos/)).toBeInTheDocument();
@@ -88,19 +88,19 @@ describe("RunLiveView · Rutas de captación", () => {
   it("la cápsula vive en el encabezado; la isla de tinta de abajo ya no está", async () => {
     given(runFixture({ step: "await_enrich", counters: { found: 25, qualified: 6 } }));
     render(<RunLiveView runId="run-1" />);
-    const actions = await screen.findByRole("group", { name: "Acciones de la ruta" });
+    const actions = await screen.findByRole("group", { name: "Acciones del piloto" });
     expect(within(actions).getByRole("button", { name: /Pausar/ })).toBeInTheDocument();
     expect(within(actions).getByRole("button", { name: /Salir ahora/ })).toBeDisabled();
     expect(within(actions).getByRole("link", { name: /Editar/ })).toHaveAttribute("href", "/marketing/autopilot/r-1/edit");
     expect(screen.queryByRole("region", { name: "Acciones del piloto" })).not.toBeInTheDocument();
   });
 
-  it("pausada: Reanudar, y al reanudar se relee la ruta", async () => {
+  it("pausada: Reanudar, y al reanudar se relee el piloto", async () => {
     given(runFixture({ status: "paused", step: "await_enrich", counters: { found: 25, qualified: 6 } }), { status: "paused" });
     api.resumeRoutine.mockResolvedValue({});
     render(<RunLiveView runId="run-1" />);
-    const actions = await screen.findByRole("group", { name: "Acciones de la ruta" });
-    expect(await screen.findByText("Pausaste la ruta")).toBeInTheDocument();
+    const actions = await screen.findByRole("group", { name: "Acciones del piloto" });
+    expect(await screen.findByText("Pausaste el piloto")).toBeInTheDocument();
     fireEvent.click(within(actions).getByRole("button", { name: /Reanudar/ }));
     await waitFor(() => expect(api.resumeRoutine).toHaveBeenCalledWith("r-1"));
     await waitFor(() => expect(api.getRoutine).toHaveBeenCalledTimes(2));
@@ -109,7 +109,7 @@ describe("RunLiveView · Rutas de captación", () => {
   it("autónomo: «Por su cuenta» y sin parada de tu aprobación", async () => {
     given(runFixture({ step: "approve", counters: { found: 25, qualified: 9, contacted: 3 } }), { mode: "autonomous" });
     render(<RunLiveView runId="run-1" />);
-    const card = await screen.findByRole("region", { name: "La ruta de esta salida" });
+    const card = await screen.findByRole("region", { name: "La carta de esta salida" });
     expect(await within(card).findByText("Por su cuenta")).toBeInTheDocument();
     expect(within(card).queryByRole("button", { name: /^Tu aprobación/ })).not.toBeInTheDocument();
   });
@@ -151,7 +151,7 @@ describe("RunLiveView · Rutas de captación", () => {
     expect(document.querySelector('[data-plane="holding"]')).not.toBeNull();
     expect(screen.getByText(/Tu política · 2 frenadas aquí/)).toBeInTheDocument();
     expect(screen.getByTitle(/Revelar el correo: 1 crédito por cuenta/)).toHaveTextContent("9 créditos");
-    expect(screen.getByRole("region", { name: "La ruta de esta salida" })).toHaveClass("surface-dark");
+    expect(screen.getByRole("region", { name: "La carta de esta salida" })).toHaveClass("surface-dark");
     fireEvent.click(screen.getByRole("button", { name: /Ver las 18/ }));
     expect(screen.getAllByText(/Puntaje por debajo de 60/).length).toBe(12);
     expect(document.body.textContent).not.toMatch(/policy_|below_min_score|no_decision_maker|skipped_in_batch/);
@@ -188,7 +188,7 @@ describe("RunLiveView · Rutas de captación", () => {
     );
     render(<RunLiveView runId="run-1" />);
     expect(await screen.findByText("Terminada: 7 cuentas en seguimiento")).toBeInTheDocument();
-    // En el mapa («Lo que viene») y en la ruta vertical; «En seguimiento» también es la etapa de las cuentas.
+    // En el mapa («Lo que viene») y en la aerovía vertical; «En seguimiento» también es la etapa de las cuentas.
     expect(screen.getAllByText("Lo que viene").length).toBe(2);
     expect(screen.getByText("Respondieron")).toBeInTheDocument();
     expect(screen.getByText("4 en seguimiento · 2 respondieron · 1 demo agendada")).toBeInTheDocument();
@@ -242,7 +242,7 @@ describe("RunLiveView · Rutas de captación", () => {
     try {
       given(runFixture({ step: "await_enrich", counters: { found: 25, qualified: 6 } }));
       render(<RunLiveView runId="run-1" />);
-      await screen.findByRole("region", { name: "La ruta de esta salida" });
+      await screen.findByRole("region", { name: "La carta de esta salida" });
       await waitFor(() => expect(document.querySelector("[data-plane]")).not.toBeNull());
       expect(raf).not.toHaveBeenCalled();
     } finally {
@@ -255,6 +255,6 @@ describe("RunLiveView · Rutas de captación", () => {
     api.getRun.mockRejectedValue({ status: 404 });
     api.listRunEvents.mockResolvedValue({ items: [] });
     render(<RunLiveView runId="run-1" />);
-    expect(await screen.findByText("Las rutas llegan con la próxima versión")).toBeInTheDocument();
+    expect(await screen.findByText("Los pilotos llegan con la próxima versión")).toBeInTheDocument();
   });
 });

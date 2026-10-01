@@ -1,7 +1,7 @@
 import { cn } from "@/core/lib/utils";
 
 /**
- * Listas agrupadas tipo Ajustes (editor de rutas): un encabezado de grupo, filas
+ * Listas agrupadas tipo Ajustes (editor de pilotos): un encabezado de grupo, filas
  * con la etiqueta a la izquierda y el valor o el control a la derecha, y una
  * nota al pie que explica.
  */

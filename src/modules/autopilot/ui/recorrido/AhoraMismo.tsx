@@ -11,7 +11,7 @@ type Ahora = NonNullable<ReturnType<typeof ahoraMismo>>;
 
 /**
  * «Ahora mismo» (R2): la isla de cristal con lo que pide tu atención en la
- * lista de rutas. El avión en su moneda, una frase grande («7 cuentas esperan tu aprobación»),
+ * lista de pilotos. El avión en su moneda, una frase grande («7 cuentas esperan tu aprobación»),
  * una línea de contexto y el botón al lote o a la salida en vivo. Sale de la
  * misma lista; quien la monta decide si hay algo que contar.
  */

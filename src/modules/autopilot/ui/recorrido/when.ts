@@ -1,6 +1,6 @@
 /**
- * Fechas de una ruta dichas como se dicen: «hoy, 8:00», «mañana, 14:00»,
- * «ayer, 10:00», «jue 2 oct, 14:00», en la zona de la ruta.
+ * Fechas de un piloto dichas como se dicen: «hoy, 8:00», «mañana, 14:00»,
+ * «ayer, 10:00», «jue 2 oct, 14:00», en la zona del piloto.
  */
 function dayKey(date: Date, timeZone: string): string {
   return date.toLocaleDateString("en-CA", { timeZone });
@@ -23,7 +23,7 @@ export function relativeDay(at: Date, now: Date, timeZone: string): string {
   return `${part("weekday")} ${part("day")} ${part("month")}`;
 }
 
-/** «8:00»: la hora de un instante en la zona de la ruta. */
+/** «8:00»: la hora de un instante en la zona del piloto. */
 export function hourIn(iso: string, timeZone: string): string | null {
   const at = new Date(iso);
   return Number.isNaN(at.getTime()) ? null : hour(at, timeZone);

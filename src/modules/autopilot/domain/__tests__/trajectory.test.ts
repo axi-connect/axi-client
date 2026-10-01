@@ -1,6 +1,6 @@
 import { RUN_STATUSES } from "../autopilot";
 import { reasonLabel, reasonShortLabel, reasonStop } from "../reasons";
-import { runTrajectory, stepProgress } from "../trajectory";
+import { runTrajectory } from "../trajectory";
 import { itemFixture, mockupItems, routineFixture, runFixture } from "./recorrido.fixtures";
 
 const assisted = routineFixture();
@@ -243,7 +243,7 @@ describe("trajectory — los siete estados", () => {
 });
 
 describe("trajectory — nombre corto y lo que hace cada parada", () => {
-  it("los nombres de las rutas y su `sub`, con la secuencia si se conoce", () => {
+  it("los nombres de los pilotos y su `sub`, con la secuencia si se conoce", () => {
     const stops = runTrajectory(runFixture(), assisted, { sequenceName: "Primer contacto" }).stops;
     expect(stops.map((stop) => [stop.label, stop.sub])).toEqual([
       ["Buscar", "gratis"],
@@ -277,7 +277,7 @@ describe("trajectory — la hora de cada parada", () => {
     closed("enrich", "2026-10-01T13:09:00Z"),
   ];
 
-  it("sale del primer step_completed, en la zona de la ruta; la parada en curso dice «ahora»", () => {
+  it("sale del primer step_completed, en la zona del piloto; la parada en curso dice «ahora»", () => {
     const run = runFixture({ step: "await_enrich", counters: { found: 25 } });
     const stops = runTrajectory(run, assisted, { events }).stops;
     expect(stops.map((stop) => stop.time)).toEqual(["8:01", "8:03", "ahora", null, null, null, null]);
@@ -319,12 +319,3 @@ describe("trajectory — el peaje y «Lo que viene»", () => {
   });
 });
 
-describe("trajectory — «paso X de N»", () => {
-  it("cuenta las mismas paradas que la miniatura", () => {
-    expect(stepProgress(runFixture({ step: "await_search" }), assisted)).toEqual({ current: 2, total: 7 });
-    expect(stepProgress(runFixture({ step: "await_search" }), autonomous)).toEqual({ current: 2, total: 6 });
-    expect(stepProgress(runFixture({ status: "awaiting_approval", step: "approve" }), assisted)).toEqual({ current: 6, total: 7 });
-    expect(stepProgress(runFixture({ status: "queued" }), assisted)).toBeNull();
-    expect(stepProgress(runFixture({ status: "done", step: "contact" }), assisted)).toBeNull();
-  });
-});

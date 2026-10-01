@@ -1,7 +1,7 @@
 import type { Schemas } from "@/core/api/types";
 
 /**
- * La ficha «Lo que trajeron tus rutas» (P6b, mockup aprobado por el dueño):
+ * La ficha «Lo que trajeron tus pilotos» (P6b, mockup aprobado por el dueño):
  * GET /autopilot/summary. El tipo sale del contrato (`SummaryDto`).
  */
 export type PilotsSummaryDTO = Schemas["SummaryDto"];

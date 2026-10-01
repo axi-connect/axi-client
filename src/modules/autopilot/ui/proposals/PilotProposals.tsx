@@ -72,7 +72,7 @@ export function PilotProposals({
         <h2 id="pilot-proposals-title" className="font-heading text-lg font-bold">
           Axi propone
         </h2>
-        <span className="text-muted-foreground text-xs">Con los números de tus rutas, sin inventar nada</span>
+        <span className="text-muted-foreground text-xs">Con los números de tus pilotos, sin inventar nada</span>
       </div>
       <div className="grid grid-cols-1 gap-4 @3xl:grid-cols-2">
         {proposals.map((proposal) => (
@@ -164,7 +164,7 @@ function ProposalCard({
         </span>
         <div className="flex min-w-0 flex-col gap-1">
           <span className="text-muted-foreground flex flex-wrap items-center gap-x-2 text-[10.5px] font-semibold tracking-[0.1em] uppercase">
-            <span className="whitespace-nowrap">Ajuste de la ruta</span>
+            <span className="whitespace-nowrap">Ajuste del piloto</span>
             {applied ? (
               <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
                 <span aria-hidden="true" className="bg-success size-1.5 rounded-full" />
@@ -201,13 +201,13 @@ function ProposalCard({
             <p className="text-pretty">
               Quedó puesto.
               <span className="text-muted-foreground mt-0.5 block text-xs">
-                Lo ves y lo cambias cuando quieras en la ficha de la ruta.
+                Lo ves y lo cambias cuando quieras en la ficha del piloto.
               </span>
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="glass" className="h-10 px-4">
-              <Link href={routineHref}>Ver la ruta</Link>
+              <Link href={routineHref}>Ver el piloto</Link>
             </Button>
           </div>
         </>
@@ -262,7 +262,7 @@ function ProposalCard({
               <p className="text-pretty">
                 No se aplicó: {state.reason.replace(/\.$/, "")}.
                 <span className="text-muted-foreground mt-0.5 block text-xs">
-                  La propuesta sigue aquí. Revisa la ruta o descártala.
+                  La propuesta sigue aquí. Revisa el piloto o descártala.
                 </span>
               </p>
             </div>
@@ -311,7 +311,7 @@ function ProposalCard({
             <div className="flex flex-wrap items-center gap-2">
               {state.mode === "failed" ? (
                 <Button asChild variant="contrast" className="h-10 rounded-full px-[18px]">
-                  <Link href={routineHref}>Ver la ruta</Link>
+                  <Link href={routineHref}>Ver el piloto</Link>
                 </Button>
               ) : (
                 <Button

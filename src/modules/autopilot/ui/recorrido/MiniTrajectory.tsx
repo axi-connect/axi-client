@@ -16,11 +16,11 @@ const NODE: Record<StopState, string> = {
 const PLANE_AT = 0.72;
 
 /**
- * La ruta de la última salida en línea recta (tarjeta de la lista, la
+ * La última salida en línea recta (tarjeta de la lista, la
  * distribución que eligió el dueño): nodos de 16 px con su cifra y su nombre,
  * sólida hasta la última parada alcanzada y punteada después, y el avión de
- * lucide en su tramo si la salida va en ruta, espera o está pausada (late solo
- * en ruta). En una tarjeta de menos de 620 px se quitan los nombres; el lector
+ * lucide en su tramo si la salida va en vuelo, espera o está pausada (late solo
+ * en vuelo). En una tarjeta de menos de 620 px se quitan los nombres; el lector
  * de pantalla los oye siempre.
  */
 export function MiniTrajectory({ trajectory, running, showPlane }: { trajectory: Trajectory; running: boolean; showPlane: boolean }) {
@@ -34,7 +34,7 @@ export function MiniTrajectory({ trajectory, running, showPlane }: { trajectory:
 
   return (
     <div className="@container/line min-w-0">
-      <div role="img" aria-label={`Ruta de la última salida: ${speech}`} className="relative mx-3 mt-1 h-[42px] @[38.75rem]/line:mx-10 @[38.75rem]/line:h-[62px]">
+      <div role="img" aria-label={`La última salida: ${speech}`} className="relative mx-3 mt-1 h-[42px] @[38.75rem]/line:mx-10 @[38.75rem]/line:h-[62px]">
         <span aria-hidden className="border-foreground/30 absolute inset-x-0 top-[7px] border-t-2 border-dotted" />
         <span aria-hidden className="bg-foreground absolute top-1.5 left-0 h-[3px] rounded-full" style={{ width: `${String(reached < 0 ? 0 : at(reached))}%` }} />
         <ol aria-hidden>

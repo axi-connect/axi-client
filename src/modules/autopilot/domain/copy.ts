@@ -24,9 +24,9 @@ import {
 } from "./trajectory";
 
 /**
- * Las frases de las rutas, en un solo sitio y testeadas (como
- * `commercial/domain/copy.ts`). Son las de los mockups «el recorrido» y «Rutas
- * de captación», aprobados el 2026-10-01: «ruta», «salida», «en ruta» y «se
+ * Las frases de los pilotos, en un solo sitio y testeadas (como
+ * `commercial/domain/copy.ts`). Son las de los mockups del recorrido y de
+ * captación, aprobados el 2026-10-01: «piloto», «salida», «en vuelo» y «se
  * quedó en el camino». Cambiarlas aquí es cambiarlas en En vivo, en la lista y
  * en el editor. Ninguna enseña una clave del motor: lo que no se reconoce se
  * dice en general.
@@ -55,7 +55,7 @@ function channelLabels(channels: readonly string[]): string[] {
 
 /** «correo y llamada del agente», para las frases (en minúscula). */
 function channelsPhrase(channels: readonly string[]): string {
-  return channels.length === 0 ? "los canales de la ruta" : joinList(channelLabels(channels)).toLowerCase();
+  return channels.length === 0 ? "los canales del piloto" : joinList(channelLabels(channels)).toLowerCase();
 }
 
 /** Los canales en corto, para los resúmenes del editor: «correo y llamada». */
@@ -89,7 +89,7 @@ const STOP_LABEL: Record<StopKey, string> = {
   approve: APPROVE_STOP.label,
 } as Record<StopKey, string>;
 
-/** Lo que hace la ruta en cada parada, en gerundio: «En ruta · calificando». */
+/** Lo que hace el piloto en cada parada, en gerundio: «En vuelo · calificando». */
 const STOP_DOING: Record<StopKey, string> = {
   search: "buscando",
   enrich: "completando datos",
@@ -108,7 +108,7 @@ function currentStop(trajectory: Trajectory) {
 
 /**
  * Por qué se detuvo una salida, en palabras y nunca con `run.error` crudo.
- * Sirve también cuando la ruta no cargó (`routine` null): no nombra la fuente.
+ * Sirve también cuando el piloto no cargó (`routine` null): no nombra la fuente.
  */
 export function failureLine(run: Pick<RunSummary, "error" | "step" | "status" | "counters">, routine: RoutineCopy | null): string {
   const again = "No se gastó nada más; puedes salir de nuevo.";
@@ -117,7 +117,7 @@ export function failureLine(run: Pick<RunSummary, "error" | "step" | "status" | 
     const source = routine === null ? "la fuente" : sourceLabel(routine.source.kind).label;
     return `No se pudo leer la fuente: ${routine === null ? "no respondió" : `${source} no respondió`}. ${again}`;
   }
-  if (error === "routine_deleted") return "La ruta se eliminó mientras la salida corría.";
+  if (error === "routine_deleted") return "El piloto se eliminó mientras la salida corría.";
   if (routine === null) return `Algo falló en esta salida. ${again}`;
   const stop = currentStop(runTrajectory(run, routine));
   return `Algo falló en «${stop?.label ?? "la salida"}». ${again}`;
@@ -153,7 +153,7 @@ function capitalize(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
-/** Qué hace la ruta ahora, en una frase y su detalle (encabezan el mapa). */
+/** Qué hace el piloto ahora, en una frase y su detalle (encabezan el mapa). */
 export function nowLine(run: RunLike, routine: RoutineCopy, ctx: RunCopyContext = {}): { title: string; detail: string } {
   const trajectory = runTrajectory(run, routine);
   const stop = currentStop(trajectory);
@@ -163,7 +163,7 @@ export function nowLine(run: RunLike, routine: RoutineCopy, ctx: RunCopyContext 
       return { title: "Sale en un momento", detail: "Cuando arranque, verás aquí cada parada con sus cifras." };
     case "paused":
       return {
-        title: "Pausaste la ruta",
+        title: "Pausaste el piloto",
         detail: `Quedó en «${stop?.label ?? "la salida"}». Sigue donde iba cuando la reanudes.`,
       };
     case "budget_exhausted": {
@@ -296,7 +296,7 @@ export function batchCopy(input: {
   sequenceName?: string | null;
 }): BatchCopy {
   const skipped = Math.max(0, input.total - input.approved);
-  const sequence = input.sequenceName ? `«${input.sequenceName}»` : "la secuencia de la ruta";
+  const sequence = input.sequenceName ? `«${input.sequenceName}»` : "la secuencia del piloto";
   return {
     pill: plural(input.total, "cuenta", "cuentas"),
     title: "Revisa a quién le escribe",
@@ -308,7 +308,7 @@ export function batchCopy(input: {
 
 /* ───────────────────────────── «Lo que viene» ───────────────────────────── */
 
-/** Al final de la ruta: en seguimiento · respondieron · demo agendada. */
+/** Al final de la aerovía: en seguimiento · respondieron · demo agendada. */
 export function destinationRows(
   destination: TrajectoryDestination | null,
   agentName?: string | null,
@@ -331,22 +331,22 @@ export function destinationRows(
 type Tone = (typeof RUN_STATUS_META)[keyof typeof RUN_STATUS_META]["tone"];
 
 /**
- * El estado de una ruta en la lista: sale de su ÚLTIMA salida (falló, se acabó
- * el tope, espera…), no de un «Programado» por defecto. En femenino, como
- * «ruta» y «salida»: Pausada, Programada.
+ * El estado de un piloto en la lista: sale de su ÚLTIMA salida (falló, se acabó
+ * el tope, espera…), no de un «Programado» por defecto. En masculino, como
+ * «piloto»: Pausado, Programado.
  */
 export function routineStatusLine(routine: RoutineListItem): { label: string; tone: Tone; live: boolean } {
   const run = routine.last_run;
-  if (routine.status === "paused") return { label: "Pausada", tone: "neutral", live: false };
+  if (routine.status === "paused") return { label: "Pausado", tone: "neutral", live: false };
   if (run !== null) {
     if (run.status === "running") {
       const stop = currentStop(runTrajectory(run, routine));
-      return { label: `En ruta · ${STOP_DOING[stop?.key ?? "search"]}`, tone: "info", live: true };
+      return { label: `En vuelo · ${STOP_DOING[stop?.key ?? "search"]}`, tone: "info", live: true };
     }
-    // Una salida pausada con la ruta activa (se reanudó la ruta, la salida no).
+    // Una salida pausada con el piloto activo (se reanudó el piloto, la salida no).
     return { label: RUN_STATUS_META[run.status].label, tone: RUN_STATUS_META[run.status].tone, live: false };
   }
-  if (routine.status === "active" && routine.next_run_at !== null) return { label: "Programada", tone: "neutral", live: false };
+  if (routine.status === "active" && routine.next_run_at !== null) return { label: "Programado", tone: "neutral", live: false };
   return { label: "Sin salidas aún", tone: "neutral", live: false };
 }
 
@@ -388,13 +388,13 @@ export interface AhoraMismoFact {
 export interface AhoraMismo {
   /** La frase grande: «7 cuentas esperan tu aprobación», ««Clínicas…» va calificando». */
   headline: string;
-  /** La línea de contexto: «Restaurantes de Medellín · además, 1 ruta va calificando · próxima salida hoy a las 14:00». */
+  /** La línea de contexto: «Restaurantes de Medellín · además, 1 piloto va calificando · próxima salida hoy a las 14:00»; si la salida es de otro piloto, «próxima salida de «Clínicas» mañana a las 8:00». */
   context: string;
   facts: AhoraMismoFact[];
   action: { kind: "batch" | "live"; run_id: string } | null;
 }
 
-/** «2026-10-01» en la zona de la ruta: para decir hoy o mañana. */
+/** «2026-10-01» en la zona del piloto: para decir hoy o mañana. */
 function dayKey(date: Date, timeZone: string): string {
   return date.toLocaleDateString("en-CA", { timeZone });
 }
@@ -409,7 +409,7 @@ function departureDay(at: Date, now: Date, timeZone: string): string {
   return `${part("weekday")} ${part("day")} ${part("month")}`;
 }
 
-/** «va calificando», «sale en un momento»: lo que hace una ruta en curso. */
+/** «va calificando», «sale en un momento»: lo que hace un piloto en curso. */
 function doing(routine: RoutineListItem): string {
   const run = routine.last_run;
   if (run === null || run.status === "queued") return "sale en un momento";
@@ -417,8 +417,8 @@ function doing(routine: RoutineListItem): string {
 }
 
 /**
- * Lo que pide tu atención en la lista: rutas en ruta, lotes que esperan y la
- * próxima salida. `null` si no hay nada en ruta ni esperando (no se pinta).
+ * Lo que pide tu atención en la lista: pilotos en vuelo, lotes que esperan y la
+ * próxima salida. `null` si no hay nada en vuelo ni esperando (no se pinta).
  * Sale de la misma lista, sin pedir nada más al servidor.
  */
 export function ahoraMismo(routines: readonly RoutineListItem[], now: Date = new Date()): AhoraMismo | null {
@@ -428,11 +428,11 @@ export function ahoraMismo(routines: readonly RoutineListItem[], now: Date = new
   const facts: AhoraMismoFact[] = [];
   const [onlyFlying] = flying;
   if (onlyFlying?.last_run) {
-    let text = "en ruta";
+    let text = "en vuelo";
     if (flying.length === 1) {
       const run = onlyFlying.last_run;
       const stop = run.status === "queued" ? "en cola" : currentStop(runTrajectory(run, onlyFlying))?.label.toLowerCase();
-      text = `en ruta · ${stop ?? ""}`;
+      text = `en vuelo · ${stop ?? ""}`;
     }
     facts.push({ key: "in_flight", value: String(flying.length), text });
   }
@@ -444,18 +444,23 @@ export function ahoraMismo(routines: readonly RoutineListItem[], now: Date = new
       text: `${waiting.length === 1 ? "lote espera tu aprobación" : "lotes esperan tu aprobación"} · ${plural(accounts, "cuenta", "cuentas")}`,
     });
   }
-  const next = routines
+  const upcoming = routines
     .filter((routine) => routine.status === "active" && routine.next_run_at !== null)
     .map((routine) => ({ routine, at: new Date(routine.next_run_at ?? "") }))
     .filter((entry) => !Number.isNaN(entry.at.getTime()) && entry.at.getTime() >= now.getTime())
-    .sort((a, b) => a.at.getTime() - b.at.getTime())[0];
+    .sort((a, b) => a.at.getTime() - b.at.getTime());
+  // Si la frase nombra UN piloto, la próxima salida es la suya; si no tiene, la
+  // más cercana de otro, y entonces dice de cuál (no se le atribuye la de otro).
+  const named = waiting.length === 1 ? waiting[0] : waiting.length === 0 && flying.length === 1 ? onlyFlying : undefined;
+  const next = upcoming.find((entry) => entry.routine.id === named?.id) ?? upcoming[0];
   let nextPhrase: string | null = null;
   if (next !== undefined) {
     const timeZone = next.routine.schedule.timezone;
     const time = hourLabel(next.at.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone }));
     const day = departureDay(next.at, now, timeZone);
-    facts.push({ key: "next", value: time, text: `próxima salida · ${day}` });
-    nextPhrase = `próxima salida ${day} a las ${time}`;
+    const whose = next.routine.id === named?.id ? "" : ` de «${next.routine.name}»`;
+    facts.push({ key: "next", value: time, text: `próxima salida${whose} · ${day}` });
+    nextPhrase = `próxima salida${whose} ${day} a las ${time}`;
   }
   const batch = waiting[0]?.last_run;
   const live = onlyFlying?.last_run;
@@ -466,19 +471,19 @@ export function ahoraMismo(routines: readonly RoutineListItem[], now: Date = new
   const context: string[] = [];
   if (waiting.length > 0) {
     headline = `${plural(accounts, "cuenta espera", "cuentas esperan")} tu aprobación`;
-    context.push(waiting.length === 1 ? (waiting[0]?.name ?? "") : `en ${plural(waiting.length, "ruta", "rutas")}`);
-    if (flying.length === 1 && onlyFlying) context.push(`además, 1 ruta ${doing(onlyFlying)}`);
-    else if (flying.length > 1) context.push(`además, ${String(flying.length)} rutas en marcha`);
+    context.push(waiting.length === 1 ? (waiting[0]?.name ?? "") : `en ${plural(waiting.length, "piloto", "pilotos")}`);
+    if (flying.length === 1 && onlyFlying) context.push(`además, 1 piloto ${doing(onlyFlying)}`);
+    else if (flying.length > 1) context.push(`además, ${String(flying.length)} pilotos en marcha`);
   } else if (flying.length === 1 && onlyFlying) {
     headline = `«${onlyFlying.name}» ${doing(onlyFlying)}`;
   } else {
-    headline = `${String(flying.length)} rutas en marcha`;
+    headline = `${String(flying.length)} pilotos en marcha`;
   }
   if (nextPhrase !== null) context.push(nextPhrase);
   return { headline, context: context.filter(Boolean).join(" · "), facts, action };
 }
 
-/* ───────────────────────── «Así sale tu ruta» ───────────────────────── */
+/* ───────────────────────── «Así sale tu piloto» ───────────────────────── */
 
 export interface PreviewContext {
   sourceLabel: string;
@@ -529,7 +534,7 @@ export function previewStops(draft: RoutineInput, ctx: PreviewContext): PreviewS
 }
 
 /**
- * La frase de la isla «Así sale tu ruta», del estimado del servidor: «De 25
+ * La frase de la isla «Así sale tu piloto», del estimado del servidor: «De 25
  * negocios, a unos 9 les escribe». Sin estimado o sin nadie revelado, lo que
  * trae.
  */

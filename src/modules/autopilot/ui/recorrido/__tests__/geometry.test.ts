@@ -1,35 +1,34 @@
-import { DEST_POINT, EXIT_W, exitCenters, flowWidth, MAP_W, pointAt, SOURCE_POINT, splitAt, stopPoints } from "../geometry";
+import { airway } from "../airChart";
+import { AXI_AT, EXIT_W, exitCenters, flowWidth, splitCubic } from "../geometry";
 
-/** La geometría de la ruta: el grosor, el corte en Axi y los desvíos que no se pisan. */
+/** La geometría de la carta: el grosor, el corte en el avión y los desvíos que no se pisan. */
 describe("geometry", () => {
-  const points = stopPoints(7);
-
   it("el grosor es 2 + 4·√(n/max): 2 px sin nadie, 6 px con todas; sin dato, nada", () => {
     expect(flowWidth(0, 25)).toBe(2);
     expect(flowWidth(25, 25)).toBe(6);
     expect(flowWidth(null, 25)).toBe(0);
   });
 
-  it("partir al 80 % del tercer tramo: dos tramos sólidos enteros, el tercero partido y el resto punteado", () => {
-    const { solid, todo } = splitAt(points, 2.8);
-    expect(solid.slice(0, 2).every((part) => part !== null)).toBe(true);
-    expect(todo.slice(0, 2).every((part) => part === null)).toBe(true);
-    expect(solid[2]).not.toBeNull();
-    expect(todo[2]).not.toBeNull();
-    // Un solo trazo: lo de delante empieza donde acaba lo de atrás.
-    expect(todo[2]?.[0]).toEqual(solid[2]?.[3]);
-    expect(solid.slice(3).every((part) => part === null)).toBe(true);
+  it("partir un tramo de la aerovía en el avión: un solo trazo, y el avión cae antes de su fijo", () => {
+    const { fixes, segments } = airway(7);
+    const cubic = segments[2];
+    if (cubic === undefined) throw new Error("sin tramo");
+    const [behind, ahead] = splitCubic(cubic, AXI_AT);
+    // Lo de delante empieza donde acaba lo de atrás, y los extremos son los del tramo.
+    expect(ahead[0]).toEqual(behind[3]);
+    expect(behind[0]).toEqual(cubic[0]);
+    expect(ahead[3]).toEqual(fixes[2]);
+    expect(behind[3].x).toBeGreaterThan(fixes[1]?.x ?? 0);
+    expect(behind[3].x).toBeLessThan(fixes[2]?.x ?? 0);
   });
 
-  it("Axi al 80 % del tramo cae antes de su parada, nunca encima del nodo", () => {
-    const axi = pointAt(points, 2.8);
-    expect(axi.x).toBeGreaterThan(points[1]?.x ?? 0);
-    expect(axi.x).toBeLessThan(points[2]?.x ?? 0);
-  });
-
-  it("en cola está en la fuente; terminada, en «Lo que viene»", () => {
-    expect(pointAt(points, 0)).toEqual(SOURCE_POINT);
-    expect(pointAt(points, points.length + 1).x).toBeCloseTo(DEST_POINT.x);
+  it("la aerovía va de la torre al aeropuerto pasando por cada fijo", () => {
+    for (const count of [6, 7]) {
+      const { fixes, segments } = airway(count);
+      expect(fixes).toHaveLength(count);
+      expect(segments).toHaveLength(count + 1);
+      segments.slice(0, -1).forEach((segment, index) => expect(segment[3]).toEqual(fixes[index]));
+    }
   });
 
   it("las cajas de desvío no se pisan ni se salen del mapa", () => {
@@ -37,7 +36,7 @@ describe("geometry", () => {
     for (let index = 1; index < centers.length; index += 1) {
       expect((centers[index] ?? 0) - (centers[index - 1] ?? 0)).toBeGreaterThanOrEqual(EXIT_W);
     }
-    expect((centers.at(-1) ?? 0) + EXIT_W / 2).toBeLessThanOrEqual(MAP_W);
+    expect((centers.at(-1) ?? 0) + EXIT_W / 2).toBeLessThanOrEqual(1000);
     expect((centers[0] ?? 0) - EXIT_W / 2).toBeGreaterThanOrEqual(0);
   });
 });

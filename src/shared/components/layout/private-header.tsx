@@ -31,8 +31,8 @@ const LABELS: Record<string, string> = {
 	"meta-templates": "Plantillas de Meta",
 	"opt-outs": "Bajas",
 	"outreach": "Política de contacto",
-	// Las rutas de captación (/marketing/autopilot), sus rutas y sus salidas.
-	"autopilot": "Rutas",
+	// El piloto (/marketing/autopilot), sus pilotos y sus salidas.
+	"autopilot": "Piloto",
 	"runs": "Salidas",
 	"edit": "Editar",
 	// Captación (/marketing/leads/*) y su pestaña Personas (P2 del piloto)
@@ -93,7 +93,7 @@ const DETAIL_LABELS: Record<string, string> = {
 	"/settings/channels": "Canal",
 	"/settings/integrations": "Integración",
 	"/marketing/campaigns": "Campaña",
-	"/marketing/autopilot": "Ruta",
+	"/marketing/autopilot": "Piloto",
 	"/marketing/autopilot/runs": "Salida",
 }
 

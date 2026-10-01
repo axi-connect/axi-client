@@ -28,7 +28,7 @@ const POLICY: Record<string, { label: string; short: string }> = {
   outside_hours: { label: OUTREACH_BLOCK_REASON_LABELS.outside_hours, short: "Fuera de horario hábil" },
   opted_out: { label: "Se dio de baja: no se le contacta", short: "Se dio de baja" },
   daily_cap: { label: "Se llegó al tope diario de tu política; sale en la siguiente franja", short: "Tope diario" },
-  no_identity: { label: "No hay a dónde escribirle por los canales de la ruta", short: "Sin dato de contacto" },
+  no_identity: { label: "No hay a dónde escribirle por los canales del piloto", short: "Sin dato de contacto" },
   blocked: { label: "Tu política de contacto no lo permite", short: "Tu política" },
 };
 

@@ -44,13 +44,13 @@ export interface RunTrajectoryMapProps {
 }
 
 /**
- * La tarjeta de la ruta de una salida (Rutas de captación, delta v4): una carta
+ * La tarjeta del piloto de una salida (Piloto, delta v4): una carta
  * de navegación aérea nocturna, en su propia superficie oscura en los dos temas
  * (`.surface-dark`). Arriba, la frase de ahora en grande; en medio la carta —la
  * aerovía continua de la torre al aeropuerto, los fijos (las paradas), el
- * espacio restringido de tu política que la ruta rodea, el circuito de espera
+ * espacio restringido de tu política que la aerovía rodea, el circuito de espera
  * sobre «Tu aprobación», el avión con su estela y los desvíos a sus cajas— y
- * abajo el tope, lo que sigue y la próxima salida. Por debajo de 760 px, la ruta
+ * abajo el tope, lo que sigue y la próxima salida. Por debajo de 760 px, la aerovía
  * vertical sobre la misma superficie.
  *
  * Un solo trazo por tramo (pedido del dueño): detrás del avión sólido, delante
@@ -61,7 +61,7 @@ export function RunTrajectoryMap(props: RunTrajectoryMapProps) {
   const atCap = credits.cap !== null && credits.spent >= credits.cap;
   return (
     <section
-      aria-label="La ruta de esta salida"
+      aria-label="La carta de esta salida"
       className="surface-dark @container/trip border-border text-foreground min-w-0 overflow-hidden rounded-3xl border bg-[radial-gradient(120%_90%_at_20%_0%,color-mix(in_srgb,var(--foreground)_6%,var(--background))_0%,var(--background)_55%)]"
     >
       <div className="relative z-[3] flex flex-wrap items-start justify-between gap-x-5 gap-y-3 px-[18px] pt-5 @[47.5rem]/trip:px-[26px] @[47.5rem]/trip:pt-6">
@@ -254,7 +254,7 @@ function NightChart({ trajectory, running, paused, failed, agentName, maxFlow, s
   const labelWidth = `${String((((fixes[1]?.x ?? CHART_W) - (fixes[0]?.x ?? 0)) * 0.98 * 100) / CHART_W)}cqw`;
   const reduced = prefersReducedMotion();
 
-  // El avión: en ruta al 80 % del tramo de llegada (con su estela); esperando, en el circuito; terminado, en el aeropuerto.
+  // El avión: en vuelo al 80 % del tramo de llegada (con su estela); esperando, en el circuito; terminado, en el aeropuerto.
   const approveIndex = indexOf("approve");
   const approveFix = fixes[approveIndex];
   let plane: { at: Point; heading: number } = { at: TOWER, heading: -45 };
@@ -328,7 +328,7 @@ function NightChart({ trajectory, running, paused, failed, agentName, maxFlow, s
             ))}
           </g>
 
-          {/* El espacio restringido: tu política, que la ruta rodea. */}
+          {/* El espacio restringido: tu política, que la aerovía rodea. */}
           <path d={LAND.zone} fill={`url(#${hatch})`} strokeWidth={1} strokeDasharray="5 4" className="stroke-foreground/[0.22]" />
 
           {/* La torre: los anillos del radar, la barrida quieta y los negocios encontrados. */}
@@ -357,7 +357,7 @@ function NightChart({ trajectory, running, paused, failed, agentName, maxFlow, s
             <path key={exit.at} data-exit="taken" d={d} fill="none" strokeWidth={1.2} className="stroke-foreground/[0.22]" />
           ))}
 
-          {/* La aerovía: lo que falta, punteado; el tramo siguiente avanza solo mientras la salida va en ruta. */}
+          {/* La aerovía: lo que falta, punteado; el tramo siguiente avanza solo mientras la salida va en vuelo. */}
           {ahead.map((cubic, index) => {
             if (cubic === null) return null;
             const next = running && index === currentIndex;
@@ -583,7 +583,7 @@ function VerticalRoute({ trajectory, paused, running, agentName, maxFlow }: RunT
   const finished = currentIndex >= n;
   const destination = destinationRows(trajectory.destination, agentName ?? undefined);
   return (
-    <ol aria-label="La ruta de esta salida" className="flex flex-col pt-1.5">
+    <ol aria-label="La aerovía de esta salida" className="flex flex-col pt-1.5">
       {stops.map((stop, index) => {
         const exit = exits.find((entry) => entry.at === stop.key);
         const nextStop = stops[index + 1];

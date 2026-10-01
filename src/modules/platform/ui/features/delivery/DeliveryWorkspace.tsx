@@ -14,7 +14,7 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useFormContext, useFormState, useWatch, type UseFormReturn } from "react-hook-form";
-import { AlertTriangle, Check, History, Info, LoaderCircle, Lock, PencilLine, Save, Send } from "lucide-react";
+import { AlertTriangle, Check, History, Info, LoaderCircle, Lock, Save, Send } from "lucide-react";
 import { isHttpError } from "@/core/api/problem";
 import { applyServerValidation, errorMessage } from "@/core/lib/error-messages";
 import { formatMoney } from "@/core/lib/format";
@@ -23,6 +23,7 @@ import { cn } from "@/core/lib/utils";
 import { useAlert } from "@/core/providers/alert-provider";
 import { DynamicForm } from "@/shared/components/features/dynamic-form";
 import { Island } from "@/shared/components/features/island";
+import { StepCard } from "@/shared/components/features/step-card";
 import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
@@ -235,72 +236,6 @@ function SummaryParts({ parts }: { parts: readonly React.ReactNode[] }) {
         </Fragment>
       ))}
     </>
-  );
-}
-
-/**
- * Un paso de la entrega como tarjeta plegable: cerrado muestra su resumen y
- * «Editar»; abierto, sus campos. Toda la cabecera es el botón (aria-expanded).
- */
-function StepCard({
-  index,
-  title,
-  summary,
-  state,
-  open,
-  onToggle,
-  children,
-}: {
-  index: number;
-  title: string;
-  summary: React.ReactNode;
-  state: "done" | "blocked" | "pending";
-  open: boolean;
-  onToggle: () => void;
-  children?: React.ReactNode;
-}) {
-  const panelId = `delivery-step-${index}`;
-  return (
-    <section className={cn("rounded-3xl border bg-card transition-shadow", open ? "border-foreground/15 shadow-[var(--shadow-float)]" : "border-border")}>
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={open}
-        aria-controls={panelId}
-        className="flex w-full items-center gap-3 rounded-3xl px-4 py-4 sm:gap-4 sm:px-5 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-      >
-        <span
-          aria-hidden="true"
-          className={cn(
-            "flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold tabular-nums",
-            state === "done" && !open && "bg-foreground text-background",
-            state === "blocked" && "border-2 border-warning text-foreground",
-            (state === "pending" || (state === "done" && open)) && "border-2 border-brand text-foreground",
-          )}
-        >
-          {state === "done" && !open ? <Check className="size-4" strokeWidth={2.5} /> : state === "blocked" ? "!" : index}
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block text-sm font-semibold">
-            {title}
-            {state === "blocked" ? <span className="sr-only"> (por resolver)</span> : null}
-          </span>
-          {open ? null : (
-            <span className="mt-0.5 block text-[13px] text-pretty text-muted-foreground sm:text-sm">{summary}</span>
-          )}
-        </span>
-        {/* En el celular, «Editar» es un icono: el resumen necesita ese ancho. */}
-        <span className="flex shrink-0 items-center gap-1.5 rounded-lg py-1 text-sm font-medium sm:px-2">
-          {open ? <Check aria-hidden="true" className="size-4 sm:hidden" /> : <PencilLine aria-hidden="true" className="size-4 sm:hidden" />}
-          <span className="sr-only sm:not-sr-only">{open ? "Listo" : "Editar"}</span>
-        </span>
-      </button>
-      {open ? (
-        <div id={panelId} className="space-y-5 px-5 pb-5 sm:pl-[4.25rem] lg:pl-5 [&_input]:min-w-0">
-          {children}
-        </div>
-      ) : null}
-    </section>
   );
 }
 
@@ -782,6 +717,7 @@ export function DeliveryWorkspace({
                 return (
                   <StepCard
                     key={id}
+                    id="delivery-step"
                     index={index + 1}
                     title={item.label}
                     summary={summaries[id]}
