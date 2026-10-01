@@ -5,7 +5,9 @@ import { cn } from "@/core/lib/utils"
  * Isotipo de Axi Connect ("α" de tres cintas: coral, violeta y ámbar).
  *
  * SVG inline para que renderice al instante (splash/loaders, sin fetch) y
- * permita animar cada cinta por separado (`data-ribbon`). Los hex de los
+ * permita animar cada cinta por separado (`data-ribbon`). `pathLength={1}` no
+ * cambia nada sin trazo: deja que el cierre de la película dibuje cada cinta
+ * con `stroke-dasharray` desde CSS sin duplicar los paths (plan §16.4). Los hex de los
  * gradientes son el artwork del logo (asset de marca, no color de UI); la
  * fuente de verdad es `public/brand/isologo-axi-connect.svg` — si el asset
  * cambia, se regeneran estos paths desde ese archivo.
@@ -29,6 +31,7 @@ export function BrandMark({ className, ...props }: React.SVGProps<SVGSVGElement>
     >
       <path
         data-ribbon="coral"
+        pathLength={1}
         fillRule="evenodd"
         clipRule="evenodd"
         d="M228.574 374.558C305.107 374.558 335.082 305.843 357.987 250.872C344.244 183.302 305.107 127.186 228.574 127.186C152.042 127.186 90 182.562 90 250.872C90 319.182 152.042 374.558 228.574 374.558ZM222.848 303.553C253.208 303.553 277.82 279.454 277.82 249.726C277.82 219.999 253.208 195.9 222.848 195.9C192.488 195.9 167.876 219.999 167.876 249.726C167.876 279.454 192.488 303.553 222.848 303.553Z"
@@ -36,11 +39,13 @@ export function BrandMark({ className, ...props }: React.SVGProps<SVGSVGElement>
       />
       <path
         data-ribbon="violet"
+        pathLength={1}
         d="M270.948 257.743C300.724 150.09 349.97 127.185 408.377 127.186C383.182 159.252 341.953 337.444 292.708 360.815C238.652 386.468 181.619 371.122 161.005 358.524C196.507 366.541 247.824 341.346 270.948 257.743Z"
         fill={`url(#${violet})`}
       />
       <path
         data-ribbon="amber"
+        pathLength={1}
         d="M355.696 225.676C373.104 295.307 398.833 353.943 409.522 374.558C309.886 374.558 280.11 290.955 266.367 225.676C253.589 164.978 191.163 140.928 166.731 139.783C186.887 125.124 225.804 121.086 268.658 132.912C311.511 144.737 341.667 169.559 355.696 225.676Z"
         fill={`url(#${amber})`}
       />
