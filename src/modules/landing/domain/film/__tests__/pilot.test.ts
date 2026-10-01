@@ -204,6 +204,15 @@ describe("el encuadre", () => {
   })
 })
 
+describe("la entrada", () => {
+  it("el titular y la cabina llegan a pleno al pin (entran antes, con el reveal) y el titular solo se atenúa al final", () => {
+    expect([pilotFrame(0, RUN).head, pilotFrame(0, RUN).panel]).toEqual([1, 1])
+    expect(pilotFrame(0.5, RUN).head).toBe(1)
+    // El otro signo: al subir la ficha (0,88–0,92) el titular sí baja, y no a cero.
+    expect(pilotFrame(1, RUN).head).toBeCloseTo(0.15)
+  })
+})
+
 describe("el tablero y los instrumentos", () => {
   it("cada fila cambia en un solo paso (la etapa nueva entra de 0 a 1) y solo avanza", () => {
     expect(boardRow(0.05, PILOT_BOARD[0])).toEqual({ stage: null, enter: 1 })

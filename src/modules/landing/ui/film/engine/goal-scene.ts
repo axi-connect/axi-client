@@ -37,10 +37,8 @@ export const goal: Scene = (section, ctx) => {
   const slow = one("[data-anim=goal-slow]");
   const projection = one("[data-anim=goal-projection]");
   const projectionLine = one("[data-anim=goal-projection-line]");
-  const head = one("[data-anim=goal-head]");
   const start = one("[data-anim=goal-start]");
 
-  const panel = mine("[data-anim=goal-panel]");
   const should = mine("[data-anim=goal-should]");
   const ring = mine("[data-anim=goal-ring]");
   const flag = mine("[data-anim=goal-flag]");
@@ -85,9 +83,7 @@ export const goal: Scene = (section, ctx) => {
     set(projection, "strokeDasharray", f.dash.projection);
     set(projectionLine, "opacity", o(f.projection));
 
-    set(head, "opacity", o(f.head));
-    set(panel, "opacity", o(f.panel));
-    set(panel, "transform", ctx.desktop ? `translateY(${px(24 * (1 - f.panel))}px)` : "none");
+    // El titular y el panel no se escriben: entran con el `reveal` de sceneTimeline.
 
     set(start, "transform", at(f.marks.start));
     set(start, "opacity", o(f.start));

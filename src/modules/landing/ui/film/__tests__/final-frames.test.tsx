@@ -108,6 +108,26 @@ it("la llamada termina con todas las etapas, los turnos y el reloj en 02:14", ()
   expect(call.querySelector("[data-anim=call-clock]")).toHaveTextContent("02:14")
 })
 
+it("la meta y el piloto: titular y panel llegan a pleno al pin y entran con el reveal de antes", () => {
+  // Signo 1: en el fotograma final no hay titular ni panel apagados (antes entraban dentro del pin, desde 0).
+  for (let p = 0; p <= 1.0001; p += 0.05) {
+    expect(goalFrame(p).head).toBe(1)
+    expect(goalFrame(p).panel).toBe(1)
+  }
+  // Signo 2: siguen teniendo entrada (no aparecen de golpe): son data-anim="head", el reveal de sceneTimeline.
+  const { container } = render(<GoalScene />)
+  const goal = container.querySelector<HTMLElement>("[data-scene=goal]")!
+  const head = goal.querySelector<HTMLElement>(".film-goal-head")!
+  expect(head).toHaveAttribute("data-anim", "head")
+  expect(head.style.opacity).toBe("")
+  const panels = goal.querySelectorAll<HTMLElement>(".film-goal-panel")
+  expect(panels.length).toBeGreaterThan(0)
+  panels.forEach((el) => {
+    expect(el).toHaveAttribute("data-anim", "head")
+    expect(el.style.opacity).toBe("")
+  })
+})
+
 it("la bóveda imprime el cupón de cada nicho", () => {
   const { container } = renderFilm()
   const vault = container.querySelector<HTMLElement>("[data-scene=vault]")!

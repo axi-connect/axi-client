@@ -147,8 +147,12 @@ export function goalFrame(p: number, route: SampledRoute = GOAL_ROUTE) {
     arrive,
     approved,
     /** Opacidades. */
-    head: easeOut(seg(p, 0.02, 0.12)),
-    panel: easeOut(seg(p, 0.08, 0.2)),
+    // El titular y el panel llegan a pleno al pin: entran con el scroll de antes
+    // (el `reveal` de `sceneTimeline`, data-anim="head"). Con la entrada dentro
+    // del pin la escena llegaba arriba vacía y, en móvil, el titular asomaba a 0
+    // (barrido del 2026-10-01).
+    head: 1,
+    panel: 1,
     carMark: land,
     here: easeOut(seg(p, 0.14, 0.2)),
     start: land * (1 - easeOut(seg(p, 0.4, 0.5))),

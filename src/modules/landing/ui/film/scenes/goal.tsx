@@ -170,7 +170,8 @@ function GoalPanel() {
         const s = routeScenario(c.route);
         const [today, next1, next2] = c.route.steps;
         return (
-          <aside data-anim="goal-panel" className="film-goal-panel" style={{ ...op(f.panel), transform: "none" }}>
+          // data-anim="head": entra con el scroll de antes del pin (sceneTimeline).
+          <aside data-anim="head" className="film-goal-panel">
             <div className="film-goal-panel-top">
               <div>
                 <p className="film-goal-dim text-xs">{GOAL_COPY.destination}</p>
@@ -258,7 +259,7 @@ export function GoalScene() {
     >
       <GoalMap />
       <div className="film-goal-layout">
-        <div className="film-goal-head" data-anim="goal-head" style={op(FINAL.head)}>
+        <div className="film-goal-head" data-anim="head">
           <p className="film-eyebrow film-goal-dim mb-[18px]">{GOAL_COPY.eyebrow}</p>
           <h2 id="meta-h" className="film-h film-goal-title">
             {GOAL_COPY.title}
