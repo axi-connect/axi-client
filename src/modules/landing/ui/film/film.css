@@ -54,6 +54,18 @@
   align-items: center;
   overflow: clip;
 }
+/* Lo que va después de la película (precios, preguntas y cierre) no se fija ni
+   tiene pins debajo: se puede saltar su render mientras no está en pantalla sin
+   mover ninguna posición de pin. Precios mide 3.500 px en móvil con el catálogo;
+   la página tiene casi 5.000 nodos y su estilo y layout costaban 2 s con CPU
+   media (Lighthouse móvil). Las escenas fijadas NO llevan esto: su pin se
+   calcularía sobre una altura estimada. */
+[data-scene="pricing"],
+[data-scene="faq"],
+[data-scene="close"] {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 900px;
+}
 .film-wrap {
   position: relative;
   z-index: 2;

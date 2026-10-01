@@ -429,21 +429,47 @@ export function startFilm(root: HTMLElement): FilmEngine {
   // Las escenas se construyen para el nicho visible; `setNiche` las rehace.
   const pins = new Map<string, ScrollTrigger>();
   const desktopQuery = window.matchMedia("(min-width: 1024px)");
+  // Las escenas se construyen por tandas de ≤ 12 ms, cediendo el hilo entre
+  // tandas, dentro del mismo contexto de matchMedia (`context.add`): antes se
+  // construían las 19 en UNA tarea, 1,2 s con CPU de gama media (Lighthouse
+  // móvil, TBT 1334 ms). El orden sigue siendo de arriba abajo, así cada pin se
+  // calcula sobre los de encima, y un solo `refresh` cierra la construcción.
+  // Si el contexto se revierte a medias (cambio de media o de nicho), se para.
+  const channel = new MessageChannel();
+  const queue: (() => void)[] = [];
+  channel.port1.onmessage = () => queue.shift()?.();
+  const yieldThen = (fn: () => void) => {
+    queue.push(fn);
+    channel.port2.postMessage(0);
+  };
+  const SLICE_MS = 12;
   const mount = () => {
     const media = gsap.matchMedia(root);
     media.add({ desktop: "(min-width: 1024px)", mobile: "(max-width: 1023px)" }, (context) => {
       const ctx: Ctx = { desktop: Boolean(context.conditions?.desktop), pins };
-      for (const section of all(root, "[data-scene]")) {
-        const build = SCENES[section.dataset.scene ?? ""];
-        if (build) build(section, ctx);
-      }
-      return () => pins.clear();
+      const sections = all(root, "[data-scene]");
+      let next = 0;
+      let alive = true;
+      const slice = () => {
+        if (!alive) return;
+        const t0 = performance.now();
+        while (next < sections.length && performance.now() - t0 < SLICE_MS) {
+          const section = sections[next++];
+          const build = SCENES[section.dataset.scene ?? ""];
+          if (build) context.add(() => build(section, ctx));
+        }
+        if (next < sections.length) yieldThen(slice);
+        else ScrollTrigger.refresh();
+      };
+      slice();
+      return () => {
+        alive = false;
+        pins.clear();
+      };
     });
     return media;
   };
   let mm = mount();
-
-  ScrollTrigger.refresh();
 
   // El hilo de luz, archivado por la dueña (plan §15): con `enabled: false` su
   // módulo (renderer WebGL incluido) ni se descarga. Encendido, llega después
@@ -474,6 +500,14 @@ export function startFilm(root: HTMLElement): FilmEngine {
   // Las fuentes o las imágenes pueden cambiar alturas después de medir.
   const refresh = () => ScrollTrigger.refresh();
   void document.fonts?.ready.then(refresh);
+  // Precios, preguntas y cierre se saltan el render fuera de pantalla
+  // (`content-visibility: auto`, film.css): al pintarse por primera vez su alto
+  // real sustituye al estimado, y el cierre mide hasta su centro.
+  const lazyScenes = all(root, '[data-scene="pricing"], [data-scene="faq"], [data-scene="close"]');
+  const onShown = (e: Event) => {
+    if (!(e as Event & { skipped?: boolean }).skipped) refresh();
+  };
+  for (const s of lazyScenes) s.addEventListener("contentvisibilityautostatechange", onShown);
 
   return {
     stop() {
@@ -484,6 +518,8 @@ export function startFilm(root: HTMLElement): FilmEngine {
         thread.destroy();
       }
       mm.revert();
+      channel.port1.close();
+      for (const s of lazyScenes) s.removeEventListener("contentvisibilityautostatechange", onShown);
       gsap.ticker.remove(tick);
       lenis.destroy();
       if (scroller) ScrollTrigger.defaults({ scroller: window });
@@ -494,10 +530,10 @@ export function startFilm(root: HTMLElement): FilmEngine {
     // Otro nicho: se rehacen las líneas para animar solo la variante visible
     // (el HTML ya trae las cuatro; esto no toca el DOM de las escenas). Mismo
     // scroll, mismos pins: el visitante no nota el cambio de andamio.
+    // (La construcción por tandas termina con su propio `refresh`.)
     setNiche() {
       mm.revert();
       mm = mount();
-      ScrollTrigger.refresh();
     },
   };
 }
