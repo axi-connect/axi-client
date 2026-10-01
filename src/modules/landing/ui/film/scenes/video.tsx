@@ -5,8 +5,8 @@ import { HERO_VIDEO } from "@/modules/landing/ui/content/productos.content";
 import { FilmVideo } from "@/modules/landing/ui/film/parts/FilmVideo";
 
 /**
- * El video inmersivo (plan §23, lienzo aprobado el 2026-10-02), en lugar de
- * «Vendemos progreso». El video del producto entra en su marco bajo el titular
+ * El video inmersivo (plan §23, lienzo aprobado el 2026-10-02). El video del
+ * producto entra en su marco bajo el titular
  * y, con la escena fijada, el marco se abre hasta llenar la pantalla
  * (`engine/video-scene.ts`, solo transform y opacity).
  *

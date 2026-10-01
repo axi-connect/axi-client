@@ -1,7 +1,7 @@
 /**
  * El video inmersivo (lienzo «Landing · Video inmersivo», aprobado por la dueña
  * el 2026-10-02): el video del producto, el mismo de /productos, incrustado en la
- * película justo después del hero, en lugar de «Vendemos progreso».
+ * película justo después del hero.
  *
  * Las fuentes son las de /productos (`HERO_VIDEO` en ui/content/productos.content):
  * Cloudinary en streaming progresivo, H.264 a `q_90`, un máster horizontal para
