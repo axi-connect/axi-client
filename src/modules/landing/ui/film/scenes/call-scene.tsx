@@ -261,7 +261,7 @@ export function CallScene() {
                       <stop offset="1" stopColor="#FFD580" />
                     </linearGradient>
                   </defs>
-                  <path d={WAVE.client} stroke="#f5f5f7" />
+                  <path d={WAVE.client} stroke="var(--foreground)" />
                   <path d={WAVE.axi} stroke={`url(#${id}wg)`} />
                 </svg>
               </div>
