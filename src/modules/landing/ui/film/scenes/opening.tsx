@@ -1,8 +1,6 @@
 import { ArrowRight, MessageCircle } from "lucide-react";
 
 import { salesWhatsAppUrl } from "@/core/config/env";
-import { cn } from "@/core/lib/utils";
-import { BrandMark } from "@/shared/components/ui/brand-mark";
 import { FILM_CONTENT } from "@/modules/landing/domain/film/film-content";
 import { FILM_NICHES } from "@/modules/landing/domain/film/niches";
 import { WA_MESSAGES } from "@/modules/landing/ui/content/landing.content";
@@ -10,26 +8,6 @@ import { FilmCta } from "@/modules/landing/ui/film/parts/FilmCta";
 import { HeroFibersLazy } from "@/modules/landing/ui/film/parts/HeroFibersLazy";
 import { HeroStats } from "@/modules/landing/ui/film/parts/HeroStats";
 import { NicheChoice } from "@/modules/landing/ui/film/parts/NicheChoice";
-
-/** El enlace secundario a WhatsApp, igual en la apertura y en el cierre. */
-function TalkToAgent({ className }: { className?: string }) {
-  return (
-    <a
-      href={salesWhatsAppUrl(WA_MESSAGES.hero)}
-      target="_blank"
-      rel="noopener noreferrer"
-      className={cn(
-        "inline-flex h-[54px] items-center justify-center gap-2 rounded-xl border border-[color-mix(in_srgb,var(--foreground)_16%,transparent)] px-6 text-base font-semibold whitespace-nowrap",
-        "bg-[color-mix(in_srgb,var(--foreground)_6%,transparent)] transition-colors hover:bg-[color-mix(in_srgb,var(--foreground)_10%,transparent)]",
-        "focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
-        className,
-      )}
-    >
-      <MessageCircle className="size-[18px]" aria-hidden="true" />
-      Habla con nuestro agente
-    </a>
-  );
-}
 
 /**
  * El hero A, «Mil conversaciones, un hilo» (plan §14, elegido por la dueña el
@@ -154,28 +132,6 @@ export function NicheScene() {
         <p className="film-dim mt-[clamp(28px,5vh,50px)] text-[13.5px] max-lg:text-left max-lg:text-[12.5px]" data-anim="niche-hint">
           O sigue bajando: te mostramos un negocio de ejemplo.
         </p>
-      </div>
-    </section>
-  );
-}
-
-export function CloseScene() {
-  return (
-    <section id="demo" data-scene="close" aria-labelledby="cierre-h" className="film-scene">
-      <div className="film-spot top-[2%] left-[calc(50%-500px)] size-[1000px] bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--axi-brand)_16%,transparent),transparent)]" />
-      <div className="film-wrap text-center">
-        <div className="relative mx-auto mb-10 aspect-square w-[min(40vw,220px)]" aria-hidden="true" data-anim="alpha-close" data-thread-target="">
-          <div className="absolute inset-[-20%] rounded-full bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--axi-brand)_30%,transparent),color-mix(in_srgb,var(--axi-violet)_16%,transparent)_55%,transparent_75%)] blur-2xl" />
-          <BrandMark className="relative size-full" />
-        </div>
-        <h2 id="cierre-h" className="film-h text-[clamp(38px,5.4vw,78px)]">
-          Tu próxima venta <span className="t">ya está escribiendo.</span>
-        </h2>
-        <div className="mt-9 flex flex-wrap justify-center gap-3">
-          <FilmCta>Prueba 7 días gratis</FilmCta>
-          <TalkToAgent />
-        </div>
-        <p className="film-dim mt-4 text-[13.5px]">Sin tarjeta. Tu cuenta queda lista hoy.</p>
       </div>
     </section>
   );
