@@ -40,6 +40,9 @@ export const philosophy: Scene = (section, ctx) => {
   const pieces = visible(section, "[data-anim=philo-piece]").map((el) => ({ i: num(el, "index"), x: quick(el, "x", "px"), o: quick(el, "opacity") }));
   const words = visible(section, "[data-anim=philo-word]").map((el) => ({ i: num(el, "index"), x: quick(el, "x", "px"), o: quick(el, "opacity") }));
   const bars = visible(section, "[data-anim=philo-bar]").map((el) => quick(el, "scaleX"));
+  const copies = visible(section, "[data-anim=philo-copy]").map((el) => ({ i: num(el, "index"), o: quick(el, "opacity") }));
+  const intro = visible(section, "[data-anim=philo-intro-copy]").map((el) => quick(el, "opacity"));
+  const half = PHILOSOPHY_TRACK.pillar / 2;
 
   // Dónde está centrado cada pilar (px de pista); se mide con la ventana.
   const stops = () => {
@@ -65,10 +68,16 @@ export const philosophy: Scene = (section, ctx) => {
       m.x(move * (1 - PHILOSOPHY_TRACK.introPiece));
       m.o(1 - clamp(move / (centers[0] * 0.6), 0, 1));
     }
+    // El texto de un pilar no centrado se apaga: el entrante aparece en la
+    // segunda mitad de su transición y el saliente se va en la primera. Del
+    // vecino solo asoma su pieza.
+    for (const c of copies) c.o(clamp(1 - Math.abs(move - centers[c.i]) / half, 0, 1));
+    for (const o of intro) o(clamp(1 - move / (centers[0] / 2), 0, 1));
     for (const s of pieces) {
       const local = move - centers[s.i];
       const extra = PHILOSOPHY_TRACK.pieces - PHILOSOPHY_TRACK.text;
-      s.x(clamp(-extra * local, -PIECE_SLACK, PIECE_SLACK));
+      // Se adelanta al entrar (1,22x) y sale a 1x: así nunca roza la columna.
+      s.x(local < 0 ? clamp(-extra * local, 0, PIECE_SLACK) : 0);
       const centered = 1 - Math.min(1, Math.abs(local) / PHILOSOPHY_TRACK.pillar);
       s.o(0.35 + 0.65 * centered);
     }
@@ -78,10 +87,10 @@ export const philosophy: Scene = (section, ctx) => {
       w.x(clamp(0.4 * local * 0.25, -60, 60));
       w.o(Math.max(0, 1 - Math.abs(local) / (PHILOSOPHY_TRACK.pillar * 0.6)));
     }
-    bars.forEach((set, i) => {
-      const from = i === 0 ? 0 : centers[i - 1];
-      set(clamp((move - from) / Math.max(1, centers[i] - from), 0, 1));
-    });
+    // Cada barra se llena solo en su transición de entrada y su meseta.
+    const step = (1 - TRACK_FROM) / bars.length;
+    bars.forEach((set, i) => set(clamp((p - TRACK_FROM - i * step) / step, 0, 1)));
+
   };
   counter(tl, TRACK_FROM, 1, paint, "none");
 };

@@ -52,7 +52,7 @@ function Track() {
     <div className="film-philo-desk">
       <div className="film-philo-track" data-anim="philo-track">
         <div className="film-philo-intro">
-          <div className="film-philo-intro-copy">
+          <div className="film-philo-intro-copy" data-anim="philo-intro-copy">
             <p className="film-eyebrow film-dim">{PHILOSOPHY.eyebrow}</p>
             <h2 id="progreso-h" className="film-h text-[clamp(64px,6.1vw,88px)] leading-none tracking-[-0.05em]">
               {PHILOSOPHY.strong[0]}
@@ -86,7 +86,7 @@ function Track() {
                 {p.name}
               </span>
             </span>
-            <div className="film-philo-copy">
+            <div className="film-philo-copy" data-anim="philo-copy" data-index={i}>
               <Eyebrow pillar={p} />
               <h3 id={`progreso-${i}`} className="film-h text-[clamp(56px,5.3vw,76px)] leading-[1.02] tracking-[-0.045em]">
                 {p.strong}
