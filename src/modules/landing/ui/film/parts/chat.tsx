@@ -117,7 +117,7 @@ export function Phone({
                 <div className="film-phone-compose" aria-hidden="true">
                   <span className="film-phone-plus">
                     <svg width="12" height="12" viewBox="0 0 12 12">
-                      <path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                      <path d="M6 1v10M1 6h10" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
                     </svg>
                   </span>
                   <span className="film-phone-input">Mensaje</span>

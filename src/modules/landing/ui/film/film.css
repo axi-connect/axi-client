@@ -19,9 +19,10 @@
   --film-surface-2: color-mix(in srgb, var(--foreground) 9%, var(--background));
   --film-muted: color-mix(in srgb, var(--foreground) 64%, transparent);
   /* El gris de cejas, notas y metadatos: 4,5:1 sobre el fondo en los dos temas.
-     En claro hace falta más tinta (62 %) que en oscuro (50 %; ≥ 47 %, pasada de
-     accesibilidad del 2026-09-30). Lo usan --film-dim y los grises de las escenas. */
-  --film-dim-text: color-mix(in srgb, var(--foreground) 62%, transparent);
+     En claro hace falta más tinta (66 %: llega a 4,5:1 también sobre los
+     paneles, ~234) que en oscuro (50 %; ≥ 47 %, pasada de accesibilidad del
+     2026-09-30). Lo usan --film-dim y los grises de las escenas. */
+  --film-dim-text: color-mix(in srgb, var(--foreground) 66%, transparent);
   --film-dim: var(--film-dim-text);
   position: relative;
   width: 100%;
@@ -1174,7 +1175,7 @@
   font-family: ui-monospace, Menlo, monospace;
   font-size: 12px;
   white-space: nowrap;
-  color: color-mix(in srgb, var(--foreground) 55%, transparent);
+  color: var(--film-dim-text);
 }
 .film-ruler-dot { position: absolute; left: 144px; top: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--background); border: 1.5px solid color-mix(in srgb, var(--foreground) 70%, transparent); }
 .film-ruler-what { position: absolute; left: 182px; top: -1px; margin: 0; max-width: 520px; font-size: 14.5px; line-height: 1.45; }

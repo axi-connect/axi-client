@@ -24,9 +24,10 @@
   --pl-80: color-mix(in srgb, var(--foreground) 80%, transparent);
   --pl-75: color-mix(in srgb, var(--foreground) 75%, transparent);
   --pl-66: color-mix(in srgb, var(--foreground) 66%, transparent);
-  --pl-62: color-mix(in srgb, var(--foreground) 62%, transparent);
+  /* En claro, más tinta (los paneles de la cabina son ~241, no blanco). */
+  --pl-62: color-mix(in srgb, var(--foreground) 72%, transparent);
   /* ≥ 47 % para 4,5:1 sobre la tinta (como `--film-dim`). */
-  --pl-dim: color-mix(in srgb, var(--foreground) 52%, transparent);
+  --pl-dim: var(--film-dim-text);
   --pl-line: color-mix(in srgb, var(--foreground) 10%, transparent);
   --pl-line-2: color-mix(in srgb, var(--foreground) 16%, transparent);
   --pl-line-3: color-mix(in srgb, var(--foreground) 22%, transparent);
@@ -34,14 +35,20 @@
   --pl-fill-2: color-mix(in srgb, var(--foreground) 7%, transparent);
   --pl-panel-a: color-mix(in srgb, var(--foreground) 6%, var(--background));
   --pl-panel-b: color-mix(in srgb, var(--foreground) 2.5%, var(--background));
-  --pl-screen: color-mix(in srgb, var(--background), black 32%);
+  /* La pantalla de ruta: una LCD clara en claro (en gris medio, el texto no se
+     leía) y oscura en oscuro. */
+  --pl-screen: color-mix(in srgb, var(--foreground) 9%, var(--background));
   --pl-shadow: color-mix(in srgb, black 60%, transparent);
   --pl-violet: var(--axi-violet);
   --pl-violet-text: color-mix(in srgb, var(--axi-violet) 38%, var(--foreground));
   --pl-mono: var(--font-plex-mono), ui-monospace, "SFMono-Regular", Menlo, monospace;
   color: var(--pl-fg);
 }
-.dark .film-pilot { --pl-ink-k: 1; }
+.dark .film-pilot {
+  --pl-ink-k: 1;
+  --pl-62: color-mix(in srgb, var(--foreground) 62%, transparent);
+  --pl-screen: color-mix(in srgb, var(--background), black 32%);
+}
 /* `.film-scene.film-pilot` y no `.film-pilot`: este CSS llega con el `import()`
    de la escena, antes que film.css, y a igual especificidad ganaba `.film-scene`. */
 .film-scene.film-pilot { align-items: stretch; }
