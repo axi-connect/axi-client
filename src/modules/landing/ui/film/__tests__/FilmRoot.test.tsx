@@ -6,7 +6,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react"
 
 const track = jest.fn()
 jest.mock("@/core/analytics/track", () => ({ track: (...a: unknown[]) => track(...a) }))
-const startFilm = jest.fn(() => ({ stop: jest.fn(), scrollTo: jest.fn() }))
+const startFilm = jest.fn(() => ({ stop: jest.fn(), scrollTo: jest.fn(), scroll: jest.fn(() => 0) }))
 jest.mock("../engine/film-engine", () => ({ startFilm: (...a: unknown[]) => startFilm(...(a as [])) }))
 
 import { ENGINE_REST_MS, FilmRoot } from "../FilmRoot"
@@ -95,11 +95,14 @@ it("sin intención, el motor espera 2,5 s de reposo tras la carga y después el 
     })
     window.requestIdleCallback = ric as unknown as typeof window.requestIdleCallback
     render(<Film />)
-    // Signo 1: justo antes del reposo, ni se pidió el hueco ni arrancó.
+    // Signo 1: justo antes del reposo, el chunk ya se pidió en un hueco (se
+    // evalúa fuera de la primera rueda), pero no se pidió el hueco de arrancar
+    // ni arrancó.
     await act(async () => {
       jest.advanceTimersByTime(ENGINE_REST_MS - 10)
     })
-    expect(ric).not.toHaveBeenCalled()
+    expect(ric).toHaveBeenCalledTimes(1)
+    expect(ric).toHaveBeenCalledWith(expect.any(Function), { timeout: 1500 })
     expect(startFilm).not.toHaveBeenCalled()
     // Signo 2: cumplido el reposo, con el primer hueco arranca.
     await act(async () => {

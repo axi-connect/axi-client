@@ -10,7 +10,7 @@ import { join } from "node:path"
 
 import { render } from "@testing-library/react"
 
-const startFilm = jest.fn(() => ({ stop: jest.fn(), scrollTo: jest.fn(), setNiche: jest.fn() }))
+const startFilm = jest.fn(() => ({ stop: jest.fn(), scrollTo: jest.fn(), setNiche: jest.fn(), scroll: jest.fn(() => 0) }))
 jest.mock("../engine/film-engine", () => ({ startFilm: (...a: unknown[]) => startFilm(...(a as [])) }))
 jest.mock("@/core/analytics/track", () => ({ track: jest.fn() }))
 

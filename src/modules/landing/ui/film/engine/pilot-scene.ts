@@ -16,7 +16,7 @@ import { gsap } from "gsap";
 
 import { PILOT_COPY, PILOT_LOT, PILOT_RUN, PILOT_STAGES, PILOT_STATUS, lotCounts } from "@/modules/landing/domain/film/pilot-content";
 import { PILOT_DIAL_MAX, PILOT_FOCUS, PILOT_OVERVIEW, capSegments, dial, pilotFrame } from "@/modules/landing/domain/film/pilot-frame";
-import { SPAN, all, sceneTimeline, stickyStrip, visible, writer, type Scene } from "@/modules/landing/ui/film/engine/film-kit";
+import { SPAN, all, nearFlag, sceneTimeline, stickyStrip, visible, writer, type Scene } from "@/modules/landing/ui/film/engine/film-kit";
 
 const px = (v: number) => v.toFixed(1);
 const o = (v: number) => v.toFixed(3);
@@ -28,6 +28,7 @@ export const pilot: Scene = (section, ctx) => {
   // sin scroll fino. En móvil, el pase es el tramo de la franja pegada.
   const strip = stickyStrip(section, ctx, { top: ".film-pilot-map", bottom: ".film-pilot-cockpit" });
   const tl = sceneTimeline(section, ctx, 800, strip ?? undefined);
+  nearFlag(section);
   const { write: set, flag, text, restore } = writer();
   gsap.context()?.add(() => () => restore());
 

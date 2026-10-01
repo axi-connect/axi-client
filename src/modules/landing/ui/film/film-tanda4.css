@@ -409,12 +409,13 @@
   width: 2400px;
   height: 1500px;
   transform-origin: 0 0;
-  will-change: transform;
 }
 .film-goal-plane svg { position: absolute; inset: 0; overflow: visible; }
 /* La ciudad en su propia capa: los trazos que avanzan no la vuelven a
-   rasterizar (perfil del scroll: 4,9 s de raster en la meta con una sola capa). */
-.film-goal-city { will-change: transform; }
+   rasterizar (perfil del scroll: 4,9 s de raster en la meta con una sola capa).
+   Solo cerca de la escena (`data-near`, nearFlag), como el piloto. */
+.film-goal[data-near] .film-goal-plane,
+.film-goal[data-near] .film-goal-city { will-change: transform; }
 
 .film-goal-plane path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
 .film-goal-lane { stroke: color-mix(in srgb, var(--foreground) 7%, transparent); stroke-width: 30; }

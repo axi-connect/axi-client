@@ -56,6 +56,8 @@ export type FilmEngine = {
   /** Dónde cae el destino en px de scroll (el pin-spacer si la escena se fija). */
   offsetOf(target: string): number | null;
   setNiche(): void;
+  /** El scroll según Lenis: un número, sin leer el DOM (leer `scrollTop` tras las escrituras de gsap fuerza un recálculo de estilos). */
+  scroll(): number;
 };
 
 /* ─────────────────────────────── escenas ─────────────────────────────── */
@@ -490,7 +492,7 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
   // Las escenas se construyen para el nicho visible; `setNiche` las rehace.
   const pins = new Map<string, ScrollTrigger>();
   const desktopQuery = window.matchMedia("(min-width: 1024px)");
-  // Las escenas se construyen por tandas de ≤ 12 ms, cediendo el hilo entre
+  // Las escenas se construyen por tandas cortas (ver `SLICE_MS`), cediendo el hilo entre
   // tandas, dentro del mismo contexto de matchMedia (`context.add`): antes se
   // construían las 19 en UNA tarea, 1,2 s con CPU de gama media (Lighthouse
   // móvil, TBT 1334 ms). El orden sigue siendo de arriba abajo, así cada pin se
@@ -504,9 +506,9 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
     channel.port2.postMessage(0);
   };
   // 30 ms: por debajo de los 50 que cuentan como tarea larga (TBT). Se comprueba
-  // ANTES de cada escena, así que una tanda dura eso más la escena siguiente
-  // (ronda 2, R8). Cada escena deja su coste en `performance` («film:<escena>»,
-  // lo leen qa/qa-perfil.mjs y qa/qa-perfil-refresh.mjs).
+  // DESPUÉS de cada escena (en escritorio, una por tarea), así que una tanda no
+  // pasa de eso más una escena. Cada escena deja su coste en `performance`
+  // («film:<escena>», lo leen qa/qa-perfil.mjs y qa/qa-perfil-refresh.mjs).
   const SLICE_MS = 30;
   // Si cambia solo el alto de la ventana, las escenas fijadas siguen fijadas:
   // su contenido se reescala en cada refresh (`fitToViewport`, kit), así que no
@@ -600,25 +602,32 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
             { root: scroller, rootMargin: "150% 0px" },
           )
         : null;
+      // El cierre: un refresh (barato: el ajuste de las fijadas ya está hecho
+      // para esta ventana) en su propia tarea, en el primer hueco libre.
+      const finish = () => {
+        if (!alive) return;
+        ScrollTrigger.refresh();
+        if (!landOnHash() && anchor && intents === intentsAtStart) restore(anchor);
+        root.setAttribute("data-film-ready", "");
+      };
       const slice = () => {
         if (!alive) return;
         const t0 = performance.now();
-        while (next < sections.length && performance.now() - t0 < SLICE_MS) {
-          const section = sections[next];
+        while (next < sections.length) {
+          const section = sections[next++];
           if (io && !near(section)) {
-            next++;
             io.observe(section);
             continue;
           }
-          next++;
           buildOne(section);
+          // En escritorio, una escena por tarea: con tandas por tiempo, la
+          // escena que pasaba del límite alargaba la tanda (50–570 ms con CPU
+          // ×1, encima de la rueda del visitante; 2-cinematic, 2026-10-01).
+          if (ctx.desktop || performance.now() - t0 >= SLICE_MS) break;
         }
         if (next < sections.length) yieldThen(slice);
-        else {
-          ScrollTrigger.refresh();
-          if (!landOnHash() && anchor && intents === intentsAtStart) restore(anchor);
-          root.setAttribute("data-film-ready", "");
-        }
+        else if (typeof window.requestIdleCallback === "function") window.requestIdleCallback(finish, { timeout: 500 });
+        else yieldThen(finish);
       };
       slice();
       return () => {
@@ -730,5 +739,6 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
       mm.revert();
       mm = mount();
     },
+    scroll: () => lenis.scroll,
   };
 }

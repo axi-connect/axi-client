@@ -210,6 +210,8 @@ export function FilmRoot({ children }: { children: ReactNode }) {
     };
     const update = () => {
       frame = 0;
+      // Con motor, el número de Lenis (al día en el rAF, sin leer el DOM).
+      if (engineRef.current) scrollTop = engineRef.current.scroll();
       const into = scrollTop - filmTop;
       const span = Math.max(1, filmHeight - viewHeight);
       const progress = Math.min(1, Math.max(0, into / span));
@@ -319,7 +321,10 @@ export function FilmRoot({ children }: { children: ReactNode }) {
     );
     root.querySelectorAll("[data-pill-avoid]").forEach((n) => pillIo.observe(n));
     const onScroll = () => {
-      const next = el.scrollTop;
+      // Con motor, el scroll de Lenis: `scrollTop` aquí llegaba después de que
+      // gsap escribiera estilos y forzaba su recálculo (36–67 ms en el
+      // recorrido; 2-cinematic, 2026-10-01). Sin motor no hay quien escriba.
+      const next = engineRef.current?.scroll() ?? el.scrollTop;
       if (next !== scrollTop) setHidden(next > scrollTop);
       window.clearTimeout(rest);
       rest = window.setTimeout(() => setHidden(false), 900);
@@ -389,8 +394,14 @@ export function FilmRoot({ children }: { children: ReactNode }) {
     const onMove = () => {
       moved = true;
     };
+    // Bajar y evaluar el chunk es una cosa; construir, otra. Evaluarlo costaba
+    // 58–161 ms con CPU ×1 en la tarea de la primera rueda (2-cinematic,
+    // 2026-10-01): ahora se evalúa en el primer hueco tras `load` y la rueda
+    // solo construye.
+    let engine: Promise<typeof import("./engine/film-engine")> | null = null;
+    const load = () => (engine ??= import(/* webpackPrefetch: true */ "./engine/film-engine"));
     const start = () => {
-      void import(/* webpackPrefetch: true */ "./engine/film-engine").then(({ startFilm }) => {
+      void load().then(({ startFilm }) => {
         if (cancelled || !rootRef.current) return;
         engineRef.current = startFilm(rootRef.current, { moved: () => moved });
       });
@@ -417,6 +428,7 @@ export function FilmRoot({ children }: { children: ReactNode }) {
     // podía cancelar un temporizador ajeno con el mismo número (ronda 2, R10).
     let idle = 0;
     let timer = 0;
+    let preIdle = 0;
     const go = () => {
       if (fired) return;
       fired = true;
@@ -433,6 +445,7 @@ export function FilmRoot({ children }: { children: ReactNode }) {
     // en cada frame y el motor entraba justo tras `load`, dentro de la ventana
     // de TBT (ronda 2, R3). Ahora: 2,5 s de reposo y después el primer hueco.
     const whenIdle = () => {
+      if (typeof window.requestIdleCallback === "function") preIdle = window.requestIdleCallback(() => void load(), { timeout: 1500 });
       timer = window.setTimeout(() => {
         timer = 0;
         if (typeof window.requestIdleCallback === "function") idle = window.requestIdleCallback(go, { timeout: 1000 });
@@ -448,7 +461,10 @@ export function FilmRoot({ children }: { children: ReactNode }) {
       scroller?.removeEventListener("scroll", onScroll);
       window.removeEventListener("load", whenIdle);
       for (const ev of INTENTS) window.removeEventListener(ev, onMove, true);
-      if (idle && typeof window.cancelIdleCallback === "function") window.cancelIdleCallback(idle);
+      if (typeof window.cancelIdleCallback === "function") {
+        if (idle) window.cancelIdleCallback(idle);
+        if (preIdle) window.cancelIdleCallback(preIdle);
+      }
       if (timer) window.clearTimeout(timer);
       engineRef.current?.stop();
       engineRef.current = null;

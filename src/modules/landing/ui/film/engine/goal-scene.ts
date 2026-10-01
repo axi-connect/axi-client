@@ -11,7 +11,7 @@ import { gsap } from "gsap";
 
 import { goalFrame } from "@/modules/landing/domain/film/goal-camera";
 import { formatMillions, formatPercent, ROUTE_FRACTIONS } from "@/modules/landing/domain/film/route-scenario";
-import { SPAN, all, sceneTimeline, setText, stickyStrip, visible, writer, type Scene } from "@/modules/landing/ui/film/engine/film-kit";
+import { SPAN, all, nearFlag, sceneTimeline, setText, stickyStrip, visible, writer, type Scene } from "@/modules/landing/ui/film/engine/film-kit";
 
 const px = (v: number) => v.toFixed(1);
 const o = (v: number) => v.toFixed(3);
@@ -23,6 +23,7 @@ export const goal: Scene = (section, ctx) => {
   // es el que deja leer la ruta, la proyección y la aprobación.
   const strip = stickyStrip(section, ctx, { top: ".film-goal-map", bottom: ".film-goal-panel" });
   const tl = sceneTimeline(section, ctx, 480, strip ?? undefined);
+  nearFlag(section);
   const { write: set, restore } = writer();
   const approvedAtStart = section.hasAttribute("data-approved");
   // Al revertir el contexto del motor (parar, cambiar de media o de nicho), la

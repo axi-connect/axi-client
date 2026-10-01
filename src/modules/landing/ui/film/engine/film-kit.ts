@@ -180,83 +180,139 @@ function inFlow(el: Element, out: HTMLElement[] = []): HTMLElement[] {
 const FIT_MIN = 0.6;
 
 /**
- * Lo más alto que se ve del contenido (texto o medios), en px desde el borde
- * de la escena, en su sitio de reposo. Lo absoluto de fondo no cuenta: va bajo
- * la isla a propósito. Los transforms en línea (el reveal del titular está en
- * su `from` durante el refresh, 24 px más abajo) se neutralizan para medir.
+ * Lo más alto que se ve del contenido (texto o medios) de cada escena, en px
+ * desde su borde, en su sitio de reposo. Lo absoluto de fondo no cuenta: va
+ * bajo la isla a propósito. Los transforms en línea (el reveal del titular está
+ * en su `from` durante el refresh, 24 px más abajo) se neutralizan para medir:
+ * los de TODAS las escenas a la vez, así las lecturas cuestan un solo layout.
  */
-function contentTop(section: HTMLElement, kids: HTMLElement[]): number {
-  const moved = kids.flatMap((k) => all(k, "[style*='transform']"));
+function contentTops(fits: readonly Fit[]): number[] {
+  const moved = fits.flatMap((f) => f.kids.flatMap((k) => all(k, "[style*='transform']")));
   const saved = moved.map((el) => el.style.transform);
   for (const el of moved) el.style.transform = "none";
-  const top0 = section.getBoundingClientRect().top;
-  let top = Infinity;
-  for (const kid of kids) {
-    const walker = document.createTreeWalker(kid, NodeFilter.SHOW_TEXT);
-    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
-      const el = n.parentElement;
-      if (!n.textContent?.trim() || !el?.getClientRects().length) continue;
-      top = Math.min(top, el.getBoundingClientRect().top - top0);
+  const tops = fits.map(({ section, kids }) => {
+    const top0 = section.getBoundingClientRect().top;
+    let top = Infinity;
+    for (const kid of kids) {
+      const walker = document.createTreeWalker(kid, NodeFilter.SHOW_TEXT);
+      for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+        const el = n.parentElement;
+        if (!n.textContent?.trim() || !el?.getClientRects().length) continue;
+        top = Math.min(top, el.getBoundingClientRect().top - top0);
+      }
+      for (const el of kid.querySelectorAll("img, svg, canvas, video")) {
+        const r = el.getBoundingClientRect();
+        if (r.width > 24 && r.height > 24) top = Math.min(top, r.top - top0);
+      }
     }
-    for (const el of kid.querySelectorAll("img, svg, canvas, video")) {
-      const r = el.getBoundingClientRect();
-      if (r.width > 24 && r.height > 24) top = Math.min(top, r.top - top0);
-    }
-  }
+    return top;
+  });
   moved.forEach((el, i) => (el.style.transform = saved[i]));
-  return top;
+  return tops;
 }
 
 /** La isla del sitio (con su aviso) ocupa hasta ~70 px: el contenido de una escena fijada empieza por debajo. */
 const SAFE_TOP = 96;
 
+/** Una escena fijada que se ajusta a la ventana; `key`, la ventana con que se ajustó la última vez. */
+type Fit = { section: HTMLElement; kids: HTMLElement[]; key: string };
+
+/** Las escenas fijadas vivas: un solo `refreshInit` las ajusta todas juntas. */
+const fits = new Set<Fit>();
+
 /**
- * Hace caber la escena fijada en la ventana con `zoom` sobre su contenido en
- * el flujo (`zoom` reflowea, así que la escena mide de verdad lo que se ve) y
- * cuida que su contenido no empiece bajo la isla (≥ `SAFE_TOP`): si el zoom lo
- * sube, la escena gana relleno arriba y se vuelve a ajustar. El zoom no siempre
- * encoge en proporción (hay altos ligados a la ventana, como en medir), así
- * que se mide y se corrige en bucle. Se hace antes de crear el trigger y en
- * cada `refreshInit` (cambio de tamaño), nunca por frame.
+ * La ventana y las fuentes con que se ajusta. Si no cambiaron, el ajuste de
+ * antes sigue valiendo: el refresh del final de la construcción, el de
+ * `fonts.ready` ya cargadas y los de precios y preguntas no lo repiten (eran
+ * 145 layouts en una tarea, 525 ms con CPU ×1 a 1366 × 657; 2-cinematic, 2026-10-01).
+ */
+const fitKey = () => `${window.innerWidth}x${window.innerHeight}|${document.fonts?.status ?? ""}`;
+
+/** Vueltas de medir y corregir. Cada una es UN layout para todas las escenas. */
+const FIT_ROUNDS = 4;
+
+function unfit({ section, kids }: Fit) {
+  for (const el of kids) el.style.removeProperty("zoom");
+  section.style.removeProperty("padding-top");
+  section.style.removeProperty("align-items");
+}
+
+/**
+ * Hace caber las escenas fijadas en la ventana con `zoom` sobre su contenido
+ * en el flujo (`zoom` reflowea, así que la escena mide de verdad lo que se ve)
+ * y cuida que su contenido no empiece bajo la isla (≥ `SAFE_TOP`): si el zoom
+ * lo sube, la escena gana relleno arriba. El zoom no siempre encoge en
+ * proporción (hay altos ligados a la ventana, como en medir): el alto es
+ * `a + b·zoom`, así que la primera corrección es proporcional y la segunda
+ * sale de la recta entre las dos medidas. En cada vuelta, primero todas las
+ * lecturas y después todas las escrituras: medir escena por escena forzaba un
+ * layout de la página por escena y por vuelta.
+ */
+function fitAll(list: Iterable<Fit>) {
+  const key = fitKey();
+  const todo = [...list].filter((f) => f.key !== key);
+  if (!todo.length) return;
+  for (const f of todo) {
+    unfit(f);
+    f.key = key;
+  }
+  const vh = window.innerHeight;
+  const work = todo.map((fit) => ({
+    fit,
+    base: fit.kids.map((el) => parseFloat(getComputedStyle(el).zoom) || 1),
+    pad: parseFloat(getComputedStyle(fit.section).paddingTop) || 0,
+    k: 1,
+    prev: null as { k: number; c: number } | null,
+  }));
+  let active = work;
+  for (let round = 0; round < FIT_ROUNDS && active.length; round++) {
+    const tops = contentTops(active.map((w) => w.fit));
+    const heights = active.map((w) => w.fit.section.offsetHeight);
+    active = active.filter((w, j) => {
+      const { section, kids } = w.fit;
+      let changed = false;
+      let h = heights[j];
+      // Primero el margen bajo la isla; centrada, el relleno solo la bajaría la
+      // mitad: se alinea arriba.
+      const gap = SAFE_TOP - tops[j];
+      if (gap > 0.5) {
+        w.pad += gap;
+        h += gap;
+        section.style.alignItems = "flex-start";
+        section.style.paddingTop = `${w.pad}px`;
+        changed = true;
+      }
+      if (h > vh && w.k > FIT_MIN) {
+        // Lo que escala es el alto sin el relleno (que va fuera del zoom).
+        const c = h - w.pad;
+        const target = vh * 0.985 - w.pad;
+        const slope = w.prev ? (w.prev.c - c) / (w.prev.k - w.k) : 0;
+        const k = slope > 0 ? (target - (c - slope * w.k)) / slope : (w.k * target) / c;
+        w.prev = { k: w.k, c };
+        w.k = Math.min(w.k, Math.max(FIT_MIN, k));
+        kids.forEach((el, i) => (el.style.zoom = String(w.base[i] * w.k)));
+        changed = true;
+      }
+      return changed;
+    });
+  }
+}
+
+const onFitRefresh = () => fitAll(fits);
+
+/**
+ * Registra la escena para ajustarse: ya, antes de crear su trigger, y en cada
+ * `refreshInit` (cambio de tamaño), todas juntas y nunca por frame.
  */
 function fitToViewport(section: HTMLElement) {
-  const kids = inFlow(section);
-  const fit = () => {
-    for (const el of kids) el.style.removeProperty("zoom");
-    section.style.removeProperty("padding-top");
-    section.style.removeProperty("align-items");
-    const base = kids.map((el) => parseFloat(getComputedStyle(el).zoom) || 1);
-    const pad0 = parseFloat(getComputedStyle(section).paddingTop) || 0;
-    const vh = window.innerHeight;
-    let k = 1;
-    let pad = pad0;
-    // Primero el margen bajo la isla, luego caber; hasta que ninguno cambie.
-    for (let i = 0; i < 12; i++) {
-      let changed = false;
-      const gap = SAFE_TOP - contentTop(section, kids);
-      if (gap > 0.5) {
-        // Centrada, el relleno solo la bajaría la mitad: se alinea arriba.
-        section.style.alignItems = "flex-start";
-        pad += gap;
-        section.style.paddingTop = `${pad}px`;
-        changed = true;
-      }
-      const over = section.offsetHeight / vh;
-      if (over > 1 && k > FIT_MIN) {
-        k = Math.max(FIT_MIN, (k * 0.985) / over);
-        kids.forEach((el, j) => (el.style.zoom = String(base[j] * k)));
-        changed = true;
-      }
-      if (!changed) break;
-    }
-  };
-  fit();
-  ScrollTrigger.addEventListener("refreshInit", fit);
+  const fit: Fit = { section, kids: inFlow(section), key: "" };
+  fitAll([fit]);
+  if (!fits.size) ScrollTrigger.addEventListener("refreshInit", onFitRefresh);
+  fits.add(fit);
   gsap.context()?.add(() => () => {
-    ScrollTrigger.removeEventListener("refreshInit", fit);
-    for (const el of kids) el.style.removeProperty("zoom");
-    section.style.removeProperty("padding-top");
-    section.style.removeProperty("align-items");
+    fits.delete(fit);
+    if (!fits.size) ScrollTrigger.removeEventListener("refreshInit", onFitRefresh);
+    unfit(fit);
   });
 }
 
@@ -320,6 +376,29 @@ function stick(section: HTMLElement, travel: number): HTMLElement {
     }
   });
   return spacer;
+}
+
+/**
+ * `data-near` en la escena mientras su recorrido está a menos de una pantalla:
+ * el CSS da capa propia (`will-change`) a sus planos solo entonces. Siempre
+ * en capa, el piloto y la meta sumaban ~7,5 Mpx de capas aunque estuvieran a
+ * diez pantallas (2-cinematic, 2026-10-01). Un observador, nada por frame.
+ */
+export function nearFlag(section: HTMLElement) {
+  if (typeof IntersectionObserver !== "function") return;
+  const box = section.parentElement?.classList.contains("pin-spacer") ? section.parentElement : section;
+  const io = new IntersectionObserver(
+    ([e]) => {
+      if (e.isIntersecting) section.setAttribute("data-near", "");
+      else section.removeAttribute("data-near");
+    },
+    { root: document.querySelector("[data-app-scroll]"), rootMargin: "100% 0px" },
+  );
+  io.observe(box);
+  gsap.context()?.add(() => () => {
+    io.disconnect();
+    section.removeAttribute("data-near");
+  });
 }
 
 /**

@@ -12,7 +12,7 @@ import { join } from "node:path"
 
 import { render } from "@testing-library/react"
 
-jest.mock("../engine/film-engine", () => ({ startFilm: jest.fn(() => ({ stop: jest.fn(), scrollTo: jest.fn(), setNiche: jest.fn() })) }))
+jest.mock("../engine/film-engine", () => ({ startFilm: jest.fn(() => ({ stop: jest.fn(), scrollTo: jest.fn(), setNiche: jest.fn(), scroll: jest.fn(() => 0) })) }))
 jest.mock("@/core/analytics/track", () => ({ track: jest.fn() }))
 // La escena del piloto carga su fuente con next/font (solo existe en el build de Next).
 jest.mock("next/font/google", () => ({ IBM_Plex_Mono: () => ({ className: "", variable: "", style: {} }) }))

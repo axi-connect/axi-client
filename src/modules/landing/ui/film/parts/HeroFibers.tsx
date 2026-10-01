@@ -28,7 +28,8 @@ import { FILM_NICHES } from "@/modules/landing/domain/film/niches";
  *   scroll del hero (evento, no bucle). Fuera de pantalla, nada.
  * - El scroll se lee en su evento; los tamaños, al cambiar de tamaño: ninguna
  *   medida del DOM por frame.
- * - DPR ≤ 2. La luz de las cabezas es un sprite pintado una vez.
+ * - DPR ≤ 2. La luz de las cabezas es un sprite pintado una vez; las preguntas,
+ *   sprites pintados al cambiar de tamaño (sin `fillText` por frame).
  * - El nudo no va en el canvas: es una capa CSS (`.film-hero-knot`) que solo
  *   cambia `transform` y `opacity`, fuera de la máscara que apaga las fibras
  *   sobre las cifras.
@@ -70,6 +71,38 @@ function radialSprite(radius: number, stops: readonly [number, string][]): HTMLC
   g.fillRect(0, 0, c.width, c.height);
   return c;
 }
+
+type TextSprite = { image: HTMLCanvasElement; width: number; ascent: number };
+
+/** Margen del sprite de texto alrededor de su caja (antialias y rasgos que sobresalen). */
+const SPRITE_PAD = 2;
+
+/**
+ * Un texto pintado una vez, a `dpr`, en un canvas desconectado: el canvas del
+ * hero solo lo copia (`drawImage`), y la opacidad va en `globalAlpha`. `ctx`
+ * (con `font` ya puesta) solo mide.
+ */
+function textSprite(ctx: CanvasRenderingContext2D, text: string, font: string, color: string, dpr: number): TextSprite {
+  const m = ctx.measureText(text);
+  const ascent = Math.ceil(m.actualBoundingBoxAscent || 10) + SPRITE_PAD;
+  const descent = Math.ceil(m.actualBoundingBoxDescent || 4) + SPRITE_PAD;
+  const image = document.createElement("canvas");
+  image.width = Math.ceil((m.width + SPRITE_PAD * 2) * dpr);
+  image.height = Math.ceil((ascent + descent) * dpr);
+  const g = image.getContext("2d");
+  if (g) {
+    g.scale(dpr, dpr);
+    g.font = font;
+    g.textBaseline = "alphabetic";
+    g.textAlign = "left";
+    g.fillStyle = color;
+    g.fillText(text, SPRITE_PAD, ascent);
+  }
+  return { image, width: m.width, ascent };
+}
+
+/** Al píxel del dispositivo: el sprite se copia 1:1, sin emborronar el texto. */
+const snap = (v: number, dpr: number) => Math.round(v * dpr) / dpr;
 
 /** Dos preguntas reales por nicho, del guion de la película. */
 const QUESTIONS = FILM_NICHES.flatMap((n) => [FILM_CONTENT[n].ask, FILM_CONTENT[n].vault.ask]);
@@ -120,6 +153,8 @@ export function HeroFibers({ className }: { className?: string }) {
     let fibers: HeroFiber[] = [];
     let knot: Point = { x: 0, y: 0 };
     let labels = new Map<number, number>();
+    // Cada pregunta, pintada una vez por tamaño (ver `textSprite`).
+    let sprites: TextSprite[] = [];
     let heroHeight = 1;
     let scrollTop = scroller?.scrollTop ?? 0;
     // Si el visitante baja antes de que termine la entrada, la entrada salta a su final.
@@ -173,7 +208,8 @@ export function HeroFibers({ className }: { className?: string }) {
       if (desktop) {
         ctx.font = font;
         const box = headlineBox();
-        const widest = Math.max(...QUESTIONS.map((q) => ctx.measureText(q).width));
+        sprites = QUESTIONS.map((q) => textSprite(ctx, q, font, rgba(fg, 1), dpr));
+        const widest = Math.max(...sprites.map((sp) => sp.width));
         labels = assignLabels(fibers, layout, (side, y) => {
           if (!box) return true;
           const left = side === "left" ? LABEL_EDGE : W - LABEL_EDGE - widest;
@@ -215,18 +251,20 @@ export function HeroFibers({ className }: { className?: string }) {
       ctx.globalAlpha = 1;
 
       // Las preguntas, pegadas al borde de su fibra (solo en escritorio).
+      // Sprites y no `fillText`: con texto, el canvas conectado recalculaba los
+      // estilos de la página en cada frame de scroll (gsap los deja sucios),
+      // 263 ms en el arranque con CPU ×1 (2-cinematic, 2026-10-01).
       if (desktop) {
-        ctx.font = font;
-        ctx.textBaseline = "alphabetic";
         for (const [i, y] of labels) {
           const f = fibers[i];
           const a = fiberState(f, t, s).label * 0.62;
-          if (a < 0.01 || f.label === null) continue;
-          const left = f.from.x < W / 2;
-          ctx.textAlign = left ? "left" : "right";
-          ctx.fillStyle = rgba(fg, a);
-          ctx.fillText(QUESTIONS[f.label % QUESTIONS.length], left ? LABEL_EDGE : W - LABEL_EDGE, y - 12);
+          const sp = f.label === null ? undefined : sprites[f.label % sprites.length];
+          if (a < 0.01 || !sp) continue;
+          const x = f.from.x < W / 2 ? LABEL_EDGE : W - LABEL_EDGE - sp.width;
+          ctx.globalAlpha = a;
+          ctx.drawImage(sp.image, snap(x - SPRITE_PAD, dpr), snap(y - 12 - sp.ascent, dpr), sp.image.width / dpr, sp.image.height / dpr);
         }
+        ctx.globalAlpha = 1;
       }
 
 

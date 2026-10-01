@@ -64,13 +64,14 @@
   width: 2400px;
   height: 1500px;
   transform-origin: 0 0;
-  will-change: transform;
   /* El fotograma final del servidor (escritorio / móvil); el motor escribe el suyo en línea. */
   transform: var(--plane-d);
 }
 .film-pilot-plane svg { position: absolute; inset: 0; overflow: visible; }
-/* El paisaje en su propia capa: los trazos que avanzan no lo vuelven a rasterizar (como la ciudad de la meta). */
-.film-pilot-land { will-change: transform; }
+/* El paisaje en su propia capa: los trazos que avanzan no lo vuelven a rasterizar (como la ciudad de la meta).
+   Solo cerca de la escena (`data-near`, nearFlag): siempre en capa pesaban aunque estuviera a diez pantallas. */
+.film-pilot[data-near] .film-pilot-plane,
+.film-pilot[data-near] .film-pilot-land { will-change: transform; }
 .film-pilot-plane path,
 .film-pilot-plane circle,
 .film-pilot-plane line { fill: none; stroke-linecap: round; stroke-linejoin: round; }

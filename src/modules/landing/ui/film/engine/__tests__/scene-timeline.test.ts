@@ -51,6 +51,41 @@ describe("fijar siempre y caber (la dueña, 2026-10-01)", () => {
   })
 })
 
+describe("el ajuste no se repite si la ventana no cambió (arranque, 2026-10-01)", () => {
+  // Medir: 300 px fijos y 900 que escalan con el zoom; cuenta cada medida del alto.
+  function counted() {
+    const s = scene("collect", 0)
+    const copy = s.querySelector<HTMLElement>("[data-anim=x]")!
+    const reads = { n: 0 }
+    Object.defineProperty(s, "offsetHeight", {
+      configurable: true,
+      get: () => {
+        reads.n++
+        return 300 + 900 * (Number(copy.style.zoom) || 1)
+      },
+    })
+    sceneTimeline(s, { desktop: true, pins: new Map() }, 100)
+    return { s, reads }
+  }
+
+  it("cabe en pocas vueltas aunque no encoja en proporción (antes, hasta 12 por escena)", () => {
+    const { s, reads } = counted()
+    expect(reads.n).toBeLessThanOrEqual(3)
+    expect(s.offsetHeight).toBeLessThanOrEqual(900)
+  })
+
+  it("un refresh con la misma ventana no vuelve a medir; con otra ventana, sí, y cabe en ella", () => {
+    const { s, reads } = counted()
+    const before = reads.n
+    ScrollTrigger.refresh()
+    expect(reads.n).toBe(before)
+    Object.defineProperty(window, "innerHeight", { configurable: true, value: 850 })
+    ScrollTrigger.refresh()
+    expect(reads.n).toBeGreaterThan(before)
+    expect(s.offsetHeight).toBeLessThanOrEqual(850)
+  })
+})
+
 describe("el contenido de una escena fijada no empieza bajo la isla (≥ 96 px)", () => {
   // Un texto cuyo borde sale a `at` px del de la escena más el relleno que se le dé.
   function at(px: number) {
