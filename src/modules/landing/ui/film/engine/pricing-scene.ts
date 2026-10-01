@@ -34,4 +34,11 @@ export function pricing(section: HTMLElement, ctx: { desktop: boolean }): void {
   // La elevación solo existe en escritorio (tres columnas); en móvil se apilan.
   if (ctx.desktop && featured.length) tl.from(featured, { y: 0, duration: at(0.25) }, at(0.7));
   if (ent.length) tl.from(ent, { opacity: 0, duration: at(0.25) }, at(0.7));
+
+  // Con el teclado, la entrada no se espera: si el foco entra a la sección, el
+  // fotograma final llega en el acto (auditoría, M2: «Hablar con ventas»
+  // recibía el foco aún a opacidad 0).
+  const reveal = () => tl.progress(1);
+  section.addEventListener("focusin", reveal);
+  gsap.context()?.add(() => () => section.removeEventListener("focusin", reveal));
 }

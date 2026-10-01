@@ -79,9 +79,17 @@ export function HeroStats() {
             <span className="max-md:hidden">{label}</span>
             <span className="md:hidden">{short}</span>
           </dt>
+          {/* El lector oye el valor final; la cifra que cuenta es solo visual
+              (auditoría, m3: se leía a medio animar, o 0 al entrar por ancla). */}
           <dd className="film-h order-2 text-[clamp(20px,2vw,28px)] tracking-[-0.02em] tabular-nums">
-            <span data-count={value}>{value}</span>
-            {suffix}
+            <span aria-hidden="true">
+              <span data-count={value}>{value}</span>
+              {suffix}
+            </span>
+            <span className="sr-only">
+              {value}
+              {suffix}
+            </span>
           </dd>
         </div>
       ))}

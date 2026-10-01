@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import * as Dialog from '@radix-ui/react-dialog';
 import { ChevronDown, Menu, X } from 'lucide-react';
@@ -34,6 +34,23 @@ export function SiteMenuSheet({
     onCtaClick: () => void;
 }) {
     const [open, setOpen] = useState(false);
+    // Atrás del navegador cierra la hoja (una entrada de historial mientras está
+    // abierta) y pasar a escritorio también (auditoría, m10).
+    useEffect(() => {
+        if (!open) return;
+        window.history.pushState({ siteSheet: true }, '');
+        const onPop = () => setOpen(false);
+        const wide = window.matchMedia('(min-width: 1024px)');
+        const onWide = () => wide.matches && setOpen(false);
+        window.addEventListener('popstate', onPop);
+        wide.addEventListener('change', onWide);
+        return () => {
+            window.removeEventListener('popstate', onPop);
+            wide.removeEventListener('change', onWide);
+            // Cerrada por Esc, un enlace o el botón: se retira la entrada que puso.
+            if (window.history.state?.siteSheet) window.history.back();
+        };
+    }, [open]);
     const [intent, setIntent] = useState<SiteIntent['id'] | null>('vender');
     const close = () => setOpen(false);
     return (
@@ -47,8 +64,7 @@ export function SiteMenuSheet({
                 <Dialog.Content
                     className={`site-nav-sheet site-sheet site-glass site-glass-deep${dark ? ' dark' : ''}`}
                     aria-describedby={undefined}
-                    // La isla queda visible y su botón cierra la hoja: no se roba el foco al cerrar.
-                    onCloseAutoFocus={(e) => e.preventDefault()}
+                    // Al cerrar, Radix devuelve el foco al botón del menú (m10).
                 >
                     <Dialog.Title className="sr-only">{SITE_ISLAND.menuTitle}</Dialog.Title>
                     <p className="site-panel-k">{SITE_ISLAND.ask}</p>

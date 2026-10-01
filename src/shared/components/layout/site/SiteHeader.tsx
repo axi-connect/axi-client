@@ -59,6 +59,9 @@ export default function SiteHeader() {
     const ringRef = useRef<SVGCircleElement>(null);
     const subRef = useRef<HTMLSpanElement>(null);
     const navRef = useRef<HTMLElement>(null);
+    // Quién abrió el panel: Esc le devuelve el foco (auditoría, M3).
+    const openerRef = useRef<HTMLElement | null>(null);
+    const wasOpen = useRef(false);
     const panelId = useId();
 
     // Con sesión el CTA lleva a la app (y repite el splash de marca); sin sesión,
@@ -125,7 +128,9 @@ export default function SiteHeader() {
     useEffect(() => {
         if (!open) return;
         const onKey = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') setOpen(null);
+            if (e.key !== 'Escape') return;
+            setOpen(null);
+            openerRef.current?.focus();
         };
         const onDown = (e: PointerEvent) => {
             if (navRef.current && !navRef.current.contains(e.target as Node)) setOpen(null);
@@ -138,9 +143,19 @@ export default function SiteHeader() {
         };
     }, [open]);
     useEffect(() => setOpen(null), [pathname]);
+    // Al abrir (no al cambiar de intención dentro), el foco entra al panel: si no,
+    // con Tab había que pasar por Crecer, Atender, Precios, sesión y CTA (M3).
+    useEffect(() => {
+        const opening = open !== null && !wasOpen.current;
+        wasOpen.current = open !== null;
+        if (opening) navRef.current?.querySelector<HTMLElement>('.site-panel .site-card')?.focus();
+    }, [open]);
 
     const active = SITE_INTENTS.find((i) => i.id === open) ?? SITE_INTENTS[0];
-    const toggle = (id: SiteIntent['id']) => setOpen((o) => (o === id ? null : id));
+    const toggle = (id: SiteIntent['id'], opener: HTMLElement) => {
+        openerRef.current = opener;
+        setOpen((o) => (o === id ? null : id));
+    };
     const close = () => setOpen(null);
 
     return (
@@ -165,7 +180,7 @@ export default function SiteHeader() {
                             data-tone={it.tone}
                             aria-expanded={open === it.id}
                             aria-controls={open ? panelId : undefined}
-                            onClick={() => toggle(it.id)}
+                            onClick={(e) => toggle(it.id, e.currentTarget)}
                         >
                             <span className="site-dot" aria-hidden="true" />
                             {it.name}
@@ -207,7 +222,10 @@ export default function SiteHeader() {
                             aria-label={open ? SITE_ISLAND.closeMenu : SITE_ISLAND.openMenu}
                             aria-expanded={open !== null}
                             aria-controls={open ? panelId : undefined}
-                            onClick={() => setOpen((o) => (o ? null : 'vender'))}
+                            onClick={(e) => {
+                                openerRef.current = e.currentTarget;
+                                setOpen((o) => (o ? null : 'vender'));
+                            }}
                         >
                             {open ? <X className="size-[18px]" aria-hidden="true" /> : <Menu className="size-[18px]" aria-hidden="true" />}
                         </button>

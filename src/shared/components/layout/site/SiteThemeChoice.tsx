@@ -20,14 +20,26 @@ export function SiteThemeChoice({ className, label }: { className: string; label
     const { theme, setTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
     useEffect(() => setMounted(true), []);
+    // Un radiogroup se recorre con flechas y es UNA parada de tabulación (m10):
+    // la opción activa lleva tabIndex 0 y las demás -1.
+    const active = Math.max(0, OPTIONS.findIndex((o) => mounted && o.value === theme));
+    const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+        const step = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0;
+        if (!step) return;
+        e.preventDefault();
+        const next = (active + step + OPTIONS.length) % OPTIONS.length;
+        setTheme(OPTIONS[next].value);
+        e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="radio"]')[next]?.focus();
+    };
     return (
-        <div role="radiogroup" aria-label={label} className={className}>
-            {OPTIONS.map(({ value, label: name, icon: Icon }) => (
+        <div role="radiogroup" aria-label={label} className={className} onKeyDown={onKeyDown}>
+            {OPTIONS.map(({ value, label: name, icon: Icon }, i) => (
                 <button
                     key={value}
                     type="button"
                     role="radio"
                     aria-checked={mounted && theme === value}
+                    tabIndex={i === active ? 0 : -1}
                     aria-label={name}
                     title={name}
                     className="site-btn"

@@ -60,12 +60,17 @@
    la página tiene casi 5.000 nodos y su estilo y layout costaban 2 s con CPU
    media (Lighthouse móvil). Las escenas fijadas NO llevan esto: su pin se
    calcularía sobre una altura estimada. */
+/* El cierre NO: es una pantalla (poco ahorro) y WebKit no desplaza a la vista
+   un control que recibe el foco dentro de un subárbol saltado (auditoría, M2:
+   «Prueba 7 días gratis» recibía el foco fuera de pantalla). */
 [data-scene="pricing"],
-[data-scene="faq"],
-[data-scene="close"] {
+[data-scene="faq"] {
   content-visibility: auto;
   contain-intrinsic-size: auto 900px;
 }
+/* Una escena recibe el foco al saltar a ella (FilmRoot.goTo): no es un control
+   y no pinta anillo alrededor de toda la pantalla. */
+.film-scene[tabindex="-1"]:focus { outline: none; }
 .film-wrap {
   position: relative;
   z-index: 2;
@@ -1036,7 +1041,10 @@
   perspective-origin: 50% 30%;
   text-align: left;
 }
-.film-notif-in { transform-style: preserve-3d; }
+/* La envoltura no recibe el clic: con la tarjeta girada en 3D, su plano quedaba
+   delante de media tarjeta y se tragaba el toque (las de los extremos no elegían). */
+.film-notif-in { transform-style: preserve-3d; pointer-events: none; }
+.film-notif-in > .film-notif { pointer-events: auto; }
 .film-notif {
   --sel: 0;
   --tilt: 0deg;

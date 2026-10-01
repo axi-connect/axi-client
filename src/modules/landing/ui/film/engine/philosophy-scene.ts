@@ -40,7 +40,15 @@ export const philosophy: Scene = (section, ctx) => {
   const pieces = visible(section, "[data-anim=philo-piece]").map((el) => ({ i: num(el, "index"), x: quick(el, "x", "px"), o: quick(el, "opacity") }));
   const words = visible(section, "[data-anim=philo-word]").map((el) => ({ i: num(el, "index"), x: quick(el, "x", "px"), o: quick(el, "opacity") }));
   const bars = visible(section, "[data-anim=philo-bar]").map((el) => quick(el, "scaleX"));
-  const copies = visible(section, "[data-anim=philo-copy]").map((el) => ({ i: num(el, "index"), o: quick(el, "opacity") }));
+  const copies = visible(section, "[data-anim=philo-copy]").map((el) => ({ el, i: num(el, "index"), o: quick(el, "opacity"), off: false }));
+  // Un pilar que no está en cuadro sale del teclado y del lector (`inert`): su
+  // «Ver «…»» recibía el foco con opacidad 0 y fuera de pantalla (auditoría, M2).
+  const offstage = (c: (typeof copies)[number], off: boolean) => {
+    if (c.off === off) return;
+    c.off = off;
+    c.el.toggleAttribute("inert", off);
+  };
+  gsap.context()?.add(() => () => copies.forEach((c) => c.el.removeAttribute("inert")));
   const intro = visible(section, "[data-anim=philo-intro-copy]").map((el) => quick(el, "opacity"));
   const half = PHILOSOPHY_TRACK.pillar / 2;
 
@@ -71,7 +79,11 @@ export const philosophy: Scene = (section, ctx) => {
     // El texto de un pilar no centrado se apaga: el entrante aparece en la
     // segunda mitad de su transición y el saliente se va en la primera. Del
     // vecino solo asoma su pieza.
-    for (const c of copies) c.o(clamp(1 - Math.abs(move - centers[c.i]) / half, 0, 1));
+    for (const c of copies) {
+      const o = clamp(1 - Math.abs(move - centers[c.i]) / half, 0, 1);
+      c.o(o);
+      offstage(c, o < 0.5);
+    }
     for (const o of intro) o(clamp(1 - move / (centers[0] / 2), 0, 1));
     for (const s of pieces) {
       const local = move - centers[s.i];

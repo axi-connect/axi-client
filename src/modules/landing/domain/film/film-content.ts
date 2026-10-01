@@ -5,8 +5,9 @@
  * nombre (`FilmIcon`) y la UI los traduce a lucide con un mapa cerrado.
  *
  * Reglas del copy (DESIGN.md §7 y landing-copy.md):
- * - Nada que el producto no haga hoy. El pago lo verifica el equipo; las
- *   llamadas son salientes; los seguimientos salen por WhatsApp con plantilla
+ * - Nada que el producto no haga hoy. El pago lo verifica el equipo; el agente
+ *   llama y también contesta (entrantes en producción desde el 2026-10-01, plan
+ *   §20); los seguimientos salen por WhatsApp con plantilla
  *   aprobada; ningún producto con tallas o colores (knowledge-base §6.4).
  * - Las cifras son de ejemplo y coherentes entre sí; las del mapa se calculan
  *   (`route-scenario.ts`), no se escriben.

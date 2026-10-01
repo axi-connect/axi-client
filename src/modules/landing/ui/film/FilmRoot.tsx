@@ -63,6 +63,22 @@ function scroller(): HTMLElement | null {
 
 const TICKS = ["Captar", "Vender", "Cobrar", "Crecer"] as const;
 
+/**
+ * La píldora fuera de la vista sale del teclado (`inert`): antes de aparecer,
+ * apartada en móvil (data-hide solo actúa ahí) o cediendo el sitio en
+ * cualquier ancho (data-avoid). «Cambiar» recibía el foco con opacidad 0 y bajo
+ * el borde de la pantalla (auditoría, M2). Se lee de sus propios atributos.
+ */
+function syncPillInert(pill: HTMLElement | null) {
+  if (!pill) return;
+  const mobile = window.matchMedia("(max-width: 1023px)").matches;
+  const off =
+    pill.getAttribute("data-on") !== "true" ||
+    pill.getAttribute("data-avoid") === "true" ||
+    (mobile && pill.getAttribute("data-hide") === "true");
+  pill.toggleAttribute("inert", off);
+}
+
 export function FilmRoot({ children }: { children: ReactNode }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<Engine | null>(null);
@@ -74,6 +90,8 @@ export function FilmRoot({ children }: { children: ReactNode }) {
   const barRef = useRef<HTMLDivElement>(null);
   const [niche, setNiche] = useState<FilmNiche>(DEFAULT_FILM_NICHE);
   const [started, setStarted] = useState(false);
+  // `data-on` lo pone React: tras cada cambio, la píldora recalcula su `inert`.
+  useEffect(() => syncPillInert(pillRef.current), [started]);
   const [chapter, setChapter] = useState(-1);
 
   // El nicho de la URL gana al recordado: es la campaña que trajo al visitante.
@@ -93,10 +111,18 @@ export function FilmRoot({ children }: { children: ReactNode }) {
     engineRef.current?.setNiche();
   }, [niche]);
 
+  // El scroll y también el foco (auditoría, m4): sin esto, tras elegir nicho el
+  // siguiente Tab volvía a «¿Quién te escribe hoy?». El destino recibe el foco
+  // sin desplazar nada (el desplazamiento lo hace el motor, suave).
   const goTo = useCallback((target: string) => {
+    const el = document.querySelector<HTMLElement>(target);
+    if (el) {
+      if (!el.hasAttribute("tabindex")) el.setAttribute("tabindex", "-1");
+      el.focus({ preventScroll: true });
+    }
     if (engineRef.current) return engineRef.current.scrollTo(target);
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    document.querySelector(target)?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    el?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
   }, []);
 
   const choose = useCallback(
@@ -196,6 +222,7 @@ export function FilmRoot({ children }: { children: ReactNode }) {
       if (on === hidden) return;
       hidden = on;
       pillRef.current?.setAttribute("data-hide", on ? "true" : "false");
+      syncPillInert(pillRef.current);
     };
     const setHidden = (on: boolean) => {
       scrolling = on;
@@ -216,6 +243,7 @@ export function FilmRoot({ children }: { children: ReactNode }) {
         if (nowAlways !== always) {
           always = nowAlways;
           pillRef.current?.setAttribute("data-avoid", always ? "true" : "false");
+          syncPillInert(pillRef.current);
         }
         apply();
       },
@@ -288,7 +316,7 @@ export function FilmRoot({ children }: { children: ReactNode }) {
     if (reduce.matches) return;
     let cancelled = false;
     const start = () => {
-      void import("./engine/film-engine").then(({ startFilm }) => {
+      void import(/* webpackPrefetch: true */ "./engine/film-engine").then(({ startFilm }) => {
         if (cancelled || !rootRef.current) return;
         // Antes de que el motor mida: las escenas con presentación propia para el
         // motor (la pista de «Vendemos progreso») la activan con este atributo.
@@ -296,18 +324,47 @@ export function FilmRoot({ children }: { children: ReactNode }) {
         engineRef.current = startFilm(rootRef.current);
       });
     };
-    // Justo después del primer pintado, no «cuando haya reposo»: el cielo del
-    // hero anima a 30 fps y con requestIdleCallback el motor llegaba a los ~7 s
-    // (medido): quien bajaba antes veía la película sin coreografía y luego un
-    // salto al fijarse las escenas.
-    let timer = 0;
-    const raf = requestAnimationFrame(() => {
-      timer = window.setTimeout(start, 0);
-    });
+    // El motor NO se evalúa durante la carga: era la tarea larga que más pesaba en
+    // el TBT de Lighthouse móvil (auditoría). Sin motor el HTML ya es el
+    // fotograma final, así que la primera pintura no cambia. Arranca con lo
+    // primero que llegue:
+    // - la primera intención del visitante (rueda, toque, clic, teclado o
+    //   cualquier scroll del contenedor): la construcción va por tandas de
+    //   arriba abajo, así la escena que asoma ya está montada cuando llega;
+    // - en el acto si la página llega con un ancla o con el scroll ya
+    //   restaurado (M1: el motor realinea el ancla al terminar);
+    // - un rato de reposo tras `load`, con tope de 3 s.
+    // El chunk se precarga (`webpackPrefetch`) para no esperar a la red al
+    // primer giro de rueda. Antes arrancaba justo tras el primer pintado.
+    const scroller = document.querySelector<HTMLElement>("[data-app-scroll]");
+    let fired = false;
+    const INTENTS = ["wheel", "touchstart", "pointerdown", "keydown"] as const;
+    const onScroll = () => {
+      if (scroller && scroller.scrollTop > 0) go();
+    };
+    let idle = 0;
+    const go = () => {
+      if (fired) return;
+      fired = true;
+      for (const ev of INTENTS) window.removeEventListener(ev, go, true);
+      scroller?.removeEventListener("scroll", onScroll);
+      start();
+    };
+    for (const ev of INTENTS) window.addEventListener(ev, go, { capture: true, passive: true });
+    scroller?.addEventListener("scroll", onScroll, { passive: true });
+    const whenIdle = () => {
+      idle = typeof window.requestIdleCallback === "function" ? window.requestIdleCallback(go, { timeout: 3000 }) : window.setTimeout(go, 3000);
+    };
+    if (window.location.hash || (scroller && scroller.scrollTop > 0)) go();
+    else if (document.readyState === "complete") whenIdle();
+    else window.addEventListener("load", whenIdle, { once: true });
     return () => {
       cancelled = true;
-      cancelAnimationFrame(raf);
-      window.clearTimeout(timer);
+      for (const ev of INTENTS) window.removeEventListener(ev, go, true);
+      scroller?.removeEventListener("scroll", onScroll);
+      window.removeEventListener("load", whenIdle);
+      if (typeof window.cancelIdleCallback === "function") window.cancelIdleCallback(idle);
+      window.clearTimeout(idle);
       engineRef.current?.stop();
       engineRef.current = null;
       root.removeAttribute("data-motion");

@@ -69,10 +69,28 @@ it("con movimiento reducido el motor no se carga", async () => {
   expect(startFilm).not.toHaveBeenCalled()
 })
 
-it("sin movimiento reducido el motor arranca en diferido", async () => {
+it("sin movimiento reducido el motor no se evalúa en la carga: arranca con la primera intención", async () => {
   setReducedMotion(false)
+  // La carga ya terminó y no hay reposo a la vista: solo la intención lo arranca.
+  window.requestIdleCallback = jest.fn(() => 1) as unknown as typeof window.requestIdleCallback
+  window.cancelIdleCallback = jest.fn()
   render(<Film />)
-  await new Promise((r) => setTimeout(r, 700))
+  await new Promise((r) => setTimeout(r, 300))
+  // Signo 1: sin que el visitante haga nada, el motor no arrancó.
+  expect(startFilm).not.toHaveBeenCalled()
+  // Signo 2: con la primera intención (un toque, una rueda…) arranca, y una sola vez.
+  fireEvent.pointerDown(window)
+  fireEvent.wheel(window)
+  await new Promise((r) => setTimeout(r, 50))
+  expect(startFilm).toHaveBeenCalledTimes(1)
+})
+
+it("si la página llega con un ancla, el motor arranca en el acto (M1: realinea al terminar)", async () => {
+  setReducedMotion(false)
+  window.requestIdleCallback = jest.fn(() => 1) as unknown as typeof window.requestIdleCallback
+  window.history.replaceState(null, "", "/#medir")
+  render(<Film />)
+  await new Promise((r) => setTimeout(r, 50))
   expect(startFilm).toHaveBeenCalledTimes(1)
 })
 

@@ -27,7 +27,11 @@ import { emitFilmEvent, FILM_ACTIVITY_EVENT, type FilmActivityDetail } from "@/m
 import { close } from "@/modules/landing/ui/film/engine/close-scene";
 import { goal } from "@/modules/landing/ui/film/engine/goal-scene";
 import { philosophy } from "@/modules/landing/ui/film/engine/philosophy-scene";
-import { pilot } from "@/modules/landing/ui/film/engine/pilot-scene";
+// El piloto (§19) solo entra en el motor con FILM_PILOT=1: la rama con el
+// literal que inlina next.config deja que webpack lo pode cuando está apagado
+// (auditoría, m11: antes pilot-content y pilot-frame viajaban igual).
+const pilotScene: Promise<Scene> | null =
+  process.env.FILM_PILOT === "1" ? import("@/modules/landing/ui/film/engine/pilot-scene").then((m) => m.pilot) : null;
 import { pricing } from "@/modules/landing/ui/film/engine/pricing-scene";
 import { call, photo, team, vault } from "@/modules/landing/ui/film/engine/sell-scenes";
 import {
@@ -397,7 +401,7 @@ const measure: Scene = (section, ctx) => {
   if (glow.length) tl.fromTo(glow, { opacity: 0 }, { opacity: 1, ease: "power3.out", duration: atP(0.14) }, atP(0.82));
 };
 
-const SCENES: Record<string, Scene> = { hero, philosophy, niche, radar, pilot, followup, chat, photo, call, vault, team, collect, pipeline, goal, axel, measure, pricing, close };
+const SCENES: Record<string, Scene> = { hero, philosophy, niche, radar, followup, chat, photo, call, vault, team, collect, pipeline, goal, axel, measure, pricing, close };
 
 /* ──────────────────────────────── arranque ──────────────────────────────── */
 
@@ -414,6 +418,31 @@ export function startFilm(root: HTMLElement): FilmEngine {
       ? { wrapper: scroller, content: scroller.querySelector<HTMLElement>("main") ?? scroller, lerp: 0.1 }
       : { lerp: 0.1 },
   );
+
+  // Anclas profundas (/#medir desde otra página o al recargar): el navegador
+  // salta al ancla antes de que existan los pins, que luego la empujan hasta
+  // diez pantallas más abajo (auditoría, M1). Al terminar la construcción se
+  // realinea, salvo que el visitante ya se haya movido. Si la escena se fija,
+  // el destino es su pin-spacer: la escena misma está en `position: fixed`.
+  let moved = false;
+  const onIntent = () => {
+    moved = true;
+  };
+  const INTENTS = ["wheel", "touchstart", "keydown", "pointerdown"] as const;
+  for (const ev of INTENTS) window.addEventListener(ev, onIntent, { passive: true, once: true });
+  const landOnHash = () => {
+    const id = decodeURIComponent(window.location.hash.slice(1));
+    if (!id || moved) return;
+    const el = document.getElementById(id);
+    if (!el || !root.contains(el)) return;
+    const box = el.parentElement?.classList.contains("pin-spacer") ? el.parentElement : el;
+    // Lenis guarda el límite de scroll de ANTES de los pins (lo actualiza con un
+    // ResizeObserver, a destiempo): sin esto el destino se recortaba a ese techo
+    // y /#medir se quedaba en 17.828 px de 29.103 (verificación de M1).
+    lenis.resize();
+    lenis.scrollTo(box, { immediate: true, force: true });
+    ScrollTrigger.update();
+  };
   lenis.on("scroll", ScrollTrigger.update);
   const tick = (time: number) => lenis.raf(time * 1000);
   gsap.ticker.add(tick);
@@ -442,7 +471,11 @@ export function startFilm(root: HTMLElement): FilmEngine {
     queue.push(fn);
     channel.port2.postMessage(0);
   };
-  const SLICE_MS = 12;
+  // 40 ms: por debajo de los 50 que cuentan como tarea larga (TBT) y con pocas
+  // tandas. GSAP encola un refresh completo por frame cuando nace un pin
+  // (`_queueRefreshAll`): con tandas de 12 ms caía un frame entre casi cada
+  // escena fijada y el contenido se recalculaba ~7 veces (auditoría, m1).
+  const SLICE_MS = 40;
   const mount = () => {
     const media = gsap.matchMedia(root);
     media.add({ desktop: "(min-width: 1024px)", mobile: "(max-width: 1023px)" }, (context) => {
@@ -454,12 +487,27 @@ export function startFilm(root: HTMLElement): FilmEngine {
         if (!alive) return;
         const t0 = performance.now();
         while (next < sections.length && performance.now() - t0 < SLICE_MS) {
-          const section = sections[next++];
-          const build = SCENES[section.dataset.scene ?? ""];
+          const section = sections[next];
+          const name = section.dataset.scene ?? "";
+          // El piloto llega en su propio chunk: si aún no está, la construcción
+          // espera aquí y sigue en orden (los pins de debajo dependen de él).
+          if (name === "pilot" && !SCENES.pilot && pilotScene) {
+            void pilotScene.then((build) => {
+              SCENES.pilot = build;
+              yieldThen(slice);
+            });
+            return;
+          }
+          next++;
+          const build = SCENES[name];
           if (build) context.add(() => build(section, ctx));
         }
         if (next < sections.length) yieldThen(slice);
-        else ScrollTrigger.refresh();
+        else {
+          ScrollTrigger.refresh();
+          landOnHash();
+          root.setAttribute("data-film-ready", "");
+        }
       };
       slice();
       return () => {
@@ -500,12 +548,20 @@ export function startFilm(root: HTMLElement): FilmEngine {
   // Las fuentes o las imágenes pueden cambiar alturas después de medir.
   const refresh = () => ScrollTrigger.refresh();
   void document.fonts?.ready.then(refresh);
-  // Precios, preguntas y cierre se saltan el render fuera de pantalla
+  // Precios y preguntas se saltan el render fuera de pantalla
   // (`content-visibility: auto`, film.css): al pintarse por primera vez su alto
-  // real sustituye al estimado, y el cierre mide hasta su centro.
-  const lazyScenes = all(root, '[data-scene="pricing"], [data-scene="faq"], [data-scene="close"]');
+  // real sustituye al estimado, y lo que va debajo (el cierre) se recoloca.
+  const lazyScenes = all(root, '[data-scene="pricing"], [data-scene="faq"]');
+  // Solo la primera vez que se pinta cada una (auditoría, m2): después su alto
+  // ya es el real y `contain-intrinsic-size: auto` lo recuerda.
+  const shown = new Set<EventTarget>();
   const onShown = (e: Event) => {
-    if (!(e as Event & { skipped?: boolean }).skipped) refresh();
+    if ((e as Event & { skipped?: boolean }).skipped || !e.currentTarget || shown.has(e.currentTarget)) return;
+    shown.add(e.currentTarget);
+    refresh();
+    // Su alto real mueve lo que hay debajo: si se llegó por ancla (/#preguntas),
+    // se vuelve a alinear (verificación de M1: quedaba 96 px abajo).
+    landOnHash();
   };
   for (const s of lazyScenes) s.addEventListener("contentvisibilityautostatechange", onShown);
 
@@ -519,6 +575,8 @@ export function startFilm(root: HTMLElement): FilmEngine {
       }
       mm.revert();
       channel.port1.close();
+      for (const ev of INTENTS) window.removeEventListener(ev, onIntent);
+      root.removeAttribute("data-film-ready");
       for (const s of lazyScenes) s.removeEventListener("contentvisibilityautostatechange", onShown);
       gsap.ticker.remove(tick);
       lenis.destroy();
