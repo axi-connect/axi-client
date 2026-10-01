@@ -303,7 +303,11 @@ export function CallPlayer() {
     pearl.addEventListener("click", toggle);
     a0.addEventListener("ended", ended0);
     a1.addEventListener("ended", ended1);
-    for (const a of audio) a.addEventListener("error", fail);
+    // Solo corta la llamada el error de la pista que suena (la 2.ª puede fallar al desbloquearse).
+    const onError = (e: Event) => {
+      if (e.target === audio[track]) fail();
+    };
+    for (const a of audio) a.addEventListener("error", onError);
     // Fuera de pantalla o de la pestaña, la llamada se pausa (y el bucle se va con ella).
     const io = new IntersectionObserver(([entry]) => {
       if (!entry.isIntersecting) pause();
@@ -317,7 +321,7 @@ export function CallPlayer() {
       pearl.removeEventListener("click", toggle);
       a0.removeEventListener("ended", ended0);
       a1.removeEventListener("ended", ended1);
-      for (const a of audio) a.removeEventListener("error", fail);
+      for (const a of audio) a.removeEventListener("error", onError);
       io.disconnect();
       document.removeEventListener("visibilitychange", onHide);
       for (const a of audio) a.pause();
