@@ -4,6 +4,7 @@ import "../film-drum.css";
 
 import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 
+import { drumSelect, drumTick, primeDrumSound } from "@/modules/landing/ui/film/parts/drum-sound";
 import { RAIL_COPY, clampIndex, drumPose, wheelStep, type RailEntry } from "@/modules/landing/domain/film/rail-index";
 
 /**
@@ -56,6 +57,15 @@ export function FilmDrum({
     if (refocus) triggerRef.current?.focus();
   };
 
+  // El sonido de selector (drum-sound.ts): escucha el primer gesto para poder sonar,
+  // y suena un tic en cada paso con la ruleta ya abierta (no al reajustarse al abrir).
+  useEffect(() => primeDrumSound(), []);
+  const prevStep = useRef({ open, sel });
+  useEffect(() => {
+    if (open && prevStep.current.open && sel !== prevStep.current.sel) drumTick();
+    prevStep.current = { open, sel };
+  }, [open, sel]);
+
   // Abierta con el teclado: el foco entra a la escena del centro.
   useEffect(() => {
     if (!open || !focusOnOpen.current) return;
@@ -90,6 +100,7 @@ export function FilmDrum({
         setSel((s) => clampIndex(s + (e.key === "ArrowDown" ? 1 : -1), entries.length));
       } else if (e.key === "Enter") {
         e.preventDefault();
+        drumSelect();
         setOpen(false);
         onTravel(entries[selRef.current]);
       } else if (e.key === "Escape") {
@@ -119,6 +130,7 @@ export function FilmDrum({
     }
   };
   const go = (k: number) => {
+    drumSelect();
     setOpen(false);
     onTravel(entries[k]);
   };
