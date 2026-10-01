@@ -11,6 +11,8 @@ import {
   type FilmNiche,
 } from "@/modules/landing/domain/film/niches";
 import { emitFilmEvent, FILM_CHAPTER_EVENT, type FilmChapterDetail } from "@/modules/landing/ui/film/film-events";
+import { RAIL_COPY, RAIL_INDEX, currentIndex, travelEase, travelSeconds, type RailEntry } from "@/modules/landing/domain/film/rail-index";
+import { FilmDrum } from "@/modules/landing/ui/film/parts/FilmDrum";
 
 /**
  * La única isla cliente de la película.
@@ -25,7 +27,8 @@ import { emitFilmEvent, FILM_CHAPTER_EVENT, type FilmChapterDetail } from "@/mod
  *   reducido. Sin motor, cada escena se ve en su fotograma final.
  */
 
-type Engine = { stop(): void; scrollTo(target: string): void; setNiche(): void };
+// Solo el tipo (se borra al compilar): el motor sigue llegando por import() diferido.
+type Engine = import("@/modules/landing/ui/film/engine/film-engine").FilmEngine;
 
 type FilmContextValue = {
   niche: FilmNiche;
@@ -88,6 +91,14 @@ export function FilmRoot({ children }: { children: ReactNode }) {
   // frame (perfil del 2026-10-01: segundos de «Recalculate style» por escena).
   const railRef = useRef<HTMLDivElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
+  // El riel temario (lienzo v2): las escenas que hay en la página, la actual y
+  // el recorrido en curso (su píldora «Hacia …» y la barra, escrita por ref).
+  const [railEntries, setRailEntries] = useState<RailEntry[]>([]);
+  const [railCurrent, setRailCurrent] = useState(0);
+  const [toward, setToward] = useState<{ title: string; tone: string; to: number } | null>(null);
+  const towardBarRef = useRef<HTMLSpanElement>(null);
+  const travelRef = useRef<{ from: number; to: number } | null>(null);
+  const travelTo = useRef<((entry: RailEntry) => void) | null>(null);
   const [niche, setNiche] = useState<FilmNiche>(DEFAULT_FILM_NICHE);
   const [started, setStarted] = useState(false);
   // `data-on` lo pone React: tras cada cambio, la píldora recalcula su `inert`.
@@ -171,6 +182,11 @@ export function FilmRoot({ children }: { children: ReactNode }) {
     // mitad de un pin (un ancla, recargar) el capítulo se perdía (QA del nav, Radar y Chat).
     const marks = TICKS.map((t) => root.querySelector<HTMLElement>(`[data-chapter="${t}"]`));
     let chapterTops: number[] = marks.map(() => Infinity);
+    const entries = RAIL_INDEX.filter((e) => root.querySelector(`#${CSS.escape(e.id)}`));
+    const entryEls = entries.map((e) => root.querySelector<HTMLElement>(`#${CSS.escape(e.id)}`));
+    setRailEntries(entries);
+    let entryTops: number[] = entries.map(() => Infinity);
+    let railNow = -1;
     const measure = () => {
       const top = root.getBoundingClientRect().top;
       filmTop = top - el.getBoundingClientRect().top + el.scrollTop;
@@ -179,6 +195,11 @@ export function FilmRoot({ children }: { children: ReactNode }) {
       if (after) afterTop = after.getBoundingClientRect().top - top;
       if (niche) nicheTop = niche.getBoundingClientRect().top - top;
       chapterTops = marks.map((m) => {
+        if (!m) return Infinity;
+        const box = m.parentElement?.classList.contains("pin-spacer") ? m.parentElement : m;
+        return box.getBoundingClientRect().top - top;
+      });
+      entryTops = entryEls.map((m) => {
         if (!m) return Infinity;
         const box = m.parentElement?.classList.contains("pin-spacer") ? m.parentElement : m;
         return box.getBoundingClientRect().top - top;
@@ -199,6 +220,17 @@ export function FilmRoot({ children }: { children: ReactNode }) {
       });
       if (current !== chapterNow) setChapter(current);
       announce(current, Math.round(progress * 100) / 100);
+      // La escena actual del riel temario y, si hay recorrido, su barra.
+      const now = currentIndex(entryTops, into, viewHeight);
+      if (now !== railNow) {
+        railNow = now;
+        setRailCurrent(now);
+      }
+      const trip = travelRef.current;
+      if (trip && towardBarRef.current) {
+        const k = Math.min(1, Math.max(0, (scrollTop - trip.from) / (trip.to - trip.from || 1)));
+        towardBarRef.current.style.transform = `scaleX(${k.toFixed(3)})`;
+      }
       const nowBeyond = into + viewHeight * 0.5 > nicheTop;
       const nowPast = into + viewHeight * 0.85 > afterTop;
       if (nowBeyond !== beyondHero || nowPast !== pastFilm) {
@@ -206,6 +238,39 @@ export function FilmRoot({ children }: { children: ReactNode }) {
         pastFilm = nowPast;
         sync();
       }
+    };
+    // El recorrido del riel temario: con el motor, un scrollTo de Lenis con
+    // duración según la distancia (1,2–2,5 s) que pasa por las escenas, así sus
+    // animaciones corren por el camino; sin motor (movimiento reducido), salto
+    // directo. El destino es el de M1 (pin-spacer si se fija). Al llegar, el
+    // foco va a la escena.
+    travelTo.current = (entry) => {
+      const target = root.querySelector<HTMLElement>(`#${CSS.escape(entry.id)}`);
+      if (!target) return;
+      const land = () => {
+        if (!target.hasAttribute("tabindex")) target.setAttribute("tabindex", "-1");
+        target.focus({ preventScroll: true });
+      };
+      const engine = engineRef.current;
+      const to = engine?.offsetOf(`#${CSS.escape(entry.id)}`);
+      if (!engine || to == null) {
+        target.scrollIntoView({ behavior: "auto", block: "start" });
+        land();
+        return;
+      }
+      const from = el.scrollTop;
+      const span = Math.max(1, filmHeight - viewHeight);
+      travelRef.current = { from, to };
+      setToward({ title: entry.title, tone: entry.tone, to: Math.min(1, Math.max(0, (to - filmTop) / span)) });
+      engine.scrollTo(`#${CSS.escape(entry.id)}`, {
+        duration: travelSeconds(to - from, viewHeight),
+        easing: travelEase,
+        onComplete: () => {
+          travelRef.current = null;
+          setToward(null);
+          land();
+        },
+      });
     };
     // La píldora del nicho se aparta mientras se baja y vuelve al subir o al
     // quedar quieto 900 ms. Solo el sentido del scroll, sin medir el DOM; el CSS
@@ -379,16 +444,28 @@ export function FilmRoot({ children }: { children: ReactNode }) {
       <div ref={rootRef} className="film dark theme-dark-island" data-niche={niche} data-film="">
         {children}
 
-        <div ref={railRef} className="film-rail" data-on={started} aria-hidden="true">
-          <div className="track" />
-          <div className="lit" />
-          <div className="dot" />
+        {/* El riel: el dibujo es decorativo; su botón y la ruleta (FilmDrum) no. Fuera de la vista, inerte. */}
+        <div ref={railRef} className="film-rail" data-on={started} inert={!started}>
+          <div className="track" aria-hidden="true" />
+          <div className="lit" aria-hidden="true" />
+          <div className="dot" aria-hidden="true" />
           {TICKS.map((t, i) => (
-            <div key={t} className="tick" data-on={i <= chapter} style={{ top: `${(i / (TICKS.length - 1)) * 100}%` }}>
+            <div key={t} className="tick" aria-hidden="true" data-on={i <= chapter} style={{ top: `${(i / (TICKS.length - 1)) * 100}%` }}>
               <i />
               <span>{t}</span>
             </div>
           ))}
+          {railEntries.length ? <FilmDrum entries={railEntries} current={railCurrent} onTravel={(e) => travelTo.current?.(e)} /> : null}
+          {toward ? (
+            <div className="film-drum-toward" data-tone={toward.tone} style={{ "--to": toward.to } as React.CSSProperties} aria-live="polite">
+              <i aria-hidden="true" />
+              <small>{RAIL_COPY.toward}</small>
+              <b>{toward.title}</b>
+              <span className="film-drum-toward-bar" aria-hidden="true">
+                <span ref={towardBarRef} />
+              </span>
+            </div>
+          ) : null}
         </div>
         <div ref={barRef} className="film-bar" aria-hidden="true">
           <i />

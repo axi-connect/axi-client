@@ -1016,3 +1016,27 @@ Cifras finales sobre la **build de producción** (`next build` sin `FILM_PILOT`,
 - la decisión de fuentes y CSS del LCP móvil (§21.2);
 - el presupuesto del panel (§6.4);
 - la revisión de la dueña en :3320.
+
+## 22. Riel temario · la ruleta de escenas (aprobada el 2026-10-01)
+
+Lienzo: https://claude.ai/artifact/TAMCLKyh5AdP3xKremX4w9 (v2). La dueña lo aprobó con «Aprobada la ruleta, constrúyela». La v1 era un panel con título y lista; la dueña pidió quitar el título, un contenedor más pequeño, una entrada más cuidada y, sobre todo, el efecto de ruleta.
+
+- **Qué es:** el riel de la izquierda se convierte en el índice de la película. Al pasar el ratón, o con el teclado desde su botón «Ir a una escena», nace del punto actual del riel una ruleta de 272 × 236 px con 5 escenas a la vista. No lleva cabecera.
+- **Entrada:** escala, opacidad y desenfoque (0,55 → 1; 10 px → 0) con un easing de salida largo. Solo al abrirse; al cerrarse se va rápido y sin desenfoque.
+- **La ruleta:**
+  - la escena del centro va sobre una franja de cristal, grande y nítida, con el punto de su pilar encendido, su capítulo encima y «Intro ↵»;
+  - las demás se achican (−12 % por paso) y se apagan (−30 %), con viñeta de máscara arriba y abajo;
+  - cada paso encaja como un tambor (0,42 s).
+- **La rueda:** mientras la ruleta está abierta, la rueda mueve la ruleta y NO la página (un paso cada 60 px, con `data-lenis-prevent` y un `wheel` no pasivo). ↑ ↓ (también Inicio y Fin) hacen lo mismo. Un clic en otra escena la trae al centro. Intro o clic en la del centro inicia el recorrido. Esc cierra y devuelve el foco al riel.
+- **El recorrido:** `scrollTo` de Lenis con duración proporcional a la distancia (1,2 a 2,5 s) y easing in-out. Pasa por las escenas, así sus animaciones corren por el camino. Mientras dura, una píldora «Hacia …» en el destino del riel con su barra (escrita por ref). El destino es el de las anclas (M1): el `pin-spacer` si la escena se fija, con `lenis.resize()` antes. Al llegar, el foco va a la escena. Con movimiento reducido, salto directo.
+- **Accesibilidad:**
+  - el dibujo del riel es decorativo y su botón y la ruleta no;
+  - el riel es inerte mientras no se ve y la ruleta, cerrada;
+  - la escena actual lleva `aria-current`;
+  - es una sola parada de tabulación, porque el foco sigue a la selección.
+- **Código:**
+  - `domain/film/rail-index.ts` (índice de escenas con su ancla real y su pilar, la pose del tambor, los pasos de rueda y la duración), con tests;
+  - `ui/film/parts/FilmDrum.tsx` y `film-drum.css`, con su test;
+  - el recorrido en `FilmRoot`;
+  - `scrollTo(target, { duration, easing, onComplete })` y `offsetOf()` en el motor.
+- **Solo escritorio:** el riel no existe por debajo de 1024 px. El piloto aparece en la lista solo con `FILM_PILOT=1`, porque el riel lista lo que hay en la página.

@@ -1,0 +1,150 @@
+/*
+ * La ruleta del riel (lienzo «Landing · Riel temario» v2). Vive dentro de
+ * `.film-rail` (fijo a la izquierda, de alto min(52vh, 480px)); nace del punto
+ * actual del riel, que está en `var(--film-progress)` de su alto.
+ * Solo tokens; en las filas, solo transform y opacity.
+ */
+.film-drum-zone {
+  position: absolute;
+  left: -14px;
+  top: -24px;
+  bottom: -24px;
+  width: 40px;
+  pointer-events: auto;
+}
+.film-drum-trigger {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.film-drum-trigger:focus-visible { outline: 2px solid var(--foreground); outline-offset: 2px; }
+
+.film-drum {
+  --drum-w: 272px;
+  --drum-h: 236px;
+  position: absolute;
+  left: 40px;
+  top: calc(24px + var(--film-progress, 0) * (100% - 48px) - var(--drum-h) / 2);
+  width: var(--drum-w);
+  height: var(--drum-h);
+  box-sizing: border-box;
+  border-radius: 24px;
+  overflow: hidden;
+  color: var(--foreground);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--foreground) 5%, var(--background)), var(--background));
+  border: 1px solid color-mix(in srgb, var(--foreground) 14%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 22%, transparent),
+    0 24px 60px color-mix(in srgb, black 50%, transparent);
+  transform-origin: 0 50%;
+  /* Cerrada: se va rápido y sin desenfoque. */
+  opacity: 0;
+  transform: scale(0.55) translateX(-24px);
+  filter: blur(10px);
+  visibility: hidden;
+  transition: opacity 0.22s ease, transform 0.22s ease, filter 0s linear 0.22s, visibility 0s linear 0.22s;
+}
+/* Abierta: nace del punto del riel con escala, opacidad y un desenfoque que se resuelve (solo en la entrada). */
+.film-drum[data-open] {
+  opacity: 1;
+  transform: none;
+  filter: none;
+  visibility: visible;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease, filter 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+/* La franja del centro: la escena seleccionada. */
+.film-drum-band {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 50%;
+  height: 48px;
+  margin-top: -24px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--foreground) 7%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--foreground) 8%, transparent);
+}
+/* La viñeta: arriba y abajo se funden. */
+.film-drum-list {
+  position: absolute;
+  inset: 0;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, black 34%, black 66%, transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0, black 34%, black 66%, transparent 100%);
+}
+.film-drum-row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 44px;
+  margin-top: -22px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transform-origin: 16px 50%;
+  transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.42s ease;
+}
+.film-drum-row:focus-visible { outline: 2px solid var(--foreground); outline-offset: -2px; border-radius: 12px; }
+.film-drum-row[data-tone="coral"] { --tone: var(--axi-brand); }
+.film-drum-row[data-tone="amber"] { --tone: var(--axi-amber); }
+.film-drum-row[data-tone="violet"] { --tone: var(--axi-violet); }
+.film-drum-row[data-tone="dim"] { --tone: color-mix(in srgb, var(--foreground) 50%, transparent); }
+.film-drum-dot { width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--tone); }
+.film-drum-row[data-centered] .film-drum-dot { box-shadow: 0 0 12px var(--tone); }
+.film-drum-text { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
+.film-drum-chapter { display: none; font-size: 9.5px; letter-spacing: 0.18em; font-weight: 600; text-transform: uppercase; color: color-mix(in srgb, var(--foreground) 52%, transparent); }
+.film-drum-row[data-centered] .film-drum-chapter { display: block; }
+.film-drum-title { font-size: 14.5px; font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.film-drum-row[data-centered] .film-drum-title { font-weight: 600; }
+.film-drum-key { margin-left: auto; font-size: 10.5px; color: color-mix(in srgb, var(--foreground) 55%, transparent); opacity: 0; }
+.film-drum-row[data-centered] .film-drum-key { opacity: 1; }
+
+/* El recorrido: la píldora «Hacia …» en el destino del riel y su barra. */
+.film-drum-toward {
+  position: absolute;
+  left: 30px;
+  top: calc(24px + var(--to, 0) * (100% - 48px));
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 38px;
+  padding: 0 14px 0 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+  font-size: 12.5px;
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--foreground) 6%, var(--background));
+  border: 1px solid color-mix(in srgb, var(--foreground) 16%, transparent);
+  box-shadow: 0 18px 40px color-mix(in srgb, black 45%, transparent);
+  pointer-events: none;
+  animation: film-drum-toward-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.film-drum-toward[data-tone="coral"] { --tone: var(--axi-brand); }
+.film-drum-toward[data-tone="amber"] { --tone: var(--axi-amber); }
+.film-drum-toward[data-tone="violet"] { --tone: var(--axi-violet); }
+.film-drum-toward[data-tone="dim"] { --tone: color-mix(in srgb, var(--foreground) 50%, transparent); }
+.film-drum-toward i { width: 8px; height: 8px; border-radius: 50%; background: var(--tone); box-shadow: 0 0 12px var(--tone); }
+.film-drum-toward small { font-size: 12.5px; color: color-mix(in srgb, var(--foreground) 60%, transparent); }
+.film-drum-toward b { font-weight: 600; }
+.film-drum-toward-bar { position: relative; width: 54px; height: 3px; border-radius: 3px; overflow: hidden; background: color-mix(in srgb, var(--foreground) 14%, transparent); }
+.film-drum-toward-bar span { position: absolute; inset: 0; border-radius: 3px; background: var(--foreground); transform-origin: left; transform: scaleX(0); }
+@keyframes film-drum-toward-in {
+  from { opacity: 0; transform: translateY(-50%) translateX(-6px); }
+  to { opacity: 1; transform: translateY(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .film-drum, .film-drum[data-open], .film-drum-row { transition: none; filter: none; }
+  .film-drum-toward { animation: none; }
+}

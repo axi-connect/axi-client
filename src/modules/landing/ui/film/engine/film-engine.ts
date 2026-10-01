@@ -53,7 +53,14 @@ import {
   type Scene,
 } from "@/modules/landing/ui/film/engine/film-kit";
 
-export type FilmEngine = { stop(): void; scrollTo(target: string): void; setNiche(): void };
+export type FilmScrollOptions = { duration?: number; easing?: (t: number) => number; onComplete?: () => void };
+export type FilmEngine = {
+  stop(): void;
+  scrollTo(target: string, options?: FilmScrollOptions): void;
+  /** Dónde cae el destino en px de scroll (el pin-spacer si la escena se fija). */
+  offsetOf(target: string): number | null;
+  setNiche(): void;
+};
 
 /* ─────────────────────────────── escenas ─────────────────────────────── */
 
@@ -582,8 +589,22 @@ export function startFilm(root: HTMLElement): FilmEngine {
       lenis.destroy();
       if (scroller) ScrollTrigger.defaults({ scroller: window });
     },
-    scrollTo(target: string) {
-      lenis.scrollTo(target, { duration: 1.4 });
+    // El destino es el del aterrizaje de anclas (M1): el pin-spacer si la escena
+    // se fija (la escena en sí está en `position: fixed` mientras dura) y con el
+    // límite de Lenis al día. Lo usan el CTA del nicho y el riel temario.
+    scrollTo(target: string, options: FilmScrollOptions = {}) {
+      const el = document.querySelector<HTMLElement>(target);
+      if (!el) return;
+      const box = el.parentElement?.classList.contains("pin-spacer") ? el.parentElement : el;
+      lenis.resize();
+      lenis.scrollTo(box, { duration: options.duration ?? 1.4, easing: options.easing, onComplete: options.onComplete, force: true });
+    },
+    offsetOf(target: string) {
+      const el = document.querySelector<HTMLElement>(target);
+      if (!el) return null;
+      const box = el.parentElement?.classList.contains("pin-spacer") ? el.parentElement : el;
+      const scrollerTop = scroller ? scroller.getBoundingClientRect().top - scroller.scrollTop : 0;
+      return box.getBoundingClientRect().top - scrollerTop;
     },
     // Otro nicho: se rehacen las líneas para animar solo la variante visible
     // (el HTML ya trae las cuatro; esto no toca el DOM de las escenas). Mismo
