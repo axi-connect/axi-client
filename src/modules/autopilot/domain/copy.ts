@@ -1,23 +1,35 @@
 import {
+  APPROVE_STOP,
   CONTACT_CHANNEL_OPTIONS,
+  ROUTINE_MODE_META,
   RUN_STATUS_META,
   RUN_STEPS,
   hourLabel,
+  scheduleLabel,
   sourceLabel,
   sourceSummary,
+  type Estimate,
   type Routine,
   type RoutineInput,
   type RoutineListItem,
   type RunEvent,
   type RunSummary,
 } from "./autopilot";
-import { runTrajectory, type StopKey, type Trajectory, type TrajectoryExit } from "./trajectory";
+import {
+  runTrajectory,
+  type StopKey,
+  type Trajectory,
+  type TrajectoryDestination,
+  type TrajectoryExit,
+} from "./trajectory";
 
 /**
- * Las frases del recorrido, en un solo sitio y testeadas (como
- * `commercial/domain/copy.ts`). Son las del mockup aprobado el 2026-10-01.
- * Cambiarlas aquí es cambiarlas en En vivo, en la lista y en el editor.
- * Ninguna enseña una clave del motor: lo que no se reconoce se dice en general.
+ * Las frases de las rutas, en un solo sitio y testeadas (como
+ * `commercial/domain/copy.ts`). Son las de los mockups «el recorrido» y «Rutas
+ * de captación», aprobados el 2026-10-01: «ruta», «salida», «en ruta» y «se
+ * quedó en el camino». Cambiarlas aquí es cambiarlas en En vivo, en la lista y
+ * en el editor. Ninguna enseña una clave del motor: lo que no se reconoce se
+ * dice en general.
  */
 
 type RunLike = Parameters<typeof runTrajectory>[0] & Pick<RunSummary, "credits_spent" | "error">;
@@ -41,6 +53,20 @@ function channelLabels(channels: readonly string[]): string[] {
   return channels.map((value) => CONTACT_CHANNEL_OPTIONS.find((option) => option.value === value)?.label ?? "otro canal");
 }
 
+/** «correo y llamada del agente», para las frases (en minúscula). */
+function channelsPhrase(channels: readonly string[]): string {
+  return channels.length === 0 ? "los canales de la ruta" : joinList(channelLabels(channels)).toLowerCase();
+}
+
+/** Los canales en corto, para los resúmenes del editor: «correo y llamada». */
+const CHANNEL_SHORT: Record<string, string> = {
+  email: "correo",
+  call: "llamada",
+  sms: "SMS",
+  whatsapp_cloud: "WhatsApp",
+  manual: "tarea manual",
+};
+
 /** Lo que cuesta revelar por cuenta: 1 crédito el correo y 8 el celular (Apollo). */
 export function revealCredits(qualify: Pick<Routine["qualify"], "reveal_email" | "reveal_phone">): number {
   return (qualify.reveal_email ? 1 : 0) + (qualify.reveal_phone ? 8 : 0);
@@ -50,32 +76,51 @@ function revealPhrase(qualify: Routine["qualify"]): string {
   const credits = revealCredits(qualify);
   if (credits === 0) return "No revela datos: no gasta créditos.";
   const what = qualify.reveal_email && qualify.reveal_phone ? "el correo y el celular" : qualify.reveal_email ? "el correo" : "el celular";
-  return `Revelar ${what} cuesta ${plural(credits, "crédito", "créditos")}.`;
+  return `Revelar ${what} cuesta ${plural(credits, "crédito", "créditos")}, solo si lo encuentra.`;
 }
 
 function filterPhrase(qualify: Routine["qualify"]): string {
   const score = `puntaje ${String(qualify.min_score)} o más`;
-  return qualify.require_decision_maker ? `${score} y decisor identificado` : score;
+  return qualify.require_decision_maker ? `${score} con decisor identificado` : score;
 }
 
 const STOP_LABEL: Record<StopKey, string> = {
   ...Object.fromEntries(RUN_STEPS.map((step) => [step.key, step.label])),
-  approve: "Tu aprobación",
+  approve: APPROVE_STOP.label,
 } as Record<StopKey, string>;
+
+/** Lo que hace la ruta en cada parada, en gerundio: «En ruta · calificando». */
+const STOP_DOING: Record<StopKey, string> = {
+  search: "buscando",
+  enrich: "completando datos",
+  qualify: "calificando",
+  promote: "pasando al CRM",
+  gate: "revisando tu política",
+  approve: "esperando tu aprobación",
+  contact: "escribiéndoles",
+};
 
 function currentStop(trajectory: Trajectory) {
   return trajectory.stops[Math.max(0, Math.min(trajectory.currentIndex, trajectory.stops.length - 1))];
 }
 
-/* ───────────────────────────── La isla «Ahora» ───────────────────────────── */
+/* ───────────────────────────── La frase de ahora ───────────────────────────── */
 
-/** Por qué se detuvo una ejecución, sin la clave del motor. */
-function failureDetail(run: RunLike, routine: RoutineCopy, stopLabel: string): string {
-  const again = "No se gastó nada más; puedes ejecutarla de nuevo.";
+/**
+ * Por qué se detuvo una salida, en palabras y nunca con `run.error` crudo.
+ * Sirve también cuando la ruta no cargó (`routine` null): no nombra la fuente.
+ */
+export function failureLine(run: Pick<RunSummary, "error" | "step" | "status" | "counters">, routine: RoutineCopy | null): string {
+  const again = "No se gastó nada más; puedes salir de nuevo.";
   const error = run.error ?? "";
-  if (error.startsWith("search_")) return `No se pudo leer la fuente: ${sourceLabel(routine.source.kind).label} no respondió. ${again}`;
-  if (error === "routine_deleted") return "El piloto se eliminó mientras la ejecución corría.";
-  return `Algo falló en «${stopLabel}». ${again}`;
+  if (error.startsWith("search_")) {
+    const source = routine === null ? "la fuente" : sourceLabel(routine.source.kind).label;
+    return `No se pudo leer la fuente: ${routine === null ? "no respondió" : `${source} no respondió`}. ${again}`;
+  }
+  if (error === "routine_deleted") return "La ruta se eliminó mientras la salida corría.";
+  if (routine === null) return `Algo falló en esta salida. ${again}`;
+  const stop = currentStop(runTrajectory(run, routine));
+  return `Algo falló en «${stop?.label ?? "la salida"}». ${again}`;
 }
 
 /** Por qué no se inscribieron, como frase con su cifra (singular y plural). */
@@ -108,37 +153,41 @@ function capitalize(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
-/** Qué hace el piloto ahora, en una frase y su detalle. */
+/** Qué hace la ruta ahora, en una frase y su detalle (encabezan el mapa). */
 export function nowLine(run: RunLike, routine: RoutineCopy, ctx: RunCopyContext = {}): { title: string; detail: string } {
   const trajectory = runTrajectory(run, routine);
   const stop = currentStop(trajectory);
   const c = run.counters;
   switch (run.status) {
     case "queued":
-      return { title: "En cola: está por despegar", detail: "Cuando arranque verás aquí cada paso, con sus cifras." };
+      return { title: "Sale en un momento", detail: "Cuando arranque, verás aquí cada parada con sus cifras." };
     case "paused":
       return {
-        title: "Pausaste el piloto",
-        detail: `La ejecución quedó en «${stop?.label ?? ""}». Sigue donde iba cuando la reanudes.`,
+        title: "Pausaste la ruta",
+        detail: `Quedó en «${stop?.label ?? "la salida"}». Sigue donde iba cuando la reanudes.`,
       };
     case "budget_exhausted": {
       if (run.error === "provider_out_of_credits") {
         return {
           title: "Se acabó tu saldo en el proveedor",
-          detail: "No queda saldo para revelar quién decide. Recárgalo y ejecuta el piloto de nuevo.",
+          detail: "No queda saldo para revelar quién decide. Recárgalo y sal de nuevo.",
         };
       }
-      const which =
-        run.credits_spent >= routine.budget.per_run
-          ? `Gastó los ${plural(routine.budget.per_run, "crédito", "créditos")} de esta ejecución al revelar.`
-          : `Se llegó al tope del mes (${plural(routine.budget.per_month, "crédito", "créditos")}).`;
+      const qualified = `Terminó con ${plural(c.qualified ?? 0, "cuenta calificada", "cuentas calificadas")}; las que no alcanzó a revelar quedan para la siguiente.`;
+      if (run.credits_spent >= routine.budget.per_run) {
+        return {
+          title: "Se acabó el tope de esta salida",
+          detail: `Gastó los ${plural(routine.budget.per_run, "crédito", "créditos")} al revelar quién decide. ${qualified}`,
+        };
+      }
+      // No llegó a su tope por salida: lo que se acabó fue el del mes.
       return {
-        title: "Se acabó el tope de esta ejecución",
-        detail: `${which} Terminó con ${plural(c.qualified ?? 0, "cuenta calificada", "cuentas calificadas")}; las que no alcanzó a revelar quedan para la siguiente.`,
+        title: "Se acabó el tope del mes",
+        detail: `Se llegó a los ${plural(routine.budget.per_month, "crédito", "créditos")} del mes. ${qualified}`,
       };
     }
     case "failed":
-      return { title: "La ejecución se detuvo", detail: failureDetail(run, routine, stop?.label ?? "") };
+      return { title: "La salida se detuvo", detail: failureLine(run, routine) };
     case "done": {
       const contacted = c.contacted ?? 0;
       const notEnrolled = enrollPhrase(run, trajectory);
@@ -163,12 +212,13 @@ export function nowLine(run: RunLike, routine: RoutineCopy, ctx: RunCopyContext 
       else if ((c.qualified ?? 0) === 0) detail = `Ninguna cuenta pasó tu filtro: ${filterPhrase(routine.qualify)}.`;
       return { title: "Terminada sin cuentas nuevas", detail };
     }
-    case "awaiting_approval":
+    case "awaiting_approval": {
+      const ready = trajectory.stops.find((entry) => entry.key === "approve")?.count ?? c.awaiting ?? 0;
       return {
-        title: "Espera tu aprobación",
-        detail:
-          "Axi calificó estas cuentas y pasó la política de contacto. Quita las que no quieras y aprueba: las demás se inscriben en la secuencia.",
+        title: `${plural(ready, "cuenta lista", "cuentas listas")} para escribirles`,
+        detail: `Axi te espera en «${APPROVE_STOP.label}». En cuanto apruebes, sigue a «${STOP_LABEL.contact}».`,
       };
+    }
     case "running":
       break;
   }
@@ -176,16 +226,16 @@ export function nowLine(run: RunLike, routine: RoutineCopy, ctx: RunCopyContext 
   switch (stop?.key) {
     case "enrich":
       return {
-        title: `Completando datos de ${plural(found, "cuenta", "cuentas")}`,
+        title: `Completando los datos de ${plural(found, "cuenta", "cuentas")}`,
         detail: "Sitio web, teléfono y redes públicas de cada negocio.",
       };
     case "qualify":
       return {
-        title: "Calificando y revelando quién decide",
-        detail:
+        title:
           c.qualified === undefined
-            ? `Pasan las de ${filterPhrase(routine.qualify)}. ${revealPhrase(routine.qualify)}`
-            : `${String(c.qualified)} de ${String(found)} pasan tu filtro: ${filterPhrase(routine.qualify)}. ${revealPhrase(routine.qualify)}`,
+            ? "Calificando quién encaja"
+            : `Calificando: ${String(c.qualified)} de ${String(found)} ${c.qualified === 1 ? "pasa" : "pasan"}, por ahora`,
+        detail: `Pasan las de ${filterPhrase(routine.qualify)}. ${revealPhrase(routine.qualify)}`,
       };
     case "promote":
       return {
@@ -201,31 +251,114 @@ export function nowLine(run: RunLike, routine: RoutineCopy, ctx: RunCopyContext 
     case "contact": {
       const going = trajectory.stops.find((entry) => entry.key === "approve")?.count ?? trajectory.stops.find((entry) => entry.key === "gate")?.count ?? null;
       return {
-        title: going === null ? "Inscribiendo las cuentas en la secuencia" : `Inscribiendo ${plural(going, "cuenta", "cuentas")} en la secuencia`,
-        detail: `Por ${joinList(channelLabels(routine.contact.channels)).toLowerCase()}, dentro de tu horario.`,
+        title: going === null ? "Escribiéndoles" : `Escribiéndoles a ${plural(going, "cuenta", "cuentas")}`,
+        detail: `Por ${channelsPhrase(routine.contact.channels)}, dentro de tu horario.`,
       };
     }
-    default: {
-      const summary = sourceSummary(routine.source.params);
-      // Solo la primera letra: «restaurantes · Medellín», no «medellín».
-      const what = summary === "Sin filtros" ? "cuentas" : summary.charAt(0).toLowerCase() + summary.slice(1);
+    default:
       return {
-        title: `Buscando ${what} en ${sourceLabel(routine.source.kind).label}`,
-        detail: `Trae hasta ${plural(routine.schedule.leads_per_run, "cuenta", "cuentas")}. Buscar no gasta créditos.`,
+        title: `Buscando ${searchWhat(routine.source.params)}`,
+        detail: `Trae hasta ${plural(routine.schedule.leads_per_run, "cuenta", "cuentas")} de ${sourceLabel(routine.source.kind).label}. Buscar no gasta créditos.`,
       };
-    }
   }
 }
 
-/** «Después: Inscribir en la secuencia»; `null` cuando ya no viene nada. */
+/** «restaurantes en Medellín», «gerente, dueño», «cuentas»: lo que se busca, dicho. */
+function searchWhat(params: Record<string, unknown>): string {
+  const text = (key: string) => (typeof params[key] === "string" ? (params[key] as string).trim() : "");
+  const person = params.person as { titles?: unknown } | undefined;
+  const titles = Array.isArray(person?.titles) ? person.titles.filter((title): title is string => typeof title === "string") : [];
+  const what = text("category") || text("text") || (titles.length > 0 ? joinList(titles) : "");
+  const where = text("city") || text("zone");
+  // Solo la primera letra: «restaurantes en Medellín», no «medellín».
+  const lower = what === "" ? "cuentas" : what.charAt(0).toLowerCase() + what.slice(1);
+  return where === "" ? lower : `${lower} en ${where}`;
+}
+
+/* ───────────────────────────── El lote ───────────────────────────── */
+
+export interface BatchCopy {
+  /** La píldora: «7 cuentas» · «1 cuenta». */
+  pill: string;
+  title: string;
+  detail: string;
+  /** «Aprobar 7 y escribirles»; con cero, «Omitir todas y seguir». */
+  cta: string;
+  /** «Ninguna se omite» · «1 se omite» · «2 se omiten». */
+  skippedNote: string;
+}
+
+/** Las frases de la isla «Tu aprobación». */
+export function batchCopy(input: {
+  total: number;
+  approved: number;
+  routine: Pick<Routine, "contact">;
+  sequenceName?: string | null;
+}): BatchCopy {
+  const skipped = Math.max(0, input.total - input.approved);
+  const sequence = input.sequenceName ? `«${input.sequenceName}»` : "la secuencia de la ruta";
+  return {
+    pill: plural(input.total, "cuenta", "cuentas"),
+    title: "Revisa a quién le escribe",
+    detail: `Quita las que no quieras. A las demás les escribe por ${channelsPhrase(input.routine.contact.channels)}, y siguen ${sequence}.`,
+    cta: input.approved === 0 ? "Omitir todas y seguir" : `Aprobar ${String(input.approved)} y escribirles`,
+    skippedNote: skipped === 0 ? "Ninguna se omite" : `${String(skipped)} ${skipped === 1 ? "se omite" : "se omiten"}`,
+  };
+}
+
+/* ───────────────────────────── «Lo que viene» ───────────────────────────── */
+
+/** Al final de la ruta: en seguimiento · respondieron · demo agendada. */
+export function destinationRows(
+  destination: TrajectoryDestination | null,
+  agentName?: string | null,
+): { rows: { key: keyof TrajectoryDestination; label: string; count: number }[]; empty: string | null } {
+  if (destination === null) {
+    return { rows: [], empty: `Si responden, ${agentName ? agentName : "el agente"} conversa y te avisa` };
+  }
+  return {
+    rows: [
+      { key: "following", label: "en seguimiento", count: destination.following },
+      { key: "replied", label: destination.replied === 1 ? "respondió" : "respondieron", count: destination.replied },
+      { key: "demo", label: destination.demo === 1 ? "demo agendada" : "demos agendadas", count: destination.demo },
+    ],
+    empty: null,
+  };
+}
+
+/* ───────────────────────── La píldora de la tarjeta ───────────────────────── */
+
+type Tone = (typeof RUN_STATUS_META)[keyof typeof RUN_STATUS_META]["tone"];
+
+/**
+ * El estado de una ruta en la lista: sale de su ÚLTIMA salida (falló, se acabó
+ * el tope, espera…), no de un «Programado» por defecto. En femenino, como
+ * «ruta» y «salida»: Pausada, Programada.
+ */
+export function routineStatusLine(routine: RoutineListItem): { label: string; tone: Tone; live: boolean } {
+  const run = routine.last_run;
+  if (routine.status === "paused") return { label: "Pausada", tone: "neutral", live: false };
+  if (run !== null) {
+    if (run.status === "running") {
+      const stop = currentStop(runTrajectory(run, routine));
+      return { label: `En ruta · ${STOP_DOING[stop?.key ?? "search"]}`, tone: "info", live: true };
+    }
+    // Una salida pausada con la ruta activa (se reanudó la ruta, la salida no).
+    return { label: RUN_STATUS_META[run.status].label, tone: RUN_STATUS_META[run.status].tone, live: false };
+  }
+  if (routine.status === "active" && routine.next_run_at !== null) return { label: "Programada", tone: "neutral", live: false };
+  return { label: "Sin salidas aún", tone: "neutral", live: false };
+}
+
+/** «Después: Escribirles»; tras la última parada, «Después: Lo que viene»; `null` al terminar. */
 export function nextLine(run: RunLike, routine: Pick<Routine, "mode" | "qualify">): string | null {
   if (run.status === "done" || run.status === "failed" || run.status === "budget_exhausted") return null;
   const trajectory = runTrajectory(run, routine);
   const next = trajectory.stops[trajectory.currentIndex + 1];
-  return next === undefined ? null : `Después: ${next.label}`;
+  return `Después: ${next === undefined ? "Lo que viene" : next.label}`;
 }
 
-/** El título de una salida del mapa: «16 no pasaron tu filtro», «1 la omitiste». */
+/** El título de un desvío del mapa: «16 no pasaron tu filtro», «1 la omitiste». */
 export function exitTitle(exit: Pick<TrajectoryExit, "at" | "total">): string {
   const n = exit.total;
   switch (exit.at) {
@@ -240,7 +373,7 @@ export function exitTitle(exit: Pick<TrajectoryExit, "at" | "total">): string {
     case "contact":
       return `${String(n)} ${n === 1 ? "no se pudo inscribir" : "no se pudieron inscribir"}`;
     default:
-      return `${String(n)} ${n === 1 ? "salió del recorrido" : "salieron del recorrido"}`;
+      return `${String(n)} ${n === 1 ? "se quedó en el camino" : "se quedaron en el camino"}`;
   }
 }
 
@@ -253,11 +386,15 @@ export interface AhoraMismoFact {
 }
 
 export interface AhoraMismo {
+  /** La frase grande: «7 cuentas esperan tu aprobación», ««Clínicas…» va calificando». */
+  headline: string;
+  /** La línea de contexto: «Restaurantes de Medellín · además, 1 ruta va calificando · próxima salida hoy a las 14:00». */
+  context: string;
   facts: AhoraMismoFact[];
   action: { kind: "batch" | "live"; run_id: string } | null;
 }
 
-/** «2026-10-01» en la zona del piloto: para decir hoy o mañana. */
+/** «2026-10-01» en la zona de la ruta: para decir hoy o mañana. */
 function dayKey(date: Date, timeZone: string): string {
   return date.toLocaleDateString("en-CA", { timeZone });
 }
@@ -272,9 +409,16 @@ function departureDay(at: Date, now: Date, timeZone: string): string {
   return `${part("weekday")} ${part("day")} ${part("month")}`;
 }
 
+/** «va calificando», «sale en un momento»: lo que hace una ruta en curso. */
+function doing(routine: RoutineListItem): string {
+  const run = routine.last_run;
+  if (run === null || run.status === "queued") return "sale en un momento";
+  return `va ${STOP_DOING[currentStop(runTrajectory(run, routine))?.key ?? "search"]}`;
+}
+
 /**
- * Lo que pide tu atención en la lista: pilotos en vuelo, lotes que esperan y
- * la próxima salida. `null` si no hay nada en vuelo ni esperando (no se pinta).
+ * Lo que pide tu atención en la lista: rutas en ruta, lotes que esperan y la
+ * próxima salida. `null` si no hay nada en ruta ni esperando (no se pinta).
  * Sale de la misma lista, sin pedir nada más al servidor.
  */
 export function ahoraMismo(routines: readonly RoutineListItem[], now: Date = new Date()): AhoraMismo | null {
@@ -284,16 +428,16 @@ export function ahoraMismo(routines: readonly RoutineListItem[], now: Date = new
   const facts: AhoraMismoFact[] = [];
   const [onlyFlying] = flying;
   if (onlyFlying?.last_run) {
-    let text = "en vuelo";
+    let text = "en ruta";
     if (flying.length === 1) {
       const run = onlyFlying.last_run;
       const stop = run.status === "queued" ? "en cola" : currentStop(runTrajectory(run, onlyFlying))?.label.toLowerCase();
-      text = `en vuelo · ${stop ?? ""}`;
+      text = `en ruta · ${stop ?? ""}`;
     }
     facts.push({ key: "in_flight", value: String(flying.length), text });
   }
+  const accounts = waiting.reduce((sum, routine) => sum + (routine.last_run?.counters.awaiting ?? 0), 0);
   if (waiting.length > 0) {
-    const accounts = waiting.reduce((sum, routine) => sum + (routine.last_run?.counters.awaiting ?? 0), 0);
     facts.push({
       key: "awaiting",
       value: String(waiting.length),
@@ -305,18 +449,36 @@ export function ahoraMismo(routines: readonly RoutineListItem[], now: Date = new
     .map((routine) => ({ routine, at: new Date(routine.next_run_at ?? "") }))
     .filter((entry) => !Number.isNaN(entry.at.getTime()) && entry.at.getTime() >= now.getTime())
     .sort((a, b) => a.at.getTime() - b.at.getTime())[0];
+  let nextPhrase: string | null = null;
   if (next !== undefined) {
     const timeZone = next.routine.schedule.timezone;
-    const time = next.at.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone });
-    facts.push({ key: "next", value: hourLabel(time), text: `próxima salida · ${departureDay(next.at, now, timeZone)}` });
+    const time = hourLabel(next.at.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone }));
+    const day = departureDay(next.at, now, timeZone);
+    facts.push({ key: "next", value: time, text: `próxima salida · ${day}` });
+    nextPhrase = `próxima salida ${day} a las ${time}`;
   }
   const batch = waiting[0]?.last_run;
   const live = onlyFlying?.last_run;
   const action = batch ? { kind: "batch" as const, run_id: batch.id } : live ? { kind: "live" as const, run_id: live.id } : null;
-  return { facts, action };
+
+  // La frase grande va por lo que pide tu atención: el lote antes que lo que corre.
+  let headline: string;
+  const context: string[] = [];
+  if (waiting.length > 0) {
+    headline = `${plural(accounts, "cuenta espera", "cuentas esperan")} tu aprobación`;
+    context.push(waiting.length === 1 ? (waiting[0]?.name ?? "") : `en ${plural(waiting.length, "ruta", "rutas")}`);
+    if (flying.length === 1 && onlyFlying) context.push(`además, 1 ruta ${doing(onlyFlying)}`);
+    else if (flying.length > 1) context.push(`además, ${String(flying.length)} rutas en marcha`);
+  } else if (flying.length === 1 && onlyFlying) {
+    headline = `«${onlyFlying.name}» ${doing(onlyFlying)}`;
+  } else {
+    headline = `${String(flying.length)} rutas en marcha`;
+  }
+  if (nextPhrase !== null) context.push(nextPhrase);
+  return { headline, context: context.filter(Boolean).join(" · "), facts, action };
 }
 
-/* ───────────────────────── «Así vuela tu piloto» ───────────────────────── */
+/* ───────────────────────── «Así sale tu ruta» ───────────────────────── */
 
 export interface PreviewContext {
   sourceLabel: string;
@@ -332,38 +494,77 @@ export interface PreviewStop {
   gate: boolean;
 }
 
-/** El recorrido del borrador del editor: cada decisión cae en su parada. */
+/** «revela el correo», «no revela datos»: lo que cuesta calificar, dicho corto. */
+function revealShort(qualify: Routine["qualify"]): string {
+  const reveal = [qualify.reveal_email ? "el correo" : "", qualify.reveal_phone ? "el celular" : ""].filter(Boolean);
+  return reveal.length === 0 ? "no revela datos" : `revela ${joinList(reveal)}`;
+}
+
+/** El recorrido del borrador del editor: cada decisión cae en su parada, dicha corta. */
 export function previewStops(draft: RoutineInput, ctx: PreviewContext): PreviewStop[] {
-  const summary = sourceSummary(draft.source.params);
-  const credits = revealCredits(draft.qualify);
-  const reveal = [draft.qualify.reveal_email ? "el correo" : "", draft.qualify.reveal_phone ? "el celular" : ""].filter(Boolean);
-  const qualifyParts = [
-    `Puntaje ${String(draft.qualify.min_score)} o más`,
-    ...(draft.qualify.require_decision_maker ? ["exige quién decide"] : []),
-    credits === 0
-      ? "no revela datos (no gasta créditos)"
-      : `revela ${joinList(reveal)} (${plural(credits, "crédito", "créditos")} por cuenta, solo si lo encuentra)`,
-  ];
-  const channels = ctx.channelLabels.length === 0 ? "Sin canal" : joinList(ctx.channelLabels);
-  const sequence = ctx.sequenceName === null ? "la secuencia que elijas" : `«${ctx.sequenceName}»`;
-  const agent = ctx.agentName === null ? "" : ` · si responden, conversa ${ctx.agentName}`;
+  const channels = draft.contact.channels.map((value) => CHANNEL_SHORT[value] ?? "otro canal");
   const stops: PreviewStop[] = [
+    { key: "search", label: STOP_LABEL.search, detail: `gratis · ${ctx.sourceLabel}`, gate: false },
+    { key: "enrich", label: STOP_LABEL.enrich, detail: "sitio, teléfono y redes", gate: false },
     {
-      key: "search",
-      label: STOP_LABEL.search,
-      detail: `${[ctx.sourceLabel, ...(summary === "Sin filtros" ? [] : [summary])].join(" · ")} · ${plural(draft.schedule.leads_per_run, "cuenta", "cuentas")} por ejecución. Buscar no gasta créditos.`,
+      key: "qualify",
+      label: STOP_LABEL.qualify,
+      detail: `puntaje ${String(draft.qualify.min_score)}+ · ${revealShort(draft.qualify)}`,
       gate: false,
     },
-    { key: "enrich", label: STOP_LABEL.enrich, detail: "Sitio web, teléfono y redes públicas de cada negocio.", gate: false },
-    { key: "qualify", label: STOP_LABEL.qualify, detail: `${qualifyParts.join(" · ")}.`, gate: false },
-    { key: "promote", label: STOP_LABEL.promote, detail: "Cada cuenta queda como contacto, con su empresa y quien decide.", gate: false },
-    { key: "gate", label: STOP_LABEL.gate, detail: "Baja, habeas data, lista de supresión, RNE, horario y tope diario.", gate: true },
+    { key: "promote", label: STOP_LABEL.promote, detail: "contacto con empresa", gate: false },
+    { key: "gate", label: STOP_LABEL.gate, detail: "bajas, RNE, horario", gate: true },
   ];
   if (draft.mode === "assisted") {
-    stops.push({ key: "approve", label: STOP_LABEL.approve, detail: "Asistido: te pide aprobar el lote antes de escribirle a nadie.", gate: true });
+    stops.push({ key: "approve", label: STOP_LABEL.approve, detail: "tu visto bueno al lote", gate: true });
   }
-  stops.push({ key: "contact", label: STOP_LABEL.contact, detail: `${channels} · ${sequence}${agent}.`, gate: false });
+  const sequence = ctx.sequenceName === null ? "" : ` · «${ctx.sequenceName}»`;
+  stops.push({
+    key: "contact",
+    label: STOP_LABEL.contact,
+    detail: `${channels.length === 0 ? "sin canal" : joinList(channels)}${sequence}`,
+    gate: false,
+  });
   return stops;
+}
+
+/**
+ * La frase de la isla «Así sale tu ruta», del estimado del servidor: «De 25
+ * negocios, a unos 9 les escribe». Sin estimado o sin nadie revelado, lo que
+ * trae.
+ */
+export function previewHeadline(leadsPerRun: number, estimate: Pick<Estimate, "leads_revealed_per_run"> | null): string {
+  const brings = `De ${plural(leadsPerRun, "negocio", "negocios")}`;
+  if (estimate === null || estimate.leads_revealed_per_run <= 0) {
+    return `Trae hasta ${plural(leadsPerRun, "negocio", "negocios")} por salida`;
+  }
+  const n = Math.min(estimate.leads_revealed_per_run, leadsPerRun);
+  return `${brings}, a ${n === 1 ? "uno" : `unos ${String(n)}`} les escribe`;
+}
+
+/** Los resúmenes de los cuatro pasos del editor, cuando están cerrados. */
+export function stepSummaries(
+  draft: RoutineInput,
+  ctx: PreviewContext,
+): { where: string; who: string; how: string; when: string } {
+  const summary = sourceSummary(draft.source.params);
+  const channels = draft.contact.channels.map((value) => CHANNEL_SHORT[value] ?? "otro canal");
+  const how = [
+    ROUTINE_MODE_META[draft.mode].label,
+    channels.length === 0 ? "sin canal" : joinList(channels),
+    ...(ctx.agentName === null ? [] : [ctx.agentName]),
+    ...(ctx.sequenceName === null ? [] : [`«${ctx.sequenceName}»`]),
+  ];
+  return {
+    where: [ctx.sourceLabel, ...(summary === "Sin filtros" ? [] : [summary])].join(" · "),
+    who: [
+      `Puntaje ${String(draft.qualify.min_score)} o más`,
+      ...(draft.qualify.require_decision_maker ? ["exige quién decide"] : []),
+      revealShort(draft.qualify),
+    ].join(" · "),
+    how: how.join(" · "),
+    when: `${scheduleLabel(draft.schedule)} · ${plural(draft.schedule.leads_per_run, "cuenta", "cuentas")} · hasta ${plural(draft.budget.per_run, "crédito", "créditos")} por salida, ${String(draft.budget.per_month)} al mes`,
+  };
 }
 
 /* ───────────────────────────── La bitácora ───────────────────────────── */
@@ -425,9 +626,9 @@ export function eventLine(event: RunEvent, routine?: Pick<Routine, "source">): s
   if (event.kind === "run_finished") {
     const status = typeof payload.status === "string" ? payload.status : "";
     const meta = (RUN_STATUS_META as Record<string, { label: string } | undefined>)[status];
-    return meta === undefined ? "Terminó la ejecución" : `Terminó la ejecución · ${meta.label}`;
+    return meta === undefined ? "Terminó la salida" : `Terminó la salida · ${meta.label}`;
   }
   // Un evento que el motor aún no narraba: se cuenta su detalle, nunca la clave cruda.
   const detail = typeof payload.detail === "string" ? payload.detail : "";
-  return detail === "" ? "Novedad de la ejecución" : detail;
+  return detail === "" ? "Novedad de la salida" : detail;
 }

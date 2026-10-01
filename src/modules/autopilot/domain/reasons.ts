@@ -6,7 +6,7 @@ import type { Routine } from "./autopilot";
  * Por qué una cuenta salió del recorrido, en palabras. El motor guarda la
  * clave (`items[].reason`) y esta es la única puerta para enseñarla: ninguna
  * clave cruda llega a la pantalla, y lo que no se reconoce se dice como
- * «Salió del recorrido».
+ * «Se quedó en el camino».
  *
  * Las claves son las del motor de P4: las de calificar (`below_min_score`,
  * `no_decision_maker`, `lead_gone`), las de pasar al CRM (`promote_<código>`),
@@ -16,7 +16,7 @@ import type { Routine } from "./autopilot";
 
 type QualifyOf = Pick<Routine, "qualify">;
 
-const UNKNOWN = { label: "Salió del recorrido", short: "Salió del recorrido" };
+const UNKNOWN = { label: "Se quedó en el camino", short: "Se quedó en el camino" };
 
 /** La política: el mapa compartido más los que cada módulo nombra a su manera. */
 const POLICY: Record<string, { label: string; short: string }> = {
@@ -28,7 +28,7 @@ const POLICY: Record<string, { label: string; short: string }> = {
   outside_hours: { label: OUTREACH_BLOCK_REASON_LABELS.outside_hours, short: "Fuera de horario hábil" },
   opted_out: { label: "Se dio de baja: no se le contacta", short: "Se dio de baja" },
   daily_cap: { label: "Se llegó al tope diario de tu política; sale en la siguiente franja", short: "Tope diario" },
-  no_identity: { label: "No hay a dónde escribirle por los canales del piloto", short: "Sin dato de contacto" },
+  no_identity: { label: "No hay a dónde escribirle por los canales de la ruta", short: "Sin dato de contacto" },
   blocked: { label: "Tu política de contacto no lo permite", short: "Tu política" },
 };
 
