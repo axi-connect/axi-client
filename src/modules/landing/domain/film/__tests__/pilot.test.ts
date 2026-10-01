@@ -29,7 +29,7 @@ import {
   PILOT_STATUS,
   lotCounts,
 } from "../pilot-content"
-import { PILOT_BOARD, PILOT_OVERVIEW, boardRow, capSegments, dial, pilotCamera, pilotFrame, planeAt } from "../pilot-frame"
+import { PILOT_BOARD, PILOT_OVERVIEW, boardRow, capSegments, dial, fixLabelWidth, pilotCamera, pilotFrame, planeAt } from "../pilot-frame"
 
 const close = (a: number, b: number, eps = 0.5) => Math.abs(a - b) <= eps
 const RUN = { ...PILOT_RUN, approved: lotCounts(PILOT_LOT).approved }
@@ -191,6 +191,18 @@ describe("el encuadre", () => {
     expect(pilotFrame(0.86, RUN, { left: late.marks.bubble.x - 250 }).bubble).toBe(0)
   })
 
+  it("una etiqueta de fijo que llegaría bajo la cabina se apaga entera (no queda cortada)", () => {
+    const fr = pilotFrame(0.6, RUN)
+    const i = 5 // «6 · Inscribir en la secuencia», la más larga y la más a la derecha
+    const tail = fr.marks.fixes[i].x + fixLabelWidth(i)
+    // Signo 1: con la cabina justo donde acaba la etiqueta, se apaga.
+    expect(pilotFrame(0.6, RUN, { right: tail }).fixEdge[i]).toBe(0)
+    // Signo 2: con 60 px de holgura, se ve entera.
+    expect(pilotFrame(0.6, RUN, { right: tail + 60 }).fixEdge[i]).toBe(1)
+    // Y en móvil la etiqueta es solo el número: mucho más corta.
+    expect(fixLabelWidth(i, false)).toBeLessThan(fixLabelWidth(i) / 4)
+  })
+
   it("en móvil el alejamiento final deja el avión aterrizado dentro de la franja de 390 × 430", () => {
     const m = pilotFrame(1, RUN, { overview: PILOT_OVERVIEW.mobile })
     // El foco está en (170, 250) de la franja: el avión debe caer en [−170, 220] × [−250, 180].
@@ -265,7 +277,9 @@ describe("el guion por nicho", () => {
   it("N y M del lote salen de las casillas", () => {
     expect(lotCounts([true, true, true, true, false])).toEqual({ approved: 4, skipped: 1 })
     expect(PILOT_COPY.cockpit.approve(4)).toBe("Aprobar 4 y contactar")
-    expect(PILOT_COPY.cockpit.skipped(1)).toBe("1 se omiten")
+    // Concordancia (auditoría, m15): singular con 1, plural desde 2.
+    expect(PILOT_COPY.cockpit.skipped(1)).toBe("1 se omite")
+    expect(PILOT_COPY.cockpit.skipped(2)).toBe("2 se omiten")
   })
 
   it("los límites honestos de §19.6: ni WhatsApp, ni Ley 2300, ni Apollo, ni créditos, ni porcentajes", () => {

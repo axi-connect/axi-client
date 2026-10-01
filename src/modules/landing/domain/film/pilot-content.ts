@@ -77,8 +77,11 @@ export const PILOT_COPY = {
     log: "Bitácora",
     lotTitle: "El lote espera tu aprobación",
     approveOne: (account: string) => `Aprobar ${account}`,
+    /** Para lectores de pantalla: el estado de cada casilla del lote (la casilla es un dibujo). */
+    boxOn: "marcada",
+    boxOff: "sin marcar",
     approve: (n: number) => `Aprobar ${n} y contactar`,
-    skipped: (m: number) => `${m} se omiten`,
+    skipped: (m: number) => (m === 1 ? "1 se omite" : `${m} se omiten`),
     runNow: "Ejecutar ahora",
     runNowWhy: "espera tu aprobación del lote",
     sent: (n: number) => `Lote aprobado · ${n} cuentas en contacto`,
@@ -129,7 +132,7 @@ const FUNNEL = [120, 46, 32, 11, 4] as const;
 export const PILOT_CONTENT: Readonly<Record<FilmNiche, PilotNicheContent>> = {
   restaurants: {
     target: "Empresas cercanas para almuerzos corporativos",
-    accounts: ["Grupo Sol", "Seguros del Parque", "Notaría 21", "Constructora Norte", "Oficinas Calle 93"],
+    accounts: ["Grupo Sol", "Seguros del Parque", "Firma de Abogados Central", "Constructora Norte", "Oficinas Calle 93"],
     // Andrea Ruiz es la de los «30 almuerzos confirmados» de la llamada.
     decisor: { initials: "AR", name: "Andrea Ruiz", role: "Jefa administrativa · decide" },
     funnel: FUNNEL,
@@ -148,7 +151,7 @@ export const PILOT_CONTENT: Readonly<Record<FilmNiche, PilotNicheContent>> = {
   },
   b2b: {
     target: "Tu cliente ideal",
-    accounts: ["Clínica Santa Fe", "Consultorio Dental Norte", "Laboratorio del Parque", "Centro Médico 93", "Fisioterapia Calle 50"],
+    accounts: ["Clínica Santa Fe", "Consultorio Dental Norte", "Laboratorio del Parque", "Centro Médico del Barrio", "Fisioterapia Calle 50"],
     // El decisor del Radar en B2B.
     decisor: { initials: "MR", name: "Marta Restrepo", role: "Directora de compras · decide" },
     funnel: FUNNEL,

@@ -86,9 +86,14 @@ export const pilot: Scene = (section, ctx) => {
   // ancho al construir y al redimensionar, nunca por frame.
   const focus = ctx.desktop ? PILOT_FOCUS.desktop.x : PILOT_FOCUS.mobile.x;
   const margin = ctx.desktop ? 72 : 16;
-  const view = { overview: ctx.desktop ? PILOT_OVERVIEW.desktop : PILOT_OVERVIEW.mobile, left: 0 };
+  const view = { overview: ctx.desktop ? PILOT_OVERVIEW.desktop : PILOT_OVERVIEW.mobile, left: 0, right: Infinity, names: ctx.desktop };
+  const cockpit = section.querySelector<HTMLElement>(".film-pilot-cockpit");
   const measure = () => {
-    view.left = -focus * section.clientWidth + margin;
+    const w = section.clientWidth;
+    view.left = -focus * w + margin;
+    // A la derecha: el filo de la cabina en escritorio (8 px antes); en móvil, el de la franja.
+    const edgeX = ctx.desktop && cockpit ? cockpit.getBoundingClientRect().left - section.getBoundingClientRect().left - 8 : w - margin;
+    view.right = edgeX - focus * w;
   };
   measure();
   window.addEventListener("resize", measure);

@@ -18,7 +18,9 @@ import {
   holdPoint,
 } from "./flight-route";
 import { easeInOut, easeOut, planeTransform, project, seg, type GoalCamera } from "./goal-camera";
-import type { PilotStage, PilotStatus } from "./pilot-content";
+import { PILOT_COPY, type PilotStage, type PilotStatus } from "./pilot-content";
+
+const PILOT_STEP_NAMES: readonly string[] = PILOT_COPY.steps;
 import type { Point } from "./route-map";
 
 /** El foco como fracción del escenario: (520, 600) de 1440 × 900 y (170, 250) de la franja de 390 × 430. */
@@ -178,7 +180,21 @@ export type PilotView = {
    * capítulos). Una tarjeta que llega a él se apaga: entra completa o no entra.
    */
   left?: number;
+  /**
+   * El borde derecho útil en px desde el foco: el filo izquierdo de la cabina
+   * en escritorio, el de la franja en móvil. Una etiqueta de fijo que llegaría
+   * bajo la cabina se apaga entera en vez de quedar cortada (auditoría, m14).
+   */
+  right?: number;
+  /** Si la etiqueta de los fijos lleva el nombre del paso (escritorio) o solo el número (móvil). */
+  names?: boolean;
 };
+
+/** Ancho estimado de la etiqueta de un fijo (10 px, mayúsculas espaciadas 0,18 em): sin medir el DOM. */
+export function fixLabelWidth(i: number, names = true): number {
+  const text = names ? `${i + 1} · ${PILOT_STEP_NAMES[i] ?? ""}` : `${i + 1}`;
+  return 14 + Math.ceil(text.length * 8.6);
+}
 
 /** Lo que tarda en apagarse una tarjeta al acercarse al borde, en px. */
 const EDGE = 60;
@@ -190,6 +206,8 @@ export function pilotFrame(p: number, run: PilotRun, view: PilotView = {}) {
   const left = view.left ?? -Infinity;
   /** 1 si la tarjeta (su borde izquierdo en `x`) cabe entera; baja a 0 al llegar al borde. */
   const edge = (x: number) => Math.min(1, Math.max(0, (x - left) / EDGE));
+  const right = view.right ?? Infinity;
+  const edgeRight = (x: number) => Math.min(1, Math.max(0, (right - x) / EDGE));
   const at = (w: Point) => project(cam, w);
   const lit = FLIGHT_FIXES.map((f) => p >= 0.1 && plane.f >= f - 0.002);
   const passed = FLIGHT_FIXES.filter((f) => plane.f >= f - 0.002).length;
@@ -255,7 +273,7 @@ export function pilotFrame(p: number, run: PilotRun, view: PilotView = {}) {
     zoneBox: edge(marks.zone.x - 110),
     zoneTag: edge(marks.zone.x - 60),
     /** Cada fijo con su etiqueta: se apaga al llegar al borde (el triángulo empieza 8 px a la izquierda). */
-    fixEdge: marks.fixes.map((pt) => edge(pt.x - 8)),
+    fixEdge: marks.fixes.map((pt, i) => Math.min(edge(pt.x - 8), edgeRight(pt.x + fixLabelWidth(i, view.names ?? true)))),
     zoneNear: 0.35 + 0.65 * fade(p, 0.4, 0.44, 0.48, 0.52),
     zonePassed: 0.3 + 0.7 * easeOut(seg(p, 0.48, 0.52)),
     hold: fade(p, 0.5, 0.53, 0.66, 0.7),

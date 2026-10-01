@@ -53,13 +53,14 @@ const LAND = flightLandscape();
 const { approved: APPROVED, skipped: SKIPPED } = lotCounts(PILOT_LOT);
 const RUN = { ...PILOT_RUN, approved: APPROVED };
 /** El borde útil del fotograma estático se calcula para 1440 y 390 (el motor usa el ancho real). */
-const FINAL: PilotFrame = pilotFrame(1, RUN, { left: -520 + 72 });
+// A la derecha, el filo de la cabina a 1440 (x = 1030, 8 px antes) y el de la franja de 390.
+const FINAL: PilotFrame = pilotFrame(1, RUN, { left: -520 + 72, right: 1030 - 8 - 520 });
 /**
  * El fotograma final en móvil: solo cambia adónde mira la cámara al alejarse
  * (hacia el destino, para que el avión aterrizado quede en la franja). El HTML
  * lleva las dos posiciones como variables y la media query del CSS elige.
  */
-const FINAL_M: PilotFrame = pilotFrame(1, RUN, { overview: PILOT_OVERVIEW.mobile, left: -170 + 16 });
+const FINAL_M: PilotFrame = pilotFrame(1, RUN, { overview: PILOT_OVERVIEW.mobile, left: -170 + 16, right: 390 - 16 - 170, names: false });
 const C = PILOT_COPY.cockpit;
 
 const op = (v: number): CSSProperties => ({ opacity: Number(v.toFixed(3)) });
@@ -309,6 +310,7 @@ function Phases() {
                 <li key={name} data-on={PILOT_LOT[i] ? "" : undefined}>
                   <span className="film-pilot-box" aria-hidden="true" />
                   {C.approveOne(name)}
+                  <span className="sr-only">, {PILOT_LOT[i] ? C.boxOn : C.boxOff}</span>
                 </li>
               ))}
             </ul>
