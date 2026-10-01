@@ -273,9 +273,8 @@ function ExitCard({ exit, className, style }: { exit: TrajectoryExit; className?
         <ul className="mt-0.5 flex flex-col gap-0.5">
           {exit.rows.map((row) => (
             <li key={row.reason} className="text-muted-foreground flex items-baseline justify-between gap-2">
-              <span className="line-clamp-2 min-w-0" title={row.label}>
-                {row.label}
-              </span>
+              {/* Completo, nunca cortado: un motivo legal (RNE, habeas data) se lee entero; la caja crece hacia abajo. */}
+              <span className="min-w-0 text-pretty break-words">{row.label}</span>
               <span className="text-foreground shrink-0 font-mono tabular-nums">{String(row.count)}</span>
             </li>
           ))}
