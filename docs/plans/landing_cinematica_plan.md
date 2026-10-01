@@ -859,7 +859,9 @@ Las cifras de ejemplo deben cuadrar entre sí y en cada nicho (test como `film.t
   - tres testigos con el vocabulario de la UI;
   - «Dentro del tope» como medidor de combustible de 20 segmentos.
 - Todo va en blanco sobre tinta. IBM Plex Mono solo en cifras y en la pantalla de ruta.
-- Construye `cinematic-film-landing-page`. La escena queda apagada con `FILM_FEATURES.pilot = false` hasta que el piloto esté en producción.
+- Construye `cinematic-film-landing-page`. La escena estuvo apagada (`FILM_PILOT` en `next.config.ts`, `FILM_FEATURES.pilot`) hasta que el piloto llegó a producción.
+- **2026-10-01: siempre activa.** La dueña: «ya está en producción». Se quitó el interruptor entero (`FILM_PILOT`, `FILM_FEATURES`, la rama `lazy` de FilmPage, el chunk diferido del motor y su test). Es una escena más: import estático en FilmPage y en `SCENES`.
+- **Guion de lectura** (pedido de la dueña: «avanza muy rápido y me pierdo casi toda la info»). `pilotStory(p)` separa el scroll de la historia, con mesetas en los 6 fijos, en la espera, con el lote aprobado y al final. El pin pasa de 320 a 800. En móvil, la franja va pegada (`stickyStrip`, escena de 560svh). Las mesetas viven en `domain/film/story.ts`, que comparte con la meta (§16.1).
 - Fusión de la rama `wip` (8a186c3e): `npm run budget` falla en 21 rutas del panel por el crecimiento de main. No es una regresión de la landing (`/` pesa 151,3 kB). Se resuelve en el programa aparte de §6.4; los topes no se suben en esta rama.
 
 ## 20. Escucha la llamada · audio de una entrante con orbe de voz (aprobado el 2026-10-01)
@@ -970,7 +972,7 @@ Cifras finales sobre la **build de producción** (`next build` sin `FILM_PILOT`,
 
 - **Capa pública en verde:** `/` 154,2 kB (tope 200), común 100,9 (103), /precios 200,5 (204), /productos 195,0 (198), /contacto 178,5 (184), /casos 154,6 (158), /soluciones y /integraciones 149,4 (152), /marketplace 109,8 (113), legales 101,5 (104).
 - El script sale en rojo por 21 rutas **del panel** que vienen de main (§6.4, programa aparte): no son de la landing y sus topes no se tocan en esta rama.
-- Con el piloto apagado no viaja nada suyo: ni CSS, ni fuente, ni HTML, ni código de servidor (§19, interruptor `FILM_PILOT` en `next.config.ts`).
+- Con el piloto apagado no viajaba nada suyo: ni CSS, ni fuente, ni HTML, ni código de servidor. Desde el 2026-10-01 el piloto va siempre (§19.9) y el interruptor no existe: el peso de `/` se vuelve a medir con él dentro (§21.6).
 
 ### 21.2 Lighthouse de `/` (mediana de 3, Chromium headless)
 
@@ -1017,6 +1019,16 @@ Cifras finales sobre la **build de producción** (`next build` sin `FILM_PILOT`,
 - el presupuesto del panel (§6.4);
 - la revisión de la dueña en :3320.
 
+### 21.6 Rendimiento tras la ronda 2 (2026-10-01)
+
+| | Rendimiento | TBT | LCP | Nota |
+|---|---|---|---|---|
+| Móvil | **78** (64/78/82; antes 70) | 233 ms (antes 438) | 4,37 s | en móvil se construye solo lo cercano; el resto, al acercarse (8e794bb9) |
+| Escritorio | **96** | 84 ms | 1,26 s | |
+
+- **El coste de escritorio no era un refresh final.** Eran 11–13 refrescos completos de ScrollTrigger durante la construcción: el `pin` de GSAP encola uno por frame en que nace un pin, y cada uno revierte y vuelve a medir todos los pins (300–700 ms con CPU ×4). Ahora las escenas se fijan con **sticky** dentro de un `div.pin-spacer` y un relleno de N vh (bc779ca3). Con CPU ×4: 2 refrescos, bloqueo de ~7 s a ~1 s y tarea mayor de 700–1331 ms a ~350 ms.
+- **Ritmo de lectura** (`qa/qa-ritmo.mjs`: px de scroll por texto nuevo; referencia, el piloto, con ~120). Se alargan collect 130→330, radar y axel 140→240, team 130→190 y pipeline 120→160. La meta tiene su guion (§16.1): 200→480, con mesetas.
+
 ## 22. Riel temario · la ruleta de escenas (aprobada el 2026-10-01)
 
 Lienzo: https://claude.ai/artifact/TAMCLKyh5AdP3xKremX4w9 (v2). La dueña lo aprobó con «Aprobada la ruleta, constrúyela». La v1 era un panel con título y lista; la dueña pidió quitar el título, un contenedor más pequeño, una entrada más cuidada y, sobre todo, el efecto de ruleta.
@@ -1039,7 +1051,7 @@ Lienzo: https://claude.ai/artifact/TAMCLKyh5AdP3xKremX4w9 (v2). La dueña lo apr
   - `ui/film/parts/FilmDrum.tsx` y `film-drum.css`, con su test;
   - el recorrido en `FilmRoot`;
   - `scrollTo(target, { duration, easing, onComplete })` y `offsetOf()` en el motor.
-- **Solo escritorio:** el riel no existe por debajo de 1024 px. El piloto aparece en la lista solo con `FILM_PILOT=1`, porque el riel lista lo que hay en la página.
+- **Solo escritorio:** el riel no existe por debajo de 1024 px. El riel lista lo que hay en la página.
 - **Ajuste del 2026-10-01 (revisión de diseño):** la escena del centro se lee entera. Su fila mide 60 px y su título puede ir en dos líneas (`line-clamp: 2`, `text-wrap: balance`). La tecla queda en «↵» y las vecinas se apartan `DRUM.bump` = 8 px. Medido a tamaño real: el título más largo («Tu captación en piloto automático») ocupa unos 270 px y la columna deja unos 141 px. Las filas de alrededor siguen en una línea, con elipsis.
 
 ## 23. Video inmersivo en lugar de «Vendemos progreso» (aprobado el 2026-10-02)
@@ -1061,3 +1073,32 @@ La dueña: «vamos a eliminar la sección de la filosofía, no me gusta para nad
 - **Movimiento reducido o ahorro de datos:** póster y «Reproducir el video», sin autoplay.
 - **Borrado de la filosofía** (constructor 1, §17.2): escena, builder, CSS, contenido, tests, PINNED, la entrada del riel y la copia. Sin rastro en src.
 - **Archivos del video** (axi-2e, 675aea35): `scenes/video.tsx`, `parts/FilmVideo.tsx`, `engine/video-scene.ts`, `film-video.css` y `domain/film/video-content.ts` con su test.
+
+## 24. Pedidos de la dueña del 2026-10-02 (tarde)
+
+- **Modo claro** (lienzo https://claude.ai/artifact/JSWQ6cJQuBWB2VKaTo8Po3, aprobado). Es la misma película con otros tokens:
+  - los colores fijos de tinta y blanco pasan a `--foreground` y `--background` con color-mix;
+  - no cambian con el tema los objetos con material (etiqueta y cupón de la bóveda, recibo, esfera de la llamada, controles sobre el video) ni las sombras;
+  - el portátil del equipo es aluminio en los dos temas, sin la franja negra sobre el teclado;
+  - FilmRoot deja de forzar `dark`, y el selector de tema va en la píldora lateral, también en la home.
+- **«Una foto basta»:** fotos reales del cliente por nicho, de Unsplash, con licencia libre.
+
+  | Nicho | Foto |
+  |---|---|
+  | Restaurantes | Hamburguesa |
+  | Tecnología | iPhone rojo |
+  | Salud y belleza | Manicura con diseño (el match pasa a «Manicura spa») |
+  | Servicios y B2B | Guantes de nitrilo |
+
+  Van en WebP 640×800, de 13 a 32 kB, diferidas.
+- **Íconos de intención del nav** (aprobados):
+  - Vender y cobrar: un círculo perfecto con degradado coral;
+  - Crecer: la cinta ámbar;
+  - Atender: la cinta violeta;
+  - cada uno en una tesela de cristal con halo, en un solo componente.
+- **Isla:** «Captar · Vender · Cobrar · Crecer» en lugar de «La película · 4 capítulos».
+- **Piloto** siempre activo: ya está en producción y se quita el interruptor.
+- **Ritmo:**
+  - mesetas también en la meta;
+  - más recorrido en cobrar, el radar, Axel, el equipo y ordenar;
+  - la ruleta del riel responde a ↑ ↓ Intro sin tabular.
