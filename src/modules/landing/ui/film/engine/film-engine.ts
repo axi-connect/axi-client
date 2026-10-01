@@ -612,9 +612,16 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
         : null;
       // El cierre: un refresh (barato: el ajuste de las fijadas ya está hecho
       // para esta ventana) en su propia tarea, en el primer hueco libre.
+      // En escritorio todo se construye de arriba abajo, así que cada trigger
+      // se midió al crearse sobre lo de encima ya fijado y ajustado: si la
+      // ventana no cambió, el refresh completo del cierre solo repetía medidas
+      // (523 ms en una tarea con CPU ×4). Las fuentes, el redimensionado y
+      // precios/preguntas siguen pidiendo el suyo.
+      const sizeAtStart = `${window.innerWidth}x${window.innerHeight}`;
       const finish = () => {
         if (!alive) return;
-        ScrollTrigger.refresh();
+        if (ctx.desktop && sizeAtStart === `${window.innerWidth}x${window.innerHeight}`) ScrollTrigger.update();
+        else ScrollTrigger.refresh();
         if (!landOnHash() && anchor && intents === intentsAtStart) restore(anchor);
         root.setAttribute("data-film-ready", "");
       };

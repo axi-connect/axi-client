@@ -228,8 +228,8 @@ const fits = new Set<Fit>();
  */
 const fitKey = () => `${window.innerWidth}x${window.innerHeight}|${document.fonts?.status ?? ""}`;
 
-/** Vueltas de medir y corregir. Cada una es UN layout para todas las escenas. */
-const FIT_ROUNDS = 4;
+/** Vueltas de medir y corregir (antes, hasta 12). Cada una es UN layout para todas las escenas. */
+const FIT_ROUNDS = 6;
 
 function unfit({ section, kids }: Fit) {
   for (const el of kids) el.style.removeProperty("zoom");
@@ -262,7 +262,7 @@ function fitAll(list: Iterable<Fit>) {
     base: fit.kids.map((el) => parseFloat(getComputedStyle(el).zoom) || 1),
     pad: parseFloat(getComputedStyle(fit.section).paddingTop) || 0,
     k: 1,
-    prev: null as { k: number; c: number } | null,
+    prev: null as { k: number; c: number; pad: number } | null,
   }));
   let active = work;
   for (let round = 0; round < FIT_ROUNDS && active.length; round++) {
@@ -270,30 +270,32 @@ function fitAll(list: Iterable<Fit>) {
     const heights = active.map((w) => w.fit.section.offsetHeight);
     active = active.filter((w, j) => {
       const { section, kids } = w.fit;
-      let changed = false;
-      let h = heights[j];
+      const h = heights[j];
       // Primero el margen bajo la isla; centrada, el relleno solo la bajaría la
-      // mitad: se alinea arriba.
+      // mitad: se alinea arriba. Con relleno nuevo, el alto se vuelve a medir
+      // en la vuelta siguiente antes de escalar: las escenas miden al menos la
+      // ventana (`min-height`), y ese mínimo puede absorber el relleno; darlo
+      // por sumado veía un desborde que no había y las hundía hasta 0,6.
       const gap = SAFE_TOP - tops[j];
       if (gap > 0.5) {
         w.pad += gap;
-        h += gap;
         section.style.alignItems = "flex-start";
         section.style.paddingTop = `${w.pad}px`;
-        changed = true;
+        return true;
       }
-      if (h > vh && w.k > FIT_MIN) {
-        // Lo que escala es el alto sin el relleno (que va fuera del zoom).
-        const c = h - w.pad;
-        const target = vh * 0.985 - w.pad;
-        const slope = w.prev ? (w.prev.c - c) / (w.prev.k - w.k) : 0;
-        const k = slope > 0 ? (target - (c - slope * w.k)) / slope : (w.k * target) / c;
-        w.prev = { k: w.k, c };
-        w.k = Math.min(w.k, Math.max(FIT_MIN, k));
-        kids.forEach((el, i) => (el.style.zoom = String(w.base[i] * w.k)));
-        changed = true;
-      }
-      return changed;
+      if (h <= vh || w.k <= FIT_MIN) return false;
+      // Lo que escala es el alto sin el relleno (que va fuera del zoom). La
+      // recta entre dos medidas solo vale con el mismo relleno y desbordando
+      // las dos (sin el `min-height` de por medio); si no, proporcional.
+      const c = h - w.pad;
+      const target = vh * 0.985 - w.pad;
+      const prev = w.prev?.pad === w.pad ? w.prev : null;
+      const slope = prev ? (prev.c - c) / (prev.k - w.k) : 0;
+      const k = slope > 0 ? (target - (c - slope * w.k)) / slope : (w.k * target) / c;
+      w.prev = { k: w.k, c, pad: w.pad };
+      w.k = Math.min(w.k, Math.max(FIT_MIN, k));
+      kids.forEach((el, i) => (el.style.zoom = String(w.base[i] * w.k)));
+      return true;
     });
   }
 }

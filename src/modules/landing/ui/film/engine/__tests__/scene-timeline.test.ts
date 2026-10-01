@@ -131,6 +131,23 @@ describe("el contenido de una escena fijada no empieza bajo la isla (≥ 96 px)"
     expect(parseFloat(s.style.paddingTop)).toBeCloseTo(76, 0)
   })
 
+  it("con alto mínimo de una ventana, el relleno no se cuenta como desborde: escala lo justo (radar a 1366 × 657, 2026-10-01)", () => {
+    // Como el radar: mide al menos la ventana y desborda un poco; al escalar, su texto sube bajo la isla.
+    const s = scene("radar", 0)
+    const copy = s.querySelector<HTMLElement>("[data-anim=x]")!
+    const pad = () => parseFloat(s.style.paddingTop) || 0
+    const z = () => Number(copy.style.zoom) || 1
+    Object.defineProperty(s, "offsetHeight", { configurable: true, get: () => Math.max(900, pad() + 950 * z()) })
+    copy.getClientRects = () => [{}] as unknown as DOMRectList
+    copy.getBoundingClientRect = () => ({ top: pad() + 100 * z() }) as DOMRect
+    s.getBoundingClientRect = () => ({ top: 0 }) as DOMRect
+    sceneTimeline(s, { desktop: true, pins: new Map() }, 100)
+    expect(s.offsetHeight).toBeLessThanOrEqual(900)
+    expect(copy.getBoundingClientRect().top).toBeGreaterThanOrEqual(95.5)
+    // Lo justo: 900/950 con su aire, no hundida hacia el mínimo.
+    expect(z()).toBeGreaterThan(0.92)
+  })
+
   it("si ya empieza a 120 px, no se toca", () => {
     const { s } = at(120)
     expect(s.style.paddingTop).toBe("")
