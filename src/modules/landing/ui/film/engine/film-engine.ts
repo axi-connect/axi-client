@@ -39,6 +39,7 @@ import {
   lerp,
   num,
   perNiche,
+  pinFits,
   prefit,
   sceneTimeline,
   segP,
@@ -551,10 +552,13 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
           if (r.top <= vh / 2 && r.bottom > vh / 2) anchor = { box: s, top: r.top };
         }
       }
-      // Las fijadas se ajustan a la ventana todas juntas, antes de construir
-      // (después de medir lo que ya estaba en pantalla, R4).
-      const unprefit = prefit(sections, Boolean(context.conditions?.desktop));
       const intentsAtStart = intents;
+      // En escritorio, cada fijada se ajusta a la ventana en su propia tarea,
+      // justo antes de construirse (`prefit`): ajuste y construcción juntos
+      // pasaban de 200 ms con CPU ×4. Juntar el ajuste de todas en una sola
+      // tarea no ahorra layout: lo concentra (488 ms con ×1).
+      const fitted = new Set<HTMLElement>();
+      const unfits: (() => void)[] = [];
       const finals: gsap.core.Timeline[] = [];
       const ctx: Ctx = { desktop: Boolean(context.conditions?.desktop), pins, settled, finals };
       let next = 0;
@@ -618,11 +622,20 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
         if (!alive) return;
         const t0 = performance.now();
         while (next < sections.length) {
-          const section = sections[next++];
+          const section = sections[next];
           if (io && !near(section)) {
+            next++;
             io.observe(section);
             continue;
           }
+          if (ctx.desktop && !fitted.has(section) && pinFits(section, true)) {
+            fitted.add(section);
+            const t = performance.now();
+            unfits.push(prefit([section], true));
+            performance.measure?.(`film:fit:${section.dataset.scene ?? ""}`, { start: t });
+            break;
+          }
+          next++;
           buildOne(section);
           // En escritorio, una escena por tarea: con tandas por tiempo, la
           // escena que pasaba del límite alargaba la tanda (50–570 ms con CPU
@@ -633,10 +646,12 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
         else if (typeof window.requestIdleCallback === "function") window.requestIdleCallback(finish, { timeout: 500 });
         else yieldThen(finish);
       };
-      slice();
+      // En su propia tarea: con el chunk ya evaluado, el arranque llega dentro
+      // del evento de la rueda que lo pidió.
+      yieldThen(slice);
       return () => {
         alive = false;
-        unprefit();
+        for (const undo of unfits) undo();
         io?.disconnect();
         for (const s of sections) s.removeAttribute("data-stick");
         pins.clear();

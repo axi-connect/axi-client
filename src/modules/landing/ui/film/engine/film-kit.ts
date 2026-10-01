@@ -304,9 +304,8 @@ const onFitRefresh = () => fitAll(fits);
 const prefitted = new Map<HTMLElement, Fit>();
 
 /**
- * Ajusta de una vez todas las escenas que se fijarán, antes de construir
- * ninguna: en lotes de 3 o 4 layouts para todas, y no esos mismos por escena
- * (31 layouts, 293 ms con CPU ×1 a 1366 × 657, repartidos por la construcción).
+ * Ajusta las escenas que se fijarán antes de construirlas, para que el ajuste
+ * vaya en otra tarea que la construcción (el motor lo hace escena a escena).
  * Cada escena, al construirse, encuentra su ajuste hecho para esta ventana.
  * Devuelve cómo deshacer lo que no llegó a construirse.
  */
