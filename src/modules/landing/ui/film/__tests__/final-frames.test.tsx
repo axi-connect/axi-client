@@ -86,7 +86,7 @@ it.each([
     .filter(([, , body]) => /(^|;)\s*opacity:\s*0\s*(;|$)|display:\s*none/.test(body))
     .flatMap(([, sel]) => sel.split(",").map((s) => s.trim()))
     // Lo que solo se oculta en móvil es composición, no un estado de animación.
-    .filter((sel) => !/^(\.film-photo-shelf|\.film-photo-sheet-top|\.film-photo-caption|\.film-call-aura|\.film-team-inbox|\.film-team-keys|\.film-team-pad|\.film-team-modes svg)$/.test(sel))
+    .filter((sel) => !/^(\.film-photo-shelf|\.film-photo-sheet-top|\.film-photo-caption|\.film-call-aura|\.film-team-inbox|\.film-team-keys|\.film-team-pad|\.film-team-modes svg|\.film-goal-(then|bar-legend|rule|routes|route-now|note))$/.test(sel))
   for (const sel of hiding) expect(allowed).toContain(sel)
 })
 

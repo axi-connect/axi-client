@@ -204,6 +204,16 @@
   .film-price-name { font-size: 20px; }
 }
 
+/* La tarjeta de fundadores en la película va en tinta: en precios no hay coral
+   (QA 4506afbf). Se pinta encima del componente compartido con /precios, que
+   no cambia: fondo #111113 con filete al 10 %, ceja al 55 %, dígitos y barra
+   blancos. */
+.film-founders .bg-founders-slab { background: #111113; border-color: rgb(255 255 255 / 0.1); }
+.film-founders p.text-accent-amber { color: rgb(245 245 247 / 0.55); }
+.film-founders .text-accent-amber { color: #f5f5f7; }
+.film-founders .bar-neon { background: #f5f5f7; box-shadow: none; }
+.film-founders .bar-neon::after { background: #f5f5f7; box-shadow: none; }
+
 /* ──────────────────────────── preguntas (§16.3) ──────────────────────────── */
 
 .film-faq { display: grid; gap: 48px; }
@@ -293,23 +303,23 @@
   text-align: center;
 }
 .film-close-mark { position: relative; width: 260px; height: 260px; }
-/* El halo coral → violeta → ámbar. Su desenfoque es fijo: el motor solo lo
-   escala y le sube la opacidad (transform/opacity). */
+/* El halo coral → violeta → ámbar. Sin `filter: blur`: su caja se recortaba
+   en un cuadrado (QA 4506afbf). La caja es un 40 % mayor que el halo visible y
+   el degradado llega a 0 al 70 %, así que el borde nunca se ve. El motor solo
+   lo escala y le sube la opacidad (transform/opacity). */
 .film-close-bloom {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 600px;
-  height: 600px;
-  margin: -300px 0 0 -300px;
-  border-radius: 50%;
-  filter: blur(40px);
+  width: 840px;
+  height: 840px;
+  margin: -420px 0 0 -420px;
   background: radial-gradient(
     closest-side,
     rgb(230 87 89 / 0.34),
-    rgb(154 79 255 / 0.2) 45%,
-    rgb(255 213 128 / 0.08) 70%,
-    transparent
+    rgb(154 79 255 / 0.2) 30%,
+    rgb(255 213 128 / 0.08) 50%,
+    rgb(255 213 128 / 0) 70%
   );
   pointer-events: none;
 }
@@ -377,7 +387,7 @@
 @media (max-width: 1023px) {
   .film-close-stage { padding-top: 56px; }
   .film-close-mark { width: 160px; height: 160px; }
-  .film-close-bloom { width: 350px; height: 350px; margin: -175px 0 0 -175px; filter: blur(34px); }
+  .film-close-bloom { width: 490px; height: 490px; margin: -245px 0 0 -245px; }
   .film-close-h { margin-top: 44px; font-size: 42px; line-height: 1.04; }
   .film-close-typing { margin-top: 32px; font-size: 12.5px; }
   .film-close-ctas { width: 100%; }
@@ -574,6 +584,9 @@
   .film-goal-veil { background: linear-gradient(180deg, #0a0a0b, rgb(10 10 11 / 0) 18%, rgb(10 10 11 / 0) 80%, #0a0a0b); }
   .film-goal-panel { order: 3; margin: 16px 16px 0; padding: 16px; border-radius: 22px; gap: 12px; max-width: 520px; box-shadow: none; }
   @media (min-width: 552px) { .film-goal-panel { margin-inline: auto; width: calc(100% - 32px); } }
+  /* Panel compacto: maniobra, barra y ruta de Axi. Lo de escritorio se esconde
+     aquí y no con `max-lg:hidden`: este CSS sin capa gana a las utilidades. */
+  .film-goal-then, .film-goal-bar-legend, .film-goal-rule, .film-goal-routes, .film-goal-route-now, .film-goal-note { display: none; }
   .film-goal-sell { font-size: 21px; }
   .film-goal-slow-chip { font-size: 10.5px; padding: 4px 9px; }
   .film-goal-turn { padding: 12px; gap: 12px; border-radius: 16px; }

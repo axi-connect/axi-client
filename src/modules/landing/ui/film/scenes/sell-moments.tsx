@@ -135,7 +135,7 @@ export function PhotoScene() {
                       </span>
                     </div>
                     <div className="film-photo-shot">
-                      <MatchIcon className="size-[150px]" strokeWidth={0.7} />
+                      <MatchIcon strokeWidth={0.7} />
                     </div>
                     <p className="film-photo-caption">{FILM_PHOTO.caption}</p>
                     <div className="film-photo-scan" data-anim="photo-scan" />

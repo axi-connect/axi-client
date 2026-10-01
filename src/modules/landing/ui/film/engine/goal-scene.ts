@@ -1,6 +1,9 @@
 /**
  * La meta (plan §16.1): fijada en escritorio, con la línea de `sceneTimeline`.
- * En móvil (y si no cabe) no se fija: corre de «top 70 %» a «bottom top».
+ * Si no cabe en escritorio no se fija y corre de «top 70 %» a «bottom top».
+ * En móvil empieza en «top 40 %»: con «top 70 %» la franja del mapa aún estaba
+ * bajo el pliegue cuando el coche arrancaba, y «Vas aquí» quedaba debajo de la
+ * píldora del nicho (QA 4506afbf, 390).
  *
  * Por frame solo se escriben: el `transform` del plano, el `stroke-dasharray`
  * de las capas de la ruta, el `transform`/`opacity` de unas diez marcas y,
@@ -49,7 +52,7 @@ const px = (v: number) => v.toFixed(1);
 const o = (v: number) => v.toFixed(3);
 
 export const goal: Scene = (section, ctx) => {
-  const tl = sceneTimeline(section, ctx, 200, { start: "top 70%", end: "bottom top" });
+  const tl = sceneTimeline(section, ctx, 200, { start: ctx.desktop ? "top 70%" : "top 40%", end: "bottom top" });
   const { write: set, restore } = writer();
   const approvedAtStart = section.hasAttribute("data-approved");
   // Al revertir el contexto del motor (parar, cambiar de media o de nicho), la

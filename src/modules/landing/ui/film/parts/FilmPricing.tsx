@@ -45,7 +45,7 @@ export function FilmPricing({ catalog }: { catalog: PublicCatalog }) {
   return (
     <>
       {offerOpen && catalog.promotion ? (
-        <div className="mt-10">
+        <div className="film-founders mt-10">
           <FoundersBar promotion={catalog.promotion} />
         </div>
       ) : null}

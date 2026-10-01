@@ -118,12 +118,26 @@
 .film-photo-avatar { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #d4d4d8, #52525b); }
 .film-photo-source { margin-left: auto; font-size: 11px; color: rgb(245 245 247 / 0.5); }
 .film-photo-shot {
+  position: relative;
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgb(245 245 247 / 0.7);
+  color: rgb(245 245 247 / 0.78);
   background: radial-gradient(120% 80% at 50% 10%, #2a2a2e, #0f0f11);
+}
+/* Que se lea como una foto de producto: el objeto llena el encuadre y lo
+   asienta una luz de estudio (QA: la lámina se veía vacía). */
+.film-photo-shot svg { position: relative; z-index: 1; width: 62%; height: auto; max-height: 72%; }
+.film-photo-shot::after {
+  content: "";
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  bottom: 9%;
+  height: 16%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(255 255 255 / 0.12), rgb(255 255 255 / 0));
 }
 .film-photo-caption { margin: 0; padding: 16px 18px; font-size: 12px; color: rgb(245 245 247 / 0.5); }
 /* El haz de escaneo: una línea propia (el hilo está archivado). Recorre la
@@ -194,7 +208,7 @@
   .film-photo-sheet { transform: rotateY(12deg); border-radius: 22px; }
   .film-photo-sheet-top, .film-photo-caption { display: none; }
   .film-photo-sheet { --shot-top: 0px; --shot-bottom: 0px; }
-  .film-photo-shot svg { width: 80px; height: 80px; }
+  .film-photo-shot svg { width: 66%; }
   .film-photo-recognized { font-size: 12px; white-space: normal; }
   .film-photo-reply { justify-self: end; max-width: 280px; font-size: 13px; margin: 0; }
 }
@@ -364,7 +378,7 @@
 .film-vault-rules li { display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 9px; align-items: center; font-size: 12px; color: rgb(17 17 19 / 0.75); text-shadow: 0 1px 0 rgb(255 255 255 / 0.6); }
 .film-vault-rules strong { font-weight: 600; color: #111113; }
 .film-vault-coupon {
-  margin: 10px 18px 0;
+  margin: 10px 0 0;
   padding: 12px 16px;
   border-radius: 4px 4px 12px 12px;
   background: #fafafa;
@@ -372,6 +386,9 @@
   border-top: 2px dashed rgb(17 17 19 / 0.25);
 }
 .film-vault-coupon p { margin: 0; display: flex; justify-content: space-between; gap: 10px; }
+/* Las cifras nunca se parten (QA a 390: «−10 %» en dos líneas y el total fuera). */
+.film-vault-coupon-line span, .film-vault-coupon-total strong { white-space: nowrap; }
+.film-vault-coupon-total span { min-width: 0; }
 .film-vault-coupon-line { font-size: 11.5px; font-weight: 600; }
 .film-vault-coupon-total { margin-top: 6px !important; align-items: baseline; font-size: 11px; color: rgb(17 17 19 / 0.6); }
 .film-vault-coupon-total strong { font-family: var(--font-nexa), var(--font-poppins), sans-serif; font-weight: 700; font-size: 20px; color: #111113; white-space: nowrap; }
@@ -391,6 +408,10 @@
   .film-vault-eyelet { left: 95px; top: 14px; width: 20px; height: 20px; }
   .film-vault-price { font-size: 26px; }
   .film-vault-rules li { font-size: 10.5px; }
+  .film-vault-coupon { padding: 10px 12px; }
+  .film-vault-coupon-total { flex-wrap: wrap; justify-content: flex-end !important; gap: 2px 10px !important; }
+  .film-vault-coupon-total span { flex: 1 0 100%; }
+  .film-vault-coupon-total strong { font-size: 17px; }
   .film-sell-in, .film-sell-out { font-size: 13px; }
   .film-vault-lead { font-size: 14.5px; }
 }
