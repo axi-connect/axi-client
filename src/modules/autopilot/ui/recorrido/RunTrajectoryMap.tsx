@@ -125,7 +125,7 @@ function SourceChip({ source }: { source: RunTrajectoryMapProps["source"] }) {
 }
 
 /** Las paradas donde una cuenta puede salir: su salida se dibuja punteada aunque no salga nadie. */
-const EXIT_STOPS: readonly StopKey[] = ["qualify", "gate", "approve"];
+const EXIT_STOPS: readonly StopKey[] = ["qualify", "gate", "approve", "contact"];
 
 function WideMap({ trajectory, source, flying }: RunTrajectoryMapProps) {
   const { stops, exits, currentIndex } = trajectory;

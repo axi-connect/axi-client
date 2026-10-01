@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 
-import { mockupItems, routineFixture, runFixture } from "@/modules/autopilot/domain/__tests__/recorrido.fixtures";
+import { itemFixture, mockupItems, routineFixture, runFixture } from "@/modules/autopilot/domain/__tests__/recorrido.fixtures";
 import type { RunDetail, RunEvent } from "@/modules/autopilot/domain/autopilot";
 import { RunLiveView } from "../RunLiveView";
 
@@ -143,6 +143,33 @@ describe("RunLiveView · el recorrido", () => {
     expect(await screen.findByText("Terminada: 6 cuentas en seguimiento")).toBeInTheDocument();
     expect(document.querySelector("[data-plane]")).toBeNull();
     expect(screen.getAllByText("Inscribir en la secuencia: 6 cuentas, terminada").length).toBeGreaterThan(0);
+  });
+
+  it("terminada sin inscribir: la salida de «Inscribir» lleva su caja y la isla lo dice; nada sale «en seguimiento»", async () => {
+    given(
+      runFixture({
+        status: "done",
+        step: "contact",
+        counters: { found: 25, qualified: 9, blocked: 2, awaiting: 7, promoted: 9, contacted: 0, enroll_skipped: 7 },
+        credits_spent: 9,
+        items: [...mockupItems().filter((item) => item.stage === "discarded"), ...Array.from({ length: 7 }, () => itemFixture("discarded", "enroll_no_channel", "approved"))],
+      }),
+    );
+    render(<RunLiveView runId="run-1" />);
+    expect(await screen.findByText("Terminada: no se pudo inscribir a nadie")).toBeInTheDocument();
+    expect(screen.getAllByText("7 no se pudieron inscribir").length).toBe(2); // mapa y vertical
+    expect(screen.getAllByText("Sin canal para la secuencia").length).toBe(2);
+    expect(screen.queryByText("En seguimiento")).not.toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/enroll_/);
+  });
+
+  it("el motivo de una salida se lee completo: sin recorte ni elipsis (RNE)", async () => {
+    given(awaiting());
+    render(<RunLiveView runId="run-1" />);
+    await screen.findByRole("region", { name: "El lote espera tu aprobación" });
+    for (const label of screen.getAllByText("Registro de Números Excluidos")) {
+      expect(label.className).not.toMatch(/truncate|line-clamp/);
+    }
   });
 
   it("falló: la parada donde iba queda en rojo y la isla dice el error", async () => {
