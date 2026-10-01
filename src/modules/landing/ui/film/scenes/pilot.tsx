@@ -25,7 +25,7 @@ import {
   PILOT_STATUS,
   lotCounts,
 } from "@/modules/landing/domain/film/pilot-content";
-import { PILOT_DIAL_MAX, capSegments, dial, pilotFrame, type PilotFrame } from "@/modules/landing/domain/film/pilot-frame";
+import { PILOT_DIAL_MAX, PILOT_OVERVIEW, capSegments, dial, pilotFrame, type PilotFrame, type PilotMarks } from "@/modules/landing/domain/film/pilot-frame";
 import type { Point } from "@/modules/landing/domain/film/route-map";
 import { ByNiche } from "@/modules/landing/ui/film/parts/ByNiche";
 
@@ -52,14 +52,21 @@ const plex = IBM_Plex_Mono({ weight: ["400", "500"], subsets: ["latin"], display
 const LAND = flightLandscape();
 const { approved: APPROVED, skipped: SKIPPED } = lotCounts(PILOT_LOT);
 const RUN = { ...PILOT_RUN, approved: APPROVED };
-const FINAL: PilotFrame = pilotFrame(1, RUN);
+/** El borde útil del fotograma estático se calcula para 1440 y 390 (el motor usa el ancho real). */
+const FINAL: PilotFrame = pilotFrame(1, RUN, { left: -520 + 72 });
+/**
+ * El fotograma final en móvil: solo cambia adónde mira la cámara al alejarse
+ * (hacia el destino, para que el avión aterrizado quede en la franja). El HTML
+ * lleva las dos posiciones como variables y la media query del CSS elige.
+ */
+const FINAL_M: PilotFrame = pilotFrame(1, RUN, { overview: PILOT_OVERVIEW.mobile, left: -170 + 16 });
 const C = PILOT_COPY.cockpit;
 
 const op = (v: number): CSSProperties => ({ opacity: Number(v.toFixed(3)) });
-const at = (pt: Point, opacity = 1): CSSProperties => ({
-  transform: `translate(${pt.x.toFixed(1)}px, ${pt.y.toFixed(1)}px)`,
-  opacity: Number(opacity.toFixed(3)),
-});
+const tr = (pt: Point) => `translate(${pt.x.toFixed(1)}px, ${pt.y.toFixed(1)}px)`;
+/** Una marca en su sitio del fotograma final: escritorio (`--t-d`) y móvil (`--t-m`). */
+const at = (pick: (m: PilotMarks) => Point, opacity = 1) =>
+  ({ "--t-d": tr(pick(FINAL.marks)), "--t-m": tr(pick(FINAL_M.marks)), opacity: Number(opacity.toFixed(3)) }) as CSSProperties;
 const pad = (n: number) => String(n).padStart(2, "0");
 
 /** El bisel de los relojes: 31 marcas en 270°, una mayor cada cinco, en dos trazos. */
@@ -83,7 +90,7 @@ function PilotMap() {
   return (
     <div className="film-pilot-map" aria-hidden="true">
       <div className="film-pilot-view">
-        <div className="film-pilot-plane" data-anim="pilot-plane" style={{ transform: f.plane }}>
+        <div className="film-pilot-plane" data-anim="pilot-plane" style={{ "--plane-d": f.plane, "--plane-m": FINAL_M.plane } as CSSProperties}>
           {/* El paisaje: estático, en su capa; solo lo mueve el plano. */}
           <svg className="film-pilot-land" width={w.w} height={w.h} viewBox={`0 0 ${w.w} ${w.h}`}>
             <defs>
@@ -135,7 +142,9 @@ function PilotMap() {
       {/* Las marcas: en el foco, movidas por `project` con la misma cámara que el plano. */}
       <div className="film-pilot-anchor">
         {f.marks.fixes.map((pt, i) => (
-          <div key={i} className="film-pilot-mark" data-anim="pilot-fix" data-lit={f.lit[i] ? "" : undefined} style={at(pt, f.fixesIn)}>
+          <div key={i} className="film-pilot-mark film-pilot-fix-mark" data-anim="pilot-fix" data-lit={f.lit[i] ? "" : undefined}
+            style={{ ...at((m) => m.fixes[i]), opacity: undefined, "--o-d": (f.fixesIn * f.fixEdge[i]).toFixed(3), "--o-m": (FINAL_M.fixesIn * FINAL_M.fixEdge[i]).toFixed(3) } as CSSProperties}
+          >
             <svg width="16" height="14" viewBox="0 0 16 14" className="film-pilot-fix">
               <path d="M8 1 15 13H1Z" />
             </svg>
@@ -145,15 +154,19 @@ function PilotMap() {
             </span>
           </div>
         ))}
-        <div className="film-pilot-mark film-pilot-desk" data-anim="pilot-tower" style={at(f.marks.tower)}>
+        <div className="film-pilot-mark film-pilot-desk" data-anim="pilot-tower" style={at((m) => m.tower)}>
           <span className="film-pilot-tag film-pilot-tower-tag">{PILOT_COPY.tower}</span>
         </div>
-        <div className="film-pilot-mark film-pilot-desk" data-anim="pilot-airport" style={at(f.marks.airport)}>
+        <div className="film-pilot-mark film-pilot-desk" data-anim="pilot-airport" style={at((m) => m.airport)}>
           <span className="film-pilot-tag film-pilot-apt-tag" data-anim="pilot-airport-label" style={op(f.airportLabel)}>
             {PILOT_COPY.destination}
           </span>
         </div>
-        <div className="film-pilot-mark" data-anim="pilot-zone-mark" style={at(f.marks.zone)}>
+        <div
+          className="film-pilot-mark film-pilot-zone-mark"
+          data-anim="pilot-zone-mark"
+          style={{ ...at((m) => m.zone), opacity: undefined, "--o-d": FINAL.zoneBox.toFixed(3), "--o-m": FINAL_M.zoneTag.toFixed(3) } as CSSProperties}
+        >
           <span className="film-pilot-zone-box film-pilot-desk">
             <span className="film-pilot-tag-k">{PILOT_COPY.zone.title}</span>
             <span className="film-pilot-zone-near" data-anim="pilot-zone-near" style={op(f.zoneNear)}>
@@ -165,7 +178,7 @@ function PilotMap() {
           </span>
           <span className="film-pilot-tag film-pilot-zone-tag film-pilot-mob">{PILOT_COPY.zone.title}</span>
         </div>
-        <div className="film-pilot-mark film-pilot-desk" data-anim="pilot-sources" style={at(f.marks.sources)}>
+        <div className="film-pilot-mark film-pilot-desk" data-anim="pilot-sources" style={at((m) => m.sources)}>
           <span className="film-pilot-sources" data-anim="pilot-sources-list" style={op(f.sourcesIn)}>
             {PILOT_COPY.sources.map((s) => (
               <span key={s} className="film-pilot-source">
@@ -175,7 +188,7 @@ function PilotMap() {
             ))}
           </span>
         </div>
-        <div className="film-pilot-mark film-pilot-desk" data-anim="pilot-people" style={at(f.marks.people)}>
+        <div className="film-pilot-mark film-pilot-desk" data-anim="pilot-people" style={at((m) => m.people)}>
           <span className="film-pilot-people" data-anim="pilot-people-card" style={op(f.people)}>
             <span className="film-pilot-guide" />
             <ByNiche as="span">
@@ -198,19 +211,19 @@ function PilotMap() {
             </ByNiche>
           </span>
         </div>
-        <div className="film-pilot-mark film-pilot-desk" data-anim="pilot-hold-mark" style={at(f.marks.holdLabel)}>
+        <div className="film-pilot-mark film-pilot-desk" data-anim="pilot-hold-mark" style={at((m) => m.holdLabel)}>
           <span className="film-pilot-tag film-pilot-hold-tag" data-anim="pilot-hold-label" style={op(f.holdLabel)}>
             {PILOT_COPY.hold}
           </span>
         </div>
-        <div className="film-pilot-mark film-pilot-desk" data-anim="pilot-bubble" style={at(f.marks.bubble)}>
+        <div className="film-pilot-mark film-pilot-desk" data-anim="pilot-bubble" style={at((m) => m.bubble)}>
           <span className="film-pilot-bubble" data-anim="pilot-bubble-box" style={op(f.bubble)}>
             <span className="film-pilot-tag-k">{PILOT_COPY.bubble.title}</span>
             <span className="film-pilot-bubble-text">{PILOT_COPY.bubble.text}</span>
           </span>
         </div>
-        <div className="film-pilot-mark" data-anim="pilot-craft" style={at(f.marks.plane, f.planeIn)}>
-          <svg viewBox="0 0 24 24" className="film-pilot-craft" data-anim="pilot-heading" style={{ transform: `rotate(${f.heading.toFixed(1)}deg)` }}>
+        <div className="film-pilot-mark" data-anim="pilot-craft" style={at((m) => m.plane, f.planeIn)}>
+          <svg viewBox="0 0 24 24" className="film-pilot-craft" data-anim="pilot-heading" style={{ "--r-d": `rotate(${f.heading.toFixed(1)}deg)`, "--r-m": `rotate(${FINAL_M.heading.toFixed(1)}deg)` } as CSSProperties}>
             <path d={PLANE_PATH} />
           </svg>
         </div>
@@ -262,7 +275,7 @@ function Board() {
               return (
                 <li key={name} className="film-pilot-row" data-anim="pilot-row" data-skipped={!PILOT_LOT[i] && f.skippedDim ? "" : undefined}>
                   <span className="film-pilot-row-name">{name}</span>
-                  <span className="film-pilot-chip" data-anim="pilot-chip" data-stage={row.stage ?? undefined} style={{ transform: `rotateX(${row.flip.toFixed(1)}deg)` }}>
+                  <span className="film-pilot-chip" data-anim="pilot-chip" data-stage={row.stage ?? undefined}>
                     {row.stage ? PILOT_STAGES[row.stage] : "—"}
                   </span>
                 </li>

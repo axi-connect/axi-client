@@ -61,8 +61,15 @@ export function planeAt(p: number): PlaneState {
   return { f, at: flightPointAt(f), hold: null };
 }
 
-/** Adónde mira la cámara al alejarse al final: toda la ruta. */
-const OVERVIEW: Point = { x: 1235, y: 840 };
+/**
+ * Adónde mira la cámara al alejarse al final. En escritorio, a toda la ruta;
+ * en la franja de 390 eso dejaba fuera el avión aterrizado, así que en móvil
+ * se centra hacia el destino (decisión de axi-2e, 2026-10-01).
+ */
+export const PILOT_OVERVIEW = {
+  desktop: { x: 1235, y: 840 },
+  mobile: { x: FLIGHT_AIRPORT.x + (1235 - FLIGHT_AIRPORT.x) * 0.3, y: FLIGHT_AIRPORT.y + (840 - FLIGHT_AIRPORT.y) * 0.3 },
+} as const;
 
 /**
  * La cámara en `p`:
@@ -72,7 +79,7 @@ const OVERVIEW: Point = { x: 1235, y: 840 };
  * - 0,82–0,9: desciende (30°, escala 1,15);
  * - 0,9–1: se aleja a toda la ruta (escala 0,55, 22°, giro −3°).
  */
-export function pilotCamera(p: number, plane: PlaneState = planeAt(p)): GoalCamera {
+export function pilotCamera(p: number, plane: PlaneState = planeAt(p), overview: Point = PILOT_OVERVIEW.desktop): GoalCamera {
   const rise = easeOut(seg(p, 0.1, 0.3));
   let scale = lerp(0.45, 1, rise);
   let tilt = lerp(0, 48, rise);
@@ -87,7 +94,7 @@ export function pilotCamera(p: number, plane: PlaneState = planeAt(p)): GoalCame
   tilt = lerp(tilt, 22, out);
   turn = lerp(turn, -3, out);
   const follow = p < 0.1 ? FLIGHT_CONTROL[0] : plane.at;
-  return { center: mix(follow, OVERVIEW, out), scale, tilt, turn };
+  return { center: mix(follow, overview, out), scale, tilt, turn };
 }
 
 /** Hacia dónde apunta el avión en pantalla (grados, 0 = arriba): la tangente proyectada. */
@@ -112,10 +119,15 @@ export const PILOT_BOARD: readonly (readonly [at: number, stage: PilotStage][])[
   [[0.1, "searching"], [0.26, "enriching"], [0.38, "qualifying"], [0.8, "discarded"]],
 ];
 
-/** Lo que dura el volteo de paleta de una fila. */
-const FLIP = 0.014;
+/** Lo que tarda en entrar la etapa nueva de una fila. */
+const ENTER = 0.014;
 
-export type BoardRow = { stage: PilotStage | null; flip: number };
+/**
+ * `enter` va de 0 (acaba de cambiar) a 1 (asentada). La etapa cambia en un solo
+ * paso: la vieja se va de golpe y la nueva entra por opacidad. Con un volteo
+ * `rotateX`, a mitad de giro el texto se veía aplastado (QA de axi-2e, 390).
+ */
+export type BoardRow = { stage: PilotStage | null; enter: number };
 
 export function boardRow(p: number, timeline: readonly (readonly [number, PilotStage])[]): BoardRow {
   let stage: PilotStage | null = null;
@@ -126,7 +138,7 @@ export function boardRow(p: number, timeline: readonly (readonly [number, PilotS
       since = t;
     }
   }
-  return { stage, flip: since >= 0 ? 90 * (1 - easeOut(seg(p, since, since + FLIP))) : 0 };
+  return { stage, enter: since >= 0 ? easeOut(seg(p, since, since + ENTER)) : 1 };
 }
 
 /** Los tres relojes giran sobre el mismo fondo de escala. */
@@ -158,10 +170,26 @@ export type PilotMarks = {
 
 export type PilotRun = { found: number; qualified: number; cap: number; approved: number };
 
+export type PilotView = {
+  /** Adónde mira la cámara al final (`PILOT_OVERVIEW`). */
+  overview?: Point;
+  /**
+   * El borde izquierdo útil en px desde el foco (a la derecha del riel de
+   * capítulos). Una tarjeta que llega a él se apaga: entra completa o no entra.
+   */
+  left?: number;
+};
+
+/** Lo que tarda en apagarse una tarjeta al acercarse al borde, en px. */
+const EDGE = 60;
+
 /** El fotograma de la escena en `p`. Los valores van de 0 a 1 (opacidades y avances); el motor los escribe tal cual. */
-export function pilotFrame(p: number, run: PilotRun) {
+export function pilotFrame(p: number, run: PilotRun, view: PilotView = {}) {
   const plane = planeAt(p);
-  const cam = pilotCamera(p, plane);
+  const cam = pilotCamera(p, plane, view.overview);
+  const left = view.left ?? -Infinity;
+  /** 1 si la tarjeta (su borde izquierdo en `x`) cabe entera; baja a 0 al llegar al borde. */
+  const edge = (x: number) => Math.min(1, Math.max(0, (x - left) / EDGE));
   const at = (w: Point) => project(cam, w);
   const lit = FLIGHT_FIXES.map((f) => p >= 0.1 && plane.f >= f - 0.002);
   const passed = FLIGHT_FIXES.filter((f) => plane.f >= f - 0.002).length;
@@ -215,14 +243,20 @@ export function pilotFrame(p: number, run: PilotRun) {
     fixesIn: easeOut(seg(p, 0.06, 0.16)),
     planeIn: easeOut(seg(p, 0.08, 0.12)),
     blip: fade(p, 0.04, 0.08, 0.2, 0.3),
-    sourcesIn: fade(p, 0.2, 0.24, 0.32, 0.36),
-    people: fade(p, 0.3, 0.34, 0.44, 0.48),
+    // Las tarjetas: su tramo y, además, el borde (sus bordes izquierdos: −60, −40 y −250 px de su marca).
+    sourcesIn: fade(p, 0.2, 0.24, 0.32, 0.36) * edge(marks.sources.x - 60),
+    people: fade(p, 0.3, 0.34, 0.44, 0.48) * edge(marks.people.x - 40),
     zone: 0.6 + 0.4 * fade(p, 0.4, 0.44, 0.52, 0.58),
+    /** La rotulación de la zona, con la misma regla del borde: la caja de escritorio (−110 px) y la etiqueta de móvil (−60 px). */
+    zoneBox: edge(marks.zone.x - 110),
+    zoneTag: edge(marks.zone.x - 60),
+    /** Cada fijo con su etiqueta: se apaga al llegar al borde (el triángulo empieza 8 px a la izquierda). */
+    fixEdge: marks.fixes.map((pt) => edge(pt.x - 8)),
     zoneNear: 0.35 + 0.65 * fade(p, 0.4, 0.44, 0.48, 0.52),
     zonePassed: 0.3 + 0.7 * easeOut(seg(p, 0.48, 0.52)),
     hold: fade(p, 0.5, 0.53, 0.66, 0.7),
     holdLabel: fade(p, 0.52, 0.55, 0.64, 0.67),
-    bubble: fade(p, 0.72, 0.76, 0.84, 0.88),
+    bubble: fade(p, 0.72, 0.76, 0.84, 0.88) * edge(marks.bubble.x - 250),
     airportLabel: 0.45 + 0.55 * easeOut(seg(p, 0.84, 0.9)),
     results: easeOut(seg(p, 0.9, 0.95)),
     funnel: easeOut(seg(p, 0.92, 0.98)),

@@ -16,7 +16,7 @@
 import { gsap } from "gsap";
 
 import { PILOT_COPY, PILOT_LOT, PILOT_RUN, PILOT_STAGES, PILOT_STATUS, lotCounts } from "@/modules/landing/domain/film/pilot-content";
-import { PILOT_DIAL_MAX, capSegments, dial, pilotFrame } from "@/modules/landing/domain/film/pilot-frame";
+import { PILOT_DIAL_MAX, PILOT_FOCUS, PILOT_OVERVIEW, capSegments, dial, pilotFrame } from "@/modules/landing/domain/film/pilot-frame";
 import { SPAN, all, sceneTimeline, visible, writer, type Scene } from "@/modules/landing/ui/film/engine/film-kit";
 
 const px = (v: number) => v.toFixed(1);
@@ -82,8 +82,21 @@ export const pilot: Scene = (section, ctx) => {
   const funnelShare = funnel.map((el) => Number(el.dataset.share ?? 1));
   const tune = one("[data-anim=pilot-tune]");
 
+  // El borde izquierdo útil, en px desde el foco: a la derecha del riel de
+  // capítulos en escritorio (72 px), con el margen de 16 en móvil. Se lee el
+  // ancho al construir y al redimensionar, nunca por frame.
+  const focus = ctx.desktop ? PILOT_FOCUS.desktop.x : PILOT_FOCUS.mobile.x;
+  const margin = ctx.desktop ? 72 : 16;
+  const view = { overview: ctx.desktop ? PILOT_OVERVIEW.desktop : PILOT_OVERVIEW.mobile, left: 0 };
+  const measure = () => {
+    view.left = -focus * section.clientWidth + margin;
+  };
+  measure();
+  window.addEventListener("resize", measure);
+  gsap.context()?.add(() => () => window.removeEventListener("resize", measure));
+
   const paint = (p: number) => {
-    const f = pilotFrame(p, run);
+    const f = pilotFrame(p, run, view);
     // El plano y la ruta.
     set(plane, "transform", f.plane);
     set(done, "strokeDasharray", `${Math.max(0.0001, f.done).toFixed(4)} 2`);
@@ -95,7 +108,7 @@ export const pilot: Scene = (section, ctx) => {
     // Las marcas.
     fixes.forEach((el, i) => {
       set([el], "transform", at(f.marks.fixes[i]));
-      set([el], "opacity", o(f.fixesIn));
+      set([el], "opacity", o(f.fixesIn * f.fixEdge[i]));
       flag([el], "data-lit", f.lit[i]);
     });
     set(tower, "transform", at(f.marks.tower));
@@ -103,7 +116,7 @@ export const pilot: Scene = (section, ctx) => {
     // La zona y el destino entran con los fijos: desde arriba (p < 0,1) caerían sobre la cabina, que aún aparece.
     set(airportLabel, "opacity", o(f.airportLabel * f.fixesIn));
     set(zoneMark, "transform", at(f.marks.zone));
-    set(zoneMark, "opacity", o(f.fixesIn));
+    set(zoneMark, "opacity", o(f.fixesIn * (ctx.desktop ? f.zoneBox : f.zoneTag)));
     set(zoneNear, "opacity", o(f.zoneNear));
     set(zonePassed, "opacity", o(f.zonePassed));
     set(sources, "transform", at(f.marks.sources));
@@ -147,7 +160,8 @@ export const pilot: Scene = (section, ctx) => {
       if (!chip) return;
       text([chip], r.stage ? PILOT_STAGES[r.stage] : "—");
       flag([chip], "data-stage", r.stage ?? false);
-      set([chip], "transform", `rotateX(${r.flip.toFixed(1)}deg)`);
+      // Un solo paso: la etapa vieja se va de golpe y la nueva entra por opacidad.
+      set([chip], "opacity", o(r.enter));
       if (rows[i]) flag([rows[i]], "data-skipped", !PILOT_LOT[i] && f.skippedDim);
     });
 

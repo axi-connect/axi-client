@@ -29,7 +29,7 @@ import {
   PILOT_STATUS,
   lotCounts,
 } from "../pilot-content"
-import { PILOT_BOARD, boardRow, capSegments, dial, pilotCamera, pilotFrame, planeAt } from "../pilot-frame"
+import { PILOT_BOARD, PILOT_OVERVIEW, boardRow, capSegments, dial, pilotCamera, pilotFrame, planeAt } from "../pilot-frame"
 
 const close = (a: number, b: number, eps = 0.5) => Math.abs(a - b) <= eps
 const RUN = { ...PILOT_RUN, approved: lotCounts(PILOT_LOT).approved }
@@ -167,21 +167,48 @@ describe("el vuelo", () => {
     const fr = pilotFrame(1, RUN)
     expect([fr.done, fr.status, fr.airportLit, fr.results, fr.funnel, fr.tune]).toEqual([1, "done", true, 1, 1, 1])
     expect([fr.found, fr.qualified, fr.contacted]).toEqual([25, 9, 4])
-    expect(fr.board.map((r) => [r.stage, r.flip])).toEqual([
-      ["demo", 0],
-      ["replied", 0],
-      ["following", 0],
-      ["following", 0],
-      ["discarded", 0],
+    expect(fr.board.map((r) => [r.stage, r.enter])).toEqual([
+      ["demo", 1],
+      ["replied", 1],
+      ["following", 1],
+      ["following", 1],
+      ["discarded", 1],
     ])
   })
 })
 
+describe("el encuadre", () => {
+  it("una tarjeta que llega al borde izquierdo se apaga: entra completa o no entra", () => {
+    // 0,46: la tarjeta del decisor aún se desvanece y su marca ya va hacia la izquierda.
+    const free = pilotFrame(0.46, RUN)
+    expect(free.people).toBeGreaterThan(0)
+    const x = free.marks.people.x - 40
+    expect(pilotFrame(0.46, RUN, { left: x }).people).toBe(0)
+    expect(pilotFrame(0.46, RUN, { left: x - 60 }).people).toBeCloseTo(free.people)
+    // 0,86: lo mismo con la burbuja del primer mensaje.
+    const late = pilotFrame(0.86, RUN)
+    expect(late.bubble).toBeGreaterThan(0)
+    expect(pilotFrame(0.86, RUN, { left: late.marks.bubble.x - 250 }).bubble).toBe(0)
+  })
+
+  it("en móvil el alejamiento final deja el avión aterrizado dentro de la franja de 390 × 430", () => {
+    const m = pilotFrame(1, RUN, { overview: PILOT_OVERVIEW.mobile })
+    // El foco está en (170, 250) de la franja: el avión debe caer en [−170, 220] × [−250, 180].
+    expect(m.marks.plane.x).toBeGreaterThan(-170 + 20)
+    expect(m.marks.plane.x).toBeLessThan(220 - 20)
+    expect(m.marks.plane.y).toBeGreaterThan(-250 + 20)
+    expect(m.marks.plane.y).toBeLessThan(180 - 20)
+    // Y en escritorio, con el centro de toda la ruta, quedaba fuera: es el caso que arregla.
+    const d = pilotFrame(1, RUN)
+    expect(d.marks.plane.x > 200 || d.marks.plane.y < -230).toBe(true)
+  })
+})
+
 describe("el tablero y los instrumentos", () => {
-  it("cada fila voltea con rotateX de 90° a 0° y solo avanza", () => {
-    expect(boardRow(0.05, PILOT_BOARD[0])).toEqual({ stage: null, flip: 0 })
-    expect(boardRow(0.2, PILOT_BOARD[0]).flip).toBe(90)
-    expect(boardRow(0.22, PILOT_BOARD[0]).flip).toBe(0)
+  it("cada fila cambia en un solo paso (la etapa nueva entra de 0 a 1) y solo avanza", () => {
+    expect(boardRow(0.05, PILOT_BOARD[0])).toEqual({ stage: null, enter: 1 })
+    expect(boardRow(0.2, PILOT_BOARD[0])).toEqual({ stage: "enriching", enter: 0 })
+    expect(boardRow(0.22, PILOT_BOARD[0]).enter).toBe(1)
     const order = Object.keys(PILOT_STAGES)
     PILOT_BOARD.forEach((t) => t.forEach(([at, s], i) => i && expect([at > t[i - 1][0], order.indexOf(s) > order.indexOf(t[i - 1][1])]).toEqual([true, true])))
   })

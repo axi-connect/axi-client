@@ -54,6 +54,8 @@
   height: 1500px;
   transform-origin: 0 0;
   will-change: transform;
+  /* El fotograma final del servidor (escritorio / móvil); el motor escribe el suyo en línea. */
+  transform: var(--plane-d);
 }
 .film-pilot-plane svg { position: absolute; inset: 0; overflow: visible; }
 /* El paisaje en su propia capa: los trazos que avanzan no lo vuelven a rasterizar (como la ciudad de la meta). */
@@ -100,7 +102,7 @@
 
 /* ──────────────────────────── las marcas ──────────────────────────── */
 .film-pilot-anchor { position: absolute; left: var(--fx); top: var(--fy); width: 0; height: 0; z-index: 3; }
-.film-pilot-mark { position: absolute; left: 0; top: 0; pointer-events: none; }
+.film-pilot-mark { position: absolute; left: 0; top: 0; pointer-events: none; transform: var(--t-d); }
 .film-pilot-mark > * { position: absolute; }
 .film-pilot-tag {
   white-space: nowrap;
@@ -121,6 +123,7 @@
 .film-pilot-tower-tag { left: -44px; top: 26px; }
 /* A la izquierda del aeropuerto: al final queda junto a la cabina y a la derecha se cortaba. */
 .film-pilot-apt-tag { right: 22px; top: -48px; color: var(--pl-fg); }
+.film-pilot-zone-mark, .film-pilot-fix-mark { opacity: var(--o-d); }
 .film-pilot-zone-box { left: -110px; top: -34px; width: 220px; display: flex; flex-direction: column; gap: 4px; text-align: center; }
 .film-pilot-zone-near { font-size: 12px; font-weight: 500; }
 .film-pilot-zone-passed { font-size: 11.5px; color: var(--pl-75); }
@@ -193,7 +196,7 @@
   border: 1px solid color-mix(in srgb, var(--pl-fg) 14%, transparent);
 }
 
-.film-pilot-craft { left: -14px; top: -14px; width: 28px; height: 28px; overflow: visible; }
+.film-pilot-craft { left: -14px; top: -14px; width: 28px; height: 28px; overflow: visible; transform: var(--r-d); }
 .film-pilot-craft path { fill: var(--pl-fg); }
 
 /* ───────────────────────────── el encuadre ───────────────────────────── */
@@ -387,7 +390,6 @@
   padding: 4px 10px;
   border-radius: 9px;
   background: var(--pl-fill);
-  perspective: 400px;
 }
 .film-pilot-row[data-skipped] { opacity: 0.55; }
 .film-pilot-row-name { font-size: 12.5px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -397,7 +399,6 @@
   font-weight: 600;
   padding: 3px 9px;
   border-radius: 7px;
-  transform-origin: 50% 50%;
   background: var(--pl-fill-2);
   color: var(--pl-90);
   border: 1px solid transparent;
@@ -480,6 +481,10 @@
   .film-pilot-results, .film-pilot-principle { display: none; }
   .film-pilot-map { position: relative; inset: auto; order: 2; height: 430px; margin-top: 12px; }
   .film-pilot-veil { background: linear-gradient(180deg, var(--pl-ink), transparent 16%, transparent 82%, var(--pl-ink)); }
+  .film-pilot-plane { transform: var(--plane-m); }
+  .film-pilot-mark { transform: var(--t-m); }
+  .film-pilot-zone-mark, .film-pilot-fix-mark { opacity: var(--o-m); }
+  .film-pilot-craft { transform: var(--r-m); }
   .film-pilot-fix { left: -7px; top: -8px; width: 14px; height: 12px; }
   .film-pilot-fix-tag { left: 10px; top: 4px; font-size: 9px; }
   .film-pilot-fix-name { display: none; }
