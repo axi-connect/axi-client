@@ -111,7 +111,7 @@
 .film-call-stage > * { position: absolute; left: 50%; top: 50%; }
 /* Solo la esfera recibe el toque: en 3D, el plano de cada órbita pasa por delante de ella. */
 .film-call-stage, .film-call-stage * { pointer-events: none; }
-.film-call-horizon { width: 880px; height: 1px; margin-left: -440px; top: calc(50% + 168px); background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.1) 30%, rgb(255 255 255 / 0.16) 50%, rgb(255 255 255 / 0.1) 70%, transparent); }
+.film-call-horizon { width: 880px; height: 1px; margin-left: -440px; top: calc(50% + 168px); background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--foreground) 10%, transparent) 30%, color-mix(in srgb, var(--foreground) 16%, transparent) 50%, color-mix(in srgb, var(--foreground) 10%, transparent) 70%, transparent); }
 .film-call-shadow { width: 300px; height: 56px; margin: 150px 0 0 -150px; border-radius: 50%; background: radial-gradient(closest-side, rgb(0 0 0 / 0.75), rgb(0 0 0 / 0)); }
 .film-call-reflect { width: 360px; height: 70px; margin: 142px 0 0 -180px; border-radius: 50%; background: radial-gradient(closest-side, rgb(154 79 255 / 0.5), rgb(230 87 89 / 0.2) 55%, rgb(0 0 0 / 0)); opacity: 0.08; transform: scaleX(0.95); will-change: opacity; transition: opacity 0.1s linear; }
 .film-call[data-speaker="client"] .film-call-reflect { background: radial-gradient(closest-side, rgb(220 226 255 / 0.35), rgb(0 0 0 / 0)); }
@@ -154,7 +154,7 @@
   height: calc(var(--r) * 2);
   margin: calc(var(--r) * -1);
   border-radius: 50%;
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.075);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--foreground) 7.5%, transparent);
 }
 .film-call-arc::before {
   content: "";
@@ -162,7 +162,7 @@
   inset: 0;
   border-radius: 50%;
   background: conic-gradient(from -25deg, transparent 0deg, color-mix(in srgb, var(--col) 75%, transparent) 80deg, var(--dot) 115deg, transparent 115.5deg);
-  mask: radial-gradient(closest-side, transparent calc(100% - var(--sw) - 0.5px), #000 calc(100% - var(--sw)), #000 99.5%, transparent);
+  mask: radial-gradient(closest-side, transparent calc(100% - var(--sw) - 0.5px), color-mix(in srgb, var(--foreground) 0%, var(--background)) calc(100% - var(--sw)), color-mix(in srgb, var(--foreground) 0%, var(--background)) 99.5%, transparent);
 }
 .film-call-orbit { transition: opacity 0.9s; }
 /* La voz enciende la estela de cada órbita (opacidad); la órbita no se reescala. */
@@ -229,45 +229,45 @@
 
 /* ───────────────────────────── texto vivo ───────────────────────────── */
 
-.film-call-label { display: flex; align-items: center; gap: 10px; font-size: 11px; letter-spacing: 0.24em; text-transform: uppercase; font-weight: 600; color: rgb(245 245 247 / 0.5); }
+.film-call-label { display: flex; align-items: center; gap: 10px; font-size: 11px; letter-spacing: 0.24em; text-transform: uppercase; font-weight: 600; color: color-mix(in srgb, var(--foreground) 50%, transparent); }
 .film-call-live { width: 7px; height: 7px; border-radius: 50%; background: #ff7a6e; box-shadow: 0 0 0 4px rgb(255 122 110 / 0.14); opacity: 0.3; transition: opacity 0.4s; }
 .film-call[data-playing] .film-call-live { opacity: 1; animation: film-call-blink 1.6s ease-in-out infinite; }
 @keyframes film-call-blink { 50% { opacity: 0.35; } }
 .film-call-clock { font-family: var(--font-mono), ui-monospace, monospace; font-variant-numeric: tabular-nums; font-size: 46px; line-height: 1; letter-spacing: -0.02em; }
-.film-call-clock > span { color: rgb(245 245 247 / 0.28); }
-.film-call-status { font-size: 13px; color: rgb(245 245 247 / 0.62); }
-.film-call-status > span { color: rgb(245 245 247 / 0.4); }
+.film-call-clock > span { color: color-mix(in srgb, var(--foreground) 28%, transparent); }
+.film-call-status { font-size: 13px; color: color-mix(in srgb, var(--foreground) 62%, transparent); }
+.film-call-status > span { color: color-mix(in srgb, var(--foreground) 40%, transparent); }
 
 .film-call-notes dl { margin: 10px 0 0; }
-.film-call-note { display: grid; gap: 3px; padding: 12px 0; border-top: 1px solid rgb(255 255 255 / 0.08); }
-.film-call-note dt { font-family: var(--font-mono), ui-monospace, monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: rgb(245 245 247 / 0.36); transition: color 0.5s; }
-.film-call-note dd { margin: 0; font-size: 14px; color: #f5f5f7; opacity: 0.001; transform: translateY(6px); transition: opacity 0.6s var(--call-ease), transform 0.6s var(--call-ease); }
-.film-call-note[data-on] dt { color: rgb(245 245 247 / 0.62); }
+.film-call-note { display: grid; gap: 3px; padding: 12px 0; border-top: 1px solid color-mix(in srgb, var(--foreground) 8%, transparent); }
+.film-call-note dt { font-family: var(--font-mono), ui-monospace, monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: color-mix(in srgb, var(--foreground) 36%, transparent); transition: color 0.5s; }
+.film-call-note dd { margin: 0; font-size: 14px; color: var(--foreground); opacity: 0.001; transform: translateY(6px); transition: opacity 0.6s var(--call-ease), transform 0.6s var(--call-ease); }
+.film-call-note[data-on] dt { color: color-mix(in srgb, var(--foreground) 62%, transparent); }
 .film-call-note[data-on] dd { opacity: 1; transform: none; }
 
 .film-call-cap p { margin: 0; font-size: clamp(17px, 1.6vw, 22px); line-height: 1.45; font-weight: 300; letter-spacing: -0.005em; }
-.film-call-intro { color: rgb(245 245 247 / 0.62); }
+.film-call-intro { color: color-mix(in srgb, var(--foreground) 62%, transparent); }
 /* Antes de tocar la esfera, la invitación; después, la pista que suena (la pone CallPlayer). */
 .film-call-line { display: none; flex-direction: column; align-items: inherit; gap: 10px; }
 .film-call[data-started] .film-call-intro { display: none; }
 .film-call[data-started][data-cap="0"] .film-call-line[data-call-track="0"],
 .film-call[data-started][data-cap="1"] .film-call-line[data-call-track="1"] { display: flex; }
-.film-call-who { display: flex; align-items: center; gap: 9px; font-size: 12px; font-weight: 500; color: rgb(245 245 247 / 0.6); }
+.film-call-who { display: flex; align-items: center; gap: 9px; font-size: 12px; font-weight: 500; color: color-mix(in srgb, var(--foreground) 60%, transparent); }
 .film-call-avatar { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #e9ebf3; color: #0a0a0b; font-size: 9px; font-weight: 600; }
 .film-call-avatar-axi { background: #0d0d10; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14); }
-.film-call-w { color: rgb(245 245 247 / 0.24); transition: color 0.35s; }
-.film-call-w[data-on] { color: #f5f5f7; }
+.film-call-w { color: color-mix(in srgb, var(--foreground) 24%, transparent); transition: color 0.35s; }
+.film-call-w[data-on] { color: var(--foreground); }
 .film-call[data-speaker="axi"] .film-call-w[data-now] { background: linear-gradient(90deg, #ff9a8f, #c9a6ff); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
 
 /* ───────────────────────────── línea de tiempo ───────────────────────────── */
 
 .film-call-stages { position: relative; height: 16px; font-family: var(--font-mono), ui-monospace, monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; }
-.film-call-stages span { position: absolute; top: 0; padding-left: 8px; border-left: 1px solid rgb(255 255 255 / 0.14); color: rgb(245 245 247 / 0.3); white-space: nowrap; transition: color 0.5s, border-color 0.5s; }
-.film-call-stages span[data-on] { color: #f5f5f7; border-color: rgb(255 255 255 / 0.55); }
+.film-call-stages span { position: absolute; top: 0; padding-left: 8px; border-left: 1px solid color-mix(in srgb, var(--foreground) 14%, transparent); color: color-mix(in srgb, var(--foreground) 30%, transparent); white-space: nowrap; transition: color 0.5s, border-color 0.5s; }
+.film-call-stages span[data-on] { color: var(--foreground); border-color: color-mix(in srgb, var(--foreground) 55%, transparent); }
 .film-call-wave { position: relative; height: 36px; margin-top: 10px; }
 .film-call-wave svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 .film-call-wave path { fill: none; stroke-width: 2.2; stroke-linecap: round; vector-effect: non-scaling-stroke; }
-.film-call-wave-base { stroke: rgb(245 245 247 / 0.16); }
+.film-call-wave-base { stroke: color-mix(in srgb, var(--foreground) 16%, transparent); }
 @media (max-width: 639px) {
   .film-call-wave path { stroke-width: 1.2; }
   /* Apertura y Motivo quedan a 31 px: Motivo baja una fila. */
@@ -279,7 +279,7 @@
 .film-call-reveal > div { position: absolute; inset: 0; transform: translateX(100%); will-change: transform; transition: transform 0.1s linear; }
 .film-call-head-line { position: absolute; inset: -6px 0; transform: translateX(-100%); will-change: transform; opacity: 0; transition: opacity 0.4s, transform 0.1s linear; }
 .film-call[data-playing] .film-call-head-line { opacity: 1; }
-.film-call-head-line i { position: absolute; right: 0; top: 0; bottom: 0; width: 1.5px; background: #fff; box-shadow: 0 0 12px rgb(255 255 255 / 0.7); }
+.film-call-head-line i { position: absolute; right: 0; top: 0; bottom: 0; width: 1.5px; background: var(--foreground); box-shadow: 0 0 12px color-mix(in srgb, var(--foreground) 70%, transparent); }
 
 @media (prefers-reduced-motion: reduce) {
   .film-call :is(.film-call-spin, .film-call-counter, .film-call-core > span, .film-call-ripples i, .film-call-gyro, .film-call-live) { animation: none !important; }
