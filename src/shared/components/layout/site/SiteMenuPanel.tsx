@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { MessageCircle } from 'lucide-react';
 
 import { salesWhatsAppUrl } from '@/core/config/env';
+import { INTENT_OF, IntentIcon } from '@/shared/components/layout/site/IntentIcon';
 import {
     SITE_INTENTS,
     SITE_ISLAND,
@@ -56,9 +57,7 @@ export function SiteMenuPanel({
                         aria-pressed={it.id === active.id}
                         onClick={() => onPick(it.id)}
                     >
-                        <span className="site-intent-icon" aria-hidden="true">
-                            <i />
-                        </span>
+                        <IntentIcon intent={INTENT_OF[it.id]} size="lg" />
                         <span>
                             <span className="site-intent-name">{it.name}</span>
                             <span className="site-intent-promise">{it.promise}</span>
