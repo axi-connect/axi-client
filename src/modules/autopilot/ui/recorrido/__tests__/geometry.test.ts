@@ -1,32 +1,39 @@
-import { EXIT_W, exitCenters, MAP_W, SOURCE_POINT, splitRoute, stopPoints } from "../geometry";
+import { DEST_POINT, EXIT_W, exitCenters, flowWidth, MAP_W, pointAt, SOURCE_POINT, splitAt, stopPoints } from "../geometry";
 
-/** La geometría del recorrido: el corte en el avión y las salidas que no se pisan. */
+/** La geometría de la ruta: el grosor, el corte en Axi y los desvíos que no se pisan. */
 describe("geometry", () => {
   const points = stopPoints(7);
 
-  it("partir en una parada entera deja lo de atrás sólido hasta ella y el avión encima", () => {
-    const { plane, done, todo } = splitRoute(points, 3);
-    expect(plane.x).toBeCloseTo(points[2]?.x ?? 0);
-    expect(plane.y).toBeCloseTo(points[2]?.y ?? 0);
-    expect(done.startsWith(`M${String(SOURCE_POINT.x)} ${String(SOURCE_POINT.y)}`)).toBe(true);
-    expect(todo).not.toBe("");
+  it("el grosor es 2 + 4·√(n/max): 2 px sin nadie, 6 px con todas; sin dato, nada", () => {
+    expect(flowWidth(0, 25)).toBe(2);
+    expect(flowWidth(25, 25)).toBe(6);
+    expect(flowWidth(null, 25)).toBe(0);
   });
 
-  it("a mitad de tramo el avión cae entre las dos paradas y un trazo empieza donde acaba el otro", () => {
-    const { plane, done, todo } = splitRoute(points, 2.5);
-    expect(plane.x).toBeGreaterThan(points[1]?.x ?? 0);
-    expect(plane.x).toBeLessThan(points[2]?.x ?? 0);
-    const end = done.split(" ").slice(-2).join(" ");
-    expect(todo.startsWith(`M${end}`)).toBe(true);
+  it("partir al 80 % del tercer tramo: dos tramos sólidos enteros, el tercero partido y el resto punteado", () => {
+    const { solid, todo } = splitAt(points, 2.8);
+    expect(solid.slice(0, 2).every((part) => part !== null)).toBe(true);
+    expect(todo.slice(0, 2).every((part) => part === null)).toBe(true);
+    expect(solid[2]).not.toBeNull();
+    expect(todo[2]).not.toBeNull();
+    // Un solo trazo: lo de delante empieza donde acaba lo de atrás.
+    expect(todo[2]?.[0]).toEqual(solid[2]?.[3]);
+    expect(solid.slice(3).every((part) => part === null)).toBe(true);
   });
 
-  it("fuera de rango se acota: antes de la fuente y después de la última", () => {
-    expect(splitRoute(points, -1).plane).toEqual(SOURCE_POINT);
-    expect(splitRoute(points, 99).plane.x).toBeCloseTo(points.at(-1)?.x ?? 0);
+  it("Axi al 80 % del tramo cae antes de su parada, nunca encima del nodo", () => {
+    const axi = pointAt(points, 2.8);
+    expect(axi.x).toBeGreaterThan(points[1]?.x ?? 0);
+    expect(axi.x).toBeLessThan(points[2]?.x ?? 0);
   });
 
-  it("las cajas de salida no se pisan ni se salen del mapa", () => {
-    const centers = exitCenters([300, 310, 700, 820]);
+  it("en cola está en la fuente; terminada, en «Lo que viene»", () => {
+    expect(pointAt(points, 0)).toEqual(SOURCE_POINT);
+    expect(pointAt(points, points.length + 1).x).toBeCloseTo(DEST_POINT.x);
+  });
+
+  it("las cajas de desvío no se pisan ni se salen del mapa", () => {
+    const centers = exitCenters([300, 320, 700, 900]);
     for (let index = 1; index < centers.length; index += 1) {
       expect((centers[index] ?? 0) - (centers[index - 1] ?? 0)).toBeGreaterThanOrEqual(EXIT_W);
     }

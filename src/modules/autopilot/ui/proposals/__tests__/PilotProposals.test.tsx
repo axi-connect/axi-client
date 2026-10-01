@@ -76,7 +76,7 @@ describe("PilotProposals", () => {
     expect(screen.getByText(/proveedor falla/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Aplicar ajuste" }));
     expect(await screen.findByText(/Quedó puesto/)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Ver el piloto" })).toHaveAttribute("href", "/marketing/autopilot/r1");
+    expect(screen.getByRole("link", { name: "Ver la ruta" })).toHaveAttribute("href", "/marketing/autopilot/r1");
   });
 
   it("si el piloto cambió entretanto, lo dice y ofrece verlo", async () => {
@@ -89,7 +89,7 @@ describe("PilotProposals", () => {
     render(<PilotProposals routineNames={names} canManage />);
     fireEvent.click(await screen.findByRole("button", { name: "Aplicar ajuste" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("No se aplicó: un piloto cambió");
-    expect(screen.getByRole("link", { name: "Ver el piloto" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Ver la ruta" })).toBeInTheDocument();
   });
 
   it("«Ahora no»: motivo opcional, lo corto se corrige y al descartar desaparece", async () => {

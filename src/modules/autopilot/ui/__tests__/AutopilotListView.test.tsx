@@ -4,15 +4,24 @@ import { listItemFixture, summaryFixture } from "@/modules/autopilot/domain/__te
 import { AutopilotListView } from "../AutopilotListView";
 
 /**
- * Tus pilotos (U2): «Ahora mismo» solo si hay algo en vuelo o esperando, con el
- * botón al lote o a la ejecución en vivo; cada tarjeta cambia sus tres cifras
- * por el recorrido de la última ejecución.
+ * Tus rutas (R2): «Ahora mismo» con Axi y una frase grande, solo si algo pide
+ * atención; «Lo que trajeron tus rutas» arriba de Axi propone; cada tarjeta con
+ * su línea, su estado en texto (de la última salida), la miniatura y la
+ * cápsula de acciones; y la lista escucha `item_moved`.
  */
 jest.mock("next/navigation", () => ({ usePathname: () => "/marketing/autopilot", useRouter: () => ({ push: jest.fn() }) }));
-jest.mock("@/core/realtime/use-socket", () => ({ useSocket: () => ({ socket: null }), useSocketEvent: () => undefined }));
+const listeners: string[] = [];
+jest.mock("@/core/realtime/use-socket", () => ({
+  useSocket: () => ({ socket: null }),
+  useSocketEvent: (_socket: unknown, name: string) => {
+    listeners.push(name);
+  },
+}));
 jest.mock("@/shared/auth/auth.hooks", () => ({ useAuth: () => ({ hasPermission: () => true }) }));
-jest.mock("@/core/providers/alert-provider", () => ({ useAlert: () => ({ showAlert: jest.fn() }) }));
-jest.mock("../proposals/PilotProposals", () => ({ PilotProposals: () => null }));
+const alert = { showAlert: jest.fn() };
+jest.mock("@/core/providers/alert-provider", () => ({ useAlert: () => alert }));
+jest.mock("../proposals/PilotProposals", () => ({ PilotProposals: () => <section aria-label="Axi propone" /> }));
+jest.mock("../summary/PilotsSummaryCard", () => ({ PilotsSummaryCard: () => <section aria-label="Lo que trajeron tus rutas" /> }));
 jest.mock("@/modules/autopilot/infrastructure/autopilot-service.adapter", () => ({
   listRoutines: jest.fn(),
   pauseRoutine: jest.fn(),
@@ -24,10 +33,13 @@ jest.mock("@/modules/autopilot/infrastructure/autopilot-service.adapter", () => 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const api = require("@/modules/autopilot/infrastructure/autopilot-service.adapter") as Record<string, jest.Mock>;
 
-afterEach(() => jest.clearAllMocks());
+afterEach(() => {
+  jest.clearAllMocks();
+  listeners.length = 0;
+});
 
-describe("AutopilotListView · el recorrido", () => {
-  it("un lote que espera: «Ahora mismo» lo dice y lleva al lote; la tarjeta enseña su recorrido", async () => {
+describe("AutopilotListView · Tus rutas", () => {
+  it("un lote que espera: «Ahora mismo» lo dice en grande y lleva al lote; la tarjeta enseña su ruta", async () => {
     api.listRoutines.mockResolvedValue({
       items: [
         listItemFixture({
@@ -38,38 +50,47 @@ describe("AutopilotListView · el recorrido", () => {
     render(<AutopilotListView />);
 
     const ahora = await screen.findByRole("region", { name: "Ahora mismo" });
-    expect(within(ahora).getByText(/lote espera tu aprobación · 7 cuentas/)).toBeInTheDocument();
-    expect(within(ahora).getByRole("link", { name: "Revisar el lote" })).toHaveAttribute("href", "/marketing/autopilot/runs/run-9");
+    expect(within(ahora).getByText("7 cuentas esperan tu aprobación")).toBeInTheDocument();
+    expect(within(ahora).getByRole("link", { name: /Revisar el lote/ })).toHaveAttribute("href", "/marketing/autopilot/runs/run-9");
 
-    const route = screen.getByRole("list", { name: "Recorrido de la última ejecución" });
-    expect(within(route).getByText("Buscar: 25 cuentas")).toBeInTheDocument();
-    expect(within(route).getByText("Tu aprobación: 7 cuentas")).toBeInTheDocument();
-    expect(within(route).getByText("Inscribir en la secuencia: aún no llega")).toBeInTheDocument();
-    // Las tres cifras sueltas («encontró · calificó · contactó») ya no van en la tarjeta: van en sus paradas.
-    expect(screen.queryByText("Última ejecución")).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Axi sale a buscar clientes por ti" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Nueva ruta/ })).toHaveAttribute("href", "/marketing/autopilot/new");
+    expect(screen.getByRole("img", { name: /^Ruta de la última salida: Buscar 25/ })).toBeInTheDocument();
+    expect(screen.getByText("Google Maps · Restaurantes · Medellín")).toBeInTheDocument();
+    expect(screen.getAllByText("Espera tu aprobación").length).toBeGreaterThan(0);
+    expect(within(screen.getByRole("group", { name: "Acciones de la ruta" })).getByRole("button", { name: /Salir ahora/ })).toBeDisabled();
   });
 
-  it("en vuelo: «Ahora mismo» lleva a la ejecución en vivo", async () => {
-    api.listRoutines.mockResolvedValue({
-      items: [listItemFixture({ last_run: summaryFixture({ id: "run-3", status: "running", step: "await_enrich", counters: { found: 25, qualified: 4 } }) })],
-    });
+  it("«Lo que trajeron tus rutas» va arriba de Axi propone, y la lista escucha item_moved", async () => {
+    api.listRoutines.mockResolvedValue({ items: [listItemFixture({ last_run: summaryFixture({ status: "done", step: "contact", counters: { found: 25, qualified: 9, contacted: 6 } }) })] });
     render(<AutopilotListView />);
-    const ahora = await screen.findByRole("region", { name: "Ahora mismo" });
-    expect(within(ahora).getByText(/en vuelo · calificar y revelar/)).toBeInTheDocument();
-    expect(within(ahora).getByRole("link", { name: "Ver en vivo" })).toHaveAttribute("href", "/marketing/autopilot/runs/run-3");
+    const summary = await screen.findByRole("region", { name: "Lo que trajeron tus rutas" });
+    const proposals = screen.getByRole("region", { name: "Axi propone" });
+    expect(summary.compareDocumentPosition(proposals) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(listeners).toContain("autopilot.item_moved");
   });
 
-  it("nada en vuelo ni esperando: no hay «Ahora mismo»", async () => {
+  it("la píldora sale de la última salida: «Falló», no «Programada»", async () => {
     api.listRoutines.mockResolvedValue({
-      items: [
-        listItemFixture({ last_run: summaryFixture({ status: "done", step: "contact", counters: { found: 25, qualified: 9, contacted: 6 } }) }),
-        listItemFixture({ id: "r-2", name: "Hoteles", last_run: null }),
-      ],
+      items: [listItemFixture({ last_run: summaryFixture({ status: "failed", step: "await_search", error: "search_timeout", counters: { found: 0 } }) })],
     });
     render(<AutopilotListView />);
-    expect(await screen.findByText("Hoteles")).toBeInTheDocument();
+    expect(await screen.findByText(/^Falló/)).toBeInTheDocument();
+    expect(screen.queryByText("Programada")).not.toBeInTheDocument();
     expect(screen.queryByRole("region", { name: "Ahora mismo" })).not.toBeInTheDocument();
-    // Un piloto sin ejecuciones no pinta recorrido.
-    expect(screen.getAllByRole("list", { name: "Recorrido de la última ejecución" })).toHaveLength(1);
+  });
+
+  it("pausada: «Pausada» y Reanudar en la cápsula", async () => {
+    api.listRoutines.mockResolvedValue({ items: [listItemFixture({ status: "paused", last_run: null })] });
+    render(<AutopilotListView />);
+    expect(await screen.findByText("Pausada")).toBeInTheDocument();
+    expect(within(screen.getByRole("group", { name: "Acciones de la ruta" })).getByRole("button", { name: /Reanudar/ })).toBeInTheDocument();
+  });
+
+  it("sin rutas: «Tu primera ruta» y «Crear una ruta»", async () => {
+    api.listRoutines.mockResolvedValue({ items: [] });
+    render(<AutopilotListView />);
+    expect(await screen.findByText("Tu primera ruta")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Crear una ruta/ })).toHaveAttribute("href", "/marketing/autopilot/new");
   });
 });

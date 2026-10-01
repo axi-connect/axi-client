@@ -2,20 +2,19 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Bot, ChevronRight, Pencil } from "lucide-react";
+import { Bot, ChevronRight } from "lucide-react";
 
 import { errorMessage } from "@/core/lib/error-messages";
-import { cn } from "@/core/lib/utils";
-import { formatShortDateTime } from "@/core/lib/format";
 import { useSocket, useSocketEvent } from "@/core/realtime/use-socket";
 import { useAuth } from "@/shared/auth/auth.hooks";
-import { BentoTile, StatePill } from "@/shared/components/features/bento";
+import { BentoTile } from "@/shared/components/features/bento";
 import { EmptyState } from "@/shared/components/features/empty-state";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { MarketingHeader } from "@/modules/marketing/ui/components/MarketingHeader";
 
 import {
+  ROUTINE_MODE_META,
   RUN_STATUS_META,
   scheduleLabel,
   sourceLabel,
@@ -23,11 +22,34 @@ import {
   type Routine,
   type RunSummary,
 } from "../domain/autopilot";
+import { failureLine } from "../domain/copy";
 import { getRoutine, isAutopilotUnavailable, listRuns } from "../infrastructure/autopilot-service.adapter";
+import { ActionCapsule } from "./recorrido/ActionCapsule";
+import { FunnelRibbon } from "./recorrido/FunnelRibbon";
+import { StatusDot } from "./recorrido/StatusDot";
+import { whenLabel } from "./recorrido/when";
+
+const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
 /**
- * Un piloto: qué busca, cuándo y cuánto, y sus ejecuciones una a una (la más
- * reciente primero), cada una con su estado, lo que trajo y lo que gastó.
+ * Lo gastado este mes, si las salidas cargadas cubren el mes entero: con más
+ * páginas y la última cargada aún dentro del mes, la suma se quedaría corta y
+ * no se dice.
+ */
+function spentThisMonth(runs: readonly RunSummary[], hasMore: boolean, timeZone: string, now = new Date()): number | null {
+  const month = (iso: string) => new Date(iso).toLocaleDateString("en-CA", { timeZone }).slice(0, 7);
+  const current = month(now.toISOString());
+  const inMonth = runs.filter((run) => month(run.created_at) === current);
+  const last = runs.at(-1);
+  if (hasMore && last !== undefined && month(last.created_at) === current) return null;
+  return inMonth.reduce((sum, run) => sum + run.credits_spent, 0);
+}
+
+/**
+ * Una ruta (Rutas de captación, R4): la cápsula de acciones que aquí faltaba
+ * (Pausar ↔ Reanudar · Salir ahora · Editar), qué busca, cómo escribe y cuándo
+ * sale, y sus salidas una a una, cada una con su cinta de embudo para
+ * compararlas sin abrirlas.
  */
 export function RoutineDetailView({ routineId }: { routineId: string }) {
   const { hasPermission } = useAuth();
@@ -71,14 +93,14 @@ export function RoutineDetailView({ routineId }: { routineId: string }) {
   }
 
   if (unavailable) {
-    return <EmptyState icon={Bot} title="El piloto llega con la próxima versión" description="Tu servidor todavía no trae el motor del piloto automático." />;
+    return <EmptyState icon={Bot} title="Las rutas llegan con la próxima versión" description="Tu servidor todavía no trae el motor de las rutas de captación." />;
   }
   if (failure !== null) {
-    return <EmptyState icon={Bot} title="No pudimos leer el piloto" description={failure} action={<Button onClick={load}>Reintentar</Button>} />;
+    return <EmptyState icon={Bot} title="No pudimos leer la ruta" description={failure} action={<Button onClick={load}>Reintentar</Button>} />;
   }
   if (routine === null || runs === null) {
     return (
-      <div className="flex flex-col gap-4" role="status" aria-label="Cargando el piloto">
+      <div className="flex flex-col gap-4" role="status" aria-label="Cargando la ruta">
         <Skeleton className="h-24 w-full rounded-3xl" />
         <Skeleton className="h-64 w-full rounded-3xl" />
       </div>
@@ -86,54 +108,50 @@ export function RoutineDetailView({ routineId }: { routineId: string }) {
   }
 
   const source = sourceLabel(routine.source.kind);
+  const timeZone = routine.schedule.timezone;
+  const mode = ROUTINE_MODE_META[routine.mode];
   const widest = Math.max(1, ...runs.map((run) => run.counters.found ?? 0));
+  const spent = spentThisMonth(runs, cursor !== null, timeZone);
+  const lastRun = runs[0]?.status ?? null;
+
   return (
     // `@container` aquí: la rejilla de las tres fichas consulta a su padre (una consulta no se mide a sí misma).
-    <div className="@container flex min-w-0 flex-col gap-6">
+    <div className="@container flex min-w-0 flex-col gap-5">
       <MarketingHeader
-        kicker="Marketing · Automatización · piloto"
+        kicker="Marketing · Rutas"
         title={routine.name}
-        description={`${scheduleLabel(routine.schedule)} · ${String(routine.schedule.leads_per_run)} cuentas y hasta ${String(routine.budget.per_run)} créditos por ejecución`}
-        actions={
-          canManage ? (
-            <Button asChild variant="outline" className="rounded-full">
-              <Link href={`/marketing/autopilot/${routine.id}/edit`}>
-                <Pencil aria-hidden className="size-4" />
-                Editar piloto
-              </Link>
-            </Button>
-          ) : undefined
-        }
+        description={`${scheduleLabel(routine.schedule)} · ${String(routine.schedule.leads_per_run)} cuentas y hasta ${String(routine.budget.per_run)} créditos por salida`}
+        actions={canManage ? <ActionCapsule routine={routine} lastRun={lastRun} onChanged={load} /> : undefined}
       />
 
-      <div className="grid gap-4 @[44rem]:grid-cols-3">
+      <div className="grid gap-3.5 @[44rem]:grid-cols-3">
         <BentoTile label="Busca">
-          <p className="text-sm font-medium">{source.label}</p>
-          <p className="text-muted-foreground text-xs text-pretty">{sourceSummary(routine.source.params)}</p>
+          <p className="text-[15px] font-medium">{source.label}</p>
+          <p className="text-muted-foreground text-[12.5px] text-pretty">{sourceSummary(routine.source.params)}</p>
         </BentoTile>
-        <BentoTile label="Modo">
-          <p className="text-sm font-medium">{routine.mode === "assisted" ? "Asistido" : "Autónomo"}</p>
-          <p className="text-muted-foreground text-xs text-pretty">
-            {routine.mode === "assisted" ? "Te pide aprobar el lote antes de contactar." : "Contacta sin esperar tu aprobación."}
-          </p>
+        <BentoTile label="Antes de escribirles">
+          <p className="text-[15px] font-medium">{mode.label}</p>
+          <p className="text-muted-foreground text-[12.5px] text-pretty">{mode.hint}</p>
         </BentoTile>
-        <BentoTile label="Siguiente ejecución">
-          <p className="text-sm font-medium">
+        <BentoTile label="Próxima salida">
+          <p className="text-[15px] font-medium">
             {routine.status === "paused"
-              ? "Pausado · al reanudar"
+              ? "Pausada · al reanudar"
               : routine.next_run_at === null
                 ? "Sin programar"
-                : formatShortDateTime(routine.next_run_at)}
+                : capitalize(whenLabel(routine.next_run_at, timeZone))}
           </p>
-          <p className="text-muted-foreground text-xs">Tope mensual: {String(routine.budget.per_month)} créditos</p>
+          <p className="text-muted-foreground text-[12.5px]">
+            Tope mensual: {String(routine.budget.per_month)} créditos{spent === null ? "" : ` · van ${String(spent)}`}
+          </p>
         </BentoTile>
       </div>
 
-      <BentoTile label="Ejecuciones">
+      <BentoTile label="Salidas">
         {runs.length === 0 ? (
-          <p className="text-muted-foreground text-sm">Todavía no se ha ejecutado.</p>
+          <p className="text-muted-foreground text-sm">Todavía no ha salido.</p>
         ) : (
-          <ul className="divide-border divide-y">
+          <ul className="divide-border @container/runs flex flex-col divide-y">
             {runs.map((run) => {
               const meta = RUN_STATUS_META[run.status];
               const found = run.counters.found ?? 0;
@@ -143,26 +161,28 @@ export function RoutineDetailView({ routineId }: { routineId: string }) {
                 <li key={run.id}>
                   <Link
                     href={`/marketing/autopilot/runs/${run.id}`}
-                    className="hover:bg-muted/40 -mx-2 grid min-h-12 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 rounded-xl px-2 py-2 text-sm"
+                    className="hover:bg-muted/40 focus-visible:outline-ring -mx-2 grid min-h-12 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3.5 gap-y-1.5 rounded-xl px-2 py-3 text-[13px] focus-visible:outline-2 @[46rem]/runs:grid-cols-[9.5rem_10.5rem_minmax(0,1fr)_5.75rem_1rem]"
                   >
-                    {/* Fecha y estado arriba, la cifra debajo: en el móvil nada se sale ni se corta. */}
-                    <span className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
-                      <span className="whitespace-nowrap tabular-nums">{formatShortDateTime(run.created_at)}</span>
-                      <StatePill tone={meta.tone}>{meta.label}</StatePill>
+                    <span className="whitespace-nowrap tabular-nums">{capitalize(whenLabel(run.created_at, timeZone))}</span>
+                    <span className="justify-self-end @[46rem]/runs:justify-self-start">
+                      <StatusDot tone={meta.tone}>{meta.label}</StatusDot>
                     </span>
-                    <ChevronRight aria-hidden className="text-muted-foreground row-span-2 size-4 shrink-0" />
-                    <span className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
-                      {/* Las barras, a escala de la ejecución con más encontradas de la lista: se comparan sin abrirlas. */}
-                      <span aria-hidden className="flex w-full max-w-56 shrink-0 items-center gap-1 sm:w-56">
-                        <RunBar kind="found" value={found} of={widest} className="bg-muted-foreground/35" />
-                        <RunBar kind="qualified" value={qualified} of={widest} className="bg-muted-foreground/70" />
-                        <RunBar kind="contacted" value={contacted} of={widest} className="bg-foreground" />
+                    <span className="col-span-2 grid min-w-0 gap-1 @[46rem]/runs:col-span-1">
+                      <span className="text-muted-foreground text-[12.5px] text-pretty">
+                        {String(found)} encontradas · {String(qualified)} calificadas · {String(contacted)} contactadas
                       </span>
-                      <span className="text-muted-foreground text-xs text-pretty">
-                        {String(found)} encontradas · {String(qualified)} calificadas · {String(contacted)} contactadas ·{" "}
-                        {String(run.credits_spent)} créditos
-                      </span>
+                      {found > 0 ? (
+                        <FunnelRibbon found={found} qualified={qualified} contacted={contacted} widest={widest} />
+                      ) : (
+                        <span className="text-muted-foreground text-xs text-pretty">
+                          {run.status === "failed" ? failureLine(run, routine) : "No trajo cuentas en esta salida."}
+                        </span>
+                      )}
                     </span>
+                    <span className="text-muted-foreground whitespace-nowrap @[46rem]/runs:text-right">
+                      {String(run.credits_spent)} {run.credits_spent === 1 ? "crédito" : "créditos"}
+                    </span>
+                    <ChevronRight aria-hidden className="text-muted-foreground size-4 justify-self-end" />
                   </Link>
                 </li>
               );
@@ -171,23 +191,10 @@ export function RoutineDetailView({ routineId }: { routineId: string }) {
         )}
         {cursor !== null && (
           <Button variant="outline" size="sm" className="self-start rounded-full" disabled={loadingMore} onClick={() => void more()}>
-            Ver más ejecuciones
+            Ver más salidas
           </Button>
         )}
       </BentoTile>
     </div>
-  );
-}
-
-/** Una barra del embudo de una ejecución: su largo es su parte de la más ancha; cero se ve como una marca. */
-function RunBar({ kind, value, of, className }: { kind: string; value: number; of: number; className: string }) {
-  const share = Math.min(1, value / of);
-  return (
-    <span
-      data-bar={kind}
-      className={cn("block h-1.5 shrink-0 rounded-full", className)}
-      // Tres barras a lo sumo del 32 % cada una: con los dos huecos caben en la franja.
-      style={{ width: value === 0 ? "2px" : `${String(share * 32)}%` }}
-    />
   );
 }

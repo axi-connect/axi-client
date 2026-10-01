@@ -24,11 +24,11 @@ type State =
   | { status: "loading"; data: PilotsSummaryDTO | null }
   | { status: "ready"; data: PilotsSummaryDTO }
   | { status: "error"; data: PilotsSummaryDTO | null }
-  /** El servidor aún no trae el piloto (404): la ficha no se muestra. */
+  /** El servidor aún no trae las rutas (404): la ficha no se muestra. */
   | { status: "unavailable"; data: null };
 
 /**
- * «Lo que trajeron los pilotos» (P6b, mockup aprobado): cuántas demos trajo el
+ * «Lo que trajeron tus rutas» (P6b, mockup aprobado): cuántas demos trajo el
  * piloto este mes, el embudo que las produjo, cuánto costaron en créditos y qué
  * fuente las trae más baratas. Autosuficiente, como `GoalProgressBlock`: pide
  * lo suyo y sin permiso o capacidad de captación no pinta nada.
@@ -56,13 +56,13 @@ export function PilotsSummaryCard({ className }: { className?: string }) {
   if (!enabled || state.status === "unavailable") return null;
 
   const month = state.data?.month;
-  const label = `Lo que trajeron los pilotos${month === undefined ? "" : ` · ${monthName(month)}`}`;
+  const label = `Lo que trajeron tus rutas${month === undefined ? "" : ` · ${monthName(month)}`}`;
 
   if (state.status === "error" && state.data === null) {
     return (
       <BentoTile label={label} className={className}>
         <div className="flex flex-col items-start gap-2">
-          <p className="text-sm text-pretty">No pudimos cargar lo que trajeron los pilotos.</p>
+          <p className="text-sm text-pretty">No pudimos cargar lo que trajeron tus rutas.</p>
           <Button size="sm" variant="outline" className="rounded-full" onClick={() => void load()}>
             Reintentar
           </Button>
@@ -74,7 +74,7 @@ export function PilotsSummaryCard({ className }: { className?: string }) {
   if (state.data === null) {
     return (
       <BentoTile label={label} className={className}>
-        <div role="status" aria-label="Cargando lo que trajeron los pilotos" className="flex flex-1 flex-col gap-3">
+        <div role="status" aria-label="Cargando lo que trajeron tus rutas" className="flex flex-1 flex-col gap-3">
           <Skeleton className="h-10 w-32 rounded-xl" />
           {[90, 70, 55, 35, 20].map((width) => (
             <Skeleton key={width} className="h-3 rounded-md" style={{ width: `${String(width)}%` }} />
@@ -90,13 +90,13 @@ export function PilotsSummaryCard({ className }: { className?: string }) {
     return (
       <BentoTile label={label} className={className}>
         <div className="flex flex-col items-start gap-1.5">
-          <p className="text-sm font-semibold">Aún no tienes pilotos</p>
+          <p className="text-sm font-semibold">Aún no tienes rutas</p>
           <p className="text-muted-foreground text-xs text-pretty">
-            Un piloto busca cuentas que encajan con tu cliente ideal, les escribe a la hora que elijas y te muestra aquí
+            Una ruta busca cuentas que encajan con tu cliente ideal, les escribe a la hora que elijas y te muestra aquí
             lo que trajo.
           </p>
           <Button asChild size="sm" variant="outline" className="mt-1 rounded-full">
-            <Link href="/marketing/autopilot/new">Crear un piloto</Link>
+            <Link href="/marketing/autopilot/new">Crear una ruta</Link>
           </Button>
         </div>
       </BentoTile>
@@ -110,7 +110,7 @@ export function PilotsSummaryCard({ className }: { className?: string }) {
   return (
     <BentoTile
       label={label}
-      aside={<BentoLink href="/marketing/autopilot">Ver pilotos</BentoLink>}
+      aside={<BentoLink href="/marketing/autopilot">Ver rutas</BentoLink>}
       busy={state.status === "loading"}
       className={className}
     >

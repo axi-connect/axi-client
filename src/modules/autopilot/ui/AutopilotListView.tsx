@@ -2,62 +2,45 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Bot, Pause, Play, Plus, Rocket, Zap } from "lucide-react";
+import { ArrowRight, Bot, Plus, Route } from "lucide-react";
 
 import { errorMessage } from "@/core/lib/error-messages";
-import { formatShortDateTime } from "@/core/lib/format";
-import { useAlert } from "@/core/providers/alert-provider";
 import { useSocket, useSocketEvent } from "@/core/realtime/use-socket";
 import { useAuth } from "@/shared/auth/auth.hooks";
-import { BentoTile, StatePill } from "@/shared/components/features/bento";
 import { EmptyState } from "@/shared/components/features/empty-state";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { MarketingHeader } from "@/modules/marketing/ui/components/MarketingHeader";
 
-import {
-  RUN_STATUS_META,
-  RUN_STEPS,
-  scheduleLabel,
-  sourceLabel,
-  sourceSummary,
-  stepsDone,
-  type RoutineListItem,
-} from "../domain/autopilot";
-import { ahoraMismo } from "../domain/copy";
+import { ROUTINE_MODE_META, scheduleLabel, sourceLabel, sourceSummary, type RoutineListItem } from "../domain/autopilot";
+import { ahoraMismo, routineStatusLine } from "../domain/copy";
 import { runTrajectory } from "../domain/trajectory";
-import {
-  isAutopilotUnavailable,
-  listRoutines,
-  pauseRoutine,
-  resumeRoutine,
-  runRoutineNow,
-} from "../infrastructure/autopilot-service.adapter";
+import { isAutopilotUnavailable, listRoutines } from "../infrastructure/autopilot-service.adapter";
 import { PilotProposals } from "./proposals/PilotProposals";
+import { ActionCapsule } from "./recorrido/ActionCapsule";
 import { AhoraMismo } from "./recorrido/AhoraMismo";
 import { MiniTrajectory } from "./recorrido/MiniTrajectory";
+import { StatusDot } from "./recorrido/StatusDot";
+import { whenLabel } from "./recorrido/when";
+import { PilotsSummaryCard } from "./summary/PilotsSummaryCard";
 
 /**
- * Marketing › Automatización (tablero 1 del lienzo P0): los pilotos del
- * negocio, cada uno en su tarjeta con tres zonas —qué busca, cuándo y cuánto,
- * y lo que trajo— y lo que está pasando AHORA si hay una ejecución en curso.
+ * Marketing › Rutas (Rutas de captación, R2): «Ahora mismo» si algo pide tu
+ * atención, lo que trajeron tus rutas este mes, «Axi propone» y cada ruta en
+ * su tarjeta —una línea con fuente, horario y modo, su ruta en miniatura y la
+ * cápsula de acciones—.
  *
- * Se refresca por los eventos `autopilot.*` de la sala de la empresa; la
- * lista es la verdad y se relee al empezar o terminar una ejecución.
+ * Se refresca por los eventos `autopilot.*` de la sala de la empresa, también
+ * `item_moved` (si no, «paso X de N» y la miniatura se quedaban congelados).
  */
 export function AutopilotListView() {
   const { hasPermission } = useAuth();
   const canManage = hasPermission("leads:manage");
-  const { showAlert } = useAlert();
   const [routines, setRoutines] = useState<RoutineListItem[] | null>(null);
   const [unavailable, setUnavailable] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState<string | null>(null);
   const ahora = useMemo(() => (routines === null ? null : ahoraMismo(routines)), [routines]);
-  const routineNames = useMemo(
-    () => new Map((routines ?? []).map((routine) => [routine.id, routine.name])),
-    [routines],
-  );
+  const routineNames = useMemo(() => new Map((routines ?? []).map((routine) => [routine.id, routine.name])), [routines]);
 
   const load = useCallback(() => {
     listRoutines()
@@ -74,39 +57,26 @@ export function AutopilotListView() {
 
   const { socket } = useSocket("inbox");
   useSocketEvent(socket, "autopilot.run_started", () => load());
+  useSocketEvent(socket, "autopilot.item_moved", () => load());
   useSocketEvent(socket, "autopilot.run_finished", () => load());
   useSocketEvent(socket, "autopilot.batch_ready", () => load());
 
-  async function act(routine: RoutineListItem, action: "pause" | "resume" | "run") {
-    setBusy(routine.id);
-    try {
-      if (action === "pause") await pauseRoutine(routine.id);
-      else if (action === "resume") await resumeRoutine(routine.id);
-      else await runRoutineNow(routine.id);
-      showAlert({
-        tone: "success",
-        title:
-          action === "pause" ? "Piloto pausado" : action === "resume" ? "Piloto reanudado" : "Ejecución en camino",
-      });
-      load();
-    } catch (caught) {
-      showAlert({ tone: "error", title: "No se pudo", description: errorMessage(caught) });
-    } finally {
-      setBusy(null);
-    }
-  }
+  const inMotion = (routines ?? []).filter((routine) => {
+    const status = routine.last_run?.status;
+    return status === "running" || status === "queued" || status === "awaiting_approval";
+  }).length;
 
   return (
-    <div className="flex min-w-0 flex-col gap-6">
+    <div className="flex min-w-0 flex-col gap-5">
       <MarketingHeader
-        title="Axi busca, califica y contacta por ti"
-        description="Programa un piloto: a qué hora se ejecuta, cuántas cuentas trae y hasta cuántos créditos gasta. Cada ejecución queda en vivo, paso por paso, con lo que gastó y lo que trajo."
+        title="Axi sale a buscar clientes por ti"
+        description="Cada ruta sale a su hora, trae negocios que encajan contigo y les escribe a quien decide. Tú pones el tope."
         actions={
           canManage && !unavailable ? (
             <Button asChild className="rounded-full">
               <Link href="/marketing/autopilot/new">
-                <Plus aria-hidden className="size-4" />
-                Nuevo piloto
+                <Route aria-hidden className="size-4" />
+                Nueva ruta
               </Link>
             </Button>
           ) : undefined
@@ -116,49 +86,52 @@ export function AutopilotListView() {
       {unavailable ? (
         <EmptyState
           icon={Bot}
-          title="El piloto llega con la próxima versión"
-          description="Tu servidor todavía no trae el motor del piloto automático. En cuanto se actualice, aquí programas tus pilotos."
+          title="Las rutas llegan con la próxima versión"
+          description="Tu servidor todavía no trae el motor de las rutas de captación. En cuanto se actualice, aquí programas tus rutas."
         />
       ) : error !== null ? (
-        <EmptyState
-          icon={Bot}
-          title="No pudimos leer tus pilotos"
-          description={error}
-          action={<Button onClick={load}>Reintentar</Button>}
-        />
+        <EmptyState icon={Bot} title="No pudimos leer tus rutas" description={error} action={<Button onClick={load}>Reintentar</Button>} />
       ) : routines === null ? (
-        <div className="grid gap-4" role="status" aria-label="Cargando pilotos">
+        <div className="grid gap-4" role="status" aria-label="Cargando rutas">
           <Skeleton className="h-56 w-full rounded-3xl" />
           <Skeleton className="h-56 w-full rounded-3xl" />
         </div>
       ) : routines.length === 0 ? (
         <EmptyState
-          icon={Rocket}
-          title="Tu primer piloto"
-          description="Elige dónde buscar, a quién dejar pasar, cómo contactar y hasta cuánto gastar. Axi lo hace solo, en tu horario, y te avisa cuando alguien responde."
+          icon={Route}
+          title="Tu primera ruta"
+          description="Elige dónde buscar, a quién dejar pasar, cómo escribirles y hasta cuánto gastar. Axi sale solo, en tu horario, y te avisa cuando alguien responde."
           action={
             canManage ? (
               <Button asChild>
-                <Link href="/marketing/autopilot/new">Crear un piloto</Link>
+                <Link href="/marketing/autopilot/new">
+                  <Plus aria-hidden className="size-4" />
+                  Crear una ruta
+                </Link>
               </Button>
             ) : undefined
           }
         />
       ) : (
         <>
-          {/* «Ahora mismo»: solo si hay algo en vuelo o esperando. */}
+          {/* «Ahora mismo»: solo si hay algo en ruta o esperando. */}
           {ahora !== null && <AhoraMismo ahora={ahora} />}
+          {/* «Lo que trajeron tus rutas»: la misma ficha del Panel; se oculta sola sin permiso o sin datos. */}
+          <PilotsSummaryCard />
           {/* P6b: «Axi propone», solo si hay algo que decidir */}
           <PilotProposals routineNames={routineNames} canManage={canManage} />
-          <section className="flex flex-col gap-4" aria-label="Tus pilotos">
+          <section className="flex flex-col gap-3.5" aria-labelledby="routes-title">
+            <div className="mt-1 flex items-baseline justify-between gap-3">
+              <h2 id="routes-title" className="text-[17px] font-semibold tracking-[-0.01em]">
+                Tus rutas
+              </h2>
+              <span className="text-muted-foreground text-[13px]">
+                {routines.length === 1 ? "1 ruta" : `${String(routines.length)} rutas`}
+                {inMotion > 0 && ` · ${String(inMotion)} en marcha`}
+              </span>
+            </div>
             {routines.map((routine) => (
-              <RoutineCard
-                key={routine.id}
-                routine={routine}
-                canManage={canManage}
-                busy={busy === routine.id}
-                onAct={(action) => void act(routine, action)}
-              />
+              <RoutineCard key={routine.id} routine={routine} canManage={canManage} onChanged={load} />
             ))}
           </section>
         </>
@@ -167,127 +140,63 @@ export function AutopilotListView() {
   );
 }
 
-function RoutineCard({
-  routine,
-  canManage,
-  busy,
-  onAct,
-}: {
-  routine: RoutineListItem;
-  canManage: boolean;
-  busy: boolean;
-  onAct: (action: "pause" | "resume" | "run") => void;
-}) {
+function RoutineCard({ routine, canManage, onChanged }: { routine: RoutineListItem; canManage: boolean; onChanged: () => void }) {
   const run = routine.last_run;
   const live = run !== null && (run.status === "running" || run.status === "queued");
   const waiting = run !== null && run.status === "awaiting_approval";
   const source = sourceLabel(routine.source.kind);
-  const pill =
-    routine.status === "paused" ? (
-      <StatePill tone="neutral">Pausado</StatePill>
-    ) : live ? (
-      <StatePill tone="info">
-        En ejecución · paso {String(Math.min(stepsDone(run.step) + 1, RUN_STEPS.length))} de {String(RUN_STEPS.length)}
-      </StatePill>
-    ) : waiting ? (
-      <StatePill tone="warning">Espera tu aprobación</StatePill>
-    ) : (
-      <StatePill tone="success">Programado</StatePill>
-    );
+  const summary = sourceSummary(routine.source.params);
+  const status = routineStatusLine(routine);
+  const trajectory = run === null ? null : runTrajectory(run, routine);
+  const next =
+    routine.status === "paused" ? "al reanudar" : routine.next_run_at === null ? "sin programar" : whenLabel(routine.next_run_at, routine.schedule.timezone);
+  const meta = [`${source.label} · ${summary}`, scheduleLabel(routine.schedule), ROUTINE_MODE_META[routine.mode].label];
 
   return (
-    <BentoTile label={routine.mode === "assisted" ? "Piloto asistido" : "Piloto autónomo"} aside={pill} className="@container gap-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex min-w-0 flex-col gap-1">
-          <Link
-            href={`/marketing/autopilot/${routine.id}`}
-            title={routine.name}
-            className="font-heading block min-h-6 truncate text-xl font-bold hover:underline"
-          >
-            {routine.name}
-          </Link>
-          <p className="text-muted-foreground text-sm text-pretty">
-            {run === null
-              ? "Todavía no se ha ejecutado."
-              : `${RUN_STATUS_META[run.status].label} · ${formatShortDateTime(run.created_at)} · ${String(run.counters.contacted ?? 0)} contactados · ${String(run.credits_spent)} créditos`}
+    <article className="bg-card border-border flex min-w-0 flex-col gap-3 rounded-3xl border p-5 sm:px-[22px]">
+      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+        <div className="min-w-0">
+          <h3 className="font-heading text-xl leading-tight font-bold tracking-[-0.02em]">
+            <Link href={`/marketing/autopilot/${routine.id}`} className="break-words hover:underline">
+              {routine.name}
+            </Link>
+          </h3>
+          <p className="text-muted-foreground mt-1.5 flex flex-wrap gap-x-2 gap-y-0.5 text-[13px]">
+            {meta.map((part, index) => (
+              <span key={part} className="flex gap-2">
+                {index > 0 && <span aria-hidden>·</span>}
+                {part}
+              </span>
+            ))}
+          </p>
+          <p className="text-muted-foreground mt-0.5 text-xs text-pretty">
+            {String(routine.schedule.leads_per_run)} cuentas y hasta {String(routine.budget.per_run)} créditos por salida · próxima salida: {next}
           </p>
         </div>
+        <StatusDot tone={status.tone} live={status.live}>
+          {status.label}
+        </StatusDot>
+      </div>
+
+      {trajectory !== null && (
+        <MiniTrajectory
+          trajectory={trajectory}
+          running={run?.status === "running"}
+          maxFlow={Math.max(routine.schedule.leads_per_run, ...trajectory.stops.map((stop) => stop.count ?? 0))}
+        />
+      )}
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        {canManage ? <ActionCapsule routine={routine} lastRun={run?.status ?? null} withEdit={false} onChanged={onChanged} /> : <span />}
         {run !== null && (
-          <Button asChild variant={live || waiting ? "default" : "outline"} size="sm" className="rounded-full">
+          <Button asChild variant={waiting ? "default" : "outline"} className="rounded-full">
             <Link href={`/marketing/autopilot/runs/${run.id}`}>
-              {live ? "Ver en vivo" : waiting ? "Revisar el lote" : "Ver la ejecución"}
+              {waiting ? "Revisar el lote" : live ? "Ver en vivo" : "Ver la salida"}
+              <ArrowRight aria-hidden className="size-3.5" />
             </Link>
           </Button>
         )}
       </div>
-
-      {/* La última ejecución, contada como recorrido: las cifras van en sus paradas. */}
-      {run !== null && <MiniTrajectory trajectory={runTrajectory(run, routine)} flying={run.status === "running"} />}
-
-      <div className="grid gap-3 @[44rem]:grid-cols-3">
-        <div className="bg-muted/40 flex min-w-0 flex-col gap-1.5 rounded-2xl p-4">
-          <span className="text-muted-foreground text-xs font-semibold">Busca</span>
-          <span className="flex min-w-0 items-center gap-2 text-sm font-medium">
-            <span aria-hidden className="bg-card grid size-6 shrink-0 place-items-center rounded-full text-xs font-bold">
-              {source.initial}
-            </span>
-            <span className="truncate">{source.label}</span>
-          </span>
-          <span className="text-muted-foreground text-xs text-pretty">{sourceSummary(routine.source.params)}</span>
-        </div>
-        <div className="bg-muted/40 flex min-w-0 flex-col gap-1.5 rounded-2xl p-4">
-          <span className="text-muted-foreground text-xs font-semibold">Cuándo y cuánto</span>
-          <span className="text-sm font-medium">{scheduleLabel(routine.schedule)}</span>
-          <span className="text-muted-foreground text-xs text-pretty">
-            {String(routine.schedule.leads_per_run)} cuentas y hasta {String(routine.budget.per_run)} créditos por ejecución
-          </span>
-          <span className="text-muted-foreground text-xs">
-            Siguiente:{" "}
-            {routine.status === "paused"
-              ? "al reanudar"
-              : routine.next_run_at === null
-                ? "sin programar"
-                : formatShortDateTime(routine.next_run_at)}
-          </span>
-        </div>
-        <div className="bg-muted/40 hidden min-w-0 flex-col gap-1.5 rounded-2xl p-4 @[44rem]:flex">
-          <span className="text-muted-foreground text-xs font-semibold">Modo</span>
-          <span className="text-sm font-medium">{routine.mode === "assisted" ? "Asistido" : "Autónomo"}</span>
-          <span className="text-muted-foreground text-xs text-pretty">
-            {routine.mode === "assisted"
-              ? "Te pide aprobar el lote antes de escribirle a nadie."
-              : "Contacta sin esperar tu aprobación, siempre dentro de tu política y tus topes."}
-          </span>
-        </div>
-      </div>
-
-      {canManage && (
-        <div className="flex flex-wrap gap-2">
-          {routine.status === "paused" ? (
-            <Button variant="outline" size="sm" className="rounded-full" disabled={busy} onClick={() => onAct("resume")}>
-              <Play aria-hidden className="size-4" />
-              Reanudar
-            </Button>
-          ) : (
-            <Button variant="outline" size="sm" className="rounded-full" disabled={busy} onClick={() => onAct("pause")}>
-              <Pause aria-hidden className="size-4" />
-              Pausar
-            </Button>
-          )}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="rounded-full"
-            // Con un lote esperando aprobación, el servidor respondería 409: se dice antes.
-            disabled={busy || live || waiting || routine.status === "paused"}
-            title={waiting ? "Aprueba primero el lote que espera" : undefined}
-            onClick={() => onAct("run")}
-          >
-            <Zap aria-hidden className="size-4" />
-            Ejecutar ahora
-          </Button>
-        </div>
-      )}
-    </BentoTile>
+    </article>
   );
 }

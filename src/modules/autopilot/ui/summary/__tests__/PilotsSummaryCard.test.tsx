@@ -48,7 +48,7 @@ describe("PilotsSummaryCard", () => {
   it("con datos: el mes, las demos frente al mes anterior, el embudo, los créditos y la fuente más barata", async () => {
     api.getPilotsSummary.mockResolvedValue(SUMMARY);
     render(<PilotsSummaryCard />);
-    expect(await screen.findByText("Lo que trajeron los pilotos · septiembre")).toBeInTheDocument();
+    expect(await screen.findByText("Lo que trajeron tus rutas · septiembre")).toBeInTheDocument();
     expect(screen.getByText("demos agendadas").parentElement).toHaveTextContent(/^4demos agendadas/);
     expect(screen.getByText("+2 vs. agosto")).toBeInTheDocument();
     const funnel = screen.getByRole("list", { name: "Embudo del mes" });
@@ -56,15 +56,15 @@ describe("PilotsSummaryCard", () => {
     expect(funnel).toHaveTextContent("Demos4");
     expect(screen.getByText("56 de 500")).toBeInTheDocument();
     expect(screen.getByText("14")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Ver pilotos/ })).toHaveAttribute("href", "/marketing/autopilot");
+    expect(screen.getByRole("link", { name: /Ver rutas/ })).toHaveAttribute("href", "/marketing/autopilot");
     expect(screen.getByText(/trae demos a 11 créditos/)).toHaveTextContent(/, a 32\./);
   });
 
   it("sin pilotos invita a crear el primero", async () => {
     api.getPilotsSummary.mockResolvedValue({ ...SUMMARY, has_routines: false, best_sources: [] });
     render(<PilotsSummaryCard />);
-    expect(await screen.findByText("Aún no tienes pilotos")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Crear un piloto" })).toHaveAttribute("href", "/marketing/autopilot/new");
+    expect(await screen.findByText("Aún no tienes rutas")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Crear una ruta" })).toHaveAttribute("href", "/marketing/autopilot/new");
   });
 
   it("sin permiso de captación no pide nada ni pinta nada", () => {
