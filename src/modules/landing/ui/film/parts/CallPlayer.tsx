@@ -152,6 +152,7 @@ export function CallPlayer() {
     let playing = false;
     let done = false;
     let progress = 0;
+    let frame = 0;
 
     /** Pinta el estado discreto (quién habla, palabras, notas, etapas, reloj). */
     const paint = (t: number) => {
@@ -203,7 +204,9 @@ export function CallPlayer() {
             lv[k] += (v - lv[k]) * (v > lv[k] ? 0.55 : 0.16);
           }
         }
-        pulse(progress);
+        // La voz se escribe a ~20 Hz y el compositor interpola (transition de 100 ms
+        // en el CSS): el hilo principal toca las capas 1 de cada 3 frames.
+        if (frame++ % 3 === 0) pulse(progress);
         // Lo discreto solo se repinta al cambiar: palabra, segundo, nota o etapa.
         const lit = words[track].filter((w) => at(w) <= local).length;
         const next = `${track}|${lit}|${Math.floor(t)}|${notes.filter((n) => at(n) <= t).length}|${stages.filter((s) => at(s) <= t).length}`;
