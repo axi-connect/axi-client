@@ -190,10 +190,32 @@ export type PilotView = {
   names?: boolean;
 };
 
-/** Ancho estimado de la etiqueta de un fijo (10 px, mayúsculas espaciadas 0,18 em): sin medir el DOM. */
+/** Ancho estimado de una etiqueta del mapa (10 px, mayúsculas espaciadas 0,18 em): sin medir el DOM. */
+export const tagWidth = (text: string) => 14 + Math.ceil(text.length * 8.6);
+
+/** Ancho estimado de la etiqueta de un fijo. */
 export function fixLabelWidth(i: number, names = true): number {
-  const text = names ? `${i + 1} · ${PILOT_STEP_NAMES[i] ?? ""}` : `${i + 1}`;
-  return 14 + Math.ceil(text.length * 8.6);
+  return tagWidth(names ? `${i + 1} · ${PILOT_STEP_NAMES[i] ?? ""}` : `${i + 1}`);
+}
+
+/** La etiqueta del destino va a la izquierda del aeropuerto, con su borde derecho a 22 px (film-pilot.css). */
+const APT_GAP = 22;
+
+/**
+ * Dónde va la etiqueta del destino («Demo agendada»): es la información clave
+ * del final, así que no se apaga al llegar a la cabina; se APARTA. Si su caja
+ * cruzaría el borde útil derecho (el filo de la cabina), se corre a la
+ * izquierda hasta quedar antes de él; solo si así cruzaría el borde izquierdo
+ * se apaga, como los fijos. `shift` en px (negativo, a la izquierda).
+ */
+export function airportTag(x: number, view: Pick<PilotView, "left" | "right"> = {}): { shift: number; fade: number } {
+  const w = tagWidth(PILOT_COPY.destination);
+  const right = view.right ?? Infinity;
+  const left = view.left ?? -Infinity;
+  const end = x - APT_GAP;
+  const shift = end > right ? right - end : 0;
+  const start = end + shift - w;
+  return { shift, fade: Math.min(1, Math.max(0, (start - left) / EDGE)) };
 }
 
 /** Lo que tarda en apagarse una tarjeta al acercarse al borde, en px. */
@@ -282,6 +304,8 @@ export function pilotFrame(p: number, run: PilotRun, view: PilotView = {}) {
     holdLabel: fade(p, 0.5, 0.53, 0.64, 0.67),
     bubble: fade(p, 0.72, 0.76, 0.84, 0.88) * edge(marks.bubble.x - 250),
     airportLabel: 0.45 + 0.55 * easeOut(seg(p, 0.84, 0.9)),
+    /** La etiqueta del destino se aparta del filo de la cabina (`airportTag`). */
+    airportTag: airportTag(marks.airport.x, view),
     results: easeOut(seg(p, 0.9, 0.95)),
     funnel: easeOut(seg(p, 0.92, 0.98)),
     tune: easeOut(seg(p, 0.95, 0.99)),

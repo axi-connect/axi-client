@@ -28,7 +28,7 @@ import {
   PILOT_STATUS,
   lotCounts,
 } from "../pilot-content"
-import { PILOT_BOARD, PILOT_OVERVIEW, boardRow, capSegments, dial, fixLabelWidth, pilotCamera, pilotFrame, planeAt } from "../pilot-frame"
+import { PILOT_BOARD, PILOT_OVERVIEW, airportTag, boardRow, capSegments, dial, fixLabelWidth, pilotCamera, pilotFrame, planeAt } from "../pilot-frame"
 
 const close = (a: number, b: number, eps = 0.5) => Math.abs(a - b) <= eps
 const RUN = { ...PILOT_RUN, approved: lotCounts(PILOT_LOT).approved }
@@ -285,5 +285,32 @@ describe("el guion por nicho", () => {
     expect(all).not.toMatch(/whatsapp|instagram|linkedin|2300|cumple|apollo|cr[ée]dito|garantiza|%/i)
     expect(PILOT_COPY.cockpit.channels).toEqual(["Correo", "Llamada del agente", "SMS"])
     expect(PILOT_COPY.zone.passed).toContain("Registro de Números Excluidos")
+  })
+})
+
+describe("la etiqueta del destino se aparta del filo de la cabina (2026-10-01)", () => {
+  const W = 14 + Math.ceil("Demo agendada".length * 8.6)
+
+  it("lejos del filo, se queda en su sitio y a pleno", () => {
+    expect(airportTag(300, { left: -400, right: 600 })).toEqual({ shift: 0, fade: 1 })
+  })
+
+  it("si cruzaría el filo derecho, se corre a la izquierda hasta quedar antes; no se apaga", () => {
+    const t = airportTag(640, { left: -400, right: 600 })
+    // Su borde derecho (x − 22 + shift) queda justo en el filo.
+    expect(640 - 22 + t.shift).toBe(600)
+    expect(t.shift).toBeLessThan(0)
+    expect(t.fade).toBe(1)
+  })
+
+  it("solo si apartándose cruzaría el borde izquierdo, se apaga", () => {
+    // Filo derecho y borde izquierdo tan juntos que la etiqueta no cabe entre ellos.
+    const t = airportTag(640, { left: 600 - W + 10, right: 600 })
+    expect(t.fade).toBeLessThan(1)
+    expect(airportTag(640, { left: 600 - 5, right: 600 }).fade).toBe(0)
+  })
+
+  it("el fotograma la lleva: sin vista (servidor) no se mueve", () => {
+    expect(pilotFrame(1, RUN).airportTag).toEqual({ shift: 0, fade: 1 })
   })
 })

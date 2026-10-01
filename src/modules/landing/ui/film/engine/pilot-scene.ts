@@ -120,7 +120,8 @@ export const pilot: Scene = (section, ctx) => {
     set(tower, "transform", at(f.marks.tower));
     set(airport, "transform", at(f.marks.airport));
     // La zona y el destino entran con los fijos: desde arriba (p < 0,1) caerían sobre la cabina, que aún aparece.
-    set(airportLabel, "opacity", o(f.airportLabel * f.fixesIn));
+    set(airportLabel, "opacity", o(f.airportLabel * f.fixesIn * f.airportTag.fade));
+    set(airportLabel, "transform", `translateX(${px(f.airportTag.shift)}px)`);
     set(zoneMark, "transform", at(f.marks.zone));
     set(zoneMark, "opacity", o(f.fixesIn * (ctx.desktop ? f.zoneBox : f.zoneTag)));
     set(zoneNear, "opacity", o(f.zoneNear));
