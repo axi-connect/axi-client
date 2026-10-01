@@ -1,8 +1,8 @@
 import type { Schemas } from "@/core/api/types";
 
 /**
- * «Axi propone» en Pilotos (P6b, mockup aprobado por el dueño): las propuestas
- * del piloto (`source: "autopilot"`) viven en `cmo_proposal` y viajan con el
+ * «Axi propone» en Rutas (P6b, mockup aprobado por el dueño): las propuestas
+ * de las rutas (`source: "autopilot"`) viven en `cmo_proposal` y viajan con el
  * mismo contrato que las de Axel (`ProposalListDto`, `ApprovalResultDto`).
  */
 export type PilotProposalDTO = Schemas["ProposalListDto"]["data"][number];
@@ -57,13 +57,13 @@ export function proposalPatches(proposal: PilotProposalDTO): Patch[] {
 const ROWS: { group: string; key: string; label: string; format: (value: unknown) => string }[] = [
   { group: "schedule", key: "times", label: "Horario", format: timesLabel },
   { group: "schedule", key: "leads_per_run", label: "Cuentas por turno", format: (value) => (typeof value === "number" ? String(value) : "—") },
-  { group: "budget", key: "per_run", label: "Tope por ejecución", format: (value) => (typeof value === "number" ? credits(value) : "—") },
+  { group: "budget", key: "per_run", label: "Tope por salida", format: (value) => (typeof value === "number" ? credits(value) : "—") },
   { group: "budget", key: "per_month", label: "Tope del mes", format: (value) => (typeof value === "number" ? credits(value) : "—") },
 ];
 
 /**
- * «Qué cambia si lo aplicas»: solo lo que cambia. Con varios pilotos (mover el
- * tope de uno a otro) cada renglón lleva el nombre del piloto.
+ * «Qué cambia si lo aplicas»: solo lo que cambia. Con varias rutas (mover el
+ * tope de una a otra) cada renglón lleva el nombre de la ruta.
  */
 export function changeRows(proposal: PilotProposalDTO, routineNames: ReadonlyMap<string, string>): ChangeRow[] {
   const patches = proposalPatches(proposal);
@@ -85,7 +85,7 @@ export function changeRows(proposal: PilotProposalDTO, routineNames: ReadonlyMap
   );
 }
 
-/** El piloto al que lleva «Ver el piloto»: el primero que el ajuste toca. */
+/** La ruta a la que lleva «Ver la ruta»: la primera que el ajuste toca. */
 export function proposalRoutineId(proposal: PilotProposalDTO): string | null {
   return proposalPatches(proposal)[0]?.routine_id ?? null;
 }

@@ -27,9 +27,9 @@ const KIND_LABELS: Record<ProposalKind, string> = {
   // La propuesta por desvío de la meta (método comercial, F6): vive en la
   // misma tabla y también se ve en /cmo si el tenant tiene Axel.
   goal_pace: "Ritmo de la meta",
-  // «Axi propone» del piloto de captación (P6b): mover la franja o el tope
+  // «Axi propone» de las rutas de captación (P6b): mover la franja o el tope
   // entre fuentes. Se decide en /marketing/autopilot y también se ve aquí.
-  autopilot_tuning: "Ajuste del piloto",
+  autopilot_tuning: "Ajuste de la ruta",
 };
 
 export function proposalKindLabel(kind: ProposalKind | string): string {

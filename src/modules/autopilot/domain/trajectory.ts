@@ -1,16 +1,27 @@
-import { RUN_STEPS, STEP_ORDER, type Routine, type RunDetail, type RunSummary } from "./autopilot";
+import {
+  APPROVE_STOP,
+  RUN_STEPS,
+  STEP_ORDER,
+  hourLabel,
+  type Routine,
+  type RunDetail,
+  type RunEvent,
+  type RunSummary,
+} from "./autopilot";
 import { reasonShortLabel, reasonStop } from "./reasons";
 
 /**
- * Una ejecución contada como recorrido (mockup «el recorrido», aprobado el
- * 2026-10-01): las seis paradas del motor, más «Tu aprobación» entre la
- * política e inscribir cuando el piloto es asistido. Cada parada lleva cuántas
- * cuentas salieron de ella, y cada cuenta descartada sale por la parada donde
- * se quedó, con su motivo.
+ * Una salida contada como ruta (mockups «el recorrido» y «Rutas de captación»,
+ * aprobados el 2026-10-01): las seis paradas del motor, más «Tu aprobación»
+ * entre tu política y escribirles cuando la ruta es «Con tu aprobación». Cada
+ * parada lleva cuántas cuentas salieron de ella y a qué hora cerró, y cada
+ * cuenta que se quedó en el camino sale por la parada donde se quedó, con su
+ * motivo.
  *
- * Todo sale del contrato de hoy: `step`, `status`, `counters` y, en la
- * ejecución en vivo, `items`. Sin `items` (el `last_run` de la lista) las
- * cifras salen solo de los contadores y las salidas no traen el desglose.
+ * Todo sale del contrato de hoy: `step`, `status`, `counters`, `credits_spent`
+ * y, en la salida en vivo, `items` y la bitácora (`step_completed`). Sin
+ * `items` (el `last_run` de la lista) las cifras salen solo de los contadores y
+ * los desvíos no traen el desglose.
  */
 
 export type StopKey = (typeof RUN_STEPS)[number]["key"] | "approve";
@@ -24,7 +35,14 @@ export interface TrajectoryStop {
   state: StopState;
   /** La política y tu aprobación: las paradas que frenan (el rombo del mapa). */
   gate: boolean;
-  sub: string | null;
+  /** Lo que hace, debajo del nombre: «gratis», «revela el correo», «"Primer contacto"». */
+  sub: string;
+  /**
+   * La hora a la que cerró («8:06», en la zona de la ruta), «ahora» si es la
+   * parada en curso de una salida que corre, y `null` si no hay dato (aún no
+   * llega, o la bitácora no lo trae: «Tu aprobación» no se narra).
+   */
+  time: string | null;
 }
 
 export interface ExitRow {
@@ -40,16 +58,37 @@ export interface TrajectoryExit {
   rows: ExitRow[];
 }
 
+/** «Lo que viene», al final de la ruta: dónde van las que siguieron. */
+export interface TrajectoryDestination {
+  following: number;
+  replied: number;
+  demo: number;
+}
+
 export interface Trajectory {
   stops: TrajectoryStop[];
   exits: TrajectoryExit[];
   /** -1 en cola; `stops.length` cuando terminó. */
   currentIndex: number;
+  /** El peaje de «Calificar» (lo único que cuesta); `null` si aún no llega ahí. */
+  credits: number | null;
+  /** `null` sin `items` o si ninguna llegó todavía a «Lo que viene». */
+  destination: TrajectoryDestination | null;
 }
 
 type RunLike = Pick<RunSummary, "status" | "step" | "counters"> & {
+  credits_spent?: number;
   items?: readonly Pick<RunDetail["items"][number], "stage" | "reason" | "decision">[];
 };
+
+type RoutineShape = Pick<Routine, "mode" | "qualify"> & { schedule?: Pick<Routine["schedule"], "timezone"> };
+
+export interface TrajectoryContext {
+  /** El nombre de la secuencia, para el `sub` de «Escribirles». */
+  sequenceName?: string | null;
+  /** La bitácora de la salida: de aquí salen las horas de cada parada. */
+  events?: readonly Pick<RunEvent, "kind" | "payload" | "created_at">[];
+}
 
 /** El paso del motor que cierra cada parada (las esperas son parte del paso anterior). */
 const CLOSES: Record<StopKey, string> = {
@@ -62,18 +101,54 @@ const CLOSES: Record<StopKey, string> = {
   contact: "contact",
 };
 
-function stopsOf(mode: Routine["mode"]): Pick<TrajectoryStop, "key" | "label" | "gate" | "sub">[] {
-  const stops: Pick<TrajectoryStop, "key" | "label" | "gate" | "sub">[] = RUN_STEPS.map((step) => ({
-    key: step.key,
-    label: step.label,
-    gate: step.key === "gate",
-    sub: null,
-  }));
-  if (mode === "assisted") {
+/** Qué revela «Calificar», dicho corto. */
+function qualifySub(qualify: Routine["qualify"]): string {
+  if (qualify.reveal_email && qualify.reveal_phone) return "revela correo y celular";
+  if (qualify.reveal_email) return "revela el correo";
+  if (qualify.reveal_phone) return "revela el celular";
+  return "no revela datos";
+}
+
+type StopShape = Pick<TrajectoryStop, "key" | "label" | "gate" | "sub">;
+
+function stopsOf(routine: RoutineShape, ctx: TrajectoryContext): StopShape[] {
+  const stops: StopShape[] = RUN_STEPS.map((step) => {
+    let sub: string = step.sub;
+    if (step.key === "qualify") sub = qualifySub(routine.qualify);
+    if (step.key === "contact" && ctx.sequenceName) sub = `«${ctx.sequenceName}»`;
+    return { key: step.key, label: step.label, gate: step.key === "gate", sub };
+  });
+  if (routine.mode === "assisted") {
     const contact = stops.findIndex((stop) => stop.key === "contact");
-    stops.splice(contact, 0, { key: "approve", label: "Tu aprobación", gate: true, sub: "solo asistido" });
+    stops.splice(contact, 0, { key: APPROVE_STOP.key, label: APPROVE_STOP.label, gate: true, sub: APPROVE_STOP.sub });
   }
   return stops;
+}
+
+/** «8:06» en la zona de la ruta (o la del navegador si no se conoce). */
+function clock(iso: string, timeZone: string | undefined): string | null {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return null;
+  const hhmm = date.toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+    ...(timeZone === undefined ? {} : { timeZone }),
+  });
+  return hourLabel(hhmm);
+}
+
+/** La hora del primer `step_completed` de cada parada (la clave va en `payload.step`). */
+function closedAt(events: TrajectoryContext["events"], timeZone: string | undefined): Map<string, string> {
+  const times = new Map<string, string>();
+  for (const event of events ?? []) {
+    if (event.kind !== "step_completed") continue;
+    const step = typeof event.payload.step === "string" ? event.payload.step : "";
+    if (step === "" || times.has(step)) continue;
+    const time = clock(event.created_at, timeZone);
+    if (time !== null) times.set(step, time);
+  }
+  return times;
 }
 
 function currentIndexOf(run: RunLike, keys: StopKey[]): number {
@@ -177,18 +252,43 @@ function outputsOf(run: RunLike, exits: TrajectoryExit[]): Record<StopKey, numbe
   };
 }
 
-export function runTrajectory(run: RunLike, routine: Pick<Routine, "mode" | "qualify">): Trajectory {
-  const shape = stopsOf(routine.mode);
+function destinationOf(run: RunLike): TrajectoryDestination | null {
+  if (run.items === undefined) return null;
+  const destination = { following: 0, replied: 0, demo: 0 };
+  for (const item of run.items) {
+    if (item.stage === "following" || item.stage === "replied" || item.stage === "demo") destination[item.stage] += 1;
+  }
+  return destination.following + destination.replied + destination.demo === 0 ? null : destination;
+}
+
+export function runTrajectory(run: RunLike, routine: RoutineShape, ctx: TrajectoryContext = {}): Trajectory {
+  const shape = stopsOf(routine, ctx);
   const keys = shape.map((stop) => stop.key);
   const currentIndex = currentIndexOf(run, keys);
   const exits = exitsOf(run, keys, currentIndex, routine);
   const outputs = outputsOf(run, exits);
+  const times = closedAt(ctx.events, routine.schedule?.timezone);
   const stops = shape.map((stop, index) => {
     const state = stateAt(index, currentIndex, run.status);
     const output = outputs[stop.key];
     // Terminada: lo que no llegó a una parada es un cero, no un «aún no».
     const count = state === "todo" ? null : (output ?? (run.status === "done" ? 0 : null));
-    return { ...stop, state, count };
+    const live = state === "now" && run.status === "running";
+    const time = state === "todo" ? null : live ? "ahora" : (times.get(stop.key) ?? null);
+    return { ...stop, state, count, time };
   });
-  return { stops, exits, currentIndex };
+  const qualify = stops.find((stop) => stop.key === "qualify");
+  const credits = qualify === undefined || qualify.state === "todo" ? null : (run.credits_spent ?? null);
+  return { stops, exits, currentIndex, credits, destination: destinationOf(run) };
+}
+
+/**
+ * «Paso X de N» de la tarjeta: las mismas paradas que la miniatura (con «Tu
+ * aprobación» si la ruta la tiene). `null` si la salida no está en curso.
+ */
+export function stepProgress(run: RunLike, routine: RoutineShape): { current: number; total: number } | null {
+  if (run.status === "queued" || run.status === "done") return null;
+  const trajectory = runTrajectory(run, routine);
+  const total = trajectory.stops.length;
+  return { current: Math.min(Math.max(trajectory.currentIndex, 0) + 1, total), total };
 }

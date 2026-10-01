@@ -62,7 +62,7 @@ describe("autopilot — antes de guardar", () => {
     expect(validateRoutine(draft).map((problem) => problem.field)).toEqual(["name", "follow_up"]);
   });
 
-  it("el tope por ejecución no pasa del mensual", () => {
+  it("el tope por salida no pasa del mensual", () => {
     const draft = { ...defaultRoutineInput("America/Bogota"), name: "Radar", follow_up: { sequence_id: "s-1" } };
     expect(validateRoutine({ ...draft, budget: { per_run: 700, per_month: 600 } })[0]?.field).toBe("budget");
     expect(validateRoutine(draft)).toEqual([]);

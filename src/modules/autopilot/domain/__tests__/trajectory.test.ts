@@ -1,6 +1,6 @@
 import { RUN_STATUSES } from "../autopilot";
 import { reasonLabel, reasonShortLabel, reasonStop } from "../reasons";
-import { runTrajectory } from "../trajectory";
+import { runTrajectory, stepProgress } from "../trajectory";
 import { itemFixture, mockupItems, routineFixture, runFixture } from "./recorrido.fixtures";
 
 const assisted = routineFixture();
@@ -35,8 +35,8 @@ describe("reasons — el motivo en palabras, nunca la clave", () => {
 
   it("lo desconocido o vacío no asoma la clave", () => {
     for (const reason of ["algo_raro", "", null]) {
-      expect(reasonLabel(reason)).toBe("Salió del recorrido");
-      expect(reasonShortLabel(reason)).toBe("Salió del recorrido");
+      expect(reasonLabel(reason)).toBe("Se quedó en el camino");
+      expect(reasonShortLabel(reason)).toBe("Se quedó en el camino");
     }
     expect(reasonShortLabel("below_min_score", assisted)).toBe("Puntaje bajo 60");
     expect(reasonShortLabel("policy_rne")).toBe("Registro de Números Excluidos");
@@ -67,11 +67,11 @@ describe("reasons — el motivo en palabras, nunca la clave", () => {
 });
 
 describe("trajectory — las paradas", () => {
-  it("asistido lleva «Tu aprobación» entre la política e inscribir; autónomo no", () => {
+  it("«Con tu aprobación» lleva «Tu aprobación» entre tu política y escribirles; «Por su cuenta» no", () => {
     expect(keys()).toEqual(["search", "enrich", "qualify", "promote", "gate", "approve", "contact"]);
     expect(keys(autonomous)).toEqual(["search", "enrich", "qualify", "promote", "gate", "contact"]);
     const approve = runTrajectory(runFixture(), assisted).stops[5];
-    expect(approve).toMatchObject({ label: "Tu aprobación", gate: true, sub: "solo asistido" });
+    expect(approve).toMatchObject({ label: "Tu aprobación", gate: true, sub: "revisas el lote" });
     expect(runTrajectory(runFixture(), assisted).stops.filter((stop) => stop.gate).map((stop) => stop.key)).toEqual(["gate", "approve"]);
   });
 
@@ -186,7 +186,7 @@ describe("trajectory — las salidas", () => {
   it("un motivo desconocido sale por la parada donde iba, sin la clave", () => {
     const run = runFixture({ step: "await_enrich", items: [itemFixture("discarded", "motivo_nuevo")] });
     const [exit] = runTrajectory(run, assisted).exits;
-    expect(exit).toEqual({ at: "qualify", total: 1, rows: [{ reason: "motivo_nuevo", label: "Salió del recorrido", count: 1 }] });
+    expect(exit).toEqual({ at: "qualify", total: 1, rows: [{ reason: "motivo_nuevo", label: "Se quedó en el camino", count: 1 }] });
   });
 
   it("sin `items` (la tarjeta de la lista) solo trae los totales de los contadores", () => {
@@ -239,5 +239,92 @@ describe("trajectory — los siete estados", () => {
       expect(trajectory.currentIndex).toBeGreaterThanOrEqual(-1);
       expect(trajectory.currentIndex).toBeLessThanOrEqual(7);
     }
+  });
+});
+
+describe("trajectory — nombre corto y lo que hace cada parada", () => {
+  it("los nombres de las rutas y su `sub`, con la secuencia si se conoce", () => {
+    const stops = runTrajectory(runFixture(), assisted, { sequenceName: "Primer contacto" }).stops;
+    expect(stops.map((stop) => [stop.label, stop.sub])).toEqual([
+      ["Buscar", "gratis"],
+      ["Completar datos", "sitio, teléfono, redes"],
+      ["Calificar", "revela el correo"],
+      ["Pasar al CRM", "contacto + empresa"],
+      ["Tu política", "bajas, RNE, horario"],
+      ["Tu aprobación", "revisas el lote"],
+      ["Escribirles", "«Primer contacto»"],
+    ]);
+    expect(runTrajectory(runFixture(), assisted).stops.at(-1)?.sub).toBe("tu secuencia");
+  });
+
+  it("«Calificar» dice qué revela", () => {
+    const sub = (reveal_email: boolean, reveal_phone: boolean) =>
+      runTrajectory(runFixture(), routineFixture({ qualify: { ...assisted.qualify, reveal_email, reveal_phone } })).stops[2]?.sub;
+    expect(sub(true, false)).toBe("revela el correo");
+    expect(sub(true, true)).toBe("revela correo y celular");
+    expect(sub(false, true)).toBe("revela el celular");
+    expect(sub(false, false)).toBe("no revela datos");
+  });
+});
+
+describe("trajectory — la hora de cada parada", () => {
+  const closed = (step: string, at: string) => ({ kind: "step_completed", payload: { step }, created_at: at });
+  const events = [
+    { kind: "step_started", payload: { step: "search" }, created_at: "2026-10-01T13:00:00Z" },
+    closed("search", "2026-10-01T13:01:00Z"),
+    closed("enrich", "2026-10-01T13:03:00Z"),
+    // Un cierre repetido (un reintento viejo) no cambia la hora: manda el primero.
+    closed("enrich", "2026-10-01T13:09:00Z"),
+  ];
+
+  it("sale del primer step_completed, en la zona de la ruta; la parada en curso dice «ahora»", () => {
+    const run = runFixture({ step: "await_enrich", counters: { found: 25 } });
+    const stops = runTrajectory(run, assisted, { events }).stops;
+    expect(stops.map((stop) => stop.time)).toEqual(["8:01", "8:03", "ahora", null, null, null, null]);
+  });
+
+  it("sin bitácora, o en pausa, no inventa la hora", () => {
+    const run = runFixture({ step: "await_enrich", counters: { found: 25 } });
+    expect(runTrajectory(run, assisted).stops.map((stop) => stop.time)).toEqual([null, null, "ahora", null, null, null, null]);
+    const paused = runTrajectory({ ...run, status: "paused" }, assisted, { events }).stops;
+    expect(paused[2]?.time).toBeNull();
+    // «Tu aprobación» no se narra en el servidor: aunque esté hecha, va sin hora.
+    const done = runTrajectory(runFixture({ status: "done", step: "contact" }), assisted, { events }).stops;
+    expect(done[5]?.time).toBeNull();
+  });
+});
+
+describe("trajectory — el peaje y «Lo que viene»", () => {
+  it("los créditos aparecen al llegar a «Calificar»", () => {
+    expect(runTrajectory(runFixture({ step: "await_search", credits_spent: 0 }), assisted).credits).toBeNull();
+    expect(runTrajectory(runFixture({ step: "qualify", credits_spent: 9 }), assisted).credits).toBe(9);
+    expect(runTrajectory({ status: "done", step: "contact", counters: {} }, assisted).credits).toBeNull();
+  });
+
+  it("dónde van las que siguieron, por etapa; null sin items o sin ninguna", () => {
+    const items = [
+      itemFixture("following"),
+      itemFixture("following"),
+      itemFixture("replied"),
+      itemFixture("demo"),
+      itemFixture("discarded", "below_min_score"),
+    ];
+    expect(runTrajectory(runFixture({ status: "done", step: "contact", items }), assisted).destination).toEqual({
+      following: 2,
+      replied: 1,
+      demo: 1,
+    });
+    expect(runTrajectory(runFixture({ items: [itemFixture("contacting")] }), assisted).destination).toBeNull();
+    expect(runTrajectory({ status: "done", step: "contact", counters: {} }, assisted).destination).toBeNull();
+  });
+});
+
+describe("trajectory — «paso X de N»", () => {
+  it("cuenta las mismas paradas que la miniatura", () => {
+    expect(stepProgress(runFixture({ step: "await_search" }), assisted)).toEqual({ current: 2, total: 7 });
+    expect(stepProgress(runFixture({ step: "await_search" }), autonomous)).toEqual({ current: 2, total: 6 });
+    expect(stepProgress(runFixture({ status: "awaiting_approval", step: "approve" }), assisted)).toEqual({ current: 6, total: 7 });
+    expect(stepProgress(runFixture({ status: "queued" }), assisted)).toBeNull();
+    expect(stepProgress(runFixture({ status: "done", step: "contact" }), assisted)).toBeNull();
   });
 });

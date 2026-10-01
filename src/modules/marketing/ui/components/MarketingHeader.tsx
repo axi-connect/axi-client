@@ -18,8 +18,8 @@ export const MARKETING_SECTIONS: readonly NavTabItem[] = [
   { href: `${BASE}/automations`, label: "Recuperación" },
   { href: `${BASE}/promotions`, label: "Promociones" },
   { href: `${BASE}/leads`, label: "Captación" },
-  // P5 del piloto de captación: los pilotos que buscan, califican y contactan solos.
-  { href: `${BASE}/autopilot`, label: "Automatización" },
+  // Las rutas de captación (P5 del piloto): salen a buscar, califican y escriben solas.
+  { href: `${BASE}/autopilot`, label: "Rutas" },
   { href: `${BASE}/settings`, label: "Configuración" },
 ];
 

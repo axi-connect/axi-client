@@ -34,7 +34,7 @@ describe("«Axi propone» — qué cambia", () => {
     expect(rows).toEqual([
       { label: "Horario", before: "09:00 y 15:00", after: "15:00" },
       { label: "Cuentas por turno", before: "20", after: "40" },
-      { label: "Tope por ejecución", before: "100 créditos", after: "200 créditos" },
+      { label: "Tope por salida", before: "100 créditos", after: "200 créditos" },
     ]);
   });
 
