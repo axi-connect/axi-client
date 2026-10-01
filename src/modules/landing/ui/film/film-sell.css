@@ -245,7 +245,16 @@
   height: 60vh;
   background: linear-gradient(180deg, transparent, rgb(255 255 255 / 0.25) 40%);
 }
-.film-vault-tag-swing { position: relative; width: 260px; transform-origin: 130px 30px; filter: drop-shadow(0 40px 60px rgb(0 0 0 / 0.7)) drop-shadow(0 0 28px rgb(255 255 255 / 0.28)); }
+/*
+ * La etiqueta se balancea por frame: sin `filter` (un drop-shadow de 60 px se
+ * recalculaba en cada giro: p50 de 33 ms en el perfil). La sombra y el halo son
+ * degradados ya pintados que giran con ella.
+ */
+.film-vault-tag-swing { position: relative; z-index: 0; width: 260px; transform-origin: 130px 30px; will-change: transform; }
+.film-vault-tag-swing::before,
+.film-vault-tag-swing::after { content: ""; position: absolute; z-index: -1; pointer-events: none; border-radius: 50%; }
+.film-vault-tag-swing::before { inset: 8% -22% -26% -22%; translate: 0 40px; background: radial-gradient(closest-side, rgb(0 0 0 / 0.7), rgb(0 0 0 / 0)); }
+.film-vault-tag-swing::after { inset: -6% -14%; background: radial-gradient(closest-side, rgb(255 255 255 / 0.16), rgb(255 255 255 / 0) 80%); }
 .film-vault-tag {
   position: relative;
   box-sizing: border-box;
