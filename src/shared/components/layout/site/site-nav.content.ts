@@ -2,25 +2,14 @@ import type { LucideIcon } from "lucide-react";
 import {
   BarChart3,
   Bot,
-  Building2,
   CalendarClock,
-  CalendarDays,
-  CircleDollarSign,
-  CreditCard,
-  GraduationCap,
   Inbox,
-  Instagram,
-  KanbanSquare,
-  MessageCircle,
-  MessagesSquare,
-  Mic,
   Package,
+  Phone,
+  Radar,
+  Receipt,
+  Sparkles,
   ScanSearch,
-  PlayCircle,
-  Shirt,
-  ShoppingBag,
-  Store,
-  UtensilsCrossed,
 } from "lucide-react";
 
 /**
@@ -34,14 +23,13 @@ import {
  * acceso. Antes de añadir una entrada, la ruta debe existir en
  * `src/app/(public)/` Y estar listada en `PUBLIC_PATHS` (`core/config/routes.ts`).
  *
- * Estructura (plan `docs/plans/navigation_standardization_plan.md`): tres
- * mega-menús —Producto, Soluciones, Integraciones— y dos enlaces planos
- * —Precios, Casos—. `Marketplace` bajó al panel de Producto: no convierte y
- * gastaba una posición de la barra.
+ * Estructura (plan `landing_cinematica_plan.md` §18.1, que sustituye a la de
+ * `navigation_standardization_plan.md`): tres menús por intención —Vender y
+ * cobrar, Crecer, Atender— y Precios en la barra; Casos e Integraciones bajan a
+ * la columna lateral del panel.
  *
- * Cada panel cierra con una barra de conversión, porque el alta es asistida y
- * no hay auto-registro (knowledge-base §19.2): agendar la demo o escribir por
- * WhatsApp son los dos únicos actos de conversión que existen.
+ * El panel cierra con una barra de conversión, porque el alta es asistida
+ * (knowledge-base §19.2): la prueba y escribir por WhatsApp.
  */
 
 /** Tarjeta grande de un panel: la capacidad o el canal, con su promesa. */
@@ -52,189 +40,124 @@ export type SiteNavCard = {
   icon: LucideIcon;
 };
 
-/** Fila de la columna derecha: destinos secundarios, sin descripción. */
-export type SiteNavRow = {
+/* ─────────────────────── Nav en isla (plan §18.1) ─────────────────────── */
+
+/**
+ * Los tres menús por intención del nav en isla (lienzo aprobado el 2026-09-30).
+ * Cada intención es un pilar de «Vendemos progreso» y una cinta del isotipo,
+ * con su color: coral, ámbar y violeta. Las tarjetas son las del lienzo con los
+ * `href` reales del sitio (la REGLA DURA de arriba: el lienzo traía «/#medicion»,
+ * que no existe; es «/#medir»).
+ */
+export type SiteIntent = {
+  id: "vender" | "crecer" | "atender";
   name: string;
-  href: string;
-  icon: LucideIcon;
-  /** Etiqueta discreta a la derecha del label (p. ej. "Pronto"). */
-  badge?: string;
+  pillar: string;
+  promise: string;
+  /** La cinta del isotipo: decide el color del punto (token de marca). */
+  tone: "coral" | "amber" | "violet";
+  cards: readonly SiteNavCard[];
 };
 
-/** Barra inferior del panel: el argumento y las dos vías de conversión. */
-export type SiteNavPanelFooter = {
-  /** Se pinta con el fragmento entre `**` en peso fuerte. */
-  claim: string;
-  /** Enlace secundario a la izquierda del CTA; sin él solo va el CTA. */
-  secondary?: { name: string; href: string };
-  /** Mensaje prellenado del WhatsApp comercial; sin él no se pinta el enlace. */
-  whatsappMessage?: string;
-};
-
-export type SiteNavItem =
-  | { kind: "link"; name: string; href: string; badge?: string }
-  | {
-      kind: "mega";
-      name: string;
-      /** Ancho del panel. Los de 4 tarjetas caben en menos. */
-      cards: readonly SiteNavCard[];
-      /** Columnas de tarjetas en escritorio: 3 para Producto, 2 para el resto. */
-      cardColumns: 2 | 3;
-      side: { title: string; rows: readonly SiteNavRow[] };
-      footer: SiteNavPanelFooter;
-    };
-
-export const SITE_NAV: readonly SiteNavItem[] = [
+export const SITE_INTENTS: readonly SiteIntent[] = [
   {
-    kind: "mega",
-    name: "Producto",
-    cardColumns: 3,
+    id: "vender",
+    name: "Vender y cobrar",
+    pillar: "Prosperidad",
+    promise: "Más ingresos, menos costos",
+    tone: "coral",
     cards: [
-      {
-        name: "Agente vendedor",
-        href: "/productos#agente",
-        description: "Cotiza con tus precios reales y cierra dentro del chat.",
-        icon: Bot,
-      },
-      {
-        name: "Inbox y handoff",
-        href: "/productos#inbox",
-        description: "Tu equipo toma o devuelve el control sin que el cliente repita nada.",
-        icon: Inbox,
-      },
-      {
-        name: "CRM, leads y contactos",
-        href: "/productos#crm",
-        description: "El pipeline se llena mientras el agente conversa.",
-        icon: KanbanSquare,
-      },
-      {
-        name: "Catálogo y agenda",
-        href: "/productos#catalogo",
-        description: "Stock real por variante. Y si vendes tiempo, citas sobre disponibilidad real.",
-        icon: Package,
-      },
-      {
-        name: "Reconocimiento de producto",
-        href: "/productos#reconocimiento",
-        description: "Le mandan una foto y el agente cotiza la referencia exacta.",
-        icon: ScanSearch,
-      },
-      {
-        name: "Medición en pesos",
-        /* La sección vive en la home (§6, LandingMetrics): /productos retiró
-           su copia por duplicada — no recrear el ancla allí sin mover esto. */
-        href: "/#medir",
-        description: "Cuánto vendió cada conversación, con hechos de tu base de datos.",
-        icon: BarChart3,
-      },
+      { name: "Agente vendedor", href: "/productos#agente", description: "Cotiza con tus precios reales y cierra dentro del chat.", icon: Bot },
+      { name: "Cobros y documentos", href: "/productos", description: "Abonos, recordatorios y el recibo listo para enviar.", icon: Receipt },
+      { name: "Catálogo y pedidos", href: "/productos#catalogo", description: "Stock real por variante y pedidos sin errores.", icon: Package },
+      { name: "Reconocimiento por foto", href: "/productos#reconocimiento", description: "Te mandan una foto y cotiza la referencia exacta.", icon: ScanSearch },
     ],
-    side: {
-      title: "Empezar por aquí",
-      rows: [
-        { name: "Cómo funciona", href: "/#quien", icon: PlayCircle },
-        { name: "Preguntas frecuentes", href: "/#preguntas", icon: MessagesSquare },
-        { name: "Marketplace", href: "/marketplace", icon: Store, badge: "Pronto" },
-        { name: "Ver todo el producto", href: "/productos", icon: Package },
-      ],
-    },
-    footer: {
-      claim: "**7 días de prueba** con el producto completo. Te lo configuramos contigo.",
-      whatsappMessage: "Hola, quiero ver Axi Connect funcionando con mi negocio.",
-    },
   },
   {
-    kind: "mega",
-    name: "Soluciones",
-    cardColumns: 2,
+    id: "crecer",
+    name: "Crecer",
+    pillar: "Crecimiento",
+    promise: "Más alcance, más clientes",
+    tone: "amber",
     cards: [
-      {
-        name: "Califica leads sin perseguir a nadie",
-        href: "/soluciones#califica",
-        description: "Responde en segundos a cualquier hora y abre la oportunidad sin que nadie la digite.",
-        icon: CircleDollarSign,
-      },
-      {
-        name: "Cierra ventas dentro de la conversación",
-        href: "/soluciones#cierra",
-        description: "Pedido con consecutivo, inventario descontado y tus medios de pago. Sin carrito web.",
-        icon: ShoppingBag,
-      },
-      {
-        name: "Retiene clientes y recupera lo que se enfrió",
-        href: "/soluciones#retiene",
-        description: "Un contacto entre canales, con su historial y su ciclo de vida completo.",
-        icon: MessageCircle,
-      },
-      {
-        name: "Programa reuniones y citas",
-        href: "/soluciones#agenda",
-        description: "Disponibilidad calculada de verdad, con recordatorios 24 h y 1 h antes.",
-        icon: CalendarClock,
-      },
+      { name: "Axel, tu director comercial", href: "/productos", description: "Cada mañana propone qué hacer y mide si funcionó.", icon: Sparkles },
+      { name: "Captación de leads", href: "/soluciones#califica", description: "Encuentra y califica a quien sí te va a comprar.", icon: Radar },
+      { name: "Medición en pesos", href: "/#medir", description: "Cuánto vendió cada conversación, campaña y canal.", icon: BarChart3 },
     ],
-    side: {
-      // Existe para responder la objeción más cara del embudo: "mi negocio es
-      // distinto". Los cinco verticales son los de mayor encaje declarados en
-      // knowledge-base §17.3, y aterrizan en las anclas de /casos.
-      title: "Por industria",
-      rows: [
-        { name: "Retail y moda", href: "/casos#retail", icon: Shirt },
-        { name: "Comida y restaurantes", href: "/casos#comida", icon: UtensilsCrossed },
-        { name: "Servicios con agenda", href: "/casos#servicios", icon: CalendarDays },
-        { name: "Educación y formación", href: "/casos#educacion", icon: GraduationCap },
-        { name: "Alto ticket", href: "/casos#alto-ticket", icon: Building2 },
-      ],
-    },
-    footer: {
-      claim: "Un restaurante, una tienda de ropa y un estudio de grabación usan **el mismo software**.",
-      secondary: { name: "Ver los tres casos", href: "/casos" },
-    },
   },
   {
-    kind: "mega",
-    name: "Integraciones",
-    cardColumns: 2,
+    id: "atender",
+    name: "Atender",
+    pillar: "Libertad",
+    promise: "Más tiempo, menos carga",
+    tone: "violet",
     cards: [
-      {
-        // Primera tarjeta a propósito: es el canal por el que entra todo el mundo.
-        // La rampa por QR ya no existe (`whatsapp_web` retirado): axi opera solo
-        // con canales oficiales de Meta.
-        name: "WhatsApp Cloud API",
-        href: "/integraciones#whatsapp-cloud",
-        description: "El canal oficial, con alta de un botón. Plantillas aprobadas y voz.",
-        icon: MessagesSquare,
-      },
-      {
-        name: "Instagram Direct",
-        href: "/integraciones#instagram",
-        description: "El mismo botón y el mismo inbox, con la app de Meta ya aprobada.",
-        icon: Instagram,
-      },
-      {
-        name: "Facebook Messenger",
-        href: "/integraciones#messenger",
-        description: "Adaptador propio, mismo pipeline y la misma autorización de Meta.",
-        icon: MessageCircle,
-      },
+      { name: "Inbox compartido", href: "/productos#inbox", description: "WhatsApp, Instagram y Messenger en una bandeja.", icon: Inbox },
+      { name: "Llamadas con voz natural", href: "/integraciones#voz", description: "Llama desde tu número cuando hay que llamar.", icon: Phone },
+      { name: "Agenda y citas", href: "/soluciones#agenda", description: "Citas sobre tu disponibilidad real, con recordatorios.", icon: CalendarClock },
     ],
-    side: {
-      title: "Y además",
-      rows: [
-        { name: "Shopify", href: "/integraciones#shopify", icon: ShoppingBag },
-        { name: "Nequi · Daviplata · Bancolombia", href: "/integraciones#pagos", icon: CreditCard },
-        { name: "Voz del agente", href: "/integraciones#voz", icon: Mic },
-        { name: "Ver todas las integraciones", href: "/integraciones", icon: Package },
-      ],
-    },
-    footer: {
-      claim: "¿Funciona con lo que ya tienes? **El alta del canal es un botón** y te acompañamos en el trámite de Meta.",
-      whatsappMessage: "Hola, quiero saber cómo conecto mis canales con Axi Connect.",
-    },
   },
-  { kind: "link", name: "Precios", href: "/precios" },
-  { kind: "link", name: "Casos", href: "/casos" },
 ];
+
+/** La columna derecha del panel: tipo de negocio, canales y, abajo, Casos e Integraciones. */
+export const SITE_MENU_SIDE: readonly { title: string; rows: readonly { name: string; href: string }[] }[] = [
+  {
+    title: "Por tipo de negocio",
+    rows: [
+      { name: "Retail y moda", href: "/casos#retail" },
+      { name: "Comida y restaurantes", href: "/casos#comida" },
+      { name: "Servicios con agenda", href: "/casos#servicios" },
+      { name: "Alto ticket", href: "/casos#alto-ticket" },
+    ],
+  },
+  {
+    title: "Conecta",
+    rows: [
+      { name: "WhatsApp, Instagram, Messenger", href: "/integraciones" },
+      { name: "Shopify y pagos", href: "/integraciones#shopify" },
+    ],
+  },
+];
+
+/** Los enlaces planos: Precios en la barra; Casos e Integraciones bajan a la columna lateral (y a la hoja móvil). */
+export const SITE_MENU_LINKS = {
+  pricing: { name: "Precios", href: "/precios" },
+  more: [
+    { name: "Casos", href: "/casos" },
+    { name: "Integraciones", href: "/integraciones" },
+  ],
+} as const;
+
+/** La barra inferior del panel (lienzo): la prueba, WhatsApp y el CTA. */
+export const SITE_MENU_FOOT = {
+  claim: "**7 días de prueba** con el producto completo. Te lo configuramos contigo.",
+  whatsapp: { name: "Escríbenos", message: "Hola, quiero ver Axi Connect funcionando con mi negocio." },
+} as const;
+
+/** La isla: qué dice según dónde está el visitante. */
+export const SITE_ISLAND = {
+  /** En la home, antes del primer capítulo de la película. */
+  start: { title: "Axi Connect", sub: "La película · 4 capítulos" },
+  chapter: (n: number, total: number) => `Capítulo ${n} de ${total}`,
+  /** Fuera de la home: el nombre de la página y cuánto se ha leído. */
+  read: (pct: number) => `${pct} % leído`,
+  pages: {
+    "/productos": "Productos",
+    "/soluciones": "Soluciones",
+    "/integraciones": "Integraciones",
+    "/precios": "Precios",
+    "/casos": "Casos",
+    "/contacto": "Contacto",
+    "/marketplace": "Marketplace",
+    "/legal": "Legal",
+  } as Readonly<Record<string, string>>,
+  fallback: "Axi Connect",
+  openMenu: "Abrir menú",
+  closeMenu: "Cerrar menú",
+  menuTitle: "Menú",
+  ask: "¿Qué quieres hacer?",
+  theme: "Tema",
+} as const;
 
 /** CTA principal del header para visitantes sin sesión. */
 export const SITE_NAV_CTA = {

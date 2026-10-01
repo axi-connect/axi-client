@@ -1,0 +1,425 @@
+/*
+ * El nav en isla (plan §18.1, lienzo aprobado el 2026-09-30).
+ *
+ * Escritorio: una barra de cristal centrada (1000 × 64, a 22 px) que, pasados
+ * 120 px de scroll, se vuelve isla (452 × 52, a 16 px). El cambio es un
+ * fundido con escala entre las dos piezas: solo `transform` y `opacity`.
+ * La isla crece 58 px con el aviso de `film:activity` recortándose con
+ * `clip-path` (un elemento de 508 × 110: pinta, no recalcula layout).
+ * Móvil: la isla fija y la hoja de cristal.
+ *
+ * Cristal (`backdrop-filter`) solo en la barra, la isla, el panel, la hoja y la
+ * píldora del tema: la excepción de §18.1. Sin soporte, o con
+ * `prefers-reduced-transparency`, va sólido. Colores: tokens y `white`/`black`.
+ */
+
+/* La hoja móvil va en un portal fuera de `.site-nav`: comparte sus variables. */
+.site-nav,
+.site-nav-sheet {
+  --sn-fg: var(--foreground);
+  --sn-dim: color-mix(in srgb, var(--foreground) 58%, transparent);
+  --sn-hover: color-mix(in srgb, var(--foreground) 8%, transparent);
+  --sn-active: color-mix(in srgb, var(--foreground) 11%, transparent);
+  --sn-line: color-mix(in srgb, var(--foreground) 9%, transparent);
+  --sn-coral: var(--axi-brand);
+  --sn-amber: var(--axi-amber);
+  --sn-violet: var(--axi-violet);
+  --sn-cta: var(--axi-brand);
+  --sn-bar-top: 22px;
+  --sn-isl-top: 16px;
+}
+.site-nav {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 50;
+  height: 0;
+  color: var(--sn-fg);
+}
+
+/* ─────────────────────────────── el cristal ─────────────────────────────── */
+.site-glass {
+  position: relative;
+  background: linear-gradient(180deg, color-mix(in srgb, white 13%, transparent), color-mix(in srgb, white 4.5%, transparent));
+  -webkit-backdrop-filter: blur(22px) saturate(1.7);
+  backdrop-filter: blur(22px) saturate(1.7);
+  border: 1px solid color-mix(in srgb, white 16%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 34%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, white 5%, transparent),
+    inset 0 0 18px color-mix(in srgb, white 4%, transparent),
+    0 24px 60px color-mix(in srgb, black 50%, transparent);
+}
+/* El brillo de arriba a la izquierda del lienzo (sin mix-blend: un degradado claro basta). */
+.site-glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(120% 90% at 20% -30%, color-mix(in srgb, white 16%, transparent), transparent 55%);
+}
+/* Las superficies grandes (panel y hoja) llevan más tinta detrás: se leen encima de cualquier escena. */
+.site-glass-deep {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--background) 84%, transparent), color-mix(in srgb, var(--background) 90%, transparent));
+}
+/* Tema claro fuera de la home: el mismo cristal, en blanco. */
+html:not(.dark) .site-nav:not(.dark) .site-glass {
+  background: linear-gradient(180deg, color-mix(in srgb, white 78%, transparent), color-mix(in srgb, white 62%, transparent));
+  border-color: color-mix(in srgb, var(--foreground) 10%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 80%, transparent),
+    0 18px 50px color-mix(in srgb, black 12%, transparent);
+}
+html:not(.dark) .site-nav:not(.dark) .site-glass::before { display: none; }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .site-glass, .site-glass-deep, html:not(.dark) .site-nav:not(.dark) .site-glass {
+    background: color-mix(in srgb, color-mix(in srgb, var(--foreground) 5%, var(--background)) 92%, transparent);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .site-glass, .site-glass-deep, html:not(.dark) .site-nav:not(.dark) .site-glass {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: color-mix(in srgb, color-mix(in srgb, var(--foreground) 5%, var(--background)) 92%, transparent);
+  }
+}
+
+/* ─────────────────────────────── piezas comunes ─────────────────────────────── */
+.site-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 0;
+  background: transparent;
+  color: color-mix(in srgb, var(--foreground) 86%, transparent);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.15s, color 0.15s;
+}
+.site-btn:hover { background: var(--sn-hover); color: var(--sn-fg); }
+.site-btn[aria-expanded="true"] { background: var(--sn-active); color: var(--sn-fg); }
+.site-btn:focus-visible, .site-card:focus-visible, .site-cta:focus-visible, .site-link:focus-visible {
+  outline: 2px solid var(--sn-fg);
+  outline-offset: 2px;
+}
+.site-btn svg { transition: transform 0.2s; }
+.site-btn[aria-expanded="true"] .site-chev { transform: rotate(180deg); }
+.site-dot { width: 6px; height: 6px; flex: none; border-radius: 50%; background: var(--sn-tone); }
+[data-tone="coral"] { --sn-tone: var(--sn-coral); }
+[data-tone="amber"] { --sn-tone: var(--sn-amber); }
+[data-tone="violet"] { --sn-tone: var(--sn-violet); }
+.site-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: var(--sn-cta);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--sn-cta) 35%, transparent);
+  transition: filter 0.15s;
+}
+.site-cta:hover { filter: brightness(1.08); }
+.site-link { color: color-mix(in srgb, var(--foreground) 82%, transparent); text-decoration: none; }
+.site-link:hover { color: var(--sn-fg); }
+
+/* ─────────────────────────────── la barra y la isla (escritorio) ─────────────────────────────── */
+.site-bar,
+.site-island {
+  position: absolute;
+  left: 50%;
+  transition: opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1), transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 0.45s;
+}
+.site-bar {
+  top: var(--sn-bar-top);
+  width: min(1000px, calc(100vw - 48px));
+  height: 64px;
+  border-radius: 999px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 9px 0 20px;
+  box-sizing: border-box;
+}
+.site-bar .site-brand { display: flex; align-items: center; gap: 10px; margin-right: 8px; color: inherit; text-decoration: none; }
+/* En la barra los botones van más ceñidos que en el lienzo (14 → 11 px): con el CTA largo la fila se pasaba 5 px de los 1000. */
+.site-bar > .site-btn { padding: 0 11px; }
+.site-bar .site-brand-name { font-family: var(--font-nexa), var(--font-poppins), sans-serif; font-weight: 700; font-size: 18px; white-space: nowrap; }
+.site-bar .site-spacer { flex: 1; }
+/* La isla: 452 × 52 visibles dentro de una pieza de 508 × 110; el aviso la «crece». */
+.site-island {
+  top: var(--sn-isl-top);
+  width: 508px;
+  height: 110px;
+  border-radius: 30px;
+  clip-path: inset(0 28px 58px 28px round 26px);
+  transform: translateX(-50%) translateY(-6px) scale(0.96);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    clip-path 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s linear 0.45s;
+}
+.site-nav[data-island] .site-bar {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-6px) scale(0.97);
+  visibility: hidden;
+}
+.site-nav[data-island] .site-island {
+  opacity: 1;
+  transform: translateX(-50%);
+  visibility: visible;
+  transition-delay: 0s;
+}
+.site-nav:not([data-island]) .site-bar { transition-delay: 0s; }
+.site-island[data-toast] { clip-path: inset(0 0 0 0 round 30px); }
+.site-island-row {
+  position: absolute;
+  left: 28px;
+  right: 28px;
+  top: 0;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 7px 0 8px;
+  box-sizing: border-box;
+}
+.site-island-mark {
+  width: 38px;
+  height: 38px;
+  flex: none;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--foreground) 7%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.site-ring { width: 26px; height: 26px; flex: none; }
+.site-ring circle { fill: none; stroke-width: 2.4; }
+.site-ring .track { stroke: color-mix(in srgb, var(--foreground) 14%, transparent); }
+.site-ring .value { stroke: var(--sn-fg); stroke-linecap: round; transition: stroke-dasharray 0.2s linear; }
+.site-island-text { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
+.site-island-title { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.site-island-sub { font-size: 11px; color: var(--sn-dim); white-space: nowrap; }
+.site-island .site-cta { height: 38px; padding: 0 16px; font-size: 13.5px; box-shadow: none; }
+.site-island .site-menu-btn { width: 40px; padding: 0; justify-content: center; background: color-mix(in srgb, var(--foreground) 7%, transparent); }
+.site-toast {
+  position: absolute;
+  left: 42px;
+  right: 42px;
+  top: 56px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--sn-line);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.site-island[data-toast] .site-toast { opacity: 1; transition-delay: 0.15s; }
+.site-toast-check {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--sn-fg);
+  color: var(--background);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.site-toast-text { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
+.site-toast-title { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.site-toast-detail { font-size: 11.5px; color: var(--sn-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.site-toast-when { margin-left: auto; font-size: 11px; color: var(--sn-dim); }
+
+/* ─────────────────────────────── el panel ─────────────────────────────── */
+.site-panel {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--sn-bar-top) + 64px + 12px);
+  width: min(940px, calc(100vw - 48px));
+  box-sizing: border-box;
+  border-radius: 30px;
+  padding: 18px;
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr) 210px;
+  gap: 18px;
+  transform: translateX(-50%);
+  animation: site-panel-in 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.site-nav[data-island] .site-panel { top: calc(var(--sn-isl-top) + 52px + 12px); }
+@keyframes site-panel-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(-6px); }
+  to { opacity: 1; transform: translateX(-50%); }
+}
+.site-panel-k { margin: 6px 10px 8px; font-size: 11px; letter-spacing: 0.18em; font-weight: 600; text-transform: uppercase; color: color-mix(in srgb, var(--foreground) 52%, transparent); }
+.site-intent {
+  height: auto;
+  width: 100%;
+  padding: 12px;
+  border-radius: 18px;
+  align-items: flex-start;
+  gap: 12px;
+  white-space: normal;
+  text-align: left;
+}
+.site-intent[aria-pressed="true"] { background: var(--sn-hover); }
+.site-intent-icon {
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--sn-tone) 18%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.site-intent-icon i { width: 10px; height: 10px; border-radius: 50%; background: var(--sn-tone); box-shadow: 0 0 14px var(--sn-tone); }
+.site-intent-name { display: block; font-size: 15px; font-weight: 600; color: var(--sn-fg); }
+.site-intent-promise { display: block; font-size: 12px; color: var(--sn-dim); }
+.site-panel-mid { display: flex; flex-direction: column; gap: 4px; padding: 0 12px; border-inline: 1px solid var(--sn-line); }
+.site-panel-head { margin: 10px 14px 6px; display: flex; gap: 8px; align-items: baseline; }
+.site-panel-head b { font-family: var(--font-nexa), var(--font-poppins), sans-serif; font-weight: 700; font-size: 20px; }
+.site-panel-head span { font-size: 12.5px; color: var(--sn-dim); }
+.site-card { display: flex; gap: 14px; padding: 14px; border-radius: 18px; color: var(--sn-fg); text-decoration: none; transition: background-color 0.15s; }
+.site-card:hover { background: color-mix(in srgb, var(--foreground) 6%, transparent); }
+.site-card-icon {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 12%, transparent);
+  background: color-mix(in srgb, var(--foreground) 4%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.site-card-name { display: block; font-size: 14.5px; font-weight: 600; }
+.site-card-desc { display: block; font-size: 12.5px; line-height: 1.45; color: color-mix(in srgb, var(--foreground) 62%, transparent); }
+.site-panel-side { display: flex; flex-direction: column; gap: 14px; padding: 10px 4px; }
+.site-panel-side ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.site-panel-side .site-link { display: block; font-size: 13px; padding: 6px 0; }
+.site-panel-side .site-panel-k { margin: 0 0 6px; letter-spacing: 0.14em; }
+.site-panel-foot {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--foreground) 5%, transparent);
+}
+.site-panel-foot p { margin: 0; flex: 1; font-size: 13.5px; color: color-mix(in srgb, var(--foreground) 75%, transparent); }
+.site-panel-foot b { color: var(--sn-fg); }
+.site-panel-foot .site-wa { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; color: var(--sn-fg); text-decoration: none; }
+.site-panel-foot .site-cta-light { height: 40px; background: var(--sn-fg); color: var(--background); box-shadow: none; }
+
+/* ─────────────────────────────── el tema (escritorio, fuera de la home) ─────────────────────────────── */
+.site-theme-pill {
+  position: fixed;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 46px;
+  border-radius: 999px;
+  padding: 4px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 49;
+}
+.site-theme-pill .site-btn, .site-sheet-theme .site-btn { width: 38px; height: 40px; padding: 0; justify-content: center; color: var(--sn-dim); }
+.site-theme-pill .site-btn[aria-checked="true"], .site-sheet-theme .site-btn[aria-checked="true"] { background: color-mix(in srgb, var(--foreground) 14%, transparent); color: var(--sn-fg); }
+
+/* ─────────────────────────────── móvil ─────────────────────────────── */
+.site-mobile {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 12px;
+  height: 54px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 7px 0 8px;
+  box-sizing: border-box;
+}
+.site-mobile .site-island-mark { width: 40px; height: 40px; }
+.site-mobile .site-brand-name { font-family: var(--font-nexa), var(--font-poppins), sans-serif; font-weight: 700; font-size: 16px; white-space: nowrap; }
+.site-mobile .site-cta { height: 40px; padding: 0 14px; font-size: 13px; box-shadow: none; }
+.site-mobile .site-menu-btn { width: 44px; height: 44px; padding: 0; justify-content: center; background: color-mix(in srgb, var(--foreground) 8%, transparent); }
+.site-sheet {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  top: 76px;
+  bottom: 12px;
+  z-index: 49;
+  border-radius: 30px;
+  box-sizing: border-box;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  color: var(--sn-fg);
+  animation: site-sheet-in 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes site-sheet-in {
+  from { opacity: 0; transform: translateY(-8px) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+.site-sheet .site-panel-k { margin: 4px 8px 0; }
+.site-acc { border-radius: 20px; border: 1px solid color-mix(in srgb, var(--foreground) 8%, transparent); }
+.site-acc[data-open] { background: color-mix(in srgb, var(--foreground) 5%, transparent); }
+.site-acc > .site-btn { width: 100%; height: auto; padding: 12px; gap: 12px; white-space: normal; text-align: left; }
+.site-acc ul { list-style: none; margin: 0; padding: 0 8px 8px; display: flex; flex-direction: column; }
+.site-acc li a { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 4px 8px; border-radius: 12px; font-size: 14px; color: var(--sn-fg); text-decoration: none; }
+.site-acc li a svg { flex: none; opacity: 0.8; }
+.site-sheet-links { display: flex; gap: 6px; flex-wrap: wrap; padding: 2px 4px; }
+.site-sheet-links .site-link { font-size: 13.5px; padding: 10px 12px; }
+.site-sheet-row { display: flex; align-items: center; justify-content: space-between; padding: 0 4px; margin-top: auto; }
+.site-sheet-row .site-link { font-size: 14px; font-weight: 500; padding: 12px 8px; }
+.site-sheet-theme { display: flex; gap: 2px; padding: 3px; border-radius: 999px; background: color-mix(in srgb, var(--foreground) 6%, transparent); }
+.site-sheet-theme .site-btn { width: 44px; height: 38px; }
+.site-sheet .site-cta { justify-content: center; height: 50px; font-size: 15px; box-shadow: none; }
+
+/* Escritorio y móvil: cada uno lo suyo (CSS sin capa: gana a las utilidades). */
+@media (max-width: 1023px) {
+  .site-bar, .site-island, .site-panel, .site-theme-pill { display: none; }
+}
+@media (min-width: 1024px) {
+  .site-mobile { display: none; }
+}
+/* Entre 1024 y 1200 la barra mide 976 px: CTA corto (como en §16.5). */
+@media (max-width: 1199px) {
+  .site-cta .site-cta-long { display: none; }
+}
+@media (min-width: 1200px) {
+  .site-cta .site-cta-short { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-bar, .site-island, .site-toast, .site-btn, .site-btn svg, .site-ring .value { transition: none; }
+  .site-panel, .site-sheet { animation: none; }
+}

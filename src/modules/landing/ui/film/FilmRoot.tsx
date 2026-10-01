@@ -105,9 +105,9 @@ export function FilmRoot({ children }: { children: ReactNode }) {
   );
 
   // Guía de progreso y píldora. El progreso es UNA lectura por frame (el raíz)
-  // escrita en una variable CSS; el capítulo y «ya estamos en precios» los
-  // decide un IntersectionObserver, sin medir el DOM en cada frame. Los
-  // setState solo disparan render cuando el valor cambia.
+  // escrita en una variable CSS; el capítulo y «ya estamos en precios» salen de
+  // posiciones medidas al cambiar de tamaño, sin medir el DOM en cada frame.
+  // Los setState solo disparan render cuando el valor cambia.
   useEffect(() => {
     const el = scroller();
     const root = rootRef.current;
@@ -134,6 +134,12 @@ export function FilmRoot({ children }: { children: ReactNode }) {
     let filmHeight = 1;
     let viewHeight = el.clientHeight;
     let scrollTop = el.scrollTop;
+    // Dónde empieza cada capítulo (su escena o, si se fija, su pin-spacer). Antes
+    // lo decidía un IntersectionObserver, pero una escena fijada es `position:
+    // fixed` y el observador del contenedor de scroll no la ve: al aterrizar a
+    // mitad de un pin (un ancla, recargar) el capítulo se perdía (QA del nav, Radar y Chat).
+    const marks = TICKS.map((t) => root.querySelector<HTMLElement>(`[data-chapter="${t}"]`));
+    let chapterTops: number[] = marks.map(() => Infinity);
     const measure = () => {
       const top = root.getBoundingClientRect().top;
       filmTop = top - el.getBoundingClientRect().top + el.scrollTop;
@@ -141,6 +147,11 @@ export function FilmRoot({ children }: { children: ReactNode }) {
       viewHeight = el.clientHeight;
       if (after) afterTop = after.getBoundingClientRect().top - top;
       if (niche) nicheTop = niche.getBoundingClientRect().top - top;
+      chapterTops = marks.map((m) => {
+        if (!m) return Infinity;
+        const box = m.parentElement?.classList.contains("pin-spacer") ? m.parentElement : m;
+        return box.getBoundingClientRect().top - top;
+      });
     };
     const update = () => {
       frame = 0;
@@ -148,7 +159,13 @@ export function FilmRoot({ children }: { children: ReactNode }) {
       const span = Math.max(1, filmHeight - viewHeight);
       const progress = Math.min(1, Math.max(0, into / span));
       root.style.setProperty("--film-progress", progress.toFixed(4));
-      announce(chapterNow, Math.round(progress * 100) / 100);
+      // Capítulo actual: el último cuya escena ya cruzó el 60 % de la ventana.
+      let current = -1;
+      chapterTops.forEach((t, i) => {
+        if (into + viewHeight * 0.6 > t) current = i;
+      });
+      if (current !== chapterNow) setChapter(current);
+      announce(current, Math.round(progress * 100) / 100);
       const nowBeyond = into + viewHeight * 0.5 > nicheTop;
       const nowPast = into + viewHeight * 0.85 > afterTop;
       if (nowBeyond !== beyondHero || nowPast !== pastFilm) {
@@ -205,31 +222,15 @@ export function FilmRoot({ children }: { children: ReactNode }) {
 
     // `film:chapter` para la isla de la cabecera: solo cuando cambia algo.
     let chapterNow = -1;
-    let progressNow = -1;
     let announced = "";
     const announce = (index: number, progress: number) => {
       chapterNow = index;
-      progressNow = progress;
       const key = `${index}|${progress}`;
       if (key === announced) return;
       announced = key;
       emitFilmEvent<FilmChapterDetail>(FILM_CHAPTER_EVENT, { chapter: TICKS[index] ?? null, index, total: TICKS.length, progress });
     };
 
-    const marks = TICKS.map((t) => root.querySelector<HTMLElement>(`[data-chapter="${t}"]`));
-    const chapterIo = new IntersectionObserver(
-      () => {
-        // Capítulo actual: el último cuya escena ya cruzó el 60 % de la ventana.
-        let current = -1;
-        marks.forEach((m, i) => {
-          if (m && m.getBoundingClientRect().top < el.clientHeight * 0.6) current = i;
-        });
-        setChapter(current);
-        announce(current, Math.max(0, progressNow));
-      },
-      { root: el, rootMargin: "0px 0px -40% 0px", threshold: [0, 1] },
-    );
-    marks.forEach((m) => m && chapterIo.observe(m));
 
     const ro = new ResizeObserver(() => {
       measure();
@@ -242,7 +243,6 @@ export function FilmRoot({ children }: { children: ReactNode }) {
     el.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onResize);
     return () => {
-      chapterIo.disconnect();
       pillIo.disconnect();
       ro.disconnect();
       el.removeEventListener("scroll", onScroll);

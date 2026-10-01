@@ -1,173 +1,250 @@
 'use client';
 
+import './site-nav.css';
+
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
+import { useEffect, useId, useRef, useState } from 'react';
+import { ArrowRight, Check, ChevronDown, Menu, X } from 'lucide-react';
 
-import { spring, fade } from '@/core/styles/motion';
 import { useAuthContext } from '@/core/providers/auth-provider';
 import { useSplashOptional } from '@/core/providers/splash-provider';
-import { ThemeToggle } from '@/shared/components/layout/theme-toggle';
-import { BrandLockup } from '@/shared/components/ui/brand-lockup';
-import { SiteNavList, SiteNavShell } from '@/shared/components/layout/site/SiteNavDesktop';
-import { SiteNavMobile } from '@/shared/components/layout/site/SiteNavMobile';
+import { BrandMark } from '@/shared/components/ui/brand-mark';
+import { SiteMenuPanel } from '@/shared/components/layout/site/SiteMenuPanel';
+import { SiteMenuSheet } from '@/shared/components/layout/site/SiteMenuSheet';
+import { SiteThemeChoice } from '@/shared/components/layout/site/SiteThemeChoice';
+import { ISLAND_AT, islandOnFilm, islandOnPage, readProgress, type IslandChapter } from '@/shared/components/layout/site/site-island';
 import {
+    SITE_INTENTS,
+    SITE_ISLAND,
+    SITE_MENU_LINKS,
     SITE_NAV_CTA,
     SITE_NAV_FILM_CTA,
     SITE_NAV_SESSION,
+    type SiteIntent,
 } from '@/shared/components/layout/site/site-nav.content';
+// El contrato público de la película (plan §18): la isla lo escucha, la película solo emite.
+import { FILM_ACTIVITY_EVENT, FILM_CHAPTER_EVENT, type FilmActivityDetail } from '@/modules/landing/ui/film/film-events';
+
+/** Lo que dura el aviso de `film:activity` en la isla (§18.1). */
+const TOAST_MS = 3000;
 
 /**
- * Header del sitio público. Aquí vive solo el armazón —marca, estado de scroll,
- * acciones y CTA—; el menú lo montan `SiteNavDesktop` (mega-menú de Radix) y
- * `SiteNavMobile` (`Sheet` + acordeones).
+ * El nav del sitio público en isla (plan §18.1, lienzo aprobado el 2026-09-30).
  *
- * El desplegable propio que había antes resolvía la accesibilidad a mano y
- * funcionaba; se retiró porque un mega-menú de dos columnas necesita además
- * orientación entre disparadores, transiciones direccionales y foco por panel.
- * Lo que se conserva palabra por palabra: apertura por hover **y** por
- * click/teclado, cierre con Escape, material `glass-overlay` en el panel, CTA
- * sensible a la sesión y bloqueo de scroll en móvil (ahora lo aporta el `Sheet`).
+ * - Escritorio: barra de cristal con el logo, tres menús por intención (Vender
+ *   y cobrar, Crecer, Atender), Precios, la sesión y el CTA. Pasados 120 px de
+ *   scroll se vuelve isla: isotipo, anillo de progreso, capítulo, menú y
+ *   «Prueba gratis». En la home la alimentan `film:chapter` y `film:activity`;
+ *   fuera de ella, el nombre de la página y lo leído.
+ * - El panel del menú no es modal: Esc, un clic fuera o un enlace lo cierran.
+ * - Móvil: la isla fija y la hoja de cristal (SiteMenuSheet).
+ * - El tema: píldora vertical fija en escritorio fuera de la home; en móvil, en la hoja.
+ *
+ * Sin framer-motion ni el mega-menú de Radix: el cambio de barra a isla es CSS
+ * (`transform` y `opacity`), y el anillo y los textos de la isla se escriben por
+ * ref, sin volver a renderizar en cada punto de avance.
  */
-export default function SiteHeader({
-    scrollContainerRef,
-}: {
-    /**
-     * El contenedor que hace scroll. Opcional: por defecto es el
-     * `[data-app-scroll]` del layout público, que así puede seguir siendo un
-     * Server Component en vez de volverse cliente solo para pasar una ref.
-     */
-    scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
-} = {}) {
+export default function SiteHeader() {
     const { status, user } = useAuthContext();
     const splash = useSplashOptional();
-    const [isScrolled, setIsScrolled] = useState(false);
+    const pathname = usePathname();
+    const onFilm = pathname === '/';
     const session = SITE_NAV_SESSION[status];
 
-    useEffect(() => {
-        const currentElement =
-            scrollContainerRef?.current ?? document.querySelector<HTMLElement>('[data-app-scroll]');
-        if (!currentElement) return;
-        const handleScroll = () => setIsScrolled(currentElement.scrollTop > 20);
-        // `passive`: el handler no cancela el gesto, y así el navegador no tiene
-        // que esperarlo para hacer scroll.
-        currentElement.addEventListener('scroll', handleScroll, { passive: true });
-        return () => currentElement.removeEventListener('scroll', handleScroll);
-    }, [scrollContainerRef]);
+    const [island, setIsland] = useState(false);
+    const [open, setOpen] = useState<SiteIntent['id'] | null>(null);
+    const [toast, setToast] = useState<FilmActivityDetail | null>(null);
+    const [islandTitle, setIslandTitle] = useState('');
+    const ringRef = useRef<SVGCircleElement>(null);
+    const subRef = useRef<HTMLSpanElement>(null);
+    const navRef = useRef<HTMLElement>(null);
+    const panelId = useId();
 
-    const headerVariants = {
-        animate: { y: 0, opacity: 1 },
-        initial: { y: -100, opacity: 0 },
-        // Debe incluir y/opacity: si se llega aquí directo desde `initial`
-        // (scroll inmediato al cargar), framer-motion congelaría el header
-        // invisible al no tener objetivo para esas propiedades.
-        scrolled: { y: 0, opacity: 1 },
-    };
-
-    // Con sesión activa el CTA lleva a la app (y repite el splash de marca);
-    // sin sesión lleva a la demo. Un visitante nuevo no quiere el inbox: antes
-    // apuntaba a /workspace/inbox y el middleware lo rebotaba al login.
-    // En la home la película ocurre en un escenario oscuro en los dos temas:
-    // la cabecera se pinta con los tokens oscuros (`.dark`) para no ser una
-    // franja clara encima, y su CTA es el de la película.
-    const onFilm = usePathname() === '/';
+    // Con sesión el CTA lleva a la app (y repite el splash de marca); sin sesión,
+    // a la prueba en la home y a la demo en el resto (D14).
     const guestCta = onFilm ? SITE_NAV_FILM_CTA : SITE_NAV_CTA;
     const isAuthenticated = status === 'authenticated';
     const ctaHref = isAuthenticated ? '/workspace/inbox' : guestCta.href;
     const ctaLabel = isAuthenticated ? (user?.name ?? 'Ir a la app') : guestCta.label;
-    // Entre `lg` y 1200 px la etiqueta larga de la película no cabía (§16.5).
-    const ctaShortLabel = !isAuthenticated && 'shortLabel' in guestCta ? guestCta.shortLabel : null;
+    const ctaShort = !isAuthenticated && 'shortLabel' in guestCta ? guestCta.shortLabel : ctaLabel;
     const onCtaClick = () => {
         if (isAuthenticated) splash.start();
     };
 
+    // La isla: cuándo aparece y qué dice. Fuera de la home, lo leído (por ref).
+    useEffect(() => {
+        const el = document.querySelector<HTMLElement>('[data-app-scroll]');
+        if (!el) return;
+        let frame = 0;
+        const paint = (title: string, sub: string, ring: number) => {
+            setIslandTitle((t) => (t === title ? t : title));
+            if (subRef.current && subRef.current.textContent !== sub) subRef.current.textContent = sub;
+            ringRef.current?.style.setProperty('stroke-dasharray', `${Math.max(0.0001, ring).toFixed(3)} 2`);
+        };
+        const update = () => {
+            frame = 0;
+            setIsland(el.scrollTop > ISLAND_AT);
+            if (!onFilm) {
+                const t = islandOnPage(pathname, readProgress(el.scrollTop, el.scrollHeight, el.clientHeight));
+                paint(t.title, t.sub, t.ring);
+            }
+        };
+        const onScroll = () => {
+            if (!frame) frame = requestAnimationFrame(update);
+        };
+        const onChapter = (e: Event) => {
+            const t = islandOnFilm((e as CustomEvent<IslandChapter>).detail);
+            paint(t.title, t.sub, t.ring);
+        };
+        let timer = 0;
+        const onActivity = (e: Event) => {
+            setToast((e as CustomEvent<FilmActivityDetail>).detail);
+            window.clearTimeout(timer);
+            timer = window.setTimeout(() => setToast(null), TOAST_MS);
+        };
+        if (onFilm) {
+            const t = islandOnFilm(null);
+            paint(t.title, t.sub, t.ring);
+            window.addEventListener(FILM_CHAPTER_EVENT, onChapter);
+            window.addEventListener(FILM_ACTIVITY_EVENT, onActivity);
+        }
+        update();
+        el.addEventListener('scroll', onScroll, { passive: true });
+        return () => {
+            el.removeEventListener('scroll', onScroll);
+            window.removeEventListener(FILM_CHAPTER_EVENT, onChapter);
+            window.removeEventListener(FILM_ACTIVITY_EVENT, onActivity);
+            window.clearTimeout(timer);
+            if (frame) cancelAnimationFrame(frame);
+            setToast(null);
+        };
+    }, [onFilm, pathname]);
+
+    // El panel: Esc y un clic fuera lo cierran; cambiar de página también.
+    useEffect(() => {
+        if (!open) return;
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setOpen(null);
+        };
+        const onDown = (e: PointerEvent) => {
+            if (navRef.current && !navRef.current.contains(e.target as Node)) setOpen(null);
+        };
+        document.addEventListener('keydown', onKey);
+        document.addEventListener('pointerdown', onDown);
+        return () => {
+            document.removeEventListener('keydown', onKey);
+            document.removeEventListener('pointerdown', onDown);
+        };
+    }, [open]);
+    useEffect(() => setOpen(null), [pathname]);
+
+    const active = SITE_INTENTS.find((i) => i.id === open) ?? SITE_INTENTS[0];
+    const toggle = (id: SiteIntent['id']) => setOpen((o) => (o === id ? null : id));
+    const close = () => setOpen(null);
+
     return (
-        // El `<header>` es un contenedor PELADO: sin material, sin transform y
-        // sin opacidad. Es la condición para que el panel del mega-menú pueda
-        // difuminar la página (ver la regla de montaje en `navigation-menu.tsx`):
-        // cualquiera de esas tres propiedades aquí crearía un backdrop root y
-        // dejaría al panel sin nada que difuminar.
-        <header className={`fixed top-0 right-0 left-0 z-50${onFilm ? ' dark theme-dark-island text-foreground' : ''}`}>
-            <SiteNavShell>
-                {/* La barra: aquí sí vive el cristal, y aquí sí anima.
-                    El borde de 1px existe SIEMPRE (transparente en reposo):
-                    togglear `.glass` a secas hacía saltar border-width 0→1px y
-                    `transition-all` interpolaba el border-color desde el gris por
-                    defecto — el "flash" de borde iluminado al cambiar de estado.
-                    Solo transicionan las propiedades del material. */}
-                <motion.div
-                    initial="initial"
-                    variants={headerVariants}
-                    animate={isScrolled ? 'scrolled' : 'animate'}
-                    transition={fade.slow}
-                    className={`border border-transparent transition-[background-color,border-color,box-shadow,backdrop-filter] duration-300 ${
-                        isScrolled
-                            ? 'glass'
-                            : 'bg-transparent shadow-none [-webkit-backdrop-filter:saturate(100%)_blur(0px)] [backdrop-filter:saturate(100%)_blur(0px)]'
-                    }`}
-                >
-                    {/* Entre `lg` y 1200 px el gutter baja a 24 px para que la fila
-                        quepa entera (plan §16.5). */}
-                    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-6 min-[1200px]:px-8">
-                        <div className="flex h-16 items-center justify-between gap-4 lg:h-20">
-                            <motion.div
-                                className="flex items-center space-x-2"
-                                whileHover={{ scale: 1.05 }}
-                                transition={spring.snappy}
-                            >
-                                {/* Lockup compartido (SVG inline, no <Image> remota: el
-                                    isotipo se servía desde Cloudinary en el critical path
-                                    del LCP). Es la misma pieza que pinta /comenzar. */}
-                                <BrandLockup className="whitespace-nowrap" />
-                            </motion.div>
+        // En la home la película es oscura en los dos temas: el nav usa los tokens oscuros.
+        <header
+            ref={navRef}
+            className={`site-nav${onFilm ? ' dark theme-dark-island' : ''}`}
+            data-island={island ? '' : undefined}
+        >
+            <nav aria-label="Principal">
+                {/* La barra (escritorio, arriba de todo). */}
+                <div className="site-bar site-glass" inert={island}>
+                    <Link prefetch={false} href="/" className="site-brand" aria-label="Axi Connect, inicio">
+                        <BrandMark className="size-[26px]" aria-hidden="true" />
+                        <span className="site-brand-name">axi connect</span>
+                    </Link>
+                    {SITE_INTENTS.map((it) => (
+                        <button
+                            key={it.id}
+                            type="button"
+                            className="site-btn"
+                            data-tone={it.tone}
+                            aria-expanded={open === it.id}
+                            aria-controls={open ? panelId : undefined}
+                            onClick={() => toggle(it.id)}
+                        >
+                            <span className="site-dot" aria-hidden="true" />
+                            {it.name}
+                            <ChevronDown className="site-chev size-3.5" aria-hidden="true" />
+                        </button>
+                    ))}
+                    <Link prefetch={false} href={SITE_MENU_LINKS.pricing.href} className="site-btn">
+                        {SITE_MENU_LINKS.pricing.name}
+                    </Link>
+                    <span className="site-spacer" />
+                    <Link prefetch={false} href={session.href} className="site-btn">
+                        {session.text}
+                    </Link>
+                    <Link prefetch={false} href={ctaHref} className="site-cta" onClick={onCtaClick}>
+                        <span className="site-cta-long">{ctaLabel}</span>
+                        <span className="site-cta-short">{ctaShort}</span>
+                        <ArrowRight className="size-[15px]" aria-hidden="true" />
+                    </Link>
+                </div>
 
-                            <SiteNavList />
-
-                            <div className="hidden items-center gap-3 lg:flex min-[1200px]:gap-4">
-                                {/* En la home la cabecera es oscura forzada y el tema no se
-                                    ve: entre `lg` y 1200 px el selector cede su sitio (§16.5). */}
-                                <div className={onFilm ? 'hidden min-[1200px]:contents' : 'contents'}>
-                                    <ThemeToggle />
-                                </div>
-                                <Link
-                                    prefetch={false}
-                                    href={session.href}
-                                    className="text-foreground hover:text-brand font-medium whitespace-nowrap transition-colors duration-200"
-                                >
-                                    {session.text}
-                                </Link>
-                                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                    <Link
-                                        prefetch={false}
-                                        href={ctaHref}
-                                        className="bg-brand-gradient text-primary-foreground inline-flex items-center space-x-2 rounded-full px-[18px] py-2.5 min-[1200px]:px-6 font-medium whitespace-nowrap transition-all duration-200 hover:brightness-110"
-                                        onClick={onCtaClick}
-                                    >
-                                        {ctaShortLabel ? (
-                                            <>
-                                                <span className="min-[1200px]:hidden">{ctaShortLabel}</span>
-                                                <span className="hidden min-[1200px]:inline">{ctaLabel}</span>
-                                            </>
-                                        ) : (
-                                            <span>{ctaLabel}</span>
-                                        )}
-                                        <ArrowRight aria-hidden="true" className="h-4 w-4" />
-                                    </Link>
-                                </motion.div>
-                            </div>
-
-                            <SiteNavMobile
-                                session={session}
-                                ctaHref={ctaHref}
-                                ctaLabel={ctaLabel}
-                                onCtaClick={onCtaClick}
-                            />
-                        </div>
+                {/* La isla (escritorio, al bajar). */}
+                <div className="site-island site-glass" data-toast={toast ? '' : undefined} inert={!island}>
+                    <div className="site-island-row">
+                        <Link prefetch={false} href="/" className="site-island-mark" aria-label="Axi Connect, inicio">
+                            <BrandMark className="size-[22px]" aria-hidden="true" />
+                        </Link>
+                        <svg className="site-ring" viewBox="0 0 26 26" aria-hidden="true">
+                            <circle className="track" cx="13" cy="13" r="11" />
+                            <circle ref={ringRef} className="value" cx="13" cy="13" r="11" pathLength={1} strokeDasharray="0.0001 2" transform="rotate(-90 13 13)" />
+                        </svg>
+                        <span className="site-island-text" aria-live="off">
+                            <span className="site-island-title">{islandTitle || SITE_ISLAND.fallback}</span>
+                            <span ref={subRef} className="site-island-sub" />
+                        </span>
+                        <span className="site-spacer flex-1" />
+                        <button
+                            type="button"
+                            className="site-btn site-menu-btn"
+                            aria-label={open ? SITE_ISLAND.closeMenu : SITE_ISLAND.openMenu}
+                            aria-expanded={open !== null}
+                            aria-controls={open ? panelId : undefined}
+                            onClick={() => setOpen((o) => (o ? null : 'vender'))}
+                        >
+                            {open ? <X className="size-[18px]" aria-hidden="true" /> : <Menu className="size-[18px]" aria-hidden="true" />}
+                        </button>
+                        <Link prefetch={false} href={ctaHref} className="site-cta" onClick={onCtaClick}>
+                            {ctaShort}
+                        </Link>
                     </div>
-                </motion.div>
-            </SiteNavShell>
+                    <div className="site-toast" aria-hidden={!toast}>
+                        <span className="site-toast-check" aria-hidden="true">
+                            <Check className="size-[15px]" strokeWidth={2.6} />
+                        </span>
+                        <span className="site-toast-text">
+                            <span className="site-toast-title">{toast?.title}</span>
+                            <span className="site-toast-detail">{toast?.detail}</span>
+                        </span>
+                        <span className="site-toast-when">ahora</span>
+                    </div>
+                </div>
+
+                {/* Móvil: la isla fija y la hoja. */}
+                <div className="site-mobile site-glass">
+                    <Link prefetch={false} href="/" className="site-island-mark" aria-label="Axi Connect, inicio">
+                        <BrandMark className="size-[22px]" aria-hidden="true" />
+                    </Link>
+                    <span className="site-brand-name">axi connect</span>
+                    <span className="flex-1" />
+                    <Link prefetch={false} href={ctaHref} className="site-cta" onClick={onCtaClick}>
+                        {ctaShort}
+                    </Link>
+                    <SiteMenuSheet dark={onFilm} session={session} ctaHref={ctaHref} ctaLabel={ctaLabel} onCtaClick={onCtaClick} />
+                </div>
+
+                {open ? <SiteMenuPanel id={panelId} active={active} onPick={setOpen} onNavigate={close} ctaHref={ctaHref} ctaLabel={ctaLabel} /> : null}
+            </nav>
+
+            {/* El tema: en escritorio, fuera de la home (allí el escenario es oscuro en los dos temas). */}
+            {onFilm ? null : <SiteThemeChoice className="site-theme-pill site-glass" label={SITE_ISLAND.theme} />}
         </header>
     );
 }
