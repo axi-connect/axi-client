@@ -20,112 +20,32 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
 
-import { FILM_NICHES } from "@/modules/landing/domain/film/niches";
 import { roadPercentAt } from "@/modules/landing/domain/film/route-map";
-import { formatMillions, formatPercent, ROUTE_FRACTIONS } from "@/modules/landing/domain/film/route-scenario";
+import { formatMillions, formatPercent, formatPesos, ROUTE_FRACTIONS } from "@/modules/landing/domain/film/route-scenario";
 import { FILM_THREAD } from "@/modules/landing/domain/film/thread-path";
 import type { FilmThread } from "@/modules/landing/ui/film/thread/thread";
+import {
+  SPAN,
+  all,
+  atP,
+  counter,
+  countUp,
+  easeOut3,
+  lerp,
+  num,
+  perNiche,
+  reveal,
+  sceneTimeline,
+  segP,
+  setText,
+  showIn,
+  spanTimeline,
+  visible,
+  type Ctx,
+  type Scene,
+} from "@/modules/landing/ui/film/engine/film-kit";
 
 export type FilmEngine = { stop(): void; scrollTo(target: string): void; setNiche(): void };
-
-/** `pins`: el ScrollTrigger de cada escena fijada, para el hilo de luz. */
-type Ctx = { desktop: boolean; pins: Map<string, ScrollTrigger> };
-type Scene = (section: HTMLElement, ctx: Ctx) => void;
-
-/* ────────────────────────────── utilidades ────────────────────────────── */
-
-const all = (scope: ParentNode, sel: string) => Array.from(scope.querySelectorAll<HTMLElement>(sel));
-
-/** El nicho que se ve: el `data-niche` del raíz de la película. */
-function activeNiche(section: HTMLElement): string {
-  return section.closest<HTMLElement>("[data-niche]")?.dataset.niche ?? FILM_NICHES[0];
-}
-
-/**
- * Los elementos de `sel` que se ven: los de la escena fuera de variantes y los
- * de la variante del nicho activo. Las escenas traen las cuatro variantes en el
- * HTML, pero solo se anima la visible (§12, reglas de construcción); al cambiar
- * de nicho el motor rehace las líneas (`setNiche`).
- */
-function visible(section: HTMLElement, sel: string): HTMLElement[] {
-  const niche = activeNiche(section);
-  return all(section, sel).filter((el) => {
-    const variant = el.closest<HTMLElement>("[data-only]");
-    return !variant || (variant.dataset.only ?? "").split(" ").includes(niche);
-  });
-}
-
-/**
- * Lo mismo, como un único grupo (la forma que usan las escenas: un grupo por
- * nicho con los mismos tiempos). Vacío si no hay nada que animar.
- */
-function perNiche(section: HTMLElement, sel: string): HTMLElement[][] {
-  const group = visible(section, sel);
-  return group.length ? [group] : [];
-}
-
-/** Escribe texto solo si cambió: en un scrub, `onUpdate` corre en cada frame. */
-function setText(el: HTMLElement, text: string) {
-  if (el.textContent !== text) el.textContent = text;
-}
-
-/**
- * Ritmo de la película: multiplica la longitud de cada pin. Medido en el render
- * del 2026-09-30: con 1 la película de escritorio pasaba de 30.000 px.
- */
-const PACE = 0.8;
-
-const reveal = { opacity: 0, y: 24 };
-
-/** Las escenas que se fijan: donde la animación ES el mensaje. */
-const PINNED = new Set(["radar", "followup", "chat", "goal"]);
-
-/**
- * Una línea de tiempo de escena: fijada si cabe, revelada al pasar si no.
- *
- * El titular de la escena NO va en la línea fijada: aparece mientras la escena
- * entra en pantalla, para que al fijarse ya se lea de qué trata y la escena no
- * llegue como un escenario vacío.
- */
-/** Sin fijar: qué elemento y qué tramo del scroll reproducen la escena. */
-type Pass = { trigger?: Element; start?: string; end?: string };
-
-function sceneTimeline(section: HTMLElement, ctx: Ctx, length: number, pass: Pass = {}): gsap.core.Timeline {
-  const heads = all(section, "[data-anim=head]");
-  if (heads.length) {
-    gsap.from(heads, { ...reveal, ease: "power2.out", scrollTrigger: { trigger: section, start: "top 88%", end: "top 30%", scrub: true } });
-  }
-  // Solo los momentos largos se fijan (chat, radar, seguimiento, la meta); el
-  // resto se revela al pasar. Todo fijado daba un ritmo plano y 28.000 px.
-  const fits = ctx.desktop && PINNED.has(section.dataset.scene ?? "") && section.offsetHeight <= window.innerHeight * 1.02;
-  const tl = gsap.timeline({
-    defaults: { ease: "power2.out", duration: 1 },
-    scrollTrigger: fits
-      ? { trigger: section, start: "top top", end: `+=${Math.round(length * PACE)}%`, pin: true, scrub: true, anticipatePin: 1, invalidateOnRefresh: true }
-      : { trigger: pass.trigger ?? section, start: pass.start ?? "top 78%", end: pass.end ?? "bottom 62%", scrub: true, invalidateOnRefresh: true },
-  });
-  if (fits && tl.scrollTrigger) ctx.pins.set(section.dataset.scene ?? "", tl.scrollTrigger);
-  return tl;
-}
-
-/** Cuenta hacia arriba un número con separador de miles colombiano. */
-function countUp(tl: gsap.core.Timeline, el: HTMLElement, at: number) {
-  const target = Number((el.textContent ?? "").replace(/[^\d]/g, ""));
-  if (!Number.isFinite(target) || target <= 0) return;
-  const prefix = (el.textContent ?? "").match(/^[^\d]*/)?.[0] ?? "";
-  const proxy = { v: 0 };
-  tl.to(
-    proxy,
-    {
-      v: target,
-      ease: "power1.out",
-      onUpdate: () => {
-        setText(el, prefix + Math.round(proxy.v).toLocaleString("es-CO"));
-      },
-    },
-    at,
-  );
-}
 
 /* ─────────────────────────────── escenas ─────────────────────────────── */
 
@@ -292,28 +212,6 @@ const team: Scene = (section, ctx) => {
   for (const group of perNiche(section, "[data-anim=return]")) tl.from(group, { opacity: 0, scale: 0.9 }, 2.8);
 };
 
-const collect: Scene = (section, ctx) => {
-  const tl = sceneTimeline(section, ctx, 130);
-  for (const group of perNiche(section, "[data-anim=order]")) tl.from(group, reveal, 0.2);
-  for (const group of perNiche(section, "[data-anim=segment]")) tl.from(group, { scaleX: 0, transformOrigin: "left", stagger: 0.6, duration: 0.6 }, 0.6);
-  for (const group of perNiche(section, "[data-anim=row]")) tl.from(group, { opacity: 0.2, stagger: 0.6, duration: 0.4 }, 0.8);
-  for (const group of perNiche(section, "[data-anim=reminders]")) tl.from(group, reveal, 1.6);
-  for (const group of perNiche(section, "[data-anim=msg]")) tl.from(group, { ...reveal, stagger: 0.5 }, 1.9);
-  for (const group of perNiche(section, "[data-anim=document]")) tl.from(group, { opacity: 0, y: 30, rotation: -4 }, 3.2);
-};
-
-const pipeline: Scene = (section, ctx) => {
-  const tl = sceneTimeline(section, ctx, 110);
-  for (const group of perNiche(section, "[data-anim=board]")) tl.from(group, reveal, 0);
-  // La oportunidad salta de Propuesta a Compromiso (una columna a la izquierda).
-  for (const group of perNiche(section, "[data-anim=deal]")) {
-    if (ctx.desktop) tl.from(group, { xPercent: -108, ease: "back.out(1.4)", duration: 1.2 }, 0.8);
-    else tl.from(group, { opacity: 0, y: 20 }, 0.8);
-  }
-  for (const group of perNiche(section, "[data-anim=ghost]")) tl.from(group, { opacity: 0 }, 1.6);
-  for (const group of perNiche(section, "[data-anim=appointment]")) tl.from(group, reveal, 2.2);
-};
-
 /**
  * Mueve una marca del mapa a otra fracción de la carretera con `transform`
  * (compositor) y no con `left`/`top` (layout en cada frame). La marca queda
@@ -376,17 +274,178 @@ const goal: Scene = (section, ctx) => {
   tl.to({}, { duration: 0.5 });
 };
 
-const axel: Scene = (section, ctx) => {
-  const tl = sceneTimeline(section, ctx, 100);
-  for (const group of perNiche(section, "[data-anim=brief]")) tl.from(group, { opacity: 0, y: 20 }, 0.1);
-  for (const group of perNiche(section, "[data-anim=summary]")) tl.from(group, { opacity: 0 }, 0.4);
-  for (const group of perNiche(section, "[data-anim=proposal]")) tl.from(group, { ...reveal, stagger: 0.35 }, 0.9);
+/* ─────────────────────────── crecer (plan §11) ─────────────────────────── */
+
+
+/** Cobrar: el recibo entra, se llena el último pago, se sella y sale el PDF. */
+const collect: Scene = (section, ctx) => {
+  const tl = spanTimeline(section, ctx, 130);
+  showIn(tl, visible(section, "[data-anim=cobro-msg]"), 0.04, 0.16);
+  showIn(tl, visible(section, "[data-anim=cobro-reply]"), 0.22, 0.34);
+  showIn(tl, visible(section, "[data-anim=cobro-promise]"), 0.36, 0.46);
+
+  const paper = visible(section, "[data-anim=receipt]");
+  const [rx0, rz0, rx1, rz1] = ctx.desktop ? [44, -2, 26, -6] : [34, -1, 20, -4];
+  if (paper.length) {
+    tl.fromTo(
+      paper,
+      { "--ty": "70px", "--rx": `${rx0}deg`, "--rz": `${rz0}deg` },
+      { "--ty": "0px", "--rx": `${rx1}deg`, "--rz": `${rz1}deg`, ease: "power3.out", duration: atP(0.6) },
+      0,
+    );
+    tl.fromTo(paper, { opacity: 0.25 }, { opacity: 1, ease: "none", duration: atP(0.2) }, 0);
+  }
+  const shadow = visible(section, "[data-anim=receipt-shadow]");
+  if (shadow.length) tl.fromTo(shadow, { opacity: 0.4 }, { opacity: 0.95, ease: "power3.out", duration: atP(0.6) }, 0);
+
+  // El último pago: se llena la barra y cuentan «Total pagado» y «Falta».
+  const fill = visible(section, "[data-anim=receipt-fill]");
+  if (fill.length) tl.fromTo(fill, { scaleX: 0 }, { scaleX: 1, ease: "power3.out", duration: atP(0.25) }, atP(0.55));
+  const paid = visible(section, "[data-anim=receipt-paid]");
+  const left = visible(section, "[data-anim=receipt-left]");
+  const status = visible(section, "[data-anim=receipt-status]");
+  const verified = visible(section, "[data-anim=receipt-verified]");
+  const finals = verified.map((el) => num(el, "final"));
+  counter(tl, 0.55, 0.8, (v) => {
+    for (const el of paid) setText(el, formatPesos(lerp(num(el, "from"), num(el, "to"), v)));
+    for (const el of left) setText(el, formatPesos(num(el, "from") * (1 - v)));
+    const done = v >= 0.999;
+    for (const el of status) setText(el, (done ? el.dataset.paid : el.dataset.due) ?? "");
+    verified.forEach((el, i) => setText(el, String(done ? finals[i] : finals[i] - 1)));
+  });
+
+  const stamp = visible(section, "[data-anim=receipt-stamp]");
+  if (stamp.length) {
+    tl.fromTo(stamp, { opacity: 0, scale: 1.5, rotation: -9 }, { opacity: 0.88, scale: 1, rotation: -9, ease: "power3.out", duration: atP(0.1) }, atP(0.82));
+  }
+  const gloss = visible(section, "[data-anim=receipt-gloss]");
+  if (gloss.length) tl.fromTo(gloss, { xPercent: -60 }, { xPercent: 60, ease: "none", duration: SPAN }, 0);
+  showIn(tl, visible(section, "[data-anim=receipt-sent]"), 0.92, 1, 10);
 };
 
+/** Ordenar: la tarjeta se levanta de «Propuesta», vuela y aterriza en «Compromiso». */
+const pipeline: Scene = (section, ctx) => {
+  const tl = spanTimeline(section, ctx, 120);
+  const forecast = visible(section, "[data-anim=forecast]");
+  counter(tl, 0, 0.5, (v) => {
+    for (const el of forecast) setText(el, formatMillions(num(el, "to") * v));
+  });
+  const plane = visible(section, "[data-anim=board-plane]");
+  if (plane.length) tl.fromTo(plane, { opacity: 0.3 }, { opacity: 1, ease: "power3.out", duration: atP(0.3) }, 0);
+
+  if (!ctx.desktop) {
+    showIn(tl, visible(section, "[data-anim=deal-mobile]"), 0.2, 0.5, 30);
+    showIn(tl, visible(section, "[data-anim=appointment-mobile]"), 0.6, 0.8);
+    return;
+  }
+
+  // La tarjeta vuela en coordenadas del tablero (820 × 600): del hueco de
+  // «Propuesta» (542, 250) al de «Compromiso» (672, 240), con un arco de 70 px.
+  // En el HTML ya está aterrizada; aquí solo se mueve la diferencia.
+  const START = { x: 542, y: 250 };
+  const END = { x: 672, y: 240 };
+  const cards = visible(section, "[data-anim=deal]");
+  const shadows = visible(section, "[data-anim=deal-shadow]");
+  const countLeft = visible(section, "[data-anim=count-left]");
+  const countLanded = visible(section, "[data-anim=count-landed]");
+  // Los finales salen de `data-to`, no del texto: al rehacer la línea (otro
+  // nicho) el texto puede haber quedado a medias.
+  const finalsLeft = countLeft.map((el) => num(el, "to"));
+  const finalsLanded = countLanded.map((el) => num(el, "to"));
+  const setCard = cards.map((el) => ({ x: gsap.quickSetter(el, "x", "px"), y: gsap.quickSetter(el, "y", "px"), r: gsap.quickSetter(el, "rotation", "deg"), o: gsap.quickSetter(el, "opacity") }));
+  const setShadow = shadows.map((el) => ({ x: gsap.quickSetter(el, "x", "px"), y: gsap.quickSetter(el, "y", "px"), s: gsap.quickSetter(el, "scale"), o: gsap.quickSetter(el, "opacity") }));
+  const fly = (p: number) => {
+    const lift = Math.sin(Math.PI * segP(p, 0.2, 0.74));
+    const move = easeOut3(segP(p, 0.3, 0.66));
+    const x = lerp(START.x, END.x, move) - END.x;
+    const ground = lerp(START.y, END.y, move) - END.y;
+    const appear = segP(p, 0.02, 0.14);
+    for (const c of setCard) {
+      c.x(x);
+      c.y(ground - 70 * lift);
+      c.r(-3 * lift);
+      c.o(appear);
+    }
+    for (const sh of setShadow) {
+      sh.x(x);
+      sh.y(ground);
+      sh.s(1 + 0.35 * lift);
+      sh.o((0.9 - 0.45 * lift) * appear);
+    }
+    countLeft.forEach((el, i) => setText(el, String(move > 0.5 ? finalsLeft[i] : num(el, "from"))));
+    countLanded.forEach((el, i) => setText(el, String(p >= 0.72 ? finalsLanded[i] : num(el, "from"))));
+  };
+  counter(tl, 0, 1, fly, "none");
+
+  const leaving = visible(section, "[data-anim=board-leaving]");
+  if (leaving.length) tl.fromTo(leaving, { opacity: 1 }, { opacity: 0, ease: "none", duration: atP(0.1) }, atP(0.22));
+  showIn(tl, visible(section, "[data-anim=appointment]"), 0.76, 0.9);
+};
+
+/** Axel escribe su resumen, amanece sobre el horizonte y suben sus propuestas. */
+const axel: Scene = (section, ctx) => {
+  const tl = spanTimeline(section, ctx, 140);
+  const typed = visible(section, "[data-anim=axel-typed]");
+  const rest = visible(section, "[data-anim=axel-rest]");
+  const carets = visible(section, "[data-anim=axel-caret]");
+  const texts = visible(section, "[data-anim=axel-summary]").map((el) => el.dataset.text ?? "");
+  const type = (v: number) => {
+    typed.forEach((el, i) => {
+      const text = texts[i] ?? "";
+      const n = Math.round(text.length * v);
+      setText(el, text.slice(0, n));
+      if (rest[i]) setText(rest[i], text.slice(n));
+      if (carets[i]) carets[i].style.opacity = n < text.length && v > 0 ? "1" : "0";
+    });
+  };
+  counter(tl, 0.1, 0.46, type, "none");
+  showIn(tl, visible(section, "[data-anim=axel-chips]"), 0.44, 0.52, 8);
+
+  const horizon = visible(section, "[data-anim=axel-horizon]");
+  if (horizon.length) tl.fromTo(horizon, { scaleX: 0 }, { scaleX: 1, ease: "power2.inOut", duration: atP(0.45) }, atP(0.3));
+  const dawn = visible(section, "[data-anim=axel-dawn]");
+  if (dawn.length) tl.fromTo(dawn, { y: 270, opacity: 0.15 }, { y: 0, opacity: 1, ease: "power3.out", duration: atP(0.35) }, atP(0.45));
+  visible(section, "[data-anim=axel-proposal]").forEach((el, i) => showIn(tl, [el], 0.52 + i * 0.08, 0.72 + i * 0.08, 40));
+  showIn(tl, visible(section, "[data-anim=axel-foot]"), 0.9, 1, 6);
+};
+
+/** Medir: las fibras se revelan de izquierda a derecha y cuentan las puertas; al final, lo producido. */
 const measure: Scene = (section, ctx) => {
-  const tl = sceneTimeline(section, ctx, 90);
-  for (const group of perNiche(section, "[data-anim=bar]")) tl.from(group, { scaleY: 0, transformOrigin: "bottom", stagger: 0.25 }, 0.3);
-  for (const group of perNiche(section, "[data-anim=count]")) for (const el of group) countUp(tl, el, 0.4);
+  const tl = spanTimeline(section, ctx, 140);
+  const funnels = visible(section, ".film-funnel").map((box) => {
+    const rect = box.querySelector<SVGRectElement>("[data-anim=funnel-clip]");
+    const x0 = Number(rect?.getAttribute("x") ?? 0);
+    const full = Number(rect?.getAttribute("width") ?? 0);
+    const from = Number(rect?.dataset.from ?? 0);
+    const gates = all(box, "[data-anim=funnel-gate]").map((g) => ({
+      x: num(g, "x"),
+      line: g.querySelector<HTMLElement>(".film-funnel-line"),
+      label: g.querySelector<HTMLElement>(".film-funnel-label"),
+      count: g.querySelector<HTMLElement>("[data-anim=funnel-count]"),
+    }));
+    return { rect, x0, full, from, gates };
+  });
+  counter(tl, 0.12, 0.82, (v) => {
+    for (const f of funnels) {
+      const width = lerp(f.from, f.full, v);
+      f.rect?.setAttribute("width", width.toFixed(1));
+      const edge = f.x0 + width;
+      for (const g of f.gates) {
+        const on = segP(edge, g.x - 40 * (f.full / 1200), g.x + 60 * (f.full / 1200));
+        if (g.line) g.line.style.opacity = (0.3 + 0.7 * on).toFixed(2);
+        if (g.label) g.label.style.opacity = (0.25 + 0.75 * on).toFixed(2);
+        if (g.count) setText(g.count, Math.round(num(g.count, "to") * easeOut3(on)).toLocaleString("es-CO"));
+      }
+    }
+  });
+  const produced = visible(section, "[data-anim=measure-produced]");
+  counter(tl, 0.82, 0.96, (v) => {
+    for (const el of produced) setText(el, formatMillions(num(el, "to") * v));
+  });
+  const result = visible(section, "[data-anim=measure-result]");
+  if (result.length) tl.fromTo(result, { opacity: 0.2 }, { opacity: 1, ease: "power3.out", duration: atP(0.14) }, atP(0.82));
+  const glow = visible(section, "[data-anim=funnel-glow]");
+  if (glow.length) tl.fromTo(glow, { opacity: 0 }, { opacity: 1, ease: "power3.out", duration: atP(0.14) }, atP(0.82));
 };
 
 const close: Scene = (section) => {

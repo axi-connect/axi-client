@@ -677,3 +677,292 @@
 }
 .film-phone-home { display: grid; flex-shrink: 0; place-items: center; height: 18px; }
 .film-phone-home span { width: 118px; height: 4.5px; border-radius: 3px; background: var(--foreground); opacity: 0.85; }
+
+/* ------------------------------------------------------------ §11 · crecer */
+/* Las escenas del lienzo de §11 se diseñaron sobre 1440 con márgenes de 120 px:
+   un contenedor más ancho que el de siempre. */
+.film-wrap-wide { max-width: 1440px; padding-inline: clamp(16px, 8.3vw, 120px); }
+@media (max-width: 1023px) { .film-wrap-wide { padding-inline: 16px; } }
+
+/* Cobrar · el recibo. Papel claro sobre el escenario: tinta = --background. */
+.film-cobro-bub { max-width: 350px; padding: 12px 15px 9px; font-size: 14.5px; line-height: 1.45; }
+.film-cobro-out { align-self: flex-end; border-radius: 20px 20px 6px 20px; background: color-mix(in srgb, var(--foreground) 95%, var(--background)); color: var(--background); }
+.film-cobro-in { align-self: flex-start; border-radius: 20px 20px 20px 6px; background: var(--film-surface-2); }
+.film-cobro-meta { display: block; margin-top: 4px; font-size: 10.5px; opacity: 0.55; text-align: right; }
+.film-cobro-in .film-cobro-meta { text-align: left; }
+
+.film-receipt-stage { position: relative; width: 500px; height: 700px; flex-shrink: 0; perspective: 1500px; perspective-origin: 50% 0%; }
+.film-receipt-shadow {
+  position: absolute;
+  left: 50px;
+  right: 40px;
+  bottom: 34px;
+  height: 80px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--background) 95%, transparent), transparent);
+  filter: blur(12px);
+  opacity: 0.95;
+}
+.film-receipt {
+  --ty: 0px;
+  --rx: 26deg;
+  --rz: -6deg;
+  position: absolute;
+  left: 40px;
+  top: 30px;
+  width: 420px;
+  height: 600px;
+  transform-origin: 50% 100%;
+  transform: translateY(var(--ty)) rotateX(var(--rx)) rotateZ(var(--rz));
+  will-change: transform;
+}
+.film-receipt-paper {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  overflow: hidden;
+  padding: 34px 34px 28px;
+  border-radius: 6px;
+  background: linear-gradient(
+    162deg,
+    var(--foreground) 0%,
+    color-mix(in srgb, var(--foreground) 95%, var(--background)) 52%,
+    color-mix(in srgb, var(--foreground) 88%, var(--background)) 100%
+  );
+  color: var(--background);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--foreground) 8%, transparent),
+    0 50px 100px color-mix(in srgb, var(--background) 75%, transparent);
+}
+.film-receipt-muted { color: color-mix(in srgb, var(--background) 55%, transparent); }
+.film-receipt-rule { height: 1px; flex-shrink: 0; background: color-mix(in srgb, var(--background) 14%, transparent); }
+.film-receipt-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 14px; align-items: baseline; }
+.film-receipt-bar { display: flex; gap: 4px; height: 8px; }
+.film-receipt-bar > span { flex: 1; border-radius: 4px; background: var(--background); }
+.film-receipt-bar > .rest { overflow: hidden; background: color-mix(in srgb, var(--background) 14%, var(--foreground)); }
+.film-receipt-bar > .rest > span { display: block; height: 100%; background: var(--background); transform-origin: left; }
+.film-receipt-stamp {
+  position: absolute;
+  right: 30px;
+  top: 232px;
+  padding: 8px 16px 6px;
+  border: 3px solid var(--background);
+  border-radius: 8px;
+  font-family: var(--font-nexa), var(--font-poppins), sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  opacity: 0.88;
+  transform: rotate(-9deg);
+}
+/* El brillo que barre el papel: solo se desliza (transform). */
+.film-receipt-gloss {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 30%, color-mix(in srgb, var(--foreground) 70%, transparent) 46%, transparent 60%);
+  mix-blend-mode: soft-light;
+  transform: translateX(60%);
+}
+.film-receipt-sent {
+  position: absolute;
+  left: 40px;
+  bottom: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 12%, transparent);
+  background: color-mix(in srgb, var(--background) 80%, transparent);
+  font-size: 13px;
+}
+@media (max-width: 1023px) {
+  .film-receipt-stage { width: 300px; height: 470px; perspective: 1100px; }
+  .film-receipt-shadow { left: 30px; right: 24px; bottom: 58px; height: 56px; }
+  .film-receipt { --rx: 20deg; --rz: -4deg; left: 0; top: 0; width: 300px; height: 400px; }
+  .film-receipt-paper { gap: 12px; padding: 22px; border-radius: 5px; }
+  .film-receipt-bar { height: 6px; gap: 3px; }
+  .film-receipt-stamp { right: 18px; top: 150px; padding: 6px 11px 4px; border-width: 2.5px; border-radius: 6px; font-size: 18px; }
+  .film-receipt-sent { left: 0; font-size: 12px; }
+}
+
+/* Ordenar · la mesa. Se dibuja a 820 × 600 y se escala entera con `--s`. */
+.film-board-stage { --s: 0.95; position: relative; width: calc(820px * var(--s)); height: calc(600px * var(--s)); flex-shrink: 0; }
+@media (max-width: 1439px) { .film-board-stage { --s: 0.82; } }
+@media (max-width: 1279px) { .film-board-stage { --s: 0.74; } }
+@media (max-width: 1151px) { .film-board-stage { --s: 0.66; } }
+.film-board-in { position: absolute; left: 0; top: 0; width: 820px; height: 600px; transform: scale(var(--s)); transform-origin: 0 0; }
+.film-board-view { position: absolute; left: 0; top: 0; width: 820px; height: 580px; perspective: 1400px; perspective-origin: 50% 0%; }
+.film-board-plane {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+  padding: 22px;
+  border-radius: 26px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 9%, transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--foreground) 3.5%, transparent), color-mix(in srgb, var(--foreground) 1.5%, transparent));
+  transform-origin: 50% 100%;
+  transform: rotateX(40deg);
+}
+.film-tile {
+  height: 92px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 7%, transparent);
+  background: color-mix(in srgb, var(--foreground) 5%, var(--background));
+}
+.film-slot { border-radius: 16px; border: 1px dashed color-mix(in srgb, var(--foreground) 22%, transparent); }
+.film-deal {
+  padding: 15px 16px 14px;
+  border-radius: 18px;
+  background: linear-gradient(165deg, var(--foreground), color-mix(in srgb, var(--foreground) 92%, var(--background)));
+  color: var(--background);
+  box-shadow: 0 24px 50px color-mix(in srgb, var(--background) 70%, transparent);
+}
+.film-deal-muted { color: color-mix(in srgb, var(--background) 60%, transparent); }
+.film-deal-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 11px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--background) 7%, transparent);
+  font-size: 11px;
+  font-weight: 500;
+}
+/* Coordenadas del tablero (820 × 600): la tarjeta y la cita en su sitio final. */
+.film-deal-fly { position: absolute; left: 565px; top: 188px; width: 214px; will-change: transform; }
+.film-deal-shadow {
+  position: absolute;
+  left: 567px;
+  top: 270px;
+  width: 210px;
+  height: 60px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--background) 90%, transparent), transparent);
+  filter: blur(10px);
+  opacity: 0.9;
+}
+.film-appt {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 12%, transparent);
+  background: color-mix(in srgb, var(--foreground) 5%, var(--background));
+  box-shadow: 0 30px 70px color-mix(in srgb, var(--background) 60%, transparent);
+}
+.film-appt-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 50px;
+  height: 54px;
+  border-radius: 12px;
+  background: var(--foreground);
+  color: var(--background);
+}
+.film-appt-fly { position: absolute; left: 532px; top: 340px; width: 280px; }
+.film-board-mobile { position: relative; height: 330px; perspective: 1000px; perspective-origin: 50% 0%; }
+.film-board-mobile .film-board-plane { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 14px; border-radius: 20px; transform: rotateX(38deg); }
+.film-deal-mobile { position: absolute; left: 126px; top: 90px; width: 190px; padding: 13px 14px; border-radius: 16px; }
+
+/* Axel · el horizonte. Tinta; el violeta solo en la marca de Axel. */
+.film-axel .film-wrap { padding-block: 88px 48px; }
+.film-axel-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--axi-violet) 22%, var(--background)), var(--background));
+  color: color-mix(in srgb, var(--axi-violet) 70%, var(--foreground));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--axi-violet) 45%, transparent),
+    0 0 54px color-mix(in srgb, var(--axi-violet) 32%, transparent);
+}
+.film-axel-caret { display: inline-block; width: 2px; height: 1.1em; margin: 0 1px -3px; background: var(--foreground); opacity: 0; }
+.film-horizon-block { position: relative; height: 1px; margin-block: clamp(40px, 7vh, 72px); }
+.film-horizon-block > * { position: absolute; left: 50%; width: 100vw; margin-left: -50vw; pointer-events: none; }
+.film-horizon {
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--foreground) 25%, transparent) 12%, color-mix(in srgb, var(--foreground) 25%, transparent) 88%, transparent);
+  transform-origin: 100% 50%;
+}
+.film-dawn { bottom: 0; height: 400px; overflow: hidden; }
+.film-dawn > span {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  top: 150px;
+  height: 520px;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in srgb, var(--foreground) 13%, transparent),
+    color-mix(in srgb, var(--foreground) 3.5%, transparent) 55%,
+    transparent
+  );
+}
+.film-ground { top: 0; height: 400px; background: linear-gradient(180deg, color-mix(in srgb, var(--foreground) 3%, transparent), transparent 60%); }
+.film-proposal {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 196px;
+  padding: 18px;
+  border-radius: 22px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--foreground) 6%, var(--background)), color-mix(in srgb, var(--foreground) 3%, var(--background)));
+  box-shadow: 0 30px 60px color-mix(in srgb, var(--background) 55%, transparent);
+}
+.film-pill-solid, .film-pill-ghost {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 0 16px;
+  border-radius: 999px;
+  font-size: 13px;
+}
+.film-pill-solid { background: var(--foreground); color: var(--background); font-weight: 600; }
+.film-pill-ghost { border: 1px solid color-mix(in srgb, var(--foreground) 16%, transparent); font-weight: 500; }
+@media (max-width: 1023px) {
+  .film-axel .film-wrap { padding-block: 88px 64px; }
+  .film-proposal { min-height: 0; gap: 7px; padding: 14px; border-radius: 18px; }
+  .film-pill-solid, .film-pill-ghost { min-height: 44px; padding: 0 18px; }
+  .film-dawn { height: 258px; }
+  .film-dawn > span { left: -60px; right: -60px; top: 110px; height: 300px; }
+}
+
+/* Medir · las fibras. Las puertas y sus cifras van en % de la caja del SVG. */
+.film-funnel { position: relative; width: 100%; margin-top: clamp(8px, 2vh, 24px); color: var(--foreground); }
+.film-funnel-mob { margin-top: 40px; margin-bottom: 64px; }
+.film-funnel-line {
+  position: absolute;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--foreground) 16%, transparent) 20%, color-mix(in srgb, var(--foreground) 16%, transparent) 80%, transparent);
+}
+.film-funnel-label { position: absolute; width: 180px; margin-left: -90px; text-align: center; }
+.film-funnel-mob .film-funnel-label { width: 84px; margin-left: -42px; }
+.film-funnel-glow {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  margin: -60px 0 0 -60px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--foreground) 95%, transparent), color-mix(in srgb, var(--foreground) 30%, transparent) 20%, transparent);
+  pointer-events: none;
+}
