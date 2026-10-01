@@ -13,7 +13,7 @@ const RADIUS = 28;
 const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
 
 export const video: Scene = (section: HTMLElement, ctx: Ctx) => {
-  // En móvil el máster vertical ya va a sangre desde el principio (film-video.css):
+  // En móvil el video ya va entero a lo ancho desde el principio (film-video.css):
   // abrir un marco en el tramo corto de la entrada no se alcanzaba a ver.
   if (!ctx.desktop) return;
   const tl = sceneTimeline(section, ctx, 180, PASS_DESKTOP);

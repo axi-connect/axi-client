@@ -1,12 +1,11 @@
 import "../film-video.css";
 
-import { FILM_VIDEO } from "@/modules/landing/domain/film/video-content";
-import { HERO_VIDEO } from "@/modules/landing/ui/content/productos.content";
+import { FILM_VIDEO, FILM_VIDEO_SOURCES } from "@/modules/landing/domain/film/video-content";
 import { FilmVideo } from "@/modules/landing/ui/film/parts/FilmVideo";
 
 /**
- * El video inmersivo (plan §23, lienzo aprobado el 2026-10-02). El video del
- * producto entra en su marco bajo el titular
+ * El video inmersivo (plan §23, lienzo aprobado el 2026-10-02). El video de la
+ * home entra en su marco bajo el titular
  * y, con la escena fijada, el marco se abre hasta llenar la pantalla
  * (`engine/video-scene.ts`, solo transform y opacity).
  *
@@ -27,7 +26,7 @@ export function VideoScene() {
       </div>
       <div className="film-video-frame" data-anim="video-frame">
         <div className="film-video-clip" data-anim="video-clip">
-          <FilmVideo desktop={HERO_VIDEO.desktop} mobile={HERO_VIDEO.mobile} />
+          <FilmVideo desktop={FILM_VIDEO_SOURCES.desktop} mobile={FILM_VIDEO_SOURCES.mobile} />
           <span className="film-video-vignette" data-anim="video-vignette" aria-hidden="true" />
           <p className="film-video-cap" data-anim="video-cap">
             <span className="film-video-kicker">{FILM_VIDEO.kicker}</span>

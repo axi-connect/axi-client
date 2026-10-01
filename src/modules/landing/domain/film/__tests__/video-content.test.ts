@@ -1,22 +1,20 @@
 /**
- * El video inmersivo (plan §23): las fuentes son las de /productos, por
- * Cloudinary en H.264 con su póster, y el texto no promete nada que el video no
- * muestre.
+ * El video inmersivo (plan §23): el video de la home por Cloudinary, en H.264,
+ * con su póster, y el texto no promete nada que el video no muestre.
  */
-import { HERO_VIDEO as FILM_VIDEO_SOURCES } from "@/modules/landing/ui/content/productos.content"
-
-import { FILM_VIDEO } from "../video-content"
+import { FILM_VIDEO, FILM_VIDEO_SOURCES } from "../video-content"
 
 describe("el video de la película", () => {
-  it.each(["desktop", "mobile"] as const)("%s: H.264 por Cloudinary, sin q_auto, con su póster", (v) => {
+  it.each(["desktop", "mobile"] as const)("%s: el video de la home por Cloudinary, en mp4, con su póster", (v) => {
     const s = FILM_VIDEO_SOURCES[v]
-    expect(s.mp4).toMatch(/^https:\/\/res\.cloudinary\.com\/.+\/video\/upload\/vc_h264,q_90,/)
+    expect(s.mp4).toMatch(/^https:\/\/res\.cloudinary\.com\/dpfnxj52w\/video\/upload\/.+\/adelante-web-vista-previa_tbvxlp\.mp4$/)
     expect(s.mp4).not.toMatch(/q_auto/)
     expect(s.poster).toMatch(/f_jpg/)
   })
 
-  it("el máster vertical es otro archivo, no un recorte del horizontal", () => {
-    expect(FILM_VIDEO_SOURCES.mobile.mp4).not.toBe(FILM_VIDEO_SOURCES.desktop.mp4)
+  it("móvil baja a 1080 de ancho; escritorio va sin re-codificar", () => {
+    expect(FILM_VIDEO_SOURCES.mobile.mp4).toMatch(/w_1080/)
+    expect(FILM_VIDEO_SOURCES.desktop.mp4).not.toMatch(/q_\d|w_\d/)
   })
 
   it("sin cifras inventadas en la copia", () => {
