@@ -628,3 +628,12 @@ La dueña pidió acelerar. axi-2e (antes axi-13) coordina y hace QA; dos constru
 - Un archivo tiene un solo dueño a la vez. Lo que cruza (registrar un builder en `SCENES`, importar `film-tanda4.css`, cambiar `GoalScene`/`CloseScene` en `FilmPage`) lo hace el dueño, o este cede el archivo de forma explícita.
 - Commits con rutas explícitas. Las tareas pesadas (typecheck, jest) se avisan entre ellos: una a la vez.
 - QA de axi-2e tras cada commit a 390, 768, 1024 y 1440 px.
+
+### 17.1 Ajustes de construcción validados por axi-2e (2026-09-30)
+
+- La meta en móvil empieza su línea en «top 40 %» y no en «top 70 %» (§16.1). Con 70 % el coche arrancaba bajo el pliegue.
+- Escenas sin pin: el fotograma final llega con la escena entera en pantalla («top 85 %» → «center 50 %»; en móvil, «top 80 %» → «bottom 95 %»).
+- Riel de capítulos: por debajo de 1536 px solo puntos y línea.
+- Precios en la película: «Programa fundadores» en tinta, con el envoltorio `.film-founders`. `/precios` no cambia.
+- Sin grano feTurbulence en ninguna escena: rendimiento antes que textura.
+- SEO de `/`: el title es «Axi Connect · Vende en cada conversación», la description es el lead del hero y la imagen OG se genera con next/og en tinta.
