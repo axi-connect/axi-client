@@ -111,7 +111,7 @@ export const RUN_STEPS = [
   { key: "contact", label: "Inscribir en la secuencia", done_after: ["contact"] },
 ] as const;
 
-const STEP_ORDER = [
+export const STEP_ORDER = [
   "search",
   "await_search",
   "enrich",
@@ -221,24 +221,6 @@ export function itemTitle(item: { display_name?: string | null; company_name?: s
   const company = item.company_name?.trim() ?? "";
   if (name === "" && company === "") return "Cuenta sin nombre";
   return [name, company].filter((part) => part !== "").join(" · ");
-}
-
-/** La bitácora dicha en una línea (los eventos que narra el motor de P4). */
-export function eventLine(event: RunEvent): string {
-  const payload = event.payload;
-  if (event.kind === "step_started") {
-    const step = typeof payload.step === "string" ? payload.step : "";
-    const known = RUN_STEPS.find((entry) => entry.key === step || (entry.done_after as readonly string[]).includes(step));
-    return `Empezó: ${known?.label ?? step}`;
-  }
-  if (event.kind === "run_finished") {
-    const status = typeof payload.status === "string" ? payload.status : "";
-    const meta = (RUN_STATUS_META as Record<string, { label: string } | undefined>)[status];
-    return `Terminó la ejecución · ${meta?.label ?? status}`;
-  }
-  // Un evento que el motor aún no narraba: se cuenta su detalle, nunca la clave cruda.
-  const detail = typeof payload.detail === "string" ? payload.detail : "";
-  return detail === "" ? "Novedad de la ejecución" : detail;
 }
 
 /** Válido para guardar: lo que el servidor rechazaría, dicho antes. */

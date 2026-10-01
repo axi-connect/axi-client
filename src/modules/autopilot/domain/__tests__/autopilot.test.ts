@@ -1,6 +1,5 @@
 import {
   defaultRoutineInput,
-  eventLine,
   funnelOf,
   hourLabel,
   itemTitle,
@@ -49,16 +48,6 @@ describe("autopilot — lo que se ve de una ejecución", () => {
     expect(itemTitle({})).toBe("Cuenta sin nombre");
   });
 
-  it("la bitácora nombra el paso que empezó y cómo terminó", () => {
-    const base = { id: "e", item_id: null, request_id: null, created_at: "2026-09-30T10:00:00Z" };
-    expect(eventLine({ ...base, kind: "step_started", payload: { step: "await_reveal" } })).toBe("Empezó: Calificar y revelar");
-    expect(eventLine({ ...base, kind: "run_finished", payload: { status: "budget_exhausted" } })).toBe(
-      "Terminó la ejecución · Se acabó el tope",
-    );
-    // Un evento nuevo del motor nunca asoma su clave cruda.
-    expect(eventLine({ ...base, kind: "item_discarded", payload: {} })).toBe("Novedad de la ejecución");
-    expect(eventLine({ ...base, kind: "item_discarded", payload: { detail: "Puntaje bajo" } })).toBe("Puntaje bajo");
-  });
 
   it("qué busca, en una línea", () => {
     expect(sourceSummary({ person: { titles: ["Dueño", "Gerente"] }, city: "Medellín" })).toBe("Dueño, Gerente · Medellín");

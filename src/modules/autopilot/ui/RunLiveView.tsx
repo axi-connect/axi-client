@@ -18,7 +18,6 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import { MarketingHeader } from "@/modules/marketing/ui/components/MarketingHeader";
 
 import {
-  eventLine,
   funnelOf,
   itemTitle,
   RUN_STAGE_LABELS,
@@ -32,6 +31,7 @@ import {
   type RunDetail,
   type RunEvent,
 } from "../domain/autopilot";
+import { eventLine } from "../domain/copy";
 import {
   decideBatch,
   getBatch,
