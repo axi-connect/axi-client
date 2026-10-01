@@ -72,6 +72,15 @@ export function sampleGoalRoute(way: readonly Point[] = GOAL_WAYPOINTS, radius =
       }
     }
   }
+  return withLengths(points);
+}
+
+/**
+ * Una polilínea con sus longitudes acumuladas: lo que hace falta para que una
+ * fracción sea una fracción del camino (`goalPointAt`, `goalSlicePath`). La
+ * usan la calle de la meta y la aerovía del piloto (`flight-route.ts`).
+ */
+export function withLengths(points: readonly Point[]): SampledRoute {
   const lengths = [0];
   for (let i = 1; i < points.length; i++) {
     lengths.push(lengths[i - 1] + Math.hypot(points[i].x - points[i - 1].x, points[i].y - points[i - 1].y));
