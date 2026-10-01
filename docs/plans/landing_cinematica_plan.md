@@ -944,3 +944,20 @@ Van en `domain/film/call-audio.ts`, como datos y funciones puras.
   - movimiento reducido;
   - teclado: Espacio y Enter en la esfera;
   - se pausa al salir de pantalla.
+
+### 20.5 Construcción y cambios frente al lienzo (2026-10-01, noche)
+
+La construyó axi-2e porque el 2.º constructor quedó detenido en un permiso. Commits: a1367d98 → 4811ed35.
+
+- **Servidor + reproductor.** `scenes/call-scene.tsx` es un Server Component que pinta la escena entera: esfera, órbitas, onda real, las dos pistas de subtítulos con `data-at` por palabra, notas y etapas. Al navegador solo va `parts/CallPlayer.tsx`, que escribe atributos y estilos directo en el DOM, sin React por frame. `call-time.ts` lleva lo mínimo que necesita el cliente.
+- **Fotograma final sin JS.** Antes de tocar la esfera, las etapas y las notas se ven completas y la onda tenue (el lienzo las mostraba vacías). Al tocar la esfera, todo vuelve a cero y se llena con la voz.
+- **Rendimiento** (perfil de Chromium headless, rueda real, 1440):
+  - variables CSS por frame en la sección → transform y opacity directos en unas 16 capas, escritos solo si cambian, a unos 20 Hz y con una transition de 100 ms que interpola el compositor;
+  - la corona son 64 trazos en un canvas 2D (una sola capa);
+  - las órbitas pasan de 3D real (ordenar planos que giran era lo más caro) a dos medias elipses 2D, la de atrás bajo la esfera y la de delante encima, con la misma lectura de profundidad;
+  - los campos del fondo son dos capas que laten por opacidad y no por escala (re-rasterizaban 1100 px).
+  - Llamada sonando: p50 de 83 → 16,7 ms con CPU ×1 (33 con ×4, como el chat) y 0 tareas largas.
+- **Tipografía.** Las cifras van en Geist Mono, ya cargada en el layout: cero fuentes nuevas (el lienzo usaba IBM Plex Mono).
+- **Píldora del nicho.** `data-pill-avoid="always"` en los subtítulos y la línea de tiempo: se aparta en cualquier ancho.
+- **Órbitas en Firefox:** el SVG en 3D se descolocaba. Los arcos son div con conic-gradient y máscara.
+- **QA:** `qa/qa-llamada.mjs` en Chromium, WebKit y Firefox a 1440, 1024, 768 y 390, más movimiento reducido: suena, cambia de quién habla, las bandas se mueven, se llenan las notas, 0 errores y sin scroll horizontal. Evidencia en `qa/evidencia/landing-llamada/`.
