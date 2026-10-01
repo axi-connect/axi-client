@@ -637,3 +637,21 @@ La dueña pidió acelerar. axi-2e (antes axi-13) coordina y hace QA; dos constru
 - Precios en la película: «Programa fundadores» en tinta, con el envoltorio `.film-founders`. `/precios` no cambia.
 - Sin grano feTurbulence en ninguna escena: rendimiento antes que textura.
 - SEO de `/`: el title es «Axi Connect · Vende en cada conversación», la description es el lead del hero y la imagen OG se genera con next/og en tinta.
+
+### 17.2 Borrado seguro, auditado (D12, 2026-09-30)
+
+Verificado de verdad con Axel, en un worktree temporal desde e51d1a25:
+- se tocaron solo FilmPage (import y JSX), el builder y la entrada en `SCENES`, `PINNED` en `film-kit.ts` y `git rm` de la escena;
+- typecheck, lint y jest de landing quedaron en verde.
+
+El motor solo construye las secciones que encuentra, así que lo demás queda inerte: el CSS de la escena, sus campos de contenido y sus anclas del hilo.
+
+Avisos por escena (además de FilmPage y `SCENES`):
+- **Capítulos del riel.** Radar (Captar), chat (Vender), cobrar (Cobrar) y meta (Crecer) llevan `data-chapter`. Si se quita una de estas escenas, hay que mover su capítulo a otra o quitarlo de `TICKS` en FilmRoot.
+- **Nicho.** Es el destino de «Cambiar» en la píldora (`goTo("#quien")`).
+- **Chat.** Es `#vender`, el destino al elegir nicho.
+- **Axel.** `film.test` cuadra `axel.proposals` con la meta.
+- **Medir.** `parseFigure` de `funnel-fibers.ts` lo usan también cobrar y ordenar.
+- **Meta.** El hilo archivado usa `roadPointAt`, `MAP_WIDTH` y `MAP_HEIGHT` de `route-map.ts`.
+- **Precios, preguntas y cierre.** Hay enlaces externos que dependen de `/#planes`, `/#preguntas` y `#demo`.
+- **Módulos transversales** (no se borran con ninguna escena): `film-kit`, `ByNiche`, `SceneHead`, `FilmCta`, `film-icons`, `niches.ts` y `film-content.ts`.
