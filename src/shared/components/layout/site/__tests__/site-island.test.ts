@@ -8,7 +8,7 @@ import { islandOnFilm, islandOnPage, pageName, readProgress } from "../site-isla
 
 describe("la isla en la home", () => {
   it("antes del primer capítulo dice qué es; luego el capítulo y «Capítulo n de 4»", () => {
-    expect(islandOnFilm(null)).toEqual({ title: "Axi Connect", sub: "La película · 4 capítulos", ring: 0 })
+    expect(islandOnFilm(null)).toEqual({ title: "Axi Connect", sub: "Captar · Vender · Cobrar · Crecer", ring: 0 })
     expect(islandOnFilm({ chapter: null, index: -1, total: 4, progress: 0.02 }).title).toBe("Axi Connect")
     expect(islandOnFilm({ chapter: "Cobrar", index: 2, total: 4, progress: 0.5 })).toEqual({ title: "Cobrar", sub: "Capítulo 3 de 4", ring: 0.5 })
   })

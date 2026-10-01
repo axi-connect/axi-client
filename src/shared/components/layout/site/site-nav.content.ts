@@ -137,7 +137,7 @@ export const SITE_MENU_FOOT = {
 /** La isla: qué dice según dónde está el visitante. */
 export const SITE_ISLAND = {
   /** En la home, antes del primer capítulo de la película. */
-  start: { title: "Axi Connect", sub: "La película · 4 capítulos" },
+  start: { title: "Axi Connect", sub: "Captar · Vender · Cobrar · Crecer" },
   chapter: (n: number, total: number) => `Capítulo ${n} de ${total}`,
   /** Fuera de la home: el nombre de la página y cuánto se ha leído. */
   read: (pct: number) => `${pct} % leído`,
