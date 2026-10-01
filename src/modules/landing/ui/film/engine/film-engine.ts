@@ -23,6 +23,7 @@ import Lenis from "lenis";
 import { formatMillions, formatPesos } from "@/modules/landing/domain/film/route-scenario";
 import { FILM_THREAD } from "@/modules/landing/domain/film/thread-path";
 import type { FilmThread } from "@/modules/landing/ui/film/thread/thread";
+import { emitFilmEvent, FILM_ACTIVITY_EVENT, type FilmActivityDetail } from "@/modules/landing/ui/film/film-events";
 import { close } from "@/modules/landing/ui/film/engine/close-scene";
 import { goal } from "@/modules/landing/ui/film/engine/goal-scene";
 import { pricing } from "@/modules/landing/ui/film/engine/pricing-scene";
@@ -243,7 +244,16 @@ const collect: Scene = (section, ctx) => {
   const status = visible(section, "[data-anim=receipt-status]");
   const verified = visible(section, "[data-anim=receipt-verified]");
   const finals = verified.map((el) => num(el, "final"));
+  // Al quedar verificada (≈ el sello), la película lo cuenta a quien escuche
+  // (la isla de la cabecera): una vez por paso hacia adelante.
+  let verifiedOnce = false;
   counter(tl, 0.55, 0.8, (v) => {
+    const now = v >= 0.999;
+    if (now && !verifiedOnce) {
+      const r = paper[0];
+      if (r?.dataset.activityTitle) emitFilmEvent<FilmActivityDetail>(FILM_ACTIVITY_EVENT, { title: r.dataset.activityTitle, detail: r.dataset.activityDetail ?? "" });
+    }
+    verifiedOnce = now;
     for (const el of paid) setText(el, formatPesos(lerp(num(el, "from"), num(el, "to"), v)));
     for (const el of left) setText(el, formatPesos(num(el, "from") * (1 - v)));
     const done = v >= 0.999;

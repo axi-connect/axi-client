@@ -28,7 +28,12 @@ function Receipt({ c }: { c: FilmContent }) {
   return (
     <div className="film-receipt-stage">
       <div className="film-receipt-shadow" data-anim="receipt-shadow" aria-hidden="true" />
-      <div className="film-receipt" data-anim="receipt">
+      <div
+        className="film-receipt"
+        data-anim="receipt"
+        data-activity-title={`${k.payer} pagó ${k.last.label === "Saldo" ? "el saldo" : `la ${k.last.label.toLowerCase()}`}`}
+        data-activity-detail={`${k.remaining} · verificado por tu equipo`}
+      >
         <div className="film-receipt-paper" data-thread-target="">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">

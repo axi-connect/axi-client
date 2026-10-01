@@ -84,6 +84,8 @@ export type FilmContent = {
     remaining: string;
     /** El último pago del recibo: su nombre y su estado antes y después de pagarse. */
     last: { label: string; due: string; paid: string };
+    /** Quién paga ese último pago (el aviso «Andrés pagó la cuota 3» de la cabecera). */
+    payer: string;
     reminder: string;
     promiseReply: string;
     promise: string;
@@ -164,6 +166,7 @@ const RESTAURANTS: FilmContent = {
     parts: [["Anticipo · verificado", "$\u00a01.000.000"], ["Abono 2 · verificado", "$\u00a0800.000"]],
     remaining: "$\u00a0650.000",
     last: { label: "Saldo", due: "Vence el 16 oct", paid: "Pagado el 19 oct" },
+    payer: "Andrea",
     reminder: "Hola Andrea, el saldo de los almuerzos de octubre, $\u00a0650.000, vence el viernes 16. Te dejo los medios de pago.",
     promiseReply: "Pago el lunes sin falta",
     promise: "Promesa · lunes 19 · recordatorios en pausa",
@@ -261,6 +264,7 @@ const TECH: FilmContent = {
     parts: [["Anticipo · verificado", "$\u00a01.500.000"], ["Cuota 2 · verificada", "$\u00a01.700.000"]],
     remaining: "$\u00a01.699.000",
     last: { label: "Cuota 3", due: "Vence el 16 oct", paid: "Pagada el 19 oct" },
+    payer: "Andrés",
     reminder: "Hola Andrés, la cuota 3 de 3 por $\u00a01.699.000 vence el viernes 16 de octubre. Te dejo los medios de pago.",
     promiseReply: "Pago el lunes sin falta",
     promise: "Promesa · lunes 19 · recordatorios en pausa",
@@ -358,6 +362,7 @@ const BEAUTY: FilmContent = {
     parts: [["Anticipo · verificado", "$\u00a0300.000"], ["Cuota 2 · verificada", "$\u00a0300.000"]],
     remaining: "$\u00a0300.000",
     last: { label: "Cuota 3", due: "Vence el 16 oct", paid: "Pagada el 19 oct" },
+    payer: "Valentina",
     reminder: "Hola Valentina, la cuota 3 de 3 de tu plan de láser, $\u00a0300.000, vence el viernes 16 de octubre.",
     promiseReply: "Te pago el lunes",
     promise: "Promesa · lunes 19 · recordatorios en pausa",
@@ -455,6 +460,7 @@ const B2B: FilmContent = {
     parts: [["Anticipo · verificado", "$\u00a01.500.000"], ["Abono 2 · verificado", "$\u00a01.700.000"]],
     remaining: "$\u00a01.700.000",
     last: { label: "Saldo", due: "Vence el 16 oct", paid: "Pagado el 19 oct" },
+    payer: "Marta",
     reminder: "Hola Marta, el saldo del pedido #3120, $\u00a01.700.000, vence el viernes 16 de octubre. Te dejo los datos de pago.",
     promiseReply: "Lo giramos el lunes",
     promise: "Promesa · lunes 19 · recordatorios en pausa",

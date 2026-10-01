@@ -75,3 +75,23 @@ it("sin movimiento reducido el motor arranca en diferido", async () => {
   await new Promise((r) => setTimeout(r, 700))
   expect(startFilm).toHaveBeenCalledTimes(1)
 })
+
+it("emite «film:chapter» para la isla de la cabecera, y solo cuando cambia", () => {
+  window.IntersectionObserver = jest.fn(() => ({ observe: jest.fn(), disconnect: jest.fn(), unobserve: jest.fn() })) as unknown as typeof IntersectionObserver
+  window.ResizeObserver = jest.fn(() => ({ observe: jest.fn(), disconnect: jest.fn(), unobserve: jest.fn() })) as unknown as typeof ResizeObserver
+  const seen: unknown[] = []
+  const listen = (e: Event) => seen.push((e as CustomEvent).detail)
+  window.addEventListener("film:chapter", listen)
+  // La capa pública hace scroll en `[data-app-scroll]`: sin él, la isla no escucha nada.
+  const scroller = document.createElement("div")
+  scroller.setAttribute("data-app-scroll", "")
+  document.body.appendChild(scroller)
+  const { unmount } = render(<Film />, { container: scroller })
+  expect(seen[0]).toEqual({ chapter: null, index: -1, total: 4, progress: 0 })
+  // Sin scroll, nada nuevo que contar.
+  fireEvent.scroll(scroller)
+  expect(seen).toHaveLength(1)
+  unmount()
+  window.removeEventListener("film:chapter", listen)
+  scroller.remove()
+})

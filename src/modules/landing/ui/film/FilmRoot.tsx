@@ -10,6 +10,7 @@ import {
   parseFilmNiche,
   type FilmNiche,
 } from "@/modules/landing/domain/film/niches";
+import { emitFilmEvent, FILM_CHAPTER_EVENT, type FilmChapterDetail } from "@/modules/landing/ui/film/film-events";
 
 /**
  * La única isla cliente de la película.
@@ -140,7 +141,9 @@ export function FilmRoot({ children }: { children: ReactNode }) {
       frame = 0;
       const into = scrollTop - filmTop;
       const span = Math.max(1, filmHeight - viewHeight);
-      root.style.setProperty("--film-progress", Math.min(1, Math.max(0, into / span)).toFixed(4));
+      const progress = Math.min(1, Math.max(0, into / span));
+      root.style.setProperty("--film-progress", progress.toFixed(4));
+      announce(chapterNow, Math.round(progress * 100) / 100);
       const nowBeyond = into > viewHeight * 1.2;
       const nowPast = into + viewHeight * 0.85 > afterTop;
       if (nowBeyond !== beyondHero || nowPast !== pastFilm) {
@@ -172,6 +175,19 @@ export function FilmRoot({ children }: { children: ReactNode }) {
       onScroll();
     };
 
+    // `film:chapter` para la isla de la cabecera: solo cuando cambia algo.
+    let chapterNow = -1;
+    let progressNow = -1;
+    let announced = "";
+    const announce = (index: number, progress: number) => {
+      chapterNow = index;
+      progressNow = progress;
+      const key = `${index}|${progress}`;
+      if (key === announced) return;
+      announced = key;
+      emitFilmEvent<FilmChapterDetail>(FILM_CHAPTER_EVENT, { chapter: TICKS[index] ?? null, index, total: TICKS.length, progress });
+    };
+
     const marks = TICKS.map((t) => root.querySelector<HTMLElement>(`[data-chapter="${t}"]`));
     const chapterIo = new IntersectionObserver(
       () => {
@@ -181,6 +197,7 @@ export function FilmRoot({ children }: { children: ReactNode }) {
           if (m && m.getBoundingClientRect().top < el.clientHeight * 0.6) current = i;
         });
         setChapter(current);
+        announce(current, Math.max(0, progressNow));
       },
       { root: el, rootMargin: "0px 0px -40% 0px", threshold: [0, 1] },
     );
