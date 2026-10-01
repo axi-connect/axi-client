@@ -1041,3 +1041,23 @@ Lienzo: https://claude.ai/artifact/TAMCLKyh5AdP3xKremX4w9 (v2). La dueña lo apr
   - `scrollTo(target, { duration, easing, onComplete })` y `offsetOf()` en el motor.
 - **Solo escritorio:** el riel no existe por debajo de 1024 px. El piloto aparece en la lista solo con `FILM_PILOT=1`, porque el riel lista lo que hay en la página.
 - **Ajuste del 2026-10-01 (revisión de diseño):** la escena del centro se lee entera. Su fila mide 60 px y su título puede ir en dos líneas (`line-clamp: 2`, `text-wrap: balance`). La tecla queda en «↵» y las vecinas se apartan `DRUM.bump` = 8 px. Medido a tamaño real: el título más largo («Tu captación en piloto automático») ocupa unos 270 px y la columna deja unos 141 px. Las filas de alrededor siguen en una línea, con elipsis.
+
+## 23. Video inmersivo en lugar de «Vendemos progreso» (aprobado el 2026-10-02)
+
+La dueña: «vamos a eliminar la sección de la filosofía, no me gusta para nada… en lugar de ello vamos a poner un video… en streaming, tal como está el otro, pero incrustado, que se sienta inmersivo». El lienzo (https://claude.ai/artifact/W7Az38XYfiBjUofU2xoUoB) quedó aprobado: «procede y elimina la filosofía, no dejes rastro ni basura, optimizado».
+
+- **Lugar:** justo después del hero (`#video`), escena fijada en escritorio.
+- **Fuentes:** las de /productos (`HERO_VIDEO`): Cloudinary en streaming progresivo, H.264 `q_90`, máster horizontal 1920 y vertical 1080×1920, cada uno con su póster.
+- **Coreografía:**
+  - entra con el video en un marco (la pantalla entera a escala 0,6, o 0,78 en móvil) bajo «Así se ve / un día con Axi.»;
+  - fijada, el titular se va y el marco se abre hasta a sangre;
+  - la viñeta se intensifica y al final aparece «Vende, cobra y atiende. Mientras tú decides.».
+  - El control «Activar sonido» es de cristal; al activarlo, el video vuelve a empezar.
+- **Rendimiento:**
+  - abrir el marco es un `scale`, con el radio compensado en el recorte; no hay cambio de tamaño ni layout;
+  - no se pide ni el póster ni el video hasta que la escena está a una pantalla;
+  - se pausa fuera de pantalla y con la pestaña oculta;
+  - sin framer-motion: no suma al JS común.
+- **Movimiento reducido o ahorro de datos:** póster y «Reproducir el video», sin autoplay.
+- **Borrado de la filosofía** (constructor 1, §17.2): escena, builder, CSS, contenido, tests, PINNED, la entrada del riel y la copia. Sin rastro en src.
+- **Archivos del video** (axi-2e, 675aea35): `scenes/video.tsx`, `parts/FilmVideo.tsx`, `engine/video-scene.ts`, `film-video.css` y `domain/film/video-content.ts` con su test.
