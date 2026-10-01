@@ -1184,3 +1184,12 @@
   [data-scene="measure"] > .film-wrap,
   [data-scene="call"] > .film-call-layout { zoom: 0.82; }
 }
+
+/* La barra de scroll de la home va en tinta, no en coral (el resto del sitio
+   conserva la de marca). El contenedor recibe `film-scroller` de FilmRoot
+   mientras la película está montada. */
+.film-scroller::-webkit-scrollbar-thumb { background-image: none; background-color: color-mix(in srgb, var(--foreground) 22%, transparent); }
+.film-scroller::-webkit-scrollbar-thumb:hover { background-image: none; background-color: color-mix(in srgb, var(--foreground) 35%, transparent); }
+@supports not selector(::-webkit-scrollbar) {
+  .film-scroller { scrollbar-color: color-mix(in srgb, var(--foreground) 22%, transparent) transparent; }
+}

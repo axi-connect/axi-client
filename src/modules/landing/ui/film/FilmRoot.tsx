@@ -213,7 +213,8 @@ export function FilmRoot({ children }: { children: ReactNode }) {
   useEffect(() => {
     const el = scroller();
     if (!el) return;
-    const added = ["dark", "theme-dark-island", "bg-background", "text-foreground"].filter((c) => !el.classList.contains(c));
+    // `film-scroller`: la barra de scroll en tinta mientras está la película (film.css).
+    const added = ["dark", "theme-dark-island", "bg-background", "text-foreground", "film-scroller"].filter((c) => !el.classList.contains(c));
     el.classList.add(...added);
     return () => el.classList.remove(...added);
   }, []);
