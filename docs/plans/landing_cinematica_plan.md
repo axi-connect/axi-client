@@ -655,3 +655,71 @@ Avisos por escena (además de FilmPage y `SCENES`):
 - **Meta.** El hilo archivado usa `roadPointAt`, `MAP_WIDTH` y `MAP_HEIGHT` de `route-map.ts`.
 - **Precios, preguntas y cierre.** Hay enlaces externos que dependen de `/#planes`, `/#preguntas` y `#demo`.
 - **Módulos transversales** (no se borran con ninguna escena): `film-kit`, `ByNiche`, `SceneHead`, `FilmCta`, `film-icons`, `niches.ts` y `film-content.ts`.
+
+## 18. Nav en isla y «Vendemos progreso» (aprobados el 2026-09-30)
+
+Lienzo: https://claude.ai/artifact/KypEd4KaAAzxuNh6kN4ReK (Main, Menu, Mobile, Philosophy y PhilosophyMobile). Aprobado por la dueña («aprobado el lienzo del nav… de resto aprobado»), con un pedido: las tres piezas del isotipo, fieles y ultra premium. Este nav sustituye lo de §16.5.
+
+### 18.1 El nav (construye `2-cinematic-film-landing-page`)
+
+**Barra (escritorio, ≥ lg).** Barra de cristal centrada: 1000 px de máximo, 64 px de alto, a 22 px del borde. Lleva logo, tres menús por intención, Precios, «Iniciar sesión» y el CTA coral.
+
+| Menú | Pilar | Promesa | Color del punto |
+|---|---|---|---|
+| «Vender y cobrar» | Prosperidad | más ingresos, menos costos | coral |
+| «Crecer» | Crecimiento | más alcance, más clientes | ámbar |
+| «Atender» | Libertad | más tiempo, menos carga | violeta |
+
+**Isla.** Pasados unos 120 px de scroll, la barra se vuelve isla: 452 × 52, a 16 px del borde.
+- Contenido: isotipo, anillo de progreso, capítulo y «Capítulo n de 4», botón de menú y «Prueba gratis».
+- El cambio se anima solo con `transform` y `opacity`.
+- En la home la alimentan dos eventos de FilmRoot:
+  - `film:chapter` con `{chapter, index, total, progress}`;
+  - `film:activity` con `{title, detail}`: la isla crece 58 px durante 3 s y muestra el aviso.
+- Fuera de la home muestra el nombre de la página y el progreso de lectura.
+
+**Panel de menú.**
+- Izquierda: «¿Qué quieres hacer?» con las tres intenciones.
+- Centro: las tarjetas de la intención elegida.
+- Derecha: «Por tipo de negocio» y «Conecta».
+- Abajo: los 7 días de prueba, «Escríbenos» por WhatsApp y el CTA.
+- Casos e Integraciones bajan a la columna lateral.
+
+**Tema.** En escritorio, una píldora vertical de cristal fija en el borde derecho; en la home no se muestra. En móvil va dentro de la hoja.
+
+**Móvil.**
+- Isla fija con isotipo, «axi connect», «Prueba gratis» y menú.
+- El menú se abre como hoja de cristal con acordeones por intención, enlaces, «Iniciar sesión», el selector de tema y el CTA.
+- Foco atrapado; Esc cierra.
+
+**Cristal.**
+- Es una excepción a la regla de no usar `backdrop-filter`, válida solo en la isla, el panel y la hoja.
+- Valores: `blur(22px) saturate(1.7)`, fondo blanco del 13 al 4,5 %, filete al 16 % y brillo interior.
+- Si el navegador no soporta `backdrop-filter`, o con `prefers-reduced-transparency`, va sólido: `#141416` al 92 %.
+
+### 18.2 «Vendemos progreso» (construye `cinematic-film-landing-page`)
+
+Escena `philosophy` con el id `progreso`. Va entre el hero y el nicho.
+- **Escritorio:** fijada. El scroll mueve una pista horizontal de 3300 px: la intro y tres pilares de 1100 px.
+- **Parallax:** las palabras gigantes van al 0,6x, el texto al 1x y las piezas al 1,22x.
+- **Móvil:** tarjetas con `scroll-snap`.
+- **Textos:** los del lienzo, tal cual.
+
+**Las piezas** (lo que pidió la dueña):
+- Cada cinta usa el path EXACTO de `BRAND_RIBBONS`, a escala uniforme, en un encuadre ceñido a su caja. Nunca se rota, se inclina ni se deforma.
+- **Desarme.** El isotipo se arma con las tres cintas en un mismo encuadre. Entre 0,03 y 0,14 del progreso se separan solo con `translate`, en la dirección natural de cada una:
+  - coral, (−58, 16);
+  - violeta, (52, −30);
+  - ámbar, (62, 22).
+- Debajo aparece «Tres piezas · un solo sistema».
+- **Material** (todo estático; con el scroll solo se mueve el `translateX` del grupo):
+  - el degradado de marca;
+  - una luz cenital: la misma forma con un degradado blanco del 34 % arriba a 0 en el 60 %;
+  - un filete blanco al 22 %, de 1 px, con `vector-effect: non-scaling-stroke`.
+- **Escenario:**
+  - la pieza flota 24 px sobre una línea de suelo (un degradado de 1 px al 14 %);
+  - debajo, una sombra de contacto elíptica (negro al 80 %, del 78 % del ancho de la pieza);
+  - un halo del color del pilar al 19 %, sin `filter`;
+  - un reflejo invertido al 14 %, con máscara que se apaga al 42 %;
+  - la leyenda «PIEZA 01 · CORAL».
+- **Asignación:** Prosperidad = coral, Crecimiento = ámbar, Libertad = violeta.
