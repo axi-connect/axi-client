@@ -188,7 +188,7 @@ export function CallScene() {
           </dl>
         </div>
 
-        <div className="film-call-cap" data-pill-avoid="">
+        <div className="film-call-cap" data-pill-avoid="always">
           <p className="film-call-intro">{CALL_COPY.intro}</p>
           {CALL_TRACKS.map((tr, track) => (
             <div key={tr.who} className="film-call-line" data-call-track={track}>
@@ -215,7 +215,7 @@ export function CallScene() {
           ))}
         </div>
 
-        <div className="film-call-time" data-pill-avoid="" role="group" aria-label={CALL_COPY.timeline} data-anim="call-time">
+        <div className="film-call-time" data-pill-avoid="always" role="group" aria-label={CALL_COPY.timeline} data-anim="call-time">
           <div className="film-call-stages">
             {CALL_STAGES.map(([name, at]) => (
               <span key={name} style={{ left: pct(at) }} data-at={at} data-on="">
