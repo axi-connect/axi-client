@@ -13,17 +13,8 @@
  * Límites (§19.6): las notas no nombran un canal de envío.
  */
 
-/** Las dos pistas: el cliente pregunta y Axi contesta. */
-export const CALL_TRACKS = [
-  { who: "Cliente", src: "/assets/audio/cliente-gafas.mp3", duration: 4.81 },
-  { who: "Axi", src: "/assets/audio/agente-aviador.mp3", duration: 7.84 },
-] as const;
-
-export type CallTrack = 0 | 1;
-
-/** Dónde empieza cada pista en el tiempo de la llamada. */
-export const CALL_START = [0, CALL_TRACKS[0].duration] as const;
-export const CALL_TOTAL = CALL_TRACKS[0].duration + CALL_TRACKS[1].duration;
+export { CALL_COPY, CALL_START, CALL_TOTAL, CALL_TRACKS, callClock, type CallTrack } from "./call-time";
+import { CALL_START, type CallTrack } from "./call-time";
 
 /** Envolvente de la onda: 77 barras del cliente y 125 de Axi, en [0, 1]. */
 export const CALL_PEAKS: readonly [readonly number[], readonly number[]] = [
@@ -102,28 +93,3 @@ export const CALL_NOTES: readonly (readonly [string, string, number])[] = [
   ["Producto", "Aviador Ámbar · quedan pocas", CALL_START[1] + 5.4],
   ["Siguiente paso", "Enviar foto y precio", CALL_START[1] + 7.6],
 ];
-
-export const CALL_COPY = {
-  eyebrow: "Vender · Llamadas",
-  title: "Y cuando hay que llamar, llama.",
-  titleThin: "Y si te llaman, contesta.",
-  lead: "Retoma cotizaciones, confirma citas y atiende las entrantes: lleva cada llamada por etapas y, si no puede atender, toma el recado.",
-  live: "Llamada entrante",
-  sample: "audio de ejemplo",
-  notes: "Lo que Axi anota",
-  intro: "Alguien vio un reel y llama a preguntar por unas gafas. Toca la esfera y escucha cómo contesta Axi.",
-  timeline: "Línea de tiempo de la llamada",
-  play: "Escuchar la llamada",
-  pause: "Pausar la llamada",
-  again: "Escuchar otra vez",
-  status: {
-    ready: "Lista para escuchar",
-    paused: "En pausa",
-    client: "Habla el cliente",
-    axi: "Contesta Axi",
-    done: "Llamada atendida",
-  },
-} as const;
-
-/** «0:04»: la llamada dura menos de un minuto. */
-export const callClock = (seconds: number) => `0:${String(Math.floor(Math.max(0, seconds))).padStart(2, "0")}`;
