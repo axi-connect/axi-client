@@ -29,7 +29,6 @@ import {
   all,
   atP,
   counter,
-  countUp,
   easeOut3,
   lerp,
   num,
@@ -59,34 +58,69 @@ const hero: Scene = (section) => {
   tl.to(visible(section, "[data-anim=halo]"), { opacity: 0, ease: "none", duration: 1 }, 0);
 };
 
+/* ─────────────────────────── captar (plan §13) ─────────────────────────── */
+
+/** Nicho: las cuatro llegan desde el fondo en arco y la elegida viene al frente. */
 const niche: Scene = (section, ctx) => {
-  const tl = sceneTimeline(section, ctx, 70);
-  tl.from(visible(section, "[data-anim=niche]"), { ...reveal, y: 60, stagger: 0.12 }, 0.3);
+  const tl = spanTimeline(section, ctx, 70);
+  visible(section, "[data-anim=notif]").forEach((el, i) => {
+    tl.fromTo(
+      el,
+      { opacity: 0, y: -40, z: ctx.desktop ? -320 : 0 },
+      { opacity: 1, y: 0, z: 0, ease: "power3.out", duration: atP(0.26) },
+      atP(0.04 + i * 0.08),
+    );
+  });
+  const row = visible(section, "[data-anim=notifs]");
+  if (row.length) tl.fromTo(row, { "--choose": 0 }, { "--choose": 1, ease: "power3.out", duration: atP(0.24) }, atP(0.5));
+  showIn(tl, visible(section, "[data-anim=niche-hint]"), 0.8, 0.95, 8);
 };
 
+/** Radar: el barrido da dos vueltas, aparecen los hallazgos, el objetivo y la ficha. */
 const radar: Scene = (section, ctx) => {
-  const tl = sceneTimeline(section, ctx, 140);
-  tl.fromTo(visible(section, "[data-anim=sweep]"), { rotation: 0 }, { rotation: 540, ease: "none", duration: 4 }, 0);
-  tl.from(visible(section, "[data-anim=dot]"), { scale: 0, stagger: 0.08, duration: 0.3 }, 0.2);
-  tl.from(visible(section, "[data-anim=hit]"), { scale: 0, stagger: 0.3, duration: 0.4 }, 1);
-  tl.from(visible(section, "[data-anim=target]"), { scale: 0, duration: 0.4 }, 1.8);
-  for (const group of perNiche(section, "[data-anim=lead]")) tl.from(group, { opacity: 0, x: 40 }, 2);
-  for (const group of perNiche(section, "[data-anim=axis]")) tl.from(group, { scaleX: 0, transformOrigin: "left", stagger: 0.12 }, 2.4);
-  for (const group of perNiche(section, "[data-anim=source]")) tl.from(group, { opacity: 0.15, stagger: 0.25, duration: 0.4 }, 2.6);
-  for (const group of perNiche(section, "[data-anim=score]")) for (const el of group) countUp(tl, el, 2.4);
-  for (const group of perNiche(section, "[data-anim=decisor]")) tl.from(group, { opacity: 0, y: 16 }, 3.4);
+  const tl = spanTimeline(section, ctx, 140);
+  // El barrido: 720° en 0–0,6 (empieza en 20°). Cada punto aparece cuando lo pasa.
+  const sweep = visible(section, "[data-anim=sweep]");
+  if (sweep.length) {
+    tl.fromTo(sweep, { rotation: 20, opacity: 1 }, { rotation: 740, ease: "none", duration: atP(0.6) }, 0);
+    tl.to(sweep, { opacity: 0.5, duration: atP(0.02) }, atP(0.96));
+  }
+  for (const dot of visible(section, "[data-anim=dot]")) {
+    // Ángulo del punto medido desde arriba (de donde parte el barrido cónico).
+    const fromTop = (num(dot, "angle") + 90) % 360;
+    tl.fromTo(dot, { opacity: 0 }, { opacity: num(dot, "strength"), ease: "none", duration: atP(0.01) }, atP((0.6 * fromTop) / 720));
+  }
+  visible(section, "[data-anim=hit]").forEach((el, i) => showIn(tl, [el], 0.28 + i * 0.06, 0.36 + i * 0.06, 0));
+  const target = visible(section, "[data-anim=target]");
+  if (target.length) tl.fromTo(target, { opacity: 0, scale: 2.4 }, { opacity: 1, scale: 1, ease: "power3.out", duration: atP(0.08) }, atP(0.48));
+  const leader = visible(section, "[data-anim=leader]");
+  if (leader.length) tl.fromTo(leader, { strokeDasharray: "0 2" }, { strokeDasharray: "1 2", ease: "power3.out", duration: atP(0.1) }, atP(0.55));
+  const cards = visible(section, "[data-anim=lead]");
+  if (cards.length) tl.fromTo(cards, { opacity: 0, x: 30 }, { opacity: 1, x: 0, ease: "power3.out", duration: atP(0.18) }, atP(0.6));
+  const scores = visible(section, "[data-anim=score]");
+  counter(tl, 0.65, 0.85, (v) => {
+    for (const el of scores) setText(el, String(Math.round(num(el, "to") * v)));
+  });
+  const axes = visible(section, "[data-anim=axis]");
+  if (axes.length) tl.fromTo(axes, { scaleX: 0 }, { scaleX: 1, ease: "power3.out", duration: atP(0.2) }, atP(0.7));
+  showIn(tl, visible(section, "[data-anim=radar-sources]"), 0.82, 0.95, 6);
 };
 
+/**
+ * Seguimiento: la regla se traza de arriba abajo con el progreso (de 0 a 0,9) y
+ * cada evento aparece cuando la regla llega a su altura. La mañana se aclara.
+ */
+const RULER_H = 660;
 const followup: Scene = (section, ctx) => {
-  const tl = sceneTimeline(section, ctx, 130);
-  // El tramo horizontal: la línea de tiempo entra desde la derecha mientras la cinta avanza.
-  for (const group of perNiche(section, "[data-anim=track]")) {
-    if (ctx.desktop) tl.from(group, { xPercent: 35, ease: "none", duration: 3 }, 0);
+  const tl = spanTimeline(section, ctx, 130);
+  const lines = visible(section, "[data-anim=ruler-line]");
+  if (lines.length) tl.fromTo(lines, { scaleY: 0 }, { scaleY: 1, ease: "none", duration: atP(0.9) }, 0);
+  for (const el of visible(section, "[data-anim=ruler-event]")) {
+    const at = (0.9 * Math.max(0, num(el, "y") - 10)) / RULER_H;
+    showIn(tl, [el], at, Math.min(1, at + 0.06), 10);
   }
-  for (const group of perNiche(section, "[data-anim=line]")) tl.from(group, { scaleX: 0, transformOrigin: "left", ease: "none", duration: 2.4 }, 0.2);
-  for (const group of perNiche(section, "[data-anim=step]")) tl.from(group, { opacity: 0.12, y: 16, stagger: 0.55, duration: 0.5 }, 0.4);
-  for (const group of perNiche(section, "[data-anim=msg]")) tl.from(group, { ...reveal, stagger: 0.5 }, 1.4);
-  for (const group of perNiche(section, "[data-anim=result]")) tl.from(group, { opacity: 0, scale: 0.94 }, 2.6);
+  const morning = visible(section, "[data-anim=morning]");
+  if (morning.length) tl.fromTo(morning, { opacity: 0.1 }, { opacity: 1, ease: "power3.out", duration: atP(0.6) }, atP(0.3));
 };
 
 /**

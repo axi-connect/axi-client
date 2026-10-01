@@ -49,10 +49,10 @@ function Appointment({ c, className, anim }: { c: FilmContent; className?: strin
         <span className="film-h text-[22px] leading-none">{a.day}</span>
       </span>
       <span className="min-w-0">
-        <span className="block truncate text-[13.5px] font-semibold max-lg:text-[12.5px]">
+        <span className="block text-[13.5px] leading-snug font-semibold max-lg:text-[12.5px]">
           {a.time} · {a.title}
         </span>
-        <span className="film-dim mt-0.5 block truncate text-[11.5px] max-lg:text-[11px]">{a.who}</span>
+        <span className="film-dim mt-0.5 block text-[11.5px] leading-snug max-lg:text-[11px]">{a.who}</span>
       </span>
     </div>
   );

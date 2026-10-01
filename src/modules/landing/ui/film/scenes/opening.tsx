@@ -9,7 +9,6 @@ import { WA_MESSAGES } from "@/modules/landing/ui/content/landing.content";
 import { FilmCta } from "@/modules/landing/ui/film/parts/FilmCta";
 import { HeroFibersLazy } from "@/modules/landing/ui/film/parts/HeroFibersLazy";
 import { HeroStats } from "@/modules/landing/ui/film/parts/HeroStats";
-import { FILM_ICONS } from "@/modules/landing/ui/film/parts/film-icons";
 import { NicheChoice } from "@/modules/landing/ui/film/parts/NicheChoice";
 
 /** El enlace secundario a WhatsApp, igual en la apertura y en el cierre. */
@@ -101,39 +100,60 @@ export function HeroScene() {
   );
 }
 
+/** Las cuatro notificaciones en arco: inclinación y profundidad de cada una (lienzo §13). */
+const NOTIF_POSE = [
+  { tilt: 9, depth: -70 },
+  { tilt: 3, depth: 0 },
+  { tilt: -3, depth: 0 },
+  { tilt: -9, depth: -70 },
+] as const;
+
+/**
+ * «¿Quién te escribe hoy?» (plan §13, lienzo aprobado el 2026-09-30): cuatro
+ * notificaciones llegan desde el fondo en arco; la del nicho activo (Tecnología
+ * por defecto) viene al frente, se endereza y se vuelve blanca. Tocar otra
+ * elige ese nicho.
+ */
 export function NicheScene() {
   return (
     <section id="quien" data-scene="niche" aria-labelledby="quien-h" className="film-scene">
-      <div className="film-spot top-[30%] left-[calc(50%-560px)] size-[1120px] bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--axi-brand)_9%,transparent),transparent)]" />
-      <div className="film-wrap text-center">
+      <div className="film-spot top-[29%] left-[calc(50%-450px)] size-[900px] bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--foreground)_6%,transparent),transparent)]" />
+      <div className="film-wrap film-wrap-wide text-center">
         <div data-anim="head">
-          <p className="film-eyebrow mb-4 text-[var(--axi-brand)]">Empieza la película</p>
-          <h2 id="quien-h" className="film-h text-[clamp(38px,5.2vw,76px)]">
+          <p className="film-eyebrow film-dim mb-5">Empieza la película</p>
+          <h2 id="quien-h" className="film-h text-[clamp(38px,5.3vw,76px)]">
             ¿Quién te <span className="t">escribe hoy?</span>
           </h2>
-          <p className="film-lead mx-auto mt-4 max-w-xl text-[clamp(15px,1.3vw,17px)]">Elige y todo lo que sigue pasa en tu negocio.</p>
+          <p className="film-lead mx-auto mt-5 max-w-[520px] text-[clamp(14.5px,1.3vw,18px)]">Elige y todo lo que sigue pasa en tu negocio.</p>
         </div>
-        <div className="mx-auto mt-14 grid max-w-[1180px] grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5 max-lg:mt-8">
-          {FILM_NICHES.map((niche) => {
+        <div className="film-notifs mt-[clamp(32px,7vh,72px)]" data-anim="notifs">
+          {FILM_NICHES.map((niche, i) => {
             const c = FILM_CONTENT[niche];
-            const Icon = FILM_ICONS[c.icon];
             return (
-              <NicheChoice key={niche} niche={niche} className="min-h-[200px] max-lg:min-h-0 max-lg:gap-4 max-lg:p-4">
-                <span className="film-bub film-bub-in max-w-none text-[15px] max-lg:text-[13.5px]">{c.ask}</span>
-                <span className="flex items-center gap-3">
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[color-mix(in_srgb,var(--foreground)_6%,transparent)]">
-                    <Icon className="size-[18px]" aria-hidden="true" />
+              <div key={niche} className="film-notif-in" data-anim="notif">
+                <NicheChoice niche={niche} style={{ "--tilt": `${NOTIF_POSE[i].tilt}deg`, "--depth": `${NOTIF_POSE[i].depth}px` } as React.CSSProperties}>
+                  <span className="relative flex items-center gap-2.5">
+                    <span className="film-notif-icon" aria-hidden="true">
+                      <MessageCircle className="size-4" />
+                    </span>
+                    <span className="text-[11.5px] font-semibold tracking-[0.02em] max-lg:text-[10px]">
+                      WhatsApp<span className="lg:hidden"> · ahora</span>
+                    </span>
+                    <span className="film-notif-dim ml-auto text-[11px] max-lg:hidden">ahora</span>
                   </span>
-                  <span>
-                    <span className="block font-semibold">{c.label}</span>
-                    <span className="film-dim block text-[12.5px]">Un cliente te escribe</span>
+                  <span className="relative text-[17px] leading-[1.4] font-medium text-balance max-lg:text-[13.5px] max-lg:leading-[1.35]">{c.ask}</span>
+                  <span className="relative mt-auto flex flex-col gap-0.5">
+                    <span className="text-[10.5px] font-semibold tracking-[0.16em] uppercase max-lg:text-[9.5px] max-lg:tracking-[0.14em]">{c.label}</span>
+                    <span className="film-notif-dim text-xs max-lg:hidden">Le escribe a {c.business.split(" · ")[0]}</span>
                   </span>
-                </span>
-              </NicheChoice>
+                </NicheChoice>
+              </div>
             );
           })}
         </div>
-        <p className="film-dim mt-8 text-[13px]">O sigue bajando: te mostramos un negocio de ejemplo.</p>
+        <p className="film-dim mt-[clamp(28px,5vh,50px)] text-[13.5px] max-lg:text-left max-lg:text-[12.5px]" data-anim="niche-hint">
+          O sigue bajando: te mostramos un negocio de ejemplo.
+        </p>
       </div>
     </section>
   );

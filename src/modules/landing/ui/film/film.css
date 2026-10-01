@@ -166,6 +166,9 @@
 .film-rail .tick span { font-size: 9.5px; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 600; color: var(--film-dim); }
 .film-rail .tick[data-on="true"] i { background: var(--foreground); }
 .film-rail .tick[data-on="true"] span { color: var(--foreground); }
+/* Por debajo de 1536 px el riel no cabe con su texto junto a los titulares
+   (margen de 120 px): quedan los puntos y la línea. */
+@media (max-width: 1535px) { .film-rail .tick span { opacity: 0; } }
 .film-bar { display: none; }
 @media (max-width: 1023px) {
   .film-rail { display: none; }
@@ -871,7 +874,7 @@
   background: var(--foreground);
   color: var(--background);
 }
-.film-appt-fly { position: absolute; left: 532px; top: 340px; width: 280px; }
+.film-appt-fly { position: absolute; left: 512px; top: 340px; width: 300px; }
 .film-board-mobile { position: relative; height: 330px; perspective: 1000px; perspective-origin: 50% 0%; }
 .film-board-mobile .film-board-plane { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 14px; border-radius: 20px; transform: rotateX(38deg); }
 .film-deal-mobile { position: absolute; left: 126px; top: 90px; width: 190px; padding: 13px 14px; border-radius: 16px; }
@@ -965,4 +968,190 @@
   border-radius: 50%;
   background: radial-gradient(closest-side, color-mix(in srgb, var(--foreground) 95%, transparent), color-mix(in srgb, var(--foreground) 30%, transparent) 20%, transparent);
   pointer-events: none;
+}
+
+/* ------------------------------------------------------- §13 · captar */
+/* Tinta sobre papel claro (fichas, resultado): el texto es --background. */
+.film-ink-muted { color: color-mix(in srgb, var(--background) 58%, transparent); }
+.film-ink-chip {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--background) 20%, transparent);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* Nicho · cuatro notificaciones en arco. `--choose` (0 → 1) lo mueve el motor:
+   la elegida (`--sel`, de aria-pressed) avanza, se endereza y se vuelve blanca. */
+.film-notifs {
+  --choose: 1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+  max-width: 1152px;
+  margin-inline: auto;
+  perspective: 1800px;
+  perspective-origin: 50% 30%;
+  text-align: left;
+}
+.film-notif-in { transform-style: preserve-3d; }
+.film-notif {
+  --sel: 0;
+  --tilt: 0deg;
+  --depth: 0px;
+  --w: calc(var(--sel) * clamp(0, (var(--choose) - 0.4) * 5, 1));
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  min-height: 200px;
+  padding: 18px 18px 16px;
+  overflow: hidden;
+  border-radius: 26px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--foreground) 7%, var(--background)), color-mix(in srgb, var(--foreground) 4%, var(--background)));
+  box-shadow: 0 40px 80px color-mix(in srgb, var(--background) 60%, transparent);
+  color: color-mix(in srgb, var(--background) calc(var(--w) * 100%), var(--foreground));
+  text-align: left;
+  cursor: pointer;
+  opacity: calc(1 - (1 - var(--sel)) * 0.6 * var(--choose));
+  transform: translateY(calc(var(--sel) * var(--choose) * -14px)) translateZ(calc(var(--depth) + var(--sel) * var(--choose) * 90px))
+    rotateY(calc(var(--tilt) * (1 - var(--sel) * var(--choose))));
+}
+.film-notif[aria-pressed="true"] { --sel: 1; }
+.film-notif::before { content: ""; position: absolute; inset: 0; background: linear-gradient(165deg, var(--foreground), color-mix(in srgb, var(--foreground) 91%, var(--background))); opacity: var(--w); }
+.film-notif:hover { border-color: color-mix(in srgb, var(--foreground) 22%, transparent); }
+.film-notif:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
+.film-notif-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--background) calc(var(--w) * 100%), var(--foreground));
+  color: color-mix(in srgb, var(--foreground) calc(var(--w) * 100%), var(--background));
+}
+.film-notif-dim { opacity: 0.55; }
+@media (max-width: 1023px) {
+  .film-notifs { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; perspective: none; }
+  .film-notif { min-height: 150px; gap: 8px; padding: 13px; border-radius: 20px; transform: none; opacity: calc(1 - (1 - var(--sel)) * 0.4 * var(--choose)); }
+  .film-notif-icon { display: none; }
+}
+
+/* Radar · el instrumento. */
+.film-radar { position: relative; width: min(500px, 100%); aspect-ratio: 1; margin-inline: auto; border-radius: 50%; }
+.film-radar-ring { fill: none; stroke: var(--foreground); }
+.film-radar-sweep {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, color-mix(in srgb, var(--foreground) 22%, transparent), transparent 60deg, transparent);
+  transform: rotate(740deg);
+  opacity: 0.5;
+}
+.film-radar-dot { position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: var(--foreground); }
+.film-radar-hit {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  margin: -4.5px 0 0 -4.5px;
+  border-radius: 50%;
+  background: var(--foreground);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--foreground) 10%, transparent), 0 0 14px color-mix(in srgb, var(--foreground) 60%, transparent);
+}
+.film-radar-target {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border-radius: 50%;
+  background: var(--foreground);
+  box-shadow: 0 0 0 9px color-mix(in srgb, var(--foreground) 14%, transparent), 0 0 34px var(--foreground);
+}
+.film-radar-leader { position: absolute; left: 0; top: 0; width: 128%; height: 64%; overflow: visible; pointer-events: none; }
+.film-radar-leader path { fill: none; stroke: color-mix(in srgb, var(--foreground) 55%, transparent); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.film-lead-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  max-width: 420px;
+  padding: 22px 24px;
+  border-radius: 22px;
+  background: linear-gradient(165deg, var(--foreground), color-mix(in srgb, var(--foreground) 91%, var(--background)));
+  color: var(--background);
+  box-shadow: 0 40px 90px color-mix(in srgb, var(--background) 60%, transparent);
+}
+@media (max-width: 1023px) {
+  .film-radar { width: 240px; }
+  .film-radar-leader { display: none; }
+  .film-lead-card { gap: 8px; padding: 16px 18px; border-radius: 20px; }
+}
+
+/* Seguimiento · la regla de tiempo. La regla (x 150 px) se traza con el progreso. */
+.film-followup-morning {
+  position: absolute;
+  left: 48%;
+  top: 58%;
+  width: 1000px;
+  height: 800px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--foreground) 8%, transparent), transparent);
+  pointer-events: none;
+}
+.film-followup { background: linear-gradient(180deg, var(--background) 45%, color-mix(in srgb, var(--foreground) 3%, var(--background))); }
+.film-ruler { position: relative; height: 660px; margin-top: 54px; }
+.film-ruler-line {
+  position: absolute;
+  left: 149px;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--foreground) 25%, transparent) 8%, color-mix(in srgb, var(--foreground) 25%, transparent) 92%, transparent);
+  transform-origin: 50% 0;
+}
+.film-ruler-gap { position: absolute; left: 144px; top: 150px; width: 12px; height: 70px; background: repeating-linear-gradient(180deg, var(--background) 0 5px, transparent 5px 10px); }
+.film-ruler-gap-label { position: absolute; left: 172px; top: 172px; margin: 0; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: color-mix(in srgb, var(--foreground) 40%, transparent); }
+.film-ruler-event { position: absolute; left: 0; right: 0; }
+.film-ruler-when {
+  position: absolute;
+  right: calc(100% - 126px);
+  top: 0;
+  margin: 0;
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 12px;
+  white-space: nowrap;
+  color: color-mix(in srgb, var(--foreground) 55%, transparent);
+}
+.film-ruler-dot { position: absolute; left: 144px; top: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--background); border: 1.5px solid color-mix(in srgb, var(--foreground) 70%, transparent); }
+.film-ruler-what { position: absolute; left: 182px; top: -1px; margin: 0; max-width: 520px; font-size: 14.5px; line-height: 1.45; }
+.film-ruler-bub { position: absolute; left: 182px; max-width: 360px; margin: 0; padding: 12px 15px 9px; font-size: 14px; line-height: 1.45; }
+.film-ruler-out { border-radius: 20px 20px 6px 20px; background: color-mix(in srgb, var(--foreground) 95%, var(--background)); color: var(--background); }
+.film-ruler-in { border-radius: 20px 20px 20px 6px; background: var(--film-surface-2); }
+.film-ruler-result {
+  position: absolute;
+  left: 182px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 16px;
+  border-radius: 18px;
+  background: linear-gradient(165deg, var(--foreground), color-mix(in srgb, var(--foreground) 91%, var(--background)));
+  color: var(--background);
+  box-shadow: 0 30px 60px color-mix(in srgb, var(--background) 60%, transparent);
+}
+/* Móvil: la regla es el margen izquierdo y los eventos, una lista en su orden. */
+@media (max-width: 1023px) {
+  .film-ruler { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; height: auto; margin-top: 8px; padding-left: 28px; }
+  .film-ruler-line { left: 6px; }
+  .film-ruler-gap, .film-ruler-gap-label { display: none; }
+  .film-ruler-event, .film-ruler-bub, .film-ruler-result { position: relative; left: auto; right: auto; top: auto !important; }
+  .film-ruler-when { position: static; font-size: 11px; }
+  .film-ruler-dot { left: -27px; top: 2px; }
+  .film-ruler-what { position: static; margin-top: 3px; font-size: 13.5px; line-height: 1.4; }
+  .film-ruler-event:has(.film-ruler-what:empty), .film-ruler-event:not(:has(.film-ruler-what)) { display: none; }
+  .film-ruler-bub { max-width: 100%; font-size: 13px; }
 }

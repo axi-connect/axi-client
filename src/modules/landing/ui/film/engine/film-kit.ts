@@ -124,8 +124,16 @@ export const segP = (p: number, a: number, b: number) => Math.min(1, Math.max(0,
 export const easeOut3 = (t: number) => 1 - Math.pow(1 - t, 3);
 
 /** Una línea de escena de §11 con su duración fija (`SPAN`). */
+/**
+ * Sin fijar, el fotograma final llega con la escena entera en pantalla (QA del
+ * 2026-09-30: con «bottom 62%» el sello, la cita o la cifra llegaban cuando la
+ * escena ya se iba bajo la cabecera).
+ */
+export const PASS_DESKTOP: Pass = { start: "top 85%", end: "center 50%" };
+export const PASS_MOBILE: Pass = { start: "top 80%", end: "bottom 95%" };
+
 export function spanTimeline(section: HTMLElement, ctx: Ctx, length: number, pass?: Pass) {
-  const tl = sceneTimeline(section, ctx, length, pass);
+  const tl = sceneTimeline(section, ctx, length, pass ?? (ctx.desktop ? PASS_DESKTOP : PASS_MOBILE));
   tl.to({}, { duration: 0 }, SPAN);
   return tl;
 }
