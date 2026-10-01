@@ -13,6 +13,7 @@ import { BrandMark } from '@/shared/components/ui/brand-mark';
 import { SiteMenuPanel } from '@/shared/components/layout/site/SiteMenuPanel';
 import { SiteMenuSheet } from '@/shared/components/layout/site/SiteMenuSheet';
 import { SiteThemeChoice } from '@/shared/components/layout/site/SiteThemeChoice';
+import { INTENT_OF, IntentIcon } from '@/shared/components/layout/site/IntentIcon';
 import { ISLAND_AT, islandOnFilm, islandOnPage, readProgress, type IslandChapter } from '@/shared/components/layout/site/site-island';
 import {
     SITE_INTENTS,
@@ -182,7 +183,7 @@ export default function SiteHeader() {
                             aria-controls={open ? panelId : undefined}
                             onClick={(e) => toggle(it.id, e.currentTarget)}
                         >
-                            <span className="site-dot" aria-hidden="true" />
+                            <IntentIcon intent={INTENT_OF[it.id]} size="sm" />
                             {it.name}
                             <ChevronDown className="site-chev size-3.5" aria-hidden="true" />
                         </button>

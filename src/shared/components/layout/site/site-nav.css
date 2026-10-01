@@ -116,7 +116,6 @@ html:not(.dark) .site-nav:not(.dark) .site-glass::before { display: none; }
 }
 .site-btn svg { transition: transform 0.2s; }
 .site-btn[aria-expanded="true"] .site-chev { transform: rotate(180deg); }
-.site-dot { width: 6px; height: 6px; flex: none; border-radius: 50%; background: var(--sn-tone); }
 [data-tone="coral"] { --sn-tone: var(--sn-coral); }
 [data-tone="amber"] { --sn-tone: var(--sn-amber); }
 [data-tone="violet"] { --sn-tone: var(--sn-violet); }
@@ -286,19 +285,6 @@ html:not(.dark) .site-nav:not(.dark) .site-glass::before { display: none; }
   text-align: left;
 }
 .site-intent[aria-pressed="true"] { background: var(--sn-hover); }
-/* Punto de intención anterior: lo usa aún el menú móvil (SiteMenuSheet) hasta
-   que cablee IntentIcon; entonces se borra. */
-.site-intent-icon {
-  width: 34px;
-  height: 34px;
-  flex: none;
-  border-radius: 11px;
-  background: color-mix(in srgb, var(--sn-tone) 18%, transparent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.site-intent-icon i { width: 10px; height: 10px; border-radius: 50%; background: var(--sn-tone); box-shadow: 0 0 14px var(--sn-tone); }
 /* Ícono de intención (IntentIcon): una pieza del isotipo en su tesela de
    cristal, con un halo de su color. La tesela va por tokens: en oscuro es
    blanca translúcida y en claro sale invertida, sin reglas aparte. */

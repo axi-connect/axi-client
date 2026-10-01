@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import * as Dialog from '@radix-ui/react-dialog';
 import { ChevronDown, Menu, X } from 'lucide-react';
 
+import { INTENT_OF, IntentIcon } from '@/shared/components/layout/site/IntentIcon';
 import { SiteThemeChoice } from '@/shared/components/layout/site/SiteThemeChoice';
 import {
     SITE_INTENTS,
@@ -100,9 +101,7 @@ export function SiteMenuSheet({
                                     aria-controls={panelId}
                                     onClick={() => setIntent(isOpen ? null : it.id)}
                                 >
-                                    <span className="site-intent-icon" aria-hidden="true">
-                                        <i />
-                                    </span>
+                                    <IntentIcon intent={INTENT_OF[it.id]} size="lg" />
                                     <span className="flex-1">
                                         <span className="site-intent-name">{it.name}</span>
                                         <span className="site-intent-promise">{it.promise}</span>
