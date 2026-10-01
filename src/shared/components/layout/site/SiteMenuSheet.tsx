@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import * as Dialog from '@radix-ui/react-dialog';
 import { ChevronDown, Menu, X } from 'lucide-react';
 
@@ -34,6 +35,13 @@ export function SiteMenuSheet({
     onCtaClick: () => void;
 }) {
     const [open, setOpen] = useState(false);
+    const router = useRouter();
+    // Un enlace de la hoja no navega por su cuenta: la hoja se cierra, retira su
+    // entrada de historial y SOLO tras ese popstate se navega. Antes el
+    // history.back() del cierre llegaba después del clic y Next 15 descartaba la
+    // navegación pendiente: «Precios» no llevaba a ningún sitio (ronda 2,
+    // BLOQUEANTE de la regresión de m10).
+    const pending = useRef<string | null>(null);
     // Atrás del navegador cierra la hoja (una entrada de historial mientras está
     // abierta) y pasar a escritorio también (auditoría, m10).
     useEffect(() => {
@@ -47,12 +55,27 @@ export function SiteMenuSheet({
         return () => {
             window.removeEventListener('popstate', onPop);
             wide.removeEventListener('change', onWide);
-            // Cerrada por Esc, un enlace o el botón: se retira la entrada que puso.
-            if (window.history.state?.siteSheet) window.history.back();
+            // Cerrada por Esc, un enlace o el botón: se retira la entrada que puso
+            // y, si fue un enlace, se navega cuando el navegador ya volvió.
+            const href = pending.current;
+            pending.current = null;
+            if (window.history.state?.siteSheet) {
+                if (href) window.addEventListener('popstate', () => router.push(href), { once: true });
+                window.history.back();
+            } else if (href) {
+                router.push(href);
+            }
         };
-    }, [open]);
+    }, [open, router]);
     const [intent, setIntent] = useState<SiteIntent['id'] | null>('vender');
-    const close = () => setOpen(false);
+    /** El clic de un enlace de la hoja: se anota adónde iba y se cierra (la navegación la hace el cierre). */
+    const follow = (href: string) => (e: React.MouseEvent) => {
+        // Con modificadores (nueva pestaña) o clic central, el navegador sigue a lo suyo.
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+        e.preventDefault();
+        pending.current = href;
+        setOpen(false);
+    };
     return (
         <Dialog.Root open={open} onOpenChange={setOpen}>
             <Dialog.Trigger asChild>
@@ -95,7 +118,7 @@ export function SiteMenuSheet({
                                             const Icon = c.icon;
                                             return (
                                                 <li key={c.name}>
-                                                    <Link prefetch={false} href={c.href} onClick={close}>
+                                                    <Link prefetch={false} href={c.href} onClick={follow(c.href)}>
                                                         <Icon className="size-[17px]" strokeWidth={1.7} aria-hidden="true" />
                                                         {c.name}
                                                     </Link>
@@ -109,13 +132,13 @@ export function SiteMenuSheet({
                     })}
                     <div className="site-sheet-links">
                         {[SITE_MENU_LINKS.pricing, ...SITE_MENU_LINKS.more].map((l) => (
-                            <Link key={l.href} prefetch={false} href={l.href} className="site-link" onClick={close}>
+                            <Link key={l.href} prefetch={false} href={l.href} className="site-link" onClick={follow(l.href)}>
                                 {l.name}
                             </Link>
                         ))}
                     </div>
                     <div className="site-sheet-row">
-                        <Link prefetch={false} href={session.href} className="site-link" onClick={close}>
+                        <Link prefetch={false} href={session.href} className="site-link" onClick={follow(session.href)}>
                             {session.text}
                         </Link>
                         <SiteThemeChoice className="site-sheet-theme" label={SITE_ISLAND.theme} />
@@ -124,9 +147,9 @@ export function SiteMenuSheet({
                         prefetch={false}
                         href={ctaHref}
                         className="site-cta"
-                        onClick={() => {
-                            close();
+                        onClick={(e) => {
                             onCtaClick();
+                            follow(ctaHref)(e);
                         }}
                     >
                         {ctaLabel}
