@@ -78,6 +78,36 @@ function failureDetail(run: RunLike, routine: RoutineCopy, stopLabel: string): s
   return `Algo falló en «${stopLabel}». ${again}`;
 }
 
+/** Por qué no se inscribieron, como frase con su cifra (singular y plural). */
+const ENROLL_PHRASE: Record<string, (n: number) => string> = {
+  enroll_no_channel: (n) => (n === 1 ? "1 no tiene canal para escribirle" : `${String(n)} no tienen canal para escribirles`),
+  enroll_opted_out: (n) => (n === 1 ? "1 se dio de baja" : `${String(n)} se dieron de baja`),
+  enroll_task_open: (n) =>
+    n === 1 ? "1 ya va en una secuencia o tiene una tarea abierta" : `${String(n)} ya van en una secuencia o tienen una tarea abierta`,
+  enroll_not_enrolled: (n) => `la secuencia no inscribió a ${String(n)} (¿está activa?)`,
+};
+const notEnrolledPhrase = (n: number) => (n === 1 ? "1 no se pudo inscribir" : `${String(n)} no se pudieron inscribir`);
+
+/**
+ * «7 no tienen canal para escribirles», con el motivo dominante; «7 no se
+ * pudieron inscribir» en las ejecuciones viejas, que no traen el motivo.
+ * `null` si todo lo que debía entrar se inscribió.
+ */
+function enrollPhrase(run: RunLike, trajectory: Trajectory): string | null {
+  const exit = trajectory.exits.find((entry) => entry.at === "contact");
+  const total = exit?.total ?? run.counters.enroll_skipped ?? 0;
+  if (total <= 0) return null;
+  const [top, ...rest] = exit?.rows ?? [];
+  const say = top === undefined ? undefined : ENROLL_PHRASE[top.reason];
+  if (top === undefined || say === undefined) return notEnrolledPhrase(total);
+  const others = rest.reduce((sum, row) => sum + row.count, 0);
+  return others === 0 ? say(top.count) : `${say(top.count)} y ${notEnrolledPhrase(others)} por otros motivos`;
+}
+
+function capitalize(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
 /** Qué hace el piloto ahora, en una frase y su detalle. */
 export function nowLine(run: RunLike, routine: RoutineCopy, ctx: RunCopyContext = {}): { title: string; detail: string } {
   const trajectory = runTrajectory(run, routine);
@@ -111,12 +141,21 @@ export function nowLine(run: RunLike, routine: RoutineCopy, ctx: RunCopyContext 
       return { title: "La ejecución se detuvo", detail: failureDetail(run, routine, stop?.label ?? "") };
     case "done": {
       const contacted = c.contacted ?? 0;
+      const notEnrolled = enrollPhrase(run, trajectory);
       if (contacted > 0) {
         const sequence = ctx.sequenceName ? `la secuencia «${ctx.sequenceName}»` : "la secuencia de seguimiento";
         const agent = ctx.agentName ? ctx.agentName : "el agente";
+        const also = notEnrolled === null ? "" : ` Además, ${notEnrolled}.`;
         return {
           title: `Terminada: ${plural(contacted, "cuenta en seguimiento", "cuentas en seguimiento")}`,
-          detail: `Siguen ${sequence}. Si alguien responde, ${agent} conversa y te avisa.`,
+          detail: `Siguen ${sequence}. Si alguien responde, ${agent} conversa y te avisa.${also}`,
+        };
+      }
+      // Pasaron la política (y el lote), pero la secuencia no las inscribió: se dice eso.
+      if (notEnrolled !== null) {
+        return {
+          title: "Terminada: no se pudo inscribir a nadie",
+          detail: `${capitalize(notEnrolled)}. Revisa que la secuencia esté activa y tenga un canal para estas cuentas.`,
         };
       }
       let detail = "Ninguna pasó tu política de contacto o las omitiste en el lote.";
@@ -198,6 +237,8 @@ export function exitTitle(exit: Pick<TrajectoryExit, "at" | "total">): string {
       return `${String(n)} ${n === 1 ? "frenada por tu política" : "frenadas por tu política"}`;
     case "approve":
       return `${String(n)} ${n === 1 ? "la omitiste" : "las omitiste"}`;
+    case "contact":
+      return `${String(n)} ${n === 1 ? "no se pudo inscribir" : "no se pudieron inscribir"}`;
     default:
       return `${String(n)} ${n === 1 ? "salió del recorrido" : "salieron del recorrido"}`;
   }
@@ -362,8 +403,12 @@ function stepCompletedLine(step: string, payload: Record<string, unknown>, routi
       const passing = Math.max(0, promoted - blocked);
       return `${head} · ${String(passing)} ${passing === 1 ? "pasa" : "pasan"}, ${frenadas}`;
     }
-    case "contact":
-      return `${head} · ${String(num(counters.contacted) ?? 0)} en seguimiento`;
+    case "contact": {
+      const contacted = num(counters.contacted) ?? 0;
+      const failed = num(counters.enroll_skipped) ?? 0;
+      if (failed === 0) return `${head} · ${String(contacted)} en seguimiento`;
+      return `${head} · ${String(contacted)} ${contacted === 1 ? "inscrita" : "inscritas"}, ${String(failed)} ${failed === 1 ? "no se pudo inscribir" : "no se pudieron inscribir"}`;
+    }
   }
   return head;
 }

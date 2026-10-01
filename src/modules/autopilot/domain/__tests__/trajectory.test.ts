@@ -43,6 +43,15 @@ describe("reasons — el motivo en palabras, nunca la clave", () => {
     expect(reasonShortLabel("skipped_in_batch")).toBe("En el lote");
   });
 
+  it("inscribir: los motivos de la secuencia, en palabras", () => {
+    expect(reasonLabel("enroll_no_channel")).toBe("No hay por dónde escribirle con los canales de la secuencia");
+    expect(reasonLabel("enroll_opted_out")).toBe("Se dio de baja");
+    expect(reasonLabel("enroll_task_open")).toBe("Ya va en una secuencia o tiene una tarea abierta");
+    expect(reasonLabel("enroll_not_enrolled")).toBe("La secuencia no lo inscribió (¿está activa?)");
+    expect(reasonLabel("enroll_algo_nuevo")).toBe("No se pudo inscribir en la secuencia");
+    expect(reasonStop("enroll_no_channel")).toBe("contact");
+  });
+
   it("cada motivo sale por su parada", () => {
     expect(["below_min_score", "no_decision_maker", "lead_gone", "promote_x", "policy_rne", "skipped_in_batch", "x", null].map(reasonStop)).toEqual([
       "qualify",
@@ -188,6 +197,37 @@ describe("trajectory — las salidas", () => {
       { at: "approve", total: 1, rows: [] },
     ]);
     expect(runTrajectory(run, autonomous).exits.map((exit) => exit.at)).toEqual(["qualify", "gate"]);
+  });
+});
+
+describe("trajectory — lo que la secuencia no inscribió", () => {
+  const counters = { found: 10, qualified: 10, promoted: 10, blocked: 2, awaiting: 8, batch_skipped: 1, contacted: 0, enroll_skipped: 7 };
+
+  it("sale por «Inscribir en la secuencia» con su motivo", () => {
+    const items = [
+      ...Array.from({ length: 7 }, () => itemFixture("discarded", "enroll_no_channel", "approved")),
+      itemFixture("discarded", "skipped_in_batch", "skipped"),
+      itemFixture("discarded", "policy_no_identity"),
+      itemFixture("discarded", "policy_no_identity"),
+    ];
+    const trajectory = runTrajectory(runFixture({ status: "done", step: "contact", counters, items }), assisted);
+    expect(trajectory.exits.find((exit) => exit.at === "contact")).toEqual({
+      at: "contact",
+      total: 7,
+      rows: [{ reason: "enroll_no_channel", label: "Sin canal para la secuencia", count: 7 }],
+    });
+    expect(trajectory.stops.map((stop) => stop.count)).toEqual([10, 10, 10, 10, 8, 7, 0]);
+  });
+
+  it("una ejecución vieja (sin el motivo) la cuenta por el total del contador", () => {
+    const items = Array.from({ length: 7 }, () => itemFixture("following", null, "approved"));
+    const exits = runTrajectory(runFixture({ status: "done", step: "contact", counters, items }), assisted).exits;
+    expect(exits.find((exit) => exit.at === "contact")).toEqual({ at: "contact", total: 7, rows: [] });
+  });
+
+  it("sin items, también del contador", () => {
+    const run = { status: "done" as const, step: "contact", counters };
+    expect(runTrajectory(run, assisted).exits.find((exit) => exit.at === "contact")?.total).toBe(7);
   });
 });
 

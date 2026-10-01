@@ -1,6 +1,6 @@
 import { defaultRoutineInput, RUN_STATUSES, type RunEvent } from "../autopilot";
 import { ahoraMismo, eventLine, exitTitle, nextLine, nowLine, previewStops, revealCredits } from "../copy";
-import { listItemFixture, routineFixture, runFixture, summaryFixture } from "./recorrido.fixtures";
+import { itemFixture, listItemFixture, routineFixture, runFixture, summaryFixture } from "./recorrido.fixtures";
 
 const routine = routineFixture();
 const autonomous = routineFixture({ mode: "autonomous" });
@@ -81,6 +81,37 @@ describe("copy — la isla «Ahora»", () => {
     expect(nowLine(done({}), routine).title).toBe("Terminada sin cuentas nuevas");
   });
 
+  it("terminada sin inscribir a nadie dice la verdad, con el motivo dominante", () => {
+    const counters = { found: 10, qualified: 10, promoted: 10, blocked: 2, awaiting: 8, batch_skipped: 1, contacted: 0, enroll_skipped: 7 };
+    const items = Array.from({ length: 7 }, () => itemFixture("discarded", "enroll_no_channel", "approved"));
+    expect(nowLine(runFixture({ status: "done", step: "contact", counters, items }), routine)).toEqual({
+      title: "Terminada: no se pudo inscribir a nadie",
+      detail: "7 no tienen canal para escribirles. Revisa que la secuencia esté activa y tenga un canal para estas cuentas.",
+    });
+    const mixed = [
+      itemFixture("discarded", "enroll_not_enrolled", "approved"),
+      itemFixture("discarded", "enroll_not_enrolled", "approved"),
+      itemFixture("discarded", "enroll_opted_out", "approved"),
+    ];
+    expect(nowLine(runFixture({ status: "done", step: "contact", counters: { ...counters, enroll_skipped: 3 }, items: mixed }), routine).detail).toMatch(
+      /^La secuencia no inscribió a 2 \(¿está activa\?\) y 1 no se pudo inscribir por otros motivos\./,
+    );
+  });
+
+  it("una ejecución vieja sin el motivo lo dice por el total", () => {
+    const counters = { found: 10, qualified: 10, awaiting: 8, batch_skipped: 1, contacted: 0, enroll_skipped: 7 };
+    const items = Array.from({ length: 7 }, () => itemFixture("following", null, "approved"));
+    expect(nowLine(runFixture({ status: "done", step: "contact", counters, items }), routine).detail).toMatch(/^7 no se pudieron inscribir\./);
+  });
+
+  it("inscritas y no inscritas mezcladas: en seguimiento, y además las que no entraron", () => {
+    const counters = { found: 5, qualified: 5, contacted: 3, enroll_skipped: 1 };
+    const items = [itemFixture("following", null, "approved"), itemFixture("discarded", "enroll_no_channel", "approved")];
+    expect(nowLine(runFixture({ status: "done", step: "contact", counters, items }), routine).detail).toBe(
+      "Siguen la secuencia de seguimiento. Si alguien responde, el agente conversa y te avisa. Además, 1 no tiene canal para escribirle.",
+    );
+  });
+
   it("los siete estados tienen título y detalle", () => {
     for (const status of RUN_STATUSES) {
       const line = nowLine(runFixture({ status, step: "await_search", counters: { found: 2 } }), routine);
@@ -109,6 +140,8 @@ describe("copy — las salidas", () => {
     expect(exitTitle({ at: "gate", total: 1 })).toBe("1 frenada por tu política");
     expect(exitTitle({ at: "approve", total: 1 })).toBe("1 la omitiste");
     expect(exitTitle({ at: "approve", total: 3 })).toBe("3 las omitiste");
+    expect(exitTitle({ at: "contact", total: 7 })).toBe("7 no se pudieron inscribir");
+    expect(exitTitle({ at: "contact", total: 1 })).toBe("1 no se pudo inscribir");
     expect(exitTitle({ at: "search", total: 1 })).toBe("1 salió del recorrido");
   });
 });
@@ -222,6 +255,12 @@ describe("copy — la bitácora", () => {
     expect(done("gate", { promoted: 2, blocked: 1 })).toBe("Revisar la política terminó · 1 pasa, 1 frenada");
     expect(done("gate", { blocked: 1 })).toBe("Revisar la política terminó · 1 frenada");
     expect(done("contact", { contacted: 7 })).toBe("Inscribir en la secuencia terminó · 7 en seguimiento");
+    expect(done("contact", { contacted: 0, enroll_skipped: 7 })).toBe(
+      "Inscribir en la secuencia terminó · 0 inscritas, 7 no se pudieron inscribir",
+    );
+    expect(done("contact", { contacted: 1, enroll_skipped: 1 })).toBe(
+      "Inscribir en la secuencia terminó · 1 inscrita, 1 no se pudo inscribir",
+    );
   });
 
   it("sin contadores o con un paso que no conoce, no asoma claves", () => {

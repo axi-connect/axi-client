@@ -112,6 +112,7 @@ function exitsOf(run: RunLike, keys: StopKey[], current: number, routine: Pick<R
       ["qualify", counters.discarded],
       ["gate", counters.blocked],
       ["approve", counters.batch_skipped],
+      ["contact", counters.enroll_skipped],
     ];
     return totals.flatMap(([at, total]) =>
       total === undefined || total <= 0 || !keys.includes(at) ? [] : [{ at, total, rows: [] }],
@@ -128,7 +129,12 @@ function exitsOf(run: RunLike, keys: StopKey[], current: number, routine: Pick<R
     reasons.set(reason, (reasons.get(reason) ?? 0) + 1);
     groups.set(at, reasons);
   }
-  return keys.flatMap((at) => {
+  // Las ejecuciones de antes del motivo `enroll_*` dejaban en seguimiento a lo
+  // que la secuencia no inscribió: solo se sabe el total, por el contador.
+  const enrollSkipped = counters.enroll_skipped ?? 0;
+  const legacyEnroll = !groups.has("contact") && enrollSkipped > 0;
+  return keys.flatMap((at): TrajectoryExit[] => {
+    if (at === "contact" && legacyEnroll) return [{ at, total: enrollSkipped, rows: [] }];
     const reasons = groups.get(at);
     if (reasons === undefined) return [];
     const rows = [...reasons.entries()]

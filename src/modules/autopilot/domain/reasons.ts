@@ -10,8 +10,8 @@ import type { Routine } from "./autopilot";
  *
  * Las claves son las del motor de P4: las de calificar (`below_min_score`,
  * `no_decision_maker`, `lead_gone`), las de pasar al CRM (`promote_<código>`),
- * las de la política (`policy_<OutreachBlockReason>`) y la del lote
- * (`skipped_in_batch`).
+ * las de la política (`policy_<OutreachBlockReason>`), la del lote
+ * (`skipped_in_batch`) y las de inscribir en la secuencia (`enroll_<motivo>`).
  */
 
 type QualifyOf = Pick<Routine, "qualify">;
@@ -47,6 +47,15 @@ const PROMOTE: Record<string, { label: string; short: string }> = {
 };
 const PROMOTE_OTHER = { label: "No pasó al CRM", short: "No pasó al CRM" };
 
+/** Inscribir: los motivos con que la secuencia salta a un contacto. */
+const ENROLL: Record<string, { label: string; short: string }> = {
+  no_channel: { label: "No hay por dónde escribirle con los canales de la secuencia", short: "Sin canal para la secuencia" },
+  opted_out: { label: "Se dio de baja", short: "Se dio de baja" },
+  task_open: { label: "Ya va en una secuencia o tiene una tarea abierta", short: "Ya va en otra secuencia" },
+  not_enrolled: { label: "La secuencia no lo inscribió (¿está activa?)", short: "La secuencia no lo inscribió" },
+};
+const ENROLL_OTHER = { label: "No se pudo inscribir en la secuencia", short: "No se pudo inscribir" };
+
 function describe(reason: string, routine?: QualifyOf): { label: string; short: string } {
   switch (reason) {
     case "below_min_score": {
@@ -64,6 +73,7 @@ function describe(reason: string, routine?: QualifyOf): { label: string; short: 
   }
   if (reason.startsWith("promote_")) return PROMOTE[reason.slice("promote_".length)] ?? PROMOTE_OTHER;
   if (reason.startsWith("policy_")) return POLICY[reason.slice("policy_".length)] ?? POLICY.blocked;
+  if (reason.startsWith("enroll_")) return ENROLL[reason.slice("enroll_".length)] ?? ENROLL_OTHER;
   return UNKNOWN;
 }
 
@@ -78,11 +88,12 @@ export function reasonShortLabel(reason: string | null, routine?: QualifyOf): st
 }
 
 /** En qué parada del recorrido sale una cuenta con ese motivo (`null` si no se reconoce). */
-export function reasonStop(reason: string | null): "qualify" | "promote" | "gate" | "approve" | null {
+export function reasonStop(reason: string | null): "qualify" | "promote" | "gate" | "approve" | "contact" | null {
   if (reason === null) return null;
   if (reason === "below_min_score" || reason === "no_decision_maker" || reason === "lead_gone") return "qualify";
   if (reason.startsWith("promote_")) return "promote";
   if (reason.startsWith("policy_")) return "gate";
   if (reason === "skipped_in_batch") return "approve";
+  if (reason.startsWith("enroll_")) return "contact";
   return null;
 }
