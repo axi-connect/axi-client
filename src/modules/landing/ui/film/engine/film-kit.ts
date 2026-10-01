@@ -19,6 +19,28 @@ export type Scene = (section: HTMLElement, ctx: Ctx) => void;
 
 export const all = (scope: ParentNode, sel: string) => Array.from(scope.querySelectorAll<HTMLElement>(sel));
 
+/**
+ * Saca del orden de tabulación lo enfocable de `scope` (o lo devuelve), sin
+ * sacarlo del árbol de accesibilidad: el lector sigue leyendo encabezados y
+ * texto de lo que está fuera de cuadro; solo el foco no cae en algo invisible.
+ * (`inert` hacía las dos cosas: auditoría ronda 2, R2.) Respeta un tabindex
+ * propio que ya tuviera el elemento.
+ */
+export function untabbable(scope: ParentNode, off: boolean) {
+  for (const el of all(scope, "a[href], button, input, select, textarea, [tabindex]")) {
+    if (off) {
+      if (el.dataset.filmTab !== undefined) continue;
+      el.dataset.filmTab = el.getAttribute("tabindex") ?? "";
+      el.tabIndex = -1;
+    } else if (el.dataset.filmTab !== undefined) {
+      const was = el.dataset.filmTab;
+      delete el.dataset.filmTab;
+      if (was === "") el.removeAttribute("tabindex");
+      else el.setAttribute("tabindex", was);
+    }
+  }
+}
+
 /** El nicho que se ve: el `data-niche` del raíz de la película. */
 export function activeNiche(section: HTMLElement): string {
   return section.closest<HTMLElement>("[data-niche]")?.dataset.niche ?? FILM_NICHES[0];

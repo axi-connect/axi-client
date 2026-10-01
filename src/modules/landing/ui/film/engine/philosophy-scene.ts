@@ -18,7 +18,7 @@
 import { gsap } from "gsap";
 
 import { PHILOSOPHY_TRACK, PHILOSOPHY_TRACK_FROM as TRACK_FROM, philosophyMove, philosophyTravel } from "@/modules/landing/domain/film/philosophy-content";
-import { atP, counter, num, showIn, spanTimeline, visible, type Scene } from "@/modules/landing/ui/film/engine/film-kit";
+import { atP, counter, num, showIn, spanTimeline, untabbable, visible, type Scene } from "@/modules/landing/ui/film/engine/film-kit";
 
 /** La pieza no se aparta de su sitio más que esto (px). */
 const PIECE_SLACK = 120;
@@ -41,14 +41,15 @@ export const philosophy: Scene = (section, ctx) => {
   const words = visible(section, "[data-anim=philo-word]").map((el) => ({ i: num(el, "index"), x: quick(el, "x", "px"), o: quick(el, "opacity") }));
   const bars = visible(section, "[data-anim=philo-bar]").map((el) => quick(el, "scaleX"));
   const copies = visible(section, "[data-anim=philo-copy]").map((el) => ({ el, i: num(el, "index"), o: quick(el, "opacity"), off: false }));
-  // Un pilar que no está en cuadro sale del teclado y del lector (`inert`): su
-  // «Ver «…»» recibía el foco con opacidad 0 y fuera de pantalla (auditoría, M2).
+  // Un pilar que no está en cuadro sale del teclado: su «Ver «…»» recibía el
+  // foco con opacidad 0 y fuera de pantalla (auditoría, M2). Solo del teclado:
+  // su encabezado y su texto siguen en el árbol de accesibilidad (R2).
   const offstage = (c: (typeof copies)[number], off: boolean) => {
     if (c.off === off) return;
     c.off = off;
-    c.el.toggleAttribute("inert", off);
+    untabbable(c.el, off);
   };
-  gsap.context()?.add(() => () => copies.forEach((c) => c.el.removeAttribute("inert")));
+  gsap.context()?.add(() => () => copies.forEach((c) => untabbable(c.el, false)));
   const intro = visible(section, "[data-anim=philo-intro-copy]").map((el) => quick(el, "opacity"));
   const half = PHILOSOPHY_TRACK.pillar / 2;
 
