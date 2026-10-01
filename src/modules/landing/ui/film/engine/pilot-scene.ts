@@ -1,8 +1,8 @@
 /**
  * El piloto automático (plan §19.4): fijado en escritorio con una línea de
- * `sceneTimeline` parecida a la de la meta. Sin pin (móvil, o escritorio donde
- * no cabe) corre de «top 40 %» (móvil, como la meta) o «top 70 %» hasta
- * «bottom bottom», y no hasta «bottom top»: con ese final el aterrizaje
+ * `sceneTimeline` parecida a la de la meta y el guion de lectura de
+ * `pilotStory` (mesetas en cada fijo). Sin pin (móvil, o escritorio donde no
+ * cabe) corre de «top 70 %» hasta «bottom bottom», y no hasta «bottom top»: con ese final el aterrizaje
  * (0,82–0,9) ocurría con la escena ya fuera por arriba y en el teléfono nunca
  * se veía «Demo agendada» (QA del 2026-10-01, 390).
  *
@@ -16,7 +16,7 @@
 import { gsap } from "gsap";
 
 import { PILOT_COPY, PILOT_LOT, PILOT_RUN, PILOT_STAGES, PILOT_STATUS, lotCounts } from "@/modules/landing/domain/film/pilot-content";
-import { PILOT_DIAL_MAX, PILOT_FOCUS, PILOT_OVERVIEW, capSegments, dial, pilotFrame } from "@/modules/landing/domain/film/pilot-frame";
+import { PILOT_DIAL_MAX, PILOT_FOCUS, PILOT_OVERVIEW, capSegments, dial, pilotFrame, pilotStory } from "@/modules/landing/domain/film/pilot-frame";
 import { SPAN, all, sceneTimeline, visible, writer, type Scene } from "@/modules/landing/ui/film/engine/film-kit";
 
 const px = (v: number) => v.toFixed(1);
@@ -25,7 +25,11 @@ const pad = (n: number) => String(n).padStart(2, "0");
 const at = (pt: { x: number; y: number }) => `translate(${px(pt.x)}px, ${px(pt.y)}px)`;
 
 export const pilot: Scene = (section, ctx) => {
-  const tl = sceneTimeline(section, ctx, 320, { start: ctx.desktop ? "top 70%" : "top 40%", end: "bottom bottom" });
+  // 800 y no 320: con las mesetas de `pilotStory` (un alto en cada fijo) son
+  // unas seis pantallas y cada paso de la cabina se lee sin scroll fino
+  // (dueña, 2026-10-01). Sin pin, el pase empieza con la escena asomando
+  // («top 70 %») para que las mesetas tengan recorrido también en el teléfono.
+  const tl = sceneTimeline(section, ctx, 800, { start: "top 70%", end: "bottom bottom" });
   const { write: set, flag, text, restore } = writer();
   gsap.context()?.add(() => () => restore());
 
@@ -99,8 +103,9 @@ export const pilot: Scene = (section, ctx) => {
   window.addEventListener("resize", measure);
   gsap.context()?.add(() => () => window.removeEventListener("resize", measure));
 
+  // `p` es el scroll; la historia (con sus mesetas) es `pilotStory(p)`.
   const paint = (p: number) => {
-    const f = pilotFrame(p, run, view);
+    const f = pilotFrame(pilotStory(p), run, view);
     // El plano y la ruta.
     set(plane, "transform", f.plane);
     set(done, "strokeDasharray", `${Math.max(0.0001, f.done).toFixed(4)} 2`);

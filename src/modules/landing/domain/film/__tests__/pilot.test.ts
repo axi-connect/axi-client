@@ -29,7 +29,7 @@ import {
   PILOT_STATUS,
   lotCounts,
 } from "../pilot-content"
-import { PILOT_BOARD, PILOT_OVERVIEW, boardRow, capSegments, dial, fixLabelWidth, pilotCamera, pilotFrame, planeAt } from "../pilot-frame"
+import { PILOT_BOARD, PILOT_OVERVIEW, PILOT_PLATEAUS, boardRow, capSegments, dial, fixLabelWidth, pilotCamera, pilotFrame, pilotStory, planeAt } from "../pilot-frame"
 
 const close = (a: number, b: number, eps = 0.5) => Math.abs(a - b) <= eps
 const RUN = { ...PILOT_RUN, approved: lotCounts(PILOT_LOT).approved }
@@ -290,5 +290,72 @@ describe("el guion por nicho", () => {
     expect(all).not.toMatch(/whatsapp|instagram|linkedin|2300|cumple|apollo|cr[ée]dito|garantiza|%/i)
     expect(PILOT_COPY.cockpit.channels).toEqual(["Correo", "Llamada del agente", "SMS"])
     expect(PILOT_COPY.zone.passed).toContain("Registro de Números Excluidos")
+  })
+})
+
+describe("el guion de lectura (pilotStory, dueña 2026-10-01)", () => {
+  const mid = (a: number, b: number) => (a + b) / 2
+  // El fijo de cada meseta: los cuatro primeros, la espera y el lote aprobado
+  // (los dos sobre el fijo 5), el fijo 6; la última es el final.
+  const FIX_OF = [0, 1, 2, 3, 4, 4, 5]
+  const HOLD = 4
+
+  it("en mitad de cada meseta el avión está en su fijo y la historia, quieta", () => {
+    expect(PILOT_PLATEAUS).toHaveLength(8)
+    FIX_OF.forEach((fix, k) => {
+      const [a, b] = PILOT_PLATEAUS[k]
+      const s = pilotStory(mid(a, b))
+      expect(pilotStory(a + 1e-6)).toBeCloseTo(s, 9)
+      expect(pilotStory(b - 1e-6)).toBeCloseTo(s, 9)
+      const plane = planeAt(s)
+      if (k === HOLD) {
+        expect(plane.hold).not.toBeNull()
+        expect(pilotFrame(s, RUN).status).toBe("waiting")
+      } else {
+        expect(Math.abs(plane.f - FLIGHT_FIXES[fix])).toBeLessThan(0.003)
+      }
+      // La cabina muestra ese paso: su fijo encendido y el siguiente no.
+      const f = pilotFrame(s, RUN)
+      expect(f.lit[fix]).toBe(true)
+      if (fix < 5) expect(f.lit[fix + 1]).toBe(false)
+    })
+    // El lote aprobado: la cuenta omitida ya se apagó y el lote sigue a la vista.
+    const approved = pilotFrame(PILOT_PLATEAUS[5][2], RUN)
+    expect([approved.skippedDim, approved.phase]).toEqual([true, "lot"])
+  })
+
+  it("en mitad de cada vuelo entre fijos el avión va entre los dos (y se mueve)", () => {
+    // Vuelos que llegan a un fijo nuevo: los de las mesetas 1, 2, 3 y 6.
+    for (const k of [1, 2, 3, 6]) {
+      const m = mid(PILOT_PLATEAUS[k - 1][1], PILOT_PLATEAUS[k][0])
+      const plane = planeAt(pilotStory(m))
+      expect(plane.f).toBeGreaterThan(FLIGHT_FIXES[FIX_OF[k] - 1] + 0.003)
+      expect(plane.f).toBeLessThan(FLIGHT_FIXES[FIX_OF[k]] - 0.003)
+      expect(pilotStory(m + 0.002)).toBeGreaterThan(pilotStory(m))
+    }
+  })
+
+  it("cada meseta es al menos el 40 % de su tramo, y la de la espera, la más larga", () => {
+    let from = 0
+    const lengths = PILOT_PLATEAUS.map(([a, b]) => {
+      expect((b - a) / (b - from)).toBeGreaterThanOrEqual(0.4)
+      from = b
+      return b - a
+    })
+    expect(Math.max(...lengths)).toBe(lengths[HOLD])
+  })
+
+  it("avanza sin saltos ni retrocesos y acaba en el fotograma final, con una meseta antes de soltar", () => {
+    let prev = 0
+    for (let i = 1; i <= 1000; i++) {
+      const s = pilotStory(i / 1000)
+      expect(s).toBeGreaterThanOrEqual(prev)
+      expect(s - prev).toBeLessThan(0.01)
+      prev = s
+    }
+    expect(pilotStory(1)).toBe(1)
+    const [lastFrom] = PILOT_PLATEAUS[PILOT_PLATEAUS.length - 1]
+    expect(pilotStory(lastFrom + 0.01)).toBe(1)
+    expect(lastFrom).toBeLessThan(0.95)
   })
 })
