@@ -129,6 +129,9 @@
 /* Que se lea como una foto de producto: el objeto llena el encuadre y lo
    asienta una luz de estudio (QA: la lámina se veía vacía). */
 .film-photo-shot svg { position: relative; z-index: 1; width: 62%; height: auto; max-height: 72%; }
+/* La foto del cliente llena el cuadro de la publicación; sin la sombra del ícono de antes. */
+.film-photo-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.film-photo-shot:has(.film-photo-img)::after { content: none; }
 .film-photo-shot::after {
   content: "";
   position: absolute;

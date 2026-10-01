@@ -323,9 +323,9 @@ const BEAUTY: FilmContent = {
       { name: "Depilación láser", price: "$\u00a0150.000", icon: "sparkles" },
       { name: "Masaje relajante", price: "$\u00a0140.000", icon: "hand" },
     ],
-    matchIndex: 1,
+    matchIndex: 3,
     similarity: "0,91",
-    reply: "Es nuestro Hidrafacial: $\u00a0260.000, 60 minutos. ¿Te busco un horario?",
+    reply: "Es nuestra manicura spa con diseño: $\u00a065.000. ¿Te agendo esta semana?",
   },
   radar: {
     mode: "ads",
