@@ -615,3 +615,16 @@ Por encima de 1200 px y en móvil queda igual. Es el único cambio permitido en 
 hero A (§14) → §11 (cobrar, ordenar, Axel y medir) → §13 (tanda 3) → §16 (meta, precios, preguntas, cierre y cabecera).
 
 Después de cada paso, QA de axi-13 a 390, 768, 1024 y 1440 px.
+
+## 17. Reparto con dos constructores (2026-09-30)
+
+La dueña pidió acelerar. axi-2e (antes axi-13) coordina y hace QA; dos constructores trabajan en el mismo worktree y rama, sin fusiones:
+
+| Constructor | Carril | Archivos suyos |
+|---|---|---|
+| `cinematic-film-landing-page` | §11 (cobrar, ordenar, Axel, medir) → §13 (tanda 3) | `engine/film-engine.ts`, `film.css`, `FilmPage.tsx`, `film-content.ts`, `opening.tsx`, `capture.tsx`, `sell.tsx`, `grow.tsx`, `collect/pipeline/axel/measure.tsx` |
+| `2-cinematic-film-landing-page` | §16 (cabecera → precios → preguntas → cierre → meta) | `layout/site/*`, `PricingPlans.tsx`, `after.tsx`, `brand-mark.tsx`, `scenes/goal.tsx`, `scenes/close.tsx`, `engine/goal-scene.ts`, `engine/close-scene.ts`, `film-tanda4.css`, `domain/film/route-map.ts`, `goal-camera.ts`, `goal-content.ts` y sus tests |
+
+- Un archivo tiene un solo dueño a la vez. Lo que cruza (registrar un builder en `SCENES`, importar `film-tanda4.css`, cambiar `GoalScene`/`CloseScene` en `FilmPage`) lo hace el dueño, o este cede el archivo de forma explícita.
+- Commits con rutas explícitas. Las tareas pesadas (typecheck, jest) se avisan entre ellos: una a la vez.
+- QA de axi-2e tras cada commit a 390, 768, 1024 y 1440 px.
