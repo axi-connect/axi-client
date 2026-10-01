@@ -102,7 +102,7 @@ export const PILOT_COPY = {
 export type PilotNicheContent = {
   /** Lo que busca el piloto en este negocio (§19.5). */
   target: string;
-  /** Las cinco cuentas del tablero, en orden. */
+  /** Las cinco cuentas del tablero, en orden. Nombres genéricos: ninguno coincide con una empresa real (salvo los del Radar aprobado). */
   accounts: readonly [string, string, string, string, string];
   /** Cuáles van marcadas en el lote. La que no, se omite y termina en «Descartado». */
   lot: readonly [boolean, boolean, boolean, boolean, boolean];
@@ -121,7 +121,7 @@ const LOT = [true, true, true, true, false] as const;
 export const PILOT_CONTENT: Readonly<Record<FilmNiche, PilotNicheContent>> = {
   restaurants: {
     target: "Empresas cercanas para almuerzos corporativos",
-    accounts: ["Grupo Sol", "Seguros Altamira", "Notaría 21", "Constructora Prado", "Agencia Faro"],
+    accounts: ["Grupo Sol", "Seguros del Parque", "Notaría 21", "Constructora Norte", "Oficinas Calle 93"],
     lot: LOT,
     // Andrea Ruiz es la de los «30 almuerzos confirmados» de la llamada.
     decisor: { initials: "AR", name: "Andrea Ruiz", role: "Jefa administrativa · decide" },
@@ -130,7 +130,7 @@ export const PILOT_CONTENT: Readonly<Record<FilmNiche, PilotNicheContent>> = {
   },
   tech: {
     target: "Empresas que renuevan equipos",
-    accounts: ["Contadores Asociados", "Agencia Nodo", "Logística Prado", "Estudio Cubo", "Inmobiliaria Roble"],
+    accounts: ["Contadores del Centro", "Logística del Sur", "Inmobiliaria Los Robles", "Estudio de Diseño 45", "Abogados Calle 10"],
     lot: LOT,
     decisor: { initials: "CM", name: "Carolina Mejía", role: "Gerente administrativa · decide" },
     run: RUN,
@@ -138,7 +138,7 @@ export const PILOT_CONTENT: Readonly<Record<FilmNiche, PilotNicheContent>> = {
   },
   beauty: {
     target: "Empresas con plan de bienestar para su equipo",
-    accounts: ["Grupo Aliar", "Transportes Luna", "Editorial Brisa", "Coopsalud", "Contact Center Norte"],
+    accounts: ["Transportes del Valle", "Editorial Brisa", "Contact Center del Norte", "Fondo de Empleados Calle 80", "Distribuidora La Esquina"],
     lot: LOT,
     decisor: { initials: "JT", name: "Juliana Torres", role: "Directora de talento humano · decide" },
     run: RUN,
@@ -146,7 +146,7 @@ export const PILOT_CONTENT: Readonly<Record<FilmNiche, PilotNicheContent>> = {
   },
   b2b: {
     target: "Tu cliente ideal",
-    accounts: ["Clínica Santa Fe", "Odontología Norte", "Laboratorio Andino", "Centro Médico 93", "Fisio Integral"],
+    accounts: ["Clínica Santa Fe", "Consultorio Dental Norte", "Laboratorio del Parque", "Centro Médico 93", "Fisioterapia Calle 50"],
     lot: LOT,
     // El decisor del Radar en B2B.
     decisor: { initials: "MR", name: "Marta Restrepo", role: "Directora de compras · decide" },
