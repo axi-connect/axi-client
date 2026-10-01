@@ -861,3 +861,86 @@ Las cifras de ejemplo deben cuadrar entre sí y en cada nicho (test como `film.t
 - Todo va en blanco sobre tinta. IBM Plex Mono solo en cifras y en la pantalla de ruta.
 - Construye `cinematic-film-landing-page`. La escena queda apagada con `FILM_FEATURES.pilot = false` hasta que el piloto esté en producción.
 - Fusión de la rama `wip` (8a186c3e): `npm run budget` falla en 21 rutas del panel por el crecimiento de main. No es una regresión de la landing (`/` pesa 151,3 kB). Se resuelve en el programa aparte de §6.4; los topes no se suben en esta rama.
+
+## 20. Escucha la llamada · audio de una entrante con orbe de voz (aprobado el 2026-10-01)
+
+Las entrantes ya están en producción. La dueña pidió que en la escena de llamada se pueda escuchar una llamada real, con un orbe de audio «ultra premium y optimizado» con los colores de Axi y sin librerías nuevas.
+
+- **Lienzo aprobado (v4):** https://claude.ai/artifact/Bp2i7Q5VeSFiHmHft94zJp (Main 1440 y Móvil 390, interactivos). La dueña dijo: «perfecto, más que aprobado». El lienzo manda en composición, copia y comportamiento.
+- **Audios:** `public/assets/audio/cliente-gafas.mp3` (4,86 s) y `agente-aviador.mp3` (7,89 s), que ya se usan en /productos. Son audios de ejemplo hasta que haya grabaciones de entrantes, y la escena lo dice («audio de ejemplo»).
+
+### 20.1 Composición
+
+- **Cabecera centrada.** Eyebrow «VENDER · LLAMADAS» y título «Y cuando hay que llamar, llama. / Y si te llaman, contesta.» (la segunda línea en Nexa 200). Lead: «Retoma cotizaciones, confirma citas y atiende las entrantes: lleva cada llamada por etapas y, si no puede atender, toma el recado.»
+- **Centro: la esfera de voz.** Es el botón de reproducir (`<button>` con `aria-label` «Escuchar la llamada», «Pausar la llamada» o «Escuchar otra vez», y `aria-pressed`). Elementos:
+  - esfera de 168 px con volumen, brillo y borde de luz;
+  - mezcla interna de la marca (coral, violeta y ámbar) que gira solo mientras suena;
+  - tres órbitas en 3D real (`perspective` 1050 px y `preserve-3d`) que cruzan la esfera y pasan por detrás. La coral responde a los graves (radio 150), la violeta a los medios (178, sentido inverso) y la ámbar a los agudos (206). Cada una lleva un punto de luz contrarrotado para que siempre mire a cámara;
+  - corona de 64 marcas: espectro en espejo, con los graves arriba y los agudos abajo;
+  - piso con horizonte, sombra, reflejo de color y tres ondas que solo se ven con voz.
+- **Izquierda:** «LLAMADA ENTRANTE» con punto vivo, el tiempo en IBM Plex Mono («0:04 / 0:12») y el estado («Lista para escuchar», «Habla el cliente», «Contesta Axi», «En pausa» o «Llamada atendida») seguido de «audio de ejemplo».
+- **Derecha: «LO QUE AXI ANOTA».** Las cuatro filas están siempre presentes y su valor aparece a su tiempo:
+  - Llegó por · Un reel;
+  - Busca · Gafas negras, lente naranja;
+  - Producto · Aviador Ámbar · quedan pocas;
+  - Siguiente paso · Enviar foto y precio.
+
+  No se menciona el canal (límite de §19.6).
+- **Debajo: subtítulos de cine**, con `aria-live="polite"`. Antes de reproducir dicen «Alguien vio un reel y llama a preguntar por unas gafas. Toca la esfera y escucha cómo contesta Axi.». Mientras suena, muestran quién habla (avatar CL o el isotipo) y las palabras se encienden con la voz; la palabra actual lleva el degradado coral→violeta.
+- **Abajo: línea de tiempo.**
+  - Etapas Apertura, Motivo, Propuesta y Cierre en su segundo real.
+  - La onda real tiene 202 barras: las del cliente en blanco y las de Axi con el degradado de la marca.
+  - Hay un cabezal de reproducción.
+- **Quién habla cambia la escena.** Con el cliente, todo queda en plata: campo plata, esfera plata y órbitas al 32 %. Cuando contesta Axi, entra el color. Así el color aparece cuando habla Axi.
+- **Móvil 390:** una columna con cabecera, la esfera escalada a 0,739 (340 px), el tiempo, los subtítulos (17 px), la línea de tiempo (358 px) y las notas.
+- **La transcripción saliente por nicho** (`c.call.lines`) sale de esta escena. La saliente queda dicha en el título y el lead.
+
+### 20.2 Datos medidos (dominio, con tests)
+
+Van en `domain/film/call-audio.ts`, como datos y funciones puras.
+
+- **`PEAKS`:** envolvente RMS, normalizada con exponente 0,6. Son 77 barras del cliente y 125 de Axi, a unos 62 ms por barra. Se midieron con ffmpeg sobre el audio real y se copian del lienzo, archivo `common.js`.
+- **`PHRASES`:** tramos con voz detectados (silencio de más de 240 ms):
+  - cliente: [0,12–0,54] «Hola, buenas.», [1,10–3,36] «Oye, vi en el reel unas gafas negras, de lente naranja…» y [3,94–4,72] «¿Todavía las tienen?»;
+  - Axi: [0,06–0,96] «¡Hola! Sí, claro.», [1,28–2,74] «Todavía nos quedan unas pocas.», [3,14–5,78] «Son las Aviador Ámbar: montura negra, lente ámbar.» y [6,04–7,78] «Te paso la foto y el precio.».
+- **`wordTimes`:** reparte cada palabra dentro de su tramo según el número de letras más uno. `litCount(track, t)` es puro.
+- **`STAGES`** (Apertura 0 s, Motivo 1,1 s, Propuesta D0+3,14 s y Cierre D0+6,04 s) y **`NOTES`** (2,0 s, 3,4 s, D0+5,4 s y D0+7,6 s) usan el tiempo global.
+- **`D0` y `D1`:** se toman de `audio.duration` cuando hay metadatos. Mientras tanto se usan 4,86 s y 7,89 s.
+- **Tests:**
+  - las palabras de cada pista coinciden con su texto;
+  - los tiempos son crecientes y quedan dentro de su tramo;
+  - etapas y notas ordenadas y menores que TOTAL;
+  - PEAKS en [0, 1].
+
+### 20.3 Rendimiento (lo que la dueña pidió: «no puede ser costoso»)
+
+- **Sin librerías.** Un solo `AudioContext` se crea al primer toque; antes no se descarga nada (`preload="none"`). Un `AnalyserNode` (fftSize 256, smoothing 0,6) y `createMediaElementSource` para los dos `<audio>`.
+- **Bucle `requestAnimationFrame` solo mientras suena.** Por frame:
+  - se leen 8 bandas logarítmicas (bins 1·2·3·4·6·8·11·15·21, con ganancia creciente);
+  - el ataque es de 0,55 y la caída de 0,16;
+  - se escriben 13 variables CSS (`--b0…--b7`, `--lo`, `--mid`, `--hi`, `--e` y `--p`) en UN elemento, la sección.
+- **El estado de React cambia solo cuando cambia algo visible:** una palabra, un segundo, una nota o una etapa. Son unas 40 veces por llamada. Nada de `setState` por frame ni por `timeupdate`.
+- **Todo lo que se mueve son `transform` y `opacity`** de capas ya pintadas, con `will-change` en las que escala el analizador.
+  - Ni `filter`, ni `blur`, ni `canvas`.
+  - El avance de la onda se hace con dos traslaciones opuestas (la capa encendida se revela sin repintar). El cabezal también es una traslación.
+  - Los giros son animaciones CSS (`animation-play-state` en pausa hasta `.on`).
+- **Sin grano.** El lienzo lleva grano feTurbulence; en el sitio no va (§17.1).
+- **Fuera de pantalla o pestaña oculta.** Un `IntersectionObserver` pausa el audio y para el bucle al salir la escena; `visibilitychange` hace lo mismo. Al desmontar se cierra el `AudioContext`.
+- **`prefers-reduced-motion`:**
+  - el audio y los subtítulos funcionan y `--p` avanza;
+  - no se escriben bandas;
+  - no hay giros, ondas, respiración ni parpadeo.
+- **Escena sin pin.** Escuchar pide quedarse quieto. Entra con el patrón de escenas sin pin («top 85 %» → «center 50 %»): cabecera, esfera y línea de tiempo. Se quita `call` de `PINNED` y el builder de `sell-scenes.ts` se reduce a esa entrada.
+
+### 20.4 Reparto y QA
+
+- **Construye `2-cinematic-film-landing-page`** al cerrar el nav en isla: es el dueño de `sell-moments.tsx` y del CSS de vender.
+  - Archivos nuevos: `domain/film/call-audio.ts` con su test, `ui/film/film-call.css` y, si conviene, `scenes/call-orb.tsx` (cliente) con el hook `useCallAudio`.
+  - Lo que cruza a `film-engine.ts`, `film-kit.ts` (`PINNED`) o `FilmPage.tsx` lo pide a `cinematic-film-landing-page`.
+- **QA de axi-2e:**
+  - 390, 768, 1024 y 1440, en claro y oscuro (la escena es tinta en ambos);
+  - Chromium, WebKit y Firefox: las órbitas pasan por detrás de la esfera en los tres;
+  - perfil de rendimiento mientras suena, sin long tasks ni repintado de la onda (Paint flashing);
+  - movimiento reducido;
+  - teclado: Espacio y Enter en la esfera;
+  - se pausa al salir de pantalla.
