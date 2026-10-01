@@ -102,6 +102,9 @@
 /* Perspectiva real: las órbitas atraviesan la esfera y pasan por detrás. */
 .film-call-stage { position: absolute; left: 0; top: 0; width: 460px; height: 460px; perspective: 1050px; perspective-origin: 50% 34%; }
 .film-call-stage > * { position: absolute; left: 50%; top: 50%; }
+/* Solo la esfera recibe el toque: en 3D, el plano de cada órbita pasa por delante de ella. */
+.film-call-stage, .film-call-stage * { pointer-events: none; }
+.film-call-pearl { pointer-events: auto; }
 .film-call-horizon { width: 880px; height: 1px; margin-left: -440px; top: calc(50% + 168px); background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.1) 30%, rgb(255 255 255 / 0.16) 50%, rgb(255 255 255 / 0.1) 70%, transparent); }
 .film-call-shadow { width: 300px; height: 56px; margin: 150px 0 0 -150px; border-radius: 50%; background: radial-gradient(closest-side, rgb(0 0 0 / 0.75), rgb(0 0 0 / 0)); }
 .film-call-reflect { width: 360px; height: 70px; margin: 142px 0 0 -180px; border-radius: 50%; background: radial-gradient(closest-side, rgb(154 79 255 / 0.5), rgb(230 87 89 / 0.2) 55%, rgb(0 0 0 / 0)); opacity: calc(0.08 + var(--e) * 0.9); transform: scaleX(calc(0.8 + var(--e) * 0.35)); will-change: transform, opacity; }
