@@ -381,9 +381,12 @@ export function TeamScene() {
                             </span>
                           </p>
                           <div className="film-team-out" data-anim="team-reply">
+                            {/* El lector lee la respuesta entera; lo que se escribe letra a letra va oculto (auditoría m3). */}
+                            <span className="sr-only">{c.team.reply}</span>
                             <span
                               data-anim="team-reply-text"
                               data-full={c.team.reply}
+                              aria-hidden="true"
                             >
                               {c.team.reply}
                             </span>
