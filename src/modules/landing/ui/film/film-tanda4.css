@@ -587,3 +587,10 @@
   .film-goal-here-v { font-size: 17px; }
   .film-goal-recalc { left: 24px; top: -42px; font-size: 11.5px; padding: 6px 11px; }
 }
+
+/* Movimiento reducido: sin motor ya se ve el fotograma final; aquí se apagan
+   también las transiciones de lo que cambia al tocar (selector, más/menos). */
+@media (prefers-reduced-motion: reduce) {
+  .film-price-switch button, .film-price-cta, .film-faq-cta, .film-faq-sign, .film-faq-sign::after,
+  .film-close-agent, .film-goal-axi { transition: none; }
+}

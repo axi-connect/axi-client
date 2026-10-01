@@ -527,3 +527,7 @@
   .film-team-base { left: -14px; width: calc(100% + 28px); top: auto; bottom: 0; height: 14px; transform: none; border-radius: 0 0 14px 14px; box-shadow: none; }
   .film-team-keys, .film-team-pad { display: none; }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .film-call-stage-name, .film-call-lines li, .film-team-mode, .film-team-return { transition: none; }
+}
