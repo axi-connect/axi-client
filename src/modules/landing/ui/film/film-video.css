@@ -2,7 +2,8 @@
  * El video inmersivo (plan §23). El marco es la pantalla entera escalada: el
  * motor solo anima su `transform` (y la opacidad de la viñeta y la frase). Sin
  * motor, el reposo es el marco a 0,6 bajo el titular. Sin filter ni blur salvo
- * el cristal del control de sonido, que no se anima.
+ * el cristal del control de sonido, que no se anima. En móvil no hay marco: el
+ * máster vertical va a sangre desde el principio.
  */
 .film-video { position: relative; height: 100svh; min-height: 560px; overflow: clip; background: var(--film-ink); }
 .film-video-head {
@@ -94,11 +95,12 @@
 .film-video-pill[data-on] .film-video-eq i:nth-child(4) { animation-delay: -0.15s; }
 @keyframes film-video-eq { 50% { height: 100%; } }
 
-/* Móvil: el máster vertical; el marco nace más grande y la frase va arriba del control. */
+/* Móvil: el máster vertical a sangre desde el principio, el titular encima. */
 @media (max-width: 767px) {
   .film-video-head { align-items: flex-start; padding-inline: 16px; text-align: left; }
-  .film-video-frame { transform: translate3d(0, 9%, 0) scale(0.78); }
-  .film-video-clip { border-radius: 35.9px; }
+  .film-video-frame { transform: none; }
+  .film-video-clip { border-radius: 0; box-shadow: none; }
+  .film-video-vignette { opacity: 1; }
   .film-video-cap { max-width: none; right: 16px; bottom: 84px; }
 }
 @media (prefers-reduced-motion: reduce) {

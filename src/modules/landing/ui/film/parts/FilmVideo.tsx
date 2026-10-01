@@ -10,8 +10,8 @@ type Sources = { mp4: string; poster: string };
  * El video de la película (plan §23): Cloudinary en streaming progresivo, sin
  * librerías ni framer-motion (no entra en el JS de /).
  *
- * - Nada se pide hasta que la escena se acerca (IntersectionObserver con margen
- *   de una pantalla): ni el póster ni el video compiten con el LCP del hero.
+ * - Nada se pide hasta que la escena está a una pantalla (IntersectionObserver
+ *   sobre el contenedor de scroll): ni el póster ni el video compiten con el LCP.
  * - Escritorio/móvil en el MISMO umbral que /productos (768 px): cada máster con
  *   su póster, elegido tras hidratar.
  * - Autoplay en silencio y en bucle; se pausa fuera de pantalla y con la pestaña
@@ -39,7 +39,10 @@ export function FilmVideo({ desktop, mobile }: { desktop: Sources; mobile: Sourc
         setAuto(!save && !calm);
         setSrc(window.matchMedia("(min-width: 768px)").matches ? desktop : mobile);
       },
-      { rootMargin: "100% 0px" },
+      // La raíz es el contenedor de scroll de la capa pública: con la del
+      // viewport, el recorte del contenedor anulaba el margen y el video se
+      // pedía tarde (pantalla negra al llegar).
+      { root: video.closest("[data-app-scroll]"), rootMargin: "100% 0px" },
     );
     near.observe(video);
     return () => near.disconnect();

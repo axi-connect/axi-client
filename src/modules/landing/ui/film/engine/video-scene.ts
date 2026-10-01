@@ -5,23 +5,25 @@
  */
 import { gsap } from "gsap";
 
-import { atP, segP, sceneTimeline, PASS_DESKTOP, PASS_MOBILE, SPAN, visible, writer, type Ctx, type Scene } from "@/modules/landing/ui/film/engine/film-kit";
+import { atP, segP, sceneTimeline, PASS_DESKTOP, SPAN, visible, writer, type Ctx, type Scene } from "@/modules/landing/ui/film/engine/film-kit";
 
 /** El marco en reposo: la pantalla entera a esta escala, algo bajo el centro. */
 const S0_DESKTOP = 0.6;
-const S0_MOBILE = 0.78;
 const RADIUS = 28;
 const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
 
 export const video: Scene = (section: HTMLElement, ctx: Ctx) => {
-  const tl = sceneTimeline(section, ctx, 180, ctx.desktop ? PASS_DESKTOP : PASS_MOBILE);
+  // En móvil el máster vertical ya va a sangre desde el principio (film-video.css):
+  // abrir un marco en el tramo corto de la entrada no se alcanzaba a ver.
+  if (!ctx.desktop) return;
+  const tl = sceneTimeline(section, ctx, 180, PASS_DESKTOP);
   tl.to({}, { duration: 0 }, SPAN);
   const frames = visible(section, "[data-anim=video-frame]");
   const clips = visible(section, "[data-anim=video-clip]");
   const heads = visible(section, "[data-anim=head]");
   const vignettes = visible(section, "[data-anim=video-vignette]");
   const caps = visible(section, "[data-anim=video-cap]");
-  const s0 = ctx.desktop ? S0_DESKTOP : S0_MOBILE;
+  const s0 = S0_DESKTOP;
   const w = writer();
   const proxy = { p: 0 };
   const paint = (p: number) => {
