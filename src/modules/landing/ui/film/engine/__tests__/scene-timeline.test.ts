@@ -51,6 +51,29 @@ describe("fijar siempre y caber (la dueña, 2026-10-01)", () => {
   })
 })
 
+describe("el recorrido fijado usa el envoltorio del servidor (arranque, 2026-10-02)", () => {
+  it("con `.film-pin`, la escena no se mueve: el envoltorio pasa a ser su recorrido; sin él, se crea uno", () => {
+    const pin = document.createElement("div")
+    pin.className = "film-pin"
+    document.body.appendChild(pin)
+    const s = scene("vault", 600)
+    pin.appendChild(s)
+    const moved: Node[] = []
+    new MutationObserver((ms) => ms.forEach((m) => m.removedNodes.forEach((n) => moved.push(n)))).observe(document.body, { childList: true, subtree: true })
+    sceneTimeline(s, { desktop: true, pins: new Map() }, 100)
+    expect(s.parentElement).toBe(pin)
+    expect(pin.classList.contains("pin-spacer")).toBe(true)
+    return Promise.resolve().then(() => {
+      expect(moved).not.toContain(s)
+      // Sin envoltorio: se crea uno (y la escena se mueve dentro).
+      const bare = scene("team", 600)
+      sceneTimeline(bare, { desktop: true, pins: new Map() }, 100)
+      expect(bare.parentElement?.classList.contains("pin-spacer")).toBe(true)
+      expect(bare.parentElement?.classList.contains("film-pin")).toBe(false)
+    })
+  })
+})
+
 describe("el ajuste no se repite si la ventana no cambió (arranque, 2026-10-01)", () => {
   // Medir: 300 px fijos y 900 que escalan con el zoom; cuenta cada medida del alto.
   function counted() {

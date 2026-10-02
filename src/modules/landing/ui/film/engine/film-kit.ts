@@ -383,19 +383,28 @@ export function sceneTimeline(section: HTMLElement, ctx: Ctx, length: number, pa
  * gsap lo deshace al revertir.
  */
 function stick(section: HTMLElement, travel: number): HTMLElement {
-  const spacer = document.createElement("div");
-  spacer.className = "pin-spacer film-stick";
+  // El envoltorio del servidor (`Pin`, FilmPage): sin mover la escena, que al
+  // reinsertarse recalculaba los estilos de todo su contenido.
+  const own = section.parentElement?.classList.contains("film-pin") ? section.parentElement : null;
+  const spacer = own ?? document.createElement("div");
+  spacer.classList.add("pin-spacer", "film-stick");
   const fill = document.createElement("div");
   fill.setAttribute("aria-hidden", "true");
   fill.style.height = `${Math.round(travel)}vh`;
-  section.before(spacer);
-  spacer.append(section, fill);
+  if (own) own.append(fill);
+  else {
+    section.before(spacer);
+    spacer.append(section, fill);
+  }
   section.style.position = "sticky";
   section.style.top = "0px";
   gsap.context()?.add(() => () => {
     section.style.removeProperty("position");
     section.style.removeProperty("top");
-    if (spacer.parentNode) {
+    if (own) {
+      fill.remove();
+      own.classList.remove("pin-spacer", "film-stick");
+    } else if (spacer.parentNode) {
       spacer.before(section);
       spacer.remove();
     }
