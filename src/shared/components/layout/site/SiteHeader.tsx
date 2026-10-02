@@ -89,13 +89,13 @@ export default function SiteHeader() {
         // Solo cuando cruza el umbral: llamar a setIsland en cada frame del scroll
         // pasaba por React aunque el valor no cambiara (perfil de arranque).
         let shown: boolean | null = null;
-        // El scroll se lee en su evento (ahí el estilo ya está al día) y no en el
-        // rAF, donde gsap ya escribió estilos y la lectura forzaba un recálculo.
+        const show = (next: boolean) => {
+            if (next !== shown) setIsland((shown = next));
+        };
         let top = el.scrollTop;
         const update = () => {
             frame = 0;
-            const next = top > ISLAND_AT;
-            if (next !== shown) setIsland((shown = next));
+            show(top > ISLAND_AT);
             if (!onFilm) {
                 const t = islandOnPage(pathname, readProgress(top, el.scrollHeight, el.clientHeight));
                 paint(t.title, t.sub, t.ring);
@@ -105,6 +105,20 @@ export default function SiteHeader() {
             top = el.scrollTop;
             if (!frame) frame = requestAnimationFrame(update);
         };
+        // En la película no se lee el scroll: leer `scrollTop` (en el evento o en el
+        // rAF) forzaba un recálculo de estilos por frame tras las escrituras de gsap
+        // (perfil de arranque, hasta 32 ms con CPU ×4). Un centinela de ISLAND_AT px
+        // arriba del contenedor dice lo mismo: la isla sale cuando deja de verse.
+        let sentinel: HTMLDivElement | null = null;
+        let io: IntersectionObserver | null = null;
+        if (onFilm && typeof IntersectionObserver === 'function') {
+            sentinel = document.createElement('div');
+            sentinel.setAttribute('aria-hidden', 'true');
+            sentinel.style.cssText = `position:absolute;top:0;left:0;width:1px;height:${ISLAND_AT}px;pointer-events:none;visibility:hidden`;
+            el.prepend(sentinel);
+            io = new IntersectionObserver(([e]) => show(!e.isIntersecting), { root: el });
+            io.observe(sentinel);
+        }
         const onChapter = (e: Event) => {
             const t = islandOnFilm((e as CustomEvent<IslandChapter>).detail);
             paint(t.title, t.sub, t.ring);
@@ -121,9 +135,14 @@ export default function SiteHeader() {
             window.addEventListener(FILM_CHAPTER_EVENT, onChapter);
             window.addEventListener(FILM_ACTIVITY_EVENT, onActivity);
         }
-        update();
-        el.addEventListener('scroll', onScroll, { passive: true });
+        if (io) show(el.scrollTop > ISLAND_AT);
+        else {
+            update();
+            el.addEventListener('scroll', onScroll, { passive: true });
+        }
         return () => {
+            io?.disconnect();
+            sentinel?.remove();
             el.removeEventListener('scroll', onScroll);
             window.removeEventListener(FILM_CHAPTER_EVENT, onChapter);
             window.removeEventListener(FILM_ACTIVITY_EVENT, onActivity);
