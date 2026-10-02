@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic"
 import type { ModalConfig } from "../../shared/components/ui/modal"
 import type { AppAlert } from "@/core/notifications"
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from "react"
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, ReactNode } from "react"
 
 /*
   Carga diferida, a propósito. Este provider vive en el layout raíz: lo que
@@ -15,12 +15,67 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, R
     del navegador (para los slices que llaman `notify` directamente). sileo
     guarda en su store los avisos emitidos antes de montar el viewport y los
     pinta al montarse, así que ninguno se pierde por llegar temprano.
+  - En la película de la home (`[data-film]`) NO se cargan en ese reposo: al
+    evaluarse, sileo inyecta un <style> con variables en `:root` y la página
+    entera recalcula estilos (≈ 2.400 elementos, 220–250 ms con CPU ×4), justo
+    cuando llega la primera rueda y se construye el motor (perfil de arranque,
+    qa/qa-recalculo.mjs). Allí se cargan con el primer aviso, cuando alguien más
+    carga sileo (un `notify` directo), o con el motor listo (`data-film-ready`)
+    y el reposo siguiente; si el motor no arranca (movimiento reducido), a los
+    FILM_TOASTER_MAX_MS. Los avisos que llegan antes se encolan y salen al
+    cargar: ninguno se pierde.
   - El Modal se monta la primera vez que alguien lo abre.
 */
-const NotificationsToaster = dynamic(
-  () => import("@/core/notifications/toaster").then((m) => m.NotificationsToaster),
-  { ssr: false },
-)
+const loadToaster = () => import("@/core/notifications/toaster")
+const NotificationsToaster = dynamic(() => loadToaster().then((m) => m.NotificationsToaster), { ssr: false })
+
+/** Tope en la película si el motor nunca marca `data-film-ready` (p. ej. movimiento reducido). */
+export const FILM_TOASTER_MAX_MS = 8000
+
+/** ¿Ya cargó alguien sileo? Su hoja inyectada declara `--sileo-…`. */
+const sileoLoaded = (node: Node) => node instanceof HTMLStyleElement && Boolean(node.textContent?.includes("--sileo"))
+
+/**
+ * Cuándo montar el viewport de avisos. Fuera de la película, en el primer
+ * reposo (como siempre). En la película, ver la nota de arriba.
+ */
+function whenToasterIsCheap(fn: () => void): () => void {
+  const film = document.querySelector<HTMLElement>("[data-film]")
+  if (!film) return whenIdle(fn)
+  let done = false
+  let cancelIdle: (() => void) | null = null
+  const fire = () => {
+    if (done) return
+    done = true
+    stop()
+    fn()
+  }
+  const idleThenFire = () => {
+    if (!cancelIdle) cancelIdle = whenIdle(fire)
+  }
+  if (film.hasAttribute("data-film-ready")) idleThenFire()
+  const ready = new MutationObserver(() => {
+    if (film.hasAttribute("data-film-ready")) idleThenFire()
+  })
+  ready.observe(film, { attributes: true, attributeFilter: ["data-film-ready"] })
+  // Si sileo ya llegó por otro lado, su recálculo ya se pagó: montar en el acto.
+  const head = new MutationObserver((records) => {
+    if (records.some((r) => Array.from(r.addedNodes).some(sileoLoaded))) fire()
+  })
+  head.observe(document.head, { childList: true })
+  if (Array.from(document.head.children).some(sileoLoaded)) fire()
+  const cap = window.setTimeout(idleThenFire, FILM_TOASTER_MAX_MS)
+  function stop() {
+    ready.disconnect()
+    head.disconnect()
+    window.clearTimeout(cap)
+  }
+  return () => {
+    done = true
+    stop()
+    cancelIdle?.()
+  }
+}
 const Modal = dynamic(() => import("../../shared/components/ui/modal").then((m) => m.Modal), { ssr: false })
 
 let notificationsModule: Promise<typeof import("@/core/notifications")> | null = null
@@ -54,7 +109,20 @@ export function AlertProvider({ children }: { children: ReactNode }) {
   // Una vez montado, el Modal se queda: así conserva su animación de cierre.
   const [modalWanted, setModalWanted] = useState(false)
 
-  useEffect(() => whenIdle(() => setToasterWanted(true)), [])
+  useEffect(() => whenToasterIsCheap(() => setToasterWanted(true)), [])
+  // Los avisos esperan a que el viewport esté cargado y salen en orden.
+  const pending = useRef<AppAlert[]>([])
+  const wanted = useRef(false)
+  const flush = useCallback(() => {
+    void Promise.all([loadToaster(), loadNotifications()]).then(([, m]) => {
+      for (const a of pending.current.splice(0)) m.notify.fromAlert(a)
+    })
+  }, [])
+  useEffect(() => {
+    if (!toasterWanted) return
+    wanted.current = true
+    flush()
+  }, [toasterWanted, flush])
 
   /*
     MEMORIZADAS, Y NO ES COSMÉTICA. Sin esto, cada aviso que aparece o se cierra
@@ -72,9 +140,10 @@ export function AlertProvider({ children }: { children: ReactNode }) {
     // El aviso lo pinta sileo (core/notifications, DESIGN-SYSTEM §9.4). Antes
     // era un `setAlert` que REEMPLAZABA: dos avisos seguidos y el primero se
     // perdía sin leerse. Ahora cada uno tiene su vida y los errores se apilan.
-    setToasterWanted(true)
-    void loadNotifications().then((m) => m.notify.fromAlert(a))
-  }, [])
+    pending.current.push(a)
+    if (wanted.current) flush()
+    else setToasterWanted(true)
+  }, [flush])
 
   const showModal = useCallback((config: ModalConfig) => {
     setModalWanted(true)
