@@ -19,63 +19,16 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
     evaluarse, sileo inyecta un <style> con variables en `:root` y la página
     entera recalcula estilos (≈ 2.400 elementos, 220–250 ms con CPU ×4), justo
     cuando llega la primera rueda y se construye el motor (perfil de arranque,
-    qa/qa-recalculo.mjs). Allí se cargan con el primer aviso, cuando alguien más
-    carga sileo (un `notify` directo), o con el motor listo (`data-film-ready`)
-    y el reposo siguiente; si el motor no arranca (movimiento reducido), a los
-    FILM_TOASTER_MAX_MS. Los avisos que llegan antes se encolan y salen al
-    cargar: ninguno se pierde.
+    qa/qa-recalculo.mjs). Allí se cargan SOLO con el primer aviso real: un
+    `showAlert` o que otro cargue sileo (un `notify` directo). Ni con el motor
+    listo ni con un tope: a los ~8 s, con la película montada, el recálculo
+    seguía notándose al bajar (222–295 ms con ×4). Los avisos que llegan antes
+    se encolan y salen al cargar: ninguno se pierde.
   - El Modal se monta la primera vez que alguien lo abre.
 */
 const loadToaster = () => import("@/core/notifications/toaster")
 const NotificationsToaster = dynamic(() => loadToaster().then((m) => m.NotificationsToaster), { ssr: false })
 
-/** Tope en la película si el motor nunca marca `data-film-ready` (p. ej. movimiento reducido). */
-export const FILM_TOASTER_MAX_MS = 8000
-
-/** ¿Ya cargó alguien sileo? Su hoja inyectada declara `--sileo-…`. */
-const sileoLoaded = (node: Node) => node instanceof HTMLStyleElement && Boolean(node.textContent?.includes("--sileo"))
-
-/**
- * Cuándo montar el viewport de avisos. Fuera de la película, en el primer
- * reposo (como siempre). En la película, ver la nota de arriba.
- */
-function whenToasterIsCheap(fn: () => void): () => void {
-  const film = document.querySelector<HTMLElement>("[data-film]")
-  if (!film) return whenIdle(fn)
-  let done = false
-  let cancelIdle: (() => void) | null = null
-  const fire = () => {
-    if (done) return
-    done = true
-    stop()
-    fn()
-  }
-  const idleThenFire = () => {
-    if (!cancelIdle) cancelIdle = whenIdle(fire)
-  }
-  if (film.hasAttribute("data-film-ready")) idleThenFire()
-  const ready = new MutationObserver(() => {
-    if (film.hasAttribute("data-film-ready")) idleThenFire()
-  })
-  ready.observe(film, { attributes: true, attributeFilter: ["data-film-ready"] })
-  // Si sileo ya llegó por otro lado, su recálculo ya se pagó: montar en el acto.
-  const head = new MutationObserver((records) => {
-    if (records.some((r) => Array.from(r.addedNodes).some(sileoLoaded))) fire()
-  })
-  head.observe(document.head, { childList: true })
-  if (Array.from(document.head.children).some(sileoLoaded)) fire()
-  const cap = window.setTimeout(idleThenFire, FILM_TOASTER_MAX_MS)
-  function stop() {
-    ready.disconnect()
-    head.disconnect()
-    window.clearTimeout(cap)
-  }
-  return () => {
-    done = true
-    stop()
-    cancelIdle?.()
-  }
-}
 const Modal = dynamic(() => import("../../shared/components/ui/modal").then((m) => m.Modal), { ssr: false })
 
 let notificationsModule: Promise<typeof import("@/core/notifications")> | null = null
@@ -92,6 +45,30 @@ function whenIdle(fn: () => void): () => void {
   }
   const id = window.setTimeout(fn, 1200)
   return () => window.clearTimeout(id)
+}
+
+/** ¿Ya cargó alguien sileo? Su hoja inyectada declara `--sileo-…`. */
+const sileoLoaded = (node: Node) => node instanceof HTMLStyleElement && Boolean(node.textContent?.includes("--sileo"))
+
+/**
+ * Cuándo montar el viewport de avisos. Fuera de la película, en el primer
+ * reposo (como siempre). En la película, solo si sileo ya llegó por otro lado
+ * (su recálculo ya se pagó); si no, espera al primer `showAlert`.
+ */
+function whenToasterIsCheap(fn: () => void): () => void {
+  const film = document.querySelector<HTMLElement>("[data-film]")
+  if (!film) return whenIdle(fn)
+  if (Array.from(document.head.children).some(sileoLoaded)) {
+    fn()
+    return () => {}
+  }
+  const head = new MutationObserver((records) => {
+    if (!records.some((r) => Array.from(r.addedNodes).some(sileoLoaded))) return
+    head.disconnect()
+    fn()
+  })
+  head.observe(document.head, { childList: true })
+  return () => head.disconnect()
 }
 
 type AlertContextType = {

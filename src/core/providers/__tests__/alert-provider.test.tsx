@@ -1,5 +1,5 @@
 import { act, render, waitFor } from "@testing-library/react"
-import { AlertProvider, FILM_TOASTER_MAX_MS, useAlert } from "../alert-provider"
+import { AlertProvider, useAlert } from "../alert-provider"
 
 const fromAlert = jest.fn()
 jest.mock("@/core/notifications", () => ({
@@ -122,16 +122,21 @@ describe("AlertProvider", () => {
       expect(fromAlert.mock.calls.map((c) => c[0])).toEqual([first, second])
     })
 
-    it("en la película, con el motor listo se monta en el reposo siguiente", async () => {
-      render(
-        <AlertProvider>
-          <div data-film="" />
-        </AlertProvider>,
-      )
+    it("en la película, ni el motor listo ni el paso del tiempo lo montan: solo un aviso", async () => {
+      jest.useFakeTimers()
+      try {
+        render(
+          <AlertProvider>
+            <div data-film="" />
+          </AlertProvider>,
+        )
+        act(() => document.querySelector("[data-film]")!.setAttribute("data-film-ready", ""))
+        act(() => jest.advanceTimersByTime(60_000))
+      } finally {
+        jest.useRealTimers()
+      }
       await idle()
       expect(toasterRender).not.toHaveBeenCalled()
-      act(() => document.querySelector("[data-film]")!.setAttribute("data-film-ready", ""))
-      await waitFor(() => expect(toasterRender).toHaveBeenCalled())
     })
 
     it("en la película, si otro cargó sileo (un notify directo) se monta en el acto", async () => {
@@ -151,21 +156,5 @@ describe("AlertProvider", () => {
       await waitFor(() => expect(toasterRender).toHaveBeenCalled())
     })
 
-    it("en la película sin motor (movimiento reducido) se monta al tope", async () => {
-      jest.useFakeTimers()
-      try {
-        render(
-          <AlertProvider>
-            <div data-film="" />
-          </AlertProvider>,
-        )
-        act(() => jest.advanceTimersByTime(FILM_TOASTER_MAX_MS - 100))
-        expect(toasterRender).not.toHaveBeenCalled()
-        act(() => jest.advanceTimersByTime(200))
-      } finally {
-        jest.useRealTimers()
-      }
-      await waitFor(() => expect(toasterRender).toHaveBeenCalled())
-    })
   })
 })
