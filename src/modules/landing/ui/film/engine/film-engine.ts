@@ -482,6 +482,11 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
     return true;
   };
   lenis.on("scroll", ScrollTrigger.update);
+  // Cuándo se movió el scroll por última vez (la construcción espera por ello).
+  let scrolledAt = 0;
+  lenis.on("scroll", () => {
+    scrolledAt = performance.now();
+  });
   const tick = (time: number) => lenis.raf(time * 1000);
   gsap.ticker.add(tick);
   gsap.ticker.lagSmoothing(0);
@@ -512,6 +517,8 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
   // pasa de eso más una escena. Cada escena deja su coste en `performance`
   // («film:<escena>», lo leen qa/qa-perfil.mjs y qa/qa-perfil-refresh.mjs).
   const SLICE_MS = 30;
+  // Sin scroll durante esto, el visitante «paró»: se construye lo lejano.
+  const SCROLL_REST_MS = 180;
   // Si cambia solo el alto de la ventana, las escenas fijadas siguen fijadas:
   // su contenido se reescala en cada refresh (`fitToViewport`, kit), así que no
   // hace falta rehacer la película (R6).
@@ -625,7 +632,9 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
         if (!landOnHash() && anchor && intents === intentsAtStart) restore(anchor);
         root.setAttribute("data-film-ready", "");
       };
+      let waiting = 0;
       const slice = () => {
+        waiting = 0;
         if (!alive) return;
         const t0 = performance.now();
         while (next < sections.length) {
@@ -634,6 +643,14 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
             next++;
             io.observe(section);
             continue;
+          }
+          // En escritorio, mientras el visitante baja, solo lo cercano: cada
+          // escena construida (y el repintado que provoca) se comía un frame,
+          // 150–180 ms con CPU ×1 aunque ninguna tarea pasara de 75. Lo que
+          // está a más de dos pantallas por debajo espera a que pare.
+          if (ctx.desktop && t0 - scrolledAt < SCROLL_REST_MS && section.getBoundingClientRect().top > window.innerHeight * 3) {
+            waiting = window.setTimeout(slice, SCROLL_REST_MS);
+            return;
           }
           if (ctx.desktop && !fitted.has(section) && pinFits(section, true)) {
             fitted.add(section);
@@ -660,6 +677,7 @@ export function startFilm(root: HTMLElement, options: FilmStartOptions = {}): Fi
       else slice();
       return () => {
         alive = false;
+        window.clearTimeout(waiting);
         for (const undo of unfits) undo();
         io?.disconnect();
         for (const s of sections) s.removeAttribute("data-stick");
