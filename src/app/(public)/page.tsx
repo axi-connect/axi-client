@@ -17,7 +17,7 @@ import { FilmPage } from "@/modules/landing/ui/film/FilmPage";
 const HOME_TITLE = "Axi Connect · Vende en cada conversación";
 // El lead del hero, tal cual (título y descripción salen de la película).
 const HOME_DESCRIPTION =
-  "Axi atiende tu WhatsApp como tu mejor vendedor: responde en segundos, cotiza con tus precios, cobra y te lleva a tu meta del mes.";
+  "Axi atiende tus canales digitales como tu mejor vendedor: responde en segundos, cotiza con tus precios, cobra y te lleva a tu meta del mes.";
 
 /**
  * `title.absolute` y no un string suelto: el template del layout raíz

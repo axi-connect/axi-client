@@ -44,7 +44,7 @@ export function HeroScene() {
           className="film-in mx-auto mt-[clamp(16px,2.6vh,26px)] max-w-[min(540px,100%)] text-[clamp(15px,1.3vw,18px)] leading-[1.6] text-[color-mix(in_srgb,var(--foreground)_64%,transparent)]"
           style={{ "--d": "0.28s" } as React.CSSProperties}
         >
-          Axi atiende tu WhatsApp como tu mejor vendedor: responde en segundos, cotiza con tus precios, cobra y te lleva
+          Axi atiende tus canales digitales como tu mejor vendedor: responde en segundos, cotiza con tus precios, cobra y te lleva
           a tu meta del mes.
         </p>
 
