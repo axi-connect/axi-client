@@ -325,7 +325,7 @@ export function FilmRoot({ children }: { children: ReactNode }) {
     );
     root.querySelectorAll("[data-pill-avoid]:not([data-pill-avoid=cover])").forEach((n) => pillIo.observe(n));
     // `data-pill-avoid="cover"` la aparta, en cualquier ancho, solo mientras eso
-    // entra en el rectángulo de la propia píldora (con holgura), no en toda la
+    // entra en el rectángulo de la propia píldora (con 4 px de holgura), no en toda la
     // franja: a 1366 × 657 el final de varias escenas fijadas (la tarjeta del
     // seguimiento, las cifras del embudo…) cae justo debajo; a 1440, no. El
     // rectángulo se rehace cuando la píldora o la ventana cambian de tamaño.
@@ -337,7 +337,7 @@ export function FilmRoot({ children }: { children: ReactNode }) {
       covering.clear();
       if (!pill || !coverTargets.length) return syncAvoid();
       const box = el.getBoundingClientRect();
-      const PAD = 12;
+      const PAD = 4; // la sombra del cristal; más holgura la apartaba por texto que acaba a 3 px (el piloto a 1440)
       const w = pill.offsetWidth + 2 * PAD;
       const h = pill.offsetHeight + (parseFloat(getComputedStyle(pill).bottom) || 0) + PAD;
       const side = Math.max(0, (box.width - w) / 2);
