@@ -154,6 +154,24 @@
 .film-vlight-ring { inset: 0; will-change: opacity; }
 .film-vlight-band { position: absolute; inset: 0; }
 .film-vlight-band > i { position: absolute; display: block; will-change: transform, opacity; }
+/* La banda caliente se desvanece hacia los cabos de cada pieza: cada pieza
+   tiene una sola opacidad, y sin esto el brillo cortaba en seco donde se unen
+   filo y esquina. Filos y esquinas se encuentran al 45 % (no en 0: dejaría un
+   nudo oscuro en cada unión) y el escalón entre piezas queda a la mitad.
+   Máscaras estáticas: van cacheadas con la capa de cada pieza. */
+.film-vlight-hot > .film-vlight-t, .film-vlight-hot > .film-vlight-b {
+  -webkit-mask-image: linear-gradient(90deg, rgb(0 0 0 / 0.45), #000 32%, #000 68%, rgb(0 0 0 / 0.45));
+  mask-image: linear-gradient(90deg, rgb(0 0 0 / 0.45), #000 32%, #000 68%, rgb(0 0 0 / 0.45));
+}
+.film-vlight-hot > .film-vlight-l, .film-vlight-hot > .film-vlight-r {
+  -webkit-mask-image: linear-gradient(180deg, rgb(0 0 0 / 0.45), #000 32%, #000 68%, rgb(0 0 0 / 0.45));
+  mask-image: linear-gradient(180deg, rgb(0 0 0 / 0.45), #000 32%, #000 68%, rgb(0 0 0 / 0.45));
+}
+/* Las esquinas: un cuarto de vuelta desde el centro del arco, con el pico a 45°. */
+.film-vlight-hot > .film-vlight-tl { -webkit-mask-image: conic-gradient(from 270deg at 100% 100%, rgb(0 0 0 / 0.45), #000 45deg, rgb(0 0 0 / 0.45) 90deg, transparent 90deg); mask-image: conic-gradient(from 270deg at 100% 100%, rgb(0 0 0 / 0.45), #000 45deg, rgb(0 0 0 / 0.45) 90deg, transparent 90deg); }
+.film-vlight-hot > .film-vlight-tr { -webkit-mask-image: conic-gradient(from 0deg at 0 100%, rgb(0 0 0 / 0.45), #000 45deg, rgb(0 0 0 / 0.45) 90deg, transparent 90deg); mask-image: conic-gradient(from 0deg at 0 100%, rgb(0 0 0 / 0.45), #000 45deg, rgb(0 0 0 / 0.45) 90deg, transparent 90deg); }
+.film-vlight-hot > .film-vlight-br { -webkit-mask-image: conic-gradient(from 90deg at 0 0, rgb(0 0 0 / 0.45), #000 45deg, rgb(0 0 0 / 0.45) 90deg, transparent 90deg); mask-image: conic-gradient(from 90deg at 0 0, rgb(0 0 0 / 0.45), #000 45deg, rgb(0 0 0 / 0.45) 90deg, transparent 90deg); }
+.film-vlight-hot > .film-vlight-bl { -webkit-mask-image: conic-gradient(from 180deg at 100% 0, rgb(0 0 0 / 0.45), #000 45deg, rgb(0 0 0 / 0.45) 90deg, transparent 90deg); mask-image: conic-gradient(from 180deg at 100% 0, rgb(0 0 0 / 0.45), #000 45deg, rgb(0 0 0 / 0.45) 90deg, transparent 90deg); }
 /* Sin motor (movimiento reducido), el lado caliente queda quieto abajo a la izquierda. */
 .film-vlight-hot > i { opacity: 0; }
 .film-vlight-hot > .film-vlight-bl { opacity: 0.9; }

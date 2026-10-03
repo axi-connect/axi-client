@@ -242,12 +242,14 @@ function heroLight(section: HTMLElement, tl: gsap.core.Timeline) {
       set(`${key}-soft`, t(x, y));
     }
     // El disco: el lado brillante (210°, abajo a la izquierda, al empezar) da la
-    // vuelta despacio. El filo y la corona bajan a 0,42 en el lado apagado y la
-    // banda caliente es un lóbulo estrecho alrededor del brillante.
+    // vuelta despacio. El filo y la corona bajan solo a 0,7 en el lado apagado
+    // (una opacidad por pieza: más contraste se veía como escalón en las
+    // uniones) y la banda caliente, que se desvanece en los cabos, es un
+    // lóbulo estrecho alrededor del brillante.
     const phi = ((210 + turn) * Math.PI) / 180;
     for (const [key, angle] of angles) {
       const lobe = 0.5 + 0.5 * Math.cos(angle - phi);
-      w.write(lit.get(key) ?? [], "opacity", (0.42 + 0.58 * Math.pow(lobe, 1.6)).toFixed(3));
+      w.write(lit.get(key) ?? [], "opacity", (0.7 + 0.3 * Math.pow(lobe, 1.6)).toFixed(3));
       w.write(hot.get(key) ?? [], "opacity", Math.pow(lobe, 4).toFixed(3));
     }
   };
