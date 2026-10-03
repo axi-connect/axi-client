@@ -58,6 +58,8 @@ const SECTIONS: readonly PlatformNavSection[] = [
     items: [
       { label: "Voces IA", path: "/platform/voices", icon: "audio-lines" },
       { label: "Calidad", path: "/platform/quality", icon: "flask-conical" },
+      // P1b: qué proveedor decide cada pregunta cerrada y cómo va cada uno.
+      { label: "Decisiones", path: "/platform/ai", icon: "split" },
     ],
   },
   {

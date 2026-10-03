@@ -7,6 +7,7 @@
  * `ConfirmTyped` — destruye transcripts/evaluaciones del tenant). Banner
  * cuando ya está purgada; recordatorio de retención automática (14 días).
  */
+import { DecisionComparisonCard } from "./DecisionComparisonCard";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, CircleAlert, CircleSlash, Trash2 } from "lucide-react";
@@ -165,6 +166,7 @@ export function RunDetailView({ runId }: { runId: string }) {
       {run.kind === "probe" ? (
         <>
           <ProbeSummaryCards run={run} />
+          <DecisionComparisonCard run={run} />
           <ProbeResultsPanel run={run} />
         </>
       ) : (

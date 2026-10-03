@@ -6036,6 +6036,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/outreach/sender": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["OutreachSenderController_sender_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/outreach/unsubscribe/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PublicOutreachController_view[0]"];
+        put?: never;
+        post: operations["PublicOutreachController_unsubscribe[0]"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/outreach/unsubscribe/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PublicOutreachController_view[1]_v1"];
+        put?: never;
+        post: operations["PublicOutreachController_unsubscribe[1]_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/cmo/messages": {
         parameters: {
             query?: never;
@@ -7060,6 +7108,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/prospecting/searches/{id}/next-page": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProspectingController_nextPage_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/prospecting/searches/delete": {
         parameters: {
             query?: never;
@@ -7150,6 +7214,102 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["ProspectingController_enrichMany_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/leads/{id}/people": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProspectingController_people_v1"];
+        put?: never;
+        post: operations["ProspectingController_peopleOne_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/leads/people": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProspectingController_peopleMany_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/providers/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProspectingController_myProviders_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/providers/{provider}/key": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["ProspectingController_saveProviderKey_v1"];
+        post?: never;
+        delete: operations["ProspectingController_removeProviderKey_v1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/leads/reveal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProspectingController_reveal_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/leads/{id}/signals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProspectingController_signals_v1"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -7438,6 +7598,262 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["CommercialProposalsController_reject_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/autopilot/proposals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AutopilotProposalsController_list_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/autopilot/proposals/{proposal_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AutopilotProposalsController_approve_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/autopilot/proposals/{proposal_id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AutopilotProposalsController_reject_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/autopilot/routines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AutopilotController_listRoutines_v1"];
+        put?: never;
+        post: operations["AutopilotController_createRoutine_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/autopilot/routines/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AutopilotController_getRoutine_v1"];
+        put: operations["AutopilotController_updateRoutine_v1"];
+        post?: never;
+        delete: operations["AutopilotController_deleteRoutine_v1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/autopilot/routines/{id}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AutopilotController_pause_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/autopilot/routines/{id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AutopilotController_resume_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/autopilot/routines/{id}/run-now": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AutopilotController_runNow_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/autopilot/routines/{id}/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AutopilotController_listRuns_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/autopilot/runs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AutopilotController_getRun_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/autopilot/runs/{id}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AutopilotController_listEvents_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/autopilot/runs/{id}/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AutopilotController_batch_v1"];
+        put?: never;
+        post: operations["AutopilotController_decideBatch_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/autopilot/estimate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AutopilotController_estimate_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/autopilot/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AutopilotController_summary_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/autopilot/ledger": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AutopilotController_ledger_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/autopilot/funnel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AutopilotController_funnel_v1"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -8300,7 +8716,7 @@ export interface components {
             ai_paused: boolean;
             metrics: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                 used: number;
                 limit: {
                     value: number;
@@ -8332,7 +8748,7 @@ export interface components {
             data: {
                 id: string;
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                 quantity: number;
                 cost_usd: number | null;
                 provider: string | null;
@@ -8364,7 +8780,7 @@ export interface components {
                     /** Format: uuid */
                     id: string;
                     /** @enum {string} */
-                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                     /** @enum {string} */
                     period: "day" | "billing_cycle";
                     /** @enum {string} */
@@ -8853,7 +9269,7 @@ export interface components {
         TenantLimitsDto: {
             data: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                 /** @enum {string} */
                 period: "day" | "billing_cycle";
                 limit_value: number;
@@ -8877,7 +9293,7 @@ export interface components {
         ReplaceTenantLimitsDto: {
             limits: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                 /** @enum {string} */
                 period: "day" | "billing_cycle";
                 limit_value: number;
@@ -8897,7 +9313,7 @@ export interface components {
         PricingListDto: {
             data: {
                 /** @enum {string} */
-                provider: "openai_compatible" | "anthropic" | "elevenlabs" | "twilio" | "groq" | "voyage" | "meta" | "typesafe";
+                provider: "openai_compatible" | "anthropic" | "elevenlabs" | "twilio" | "groq" | "voyage" | "meta" | "typesafe" | "resend";
                 model: string;
                 /**
                  * @default tokens
@@ -8920,7 +9336,7 @@ export interface components {
         };
         CreatePricingDto: {
             /** @enum {string} */
-            provider: "openai_compatible" | "anthropic" | "elevenlabs" | "twilio" | "groq" | "voyage" | "meta" | "typesafe";
+            provider: "openai_compatible" | "anthropic" | "elevenlabs" | "twilio" | "groq" | "voyage" | "meta" | "typesafe" | "resend";
             model: string;
             /**
              * @default tokens
@@ -9027,7 +9443,7 @@ export interface components {
                 tier: "sbs" | "enterprise";
                 default_limits: {
                     /** @enum {string} */
-                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                     /** @enum {string} */
                     period: "day" | "billing_cycle";
                     limit_value: number;
@@ -9066,7 +9482,7 @@ export interface components {
             /** @default [] */
             default_limits: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                 /** @enum {string} */
                 period: "day" | "billing_cycle";
                 limit_value: number;
@@ -9093,7 +9509,7 @@ export interface components {
             /** @default [] */
             default_limits: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                 /** @enum {string} */
                 period: "day" | "billing_cycle";
                 limit_value: number;
@@ -9120,7 +9536,7 @@ export interface components {
                 tier: "sbs" | "enterprise";
                 default_limits: {
                     /** @enum {string} */
-                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                     /** @enum {string} */
                     period: "day" | "billing_cycle";
                     limit_value: number;
@@ -9154,7 +9570,7 @@ export interface components {
             billing_cycle_anchor: string | null;
             limits: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                 /** @enum {string} */
                 period: "day" | "billing_cycle";
                 limit_value: number;
@@ -13998,7 +14414,7 @@ export interface components {
                 /** Format: uuid */
                 call_session_id: string | null;
                 /** @enum {string} */
-                kind: "note" | "call" | "meeting" | "task";
+                kind: "note" | "call" | "meeting" | "task" | "email" | "sms";
                 title: string | null;
                 body: string | null;
                 /** Format: date-time */
@@ -14043,9 +14459,9 @@ export interface components {
                 /** Format: date-time */
                 awaiting_reply_until: string | null;
                 /** @enum {string|null} */
-                task_channel: "message" | "call" | "call_then_message" | null;
+                task_channel: "message" | "call" | "call_then_message" | "email" | "sms" | "manual" | null;
                 /** @enum {string|null} */
-                task_medium: "message" | "call" | null;
+                task_medium: "message" | "call" | "email" | "sms" | "manual" | null;
                 call_type: string | null;
                 /** Format: uuid */
                 bulk_id: string | null;
@@ -14110,7 +14526,7 @@ export interface components {
             /** Format: uuid */
             call_session_id: string | null;
             /** @enum {string} */
-            kind: "note" | "call" | "meeting" | "task";
+            kind: "note" | "call" | "meeting" | "task" | "email" | "sms";
             title: string | null;
             body: string | null;
             /** Format: date-time */
@@ -14155,9 +14571,9 @@ export interface components {
             /** Format: date-time */
             awaiting_reply_until: string | null;
             /** @enum {string|null} */
-            task_channel: "message" | "call" | "call_then_message" | null;
+            task_channel: "message" | "call" | "call_then_message" | "email" | "sms" | "manual" | null;
             /** @enum {string|null} */
-            task_medium: "message" | "call" | null;
+            task_medium: "message" | "call" | "email" | "sms" | "manual" | null;
             call_type: string | null;
             /** Format: uuid */
             bulk_id: string | null;
@@ -14324,9 +14740,11 @@ export interface components {
                 message_id: string | null;
                 detail: string | null;
                 /** @enum {string} */
-                medium: "message" | "call";
+                medium: "message" | "call" | "email" | "sms" | "manual";
                 /** Format: uuid */
                 call_session_id: string | null;
+                /** Format: uuid */
+                outreach_message_id: string | null;
                 opened_with_template: boolean;
                 /** @enum {string|null} */
                 delivery_status: "sent" | "delivered" | "read" | "failed" | null;
@@ -14362,9 +14780,11 @@ export interface components {
                 message_id: string | null;
                 detail: string | null;
                 /** @enum {string} */
-                medium: "message" | "call";
+                medium: "message" | "call" | "email" | "sms" | "manual";
                 /** Format: uuid */
                 call_session_id: string | null;
+                /** Format: uuid */
+                outreach_message_id: string | null;
                 opened_with_template: boolean;
                 /** @enum {string|null} */
                 delivery_status: "sent" | "delivered" | "read" | "failed" | null;
@@ -14562,13 +14982,15 @@ export interface components {
                 stop_on_reply: boolean;
                 stop_on_conversion: boolean;
                 is_active: boolean;
+                /** Format: uuid */
+                next_sequence_id: string | null;
                 steps: {
                     /** Format: uuid */
                     id: string;
                     position: number;
                     offset_hours: number;
                     /** @enum {string} */
-                    task_channel: "message" | "call" | "call_then_message";
+                    task_channel: "message" | "call" | "call_then_message" | "email" | "sms" | "manual";
                     call_type: string | null;
                     objective: string;
                     opening_template: {
@@ -14580,6 +15002,10 @@ export interface components {
                         language: string;
                         params: string[];
                         topic: string | null;
+                    } | null;
+                    message_template: {
+                        subject: string | null;
+                        body: string;
                     } | null;
                 }[];
                 active_enrollments: number;
@@ -14597,13 +15023,15 @@ export interface components {
             stop_on_reply: boolean;
             stop_on_conversion: boolean;
             is_active: boolean;
+            /** Format: uuid */
+            next_sequence_id: string | null;
             steps: {
                 /** Format: uuid */
                 id: string;
                 position: number;
                 offset_hours: number;
                 /** @enum {string} */
-                task_channel: "message" | "call" | "call_then_message";
+                task_channel: "message" | "call" | "call_then_message" | "email" | "sms" | "manual";
                 call_type: string | null;
                 objective: string;
                 opening_template: {
@@ -14615,6 +15043,10 @@ export interface components {
                     language: string;
                     params: string[];
                     topic: string | null;
+                } | null;
+                message_template: {
+                    subject: string | null;
+                    body: string;
                 } | null;
             }[];
             active_enrollments: number;
@@ -14632,13 +15064,15 @@ export interface components {
             stop_on_conversion: boolean;
             /** @default false */
             is_active: boolean;
+            /** Format: uuid */
+            next_sequence_id?: string | null;
             steps: {
                 offset_hours: number;
                 /**
                  * @default message
                  * @enum {string}
                  */
-                task_channel: "message" | "call" | "call_then_message";
+                task_channel: "message" | "call" | "call_then_message" | "email" | "sms" | "manual";
                 /** @enum {string|null} */
                 call_type?: "sales_followup" | "reactivation" | "followup" | null;
                 objective: string;
@@ -14647,6 +15081,10 @@ export interface components {
                     channel_template_id: string;
                     params: string[];
                     topic?: string | null;
+                } | null;
+                message_template?: {
+                    subject?: string | null;
+                    body: string;
                 } | null;
             }[];
         };
@@ -14662,11 +15100,13 @@ export interface components {
                 status: "active" | "completed" | "stopped";
                 current_position: number;
                 /** @enum {string|null} */
-                stop_reason: "replied" | "converted" | "opted_out" | "task_cancelled" | "stopped_by_user" | null;
+                stop_reason: "replied" | "converted" | "opted_out" | "task_cancelled" | "stopped_by_user" | "not_interested" | null;
                 /** Format: date-time */
                 enrolled_at: string;
                 /** Format: date-time */
                 finished_at: string | null;
+                /** Format: date-time */
+                snoozed_until: string | null;
             }[];
             meta: {
                 total: number;
@@ -15558,7 +15998,7 @@ export interface components {
                     email: string | null;
                 };
                 /** @enum {string} */
-                source: "inbound_keyword" | "manual" | "import" | "habeas_data" | "email_unsubscribe" | "sms_stop";
+                source: "inbound_keyword" | "manual" | "import" | "habeas_data" | "email_unsubscribe" | "sms_stop" | "email_bounce";
                 channel: string | null;
                 keyword_text: string | null;
                 /** Format: uuid */
@@ -15591,6 +16031,16 @@ export interface components {
             /** Format: uuid */
             id: string;
             upgraded: boolean;
+            /** @enum {string} */
+            outcome: "created" | "upgraded";
+        };
+        RevokeOptOutDto: {
+            /** @description true: confirmo que revoco una solicitud de habeas data del titular */
+            acknowledge_habeas?: boolean;
+        };
+        RevokedOptOutDto: {
+            /** @enum {string} */
+            revoked_source: "habeas_data" | "other";
         };
         MarketingSettingsDto: {
             attribution_window_hours: number;
@@ -18862,6 +19312,18 @@ export interface components {
             source: "generated" | "fallback";
             agent_name: string | null;
         };
+        OutreachSenderDto: {
+            address: string;
+            from_name: string;
+            paused: boolean;
+            pause_reason: string | null;
+        };
+        UnsubscribeViewDto: {
+            sender_name: string;
+            /** @enum {string} */
+            channel: "email" | "sms";
+            destination_masked: string;
+        };
         CmoSendMessageDto: {
             /** @description Lo que el dueño le pregunta o le pide a Axel */
             message: string;
@@ -18948,7 +19410,7 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
-                kind: "campaign" | "recovery" | "repurchase" | "promotion" | "segment" | "agent_tuning" | "insight" | "goal_pace";
+                kind: "campaign" | "recovery" | "repurchase" | "promotion" | "segment" | "agent_tuning" | "insight" | "goal_pace" | "autopilot_tuning";
                 /** @enum {string} */
                 status: "pending" | "approved" | "rejected" | "expired" | "superseded";
                 title: string;
@@ -18962,7 +19424,7 @@ export interface components {
                 risks: string[];
                 artifacts: unknown[];
                 /** @enum {string} */
-                source: "briefing" | "signal" | "chat" | "commercial";
+                source: "briefing" | "signal" | "chat" | "commercial" | "autopilot";
                 expires_at: string | null;
                 decided_at: string | null;
                 reject_reason: string | null;
@@ -18974,7 +19436,7 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
-                kind: "campaign" | "recovery" | "repurchase" | "promotion" | "segment" | "agent_tuning" | "insight" | "goal_pace";
+                kind: "campaign" | "recovery" | "repurchase" | "promotion" | "segment" | "agent_tuning" | "insight" | "goal_pace" | "autopilot_tuning";
                 /** @enum {string} */
                 status: "pending" | "approved" | "rejected" | "expired" | "superseded";
                 title: string;
@@ -18988,7 +19450,7 @@ export interface components {
                 risks: string[];
                 artifacts: unknown[];
                 /** @enum {string} */
-                source: "briefing" | "signal" | "chat" | "commercial";
+                source: "briefing" | "signal" | "chat" | "commercial" | "autopilot";
                 expires_at: string | null;
                 decided_at: string | null;
                 reject_reason: string | null;
@@ -19423,7 +19885,7 @@ export interface components {
                 is_current: boolean;
                 overage_rates: {
                     /** @enum {string} */
-                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                     included_quantity: number | null;
                     unit_size: number;
                     amount_cents_per_unit: number;
@@ -19481,7 +19943,7 @@ export interface components {
             /** @default [] */
             overage_rates: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                 /** @default null */
                 included_quantity: number | null;
                 unit_size: number;
@@ -20465,11 +20927,26 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
-                source: "ctwa" | "meta_lead_ads" | "manual" | "google_places" | "openstreetmap" | "serp";
+                source: "ctwa" | "meta_lead_ads" | "manual" | "google_places" | "openstreetmap" | "serp" | "apollo_people" | "rues_open" | "website";
                 external_id: string | null;
                 /** @enum {string} */
                 kind: "person" | "business";
                 display_name: string | null;
+                first_name: string | null;
+                last_name: string | null;
+                masked: boolean;
+                /** Format: uuid */
+                parent_lead_id: string | null;
+                title: string | null;
+                /** @enum {string|null} */
+                buying_role: "decides" | "approves" | "recommends" | "uses" | "unknown" | null;
+                decision_maker_confidence: number | null;
+                parent: {
+                    /** Format: uuid */
+                    id: string;
+                    display_name: string | null;
+                    city: string | null;
+                } | null;
                 legal_name: string | null;
                 email: string | null;
                 phone: string | null;
@@ -20519,14 +20996,14 @@ export interface components {
         SourcesCatalogDto: {
             items: {
                 /** @enum {string} */
-                source: "google_places" | "openstreetmap" | "serp";
+                source: "google_places" | "openstreetmap" | "serp" | "apollo_people" | "rues_open";
                 provider: string;
                 label: string;
                 /** @enum {string} */
-                query_shape: "map" | "web";
+                query_shape: "map" | "web" | "registry" | "people";
                 available: boolean;
                 /** @enum {string|null} */
-                unavailable_reason: "no_account" | "disabled" | "unhealthy" | "capped_day" | "capped_month" | null;
+                unavailable_reason: "no_account" | "disabled" | "unhealthy" | "capped_day" | "capped_month" | "no_tenant_key" | "plan_without_api" | "out_of_credits" | null;
                 free: boolean;
                 allowed_channels: ("whatsapp" | "email" | "manual")[];
                 attribution: string | null;
@@ -20534,6 +21011,8 @@ export interface components {
             categories: {
                 id: string;
                 label: string;
+                niche_code: string;
+                ciiu: string[];
             }[];
         };
         GeocodeResultsDto: {
@@ -20552,7 +21031,7 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
-                source: "google_places" | "openstreetmap" | "serp";
+                source: "google_places" | "openstreetmap" | "serp" | "apollo_people" | "rues_open";
                 label: string | null;
                 /** @enum {string} */
                 status: "queued" | "running" | "completed" | "partial" | "failed" | "cancelled";
@@ -20575,7 +21054,32 @@ export interface components {
                         verified_only?: boolean;
                         max_records?: number | null;
                     };
+                    person: {
+                        /** @default [] */
+                        titles: string[];
+                        /** @default [] */
+                        seniorities: ("owner" | "founder" | "c_suite" | "partner" | "vp" | "head" | "director" | "manager" | "senior" | "entry")[];
+                        /** @default true */
+                        include_similar: boolean;
+                        /** @default false */
+                        email_verified: boolean;
+                        /** @default false */
+                        hiring: boolean;
+                    } | null;
+                    company: {
+                        /** @default [] */
+                        ciiu: string[];
+                        /** @default [] */
+                        domains: string[];
+                        /** @default [] */
+                        employee_ranges: ("1,10" | "11,50" | "51,200" | "201,500" | "501,1000" | "1001,100000")[];
+                        /** @default null */
+                        keywords: string | null;
+                    } | null;
+                    /** @enum {string} */
+                    mode: "fill" | "browse";
                 };
+                has_more: boolean;
                 found_count: number;
                 new_count: number;
                 duplicate_count: number;
@@ -20607,7 +21111,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            source: "google_places" | "openstreetmap" | "serp";
+            source: "google_places" | "openstreetmap" | "serp" | "apollo_people" | "rues_open";
             label: string | null;
             /** @enum {string} */
             status: "queued" | "running" | "completed" | "partial" | "failed" | "cancelled";
@@ -20630,7 +21134,32 @@ export interface components {
                     verified_only?: boolean;
                     max_records?: number | null;
                 };
+                person: {
+                    /** @default [] */
+                    titles: string[];
+                    /** @default [] */
+                    seniorities: ("owner" | "founder" | "c_suite" | "partner" | "vp" | "head" | "director" | "manager" | "senior" | "entry")[];
+                    /** @default true */
+                    include_similar: boolean;
+                    /** @default false */
+                    email_verified: boolean;
+                    /** @default false */
+                    hiring: boolean;
+                } | null;
+                company: {
+                    /** @default [] */
+                    ciiu: string[];
+                    /** @default [] */
+                    domains: string[];
+                    /** @default [] */
+                    employee_ranges: ("1,10" | "11,50" | "51,200" | "201,500" | "501,1000" | "1001,100000")[];
+                    /** @default null */
+                    keywords: string | null;
+                } | null;
+                /** @enum {string} */
+                mode: "fill" | "browse";
             };
+            has_more: boolean;
             found_count: number;
             new_count: number;
             duplicate_count: number;
@@ -20648,7 +21177,7 @@ export interface components {
         };
         StartSearchDto: {
             /** @enum {string} */
-            source: "google_places" | "openstreetmap" | "serp";
+            source: "google_places" | "openstreetmap" | "serp" | "apollo_people" | "rues_open";
             label?: string;
             text?: string;
             category?: string;
@@ -20669,6 +21198,33 @@ export interface components {
                 verified_only?: boolean;
                 max_records?: number | null;
             };
+            person?: {
+                /** @default [] */
+                titles: string[];
+                /** @default [] */
+                seniorities: ("owner" | "founder" | "c_suite" | "partner" | "vp" | "head" | "director" | "manager" | "senior" | "entry")[];
+                /** @default true */
+                include_similar: boolean;
+                /** @default false */
+                email_verified: boolean;
+                /** @default false */
+                hiring: boolean;
+            };
+            company?: {
+                /** @default [] */
+                ciiu: string[];
+                /** @default [] */
+                domains: string[];
+                /** @default [] */
+                employee_ranges: ("1,10" | "11,50" | "51,200" | "201,500" | "501,1000" | "1001,100000")[];
+                /** @default null */
+                keywords: string | null;
+            };
+            /**
+             * @default fill
+             * @enum {string}
+             */
+            mode: "fill" | "browse";
         };
         StartSearchResultDto: {
             /** Format: uuid */
@@ -20698,11 +21254,26 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            source: "ctwa" | "meta_lead_ads" | "manual" | "google_places" | "openstreetmap" | "serp";
+            source: "ctwa" | "meta_lead_ads" | "manual" | "google_places" | "openstreetmap" | "serp" | "apollo_people" | "rues_open" | "website";
             external_id: string | null;
             /** @enum {string} */
             kind: "person" | "business";
             display_name: string | null;
+            first_name: string | null;
+            last_name: string | null;
+            masked: boolean;
+            /** Format: uuid */
+            parent_lead_id: string | null;
+            title: string | null;
+            /** @enum {string|null} */
+            buying_role: "decides" | "approves" | "recommends" | "uses" | "unknown" | null;
+            decision_maker_confidence: number | null;
+            parent: {
+                /** Format: uuid */
+                id: string;
+                display_name: string | null;
+                city: string | null;
+            } | null;
             legal_name: string | null;
             email: string | null;
             phone: string | null;
@@ -20800,6 +21371,80 @@ export interface components {
         };
         EnrichLeadsDto: {
             lead_ids: string[];
+        };
+        TenantProviderKeysDto: {
+            items: {
+                /** @enum {string} */
+                provider: "millionverifier" | "twilio_lookup" | "rues" | "apollo" | "google_places" | "overpass" | "serper" | "firecrawl" | "site_extractor" | "nominatim";
+                configured: boolean;
+                token_last4: string | null;
+                /** Format: date-time */
+                credential_set_at: string | null;
+                capabilities: string[];
+                all_capabilities: string[];
+                healthy: boolean | null;
+                last_error: string | null;
+                /** Format: date-time */
+                last_checked_at: string | null;
+                credit_costs: {
+                    email: number | null;
+                    phone: number | null;
+                };
+                calls_this_month: number;
+            }[];
+        };
+        SaveTenantProviderKeyDto: {
+            api_key: string;
+        };
+        RevealLeadsDto: {
+            lead_ids: string[];
+            fields: ("email" | "phone")[];
+        };
+        LeadPeopleDto: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                source: string;
+                status: string;
+                display_name: string | null;
+                title: string | null;
+                /** @enum {string} */
+                buying_role: "decides" | "approves" | "recommends" | "uses" | "unknown";
+                decision_maker_confidence: number | null;
+                masked: boolean;
+                has_email: boolean;
+                has_phone: boolean;
+                email: string | null;
+                phone: string | null;
+                in_crm: boolean;
+                evidence: string | null;
+                evidence_provider: string | null;
+                /** @enum {string} */
+                evidence_level: "fact" | "hypothesis";
+                evidence_url: string | null;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+        };
+        LeadSignalsDto: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                account_id: string;
+                kind: string;
+                /** @enum {string} */
+                level: "fact" | "hypothesis" | "validated";
+                source: string;
+                source_url: string | null;
+                /** Format: date-time */
+                observed_at: string;
+                /** Format: date-time */
+                expires_at: string;
+                confidence: number;
+                summary: string;
+                counts_for_intent: boolean;
+            }[];
         };
         DiscardLeadDto: {
             reason?: string;
@@ -20903,7 +21548,7 @@ export interface components {
             data: {
                 /** @enum {string} */
                 provider: "millionverifier" | "twilio_lookup" | "rues" | "apollo" | "google_places" | "overpass" | "serper" | "firecrawl" | "site_extractor" | "nominatim";
-                capabilities: ("verify_email" | "verify_phone" | "identity_lookup" | "enrich_person" | "enrich_company" | "discover" | "extract_site" | "geocode")[];
+                capabilities: ("verify_email" | "verify_phone" | "identity_lookup" | "enrich_person" | "enrich_company" | "discover" | "extract_site" | "geocode" | "find_people")[];
                 /** @enum {string} */
                 credential_mode: "api_key" | "key_secret" | "none";
                 unit_cost: {
@@ -20917,6 +21562,8 @@ export interface components {
             /** @enum {string} */
             provider: "millionverifier" | "twilio_lookup" | "rues" | "apollo" | "google_places" | "overpass" | "serper" | "firecrawl" | "site_extractor" | "nominatim";
             label: string;
+            /** Format: uuid */
+            company_id: string | null;
             enabled: boolean;
             capabilities: string[];
             priority: number;
@@ -20937,6 +21584,8 @@ export interface components {
             /** @enum {string} */
             provider: "millionverifier" | "twilio_lookup" | "rues" | "apollo" | "google_places" | "overpass" | "serper" | "firecrawl" | "site_extractor" | "nominatim";
             label: string;
+            /** Format: uuid */
+            company_id?: string;
             credentials: {
                 /** @enum {string} */
                 mode: "api_key";
@@ -21006,7 +21655,7 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
-                kind: "campaign" | "recovery" | "repurchase" | "promotion" | "segment" | "agent_tuning" | "insight" | "goal_pace";
+                kind: "campaign" | "recovery" | "repurchase" | "promotion" | "segment" | "agent_tuning" | "insight" | "goal_pace" | "autopilot_tuning";
                 /** @enum {string} */
                 status: "pending" | "approved" | "rejected" | "expired" | "superseded";
                 title: string;
@@ -21020,7 +21669,7 @@ export interface components {
                 risks: string[];
                 artifacts: unknown[];
                 /** @enum {string} */
-                source: "briefing" | "signal" | "chat" | "commercial";
+                source: "briefing" | "signal" | "chat" | "commercial" | "autopilot";
                 expires_at: string | null;
                 decided_at: string | null;
                 reject_reason: string | null;
@@ -21038,7 +21687,7 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
-                kind: "campaign" | "recovery" | "repurchase" | "promotion" | "segment" | "agent_tuning" | "insight" | "goal_pace";
+                kind: "campaign" | "recovery" | "repurchase" | "promotion" | "segment" | "agent_tuning" | "insight" | "goal_pace" | "autopilot_tuning";
                 /** @enum {string} */
                 status: "pending" | "approved" | "rejected" | "expired" | "superseded";
                 title: string;
@@ -21052,7 +21701,7 @@ export interface components {
                 risks: string[];
                 artifacts: unknown[];
                 /** @enum {string} */
-                source: "briefing" | "signal" | "chat" | "commercial";
+                source: "briefing" | "signal" | "chat" | "commercial" | "autopilot";
                 expires_at: string | null;
                 decided_at: string | null;
                 reject_reason: string | null;
@@ -21063,6 +21712,356 @@ export interface components {
                 basis: string | null;
                 /** @enum {string|null} */
                 estimate_source: "history" | "declared" | "benchmark" | null;
+            };
+        };
+        RoutinesListDto: {
+            items: {
+                name: string;
+                /** @enum {string} */
+                mode: "assisted" | "autonomous";
+                source: {
+                    kind: string;
+                    params: {
+                        [key: string]: unknown;
+                    };
+                };
+                qualify: {
+                    /** Format: uuid */
+                    icp_id?: string | null;
+                    min_score: number;
+                    require_decision_maker: boolean;
+                    reveal_email: boolean;
+                    reveal_phone: boolean;
+                };
+                contact: {
+                    channels: string[];
+                    /** Format: uuid */
+                    agent_id: string | null;
+                    goal: string;
+                };
+                follow_up: {
+                    /** Format: uuid */
+                    sequence_id: string;
+                };
+                schedule: {
+                    days: number[];
+                    times: string[];
+                    timezone: string;
+                    leads_per_run: number;
+                };
+                budget: {
+                    per_run: number;
+                    per_month: number;
+                };
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                status: "active" | "paused" | "archived";
+                /** Format: date-time */
+                next_run_at: string | null;
+                /** Format: date-time */
+                last_run_at: string | null;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+                last_run: {
+                    /** Format: uuid */
+                    id: string;
+                    /** Format: uuid */
+                    routine_id: string;
+                    trigger: string;
+                    /** @enum {string} */
+                    status: "queued" | "running" | "awaiting_approval" | "paused" | "done" | "budget_exhausted" | "failed";
+                    step: string | null;
+                    counters: {
+                        [key: string]: number;
+                    };
+                    credits_spent: number;
+                    error: string | null;
+                    /** Format: date-time */
+                    started_at: string | null;
+                    /** Format: date-time */
+                    finished_at: string | null;
+                    /** Format: date-time */
+                    created_at: string;
+                } | null;
+            }[];
+        };
+        RoutineInputDto: {
+            name: string;
+            /** @enum {string} */
+            mode: "assisted" | "autonomous";
+            source: {
+                kind: string;
+                params: {
+                    [key: string]: unknown;
+                };
+            };
+            qualify: {
+                /** Format: uuid */
+                icp_id?: string | null;
+                min_score: number;
+                require_decision_maker: boolean;
+                reveal_email: boolean;
+                reveal_phone: boolean;
+            };
+            contact: {
+                channels: string[];
+                /** Format: uuid */
+                agent_id: string | null;
+                goal: string;
+            };
+            follow_up: {
+                /** Format: uuid */
+                sequence_id: string;
+            };
+            schedule: {
+                days: number[];
+                times: string[];
+                timezone: string;
+                leads_per_run: number;
+            };
+            budget: {
+                per_run: number;
+                per_month: number;
+            };
+        };
+        RoutineCreatedDto: {
+            /** Format: uuid */
+            id: string;
+        };
+        RoutineDto: {
+            name: string;
+            /** @enum {string} */
+            mode: "assisted" | "autonomous";
+            source: {
+                kind: string;
+                params: {
+                    [key: string]: unknown;
+                };
+            };
+            qualify: {
+                /** Format: uuid */
+                icp_id?: string | null;
+                min_score: number;
+                require_decision_maker: boolean;
+                reveal_email: boolean;
+                reveal_phone: boolean;
+            };
+            contact: {
+                channels: string[];
+                /** Format: uuid */
+                agent_id: string | null;
+                goal: string;
+            };
+            follow_up: {
+                /** Format: uuid */
+                sequence_id: string;
+            };
+            schedule: {
+                days: number[];
+                times: string[];
+                timezone: string;
+                leads_per_run: number;
+            };
+            budget: {
+                per_run: number;
+                per_month: number;
+            };
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            status: "active" | "paused" | "archived";
+            /** Format: date-time */
+            next_run_at: string | null;
+            /** Format: date-time */
+            last_run_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        RunRefDto: {
+            /** Format: uuid */
+            run_id?: string;
+        };
+        RunsListDto: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                routine_id: string;
+                trigger: string;
+                /** @enum {string} */
+                status: "queued" | "running" | "awaiting_approval" | "paused" | "done" | "budget_exhausted" | "failed";
+                step: string | null;
+                counters: {
+                    [key: string]: number;
+                };
+                credits_spent: number;
+                error: string | null;
+                /** Format: date-time */
+                started_at: string | null;
+                /** Format: date-time */
+                finished_at: string | null;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+            /** Format: uuid */
+            next_cursor: string | null;
+        };
+        AutopilotRunDetailDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            routine_id: string;
+            trigger: string;
+            /** @enum {string} */
+            status: "queued" | "running" | "awaiting_approval" | "paused" | "done" | "budget_exhausted" | "failed";
+            step: string | null;
+            counters: {
+                [key: string]: number;
+            };
+            credits_spent: number;
+            error: string | null;
+            /** Format: date-time */
+            started_at: string | null;
+            /** Format: date-time */
+            finished_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+            items: {
+                /** Format: uuid */
+                id: string;
+                lead_id: string;
+                contact_id: string | null;
+                display_name: string | null;
+                company_name: string | null;
+                /** @enum {string} */
+                stage: "searching" | "enriching" | "qualifying" | "contacting" | "following" | "replied" | "demo" | "discarded";
+                reason: string | null;
+                score: number | null;
+                decision: string | null;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+        };
+        RunEventsDto: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                item_id: string | null;
+                kind: string;
+                payload: {
+                    [key: string]: unknown;
+                };
+                request_id: string | null;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+        };
+        BatchDto: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                lead_id: string;
+                contact_id: string | null;
+                display_name: string | null;
+                company_name: string | null;
+                score: number | null;
+                decision: string | null;
+            }[];
+        };
+        BatchDecisionDto: {
+            approve: string[];
+            /** @default [] */
+            skip: string[];
+        };
+        EstimateDto: {
+            credits_per_run: number;
+            credits_per_month: number;
+            runs_per_month: number;
+            leads_revealed_per_run: number;
+        };
+        SummaryDto: {
+            month: string;
+            has_routines: boolean;
+            demos: number;
+            demos_previous: number;
+            funnel: {
+                found: number;
+                qualified: number;
+                contacted: number;
+                replied: number;
+                demo: number;
+            };
+            credits_month: number;
+            credits_budget_month: number;
+            credits_per_demo: number | null;
+            best_sources: {
+                source: string;
+                credits_per_demo: number;
+            }[];
+        };
+        LedgerDto: {
+            items: {
+                run_id: string;
+                routine_id: string | null;
+                request_id: string;
+                provider: string | null;
+                metric: string;
+                quantity: number;
+                cost_usd: number | null;
+                bill_to: string;
+                /** Format: date-time */
+                occurred_at: string;
+            }[];
+            totals: {
+                provider: string | null;
+                metric: string;
+                bill_to: string;
+                quantity: number;
+                cost_usd: number;
+            }[];
+            truncated: boolean;
+        };
+        FunnelViewDto: {
+            by_routine: {
+                found: number;
+                qualified: number;
+                contactable: number;
+                contacted: number;
+                replied: number;
+                demo: number;
+                won: number;
+                lost: number;
+                discarded_by_reason: {
+                    [key: string]: number;
+                };
+                credits: number;
+                credits_per_qualified: number | null;
+                credits_per_demo: number | null;
+                /** Format: uuid */
+                routine_id: string;
+                name: string;
+                source: string | null;
+            }[];
+            total: {
+                found: number;
+                qualified: number;
+                contactable: number;
+                contacted: number;
+                replied: number;
+                demo: number;
+                won: number;
+                lost: number;
+                discarded_by_reason: {
+                    [key: string]: number;
+                };
+                credits: number;
+                credits_per_qualified: number | null;
+                credits_per_demo: number | null;
             };
         };
         NotificationsListDto: {
@@ -23212,7 +24211,7 @@ export interface operations {
     UsageController_history_v1: {
         parameters: {
             query: {
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                 granularity?: "hour" | "day";
                 from?: string;
                 to?: string;
@@ -23236,7 +24235,7 @@ export interface operations {
     UsageController_events_v1: {
         parameters: {
             query?: {
-                metric?: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions";
+                metric?: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                 from?: string;
                 to?: string;
                 page?: number;
@@ -29783,7 +30782,7 @@ export interface operations {
             query?: {
                 contact_id?: string;
                 deal_id?: string;
-                kind?: "note" | "call" | "meeting" | "task";
+                kind?: "note" | "call" | "meeting" | "task" | "email" | "sms";
                 page?: number;
                 page_size?: number;
             };
@@ -31658,13 +32657,19 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RevokeOptOutDto"];
+            };
+        };
         responses: {
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["RevokedOptOutDto"];
+                };
             };
         };
     };
@@ -34094,6 +35099,109 @@ export interface operations {
             };
         };
     };
+    OutreachSenderController_sender_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OutreachSenderDto"];
+                };
+            };
+        };
+    };
+    "PublicOutreachController_view[0]": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnsubscribeViewDto"];
+                };
+            };
+        };
+    };
+    "PublicOutreachController_unsubscribe[0]": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnsubscribeViewDto"];
+                };
+            };
+        };
+    };
+    "PublicOutreachController_view[1]_v1": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnsubscribeViewDto"];
+                };
+            };
+        };
+    };
+    "PublicOutreachController_unsubscribe[1]_v1": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnsubscribeViewDto"];
+                };
+            };
+        };
+    };
     CmoController_send_v1: {
         parameters: {
             query?: never;
@@ -35640,7 +36748,7 @@ export interface operations {
                 page?: number;
                 page_size?: number;
                 status?: ("new" | "enriching" | "qualified" | "rejected" | "promoted" | "discarded" | "suppressed")[];
-                source?: ("ctwa" | "meta_lead_ads" | "manual" | "google_places" | "openstreetmap" | "serp")[];
+                source?: ("ctwa" | "meta_lead_ads" | "manual" | "google_places" | "openstreetmap" | "serp" | "apollo_people" | "rues_open" | "website")[];
                 quality_status?: ("unverified" | "verified" | "risky" | "invalid" | "suppressed")[];
                 allows?: "whatsapp" | "email" | "manual";
                 min_score?: number;
@@ -35653,7 +36761,10 @@ export interface operations {
                 require_mode?: "all" | "any";
                 created_after?: string;
                 created_before?: string;
-                sort?: "score" | "data" | "recent";
+                sort?: "score" | "data" | "recent" | "discovered";
+                search_id?: string;
+                kind?: "person" | "business";
+                masked?: "exclude" | "only" | "include";
             };
             header?: never;
             path?: never;
@@ -35675,7 +36786,7 @@ export interface operations {
         parameters: {
             query?: {
                 status?: ("new" | "enriching" | "qualified" | "rejected" | "promoted" | "discarded" | "suppressed")[];
-                source?: ("ctwa" | "meta_lead_ads" | "manual" | "google_places" | "openstreetmap" | "serp")[];
+                source?: ("ctwa" | "meta_lead_ads" | "manual" | "google_places" | "openstreetmap" | "serp" | "apollo_people" | "rues_open" | "website")[];
                 quality_status?: ("unverified" | "verified" | "risky" | "invalid" | "suppressed")[];
                 allows?: "whatsapp" | "email" | "manual";
                 min_score?: number;
@@ -35688,6 +36799,9 @@ export interface operations {
                 require_mode?: "all" | "any";
                 created_after?: string;
                 created_before?: string;
+                search_id?: string;
+                kind?: "person" | "business";
+                masked?: "exclude" | "only" | "include";
             };
             header?: never;
             path?: never;
@@ -35872,6 +36986,27 @@ export interface operations {
             };
         };
     };
+    ProspectingController_nextPage_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StartSearchResultDto"];
+                };
+            };
+        };
+    };
     ProspectingController_deleteSearches_v1: {
         parameters: {
             query?: never;
@@ -36017,6 +37152,176 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EnrichQueuedDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_people_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeadPeopleDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_peopleOne_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnrichQueuedDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_peopleMany_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EnrichLeadsDto"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnrichQueuedDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_myProviders_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenantProviderKeysDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_saveProviderKey_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: "millionverifier" | "twilio_lookup" | "rues" | "apollo" | "google_places" | "overpass" | "serper" | "firecrawl" | "site_extractor" | "nominatim";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveTenantProviderKeyDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProspectingController_removeProviderKey_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: "millionverifier" | "twilio_lookup" | "rues" | "apollo" | "google_places" | "overpass" | "serper" | "firecrawl" | "site_extractor" | "nominatim";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProspectingController_reveal_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RevealLeadsDto"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnrichQueuedDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_signals_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeadSignalsDto"];
                 };
             };
         };
@@ -36485,6 +37790,444 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RejectResultDto"];
+                };
+            };
+        };
+    };
+    AutopilotProposalsController_list_v1: {
+        parameters: {
+            query: {
+                status: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposalListDto"];
+                };
+            };
+        };
+    };
+    AutopilotProposalsController_approve_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                proposal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApprovalResultDto"];
+                };
+            };
+        };
+    };
+    AutopilotProposalsController_reject_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                proposal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RejectProposalDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RejectResultDto"];
+                };
+            };
+        };
+    };
+    AutopilotController_listRoutines_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutinesListDto"];
+                };
+            };
+        };
+    };
+    AutopilotController_createRoutine_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoutineInputDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutineCreatedDto"];
+                };
+            };
+        };
+    };
+    AutopilotController_getRoutine_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutineDto"];
+                };
+            };
+        };
+    };
+    AutopilotController_updateRoutine_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoutineInputDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutineDto"];
+                };
+            };
+        };
+    };
+    AutopilotController_deleteRoutine_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AutopilotController_pause_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunRefDto"];
+                };
+            };
+        };
+    };
+    AutopilotController_resume_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunRefDto"];
+                };
+            };
+        };
+    };
+    AutopilotController_runNow_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunRefDto"];
+                };
+            };
+        };
+    };
+    AutopilotController_listRuns_v1: {
+        parameters: {
+            query?: {
+                cursor?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunsListDto"];
+                };
+            };
+        };
+    };
+    AutopilotController_getRun_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AutopilotRunDetailDto"];
+                };
+            };
+        };
+    };
+    AutopilotController_listEvents_v1: {
+        parameters: {
+            query?: {
+                after?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunEventsDto"];
+                };
+            };
+        };
+    };
+    AutopilotController_batch_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BatchDto"];
+                };
+            };
+        };
+    };
+    AutopilotController_decideBatch_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BatchDecisionDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AutopilotController_estimate_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoutineInputDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EstimateDto"];
+                };
+            };
+        };
+    };
+    AutopilotController_summary_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SummaryDto"];
+                };
+            };
+        };
+    };
+    AutopilotController_ledger_v1: {
+        parameters: {
+            query?: {
+                routine_id?: string;
+                run_id?: string;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LedgerDto"];
+                };
+            };
+        };
+    };
+    AutopilotController_funnel_v1: {
+        parameters: {
+            query?: {
+                routine_id?: string;
+                run_id?: string;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FunnelViewDto"];
                 };
             };
         };

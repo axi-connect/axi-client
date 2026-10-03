@@ -115,3 +115,7 @@ export {
  * del pipeline» de Conversión con el mismo vocabulario que el editor.
  */
 export { STAGE_KIND_LABELS, STAGE_KIND_ORDER } from "./domain/journey";
+
+/** P5 (piloto automático): el piloto inscribe en una secuencia del CRM. */
+export type { SequenceDTO } from "./domain/sequences";
+export { listSequences } from "./infrastructure/services/sequences-service.adapter";

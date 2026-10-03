@@ -25,6 +25,7 @@ describe("navegación de platform por secciones", () => {
     expect(paths.sort()).toEqual(
       [
         "/platform",
+        "/platform/ai",
         "/platform/analytics",
         "/platform/audit",
         "/platform/billing",

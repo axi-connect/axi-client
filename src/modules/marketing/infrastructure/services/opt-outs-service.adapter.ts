@@ -21,11 +21,22 @@ export function listOptOuts(
   });
 }
 
-/** 409 `marketing/opt_out_already_active` si el contacto ya está de baja. */
-export function createOptOut(contactId: string): Promise<OptOutDTO> {
-  return http.post<OptOutDTO>("/marketing/opt-outs", { contact_id: contactId });
+export type CreateOptOutSource = NonNullable<Schemas["CreateOptOutDto"]["source"]>;
+export type CreatedOptOutDTO = Schemas["CreatedOptOutDto"];
+
+/**
+ * Alta manual desde el panel. 409 `marketing/opt_out_already_active` si ya
+ * tenía baja; con `habeas_data` no es 409: la baja viva sube de origen y
+ * vuelve `upgraded: true`.
+ */
+export function createOptOut(contactId: string, source: CreateOptOutSource): Promise<CreatedOptOutDTO> {
+  return http.post<CreatedOptOutDTO>("/marketing/opt-outs", { contact_id: contactId, source });
 }
 
-export function revokeOptOut(id: string): Promise<void> {
-  return http.post<void>(`/marketing/opt-outs/${id}/revoke`);
+/**
+ * P1: revocar una baja de habeas data exige `acknowledge_habeas` también en la
+ * API (422 sin él); la casilla del panel es la que lo pone.
+ */
+export function revokeOptOut(id: string, options: { acknowledge_habeas?: boolean } = {}): Promise<void> {
+  return http.post<void>(`/marketing/opt-outs/${id}/revoke`, options.acknowledge_habeas === true ? { acknowledge_habeas: true } : {});
 }

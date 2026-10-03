@@ -47,6 +47,9 @@ export const RUN_CAPABILITY_LABELS: Record<string, string> = {
   enrich_company: "Datos de empresas",
   extract_site: "Su sitio web",
   geocode: "Ubicación en el mapa",
+  // P2
+  find_people: "Personas del negocio",
+  reveal_phone: "Celular",
 };
 
 /** El estado de la pasada entera. `partial` importa: algo llegó y algo falló. */
@@ -86,6 +89,9 @@ export const SOURCE_LABELS: Record<LeadSource, string> = {
   google_places: "Google Maps",
   openstreetmap: "OpenStreetMap",
   serp: "Buscador web",
+  apollo_people: "Apollo",
+  rues_open: "Registro mercantil",
+  website: "Su sitio web",
 };
 
 /**
@@ -138,6 +144,9 @@ export const PROVIDER_LABELS: Record<string, string> = {
   openstreetmap: "OpenStreetMap",
   google_places: "Google Maps",
   serp: "Buscador web",
+  apollo_people: "Apollo",
+  rues_open: "Registro mercantil",
+  website: "Su sitio web",
   // Quién completó el dato
   nominatim: "OpenStreetMap",
   overpass: "OpenStreetMap",
@@ -175,6 +184,22 @@ export const ATTRIBUTE_LABELS: Record<string, string> = {
   social_linkedin: "LinkedIn",
   social_tiktok: "TikTok",
   social_whatsapp: "WhatsApp",
+  // P2: lo que traen el registro mercantil y Apollo.
+  ciiu: "CIIU",
+  niche_code: "Nicho",
+  registry_status: "Matrícula",
+  registry_renewed_year: "Renovada en",
+  registry_legal_form: "Forma jurídica",
+  apollo_industry: "Industria (Apollo)",
+  employee_count_estimate: "Empleados (estimado)",
+  apollo_organization_id: "Id en Apollo",
+  apollo_email_status: "Estado del correo (Apollo)",
+  last_name: "Apellido",
+  membership: "Por qué es de este negocio",
+  phone_type: "Tipo de teléfono",
+  phone_do_not_call: "En lista de no llamar",
+  has_email: "Apollo tiene su correo",
+  has_direct_phone: "Apollo tiene su celular",
 };
 
 export const SOCIAL_LABELS: Record<SocialNetwork, string> = {
@@ -490,6 +515,10 @@ export type LeadRow = {
    * se quedaba girando hasta rendirse a los 90 s.
    */
   enriched_at: string | null;
+  /** P2: negocio o persona; de una persona, su papel y su negocio. */
+  kind: "business" | "person";
+  /** «Gerente general · decide · La Brasa Parrilla». Vacío en un negocio. */
+  person_line: string;
 };
 
 export function mapLeadToRow(lead: LeadDTO): LeadRow {
@@ -522,8 +551,27 @@ export function mapLeadToRow(lead: LeadDTO): LeadRow {
     city: lead.city,
     created_at: lead.created_at,
     enriched_at: lead.last_enriched_at,
+    kind: lead.kind,
+    person_line:
+      lead.kind === "person"
+        ? [
+            lead.title,
+            lead.buying_role === null || lead.buying_role === "unknown" ? null : PERSON_ROLE_WORDS[lead.buying_role],
+            lead.parent?.display_name ?? null,
+          ]
+            .filter(Boolean)
+            .join(" · ")
+        : "",
   };
 }
+
+/** El papel de una persona en la fila de la bandeja (el dominio de personas tiene el resto). */
+const PERSON_ROLE_WORDS: Record<"decides" | "approves" | "recommends" | "uses", string> = {
+  decides: "decide",
+  approves: "aprueba",
+  recommends: "recomienda",
+  uses: "usa",
+};
 
 /** Los canales permitidos reconstruidos desde la fila plana. */
 export function rowChannelSubject(row: LeadRow): ChannelSubject {

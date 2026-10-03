@@ -2,7 +2,7 @@
 
 import { memo } from "react";
 import Link from "next/link";
-import { ArrowRight, Bot, Flame, Lightbulb, Megaphone, RefreshCw, Route, Tag, Users } from "lucide-react";
+import { ArrowRight, Bot, Flame, Lightbulb, Megaphone, Radar, RefreshCw, Route, Tag, Users } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
 import type { ProposalDTO, ProposalKind } from "@/modules/cmo/domain/cmo";
@@ -24,6 +24,7 @@ const KIND_ICONS: Record<ProposalKind, typeof Flame> = {
   agent_tuning: Bot,
   insight: Lightbulb,
   goal_pace: Route,
+  autopilot_tuning: Radar,
 };
 
 /** Cuántas cifras de evidencia caben en la fila sin volverse una tabla. */

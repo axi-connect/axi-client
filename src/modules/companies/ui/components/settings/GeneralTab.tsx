@@ -17,6 +17,7 @@ import {
   type CompanyFormValues,
 } from "@/modules/companies/ui/forms/config/company.config"
 import { CompanySettingsSkeleton } from "./CompanySettingsSkeleton"
+import { OutreachSenderCard } from "./OutreachSenderCard"
 
 /**
  * Pestaña General de Mi empresa (`PATCH /companies/me` + `PUT /companies/me/schedules`).
@@ -90,6 +91,8 @@ export function GeneralTab() {
           }}
         />
       </section>
+
+      <OutreachSenderCard />
 
       <section className="rounded-2xl border border-border bg-card p-5 md:p-6">
         <h2 className="mb-1 text-lg font-medium">Horario de atención</h2>

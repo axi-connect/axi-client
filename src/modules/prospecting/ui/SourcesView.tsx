@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Globe, MapPin, Search } from "lucide-react";
+import { Globe, Landmark, MapPin, Search, UsersRound } from "lucide-react";
 
 import { errorMessage } from "@/core/lib/error-messages";
 import { BrandLoader } from "@/shared/components/ui/brand-loader";
@@ -12,6 +12,7 @@ import {
   ProviderCardGrid,
   type ProviderBrand,
 } from "@/shared/components/features/provider-card";
+import { ApolloKeyCard } from "./components/ApolloKeyCard";
 import { CaptureHeader } from "./components/CaptureHeader";
 
 import { CHANNEL_LABELS } from "../domain/lead";
@@ -22,6 +23,8 @@ const ICONS: Record<SearchSource, typeof MapPin> = {
   google_places: MapPin,
   openstreetmap: Globe,
   serp: Search,
+  apollo_people: UsersRound,
+  rues_open: Landmark,
 };
 
 /** El resplandor de cada fuente. Clases estáticas: Tailwind extrae en compilación. */
@@ -29,12 +32,16 @@ const BRANDS: Record<SearchSource, ProviderBrand> = {
   google_places: "maps",
   openstreetmap: "osm",
   serp: "serp",
+  apollo_people: "neutral",
+  rues_open: "neutral",
 };
 
 const SUBTITLES: Record<SearchSource, string> = {
   google_places: "Places API · con llave de Google Cloud",
   openstreetmap: "Mapa libre · sin llave",
   serp: "Serper · resultados de buscador",
+  apollo_people: "Personas por cargo · con tu llave",
+  rues_open: "Confecámaras · datos abiertos",
 };
 
 /**
@@ -52,6 +59,9 @@ const UNAVAILABLE_REASONS: Record<string, string> = {
   unhealthy: "Esta fuente está dando problemas; tu plataforma ya lo sabe.",
   capped_day: "Esta fuente llegó a su tope de consultas de hoy. Vuelve mañana.",
   capped_month: "Esta fuente llegó a su tope del mes.",
+  no_tenant_key: "Usa tu propia llave de Apollo: ponla abajo.",
+  plan_without_api: "Tu plan de Apollo no incluye la API de personas.",
+  out_of_credits: "Tu saldo de Apollo se agotó. Cuando recargues, en unas horas volvemos a intentarlo solos.",
 };
 
 /** Qué aporta cada fuente, dicho por lo que el dueño va a obtener. */
@@ -61,6 +71,10 @@ const PITCH: Record<SearchSource, string> = {
   openstreetmap:
     "Mapa libre y gratuito. Trae menos negocios y casi nunca el correo, pero no gasta unidades de tu plan.",
   serp: "Resultados del buscador. Encuentra al que existe en la web sin estar en ningún mapa: agencias, mayoristas, servicios a domicilio.",
+  apollo_people:
+    "Quién decide, por cargo y por empresa. Buscar no gasta créditos; revelar el correo o el celular, sí, de tu saldo en Apollo.",
+  rues_open:
+    "El registro mercantil: negocios con matrícula activa por actividad y ciudad, su NIT y, si es persona natural, su dueño. Gratis; no trae teléfono.",
 };
 
 /**
@@ -88,7 +102,7 @@ export function SourcesView() {
   const header = (
     <CaptureHeader
       title="De dónde traemos leads"
-      description="Las llaves las pone axi. Tú eliges la fuente y pagas por lo que uses, contra la cuota de tu plan."
+      description="Las llaves las pone axi, salvo la de Apollo, que es tuya. Tú eliges la fuente y pagas por lo que uses."
     />
   );
 
@@ -156,6 +170,11 @@ export function SourcesView() {
           );
         })}
       </ProviderCardGrid>
+
+      {/* La única llave que pone el negocio. Guardarla o quitarla cambia la tarjeta de Apollo: se recarga. */}
+      <section aria-label="Tus llaves" className="grid gap-4 lg:grid-cols-2 [&>*]:min-w-0">
+        <ApolloKeyCard onChanged={load} />
+      </section>
     </div>
   );
 }

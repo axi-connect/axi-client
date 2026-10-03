@@ -39,6 +39,10 @@ export const SOURCE_DOTS: Record<LeadSource, string> = {
   google_places: "bg-accent",
   openstreetmap: "bg-accent",
   serp: "bg-accent",
+  // P2: también «lo salimos a buscar».
+  apollo_people: "bg-accent",
+  rues_open: "bg-accent",
+  website: "bg-accent",
 };
 
 /**
@@ -60,6 +64,10 @@ function nameColumn(working: ReadonlySet<string>): ColumnDef<LeadRow> {
         className="hover:text-brand block"
       >
         <span className="block text-sm font-semibold">{row.original.name}</span>
+        {/* P2: una persona dice su cargo, su papel y su negocio bajo el nombre. */}
+        {row.original.person_line.length > 0 && (
+          <span className="text-muted-foreground block text-xs">{row.original.person_line}</span>
+        )}
         {working.has(row.original.id) ? (
           <span className="text-info flex items-center gap-1.5 text-xs">
             <LoaderCircle aria-hidden className="size-3 animate-spin" />

@@ -70,6 +70,13 @@ export const platformKeys = {
     list: () => [...platformKeys.voices.all, "list"] as const,
   },
 
+  // P1b · motor de decisiones: rutas por propósito y salud por proveedor.
+  decisions: {
+    all: ["platform", "decisions"] as const,
+    routes: () => [...platformKeys.decisions.all, "routes"] as const,
+    health: (hours: number) => [...platformKeys.decisions.all, "health", hours] as const,
+  },
+
   // Facturación de la licencia (billing_frontend_plan.md F2). La cartera pagina
   // en server: los filtros (page incluido) viajan en la key. La ficha del tenant
   // cuelga de su id para que invalidarla no toque la cartera.

@@ -134,3 +134,27 @@ describe("validateRunConfig — probe (F4)", () => {
   });
 });
 
+
+describe("probe de intención — comparar proveedores (P1b)", () => {
+  const INTENT: RunConfigValues = { ...defaultRunConfigValues, kind: "probe", probeKind: "intent", datasetId: "ds-1" };
+
+  it("los pares viajan al DTO; sin pares, el campo no viaja", () => {
+    const dto = buildCreateRunDTO({
+      companyId: "co-1",
+      agentId: null,
+      config: { ...INTENT, decisionTargets: ["typesafe|jev-1.13.0", "openai_compatible|gpt-4o-mini"] },
+    });
+    expect(dto).toMatchObject({
+      decision_targets: [
+        { provider: "typesafe", model: "jev-1.13.0" },
+        { provider: "openai_compatible", model: "gpt-4o-mini" },
+      ],
+    });
+    expect(buildCreateRunDTO({ companyId: "co-1", agentId: null, config: INTENT })).not.toHaveProperty("decision_targets");
+  });
+
+  it("más de 5 pares es un error del formulario", () => {
+    const six = Array.from({ length: 6 }, (_, i) => `p${String(i)}|m`);
+    expect(validateRunConfig({ ...INTENT, decisionTargets: six })).toContain("Compara hasta 5 proveedores a la vez");
+  });
+});

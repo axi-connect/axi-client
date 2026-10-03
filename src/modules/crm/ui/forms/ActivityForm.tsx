@@ -5,7 +5,7 @@ import { applyServerValidation, errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { DynamicForm } from "@/shared/components/features/dynamic-form";
 import { getTenantAgents, type AssignableAgent } from "@/modules/agents/public";
-import type { ActivityDTO, ActivityKind } from "@/modules/crm/domain/activity";
+import type { ActivityDTO, ActivityKind, CreatableActivityKind } from "@/modules/crm/domain/activity";
 import {
   createActivity,
   createAgentTask,
@@ -45,7 +45,7 @@ export function ActivityForm({
   onSuccess,
 }: {
   presetContact?: { id: string; label: string };
-  presetKind?: ActivityKind;
+  presetKind?: CreatableActivityKind;
   presetExecutor?: "user" | "agent";
   dealId?: string;
   /** Presente = edición. El tipo y el ejecutor quedan bloqueados. */

@@ -59,6 +59,9 @@ const UNAVAILABLE_SHORT: Record<string, string> = {
   unhealthy: "con problemas",
   capped_day: "tope de hoy alcanzado",
   capped_month: "tope del mes alcanzado",
+  no_tenant_key: "falta tu llave",
+  plan_without_api: "tu plan no lo incluye",
+  out_of_credits: "sin saldo en Apollo",
 };
 
 /**
@@ -92,7 +95,13 @@ export function StartSearchSheet({
   onStarted: () => void;
 }) {
   const { showAlert } = useAlert();
-  const usable = sources.filter((source) => source.available);
+  /*
+    P2: las PERSONAS se buscan en su pestaña (Captación › Personas), que navega
+    página a página y revela; este formulario es de negocios. Mismo modelo de
+    búsqueda, otra pantalla.
+  */
+  const businessSources = sources.filter((source) => source.query_shape !== "people");
+  const usable = businessSources.filter((source) => source.available);
 
   const [source, setSource] = useState<SearchSource>(
     initial?.source ?? usable[0]?.source ?? "openstreetmap",
@@ -142,6 +151,10 @@ export function StartSearchSheet({
   */
   const shape = chosen?.query_shape ?? "map";
   const isWeb = shape === "web";
+  /** P2: el registro mercantil se pregunta por actividad y ciudad, sin mapa. */
+  const isRegistry = shape === "registry";
+  const registryCategories = categories.filter((option) => option.ciiu.length > 0);
+  const [registryCity, setRegistryCity] = useState(initial?.city ?? "");
   const gated = hasAdmission(admission);
   const categoryLabel =
     categories.find((option) => option.id === category)?.label ?? "negocios";
@@ -173,6 +186,12 @@ export function StartSearchSheet({
    * usa para buscar.
    */
   function payloadOf(): Partial<StartSearchInput> {
+    if (isRegistry) {
+      // Ni punto ni radio: el registro no tiene coordenadas. La ciudad elige la
+      // cámara de comercio; la categoría, sus clases CIIU.
+      const city = registryCity.trim();
+      return { category, ...(city.length === 0 ? {} : { city }) };
+    }
     if (isWeb) {
       // Ni punto ni radio: el buscador no los usa, y enseñarlos sería prometer
       // una precisión que no existe. De la ubicación solo sirve su nombre.
@@ -206,7 +225,15 @@ export function StartSearchSheet({
       });
       return;
     }
-    if (!isWeb && place === null) {
+    if (isRegistry && !registryCategories.some((option) => option.id === category)) {
+      showAlert({
+        tone: "error",
+        title: "Falta a qué se dedican",
+        description: "Elige una actividad: el registro mercantil busca por su clasificación.",
+      });
+      return;
+    }
+    if (!isWeb && !isRegistry && place === null) {
       showAlert({
         tone: "error",
         title: "Falta la ubicación",
@@ -270,7 +297,7 @@ export function StartSearchSheet({
                   y no la encontraba aquí. Una opción vetada que dice por qué es
                   información; una opción ausente es un misterio.
                 */}
-                {sources.map((option) => (
+                {businessSources.map((option) => (
                   <SelectItem
                     key={option.source}
                     value={option.source}
@@ -286,7 +313,52 @@ export function StartSearchSheet({
             </Select>
           </div>
 
-          {isWeb ? (
+          {isRegistry ? (
+            /*
+              P2 · EL FORMULARIO DEL REGISTRO. Actividad y ciudad: el registro
+              mercantil clasifica por CIIU y cada ciudad tiene su cámara. Solo
+              salen las categorías con clases CIIU conocidas — una clase mal
+              puesta traería negocios de otra cosa. No trae teléfono: lo buscan
+              después la web del negocio y el resto de la cascada.
+            */
+            <>
+              <div>
+                <label className="text-sm font-semibold" htmlFor="search-registry-category">
+                  A qué se dedican
+                </label>
+                <Select value={category} onValueChange={setCategory}>
+                  <SelectTrigger id="search-registry-category" className="mt-1 w-full">
+                    <SelectValue placeholder="Elige una actividad" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {registryCategories.map((option) => (
+                      <SelectItem key={option.id} value={option.id}>
+                        {option.label}
+                        <span className="text-muted-foreground font-mono text-xs"> · CIIU {option.ciiu.join(", ")}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-semibold" htmlFor="search-registry-city">
+                  Ciudad
+                </label>
+                <Input
+                  id="search-registry-city"
+                  className="mt-1"
+                  value={registryCity}
+                  onChange={(event) => setRegistryCity(event.target.value)}
+                  placeholder="Medellín"
+                  maxLength={80}
+                />
+                <p className="text-muted-foreground mt-1 text-xs text-pretty">
+                  Solo negocios con matrícula activa y renovada. El registro no trae teléfono ni correo: la cascada los
+                  completa después.
+                </p>
+              </div>
+            </>
+          ) : isWeb ? (
             /*
               EL FORMULARIO DEL BUSCADOR. Una frase, no un punto en el mapa: es
               para lo que sirve un buscador, y es lo que encuentra al mayorista o
@@ -365,7 +437,7 @@ export function StartSearchSheet({
             </>
           )}
 
-          {!isWeb && place !== null && (
+          {!isWeb && !isRegistry && place !== null && (
             <>
               <div>
                 <label className="text-sm font-semibold" htmlFor="search-radius">

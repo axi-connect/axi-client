@@ -10,6 +10,7 @@ import {
 import { z } from "zod";
 import type { ActivityDTO, CreateAgentTaskDTO, UpdateAgentTaskDTO } from "@/modules/crm/domain/activity";
 import {
+  asFollowUpMedium,
   asCrmCallType,
   businessDateTimeToIso,
   isInPast,
@@ -182,7 +183,7 @@ export function editScheduleFollowUpValues(
     agent_id: task.assigned_agent_id ?? NO_AGENT,
     // La POLÍTICA elegida, no el medio en curso: una «llamar, y si no,
     // escribir» que ya va por mensaje sigue siendo esa política al editarla.
-    medium: task.task_channel ?? "message",
+    medium: asFollowUpMedium(task.task_channel),
     call_type: asCrmCallType(task.call_type),
     objective: task.objective ?? "",
     date: when.date,

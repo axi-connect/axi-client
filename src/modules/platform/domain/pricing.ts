@@ -36,7 +36,12 @@ export const PROVIDERS: { value: PricingProvider; label: string }[] = [
   // F1 del seguimiento autónomo: plantillas de WhatsApp por categoría y país
   // (`utility_co`, `marketing_co`…), USD por millón de mensajes entregados.
   { value: "meta", label: "Meta (plantillas de WhatsApp)" },
+  // P1b: el motor de decisiones. Sin esta entrada su tarifa no se pinta y el
+  // operador no podría ajustar el costo de un clasificador.
   { value: "typesafe", label: "TypeSafe (Jev)" },
+  // P3a del piloto de captación: el correo en frío, USD por millón de envíos.
+  // El SMS va con Twilio (`sms_co`, `sms_intl`, por segmento).
+  { value: "resend", label: "Resend (correo de prospección)" },
 ];
 
 export function providerLabel(provider: PricingProvider): string {
