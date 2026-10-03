@@ -105,7 +105,8 @@ function heroLight(section: HTMLElement, tl: gsap.core.Timeline) {
   let vh = 1;
   let sw = 1;
   let sh = 1;
-  let knotY = 0;
+  let heroAt = 0;
+  let heroH = 0;
   let length = 1;
   // La velocidad de la gota (estado entre frames).
   let stretch = 0;
@@ -115,11 +116,9 @@ function heroLight(section: HTMLElement, tl: gsap.core.Timeline) {
     vh = window.innerHeight;
     sw = section.offsetWidth;
     sh = section.offsetHeight;
-    // Dónde estaba el nudo en pantalla cuando la escena asomaba por abajo
-    // (`a = 0`): su altura en el hero (la escribe HeroFibers en `--knot-y`)
-    // relativa al borde superior de la escena, más una ventana.
-    const ky = parseFloat(hero.style.getPropertyValue("--knot-y")) || hero.offsetHeight * 0.68;
-    knotY = vh + hero.getBoundingClientRect().top + ky - spacer.getBoundingClientRect().top;
+    // El hero respecto al borde superior de la escena (layout: solo aquí).
+    heroAt = hero.getBoundingClientRect().top - spacer.getBoundingClientRect().top;
+    heroH = hero.offsetHeight;
     // Los arcos: el contorno del marco en reposo, 1,6 px por fuera del filo,
     // del centro de arriba al de abajo por cada lado.
     const pad = 1.6;
@@ -160,8 +159,14 @@ function heroLight(section: HTMLElement, tl: gsap.core.Timeline) {
   // La llegada: de asomar por abajo a quedar fijada arriba.
   const approach = ScrollTrigger.create({ trigger: spacer, start: "top bottom", end: "top top", onRefresh: measure });
 
+  // Dónde estaba el nudo en pantalla cuando la escena asomaba por abajo
+  // (`a = 0`): su altura en el hero más el hero respecto a la escena, más una
+  // ventana. La altura la escribe HeroFibers en `--knot-y` cuando llega (va en
+  // diferido, a veces después de construir esta escena): se lee del estilo
+  // en línea en cada frame, que no recalcula nada.
+  const knotY = () => vh + heroAt + (parseFloat(hero.style.getPropertyValue("--knot-y")) || heroH * 0.68);
   const frame = (time: number) => {
-    const s = lightState({ a: approach.progress, p: pin.progress, vh, sh, knotY });
+    const s = lightState({ a: approach.progress, p: pin.progress, vh, sh, knotY: knotY() });
     // Nunca el nudo y la gota a la vez: desde el primer píxel, la luz es la gota.
     w.flag([hero], "data-relay", approach.progress > 0);
 
