@@ -4356,6 +4356,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/marketing/hsm-templates/library": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["HsmTemplatesController_library_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/marketing/hsm-templates": {
         parameters: {
             query?: never;
@@ -15590,6 +15606,35 @@ export interface components {
             used: number;
             remaining: number | null;
         };
+        HsmLibraryListDto: {
+            data: {
+                name: string;
+                language: string;
+                topic: string;
+                usecase: string;
+                industries: string[];
+                header: string | null;
+                header_example: string | null;
+                body: string;
+                body_examples: string[];
+                footer: string | null;
+                buttons: ({
+                    /** @enum {string} */
+                    type: "quick_reply";
+                    text: string;
+                } | {
+                    /** @enum {string} */
+                    type: "url";
+                    text: string;
+                    url: string;
+                } | {
+                    /** @enum {string} */
+                    type: "phone_number";
+                    text: string;
+                    phone_number: string;
+                })[];
+            }[];
+        };
         HsmTemplatesListDto: {
             data: {
                 /** Format: uuid */
@@ -15780,6 +15825,7 @@ export interface components {
                 handle: string;
                 file_name?: string;
             };
+            library_template_name?: string;
         };
         AutomationsListDto: {
             data: {
@@ -32297,6 +32343,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MessagingWindowDto"];
+                };
+            };
+        };
+    };
+    HsmTemplatesController_library_v1: {
+        parameters: {
+            query: {
+                channel_id: string;
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HsmLibraryListDto"];
                 };
             };
         };

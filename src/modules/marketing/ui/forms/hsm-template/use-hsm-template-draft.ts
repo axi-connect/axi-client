@@ -25,9 +25,11 @@ import {
   SUGGESTED_OPENING_TEMPLATES,
   TEMPLATE_COST_CO_USD,
   type HsmHeaderMediaUploadDTO,
+  type HsmLibraryTemplateDTO,
   type HsmTemplateDTO,
   type UpdateHsmTemplateDTO,
 } from "@/modules/marketing/domain/template-catalog";
+import { isStillLibrary, libraryDraft } from "@/modules/marketing/domain/template-library";
 import {
   composeTemplateName,
   firstFreeVersion,
@@ -45,6 +47,7 @@ import {
 } from "@/modules/marketing/domain/template-pieces";
 import {
   createHsmTemplate,
+  listHsmLibrary,
   listHsmTemplates,
   updateHsmTemplate,
   uploadHsmHeaderMedia,
@@ -68,6 +71,18 @@ type HeaderFile = Omit<HsmHeaderMediaUploadDTO, "preview_url"> & {
 };
 
 const HEADER_KIND_LABEL: Record<HeaderMediaKind, string> = { image: "imagen", video: "video", document: "documento" };
+
+/**
+ * La biblioteca de Meta del canal (F5): se pide sola al abrir la página de
+ * crear, sin bloquearla. `off` al editar: una plantilla existente no «empieza
+ * desde» nada. Un fallo no rompe la página: la fila sigue con lo de axi y la
+ * hoja ofrece reintentar.
+ */
+export type LibraryState =
+  | { kind: "off" }
+  | { kind: "loading" }
+  | { kind: "ready"; items: readonly HsmLibraryTemplateDTO[] }
+  | { kind: "error"; message: string };
 
 export const LANGUAGES: ReadonlyArray<{ value: string; label: string }> = [
   { value: "es_CO", label: "Español (Colombia)" },
@@ -96,6 +111,8 @@ function whatIsMissing(
     missingExample: number | null;
     isEditing: boolean;
     mediaWithoutCopy: HeaderMediaKind | null;
+    /** De la biblioteca y sin tocar su texto: Meta la aprueba al enviarla. */
+    libraryInstant: boolean;
   },
 ): string {
   if (context.messageEmpty && context.baseEmpty) return "Falta el texto y el nombre";
@@ -108,6 +125,7 @@ function whatIsMissing(
   if (context.baseEmpty) return "Falta el nombre";
   if (errors.name !== undefined) return errors.name;
   if (context.mediaWithoutCopy !== null) return `Sin el archivo, ${HEADER_MEDIA_RULES[context.mediaWithoutCopy].noun} no sale en los envíos`;
+  if (context.libraryInstant) return "Se aprueba al instante";
   return context.isEditing ? "Se envía de nuevo a revisión" : "Se envía a revisión de Meta";
 }
 
@@ -199,6 +217,33 @@ export function useHsmTemplateDraft({
   const [footer, setFooter] = useState<string | null>(stored.footer);
   const [buttons, setButtons] = useState<TemplateButton[]>(stored.buttons);
   const [origin, setOrigin] = useState<string | null>(null);
+  // La plantilla de la biblioteca de la que se partió (F5): con ella se decide
+  // si el envío lleva `library_template_name` (aprobación al instante) o no.
+  const [libraryOrigin, setLibraryOrigin] = useState<HsmLibraryTemplateDTO | null>(null);
+  // El ejemplo del `{{1}}` de una cabecera de la biblioteca: el formulario no
+  // tiene campo para él, y sin ejemplo Meta rechaza una cabecera con hueco.
+  const [headerExample, setHeaderExample] = useState<string | null>(null);
+  const [library, setLibrary] = useState<LibraryState>(isEditing ? { kind: "off" } : { kind: "loading" });
+  const [libraryAttempt, setLibraryAttempt] = useState(0);
+
+  // La biblioteca, una vez por canal (y por reintento): no bloquea la página, y lo que llega
+  // tarde de un canal anterior no pisa al actual.
+  useEffect(() => {
+    if (isEditing) return;
+    let alive = true;
+    void (async () => {
+      try {
+        const items = await listHsmLibrary(channelId);
+        if (alive) setLibrary({ kind: "ready", items });
+      } catch (err) {
+        if (alive) setLibrary({ kind: "error", message: errorMessage(err, "No pudimos traer la biblioteca de Meta") });
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [channelId, isEditing, libraryAttempt]);
+
   const [startCollapsed, setStartCollapsed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   // Guarda síncrona: `submitting` es estado y no llega a tiempo para el segundo
@@ -260,6 +305,12 @@ export function useHsmTemplateDraft({
     buttons,
   });
   const errorSteps = stepsWithErrors(errors);
+  // De la biblioteca: sin tocar (aprobación al instante) o tocada (revisión normal).
+  const stillLibrary =
+    libraryOrigin !== null &&
+    isStillLibrary(libraryOrigin, { category, language, header, hasMediaHeader: mediaKind !== null, body, footer, buttons });
+  const libraryInstant = !isEditing && stillLibrary;
+  const libraryChanged = !isEditing && libraryOrigin !== null && !stillLibrary;
   const invalid = errorSteps.size > 0;
   const missingExample = firstMissingExample(examples, variableCount);
   const categoryLabel = HSM_CATEGORY_LABELS[category];
@@ -281,9 +332,21 @@ export function useHsmTemplateDraft({
     });
   }
 
+  /** Lo que una plantilla de la biblioteca había puesto y una sugerida o «en blanco» no traen. */
+  function clearLibraryPieces() {
+    if (libraryOrigin === null) return;
+    setLibraryOrigin(null);
+    changeHeaderKind("none");
+    setHeaderText("");
+    setHeaderExample(null);
+    setFooter(null);
+    setButtons([]);
+  }
+
   function applySuggestion(key: string) {
     const suggestion = SUGGESTED_OPENING_TEMPLATES.find((item) => item.key === key);
     if (suggestion === undefined) return;
+    clearLibraryPieces();
     setHuman(humanizeTemplateBase(splitTemplateName(suggestion.name).base));
     setVersionChoice(null);
     setBody(suggestion.body);
@@ -294,13 +357,44 @@ export function useHsmTemplateDraft({
     setFailure(null);
   }
 
+  /**
+   * Partir de una plantilla de la biblioteca de Meta (F5): la página se llena
+   * con su texto, sus ejemplos, sus botones, Utilidad y `es` —el idioma con que
+   * Meta la aprueba al instante—. Si había un archivo de cabecera, se suelta
+   * (`changeHeaderKind`): la biblioteca solo trae cabeceras de texto.
+   */
+  function applyLibrary(template: HsmLibraryTemplateDTO) {
+    const draft = libraryDraft(template);
+    setLibraryOrigin(template);
+    setHuman(draft.suggestedName);
+    setVersionChoice(null);
+    setCategory(draft.category);
+    setLanguage(draft.language);
+    changeHeaderKind(draft.headerText !== null ? "text" : "none");
+    setHeaderText(draft.headerText ?? "");
+    setHeaderExample(draft.headerExample);
+    setBody(draft.body);
+    setExamples(draft.examples);
+    setFooter(draft.footer);
+    setButtons(draft.buttons);
+    setOrigin(null);
+    setStartCollapsed(true);
+    setFailure(null);
+  }
+
+  function retryLibrary() {
+    setLibrary({ kind: "loading" });
+    setLibraryAttempt((previous) => previous + 1);
+  }
+
   function startBlank() {
-    // «En blanco» es empezar de cero: si venía de una sugerida, se limpia.
-    if (origin !== null) {
+    // «En blanco» es empezar de cero: si venía de una sugerida o de la biblioteca, se limpia.
+    if (origin !== null || libraryOrigin !== null) {
       setHuman("");
       setBody("");
       setExamples([]);
     }
+    clearLibraryPieces();
     setOrigin(null);
     setStartCollapsed(true);
     setFailure(null);
@@ -332,7 +426,11 @@ export function useHsmTemplateDraft({
         },
       };
     }
-    if (header !== null) return { header: { format: "text", text: header } };
+    if (header !== null) {
+      // Una cabecera con hueco (las hay en la biblioteca) necesita su ejemplo, o Meta la rechaza.
+      const example = /\{\{1\}\}/.test(header) && headerExample !== null ? { example: headerExample } : {};
+      return { header: { format: "text", text: header, ...example } };
+    }
     return isEditing ? { header: null } : {};
   }
 
@@ -490,16 +588,26 @@ export function useHsmTemplateDraft({
             language,
             category,
             ...params,
+            // Sin tocar su texto fijo, se crea DESDE la biblioteca y Meta la
+            // aprueba al instante; los botones solo aportan el enlace o el
+            // teléfono del negocio. Tocada, viaja como propia.
+            ...(libraryInstant && libraryOrigin !== null
+              ? { library_template_name: libraryOrigin.name, category: "utility" as const }
+              : {}),
             // Al crear no hay nada que quitar: `null` no viaja.
             ...(headerFields.header ? { header: headerFields.header } : {}),
             ...(headerFields.header_media ? { header_media: headerFields.header_media } : {}),
           });
-      showAlert({
-        tone: "success",
-        title: isEditing ? "Enviada de nuevo a revisión" : "Enviada a revisión de Meta",
-        description:
-          "Suele decidir en minutos; puede tardar hasta 48 h. Mientras haya alguna en revisión, la lista se refresca sola.",
-      });
+      showAlert(
+        saved.approval_status === "approved"
+          ? { tone: "success", title: "Aprobada por Meta", description: "Es de su biblioteca: ya la puedes usar." }
+          : {
+              tone: "success",
+              title: isEditing ? "Enviada de nuevo a revisión" : "Enviada a revisión de Meta",
+              description:
+                "Suele decidir en minutos; puede tardar hasta 48 h. Mientras haya alguna en revisión, la lista se refresca sola.",
+            },
+      );
       onDirtyChange(false);
       onSaved(saved);
     } catch (err) {
@@ -558,6 +666,7 @@ export function useHsmTemplateDraft({
     missingExample,
     isEditing,
     mediaWithoutCopy,
+    libraryInstant,
   });
 
   const summaries: Record<HsmFormStep, string> = {
@@ -624,6 +733,10 @@ export function useHsmTemplateDraft({
     buttons,
     setButtons,
     origin,
+    libraryOrigin,
+    library,
+    libraryInstant,
+    libraryChanged,
     startCollapsed,
     setStartCollapsed,
     submitting,
@@ -648,6 +761,8 @@ export function useHsmTemplateDraft({
     missingExample,
     goToStep,
     applySuggestion,
+    applyLibrary,
+    retryLibrary,
     startBlank,
     insertVariable,
     changeHeaderKind,

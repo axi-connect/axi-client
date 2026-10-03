@@ -4,6 +4,7 @@ import type {
   UpdateHsmTemplateDTO,
   CreateTemplateDTO,
   HsmHeaderMediaUploadDTO,
+  HsmLibraryTemplateDTO,
   HsmTemplateDTO,
   MessagingWindowDTO,
   TemplateDTO,
@@ -84,9 +85,26 @@ export function syncHsmTemplates(
   });
 }
 
-/** Crea la plantilla EN META: queda `pending` hasta que Meta la apruebe. */
+/**
+ * Crea la plantilla EN META: queda `pending` hasta que Meta la apruebe. Con
+ * `library_template_name` se crea desde la biblioteca de Meta y, si el texto
+ * fijo no cambió, vuelve ya aprobada.
+ */
 export function createHsmTemplate(dto: CreateHsmTemplateDTO): Promise<HsmTemplateDTO> {
   return http.post<HsmTemplateDTO>("/marketing/hsm-templates", dto);
+}
+
+/**
+ * La biblioteca de plantillas de Meta para la WABA del canal (hsm-media F5):
+ * unas 170 de utilidad en `es`, sin las que traen botones que axi no maneja.
+ * `search` filtra en el servidor; la página filtra en cliente y no lo usa.
+ */
+export async function listHsmLibrary(channelId: string, search?: string): Promise<HsmLibraryTemplateDTO[]> {
+  const res = await http.get<{ data: HsmLibraryTemplateDTO[] }>("/marketing/hsm-templates/library", {
+    channel_id: channelId,
+    ...(search !== undefined && search.trim() !== "" ? { search: search.trim() } : {}),
+  });
+  return res.data;
 }
 
 /**

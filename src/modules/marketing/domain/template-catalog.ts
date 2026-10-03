@@ -19,6 +19,15 @@ export type HsmHeaderMediaUploadDTO = Schemas["HsmHeaderMediaUploadDto"];
 export type HsmHeaderMediaDTO = NonNullable<HsmTemplateDTO["header_media"]>;
 
 /**
+ * Una plantilla de la Biblioteca de Meta (`GET /marketing/hsm-templates/library`,
+ * hsm-media F5): de utilidad, ya redactada por Meta, en `es`. Si se crea sin
+ * cambiar su texto fijo (`library_template_name` en el alta), Meta la aprueba
+ * al instante. Los botones traen la URL o el teléfono de ejemplo de Meta.
+ */
+export type HsmLibraryTemplateDTO = Schemas["HsmLibraryListDto"]["data"][number];
+export type HsmLibraryButton = HsmLibraryTemplateDTO["buttons"][number];
+
+/**
  * Para qué se va a usar una plantilla de Meta. Cada flujo tenía su propia
  * regla de elegibilidad (campañas solo Marketing; automatizaciones cualquiera
  * sin variables; aperturas cualquiera menos Autenticación; acciones rápidas,

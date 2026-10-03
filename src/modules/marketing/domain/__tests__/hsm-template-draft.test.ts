@@ -51,6 +51,14 @@ describe("hsmDraftErrors · las reglas de Meta antes de gastar el envío", () =>
   it("variables fuera de las reglas de Meta", () => {
     expect(hsmDraftErrors({ ...OK, body: "{{1}} empieza con una variable y no vale", examples: ["x"] }).body).toBeDefined();
   });
+
+  it("un enlace que sigue en el example.com de la biblioteca de Meta no sale (F5)", () => {
+    const placeholder = { type: "url" as const, text: "Ver cuenta", url: "https://www.example.com" };
+    expect(hsmDraftErrors({ ...OK, buttons: [placeholder] }).buttons).toBe("Pon la dirección de tu negocio en «Ver cuenta»");
+    expect(hsmDraftErrors({ ...OK, buttons: [{ ...placeholder, url: "https://savage.co/cuenta" }] })).toEqual({});
+    // A medias sigue diciendo lo de siempre: primero completarlo.
+    expect(hsmDraftErrors({ ...OK, buttons: [{ ...placeholder, text: "" }] }).buttons).toBe("Completa cada botón o quítalo");
+  });
 });
 
 describe("pasos con error", () => {

@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import {
   Ban,
   ChevronDown,
@@ -10,6 +11,7 @@ import {
   FileText,
   Hourglass,
   ImageIcon,
+  Info,
   LoaderCircle,
   MessageSquare,
   Monitor,
@@ -17,6 +19,7 @@ import {
   Type,
   Video,
   X,
+  Zap,
 } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { countPassing, FormStep, StepTramos } from "@/shared/components/features/form-steps";
@@ -31,12 +34,14 @@ import type { HeaderMediaKind } from "@/modules/marketing/domain/header-media";
 import type { HsmDraftErrors } from "@/modules/marketing/domain/hsm-template-draft";
 import type { HsmFormStep } from "@/modules/marketing/domain/meta-template-view";
 import { SUGGESTED_OPENING_TEMPLATES, type HsmTemplateDTO } from "@/modules/marketing/domain/template-catalog";
+import { libraryHighlights, libraryTitle } from "@/modules/marketing/domain/template-library";
 import { composeTemplateName } from "@/modules/marketing/domain/template-name";
 import { breaksDesktop, emptyButton, FOOTER_MAX, HEADER_MAX } from "@/modules/marketing/domain/template-pieces";
 import { HsmPreview } from "@/modules/marketing/ui/components/HsmPreview";
 import { HsmSubmitNotice } from "@/modules/marketing/ui/components/HsmSubmitNotice";
 import { TemplateButtonsEditor } from "@/modules/marketing/ui/components/TemplateButtonsEditor";
 import { HeaderMediaField } from "./HeaderMediaField";
+import { LibrarySheet } from "./LibrarySheet";
 import { PurposeCards } from "./PurposeCards";
 import { StartStrip } from "./StartStrip";
 import { TemplateNameField } from "./TemplateNameField";
@@ -113,6 +118,10 @@ export function HsmTemplateForm({
     buttons,
     setButtons,
     origin,
+    libraryOrigin,
+    library,
+    libraryInstant,
+    libraryChanged,
     startCollapsed,
     setStartCollapsed,
     submitting,
@@ -137,6 +146,8 @@ export function HsmTemplateForm({
     missingExample,
     goToStep,
     applySuggestion,
+    applyLibrary,
+    retryLibrary,
     startBlank,
     insertVariable,
     changeHeaderKind,
@@ -157,6 +168,16 @@ export function HsmTemplateForm({
     counter,
     previewProps,
   } = useHsmTemplateDraft({ channelId, templates: initialTemplates, editing, onSaved, onDirtyChange });
+  const [libraryOpen, setLibraryOpen] = useState(false);
+  // Las que se asoman en «Empieza desde»: solo cuando la biblioteca ya llegó.
+  const libraryItems = library.kind === "ready" ? library.items : null;
+  const libraryCards = useMemo(
+    () =>
+      libraryItems === null
+        ? []
+        : libraryHighlights(libraryItems).map((template) => ({ key: template.name, title: libraryTitle(template) })),
+    [libraryItems],
+  );
 
   return (
     <div className="flex min-w-0 flex-col gap-5">
@@ -195,6 +216,23 @@ export function HsmTemplateForm({
           onPickBlank={startBlank}
           onPick={applySuggestion}
           onExpand={() => setStartCollapsed(false)}
+          library={libraryCards}
+          pickedLibrary={libraryOrigin === null ? null : { key: libraryOrigin.name, title: libraryTitle(libraryOrigin) }}
+          onPickLibrary={(key) => {
+            const template = libraryItems?.find((item) => item.name === key);
+            if (template !== undefined) applyLibrary(template);
+          }}
+          onExploreLibrary={library.kind === "off" ? undefined : () => setLibraryOpen(true)}
+        />
+      )}
+
+      {!isEditing && (
+        <LibrarySheet
+          open={libraryOpen}
+          onOpenChange={setLibraryOpen}
+          state={library}
+          onRetry={retryLibrary}
+          onUse={applyLibrary}
         />
       )}
 
@@ -503,6 +541,11 @@ export function HsmTemplateForm({
                         ))}
                       </SelectContent>
                     </Select>
+                    {libraryOrigin !== null && language === "es" && (
+                      <p className="text-muted-foreground text-xs text-pretty">
+                        La biblioteca de Meta va en español neutro (es): así se aprueba al instante.
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -522,6 +565,7 @@ export function HsmTemplateForm({
             variableCount={variableCount}
             missingExample={missingExample}
             mediaWithoutCopy={mediaWithoutCopy}
+            library={libraryInstant ? "instant" : libraryChanged ? "changed" : null}
             onGo={goToStep}
           />
           {bodyChanged && editing !== null && (
@@ -530,7 +574,7 @@ export function HsmTemplateForm({
               <p className="text-muted-foreground text-xs leading-relaxed text-pretty whitespace-pre-line">{editing.body}</p>
             </div>
           )}
-          {!isEditing && <SendExpectation />}
+          {!isEditing && <SendExpectation instant={libraryInstant} />}
         </aside>
       </div>
 
@@ -593,6 +637,7 @@ function BeforeSend({
   variableCount,
   missingExample,
   mediaWithoutCopy,
+  library,
   onGo,
 }: {
   errors: HsmDraftErrors;
@@ -601,6 +646,11 @@ function BeforeSend({
   missingExample: number | null;
   /** Cabecera de medio sin copia de axi: aviso, no bloqueo (auditoría F4, R1). */
   mediaWithoutCopy: HeaderMediaKind | null;
+  /**
+   * Si parte de la biblioteca de Meta (F5): `instant` sin tocar su texto
+   * (aprobación inmediata), `changed` si se tocó (revisión normal). Ninguno bloquea.
+   */
+  library: "instant" | "changed" | null;
   onGo: (step: HsmFormStep, focusId?: string) => void;
 }) {
   const blockers: { text: React.ReactNode; action: string; go: () => void }[] = [];
@@ -633,18 +683,36 @@ function BeforeSend({
           },
         ];
 
+  // La línea de la biblioteca: un «sí» cuando sigue intacta, un aviso que no
+  // bloquea cuando se tocó (Meta la revisa como una propia).
+  const libraryLine =
+    library === "instant" ? (
+      <li className="grid grid-cols-[1.125rem_minmax(0,1fr)] gap-x-2.5 text-[13px]">
+        <Zap aria-hidden className="text-success mt-0.5 size-4.5" />
+        <span className="text-pretty">Aprobación inmediata: es de la biblioteca de Meta y no cambiaste su texto.</span>
+      </li>
+    ) : library === "changed" ? (
+      <li className="grid grid-cols-[1.125rem_minmax(0,1fr)] gap-x-2.5 text-[13px]">
+        <Info aria-hidden className="text-info mt-0.5 size-4.5" />
+        <span className="text-pretty">Cambiaste el texto de la biblioteca: Meta la revisará como una plantilla propia.</span>
+      </li>
+    ) : null;
+
   if (blockers.length === 0 && warnings.length === 0) {
     return (
-      <Alert variant="success" className="rounded-2xl">
-        <CircleCheck aria-hidden />
-        <AlertTitle>Lista para enviar a revisión</AlertTitle>
-        <AlertDescription className="text-foreground text-xs">
-          <p>
-            {variableCount === 0 ? "Sin variables" : `${String(variableCount)} ${variableCount === 1 ? "variable" : "variables"} con su ejemplo`} ·{" "}
-            <span className="font-mono">{name}</span>
-          </p>
-        </AlertDescription>
-      </Alert>
+      <div className="flex flex-col gap-3">
+        <Alert variant="success" className="rounded-2xl">
+          <CircleCheck aria-hidden />
+          <AlertTitle>Lista para enviar a revisión</AlertTitle>
+          <AlertDescription className="text-foreground text-xs">
+            <p>
+              {variableCount === 0 ? "Sin variables" : `${String(variableCount)} ${variableCount === 1 ? "variable" : "variables"} con su ejemplo`} ·{" "}
+              <span className="font-mono">{name}</span>
+            </p>
+          </AlertDescription>
+        </Alert>
+        {libraryLine !== null && <ul className="px-1">{libraryLine}</ul>}
+      </div>
     );
   }
 
@@ -667,6 +735,7 @@ function BeforeSend({
             </button>
           </li>
         ))}
+        {libraryLine}
         {blockers.map((blocker, index) => (
           <li key={index} className="grid grid-cols-[1.125rem_minmax(0,1fr)] gap-x-2.5 gap-y-1 text-[13px]">
             <CircleAlert aria-hidden className="text-warning mt-0.5 size-4.5" />
@@ -685,16 +754,26 @@ function BeforeSend({
   );
 }
 
-/** Lo que pasa después de enviar, dicho antes: la expectativa honesta de cuánto tarda Meta. */
-function SendExpectation() {
+/**
+ * Lo que pasa después de enviar, dicho antes: la expectativa honesta de cuánto
+ * tarda Meta. Una de su biblioteca sin tocar no espera: vuelve aprobada.
+ */
+function SendExpectation({ instant }: { instant: boolean }) {
   return (
     <Alert variant="info" className="rounded-2xl">
       <Hourglass aria-hidden />
       <AlertDescription className="text-foreground text-xs">
-        <p>
-          <strong className="font-medium">Qué pasa al enviar:</strong> queda «En revisión». Meta suele decidir en minutos y puede
-          tardar hasta 48 h; la lista se refresca sola mientras tanto.
-        </p>
+        {instant ? (
+          <p>
+            <strong className="font-medium">Qué pasa al enviar:</strong> como es de la biblioteca de Meta y no cambiaste su texto,
+            Meta la aprueba al instante y queda lista para usar.
+          </p>
+        ) : (
+          <p>
+            <strong className="font-medium">Qué pasa al enviar:</strong> queda «En revisión». Meta suele decidir en minutos y puede
+            tardar hasta 48 h; la lista se refresca sola mientras tanto.
+          </p>
+        )}
       </AlertDescription>
     </Alert>
   );

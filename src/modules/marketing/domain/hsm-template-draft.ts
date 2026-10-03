@@ -3,6 +3,7 @@ import {
   inspectTemplateVariables,
   TEMPLATE_VARIABLE_MESSAGES,
 } from "@/modules/marketing/domain/template-catalog";
+import { placeholderButtonIssue } from "@/modules/marketing/domain/template-library";
 import { isValidTemplateName } from "@/modules/marketing/domain/template-name";
 import {
   BODY_MAX,
@@ -73,6 +74,12 @@ export function hsmDraftErrors(draft: HsmTemplateDraft): HsmDraftErrors {
   }
   if (draft.footer !== null && draft.footer.trim() === "") errors.footer = "Escribe el pie o quítalo";
   if (hasIncompleteButton([...draft.buttons])) errors.buttons = "Completa cada botón o quítalo";
+  else {
+    // El `example.com` con que llegan los enlaces de la biblioteca de Meta (F5):
+    // completo para Meta, pero mandaría a cada cliente a una página que no es del negocio.
+    const placeholder = placeholderButtonIssue(draft.buttons);
+    if (placeholder !== null) errors.buttons = placeholder;
+  }
 
   return errors;
 }

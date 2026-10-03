@@ -1,15 +1,23 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, CornerDownRight, Plus, Sparkles } from "lucide-react";
+import { Children, useCallback, useEffect, useRef, useState } from "react";
+import { ArrowRight, ChevronLeft, ChevronRight, CornerDownRight, LibraryBig, Plus, Sparkles } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 
-/** Una tarjeta de punto de partida: lo que axi sugiere hoy; la Biblioteca de Meta llega en F5. */
+/** Una tarjeta de punto de partida de lo que axi sugiere. */
 export interface StartOption {
   key: string;
   title: string;
   body: string;
 }
+
+/** Una de la biblioteca de Meta (F5): su nombre en la biblioteca y su título en español. */
+export interface LibraryStartOption {
+  key: string;
+  title: string;
+}
+
+const LIBRARY_HINT = "Aprobación inmediata si no cambias el texto fijo";
 
 const CARD_GAP_PX = 10;
 
@@ -21,6 +29,10 @@ const CARD_GAP_PX = 10;
  *
  * Elegir pliega la fila a una línea («Empezaste en blanco · Cambiar»): el punto
  * de partida se decide una vez y no debe seguir ocupando la página.
+ *
+ * Detrás de las de axi se asoman unas pocas de la biblioteca de Meta (F5) en
+ * cuanto llegan, y «Explorar la biblioteca de Meta» abre la hoja con todas. Si
+ * la biblioteca no llega, la fila sigue igual que antes.
  */
 export function StartStrip({
   options,
@@ -29,6 +41,10 @@ export function StartStrip({
   onPickBlank,
   onPick,
   onExpand,
+  library = [],
+  pickedLibrary = null,
+  onPickLibrary,
+  onExploreLibrary,
 }: {
   options: readonly StartOption[];
   /** `null` en blanco; si no, la `key` de la sugerida elegida. */
@@ -37,15 +53,28 @@ export function StartStrip({
   onPickBlank: () => void;
   onPick: (key: string) => void;
   onExpand: () => void;
+  /** Las de la biblioteca que se asoman en la fila; vacía mientras no llega. */
+  library?: readonly LibraryStartOption[];
+  /** La de la biblioteca elegida (puede venir de la hoja, no de la fila). */
+  pickedLibrary?: LibraryStartOption | null;
+  onPickLibrary?: (key: string) => void;
+  /** Abre la hoja con la biblioteca entera; sin él no hay enlace. */
+  onExploreLibrary?: () => void;
 }) {
   if (collapsed) {
-    const origin = picked === null ? null : options.find((option) => option.key === picked)?.title;
+    const origin =
+      pickedLibrary !== null
+        ? pickedLibrary.title
+        : picked === null
+          ? null
+          : options.find((option) => option.key === picked)?.title;
     return (
       <p className="text-muted-foreground flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px]">
         <CornerDownRight aria-hidden="true" className="size-3.5 shrink-0" />
         <span>
           Empezaste{" "}
           <span className="text-foreground font-medium">{origin ? `desde «${origin}»` : "en blanco"}</span>
+          {pickedLibrary !== null ? " · Biblioteca de Meta" : null}
         </span>
         <button
           type="button"
@@ -66,8 +95,21 @@ export function StartStrip({
             Empieza desde
           </h2>
         }
+        tools={
+          onExploreLibrary ? (
+            <button
+              type="button"
+              onClick={onExploreLibrary}
+              className="decoration-border hover:decoration-foreground inline-flex min-h-6 items-center gap-1.5 text-[12.5px] font-medium underline-offset-[3px] hover:underline"
+            >
+              <LibraryBig aria-hidden="true" className="size-3.5" />
+              Explorar la biblioteca de Meta
+              <ArrowRight aria-hidden="true" className="size-3.5" />
+            </button>
+          ) : null
+        }
       >
-        <StartCard pressed={picked === null} onClick={onPickBlank} dashed>
+        <StartCard pressed={picked === null && pickedLibrary === null} onClick={onPickBlank} dashed>
           <Plus aria-hidden="true" className="size-4.5" />
           <span className="text-[13.5px] font-semibold">En blanco</span>
           <span className="text-muted-foreground text-xs">Escribe la tuya desde cero</span>
@@ -80,6 +122,20 @@ export function StartStrip({
             </span>
             <span className="text-[13.5px] font-semibold">{option.title}</span>
             <span className="text-muted-foreground line-clamp-2 text-xs">«{option.body}»</span>
+          </StartCard>
+        ))}
+        {library.map((option) => (
+          <StartCard
+            key={`library-${option.key}`}
+            pressed={pickedLibrary?.key === option.key}
+            onClick={() => onPickLibrary?.(option.key)}
+          >
+            <span className="text-muted-foreground flex items-center gap-1.5 text-[10.5px] font-semibold tracking-[0.07em] uppercase">
+              <LibraryBig aria-hidden="true" className="size-3" />
+              Biblioteca de Meta
+            </span>
+            <span className="text-[13.5px] font-semibold">{option.title}</span>
+            <span className="text-muted-foreground line-clamp-2 text-xs">{LIBRARY_HINT}</span>
           </StartCard>
         ))}
       </Carousel>
@@ -120,7 +176,16 @@ function StartCard({
  * solo donde queda contenido; las flechas se apagan en cada extremo. Al llegar
  * con el teclado a una tarjeta tapada, el navegador la desplaza a la vista.
  */
-function Carousel({ title, children }: { title: React.ReactNode; children: React.ReactNode }) {
+function Carousel({
+  title,
+  tools = null,
+  children,
+}: {
+  title: React.ReactNode;
+  /** Lo que va junto a las flechas: el enlace a la biblioteca. */
+  tools?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   const rowRef = useRef<HTMLDivElement>(null);
   const [edges, setEdges] = useState({ start: true, end: true });
 
@@ -144,6 +209,14 @@ function Carousel({ title, children }: { title: React.ReactNode; children: React
     return () => observer.disconnect();
   }, [sync]);
 
+  // Las de la biblioteca llegan después: la fila no cambia de tamaño (lo que
+  // crece es su contenido) y el observador no se entera. Se recalcula al cambiar
+  // cuántas tarjetas hay, o las flechas no aparecerían.
+  const cardCount = Children.count(children);
+  useEffect(() => {
+    sync();
+  }, [cardCount, sync]);
+
   function page(direction: 1 | -1) {
     const row = rowRef.current;
     if (row === null) return;
@@ -163,16 +236,19 @@ function Carousel({ title, children }: { title: React.ReactNode; children: React
     <>
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
         {title}
-        {scrollable ? (
-          <div className="flex gap-1.5">
-            <ArrowButton label="Anteriores" disabled={edges.start} onClick={() => page(-1)}>
-              <ChevronLeft aria-hidden="true" className="size-4" />
-            </ArrowButton>
-            <ArrowButton label="Siguientes" disabled={edges.end} onClick={() => page(1)}>
-              <ChevronRight aria-hidden="true" className="size-4" />
-            </ArrowButton>
-          </div>
-        ) : null}
+        <div className="flex items-center gap-3">
+          {tools}
+          {scrollable ? (
+            <div className="flex gap-1.5">
+              <ArrowButton label="Anteriores" disabled={edges.start} onClick={() => page(-1)}>
+                <ChevronLeft aria-hidden="true" className="size-4" />
+              </ArrowButton>
+              <ArrowButton label="Siguientes" disabled={edges.end} onClick={() => page(1)}>
+                <ChevronRight aria-hidden="true" className="size-4" />
+              </ArrowButton>
+            </div>
+          ) : null}
+        </div>
       </div>
       <div
         ref={rowRef}

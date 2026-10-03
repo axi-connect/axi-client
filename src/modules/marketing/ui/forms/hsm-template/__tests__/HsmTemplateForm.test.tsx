@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { HttpError } from "@/core/api/problem";
-import type { HsmTemplateDTO } from "@/modules/marketing/domain/template-catalog";
+import type { HsmLibraryTemplateDTO, HsmTemplateDTO } from "@/modules/marketing/domain/template-catalog";
 import { HsmTemplateForm } from "../HsmTemplateForm";
 
 /**
@@ -17,6 +17,7 @@ jest.mock("@/modules/marketing/infrastructure/services/templates-service.adapter
   createHsmTemplate: jest.fn(),
   updateHsmTemplate: jest.fn(),
   listHsmTemplates: jest.fn(),
+  listHsmLibrary: jest.fn(),
   uploadHsmHeaderMedia: jest.fn(),
 }));
 
@@ -29,6 +30,7 @@ const api = require("@/modules/marketing/infrastructure/services/templates-servi
   createHsmTemplate: jest.Mock;
   updateHsmTemplate: jest.Mock;
   listHsmTemplates: jest.Mock;
+  listHsmLibrary: jest.Mock;
   uploadHsmHeaderMedia: jest.Mock;
 };
 /* eslint-enable @typescript-eslint/no-require-imports */
@@ -66,6 +68,7 @@ beforeEach(() => {
   api.updateHsmTemplate.mockResolvedValue(template());
   api.createHsmTemplate.mockResolvedValue(template({ id: "nueva", name: "sesion_en_vivo_v1" }));
   api.listHsmTemplates.mockResolvedValue([]);
+  api.listHsmLibrary.mockResolvedValue([]);
 });
 
 function renderNew(templates: HsmTemplateDTO[] = []) {
@@ -615,5 +618,120 @@ describe("cabecera de imagen, video o documento (F4)", () => {
 
     await waitFor(() => expect(api.updateHsmTemplate).toHaveBeenCalled());
     expect(api.updateHsmTemplate.mock.calls[0][1]).toMatchObject({ header: null });
+  });
+});
+
+describe("biblioteca de Meta (F5)", () => {
+  /** La muestra real del servidor. */
+  const AUTO_PAY: HsmLibraryTemplateDTO = {
+    name: "auto_pay_reminder_1",
+    language: "es",
+    topic: "PAYMENTS",
+    usecase: "AUTO_PAY_REMINDER",
+    industries: ["FINANCIAL_SERVICES"],
+    header: "Próximo pago automático",
+    header_example: null,
+    body:
+      "Hola, {{1}}: \n\nTu pago automático de {{2}} está programado para el {{3}} en la cuenta {{4}}.\n\nAsegúrate de tener saldo suficiente para evitar cargos por {{5}}.",
+    body_examples: ["John", "$12,34", "1 de enero de 2024", "CS Mutual Checking", "retraso"],
+    footer: null,
+    buttons: [{ type: "url", text: "Ver cuenta", url: "https://www.example.com" }],
+  };
+  const body = () => screen.getByPlaceholderText(/Hola \{\{1\}\}, te escribo/);
+
+  async function pickAutoPay() {
+    api.listHsmLibrary.mockResolvedValue([AUTO_PAY]);
+    const props = renderNew();
+    fireEvent.click(await screen.findByRole("button", { name: /Próximo pago automático/ }));
+    return props;
+  }
+
+  function typeOwnUrl(url = "https://savage.co/cuenta") {
+    fireEvent.change(screen.getByLabelText("Dirección del botón 1"), { target: { value: url } });
+  }
+
+  it("se pide al abrir la página de crear, del canal; al editar, no", () => {
+    renderNew();
+    expect(api.listHsmLibrary).toHaveBeenCalledWith("ch1");
+    jest.clearAllMocks();
+    render(<HsmTemplateForm channelId="ch1" templates={[]} editing={template()} {...handlers()} />);
+    expect(api.listHsmLibrary).not.toHaveBeenCalled();
+  });
+
+  it("elegirla llena el formulario: texto, ejemplos, cabecera, botón, Utilidad, `es` y el nombre", async () => {
+    await pickAutoPay();
+
+    expect(body()).toHaveValue(AUTO_PAY.body);
+    expect(screen.getByLabelText("Ejemplo de la variable 1")).toHaveValue("John");
+    expect(screen.getByLabelText("Ejemplo de la variable 5")).toHaveValue("retraso");
+    expect(screen.getByLabelText("Texto de la cabecera")).toHaveValue("Próximo pago automático");
+    expect(screen.getByLabelText("Dirección del botón 1")).toHaveValue("https://www.example.com");
+    expect(screen.getAllByText("proximo_pago_automatico_v1").length).toBeGreaterThan(0);
+    expect(screen.getByText(/desde «Próximo pago automático»/)).toBeInTheDocument();
+    expect(screen.getByText(/· Biblioteca de Meta/)).toBeInTheDocument();
+    expect(screen.getByText(/va en español neutro \(es\)/)).toBeInTheDocument();
+  });
+
+  it("con el enlace de ejemplo de Meta no se envía, y lo nombra en «Antes de enviar» y en la isla", async () => {
+    await pickAutoPay();
+    send();
+
+    expect(api.createHsmTemplate).not.toHaveBeenCalled();
+    const message = "Pon la dirección de tu negocio en «Ver cuenta»";
+    expect(within(screen.getByRole("region", { name: "Antes de enviar" })).getByText(message)).toBeInTheDocument();
+    expect(within(screen.getByRole("contentinfo")).getByText(message)).toBeInTheDocument();
+  });
+
+  it("con su enlace y sin tocar el texto: viaja con `library_template_name`, Utilidad y `es`", async () => {
+    await pickAutoPay();
+    typeOwnUrl();
+
+    expect(screen.getByText(/Aprobación inmediata: es de la biblioteca de Meta/)).toBeInTheDocument();
+    expect(within(screen.getByRole("contentinfo")).getByText("Se aprueba al instante")).toBeInTheDocument();
+    send();
+
+    await waitFor(() => expect(api.createHsmTemplate).toHaveBeenCalled());
+    expect(api.createHsmTemplate.mock.calls[0][0]).toMatchObject({
+      library_template_name: "auto_pay_reminder_1",
+      category: "utility",
+      language: "es",
+      name: "proximo_pago_automatico_v1",
+      buttons: [{ type: "url", text: "Ver cuenta", url: "https://savage.co/cuenta" }],
+    });
+  });
+
+  it("si se toca el texto, se avisa y viaja como propia, sin `library_template_name`", async () => {
+    await pickAutoPay();
+    typeOwnUrl();
+    fireEvent.change(body(), { target: { value: `${AUTO_PAY.body} Gracias.` } });
+
+    expect(screen.getByText(/Cambiaste el texto de la biblioteca/)).toBeInTheDocument();
+    send();
+
+    await waitFor(() => expect(api.createHsmTemplate).toHaveBeenCalled());
+    expect(api.createHsmTemplate.mock.calls[0][0]).not.toHaveProperty("library_template_name");
+  });
+
+  it("si la biblioteca no llega, la página sigue: la fila sin sus tarjetas", async () => {
+    api.listHsmLibrary.mockRejectedValue(new Error("boom"));
+    renderNew();
+
+    await waitFor(() => expect(api.listHsmLibrary).toHaveBeenCalled());
+    expect(screen.getByRole("button", { name: /Retomar conversación/ })).toBeInTheDocument();
+    expect(screen.queryByText("Biblioteca de Meta")).not.toBeInTheDocument();
+  });
+
+  it("«Explorar la biblioteca de Meta» abre la hoja, y usar una la carga", async () => {
+    api.listHsmLibrary.mockResolvedValue([AUTO_PAY]);
+    renderNew();
+    await screen.findByRole("button", { name: /Próximo pago automático/ });
+
+    fireEvent.click(screen.getByRole("button", { name: /Explorar la biblioteca de Meta/ }));
+    const sheet = await screen.findByRole("dialog");
+    fireEvent.click(within(sheet).getByRole("button", { name: "Próximo pago automático" }));
+    fireEvent.click(within(sheet).getByRole("button", { name: "Usar esta plantilla" }));
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(body()).toHaveValue(AUTO_PAY.body);
   });
 });
