@@ -303,6 +303,16 @@ K.extra_css = """
 .start-row[data-end="true"]{--fade-r:0px}
 .start-row > *{scroll-snap-align:start}
 @media (prefers-reduced-motion: reduce){.start-row{scroll-behavior:auto}}
+
+/* v5: la isla en una fila — tramos · estado y qué falta · acciones */
+.dock{padding:8px 8px 8px 20px;gap:10px 18px;flex-wrap:nowrap}
+.dock .tramos{margin:0}
+.dock .sep{height:28px;align-self:center}
+.dock .state-text{display:flex;flex-direction:column;gap:1px;min-width:0;max-width:22rem}
+.dock .state-text .state-t{font-size:13px;line-height:1.3}
+.dock .state-text .detail{font-size:12px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dock .acts{margin-left:6px;flex:none}
+@container (max-width: 640px){.dock{flex-wrap:wrap;padding:12px 14px}.dock .state-text{flex:1 1 0;max-width:none}.dock .acts{margin-left:0;width:100%;justify-content:flex-end}}
 @media (prefers-reduced-motion: reduce){.bar i{animation:none;width:100%}}
 """
 
@@ -498,15 +508,17 @@ def dock(title, n, tramos, detail, cta="Enviar a revisión de Meta", ready=False
         for lbl, st in tramos
     )
     dis = "" if ready else 'aria-disabled="true" style="opacity:.6"'
+    # v5 (dueño, 2026-10-03): una sola fila. Los tramos donde estaban; en el
+    # centro, el estado y qué falta en vez del precio, que ya está en «¿Para
+    # qué es?». La isla pasa de tres líneas a dos y ocupa mucho menos.
     return f"""
 <footer class="dock ink">
-  <div class="state">
+  <ul class="tramos" aria-label="Qué falta">{tr}</ul>
+  <span class="sep" aria-hidden="true"></span>
+  <div class="state-text">
     <span class="state-t">{title}<span class="n">{n}</span></span>
-    <ul class="tramos" aria-label="Qué falta">{tr}</ul>
     <span class="detail">{detail}</span>
   </div>
-  <span class="sep" aria-hidden="true"></span>
-  <span class="price-line"><b>{category} · {price}</b>por mensaje en Colombia</span>
   <div class="acts">{btn('Cancelar', '', 'glass sm')}<button class="btn contrast sm" {dis}>{cta}</button></div>
 </footer>"""
 
