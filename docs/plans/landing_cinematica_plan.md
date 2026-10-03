@@ -1152,7 +1152,8 @@ No hay marco: el video va a lo ancho desde el principio (§23). La luz cae y, al
 
 - Solo `transform`, `opacity` y el `stroke-dashoffset` del contacto. No se escriben variables CSS por frame en ancestros ([[perf-variables-css-por-frame]]). Los desenfoques y sombras son estáticos.
 - No se usa `@property` con nombres que ya existen (la lección de `--ry`, §hotfix 625709ef).
-- **Movimiento reducido:** no hay caída. El anillo aparece quieto y cerrado, y se apaga al abrir el video.
+- **Movimiento reducido:** no hay caída. En reducido el video no se fija ni se abre (§23), así que el anillo queda quieto, cerrado y tenue (filo y corona, sin bloom) durante todo el recorrido. Es un marco iluminado, no una animación (decisión del 2026-10-03 tras la QA de 0d438b58).
+- **Móvil, relevo:** el nudo del hero baja unos px y se apaga mientras el filamento se enciende; nunca las dos luces por encima de 0,3 a la vez.
 - `aria-hidden` en todas las capas de luz.
 
 ### 25.6 Reparto
