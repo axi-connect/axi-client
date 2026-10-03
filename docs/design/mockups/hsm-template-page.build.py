@@ -192,6 +192,100 @@ K.extra_css = """
 .start b{font-size:13.5px;font-weight:600;display:flex;gap:6px;align-items:center}
 .start b .ic{color:var(--axi-violet)}
 .start span{font-size:12px;color:var(--muted-foreground);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* ── v2 (feedback del dueño 2026-10-03) ── */
+/* 1. La isla de acción: compacta y centrada, no del ancho de la página */
+.dock{align-self:center;width:fit-content;max-width:100%;gap:12px 22px;padding:10px 10px 10px 20px}
+.dock .state{flex:0 0 auto;gap:7px}
+.tramos button{width:40px}
+.dock .sep{width:1px;align-self:stretch;background:var(--border)}
+.dock .price-line{display:flex;flex-direction:column;gap:1px;font-size:12px;color:var(--muted-foreground);white-space:nowrap}
+.dock .price-line b{color:var(--foreground);font-weight:600;font-size:13px}
+.dock .acts{margin-left:0}
+@container (max-width: 640px){.dock{width:100%;padding:14px 16px}.dock .sep{display:none}.dock .acts{width:100%;justify-content:flex-end}}
+
+/* 2. Nombre + versión */
+.namegroup{position:relative;display:flex;align-items:stretch;border:1px solid var(--input);border-radius:var(--radius-md);background:var(--background)}
+.namegroup .input{border:0;border-radius:var(--radius-md) 0 0 var(--radius-md);min-height:40px}
+.namegroup.locked{background:var(--secondary)}
+.vsel{display:flex;align-items:center;gap:6px;padding:0 10px 0 12px;border-left:1px solid var(--input);font-family:var(--font-mono);font-size:13px;white-space:nowrap;min-height:40px}
+.vsel .ic{color:var(--muted-foreground)}
+.techname{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;color:var(--muted-foreground)}
+.techname code{font-family:var(--font-mono);font-size:12px;color:var(--foreground);background:var(--secondary);border-radius:6px;padding:2px 6px}
+.vpop{position:absolute;right:0;top:calc(100% + 6px);z-index:5;width:min(270px,100%);border-radius:16px;border:1px solid var(--border);background:color-mix(in srgb, var(--background) 86%, transparent);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:var(--shadow-overlay);padding:6px}
+.vpop li{list-style:none;display:grid;grid-template-columns:30px 1fr auto;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;font-size:13px}
+.vpop li .v{font-family:var(--font-mono)}
+.vpop li small{color:var(--muted-foreground);font-size:11.5px}
+.vpop li[aria-disabled="true"]{opacity:.55}
+.vpop li[aria-selected="true"]{background:var(--secondary)}
+.vpop ul{margin:0;padding:0}
+
+/* 3. Empieza desde */
+.startbox{display:flex;flex-direction:column;gap:10px}
+.start-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px 12px}
+.start-head h2{font-family:var(--font-body);font-size:15px;font-weight:600;letter-spacing:0}
+.start-head a{display:inline-flex;gap:6px;align-items:center;font-size:12.5px;font-weight:500;text-decoration:none;min-height:24px}
+.start-row{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(196px,1fr);gap:10px;overflow-x:auto;padding:2px 2px 6px;scrollbar-width:thin}
+.scard{border:1px solid var(--border);border-radius:18px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;text-align:left;min-width:0;background:var(--background)}
+.scard:hover{border-color:color-mix(in srgb, var(--foreground) 30%, var(--background))}
+.scard .src{display:flex;gap:5px;align-items:center;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;font-weight:600;color:var(--muted-foreground)}
+.scard .src.axi .ic{color:var(--axi-violet)}
+.scard b{font-size:13.5px;font-weight:600}
+.scard .sbody{font-size:12px;color:var(--muted-foreground);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.scard.blank{border-style:dashed;align-items:flex-start;justify-content:center}
+.scard.blank .ic{color:var(--foreground)}
+.scard[aria-pressed="true"]{border-color:var(--foreground);box-shadow:0 0 0 1px var(--foreground)}
+.started{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:12.5px;color:var(--muted-foreground)}
+.started b{color:var(--foreground);font-weight:500}
+.started button{font-weight:500;color:var(--foreground);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--border);min-height:24px}
+
+/* biblioteca: hoja lateral (flota → cristal, DESIGN §5.1) */
+.stack{position:relative}
+.stack .scrim{position:absolute;inset:0;background:var(--scrim);z-index:20}
+.sheet{position:absolute;top:0;right:0;bottom:0;z-index:21;width:min(640px,100%);display:flex;flex-direction:column;gap:14px;padding:22px 24px;overflow:auto;border-left:1px solid var(--border);background:color-mix(in srgb, var(--background) 90%, transparent);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);box-shadow:var(--shadow-overlay)}
+.sheet-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.sheet-head h2{font-size:22px}
+.sheet-head p{color:var(--muted-foreground);font-size:13px;margin-top:4px;max-width:52ch;text-wrap:pretty}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{height:30px;padding:0 12px;border-radius:999px;border:1px solid var(--border);font-size:12.5px;font-weight:500;color:var(--muted-foreground)}
+.chips button[aria-pressed="true"]{background:var(--foreground);color:var(--background);border-color:var(--foreground)}
+.lgrid{display:grid;gap:10px;grid-template-columns:1fr}
+@container (min-width: 520px){.lgrid{grid-template-columns:1fr 1fr}}
+.lcard{border:1px solid var(--border);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:8px;background:var(--background)}
+.lcard[aria-selected="true"]{border-color:var(--foreground);box-shadow:0 0 0 1px var(--foreground)}
+.lcard .top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.lcard b{font-size:13.5px;font-weight:600}
+.lcard .use{font-size:11.5px;color:var(--muted-foreground)}
+.lcard .mini{font-size:12.5px;line-height:1.5;padding:10px 12px;border-radius:12px;background:var(--secondary)}
+.lcard .mini mark{background:color-mix(in srgb, var(--axi-violet) 14%, transparent);color:inherit;border-radius:4px;padding:0 2px}
+.lcard .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.instant{display:inline-flex;gap:5px;align-items:center;font-size:11.5px;color:var(--muted-foreground)}
+.instant .ic{color:var(--axi-success)}
+
+/* 4. ¿Para qué es? — dos decisiones, no tres casillas */
+.purpose{display:grid;gap:12px;grid-template-columns:1fr}
+@container (min-width: 620px){.purpose{grid-template-columns:1fr 1fr}}
+.pcard{position:relative;display:flex;flex-direction:column;gap:14px;padding:18px 18px 16px;border-radius:20px;border:1px solid var(--border);background:var(--background);text-align:left;min-width:0;transition:border-color .15s var(--ease), box-shadow .15s var(--ease)}
+.pcard:hover{border-color:color-mix(in srgb, var(--foreground) 30%, var(--background))}
+.pcard[aria-checked="true"]{border-color:var(--foreground);box-shadow:0 0 0 1px var(--foreground), var(--shadow-float)}
+.pcard[aria-disabled="true"]{opacity:.5}
+.pcard .phead{display:flex;align-items:center;gap:12px}
+.pcard .glyph{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:var(--secondary);color:var(--foreground);flex:none}
+.pcard[aria-checked="true"] .glyph{background:var(--foreground);color:var(--background)}
+.pcard .ptitle{display:flex;flex-direction:column;min-width:0}
+.pcard .ptitle b{font-size:15.5px;font-weight:600;letter-spacing:-.01em}
+.pcard .ptitle span{font-size:12.5px;color:var(--muted-foreground)}
+.pcard .tick{margin-left:auto;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border);display:grid;place-items:center;flex:none}
+.pcard[aria-checked="true"] .tick{background:var(--foreground);border-color:var(--foreground);color:var(--background)}
+.pcard .pex{font-size:13px;line-height:1.45;color:var(--foreground);padding:10px 12px;border-radius:12px;background:var(--secondary)}
+.pcard .pex small{display:block;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted-foreground);font-weight:600;margin-bottom:3px}
+.pcard .pfoot{display:flex;flex-direction:column;gap:4px;padding-top:12px;border-top:1px solid var(--border-soft)}
+.pcard .price{display:flex;align-items:baseline;gap:6px;white-space:nowrap}
+.pcard .price b{font-family:var(--font-heading);font-size:24px;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.pcard .price span{font-size:12px;color:var(--muted-foreground)}
+.pcard .review{font-size:12px;color:var(--muted-foreground)}
+.pcard .review b{color:var(--foreground);font-weight:500}
+.auth-note{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--muted-foreground)}
 @media (prefers-reduced-motion: reduce){.bar i{animation:none;width:100%}}
 """
 
@@ -224,18 +318,28 @@ HEADER_KINDS = [("Ninguna", "ban"), ("Texto", "type"), ("Imagen", "image"), ("Vi
 
 def purpose(active="Marketing", locked=False):
     opts = [
-        ("Marketing", "zap", "US$ 0,02", "Promociones, lanzamientos y ofertas. Revisión más estricta."),
-        ("Utilidad", "badge-check", "US$ 0,0008", "Seguimiento de algo que el cliente inició: cotización, pedido, cita."),
-        ("Autenticación", "circle-x", "US$ 0,0008", "Solo códigos de verificación. No abre conversaciones."),
+        ("Marketing", "megaphone", "Promociones y lanzamientos", "Ya llegó la colección nueva: 20 % hasta el domingo.", "0,02", "Revisión estricta", "≈ 25 × utilidad"),
+        ("Utilidad", "package-check", "Algo que el cliente inició", "Tu pedido #4821 ya salió. Llega mañana entre 9 y 12.", "0,0008", "Revisión rápida", "suele aprobarse en minutos"),
     ]
-    out = []
-    for label, icon, cost, desc in opts:
-        dis = label == "Autenticación" or (locked and label != active)
-        out.append(
-            f'<button class="opt" role="radio" aria-checked="{str(label == active).lower()}" aria-disabled="{str(dis).lower()}">'
-            f'{ic(icon, size=16)}<b>{label}</b><span class="cost">{cost} / mensaje</span><span>{desc}</span></button>'
-        )
-    return f'<div class="purpose" role="radiogroup" aria-label="Para qué es">{"".join(out)}</div>'
+    cards = []
+    for label, icon, sub, example, price, review, review_sub in opts:
+        checked = label == active
+        dis = locked and not checked
+        cards.append(f"""
+<button class="pcard" role="radio" aria-checked="{str(checked).lower()}" aria-disabled="{str(dis).lower()}">
+  <span class="phead">
+    <span class="glyph">{ic(icon, size=18)}</span>
+    <span class="ptitle"><b>{label}</b><span>{sub}</span></span>
+    <span class="tick" aria-hidden="true">{ic('check', size=13) if checked else ''}</span>
+  </span>
+  <span class="pex"><small>Por ejemplo</small>{example}</span>
+  <span class="pfoot">
+    <span class="price"><b>US$ {price}</b><span>por mensaje</span></span>
+    <span class="review"><b>{review}</b> · {review_sub}</span>
+  </span>
+</button>""")
+    note = f'<p class="auth-note">{ic("key-round", size=14)}Las de autenticación —códigos de verificación— no se crean desde aquí.</p>'
+    return f'<div class="purpose" role="radiogroup" aria-label="Para qué es">{"".join(cards)}</div>{note}'
 
 
 BODY = 'Hola <span class="var">{{1}}</span>, ya llegó la colección de temporada a Savage. Tienes <span class="var">{{2}}</span> de descuento en tu próxima compra hasta el domingo.'
@@ -308,12 +412,31 @@ BUTTONS = f"""
 </div>"""
 
 
-def ficha(name="temporada_coleccion_v1", locked=False):
-    lock = f'<span class="locked">{ic("lock", size=12)}Fijo desde que la creaste</span>' if locked else ""
-    hint = "Meta no deja cambiarlo: para otro nombre, crea una plantilla nueva." if locked else "Minúsculas, números y guion bajo. Si borras una plantilla, Meta reserva su nombre 30 días."
+def name_group(human="Temporada colección", version="v2", locked=False, popover=False):
+    pop = ""
+    if popover:
+        pop = f"""<div class="vpop" role="listbox" aria-label="Versión">
+  <ul>
+    <li aria-disabled="true"><span class="v">v1</span><small>Aprobada · en uso</small>{badge('En uso', 'ok')}</li>
+    <li aria-selected="true"><span class="v">v2</span><small>Libre · la siguiente</small>{ic('check', size=14)}</li>
+    <li><span class="v">v3</span><small>Libre</small><span></span></li>
+  </ul>
+</div>"""
+    sel = (f'<span class="vsel">{version}{ic("lock", size=13)}</span>' if locked
+           else f'<span class="vsel" role="combobox" aria-expanded="{str(popover).lower()}">{version}{ic("chevron-down", size=14)}</span>')
+    return f"""<div class="namegroup {'locked' if locked else ''}">{K.input(human, 'Cómo la reconoces, p. ej. Temporada colección', 'readonly' if locked else '')}{sel}{pop}</div>"""
+
+
+def techname(tech):
+    return f'<p class="techname">En Meta: <code>{tech}</code><span>· lo formateamos por ti</span></p>'
+
+
+def ficha(human="Temporada colección", tech="temporada_coleccion_v2", version="v2", locked=False):
+    lock_hint = '<p class="hint">Meta no deja cambiar nombre ni versión: para otra, crea una nueva desde la lista.</p>' if locked else ""
+    tech_line = techname(tech) if human else '<p class="techname">Escribe un nombre: lo pasamos al formato de Meta y le ponemos versión.</p>'
     return f"""
 <div class="ficha">
-  <div class="field"><label>Nombre interno {lock}</label>{K.input(name, '', 'readonly mono' if locked else 'mono')}<p class="hint">{hint}</p></div>
+  <div class="field"><label>Nombre</label>{name_group(human, version, locked)}{tech_line}{lock_hint}</div>
   <div class="field"><label>Idioma</label>{K.select('Español (Colombia) · es_CO', 'readonly' if locked else '')}</div>
 </div>"""
 
@@ -352,7 +475,7 @@ def before(items):
     return f'<div class="before"><h3>Antes de enviar</h3>{"".join(rows)}</div>'
 
 
-def dock(title, n, tramos, detail, cta="Enviar a revisión de Meta", ready=False):
+def dock(title, n, tramos, detail, cta="Enviar a revisión de Meta", ready=False, category="Marketing", price="US$ 0,02"):
     tr = "".join(
         f'<li><button class="{st}" aria-label="{lbl}: {"listo" if st == "ok" else "por resolver"}"><i></i></button></li>'
         for lbl, st in tramos
@@ -365,9 +488,44 @@ def dock(title, n, tramos, detail, cta="Enviar a revisión de Meta", ready=False
     <ul class="tramos" aria-label="Qué falta">{tr}</ul>
     <span class="detail">{detail}</span>
   </div>
-  <span class="cost"><b>Marketing</b> · US$ 0,02 por mensaje entregado en Colombia</span>
+  <span class="sep" aria-hidden="true"></span>
+  <span class="price-line"><b>{category} · {price}</b>por mensaje en Colombia</span>
   <div class="acts">{btn('Cancelar', '', 'glass sm')}<button class="btn contrast sm" {dis}>{cta}</button></div>
 </footer>"""
+
+
+LIBRARY = [
+    ("Recordatorio de pago", "Pagos", 'Hola <mark>Ana</mark>, te recordamos que tu pago de <mark>$ 180.000</mark> vence el <mark>15 de octubre</mark>.'),
+    ("Pedido en camino", "Pedidos y envíos", 'Tu pedido <mark>#4821</mark> ya va en camino. Llega el <mark>jueves 9</mark>.'),
+    ("Pago recibido", "Pagos", 'Recibimos tu pago de <mark>$ 180.000</mark>. Gracias por tu compra.'),
+    ("¿Cómo te fue?", "Opiniones", '¿Cómo te fue con <mark>tu pedido #4821</mark>? Responde del 1 al 5.'),
+    ("Cambio en tu cuenta", "Cuenta", 'Hola <mark>Ana</mark>, actualizamos el correo de tu cuenta a <mark>a***@correo.co</mark>.'),
+    ("Pedido listo para recoger", "Pedidos y envíos", 'Tu pedido <mark>#4821</mark> está listo. Recógelo en <mark>Savage Centro</mark>.'),
+]
+
+
+def start_strip(pressed="En blanco"):
+    def card(src_cls, src_icon, src, title, body, blank=False):
+        p = str(title == pressed).lower()
+        if blank:
+            return f'<button class="scard blank" aria-pressed="{p}">{ic("plus", size=18)}<b>{title}</b><span class="sbody">{body}</span></button>'
+        return f'<button class="scard" aria-pressed="{p}"><span class="src {src_cls}">{ic(src_icon, size=12)}{src}</span><b>{title}</b><span class="sbody">{body}</span></button>'
+    cards = (
+        card("", "", "", "En blanco", "Escribe la tuya desde cero", blank=True)
+        + card("axi", "sparkles", "axi sugiere", "Retomar cotización", "«Hola {{1}}, te escribo por la cotización de {{2}}. ¿Seguimos?»")
+        + card("axi", "sparkles", "axi sugiere", "Recordar cita", "«Hola {{1}}, te recordamos tu cita del {{2}}. ¿Nos confirmas?»")
+        + card("", "library-big", "Biblioteca de Meta", "Recordatorio de pago", "Aprobación inmediata si no cambias el texto fijo")
+        + card("", "library-big", "Biblioteca de Meta", "Pedido en camino", "Aprobación inmediata si no cambias el texto fijo")
+    )
+    return f"""
+<section class="startbox" aria-label="Empieza desde">
+  <div class="start-head"><h2>Empieza desde</h2><a href="#biblioteca">{ic('library-big', size=14)}Explorar la biblioteca de Meta{ic('arrow-right', size=14)}</a></div>
+  <div class="start-row">{cards}</div>
+</section>"""
+
+
+def started(origin="en blanco"):
+    return f'<p class="started">{ic("corner-down-right", size=14)}Empezaste <b>{origin}</b><button>Cambiar</button></p>'
 
 
 def page(title, lead, left, right, dock_html, kicker="Plantillas de Meta"):
@@ -389,9 +547,10 @@ PENDING = [("Para qué", "ok"), ("Mensaje", "warn"), ("Ficha", "ok")]
 # ----------------------------------------------------------------------------- vistas
 def view_imagen():
     left = (
-        step(1, "¿Para qué es?", "Marketing · US$ 0,02 por mensaje", purpose())
+        started("en blanco")
+        + step(1, "¿Para qué es?", "Marketing · US$ 0,02 por mensaje", purpose())
         + step(2, "El mensaje", "Hay algo que corregir", header_block() + '<div class="rule"></div>' + body_block(ex2_err=True) + '<div class="rule"></div>' + FOOTER + '<div class="rule"></div>' + BUTTONS, mark="err", sum_err=True)
-        + step(3, "Ficha", "temporada_coleccion_v1 · es_CO", ficha())
+        + step(3, "Ficha", "temporada_coleccion_v2 · es_CO", ficha())
     )
     right = (
         '<h3>Así se verá <small>con tus ejemplos</small></h3>'
@@ -399,7 +558,7 @@ def view_imagen():
         + before([
             ("ok", "Imagen lista: JPG de 412 KB. Meta la usa como ejemplo al revisar.", ""),
             ("pend", "Falta el ejemplo de <span class='mono'>{{2}}</span>.", "Escribirlo"),
-            ("ok", "Nombre libre e idioma elegidos.", ""),
+            ("ok", "Nombre libre: <span class='mono'>temporada_coleccion_v2</span> (la v1 sigue en uso).", ""),
         ])
     )
     return page(
@@ -411,19 +570,11 @@ def view_imagen():
 
 
 def view_vacia():
-    starts = "".join(
-        f'<button class="start"><b>{ic("sparkles", size=14)}{t}</b><span>«{b}»</span></button>'
-        for t, b in [
-            ("Retomar cotización", "Hola {{1}}, te escribo por la cotización de {{2}}. ¿Seguimos?"),
-            ("Recordar cita", "Hola {{1}}, te recordamos tu cita del {{2}}. ¿Nos confirmas?"),
-            ("Pedido en camino", "Hola {{1}}, tu pedido {{2}} ya salió. Te avisamos al llegar."),
-        ]
-    )
     left = (
-        f'<div class="blk"><div class="blk-h">Empieza con una sugerida <span class="muted" style="font-weight:400">· o escribe la tuya abajo</span></div><div class="starts">{starts}</div></div>'
+        start_strip()
         + step(1, "¿Para qué es?", "Utilidad · US$ 0,0008 por mensaje", purpose("Utilidad"), mark="1")
         + step(2, "El mensaje", "Sin escribir", header_block("Ninguna") + '<div class="rule"></div>' + '<div class="blk"><div class="blk-h">Texto<span class="count">0 variables · 0 / 1024</span></div><div class="ta muted">Hola {{1}}, te escribo por {{2}}. ¿Seguimos?</div>' + f'<button class="chip">{ic("plus", size=14)}<span class="mono">{{{{1}}}}</span> insertar variable</button></div>' + f'<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="adder">{ic("message-square", size=14)}Añadir pie</button><button class="adder">{ic("corner-up-left", size=14)}Añadir botones</button></div>', mark="2")
-        + step(3, "Ficha", "Sin nombre", ficha(""), mark="3")
+        + step(3, "Ficha", "Sin nombre", ficha("", version="v1"), mark="3")
     )
     right = (
         '<h3>Así se verá</h3>'
@@ -434,7 +585,7 @@ def view_vacia():
         "Nueva plantilla",
         "Un mensaje fijo con huecos que se rellenan con datos del contacto. Meta lo revisa antes de que puedas usarlo; suele decidir en minutos.",
         left, right,
-        dock("Por empezar", "1/3", [("Para qué", "ok"), ("Mensaje", "pend"), ("Ficha", "pend")], "Falta el texto y el nombre interno"),
+        dock("Por empezar", "1/3", [("Para qué", "ok"), ("Mensaje", "pend"), ("Ficha", "pend")], "Falta el texto y el nombre", category="Utilidad", price="US$ 0,0008"),
     )
 
 
@@ -467,7 +618,7 @@ def view_rechazada():
         reason
         + step(1, "¿Para qué es?", "Marketing · US$ 0,02 por mensaje", purpose())
         + step(2, "El mensaje", "Imagen · 2 variables · pie · 2 botones", header_block() + '<div class="rule"></div>' + body_block("20 %") + '<div class="rule"></div>' + FOOTER + '<div class="rule"></div>' + BUTTONS)
-        + step(3, "Ficha", "temporada_coleccion_v1 · es_CO · fijos", ficha(locked=True), closed=True)
+        + step(3, "Ficha", "temporada_coleccion_v1 · es_CO · fijos", ficha(tech="temporada_coleccion_v1", version="v1", locked=True), closed=True)
     )
     right = '<h3>Así se verá <small>con tus ejemplos</small></h3>' + bubble() + before([("ok", "Imagen nueva lista para la revisión.", ""), ("ok", "Todo lo demás, en orden.", "")])
     return page(
@@ -483,7 +634,7 @@ def view_aprobada():
     left = (
         step(1, "¿Para qué es?", "Marketing · fija en una aprobada", purpose(locked=True) + '<p class="hint">Una aprobada no cambia de categoría: para otra, crea una plantilla nueva.</p>', closed=True)
         + step(2, "El mensaje", "Imagen · 2 variables · pie · 2 botones", header_block() + '<div class="rule"></div>' + body_block("20 %") + '<div class="rule"></div>' + FOOTER + '<div class="rule"></div>' + BUTTONS)
-        + step(3, "Ficha", "temporada_coleccion_v1 · es_CO · fijos", ficha(locked=True), closed=True)
+        + step(3, "Ficha", "temporada_coleccion_v1 · es_CO · fijos", ficha(tech="temporada_coleccion_v1", version="v1", locked=True), closed=True)
     )
     right = (
         '<h3>Así se verá <small>con tus ejemplos</small></h3>'
@@ -506,17 +657,73 @@ def view_movil():
   <a class="back" href="#">{ic('arrow-left', size=15)}Plantillas de Meta</a>
   <header><p class="kicker">Plantillas de Meta</p><h1 class="title">Nueva plantilla</h1></header>
   <details class="fold" open><summary>Así se verá {ic('chevron-down', size=16)}</summary>{bubble(ex2="")}</details>
+  {started("en blanco")}
   {step(1, "¿Para qué es?", "Marketing", purpose(), closed=True)}
   {step(2, "El mensaje", "Hay algo que corregir", header_block() + '<div class="rule"></div>' + body_block(ex2_err=True), mark="err", sum_err=True)}
-  {step(3, "Ficha", "temporada_coleccion_v1", ficha(), closed=True)}
+  {step(3, "Ficha", "temporada_coleccion_v2", ficha(), closed=True)}
   {dock("Casi lista", "2/3", PENDING, "Falta el ejemplo de {{2}}")}
 </div>"""
     return f'<div class="shell" style="padding:20px 16px 48px"><div class="phone">{inner}</div></div>'
 
 
+def view_nombre():
+    def card(h, inner):
+        return f'<div class="state-card"><h4>{h}</h4>{inner}</div>'
+    typed = (f'<div class="field"><label>Nombre</label>{name_group("¡Promo Día de la Madre 2026!", "v1")}'
+             + techname("promo_dia_de_la_madre_2026_v1") + "</div>")
+    picking = (f'<div class="field" style="padding-bottom:150px"><label>Nombre</label>{name_group("Temporada colección", "v2", popover=True)}'
+               + techname("temporada_coleccion_v2") + "</div>")
+    reserved = (f'<div class="field"><label>Nombre</label>{name_group("Bienvenida", "v3")}'
+                + techname("bienvenida_v3")
+                + '<p class="hint">La v2 se borró el 28 sep: Meta reserva su nombre hasta el 28 oct. Te proponemos la v3.</p></div>')
+    locked = (f'<div class="field"><label>Nombre</label>{name_group("Temporada colección", "v1", locked=True)}'
+              + techname("temporada_coleccion_v1")
+              + '<p class="hint">Meta no deja cambiar nombre ni versión: para otra, crea una nueva desde la lista.</p></div>')
+    states = (
+        card("Se escribe como se dice; Meta recibe su formato", typed)
+        + card("La versión: la siguiente libre, ya elegida", picking)
+        + card("Una versión borrada queda reservada 30 días", reserved)
+        + card("Editando: nombre y versión fijos", locked)
+    )
+    return (f'<div class="shell"><div class="page"><header><p class="kicker">Ficha</p><h1 class="title">Nombre y versión</h1>'
+            '<p class="title-lead">Un campo para el nombre como lo dices y un selector para la versión. Las tildes, los signos, los espacios y las mayúsculas los resolvemos al escribir.</p></header>'
+            f'<div class="states">{states}</div></div></div>')
+
+
+def view_biblioteca():
+    chips = "".join(
+        f'<button aria-pressed="{str(t == "Todas").lower()}">{t}</button>'
+        for t in ["Todas", "Pagos", "Pedidos y envíos", "Cuenta", "Opiniones"]
+    )
+    cards = []
+    for i, (title, use, body) in enumerate(LIBRARY):
+        sel = i == 0
+        action = (btn("Usar esta plantilla", "", "sm") if sel else "")
+        cards.append(f"""<div class="lcard" aria-selected="{str(sel).lower()}">
+  <div class="top"><b>{title}</b><span class="use">{use}</span></div>
+  <p class="mini">{body}</p>
+  <div class="row"><span class="instant">{ic('zap', size=12)}Aprobación inmediata</span>{action}</div>
+</div>""")
+    sheet = f"""
+<aside class="sheet" aria-label="Biblioteca de Meta">
+  <div class="sheet-head">
+    <div><p class="kicker">Empieza desde</p><h2>Biblioteca de Meta</h2>
+    <p>Plantillas de utilidad que Meta ya redactó. Si no cambias su texto fijo, se aprueban al instante; los huecos los rellenas tú.</p></div>
+    <button class="btn ghost icon sm" aria-label="Cerrar">{ic('x', size=16)}</button>
+  </div>
+  {K.input('', 'Busca: pago, pedido, cita…', 'adorn', icon='search')}
+  <div class="chips" role="group" aria-label="Caso de uso">{chips}</div>
+  <div class="lgrid">{"".join(cards)}</div>
+  <p class="auth-note">{ic('info', size=14)}La biblioteca no trae plantillas de marketing: para una promoción con imagen, empieza en blanco.</p>
+</aside>"""
+    return f'<div class="stack">{view_vacia()}<div class="scrim"></div>{sheet}</div>'
+
+
 VIEWS = [
     ("imagen", "Crear con imagen", view_imagen(), "La capacidad nueva: cabecera de imagen subida, con su frase «Va en cada envío». Un pendiente para enseñar «Antes de enviar» y los tramos."),
-    ("vacia", "Crear vacía", view_vacia(), "Punto de partida: las tres sugeridas de hoy, sin cabecera. Utilidad por defecto, como ahora."),
+    ("vacia", "Crear vacía", view_vacia(), "«Empieza desde»: en blanco, lo que axi sugiere o la Biblioteca de Meta, en una sola fila. Al elegir, se pliega a una línea."),
+    ("biblioteca", "Biblioteca de Meta", view_biblioteca(), "La biblioteca completa en una hoja lateral: buscador, casos de uso y una vista de cada plantilla. Elegir una llena el formulario como Utilidad."),
+    ("nombre", "Nombre y versión", view_nombre(), "Un campo para el nombre como lo dices, el formato de Meta resuelto al escribir, y un selector de versión que ya propone la siguiente libre."),
     ("estados", "Estados del subidor", view_estados(), "Vacío, subiendo, lista, rechazos del navegador y de Meta; video y documento en la burbuja."),
     ("rechazada", "Corregir rechazada", view_rechazada(), "El motivo de Meta arriba, la ficha plegada y fija; reenviar sin límite."),
     ("aprobada", "Editar aprobada", view_aprobada(), "Categoría y ficha fijas; «Antes» al lado de la burbuja y el aviso de que sigue saliendo la aprobada."),

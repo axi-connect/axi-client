@@ -404,6 +404,100 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
 .start b{font-size:13.5px;font-weight:600;display:flex;gap:6px;align-items:center}
 .start b .ic{color:var(--axi-violet)}
 .start span{font-size:12px;color:var(--muted-foreground);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* ── v2 (feedback del dueño 2026-10-03) ── */
+/* 1. La isla de acción: compacta y centrada, no del ancho de la página */
+.dock{align-self:center;width:fit-content;max-width:100%;gap:12px 22px;padding:10px 10px 10px 20px}
+.dock .state{flex:0 0 auto;gap:7px}
+.tramos button{width:40px}
+.dock .sep{width:1px;align-self:stretch;background:var(--border)}
+.dock .price-line{display:flex;flex-direction:column;gap:1px;font-size:12px;color:var(--muted-foreground);white-space:nowrap}
+.dock .price-line b{color:var(--foreground);font-weight:600;font-size:13px}
+.dock .acts{margin-left:0}
+@container (max-width: 640px){.dock{width:100%;padding:14px 16px}.dock .sep{display:none}.dock .acts{width:100%;justify-content:flex-end}}
+
+/* 2. Nombre + versión */
+.namegroup{position:relative;display:flex;align-items:stretch;border:1px solid var(--input);border-radius:var(--radius-md);background:var(--background)}
+.namegroup .input{border:0;border-radius:var(--radius-md) 0 0 var(--radius-md);min-height:40px}
+.namegroup.locked{background:var(--secondary)}
+.vsel{display:flex;align-items:center;gap:6px;padding:0 10px 0 12px;border-left:1px solid var(--input);font-family:var(--font-mono);font-size:13px;white-space:nowrap;min-height:40px}
+.vsel .ic{color:var(--muted-foreground)}
+.techname{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;color:var(--muted-foreground)}
+.techname code{font-family:var(--font-mono);font-size:12px;color:var(--foreground);background:var(--secondary);border-radius:6px;padding:2px 6px}
+.vpop{position:absolute;right:0;top:calc(100% + 6px);z-index:5;width:min(270px,100%);border-radius:16px;border:1px solid var(--border);background:color-mix(in srgb, var(--background) 86%, transparent);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:var(--shadow-overlay);padding:6px}
+.vpop li{list-style:none;display:grid;grid-template-columns:30px 1fr auto;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;font-size:13px}
+.vpop li .v{font-family:var(--font-mono)}
+.vpop li small{color:var(--muted-foreground);font-size:11.5px}
+.vpop li[aria-disabled="true"]{opacity:.55}
+.vpop li[aria-selected="true"]{background:var(--secondary)}
+.vpop ul{margin:0;padding:0}
+
+/* 3. Empieza desde */
+.startbox{display:flex;flex-direction:column;gap:10px}
+.start-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px 12px}
+.start-head h2{font-family:var(--font-body);font-size:15px;font-weight:600;letter-spacing:0}
+.start-head a{display:inline-flex;gap:6px;align-items:center;font-size:12.5px;font-weight:500;text-decoration:none;min-height:24px}
+.start-row{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(196px,1fr);gap:10px;overflow-x:auto;padding:2px 2px 6px;scrollbar-width:thin}
+.scard{border:1px solid var(--border);border-radius:18px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;text-align:left;min-width:0;background:var(--background)}
+.scard:hover{border-color:color-mix(in srgb, var(--foreground) 30%, var(--background))}
+.scard .src{display:flex;gap:5px;align-items:center;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;font-weight:600;color:var(--muted-foreground)}
+.scard .src.axi .ic{color:var(--axi-violet)}
+.scard b{font-size:13.5px;font-weight:600}
+.scard .sbody{font-size:12px;color:var(--muted-foreground);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.scard.blank{border-style:dashed;align-items:flex-start;justify-content:center}
+.scard.blank .ic{color:var(--foreground)}
+.scard[aria-pressed="true"]{border-color:var(--foreground);box-shadow:0 0 0 1px var(--foreground)}
+.started{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:12.5px;color:var(--muted-foreground)}
+.started b{color:var(--foreground);font-weight:500}
+.started button{font-weight:500;color:var(--foreground);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--border);min-height:24px}
+
+/* biblioteca: hoja lateral (flota → cristal, DESIGN §5.1) */
+.stack{position:relative}
+.stack .scrim{position:absolute;inset:0;background:var(--scrim);z-index:20}
+.sheet{position:absolute;top:0;right:0;bottom:0;z-index:21;width:min(640px,100%);display:flex;flex-direction:column;gap:14px;padding:22px 24px;overflow:auto;border-left:1px solid var(--border);background:color-mix(in srgb, var(--background) 90%, transparent);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);box-shadow:var(--shadow-overlay)}
+.sheet-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.sheet-head h2{font-size:22px}
+.sheet-head p{color:var(--muted-foreground);font-size:13px;margin-top:4px;max-width:52ch;text-wrap:pretty}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{height:30px;padding:0 12px;border-radius:999px;border:1px solid var(--border);font-size:12.5px;font-weight:500;color:var(--muted-foreground)}
+.chips button[aria-pressed="true"]{background:var(--foreground);color:var(--background);border-color:var(--foreground)}
+.lgrid{display:grid;gap:10px;grid-template-columns:1fr}
+@container (min-width: 520px){.lgrid{grid-template-columns:1fr 1fr}}
+.lcard{border:1px solid var(--border);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:8px;background:var(--background)}
+.lcard[aria-selected="true"]{border-color:var(--foreground);box-shadow:0 0 0 1px var(--foreground)}
+.lcard .top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.lcard b{font-size:13.5px;font-weight:600}
+.lcard .use{font-size:11.5px;color:var(--muted-foreground)}
+.lcard .mini{font-size:12.5px;line-height:1.5;padding:10px 12px;border-radius:12px;background:var(--secondary)}
+.lcard .mini mark{background:color-mix(in srgb, var(--axi-violet) 14%, transparent);color:inherit;border-radius:4px;padding:0 2px}
+.lcard .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.instant{display:inline-flex;gap:5px;align-items:center;font-size:11.5px;color:var(--muted-foreground)}
+.instant .ic{color:var(--axi-success)}
+
+/* 4. ¿Para qué es? — dos decisiones, no tres casillas */
+.purpose{display:grid;gap:12px;grid-template-columns:1fr}
+@container (min-width: 620px){.purpose{grid-template-columns:1fr 1fr}}
+.pcard{position:relative;display:flex;flex-direction:column;gap:14px;padding:18px 18px 16px;border-radius:20px;border:1px solid var(--border);background:var(--background);text-align:left;min-width:0;transition:border-color .15s var(--ease), box-shadow .15s var(--ease)}
+.pcard:hover{border-color:color-mix(in srgb, var(--foreground) 30%, var(--background))}
+.pcard[aria-checked="true"]{border-color:var(--foreground);box-shadow:0 0 0 1px var(--foreground), var(--shadow-float)}
+.pcard[aria-disabled="true"]{opacity:.5}
+.pcard .phead{display:flex;align-items:center;gap:12px}
+.pcard .glyph{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:var(--secondary);color:var(--foreground);flex:none}
+.pcard[aria-checked="true"] .glyph{background:var(--foreground);color:var(--background)}
+.pcard .ptitle{display:flex;flex-direction:column;min-width:0}
+.pcard .ptitle b{font-size:15.5px;font-weight:600;letter-spacing:-.01em}
+.pcard .ptitle span{font-size:12.5px;color:var(--muted-foreground)}
+.pcard .tick{margin-left:auto;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border);display:grid;place-items:center;flex:none}
+.pcard[aria-checked="true"] .tick{background:var(--foreground);border-color:var(--foreground);color:var(--background)}
+.pcard .pex{font-size:13px;line-height:1.45;color:var(--foreground);padding:10px 12px;border-radius:12px;background:var(--secondary)}
+.pcard .pex small{display:block;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted-foreground);font-weight:600;margin-bottom:3px}
+.pcard .pfoot{display:flex;flex-direction:column;gap:4px;padding-top:12px;border-top:1px solid var(--border-soft)}
+.pcard .price{display:flex;align-items:baseline;gap:6px;white-space:nowrap}
+.pcard .price b{font-family:var(--font-heading);font-size:24px;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.pcard .price span{font-size:12px;color:var(--muted-foreground)}
+.pcard .review{font-size:12px;color:var(--muted-foreground)}
+.pcard .review b{color:var(--foreground);font-weight:500}
+.auth-note{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--muted-foreground)}
 @media (prefers-reduced-motion: reduce){.bar i{animation:none;width:100%}}
 
 </style>
@@ -412,7 +506,7 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
 <div class="mk-bar">
   <span class="mk-tag">F0 · hsm-media</span>
   <span>Crear y editar plantillas: el mensaje a la izquierda, la burbuja a la derecha</span>
-  <div class="mk-views" role="group" aria-label="Vistas del mockup"><button class="mk-view" data-view="imagen" aria-pressed="false">Crear con imagen</button><button class="mk-view" data-view="vacia" aria-pressed="false">Crear vacía</button><button class="mk-view" data-view="estados" aria-pressed="false">Estados del subidor</button><button class="mk-view" data-view="rechazada" aria-pressed="false">Corregir rechazada</button><button class="mk-view" data-view="aprobada" aria-pressed="false">Editar aprobada</button><button class="mk-view" data-view="movil" aria-pressed="false">Móvil 390</button><button class="mk-theme" id="theme">Tema</button></div>
+  <div class="mk-views" role="group" aria-label="Vistas del mockup"><button class="mk-view" data-view="imagen" aria-pressed="false">Crear con imagen</button><button class="mk-view" data-view="vacia" aria-pressed="false">Crear vacía</button><button class="mk-view" data-view="biblioteca" aria-pressed="false">Biblioteca de Meta</button><button class="mk-view" data-view="nombre" aria-pressed="false">Nombre y versión</button><button class="mk-view" data-view="estados" aria-pressed="false">Estados del subidor</button><button class="mk-view" data-view="rechazada" aria-pressed="false">Corregir rechazada</button><button class="mk-view" data-view="aprobada" aria-pressed="false">Editar aprobada</button><button class="mk-view" data-view="movil" aria-pressed="false">Móvil 390</button><button class="mk-theme" id="theme">Tema</button></div>
   <span class="mk-note" id="mk-note"></span>
 </div>
 <section class="view" data-view="imagen" data-note="La capacidad nueva: cabecera de imagen subida, con su frase «Va en cada envío». Un pendiente para enseñar «Antes de enviar» y los tramos." hidden>
@@ -420,7 +514,7 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
   <a class="back" href="#"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>Plantillas de Meta</a>
   <header><p class="kicker">Plantillas de Meta</p><h1 class="title">Nueva plantilla</h1><p class="title-lead">Un mensaje fijo con huecos que se rellenan con datos del contacto. Meta lo revisa antes de que puedas usarlo; suele decidir en minutos.</p></header>
   <div class="layout">
-    <div class="col">
+    <div class="col"><p class="started"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 10 5 5-5 5"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/></svg>Empezaste <b>en blanco</b><button>Cambiar</button></p>
 <section class="step " aria-label="¿Para qué es?">
   <button class="step-head" aria-expanded="true">
     <span class="mark done" aria-hidden="true"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
@@ -428,7 +522,31 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
     <span class="step-sum ">Marketing · US$ 0,02 por mensaje</span>
     <svg class="ic muted" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
   </button>
-  <div class="step-body"><div class="purpose" role="radiogroup" aria-label="Para qué es"><button class="opt" role="radio" aria-checked="true" aria-disabled="false"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg><b>Marketing</b><span class="cost">US$ 0,02 / mensaje</span><span>Promociones, lanzamientos y ofertas. Revisión más estricta.</span></button><button class="opt" role="radio" aria-checked="false" aria-disabled="false"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4"/></svg><b>Utilidad</b><span class="cost">US$ 0,0008 / mensaje</span><span>Seguimiento de algo que el cliente inició: cotización, pedido, cita.</span></button><button class="opt" role="radio" aria-checked="false" aria-disabled="true"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg><b>Autenticación</b><span class="cost">US$ 0,0008 / mensaje</span><span>Solo códigos de verificación. No abre conversaciones.</span></button></div></div>
+  <div class="step-body"><div class="purpose" role="radiogroup" aria-label="Para qué es">
+<button class="pcard" role="radio" aria-checked="true" aria-disabled="false">
+  <span class="phead">
+    <span class="glyph"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"/><path d="M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14"/><path d="M8 6v8"/></svg></span>
+    <span class="ptitle"><b>Marketing</b><span>Promociones y lanzamientos</span></span>
+    <span class="tick" aria-hidden="true"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
+  </span>
+  <span class="pex"><small>Por ejemplo</small>Ya llegó la colección nueva: 20 % hasta el domingo.</span>
+  <span class="pfoot">
+    <span class="price"><b>US$ 0,02</b><span>por mensaje</span></span>
+    <span class="review"><b>Revisión estricta</b> · ≈ 25 × utilidad</span>
+  </span>
+</button>
+<button class="pcard" role="radio" aria-checked="false" aria-disabled="false">
+  <span class="phead">
+    <span class="glyph"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 16 2 2 4-4"/><path d="M21 10V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l2-1.14"/><path d="m7.5 4.27 9 5.15"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" x2="12" y1="22" y2="12"/></svg></span>
+    <span class="ptitle"><b>Utilidad</b><span>Algo que el cliente inició</span></span>
+    <span class="tick" aria-hidden="true"></span>
+  </span>
+  <span class="pex"><small>Por ejemplo</small>Tu pedido #4821 ya salió. Llega mañana entre 9 y 12.</span>
+  <span class="pfoot">
+    <span class="price"><b>US$ 0,0008</b><span>por mensaje</span></span>
+    <span class="review"><b>Revisión rápida</b> · suele aprobarse en minutos</span>
+  </span>
+</button></div><p class="auth-note"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/></svg>Las de autenticación —códigos de verificación— no se crean desde aquí.</p></div>
 </section>
 <section class="step " aria-label="El mensaje">
   <button class="step-head" aria-expanded="true">
@@ -474,12 +592,12 @@ campañas, seguimientos, cobros y automatizaciones la mandan solas, sin que la e
   <button class="step-head" aria-expanded="true">
     <span class="mark done" aria-hidden="true"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
     <span class="step-title">Ficha</span>
-    <span class="step-sum ">temporada_coleccion_v1 · es_CO</span>
+    <span class="step-sum ">temporada_coleccion_v2 · es_CO</span>
     <svg class="ic muted" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
   </button>
   <div class="step-body">
 <div class="ficha">
-  <div class="field"><label>Nombre interno </label><div class="input  mono" id="" role="textbox" aria-readonly="true"><span>temporada_coleccion_v1</span></div><p class="hint">Minúsculas, números y guion bajo. Si borras una plantilla, Meta reserva su nombre 30 días.</p></div>
+  <div class="field"><label>Nombre</label><div class="namegroup "><div class="input  " id="" role="textbox" aria-readonly="true"><span>Temporada colección</span></div><span class="vsel" role="combobox" aria-expanded="false">v2<svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span></div><p class="techname">En Meta: <code>temporada_coleccion_v2</code><span>· lo formateamos por ti</span></p></div>
   <div class="field"><label>Idioma</label><div class="select " id="" role="combobox" aria-expanded="false"><span class="val">Español (Colombia) · es_CO</span><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div></div>
 </div></div>
 </section></div>
@@ -493,7 +611,7 @@ campañas, seguimientos, cobros y automatizaciones la mandan solas, sin que la e
     <span class="wa-link"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>Ver la colección</span>
     <span class="wa-link"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>Copiar código</span>
   </div>
-</div><div class="before"><h3>Antes de enviar</h3><div class="chk ok"><svg class="ic " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><span>Imagen lista: JPG de 412 KB. Meta la usa como ejemplo al revisar.</span></div><div class="chk pend"><svg class="ic " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg><span>Falta el ejemplo de <span class='mono'>{{2}}</span>.</span><button class="act">Escribirlo</button></div><div class="chk ok"><svg class="ic " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><span>Nombre libre e idioma elegidos.</span></div></div></aside>
+</div><div class="before"><h3>Antes de enviar</h3><div class="chk ok"><svg class="ic " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><span>Imagen lista: JPG de 412 KB. Meta la usa como ejemplo al revisar.</span></div><div class="chk pend"><svg class="ic " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg><span>Falta el ejemplo de <span class='mono'>{{2}}</span>.</span><button class="act">Escribirlo</button></div><div class="chk ok"><svg class="ic " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><span>Nombre libre: <span class='mono'>temporada_coleccion_v2</span> (la v1 sigue en uso).</span></div></div></aside>
   </div>
   
 <footer class="dock ink">
@@ -502,15 +620,20 @@ campañas, seguimientos, cobros y automatizaciones la mandan solas, sin que la e
     <ul class="tramos" aria-label="Qué falta"><li><button class="ok" aria-label="Para qué: listo"><i></i></button></li><li><button class="warn" aria-label="Mensaje: por resolver"><i></i></button></li><li><button class="ok" aria-label="Ficha: listo"><i></i></button></li></ul>
     <span class="detail">Falta el ejemplo de {{2}}</span>
   </div>
-  <span class="cost"><b>Marketing</b> · US$ 0,02 por mensaje entregado en Colombia</span>
+  <span class="sep" aria-hidden="true"></span>
+  <span class="price-line"><b>Marketing · US$ 0,02</b>por mensaje en Colombia</span>
   <div class="acts"><button class="btn glass sm" >Cancelar</button><button class="btn contrast sm" aria-disabled="true" style="opacity:.6">Enviar a revisión de Meta</button></div>
 </footer>
-</div></div></section><section class="view" data-view="vacia" data-note="Punto de partida: las tres sugeridas de hoy, sin cabecera. Utilidad por defecto, como ahora." hidden>
+</div></div></section><section class="view" data-view="vacia" data-note="«Empieza desde»: en blanco, lo que axi sugiere o la Biblioteca de Meta, en una sola fila. Al elegir, se pliega a una línea." hidden>
 <div class="shell"><div class="page">
   <a class="back" href="#"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>Plantillas de Meta</a>
   <header><p class="kicker">Plantillas de Meta</p><h1 class="title">Nueva plantilla</h1><p class="title-lead">Un mensaje fijo con huecos que se rellenan con datos del contacto. Meta lo revisa antes de que puedas usarlo; suele decidir en minutos.</p></header>
   <div class="layout">
-    <div class="col"><div class="blk"><div class="blk-h">Empieza con una sugerida <span class="muted" style="font-weight:400">· o escribe la tuya abajo</span></div><div class="starts"><button class="start"><b><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg>Retomar cotización</b><span>«Hola {{1}}, te escribo por la cotización de {{2}}. ¿Seguimos?»</span></button><button class="start"><b><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg>Recordar cita</b><span>«Hola {{1}}, te recordamos tu cita del {{2}}. ¿Nos confirmas?»</span></button><button class="start"><b><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg>Pedido en camino</b><span>«Hola {{1}}, tu pedido {{2}} ya salió. Te avisamos al llegar.»</span></button></div></div>
+    <div class="col">
+<section class="startbox" aria-label="Empieza desde">
+  <div class="start-head"><h2>Empieza desde</h2><a href="#biblioteca"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="8" height="18" x="3" y="3" rx="1"/><path d="M7 3v18"/><path d="M20.4 18.9c.2.5-.1 1.1-.6 1.3l-1.9.7c-.5.2-1.1-.1-1.3-.6L11.1 5.1c-.2-.5.1-1.1.6-1.3l1.9-.7c.5-.2 1.1.1 1.3.6Z"/></svg>Explorar la biblioteca de Meta<svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a></div>
+  <div class="start-row"><button class="scard blank" aria-pressed="true"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg><b>En blanco</b><span class="sbody">Escribe la tuya desde cero</span></button><button class="scard" aria-pressed="false"><span class="src axi"><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg>axi sugiere</span><b>Retomar cotización</b><span class="sbody">«Hola {{1}}, te escribo por la cotización de {{2}}. ¿Seguimos?»</span></button><button class="scard" aria-pressed="false"><span class="src axi"><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg>axi sugiere</span><b>Recordar cita</b><span class="sbody">«Hola {{1}}, te recordamos tu cita del {{2}}. ¿Nos confirmas?»</span></button><button class="scard" aria-pressed="false"><span class="src "><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="8" height="18" x="3" y="3" rx="1"/><path d="M7 3v18"/><path d="M20.4 18.9c.2.5-.1 1.1-.6 1.3l-1.9.7c-.5.2-1.1-.1-1.3-.6L11.1 5.1c-.2-.5.1-1.1.6-1.3l1.9-.7c.5-.2 1.1.1 1.3.6Z"/></svg>Biblioteca de Meta</span><b>Recordatorio de pago</b><span class="sbody">Aprobación inmediata si no cambias el texto fijo</span></button><button class="scard" aria-pressed="false"><span class="src "><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="8" height="18" x="3" y="3" rx="1"/><path d="M7 3v18"/><path d="M20.4 18.9c.2.5-.1 1.1-.6 1.3l-1.9.7c-.5.2-1.1-.1-1.3-.6L11.1 5.1c-.2-.5.1-1.1.6-1.3l1.9-.7c.5-.2 1.1.1 1.3.6Z"/></svg>Biblioteca de Meta</span><b>Pedido en camino</b><span class="sbody">Aprobación inmediata si no cambias el texto fijo</span></button></div>
+</section>
 <section class="step " aria-label="¿Para qué es?">
   <button class="step-head" aria-expanded="true">
     <span class="mark 1" aria-hidden="true">1</span>
@@ -518,7 +641,31 @@ campañas, seguimientos, cobros y automatizaciones la mandan solas, sin que la e
     <span class="step-sum ">Utilidad · US$ 0,0008 por mensaje</span>
     <svg class="ic muted" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
   </button>
-  <div class="step-body"><div class="purpose" role="radiogroup" aria-label="Para qué es"><button class="opt" role="radio" aria-checked="false" aria-disabled="false"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg><b>Marketing</b><span class="cost">US$ 0,02 / mensaje</span><span>Promociones, lanzamientos y ofertas. Revisión más estricta.</span></button><button class="opt" role="radio" aria-checked="true" aria-disabled="false"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4"/></svg><b>Utilidad</b><span class="cost">US$ 0,0008 / mensaje</span><span>Seguimiento de algo que el cliente inició: cotización, pedido, cita.</span></button><button class="opt" role="radio" aria-checked="false" aria-disabled="true"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg><b>Autenticación</b><span class="cost">US$ 0,0008 / mensaje</span><span>Solo códigos de verificación. No abre conversaciones.</span></button></div></div>
+  <div class="step-body"><div class="purpose" role="radiogroup" aria-label="Para qué es">
+<button class="pcard" role="radio" aria-checked="false" aria-disabled="false">
+  <span class="phead">
+    <span class="glyph"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"/><path d="M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14"/><path d="M8 6v8"/></svg></span>
+    <span class="ptitle"><b>Marketing</b><span>Promociones y lanzamientos</span></span>
+    <span class="tick" aria-hidden="true"></span>
+  </span>
+  <span class="pex"><small>Por ejemplo</small>Ya llegó la colección nueva: 20 % hasta el domingo.</span>
+  <span class="pfoot">
+    <span class="price"><b>US$ 0,02</b><span>por mensaje</span></span>
+    <span class="review"><b>Revisión estricta</b> · ≈ 25 × utilidad</span>
+  </span>
+</button>
+<button class="pcard" role="radio" aria-checked="true" aria-disabled="false">
+  <span class="phead">
+    <span class="glyph"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 16 2 2 4-4"/><path d="M21 10V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l2-1.14"/><path d="m7.5 4.27 9 5.15"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" x2="12" y1="22" y2="12"/></svg></span>
+    <span class="ptitle"><b>Utilidad</b><span>Algo que el cliente inició</span></span>
+    <span class="tick" aria-hidden="true"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
+  </span>
+  <span class="pex"><small>Por ejemplo</small>Tu pedido #4821 ya salió. Llega mañana entre 9 y 12.</span>
+  <span class="pfoot">
+    <span class="price"><b>US$ 0,0008</b><span>por mensaje</span></span>
+    <span class="review"><b>Revisión rápida</b> · suele aprobarse en minutos</span>
+  </span>
+</button></div><p class="auth-note"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/></svg>Las de autenticación —códigos de verificación— no se crean desde aquí.</p></div>
 </section>
 <section class="step " aria-label="El mensaje">
   <button class="step-head" aria-expanded="true">
@@ -543,7 +690,7 @@ campañas, seguimientos, cobros y automatizaciones la mandan solas, sin que la e
   </button>
   <div class="step-body">
 <div class="ficha">
-  <div class="field"><label>Nombre interno </label><div class="input ph mono" id="" role="textbox" aria-readonly="true"><span></span></div><p class="hint">Minúsculas, números y guion bajo. Si borras una plantilla, Meta reserva su nombre 30 días.</p></div>
+  <div class="field"><label>Nombre</label><div class="namegroup "><div class="input ph " id="" role="textbox" aria-readonly="true"><span>Cómo la reconoces, p. ej. Temporada colección</span></div><span class="vsel" role="combobox" aria-expanded="false">v1<svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span></div><p class="techname">Escribe un nombre: lo pasamos al formato de Meta y le ponemos versión.</p></div>
   <div class="field"><label>Idioma</label><div class="select " id="" role="combobox" aria-expanded="false"><span class="val">Español (Colombia) · es_CO</span><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div></div>
 </div></div>
 </section></div>
@@ -554,12 +701,137 @@ campañas, seguimientos, cobros y automatizaciones la mandan solas, sin que la e
   <div class="state">
     <span class="state-t">Por empezar<span class="n">1/3</span></span>
     <ul class="tramos" aria-label="Qué falta"><li><button class="ok" aria-label="Para qué: listo"><i></i></button></li><li><button class="pend" aria-label="Mensaje: por resolver"><i></i></button></li><li><button class="pend" aria-label="Ficha: por resolver"><i></i></button></li></ul>
-    <span class="detail">Falta el texto y el nombre interno</span>
+    <span class="detail">Falta el texto y el nombre</span>
   </div>
-  <span class="cost"><b>Marketing</b> · US$ 0,02 por mensaje entregado en Colombia</span>
+  <span class="sep" aria-hidden="true"></span>
+  <span class="price-line"><b>Utilidad · US$ 0,0008</b>por mensaje en Colombia</span>
   <div class="acts"><button class="btn glass sm" >Cancelar</button><button class="btn contrast sm" aria-disabled="true" style="opacity:.6">Enviar a revisión de Meta</button></div>
 </footer>
-</div></div></section><section class="view" data-view="estados" data-note="Vacío, subiendo, lista, rechazos del navegador y de Meta; video y documento en la burbuja." hidden><div class="shell"><div class="page"><header><p class="kicker">Subidor de la cabecera</p><h1 class="title">Estados del archivo</h1><p class="title-lead">Molde: el subidor de fotos del catálogo. Se valida en el navegador antes de subir, y el error dice qué pasó y qué hacer.</p></header><div class="states"><div class="state-card"><h4>Vacío</h4><button class="drop"><span class="dz-ic"><svg class="ic " width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10l-3.1-3.1a2 2 0 0 0-2.814.014L6 21"/><path d="m14 19.5 3-3 3 3"/><path d="M17 22v-5.5"/><circle cx="9" cy="9" r="2"/></svg></span><b>Arrastra una imagen o elige un archivo</b><span>JPG o PNG, hasta 5 MB</span></button></div><div class="state-card"><h4>Subiendo · barra sin porcentaje (fetch no lo da)</h4><div class="file"><img class="th" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 210'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%23d9b99b'/><stop offset='1' stop-color='%238a5a44'/></linearGradient><radialGradient id='s' cx='.7' cy='.35' r='.6'><stop offset='0' stop-color='%23fff' stop-opacity='.55'/><stop offset='1' stop-color='%23fff' stop-opacity='0'/></radialGradient></defs><rect width='400' height='210' fill='url(%23g)'/><rect width='400' height='210' fill='url(%23s)'/><rect x='150' y='34' width='96' height='150' rx='14' fill='%23f3ebe2' opacity='.92'/><path d='M170 34 q28 34 56 0' fill='none' stroke='%238a5a44' stroke-width='5' opacity='.55'/><rect x='262' y='70' width='70' height='114' rx='12' fill='%232d2a26' opacity='.85'/><circle cx='92' cy='150' r='34' fill='%23f3ebe2' opacity='.35'/></svg>" alt=""><div><b>coleccion-temporada.jpg</b><small>Subiendo a Meta para la revisión…</small><div class="bar" role="progressbar" aria-label="Subiendo"><i></i></div></div><div class="acts"><button class="btn ghost xs" >Cancelar</button></div></div></div><div class="state-card"><h4>Lista</h4><div class="file"><img class="th" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 210'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%23d9b99b'/><stop offset='1' stop-color='%238a5a44'/></linearGradient><radialGradient id='s' cx='.7' cy='.35' r='.6'><stop offset='0' stop-color='%23fff' stop-opacity='.55'/><stop offset='1' stop-color='%23fff' stop-opacity='0'/></radialGradient></defs><rect width='400' height='210' fill='url(%23g)'/><rect width='400' height='210' fill='url(%23s)'/><rect x='150' y='34' width='96' height='150' rx='14' fill='%23f3ebe2' opacity='.92'/><path d='M170 34 q28 34 56 0' fill='none' stroke='%238a5a44' stroke-width='5' opacity='.55'/><rect x='262' y='70' width='70' height='114' rx='12' fill='%232d2a26' opacity='.85'/><circle cx='92' cy='150' r='34' fill='%23f3ebe2' opacity='.35'/></svg>" alt=""><div><b>coleccion-temporada.jpg</b><small>JPG · 412 KB · lista</small></div><div class="acts"><button class="btn outline xs" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>Reemplazar</button><button class="btn ghost icon sm" aria-label="Quitar"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div></div><p class="sends"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m2 9 3-3 3 3"/><path d="M13 18H7a2 2 0 0 1-2-2V6"/><path d="m22 15-3 3-3-3"/><path d="M11 6h6a2 2 0 0 1 2 2v10"/></svg><span><b>Va en cada envío.</b> Queda guardada con la plantilla:
+</div></div></section><section class="view" data-view="biblioteca" data-note="La biblioteca completa en una hoja lateral: buscador, casos de uso y una vista de cada plantilla. Elegir una llena el formulario como Utilidad." hidden><div class="stack">
+<div class="shell"><div class="page">
+  <a class="back" href="#"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>Plantillas de Meta</a>
+  <header><p class="kicker">Plantillas de Meta</p><h1 class="title">Nueva plantilla</h1><p class="title-lead">Un mensaje fijo con huecos que se rellenan con datos del contacto. Meta lo revisa antes de que puedas usarlo; suele decidir en minutos.</p></header>
+  <div class="layout">
+    <div class="col">
+<section class="startbox" aria-label="Empieza desde">
+  <div class="start-head"><h2>Empieza desde</h2><a href="#biblioteca"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="8" height="18" x="3" y="3" rx="1"/><path d="M7 3v18"/><path d="M20.4 18.9c.2.5-.1 1.1-.6 1.3l-1.9.7c-.5.2-1.1-.1-1.3-.6L11.1 5.1c-.2-.5.1-1.1.6-1.3l1.9-.7c.5-.2 1.1.1 1.3.6Z"/></svg>Explorar la biblioteca de Meta<svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a></div>
+  <div class="start-row"><button class="scard blank" aria-pressed="true"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg><b>En blanco</b><span class="sbody">Escribe la tuya desde cero</span></button><button class="scard" aria-pressed="false"><span class="src axi"><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg>axi sugiere</span><b>Retomar cotización</b><span class="sbody">«Hola {{1}}, te escribo por la cotización de {{2}}. ¿Seguimos?»</span></button><button class="scard" aria-pressed="false"><span class="src axi"><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg>axi sugiere</span><b>Recordar cita</b><span class="sbody">«Hola {{1}}, te recordamos tu cita del {{2}}. ¿Nos confirmas?»</span></button><button class="scard" aria-pressed="false"><span class="src "><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="8" height="18" x="3" y="3" rx="1"/><path d="M7 3v18"/><path d="M20.4 18.9c.2.5-.1 1.1-.6 1.3l-1.9.7c-.5.2-1.1-.1-1.3-.6L11.1 5.1c-.2-.5.1-1.1.6-1.3l1.9-.7c.5-.2 1.1.1 1.3.6Z"/></svg>Biblioteca de Meta</span><b>Recordatorio de pago</b><span class="sbody">Aprobación inmediata si no cambias el texto fijo</span></button><button class="scard" aria-pressed="false"><span class="src "><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="8" height="18" x="3" y="3" rx="1"/><path d="M7 3v18"/><path d="M20.4 18.9c.2.5-.1 1.1-.6 1.3l-1.9.7c-.5.2-1.1-.1-1.3-.6L11.1 5.1c-.2-.5.1-1.1.6-1.3l1.9-.7c.5-.2 1.1.1 1.3.6Z"/></svg>Biblioteca de Meta</span><b>Pedido en camino</b><span class="sbody">Aprobación inmediata si no cambias el texto fijo</span></button></div>
+</section>
+<section class="step " aria-label="¿Para qué es?">
+  <button class="step-head" aria-expanded="true">
+    <span class="mark 1" aria-hidden="true">1</span>
+    <span class="step-title">¿Para qué es?</span>
+    <span class="step-sum ">Utilidad · US$ 0,0008 por mensaje</span>
+    <svg class="ic muted" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+  </button>
+  <div class="step-body"><div class="purpose" role="radiogroup" aria-label="Para qué es">
+<button class="pcard" role="radio" aria-checked="false" aria-disabled="false">
+  <span class="phead">
+    <span class="glyph"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"/><path d="M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14"/><path d="M8 6v8"/></svg></span>
+    <span class="ptitle"><b>Marketing</b><span>Promociones y lanzamientos</span></span>
+    <span class="tick" aria-hidden="true"></span>
+  </span>
+  <span class="pex"><small>Por ejemplo</small>Ya llegó la colección nueva: 20 % hasta el domingo.</span>
+  <span class="pfoot">
+    <span class="price"><b>US$ 0,02</b><span>por mensaje</span></span>
+    <span class="review"><b>Revisión estricta</b> · ≈ 25 × utilidad</span>
+  </span>
+</button>
+<button class="pcard" role="radio" aria-checked="true" aria-disabled="false">
+  <span class="phead">
+    <span class="glyph"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 16 2 2 4-4"/><path d="M21 10V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l2-1.14"/><path d="m7.5 4.27 9 5.15"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" x2="12" y1="22" y2="12"/></svg></span>
+    <span class="ptitle"><b>Utilidad</b><span>Algo que el cliente inició</span></span>
+    <span class="tick" aria-hidden="true"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
+  </span>
+  <span class="pex"><small>Por ejemplo</small>Tu pedido #4821 ya salió. Llega mañana entre 9 y 12.</span>
+  <span class="pfoot">
+    <span class="price"><b>US$ 0,0008</b><span>por mensaje</span></span>
+    <span class="review"><b>Revisión rápida</b> · suele aprobarse en minutos</span>
+  </span>
+</button></div><p class="auth-note"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/></svg>Las de autenticación —códigos de verificación— no se crean desde aquí.</p></div>
+</section>
+<section class="step " aria-label="El mensaje">
+  <button class="step-head" aria-expanded="true">
+    <span class="mark 2" aria-hidden="true">2</span>
+    <span class="step-title">El mensaje</span>
+    <span class="step-sum ">Sin escribir</span>
+    <svg class="ic muted" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+  </button>
+  <div class="step-body">
+<div class="blk">
+  <div class="blk-h">Cabecera</div>
+  <div class="seg inline sm" role="radiogroup" aria-label="Tipo de cabecera"><button role="radio" aria-checked="true"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.929 4.929 19.07 19.071"/><circle cx="12" cy="12" r="10"/></svg>Ninguna</button><button role="radio" aria-checked="false"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v16"/><path d="M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2"/><path d="M9 20h6"/></svg>Texto</button><button role="radio" aria-checked="false"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>Imagen</button><button role="radio" aria-checked="false"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>Video</button><button role="radio" aria-checked="false"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>Documento</button></div>
+  <p class="hint">Sin cabecera el mensaje empieza por el texto. Para promociones, una imagen suele leerse mejor.</p>
+</div><div class="rule"></div><div class="blk"><div class="blk-h">Texto<span class="count">0 variables · 0 / 1024</span></div><div class="ta muted">Hola {{1}}, te escribo por {{2}}. ¿Seguimos?</div><button class="chip"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg><span class="mono">{{1}}</span> insertar variable</button></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="adder"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/></svg>Añadir pie</button><button class="adder"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 20v-7a4 4 0 0 0-4-4H4"/><path d="M9 14 4 9l5-5"/></svg>Añadir botones</button></div></div>
+</section>
+<section class="step " aria-label="Ficha">
+  <button class="step-head" aria-expanded="true">
+    <span class="mark 3" aria-hidden="true">3</span>
+    <span class="step-title">Ficha</span>
+    <span class="step-sum ">Sin nombre</span>
+    <svg class="ic muted" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+  </button>
+  <div class="step-body">
+<div class="ficha">
+  <div class="field"><label>Nombre</label><div class="namegroup "><div class="input ph " id="" role="textbox" aria-readonly="true"><span>Cómo la reconoces, p. ej. Temporada colección</span></div><span class="vsel" role="combobox" aria-expanded="false">v1<svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span></div><p class="techname">Escribe un nombre: lo pasamos al formato de Meta y le ponemos versión.</p></div>
+  <div class="field"><label>Idioma</label><div class="select " id="" role="combobox" aria-expanded="false"><span class="val">Español (Colombia) · es_CO</span><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div></div>
+</div></div>
+</section></div>
+    <aside class="aside" aria-label="Así se verá"><h3>Así se verá</h3><div class="wa-preview"><div class="wa-bubble"><p class="wa-text wa-muted">Escribe el texto y aquí verás el mensaje tal como le llega al cliente.</p><span class="wa-time wa-muted">9:41</span></div></div><div class="before"><h3>Antes de enviar</h3><div class="chk pend"><svg class="ic " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg><span>Escribe el texto del mensaje.</span><button class="act">Ir al mensaje</button></div><div class="chk pend"><svg class="ic " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg><span>Ponle un nombre interno.</span><button class="act">Ir a la ficha</button></div></div></aside>
+  </div>
+  
+<footer class="dock ink">
+  <div class="state">
+    <span class="state-t">Por empezar<span class="n">1/3</span></span>
+    <ul class="tramos" aria-label="Qué falta"><li><button class="ok" aria-label="Para qué: listo"><i></i></button></li><li><button class="pend" aria-label="Mensaje: por resolver"><i></i></button></li><li><button class="pend" aria-label="Ficha: por resolver"><i></i></button></li></ul>
+    <span class="detail">Falta el texto y el nombre</span>
+  </div>
+  <span class="sep" aria-hidden="true"></span>
+  <span class="price-line"><b>Utilidad · US$ 0,0008</b>por mensaje en Colombia</span>
+  <div class="acts"><button class="btn glass sm" >Cancelar</button><button class="btn contrast sm" aria-disabled="true" style="opacity:.6">Enviar a revisión de Meta</button></div>
+</footer>
+</div></div><div class="scrim"></div>
+<aside class="sheet" aria-label="Biblioteca de Meta">
+  <div class="sheet-head">
+    <div><p class="kicker">Empieza desde</p><h2>Biblioteca de Meta</h2>
+    <p>Plantillas de utilidad que Meta ya redactó. Si no cambias su texto fijo, se aprueban al instante; los huecos los rellenas tú.</p></div>
+    <button class="btn ghost icon sm" aria-label="Cerrar"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+  </div>
+  <div class="input ph adorn" id="" role="textbox" aria-readonly="true"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg><span>Busca: pago, pedido, cita…</span></div>
+  <div class="chips" role="group" aria-label="Caso de uso"><button aria-pressed="true">Todas</button><button aria-pressed="false">Pagos</button><button aria-pressed="false">Pedidos y envíos</button><button aria-pressed="false">Cuenta</button><button aria-pressed="false">Opiniones</button></div>
+  <div class="lgrid"><div class="lcard" aria-selected="true">
+  <div class="top"><b>Recordatorio de pago</b><span class="use">Pagos</span></div>
+  <p class="mini">Hola <mark>Ana</mark>, te recordamos que tu pago de <mark>$ 180.000</mark> vence el <mark>15 de octubre</mark>.</p>
+  <div class="row"><span class="instant"><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>Aprobación inmediata</span><button class="btn sm" >Usar esta plantilla</button></div>
+</div><div class="lcard" aria-selected="false">
+  <div class="top"><b>Pedido en camino</b><span class="use">Pedidos y envíos</span></div>
+  <p class="mini">Tu pedido <mark>#4821</mark> ya va en camino. Llega el <mark>jueves 9</mark>.</p>
+  <div class="row"><span class="instant"><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>Aprobación inmediata</span></div>
+</div><div class="lcard" aria-selected="false">
+  <div class="top"><b>Pago recibido</b><span class="use">Pagos</span></div>
+  <p class="mini">Recibimos tu pago de <mark>$ 180.000</mark>. Gracias por tu compra.</p>
+  <div class="row"><span class="instant"><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>Aprobación inmediata</span></div>
+</div><div class="lcard" aria-selected="false">
+  <div class="top"><b>¿Cómo te fue?</b><span class="use">Opiniones</span></div>
+  <p class="mini">¿Cómo te fue con <mark>tu pedido #4821</mark>? Responde del 1 al 5.</p>
+  <div class="row"><span class="instant"><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>Aprobación inmediata</span></div>
+</div><div class="lcard" aria-selected="false">
+  <div class="top"><b>Cambio en tu cuenta</b><span class="use">Cuenta</span></div>
+  <p class="mini">Hola <mark>Ana</mark>, actualizamos el correo de tu cuenta a <mark>a***@correo.co</mark>.</p>
+  <div class="row"><span class="instant"><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>Aprobación inmediata</span></div>
+</div><div class="lcard" aria-selected="false">
+  <div class="top"><b>Pedido listo para recoger</b><span class="use">Pedidos y envíos</span></div>
+  <p class="mini">Tu pedido <mark>#4821</mark> está listo. Recógelo en <mark>Savage Centro</mark>.</p>
+  <div class="row"><span class="instant"><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>Aprobación inmediata</span></div>
+</div></div>
+  <p class="auth-note"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>La biblioteca no trae plantillas de marketing: para una promoción con imagen, empieza en blanco.</p>
+</aside></div></section><section class="view" data-view="nombre" data-note="Un campo para el nombre como lo dices, el formato de Meta resuelto al escribir, y un selector de versión que ya propone la siguiente libre." hidden><div class="shell"><div class="page"><header><p class="kicker">Ficha</p><h1 class="title">Nombre y versión</h1><p class="title-lead">Un campo para el nombre como lo dices y un selector para la versión. Las tildes, los signos, los espacios y las mayúsculas los resolvemos al escribir.</p></header><div class="states"><div class="state-card"><h4>Se escribe como se dice; Meta recibe su formato</h4><div class="field"><label>Nombre</label><div class="namegroup "><div class="input  " id="" role="textbox" aria-readonly="true"><span>¡Promo Día de la Madre 2026!</span></div><span class="vsel" role="combobox" aria-expanded="false">v1<svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span></div><p class="techname">En Meta: <code>promo_dia_de_la_madre_2026_v1</code><span>· lo formateamos por ti</span></p></div></div><div class="state-card"><h4>La versión: la siguiente libre, ya elegida</h4><div class="field" style="padding-bottom:150px"><label>Nombre</label><div class="namegroup "><div class="input  " id="" role="textbox" aria-readonly="true"><span>Temporada colección</span></div><span class="vsel" role="combobox" aria-expanded="true">v2<svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span><div class="vpop" role="listbox" aria-label="Versión">
+  <ul>
+    <li aria-disabled="true"><span class="v">v1</span><small>Aprobada · en uso</small><span class="badge ok"><span class="dot"></span>En uso</span></li>
+    <li aria-selected="true"><span class="v">v2</span><small>Libre · la siguiente</small><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></li>
+    <li><span class="v">v3</span><small>Libre</small><span></span></li>
+  </ul>
+</div></div><p class="techname">En Meta: <code>temporada_coleccion_v2</code><span>· lo formateamos por ti</span></p></div></div><div class="state-card"><h4>Una versión borrada queda reservada 30 días</h4><div class="field"><label>Nombre</label><div class="namegroup "><div class="input  " id="" role="textbox" aria-readonly="true"><span>Bienvenida</span></div><span class="vsel" role="combobox" aria-expanded="false">v3<svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span></div><p class="techname">En Meta: <code>bienvenida_v3</code><span>· lo formateamos por ti</span></p><p class="hint">La v2 se borró el 28 sep: Meta reserva su nombre hasta el 28 oct. Te proponemos la v3.</p></div></div><div class="state-card"><h4>Editando: nombre y versión fijos</h4><div class="field"><label>Nombre</label><div class="namegroup locked"><div class="input  readonly" id="" role="textbox" aria-readonly="true"><span>Temporada colección</span></div><span class="vsel">v1<svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></div><p class="techname">En Meta: <code>temporada_coleccion_v1</code><span>· lo formateamos por ti</span></p><p class="hint">Meta no deja cambiar nombre ni versión: para otra, crea una nueva desde la lista.</p></div></div></div></div></div></section><section class="view" data-view="estados" data-note="Vacío, subiendo, lista, rechazos del navegador y de Meta; video y documento en la burbuja." hidden><div class="shell"><div class="page"><header><p class="kicker">Subidor de la cabecera</p><h1 class="title">Estados del archivo</h1><p class="title-lead">Molde: el subidor de fotos del catálogo. Se valida en el navegador antes de subir, y el error dice qué pasó y qué hacer.</p></header><div class="states"><div class="state-card"><h4>Vacío</h4><button class="drop"><span class="dz-ic"><svg class="ic " width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10l-3.1-3.1a2 2 0 0 0-2.814.014L6 21"/><path d="m14 19.5 3-3 3 3"/><path d="M17 22v-5.5"/><circle cx="9" cy="9" r="2"/></svg></span><b>Arrastra una imagen o elige un archivo</b><span>JPG o PNG, hasta 5 MB</span></button></div><div class="state-card"><h4>Subiendo · barra sin porcentaje (fetch no lo da)</h4><div class="file"><img class="th" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 210'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%23d9b99b'/><stop offset='1' stop-color='%238a5a44'/></linearGradient><radialGradient id='s' cx='.7' cy='.35' r='.6'><stop offset='0' stop-color='%23fff' stop-opacity='.55'/><stop offset='1' stop-color='%23fff' stop-opacity='0'/></radialGradient></defs><rect width='400' height='210' fill='url(%23g)'/><rect width='400' height='210' fill='url(%23s)'/><rect x='150' y='34' width='96' height='150' rx='14' fill='%23f3ebe2' opacity='.92'/><path d='M170 34 q28 34 56 0' fill='none' stroke='%238a5a44' stroke-width='5' opacity='.55'/><rect x='262' y='70' width='70' height='114' rx='12' fill='%232d2a26' opacity='.85'/><circle cx='92' cy='150' r='34' fill='%23f3ebe2' opacity='.35'/></svg>" alt=""><div><b>coleccion-temporada.jpg</b><small>Subiendo a Meta para la revisión…</small><div class="bar" role="progressbar" aria-label="Subiendo"><i></i></div></div><div class="acts"><button class="btn ghost xs" >Cancelar</button></div></div></div><div class="state-card"><h4>Lista</h4><div class="file"><img class="th" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 210'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%23d9b99b'/><stop offset='1' stop-color='%238a5a44'/></linearGradient><radialGradient id='s' cx='.7' cy='.35' r='.6'><stop offset='0' stop-color='%23fff' stop-opacity='.55'/><stop offset='1' stop-color='%23fff' stop-opacity='0'/></radialGradient></defs><rect width='400' height='210' fill='url(%23g)'/><rect width='400' height='210' fill='url(%23s)'/><rect x='150' y='34' width='96' height='150' rx='14' fill='%23f3ebe2' opacity='.92'/><path d='M170 34 q28 34 56 0' fill='none' stroke='%238a5a44' stroke-width='5' opacity='.55'/><rect x='262' y='70' width='70' height='114' rx='12' fill='%232d2a26' opacity='.85'/><circle cx='92' cy='150' r='34' fill='%23f3ebe2' opacity='.35'/></svg>" alt=""><div><b>coleccion-temporada.jpg</b><small>JPG · 412 KB · lista</small></div><div class="acts"><button class="btn outline xs" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>Reemplazar</button><button class="btn ghost icon sm" aria-label="Quitar"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div></div><p class="sends"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m2 9 3-3 3 3"/><path d="M13 18H7a2 2 0 0 1-2-2V6"/><path d="m22 15-3 3-3-3"/><path d="M11 6h6a2 2 0 0 1 2 2v10"/></svg><span><b>Va en cada envío.</b> Queda guardada con la plantilla:
 campañas, seguimientos, cobros y automatizaciones la mandan solas, sin que la elijas otra vez.</span></p></div><div class="state-card"><h4>Rechazado en el navegador, antes de subir</h4><button class="drop err"><span class="dz-ic"><svg class="ic " width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="2" x2="22" y1="2" y2="22"/><path d="M10.41 10.41a2 2 0 1 1-2.83-2.83"/><line x1="13.5" x2="6" y1="13.5" y2="21"/><line x1="18" x2="21" y1="12" y2="15"/><path d="M3.59 3.59A1.99 1.99 0 0 0 3 5v14a2 2 0 0 0 2 2h14c.55 0 1.052-.22 1.41-.59"/><path d="M21 15V5a2 2 0 0 0-2-2H9"/></svg></span><b>Elige otra imagen</b><span>JPG o PNG, hasta 5 MB</span></button><p class="hint err">«banner.webp» es WebP. En la cabecera, Meta solo acepta JPG o PNG.</p><p class="hint err">«video-lanzamiento.mov» pesa 48 MB. El video de la cabecera va en MP4 y hasta 16 MB.</p></div><div class="state-card"><h4>Video lista</h4><div class="file"><span class="th"><svg class="ic " width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg></span><div><b>lanzamiento-temporada.mp4</b><small>MP4 · 0:18 · 9,8 MB · lista</small></div><div class="acts"><button class="btn outline xs" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>Reemplazar</button><button class="btn ghost icon sm" aria-label="Quitar"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div></div></div><div class="state-card"><h4>Documento listo · tope 25 MB (el nuestro, no los 100 de Meta)</h4><div class="file"><span class="th"><svg class="ic " width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg></span><div><b>catalogo-temporada.pdf</b><small>PDF · 2,4 MB · lista</small></div><div class="acts"><button class="btn outline xs" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>Reemplazar</button><button class="btn ghost icon sm" aria-label="Quitar"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div></div></div><div class="state-card"><h4>Meta rechazó la subida</h4><div class="notice err "><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg><div><b>Meta no aceptó el archivo.</b> No se guardó nada. Vuelve a intentarlo; si se repite, prueba con otra imagen.<div class="acts"><button class="btn outline xs" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>Reintentar</button></div></div></div></div><div class="state-card"><h4>Así llegan video y documento</h4><div style="display:grid;gap:10px">
 <div class="wa-preview">
   <div class="wa-bubble">
@@ -593,7 +865,31 @@ campañas, seguimientos, cobros y automatizaciones la mandan solas, sin que la e
     <span class="step-sum ">Marketing · US$ 0,02 por mensaje</span>
     <svg class="ic muted" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
   </button>
-  <div class="step-body"><div class="purpose" role="radiogroup" aria-label="Para qué es"><button class="opt" role="radio" aria-checked="true" aria-disabled="false"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg><b>Marketing</b><span class="cost">US$ 0,02 / mensaje</span><span>Promociones, lanzamientos y ofertas. Revisión más estricta.</span></button><button class="opt" role="radio" aria-checked="false" aria-disabled="false"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4"/></svg><b>Utilidad</b><span class="cost">US$ 0,0008 / mensaje</span><span>Seguimiento de algo que el cliente inició: cotización, pedido, cita.</span></button><button class="opt" role="radio" aria-checked="false" aria-disabled="true"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg><b>Autenticación</b><span class="cost">US$ 0,0008 / mensaje</span><span>Solo códigos de verificación. No abre conversaciones.</span></button></div></div>
+  <div class="step-body"><div class="purpose" role="radiogroup" aria-label="Para qué es">
+<button class="pcard" role="radio" aria-checked="true" aria-disabled="false">
+  <span class="phead">
+    <span class="glyph"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"/><path d="M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14"/><path d="M8 6v8"/></svg></span>
+    <span class="ptitle"><b>Marketing</b><span>Promociones y lanzamientos</span></span>
+    <span class="tick" aria-hidden="true"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
+  </span>
+  <span class="pex"><small>Por ejemplo</small>Ya llegó la colección nueva: 20 % hasta el domingo.</span>
+  <span class="pfoot">
+    <span class="price"><b>US$ 0,02</b><span>por mensaje</span></span>
+    <span class="review"><b>Revisión estricta</b> · ≈ 25 × utilidad</span>
+  </span>
+</button>
+<button class="pcard" role="radio" aria-checked="false" aria-disabled="false">
+  <span class="phead">
+    <span class="glyph"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 16 2 2 4-4"/><path d="M21 10V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l2-1.14"/><path d="m7.5 4.27 9 5.15"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" x2="12" y1="22" y2="12"/></svg></span>
+    <span class="ptitle"><b>Utilidad</b><span>Algo que el cliente inició</span></span>
+    <span class="tick" aria-hidden="true"></span>
+  </span>
+  <span class="pex"><small>Por ejemplo</small>Tu pedido #4821 ya salió. Llega mañana entre 9 y 12.</span>
+  <span class="pfoot">
+    <span class="price"><b>US$ 0,0008</b><span>por mensaje</span></span>
+    <span class="review"><b>Revisión rápida</b> · suele aprobarse en minutos</span>
+  </span>
+</button></div><p class="auth-note"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/></svg>Las de autenticación —códigos de verificación— no se crean desde aquí.</p></div>
 </section>
 <section class="step " aria-label="El mensaje">
   <button class="step-head" aria-expanded="true">
@@ -644,7 +940,7 @@ campañas, seguimientos, cobros y automatizaciones la mandan solas, sin que la e
   </button>
   <div class="step-body">
 <div class="ficha">
-  <div class="field"><label>Nombre interno <span class="locked"><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Fijo desde que la creaste</span></label><div class="input  readonly mono" id="" role="textbox" aria-readonly="true"><span>temporada_coleccion_v1</span></div><p class="hint">Meta no deja cambiarlo: para otro nombre, crea una plantilla nueva.</p></div>
+  <div class="field"><label>Nombre</label><div class="namegroup locked"><div class="input  readonly" id="" role="textbox" aria-readonly="true"><span>Temporada colección</span></div><span class="vsel">v1<svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></div><p class="techname">En Meta: <code>temporada_coleccion_v1</code><span>· lo formateamos por ti</span></p><p class="hint">Meta no deja cambiar nombre ni versión: para otra, crea una nueva desde la lista.</p></div>
   <div class="field"><label>Idioma</label><div class="select readonly" id="" role="combobox" aria-expanded="false"><span class="val">Español (Colombia) · es_CO</span><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div></div>
 </div></div>
 </section></div>
@@ -667,7 +963,8 @@ campañas, seguimientos, cobros y automatizaciones la mandan solas, sin que la e
     <ul class="tramos" aria-label="Qué falta"><li><button class="ok" aria-label="Para qué: listo"><i></i></button></li><li><button class="ok" aria-label="Mensaje: listo"><i></i></button></li><li><button class="ok" aria-label="Ficha: listo"><i></i></button></li></ul>
     <span class="detail">Se envía de nuevo a revisión</span>
   </div>
-  <span class="cost"><b>Marketing</b> · US$ 0,02 por mensaje entregado en Colombia</span>
+  <span class="sep" aria-hidden="true"></span>
+  <span class="price-line"><b>Marketing · US$ 0,02</b>por mensaje en Colombia</span>
   <div class="acts"><button class="btn glass sm" >Cancelar</button><button class="btn contrast sm" >Guardar y reenviar a revisión</button></div>
 </footer>
 </div></div></section><section class="view" data-view="aprobada" data-note="Categoría y ficha fijas; «Antes» al lado de la burbuja y el aviso de que sigue saliendo la aprobada." hidden>
@@ -683,7 +980,31 @@ campañas, seguimientos, cobros y automatizaciones la mandan solas, sin que la e
     <span class="step-sum ">Marketing · fija en una aprobada</span>
     <svg class="ic muted" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
   </button>
-  <div class="step-body"><div class="purpose" role="radiogroup" aria-label="Para qué es"><button class="opt" role="radio" aria-checked="true" aria-disabled="false"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg><b>Marketing</b><span class="cost">US$ 0,02 / mensaje</span><span>Promociones, lanzamientos y ofertas. Revisión más estricta.</span></button><button class="opt" role="radio" aria-checked="false" aria-disabled="true"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4"/></svg><b>Utilidad</b><span class="cost">US$ 0,0008 / mensaje</span><span>Seguimiento de algo que el cliente inició: cotización, pedido, cita.</span></button><button class="opt" role="radio" aria-checked="false" aria-disabled="true"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg><b>Autenticación</b><span class="cost">US$ 0,0008 / mensaje</span><span>Solo códigos de verificación. No abre conversaciones.</span></button></div><p class="hint">Una aprobada no cambia de categoría: para otra, crea una plantilla nueva.</p></div>
+  <div class="step-body"><div class="purpose" role="radiogroup" aria-label="Para qué es">
+<button class="pcard" role="radio" aria-checked="true" aria-disabled="false">
+  <span class="phead">
+    <span class="glyph"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"/><path d="M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14"/><path d="M8 6v8"/></svg></span>
+    <span class="ptitle"><b>Marketing</b><span>Promociones y lanzamientos</span></span>
+    <span class="tick" aria-hidden="true"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
+  </span>
+  <span class="pex"><small>Por ejemplo</small>Ya llegó la colección nueva: 20 % hasta el domingo.</span>
+  <span class="pfoot">
+    <span class="price"><b>US$ 0,02</b><span>por mensaje</span></span>
+    <span class="review"><b>Revisión estricta</b> · ≈ 25 × utilidad</span>
+  </span>
+</button>
+<button class="pcard" role="radio" aria-checked="false" aria-disabled="true">
+  <span class="phead">
+    <span class="glyph"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 16 2 2 4-4"/><path d="M21 10V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l2-1.14"/><path d="m7.5 4.27 9 5.15"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" x2="12" y1="22" y2="12"/></svg></span>
+    <span class="ptitle"><b>Utilidad</b><span>Algo que el cliente inició</span></span>
+    <span class="tick" aria-hidden="true"></span>
+  </span>
+  <span class="pex"><small>Por ejemplo</small>Tu pedido #4821 ya salió. Llega mañana entre 9 y 12.</span>
+  <span class="pfoot">
+    <span class="price"><b>US$ 0,0008</b><span>por mensaje</span></span>
+    <span class="review"><b>Revisión rápida</b> · suele aprobarse en minutos</span>
+  </span>
+</button></div><p class="auth-note"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/></svg>Las de autenticación —códigos de verificación— no se crean desde aquí.</p><p class="hint">Una aprobada no cambia de categoría: para otra, crea una plantilla nueva.</p></div>
 </section>
 <section class="step " aria-label="El mensaje">
   <button class="step-head" aria-expanded="true">
@@ -734,7 +1055,7 @@ campañas, seguimientos, cobros y automatizaciones la mandan solas, sin que la e
   </button>
   <div class="step-body">
 <div class="ficha">
-  <div class="field"><label>Nombre interno <span class="locked"><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Fijo desde que la creaste</span></label><div class="input  readonly mono" id="" role="textbox" aria-readonly="true"><span>temporada_coleccion_v1</span></div><p class="hint">Meta no deja cambiarlo: para otro nombre, crea una plantilla nueva.</p></div>
+  <div class="field"><label>Nombre</label><div class="namegroup locked"><div class="input  readonly" id="" role="textbox" aria-readonly="true"><span>Temporada colección</span></div><span class="vsel">v1<svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></div><p class="techname">En Meta: <code>temporada_coleccion_v1</code><span>· lo formateamos por ti</span></p><p class="hint">Meta no deja cambiar nombre ni versión: para otra, crea una nueva desde la lista.</p></div>
   <div class="field"><label>Idioma</label><div class="select readonly" id="" role="combobox" aria-expanded="false"><span class="val">Español (Colombia) · es_CO</span><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div></div>
 </div></div>
 </section></div>
@@ -757,7 +1078,8 @@ campañas, seguimientos, cobros y automatizaciones la mandan solas, sin que la e
     <ul class="tramos" aria-label="Qué falta"><li><button class="ok" aria-label="Para qué: listo"><i></i></button></li><li><button class="ok" aria-label="Mensaje: listo"><i></i></button></li><li><button class="ok" aria-label="Ficha: listo"><i></i></button></li></ul>
     <span class="detail">Cambiaste el texto</span>
   </div>
-  <span class="cost"><b>Marketing</b> · US$ 0,02 por mensaje entregado en Colombia</span>
+  <span class="sep" aria-hidden="true"></span>
+  <span class="price-line"><b>Marketing · US$ 0,02</b>por mensaje en Colombia</span>
   <div class="acts"><button class="btn glass sm" >Cancelar</button><button class="btn contrast sm" >Guardar y reenviar a revisión</button></div>
 </footer>
 </div></div></section><section class="view" data-view="movil" data-note="Una columna; la burbuja arriba y plegable; la isla deja de ser píldora." hidden><div class="shell" style="padding:20px 16px 48px"><div class="phone">
@@ -775,6 +1097,7 @@ campañas, seguimientos, cobros y automatizaciones la mandan solas, sin que la e
     <span class="wa-link"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>Copiar código</span>
   </div>
 </div></details>
+  <p class="started"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 10 5 5-5 5"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/></svg>Empezaste <b>en blanco</b><button>Cambiar</button></p>
   
 <section class="step closed" aria-label="¿Para qué es?">
   <button class="step-head" aria-expanded="false">
@@ -783,7 +1106,31 @@ campañas, seguimientos, cobros y automatizaciones la mandan solas, sin que la e
     <span class="step-sum ">Marketing</span>
     <svg class="ic muted" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
   </button>
-  <div class="step-body"><div class="purpose" role="radiogroup" aria-label="Para qué es"><button class="opt" role="radio" aria-checked="true" aria-disabled="false"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg><b>Marketing</b><span class="cost">US$ 0,02 / mensaje</span><span>Promociones, lanzamientos y ofertas. Revisión más estricta.</span></button><button class="opt" role="radio" aria-checked="false" aria-disabled="false"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4"/></svg><b>Utilidad</b><span class="cost">US$ 0,0008 / mensaje</span><span>Seguimiento de algo que el cliente inició: cotización, pedido, cita.</span></button><button class="opt" role="radio" aria-checked="false" aria-disabled="true"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg><b>Autenticación</b><span class="cost">US$ 0,0008 / mensaje</span><span>Solo códigos de verificación. No abre conversaciones.</span></button></div></div>
+  <div class="step-body"><div class="purpose" role="radiogroup" aria-label="Para qué es">
+<button class="pcard" role="radio" aria-checked="true" aria-disabled="false">
+  <span class="phead">
+    <span class="glyph"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"/><path d="M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14"/><path d="M8 6v8"/></svg></span>
+    <span class="ptitle"><b>Marketing</b><span>Promociones y lanzamientos</span></span>
+    <span class="tick" aria-hidden="true"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
+  </span>
+  <span class="pex"><small>Por ejemplo</small>Ya llegó la colección nueva: 20 % hasta el domingo.</span>
+  <span class="pfoot">
+    <span class="price"><b>US$ 0,02</b><span>por mensaje</span></span>
+    <span class="review"><b>Revisión estricta</b> · ≈ 25 × utilidad</span>
+  </span>
+</button>
+<button class="pcard" role="radio" aria-checked="false" aria-disabled="false">
+  <span class="phead">
+    <span class="glyph"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 16 2 2 4-4"/><path d="M21 10V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l2-1.14"/><path d="m7.5 4.27 9 5.15"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" x2="12" y1="22" y2="12"/></svg></span>
+    <span class="ptitle"><b>Utilidad</b><span>Algo que el cliente inició</span></span>
+    <span class="tick" aria-hidden="true"></span>
+  </span>
+  <span class="pex"><small>Por ejemplo</small>Tu pedido #4821 ya salió. Llega mañana entre 9 y 12.</span>
+  <span class="pfoot">
+    <span class="price"><b>US$ 0,0008</b><span>por mensaje</span></span>
+    <span class="review"><b>Revisión rápida</b> · suele aprobarse en minutos</span>
+  </span>
+</button></div><p class="auth-note"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/></svg>Las de autenticación —códigos de verificación— no se crean desde aquí.</p></div>
 </section>
   
 <section class="step " aria-label="El mensaje">
@@ -820,12 +1167,12 @@ campañas, seguimientos, cobros y automatizaciones la mandan solas, sin que la e
   <button class="step-head" aria-expanded="false">
     <span class="mark done" aria-hidden="true"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
     <span class="step-title">Ficha</span>
-    <span class="step-sum ">temporada_coleccion_v1</span>
+    <span class="step-sum ">temporada_coleccion_v2</span>
     <svg class="ic muted" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
   </button>
   <div class="step-body">
 <div class="ficha">
-  <div class="field"><label>Nombre interno </label><div class="input  mono" id="" role="textbox" aria-readonly="true"><span>temporada_coleccion_v1</span></div><p class="hint">Minúsculas, números y guion bajo. Si borras una plantilla, Meta reserva su nombre 30 días.</p></div>
+  <div class="field"><label>Nombre</label><div class="namegroup "><div class="input  " id="" role="textbox" aria-readonly="true"><span>Temporada colección</span></div><span class="vsel" role="combobox" aria-expanded="false">v2<svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span></div><p class="techname">En Meta: <code>temporada_coleccion_v2</code><span>· lo formateamos por ti</span></p></div>
   <div class="field"><label>Idioma</label><div class="select " id="" role="combobox" aria-expanded="false"><span class="val">Español (Colombia) · es_CO</span><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div></div>
 </div></div>
 </section>
@@ -836,7 +1183,8 @@ campañas, seguimientos, cobros y automatizaciones la mandan solas, sin que la e
     <ul class="tramos" aria-label="Qué falta"><li><button class="ok" aria-label="Para qué: listo"><i></i></button></li><li><button class="warn" aria-label="Mensaje: por resolver"><i></i></button></li><li><button class="ok" aria-label="Ficha: listo"><i></i></button></li></ul>
     <span class="detail">Falta el ejemplo de {{2}}</span>
   </div>
-  <span class="cost"><b>Marketing</b> · US$ 0,02 por mensaje entregado en Colombia</span>
+  <span class="sep" aria-hidden="true"></span>
+  <span class="price-line"><b>Marketing · US$ 0,02</b>por mensaje en Colombia</span>
   <div class="acts"><button class="btn glass sm" >Cancelar</button><button class="btn contrast sm" aria-disabled="true" style="opacity:.6">Enviar a revisión de Meta</button></div>
 </footer>
 </div></div></div></section>
