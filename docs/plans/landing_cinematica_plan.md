@@ -1102,3 +1102,64 @@ La dueña: «vamos a eliminar la sección de la filosofía, no me gusta para nad
   - mesetas también en la meta;
   - más recorrido en cobrar, el radar, Axel, el equipo y ordenar;
   - la ruleta del riel responde a ↑ ↓ Intro sin tabular.
+
+## 25. La luz del hero abraza el marco del video (aprobado el 2026-10-03)
+
+La dueña pidió que la luz del hero, al hacer scroll, se fusione con el marco del video y lo rodee como el anillo de un agujero negro hasta que el video ocupe el 100 %. La sombra violeta de detrás desaparece: «La luz del hero no va por atrás, sino que llega hasta el marco del video y desaparece hasta que el video esté 100% en el ancho».
+
+Lienzo con prototipo de scroll y comparación con la versión actual: https://claude.ai/artifact/FnknynoDN5GzRcVxBFHNWU.
+
+Aprobado con: «Aprobado, procede con las propuestas de claro y móvil, perfecciona el efecto para que se vea con más calidad». El prototipo marca la idea, no el acabado.
+
+### 25.1 Coreografía en escritorio (≥ 768)
+
+| Tramo | Luz | Marco |
+|---|---|---|
+| Reposo | Es el nudo de hoy (`.film-hero-knot`), bajo el CTA | Fuera de cuadro |
+| Cae | El hero sube y el nudo baja (~14 % del alto), estirándose como una gota con estela hacia arriba; el halo del hero se apaga | Entra por abajo |
+| Contacto | Al tocar el filo superior se aplasta en un destello horizontal y se abre en dos arcos que recorren el borde hasta cerrarse abajo, en el centro | Sube a su sitio |
+| Anillo | El anillo queda encendido por fuera del borde, con un brillo asimétrico que gira despacio (el disco); nada detrás | Fijado a 0,6 |
+| Se abre | Su intensidad baja con la apertura, `(1 − open)^~1,15` | 0,6 → 1 |
+| 100 % | Apagado del todo antes de que el borde toque los lados de la ventana | A sangre |
+
+- Desaparece el `box-shadow` violeta de `.film-video-clip` (`0 80px 160px -60px`) en los dos temas. Se queda el filete de 1 px.
+- No cambian los textos, el recorrido del marco (S0 0,6, TY 9 %, radio 28 compensado), la viñeta ni la frase.
+- **El relevo del nudo:** el nudo del hero vive en la sección del hero. La sección del video, que pinta encima, tiene su propia gota y la recoge en el mismo fotograma, sin costura ni doble luz. La gota arranca en la posición exacta del nudo y la pinta el motor del video.
+
+### 25.2 Calidad del acabado (lo que el prototipo no tenía)
+
+- **Tres capas en el anillo:**
+  - filo caliente de 1,5 px vistos, blanco y ámbar;
+  - corona media coral, de ~6 px y poco desenfoque;
+  - bloom ancho y tenue que se pierde en la tinta.
+  - Son la paleta del nudo (blanco, ámbar `--axi-amber`, coral `--axi-brand`), con violeta como mucho en un borde lejano y nunca como relleno detrás.
+- **Grosor y desenfoque constantes:** se compensan con la escala, igual que el radio, para que el filo no engorde al abrirse.
+- **Disco asimétrico:** un lado más brillante, como el disco de un agujero negro. Es una capa con degradado cónico enmascarada al anillo que gira solo con `transform`: no se reanima el degradado.
+- **Contacto con destello anamórfico:** el nudo se aplasta en una raya horizontal breve sobre el filo superior. Los dos arcos se dibujan con `stroke-dashoffset`, solo durante el contacto, con un extremo más brillante (la cabeza de la luz que corre).
+- **La gota:** se estira con la velocidad del scroll, no con la posición, con una estela hacia arriba. Al soltar el scroll recupera su redondez sin rebote.
+- **Sin bandas:** los degradados largos sobre negro llevan un dither de grano sutil (una sola textura estática) para que no se vean escalones a 8 bits.
+- **Respiración:** una pulsación lenta de ±6 % de la intensidad en el tramo del anillo, nunca durante el contacto.
+
+### 25.3 Modo claro
+
+El hero es claro y el núcleo blanco desaparece sobre el fondo. En claro, el núcleo de la gota y el filo del anillo van en ámbar y coral, con el blanco solo en el punto más interior y rodeado de color. El anillo vive sobre el negro del video (la sección es negra del 14 % al 86 %), así que conserva su contraste. Hay que comprobar el tramo de caída sobre el claro del hero y el cruce del degradado de tinta a negro.
+
+### 25.4 Móvil (< 768)
+
+No hay marco: el video va a lo ancho desde el principio (§23). La luz cae y, al tocar el borde superior del video, se convierte en un filamento horizontal que se abre del centro a los dos lados y se apaga mientras el video sube. Es una sola capa: solo `transform` (`scaleX`) y opacidad, sin desenfoque animado. No debe sumar al Lighthouse móvil.
+
+### 25.5 Rendimiento y accesibilidad
+
+- Solo `transform`, `opacity` y el `stroke-dashoffset` del contacto. No se escriben variables CSS por frame en ancestros ([[perf-variables-css-por-frame]]). Los desenfoques y sombras son estáticos.
+- No se usa `@property` con nombres que ya existen (la lección de `--ry`, §hotfix 625709ef).
+- **Movimiento reducido:** no hay caída. El anillo aparece quieto y cerrado, y se apaga al abrir el video.
+- `aria-hidden` en todas las capas de luz.
+
+### 25.6 Reparto
+
+- **Constructor 1:** `engine/video-scene.ts`, `scenes/video.tsx`, `film-video.css`, y en el hero lo justo para el relevo del nudo (`HeroFibers` o `film.css`).
+- **Constructor 2:**
+  - QA a 1024, 1280, 1366×657, 1440 y 1920, en oscuro y claro, y en móvil a 390;
+  - capturas de los seis tramos, comprobación de que no hay doble luz ni salto en el relevo, y de que el anillo está a 0 con el video al 100 %;
+  - qa-perfil en el tramo del anillo y qa-progreso.
+- **axi-2e:** revisión visual contra el lienzo antes de la demo a la dueña.
