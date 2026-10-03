@@ -61,7 +61,9 @@ export const video: Scene = (section: HTMLElement, ctx: Ctx) => {
 function filament(section: HTMLElement) {
   const el = section.querySelector<HTMLElement>("[data-light=filament]");
   if (!el) return;
-  const tl = gsap.timeline({ scrollTrigger: { trigger: section, start: "top 72%", end: "top 12%", scrub: true } });
+  // Empieza a «top 80 %», justo antes de que se apague el nudo del hero (HeroFibers):
+  // a 72 % quedaban ~49 px de scroll sin ninguna luz a 390 (QA de 2cb171b2, plan §26.4).
+  const tl = gsap.timeline({ scrollTrigger: { trigger: section, start: "top 80%", end: "top 12%", scrub: true } });
   tl.fromTo(el, { scaleX: 0, opacity: 0 }, { scaleX: 1, opacity: 1, ease: "power2.out", duration: 0.5 }, 0);
   tl.to(el, { opacity: 0, ease: "none", duration: 0.5 }, 0.5);
 }

@@ -277,7 +277,7 @@ export function HeroFibers({ className }: { className?: string }) {
       // El nudo: el momento de color pleno del hero. Capa CSS: solo transform y opacity.
       const k = knotState(knot, t, s);
       // Por debajo de 1024 la luz del video es el filamento (§25.4, empieza con
-      // la escena a «top 72 %»): el nudo baja un poco y se apaga antes, para
+      // la escena a «top 80 %»): el nudo baja un poco y se apaga antes, para
       // que nunca se vean las dos luces a la vez.
       if (!desktop) {
         const f = Math.min(1, Math.max(0, (s - 0.08) / 0.14));
