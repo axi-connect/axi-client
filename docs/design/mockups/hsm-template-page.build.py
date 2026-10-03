@@ -146,7 +146,7 @@ K.extra_css = """
 
 /* ficha */
 .ficha{display:grid;gap:14px;grid-template-columns:1fr}
-@container (min-width: 620px){.ficha{grid-template-columns:minmax(0,1fr) 18rem}}
+@container (min-width: 620px){.ficha{grid-template-columns:minmax(0,1fr) 12.5rem}}
 .locked{display:inline-flex;gap:5px;align-items:center;font-size:12px;color:var(--muted-foreground)}
 
 /* columna derecha */
@@ -286,6 +286,23 @@ K.extra_css = """
 .pcard .review{font-size:12px;color:var(--muted-foreground)}
 .pcard .review b{color:var(--foreground);font-weight:500}
 .auth-note{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--muted-foreground)}
+
+/* «Empieza desde» v3: a todo el ancho, carrusel sin barra, con desvanecidos y flechas */
+.startbox{gap:12px}
+.start-tools{display:flex;align-items:center;gap:12px}
+.start-nav{display:flex;gap:6px}
+.start-nav button{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);display:grid;place-items:center;background:var(--background);color:var(--foreground);transition:opacity .15s var(--ease)}
+.start-nav button:hover{background:var(--secondary)}
+.start-nav button:disabled{opacity:.35;cursor:default;background:var(--background)}
+.start-row{grid-auto-columns:220px;scrollbar-width:none;-ms-overflow-style:none;scroll-snap-type:x proximity;scroll-behavior:smooth;
+  --fade-l:0px;--fade-r:48px;
+  -webkit-mask-image:linear-gradient(to right,transparent 0,#000 var(--fade-l),#000 calc(100% - var(--fade-r)),transparent 100%);
+  mask-image:linear-gradient(to right,transparent 0,#000 var(--fade-l),#000 calc(100% - var(--fade-r)),transparent 100%)}
+.start-row::-webkit-scrollbar{display:none}
+.start-row[data-start="false"]{--fade-l:48px}
+.start-row[data-end="true"]{--fade-r:0px}
+.start-row > *{scroll-snap-align:start}
+@media (prefers-reduced-motion: reduce){.start-row{scroll-behavior:auto}}
 @media (prefers-reduced-motion: reduce){.bar i{animation:none;width:100%}}
 """
 
@@ -437,7 +454,7 @@ def ficha(human="Temporada colección", tech="temporada_coleccion_v2", version="
     return f"""
 <div class="ficha">
   <div class="field"><label>Nombre</label>{name_group(human, version, locked)}{tech_line}{lock_hint}</div>
-  <div class="field"><label>Idioma</label>{K.select('Español (Colombia) · es_CO', 'readonly' if locked else '')}</div>
+  <div class="field"><label>Idioma</label>{K.select('Español (Colombia)', 'readonly' if locked else '')}</div>
 </div>"""
 
 
@@ -510,29 +527,78 @@ def start_strip(pressed="En blanco"):
         if blank:
             return f'<button class="scard blank" aria-pressed="{p}">{ic("plus", size=18)}<b>{title}</b><span class="sbody">{body}</span></button>'
         return f'<button class="scard" aria-pressed="{p}"><span class="src {src_cls}">{ic(src_icon, size=12)}{src}</span><b>{title}</b><span class="sbody">{body}</span></button>'
+    meta_hint = "Aprobación inmediata si no cambias el texto fijo"
     cards = (
         card("", "", "", "En blanco", "Escribe la tuya desde cero", blank=True)
-        + card("axi", "sparkles", "axi sugiere", "Retomar cotización", "«Hola {{1}}, te escribo por la cotización de {{2}}. ¿Seguimos?»")
-        + card("axi", "sparkles", "axi sugiere", "Recordar cita", "«Hola {{1}}, te recordamos tu cita del {{2}}. ¿Nos confirmas?»")
-        + card("", "library-big", "Biblioteca de Meta", "Recordatorio de pago", "Aprobación inmediata si no cambias el texto fijo")
-        + card("", "library-big", "Biblioteca de Meta", "Pedido en camino", "Aprobación inmediata si no cambias el texto fijo")
+        + card("axi", "sparkles", "axi sugiere", "Retomar conversación", "«Hola {{1}}, te escribo por {{2}}. ¿Seguimos?»")
+        + card("axi", "sparkles", "axi sugiere", "Recordar cotización", "«Hola {{1}}, tu cotización de {{2}} sigue vigente.»")
+        + card("axi", "sparkles", "axi sugiere", "Confirmar interés", "«Hola {{1}}, hace unos días hablamos de {{2}}.»")
+        + card("", "library-big", "Biblioteca de Meta", "Recordatorio de pago", meta_hint)
+        + card("", "library-big", "Biblioteca de Meta", "Pedido en camino", meta_hint)
+        + card("", "library-big", "Biblioteca de Meta", "Pago recibido", meta_hint)
+        + card("", "library-big", "Biblioteca de Meta", "¿Cómo te fue?", meta_hint)
     )
     return f"""
 <section class="startbox" aria-label="Empieza desde">
-  <div class="start-head"><h2>Empieza desde</h2><a href="#biblioteca">{ic('library-big', size=14)}Explorar la biblioteca de Meta{ic('arrow-right', size=14)}</a></div>
-  <div class="start-row">{cards}</div>
+  <div class="start-head">
+    <h2>Empieza desde</h2>
+    <div class="start-tools">
+      <a href="#biblioteca">{ic('library-big', size=14)}Explorar la biblioteca de Meta{ic('arrow-right', size=14)}</a>
+      <div class="start-nav">
+        <button type="button" data-dir="-1" aria-label="Anteriores" disabled>{ic('chevron-left', size=16)}</button>
+        <button type="button" data-dir="1" aria-label="Siguientes">{ic('chevron-right', size=16)}</button>
+      </div>
+    </div>
+  </div>
+  <div class="start-row" data-start="true" data-end="false">{cards}</div>
 </section>"""
+
+
+# El carrusel de «Empieza desde»: flechas que pasan de tarjetas, desvanecidos
+# que solo aparecen donde queda contenido, y sin barra de desplazamiento.
+CAROUSEL_JS = """<script>
+(function () {
+  document.querySelectorAll('.startbox').forEach(function (box) {
+    if (box.dataset.bound) return;
+    box.dataset.bound = '1';
+    var row = box.querySelector('.start-row');
+    var prev = box.querySelector('[data-dir="-1"]');
+    var next = box.querySelector('[data-dir="1"]');
+    function sync() {
+      var atStart = row.scrollLeft <= 2;
+      var atEnd = row.scrollLeft + row.clientWidth >= row.scrollWidth - 2;
+      row.dataset.start = String(atStart);
+      row.dataset.end = String(atEnd);
+      prev.disabled = atStart;
+      next.disabled = atEnd;
+    }
+    function step(dir) {
+      var card = row.firstElementChild;
+      var width = card ? card.getBoundingClientRect().width + 10 : 230;
+      var perPage = Math.max(1, Math.floor(row.clientWidth / width));
+      row.scrollBy({ left: dir * perPage * width, behavior: 'smooth' });
+    }
+    prev.addEventListener('click', function () { step(-1); });
+    next.addEventListener('click', function () { step(1); });
+    row.addEventListener('scroll', sync, { passive: true });
+    new ResizeObserver(sync).observe(row);
+    document.querySelectorAll('.mk-view').forEach(function (b) { b.addEventListener('click', function () { setTimeout(sync, 50); }); });
+    sync();
+  });
+})();
+</script>"""
 
 
 def started(origin="en blanco"):
     return f'<p class="started">{ic("corner-down-right", size=14)}Empezaste <b>{origin}</b><button>Cambiar</button></p>'
 
 
-def page(title, lead, left, right, dock_html, kicker="Plantillas de Meta"):
+def page(title, lead, left, right, dock_html, kicker="Plantillas de Meta", top=""):
     return f"""
 <div class="shell"><div class="page">
   <a class="back" href="#">{ic('arrow-left', size=15)}Plantillas de Meta</a>
   <header><p class="kicker">{kicker}</p><h1 class="title">{title}</h1><p class="title-lead">{lead}</p></header>
+  {top}
   <div class="layout">
     <div class="col">{left}</div>
     <aside class="aside" aria-label="Así se verá">{right}</aside>
@@ -547,8 +613,7 @@ PENDING = [("Para qué", "ok"), ("Mensaje", "warn"), ("Ficha", "ok")]
 # ----------------------------------------------------------------------------- vistas
 def view_imagen():
     left = (
-        started("en blanco")
-        + step(1, "¿Para qué es?", "Marketing · US$ 0,02 por mensaje", purpose())
+        step(1, "¿Para qué es?", "Marketing · US$ 0,02 por mensaje", purpose())
         + step(2, "El mensaje", "Hay algo que corregir", header_block() + '<div class="rule"></div>' + body_block(ex2_err=True) + '<div class="rule"></div>' + FOOTER + '<div class="rule"></div>' + BUTTONS, mark="err", sum_err=True)
         + step(3, "Ficha", "temporada_coleccion_v2 · es_CO", ficha())
     )
@@ -566,13 +631,13 @@ def view_imagen():
         "Un mensaje fijo con huecos que se rellenan con datos del contacto. Meta lo revisa antes de que puedas usarlo; suele decidir en minutos.",
         left, right,
         dock("Casi lista", "2/3", PENDING, "Falta el ejemplo de {{2}}"),
+        top=started("en blanco"),
     )
 
 
 def view_vacia():
     left = (
-        start_strip()
-        + step(1, "¿Para qué es?", "Utilidad · US$ 0,0008 por mensaje", purpose("Utilidad"), mark="1")
+        step(1, "¿Para qué es?", "Utilidad · US$ 0,0008 por mensaje", purpose("Utilidad"), mark="1")
         + step(2, "El mensaje", "Sin escribir", header_block("Ninguna") + '<div class="rule"></div>' + '<div class="blk"><div class="blk-h">Texto<span class="count">0 variables · 0 / 1024</span></div><div class="ta muted">Hola {{1}}, te escribo por {{2}}. ¿Seguimos?</div>' + f'<button class="chip">{ic("plus", size=14)}<span class="mono">{{{{1}}}}</span> insertar variable</button></div>' + f'<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="adder">{ic("message-square", size=14)}Añadir pie</button><button class="adder">{ic("corner-up-left", size=14)}Añadir botones</button></div>', mark="2")
         + step(3, "Ficha", "Sin nombre", ficha("", version="v1"), mark="3")
     )
@@ -586,6 +651,7 @@ def view_vacia():
         "Un mensaje fijo con huecos que se rellenan con datos del contacto. Meta lo revisa antes de que puedas usarlo; suele decidir en minutos.",
         left, right,
         dock("Por empezar", "1/3", [("Para qué", "ok"), ("Mensaje", "pend"), ("Ficha", "pend")], "Falta el texto y el nombre", category="Utilidad", price="US$ 0,0008"),
+        top=start_strip() + CAROUSEL_JS,
     )
 
 

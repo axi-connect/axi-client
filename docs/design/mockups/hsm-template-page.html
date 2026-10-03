@@ -358,7 +358,7 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
 
 /* ficha */
 .ficha{display:grid;gap:14px;grid-template-columns:1fr}
-@container (min-width: 620px){.ficha{grid-template-columns:minmax(0,1fr) 18rem}}
+@container (min-width: 620px){.ficha{grid-template-columns:minmax(0,1fr) 12.5rem}}
 .locked{display:inline-flex;gap:5px;align-items:center;font-size:12px;color:var(--muted-foreground)}
 
 /* columna derecha */
@@ -498,6 +498,23 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
 .pcard .review{font-size:12px;color:var(--muted-foreground)}
 .pcard .review b{color:var(--foreground);font-weight:500}
 .auth-note{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--muted-foreground)}
+
+/* «Empieza desde» v3: a todo el ancho, carrusel sin barra, con desvanecidos y flechas */
+.startbox{gap:12px}
+.start-tools{display:flex;align-items:center;gap:12px}
+.start-nav{display:flex;gap:6px}
+.start-nav button{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);display:grid;place-items:center;background:var(--background);color:var(--foreground);transition:opacity .15s var(--ease)}
+.start-nav button:hover{background:var(--secondary)}
+.start-nav button:disabled{opacity:.35;cursor:default;background:var(--background)}
+.start-row{grid-auto-columns:220px;scrollbar-width:none;-ms-overflow-style:none;scroll-snap-type:x proximity;scroll-behavior:smooth;
+  --fade-l:0px;--fade-r:48px;
+  -webkit-mask-image:linear-gradient(to right,transparent 0,#000 var(--fade-l),#000 calc(100% - var(--fade-r)),transparent 100%);
+  mask-image:linear-gradient(to right,transparent 0,#000 var(--fade-l),#000 calc(100% - var(--fade-r)),transparent 100%)}
+.start-row::-webkit-scrollbar{display:none}
+.start-row[data-start="false"]{--fade-l:48px}
+.start-row[data-end="true"]{--fade-r:0px}
+.start-row > *{scroll-snap-align:start}
+@media (prefers-reduced-motion: reduce){.start-row{scroll-behavior:auto}}
 @media (prefers-reduced-motion: reduce){.bar i{animation:none;width:100%}}
 
 </style>
@@ -513,8 +530,9 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
 <div class="shell"><div class="page">
   <a class="back" href="#"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>Plantillas de Meta</a>
   <header><p class="kicker">Plantillas de Meta</p><h1 class="title">Nueva plantilla</h1><p class="title-lead">Un mensaje fijo con huecos que se rellenan con datos del contacto. Meta lo revisa antes de que puedas usarlo; suele decidir en minutos.</p></header>
+  <p class="started"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 10 5 5-5 5"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/></svg>Empezaste <b>en blanco</b><button>Cambiar</button></p>
   <div class="layout">
-    <div class="col"><p class="started"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 10 5 5-5 5"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/></svg>Empezaste <b>en blanco</b><button>Cambiar</button></p>
+    <div class="col">
 <section class="step " aria-label="¿Para qué es?">
   <button class="step-head" aria-expanded="true">
     <span class="mark done" aria-hidden="true"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
@@ -598,7 +616,7 @@ campañas, seguimientos, cobros y automatizaciones la mandan solas, sin que la e
   <div class="step-body">
 <div class="ficha">
   <div class="field"><label>Nombre</label><div class="namegroup "><div class="input  " id="" role="textbox" aria-readonly="true"><span>Temporada colección</span></div><span class="vsel" role="combobox" aria-expanded="false">v2<svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span></div><p class="techname">En Meta: <code>temporada_coleccion_v2</code><span>· lo formateamos por ti</span></p></div>
-  <div class="field"><label>Idioma</label><div class="select " id="" role="combobox" aria-expanded="false"><span class="val">Español (Colombia) · es_CO</span><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div></div>
+  <div class="field"><label>Idioma</label><div class="select " id="" role="combobox" aria-expanded="false"><span class="val">Español (Colombia)</span><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div></div>
 </div></div>
 </section></div>
     <aside class="aside" aria-label="Así se verá"><h3>Así se verá <small>con tus ejemplos</small></h3>
@@ -628,12 +646,52 @@ campañas, seguimientos, cobros y automatizaciones la mandan solas, sin que la e
 <div class="shell"><div class="page">
   <a class="back" href="#"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>Plantillas de Meta</a>
   <header><p class="kicker">Plantillas de Meta</p><h1 class="title">Nueva plantilla</h1><p class="title-lead">Un mensaje fijo con huecos que se rellenan con datos del contacto. Meta lo revisa antes de que puedas usarlo; suele decidir en minutos.</p></header>
+  
+<section class="startbox" aria-label="Empieza desde">
+  <div class="start-head">
+    <h2>Empieza desde</h2>
+    <div class="start-tools">
+      <a href="#biblioteca"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="8" height="18" x="3" y="3" rx="1"/><path d="M7 3v18"/><path d="M20.4 18.9c.2.5-.1 1.1-.6 1.3l-1.9.7c-.5.2-1.1-.1-1.3-.6L11.1 5.1c-.2-.5.1-1.1.6-1.3l1.9-.7c.5-.2 1.1.1 1.3.6Z"/></svg>Explorar la biblioteca de Meta<svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+      <div class="start-nav">
+        <button type="button" data-dir="-1" aria-label="Anteriores" disabled><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+        <button type="button" data-dir="1" aria-label="Siguientes"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
+      </div>
+    </div>
+  </div>
+  <div class="start-row" data-start="true" data-end="false"><button class="scard blank" aria-pressed="true"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg><b>En blanco</b><span class="sbody">Escribe la tuya desde cero</span></button><button class="scard" aria-pressed="false"><span class="src axi"><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg>axi sugiere</span><b>Retomar conversación</b><span class="sbody">«Hola {{1}}, te escribo por {{2}}. ¿Seguimos?»</span></button><button class="scard" aria-pressed="false"><span class="src axi"><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg>axi sugiere</span><b>Recordar cotización</b><span class="sbody">«Hola {{1}}, tu cotización de {{2}} sigue vigente.»</span></button><button class="scard" aria-pressed="false"><span class="src axi"><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg>axi sugiere</span><b>Confirmar interés</b><span class="sbody">«Hola {{1}}, hace unos días hablamos de {{2}}.»</span></button><button class="scard" aria-pressed="false"><span class="src "><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="8" height="18" x="3" y="3" rx="1"/><path d="M7 3v18"/><path d="M20.4 18.9c.2.5-.1 1.1-.6 1.3l-1.9.7c-.5.2-1.1-.1-1.3-.6L11.1 5.1c-.2-.5.1-1.1.6-1.3l1.9-.7c.5-.2 1.1.1 1.3.6Z"/></svg>Biblioteca de Meta</span><b>Recordatorio de pago</b><span class="sbody">Aprobación inmediata si no cambias el texto fijo</span></button><button class="scard" aria-pressed="false"><span class="src "><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="8" height="18" x="3" y="3" rx="1"/><path d="M7 3v18"/><path d="M20.4 18.9c.2.5-.1 1.1-.6 1.3l-1.9.7c-.5.2-1.1-.1-1.3-.6L11.1 5.1c-.2-.5.1-1.1.6-1.3l1.9-.7c.5-.2 1.1.1 1.3.6Z"/></svg>Biblioteca de Meta</span><b>Pedido en camino</b><span class="sbody">Aprobación inmediata si no cambias el texto fijo</span></button><button class="scard" aria-pressed="false"><span class="src "><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="8" height="18" x="3" y="3" rx="1"/><path d="M7 3v18"/><path d="M20.4 18.9c.2.5-.1 1.1-.6 1.3l-1.9.7c-.5.2-1.1-.1-1.3-.6L11.1 5.1c-.2-.5.1-1.1.6-1.3l1.9-.7c.5-.2 1.1.1 1.3.6Z"/></svg>Biblioteca de Meta</span><b>Pago recibido</b><span class="sbody">Aprobación inmediata si no cambias el texto fijo</span></button><button class="scard" aria-pressed="false"><span class="src "><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="8" height="18" x="3" y="3" rx="1"/><path d="M7 3v18"/><path d="M20.4 18.9c.2.5-.1 1.1-.6 1.3l-1.9.7c-.5.2-1.1-.1-1.3-.6L11.1 5.1c-.2-.5.1-1.1.6-1.3l1.9-.7c.5-.2 1.1.1 1.3.6Z"/></svg>Biblioteca de Meta</span><b>¿Cómo te fue?</b><span class="sbody">Aprobación inmediata si no cambias el texto fijo</span></button></div>
+</section><script>
+(function () {
+  document.querySelectorAll('.startbox').forEach(function (box) {
+    if (box.dataset.bound) return;
+    box.dataset.bound = '1';
+    var row = box.querySelector('.start-row');
+    var prev = box.querySelector('[data-dir="-1"]');
+    var next = box.querySelector('[data-dir="1"]');
+    function sync() {
+      var atStart = row.scrollLeft <= 2;
+      var atEnd = row.scrollLeft + row.clientWidth >= row.scrollWidth - 2;
+      row.dataset.start = String(atStart);
+      row.dataset.end = String(atEnd);
+      prev.disabled = atStart;
+      next.disabled = atEnd;
+    }
+    function step(dir) {
+      var card = row.firstElementChild;
+      var width = card ? card.getBoundingClientRect().width + 10 : 230;
+      var perPage = Math.max(1, Math.floor(row.clientWidth / width));
+      row.scrollBy({ left: dir * perPage * width, behavior: 'smooth' });
+    }
+    prev.addEventListener('click', function () { step(-1); });
+    next.addEventListener('click', function () { step(1); });
+    row.addEventListener('scroll', sync, { passive: true });
+    new ResizeObserver(sync).observe(row);
+    document.querySelectorAll('.mk-view').forEach(function (b) { b.addEventListener('click', function () { setTimeout(sync, 50); }); });
+    sync();
+  });
+})();
+</script>
   <div class="layout">
     <div class="col">
-<section class="startbox" aria-label="Empieza desde">
-  <div class="start-head"><h2>Empieza desde</h2><a href="#biblioteca"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="8" height="18" x="3" y="3" rx="1"/><path d="M7 3v18"/><path d="M20.4 18.9c.2.5-.1 1.1-.6 1.3l-1.9.7c-.5.2-1.1-.1-1.3-.6L11.1 5.1c-.2-.5.1-1.1.6-1.3l1.9-.7c.5-.2 1.1.1 1.3.6Z"/></svg>Explorar la biblioteca de Meta<svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a></div>
-  <div class="start-row"><button class="scard blank" aria-pressed="true"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg><b>En blanco</b><span class="sbody">Escribe la tuya desde cero</span></button><button class="scard" aria-pressed="false"><span class="src axi"><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg>axi sugiere</span><b>Retomar cotización</b><span class="sbody">«Hola {{1}}, te escribo por la cotización de {{2}}. ¿Seguimos?»</span></button><button class="scard" aria-pressed="false"><span class="src axi"><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg>axi sugiere</span><b>Recordar cita</b><span class="sbody">«Hola {{1}}, te recordamos tu cita del {{2}}. ¿Nos confirmas?»</span></button><button class="scard" aria-pressed="false"><span class="src "><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="8" height="18" x="3" y="3" rx="1"/><path d="M7 3v18"/><path d="M20.4 18.9c.2.5-.1 1.1-.6 1.3l-1.9.7c-.5.2-1.1-.1-1.3-.6L11.1 5.1c-.2-.5.1-1.1.6-1.3l1.9-.7c.5-.2 1.1.1 1.3.6Z"/></svg>Biblioteca de Meta</span><b>Recordatorio de pago</b><span class="sbody">Aprobación inmediata si no cambias el texto fijo</span></button><button class="scard" aria-pressed="false"><span class="src "><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="8" height="18" x="3" y="3" rx="1"/><path d="M7 3v18"/><path d="M20.4 18.9c.2.5-.1 1.1-.6 1.3l-1.9.7c-.5.2-1.1-.1-1.3-.6L11.1 5.1c-.2-.5.1-1.1.6-1.3l1.9-.7c.5-.2 1.1.1 1.3.6Z"/></svg>Biblioteca de Meta</span><b>Pedido en camino</b><span class="sbody">Aprobación inmediata si no cambias el texto fijo</span></button></div>
-</section>
 <section class="step " aria-label="¿Para qué es?">
   <button class="step-head" aria-expanded="true">
     <span class="mark 1" aria-hidden="true">1</span>
@@ -691,7 +749,7 @@ campañas, seguimientos, cobros y automatizaciones la mandan solas, sin que la e
   <div class="step-body">
 <div class="ficha">
   <div class="field"><label>Nombre</label><div class="namegroup "><div class="input ph " id="" role="textbox" aria-readonly="true"><span>Cómo la reconoces, p. ej. Temporada colección</span></div><span class="vsel" role="combobox" aria-expanded="false">v1<svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span></div><p class="techname">Escribe un nombre: lo pasamos al formato de Meta y le ponemos versión.</p></div>
-  <div class="field"><label>Idioma</label><div class="select " id="" role="combobox" aria-expanded="false"><span class="val">Español (Colombia) · es_CO</span><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div></div>
+  <div class="field"><label>Idioma</label><div class="select " id="" role="combobox" aria-expanded="false"><span class="val">Español (Colombia)</span><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div></div>
 </div></div>
 </section></div>
     <aside class="aside" aria-label="Así se verá"><h3>Así se verá</h3><div class="wa-preview"><div class="wa-bubble"><p class="wa-text wa-muted">Escribe el texto y aquí verás el mensaje tal como le llega al cliente.</p><span class="wa-time wa-muted">9:41</span></div></div><div class="before"><h3>Antes de enviar</h3><div class="chk pend"><svg class="ic " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg><span>Escribe el texto del mensaje.</span><button class="act">Ir al mensaje</button></div><div class="chk pend"><svg class="ic " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg><span>Ponle un nombre interno.</span><button class="act">Ir a la ficha</button></div></div></aside>
@@ -711,12 +769,52 @@ campañas, seguimientos, cobros y automatizaciones la mandan solas, sin que la e
 <div class="shell"><div class="page">
   <a class="back" href="#"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>Plantillas de Meta</a>
   <header><p class="kicker">Plantillas de Meta</p><h1 class="title">Nueva plantilla</h1><p class="title-lead">Un mensaje fijo con huecos que se rellenan con datos del contacto. Meta lo revisa antes de que puedas usarlo; suele decidir en minutos.</p></header>
+  
+<section class="startbox" aria-label="Empieza desde">
+  <div class="start-head">
+    <h2>Empieza desde</h2>
+    <div class="start-tools">
+      <a href="#biblioteca"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="8" height="18" x="3" y="3" rx="1"/><path d="M7 3v18"/><path d="M20.4 18.9c.2.5-.1 1.1-.6 1.3l-1.9.7c-.5.2-1.1-.1-1.3-.6L11.1 5.1c-.2-.5.1-1.1.6-1.3l1.9-.7c.5-.2 1.1.1 1.3.6Z"/></svg>Explorar la biblioteca de Meta<svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+      <div class="start-nav">
+        <button type="button" data-dir="-1" aria-label="Anteriores" disabled><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+        <button type="button" data-dir="1" aria-label="Siguientes"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
+      </div>
+    </div>
+  </div>
+  <div class="start-row" data-start="true" data-end="false"><button class="scard blank" aria-pressed="true"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg><b>En blanco</b><span class="sbody">Escribe la tuya desde cero</span></button><button class="scard" aria-pressed="false"><span class="src axi"><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg>axi sugiere</span><b>Retomar conversación</b><span class="sbody">«Hola {{1}}, te escribo por {{2}}. ¿Seguimos?»</span></button><button class="scard" aria-pressed="false"><span class="src axi"><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg>axi sugiere</span><b>Recordar cotización</b><span class="sbody">«Hola {{1}}, tu cotización de {{2}} sigue vigente.»</span></button><button class="scard" aria-pressed="false"><span class="src axi"><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg>axi sugiere</span><b>Confirmar interés</b><span class="sbody">«Hola {{1}}, hace unos días hablamos de {{2}}.»</span></button><button class="scard" aria-pressed="false"><span class="src "><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="8" height="18" x="3" y="3" rx="1"/><path d="M7 3v18"/><path d="M20.4 18.9c.2.5-.1 1.1-.6 1.3l-1.9.7c-.5.2-1.1-.1-1.3-.6L11.1 5.1c-.2-.5.1-1.1.6-1.3l1.9-.7c.5-.2 1.1.1 1.3.6Z"/></svg>Biblioteca de Meta</span><b>Recordatorio de pago</b><span class="sbody">Aprobación inmediata si no cambias el texto fijo</span></button><button class="scard" aria-pressed="false"><span class="src "><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="8" height="18" x="3" y="3" rx="1"/><path d="M7 3v18"/><path d="M20.4 18.9c.2.5-.1 1.1-.6 1.3l-1.9.7c-.5.2-1.1-.1-1.3-.6L11.1 5.1c-.2-.5.1-1.1.6-1.3l1.9-.7c.5-.2 1.1.1 1.3.6Z"/></svg>Biblioteca de Meta</span><b>Pedido en camino</b><span class="sbody">Aprobación inmediata si no cambias el texto fijo</span></button><button class="scard" aria-pressed="false"><span class="src "><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="8" height="18" x="3" y="3" rx="1"/><path d="M7 3v18"/><path d="M20.4 18.9c.2.5-.1 1.1-.6 1.3l-1.9.7c-.5.2-1.1-.1-1.3-.6L11.1 5.1c-.2-.5.1-1.1.6-1.3l1.9-.7c.5-.2 1.1.1 1.3.6Z"/></svg>Biblioteca de Meta</span><b>Pago recibido</b><span class="sbody">Aprobación inmediata si no cambias el texto fijo</span></button><button class="scard" aria-pressed="false"><span class="src "><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="8" height="18" x="3" y="3" rx="1"/><path d="M7 3v18"/><path d="M20.4 18.9c.2.5-.1 1.1-.6 1.3l-1.9.7c-.5.2-1.1-.1-1.3-.6L11.1 5.1c-.2-.5.1-1.1.6-1.3l1.9-.7c.5-.2 1.1.1 1.3.6Z"/></svg>Biblioteca de Meta</span><b>¿Cómo te fue?</b><span class="sbody">Aprobación inmediata si no cambias el texto fijo</span></button></div>
+</section><script>
+(function () {
+  document.querySelectorAll('.startbox').forEach(function (box) {
+    if (box.dataset.bound) return;
+    box.dataset.bound = '1';
+    var row = box.querySelector('.start-row');
+    var prev = box.querySelector('[data-dir="-1"]');
+    var next = box.querySelector('[data-dir="1"]');
+    function sync() {
+      var atStart = row.scrollLeft <= 2;
+      var atEnd = row.scrollLeft + row.clientWidth >= row.scrollWidth - 2;
+      row.dataset.start = String(atStart);
+      row.dataset.end = String(atEnd);
+      prev.disabled = atStart;
+      next.disabled = atEnd;
+    }
+    function step(dir) {
+      var card = row.firstElementChild;
+      var width = card ? card.getBoundingClientRect().width + 10 : 230;
+      var perPage = Math.max(1, Math.floor(row.clientWidth / width));
+      row.scrollBy({ left: dir * perPage * width, behavior: 'smooth' });
+    }
+    prev.addEventListener('click', function () { step(-1); });
+    next.addEventListener('click', function () { step(1); });
+    row.addEventListener('scroll', sync, { passive: true });
+    new ResizeObserver(sync).observe(row);
+    document.querySelectorAll('.mk-view').forEach(function (b) { b.addEventListener('click', function () { setTimeout(sync, 50); }); });
+    sync();
+  });
+})();
+</script>
   <div class="layout">
     <div class="col">
-<section class="startbox" aria-label="Empieza desde">
-  <div class="start-head"><h2>Empieza desde</h2><a href="#biblioteca"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="8" height="18" x="3" y="3" rx="1"/><path d="M7 3v18"/><path d="M20.4 18.9c.2.5-.1 1.1-.6 1.3l-1.9.7c-.5.2-1.1-.1-1.3-.6L11.1 5.1c-.2-.5.1-1.1.6-1.3l1.9-.7c.5-.2 1.1.1 1.3.6Z"/></svg>Explorar la biblioteca de Meta<svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a></div>
-  <div class="start-row"><button class="scard blank" aria-pressed="true"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg><b>En blanco</b><span class="sbody">Escribe la tuya desde cero</span></button><button class="scard" aria-pressed="false"><span class="src axi"><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg>axi sugiere</span><b>Retomar cotización</b><span class="sbody">«Hola {{1}}, te escribo por la cotización de {{2}}. ¿Seguimos?»</span></button><button class="scard" aria-pressed="false"><span class="src axi"><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg>axi sugiere</span><b>Recordar cita</b><span class="sbody">«Hola {{1}}, te recordamos tu cita del {{2}}. ¿Nos confirmas?»</span></button><button class="scard" aria-pressed="false"><span class="src "><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="8" height="18" x="3" y="3" rx="1"/><path d="M7 3v18"/><path d="M20.4 18.9c.2.5-.1 1.1-.6 1.3l-1.9.7c-.5.2-1.1-.1-1.3-.6L11.1 5.1c-.2-.5.1-1.1.6-1.3l1.9-.7c.5-.2 1.1.1 1.3.6Z"/></svg>Biblioteca de Meta</span><b>Recordatorio de pago</b><span class="sbody">Aprobación inmediata si no cambias el texto fijo</span></button><button class="scard" aria-pressed="false"><span class="src "><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="8" height="18" x="3" y="3" rx="1"/><path d="M7 3v18"/><path d="M20.4 18.9c.2.5-.1 1.1-.6 1.3l-1.9.7c-.5.2-1.1-.1-1.3-.6L11.1 5.1c-.2-.5.1-1.1.6-1.3l1.9-.7c.5-.2 1.1.1 1.3.6Z"/></svg>Biblioteca de Meta</span><b>Pedido en camino</b><span class="sbody">Aprobación inmediata si no cambias el texto fijo</span></button></div>
-</section>
 <section class="step " aria-label="¿Para qué es?">
   <button class="step-head" aria-expanded="true">
     <span class="mark 1" aria-hidden="true">1</span>
@@ -774,7 +872,7 @@ campañas, seguimientos, cobros y automatizaciones la mandan solas, sin que la e
   <div class="step-body">
 <div class="ficha">
   <div class="field"><label>Nombre</label><div class="namegroup "><div class="input ph " id="" role="textbox" aria-readonly="true"><span>Cómo la reconoces, p. ej. Temporada colección</span></div><span class="vsel" role="combobox" aria-expanded="false">v1<svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span></div><p class="techname">Escribe un nombre: lo pasamos al formato de Meta y le ponemos versión.</p></div>
-  <div class="field"><label>Idioma</label><div class="select " id="" role="combobox" aria-expanded="false"><span class="val">Español (Colombia) · es_CO</span><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div></div>
+  <div class="field"><label>Idioma</label><div class="select " id="" role="combobox" aria-expanded="false"><span class="val">Español (Colombia)</span><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div></div>
 </div></div>
 </section></div>
     <aside class="aside" aria-label="Así se verá"><h3>Así se verá</h3><div class="wa-preview"><div class="wa-bubble"><p class="wa-text wa-muted">Escribe el texto y aquí verás el mensaje tal como le llega al cliente.</p><span class="wa-time wa-muted">9:41</span></div></div><div class="before"><h3>Antes de enviar</h3><div class="chk pend"><svg class="ic " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg><span>Escribe el texto del mensaje.</span><button class="act">Ir al mensaje</button></div><div class="chk pend"><svg class="ic " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg><span>Ponle un nombre interno.</span><button class="act">Ir a la ficha</button></div></div></aside>
@@ -856,6 +954,7 @@ campañas, seguimientos, cobros y automatizaciones la mandan solas, sin que la e
 <div class="shell"><div class="page">
   <a class="back" href="#"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>Plantillas de Meta</a>
   <header><p class="kicker">Rechazada</p><h1 class="title">Corregir «temporada_coleccion_v1»</h1><p class="title-lead">Meta la revisa otra vez. El nombre y el idioma no se pueden cambiar: son suyos desde que la creaste.</p></header>
+  
   <div class="layout">
     <div class="col"><div class="notice err "><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg><div><b>Por qué la rechazó Meta:</b> la imagen parece un anuncio de un producto que no vendes en tu catálogo (política de comercio).<br><span class='muted small'>Una rechazada se corrige sin límite de ediciones. Al guardar vuelve a «En revisión».</span></div></div>
 <section class="step " aria-label="¿Para qué es?">
@@ -941,7 +1040,7 @@ campañas, seguimientos, cobros y automatizaciones la mandan solas, sin que la e
   <div class="step-body">
 <div class="ficha">
   <div class="field"><label>Nombre</label><div class="namegroup locked"><div class="input  readonly" id="" role="textbox" aria-readonly="true"><span>Temporada colección</span></div><span class="vsel">v1<svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></div><p class="techname">En Meta: <code>temporada_coleccion_v1</code><span>· lo formateamos por ti</span></p><p class="hint">Meta no deja cambiar nombre ni versión: para otra, crea una nueva desde la lista.</p></div>
-  <div class="field"><label>Idioma</label><div class="select readonly" id="" role="combobox" aria-expanded="false"><span class="val">Español (Colombia) · es_CO</span><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div></div>
+  <div class="field"><label>Idioma</label><div class="select readonly" id="" role="combobox" aria-expanded="false"><span class="val">Español (Colombia)</span><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div></div>
 </div></div>
 </section></div>
     <aside class="aside" aria-label="Así se verá"><h3>Así se verá <small>con tus ejemplos</small></h3>
@@ -971,6 +1070,7 @@ campañas, seguimientos, cobros y automatizaciones la mandan solas, sin que la e
 <div class="shell"><div class="page">
   <a class="back" href="#"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>Plantillas de Meta</a>
   <header><p class="kicker">Aprobada</p><h1 class="title">Editar «temporada_coleccion_v1»</h1><p class="title-lead">Aprobada y en uso. Puedes cambiar el mensaje y los botones; Meta la revisa de nuevo.</p></header>
+  
   <div class="layout">
     <div class="col">
 <section class="step closed" aria-label="¿Para qué es?">
@@ -1056,7 +1156,7 @@ campañas, seguimientos, cobros y automatizaciones la mandan solas, sin que la e
   <div class="step-body">
 <div class="ficha">
   <div class="field"><label>Nombre</label><div class="namegroup locked"><div class="input  readonly" id="" role="textbox" aria-readonly="true"><span>Temporada colección</span></div><span class="vsel">v1<svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></div><p class="techname">En Meta: <code>temporada_coleccion_v1</code><span>· lo formateamos por ti</span></p><p class="hint">Meta no deja cambiar nombre ni versión: para otra, crea una nueva desde la lista.</p></div>
-  <div class="field"><label>Idioma</label><div class="select readonly" id="" role="combobox" aria-expanded="false"><span class="val">Español (Colombia) · es_CO</span><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div></div>
+  <div class="field"><label>Idioma</label><div class="select readonly" id="" role="combobox" aria-expanded="false"><span class="val">Español (Colombia)</span><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div></div>
 </div></div>
 </section></div>
     <aside class="aside" aria-label="Así se verá"><h3>Así se verá <small>con tus ejemplos</small></h3>
@@ -1173,7 +1273,7 @@ campañas, seguimientos, cobros y automatizaciones la mandan solas, sin que la e
   <div class="step-body">
 <div class="ficha">
   <div class="field"><label>Nombre</label><div class="namegroup "><div class="input  " id="" role="textbox" aria-readonly="true"><span>Temporada colección</span></div><span class="vsel" role="combobox" aria-expanded="false">v2<svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span></div><p class="techname">En Meta: <code>temporada_coleccion_v2</code><span>· lo formateamos por ti</span></p></div>
-  <div class="field"><label>Idioma</label><div class="select " id="" role="combobox" aria-expanded="false"><span class="val">Español (Colombia) · es_CO</span><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div></div>
+  <div class="field"><label>Idioma</label><div class="select " id="" role="combobox" aria-expanded="false"><span class="val">Español (Colombia)</span><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div></div>
 </div></div>
 </section>
   
