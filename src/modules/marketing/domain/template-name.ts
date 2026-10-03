@@ -80,7 +80,7 @@ export interface VersionOption {
 
 /**
  * Las versiones de una base en un idioma: las que ya existen en la lista (en
- * uso), las que Meta dijo que están reservadas, y unas cuantas libres detrás.
+ * uso), las que Meta dijo que están reservadas, y las primeras libres.
  * Una plantilla es única por nombre E idioma, así que la v1 en inglés no ocupa
  * la v1 en español.
  *
@@ -93,27 +93,29 @@ export function versionOptions(
   templates: readonly Pick<HsmTemplateDTO, "name" | "language" | "approval_status">[],
   reserved: ReadonlyMap<number, string | null> = new Map(),
 ): VersionOption[] {
-  const inUse = new Map<number, HsmTemplateDTO["approval_status"]>();
+  const taken = new Map<number, VersionTaken>();
   for (const template of templates) {
     if (template.language !== language) continue;
     const parts = splitTemplateName(template.name);
-    if (parts.base === base && parts.version !== null) inUse.set(parts.version, template.approval_status);
+    if (parts.base === base && parts.version !== null) {
+      taken.set(parts.version, { reason: "in_use", status: template.approval_status });
+    }
   }
-  const highest = Math.max(0, ...inUse.keys(), ...reserved.keys());
-  const options: VersionOption[] = [];
-  let free = 0;
-  for (let version = 1; version <= highest || free < FREE_VERSIONS_OFFERED; version += 1) {
-    const status = inUse.get(version);
-    const taken: VersionTaken | null =
-      status !== undefined
-        ? { reason: "in_use", status }
-        : reserved.has(version)
-          ? { reason: "reserved", until: reserved.get(version) ?? null }
-          : null;
-    if (taken === null) free += 1;
-    options.push({ version, taken });
+  for (const [version, until] of reserved) {
+    if (!taken.has(version)) taken.set(version, { reason: "reserved", until });
   }
-  return options;
+
+  // Las libres: las primeras N que no están tomadas, buscando desde la v1. El
+  // recorrido es de |tomadas| + N pasos como mucho, NO hasta la más alta: una
+  // plantilla del Business Manager llamada `promo_v20261003` no puede producir
+  // veinte millones de opciones (auditoría F3, R1).
+  const options: VersionOption[] = [...taken].map(([version, reason]) => ({ version, taken: reason }));
+  for (let version = 1, free = 0; free < FREE_VERSIONS_OFFERED; version += 1) {
+    if (taken.has(version)) continue;
+    options.push({ version, taken: null });
+    free += 1;
+  }
+  return options.sort((left, right) => left.version - right.version);
 }
 
 /** La primera versión libre: la que el selector propone sin que nadie elija. */

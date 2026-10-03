@@ -2,6 +2,7 @@ import {
   breaksDesktop,
   canAddButton,
   groupButtons,
+  readBodyExamples,
   visibleButtons,
   type TemplateButton,
 } from "../template-pieces";
@@ -63,5 +64,21 @@ describe("lo que el cliente verá de verdad", () => {
     expect(breaksDesktop([url(), phone()])).toBe(false);
     expect(breaksDesktop([quick(), url()])).toBe(true);
     expect(breaksDesktop([quick(), quick(), quick(), quick()])).toBe(true);
+  });
+});
+
+describe("readBodyExamples · los ejemplos que ya tiene la plantilla (F3, R2)", () => {
+  it("lee el primer juego de body_text", () => {
+    expect(
+      readBodyExamples([
+        { type: "HEADER", format: "TEXT", text: "Hola" },
+        { type: "BODY", text: "Hola {{1}}, {{2}}", example: { body_text: [["Ana", "20 %"]] } },
+      ]),
+    ).toEqual(["Ana", "20 %"]);
+  });
+
+  it("sin ejemplo, o sin componentes, no inventa nada", () => {
+    expect(readBodyExamples([{ type: "BODY", text: "Hola" }])).toEqual([]);
+    expect(readBodyExamples(null)).toEqual([]);
   });
 });

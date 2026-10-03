@@ -86,4 +86,28 @@ describe("versionOptions · la siguiente libre, ya elegida", () => {
       { version: 2, taken: null },
     ]);
   });
+
+  it("una versión enorme (del Business Manager) no genera millones de opciones (R1)", () => {
+    const started = Date.now();
+    const options = versionOptions("promo", "es_CO", [
+      { name: "promo_v20261003", language: "es_CO", approval_status: "approved" },
+    ]);
+
+    expect(options.map((option) => option.version)).toEqual([1, 2, 20261003]);
+    expect(firstFreeVersion(options)).toBe(1);
+    expect(Date.now() - started).toBeLessThan(50);
+  });
+
+  it("los huecos se ofrecen antes que lo de detrás de la más alta", () => {
+    const options = versionOptions("p", "es", [
+      { name: "p_v1", language: "es", approval_status: "approved" },
+      { name: "p_v3", language: "es", approval_status: "approved" },
+    ]);
+    expect(options.map((option) => [option.version, option.taken === null])).toEqual([
+      [1, false],
+      [2, true],
+      [3, false],
+      [4, true],
+    ]);
+  });
 });

@@ -101,6 +101,24 @@ describe("nombre y versión: se escribe como se dice", () => {
   });
 });
 
+describe("editar precarga lo que ya tiene (auditoría F3, R2)", () => {
+  it("los ejemplos guardados llegan puestos: corregir no obliga a reescribirlos", () => {
+    render(
+      <HsmTemplateForm
+        channelId="ch1"
+        templates={[]}
+        editing={template({
+          components: [{ type: "BODY", text: "Hola {{1}}, tenemos algo para ti hoy.", example: { body_text: [["Ana"]] } }],
+        })}
+        {...handlers()}
+      />,
+    );
+
+    expect(screen.getByLabelText("Ejemplo de la variable 1")).toHaveValue("Ana");
+    expect(within(screen.getByRole("contentinfo")).queryByText(/Falta el ejemplo/)).not.toBeInTheDocument();
+  });
+});
+
 describe("empieza desde", () => {
   it("una sugerida de axi llena el texto, sus ejemplos y el nombre, y la fila se pliega", () => {
     renderNew();

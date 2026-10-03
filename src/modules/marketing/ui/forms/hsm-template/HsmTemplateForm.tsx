@@ -47,6 +47,7 @@ import {
   FOOTER_MAX,
   groupButtons,
   HEADER_MAX,
+  readBodyExamples,
   readTemplatePieces,
   type TemplateButton,
 } from "@/modules/marketing/domain/template-pieces";
@@ -143,7 +144,8 @@ export function HsmTemplateForm({
   const [language, setLanguage] = useState(editing?.language ?? "es_CO");
   const [category, setCategory] = useState<Category>(editing?.category ?? "utility");
   const [body, setBody] = useState(editing?.body ?? "");
-  const [examples, setExamples] = useState<string[]>([]);
+  // Al editar, los ejemplos que ya tiene: corregir no obliga a reescribirlos.
+  const [examples, setExamples] = useState<string[]>(() => readBodyExamples(editing?.components));
   const [header, setHeader] = useState<string | null>(stored.header);
   const [footer, setFooter] = useState<string | null>(stored.footer);
   const [buttons, setButtons] = useState<TemplateButton[]>(stored.buttons);

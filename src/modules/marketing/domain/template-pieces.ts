@@ -211,3 +211,23 @@ export function hasIncompleteButton(buttons: readonly TemplateButton[]): boolean
     }
   });
 }
+
+/**
+ * Los ejemplos de las variables del cuerpo que la plantilla ya tiene
+ * (`BODY.example.body_text[0]`, el array de arrays que exige Meta), o `[]`.
+ * Al editar se precargan: sin ellos, corregir una rechazada obligaba a
+ * reescribir ejemplos que ya estaban (auditoría F3, R2).
+ */
+export function readBodyExamples(components: unknown): string[] {
+  if (!Array.isArray(components)) return [];
+  for (const raw of components) {
+    if (typeof raw !== "object" || raw === null) continue;
+    const item = raw as Record<string, unknown>;
+    if (typeof item.type !== "string" || item.type.toUpperCase() !== "BODY") continue;
+    const rows = (item.example as { body_text?: unknown } | undefined)?.body_text;
+    const first = Array.isArray(rows) ? rows[0] : undefined;
+    return Array.isArray(first) ? first.map((value) => (typeof value === "string" ? value : "")) : [];
+  }
+  return [];
+}
+
