@@ -33,6 +33,31 @@
 
 .dark .film { --film-dim-text: color-mix(in srgb, var(--foreground) 50%, transparent); }
 
+/* El nudo del hero y la gota que lo releva (§25) son la misma luz. En oscuro,
+   el núcleo es blanco; en claro, el blanco se perdería sobre el fondo: núcleo
+   ámbar y coral con el blanco solo en el punto más interior. */
+.film {
+  --knot-bg: radial-gradient(
+    closest-side,
+    #fff6e6,
+    color-mix(in srgb, var(--axi-amber) 96%, transparent) 9%,
+    color-mix(in srgb, var(--axi-brand) 72%, transparent) 30%,
+    color-mix(in srgb, var(--axi-brand) 30%, transparent) 52%,
+    color-mix(in srgb, var(--axi-violet) 9%, transparent) 76%,
+    transparent
+  );
+}
+.dark .film {
+  --knot-bg: radial-gradient(
+    closest-side,
+    white,
+    color-mix(in srgb, var(--axi-amber) 90%, transparent) 18%,
+    color-mix(in srgb, var(--axi-brand) 45%, transparent) 45%,
+    color-mix(in srgb, var(--axi-violet) 14%, transparent) 75%,
+    transparent
+  );
+}
+
 /* La pose del teléfono (chat) y del recibo (cobrar): el motor anima estas
    variables en cada frame y solo las lee el `transform` del propio elemento.
    Registradas sin herencia, cambiarlas no invalida el estilo de todo lo que
@@ -324,19 +349,13 @@
   width: 280px;
   height: 280px;
   border-radius: 50%;
-  /* El núcleo es luz: blanco en los dos temas (con --foreground, en claro era negro). */
-  background: radial-gradient(
-    closest-side,
-    white,
-    color-mix(in srgb, var(--axi-amber) 90%, transparent) 18%,
-    color-mix(in srgb, var(--axi-brand) 45%, transparent) 45%,
-    color-mix(in srgb, var(--axi-violet) 14%, transparent) 75%,
-    transparent
-  );
+  background: var(--knot-bg);
   opacity: 0;
   pointer-events: none;
   will-change: transform, opacity;
 }
+/* Al bajar, la gota de la escena del video lo releva en su sitio (§25): nunca los dos a la vez. */
+[data-scene="hero"][data-relay] .film-hero-knot { visibility: hidden; }
 .film-hero-copy { position: absolute; inset-inline: 0; top: 19%; padding-inline: 16px; text-align: center; }
 /* Al 87 % del alto, pero sin salirse por abajo: «Canales: WhatsApp, Instagram
    y Messenger» ocupa dos líneas (la fila mide ~120 px). */

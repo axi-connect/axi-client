@@ -34,6 +34,54 @@ export function VideoScene() {
           </p>
         </div>
       </div>
+      <VideoLight />
     </section>
+  );
+}
+
+/** Las piezas de una banda del anillo: cuatro filos y cuatro esquinas, en la geometría del marco en reposo. */
+const PIECES = ["t", "b", "l", "r", "tl", "tr", "bl", "br"] as const;
+
+/**
+ * La luz del hero que abraza el marco (plan §25). Capas decorativas: sin motor
+ * no se ven (salvo el anillo quieto con movimiento reducido, film-video.css) y
+ * el motor solo les cambia transform, opacity y el dashoffset de los arcos.
+ * - La gota releva al nudo del hero (`.film-hero-knot`) y cae hasta el filo.
+ * - El destello anamórfico y los dos arcos son el contacto.
+ * - El anillo: tres bandas (filo, corona y bloom) de ocho piezas, para que el
+ *   marco crezca sin engordarlas, dentro del disco que gira (su máscara cónica).
+ * - El filamento es la versión de pantallas sin marco animado (< 1024).
+ */
+function VideoLight() {
+  return (
+    <div className="film-vlight" aria-hidden="true">
+      <div className="film-vlight-ring" data-light="ring" aria-hidden="true">
+        <div className="film-vlight-disc" data-anim="vlight-disc">
+          <div className="film-vlight-bands" data-anim="vlight-bands">
+            {(["bloom", "corona", "filo"] as const).map((band) => (
+              <div key={band} className={`film-vlight-band film-vlight-${band}`}>
+                {PIECES.map((piece) => (
+                  <i key={piece} className={`film-vlight-${piece}`} data-piece={piece} />
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <svg className="film-vlight-arcs" data-light="arcs" aria-hidden="true">
+        <path className="film-vlight-arc-glow" data-arc="cw" />
+        <path className="film-vlight-arc-glow" data-arc="ccw" />
+        <path className="film-vlight-arc-core" data-arc="cw" />
+        <path className="film-vlight-arc-core" data-arc="ccw" />
+        <path className="film-vlight-arc-head" data-arc="cw" />
+        <path className="film-vlight-arc-head" data-arc="ccw" />
+      </svg>
+      <span className="film-vlight-flash" data-light="flash" aria-hidden="true" />
+      <span className="film-vlight-drop" data-light="drop" aria-hidden="true">
+        <i className="film-vlight-trail" />
+        <i className="film-vlight-core" />
+      </span>
+      <span className="film-vlight-filament" data-light="filament" aria-hidden="true" />
+    </div>
   );
 }

@@ -228,7 +228,10 @@ export function HeroFibers({ className }: { className?: string }) {
 
       // Las fibras: solo el tramo que ya llegó y que el scroll todavía no recogió.
       ctx.lineCap = "round";
-      const out = 1 - 0.6 * s;
+      // Con la gota relevando al nudo (§25), las fibras ya no tienen dónde
+      // recogerse: se apagan en el primer 12 % (la gota aún tapa su punto).
+      const relay = hero.hasAttribute("data-relay");
+      const out = (1 - 0.6 * s) * (relay ? Math.max(0, 1 - s / 0.12) : 1);
       for (const f of fibers) {
         const st = fiberState(f, t, s);
         if (st.to - st.from < 0.002) continue;
@@ -241,8 +244,11 @@ export function HeroFibers({ className }: { className?: string }) {
         ctx.stroke();
       }
       // La luz en la punta que se mueve: la que llega y, al salir, la que se recoge.
-      ctx.globalAlpha = 0.9;
+      // Con la gota del video ya relevando al nudo (§25, `data-relay`), las
+      // puntas se recogerían en un sitio donde ya no hay luz: no se pintan.
+      ctx.globalAlpha = relay ? 0 : 0.9;
       for (const f of fibers) {
+        if (!ctx.globalAlpha) break;
         const st = fiberState(f, t, s);
         if (st.head === null) continue;
         const p = fiberPoint(f, knot, st.head);

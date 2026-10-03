@@ -79,7 +79,7 @@ export function writer() {
   const original = new Map<El, string | null>();
   const attrs = new Map<El, Map<string, string | null>>();
   const texts = new Map<HTMLElement, string>();
-  const write = (els: readonly El[], prop: "transform" | "opacity" | "strokeDasharray", value: string) => {
+  const write = (els: readonly El[], prop: "transform" | "opacity" | "strokeDasharray" | "strokeDashoffset", value: string) => {
     for (const el of els) {
       let seen = last.get(el);
       if (!seen) {
