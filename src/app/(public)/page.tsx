@@ -18,6 +18,10 @@ const HOME_TITLE = "Axi Connect · Vende en cada conversación";
 // El lead del hero, tal cual (título y descripción salen de la película).
 const HOME_DESCRIPTION =
   "Axi atiende tus canales digitales como tu mejor vendedor: responde en segundos, cotiza con tus precios, cobra y te lleva a tu meta del mes.";
+// La de la tarjeta de enlace, corta para que el chat no la corte a mitad de
+// frase (plan §26.3: 92 caracteres). La de buscadores es la de arriba.
+const HOME_CARD_DESCRIPTION =
+  "Axi atiende tus canales digitales como tu mejor vendedor. Prueba 7 días gratis, sin tarjeta.";
 
 /**
  * `title.absolute` y no un string suelto: el template del layout raíz
@@ -33,14 +37,14 @@ export const metadata: Metadata = {
     siteName: "Axi Connect",
     locale: "es_CO",
     title: HOME_TITLE,
-    description: HOME_DESCRIPTION,
+    description: HOME_CARD_DESCRIPTION,
     url: siteUrl("/"),
     images: [OG_IMAGE],
   },
   twitter: {
     card: "summary_large_image",
     title: HOME_TITLE,
-    description: HOME_DESCRIPTION,
+    description: HOME_CARD_DESCRIPTION,
     images: [OG_IMAGE.url],
   },
 };

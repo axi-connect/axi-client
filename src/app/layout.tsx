@@ -56,7 +56,7 @@ export const metadata: Metadata = {
   // todas las URLs de Open Graph apuntaban a `http://localhost:3001`.
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Axi Connect — Vende por WhatsApp con agentes de IA",
+    default: "Axi Connect — Vende en tus canales digitales con agentes de IA",
     template: "%s — Axi Connect",
   },
   description: SITE_DESCRIPTION,
@@ -68,7 +68,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "Axi Connect",
-    title: "Axi Connect — Vende por WhatsApp con agentes de IA",
+    title: "Axi Connect — Vende en tus canales digitales con agentes de IA",
     description: SITE_DESCRIPTION,
     locale: "es_CO",
     url: siteUrl("/"),
@@ -76,7 +76,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Axi Connect — Vende por WhatsApp con agentes de IA",
+    title: "Axi Connect — Vende en tus canales digitales con agentes de IA",
     description: SITE_DESCRIPTION,
     images: [OG_IMAGE.url],
   },

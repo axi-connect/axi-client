@@ -8,6 +8,7 @@ import type {
 } from "schema-dts";
 
 import { SALES_WHATSAPP, SITE_URL, siteUrl } from "@/core/config/env";
+import { ogImageFor } from "@/core/seo/og-cards";
 import { routeLabel } from "@/core/seo/routes";
 
 /**
@@ -31,19 +32,14 @@ import { routeLabel } from "@/core/seo/routes";
  * `og:image` ausente — una tarjeta de enlace sin imagen en WhatsApp, LinkedIn
  * y X, que es justo lo que se quería arreglar.
  */
-export const OG_IMAGE = {
-  url: siteUrl("/opengraph-image"),
-  width: 1200,
-  height: 630,
-  alt: "Axi Connect · Vende en cada conversación",
-} as const;
+export const OG_IMAGE = ogImageFor("/");
 
 export const SITE = {
   name: "Axi Connect",
   url: SITE_URL,
   logo: siteUrl("/images/brand/logo-horizontal.png"),
   description:
-    "Axi atiende tu WhatsApp, Instagram y Messenger como tu mejor vendedor: cotiza con tus precios, cobra y te lleva a tu meta del mes.",
+    "Axi atiende tus canales digitales como tu mejor vendedor: cotiza con tus precios, cobra y te lleva a tu meta del mes.",
 } as const;
 
 /**

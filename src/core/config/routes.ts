@@ -64,6 +64,9 @@ export const PUBLIC_PATHS = [
   "/manifest.webmanifest",
   // La imagen OG la genera `app/opengraph-image.tsx` (sin extensión).
   "/opengraph-image",
+  // Las tarjetas por página (`app/og/[card]/route.tsx`, plan §26): sin esto el
+  // middleware las manda al login y la app que comparte el enlace no ve imagen.
+  "/og",
   "/icon.svg",
   "/apple-icon.png",
 ];

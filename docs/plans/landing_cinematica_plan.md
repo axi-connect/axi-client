@@ -1164,3 +1164,49 @@ No hay marco: el video va a lo ancho desde el principio (§23). La luz cae y, al
   - capturas de los seis tramos, comprobación de que no hay doble luz ni salto en el relevo, y de que el anillo está a 0 con el video al 100 %;
   - qa-perfil en el tramo del anillo y qa-progreso.
 - **axi-2e:** revisión visual contra el lienzo antes de la demo a la dueña.
+
+## 26. La tarjeta al compartir el enlace (aprobado el 2026-10-03)
+
+La usuaria pidió mejorar la vista previa que aparece al compartir un enlace de Axi. Lienzo con las tres direcciones, los contextos (chat oscuro, chat claro, feed y miniatura cuadrada), las tarjetas por página y las deudas: https://claude.ai/artifact/W5FJNUpjUF9dQY2Ry4oq1i. Aprobada la **dirección A · La película**: «Me gusta mucho este, aprobado, implementar».
+
+Hoy (`src/app/opengraph-image.tsx`) solo hay isotipo con halo y «Vende en cada conversación», sin el nombre de la marca ni producto, y una sola imagen para las 11 rutas públicas. Además, la descripción de la home (141 caracteres) se corta en los chats.
+
+### 26.1 La tarjeta A (1200 × 630, tinta)
+
+- **Arriba:** a la izquierda, isotipo y «Axi Connect» en Nexa Heavy; a la derecha, `axi-connect.co`.
+- **Titular centrado:** «Vende en» en Nexa Heavy y «cada conversación.» en Nexa ExtraLight, a 84 px. Debajo, «Prueba 7 días gratis · Sin tarjeta».
+- **El marco del video**, eco de §25: entra por abajo con el anillo encendido en tres capas (filo blanco y ámbar, corona coral y bloom tenue, con el violeta solo lejano). El nudo de luz toca el filo superior en el centro, con su destello horizontal. Dentro va el chat de Fuego & Pan: «Hola, ¿tienen domicilio a Laureles?» y «¡Sí! Llegamos a Laureles en 35 min. Te comparto el más pedido.».
+- **Recorte cuadrado:** en la miniatura pequeña, el centro conserva la luz tocando el marco y el titular.
+
+### 26.2 Una tarjeta por página
+
+Un solo componente (`src/app/_og/film-card.tsx`) que pinta todas las tarjetas, con el titular real de cada página y sin textos nuevos. La de inicio sale de `src/app/opengraph-image.tsx`. Las demás salen de un route handler estático, `src/app/og/[card]/route.tsx`, que las sirve en `/og/precios`, `/og/productos` y `/og/contacto`. No se usa un `opengraph-image.tsx` por carpeta porque, dentro del grupo `(public)`, Next le pone un sufijo con hash a la URL, y aquí la imagen se declara de forma explícita.
+
+| Ruta | Antetítulo | Titular | Bajo el titular | Dentro del marco |
+|---|---|---|---|---|
+| `/` | — | Vende en / cada conversación. | Prueba 7 días gratis · Sin tarjeta | El chat |
+| `/precios` | Precios | Eliges las funciones / y el volumen por separado. | Empieza con 7 días gratis, sin tarjeta. | Y te avisamos antes de que te sorprenda. |
+| `/productos` | Productos | El canal por donde hoy entra el dinero / es el peor gestionado de tu empresa. | El agente, el inbox, el CRM, el catálogo, la agenda y la medición en pesos. | Producto construido y en producción, no roadmap. |
+| `/contacto` | Agenda tu demo | Míralo funcionando con / un negocio como el tuyo. | 30 minutos. Sin compromiso y sin diapositivas. | Una venta completa, del «hola» al pago verificado, y el embudo que dice cuánto produjo. |
+
+El resto de rutas (soluciones, integraciones, casos, marketplace y legales) usa la de inicio. `pageMetadata` recibe la imagen de su ruta y la declara de forma explícita en `openGraph` y `twitter`, como ya hace con la de inicio (comentario de `OG_IMAGE` en `site.ts`).
+
+### 26.3 El texto
+
+- **Descripción para la tarjeta de la home** (og y twitter): «Axi atiende tus canales digitales como tu mejor vendedor. Prueba 7 días gratis, sin tarjeta.» (92 caracteres). El `<meta description>` para buscadores se queda igual.
+- **Título por defecto del sitio** (`layout.tsx`): pasa de «Vende por WhatsApp con agentes de IA» a «Vende en tus canales digitales con agentes de IA».
+- **Descripción del sitio** (`site.ts`, JSON-LD): «Axi atiende tus canales digitales…».
+- **Texto alternativo:** describe la imagen de cada tarjeta.
+
+### 26.4 Deudas que salen en el mismo despliegue
+
+- **Hueco en móvil entre el hero y el video:** unos 49 px sin luz a 390, que dejó la QA de 2cb171b2. El filamento empieza antes («top 80 %» en vez de 72 %) para cruzarse con el final del nudo, sin dos luces por encima de 0,3 a la vez (§25.5).
+- **Tras el despliegue:**
+  - verificar en producción la luz en móvil y con movimiento reducido;
+  - refrescar la caché de las tarjetas con los depuradores de enlaces y probar en un chat real.
+
+### 26.5 Verificación
+
+- **Build local:** las cuatro imágenes renderizadas y revisadas a ojo; las metaetiquetas og y twitter correctas por ruta.
+- `qa/qa-luz-marco.mjs` a 390, que no deje pasos sin luz ni doble luz.
+- tsc y los tests de SEO.
