@@ -30,7 +30,7 @@ function Funnel({ c, niche, layout, variant }: { c: FilmContent; niche: FilmNich
       {c.measure.steps.map(([label, value], i) => (
         <div key={label} data-anim="funnel-gate" data-x={layout.gates[i]}>
           <span className="film-funnel-line" style={{ left: px(layout, layout.gates[i]), top: py(layout, gateTop), height: py(layout, y + gateBottom - gateTop) }} />
-          <span className="film-funnel-label" style={{ left: px(layout, layout.gates[i]), top: `calc(${py(layout, gateBottom)} + ${desk ? 8 : 10}px)` }}>
+          <span className="film-funnel-label" data-pill-avoid="cover" style={{ left: px(layout, layout.gates[i]), top: `calc(${py(layout, gateBottom)} + ${desk ? 8 : 10}px)` }}>
             <span className="film-h block text-[clamp(18px,2.1vw,30px)] tracking-[-0.03em] tabular-nums" data-anim="funnel-count" data-to={counts[i]}>
               {value}
             </span>

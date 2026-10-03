@@ -81,7 +81,7 @@ function RadarCard({ c }: { c: FilmContent }) {
       <p className="film-ink-muted text-xs max-lg:hidden" data-anim="radar-sources">
         {r.sources.join(" · ")}: encontró datos en los tres
       </p>
-      <p className="text-[12.5px] font-semibold max-lg:text-[11.5px]" data-anim="radar-sources">
+      <p className="text-[12.5px] font-semibold max-lg:text-[11.5px]" data-anim="radar-sources" data-pill-avoid="cover">
         {r.contactBy}
       </p>
     </div>
@@ -181,7 +181,7 @@ function Timeline({ c }: { c: FilmContent }) {
         {f.reply}
         <span className="mt-[3px] block text-[10.5px] opacity-45">10:09{" "}a.{" "}m.</span>
       </p>
-      <div className="film-ruler-result" style={{ top: ry(602), order: 602 }} data-anim="ruler-event" data-y={602} data-thread-target="">
+      <div className="film-ruler-result" style={{ top: ry(602), order: 602 }} data-anim="ruler-event" data-y={602} data-thread-target="" data-pill-avoid="cover">
         <CircleCheck className="size-5 shrink-0" aria-hidden="true" />
         <span>
           <span className="block text-sm font-semibold">{f.recovered}</span>

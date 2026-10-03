@@ -114,7 +114,7 @@ export function AxelScene() {
             </ul>
           )}
         </ByNiche>
-        <p className="film-dim mt-7 text-center text-[12.5px] max-lg:mt-5" data-anim="axel-foot">
+        <p className="film-dim mt-7 text-center text-[12.5px] max-lg:mt-5" data-anim="axel-foot" data-pill-avoid="cover">
           Nada sale sin tu aprobación.
         </p>
       </div>

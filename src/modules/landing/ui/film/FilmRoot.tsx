@@ -301,25 +301,61 @@ export function FilmRoot({ children }: { children: ReactNode }) {
     // `data-pill-avoid="always"` la aparta también en escritorio (data-avoid): la
     // onda de la llamada vive abajo al centro, donde está la píldora.
     const avoiding = new Set<Element>();
+    const covering = new Set<Element>();
     let always = false;
+    const syncAvoid = () => {
+      avoid = avoiding.size > 0;
+      const nowAlways = covering.size > 0 || [...avoiding].some((n) => (n as HTMLElement).dataset.pillAvoid === "always");
+      if (nowAlways !== always) {
+        always = nowAlways;
+        pillRef.current?.setAttribute("data-avoid", always ? "true" : "false");
+        syncPillInert(pillRef.current);
+      }
+      apply();
+    };
     const pillIo = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
           if (e.isIntersecting) avoiding.add(e.target);
           else avoiding.delete(e.target);
         }
-        avoid = avoiding.size > 0;
-        const nowAlways = [...avoiding].some((n) => (n as HTMLElement).dataset.pillAvoid === "always");
-        if (nowAlways !== always) {
-          always = nowAlways;
-          pillRef.current?.setAttribute("data-avoid", always ? "true" : "false");
-          syncPillInert(pillRef.current);
-        }
-        apply();
+        syncAvoid();
       },
       { root: el, rootMargin: "-88% 0px 0px 0px" },
     );
-    root.querySelectorAll("[data-pill-avoid]").forEach((n) => pillIo.observe(n));
+    root.querySelectorAll("[data-pill-avoid]:not([data-pill-avoid=cover])").forEach((n) => pillIo.observe(n));
+    // `data-pill-avoid="cover"` la aparta, en cualquier ancho, solo mientras eso
+    // entra en el rectángulo de la propia píldora (con holgura), no en toda la
+    // franja: a 1366 × 657 el final de varias escenas fijadas (la tarjeta del
+    // seguimiento, las cifras del embudo…) cae justo debajo; a 1440, no. El
+    // rectángulo se rehace cuando la píldora o la ventana cambian de tamaño.
+    const coverTargets = root.querySelectorAll("[data-pill-avoid=cover]");
+    let coverIo: IntersectionObserver | null = null;
+    const watchCover = () => {
+      const pill = pillRef.current;
+      coverIo?.disconnect();
+      covering.clear();
+      if (!pill || !coverTargets.length) return syncAvoid();
+      const box = el.getBoundingClientRect();
+      const PAD = 12;
+      const w = pill.offsetWidth + 2 * PAD;
+      const h = pill.offsetHeight + (parseFloat(getComputedStyle(pill).bottom) || 0) + PAD;
+      const side = Math.max(0, (box.width - w) / 2);
+      coverIo = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            if (e.isIntersecting) covering.add(e.target);
+            else covering.delete(e.target);
+          }
+          syncAvoid();
+        },
+        { root: el, rootMargin: `${-Math.max(0, box.height - h)}px ${-side}px 0px ${-side}px` },
+      );
+      coverTargets.forEach((n) => coverIo?.observe(n));
+    };
+    const pillRo = new ResizeObserver(watchCover);
+    if (pillRef.current) pillRo.observe(pillRef.current);
+    watchCover();
     const onScroll = () => {
       // Con motor, el scroll de Lenis: `scrollTop` aquí llegaba después de que
       // gsap escribiera estilos y forzaba su recálculo (36–67 ms en el
@@ -334,6 +370,7 @@ export function FilmRoot({ children }: { children: ReactNode }) {
     const onResize = () => {
       measure();
       onScroll();
+      watchCover();
     };
 
     // `film:chapter` para la isla de la cabecera: solo cuando cambia algo.
@@ -360,6 +397,8 @@ export function FilmRoot({ children }: { children: ReactNode }) {
     window.addEventListener("resize", onResize);
     return () => {
       pillIo.disconnect();
+      coverIo?.disconnect();
+      pillRo.disconnect();
       ro.disconnect();
       el.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);

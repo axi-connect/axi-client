@@ -486,7 +486,7 @@ export function PilotScene() {
             <p className="film-lead film-pilot-lead">{PILOT_COPY.lead}</p>
           </div>
           <Results />
-          <p className="film-pilot-principle" data-anim="pilot-principle">
+          <p className="film-pilot-principle" data-anim="pilot-principle" data-pill-avoid="cover">
             {PILOT_COPY.principle}
           </p>
         </div>

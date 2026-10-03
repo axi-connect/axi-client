@@ -197,6 +197,43 @@ it("la píldora se aparta en cualquier ancho solo con data-pill-avoid=\"always\"
   scroller.remove()
 })
 
+it("data-pill-avoid=\"cover\" aparta la píldora solo mientras eso entra en el rectángulo de la píldora, no en toda la franja", () => {
+  const observers: { cb: IntersectionObserverCallback; opts?: IntersectionObserverInit; observed: Element[] }[] = []
+  window.IntersectionObserver = jest.fn((cb: IntersectionObserverCallback, opts?: IntersectionObserverInit) => {
+    const o = { cb, opts, observed: [] as Element[] }
+    observers.push(o)
+    return { observe: jest.fn((n: Element) => o.observed.push(n)), disconnect: jest.fn(), unobserve: jest.fn() }
+  }) as unknown as typeof IntersectionObserver
+  window.ResizeObserver = jest.fn(() => ({ observe: jest.fn(), disconnect: jest.fn(), unobserve: jest.fn() })) as unknown as typeof ResizeObserver
+  const scroller = document.createElement("div")
+  scroller.setAttribute("data-app-scroll", "")
+  document.body.appendChild(scroller)
+  const { container, unmount } = render(
+    <FilmRoot>
+      <p data-pill-avoid="cover">Venta recuperada</p>
+      <p data-pill-avoid="always">Onda</p>
+    </FilmRoot>,
+    { container: scroller },
+  )
+  const pill = container.querySelector<HTMLElement>(".film-pill")!
+  const card = container.querySelector("[data-pill-avoid=cover]")!
+  const band = observers.find((o) => o.opts?.rootMargin === "-88% 0px 0px 0px")!
+  const cover = observers.filter((o) => o.observed.includes(card)).at(-1)!
+  // La franja de abajo no vigila la tarjeta (a 1440 la tocaría sin taparla); su propio observador, sí.
+  expect(band.observed).not.toContain(card)
+  expect(cover).not.toBe(band)
+  expect(cover.observed).not.toContain(container.querySelector("[data-pill-avoid=always]"))
+  const enter = (isIntersecting: boolean) =>
+    cover.cb([{ target: card, isIntersecting } as IntersectionObserverEntry], {} as IntersectionObserver)
+  // Los dos signos: entra y la píldora se aparta (también en escritorio); sale y vuelve.
+  enter(true)
+  expect(pill).toHaveAttribute("data-avoid", "true")
+  enter(false)
+  expect(pill).toHaveAttribute("data-avoid", "false")
+  unmount()
+  scroller.remove()
+})
+
 it("la película sigue el tema del sitio: no fuerza el oscuro ni en ella ni en el contenedor de scroll (modo claro)", () => {
   const scroller = document.createElement("div")
   scroller.setAttribute("data-app-scroll", "")
