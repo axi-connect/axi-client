@@ -41,6 +41,15 @@ export function VideoScene() {
 
 /** Las piezas de una banda del anillo: cuatro filos y cuatro esquinas, en la geometría del marco en reposo. */
 const PIECES = ["t", "b", "l", "r", "tl", "tr", "bl", "br"] as const;
+/**
+ * Dos discos que giran juntos: el del anillo (sus tres bandas, más tenue en el
+ * lado apagado) y el del lado brillante, una banda casi blanca bajo una máscara
+ * cónica estrecha. Así el lado brillante cambia de color, no solo de opacidad.
+ */
+const DISCS = [
+  { name: "ring", bands: ["bloom", "corona", "filo"] },
+  { name: "hot", bands: ["hot"] },
+] as const;
 
 /**
  * La luz del hero que abraza el marco (plan §25). Capas decorativas: sin motor
@@ -49,24 +58,27 @@ const PIECES = ["t", "b", "l", "r", "tl", "tr", "bl", "br"] as const;
  * - La gota releva al nudo del hero (`.film-hero-knot`) y cae hasta el filo.
  * - El destello anamórfico y los dos arcos son el contacto.
  * - El anillo: tres bandas (filo, corona y bloom) de ocho piezas, para que el
- *   marco crezca sin engordarlas, dentro del disco que gira (su máscara cónica).
+ *   marco crezca sin engordarlas, dentro del disco que gira (su máscara cónica),
+ *   y una cuarta casi blanca en el lado brillante del disco.
  * - El filamento es la versión de pantallas sin marco animado (< 1024).
  */
 function VideoLight() {
   return (
     <div className="film-vlight" aria-hidden="true">
       <div className="film-vlight-ring" data-light="ring" aria-hidden="true">
-        <div className="film-vlight-disc" data-anim="vlight-disc">
-          <div className="film-vlight-bands" data-anim="vlight-bands">
-            {(["bloom", "corona", "filo"] as const).map((band) => (
-              <div key={band} className={`film-vlight-band film-vlight-${band}`}>
-                {PIECES.map((piece) => (
-                  <i key={piece} className={`film-vlight-${piece}`} data-piece={piece} />
-                ))}
-              </div>
-            ))}
+        {DISCS.map(({ name, bands }) => (
+          <div key={name} className={`film-vlight-disc film-vlight-disc-${name}`} data-anim="vlight-disc">
+            <div className="film-vlight-bands" data-anim="vlight-bands">
+              {bands.map((band) => (
+                <div key={band} className={`film-vlight-band film-vlight-${band}`}>
+                  {PIECES.map((piece) => (
+                    <i key={piece} className={`film-vlight-${piece}`} data-piece={piece} />
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        ))}
       </div>
       <svg className="film-vlight-arcs" data-light="arcs" aria-hidden="true">
         <path className="film-vlight-arc-glow" data-arc="cw" />

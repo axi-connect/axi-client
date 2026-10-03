@@ -84,17 +84,19 @@ function heroLight(section: HTMLElement, tl: gsap.core.Timeline) {
   const flash = one("[data-light=flash]");
   const svg = one<SVGSVGElement>("[data-light=arcs]");
   const ring = one("[data-light=ring]");
-  const disc = one("[data-anim=vlight-disc]");
-  const bands = one("[data-anim=vlight-bands]");
-  if (!pin || !spacer || spacer === section || !hero || !drop || !trail || !flash || !svg || !ring || !disc || !bands) return;
+  const discs = all(section, "[data-anim=vlight-disc]");
+  const bands = all(section, "[data-anim=vlight-bands]");
+  if (!pin || !spacer || spacer === section || !hero || !drop || !trail || !flash || !svg || !ring || !discs.length || bands.length !== discs.length) return;
   const arcs = Array.from(svg.querySelectorAll<SVGPathElement>("path"));
   const strokes = arcs.filter((p) => !p.classList.contains("film-vlight-arc-head"));
   const heads = arcs.filter((p) => p.classList.contains("film-vlight-arc-head"));
-  // Por pieza; las esquinas del bloom van aparte: no escalan con el radio (es
-  // difuso, no se nota) y así no hacen escalón contra sus filos, que no encogen.
+  // Por pieza. El bloom va aparte (`-soft`): sus esquinas no escalan con el
+  // radio (es difuso) y sus filos acaban donde empiezan ellas, con el radio
+  // de reposo, como en el anillo cerrado. Si sus filos llegaran a la tangente
+  // del radio que encoge, sus cabos rectos asomarían por fuera de la esquina.
   const pieces = new Map<string, HTMLElement[]>();
   for (const el of all(ring, "[data-piece]")) {
-    const key = el.dataset.piece!.length === 2 && el.parentElement?.classList.contains("film-vlight-bloom") ? `${el.dataset.piece}-soft` : el.dataset.piece!;
+    const key = el.parentElement?.classList.contains("film-vlight-bloom") ? `${el.dataset.piece}-soft` : el.dataset.piece!;
     pieces.set(key, [...(pieces.get(key) ?? []), el]);
   }
   const w = writer();
@@ -145,9 +147,13 @@ function heroLight(section: HTMLElement, tl: gsap.core.Timeline) {
     const D = Math.ceil(Math.hypot(sw * 0.92, sh * 0.92) + 2 * BLOOM + 8);
     const fx = sw / 2;
     const fy = sh * (0.5 + FRAME.ty);
-    Object.assign(disc.style, { inset: "auto", left: `${fx - D / 2}px`, top: `${fy - D / 2}px`, width: `${D}px`, height: `${D}px` });
-    Object.assign(bands.style, { left: `${D / 2 - fx}px`, top: `${D / 2 - fy}px`, width: `${sw}px`, height: `${sh}px`, transformOrigin: `${fx}px ${fy}px` });
-    disc.setAttribute("data-square", "");
+    for (const disc of discs) {
+      Object.assign(disc.style, { inset: "auto", left: `${fx - D / 2}px`, top: `${fy - D / 2}px`, width: `${D}px`, height: `${D}px` });
+      disc.setAttribute("data-square", "");
+    }
+    for (const band of bands) {
+      Object.assign(band.style, { left: `${D / 2 - fx}px`, top: `${D / 2 - fy}px`, width: `${sw}px`, height: `${sh}px`, transformOrigin: `${fx}px ${fy}px` });
+    }
     lastTop = NaN;
   };
 
@@ -205,20 +211,24 @@ function heroLight(section: HTMLElement, tl: gsap.core.Timeline) {
     const r = FRAME.radius * f;
     const kx = (sw * sc - 2 * r) / (sw * FRAME.scale - 2 * FRAME.radius);
     const ky = (sh * sc - 2 * r) / (sh * FRAME.scale - 2 * FRAME.radius);
+    const kxSoft = (sw * sc - 2 * FRAME.radius) / (sw * FRAME.scale - 2 * FRAME.radius);
+    const kySoft = (sh * sc - 2 * FRAME.radius) / (sh * FRAME.scale - 2 * FRAME.radius);
     const corner = f < 1 ? ` scale(${f.toFixed(4)})` : "";
     const t = (px: number, py: number, extra = "") => `translate3d(${px.toFixed(1)}px, ${py.toFixed(1)}px, 0)${extra}`;
     const set = (key: string, value: string) => w.write(pieces.get(key) ?? [], "transform", value);
-    set("t", t(0, top, ` scaleX(${kx.toFixed(4)})`));
-    set("b", t(0, bottom, ` scaleX(${kx.toFixed(4)})`));
-    set("l", t(-dx, mid, ` scaleY(${ky.toFixed(4)})`));
-    set("r", t(dx, mid, ` scaleY(${ky.toFixed(4)})`));
+    for (const [suffix, x, y] of [["", kx, ky], ["-soft", kxSoft, kySoft]] as const) {
+      set(`t${suffix}`, t(0, top, ` scaleX(${x.toFixed(4)})`));
+      set(`b${suffix}`, t(0, bottom, ` scaleX(${x.toFixed(4)})`));
+      set(`l${suffix}`, t(-dx, mid, ` scaleY(${y.toFixed(4)})`));
+      set(`r${suffix}`, t(dx, mid, ` scaleY(${y.toFixed(4)})`));
+    }
     for (const [key, x, y] of [["tl", -dx, top], ["tr", dx, top], ["bl", -dx, bottom], ["br", dx, bottom]] as const) {
       set(key, t(x, y, corner));
       set(`${key}-soft`, t(x, y));
     }
     // El disco sigue al centro del marco y gira; las bandas giran al revés para quedarse quietas.
-    w.write([disc], "transform", `translate3d(0, ${mid.toFixed(1)}px, 0) rotate(${turn.toFixed(2)}deg)`);
-    w.write([bands], "transform", `rotate(${(-turn).toFixed(2)}deg) translate3d(0, ${(-mid).toFixed(1)}px, 0)`);
+    w.write(discs, "transform", `translate3d(0, ${mid.toFixed(1)}px, 0) rotate(${turn.toFixed(2)}deg)`);
+    w.write(bands, "transform", `rotate(${(-turn).toFixed(2)}deg) translate3d(0, ${(-mid).toFixed(1)}px, 0)`);
   };
 
   // Solo late mientras la escena está a la vista (de asomar a soltarse): el
@@ -250,8 +260,8 @@ function heroLight(section: HTMLElement, tl: gsap.core.Timeline) {
   gsap.context()?.add(() => () => {
     gsap.ticker.remove(tick);
     w.restore();
-    for (const el of [disc, bands]) el.removeAttribute("style");
-    disc.removeAttribute("data-square");
+    for (const el of [...discs, ...bands]) el.removeAttribute("style");
+    for (const disc of discs) disc.removeAttribute("data-square");
     svg.removeAttribute("viewBox");
     for (const p of arcs) {
       p.removeAttribute("d");

@@ -5,8 +5,10 @@
  * el cristal del control de sonido, que no se anima. En móvil no hay marco: el
  * video va entero a lo ancho desde el principio.
  */
-/* El fondo es el negro del video y se funde con la tinta arriba y abajo: sin costura con las vecinas. */
-.film-video { position: relative; height: 100svh; min-height: 560px; overflow: clip; background: linear-gradient(180deg, var(--film-ink), #000 14%, #000 86%, var(--film-ink)); }
+/* El fondo es el negro del video y se funde con la tinta arriba y abajo: sin
+   costura con las vecinas. El negro empieza al 8 %: el titular (desde 76 px)
+   queda entero sobre negro también a 657 px de alto, en los dos temas. */
+.film-video { position: relative; height: 100svh; min-height: 560px; overflow: clip; background: linear-gradient(180deg, var(--film-ink), #000 8%, #000 86%, var(--film-ink)); }
 .film-video-head {
   position: absolute;
   inset: clamp(76px, 9vh, 96px) 0 auto;
@@ -17,9 +19,11 @@
   gap: 12px;
   text-align: center;
   pointer-events: none;
+  /* Va sobre el negro del video en los dos temas: claro también en el tema claro. */
+  color: #f5f5f7;
 }
 .film-video-head .film-eyebrow { margin: 0; }
-.film-video-dim { color: color-mix(in srgb, var(--foreground) 50%, transparent); }
+.film-video-dim { color: rgb(245 245 247 / 0.6); }
 .film-video-title { margin: 0; font-size: clamp(34px, 4.3vw, 62px); line-height: 1.02; letter-spacing: -0.045em; }
 
 .film-video-frame {
@@ -149,16 +153,19 @@
    lo largo (su grosor no cambia al abrirse) y las esquinas siguen el radio del recorte. */
 .film-vlight-ring { inset: 0; }
 .film-vlight-disc {
+  /* El lado brillante del disco empieza en 210° (abajo a la izquierda) y gira. */
+  --disc-at: 50% 59%;
   position: absolute;
   inset: 0;
-  -webkit-mask-image: conic-gradient(from 210deg at 50% 59%, #000, rgb(0 0 0 / 0.72) 70deg, rgb(0 0 0 / 0.4) 160deg, rgb(0 0 0 / 0.4) 210deg, rgb(0 0 0 / 0.72) 290deg, #000);
-  mask-image: conic-gradient(from 210deg at 50% 59%, #000, rgb(0 0 0 / 0.72) 70deg, rgb(0 0 0 / 0.4) 160deg, rgb(0 0 0 / 0.4) 210deg, rgb(0 0 0 / 0.72) 290deg, #000);
+  -webkit-mask-image: var(--disc);
+  mask-image: var(--disc);
 }
+/* El anillo: entero en el lado brillante, coral tenue (0,3) en el opuesto. */
+.film-vlight-disc-ring { --disc: conic-gradient(from 210deg at var(--disc-at), #000, rgb(0 0 0 / 0.66) 70deg, rgb(0 0 0 / 0.3) 150deg, rgb(0 0 0 / 0.3) 220deg, rgb(0 0 0 / 0.66) 290deg, #000); }
+/* La banda caliente: solo un lóbulo estrecho alrededor del lado brillante. */
+.film-vlight-disc-hot { --disc: conic-gradient(from 210deg at var(--disc-at), #000, rgb(0 0 0 / 0.45) 40deg, transparent 85deg, transparent 275deg, rgb(0 0 0 / 0.45) 320deg, #000); }
 /* El motor hace del disco un cuadrado centrado en el marco (para girar sin dejar esquinas fuera). */
-.film-vlight-disc[data-square] {
-  -webkit-mask-image: conic-gradient(from 210deg, #000, rgb(0 0 0 / 0.72) 70deg, rgb(0 0 0 / 0.4) 160deg, rgb(0 0 0 / 0.4) 210deg, rgb(0 0 0 / 0.72) 290deg, #000);
-  mask-image: conic-gradient(from 210deg, #000, rgb(0 0 0 / 0.72) 70deg, rgb(0 0 0 / 0.4) 160deg, rgb(0 0 0 / 0.4) 210deg, rgb(0 0 0 / 0.72) 290deg, #000);
-}
+.film-vlight-disc[data-square] { --disc-at: 50% 50%; }
 .film-vlight-bands, .film-vlight-band { position: absolute; inset: 0; }
 .film-vlight-bands { width: 100%; height: 100%; }
 .film-vlight-band > i { position: absolute; display: block; will-change: transform; }
@@ -173,6 +180,11 @@
 .film-vlight-corona { --b: 12px; --i: 3px; }
 .film-vlight-corona > i {
   --g: transparent calc(var(--o) - 3px), color-mix(in srgb, var(--vl-coral) 28%, transparent) var(--o), color-mix(in srgb, var(--vl-amber) 62%, transparent) calc(var(--o) + 1.6px), color-mix(in srgb, var(--vl-coral) 66%, transparent) calc(var(--o) + 3.2px), color-mix(in srgb, var(--vl-coral) 30%, transparent) calc(var(--o) + 5.5px), transparent calc(var(--o) + 10px);
+}
+/* La banda caliente del lado brillante: ámbar casi blanco, fina, sobre el filo. */
+.film-vlight-hot { --b: 8px; --i: 1px; }
+.film-vlight-hot > i {
+  --g: transparent calc(var(--o) - 1px), #fff3dc calc(var(--o) + 0.9px), color-mix(in srgb, #ffe2a6 85%, transparent) calc(var(--o) + 2.4px), color-mix(in srgb, var(--vl-amber) 45%, transparent) calc(var(--o) + 4.2px), transparent calc(var(--o) + 7.5px);
 }
 /* Bloom: ancho y tenue, se pierde en la tinta; violeta solo en el borde lejano. */
 .film-vlight-bloom { --b: 72px; --i: 4px; }
