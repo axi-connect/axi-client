@@ -52,6 +52,7 @@ function hsm(over: Partial<HsmTemplateDTO> = {}): HsmTemplateDTO {
     edit_blocked_reason: null,
     edit_retry_at: null,
     external_id: null,
+    header_media: null,
     updated_at: "2026-08-01T00:00:00.000Z",
     ...over,
   };

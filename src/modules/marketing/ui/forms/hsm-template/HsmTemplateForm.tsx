@@ -1,10 +1,24 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, CircleAlert, CircleCheck, CircleX, CornerUpLeft, Hourglass, LoaderCircle, MessageSquare, Monitor, X } from "lucide-react";
+import {
+  Ban,
+  ChevronDown,
+  CircleAlert,
+  CircleCheck,
+  CircleX,
+  CornerUpLeft,
+  FileText,
+  Hourglass,
+  ImageIcon,
+  LoaderCircle,
+  MessageSquare,
+  Monitor,
+  Type,
+  Video,
+  X,
+} from "lucide-react";
 import { cn } from "@/core/lib/utils";
-import { useAlert } from "@/core/providers/alert-provider";
-import { FormStep, StepProgress, type FormStepState, type StepProgressCheck } from "@/shared/components/features/form-steps";
+import { countPassing, FormStep, StepTramos } from "@/shared/components/features/form-steps";
 import { Island } from "@/shared/components/features/island";
 import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert";
 import { Button } from "@/shared/components/ui/button";
@@ -12,66 +26,19 @@ import { Input } from "@/shared/components/ui/input";
 import { SegmentedControl } from "@/shared/components/ui/segmented";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
 import { Textarea } from "@/shared/components/ui/textarea";
-import { HSM_CATEGORY_LABELS } from "@/modules/marketing/domain/enums";
-import {
-  firstMissingExample,
-  hsmDraftErrors,
-  stepsWithErrors,
-  type HsmDraftErrors,
-} from "@/modules/marketing/domain/hsm-template-draft";
-import {
-  classifyHsmSubmitError,
-  HSM_REJECT_REASONS,
-  type HsmFormStep,
-  type HsmSubmitFailure,
-} from "@/modules/marketing/domain/meta-template-view";
-import {
-  inspectTemplateVariables,
-  rejectionReasonLabel,
-  SUGGESTED_OPENING_TEMPLATES,
-  TEMPLATE_COST_CO_USD,
-  type HsmTemplateDTO,
-} from "@/modules/marketing/domain/template-catalog";
-import {
-  composeTemplateName,
-  firstFreeVersion,
-  formatTemplateBase,
-  humanizeTemplateBase,
-  splitTemplateName,
-  versionOptions,
-} from "@/modules/marketing/domain/template-name";
-import {
-  BODY_MAX,
-  breaksDesktop,
-  emptyButton,
-  FOOTER_MAX,
-  groupButtons,
-  HEADER_MAX,
-  readBodyExamples,
-  readTemplatePieces,
-  type TemplateButton,
-} from "@/modules/marketing/domain/template-pieces";
-import {
-  createHsmTemplate,
-  listHsmTemplates,
-  updateHsmTemplate,
-} from "@/modules/marketing/infrastructure/services/templates-service.adapter";
+import type { HsmDraftErrors } from "@/modules/marketing/domain/hsm-template-draft";
+import type { HsmFormStep } from "@/modules/marketing/domain/meta-template-view";
+import { SUGGESTED_OPENING_TEMPLATES, type HsmTemplateDTO } from "@/modules/marketing/domain/template-catalog";
+import { composeTemplateName } from "@/modules/marketing/domain/template-name";
+import { breaksDesktop, emptyButton, FOOTER_MAX, HEADER_MAX } from "@/modules/marketing/domain/template-pieces";
 import { HsmPreview } from "@/modules/marketing/ui/components/HsmPreview";
 import { HsmSubmitNotice } from "@/modules/marketing/ui/components/HsmSubmitNotice";
 import { TemplateButtonsEditor } from "@/modules/marketing/ui/components/TemplateButtonsEditor";
+import { HeaderMediaField } from "./HeaderMediaField";
 import { PurposeCards } from "./PurposeCards";
 import { StartStrip } from "./StartStrip";
 import { TemplateNameField } from "./TemplateNameField";
-
-type Category = HsmTemplateDTO["category"];
-type HeaderKind = "none" | "text";
-
-const LANGUAGES: ReadonlyArray<{ value: string; label: string }> = [
-  { value: "es_CO", label: "Español (Colombia)" },
-  { value: "es_MX", label: "Español (México)" },
-  { value: "es", label: "Español" },
-  { value: "en_US", label: "Inglés (Estados Unidos)" },
-];
+import { LANGUAGES, useHsmTemplateDraft, type HeaderKind } from "./use-hsm-template-draft";
 
 const START_OPTIONS = SUGGESTED_OPENING_TEMPLATES.map((suggestion) => ({
   key: suggestion.key,
@@ -82,17 +49,6 @@ const START_OPTIONS = SUGGESTED_OPENING_TEMPLATES.map((suggestion) => ({
 /** El añadidor de piezas: mismo botón punteado para el pie y los botones. */
 const ADDER =
   "inline-flex h-9 items-center gap-1.5 rounded-full border border-dashed border-foreground/20 px-3.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground";
-
-/** Un paso de la página: su número y su título. El orden es el de la maqueta. */
-const STEPS: ReadonlyArray<{ key: HsmFormStep; number: number; title: string }> = [
-  { key: "purpose", number: 1, title: "¿Para qué es?" },
-  { key: "message", number: 2, title: "El mensaje" },
-  { key: "ficha", number: 3, title: "Ficha" },
-];
-
-function priceLabel(category: Category): string {
-  return `US$ ${TEMPLATE_COST_CO_USD[category].toLocaleString("es-CO", { maximumFractionDigits: 4 })}`;
-}
 
 /**
  * Alta y corrección de una plantilla de Meta en página propia (maqueta F0
@@ -128,285 +84,75 @@ export function HsmTemplateForm({
   onDirtyChange: (dirty: boolean) => void;
   onCancel: () => void;
 }) {
-  const { showAlert } = useAlert();
-  const isEditing = editing !== null;
-  const isFixing = editing?.approval_status === "rejected";
-  const editingName = editing === null ? null : splitTemplateName(editing.name);
-  const stored = useMemo(() => readTemplatePieces(editing?.components), [editing]);
-  const nameRef = useRef<HTMLInputElement>(null);
-
-  const [templates, setTemplates] = useState<readonly HsmTemplateDTO[]>(initialTemplates);
-  const [human, setHuman] = useState(editingName === null ? "" : humanizeTemplateBase(editingName.base));
-  const [versionChoice, setVersionChoice] = useState<number | null>(null);
-  // Lo que Meta dijo que está reservado (el 409 al enviar): la lista no trae las
-  // borradas, así que solo se sabe al chocar. Clave `base|idioma`.
-  const [reserved, setReserved] = useState<ReadonlyMap<string, ReadonlyMap<number, string | null>>>(new Map());
-  const [language, setLanguage] = useState(editing?.language ?? "es_CO");
-  const [category, setCategory] = useState<Category>(editing?.category ?? "utility");
-  const [body, setBody] = useState(editing?.body ?? "");
-  // Al editar, los ejemplos que ya tiene: corregir no obliga a reescribirlos.
-  const [examples, setExamples] = useState<string[]>(() => readBodyExamples(editing?.components));
-  const [header, setHeader] = useState<string | null>(stored.header);
-  const [footer, setFooter] = useState<string | null>(stored.footer);
-  const [buttons, setButtons] = useState<TemplateButton[]>(stored.buttons);
-  const [origin, setOrigin] = useState<string | null>(null);
-  const [startCollapsed, setStartCollapsed] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  // Guarda síncrona: `submitting` es estado y no llega a tiempo para el segundo
-  // clic del mismo tick. Un segundo POST crea en Meta otra vez (incidente 2026-09-28).
-  const inFlight = useRef(false);
-  const [touched, setTouched] = useState(false);
-  const [failure, setFailure] = useState<HsmSubmitFailure | null>(null);
-  // El nombre con que se envió cuando falló: el aviso habla de ESE, aunque el
-  // selector ya haya saltado a la siguiente versión libre.
-  const [failedName, setFailedName] = useState("");
-  const [checking, setChecking] = useState(false);
-  // Todos abiertos al llegar, como el alta de producto: el operador pliega lo que ya resolvió.
-  const [openSteps, setOpenSteps] = useState<Record<HsmFormStep, boolean>>({
-    purpose: !isEditing,
-    message: true,
-    ficha: !isEditing,
-  });
-
-  const base = editingName?.base ?? formatTemplateBase(human);
-  const reservedHere = reserved.get(`${base}|${language}`);
-  const options = useMemo(
-    () => versionOptions(base, language, templates, reservedHere),
-    [base, language, templates, reservedHere],
-  );
-  const chosenIsFree = versionChoice !== null && options.some((option) => option.version === versionChoice && option.taken === null);
-  const version = editingName !== null ? editingName.version : chosenIsFree ? versionChoice : firstFreeVersion(options);
-  const name = editing !== null ? editing.name : base === "" ? "" : composeTemplateName(base, version ?? 1);
-
-  const verdict = useMemo(() => inspectTemplateVariables(body), [body]);
-  const variableCount = verdict.ok ? verdict.count : 0;
-  const categoryLocked = isEditing && editing.approval_status === "approved";
-  const errors: HsmDraftErrors = hsmDraftErrors({ base, name, body, examples, header, footer, buttons });
-  const errorSteps = stepsWithErrors(errors);
-  const invalid = errorSteps.size > 0;
-  const missingExample = firstMissingExample(examples, variableCount);
-  const categoryLabel = HSM_CATEGORY_LABELS[category];
-
-  // Sucio = distinto de como llegó. Al guardar se limpia antes de navegar.
-  const snapshot = JSON.stringify([human, language, category, body, examples, header, footer, buttons]);
-  const initialSnapshot = useRef(snapshot);
-  const dirty = snapshot !== initialSnapshot.current;
-  useEffect(() => onDirtyChange(dirty), [dirty, onDirtyChange]);
-
-  function goToStep(step: HsmFormStep, focusId?: string) {
-    setOpenSteps((previous) => ({ ...previous, [step]: true }));
-    // Tras pintar el paso abierto: el campo existe siempre (`hidden`), pero el foco va cuando se ve.
-    requestAnimationFrame(() => {
-      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      document.getElementById(`hsm-step-${step}`)?.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" });
-      if (focusId !== undefined) document.getElementById(focusId)?.focus({ preventScroll: true });
-      else if (step === "ficha") nameRef.current?.focus({ preventScroll: true });
-    });
-  }
-
-  function applySuggestion(key: string) {
-    const suggestion = SUGGESTED_OPENING_TEMPLATES.find((item) => item.key === key);
-    if (suggestion === undefined) return;
-    setHuman(humanizeTemplateBase(splitTemplateName(suggestion.name).base));
-    setVersionChoice(null);
-    setBody(suggestion.body);
-    setCategory("utility");
-    setExamples([...suggestion.examples]);
-    setOrigin(key);
-    setStartCollapsed(true);
-    setFailure(null);
-  }
-
-  function startBlank() {
-    // «En blanco» es empezar de cero: si venía de una sugerida, se limpia.
-    if (origin !== null) {
-      setHuman("");
-      setBody("");
-      setExamples([]);
-    }
-    setOrigin(null);
-    setStartCollapsed(true);
-    setFailure(null);
-  }
-
-  function insertVariable() {
-    const next = variableCount + 1;
-    setBody((previous) => `${previous}${previous.endsWith(" ") || previous === "" ? "" : " "}{{${String(next)}}}`);
-  }
-
-  /** La siguiente versión libre que no sea la que acaba de chocar: la salida de un 409 en un clic. */
-  function nextVersionAfterCurrent(): number {
-    const free = options.find((option) => option.taken === null && option.version !== version);
-    return free?.version ?? (version ?? 0) + 1;
-  }
-
-  /**
-   * «Usar …» del aviso de un 409. Si el selector ya saltó solo (la versión que
-   * falló quedó marcada como reservada o en uso), basta con aceptar la que está;
-   * si no, se elige la siguiente libre.
-   */
-  function useNextVersion() {
-    if (name === failedName) setVersionChoice(nextVersionAfterCurrent());
-    setFailure(null);
-    goToStep("ficha");
-  }
-
-  async function refreshTemplates(): Promise<readonly HsmTemplateDTO[]> {
-    const rows = await listHsmTemplates({ channel_id: channelId });
-    setTemplates(rows);
-    return rows;
-  }
-
-  /**
-   * Sin respuesta, lo honesto es MIRAR antes de reenviar: si la plantilla ya
-   * está en la lista, llegó; si no, se puede enviar.
-   *
-   * Se busca por el nombre que SE ENVIÓ, no por el de ahora: si llegó, su
-   * versión aparece en uso al recargar y el selector salta solo a la siguiente,
-   * y buscar esa diría «no llegó» de una que sí llegó (el incidente 2026-09-28).
-   */
-  async function checkArrived() {
-    setChecking(true);
-    try {
-      const rows = await refreshTemplates();
-      const arrived = !isEditing ? rows.find((row) => row.name === failedName && row.language === language) : undefined;
-      if (arrived !== undefined) {
-        showAlert({
-          tone: "success",
-          title: "Ya llegó a Meta",
-          description: "Está en la lista, en revisión: no hace falta enviarla otra vez.",
-        });
-        onDirtyChange(false);
-        onSaved(arrived);
-        return;
-      }
-      setFailure(null);
-      showAlert({ tone: "info", title: "No llegó: ya puedes enviarla" });
-    } catch {
-      // Seguimos sin saber: el aviso se queda y el botón sigue esperando.
-      showAlert({ tone: "error", title: "Tampoco pudimos leer la lista. Inténtalo en un momento" });
-    } finally {
-      setChecking(false);
-    }
-  }
-
-  async function submit() {
-    setTouched(true);
-    if (invalid) {
-      // Se abre y se lleva al primer paso con error: un error plegado no se ve.
-      const first = STEPS.find((step) => errorSteps.has(step.key));
-      setOpenSteps((previous) => ({
-        purpose: previous.purpose,
-        message: previous.message || errorSteps.has("message"),
-        ficha: previous.ficha || errorSteps.has("ficha"),
-      }));
-      if (first !== undefined) goToStep(first.key);
-      return;
-    }
-    if (inFlight.current || failure?.kind === "unknown") return;
-    inFlight.current = true;
-    setSubmitting(true);
-    setFailure(null);
-    try {
-      const params = {
-        body,
-        ...(variableCount > 0 ? { examples: examples.slice(0, variableCount) } : {}),
-        // Las rápidas se agrupan al guardar: intercaladas, Meta rechaza la
-        // plantilla entera con «invalid combination».
-        // Quitar una pieza NO es omitirla: editar reemplaza todos los
-        // componentes en Meta, así que al editar se manda `null` explícito.
-        // La excepción es la cabecera de MEDIA, que esta página todavía no
-        // sabe enseñar: ahí se omite para no borrarla.
-        ...pieceUpdate("buttons", buttons.length === 0 ? null : groupButtons(buttons), isEditing),
-        ...(stored.headerIsMedia && header === null
-          ? {}
-          : pieceUpdate("header", header === null ? null : { format: "text" as const, text: header }, isEditing)),
-        ...pieceUpdate("footer", footer, isEditing),
-      };
-      const saved = isEditing
-        ? await updateHsmTemplate(editing.id, {
-            ...params,
-            // La categoría solo viaja si de verdad cambió Y Meta lo permite.
-            ...(!categoryLocked && category !== editing.category ? { category } : {}),
-          })
-        : await createHsmTemplate({ channel_id: channelId, name, language, category, ...params });
-      showAlert({
-        tone: "success",
-        title: isEditing ? "Enviada de nuevo a revisión" : "Enviada a revisión de Meta",
-        description:
-          "Suele decidir en minutos; puede tardar hasta 48 h. Mientras haya alguna en revisión, la lista se refresca sola.",
-      });
-      onDirtyChange(false);
-      onSaved(saved);
-    } catch (err) {
-      const next = classifyHsmSubmitError(err);
-      setFailedName(name);
-      if (next.kind === "name_locked" && !isEditing && version !== null) {
-        // Meta reserva esa versión 30 días: se anota para que el selector la
-        // marque y proponga la siguiente libre.
-        setReserved((previous) => {
-          const key = `${base}|${language}`;
-          const merged = new Map(previous);
-          merged.set(key, new Map(previous.get(key) ?? []).set(version, next.until));
-          return merged;
-        });
-      }
-      setFailure(next);
-      if (next.kind === "exists_here" || next.kind === "exists_meta" || next.kind === "unknown") {
-        void refreshTemplates().catch(() => undefined);
-      }
-      if (next.kind === "rejected") {
-        const step = HSM_REJECT_REASONS[next.reason].step;
-        if (step !== null) goToStep(step);
-      }
-      if (next.kind === "name_locked") goToStep("ficha");
-    } finally {
-      inFlight.current = false;
-      setSubmitting(false);
-    }
-  }
-
-  // ── Estado de cada paso: la marca, los tramos de la isla y «Antes de enviar» ──
-  const messageEmpty = body.trim() === "";
-  const messageErrors = (["body", "examples", "header", "footer", "buttons"] as const).filter((field) => errors[field] !== undefined);
-  const stepState: Record<HsmFormStep, FormStepState> = {
-    purpose: "done",
-    message: touched && messageErrors.length > 0 ? "error" : messageErrors.length === 0 ? "done" : "pending",
-    ficha: touched && errors.name !== undefined ? "error" : errors.name === undefined ? "done" : "pending",
-  };
-  const progress: Record<HsmFormStep, StepProgressCheck["state"]> = {
-    purpose: "ready",
-    message: messageErrors.length === 0 ? "ready" : messageEmpty ? "pending" : "blocked",
-    ficha: errors.name === undefined ? "ready" : base === "" ? "pending" : "blocked",
-  };
-  const readyCount = Object.values(progress).filter((state) => state === "ready").length;
-  const notStarted = messageEmpty && base === "";
-  const dockTitle = readyCount === STEPS.length ? "Lista" : notStarted ? "Por empezar" : "Casi lista";
-  const dockDetail = whatIsMissing(errors, { messageEmpty, baseEmpty: base === "", missingExample, isEditing });
-
-  const summaries: Record<HsmFormStep, string> = {
-    purpose: `${categoryLabel} · ${priceLabel(category)} por mensaje`,
-    message:
-      messageErrors.length > 0 && touched
-        ? "Hay algo que corregir"
-        : messageEmpty
-          ? "Sin escribir"
-          : [
-              header !== null ? "cabecera" : stored.headerIsMedia ? "cabecera multimedia" : null,
-              `${String(variableCount)} ${variableCount === 1 ? "variable" : "variables"}`,
-              footer !== null ? "pie" : null,
-              buttons.length > 0 ? `${String(buttons.length)} ${buttons.length === 1 ? "botón" : "botones"}` : null,
-            ]
-              .filter((piece): piece is string => piece !== null)
-              .join(" · "),
-    ficha: name === "" ? "Sin nombre" : `${name} · ${LANGUAGES.find((item) => item.value === language)?.label ?? language}${isEditing ? " · fijos" : ""}`,
-  };
-
-  const preview = <HsmPreview header={header} body={body} examples={examples} footer={footer} buttons={buttons} />;
-  const rejectionReason = isFixing ? rejectionReasonLabel(editing.rejected_reason) : null;
-  const bodyChanged = isEditing && body !== editing.body;
-  const counter = `${String(variableCount)} ${variableCount === 1 ? "variable" : "variables"} · ${String(body.length)} / ${String(BODY_MAX)}`;
-  const headerKind: HeaderKind = header === null ? "none" : "text";
+  const {
+    isEditing,
+    isFixing,
+    nameRef,
+    human,
+    setHuman,
+    setVersionChoice,
+    language,
+    setLanguage,
+    category,
+    setCategory,
+    body,
+    setBody,
+    examples,
+    setExamples,
+    storedKind,
+    storedFile,
+    headerKind,
+    setHeaderText,
+    headerFile,
+    mediaStatus,
+    footer,
+    setFooter,
+    buttons,
+    setButtons,
+    origin,
+    startCollapsed,
+    setStartCollapsed,
+    submitting,
+    touched,
+    failure,
+    setFailure,
+    failedName,
+    checking,
+    openSteps,
+    setOpenSteps,
+    base,
+    options,
+    version,
+    name,
+    variableCount,
+    categoryLocked,
+    header,
+    mediaKind,
+    errors,
+    invalid,
+    missingExample,
+    goToStep,
+    applySuggestion,
+    startBlank,
+    insertVariable,
+    changeHeaderKind,
+    pickHeaderFile,
+    removeHeaderFile,
+    nextVersionAfterCurrent,
+    takeNextVersion,
+    checkArrived,
+    submit,
+    messageEmpty,
+    stepState,
+    dockChecks,
+    dockTitle,
+    dockDetail,
+    summaries,
+    rejectionReason,
+    bodyChanged,
+    counter,
+    previewProps,
+  } = useHsmTemplateDraft({ channelId, templates: initialTemplates, editing, onSaved, onDirtyChange });
 
   return (
     <div className="flex min-w-0 flex-col gap-5">
@@ -417,7 +163,7 @@ export function HsmTemplateForm({
           language={language}
           suggestedName={name !== failedName || base === "" ? name : composeTemplateName(base, nextVersionAfterCurrent())}
           onViewExisting={() => onViewExisting(failure.kind === "exists_here" ? failure.templateId : null)}
-          onUseName={useNextVersion}
+          onUseName={takeNextVersion}
           onSync={onSync}
           onRefresh={() => void checkArrived()}
           onGoToStep={goToStep}
@@ -456,7 +202,7 @@ export function HsmTemplateForm({
               Así se verá
               <ChevronDown aria-hidden className="size-4 transition-transform group-open:rotate-180" />
             </summary>
-            <div className="bg-muted rounded-b-3xl px-2 pb-2">{preview}</div>
+            <div className="bg-muted rounded-b-3xl px-2 pb-2"><HsmPreview {...previewProps} /></div>
           </details>
 
           <div id="hsm-step-purpose" className="scroll-mt-24">
@@ -496,44 +242,66 @@ export function HsmTemplateForm({
             >
               <section className="space-y-2" aria-label="Cabecera">
                 <span className="text-xs font-medium">Cabecera</span>
-                {stored.headerIsMedia && header === null ? (
-                  <p className="text-muted-foreground text-xs">Se conserva la cabecera multimedia que ya tiene.</p>
-                ) : (
-                  <>
-                    <SegmentedControl<HeaderKind>
-                      value={headerKind}
-                      onValueChange={(next) => setHeader(next === "none" ? null : (header ?? ""))}
-                      label="Tipo de cabecera"
-                      surface="inline"
-                      size="sm"
-                      items={[
-                        { value: "none", label: "Ninguna" },
-                        { value: "text", label: "Texto" },
-                      ]}
+                <SegmentedControl<HeaderKind>
+                  value={headerKind}
+                  onValueChange={changeHeaderKind}
+                  label="Tipo de cabecera"
+                  surface="inline"
+                  size="sm"
+                  className="max-w-full overflow-x-auto [scrollbar-width:none]"
+                  items={[
+                    { value: "none", label: "Ninguna", icon: Ban },
+                    { value: "text", label: "Texto", icon: Type },
+                    { value: "image", label: "Imagen", icon: ImageIcon },
+                    { value: "video", label: "Video", icon: Video },
+                    { value: "document", label: "Documento", icon: FileText },
+                  ]}
+                />
+                {header !== null && (
+                  <div className="space-y-1.5">
+                    <Input
+                      id="hsm-header"
+                      aria-label="Texto de la cabecera"
+                      placeholder="Temporada nueva en Savage"
+                      maxLength={HEADER_MAX}
+                      value={header}
+                      aria-invalid={touched && Boolean(errors.header)}
+                      onChange={(event) => setHeaderText(event.target.value)}
                     />
-                    {header !== null && (
-                      <div className="space-y-1.5">
-                        <Input
-                          id="hsm-header"
-                          aria-label="Texto de la cabecera"
-                          placeholder="Temporada nueva en Savage"
-                          maxLength={HEADER_MAX}
-                          value={header}
-                          aria-invalid={touched && Boolean(errors.header)}
-                          onChange={(event) => setHeader(event.target.value)}
-                        />
-                        <p className="text-muted-foreground flex justify-between gap-2 text-xs">
-                          {touched && errors.header ? (
-                            <span className="text-destructive">{errors.header}</span>
-                          ) : (
-                            <span>Va en negrita arriba. Admite un solo hueco, y no admite negritas ni cursivas.</span>
-                          )}
-                          <span className="tabular-nums">
-                            {header.length}/{HEADER_MAX}
-                          </span>
-                        </p>
-                      </div>
-                    )}
+                    <p className="text-muted-foreground flex justify-between gap-2 text-xs">
+                      {touched && errors.header ? (
+                        <span className="text-destructive">{errors.header}</span>
+                      ) : (
+                        <span>Va en negrita arriba. Admite un solo hueco, y no admite negritas ni cursivas.</span>
+                      )}
+                      <span className="tabular-nums">
+                        {header.length}/{HEADER_MAX}
+                      </span>
+                    </p>
+                  </div>
+                )}
+                {mediaKind !== null && (
+                  <>
+                    <HeaderMediaField
+                      kind={mediaKind}
+                      file={
+                        headerFile === null
+                          ? null
+                          : {
+                              fileName: headerFile.file_name,
+                              mimeType: headerFile.mime_type,
+                              byteSize: headerFile.byte_size,
+                              previewUrl: headerFile.local_url ?? headerFile.preview_url,
+                            }
+                      }
+                      status={mediaStatus}
+                      missingCopy={isEditing && mediaKind === storedKind && storedFile === null && headerFile === null}
+                      onPick={(file) => void pickHeaderFile(file)}
+                      onRemove={removeHeaderFile}
+                    />
+                    {touched && errors.header && mediaStatus.kind !== "error" ? (
+                      <p className="text-destructive text-xs">{errors.header}</p>
+                    ) : null}
                   </>
                 )}
               </section>
@@ -743,7 +511,7 @@ export function HsmTemplateForm({
             <h2 className="text-sm font-semibold">Así se verá</h2>
             <span className="text-muted-foreground text-xs">con tus ejemplos</span>
           </div>
-          {preview}
+          <HsmPreview {...previewProps} />
           <BeforeSend
             errors={errors}
             name={name}
@@ -751,7 +519,7 @@ export function HsmTemplateForm({
             missingExample={missingExample}
             onGo={goToStep}
           />
-          {bodyChanged && (
+          {bodyChanged && editing !== null && (
             <div className="bg-card space-y-1.5 rounded-2xl border border-border p-4">
               <p className="text-xs font-semibold">Antes</p>
               <p className="text-muted-foreground text-xs leading-relaxed text-pretty whitespace-pre-line">{editing.body}</p>
@@ -761,31 +529,31 @@ export function HsmTemplateForm({
         </aside>
       </div>
 
+      {/*
+        La isla en UNA fila (maqueta v5, pedido del dueño): los tramos, el estado
+        con qué falta, y las acciones. El precio ya está en «¿Para qué es?»: aquí
+        sobraba y hacía la isla de tres líneas.
+      */}
       <Island
         as="footer"
         material="ink"
         glow="none"
-        className="sticky bottom-3 z-10 mx-auto flex w-full max-w-full flex-wrap items-center gap-x-5 gap-y-3 rounded-3xl px-4 py-3 sm:w-fit sm:rounded-full sm:py-2.5 sm:pr-2.5 sm:pl-5"
+        className="sticky bottom-3 z-10 mx-auto flex w-full max-w-full flex-wrap items-center gap-x-4.5 gap-y-3 rounded-3xl px-4 py-3 sm:w-fit sm:flex-nowrap sm:rounded-full sm:py-2 sm:pr-2 sm:pl-5"
       >
-        <StepProgress
-          className="w-44 shrink-0"
-          title={dockTitle}
-          detail={<span id="hsm-dock-detail">{dockDetail}</span>}
-          checks={STEPS.map((step) => ({
-            id: step.key,
-            label: step.title,
-            state: progress[step.key],
-            onGo: () => goToStep(step.key),
-          }))}
-        />
-        <span aria-hidden="true" className="bg-border hidden h-9 w-px sm:block" />
-        <p className="text-muted-foreground text-xs whitespace-nowrap">
-          <span className="text-foreground block text-[13px] font-semibold">
-            {categoryLabel} · {priceLabel(category)}
-          </span>
-          por mensaje en Colombia
-        </p>
-        <div className="ml-auto flex gap-2 sm:ml-0">
+        <StepTramos className="w-34 shrink-0" checks={dockChecks} />
+        <span aria-hidden="true" className="bg-border hidden h-7 w-px shrink-0 sm:block" />
+        <div className="min-w-0 flex-1 sm:max-w-88">
+          <p className="flex items-baseline gap-2 text-[13px] leading-tight font-semibold">
+            {dockTitle}
+            <span className="text-xs font-normal tabular-nums opacity-70">
+              {countPassing(dockChecks)}/{dockChecks.length}
+            </span>
+          </p>
+          <p id="hsm-dock-detail" className="text-muted-foreground truncate text-xs leading-tight" title={dockDetail}>
+            {dockDetail}
+          </p>
+        </div>
+        <div className="flex w-full justify-end gap-2 sm:ml-1.5 sm:w-auto sm:shrink-0">
           <Button variant="glass" type="button" size="sm" onClick={onCancel}>
             Cancelar
           </Button>
@@ -808,23 +576,6 @@ export function HsmTemplateForm({
       </Island>
     </div>
   );
-}
-
-/** Lo que falta, nombrado: la línea de la isla (DESIGN-SYSTEM §9.7, «qué falta nombrado»). */
-function whatIsMissing(
-  errors: HsmDraftErrors,
-  context: { messageEmpty: boolean; baseEmpty: boolean; missingExample: number | null; isEditing: boolean },
-): string {
-  if (context.messageEmpty && context.baseEmpty) return "Falta el texto y el nombre";
-  if (context.messageEmpty) return "Falta el texto";
-  if (context.missingExample !== null) return `Falta el ejemplo de {{${String(context.missingExample)}}}`;
-  if (errors.body !== undefined) return errors.body;
-  if (errors.header !== undefined) return errors.header;
-  if (errors.footer !== undefined) return errors.footer;
-  if (errors.buttons !== undefined) return errors.buttons;
-  if (context.baseEmpty) return "Falta el nombre";
-  if (errors.name !== undefined) return errors.name;
-  return context.isEditing ? "Se envía de nuevo a revisión" : "Se envía a revisión de Meta";
 }
 
 /**
@@ -950,15 +701,4 @@ function PieceField({
       <p className="text-muted-foreground text-xs">{hint}</p>
     </section>
   );
-}
-
-/**
- * Cómo viaja una pieza que el operador dejó vacía. Al CREAR se omite: no hay
- * nada que borrar. Al EDITAR se manda `null`, que es lo que el servidor entiende
- * como «quítala» — omitirla la conservaría, porque editar reemplaza todos los
- * componentes en Meta.
- */
-function pieceUpdate<T>(key: string, value: T | null, isEditing: boolean): Record<string, T | null> {
-  if (value !== null) return { [key]: value };
-  return isEditing ? { [key]: null } : {};
 }

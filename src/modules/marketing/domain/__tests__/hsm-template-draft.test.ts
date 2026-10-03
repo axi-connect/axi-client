@@ -38,6 +38,16 @@ describe("hsmDraftErrors · las reglas de Meta antes de gastar el envío", () =>
     expect(errors.footer).toBe("Escribe el pie o quítalo");
   });
 
+  it("una cabecera de medio sin archivo no se envía; subiendo, se espera", () => {
+    expect(hsmDraftErrors({ ...OK, headerMedia: { ready: false, uploading: false } }).header).toBe(
+      "Sube el archivo de la cabecera o quítala",
+    );
+    expect(hsmDraftErrors({ ...OK, headerMedia: { ready: false, uploading: true } }).header).toBe(
+      "Espera a que termine de subir el archivo de la cabecera",
+    );
+    expect(hsmDraftErrors({ ...OK, headerMedia: { ready: true, uploading: false } })).toEqual({});
+  });
+
   it("variables fuera de las reglas de Meta", () => {
     expect(hsmDraftErrors({ ...OK, body: "{{1}} empieza con una variable y no vale", examples: ["x"] }).body).toBeDefined();
   });

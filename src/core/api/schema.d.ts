@@ -4388,6 +4388,22 @@ export interface paths {
         patch: operations["HsmTemplatesController_update_v1"];
         trace?: never;
     };
+    "/api/v1/marketing/hsm-templates/media": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["HsmTemplatesController_uploadMedia_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/marketing/hsm-templates/sync": {
         parameters: {
             query?: never;
@@ -15595,6 +15611,18 @@ export interface components {
                 /** Format: date-time */
                 edit_retry_at: string | null;
                 external_id: string | null;
+                header_media: {
+                    /** @enum {string} */
+                    mode: "fixed" | "per_send";
+                    /** @enum {string} */
+                    kind: "image" | "video" | "document";
+                    storage_key: string;
+                    mime_type: string;
+                    byte_size: number;
+                    handle: string;
+                    file_name?: string;
+                    preview_url: string | null;
+                } | null;
                 /** Format: date-time */
                 updated_at: string;
             }[];
@@ -15635,6 +15663,17 @@ export interface components {
                 type: "copy_code";
                 example: string;
             })[] | null;
+            header_media?: {
+                /** @enum {string} */
+                mode: "fixed" | "per_send";
+                /** @enum {string} */
+                kind: "image" | "video" | "document";
+                storage_key: string;
+                mime_type: string;
+                byte_size: number;
+                handle: string;
+                file_name?: string;
+            } | null;
         };
         HsmTemplateDto: {
             /** Format: uuid */
@@ -15656,8 +15695,30 @@ export interface components {
             /** Format: date-time */
             edit_retry_at: string | null;
             external_id: string | null;
+            header_media: {
+                /** @enum {string} */
+                mode: "fixed" | "per_send";
+                /** @enum {string} */
+                kind: "image" | "video" | "document";
+                storage_key: string;
+                mime_type: string;
+                byte_size: number;
+                handle: string;
+                file_name?: string;
+                preview_url: string | null;
+            } | null;
             /** Format: date-time */
             updated_at: string;
+        };
+        HsmHeaderMediaUploadDto: {
+            handle: string;
+            storage_key: string;
+            /** @enum {string} */
+            kind: "image" | "video" | "document";
+            mime_type: string;
+            byte_size: number;
+            file_name: string;
+            preview_url: string;
         };
         SyncHsmTemplatesDto: {
             /** Format: uuid */
@@ -15707,6 +15768,17 @@ export interface components {
                 type: "copy_code";
                 example: string;
             })[];
+            header_media?: {
+                /** @enum {string} */
+                mode: "fixed" | "per_send";
+                /** @enum {string} */
+                kind: "image" | "video" | "document";
+                storage_key: string;
+                mime_type: string;
+                byte_size: number;
+                handle: string;
+                file_name?: string;
+            };
         };
         AutomationsListDto: {
             data: {
@@ -32314,6 +32386,34 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HsmTemplateDto"];
+                };
+            };
+        };
+    };
+    HsmTemplatesController_uploadMedia_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                    /** Format: uuid */
+                    channel_id: string;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HsmHeaderMediaUploadDto"];
                 };
             };
         };

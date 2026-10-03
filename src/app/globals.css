@@ -2798,3 +2798,7 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .wa-muted { color: var(--wa-muted); }
 .wa-link { color: var(--wa-link); border-top: 1px solid color-mix(in oklab, var(--wa-muted) 22%, transparent); }
 .wa-mark { background: var(--wa-mark); color: inherit; border-radius: 4px; padding: 0 2px; }
+/* La cabecera multimedia de la burbuja (hsm-media F4): hueco del medio y póster
+   del video, con los mismos tokens del lienzo de WhatsApp, sin colores nuevos. */
+.wa-media { background: color-mix(in oklab, var(--wa-muted) 18%, transparent); color: var(--wa-muted); }
+.wa-video { background: color-mix(in oklab, var(--wa-ink) 82%, transparent); color: var(--wa-bubble); }

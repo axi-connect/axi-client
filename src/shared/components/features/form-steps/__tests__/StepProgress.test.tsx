@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 
-import { StepProgress, type StepProgressCheck } from "../StepProgress";
+import { countPassing, StepProgress, StepTramos, type StepProgressCheck } from "../StepProgress";
 
 function checks(onGo = jest.fn()): StepProgressCheck[] {
   return [
@@ -63,5 +63,23 @@ describe("StepProgress", () => {
     );
     expect(screen.getByText("2/3")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "El mensaje: por corregir" })).toBeInTheDocument();
+  });
+});
+
+describe("StepTramos y countPassing", () => {
+  it("solo los tramos, con la misma lista accesible, para una isla que pone el estado en otro sitio", () => {
+    const onGo = jest.fn();
+    render(<StepTramos checks={checks(onGo)} />);
+    const list = screen.getByRole("list", { name: "Qué falta" });
+    expect(within(list).getAllByRole("button")).toHaveLength(3);
+    fireEvent.click(within(list).getByRole("button", { name: "El correo: por resolver" }));
+    expect(onGo).toHaveBeenCalledWith("mail");
+    // Sin título ni detalle: eso lo pone quien la usa.
+    expect(screen.queryByText("2/3")).not.toBeInTheDocument();
+  });
+
+  it("cuenta los listos y los con aviso, no los por corregir ni los por resolver", () => {
+    expect(countPassing(checks())).toBe(2);
+    expect(countPassing([{ id: "x", label: "X", state: "blocked", onGo: jest.fn() }])).toBe(0);
   });
 });

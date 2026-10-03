@@ -13,6 +13,10 @@ export type MessagingWindowDTO = Schemas["MessagingWindowDto"];
 export type CreateHsmTemplateDTO = Schemas["CreateHsmTemplateDto"];
 /** Con cabecera, pie y botones: el tipo a mano los omitía aunque el modal los manda. */
 export type UpdateHsmTemplateDTO = Schemas["UpdateHsmTemplateDto"];
+/** Lo que devuelve la subida del archivo de una cabecera: el handle para Meta y la copia de axi. */
+export type HsmHeaderMediaUploadDTO = Schemas["HsmHeaderMediaUploadDto"];
+/** El medio guardado con la plantilla (`header_media` de la vista), con su previa firmada. */
+export type HsmHeaderMediaDTO = NonNullable<HsmTemplateDTO["header_media"]>;
 
 /**
  * Para qué se va a usar una plantilla de Meta. Cada flujo tenía su propia

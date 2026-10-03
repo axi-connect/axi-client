@@ -17,13 +17,19 @@ jest.mock("@/modules/marketing/infrastructure/services/templates-service.adapter
   createHsmTemplate: jest.fn(),
   updateHsmTemplate: jest.fn(),
   listHsmTemplates: jest.fn(),
+  uploadHsmHeaderMedia: jest.fn(),
 }));
+
+// jsdom no tiene object URLs: la previa local del archivo elegido.
+URL.createObjectURL = jest.fn(() => "blob:previa-local");
+URL.revokeObjectURL = jest.fn();
 
 /* eslint-disable @typescript-eslint/no-require-imports */
 const api = require("@/modules/marketing/infrastructure/services/templates-service.adapter") as {
   createHsmTemplate: jest.Mock;
   updateHsmTemplate: jest.Mock;
   listHsmTemplates: jest.Mock;
+  uploadHsmHeaderMedia: jest.Mock;
 };
 /* eslint-enable @typescript-eslint/no-require-imports */
 
@@ -162,26 +168,30 @@ describe("quitar una pieza al editar", () => {
     expect(api.updateHsmTemplate.mock.calls[0][1]).toMatchObject({ footer: null });
   });
 
-  it("pero OMITE la cabecera de imagen, que la página aún no enseña", async () => {
+  it("una cabecera de imagen creada FUERA de axi: lo dice, y editar el texto la conserva sin mandarla", async () => {
+    // Sin copia de axi (`header_media` null) no se puede reenviar: se invita a
+    // subirla, pero editar el cuerpo no puede quedar bloqueado por eso.
     render(
       <HsmTemplateForm
         channelId="ch1"
         templates={[]}
         editing={template({
           components: [
-            { type: "HEADER", format: "IMAGE", example: { header_handle: ["4::aW1h"] } },
+            { type: "HEADER", format: "IMAGE", example: { header_handle: ["https://scontent.whatsapp.net/x"] } },
             { type: "BODY", text: "Hola {{1}}, tenemos algo para ti hoy." },
           ],
+          header_media: null,
         })}
         {...handlers()}
       />,
     );
-    expect(screen.getByText("Se conserva la cabecera multimedia que ya tiene.")).toBeInTheDocument();
+    expect(screen.getByText(/Esta cabecera se creó fuera de axi/)).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("Ejemplo de la variable 1"), { target: { value: "Ana" } });
     fireEvent.click(screen.getByRole("button", { name: /Guardar y reenviar/ }));
 
     await waitFor(() => expect(api.updateHsmTemplate).toHaveBeenCalled());
     expect(api.updateHsmTemplate.mock.calls[0][1]).not.toHaveProperty("header");
+    expect(api.updateHsmTemplate.mock.calls[0][1]).not.toHaveProperty("header_media");
   });
 });
 
@@ -394,5 +404,155 @@ describe("antes de enviar y la isla", () => {
     const dock = screen.getByRole("contentinfo");
     expect(within(dock).getByText("Por empezar")).toBeInTheDocument();
     expect(within(dock).getByText("Falta el texto y el nombre")).toBeInTheDocument();
+  });
+});
+
+describe("cabecera de imagen, video o documento (F4)", () => {
+  const UPLOADED = {
+    handle: "4:cHJvbW8uanBn:aW1hZ2UvanBlZw==:ARb",
+    storage_key: "companies/c1/hsm_templates/019fec79-0000-7000-8000-000000000001",
+    kind: "image" as const,
+    mime_type: "image/jpeg",
+    byte_size: 412_000,
+    file_name: "coleccion-temporada.jpg",
+    preview_url: "https://s3.test/firmada",
+  };
+  const jpg = () => new File([new Uint8Array(412_000)], "coleccion-temporada.jpg", { type: "image/jpeg" });
+  const fileInput = () => document.querySelector('input[type="file"]') as HTMLInputElement;
+
+  function chooseImage() {
+    fireEvent.click(screen.getByRole("radio", { name: /Imagen/ }));
+  }
+
+  it("una imagen válida se sube, enseña «Va en cada envío» y viaja con su copia de axi", async () => {
+    api.uploadHsmHeaderMedia.mockResolvedValue(UPLOADED);
+    renderNew();
+    fill();
+    chooseImage();
+    fireEvent.change(fileInput(), { target: { files: [jpg()] } });
+
+    expect(await screen.findByText(/Va en cada envío/)).toBeInTheDocument();
+    expect(api.uploadHsmHeaderMedia).toHaveBeenCalledWith("ch1", expect.any(File));
+    expect(screen.getByText("coleccion-temporada.jpg")).toBeInTheDocument();
+
+    send();
+    await waitFor(() => expect(api.createHsmTemplate).toHaveBeenCalled());
+    expect(api.createHsmTemplate.mock.calls[0][0]).toMatchObject({
+      header: { format: "image", handle: UPLOADED.handle },
+      header_media: {
+        mode: "fixed",
+        kind: "image",
+        storage_key: UPLOADED.storage_key,
+        mime_type: "image/jpeg",
+        byte_size: 412_000,
+        handle: UPLOADED.handle,
+        file_name: "coleccion-temporada.jpg",
+      },
+    });
+  });
+
+  it("un WebP se rechaza en el navegador, con el motivo, sin subir nada", () => {
+    renderNew();
+    chooseImage();
+    fireEvent.change(fileInput(), { target: { files: [new File(["x"], "banner.webp", { type: "image/webp" })] } });
+
+    expect(screen.getByText("«banner.webp» es WebP. En la cabecera, Meta solo acepta JPG o PNG.")).toHaveAttribute("role", "alert");
+    expect(api.uploadHsmHeaderMedia).not.toHaveBeenCalled();
+  });
+
+  it("si Meta rechaza la subida, lo dice y deja elegir otro", async () => {
+    api.uploadHsmHeaderMedia.mockRejectedValue(new Error("boom"));
+    renderNew();
+    chooseImage();
+    fireEvent.change(fileInput(), { target: { files: [jpg()] } });
+
+    expect(await screen.findByText(/no se guardó nada/)).toHaveAttribute("role", "alert");
+    expect(screen.getByText("Elige otro archivo")).toBeInTheDocument();
+  });
+
+  it("elegir imagen y no subir nada no deja enviar: se aprobaría y no se podría mandar", () => {
+    renderNew();
+    fill();
+    chooseImage();
+    send();
+
+    expect(api.createHsmTemplate).not.toHaveBeenCalled();
+    expect(screen.getAllByText("Sube el archivo de la cabecera o quítala").length).toBeGreaterThan(0);
+  });
+
+  it("al editar, el medio guardado se enseña y, sin tocarlo, no se manda: el servidor lo conserva", async () => {
+    render(
+      <HsmTemplateForm
+        channelId="ch1"
+        templates={[]}
+        editing={template({
+          components: [
+            { type: "HEADER", format: "IMAGE", example: { header_handle: [UPLOADED.handle] } },
+            { type: "BODY", text: "Hola {{1}}, tenemos algo para ti hoy." },
+          ],
+          header_media: { ...UPLOADED, mode: "fixed" },
+        })}
+        {...handlers()}
+      />,
+    );
+    expect(screen.getByText("coleccion-temporada.jpg")).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Ejemplo de la variable 1"), { target: { value: "Ana" } });
+    fireEvent.click(screen.getByRole("button", { name: /Guardar y reenviar/ }));
+
+    await waitFor(() => expect(api.updateHsmTemplate).toHaveBeenCalled());
+    expect(api.updateHsmTemplate.mock.calls[0][1]).not.toHaveProperty("header");
+    expect(api.updateHsmTemplate.mock.calls[0][1]).not.toHaveProperty("header_media");
+  });
+
+  it("reemplazar el medio guardado manda el nuevo, con su handle", async () => {
+    const replaced = { ...UPLOADED, storage_key: UPLOADED.storage_key.replace(/1$/, "2"), handle: "4:nuevo" };
+    api.uploadHsmHeaderMedia.mockResolvedValue(replaced);
+    render(
+      <HsmTemplateForm
+        channelId="ch1"
+        templates={[]}
+        editing={template({
+          components: [
+            { type: "HEADER", format: "IMAGE", example: { header_handle: [UPLOADED.handle] } },
+            { type: "BODY", text: "Hola {{1}}, tenemos algo para ti hoy." },
+          ],
+          header_media: { ...UPLOADED, mode: "fixed" },
+        })}
+        {...handlers()}
+      />,
+    );
+    fireEvent.change(fileInput(), { target: { files: [jpg()] } });
+    await waitFor(() => expect(api.uploadHsmHeaderMedia).toHaveBeenCalled());
+    fireEvent.change(screen.getByLabelText("Ejemplo de la variable 1"), { target: { value: "Ana" } });
+    fireEvent.click(screen.getByRole("button", { name: /Guardar y reenviar/ }));
+
+    await waitFor(() => expect(api.updateHsmTemplate).toHaveBeenCalled());
+    expect(api.updateHsmTemplate.mock.calls[0][1]).toMatchObject({
+      header: { format: "image", handle: "4:nuevo" },
+      header_media: { storage_key: replaced.storage_key, handle: "4:nuevo" },
+    });
+  });
+
+  it("pasar la cabecera de imagen a ninguna al editar la QUITA (null), no la conserva", async () => {
+    render(
+      <HsmTemplateForm
+        channelId="ch1"
+        templates={[]}
+        editing={template({
+          components: [
+            { type: "HEADER", format: "IMAGE", example: { header_handle: [UPLOADED.handle] } },
+            { type: "BODY", text: "Hola {{1}}, tenemos algo para ti hoy." },
+          ],
+          header_media: { ...UPLOADED, mode: "fixed" },
+        })}
+        {...handlers()}
+      />,
+    );
+    fireEvent.click(screen.getByRole("radio", { name: /Ninguna/ }));
+    fireEvent.change(screen.getByLabelText("Ejemplo de la variable 1"), { target: { value: "Ana" } });
+    fireEvent.click(screen.getByRole("button", { name: /Guardar y reenviar/ }));
+
+    await waitFor(() => expect(api.updateHsmTemplate).toHaveBeenCalled());
+    expect(api.updateHsmTemplate.mock.calls[0][1]).toMatchObject({ header: null });
   });
 });

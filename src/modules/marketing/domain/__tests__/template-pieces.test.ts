@@ -3,6 +3,7 @@ import {
   canAddButton,
   groupButtons,
   readBodyExamples,
+  readTemplatePieces,
   visibleButtons,
   type TemplateButton,
 } from "../template-pieces";
@@ -80,5 +81,22 @@ describe("readBodyExamples · los ejemplos que ya tiene la plantilla (F3, R2)", 
   it("sin ejemplo, o sin componentes, no inventa nada", () => {
     expect(readBodyExamples([{ type: "BODY", text: "Hola" }])).toEqual([]);
     expect(readBodyExamples(null)).toEqual([]);
+  });
+});
+
+describe("readTemplatePieces · la cabecera de medio (F4)", () => {
+  it("devuelve su clase y el handle de su ejemplo, sin tocar `header`", () => {
+    const pieces = readTemplatePieces([
+      { type: "HEADER", format: "IMAGE", example: { header_handle: ["4::aW1h"] } },
+      { type: "BODY", text: "Hola" },
+    ]);
+    expect(pieces.header).toBeNull();
+    expect(pieces.headerIsMedia).toBe(true);
+    expect(pieces.headerMedia).toEqual({ kind: "image", handle: "4::aW1h" });
+  });
+
+  it("sin ejemplo el handle queda vacío; una de texto no es de medio", () => {
+    expect(readTemplatePieces([{ type: "HEADER", format: "VIDEO" }]).headerMedia).toEqual({ kind: "video", handle: "" });
+    expect(readTemplatePieces([{ type: "HEADER", format: "TEXT", text: "Hola" }]).headerMedia).toBeNull();
   });
 });

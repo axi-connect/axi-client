@@ -3,6 +3,7 @@ import type {
   CreateHsmTemplateDTO,
   UpdateHsmTemplateDTO,
   CreateTemplateDTO,
+  HsmHeaderMediaUploadDTO,
   HsmTemplateDTO,
   MessagingWindowDTO,
   TemplateDTO,
@@ -83,4 +84,17 @@ export function syncHsmTemplates(channelId: string): Promise<{ synced: number; r
 /** Crea la plantilla EN META: queda `pending` hasta que Meta la apruebe. */
 export function createHsmTemplate(dto: CreateHsmTemplateDTO): Promise<HsmTemplateDTO> {
   return http.post<HsmTemplateDTO>("/marketing/hsm-templates", dto);
+}
+
+/**
+ * Sube el archivo de la cabecera (hsm-media F4): el servidor guarda la copia de
+ * axi —la que se reenvía en cada envío— y lo sube a Meta para el ejemplo de la
+ * revisión. Devuelve las dos cosas para mandarlas luego con la plantilla.
+ * Multipart: `http` no fija `Content-Type` y el navegador pone el boundary.
+ */
+export function uploadHsmHeaderMedia(channelId: string, file: File): Promise<HsmHeaderMediaUploadDTO> {
+  const form = new FormData();
+  form.append("channel_id", channelId);
+  form.append("file", file);
+  return http.post<HsmHeaderMediaUploadDTO>("/marketing/hsm-templates/media", form);
 }

@@ -1,3 +1,5 @@
+import type { HeaderMediaKind } from "@/modules/marketing/domain/header-media";
+
 /**
  * Las piezas de una plantilla de Meta en el cliente: cabecera, pie y botones.
  *
@@ -15,7 +17,7 @@
 
 export type TemplateHeader =
   | { format: "text"; text: string; example?: string }
-  | { format: "image"; handle: string };
+  | { format: HeaderMediaKind; handle: string };
 
 export type TemplateButton =
   | { type: "quick_reply"; text: string }
@@ -132,12 +134,19 @@ export function readTemplatePieces(components: unknown): {
    * confundirlas es lo que hacía que el botón de quitar no quitara nada.
    */
   headerIsMedia: boolean;
+  /**
+   * La cabecera de media que hay —su clase y el handle del ejemplo que vio
+   * Meta—, o `null`. Desde F4 la página la sabe enseñar y reemplazar; la bandeja
+   * sigue leyendo solo `header`/`headerIsMedia`.
+   */
+  headerMedia: { kind: HeaderMediaKind; handle: string } | null;
   footer: string | null;
   buttons: TemplateButton[];
 } {
   const empty = {
     header: null,
     headerIsMedia: false,
+    headerMedia: null,
     footer: null,
     buttons: [] as TemplateButton[],
   };
@@ -145,6 +154,7 @@ export function readTemplatePieces(components: unknown): {
 
   let header: string | null = null;
   let headerIsMedia = false;
+  let headerMedia: { kind: HeaderMediaKind; handle: string } | null = null;
   let footer: string | null = null;
   let buttons: TemplateButton[] = [];
 
@@ -154,10 +164,17 @@ export function readTemplatePieces(components: unknown): {
     const type = typeof item.type === "string" ? item.type.toUpperCase() : "";
     const text = typeof item.text === "string" ? item.text : "";
     if (type === "HEADER") {
-      // Una cabecera de media no se puede editar todavía: se deja fuera del
-      // formulario, pero se RECUERDA para no borrarla al guardar.
-      if (String(item.format ?? "text").toLowerCase() === "text") header = text;
-      else headerIsMedia = true;
+      // Una cabecera de media no va en `header` (que es texto): se RECUERDA
+      // aparte, con su clase y el handle de su ejemplo, para no borrarla al
+      // guardar y para que la página pueda enseñarla.
+      const format = String(item.format ?? "text").toLowerCase();
+      if (format === "text") header = text;
+      else {
+        headerIsMedia = true;
+        if (format === "image" || format === "video" || format === "document") {
+          headerMedia = { kind: format, handle: readHandle(item.example) };
+        }
+      }
     }
     if (type === "FOOTER") footer = text;
     if (type === "BUTTONS" && Array.isArray(item.buttons)) {
@@ -166,7 +183,13 @@ export function readTemplatePieces(components: unknown): {
         .filter((button): button is TemplateButton => button !== null);
     }
   }
-  return { header, headerIsMedia, footer, buttons };
+  return { header, headerIsMedia, headerMedia, footer, buttons };
+}
+
+/** `example.header_handle[0]`, o `""`: Graph devuelve el ejemplo como URL, axi como handle. */
+function readHandle(example: unknown): string {
+  const handles = (example as { header_handle?: unknown } | null)?.header_handle;
+  return Array.isArray(handles) && typeof handles[0] === "string" ? handles[0] : "";
 }
 
 function readButton(raw: unknown): TemplateButton | null {

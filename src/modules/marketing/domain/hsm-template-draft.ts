@@ -18,7 +18,14 @@ export interface HsmTemplateDraft {
   name: string;
   body: string;
   examples: readonly string[];
+  /** La cabecera de TEXTO; una de medio va en `headerMedia`. */
   header: string | null;
+  /**
+   * La cabecera de imagen, video o documento, si es la elegida: `ready` cuando
+   * ya hay archivo subido (o el guardado con la plantilla), `uploading` mientras
+   * sube. Sin archivo no se envía: se aprobaría y no se podría mandar.
+   */
+  headerMedia?: { ready: boolean; uploading: boolean } | null;
   footer: string | null;
   buttons: readonly TemplateButton[];
 }
@@ -59,6 +66,11 @@ export function hsmDraftErrors(draft: HsmTemplateDraft): HsmDraftErrors {
   if (missing !== null) errors.examples = `Meta exige un ejemplo por cada variable: falta el de {{${String(missing)}}}`;
 
   if (draft.header !== null && draft.header.trim() === "") errors.header = "Escribe la cabecera o quítala";
+  if (draft.headerMedia && !draft.headerMedia.ready) {
+    errors.header = draft.headerMedia.uploading
+      ? "Espera a que termine de subir el archivo de la cabecera"
+      : "Sube el archivo de la cabecera o quítala";
+  }
   if (draft.footer !== null && draft.footer.trim() === "") errors.footer = "Escribe el pie o quítalo";
   if (hasIncompleteButton([...draft.buttons])) errors.buttons = "Completa cada botón o quítalo";
 
