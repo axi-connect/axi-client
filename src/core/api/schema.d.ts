@@ -15727,6 +15727,7 @@ export interface components {
         SyncHsmResultDto: {
             synced: number;
             removed: number;
+            media_pending: number;
         };
         CreateHsmTemplateDto: {
             /** Format: uuid */

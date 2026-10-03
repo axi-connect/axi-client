@@ -221,18 +221,23 @@ export function MetaTemplatesView({
     if (!channelId) return;
     setSyncing(true);
     try {
-      const { synced, removed = 0 } = await syncHsmTemplates(channelId);
+      const { synced, removed = 0, media_pending: mediaPending = 0 } = await syncHsmTemplates(channelId);
+      // Lo que se retiró y los archivos de cabecera que faltan por traer, en una sola descripción.
+      const notes = [
+        removed > 0
+          ? `${removed} ${removed === 1 ? "ya no está en Meta y se retiró" : "ya no están en Meta y se retiraron"} de aquí.`
+          : null,
+        mediaPending > 0
+          ? `Faltan ${mediaPending} ${mediaPending === 1 ? "archivo de cabecera" : "archivos de cabecera"} por traer de Meta: sincroniza otra vez.`
+          : null,
+      ].filter((note): note is string => note !== null);
       showAlert({
         tone: "success",
         title:
           synced === 0 && removed === 0
             ? "Meta no devolvió plantillas nuevas"
             : `${synced} ${synced === 1 ? "plantilla sincronizada" : "plantillas sincronizadas"}`,
-        ...(removed > 0
-          ? {
-              description: `${removed} ${removed === 1 ? "ya no está en Meta y se retiró" : "ya no están en Meta y se retiraron"} de aquí.`,
-            }
-          : {}),
+        ...(notes.length > 0 ? { description: notes.join(" ") } : {}),
       });
       await load(channelId, { quiet: true });
     } catch (err) {

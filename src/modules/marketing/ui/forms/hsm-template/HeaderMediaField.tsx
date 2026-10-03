@@ -161,6 +161,7 @@ export function HeaderMediaField({
         </p>
       ) : null}
       <button
+        id="hsm-header-media"
         type="button"
         onClick={() => inputRef.current?.click()}
         onDragOver={(event) => {

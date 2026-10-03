@@ -6,7 +6,7 @@ import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import type { FormStepState, StepProgressCheck } from "@/shared/components/features/form-steps";
 import { HSM_CATEGORY_LABELS } from "@/modules/marketing/domain/enums";
-import { validateHeaderMediaFile, type HeaderMediaKind } from "@/modules/marketing/domain/header-media";
+import { HEADER_MEDIA_RULES, validateHeaderMediaFile, type HeaderMediaKind } from "@/modules/marketing/domain/header-media";
 import {
   firstMissingExample,
   hsmDraftErrors,
@@ -90,7 +90,13 @@ function priceLabel(category: Category): string {
 /** Lo que falta, nombrado: la línea de la isla (DESIGN-SYSTEM §9.7, «qué falta nombrado»). */
 function whatIsMissing(
   errors: HsmDraftErrors,
-  context: { messageEmpty: boolean; baseEmpty: boolean; missingExample: number | null; isEditing: boolean },
+  context: {
+    messageEmpty: boolean;
+    baseEmpty: boolean;
+    missingExample: number | null;
+    isEditing: boolean;
+    mediaWithoutCopy: HeaderMediaKind | null;
+  },
 ): string {
   if (context.messageEmpty && context.baseEmpty) return "Falta el texto y el nombre";
   if (context.messageEmpty) return "Falta el texto";
@@ -101,6 +107,7 @@ function whatIsMissing(
   if (errors.buttons !== undefined) return errors.buttons;
   if (context.baseEmpty) return "Falta el nombre";
   if (errors.name !== undefined) return errors.name;
+  if (context.mediaWithoutCopy !== null) return `Sin el archivo, ${HEADER_MEDIA_RULES[context.mediaWithoutCopy].noun} no sale en los envíos`;
   return context.isEditing ? "Se envía de nuevo a revisión" : "Se envía a revisión de Meta";
 }
 
@@ -232,6 +239,12 @@ export function useHsmTemplateDraft({
     mediaKind !== null &&
     headerKind === storedKind &&
     (headerFile?.storage_key ?? null) === (storedFile?.storage_key ?? null);
+  // Una cabecera de medio creada fuera de axi sin copia: guardar es válido,
+  // pero cada envío saldría sin ella y Meta lo rechazaría. Se avisa sin bloquear.
+  const mediaWithoutCopy =
+    isEditing && mediaKind !== null && mediaKind === storedKind && storedFile === null && headerFile === null
+      ? mediaKind
+      : null;
   const headerMediaDraft =
     mediaKind === null
       ? null
@@ -539,7 +552,13 @@ export function useHsmTemplateDraft({
   }));
   const notStarted = messageEmpty && base === "";
   const dockTitle = readyCount === STEPS.length ? "Lista" : notStarted ? "Por empezar" : "Casi lista";
-  const dockDetail = whatIsMissing(errors, { messageEmpty, baseEmpty: base === "", missingExample, isEditing });
+  const dockDetail = whatIsMissing(errors, {
+    messageEmpty,
+    baseEmpty: base === "",
+    missingExample,
+    isEditing,
+    mediaWithoutCopy,
+  });
 
   const summaries: Record<HsmFormStep, string> = {
     purpose: `${categoryLabel} · ${priceLabel(category)} por mensaje`,
@@ -596,8 +615,6 @@ export function useHsmTemplateDraft({
     setBody,
     examples,
     setExamples,
-    storedKind,
-    storedFile,
     headerKind,
     setHeaderText,
     headerFile,
@@ -625,6 +642,7 @@ export function useHsmTemplateDraft({
     categoryLocked,
     header,
     mediaKind,
+    mediaWithoutCopy,
     errors,
     invalid,
     missingExample,

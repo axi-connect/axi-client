@@ -193,6 +193,67 @@ describe("quitar una pieza al editar", () => {
     expect(api.updateHsmTemplate.mock.calls[0][1]).not.toHaveProperty("header");
     expect(api.updateHsmTemplate.mock.calls[0][1]).not.toHaveProperty("header_media");
   });
+
+  it("sin copia, «Antes de enviar» lo AVISA (no bloquea) y la isla lo nombra (auditoría F4, R1)", async () => {
+    // Guardar es válido, pero cada envío saldría sin la cabecera y Meta lo
+    // rechazaría: el operador no puede creerla «Lista» sin más.
+    render(
+      <HsmTemplateForm
+        channelId="ch1"
+        templates={[]}
+        editing={template({
+          components: [
+            { type: "HEADER", format: "IMAGE", example: { header_handle: ["https://scontent.whatsapp.net/x"] } },
+            { type: "BODY", text: "Hola, tenemos algo para ti hoy." },
+          ],
+          body: "Hola, tenemos algo para ti hoy.",
+          header_media: null,
+        })}
+        {...handlers()}
+      />,
+    );
+
+    const warning = screen.getByRole("region", { name: "Se puede enviar, con un aviso" });
+    expect(warning).toHaveTextContent(/se creó fuera de axi y no tenemos su archivo: los envíos saldrían sin ella/);
+    expect(screen.queryByText("Lista para enviar a revisión")).not.toBeInTheDocument();
+    expect(screen.getByText("Sin el archivo, la imagen no sale en los envíos")).toBeInTheDocument();
+    // No bloquea: el botón sigue activo
+    expect(screen.getByRole("button", { name: /Guardar y reenviar/ })).not.toHaveAttribute("aria-disabled", "true");
+
+    // «Subir el archivo» lleva el foco al subidor
+    fireEvent.click(screen.getByRole("button", { name: "Subir el archivo" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: /Arrastra una imagen/ })).toHaveFocus());
+  });
+
+  it("con su copia de axi no hay aviso", () => {
+    render(
+      <HsmTemplateForm
+        channelId="ch1"
+        templates={[]}
+        editing={template({
+          components: [
+            { type: "HEADER", format: "IMAGE", example: { header_handle: ["4::aW"] } },
+            { type: "BODY", text: "Hola, tenemos algo para ti hoy." },
+          ],
+          body: "Hola, tenemos algo para ti hoy.",
+          header_media: {
+            mode: "fixed",
+            kind: "image",
+            storage_key: "companies/c1/hsm_templates/obj",
+            mime_type: "image/jpeg",
+            byte_size: 412_000,
+            handle: "4::aW",
+            file_name: "coleccion.jpg",
+            preview_url: "https://s3.test/firmada",
+          },
+        })}
+        {...handlers()}
+      />,
+    );
+
+    expect(screen.queryByText(/se creó fuera de axi/)).not.toBeInTheDocument();
+    expect(screen.getByText("Lista para enviar a revisión")).toBeInTheDocument();
+  });
 });
 
 describe("enviar una plantilla nueva (incidente 2026-09-28)", () => {

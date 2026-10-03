@@ -13,6 +13,7 @@ import {
   LoaderCircle,
   MessageSquare,
   Monitor,
+  TriangleAlert,
   Type,
   Video,
   X,
@@ -26,6 +27,7 @@ import { Input } from "@/shared/components/ui/input";
 import { SegmentedControl } from "@/shared/components/ui/segmented";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
 import { Textarea } from "@/shared/components/ui/textarea";
+import type { HeaderMediaKind } from "@/modules/marketing/domain/header-media";
 import type { HsmDraftErrors } from "@/modules/marketing/domain/hsm-template-draft";
 import type { HsmFormStep } from "@/modules/marketing/domain/meta-template-view";
 import { SUGGESTED_OPENING_TEMPLATES, type HsmTemplateDTO } from "@/modules/marketing/domain/template-catalog";
@@ -45,6 +47,9 @@ const START_OPTIONS = SUGGESTED_OPENING_TEMPLATES.map((suggestion) => ({
   title: suggestion.title,
   body: suggestion.body,
 }));
+
+/** «Esta imagen…», «Este video…» no: el aviso dice la clase con su artículo. */
+const HEADER_KIND_NOUN: Record<HeaderMediaKind, string> = { image: "imagen", video: "cabecera de video", document: "cabecera de documento" };
 
 /** El añadidor de piezas: mismo botón punteado para el pie y los botones. */
 const ADDER =
@@ -99,8 +104,6 @@ export function HsmTemplateForm({
     setBody,
     examples,
     setExamples,
-    storedKind,
-    storedFile,
     headerKind,
     setHeaderText,
     headerFile,
@@ -128,6 +131,7 @@ export function HsmTemplateForm({
     categoryLocked,
     header,
     mediaKind,
+    mediaWithoutCopy,
     errors,
     invalid,
     missingExample,
@@ -295,7 +299,7 @@ export function HsmTemplateForm({
                             }
                       }
                       status={mediaStatus}
-                      missingCopy={isEditing && mediaKind === storedKind && storedFile === null && headerFile === null}
+                      missingCopy={mediaWithoutCopy !== null}
                       onPick={(file) => void pickHeaderFile(file)}
                       onRemove={removeHeaderFile}
                     />
@@ -517,6 +521,7 @@ export function HsmTemplateForm({
             name={name}
             variableCount={variableCount}
             missingExample={missingExample}
+            mediaWithoutCopy={mediaWithoutCopy}
             onGo={goToStep}
           />
           {bodyChanged && editing !== null && (
@@ -587,12 +592,15 @@ function BeforeSend({
   name,
   variableCount,
   missingExample,
+  mediaWithoutCopy,
   onGo,
 }: {
   errors: HsmDraftErrors;
   name: string;
   variableCount: number;
   missingExample: number | null;
+  /** Cabecera de medio sin copia de axi: aviso, no bloqueo (auditoría F4, R1). */
+  mediaWithoutCopy: HeaderMediaKind | null;
   onGo: (step: HsmFormStep, focusId?: string) => void;
 }) {
   const blockers: { text: React.ReactNode; action: string; go: () => void }[] = [];
@@ -612,8 +620,20 @@ function BeforeSend({
   if (errors.footer !== undefined) blockers.push({ text: errors.footer, action: "Corregirlo", go: () => onGo("message", "hsm-footer") });
   if (errors.buttons !== undefined) blockers.push({ text: errors.buttons, action: "Ir a los botones", go: () => onGo("message") });
   if (errors.name !== undefined) blockers.push({ text: errors.name, action: "Ir a la ficha", go: () => onGo("ficha") });
+  // Se puede guardar, pero cada envío saldría sin la cabecera y Meta lo
+  // rechazaría: el operador la creería lista y sus campañas fallarían.
+  const warnings: { text: React.ReactNode; action: string; go: () => void }[] =
+    mediaWithoutCopy === null
+      ? []
+      : [
+          {
+            text: `Esta ${HEADER_KIND_NOUN[mediaWithoutCopy]} se creó fuera de axi y no tenemos su archivo: los envíos saldrían sin ella y Meta los rechazaría.`,
+            action: "Subir el archivo",
+            go: () => onGo("message", "hsm-header-media"),
+          },
+        ];
 
-  if (blockers.length === 0) {
+  if (blockers.length === 0 && warnings.length === 0) {
     return (
       <Alert variant="success" className="rounded-2xl">
         <CircleCheck aria-hidden />
@@ -631,9 +651,22 @@ function BeforeSend({
   return (
     <section aria-labelledby="hsm-before-send" className="bg-card space-y-3 rounded-3xl border border-border p-4.5">
       <h3 id="hsm-before-send" className="text-sm font-semibold">
-        Antes de enviar
+        {blockers.length === 0 ? "Se puede enviar, con un aviso" : "Antes de enviar"}
       </h3>
       <ul className="space-y-3">
+        {warnings.map((warning) => (
+          <li key={warning.action} className="grid grid-cols-[1.125rem_minmax(0,1fr)] gap-x-2.5 gap-y-1 text-[13px]">
+            <TriangleAlert aria-hidden className="text-warning mt-0.5 size-4.5" />
+            <span className="text-pretty">{warning.text}</span>
+            <button
+              type="button"
+              onClick={warning.go}
+              className="decoration-border hover:decoration-foreground col-start-2 min-h-6 w-fit text-[12.5px] font-medium underline underline-offset-[3px]"
+            >
+              {warning.action}
+            </button>
+          </li>
+        ))}
         {blockers.map((blocker, index) => (
           <li key={index} className="grid grid-cols-[1.125rem_minmax(0,1fr)] gap-x-2.5 gap-y-1 text-[13px]">
             <CircleAlert aria-hidden className="text-warning mt-0.5 size-4.5" />

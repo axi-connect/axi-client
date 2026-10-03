@@ -119,6 +119,21 @@ describe("canal cloud con plantillas", () => {
     expect(api.listHsmTemplates).toHaveBeenCalledTimes(2);
   });
 
+  it("si quedan archivos de cabecera por traer (tope del sync), dice que se sincronice otra vez", async () => {
+    api.syncHsmTemplates.mockResolvedValue({ synced: 8, removed: 1, media_pending: 3 });
+    fireEvent.click(screen.getByRole("button", { name: /Sincronizar/ }));
+
+    await waitFor(() =>
+      expect(showAlert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "8 plantillas sincronizadas",
+          description:
+            "1 ya no está en Meta y se retiró de aquí. Faltan 3 archivos de cabecera por traer de Meta: sincroniza otra vez.",
+        }),
+      ),
+    );
+  });
+
   it("si Meta rechaza la sincronización, lo dice sin romper la tabla", async () => {
     api.syncHsmTemplates.mockRejectedValue(new Error("Meta devolvió 400"));
     fireEvent.click(screen.getByRole("button", { name: /Sincronizar/ }));
