@@ -68,8 +68,6 @@ function filament(section: HTMLElement) {
 
 /** Lo que la cabeza de cada arco lleva de luz más brillante, en px de trazo. */
 const HEAD = 46;
-/** El bloom más ancho (film-video.css): el disco tiene que cubrirlo al girar. */
-const BLOOM = 72;
 /** Un giro del disco, en segundos, y la respiración del anillo (±6 % en este periodo). */
 const TURN = 9;
 const BREATH = 4.2;
@@ -84,9 +82,7 @@ function heroLight(section: HTMLElement, tl: gsap.core.Timeline) {
   const flash = one("[data-light=flash]");
   const svg = one<SVGSVGElement>("[data-light=arcs]");
   const ring = one("[data-light=ring]");
-  const discs = all(section, "[data-anim=vlight-disc]");
-  const bands = all(section, "[data-anim=vlight-bands]");
-  if (!pin || !spacer || spacer === section || !hero || !drop || !trail || !flash || !svg || !ring || !discs.length || bands.length !== discs.length) return;
+  if (!pin || !spacer || spacer === section || !hero || !drop || !trail || !flash || !svg || !ring) return;
   const arcs = Array.from(svg.querySelectorAll<SVGPathElement>("path"));
   const strokes = arcs.filter((p) => !p.classList.contains("film-vlight-arc-head"));
   const heads = arcs.filter((p) => p.classList.contains("film-vlight-arc-head"));
@@ -95,9 +91,16 @@ function heroLight(section: HTMLElement, tl: gsap.core.Timeline) {
   // de reposo, como en el anillo cerrado. Si sus filos llegaran a la tangente
   // del radio que encoge, sus cabos rectos asomarían por fuera de la esquina.
   const pieces = new Map<string, HTMLElement[]>();
+  // El brillo del disco: el filo y la corona (`lit`) y la banda caliente (`hot`), por pieza.
+  const lit = new Map<string, HTMLElement[]>();
+  const hot = new Map<string, HTMLElement[]>();
+  const push = (map: Map<string, HTMLElement[]>, key: string, el: HTMLElement) => map.set(key, [...(map.get(key) ?? []), el]);
   for (const el of all(ring, "[data-piece]")) {
-    const key = el.parentElement?.classList.contains("film-vlight-bloom") ? `${el.dataset.piece}-soft` : el.dataset.piece!;
-    pieces.set(key, [...(pieces.get(key) ?? []), el]);
+    const piece = el.dataset.piece!;
+    const band = el.dataset.band;
+    push(pieces, band === "bloom" ? `${piece}-soft` : piece, el);
+    if (band === "hot") push(hot, piece, el);
+    else if (band !== "bloom") push(lit, piece, el);
   }
   const w = writer();
 
@@ -106,6 +109,7 @@ function heroLight(section: HTMLElement, tl: gsap.core.Timeline) {
   let sw = 1;
   let sh = 1;
   let heroAt = 0;
+  const angles = new Map<string, number>();
   let heroH = 0;
   let length = 1;
   // La velocidad de la gota (estado entre frames).
@@ -141,18 +145,11 @@ function heroLight(section: HTMLElement, tl: gsap.core.Timeline) {
     length = arcs[0]?.getTotalLength?.() || 1;
     for (const p of strokes) p.style.strokeDasharray = `${length} ${length + 10}`;
     for (const p of heads) p.style.strokeDasharray = `${HEAD} ${length + HEAD}`;
-    // El disco: un cuadrado centrado en el marco que cubre el anillo abierto
-    // casi del todo (se apaga a 0,92) y su bloom; las bandas, dentro, en su sitio.
-    const D = Math.ceil(Math.hypot(sw * 0.92, sh * 0.92) + 2 * BLOOM + 8);
-    const fx = sw / 2;
-    const fy = sh * (0.5 + FRAME.ty);
-    for (const disc of discs) {
-      Object.assign(disc.style, { inset: "auto", left: `${fx - D / 2}px`, top: `${fy - D / 2}px`, width: `${D}px`, height: `${D}px` });
-      disc.setAttribute("data-square", "");
-    }
-    for (const band of bands) {
-      Object.assign(band.style, { left: `${D / 2 - fx}px`, top: `${D / 2 - fy}px`, width: `${sw}px`, height: `${sh}px`, transformOrigin: `${fx}px ${fy}px` });
-    }
+    // El ángulo de cada pieza desde el centro del marco (para el brillo del disco).
+    const hw = (sw * FRAME.scale) / 2;
+    const hh = (sh * FRAME.scale) / 2;
+    const at: Record<string, [number, number]> = { t: [0, -hh], b: [0, hh], l: [-hw, 0], r: [hw, 0], tl: [-hw, -hh], tr: [hw, -hh], bl: [-hw, hh], br: [hw, hh] };
+    for (const [key, [x, y]] of Object.entries(at)) angles.set(key, Math.atan2(y, x));
     lastTop = NaN;
   };
 
@@ -244,9 +241,15 @@ function heroLight(section: HTMLElement, tl: gsap.core.Timeline) {
       set(key, t(x, y, corner));
       set(`${key}-soft`, t(x, y));
     }
-    // El disco sigue al centro del marco y gira; las bandas giran al revés para quedarse quietas.
-    w.write(discs, "transform", `translate3d(0, ${mid.toFixed(1)}px, 0) rotate(${turn.toFixed(2)}deg)`);
-    w.write(bands, "transform", `rotate(${(-turn).toFixed(2)}deg) translate3d(0, ${(-mid).toFixed(1)}px, 0)`);
+    // El disco: el lado brillante (210°, abajo a la izquierda, al empezar) da la
+    // vuelta despacio. El filo y la corona bajan a 0,42 en el lado apagado y la
+    // banda caliente es un lóbulo estrecho alrededor del brillante.
+    const phi = ((210 + turn) * Math.PI) / 180;
+    for (const [key, angle] of angles) {
+      const lobe = 0.5 + 0.5 * Math.cos(angle - phi);
+      w.write(lit.get(key) ?? [], "opacity", (0.42 + 0.58 * Math.pow(lobe, 1.6)).toFixed(3));
+      w.write(hot.get(key) ?? [], "opacity", Math.pow(lobe, 4).toFixed(3));
+    }
   };
 
   // Solo late mientras la escena está a la vista (de asomar a soltarse): el
@@ -278,8 +281,6 @@ function heroLight(section: HTMLElement, tl: gsap.core.Timeline) {
   gsap.context()?.add(() => () => {
     gsap.ticker.remove(tick);
     w.restore();
-    for (const el of [...discs, ...bands]) el.removeAttribute("style");
-    for (const disc of discs) disc.removeAttribute("data-square");
     svg.removeAttribute("viewBox");
     for (const p of arcs) {
       p.removeAttribute("d");

@@ -42,14 +42,12 @@ export function VideoScene() {
 /** Las piezas de una banda del anillo: cuatro filos y cuatro esquinas, en la geometría del marco en reposo. */
 const PIECES = ["t", "b", "l", "r", "tl", "tr", "bl", "br"] as const;
 /**
- * Dos discos que giran juntos: el del anillo (sus tres bandas, más tenue en el
- * lado apagado) y el del lado brillante, una banda casi blanca bajo una máscara
- * cónica estrecha. Así el lado brillante cambia de color, no solo de opacidad.
+ * Las bandas del anillo, de fuera adentro, y la caliente (casi blanca) que
+ * enciende el lado brillante del disco: el motor la recorre alrededor del
+ * marco con la opacidad de cada pieza (sin máscaras que giren: costaban
+ * 17–25 frames de > 50 ms en el tramo, perfil del 2026-10-03).
  */
-const DISCS = [
-  { name: "ring", bands: ["bloom", "corona", "filo"] },
-  { name: "hot", bands: ["hot"] },
-] as const;
+const BANDS = ["bloom", "corona", "filo", "hot"] as const;
 
 /**
  * La luz del hero que abraza el marco (plan §25). Capas decorativas: sin motor
@@ -58,25 +56,19 @@ const DISCS = [
  * - La gota releva al nudo del hero (`.film-hero-knot`) y cae hasta el filo.
  * - El destello anamórfico y los dos arcos son el contacto.
  * - El anillo: tres bandas (filo, corona y bloom) de ocho piezas, para que el
- *   marco crezca sin engordarlas, dentro del disco que gira (su máscara cónica),
- *   y una cuarta casi blanca en el lado brillante del disco.
+ *   marco crezca sin engordarlas, y una cuarta casi blanca que es el lado
+ *   brillante del disco, girando alrededor del marco.
  * - El filamento es la versión de pantallas sin marco animado (< 1024).
  */
 function VideoLight() {
   return (
     <div className="film-vlight" aria-hidden="true">
       <div className="film-vlight-ring" data-light="ring" aria-hidden="true">
-        {DISCS.map(({ name, bands }) => (
-          <div key={name} className={`film-vlight-disc film-vlight-disc-${name}`} data-anim="vlight-disc">
-            <div className="film-vlight-bands" data-anim="vlight-bands">
-              {bands.map((band) => (
-                <div key={band} className={`film-vlight-band film-vlight-${band}`}>
-                  {PIECES.map((piece) => (
-                    <i key={piece} className={`film-vlight-${piece}`} data-piece={piece} />
-                  ))}
-                </div>
-              ))}
-            </div>
+        {BANDS.map((band) => (
+          <div key={band} className={`film-vlight-band film-vlight-${band}`}>
+            {PIECES.map((piece) => (
+              <i key={piece} className={`film-vlight-${piece}`} data-piece={piece} data-band={band} />
+            ))}
           </div>
         ))}
       </div>
