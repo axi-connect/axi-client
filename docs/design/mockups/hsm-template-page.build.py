@@ -314,6 +314,46 @@ K.extra_css = """
 .dock .acts{margin-left:6px;flex:none}
 @container (max-width: 640px){.dock{flex-wrap:wrap;padding:12px 14px}.dock .state-text{flex:1 1 0;max-width:none}.dock .acts{margin-left:0;width:100%;justify-content:flex-end}}
 @media (prefers-reduced-motion: reduce){.bar i{animation:none;width:100%}}
+
+/* ── F6: carrusel de tarjetas (decisiones D12–D15) ── */
+.fmt{display:grid;gap:8px;grid-template-columns:1fr 1fr}
+.fmt button{display:flex;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--border);border-radius:14px;text-align:left;min-width:0}
+.fmt button[aria-checked="true"]{border-color:var(--foreground);box-shadow:0 0 0 1px var(--foreground)}
+.fmt button[aria-disabled="true"]{opacity:.5}
+.fmt b{display:block;font-size:13.5px;font-weight:600}
+.fmt small{display:block;font-size:12px;color:var(--muted-foreground);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fmt .ic{flex:none;color:var(--muted-foreground)}
+.fmt button[aria-checked="true"] .ic{color:var(--axi-violet)}
+.shared{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:16px;background:var(--secondary)}
+.shared .row{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.shared .lbl{font-size:12.5px;font-weight:500;min-width:7.5rem}
+.btype{display:inline-flex;gap:6px;align-items:center;height:30px;padding:0 10px 0 12px;border-radius:999px;background:var(--background);border:1px solid var(--border);font-size:12.5px;font-weight:500}
+.btype .x{color:var(--muted-foreground);display:grid;place-items:center;width:20px;height:20px;border-radius:50%}
+.cards{display:flex;flex-direction:column;gap:10px}
+.ccard{display:grid;grid-template-columns:28px 104px minmax(0,1fr) auto;gap:12px;align-items:start;padding:12px;border:1px solid var(--border);border-radius:18px;background:var(--background)}
+.ccard .num{width:24px;height:24px;border-radius:50%;background:var(--secondary);display:grid;place-items:center;font-size:12px;font-weight:600;margin-top:2px}
+.ccard .thumb{width:104px;aspect-ratio:1.91/1;border-radius:12px;object-fit:cover;display:block}
+.ccard .thumb.empty{display:grid;place-items:center;align-content:center;gap:2px;border:1.5px dashed var(--border);color:var(--muted-foreground);font-size:11px;text-align:center}
+.ccard .thumb.err{border-color:color-mix(in srgb, var(--axi-destructive) 55%, var(--border))}
+.ccard .fields{display:flex;flex-direction:column;gap:8px;min-width:0}
+.ccard .ta-sm{border:1px solid var(--input);border-radius:10px;padding:8px 10px;font-size:13px;line-height:1.45;background:var(--background)}
+.ccard .ta-sm .n{float:right;font-size:11.5px;color:var(--muted-foreground);font-variant-numeric:tabular-nums;margin-left:8px}
+.ccard .bl{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:6px}
+.ccard .bl.one{grid-template-columns:minmax(0,1fr)}
+.ccard .side{display:flex;flex-direction:column;gap:2px}
+.ccard .input{min-width:0}
+.state-card{container-type:inline-size;min-width:0}
+.ccard .bar{margin-top:4px}
+@container (max-width: 560px){.ccard{grid-template-columns:24px minmax(0,1fr) auto}.ccard .thumb{grid-column:2;width:100%}.ccard .fields{grid-column:2}.ccard .side{grid-row:1;grid-column:3}.ccard .bl{grid-template-columns:minmax(0,1fr)}}
+.fixed-note{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--muted-foreground)}
+.fixed-note .ic{flex:none;margin-top:1px}
+/* burbuja del carrusel: el texto arriba y las tarjetas en fila */
+.wa-carousel{display:grid;grid-auto-flow:column;grid-auto-columns:78%;gap:8px;overflow-x:auto;scrollbar-width:none;margin-top:8px;padding-bottom:2px}
+.wa-carousel::-webkit-scrollbar{display:none}
+.wa-card{background:var(--wa-bubble);color:var(--wa-ink);border-radius:12px;overflow:hidden;box-shadow:0 1px .5px rgb(11 20 26/.13);display:flex;flex-direction:column}
+.wa-card .wa-media{width:calc(100% - 8px)}
+.wa-card .wa-text{font-size:13px;padding:6px 10px 6px;flex:1}
+.wa-card .wa-link{font-size:13px;padding:8px 10px}
 """
 
 
@@ -797,6 +837,176 @@ def view_biblioteca():
     return f'<div class="stack">{view_vacia()}<div class="scrim"></div>{sheet}</div>'
 
 
+# ----------------------------------------------------------------------------- F6: carrusel
+# Decisiones del dueño 2026-10-03: texto fijo por tarjeta, sin variables (D12); botones definidos
+# una vez para todas (D13); de 2 a 5 tarjetas (D14); crear, editar y sync (D15). Por Meta: solo
+# marketing, una sola clase de medio (imagen o video) en todas, el número de tarjetas queda fijo.
+PHOTO2 = PHOTO.replace("d9b99b", "b9c7d9").replace("8a5a44", "44608a")
+PHOTO3 = PHOTO.replace("d9b99b", "c9d9b9").replace("8a5a44", "5a7a44")
+CARDS = [
+    (PHOTO, "Chaqueta Bruma", "Algodón orgánico, tallas S a XL. Llega en 48 h a toda Colombia.", "Ver chaqueta", "savage.co/bruma"),
+    (PHOTO2, "Jean Ancla", "Corte recto y lavado oscuro. El más pedido de la temporada.", "Ver jean", "savage.co/ancla"),
+    (PHOTO3, "Camisa Lino", "Lino lavado, fresca para clima cálido. Cuatro colores.", "Ver camisa", "savage.co/lino"),
+]
+
+
+def fmt_choice(active="Carrusel", locked=False):
+    opts = [("Mensaje", "message-square", "Cabecera, texto, pie y botones"),
+            ("Carrusel", "gallery-horizontal", "De 2 a 5 tarjetas con imagen o video")]
+    items = "".join(
+        f'<button role="radio" aria-checked="{str(lbl == active).lower()}" aria-disabled="{str(locked and lbl != active).lower()}">'
+        f'{ic(icon, size=18)}<span style="min-width:0"><b>{lbl}</b><small>{sub}</small></span></button>'
+        for lbl, icon, sub in opts
+    )
+    return f'<div class="blk"><div class="blk-h">Formato</div><div class="fmt" role="radiogroup" aria-label="Formato">{items}</div></div>'
+
+
+def shared_block():
+    return f"""
+<div class="shared" aria-label="Igual en todas las tarjetas">
+  <div class="row"><span class="lbl">Medio de las tarjetas</span>{seg([("Imagen", "image"), ("Video", "video")], "Imagen")}</div>
+  <div class="row"><span class="lbl">Botones de cada tarjeta</span>
+    <span class="btype">{ic('external-link', size=13)}Enlace<span class="x" aria-label="Quitar">{ic('x', size=12)}</span></span>
+    <span class="btype">{ic('corner-up-left', size=13)}Respuesta rápida<span class="x" aria-label="Quitar">{ic('x', size=12)}</span></span>
+  </div>
+  <p class="hint">Meta exige que todas las tarjetas tengan las mismas piezas: el medio y los botones se eligen una vez aquí, y en cada tarjeta solo cambian la imagen, el texto y lo que dice cada botón.</p>
+</div>"""
+
+
+def ccard(n, photo, title, text, b1, url, state="ready", qr="Me interesa"):
+    if state == "empty":
+        thumb = f'<button class="thumb empty">{ic("image-up", size=18)}<span>Subir imagen</span></button>'
+    elif state == "err":
+        thumb = f'<button class="thumb empty err">{ic("image-off", size=18)}<span>Elegir otra</span></button>'
+    elif state == "uploading":
+        thumb = f'<div><img class="thumb" src="{photo}" alt="" style="opacity:.55"><div class="bar" role="progressbar" aria-label="Subiendo"><i></i></div></div>'
+    else:
+        thumb = f'<img class="thumb" src="{photo}" alt="Imagen de la tarjeta {n}">'
+    full = f"{title}. {text}" if title else ""
+    text_html = (f'<span class="n">{len(full)} / 160</span>{full}' if full
+                 else '<span class="n">0 / 160</span><span class="muted">Texto de la tarjeta</span>')
+    err = ('<p class="hint err">«look-bruma.webp» es WebP. En las tarjetas, Meta solo acepta JPG o PNG.</p>' if state == "err" else "")
+    return f"""
+<div class="ccard">
+  <span class="num" aria-hidden="true">{n}</span>
+  {thumb}
+  <div class="fields">
+    <div class="ta-sm">{text_html}</div>
+    <div class="bl">{K.input(b1, 'Texto del enlace')}{K.input(url, 'savage.co/…', 'adorn', icon='link')}</div>
+    <div class="bl one">{K.input(qr, 'Texto de la respuesta')}</div>
+    {err}
+  </div>
+  <div class="side">
+    <button class="btn ghost icon sm" aria-label="Subir la tarjeta {n}">{ic('arrow-up', size=15)}</button>
+    <button class="btn ghost icon sm" aria-label="Quitar la tarjeta {n}">{ic('trash-2', size=15)}</button>
+  </div>
+</div>"""
+
+
+def cards_block(states=("ready", "ready", "ready"), count_note=True):
+    cards = "".join(ccard(i + 1, *CARDS[i], state=st) for i, st in enumerate(states))
+    n = len(states)
+    return f"""
+<div class="blk">
+  <div class="blk-h">Tarjetas<span class="count">{n} de 5</span></div>
+  {shared_block()}
+  <div class="cards">{cards}</div>
+  <button class="adder">{ic('plus', size=14)}Añadir tarjeta</button>
+  <p class="fixed-note">{ic('lock', size=14)}<span>Cuando Meta la apruebe, el carrusel sale siempre con <b>{n} tarjetas</b>: para cambiar cuántas, se crea otra plantilla.</span></p>
+  {SENDS.replace('Queda guardada con la plantilla', 'Las imágenes quedan guardadas con la plantilla')}
+</div>"""
+
+
+CAR_BODY = 'Hola <span class="var">{{1}}</span>, llegó la temporada a Savage. Mira lo más pedido de la semana.'
+CAR_BODY_TXT = "Hola {{1}}, llegó la temporada a Savage. Mira lo más pedido de la semana."
+
+
+def car_body_block():
+    return f"""
+<div class="blk">
+  <div class="blk-h">Texto de arriba<span class="count">1 variable · {len(CAR_BODY_TXT)} / 1024</span></div>
+  <div class="ta" style="min-height:72px">{CAR_BODY}</div>
+  <div class="ex"><div class="ex-row"><span class="var">{{{{1}}}}</span>{K.input('Ana')}</div></div>
+  <p class="hint">Va en la burbuja encima de las tarjetas. En un carrusel no hay cabecera ni pie: cada tarjeta lleva su imagen.</p>
+</div>"""
+
+
+def car_bubble(n=3, missing=None):
+    cards = []
+    for i in range(n):
+        photo, title, text, b1, _ = CARDS[i % 3]
+        media = (f'<div class="wa-media" style="display:grid;place-items:center;color:var(--wa-muted)">{ic("image", size=20)}</div>'
+                 if missing == i else f'<img class="wa-media" src="{photo}" alt="">')
+        cards.append(f'<div class="wa-card">{media}<p class="wa-text"><b>{title}.</b> {text}</p>'
+                     f'<span class="wa-link">{ic("external-link", size=14)}{b1}</span>'
+                     f'<span class="wa-link">{ic("corner-up-left", size=14)}Me interesa</span></div>')
+    return f"""
+<div class="wa-preview">
+  <div class="wa-bubble"><p class="wa-text">Hola <mark class="wa-mark">Ana</mark>, llegó la temporada a Savage. Mira lo más pedido de la semana.</p><span class="wa-time wa-muted">9:41</span></div>
+  <div class="wa-carousel">{"".join(cards)}</div>
+</div>"""
+
+
+def view_carrusel():
+    left = (
+        step(1, "¿Para qué es?", "Marketing · US$ 0,02 por mensaje", purpose(locked=True) + '<p class="hint">Meta solo admite carruseles en Marketing.</p>', closed=True)
+        + step(2, "El mensaje", "Carrusel · 3 tarjetas · 1 variable", fmt_choice() + '<div class="rule"></div>' + car_body_block() + '<div class="rule"></div>' + cards_block())
+        + step(3, "Ficha", "lo_mas_pedido_v1 · es_CO", ficha("Lo más pedido", "lo_mas_pedido_v1", "v1"))
+    )
+    right = (
+        '<h3>Así se verá <small>desliza las tarjetas</small></h3>'
+        + car_bubble()
+        + before([
+            ("ok", "3 tarjetas con su imagen, su texto y sus dos botones.", ""),
+            ("ok", "Nombre libre: <span class='mono'>lo_mas_pedido_v1</span>.", ""),
+        ])
+    )
+    return page(
+        "Nueva plantilla",
+        "Un carrusel: un texto arriba y de 2 a 5 tarjetas que el cliente desliza, cada una con su imagen y sus botones.",
+        left, right,
+        dock("Lista", "3/3", [("Para qué", "ok"), ("Mensaje", "ok"), ("Ficha", "ok")], "Se envía a revisión de Meta", ready=True),
+        top=started("en blanco"),
+    )
+
+
+def view_carrusel_estados():
+    def card(h, inner):
+        return f'<div class="state-card"><h4>{h}</h4>{inner}</div>'
+    pending = (ccard(2, *CARDS[1], state="uploading") + ccard(3, "", "", "", "", "", state="empty", qr=""))
+    blocked = before([
+        ("pend", "Falta la imagen de la tarjeta 3.", "Subirla"),
+        ("pend", "Falta el texto de la tarjeta 3.", "Escribirlo"),
+    ])
+    imported = (K.notice("info", "<b>Creado en el Business Manager con 7 tarjetas.</b> Se envía tal cual, con sus 7 imágenes. En axi puedes corregir textos y botones; quitar o añadir tarjetas no, porque Meta fija el número al aprobar.")
+                + '<p class="hint">El sync trae como mucho 5 imágenes por pulsación: si faltan, «Sincronizar» lo dice.</p>')
+    states = (
+        card("Subiendo una tarjeta, otra vacía", f'<div class="cards">{pending}</div>')
+        + card("Rechazada en el navegador, antes de subir", f'<div class="cards">{ccard(1, *CARDS[0], state="err")}</div>')
+        + card("Antes de enviar, con lo que falta por tarjeta", blocked + car_bubble(3, missing=2))
+        + card("Un carrusel del Business Manager con más de 5", imported)
+        + card("Formato fijo al editar una aprobada", fmt_choice(locked=True) + '<p class="hint">Un mensaje no pasa a carrusel ni al revés: Meta lo trata como otra plantilla.</p>')
+        + card("Video en las tarjetas", f'<div class="wa-preview"><div class="wa-carousel" style="margin-top:0">' + "".join(f'<div class="wa-card"><div class="wa-video"><span class="play">{ic("play", size=18)}</span><span class="dur">0:1{i}</span></div><p class="wa-text"><b>{t}.</b> Míralo en movimiento.</p><span class="wa-link">{ic("external-link", size=14)}{b}</span></div>' for i, (_, t, _, b, _) in enumerate(CARDS)) + '</div></div>')
+    )
+    return (f'<div class="shell"><div class="page"><header><p class="kicker">Carrusel</p><h1 class="title">Estados de las tarjetas</h1>'
+            '<p class="title-lead">Cada tarjeta se sube y se valida como la cabecera: antes de subir, en el navegador, y con su motivo. Lo que falta se nombra por tarjeta.</p></header>'
+            f'<div class="states">{states}</div></div></div>')
+
+
+def view_carrusel_movil():
+    inner = f"""
+<div class="page">
+  <a class="back" href="#">{ic('arrow-left', size=15)}Plantillas de Meta</a>
+  <header><p class="kicker">Plantillas de Meta</p><h1 class="title">Nueva plantilla</h1></header>
+  <details class="fold" open><summary>Así se verá {ic('chevron-down', size=16)}</summary>{car_bubble()}</details>
+  {step(1, "¿Para qué es?", "Marketing", purpose(), closed=True)}
+  {step(2, "El mensaje", "Carrusel · 3 tarjetas", fmt_choice() + '<div class="rule"></div>' + cards_block(("ready", "ready")))}
+  {step(3, "Ficha", "lo_mas_pedido_v1", ficha("Lo más pedido", "lo_mas_pedido_v1", "v1"), closed=True)}
+  {dock("Lista", "3/3", [("Para qué", "ok"), ("Mensaje", "ok"), ("Ficha", "ok")], "Se envía a revisión de Meta", ready=True)}
+</div>"""
+    return f'<div class="shell" style="padding:20px 16px 48px"><div class="phone">{inner}</div></div>'
+
+
 VIEWS = [
     ("imagen", "Crear con imagen", view_imagen(), "La capacidad nueva: cabecera de imagen subida, con su frase «Va en cada envío». Un pendiente para enseñar «Antes de enviar» y los tramos."),
     ("vacia", "Crear vacía", view_vacia(), "«Empieza desde»: en blanco, lo que axi sugiere o la Biblioteca de Meta, en una sola fila. Al elegir, se pliega a una línea."),
@@ -806,6 +1016,9 @@ VIEWS = [
     ("rechazada", "Corregir rechazada", view_rechazada(), "El motivo de Meta arriba, la ficha plegada y fija; reenviar sin límite."),
     ("aprobada", "Editar aprobada", view_aprobada(), "Categoría y ficha fijas; «Antes» al lado de la burbuja y el aviso de que sigue saliendo la aprobada."),
     ("movil", "Móvil 390", view_movil(), "Una columna; la burbuja arriba y plegable; la isla deja de ser píldora."),
+    ("carrusel", "F6 · Carrusel", view_carrusel(), "F6: el formato se elige en «El mensaje». Medio y botones una vez para todas; por tarjeta, imagen, texto fijo y lo que dice cada botón. De 2 a 5."),
+    ("carrusel-estados", "F6 · Estados", view_carrusel_estados(), "Subiendo, vacía, rechazada, lo que falta por tarjeta, el carrusel de 7 del Business Manager y el video."),
+    ("carrusel-movil", "F6 · Móvil 390", view_carrusel_movil(), "Las tarjetas en una columna; la burbuja con las tarjetas deslizables arriba."),
 ]
 
 K.build_html("Plantilla de Meta en página", "F0 · hsm-media", "Crear y editar plantillas: el mensaje a la izquierda, la burbuja a la derecha", VIEWS)
