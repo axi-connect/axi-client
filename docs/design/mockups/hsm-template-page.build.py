@@ -441,7 +441,7 @@ def name_group(human="Temporada colección", version="v2", locked=False, popover
 </div>"""
     sel = (f'<span class="vsel">{version}{ic("lock", size=13)}</span>' if locked
            else f'<span class="vsel" role="combobox" aria-expanded="{str(popover).lower()}">{version}{ic("chevron-down", size=14)}</span>')
-    return f"""<div class="namegroup {'locked' if locked else ''}">{K.input(human, 'Cómo la reconoces, p. ej. Temporada colección', 'readonly' if locked else '')}{sel}{pop}</div>"""
+    return f"""<div class="namegroup {'locked' if locked else ''}">{K.input(human, 'Ej.: Temporada colección', 'readonly' if locked else '')}{sel}{pop}</div>"""
 
 
 def techname(tech):
@@ -450,7 +450,7 @@ def techname(tech):
 
 def ficha(human="Temporada colección", tech="temporada_coleccion_v2", version="v2", locked=False):
     lock_hint = '<p class="hint">Meta no deja cambiar nombre ni versión: para otra, crea una nueva desde la lista.</p>' if locked else ""
-    tech_line = techname(tech) if human else '<p class="techname">Escribe un nombre: lo pasamos al formato de Meta y le ponemos versión.</p>'
+    tech_line = techname(tech) if human else ""
     return f"""
 <div class="ficha">
   <div class="field"><label>Nombre</label>{name_group(human, version, locked)}{tech_line}{lock_hint}</div>
