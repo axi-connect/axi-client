@@ -74,7 +74,9 @@ describe("PromocionesTab", () => {
         kind: "fixed_discount",
         amount_cents: 1_500_000,
         external_codes: ["SAVAGE15"],
-        ends_at: "2026-09-30T00:00:00.000Z",
+        // Una fecha de fin FUTURA, relativa a hoy: con una fija («2026-09-30») el
+        // test empezó a fallar al pasar ese día, porque la promoción ya no estaba activa.
+        ends_at: new Date(Date.now() + 30 * 86_400_000).toISOString(),
       }),
       promo({ id: "local", name: "Creada en axi", governed_by_connection_id: null }),
     ]);
