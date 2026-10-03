@@ -193,11 +193,11 @@ function Timeline({ c }: { c: FilmContent }) {
 }
 
 /**
- * La posición en la regla (px de su alto de 660) escalada por `--ry`: a poca
+ * La posición en la regla (px de su alto de 660) escalada por `--ruler-k`: a poca
  * altura la regla se compacta entera sin mover nada de sitio relativo (film.css).
  * El motor mide por `data-y` / 660, que no cambia.
  */
-const ry = (y: number) => `calc(${y}px * var(--ry, 1))`;
+const ry = (y: number) => `calc(${y}px * var(--ruler-k, 1))`;
 
 export function FollowupScene() {
   return (

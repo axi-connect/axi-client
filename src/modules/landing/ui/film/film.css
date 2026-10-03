@@ -36,7 +36,10 @@
 /* La pose del teléfono (chat) y del recibo (cobrar): el motor anima estas
    variables en cada frame y solo las lee el `transform` del propio elemento.
    Registradas sin herencia, cambiarlas no invalida el estilo de todo lo que
-   cuelga del teléfono (el hilo del chat): perfil del 2026-10-01, CPU × 4. */
+   cuelga del teléfono (el hilo del chat): perfil del 2026-10-01, CPU × 4.
+   Sus nombres quedan reservados: un `--ry: 1` en otra regla se computa como
+   0deg y no se hereda (la regla del seguimiento se apiló en y=0, 2026-10-03).
+   Lo vigila __tests__/css-registered-props.test.ts. */
 @property --rx { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
 @property --ry { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
 @property --rz { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
@@ -1154,7 +1157,7 @@
 }
 /* La luz de la mañana sube y vuelve a la tinta en el borde: la escena siguiente empieza en `--background`. */
 .film-followup { background: linear-gradient(180deg, var(--background) 45%, color-mix(in srgb, var(--foreground) 3%, var(--background)) 80%, var(--background)); }
-.film-ruler { --ry: 1; position: relative; height: calc(660px * var(--ry)); margin-top: 54px; }
+.film-ruler { --ruler-k: 1; position: relative; height: calc(660px * var(--ruler-k)); margin-top: 54px; }
 .film-ruler-line {
   position: absolute;
   left: 149px;
@@ -1164,8 +1167,8 @@
   background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--foreground) 25%, transparent) 8%, color-mix(in srgb, var(--foreground) 25%, transparent) 92%, transparent);
   transform-origin: 50% 0;
 }
-.film-ruler-gap { position: absolute; left: 144px; top: calc(150px * var(--ry)); width: 12px; height: calc(70px * var(--ry)); background: repeating-linear-gradient(180deg, var(--background) 0 5px, transparent 5px 10px); }
-.film-ruler-gap-label { position: absolute; left: 172px; top: calc(172px * var(--ry)); margin: 0; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--film-dim-text); }
+.film-ruler-gap { position: absolute; left: 144px; top: calc(150px * var(--ruler-k)); width: 12px; height: calc(70px * var(--ruler-k)); background: repeating-linear-gradient(180deg, var(--background) 0 5px, transparent 5px 10px); }
+.film-ruler-gap-label { position: absolute; left: 172px; top: calc(172px * var(--ruler-k)); margin: 0; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--film-dim-text); }
 .film-ruler-event { position: absolute; left: 0; right: 0; }
 .film-ruler-when {
   position: absolute;
@@ -1232,12 +1235,12 @@
   [data-scene="collect"] > .film-wrap { padding-block: 0 24px; }
   [data-scene="measure"] > .film-wrap { padding-block: 0 20px; }
   /* Opción (a) de axi-2e: titular de ~60 a 48 px y menos aire entre filas. La
-     regla se compacta entera (--ry); el embudo, con su ancho topado: con
+     regla se compacta entera (--ruler-k); el embudo, con su ancho topado: con
      `aspect-ratio` y ancho 100 %, el zoom lo hacía más alto, no más bajo. */
   [data-scene="followup"] [data-anim="head"] h2,
   [data-scene="measure"] [data-anim="head"] h2,
   [data-scene="photo"] .film-sell-title { font-size: 48px; }
-  [data-scene="followup"] .film-ruler { --ry: 0.86; margin-top: 24px; }
+  [data-scene="followup"] .film-ruler { --ruler-k: 0.86; margin-top: 24px; }
   [data-scene="measure"] .film-funnel { width: min(100%, 980px); margin: 0 auto; }
 }
 
