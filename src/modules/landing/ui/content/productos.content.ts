@@ -276,6 +276,205 @@ export const PIECES: readonly Piece[] = [
   { id: "medicion", tab: "Medición", tone: "amber", strong: "Ventas en pesos.", thin: "No mensajes.", sample: true },
 ];
 
+/**
+ * Las siete pantallas recreadas. Las etiquetas, estados y botones son los del
+ * panel real (INVENTARIO §1, copiados del cliente); los nombres y las cifras
+ * son de ejemplo, y por eso esas piezas llevan `sample`. Las cifras cuadran
+ * entre sí (la cartera suma lo que dice «Te deben», la calidad es la media de
+ * sus cuatro notas) para que nadie que mire de cerca encuentre un truco.
+ */
+export type ScreenTone = GameTone | "ok" | "muted";
+
+export interface PieceScreens {
+  inbox: {
+    title: string;
+    views: readonly string[];
+    rows: readonly { initials: string; name: string; preview: string; holder: string; tone: ScreenTone }[];
+    thread: readonly { from: "customer" | "agent"; text: string }[];
+    handoff: string;
+    claim: { label: string; action: string };
+    actions: readonly string[];
+  };
+  configura: {
+    name: string;
+    role: string;
+    status: string;
+    toneLabel: string;
+    tones: readonly { label: string; hint: string; selected: boolean }[];
+    rolesLabel: string;
+    roles: readonly string[];
+    rules: readonly { label: string; text: string }[];
+    saved: string;
+  };
+  catalogo: {
+    name: string;
+    price: string;
+    imageSrc: string;
+    imageAlt: string;
+    variantsLabel: string;
+    columns: readonly [string, string, string];
+    variants: readonly { name: string; sku: string; stock: string; out: boolean }[];
+    readiness: string;
+    search: { label: string; typed: string; found: string };
+  };
+  crm: {
+    title: string;
+    forecast: { label: string; value: string };
+    stages: readonly { name: string; count: number; deals: readonly { name: string; value: string; note?: string; byAxi?: boolean }[] }[];
+    byAxi: string;
+  };
+  llamadas: {
+    who: string;
+    result: string;
+    stages: readonly { label: string; reached: boolean }[];
+    notesLabel: string;
+    notes: readonly { label: string; text: string }[];
+    summary: string;
+  };
+  cobros: {
+    owedLabel: string;
+    owed: string;
+    overdueLabel: string;
+    overdue: string;
+    order: string;
+    island: { kicker: string; name: string; amount: string; actions: readonly string[] };
+    rows: readonly { initials: string; name: string; concept: string; amount: string; state: string; tone: ScreenTone }[];
+  };
+  medicion: {
+    salesLabel: string;
+    sales: string;
+    flow: string;
+    funnelLabel: string;
+    funnel: readonly { label: string; value: number }[];
+    qualityLabel: string;
+    quality: number;
+    qualityOf: string;
+    subscores: readonly { label: string; value: number }[];
+    fixLabel: string;
+    fixes: readonly string[];
+  };
+}
+
+export const PIECE_SCREENS: PieceScreens = {
+  inbox: {
+    title: "Inbox",
+    views: ["En cola", "Contigo", "Axi atiende"],
+    rows: [
+      { initials: "AM", name: "Andrés M.", preview: "Prefiero hablar con una persona", holder: "En cola · 2 min", tone: "amber" },
+      { initials: "VR", name: "Valentina R.", preview: "¿Me hacen el examen visual?", holder: "Axi atiende", tone: "violet" },
+      { initials: "LC", name: "Lucía C.", preview: "Gracias, Laura", holder: "Con el equipo", tone: "coral" },
+    ],
+    thread: [
+      { from: "customer", text: "¿Me las dejas más baratas?" },
+      { from: "agent", text: "Con el cupón PRIMERAVEZ te quedan en $170.100." },
+      { from: "customer", text: "Prefiero hablar con una persona" },
+    ],
+    handoff: "Axi pasó la conversación al equipo: El cliente pidió hablar con una persona.",
+    claim: { label: "Axi te la pasó · 14 min", action: "Atender" },
+    actions: ["Devolver a Axi", "Marcar como resuelta"],
+  },
+  configura: {
+    name: "Vera",
+    role: "Vende y toma pedidos",
+    status: "Activo",
+    toneLabel: "Tono",
+    tones: [
+      { label: "Cercano", hint: "De tú, cálido", selected: true },
+      { label: "Formal", hint: "De usted, sin apodos", selected: false },
+      { label: "Directo", hint: "Sin rodeos ni relleno", selected: false },
+    ],
+    rolesLabel: "Lo que hace de verdad",
+    roles: ["Vende y toma pedidos", "Gestiona la agenda"],
+    rules: [
+      { label: "Lo que siempre hace", text: "Ofrece el estuche con cada montura." },
+      { label: "Lo que nunca hace", text: "Nunca inventes precios ni tiempos de entrega." },
+      { label: "Cuándo pasa a una persona", text: "Si lo pide, o si falla 2 veces seguidas." },
+    ],
+    saved: "Todo guardado",
+  },
+  catalogo: {
+    name: "Aviador Ámbar",
+    price: "$189.000",
+    imageSrc: PRODUCT_IMAGE,
+    imageAlt: "Gafas Aviador Ámbar",
+    variantsLabel: "Variantes y stock (3)",
+    columns: ["Variante", "SKU", "Stock"],
+    variants: [
+      { name: "Negro / Ámbar", sku: "AV-NA-01", stock: "4 · disponible", out: false },
+      { name: "Dorado / Verde", sku: "AV-DV-02", stock: "7 · disponible", out: false },
+      { name: "Plata / Gris", sku: "AV-PG-03", stock: "agotado", out: true },
+    ],
+    readiness: "Plata / Gris está agotada · tu agente ofrece las demás",
+    search: { label: "Búsqueda con IA", typed: "aviadro ambar", found: "Aviador Ámbar" },
+  },
+  crm: {
+    title: "Pipeline",
+    forecast: { label: "Pronóstico ponderado", value: "$ 1,9 M" },
+    stages: [
+      { name: "Nuevo", count: 6, deals: [{ name: "Juan P.", value: "Monturas niño" }, { name: "Sara L.", value: "Lentes de contacto" }] },
+      { name: "Cotizado", count: 4, deals: [{ name: "Valentina R.", value: "$170.100", note: "Entró hoy a la etapa", byAxi: true }] },
+      { name: "Compromiso", count: 2, deals: [{ name: "Andrés M.", value: "$412.000", note: "cierra el viernes" }] },
+      { name: "Ganado", count: 9, deals: [{ name: "Lucía C.", value: "$189.000" }] },
+    ],
+    byAxi: "La abrió Axi",
+  },
+  llamadas: {
+    who: "Axi llamó a Andrés M. · 2:14",
+    result: "Objetivo cumplido",
+    stages: [
+      { label: "Apertura", reached: true },
+      { label: "Motivo", reached: true },
+      { label: "Propuesta", reached: true },
+      { label: "Cierre", reached: true },
+    ],
+    notesLabel: "Lo que Axi anota",
+    notes: [
+      { label: "Motivo", text: "Retomar la cotización" },
+      { label: "Busca", text: "Gafas negras, lente naranja" },
+      { label: "Producto", text: "Aviador Ámbar" },
+      { label: "Siguiente paso", text: "Enviarle el pedido por WhatsApp" },
+    ],
+    summary: "Resumen escrito por Axi al colgar",
+  },
+  cobros: {
+    owedLabel: "Te deben",
+    owed: "$ 3,4 M",
+    overdueLabel: "Vencido",
+    overdue: "$ 820.000",
+    order: "Ordenada por a quién escribir primero, no por nombre ni por monto.",
+    island: { kicker: "Escribe primero a", name: "Andrés M.", amount: "$ 820.000 vencidos", actions: ["Escribirle", "Anotar promesa"] },
+    rows: [
+      { initials: "AM", name: "Andrés M.", concept: "Cuota 2 de 3", amount: "$ 820.000", state: "En mora · 4 días", tone: "amber" },
+      { initials: "VR", name: "Valentina R.", concept: "Saldo", amount: "$ 128.100", state: "Promesa · viernes", tone: "violet" },
+      { initials: "JP", name: "Juan P.", concept: "Cuota 1 de 2", amount: "$ 1.250.000", state: "Por vencer", tone: "muted" },
+      { initials: "SL", name: "Sara L.", concept: "Saldo", amount: "$ 1.201.900", state: "Al día", tone: "ok" },
+    ],
+  },
+  medicion: {
+    salesLabel: "Ventas pagadas · septiembre",
+    sales: "$ 48,6 M",
+    flow: "1.240 conversaciones → 171 pagadas",
+    funnelLabel: "Embudo de ventas",
+    funnel: [
+      { label: "Con intención", value: 612 },
+      { label: "Pedidos creados", value: 268 },
+      { label: "Pedidos confirmados", value: 204 },
+      { label: "Pedidos pagados", value: 171 },
+    ],
+    qualityLabel: "Calidad general",
+    quality: 86,
+    qualityOf: "de 100",
+    subscores: [
+      { label: "Precisión", value: 91 },
+      { label: "Uso de datos", value: 88 },
+      { label: "Cierre de venta", value: 74 },
+      { label: "Tono", value: 92 },
+    ],
+    fixLabel: "Problemas más frecuentes",
+    fixes: ["Cierre no intentado", "Ignoró el inventario"],
+  },
+};
+
 /* ──────────────────────────────── 4 · El video ──────────────────────────────── */
 
 const CLOUDINARY_VIDEO = "https://res.cloudinary.com/dpfnxj52w/video/upload";
