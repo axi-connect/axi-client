@@ -5,10 +5,12 @@
  * el cristal del control de sonido, que no se anima. En móvil no hay marco: el
  * video va entero a lo ancho desde el principio.
  */
-/* El fondo es el negro del video y se funde con la tinta arriba y abajo: sin
-   costura con las vecinas. El negro empieza al 8 %: el titular (desde 76 px)
-   queda entero sobre negro también a 657 px de alto, en los dos temas. */
-.film-video { position: relative; height: 100svh; min-height: 560px; overflow: clip; background: linear-gradient(180deg, var(--film-ink), #000 8%, #000 86%, var(--film-ink)); }
+/* Claro: la escena es del fondo del tema, blanca (la dueña, 2026-10-03: el
+   negro en el tema claro se veía mal); solo el marco es negro, el del video.
+   Oscuro: el negro del video, fundido con la tinta arriba y abajo. El negro
+   empieza al 8 %: el titular (desde 76 px) queda entero sobre negro. */
+.film-video { position: relative; height: 100svh; min-height: 560px; overflow: clip; background: var(--film-ink); }
+.dark .film-video { background: linear-gradient(180deg, var(--film-ink), #000 8%, #000 86%, var(--film-ink)); }
 .film-video-head {
   position: absolute;
   inset: clamp(76px, 9vh, 96px) 0 auto;
@@ -19,11 +21,11 @@
   gap: 12px;
   text-align: center;
   pointer-events: none;
-  /* Va sobre el negro del video en los dos temas: claro también en el tema claro. */
-  color: #f5f5f7;
+  /* Sobre el fondo de la escena: tinta del tema (blanca en oscuro, negra en claro). */
+  color: var(--foreground);
 }
 .film-video-head .film-eyebrow { margin: 0; }
-.film-video-dim { color: rgb(245 245 247 / 0.6); }
+.film-video-dim { color: var(--film-dim-text); }
 .film-video-title { margin: 0; font-size: clamp(34px, 4.3vw, 62px); line-height: 1.02; letter-spacing: -0.045em; }
 
 .film-video-frame {
@@ -104,6 +106,9 @@
 
 /* Móvil: el video entero a lo ancho desde el principio, el titular encima. */
 @media (max-width: 767px) {
+  /* En móvil el video ocupa toda la escena y el titular va encima: claro en los dos temas. */
+  .film-video-head { color: #f5f5f7; }
+  .film-video-dim { color: rgb(245 245 247 / 0.6); }
   .film-video-head { align-items: flex-start; padding-inline: 16px; text-align: left; }
   .film-video-frame { transform: none; }
   .film-video-clip { border-radius: 0; box-shadow: none; }
@@ -122,8 +127,12 @@
    se anima ni un filter ni un fondo. */
 .film-vlight {
   /* Claro: el núcleo y el filo en ámbar y coral (el blanco se perdería sobre el hero claro). */
-  --vl-hot: #ffd58f;
-  --vl-hot-edge: color-mix(in srgb, var(--axi-brand) 80%, transparent);
+  /* Claro: el filo y la banda caliente en ámbar y coral (el anillo va sobre el
+     blanco de la escena: un blanco cálido no se vería). */
+  --vl-hot: color-mix(in srgb, var(--axi-amber) 70%, var(--axi-brand));
+  --vl-hot-edge: color-mix(in srgb, var(--axi-brand) 85%, transparent);
+  --vl-hot-band: color-mix(in srgb, var(--axi-amber) 88%, white);
+  --vl-hot-band-2: var(--axi-amber);
   --vl-amber: var(--axi-amber);
   --vl-coral: var(--axi-brand);
   --vl-violet: var(--axi-violet);
@@ -136,6 +145,8 @@
 .dark .film-vlight {
   --vl-hot: #fff4e2;
   --vl-hot-edge: color-mix(in srgb, var(--axi-amber) 85%, transparent);
+  --vl-hot-band: #fff3dc;
+  --vl-hot-band-2: #ffe2a6;
 }
 .film-vlight > * { position: absolute; opacity: 0; }
 /* Grano estático para los degradados largos sobre negro: una máscara de ruido
@@ -191,7 +202,7 @@
 /* La banda caliente del lado brillante: ámbar casi blanco, fina, sobre el filo. */
 .film-vlight-hot { --b: 8px; --i: 1px; }
 .film-vlight-hot > i {
-  --g: transparent calc(var(--o) - 1px), #fff3dc calc(var(--o) + 0.9px), color-mix(in srgb, #ffe2a6 85%, transparent) calc(var(--o) + 2.4px), color-mix(in srgb, var(--vl-amber) 45%, transparent) calc(var(--o) + 4.2px), transparent calc(var(--o) + 7.5px);
+  --g: transparent calc(var(--o) - 1px), var(--vl-hot-band) calc(var(--o) + 0.9px), color-mix(in srgb, var(--vl-hot-band-2) 85%, transparent) calc(var(--o) + 2.4px), color-mix(in srgb, var(--vl-amber) 45%, transparent) calc(var(--o) + 4.2px), transparent calc(var(--o) + 7.5px);
 }
 /* Bloom: ancho y tenue, se pierde en la tinta; violeta solo en el borde lejano. */
 .film-vlight-bloom { --b: 72px; --i: 4px; }
