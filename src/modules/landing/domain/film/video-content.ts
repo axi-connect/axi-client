@@ -22,8 +22,8 @@ export const FILM_VIDEO_SOURCES = {
 
 export const FILM_VIDEO = {
   eyebrow: "Axi en acción",
-  title: "Así se ve",
-  titleThin: "un día con Axi.",
+  /** Una sola línea (pedido de la dueña, 2026-10-03). */
+  title: "Así se ve Axi",
   kicker: "Video del producto",
   caption: "Vende, cobra y atiende. Mientras tú decides.",
   soundOn: "Activar sonido",

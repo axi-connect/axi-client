@@ -20,8 +20,6 @@ export function VideoScene() {
         <p className="film-eyebrow film-video-dim">{FILM_VIDEO.eyebrow}</p>
         <h2 id="video-h" className="film-h film-video-title">
           {FILM_VIDEO.title}
-          <br />
-          <span className="t">{FILM_VIDEO.titleThin}</span>
         </h2>
       </div>
       <div className="film-video-frame" data-anim="video-frame">
