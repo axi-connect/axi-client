@@ -872,7 +872,11 @@ function WizardBack() {
   );
 }
 
-/** La marca de un paso: ✓ si está hecho, el número con anillo coral si es el actual, el número tenue si falta. */
+/**
+ * Cómo se ve aquí la `StepMark` compartida: el número tenue si falta y un ✓ más
+ * chico y grueso que en los formularios. Lo hecho y el anillo del paso actual los
+ * pone la pieza misma.
+ */
 const MARK_LOOK = { pendingStyle: "faint", checkClassName: "size-3.5", checkStrokeWidth: 2.6 } as const;
 
 /** Un aviso: punto ámbar + texto en foreground. Sin caja tintada (el color va en el punto, DS §9.5). */

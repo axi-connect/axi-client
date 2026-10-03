@@ -5,7 +5,7 @@ import { cn } from "@/core/lib/utils";
 /**
  * - `pending`: falta. Su cara la elige `pendingStyle`.
  * - `current`: es el paso en curso (anillo de marca).
- * - `done`: hecho (✓, o el número relleno si `showCheck` es `false`).
+ * - `done`: hecho (✓).
  * - `error`: tiene algo que corregir (tinte destructivo, con el número).
  * - `blocked`: algo lo bloquea («!» con anillo de aviso).
  */
@@ -50,7 +50,6 @@ export function StepMark({
   state,
   size = "lg",
   pendingStyle = "fill",
-  showCheck = true,
   className,
   checkClassName,
   checkStrokeWidth = 2.5,
@@ -59,8 +58,6 @@ export function StepMark({
   state: StepMarkState;
   size?: StepMarkSize;
   pendingStyle?: StepMarkPendingStyle;
-  /** `false`: un paso hecho conserva su número (relleno) en vez del ✓. */
-  showCheck?: boolean;
   className?: string;
   /** Ajustes finos del ✓ de cada pantalla (tamaño). */
   checkClassName?: string;
@@ -78,7 +75,7 @@ export function StepMark({
         className,
       )}
     >
-      {state === "done" && showCheck ? (
+      {state === "done" ? (
         <Check className={cn(look.check, checkClassName)} strokeWidth={checkStrokeWidth} />
       ) : state === "blocked" ? (
         "!"

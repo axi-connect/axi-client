@@ -28,7 +28,7 @@ import { ProductDetailSkeleton } from "@/modules/catalog/ui/components/ProductDe
 import { ProductEnrichmentSection } from "@/modules/catalog/ui/components/ProductEnrichmentSection";
 import { ProductPhotosSection } from "@/modules/catalog/ui/components/ProductPhotosSection";
 import { ProductReadinessIsland } from "@/modules/catalog/ui/components/ProductReadinessIsland";
-import { useUnsavedGuard } from "@/modules/catalog/ui/hooks/use-unsaved-guard";
+import { useUnsavedGuard } from "@/core/hooks/use-unsaved-guard";
 import { VariantsTable } from "@/modules/catalog/ui/components/VariantsTable";
 
 const CARD = "rounded-3xl border border-border bg-card p-5";

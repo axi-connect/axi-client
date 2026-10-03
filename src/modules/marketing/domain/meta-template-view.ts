@@ -130,15 +130,19 @@ export type HsmRejectReason =
   | "template_limit"
   | "unknown";
 
-/** Dónde se corrige cada motivo: el paso del diálogo que hay que abrir. */
-export type HsmFormStep = "identity" | "category" | "message" | "pieces";
+/**
+ * Dónde se corrige cada motivo: el paso de la página que hay que abrir. Son
+ * los tres de la página (maqueta F0 v2): para qué es, el mensaje entero
+ * (cabecera, texto, pie y botones) y la ficha (nombre, versión e idioma).
+ */
+export type HsmFormStep = "purpose" | "message" | "ficha";
 
 export const HSM_REJECT_REASONS: Record<HsmRejectReason, { title: string; hint: string; step: HsmFormStep | null }> = {
-  exists: { title: "Ya existe una plantilla con ese nombre e idioma", hint: "Usa otro nombre.", step: "identity" },
+  exists: { title: "Ya existe una plantilla con ese nombre e idioma", hint: "Usa otro nombre.", step: "ficha" },
   name_locked: {
     title: "Meta tiene reservado ese nombre",
     hint: "Hace poco se borró una plantilla así; Meta lo reserva unos 30 días. Usa otro nombre.",
-    step: "identity",
+    step: "ficha",
   },
   status_locked: {
     title: "Meta todavía la está revisando",
@@ -153,14 +157,14 @@ export const HSM_REJECT_REASONS: Record<HsmRejectReason, { title: string; hint: 
   header_format: {
     title: "El formato de la cabecera no le vale a Meta",
     hint: "Sin negritas ni cursivas, y como mucho un hueco.",
-    step: "pieces",
+    step: "message",
   },
   body_format: {
     title: "El formato del texto no le vale a Meta",
     hint: "Revisa saltos de línea, símbolos y las variables.",
     step: "message",
   },
-  footer_format: { title: "El formato del pie no le vale a Meta", hint: "Sin huecos ni formato en el pie.", step: "pieces" },
+  footer_format: { title: "El formato del pie no le vale a Meta", hint: "Sin huecos ni formato en el pie.", step: "message" },
   param_ratio: {
     title: "Demasiadas variables para tan poco texto",
     hint: "Meta exige más texto fijo por cada hueco. Escribe más o quita variables.",

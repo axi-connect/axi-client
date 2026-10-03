@@ -10,20 +10,19 @@ import { StepMark, type StepMarkPendingStyle, type StepMarkSize, type StepMarkSt
 export type FormStepState = "pending" | "done" | "error" | "blocked";
 
 /**
- * Las cuatro caras que tenían las copias (F2 las junta sin cambiar un píxel):
+ * Las caras de un paso (F2 juntó las copias sin cambiar un píxel; cada una
+ * existe porque tiene quien la use):
  *
  * - `card`: tarjeta propia con chevrón; el subtítulo abierto o el resumen plegado
- *   en una línea truncada (alta de producto del catálogo).
- * - `divided`: sin tarjeta, separado por una línea, con el resumen a la derecha
- *   de la cabecera: dentro de un diálogo, cuatro tarjetas serían cajas dentro de
- *   una caja (plantilla de WhatsApp).
+ *   en una línea truncada (alta de producto del catálogo, página de plantillas
+ *   de Meta).
  * - `edit`: tarjeta que se eleva al abrirse; cerrada dice «Editar» y abierta
  *   «Listo» (icono en el celular) y un paso pendiente lleva el anillo de marca
  *   (Preparar entrega).
  * - `chevron`: tarjeta que se eleva al abrirse, con un chevrón que gira, el
  *   número más chico y el título más grande (editor del piloto).
  */
-export type FormStepVariant = "card" | "divided" | "edit" | "chevron";
+export type FormStepVariant = "card" | "edit" | "chevron";
 
 interface Look {
   /** La `<section>` se nombra con el título (región). */
@@ -35,7 +34,6 @@ interface Look {
   mark: {
     size: StepMarkSize;
     pendingStyle: StepMarkPendingStyle;
-    showCheck: boolean;
     className?: string;
     checkStrokeWidth?: number;
   };
@@ -59,7 +57,7 @@ const LOOK: Record<FormStepVariant, Look> = {
     raised: false,
     button:
       "flex w-full items-center gap-3.5 rounded-3xl px-5 py-4 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-    mark: { size: "lg", pendingStyle: "fill", showCheck: true, className: "text-sm", checkStrokeWidth: 2 },
+    mark: { size: "lg", pendingStyle: "fill", className: "text-sm", checkStrokeWidth: 2 },
     doneWhileOpen: "done",
     pendingMark: "pending",
     text: "flex min-w-0 flex-1 flex-col gap-0.5",
@@ -69,29 +67,13 @@ const LOOK: Record<FormStepVariant, Look> = {
     chevron: "size-4.5 shrink-0 text-muted-foreground transition-transform duration-200",
     panel: "space-y-4 px-5 pb-5 sm:pl-[4.25rem]",
   },
-  divided: {
-    labelled: true,
-    section: "border-t border-border",
-    raised: false,
-    button:
-      "flex min-h-12 w-full items-center gap-3 rounded-xl py-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-    mark: { size: "sm", pendingStyle: "fill", showCheck: false },
-    doneWhileOpen: "done",
-    pendingMark: "pending",
-    text: "",
-    title: "text-[15px] font-semibold whitespace-nowrap",
-    line: "text-muted-foreground ml-auto min-w-0 truncate text-right text-xs",
-    truncate: true,
-    chevron: "size-4 shrink-0 text-muted-foreground transition-transform duration-200",
-    panel: "space-y-4 pb-5 sm:pl-9",
-  },
   edit: {
     labelled: false,
     section: "rounded-3xl border bg-card transition-shadow",
     raised: true,
     button:
       "flex w-full items-center gap-3 rounded-3xl px-4 py-4 sm:gap-4 sm:px-5 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-    mark: { size: "lg", pendingStyle: "fill", showCheck: true },
+    mark: { size: "lg", pendingStyle: "fill" },
     doneWhileOpen: "current",
     pendingMark: "current",
     text: "min-w-0 flex-1",
@@ -107,7 +89,7 @@ const LOOK: Record<FormStepVariant, Look> = {
     raised: true,
     button:
       "focus-visible:outline-ring flex w-full items-center gap-3.5 rounded-3xl px-5 py-[18px] text-left focus-visible:outline-2 focus-visible:outline-offset-2",
-    mark: { size: "md", pendingStyle: "outline", showCheck: true },
+    mark: { size: "md", pendingStyle: "outline" },
     doneWhileOpen: "pending",
     pendingMark: "pending",
     text: "min-w-0 flex-1",
@@ -131,8 +113,7 @@ function markState(look: Look, state: FormStepState, open: boolean): StepMarkSta
  * el título y, plegado, el resumen de lo elegido. El contenido NO se desmonta
  * al plegar (`hidden`): los campos conservan su valor y siguen validándose.
  *
- * `blocked` y `error` se dicen al lector de pantalla junto al título; en
- * `divided` el error además reemplaza el resumen a la vista.
+ * `blocked` y `error` se dicen al lector de pantalla junto al título.
  */
 export function FormStep({
   id,
@@ -147,6 +128,7 @@ export function FormStep({
   blockedHint = "por resolver",
   errorHint = "Hay algo que corregir",
   unmountWhenClosed = false,
+  flush = false,
   children,
 }: {
   /** Prefijo del id del panel (`aria-controls` = `${id}-${number}`): único en la página. Sin él, `useId`. */
@@ -155,7 +137,7 @@ export function FormStep({
   title: string;
   /** La línea bajo el título con el paso abierto (y plegado si no hay resumen). */
   subtitle?: string;
-  /** Lo elegido, para cuando el paso está plegado (en `divided`, siempre a la vista). */
+  /** Lo elegido, para cuando el paso está plegado. */
   summary?: React.ReactNode;
   state: FormStepState;
   open: boolean;
@@ -168,22 +150,25 @@ export function FormStep({
    * dependía de eso (el editor del piloto): por defecto el contenido se conserva.
    */
   unmountWhenClosed?: boolean;
+  /**
+   * Los campos sin sangría bajo el título. DESIGN-SYSTEM §9.7: con la vista
+   * previa al lado, los campos van en una columna y sin sangría, o no caben
+   * (la página de plantillas de Meta).
+   */
+  flush?: boolean;
   children?: React.ReactNode;
 }) {
   const look = LOOK[variant];
   const generatedId = useId();
   const panelId = id ? `${id}-${String(number)}` : generatedId;
-  const showError = variant === "divided" && state === "error";
-  const srHint = state === "blocked" ? blockedHint : state === "error" && !showError ? errorHint : null;
+  const srHint = state === "blocked" ? blockedHint : state === "error" ? errorHint : null;
   const hint = srHint ? <span className="sr-only"> ({srHint})</span> : null;
 
-  let line: React.ReactNode;
-  if (variant === "divided") line = showError ? errorHint : summary;
-  else line = open ? subtitle : (summary ?? subtitle);
+  const line: React.ReactNode = open ? subtitle : (summary ?? subtitle);
   // `card` calla la línea vacía; `edit` y `chevron` pintan el resumen siempre que están plegados.
   const showLine = look.truncate ? Boolean(line) : !open || Boolean(subtitle);
-  // El `title` repite el texto entero de una línea truncada (en `divided`, el resumen aunque haya error).
-  const lineTitle = look.truncate ? (variant === "divided" ? summary : line) : undefined;
+  // El `title` repite el texto entero de una línea truncada.
+  const lineTitle = look.truncate ? line : undefined;
 
   return (
     <section
@@ -196,33 +181,20 @@ export function FormStep({
           state={markState(look, state, open)}
           size={look.mark.size}
           pendingStyle={look.mark.pendingStyle}
-          showCheck={look.mark.showCheck}
           className={look.mark.className}
           checkStrokeWidth={look.mark.checkStrokeWidth}
         />
-        {variant === "divided" ? (
-          <>
-            <span className={look.title}>
-              {title}
-              {hint}
-            </span>
+        <span className={look.text}>
+          <span className={look.title}>
+            {title}
+            {hint}
+          </span>
+          {showLine ? (
             <span className={look.line} title={typeof lineTitle === "string" ? lineTitle : undefined}>
               {line}
             </span>
-          </>
-        ) : (
-          <span className={look.text}>
-            <span className={look.title}>
-              {title}
-              {hint}
-            </span>
-            {showLine ? (
-              <span className={look.line} title={typeof lineTitle === "string" ? lineTitle : undefined}>
-                {line}
-              </span>
-            ) : null}
-          </span>
-        )}
+          ) : null}
+        </span>
         {look.chevron === null ? (
           // En el celular, «Editar» es un icono: el resumen necesita ese ancho.
           <span className="flex shrink-0 items-center gap-1.5 rounded-lg py-1 text-sm font-medium sm:px-2">
@@ -234,7 +206,7 @@ export function FormStep({
         )}
       </button>
       {unmountWhenClosed && !open ? null : (
-        <div id={panelId} hidden={!open} className={look.panel}>
+        <div id={panelId} hidden={!open} className={cn(look.panel, flush && "sm:pl-5 lg:pl-5")}>
           {children}
         </div>
       )}

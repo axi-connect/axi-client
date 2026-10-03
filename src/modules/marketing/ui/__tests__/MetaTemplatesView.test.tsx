@@ -15,6 +15,10 @@ jest.mock("@/core/providers/alert-provider", () => ({
   useAlert: () => ({ showAlert, showModal, closeModal: jest.fn() }),
 }));
 
+const push = jest.fn();
+const replace = jest.fn();
+jest.mock("next/navigation", () => ({ useRouter: () => ({ push, replace }) }));
+
 jest.mock("@/modules/channels/public", () => ({ listChannels: jest.fn() }));
 jest.mock("@/modules/marketing/infrastructure/services/templates-service.adapter", () => ({
   deleteHsmTemplate: jest.fn(),
@@ -326,5 +330,38 @@ describe("lo próximo y los estados (lienzo 2026-09-28)", () => {
     render(<MetaTemplatesView />);
     expect((await screen.findAllByText("En revisión"))[0]).toBeInTheDocument();
     expect(screen.queryByText("Pendiente")).not.toBeInTheDocument();
+  });
+});
+
+describe("crear y editar son páginas (hsm-media F3)", () => {
+  beforeEach(() => {
+    channelsApi.listChannels.mockResolvedValue(CLOUD);
+    api.listHsmTemplates.mockResolvedValue([hsm(), hsm({ id: "h9", name: "promo_rechazada", approval_status: "rejected" })]);
+  });
+
+  it("«Nueva plantilla» abre la página con el canal elegido", async () => {
+    render(<MetaTemplatesView />);
+    await screen.findByText("promo_agosto");
+
+    fireEvent.click(screen.getByRole("button", { name: "Nueva plantilla" }));
+
+    expect(push).toHaveBeenCalledWith("/settings/meta-templates/new?channel=ch1");
+  });
+
+  it("«Corregir» abre la página de esa plantilla", async () => {
+    render(<MetaTemplatesView />);
+    await screen.findByText("promo_rechazada");
+
+    fireEvent.click(screen.getAllByRole("button", { name: /Corregir promo_rechazada/ })[0]);
+
+    expect(push).toHaveBeenCalledWith("/settings/meta-templates/h9/edit?channel=ch1");
+  });
+
+  it("al volver con ?point= la señala una vez y limpia la URL", async () => {
+    render(<MetaTemplatesView initialChannelId="ch1" pointId="h9" />);
+    await screen.findByText("promo_rechazada");
+
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/settings/meta-templates?channel=ch1", { scroll: false }));
+    expect(replace).toHaveBeenCalledTimes(1);
   });
 });

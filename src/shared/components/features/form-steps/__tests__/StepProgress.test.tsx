@@ -48,4 +48,20 @@ describe("StepProgress", () => {
     expect(screen.getByRole("button", { name: "El correo: por resolver" }).querySelector("[aria-hidden='true']")).toHaveClass("bg-current/20");
     expect(screen.getByRole("list", { name: "Qué le falta" })).toBeInTheDocument();
   });
+
+  it("`blocked` se pinta como el aviso pero NO cuenta: hay algo que corregir", () => {
+    render(
+      <StepProgress
+        title="Casi lista"
+        detail="Falta el ejemplo de {{2}}"
+        checks={[
+          { id: "purpose", label: "¿Para qué es?", state: "ready", onGo: jest.fn() },
+          { id: "message", label: "El mensaje", state: "blocked", onGo: jest.fn() },
+          { id: "ficha", label: "Ficha", state: "ready", onGo: jest.fn() },
+        ]}
+      />,
+    );
+    expect(screen.getByText("2/3")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "El mensaje: por corregir" })).toBeInTheDocument();
+  });
 });

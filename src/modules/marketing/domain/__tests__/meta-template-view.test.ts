@@ -85,7 +85,7 @@ describe("qué pasó al enviar (incidente 2026-09-28)", () => {
       }),
     );
     expect(failure).toEqual({ kind: "rejected", reason: "header_format", detail: "Header format is incorrect", reference: "Ax9" });
-    expect(HSM_REJECT_REASONS.header_format.step).toBe("pieces");
+    expect(HSM_REJECT_REASONS.header_format.step).toBe("message");
     // Un motivo que el cliente no conoce sigue siendo un rechazo legible.
     expect(classifyHsmSubmitError(problem(422, "channels/template_rejected", { reason_code: "algo_nuevo" }))).toMatchObject({
       kind: "rejected",

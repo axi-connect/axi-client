@@ -2,8 +2,12 @@
 
 import { cn } from "@/core/lib/utils";
 
-/** `ready` listo, `warning` pasa pero con un aviso, `pending` por resolver. */
-export type StepProgressState = "ready" | "warning" | "pending";
+/**
+ * `ready` listo; `warning` pasa, pero con un aviso; `blocked` hay algo que
+ * corregir y NO pasa (se pinta como el aviso pero no cuenta); `pending` por
+ * resolver, sin empezar.
+ */
+export type StepProgressState = "ready" | "warning" | "blocked" | "pending";
 
 export interface StepProgressCheck {
   id: string;
@@ -17,12 +21,14 @@ export interface StepProgressCheck {
 const BAR: Record<StepProgressState, string> = {
   ready: "bg-current",
   warning: "bg-warning",
+  blocked: "bg-warning",
   pending: "bg-current/20",
 };
 
 const SPOKEN: Record<StepProgressState, string> = {
   ready: ": listo",
   warning: ": con un aviso",
+  blocked: ": por corregir",
   pending: ": por resolver",
 };
 
@@ -50,7 +56,8 @@ export function StepProgress({
   label?: string;
   className?: string;
 }) {
-  const passing = checks.filter((check) => check.state !== "pending").length;
+  // Pasan los listos y los que solo traen un aviso; lo que hay que corregir, no.
+  const passing = checks.filter((check) => check.state === "ready" || check.state === "warning").length;
   return (
     <div className={cn("min-w-0 space-y-1.5", className)}>
       <div className="flex items-baseline gap-2">

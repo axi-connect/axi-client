@@ -4,7 +4,12 @@ import { useState } from "react";
 import { AlertTriangle, Check, CircleX, Copy } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert";
 import { Button } from "@/shared/components/ui/button";
-import { HSM_REJECT_REASONS, hsmStatusLabel, type HsmSubmitFailure } from "@/modules/marketing/domain/meta-template-view";
+import {
+  HSM_REJECT_REASONS,
+  hsmStatusLabel,
+  type HsmFormStep,
+  type HsmSubmitFailure,
+} from "@/modules/marketing/domain/meta-template-view";
 
 /**
  * Qué pasó al enviar, dicho DENTRO del formulario y hasta que el operador
@@ -33,7 +38,7 @@ export function HsmSubmitNotice({
   onSync: () => void;
   onRefresh: () => void;
   /** «Ir a corregirlo»: abre el paso del formulario donde está el problema. */
-  onGoToStep: (step: "identity" | "category" | "message" | "pieces") => void;
+  onGoToStep: (step: HsmFormStep) => void;
 }) {
   switch (failure.kind) {
     case "name_locked":
@@ -76,7 +81,7 @@ export function HsmSubmitNotice({
                     Usar {suggestedName}
                   </Button>
                 ) : reason.step !== null ? (
-                  <Button size="sm" variant="outline" className="rounded-full" onClick={() => onGoToStep(reason.step as never)}>
+                  <Button size="sm" variant="outline" className="rounded-full" onClick={() => reason.step !== null && onGoToStep(reason.step)}>
                     Ir a corregirlo
                   </Button>
                 ) : null}

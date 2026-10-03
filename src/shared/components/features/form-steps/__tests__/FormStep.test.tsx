@@ -71,25 +71,27 @@ describe("FormStep", () => {
     expect(screen.queryByText("Dónde vive")).not.toBeInTheDocument();
   });
 
-  it("`divided`: el resumen siempre a la vista y, con error, «Hay algo que corregir» en su lugar", () => {
-    const { rerender } = render(
-      <FormStep variant="divided" number={4} title="Cabecera, pie y botones" summary="Opcional" state="pending" open onToggle={() => undefined}>
+  it("`card` con error: la marca «!» y el aviso dicho al lector de pantalla junto al título", () => {
+    render(
+      <FormStep number={2} title="El mensaje" summary="2 variables" state="error" open={false} onToggle={() => undefined}>
         <p>campos</p>
       </FormStep>,
     );
-    expect(screen.getByRole("button", { name: /Cabecera, pie y botones/ })).toHaveTextContent("Opcional");
-
-    rerender(
-      <FormStep variant="divided" number={4} title="Cabecera, pie y botones" summary="Solo botón" state="error" open={false} onToggle={() => undefined}>
-        <p>campos</p>
-      </FormStep>,
-    );
-    const button = screen.getByRole("button", { name: /Cabecera, pie y botones/ });
-    expect(button).toHaveTextContent("Hay algo que corregir");
-    expect(button).not.toHaveTextContent("Solo botón");
-    // El error conserva el número, con el tinte destructivo.
+    const button = screen.getByRole("button", { name: /El mensaje \(Hay algo que corregir\)/ });
     expect(button.querySelector("[data-state]")).toHaveAttribute("data-state", "error");
-    expect(button.querySelector("[data-state]")).toHaveTextContent("4");
+    // El resumen sigue a la vista: el error no lo borra.
+    expect(button).toHaveTextContent("2 variables");
+  });
+
+  it("`flush`: los campos sin sangría, para cuando la vista previa va al lado (DS §9.7)", () => {
+    render(
+      <FormStep id="p" number={1} title="Ficha" state="pending" open onToggle={() => undefined} flush>
+        <p>campos</p>
+      </FormStep>,
+    );
+    const panel = document.getElementById("p-1") as HTMLElement;
+    expect(panel.className).toContain("sm:pl-5");
+    expect(panel.className).not.toContain("sm:pl-[4.25rem]");
   });
 
   it("`edit`: cerrada dice su resumen y «Editar»; abierta, «Listo»; el panel lleva el id `${id}-${number}`", () => {

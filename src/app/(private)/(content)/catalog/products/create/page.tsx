@@ -7,7 +7,7 @@ import { useAlert } from "@/core/providers/alert-provider";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert";
 import { ProductForm } from "@/modules/catalog/ui/forms/ProductForm";
-import { useUnsavedGuard } from "@/modules/catalog/ui/hooks/use-unsaved-guard";
+import { useUnsavedGuard } from "@/core/hooks/use-unsaved-guard";
 
 /**
  * Crear producto (catálogo premium F3, canvas tablero 6): pasos plegables,

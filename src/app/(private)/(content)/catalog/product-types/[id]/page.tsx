@@ -14,7 +14,7 @@ import { getProductTypeById } from "@/modules/catalog/infrastructure/services/pr
 import { useCatalog } from "@/modules/catalog/infrastructure/stores/catalog.context";
 import { AttributeSetEditor } from "@/modules/catalog/ui/components/AttributeSetEditor";
 import { ProductTypeForm } from "@/modules/catalog/ui/forms/ProductTypeForm";
-import { useUnsavedGuard } from "@/modules/catalog/ui/hooks/use-unsaved-guard";
+import { useUnsavedGuard } from "@/core/hooks/use-unsaved-guard";
 
 /**
  * Un tipo de producto (catálogo premium F4, canvas tablero 10): sus datos y el

@@ -24,6 +24,19 @@
 /** Dónde se gestionan: en Configuración, porque las usa toda la plataforma. */
 export const META_TEMPLATES_HREF = "/settings/meta-templates";
 
+/**
+ * La lista de plantillas de Meta en el canal en que se estaba y, si hace falta,
+ * señalando una (`?point=`): es como la página de una plantilla vuelve a la
+ * lista al guardar (hsm-media F3).
+ */
+export function metaTemplatesHref(channelId: string | null, pointId?: string | null): string {
+  const params = new URLSearchParams();
+  if (channelId !== null) params.set("channel", channelId);
+  if (pointId) params.set("point", pointId);
+  const query = params.toString();
+  return query === "" ? META_TEMPLATES_HREF : `${META_TEMPLATES_HREF}?${query}`;
+}
+
 export const HSM_NOUN = "plantilla de Meta";
 export const HSM_NOUN_PLURAL = "plantillas de Meta";
 export const HSM_TITLE = "Plantillas de Meta";

@@ -21,14 +21,10 @@ describe("StepMark", () => {
     }
   });
 
-  it("hecho lleva ✓, o su número si `showCheck` es `false`", () => {
+  it("hecho lleva ✓ en vez del número", () => {
     const done = mark("done");
     expect(done.querySelector("svg")).not.toBeNull();
     expect(done).not.toHaveTextContent("3");
-
-    const numbered = mark("done", { showCheck: false });
-    expect(numbered.querySelector("svg")).toBeNull();
-    expect(numbered).toHaveTextContent("3");
   });
 
   it("bloqueado lleva «!» con el anillo de aviso", () => {
