@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, Clock, MessageSquare } from "lucide-react";
+import { ArrowLeft, Clock, MessageSquare } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { plural } from "@/core/lib/plural";
 import { errorMessage } from "@/core/lib/error-messages";
@@ -12,6 +12,7 @@ import { useAuth } from "@/shared/auth/auth.hooks";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
+import { StepMark } from "@/shared/components/features/form-steps";
 import { Island } from "@/shared/components/features/island";
 import { FormSkeleton } from "@/shared/components/features/loading";
 import {
@@ -430,7 +431,7 @@ export function CampaignWizard({
                   !done && "opacity-60",
                 )}
               >
-                <StepMark done={done} number={index + 1} />
+                <StepMark {...MARK_LOOK} state={done ? "done" : "pending"} number={index + 1} />
                 <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                   <span className="text-sm font-semibold">{WIZARD_STEP_LABELS[current]}</span>
                   {done && stepSummary[current] ? (
@@ -450,7 +451,7 @@ export function CampaignWizard({
           return (
             <li key={current} aria-current="step" className="border-border bg-card @container min-w-0 rounded-3xl border p-5 sm:p-6">
               <div className="mb-5 flex items-center gap-3">
-                <StepMark current number={index + 1} />
+                <StepMark {...MARK_LOOK} state="current" number={index + 1} />
                 <h2 className="font-heading text-xl font-bold tracking-tight">{STEP_QUESTIONS[current]}</h2>
               </div>
 
@@ -872,21 +873,7 @@ function WizardBack() {
 }
 
 /** La marca de un paso: ✓ si está hecho, el número con anillo coral si es el actual, el número tenue si falta. */
-function StepMark({ done = false, current = false, number }: { done?: boolean; current?: boolean; number: number }) {
-  return (
-    <span
-      aria-hidden="true"
-      className={cn(
-        "flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
-        done && "bg-foreground text-background",
-        current && "ring-brand ring-2 ring-inset",
-        !done && !current && "text-muted-foreground ring-border ring-1 ring-inset",
-      )}
-    >
-      {done ? <Check className="size-3.5" strokeWidth={2.6} /> : number}
-    </span>
-  );
-}
+const MARK_LOOK = { pendingStyle: "faint", checkClassName: "size-3.5", checkStrokeWidth: 2.6 } as const;
 
 /** Un aviso: punto ámbar + texto en foreground. Sin caja tintada (el color va en el punto, DS §9.5). */
 function Notice({ children }: { children: React.ReactNode }) {

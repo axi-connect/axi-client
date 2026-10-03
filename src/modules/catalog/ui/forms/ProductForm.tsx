@@ -10,6 +10,7 @@ import { Input } from "@/shared/components/ui/input";
 import { Switch } from "@/shared/components/ui/switch";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Alert, AlertDescription } from "@/shared/components/ui/alert";
+import { FormStep } from "@/shared/components/features/form-steps";
 import { Island } from "@/shared/components/features/island";
 import { cn } from "@/core/lib/utils";
 import { formatMoney } from "@/core/lib/format";
@@ -22,7 +23,6 @@ import { useCatalog } from "@/modules/catalog/infrastructure/stores/catalog.cont
 import { PriceInput } from "@/modules/catalog/ui/components/PriceInput";
 import { ProductThumb } from "@/modules/catalog/ui/components/ProductThumb";
 import { VariantRowsEditor } from "@/modules/catalog/ui/components/VariantRowsEditor";
-import { FormStep } from "./FormStep";
 import {
   defaultProductFormValues,
   NONE_VALUE,
@@ -276,7 +276,7 @@ export function ProductForm({ onCreated, setAlert, onDirtyChange, onCancel }: Pr
       <form id="product-form" onSubmit={form.handleSubmit(handleSubmit, openStepsWithErrors)} className="flex flex-col gap-6">
         <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_20rem] [&>*]:min-w-0">
           <div className="flex flex-col gap-3">
-            <FormStep number={1} title="Qué vas a ofrecer" summary={kindSummary} done open={isOpen("kind")} onToggle={() => toggle("kind")}>
+            <FormStep number={1} title="Qué vas a ofrecer" summary={kindSummary} state="done" open={isOpen("kind")} onToggle={() => toggle("kind")}>
               <FormField
                 name="kind"
                 control={form.control}
@@ -308,7 +308,7 @@ export function ProductForm({ onCreated, setAlert, onDirtyChange, onCancel }: Pr
 
             </FormStep>
 
-            <FormStep number={2} title="Datos básicos" summary={basicSummary} done={nameFilled} open={isOpen("basic")} onToggle={() => toggle("basic")}>
+            <FormStep number={2} title="Datos básicos" summary={basicSummary} state={nameFilled ? "done" : "pending"} open={isOpen("basic")} onToggle={() => toggle("basic")}>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <FormField
                   name="name"
@@ -373,7 +373,7 @@ export function ProductForm({ onCreated, setAlert, onDirtyChange, onCancel }: Pr
               title="Clasificación"
               subtitle="Dónde vive y cómo se tipa este producto."
               summary={classSummary}
-              done={catalogFilled}
+              state={catalogFilled ? "done" : "pending"}
               open={isOpen("class")}
               onToggle={() => toggle("class")}
             >
@@ -472,7 +472,7 @@ export function ProductForm({ onCreated, setAlert, onDirtyChange, onCancel }: Pr
               </div>
             </FormStep>
 
-            <FormStep number={4} title="Precio" summary={priceSummary} done={priceFilled} open={isOpen("price")} onToggle={() => toggle("price")}>
+            <FormStep number={4} title="Precio" summary={priceSummary} state={priceFilled ? "done" : "pending"} open={isOpen("price")} onToggle={() => toggle("price")}>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <FormField
                   name="price_cents"
@@ -525,7 +525,7 @@ export function ProductForm({ onCreated, setAlert, onDirtyChange, onCancel }: Pr
                 title="Agendamiento"
                 subtitle="Cómo se reserva este servicio."
                 summary={scheduleSummary}
-                done={durationFilled}
+                state={durationFilled ? "done" : "pending"}
                 open={isOpen("schedule")}
                 onToggle={() => toggle("schedule")}
               >
@@ -599,7 +599,7 @@ export function ProductForm({ onCreated, setAlert, onDirtyChange, onCancel }: Pr
               title="Variantes"
               subtitle="Todo producto nace con al menos una variante (su SKU)."
               summary={variantsSummary}
-              done={variantsFilled}
+              state={variantsFilled ? "done" : "pending"}
               open={isOpen("variants")}
               onToggle={() => toggle("variants")}
             >

@@ -821,8 +821,9 @@ sin `<style>` por render y con `color-mix` en lugar de `oklch(from …)`):
 
 Para un formulario de varios pasos que llega precargado (Preparar entrega):
 
-- **Pasos plegables, no pestañas ni asistente.** Cada paso es una `StepCard`
-  (`modules/platform/ui/features/delivery/DeliveryWorkspace.tsx`): cabecera que
+- **Pasos plegables, no pestañas ni asistente.** Cada paso es un `FormStep`
+  (`shared/components/features/form-steps/`, una pieza para todos los formularios por pasos
+  desde 2026-10-03; su marca es `StepMark`): cabecera que
   es un solo `<button aria-expanded aria-controls>` con el número o ✓ (o «!» si está
   bloqueado), el título y, **cerrado, el resumen de lo elegido**. Uno abierto a la vez; se
   abre el que tenga un bloqueo o un error al enviar. La revisión deja de ser un paso: los
@@ -833,7 +834,7 @@ Para un formulario de varios pasos que llega precargado (Preparar entrega):
 - **«Antes de enviar» siempre a la vista**: cada bloqueo en una fila con su acción debajo
   del texto (no al lado: a 555 px de columna el texto se partía en tres líneas), o un
   `<Alert variant="success">` cuando no hay nada.
-- **Barra de acción** (en `DeliveryWorkspace`): `Island as="footer" material="ink"` (§9.5.1: las barras van siempre en tinta) `sticky bottom-3`, `rounded-full` desde
+- **Barra de acción** (en `DeliveryWorkspace`; los tramos son `StepProgress`, de la misma carpeta): `Island as="footer" material="ink"` (§9.5.1: las barras van siempre en tinta) `sticky bottom-3`, `rounded-full` desde
   `sm`. Lleva el estado en una palabra («Casi lista», «Lista para enviar»), los tramos de
   progreso —uno por grupo de la revisión, cada uno es un botón de **24 px de alto** con la
   barra de 6 px dentro, que lleva a su paso, con su estado en `sr-only`—, **qué falta

@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   BadgeCheck,
   ChevronDown,
@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { useAlert } from "@/core/providers/alert-provider";
+import { FormStep } from "@/shared/components/features/form-steps";
 import { Island } from "@/shared/components/features/island";
 import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert";
 import { Button } from "@/shared/components/ui/button";
@@ -441,12 +442,12 @@ export function CreateHsmTemplateModal({
             )}
 
             <div>
-              <ModalStep
+              <FormStep
+                variant="divided"
                 number={1}
                 title="Nombre e idioma"
                 summary={isEditing ? `${name} · ${language} · fijos` : `${name || "Sin nombre"} · ${language}`}
-                done={NAME_REGEX.test(name)}
-                error={touched && stepHasError.identity}
+                state={touched && stepHasError.identity ? "error" : NAME_REGEX.test(name) ? "done" : "pending"}
                 open={openSteps.identity}
                 onToggle={() => toggleStep("identity")}
               >
@@ -504,13 +505,14 @@ export function CreateHsmTemplateModal({
                     </Select>
                   </div>
                 </div>
-              </ModalStep>
+              </FormStep>
 
-              <ModalStep
+              <FormStep
+                variant="divided"
                 number={2}
                 title="Categoría"
                 summary={`${categoryLabel} · ${formatTemplateCost(category)}`}
-                done
+                state="done"
                 open={openSteps.category}
                 onToggle={() => toggleStep("category")}
               >
@@ -552,14 +554,16 @@ export function CreateHsmTemplateModal({
                       : "Una rechazada o pausada puede cambiar de categoría; una aprobada no."}
                   </p>
                 )}
-              </ModalStep>
+              </FormStep>
 
-              <ModalStep
+              <FormStep
+                variant="divided"
                 number={3}
                 title="Mensaje"
                 summary={counter}
-                done={errors.body === undefined && errors.examples === undefined}
-                error={touched && stepHasError.message}
+                state={
+                  touched && stepHasError.message ? "error" : errors.body === undefined && errors.examples === undefined ? "done" : "pending"
+                }
                 open={openSteps.message}
                 onToggle={() => toggleStep("message")}
               >
@@ -630,14 +634,14 @@ export function CreateHsmTemplateModal({
                     {touched && errors.examples && <p className="text-xs text-destructive">{errors.examples}</p>}
                   </div>
                 )}
-              </ModalStep>
+              </FormStep>
 
-              <ModalStep
+              <FormStep
+                variant="divided"
                 number={4}
                 title="Cabecera, pie y botones"
                 summary={pieces.length > 0 ? pieces.join(" · ") : "Opcional"}
-                done={pieces.length > 0 && !stepHasError.pieces}
-                error={touched && stepHasError.pieces}
+                state={touched && stepHasError.pieces ? "error" : pieces.length > 0 && !stepHasError.pieces ? "done" : "pending"}
                 open={openSteps.pieces}
                 onToggle={() => toggleStep("pieces")}
               >
@@ -731,7 +735,7 @@ export function CreateHsmTemplateModal({
                     </button>
                   )}
                 </div>
-              </ModalStep>
+              </FormStep>
             </div>
           </div>
 
@@ -803,66 +807,6 @@ function SendExpectation() {
         </p>
       </AlertDescription>
     </Alert>
-  );
-}
-
-/**
- * Un paso plegable del diálogo (DESIGN-SYSTEM §9.7), separado por una línea en
- * vez de en su tarjeta: dentro de un diálogo, cuatro tarjetas serían cajas
- * dentro de una caja. El contenido NO se desmonta al plegar (`hidden`): los
- * campos conservan su valor y siguen validándose.
- */
-function ModalStep({
-  number,
-  title,
-  summary,
-  done,
-  error = false,
-  open,
-  onToggle,
-  children,
-}: {
-  number: number;
-  title: string;
-  summary: string;
-  done: boolean;
-  error?: boolean;
-  open: boolean;
-  onToggle: () => void;
-  children: React.ReactNode;
-}) {
-  const bodyId = useId();
-  return (
-    <section aria-label={title} className="border-t border-border">
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={open}
-        aria-controls={bodyId}
-        className="flex min-h-12 w-full items-center gap-3 rounded-xl py-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-      >
-        <span
-          aria-hidden="true"
-          className={cn(
-            "flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold tabular-nums",
-            error ? "bg-destructive/15 text-foreground" : done ? "bg-foreground text-background" : "bg-muted text-foreground",
-          )}
-        >
-          {number}
-        </span>
-        <span className="text-[15px] font-semibold whitespace-nowrap">{title}</span>
-        <span className="text-muted-foreground ml-auto min-w-0 truncate text-right text-xs" title={summary}>
-          {error ? "Hay algo que corregir" : summary}
-        </span>
-        <ChevronDown
-          aria-hidden="true"
-          className={cn("size-4 shrink-0 text-muted-foreground transition-transform duration-200", open && "rotate-180")}
-        />
-      </button>
-      <div id={bodyId} hidden={!open} className="space-y-4 pb-5 sm:pl-9">
-        {children}
-      </div>
-    </section>
   );
 }
 
