@@ -283,6 +283,8 @@
 }
 /* Movimiento reducido (sin motor): el anillo quieto y cerrado alrededor del marco, sin caída. */
 @media (prefers-reduced-motion: reduce) and (min-width: 768px) {
-  .film-vlight-ring { display: block; opacity: 1; }
+  /* El video no se abre sin motor (§23): un marco iluminado, tenue, no un efecto (§25.5). */
+  .film-vlight-ring { display: block; opacity: 0.7; }
+  .film-vlight-bloom, .film-vlight-hot { display: none; }
   .film-vlight-filament { display: none; }
 }

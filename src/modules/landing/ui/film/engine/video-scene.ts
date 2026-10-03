@@ -61,7 +61,7 @@ export const video: Scene = (section: HTMLElement, ctx: Ctx) => {
 function filament(section: HTMLElement) {
   const el = section.querySelector<HTMLElement>("[data-light=filament]");
   if (!el) return;
-  const tl = gsap.timeline({ scrollTrigger: { trigger: section, start: "top 85%", end: "top 15%", scrub: true } });
+  const tl = gsap.timeline({ scrollTrigger: { trigger: section, start: "top 72%", end: "top 12%", scrub: true } });
   tl.fromTo(el, { scaleX: 0, opacity: 0 }, { scaleX: 1, opacity: 1, ease: "power2.out", duration: 0.5 }, 0);
   tl.to(el, { opacity: 0, ease: "none", duration: 0.5 }, 0.5);
 }
