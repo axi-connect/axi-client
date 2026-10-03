@@ -1,0 +1,310 @@
+/*
+ * /productos «Escríbele. Mira cómo vende.» (plan productos_juego_plan.md).
+ *
+ * Solo la importa la página. No declara colores: todo sale de los tokens de
+ * globals.css (--foreground, --background, --axi-brand/violet/amber), así que
+ * el claro y el oscuro salen solos, como la película de la home. Los únicos
+ * materiales fijos son el metal del teléfono y la tinta de la isla.
+ */
+
+.pj {
+  --pj-line: color-mix(in srgb, var(--foreground) 10%, transparent);
+  --pj-muted: color-mix(in srgb, var(--foreground) 64%, transparent);
+  --pj-dim: color-mix(in srgb, var(--foreground) 58%, transparent);
+  --pj-surface: color-mix(in srgb, var(--foreground) 4%, var(--background));
+  --pj-surface-2: color-mix(in srgb, var(--foreground) 8%, var(--background));
+  --pj-island: color-mix(in srgb, var(--background) 78%, transparent);
+  /* Las burbujas: el cliente en superficie, Axi en tinta invertida (como la home). */
+  --pj-bubble-in: color-mix(in srgb, var(--foreground) 9%, var(--background));
+  --pj-bubble-out: var(--foreground);
+  --pj-bubble-out-fg: var(--background);
+  position: relative;
+  width: 100%;
+  background: var(--background);
+  color: var(--foreground);
+  isolation: isolate;
+  overflow-x: clip;
+}
+
+.dark .pj { --pj-dim: color-mix(in srgb, var(--foreground) 50%, transparent); }
+
+.pj-scene {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100svh;
+  padding: clamp(96px, 14vh, 140px) 16px clamp(56px, 9vh, 96px);
+  scroll-margin-top: 0;
+}
+
+.pj-h {
+  font-family: var(--font-nexa), var(--font-poppins), sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 0.98;
+  text-wrap: balance;
+  margin: 0;
+}
+.pj-h .t { font-weight: 200; letter-spacing: -0.03em; }
+.pj-h-xl { font-size: clamp(52px, 7.4vw, 108px); }
+.pj-h-lg { font-size: clamp(36px, 4.4vw, 62px); line-height: 1.02; }
+.pj-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 0.24em; text-transform: uppercase; margin: 0; }
+.pj-lead { color: var(--pj-muted); font-weight: 300; font-size: clamp(16px, 1.4vw, 19px); line-height: 1.55; margin: 0; }
+.pj-dim { color: var(--pj-dim); }
+
+/* La luz: el sol del hero de la home, a escala de escena. */
+.pj-sun {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    color-mix(in srgb, var(--axi-amber) 60%, white) 0,
+    color-mix(in srgb, var(--axi-amber) 42%, transparent) 6%,
+    color-mix(in srgb, var(--axi-brand) 26%, transparent) 18%,
+    color-mix(in srgb, var(--axi-violet) 11%, transparent) 36%,
+    transparent 62%);
+}
+.pj-glow {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(ellipse,
+    color-mix(in srgb, var(--axi-brand) 16%, transparent),
+    color-mix(in srgb, var(--axi-violet) 6%, transparent) 45%,
+    transparent 70%);
+}
+
+/* El CTA de la página: coral en píldora con su halo. */
+.pj-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 56px;
+  padding: 0 30px;
+  border-radius: 999px;
+  background: var(--axi-brand);
+  color: var(--axi-on-brand);
+  font-weight: 600;
+  font-size: 16px;
+  white-space: nowrap;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--axi-brand) 30%, transparent), 0 14px 44px color-mix(in srgb, var(--axi-brand) 34%, transparent);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+.pj-cta:hover { transform: translateY(-2px); background: color-mix(in srgb, var(--axi-brand) 88%, white); }
+.pj-cta:active { transform: scale(0.97); }
+.pj-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--foreground) 82%, transparent);
+  transition: color 0.15s ease;
+}
+.pj-link:hover { color: var(--foreground); }
+.pj-cta:focus-visible, .pj-link:focus-visible, .pj-move:focus-visible, .pj-voice:focus-visible {
+  outline: 2px solid var(--foreground);
+  outline-offset: 3px;
+}
+
+/* El teléfono: metal fijo en los dos temas (material, no tema). */
+.pj-device {
+  position: relative;
+  border-radius: 58px;
+  padding: 11px;
+  background: linear-gradient(145deg, #3a3a40, #121214 40%, #26262b);
+  box-shadow: 0 60px 120px rgb(0 0 0 / 0.45), 0 0 0 1px rgb(255 255 255 / 0.06);
+}
+.pj-screen {
+  height: 100%;
+  border-radius: 48px;
+  background: var(--background);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ───────────── 1 · Apertura ───────────── */
+.pj-opening { justify-content: flex-start; gap: 24px; text-align: center; overflow: hidden; }
+.pj-opening .pj-sun { width: 640px; height: 640px; left: 50%; bottom: -330px; transform: translateX(-50%); }
+.pj-opening-phone { width: 300px; height: 380px; margin-top: auto; margin-bottom: -150px; border-radius: 50px; }
+.pj-opening-phone .pj-screen { border-radius: 41px; padding: 54px 14px 0; gap: 10px; }
+.pj-orbs { position: absolute; left: 50%; bottom: 120px; width: 0; height: 0; }
+.pj-orb {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--pj-line);
+  background: color-mix(in srgb, var(--foreground) 4%, transparent);
+  color: var(--pj-dim);
+}
+
+/* ───────────── 2 · El juego ───────────── */
+.pj-game { justify-content: center; gap: 28px; }
+.pj-game .pj-glow { width: 900px; height: 760px; left: 50%; top: 50%; transform: translate(-50%, -45%); }
+.pj-island {
+  position: relative;
+  z-index: 3;
+  width: min(452px, 100%);
+  border-radius: 30px;
+  background: var(--pj-island);
+  backdrop-filter: blur(24px) saturate(1.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  border: 1px solid var(--pj-line);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 6%, transparent), 0 18px 50px rgb(0 0 0 / 0.25);
+  overflow: hidden;
+}
+.pj-island-toast {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.pj-island-toast[data-open] { grid-template-rows: 1fr; }
+.pj-island-toast > div { min-height: 0; }
+
+.pj-board {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 372px minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(32px, 5vw, 72px);
+  width: min(1248px, 100%);
+}
+.pj-abilities { display: flex; flex-direction: column; gap: 4px; position: relative; padding-left: 28px; }
+.pj-abilities-rail { position: absolute; left: 0; top: 46px; bottom: 8px; width: 2px; border-radius: 2px; background: var(--pj-line); }
+.pj-abilities-rail > span {
+  display: block; width: 2px; border-radius: 2px;
+  background: linear-gradient(var(--axi-brand), var(--axi-amber), var(--axi-violet));
+  transition: height 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.pj-ability { display: flex; align-items: center; gap: 14px; min-height: 62px; transition: opacity 0.4s ease; }
+.pj-ability[data-locked] { opacity: 0.42; }
+.pj-ability-orb {
+  width: 40px; height: 40px; flex: none; border-radius: 50%;
+  display: grid; place-items: center;
+  background: color-mix(in srgb, var(--foreground) 5%, transparent);
+  color: var(--pj-dim);
+  transition: background-color 0.5s ease, box-shadow 0.5s ease, color 0.5s ease;
+}
+.pj-ability:not([data-locked]) .pj-ability-orb {
+  background: var(--pj-tone);
+  color: var(--background);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--pj-tone) 45%, transparent);
+}
+[data-tone="coral"] { --pj-tone: var(--axi-brand); }
+[data-tone="violet"] { --pj-tone: var(--axi-violet); }
+[data-tone="amber"] { --pj-tone: var(--axi-amber); }
+[data-tone="ok"] { --pj-tone: var(--axi-success); }
+
+.pj-phone { width: 372px; height: min(740px, 78svh); transform: perspective(2200px) rotateY(-9deg) rotateX(3deg); }
+.pj-chat-head { height: 96px; flex: none; display: flex; align-items: flex-end; gap: 10px; padding: 0 18px 12px; border-bottom: 1px solid var(--pj-line); }
+.pj-chat-log { flex: 1; min-height: 0; padding: 14px 12px; display: flex; flex-direction: column; justify-content: flex-end; gap: 8px; overflow: hidden; }
+.pj-composer { height: 64px; flex: none; display: flex; align-items: center; padding: 0 14px 10px; }
+.pj-composer > div { flex: 1; height: 38px; border-radius: 999px; background: var(--pj-bubble-in); display: flex; align-items: center; padding: 0 14px; font-size: 12px; color: var(--pj-dim); }
+
+.pj-bubble { max-width: 82%; padding: 9px 13px; border-radius: 18px; font-size: 13px; line-height: 1.42; animation: pj-pop 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.pj-bubble[data-from="customer"] { align-self: flex-start; background: var(--pj-bubble-in); border-bottom-left-radius: 6px; }
+.pj-bubble[data-from="agent"] { align-self: flex-end; background: var(--pj-bubble-out); color: var(--pj-bubble-out-fg); border-bottom-right-radius: 6px; }
+.pj-bubble[data-from="human"] { align-self: flex-end; background: var(--axi-brand); color: var(--axi-on-brand); border-bottom-right-radius: 6px; }
+.pj-bubble-author { display: block; font-size: 10.5px; font-weight: 600; opacity: 0.75; margin-bottom: 2px; }
+.pj-event {
+  align-self: center; display: inline-flex; align-items: center; gap: 6px;
+  font-size: 10.5px; color: var(--pj-muted);
+  padding: 5px 11px; border-radius: 999px; border: 1px solid var(--pj-line);
+  animation: pj-pop 0.35s ease both;
+}
+.pj-event::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--pj-tone); }
+.pj-card { width: 216px; border-radius: 18px; overflow: hidden; animation: pj-pop 0.35s ease both; }
+.pj-card[data-from="agent"] { align-self: flex-end; background: var(--pj-bubble-out); color: var(--pj-bubble-out-fg); }
+.pj-card[data-from="customer"] { align-self: flex-start; background: var(--pj-bubble-in); }
+.pj-card img { display: block; width: 100%; height: 110px; object-fit: cover; }
+.pj-card-kicker { font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 600; opacity: 0.6; }
+.pj-photo { align-self: flex-start; width: 180px; border-radius: 18px; overflow: hidden; background: var(--pj-bubble-in); animation: pj-pop 0.35s ease both; }
+.pj-photo img { display: block; width: 180px; height: 120px; object-fit: cover; }
+.pj-voice { width: 28px; height: 28px; flex: none; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, currentColor 18%, transparent); cursor: pointer; }
+.pj-wave { display: flex; align-items: center; gap: 2px; height: 18px; }
+.pj-wave i { width: 3px; height: 16px; border-radius: 2px; background: currentColor; opacity: 0.7; transform: scaleY(0.4); }
+.pj-wave[data-playing] i { animation: pj-eq 0.7s ease-in-out infinite; }
+.pj-wave i:nth-child(2n) { animation-delay: 0.12s; }
+.pj-wave i:nth-child(3n) { animation-delay: 0.24s; }
+.pj-typing { display: inline-flex; gap: 4px; }
+.pj-typing i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: pj-dot 1s infinite; }
+.pj-typing i:nth-child(2) { animation-delay: 0.15s; }
+.pj-typing i:nth-child(3) { animation-delay: 0.3s; }
+
+.pj-moves { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.pj-move {
+  display: flex; flex-direction: column; justify-content: space-between; gap: 16px;
+  min-height: 112px; padding: 16px; border-radius: 22px; text-align: left;
+  font-size: 14px; font-weight: 500; color: var(--foreground);
+  border: 1px solid var(--pj-line);
+  background: color-mix(in srgb, var(--foreground) 3.5%, transparent);
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.3s ease;
+}
+.pj-move:hover:not(:disabled) { transform: translateY(-2px); background: color-mix(in srgb, var(--foreground) 7%, transparent); border-color: color-mix(in srgb, var(--foreground) 18%, transparent); }
+.pj-move:active:not(:disabled) { transform: scale(0.97); }
+.pj-move:disabled { opacity: 0.32; cursor: default; }
+.pj-move[data-hint] { border-color: var(--axi-violet); box-shadow: 0 0 0 4px color-mix(in srgb, var(--axi-violet) 20%, transparent); }
+.pj-move-icon { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--foreground) 7%, transparent); color: var(--pj-tone); }
+
+/* Móvil: el chat al centro, las jugadas en una cinta de chips. */
+@media (max-width: 1023px) {
+  .pj-board { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .pj-abilities { display: none; }
+  .pj-phone { width: min(372px, 100%); height: min(560px, 64svh); justify-self: center; transform: none; }
+  .pj-moves { display: flex; overflow-x: auto; gap: 8px; margin: 0 -16px; padding: 0 16px 4px; scroll-snap-type: x mandatory; scrollbar-width: none; }
+  .pj-moves::-webkit-scrollbar { display: none; }
+  .pj-move { flex: none; min-height: 0; height: 46px; flex-direction: row; align-items: center; gap: 8px; padding: 0 16px 0 6px; border-radius: 999px; scroll-snap-align: start; white-space: nowrap; }
+  .pj-move-icon { width: 34px; height: 34px; }
+}
+@media (min-width: 1024px) { .pj-dots { display: none; } }
+
+/* ───────────── 4 · El video ───────────── */
+.pj-video .pj-glow { width: 1100px; height: 600px; left: 50%; bottom: -120px; transform: translateX(-50%); }
+.pj-video-frame {
+  position: relative; z-index: 1;
+  width: min(992px, 100%);
+  aspect-ratio: 16 / 9;
+  border-radius: 28px;
+  overflow: hidden;
+  border: 1px solid var(--pj-line);
+  background: #000;
+  box-shadow: 0 60px 140px rgb(0 0 0 / 0.5), 0 0 0 10px color-mix(in srgb, var(--foreground) 2%, transparent);
+}
+@media (max-width: 767px) { .pj-video-frame { aspect-ratio: 9 / 16; max-height: 78svh; width: auto; border-radius: 24px; } }
+
+/* ───────────── 5 · Cierre ───────────── */
+.pj-close { justify-content: center; gap: 40px; text-align: center; overflow: hidden; }
+.pj-close .pj-glow { width: 1000px; height: 700px; left: 50%; bottom: -380px; transform: translateX(-50%); }
+.pj-route { position: relative; z-index: 1; width: min(880px, 100%); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.pj-route::before {
+  content: ""; position: absolute; left: 12.5%; right: 12.5%; top: 9px; height: 3px;
+  background: repeating-linear-gradient(90deg, color-mix(in srgb, var(--foreground) 18%, transparent) 0 3px, transparent 3px 13px);
+}
+.pj-route::after {
+  content: ""; position: absolute; left: 12.5%; width: 25%; top: 9px; height: 3px; border-radius: 3px;
+  background: linear-gradient(90deg, var(--axi-brand), var(--axi-amber));
+}
+.pj-stop { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.pj-stop-dot { width: 20px; height: 20px; border-radius: 50%; border: 3px solid var(--pj-tone, var(--pj-line)); background: var(--background); }
+.pj-stop:first-child .pj-stop-dot { background: var(--axi-brand); border-color: var(--axi-brand); }
+.pj-stop-day { font-size: 11px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: var(--pj-tone, var(--pj-dim)); }
+.pj-stop-label { font-size: clamp(13px, 1.3vw, 16px); font-weight: 500; }
+
+@keyframes pj-pop { from { opacity: 0; transform: translateY(8px) scale(0.98); } to { opacity: 1; transform: none; } }
+@keyframes pj-eq { 0%, 100% { transform: scaleY(0.35); } 50% { transform: scaleY(1); } }
+@keyframes pj-dot { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .pj-bubble, .pj-event, .pj-card, .pj-photo, .pj-wave[data-playing] i, .pj-typing i { animation: none; }
+  .pj-island-toast, .pj-abilities-rail > span, .pj-move, .pj-cta { transition: none; }
+  .pj-phone { transform: none; }
+}

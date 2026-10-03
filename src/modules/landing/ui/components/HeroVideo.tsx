@@ -40,7 +40,7 @@ export interface HeroVideoSources {
  * explícito o el video no carga jamás.
  *
  * Rendimiento y resiliencia: el LCP es lo que haya debajo del video (el
- * `BrandGradientCanvas` de la sección), que es también su respaldo si el
+ * póster o el fondo de la sección), que es también su respaldo si el
  * asset falla; pausa fuera de viewport (IO sobre `[data-app-scroll]`);
  * `prefers-reduced-motion`/Save-Data ⇒ sin autoplay, botón de reproducción.
  */

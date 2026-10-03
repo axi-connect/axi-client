@@ -68,8 +68,8 @@ export const SITE_INTENTS: readonly SiteIntent[] = [
     tone: "coral",
     cards: [
       { name: "Agente vendedor", href: "/productos#agente", description: "Cotiza con tus precios reales y cierra dentro del chat.", icon: Bot },
-      { name: "Cobros y documentos", href: "/productos", description: "Abonos, recordatorios y el recibo listo para enviar.", icon: Receipt },
-      { name: "Catálogo y pedidos", href: "/productos#catalogo", description: "Stock real por variante y pedidos sin errores.", icon: Package },
+      { name: "Cobros y documentos", href: "/productos#cobros", description: "Abonos, recordatorios y el recibo listo para enviar.", icon: Receipt },
+      { name: "Catálogo y pedidos", href: "/productos#catalogo", description: "Variantes con SKU y stock real.", icon: Package },
       { name: "Reconocimiento por foto", href: "/productos#reconocimiento", description: "Te mandan una foto y cotiza la referencia exacta.", icon: ScanSearch },
     ],
   },
@@ -80,9 +80,9 @@ export const SITE_INTENTS: readonly SiteIntent[] = [
     promise: "Más alcance, más clientes",
     tone: "amber",
     cards: [
-      { name: "Axel, tu director comercial", href: "/productos", description: "Cada mañana propone qué hacer y mide si funcionó.", icon: Sparkles },
+      { name: "Axel, tu director comercial", href: "/#axel", description: "Cada mañana propone qué hacer y mide si funcionó.", icon: Sparkles },
       { name: "Captación de leads", href: "/soluciones#califica", description: "Encuentra y califica a quien sí te va a comprar.", icon: Radar },
-      { name: "Medición en pesos", href: "/#medir", description: "Cuánto vendió cada conversación, campaña y canal.", icon: BarChart3 },
+      { name: "Medición en pesos", href: "/productos#medicion", description: "Cuánto vendió cada conversación, campaña y canal.", icon: BarChart3 },
     ],
   },
   {
@@ -92,8 +92,8 @@ export const SITE_INTENTS: readonly SiteIntent[] = [
     promise: "Más tiempo, menos carga",
     tone: "violet",
     cards: [
-      { name: "Inbox compartido", href: "/productos#inbox", description: "WhatsApp, Instagram y Messenger en una bandeja.", icon: Inbox },
-      { name: "Llamadas con voz natural", href: "/integraciones#voz", description: "Llama desde tu número cuando hay que llamar.", icon: Phone },
+      { name: "Inbox compartido", href: "/productos#inbox", description: "Tu equipo y Axi en una sola bandeja.", icon: Inbox },
+      { name: "Llamadas con voz natural", href: "/productos#llamadas", description: "Llama desde tu número cuando hay que llamar.", icon: Phone },
       { name: "Agenda y citas", href: "/soluciones#agenda", description: "Citas sobre tu disponibilidad real, con recordatorios.", icon: CalendarClock },
     ],
   },
@@ -161,8 +161,10 @@ export const SITE_ISLAND = {
 
 /** CTA principal del header para visitantes sin sesión. */
 export const SITE_NAV_CTA = {
-  label: "Agenda tu demo",
-  href: "/contacto",
+  /* La misma conversión que la home (plan /productos D6): la prueba, no la demo. */
+  label: "Prueba 7 días gratis",
+  shortLabel: "Prueba gratis",
+  href: "/comenzar?plan=free_trial",
 } as const;
 
 /* ──────────────────────────────── Footer ──────────────────────────────── */
@@ -183,6 +185,7 @@ export const SITE_FOOTER_COLUMNS: readonly {
     links: [
       { name: "Cómo funciona", href: "/#quien" },
       { name: "Productos", href: "/productos" },
+      { name: "Juega a ser tu cliente", href: "/productos#agente" },
       { name: "Soluciones", href: "/soluciones" },
       { name: "Integraciones", href: "/integraciones" },
       { name: "Preguntas", href: "/#preguntas" },

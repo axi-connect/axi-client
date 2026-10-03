@@ -2,8 +2,8 @@
  * Ningún enlace «/#x» del sitio apunta a un ancla que la home no tiene.
  *
  * La home es la película: sus anclas son los `id` de `FilmPage` renderizado.
- * Se revisan la cabecera (SITE_INTENTS, SITE_MENU_SIDE, SITE_MENU_LINKS), el pie (SITE_FOOTER_COLUMNS), las
- * capacidades de /productos y, por si alguien escribe el enlace a mano en una
+ * Se revisan la cabecera (SITE_INTENTS, SITE_MENU_SIDE, SITE_MENU_LINKS), el pie (SITE_FOOTER_COLUMNS)
+ * y, por si alguien escribe el enlace a mano en una
  * página, todo «"/#x"» literal del código. Un ancla rota aterriza arriba de la
  * home sin aviso (pasó con /#medicion y /#como-funciona, 2026-09-30).
  */
@@ -18,7 +18,6 @@ jest.mock("@/core/analytics/track", () => ({ track: jest.fn() }))
 jest.mock("next/font/google", () => ({ IBM_Plex_Mono: () => ({ className: "", variable: "", style: {} }) }))
 
 import { FIXTURE_CATALOG } from "@/modules/landing/domain/testing/catalog.fixture"
-import { CAPABILITIES } from "@/modules/landing/ui/content/productos.content"
 import { SITE_FOOTER_COLUMNS, SITE_INTENTS, SITE_MENU_LINKS, SITE_MENU_SIDE } from "@/shared/components/layout/site/site-nav.content"
 import { FilmPage } from "../FilmPage"
 
@@ -65,7 +64,7 @@ test("los enlaces a la home apuntan a anclas que existen en la película", () =>
   const { container } = render(<FilmPage catalog={FIXTURE_CATALOG} />)
   const ids = new Set(Array.from(container.querySelectorAll("[id]")).map((el) => el.id))
 
-  const fromContent = [...hrefs([SITE_INTENTS, SITE_MENU_SIDE, SITE_MENU_LINKS]), ...hrefs(SITE_FOOTER_COLUMNS), ...hrefs(CAPABILITIES)]
+  const fromContent = [...hrefs([SITE_INTENTS, SITE_MENU_SIDE, SITE_MENU_LINKS]), ...hrefs(SITE_FOOTER_COLUMNS)]
     .map(homeAnchor)
     .filter((a): a is string => a !== null)
   const fromCode = literalHomeAnchors(join(process.cwd(), "src"))

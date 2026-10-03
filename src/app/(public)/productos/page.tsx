@@ -1,56 +1,48 @@
 import type { Metadata } from "next";
 
+import "@/modules/landing/ui/sections/productos/productos.css";
 import { pageMetadata } from "@/core/seo/metadata";
 import { JsonLd } from "@/core/seo/json-ld";
 import { breadcrumbSchema } from "@/core/seo/site";
 
-import ProductosHero from "@/modules/landing/ui/sections/productos/ProductosHero";
-import ProductosAgentReveal from "@/modules/landing/ui/sections/productos/ProductosAgentReveal";
-import ProductosCarousel from "@/modules/landing/ui/sections/productos/ProductosCarousel";
-import ProductosInbox from "@/modules/landing/ui/sections/productos/ProductosInbox";
-import ProductosCrmBento from "@/modules/landing/ui/sections/productos/ProductosCrmBento";
-import ProductosCatalogo from "@/modules/landing/ui/sections/productos/ProductosCatalogo";
-import ProductosReconocimiento from "@/modules/landing/ui/sections/productos/ProductosReconocimiento";
-import ProductosConversaciones from "@/modules/landing/ui/sections/productos/ProductosConversaciones";
-import ProductosFinalCta from "@/modules/landing/ui/sections/productos/ProductosFinalCta";
+import { PRODUCTOS_ANCHORS, PRODUCTOS_SEO } from "@/modules/landing/ui/content/productos.content";
+import { ProductosOpening } from "@/modules/landing/ui/sections/productos/ProductosOpening";
+import { ProductosGame } from "@/modules/landing/ui/sections/productos/game/ProductosGame";
+import { ProductosPieces } from "@/modules/landing/ui/sections/productos/pieces/ProductosPieces";
+import { ProductosVideoScene } from "@/modules/landing/ui/sections/productos/ProductosVideoScene";
+import { ProductosClose } from "@/modules/landing/ui/sections/productos/ProductosClose";
+import { ProductosHashRouter } from "@/modules/landing/ui/sections/productos/ProductosHashRouter";
 
 /**
- * `/productos` — F6 del plan GTM: la página más rica de la capa pública.
- * Hero con video en streaming, escena pineada del agente, carrusel de
- * capacidades, capturas reales en device frames, bento del CRM y medición.
+ * `/productos` — «Escríbele. Mira cómo vende.» (plan
+ * `docs/plans/productos_juego_plan.md`, lienzo aprobado el 2026-10-03).
  *
- * Plan de fase: `docs/plans/public-gtm-f6-productos.md`.
+ * Cinco escenas: apertura, el juego (#agente), pieza por pieza (#piezas, con
+ * una pestaña por ancla), el video del fundador (#video) y el cierre
+ * (#empezar). Los enlaces del menú caen en su pieza exacta vía
+ * `ProductosHashRouter`; `productos-anchors.test.tsx` vigila que existan.
  *
- * Las anclas `#agente #inbox #crm #catalogo #reconocimiento` están enlazadas desde el
- * mega-menú y el footer: si se renombra una, hay que actualizar
- * `site-nav.content.ts` en el mismo commit. `#medicion` ya no vive aquí:
- * duplicaba la §6 de la home y su entrada del nav apunta a `/#medir`.
- *
- * La raíz es `w-full` (el `<main>` del layout centra con `items-center`) y
- * NINGÚN wrapper de página lleva overflow: el pin de `#agente` depende de que
- * el sticky alcance al scroller `[data-app-scroll]`.
+ * Ningún wrapper lleva overflow-y: las escenas fijas dependen de que el sticky
+ * alcance al scroller `[data-app-scroll]`.
  */
 export const metadata: Metadata = pageMetadata({
-  title: "Productos",
-  description:
-    "El agente vendedor, el inbox con handoff, el CRM, el catálogo con stock real, el reconocimiento de producto a partir de una foto, la agenda y la medición en pesos. Producto construido y en producción, no roadmap.",
+  title: PRODUCTOS_SEO.title,
+  description: PRODUCTOS_SEO.description,
   path: "/productos",
 });
 
 export default function ProductosPage() {
   return (
-    <div className="w-full">
+    <div className="pj">
       <JsonLd data={breadcrumbSchema(["/productos"])} />
-      <ProductosHero />
-      <ProductosAgentReveal />
-      <ProductosCarousel />
-      <ProductosInbox />
-      <ProductosCrmBento />
-      <ProductosCatalogo />
-      {/* Tras el catálogo, que es su prerrequisito: sin índice no hay nada que reconocer. */}
-      <ProductosReconocimiento />
-      <ProductosConversaciones />
-      <ProductosFinalCta />
+      <ProductosOpening />
+      <ProductosGame />
+      <section id={PRODUCTOS_ANCHORS.pieces} aria-labelledby="piezas-title" className="pj-scene pj-pieces">
+        <ProductosPieces />
+      </section>
+      <ProductosVideoScene />
+      <ProductosClose />
+      <ProductosHashRouter />
     </div>
   );
 }

@@ -42,11 +42,11 @@ export const OG_CARDS = {
   },
   "/productos": {
     kicker: "Productos",
-    lines: ["El canal por donde hoy entra el dinero", "es el peor gestionado de tu empresa."],
-    size: 50,
-    sub: "El agente, el inbox, el CRM, el catálogo, la agenda y la medición en pesos.",
-    frame: { kind: "line", text: "Producto construido y en producción, no roadmap." },
-    alt: "Productos de Axi Connect: «El canal por donde hoy entra el dinero es el peor gestionado de tu empresa», sobre un marco de video con un anillo de luz.",
+    lines: ["Escríbele.", "Mira cómo vende."],
+    size: 84,
+    sub: "Juega a ser tu cliente · Prueba 7 días gratis",
+    frame: { kind: "chat" },
+    alt: "Productos de Axi Connect: «Escríbele. Mira cómo vende.», sobre un marco de video con un anillo de luz y el chat de un cliente.",
   },
   "/contacto": {
     kicker: "Agenda tu demo",

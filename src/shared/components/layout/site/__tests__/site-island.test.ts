@@ -53,6 +53,7 @@ describe("el menú por intención", () => {
     const ROUTES = ["/", "/productos", "/soluciones", "/integraciones", "/precios", "/casos"]
     for (const h of hrefs) expect(ROUTES).toContain(h.split("#")[0] || "/")
     expect(hrefs).not.toContain("/#medicion")
-    expect(hrefs).toContain("/#medir")
+    // La medición se enseña en /productos (plan productos_juego §5.2).
+    expect(hrefs).toContain("/productos#medicion")
   })
 })
