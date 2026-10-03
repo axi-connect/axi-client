@@ -163,12 +163,25 @@ function heroLight(section: HTMLElement, tl: gsap.core.Timeline) {
   // (`a = 0`): su altura en el hero más el hero respecto a la escena, más una
   // ventana. La altura la escribe HeroFibers en `--knot-y` cuando llega (va en
   // diferido, a veces después de construir esta escena): se lee del estilo
-  // en línea en cada frame, que no recalcula nada.
-  const knotY = () => vh + heroAt + (parseFloat(hero.style.getPropertyValue("--knot-y")) || heroH * 0.68);
+  // en línea en cada frame, que no recalcula nada. Sin ella, el nudo aún no
+  // existe (red lenta): no hay gota que relevar ni destello; la caída no se
+  // inventa desde el 68 %, y el anillo se enciende igual con los arcos. Si el
+  // nudo llega cuando el visitante ya bajó, tampoco: la gota saldría de golpe a
+  // media caída; el nudo hace su salida de siempre (HeroFibers). La gota solo
+  // releva a un nudo que ya estaba al empezar la llegada (`a < 0,05`, unos
+  // 45 px: el primer frame con scroll ya trae `a > 0`).
+  let rested = false;
   const frame = (time: number) => {
-    const s = lightState({ a: approach.progress, p: pin.progress, vh, sh, knotY: knotY() });
+    const knotAt = parseFloat(hero.style.getPropertyValue("--knot-y"));
+    if (Number.isFinite(knotAt) && approach.progress < 0.05) rested = true;
+    const knot = rested && Number.isFinite(knotAt);
+    const s = lightState({ a: approach.progress, p: pin.progress, vh, sh, knotY: vh + heroAt + (knot ? knotAt : heroH * 0.68) });
+    if (!knot) {
+      s.drop = 0;
+      s.flash.alpha = 0;
+    }
     // Nunca el nudo y la gota a la vez: desde el primer píxel, la luz es la gota.
-    w.flag([hero], "data-relay", approach.progress > 0);
+    w.flag([hero], "data-relay", knot && approach.progress > 0);
 
     // La gota se estira con la velocidad (no con la posición) mientras cae, y
     // al soltar el scroll vuelve a su redondez sin rebote (una exponencial).
@@ -182,7 +195,7 @@ function heroLight(section: HTMLElement, tl: gsap.core.Timeline) {
     const [sx, sy, lift] = s.u > 0 ? [s.squash.x, s.squash.y, 0] : [1 - 0.28 * stretch, 1 + 0.7 * stretch, 26 * stretch];
     w.write([drop], "transform", `translate3d(0, ${(s.dropY - lift).toFixed(1)}px, 0) scale(${sx.toFixed(3)}, ${sy.toFixed(3)})`);
     w.write([drop], "opacity", s.drop.toFixed(3));
-    w.write([trail], "opacity", (s.u > 0 ? 0 : 0.9 * stretch).toFixed(3));
+    w.write([trail], "opacity", (s.u > 0 ? 0 : 0.9 * stretch * s.drop).toFixed(3));
 
     // El contacto: el destello y los arcos, con la cabeza más brillante.
     w.write([flash], "opacity", s.flash.alpha.toFixed(3));
