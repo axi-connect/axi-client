@@ -1,8 +1,8 @@
 "use client"
 
-import { FileText, ImageIcon } from "lucide-react"
+import { FileText } from "lucide-react"
 import { cn } from "@/core/lib/utils"
-import { readTemplatePieces, renderHsmPreview, type HsmTemplateDTO } from "@/modules/marketing/public"
+import { readTemplatePieces, renderHsmPreview, TemplateMediaHeader, type HsmTemplateDTO } from "@/modules/marketing/public"
 import type { SentTemplate } from "@/modules/inbox/domain/template-message"
 
 /**
@@ -56,9 +56,12 @@ export function TemplateContent({
       ) : (
         <>
           {sent.headerMedia || pieces?.headerIsMedia ? (
-            <span className="-mx-1 mb-2 flex h-24 items-center justify-center gap-1.5 rounded-xl bg-current/10 text-xs opacity-80">
-              <ImageIcon aria-hidden className="size-4" /> Imagen de la plantilla
-            </span>
+            // La de la plantilla (su copia de axi): es la que salió, salvo que se reemplazara después.
+            <TemplateMediaHeader
+              kind={pieces?.headerMedia?.kind ?? "image"}
+              media={catalog.header_media}
+              className="-mx-1 mb-2 w-[calc(100%+0.5rem)]"
+            />
           ) : (
             pieces?.header && (
               <p className="mb-1 font-semibold">

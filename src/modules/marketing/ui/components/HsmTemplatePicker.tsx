@@ -13,6 +13,8 @@ import {
 } from "@/shared/components/ui/select";
 import { bulkOpeningCost, formatUsd } from "../../domain/template-cost";
 import { renderHsmPreview } from "../../domain/hsm-preview";
+import { readTemplatePieces } from "../../domain/template-pieces";
+import { TemplateMediaHeader } from "./TemplateMediaHeader";
 import {
   countTemplateVariables,
   templateVariableIssue,
@@ -63,6 +65,8 @@ export function HsmTemplatePicker({
   emptyLabel?: string;
 }) {
   const selected = templates.find((template) => template.id === value) ?? null;
+  // La cabecera de medio de la elegida: la campaña la manda en cada envío, así que se ve aquí.
+  const selectedMedia = selected === null ? null : readTemplatePieces(selected.components).headerMedia;
   // `null` = Meta no aceptaría ese cuerpo. Antes eso valía CERO y el selector
   // no pintaba ni una fila: el operador no veía nada raro y el envío salía sin
   // parámetros.
@@ -174,6 +178,9 @@ export function HsmTemplatePicker({
       {selected !== null && (
         <div className="rounded-lg border border-border/60 bg-foreground/[0.03] p-3.5">
           <div className="max-w-[34ch] rounded-2xl rounded-bl-sm border border-border/60 bg-background px-3 py-2 text-sm leading-relaxed shadow-sm">
+            {selectedMedia !== null && (
+              <TemplateMediaHeader kind={selectedMedia.kind} media={selected.header_media} className="-mx-1 mb-2 w-[calc(100%+0.5rem)]" />
+            )}
             {renderHsmPreview(selected.body, (index) => {
               const entry = mapping.find((row) => row.index === index);
               return entry === undefined ? null : hsmPreviewValue(entry.source, sample);
