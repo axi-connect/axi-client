@@ -212,6 +212,10 @@ export function ProductosGame() {
         {toastAbility ? `${GAME.island.discovered(toastAbility.name)}. ${toastAbility.line}. ${GAME.island.count(n, TOTAL_ABILITIES)}.` : ""}
       </p>
 
+      {/* Móvil: la isla del nav lleva la marca, así que el capítulo va aquí, sobre los siete puntos. */}
+      <p className="pj-game-title-m pj-eyebrow text-[var(--axi-brand)]" aria-hidden="true">
+        {GAME.island.title} · {GAME.island.count(n, TOTAL_ABILITIES)}
+      </p>
       {/* Móvil: el progreso en siete puntos. */}
       <div className="pj-dots flex gap-2.5" aria-hidden="true">
         {GAME_ABILITIES.map((a) => {

@@ -208,7 +208,7 @@
 /* ───────────── 1 · Apertura ───────────── */
 .pj-opening { z-index: 1; justify-content: flex-start; gap: 24px; text-align: center; overflow: hidden; }
 .pj-opening .pj-sun { width: 760px; height: 760px; left: 50%; bottom: calc(var(--pj-peek) - 380px); transform: translateX(-50%); }
-.pj-orbs { position: absolute; left: 50%; bottom: calc(var(--pj-peek) - 30px); width: 0; height: 0; }
+.pj-orbs { position: absolute; left: 50%; bottom: calc(var(--pj-peek) - 96px); width: 0; height: 0; }
 .pj-orb {
   position: absolute;
   width: 44px;
@@ -262,6 +262,8 @@
 
 .pj-chat-log { flex: 1; min-height: 0; padding: 10px 11px; mask-image: linear-gradient(to bottom, transparent, black 24px); display: flex; flex-direction: column; justify-content: flex-end; gap: 8px; overflow: hidden; }
 
+/* Los mensajes no se encogen: lo que no cabe se va por arriba, como en un chat. */
+.pj-chat-log > * { flex-shrink: 0; }
 .pj-bubble { max-width: 82%; padding: 9px 13px; border-radius: 18px; font-size: 13px; line-height: 1.42; animation: pj-pop 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
 .pj-bubble[data-from="customer"] { align-self: flex-start; background: var(--pj-bubble-in); border-bottom-left-radius: 6px; }
 .pj-bubble[data-from="agent"] { align-self: flex-end; background: var(--pj-bubble-out); color: var(--pj-bubble-out-fg); border-bottom-right-radius: 6px; }
@@ -317,7 +319,7 @@
   .pj-move { flex: none; min-height: 0; height: 46px; flex-direction: row; align-items: center; gap: 8px; padding: 0 16px 0 6px; border-radius: 999px; scroll-snap-align: start; white-space: nowrap; }
   .pj-move-icon { width: 34px; height: 34px; }
 }
-@media (min-width: 1024px) { .pj-dots { display: none; } }
+@media (min-width: 1024px) { .pj-dots, .pj-game-title-m { display: none; } }
 
 /* ───────────── 4 · El video ───────────── */
 .pj-video .pj-glow { width: 1100px; height: 600px; left: 50%; bottom: -120px; transform: translateX(-50%); }

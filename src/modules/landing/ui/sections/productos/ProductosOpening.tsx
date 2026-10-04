@@ -5,7 +5,7 @@ import { PRODUCTOS_ANCHORS, PRODUCTOS_HERO, PRODUCTOS_TRIAL } from "@/modules/la
 
 /** Las siete habilidades por descubrir, en arco sobre el teléfono (x, y en px desde el centro). */
 const ORBS = [
-  [-316, 10], [-268, -80], [-180, -146], [0, -176], [180, -146], [268, -80], [316, 10],
+  [-250, 34], [-212, -40], [-130, -96], [0, -122], [130, -96], [212, -40], [250, 34],
 ] as const;
 
 /**
