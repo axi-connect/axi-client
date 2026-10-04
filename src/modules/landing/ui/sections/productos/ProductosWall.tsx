@@ -33,8 +33,9 @@ export function ProductosWall() {
         <div className="pj-wall-tilt">
           {WALL.columns.map((column, i) => (
             <MarqueeColumn key={SPEEDS[i]} reverse={i % 2 === 1} duration={SPEEDS[i]} className={i === 2 ? "pj-wall-col pj-wall-col-last" : "pj-wall-col"}>
-              {column.map((message) => (
-                <WallCard key={message.id} message={message} />
+              {/* Dos pasadas por copia: la columna es más alta que el plano inclinado y nunca se le ve el final. */}
+              {[...column, ...column].map((message, k) => (
+                <WallCard key={`${message.id}-${k}`} message={message} repeat={k >= column.length} />
               ))}
             </MarqueeColumn>
           ))}
@@ -44,10 +45,10 @@ export function ProductosWall() {
   );
 }
 
-function WallCard({ message }: { message: WallMessage }) {
+function WallCard({ message, repeat }: { message: WallMessage; repeat: boolean }) {
   const agent = message.from === "agent";
   return (
-    <figure className="pj-wall-card" data-from={message.from}>
+    <figure className="pj-wall-card" data-from={message.from} aria-hidden={repeat || undefined}>
       <figcaption className="pj-wall-who">
         <span className="pj-wall-av" aria-hidden="true">
           {message.business.charAt(0)}
