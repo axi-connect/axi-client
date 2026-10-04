@@ -1,5 +1,3 @@
-'use client';
-
 import Link from 'next/link';
 
 import { BrandMark } from '@/shared/components/ui/brand-mark';

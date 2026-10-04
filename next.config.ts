@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import bundleAnalyzer from "@next/bundle-analyzer";
 
 /**
  * Convierte orígenes (URLs de variables de entorno) en `remotePatterns` de
@@ -26,6 +27,12 @@ const nextConfig: NextConfig = {
   // La versión de Next no aporta nada al cliente y sí a quien busca exploits.
   poweredByHeader: false,
 
+  experimental: {
+    // Importa solo los módulos de framer-motion que se usan (Next ya lo hace
+    // de serie con lucide, date-fns, recharts y react-icons, no con este).
+    optimizePackageImports: ["framer-motion"],
+  },
+
   /**
    * Redirects de la capa pública (docs/plans/public-gtm-plan.md §F1).
    *
@@ -41,6 +48,15 @@ const nextConfig: NextConfig = {
    */
   async redirects() {
     return [
+      // La imagen OG era un PNG estático; hoy la genera `app/opengraph-image.tsx`
+      // (sin extensión). Sin esto, los rastreadores con la URL vieja recibían un
+      // 307 al login (el middleware no la conoce): auditoría de la landing, m9.
+      // Los redirects de next.config corren ANTES que el middleware.
+      {
+        source: "/opengraph-image.png",
+        destination: "/opengraph-image",
+        permanent: true,
+      },
       // `/precios` YA NO redirige: es página propia desde el rediseño del nav
       // (docs/plans/navigation_standardization_plan.md). Dejar el redirect aquí
       // haría inalcanzable la página, porque el redirect gana a la ruta.
@@ -223,4 +239,8 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// `ANALYZE=true npm run build` abre el mapa de cada bundle (programa landing
+// cinematográfica, F0). Sin la variable no hace nada.
+const withBundleAnalyzer = bundleAnalyzer({ enabled: process.env.ANALYZE === "true" });
+
+export default withBundleAnalyzer(nextConfig);

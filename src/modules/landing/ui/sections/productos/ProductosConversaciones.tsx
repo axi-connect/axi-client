@@ -23,7 +23,7 @@ const COLUMN_SPEEDS = ["46s", "58s", "52s"] as const;
  * §7 — el muro 3D de conversaciones (pre-CTA): tres columnas de mensajes en
  * marquee vertical CSS (compositor, cero JS), inclinadas en perspectiva.
  * Sustituye a la sección de medición, que duplicaba la §6 de la home — el
- * ancla `#medicion` del mega-menú apunta ahora a `/#medicion`.
+ * ancla `#medicion` del mega-menú apunta ahora a `/#medir`.
  *
  * Los negocios son ficticios (retail, comida, moda); el mensaje del agente se
  * distingue por el borde coral + la marca «α · Agente» (violeta = IA, la

@@ -8,6 +8,7 @@ import type {
 } from "schema-dts";
 
 import { SALES_WHATSAPP, SITE_URL, siteUrl } from "@/core/config/env";
+import { ogImageFor } from "@/core/seo/og-cards";
 import { routeLabel } from "@/core/seo/routes";
 
 /**
@@ -22,7 +23,8 @@ import { routeLabel } from "@/core/seo/routes";
  * (no hay buscador).
  */
 /**
- * Imagen de las tarjetas de enlace (1200×630, `src/app/opengraph-image.png`).
+ * Imagen de las tarjetas de enlace (1200×630), generada con `next/og` en
+ * `src/app/opengraph-image.tsx`.
  *
  * Se declara explícitamente en cada página en vez de confiar en la convención
  * de archivo de Next: en cuanto una página define su propio `openGraph`, la
@@ -30,19 +32,14 @@ import { routeLabel } from "@/core/seo/routes";
  * `og:image` ausente — una tarjeta de enlace sin imagen en WhatsApp, LinkedIn
  * y X, que es justo lo que se quería arreglar.
  */
-export const OG_IMAGE = {
-  url: siteUrl("/opengraph-image.png"),
-  width: 1200,
-  height: 630,
-  alt: "Axi Connect — atención y ventas por WhatsApp con agentes de IA",
-} as const;
+export const OG_IMAGE = ogImageFor("/");
 
 export const SITE = {
   name: "Axi Connect",
   url: SITE_URL,
   logo: siteUrl("/images/brand/logo-horizontal.png"),
   description:
-    "Atención al cliente omnicanal con IA: WhatsApp, Instagram y Messenger en un solo inbox, con agentes inteligentes y handoff humano.",
+    "Axi atiende tus canales digitales como tu mejor vendedor: cotiza con tus precios, cobra y te lleva a tu meta del mes.",
 } as const;
 
 /**

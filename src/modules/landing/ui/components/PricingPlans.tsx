@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Check, MessageCircle, ScanSearch } from "lucide-react";
 
@@ -18,11 +17,9 @@ import {
   RECOGNITION_METRIC,
   annualTotalCop,
   discountLabel,
-  hasVolumeAxis,
   planListCop,
   planMonthlyCop,
   planUnitQuantity,
-  promotionOpen,
   volumeById,
   type PublicCatalog,
 } from "@/modules/landing/domain/public-catalog";
@@ -38,8 +35,7 @@ import {
   type BillingPeriodId,
   type PricingPlan,
 } from "@/modules/landing/ui/content/landing.content";
-
-const SALES_PATH = "/contacto";
+import { SALES_PATH, signupHref, usePricingState } from "@/modules/landing/ui/components/pricing-state";
 
 /**
  * §9 Paquetes. Isla de cliente con DOS estados —volumen y periodicidad— porque
@@ -62,20 +58,7 @@ export function PricingPlans({ catalog }: { catalog: PublicCatalog | null }) {
 }
 
 function PricingGrid({ catalog }: { catalog: PublicCatalog }) {
-  const twoAxis = hasVolumeAxis(catalog);
-  const [volumeId, setVolumeId] = useState<string>(catalog.defaultVolumeId);
-  const [period, setPeriod] = useState<BillingPeriodId>("monthly");
-
-  // La FECHA de la promoción depende del reloj, y comprobarla en el primer
-  // render la congelaría en la del despliegue —la página se prerenderiza—, así
-  // que se verifica tras montar. Al vencer, la oferta cae sola a precios de
-  // lista sin desplegar nada: fallo seguro. Los cupos ya vienen resueltos.
-  const [now, setNow] = useState<Date | null>(null);
-  useEffect(() => {
-    setNow(new Date());
-  }, []);
-  const clock = now ?? new Date(catalog.asOf);
-  const offerOpen = promotionOpen(catalog, clock);
+  const { twoAxis, volumeId, setVolumeId, period, setPeriod, clock, offerOpen } = usePricingState(catalog);
 
   const packages = pricingPackages();
   const enterprise = planById("enterprise");
@@ -162,15 +145,6 @@ function PricingUnavailable() {
       </div>
     </Reveal>
   );
-}
-
-/** El enlace del CTA arrastra las dos elecciones: sin ellas, el alta empieza de cero. */
-function signupHref(plan: PricingPlan, volumeId: string, period: BillingPeriodId, twoAxis: boolean): string {
-  const [path, query = ""] = plan.cta.href.split("?");
-  const params = new URLSearchParams(query);
-  if (twoAxis) params.set("volumen", volumeId);
-  params.set("periodo", period);
-  return `${path}?${params.toString()}`;
 }
 
 function PlanCard({

@@ -9,7 +9,7 @@ import { AlertProvider } from "@/core/providers/alert-provider";
 import { SplashProvider } from "@/core/providers/splash-provider";
 import { MotionProvider } from "@/core/providers/motion-provider";
 import { SITE_URL, siteUrl } from "@/core/config/env";
-import { OG_IMAGE } from "@/core/seo/site";
+import { OG_IMAGE, SITE } from "@/core/seo/site";
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -43,12 +43,11 @@ const poppins = Poppins({
 });
 
 /**
- * Descripción por defecto del sitio. Vive aquí y no en el content de la landing
- * porque la heredan también las rutas que no son marketing (`/marketplace`,
- * legales) cuando no declaran la suya.
+ * Descripción por defecto del sitio: la misma de la marca (`SITE`, que usan el
+ * JSON-LD de Organization y WebSite). La heredan también las rutas que no son
+ * marketing (`/marketplace`, legales) cuando no declaran la suya.
  */
-const SITE_DESCRIPTION =
-  "Atención al cliente omnicanal con IA: WhatsApp, Instagram y Messenger en un solo inbox, con agentes inteligentes y handoff humano.";
+const SITE_DESCRIPTION = SITE.description;
 
 export const metadata: Metadata = {
   // `SITE_URL` lanza si falta (core/config/env.ts). Antes había aquí un
@@ -57,7 +56,7 @@ export const metadata: Metadata = {
   // todas las URLs de Open Graph apuntaban a `http://localhost:3001`.
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Axi Connect — Vende por WhatsApp con agentes de IA",
+    default: "Axi Connect — Vende en tus canales digitales con agentes de IA",
     template: "%s — Axi Connect",
   },
   description: SITE_DESCRIPTION,
@@ -69,7 +68,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "Axi Connect",
-    title: "Axi Connect — Vende por WhatsApp con agentes de IA",
+    title: "Axi Connect — Vende en tus canales digitales con agentes de IA",
     description: SITE_DESCRIPTION,
     locale: "es_CO",
     url: siteUrl("/"),
@@ -77,7 +76,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Axi Connect — Vende por WhatsApp con agentes de IA",
+    title: "Axi Connect — Vende en tus canales digitales con agentes de IA",
     description: SITE_DESCRIPTION,
     images: [OG_IMAGE.url],
   },

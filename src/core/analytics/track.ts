@@ -41,7 +41,10 @@ export type AnalyticsEvent =
       }
     }
   | { name: "signup_step_view"; params: { step: string } }
-  | { name: "signup_completed"; params: { offer_codes: string } };
+  | { name: "signup_completed"; params: { offer_codes: string } }
+  // Película de la home: qué nicho eligió el visitante y si vino en la URL de
+  // una campaña (`?nicho=`) o lo tocó en «¿Quién te escribe hoy?».
+  | { name: "film_niche_chosen"; params: { niche: string; source: "choice" | "url" } };
 
 /**
  * Traducción de cada evento del dominio a los dos destinos.
@@ -65,6 +68,7 @@ const EVENT_MAP: Record<
   signup_step_view: { ga: "signup_step_view", meta: null },
   // `sign_up` y `CompleteRegistration` son los estándar de GA4 y de Meta.
   signup_completed: { ga: "sign_up", meta: { method: "track", name: "CompleteRegistration" } },
+  film_niche_chosen: { ga: "film_niche_chosen", meta: null },
 };
 
 /**

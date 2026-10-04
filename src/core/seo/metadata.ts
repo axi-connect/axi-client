@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { siteUrl } from "@/core/config/env";
+import { OG_CARDS, ogImageFor, type OgCardPath } from "@/core/seo/og-cards";
 import { OG_IMAGE } from "@/core/seo/site";
 
 /**
@@ -29,6 +30,8 @@ export function pageMetadata({
   ogTitle?: string;
 }): Metadata {
   const socialTitle = ogTitle ?? `${title} — Axi Connect`;
+  // Precios, productos y demo tienen tarjeta propia (plan §26); el resto, la de inicio.
+  const image = path in OG_CARDS ? ogImageFor(path as OgCardPath) : OG_IMAGE;
 
   return {
     title,
@@ -41,13 +44,13 @@ export function pageMetadata({
       title: socialTitle,
       description,
       url: siteUrl(path),
-      images: [OG_IMAGE],
+      images: [image],
     },
     twitter: {
       card: "summary_large_image",
       title: socialTitle,
       description,
-      images: [OG_IMAGE.url],
+      images: [image.url],
     },
   };
 }

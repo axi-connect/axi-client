@@ -1,0 +1,622 @@
+/*
+ * Tanda 4 de la película (plan §16): precios, preguntas, cierre y la meta.
+ *
+ * Mismo escenario en tinta que `film.css` (tokens de `.dark`); aquí solo los
+ * valores que fijaron los lienzos aprobados. Nada se anima desde CSS: las
+ * entradas las pone el motor y, sin él, cada pieza está en su fotograma final.
+ */
+
+/* ───────────────────────────── precios (§16.2) ───────────────────────────── */
+
+.film-price-spot {
+  position: absolute;
+  left: calc(50% - 400px);
+  top: 260px;
+  width: 800px;
+  height: 700px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--foreground) 5%, transparent), transparent);
+  pointer-events: none;
+}
+
+.film-price-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--foreground) 8.5%, var(--background));
+  border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+}
+.film-price-switch button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 18px;
+  border-radius: 999px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--foreground) 70%, transparent);
+  transition: background-color 0.2s, color 0.2s;
+}
+.film-price-switch button[data-on] { background: var(--foreground); color: var(--background); }
+.film-price-switch button:focus-visible { outline: 2px solid var(--foreground); outline-offset: 2px; }
+.film-price-switch-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--foreground) 10%, transparent);
+  color: var(--foreground);
+}
+.film-price-switch button[data-on] .film-price-switch-badge { background: var(--background); color: var(--foreground); }
+
+.film-price-grid {
+  margin: 48px auto 0;
+  display: grid;
+  gap: 24px;
+  max-width: 520px;
+}
+@media (min-width: 1024px) {
+  .film-price-grid { max-width: none; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; }
+}
+
+.film-price-card {
+  --dim: var(--film-dim-text);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 26px;
+  border-radius: 28px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--foreground) 8.9%, var(--background)), var(--background));
+  border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+  box-shadow: 0 30px 70px rgb(0 0 0 / 0.45);
+  color: var(--foreground);
+}
+/* La recomendada, invertida en blanco. En escritorio queda 14 px más alta:
+   la entrada del motor la eleva al final, y sin motor ya está arriba. */
+.film-price-card[data-featured] {
+  --dim: color-mix(in srgb, var(--background) 60%, transparent);
+  background: linear-gradient(170deg, var(--foreground), color-mix(in srgb, var(--background) 8.2%, var(--foreground)));
+  border-color: color-mix(in srgb, var(--foreground) 90%, transparent);
+  box-shadow: 0 40px 90px rgb(0 0 0 / 0.55);
+  color: var(--background);
+}
+@media (min-width: 1024px) {
+  .film-price-card[data-featured] { transform: translateY(-14px); }
+}
+
+.film-price-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 26px; }
+.film-price-name {
+  margin: 0;
+  font-family: var(--font-nexa), var(--font-poppins), sans-serif;
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+}
+.film-price-pill {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: var(--background);
+  color: var(--foreground);
+  white-space: nowrap;
+}
+.film-price-tagline { margin: -8px 0 0; font-size: 14px; line-height: 1.5; min-height: 42px; color: var(--dim); }
+.film-price-dim { color: var(--dim); font-size: 13px; }
+.film-price-amount { display: flex; flex-direction: column; gap: 4px; }
+.film-price-line { margin: 0; display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; }
+.film-price-figure {
+  margin: 0;
+  font-family: var(--font-nexa), var(--font-poppins), sans-serif;
+  font-weight: 700;
+  font-size: 46px;
+  line-height: 1.1;
+  letter-spacing: -0.035em;
+  font-variant-numeric: tabular-nums;
+}
+.film-price-note { margin: 4px 0 0; font-size: 12.5px; }
+.film-price-founders {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+}
+.film-price-volume {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--foreground) 5%, transparent);
+  font-size: 14px;
+}
+.film-price-volume b { font-variant-numeric: tabular-nums; }
+.film-price-card[data-featured] .film-price-volume { background: color-mix(in srgb, var(--background) 6%, transparent); }
+.film-price-inherits { margin: 0; font-size: 12.5px; font-weight: 600; color: var(--dim); }
+.film-price-bullets { margin: -6px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.film-price-bullets li { display: flex; gap: 10px; font-size: 14px; line-height: 1.45; }
+.film-price-bullets svg { margin-top: 2px; opacity: 0.8; }
+.film-price-cta {
+  margin-top: 4px;
+  display: block;
+  text-align: center;
+  font-size: 14.5px;
+  font-weight: 600;
+  padding: 14px;
+  border-radius: 999px;
+  background: var(--foreground);
+  color: var(--background);
+  transition: filter 0.2s;
+}
+.film-price-cta:hover { filter: brightness(0.92); }
+.film-price-card[data-featured] .film-price-cta { background: var(--background); color: var(--foreground); }
+.film-price-card[data-featured] .film-price-cta:hover { filter: brightness(1.4); }
+/* Foco en tinta: anillo blanco de 2 px a 2 px; sobre la tarjeta blanca, negro. */
+.film-price-cta:focus-visible { outline: 2px solid var(--foreground); outline-offset: 2px; }
+.film-price-card[data-featured] .film-price-cta:focus-visible { outline-color: var(--background); }
+.film-price-micro { margin: -8px 0 0; text-align: center; font-size: 12px; color: var(--dim); }
+
+.film-price-ent {
+  margin-top: 40px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 28px;
+  padding: 20px 26px;
+  border-radius: 22px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+  background: var(--background);
+  color: var(--foreground);
+}
+.film-price-ent-name { margin: 0; font-family: var(--font-nexa), var(--font-poppins), sans-serif; font-weight: 700; font-size: 20px; }
+.film-price-ent-text { margin: 0; flex: 1 1 260px; font-size: 13.5px; color: color-mix(in srgb, var(--foreground) 62%, transparent); }
+.film-price-ent-from { margin: 0; font-size: 13px; color: color-mix(in srgb, var(--foreground) 62%, transparent); white-space: nowrap; }
+.film-price-ent-from b { font-family: var(--font-nexa), var(--font-poppins), sans-serif; font-size: 20px; color: var(--foreground); font-variant-numeric: tabular-nums; }
+.film-price-ent-cta {
+  font-size: 13.5px;
+  font-weight: 600;
+  padding: 11px 18px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 30%, transparent);
+  color: var(--foreground);
+  white-space: nowrap;
+  transition: background-color 0.2s;
+}
+.film-price-ent-cta:hover { background: color-mix(in srgb, var(--foreground) 6%, transparent); }
+.film-price-ent-cta:focus-visible { outline: 2px solid var(--foreground); outline-offset: 2px; }
+.film-price-peruser { margin: 18px 0 0; text-align: center; font-size: 12.5px; color: color-mix(in srgb, var(--foreground) 50%, transparent); }
+
+@media (max-width: 1023px) {
+  .film-price-ent { max-width: 520px; margin-inline: auto; flex-direction: column; align-items: flex-start; padding: 18px; border-radius: 20px; }
+  .film-price-ent-text { flex-basis: auto; }
+}
+@media (max-width: 479px) {
+  .film-price-card { padding: 20px; border-radius: 24px; gap: 14px; }
+  .film-price-figure { font-size: 38px; }
+  .film-price-name { font-size: 20px; }
+}
+
+/* La tarjeta de fundadores en la película va en tinta: en precios no hay coral
+   (QA 4506afbf). Se pinta encima del componente compartido con /precios, que
+   no cambia: fondo #111113 con filete al 10 %, ceja al 55 %, dígitos y barra
+   blancos. */
+.film-founders .bg-founders-slab { background: var(--background); border-color: color-mix(in srgb, var(--foreground) 10%, transparent); }
+.film-founders p.text-accent-amber { color: color-mix(in srgb, var(--foreground) 55%, transparent); }
+.film-founders .text-accent-amber { color: var(--foreground); }
+.film-founders .bar-neon { background: var(--foreground); box-shadow: none; }
+.film-founders .bar-neon::after { background: var(--foreground); box-shadow: none; }
+
+/* ──────────────────────────── preguntas (§16.3) ──────────────────────────── */
+
+.film-faq { display: grid; gap: 48px; }
+@media (min-width: 1024px) {
+  .film-faq { grid-template-columns: 400px minmax(0, 1fr); gap: 80px; }
+}
+.film-faq-side { display: flex; flex-direction: column; align-items: flex-start; gap: 20px; }
+.film-faq-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 20px;
+  border-radius: 999px;
+  background: var(--foreground);
+  color: var(--background);
+  font-size: 14.5px;
+  font-weight: 600;
+  transition: filter 0.2s;
+}
+.film-faq-cta:hover { filter: brightness(0.92); }
+.film-faq-cta:focus-visible { outline: 2px solid var(--foreground); outline-offset: 2px; }
+/* La voz del agente: el único violeta de la sección. */
+.film-faq-live { margin: -8px 0 0; display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--film-dim-text); }
+.film-faq-live-dot { width: 7px; height: 7px; border-radius: 50%; background: #a78bfa; box-shadow: 0 0 12px rgb(167 139 250 / 0.8); }
+
+.film-faq-list { border-top: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent); }
+.film-faq-item { border-bottom: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent); }
+.film-faq-item summary {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding: 20px 4px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 17px;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--foreground) 86%, transparent);
+}
+.film-faq-item summary::-webkit-details-marker { display: none; }
+.film-faq-item summary:focus-visible { outline: 2px solid var(--foreground); outline-offset: 2px; border-radius: 6px; }
+.film-faq-item[open] summary { color: var(--foreground); }
+.film-faq-n { width: 26px; flex: none; font-size: 12px; font-variant-numeric: tabular-nums; color: var(--film-dim-text); }
+.film-faq-q { flex: 1; }
+/* Más/menos: la barra vertical se apaga y el círculo se invierte al abrir. */
+.film-faq-sign {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--foreground) 18%, transparent);
+  color: var(--foreground);
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+.film-faq-sign::before,
+.film-faq-sign::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  background: currentColor;
+  transform: translate(-50%, -50%);
+}
+.film-faq-sign::before { width: 11px; height: 1.5px; }
+.film-faq-sign::after { width: 1.5px; height: 11px; transition: opacity 0.2s; }
+.film-faq-item[open] .film-faq-sign { background: var(--foreground); border-color: var(--foreground); color: var(--background); }
+.film-faq-item[open] .film-faq-sign::after { opacity: 0; }
+.film-faq-a { margin: -6px 0 0 52px; padding: 0 60px 22px 0; font-size: 15px; line-height: 1.7; color: color-mix(in srgb, var(--foreground) 66%, transparent); }
+
+@media (max-width: 1023px) {
+  .film-faq-item summary { gap: 12px; padding: 16px 0; font-size: 15px; }
+  .film-faq-n { width: 18px; font-size: 11px; }
+  .film-faq-a { margin: -4px 0 0 30px; padding: 0 0 18px; font-size: 13.5px; line-height: 1.65; }
+}
+
+/* ───────────────────────────── cierre (§16.4) ───────────────────────────── */
+
+.film-close-stage {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  padding: 88px 16px 96px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.film-close-mark { position: relative; width: 260px; height: 260px; }
+/* El halo coral → violeta → ámbar. Sin `filter: blur`: su caja se recortaba
+   en un cuadrado (QA 4506afbf). La caja es un 40 % mayor que el halo visible y
+   el degradado llega a 0 al 70 %, así que el borde nunca se ve. El motor solo
+   lo escala y le sube la opacidad (transform/opacity). */
+.film-close-bloom {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 840px;
+  height: 840px;
+  margin: -420px 0 0 -420px;
+  background: radial-gradient(
+    closest-side,
+    rgb(230 87 89 / 0.34),
+    rgb(154 79 255 / 0.2) 30%,
+    rgb(255 213 128 / 0.08) 50%,
+    rgb(255 213 128 / 0) 70%
+  );
+  pointer-events: none;
+}
+.film-close-iso { position: relative; width: 100%; height: 100%; }
+/* Cada cinta lleva su trazo de luz apagado: el motor lo dibuja
+   (`stroke-dasharray` sobre `pathLength=1`) y lo apaga al llenarse. */
+.film-close-iso [data-ribbon] {
+  stroke: var(--foreground);
+  stroke-width: 4;
+  stroke-opacity: 0;
+  stroke-dasharray: 1 2;
+  stroke-linejoin: round;
+}
+.film-close-h { margin-top: 52px; font-size: clamp(42px, 5.6vw, 80px); line-height: 1.02; letter-spacing: -0.045em; }
+.film-close-typing {
+  margin-top: 40px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px 10px 12px;
+  border-radius: 18px 18px 18px 6px;
+  background: color-mix(in srgb, var(--foreground) 11%, var(--background));
+  border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+  color: color-mix(in srgb, var(--foreground) 80%, transparent);
+  font-size: 13.5px;
+}
+.film-close-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--foreground);
+  color: var(--background);
+  font-size: 10.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.film-close-dots { display: inline-flex; gap: 4px; }
+.film-close-dots i { display: block; width: 6px; height: 6px; border-radius: 50%; background: var(--foreground); opacity: 0.7; }
+.film-close-ctas { margin-top: 30px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.film-close-buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; }
+.film-close .film-close-cta { height: auto; border-radius: 999px; padding: 16px 30px; font-size: 15.5px; }
+.film-close-agent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 15px 24px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  background: color-mix(in srgb, var(--foreground) 5%, transparent);
+  color: var(--foreground);
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background-color 0.2s;
+}
+.film-close-agent:hover { background: color-mix(in srgb, var(--foreground) 10%, transparent); }
+.film-close-agent:focus-visible { outline: 2px solid var(--foreground); outline-offset: 2px; }
+/* El CTA coral del cierre es el FilmCta compartido (anillo de marca): aquí, el de tinta. */
+.film-close .film-close-cta:focus-visible { box-shadow: none; outline: 2px solid var(--foreground); outline-offset: 2px; }
+.film-close-micro { margin: 0; font-size: 13px; color: var(--film-dim-text); }
+
+@media (max-width: 1023px) {
+  .film-close-stage { padding-top: 56px; }
+  .film-close-mark { width: 160px; height: 160px; }
+  .film-close-bloom { width: 490px; height: 490px; margin: -245px 0 0 -245px; }
+  .film-close-h { margin-top: 44px; font-size: 42px; line-height: 1.04; }
+  .film-close-typing { margin-top: 32px; font-size: 12.5px; }
+  .film-close-ctas { width: 100%; }
+  .film-close-buttons { width: 100%; flex-direction: column; gap: 12px; }
+  .film-close .film-close-cta, .film-close-agent { width: 100%; }
+}
+
+/* ───────────────────────────── la meta (§16.1) ───────────────────────────── */
+
+/* El foco de la cámara, como fracción del escenario: (600, 600) de 1440 × 900.
+   El plano y las marcas se colocan ahí; `perspective-origin` es el mismo punto. */
+.film-goal { --fx: 41.667%; --fy: 66.667%; align-items: flex-start; }
+.film-goal-map { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
+.film-goal-view { position: absolute; inset: 0; perspective: 1300px; perspective-origin: var(--fx) var(--fy); }
+.film-goal-plane {
+  position: absolute;
+  left: var(--fx);
+  top: var(--fy);
+  width: 2400px;
+  height: 1500px;
+  transform-origin: 0 0;
+}
+.film-goal-plane svg { position: absolute; inset: 0; overflow: visible; }
+/* La ciudad en su propia capa: los trazos que avanzan no la vuelven a
+   rasterizar (perfil del scroll: 4,9 s de raster en la meta con una sola capa).
+   Solo cerca de la escena (`data-near`, nearFlag), como el piloto. */
+.film-goal[data-near] .film-goal-plane,
+.film-goal[data-near] .film-goal-city { will-change: transform; }
+
+.film-goal-plane path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.film-goal-lane { stroke: color-mix(in srgb, var(--foreground) 7%, transparent); stroke-width: 30; }
+.film-goal-plan { stroke: color-mix(in srgb, var(--foreground) 32%, transparent); stroke-width: 3; stroke-dasharray: 1 13; }
+.film-goal-reveal { stroke: var(--foreground); stroke-width: 16; stroke-linecap: butt !important; }
+/* Los brillos son trazos anchos y tenues, sin feGaussianBlur: el filtro sobre
+   una ruta de 2400 px se recalculaba en cada frame del scrub. */
+.film-goal-axi-glow { stroke: #a78bfa; stroke-width: 26; stroke-opacity: 0.35; }
+.film-goal-axi { stroke: #a78bfa; stroke-width: 7; transition: stroke 0.3s; }
+.film-goal[data-approved] .film-goal-axi { stroke: var(--foreground); }
+.film-goal-projection { stroke: var(--foreground); stroke-width: 4; stroke-dasharray: 10 12; }
+.film-goal-slow { stroke: #8e8e96; stroke-width: 7; stroke-dasharray: 2 12; }
+.film-goal-done-glow { stroke: var(--foreground); stroke-width: 22; stroke-opacity: 0.12; }
+.film-goal-done { stroke: var(--foreground); stroke-width: 8; }
+
+.film-goal-veil {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--background) 94%, transparent) 0%, color-mix(in srgb, var(--background) 55%, transparent) 30%, color-mix(in srgb, var(--background) 0%, transparent) 52%),
+    linear-gradient(0deg, color-mix(in srgb, var(--background) 80%, transparent), color-mix(in srgb, var(--background) 0%, transparent) 22%),
+    linear-gradient(180deg, color-mix(in srgb, var(--background) 85%, transparent), color-mix(in srgb, var(--background) 0%, transparent) 18%);
+}
+
+/* Lo que propone Axi y lo aprobado: dos textos en el HTML, uno visible. */
+.film-goal[data-approved] .film-goal-when-propose,
+.film-goal:not([data-approved]) .film-goal-when-approved { display: none; }
+
+/* ── marcas ── */
+.film-goal-anchor { position: absolute; left: var(--fx); top: var(--fy); width: 0; height: 0; z-index: 3; }
+.film-goal-mark { position: absolute; left: 0; top: 0; pointer-events: none; color: var(--foreground); }
+.film-goal-mark > span { position: absolute; white-space: nowrap; }
+.film-goal-start {
+  left: 14px; top: -14px;
+  font-size: 12px; padding: 6px 11px; border-radius: 999px;
+  background: color-mix(in srgb, color-mix(in srgb, var(--foreground) 8.1%, var(--background)) 90%, transparent); border: 1px solid color-mix(in srgb, var(--foreground) 12%, transparent); color: color-mix(in srgb, var(--foreground) 75%, transparent);
+}
+.film-goal-should-dot { left: -9px; top: -9px; width: 14px; height: 14px; border-radius: 50%; border: 2px solid #8e8e96; background: var(--background); }
+.film-goal-should-label {
+  left: 16px; top: -40px;
+  font-size: 12px; padding: 7px 12px; border-radius: 12px;
+  background: color-mix(in srgb, color-mix(in srgb, var(--foreground) 8.1%, var(--background)) 92%, transparent); border: 1px dashed color-mix(in srgb, var(--foreground) 22%, transparent); color: color-mix(in srgb, var(--foreground) 82%, transparent);
+}
+.film-goal-ring { left: -13px; top: -13px; width: 22px; height: 22px; border-radius: 50%; border: 2px dashed color-mix(in srgb, var(--foreground) 80%, transparent); background: color-mix(in srgb, var(--background) 80%, transparent); }
+.film-goal[data-approved] .film-goal-ring { border-color: var(--foreground); }
+.film-goal-ring-label {
+  left: -110px; top: -58px;
+  font-size: 12.5px; padding: 8px 12px; border-radius: 12px;
+  background: var(--foreground); color: var(--background); box-shadow: 0 14px 30px rgb(0 0 0 / 0.5);
+}
+.film-goal-ring-label b { font-variant-numeric: tabular-nums; }
+.film-goal-flag {
+  left: -20px; top: -46px; width: 40px; height: 40px;
+  border-radius: 50% 50% 50% 4px; transform: rotate(-45deg);
+  background: var(--foreground); color: var(--background);
+  display: flex; align-items: center; justify-content: center;
+}
+.film-goal-flag svg { transform: rotate(45deg); }
+.film-goal-flag-label { left: 26px; top: -40px; font-size: 12px; color: color-mix(in srgb, var(--foreground) 70%, transparent); }
+.film-goal-pulse { left: -46px; top: -46px; width: 92px; height: 92px; border-radius: 50%; background: radial-gradient(closest-side, rgb(230 87 89 / 0.35), rgb(230 87 89 / 0)); }
+/* El coral de la escena: solo el coche. */
+.film-goal-car {
+  left: -17px; top: -17px; width: 34px; height: 34px; border-radius: 50%;
+  background: #e65759;
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--background) 90%, transparent), 0 0 30px rgb(230 87 89 / 0.8);
+  display: flex; align-items: center; justify-content: center;
+}
+.film-goal-here {
+  left: -28px; top: 30px;
+  padding: 10px 14px; border-radius: 16px;
+  background: color-mix(in srgb, color-mix(in srgb, var(--foreground) 8.1%, var(--background)) 94%, transparent); border: 1px solid color-mix(in srgb, var(--foreground) 12%, transparent); box-shadow: 0 18px 40px rgb(0 0 0 / 0.5);
+}
+.film-goal-here-k { display: block; font-size: 9.5px; letter-spacing: 0.18em; font-weight: 600; text-transform: uppercase; color: #f07a6e; }
+.film-goal-here-v { font-family: var(--font-nexa), var(--font-poppins), sans-serif; font-weight: 700; font-size: 21px; font-variant-numeric: tabular-nums; }
+/* La voz de Axi: violeta solo mientras propone. */
+.film-goal-recalc {
+  left: 30px; top: -48px;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12.5px; padding: 8px 13px; border-radius: 999px;
+  /* El texto, violeta sobre la tinta del tema: con #d9ccff fijo desaparecía en claro. */
+  background: color-mix(in srgb, var(--axi-violet) 16%, transparent); border: 1px solid color-mix(in srgb, var(--axi-violet) 55%, transparent); color: color-mix(in srgb, var(--axi-violet) 38%, var(--foreground));
+  box-shadow: 0 0 30px rgb(124 58 237 / 0.35);
+}
+.film-goal-recalc-dot { width: 7px; height: 7px; border-radius: 50%; background: #a78bfa; }
+
+/* ── titular y panel ── */
+.film-goal-layout {
+  position: relative;
+  z-index: 4;
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+  padding: clamp(88px, 14vh, 124px) clamp(16px, 5.6vw, 80px) 64px clamp(16px, 8.3vw, 120px);
+  display: grid;
+  grid-template-columns: minmax(0, 560px) 360px;
+  justify-content: space-between;
+  align-items: start;
+  gap: 32px;
+}
+.film-goal-dim { color: var(--film-dim-text); }
+.film-goal-head { padding-top: 8px; }
+.film-goal-title { font-size: clamp(38px, 4.4vw, 64px); line-height: 1.02; letter-spacing: -0.04em; }
+.film-goal-lead { margin: 20px 0 0; max-width: 460px; font-size: 17px; line-height: 1.6; }
+
+.film-goal-panel {
+  box-sizing: border-box;
+  padding: 20px;
+  border-radius: 26px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--foreground) 8.5%, var(--background)), color-mix(in srgb, var(--foreground) 6.1%, var(--background)));
+  border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+  box-shadow: 0 40px 90px rgb(0 0 0 / 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  color: var(--foreground);
+}
+.film-goal-panel p { margin: 0; }
+.film-goal-panel-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.film-goal-sell { margin-top: 2px !important; font-family: var(--font-nexa), var(--font-poppins), sans-serif; font-weight: 700; font-size: 25px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.film-goal-slow-chip {
+  font-size: 11px; padding: 5px 10px; border-radius: 999px; white-space: nowrap;
+  border: 1px dashed color-mix(in srgb, var(--foreground) 30%, transparent); color: color-mix(in srgb, var(--foreground) 75%, transparent);
+}
+.film-goal-turn { display: flex; gap: 14px; align-items: center; padding: 14px; border-radius: 18px; background: var(--foreground); color: var(--background); }
+.film-goal-turn-icon { width: 44px; height: 44px; flex: none; border-radius: 12px; background: var(--background); display: flex; align-items: center; justify-content: center; }
+.film-goal-turn-title { font-family: var(--font-nexa), var(--font-poppins), sans-serif; font-weight: 700; font-size: 19px; letter-spacing: -0.01em; }
+.film-goal-turn-sub { font-size: 12.5px; color: color-mix(in srgb, var(--background) 60%, transparent); }
+.film-goal-then { margin-top: -4px !important; font-size: 12px; color: var(--film-dim-text); }
+.film-goal-bar { position: relative; height: 8px; border-radius: 99px; background: color-mix(in srgb, var(--foreground) 8%, transparent); }
+.film-goal-bar-fill { position: absolute; inset: 0; border-radius: 99px; background: var(--foreground); transform-origin: left; }
+.film-goal-bar-slow { position: absolute; top: 0; bottom: 0; }
+.film-goal-bar-slow > div {
+  width: 100%; height: 100%; border-radius: 99px; transform-origin: left;
+  background: repeating-linear-gradient(90deg, #8e8e96 0 3px, transparent 3px 7px);
+}
+.film-goal-bar-track { position: absolute; inset: 0; pointer-events: none; }
+.film-goal-bar-ring {
+  position: absolute; left: -7px; top: -3px; width: 14px; height: 14px; box-sizing: border-box;
+  border-radius: 50%; border: 2px dashed color-mix(in srgb, var(--foreground) 80%, transparent); background: color-mix(in srgb, var(--foreground) 6.1%, var(--background));
+}
+.film-goal[data-approved] .film-goal-bar-ring { border-color: var(--foreground); }
+.film-goal-bar-legend { display: flex; justify-content: space-between; margin-top: 10px; font-size: 12px; color: var(--film-dim-text); }
+.film-goal-bar-legend b, .film-goal-panel b { color: inherit; font-variant-numeric: tabular-nums; }
+.film-goal-bar-legend b { color: var(--foreground); }
+.film-goal-rule { height: 1px; background: color-mix(in srgb, var(--foreground) 8%, transparent); }
+.film-goal-routes { font-size: 10px; letter-spacing: 0.18em; font-weight: 600; text-transform: uppercase; color: var(--film-dim-text); }
+.film-goal-route-now {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  padding: 11px 13px; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent); font-size: 13px;
+}
+.film-goal-route-axi {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 12px 13px; border-radius: 14px; font-size: 13px;
+  border: 1px solid rgb(167 139 250 / 0.7); background: rgb(124 58 237 / 0.1); box-shadow: 0 0 30px rgb(124 58 237 / 0.25);
+}
+.film-goal[data-approved] .film-goal-route-axi { border-color: color-mix(in srgb, var(--foreground) 50%, transparent); background: color-mix(in srgb, var(--foreground) 6%, transparent); box-shadow: none; }
+.film-goal-approve {
+  align-self: flex-start;
+  font-size: 12.5px; font-weight: 600; padding: 8px 14px; border-radius: 999px;
+  background: var(--foreground); color: var(--background); border: 1px solid transparent;
+}
+.film-goal[data-approved] .film-goal-approve { background: transparent; color: var(--foreground); border-color: color-mix(in srgb, var(--foreground) 30%, transparent); }
+.film-goal-note { font-size: 11px; color: var(--film-dim-text); text-align: center; }
+
+/* ── móvil: no se fija; titular, franja del mapa de 430 px y panel compacto ── */
+@media (max-width: 1023px) {
+  /* La rejilla es la de `.film-strip` (film.css), que también la deja pegada. */
+  .film-goal { --fx: 43.59%; --fy: 58.14%; display: block; padding-block: 88px; }
+  .film-goal-layout { display: contents; }
+  .film-goal-head { order: 1; padding: 0 16px; }
+  .film-goal-title { font-size: 38px; line-height: 1.04; }
+  .film-goal-map { position: relative; inset: auto; order: 2; height: 430px; margin-top: 16px; }
+  .film-goal-veil { background: linear-gradient(180deg, var(--background), color-mix(in srgb, var(--background) 0%, transparent) 18%, color-mix(in srgb, var(--background) 0%, transparent) 80%, var(--background)); }
+  .film-goal-panel { order: 3; margin: 16px 16px 0; padding: 16px; border-radius: 22px; gap: 12px; max-width: 520px; box-shadow: none; }
+  @media (min-width: 552px) { .film-goal-panel { margin-inline: auto; width: calc(100% - 32px); } }
+  /* Panel compacto: maniobra, barra y ruta de Axi. Lo de escritorio se esconde
+     aquí y no con `max-lg:hidden`: este CSS sin capa gana a las utilidades. */
+  .film-goal-then, .film-goal-bar-legend, .film-goal-rule, .film-goal-routes, .film-goal-route-now, .film-goal-note { display: none; }
+  .film-goal-sell { font-size: 21px; }
+  .film-goal-slow-chip { font-size: 10.5px; padding: 4px 9px; }
+  .film-goal-turn { padding: 12px; gap: 12px; border-radius: 16px; }
+  .film-goal-turn-icon { width: 38px; height: 38px; border-radius: 10px; }
+  .film-goal-turn-title { font-size: 17px; }
+  .film-goal-turn-sub { font-size: 12px; }
+  .film-goal-bar { height: 7px; }
+  .film-goal-route-axi { font-size: 12.5px; padding: 11px 12px; gap: 9px; }
+  .film-goal-approve { font-size: 12px; padding: 7px 13px; }
+
+  .film-goal-ring-label { left: -40px; top: -44px; font-size: 11.5px; padding: 6px 10px; border-radius: 10px; }
+  .film-goal-flag { left: -16px; top: -38px; width: 32px; height: 32px; }
+  .film-goal-car { left: -15px; top: -15px; width: 30px; height: 30px; box-shadow: 0 0 0 4px color-mix(in srgb, var(--background) 90%, transparent), 0 0 26px rgb(230 87 89 / 0.8); }
+  .film-goal-here { left: -40px; top: 26px; padding: 8px 12px; border-radius: 14px; }
+  .film-goal-here-k { font-size: 9px; }
+  .film-goal-here-v { font-size: 17px; }
+  .film-goal-recalc { left: 24px; top: -42px; font-size: 11.5px; padding: 6px 11px; }
+}
+
+/* Movimiento reducido: sin motor ya se ve el fotograma final; aquí se apagan
+   también las transiciones de lo que cambia al tocar (selector, más/menos). */
+@media (prefers-reduced-motion: reduce) {
+  .film-price-switch button, .film-price-cta, .film-faq-cta, .film-faq-sign, .film-faq-sign::after,
+  .film-close-agent, .film-goal-axi { transition: none; }
+}

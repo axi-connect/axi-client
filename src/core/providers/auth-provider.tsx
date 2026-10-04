@@ -2,7 +2,7 @@
 
 import { isPublicPath } from "@/core/config/routes"
 import { followsTenantIdentity, onAuthChange } from "@/shared/auth/auth-channel"
-import { socketManager } from "@/core/realtime/socket-manager"
+import { haltRealtime, resetRealtime } from "@/core/realtime/realtime-control"
 import {
   API_ERROR_CODES,
   COMPANY_SUSPENDED_EVENT,
@@ -91,7 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    * señal llega por HTTP, por WS o por ambas.
    */
   const markSuspended = useCallback((code?: string) => {
-    socketManager.halt()
+    haltRealtime()
     setUser(null)
     setSuspensionCode(code ?? API_ERROR_CODES.companySuspended)
     setStatus("suspended")
@@ -167,7 +167,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     // Login exitoso (empresa activa): re-habilita el tiempo real si venía
     // frenado por una suspensión en esta misma sesión de página.
-    socketManager.reset()
+    resetRealtime()
     await hydrate()
   }, [hydrate])
 
@@ -194,7 +194,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         })
       }
       const result = (await res.json()) as SignupResult
-      socketManager.reset()
+      resetRealtime()
       await hydrate()
       return result
     },

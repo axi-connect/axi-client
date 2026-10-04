@@ -48,30 +48,9 @@ export const LANDING_ANCHORS = {
 
 /* ────────────────────────────── Mascotas ────────────────────────────── */
 
-/**
- * Personajes de los agentes de la plataforma.
- * Viven en `public/images/mascots/`: el matcher del middleware solo exime
- * `images|fonts|assets` — cualquier otra carpeta de `public/` redirige a
- * login para visitantes sin sesión (middleware.ts).
- */
-export const MASCOTS = {
-  lumo: { src: "/images/mascots/lumo.png", alt: "Lumo, agente de Axi", width: 1080, height: 1080 },
-  lumoCloseup: { src: "/images/mascots/lumo-closeup.png", alt: "Lumo, agente de Axi", width: 1080, height: 1080 },
-  novaCloseup: { src: "/images/mascots/nova-closeup.png", alt: "Nova, agente de Axi", width: 1080, height: 1080 },
-} as const;
 
 /* ─────────────────────────────── §1 Hero ────────────────────────────── */
 
-export const HERO = {
-  // kicker: "Convierte cada conversación en una oportunidad de venta.",
-  headline: "El futuro es conversacional.",
-  // headlineGradient: "Y debería terminar en una venta.",
-  subheadline:
-    "Tus clientes ya te compran por WhatsApp e Instagram. Axi Connect pone ahí a tu mejor vendedor: responde en segundos, cotiza con tus precios reales, arma el pedido, comparte tus medios de pago y te muestra —en pesos— lo que produjo cada conversación. Y cuando hace falta una persona, tu equipo entra sin que el cliente note el cambio.",
-  ctaPrimary: "Agenda tu demo",
-  ctaSecondary: "Chatea con nuestro agente",
-  microcopy: "La demo es con tu tipo de negocio, no con diapositivas. 30 minutos, sin compromiso.",
-} as const;
 
 /* ─────────────────────── Mockup de chat (hero y §4) ─────────────────── */
 
@@ -98,6 +77,7 @@ export type ChatMessage =
       imageSrc?: string | null;
     }
   | { id: string; from: "system"; kind: "system"; text: string };
+
 
 /** Datos de la tarjeta "Venta pagada" que remata cada mockup de chat. */
 export interface SaleCardData {
@@ -165,161 +145,16 @@ export const STORY_CHAT = {
 
 /* ─────────────────────── §2 Barra de prueba social ──────────────────── */
 
-/** Con al menos estos negocios, la banda de logos pasa a marquee automático. */
-export const MARQUEE_MIN_ITEMS = 5;
 
-export const SOCIAL_PROOF = {
-  kicker: "Ya venden con Axi",
-  businesses: [
-    {
-      name: "Joao's Burguer",
-      detail: "comida rápida, Palmira",
-      logoSrc: null as string | null | undefined,
-      websiteUrl: "https://www.joaosburguer.com/",
-    },
-    {
-      name: "Savage",
-      detail: "moda urbana, Bogotá",
-      logoSrc: "https://res.cloudinary.com/dpfnxj52w/image/upload/v1785430138/logo_savage_crop_lzvouy.png",
-      websiteUrl: "https://www.savagecolombia.com/",
-    },
-    {
-      name: "The Brothers Inc",
-      detail: "estudio de grabación, Bogotá",
-      logoSrc: null as string | null | undefined,
-      websiteUrl: "https://thebrothersinc.co/",
-    },
-  ],
-  closing: "Tres formas distintas de vender. Cero desarrollo a medida.",
-} as const;
 
 /* ───────────────────────────── §3 Problema ──────────────────────────── */
 
-export const PROBLEM = {
-  title: "Cada chat que se queda esperando es una venta que se va.",
-  intro:
-    "No es culpa tuya: la puerta cambió de lugar y la venta por chat creció más rápido que cualquier operación. Esto es lo que le pasa a casi todos los negocios que venden por WhatsApp:",
-  pains: [
-    {
-      id: "after-hours",
-      title: "Las ventas de las 9 de la noche no las atiende nadie.",
-      body: "El cliente que escribe fuera de horario no espera hasta mañana: le compra al que sí respondió.",
-    },
-    {
-      id: "single-phone",
-      title: "Tu operación vive en el teléfono de alguien.",
-      body: "Si esa persona se enferma, renuncia o simplemente no vio el mensaje, la venta no existió. Sin historial, sin trazabilidad, sin control.",
-    },
-    {
-      id: "no-attribution",
-      title: "Nadie sabe qué conversación terminó en venta.",
-      body: "Respondes cientos de chats al mes y no puedes decir cuáles produjeron plata y cuáles se cayeron a mitad de camino. Invertir en atención, así, es un acto de fe.",
-    },
-    {
-      id: "scary-bots",
-      title: "Y los bots que probaste te dieron miedo — con razón.",
-      body: "Inventan precios, prometen lo que no hay en stock, regalan descuentos que nadie autorizó. Un bot sin control no es ahorro: es riesgo.",
-    },
-  ],
-  closing: "Axi Connect se construyó para atacar los cuatro. El último —el control— es el que define todo lo demás.",
-} as const;
 
 /* ──────────────────────── §4 Cómo funciona ──────────────────────────── */
 
-export const HOW_IT_WORKS = {
-  title: "Así se ve una venta con Axi. De “hola, ¿tienen…?” a pago verificado.",
-  steps: [
-    {
-      n: "01",
-      title: "Un cliente escribe a las 8:47 p.m.",
-      body: "“Hola, ¿tienen el hoodie oversize en talla M?” Por WhatsApp, Instagram o Messenger — da igual: todos llegan al mismo lugar, y si ya te había escrito por otro canal, Axi sabe que es la misma persona.",
-      // TODO [A VALIDAR]: puesta en producción de Instagram/Messenger (checklist landing-copy.md).
-    },
-    {
-      n: "02",
-      title: "Tu agente responde en segundos, con tu catálogo real.",
-      body: "Encuentra el producto aunque el cliente escriba “hodie” o mande la captura de lo que vio en un reel, envía las fotos reales, responde con el precio de tu sistema. No improvisa: consulta.",
-    },
-    {
-      n: "03",
-      title: "Arma el pedido y comparte tus medios de pago.",
-      body: "Cotiza con totales calculados por el sistema, confirma el pedido con número consecutivo, descuenta el inventario y le pasa al cliente tu Nequi, tu cuenta o tu link de pago. La venta completa ocurre dentro del chat — sin sacar al cliente a un carrito web.",
-    },
-    {
-      n: "04",
-      title: "Tu equipo entra exactamente cuando hace falta.",
-      body: "El comprobante de pago siempre lo verifica una persona tuya — eso no se automatiza, por diseño. Y si el cliente pide un asesor o la conversación se complica, pasa a tu equipo con todo el contexto, sin que el cliente repita nada.",
-    },
-    {
-      n: "05",
-      title: "Tú ves lo que nadie más te muestra.",
-      body: "Cuántas conversaciones hubo, cuántas cotizaron, cuántas pagaron, cuánta plata entró — y qué corregir primero para vender más el próximo mes.",
-    },
-  ],
-  cta: "Ver esto con mi negocio",
-  /** Tarjeta sticky "Tu agente, trabajando" (mascota Lumo close-up). */
-  agentCard: {
-    title: "Tu agente, trabajando",
-    subtitle: "3 conversaciones a la vez · sin turnos",
-  },
-  /** Tarjeta de pedido del panel sticky. */
-  orderCard: {
-    title: "Pedido #1042",
-    badge: "PAGO VERIFICADO",
-    lines: [
-      { label: "Hoodie Heavy · M", value: "$129.900" },
-      { label: "Envío Bogotá", value: "$0" },
-    ],
-    total: { label: "Total", value: "$129.900" },
-  },
-  /** Línea de tiempo del panel sticky. */
-  timeline: {
-    title: "Línea de tiempo",
-    events: [
-      "Agente cotizó · 8:48 p.m.",
-      "Pago reportado por el cliente · 8:51 p.m.",
-      "Verificado por Laura (tu equipo) · 8:53 p.m.",
-    ],
-  },
-} as const;
 
 /* ──────────────────── §5 La objeción de la IA (bóveda) ──────────────── */
 
-export const GUARDRAILS = {
-  title: "La IA que no puede inventarle un precio a tu cliente.",
-  intro: "No porque se lo pidamos amablemente en las instrucciones. Porque el dato no pasa por ella:",
-  guarantees: [
-    {
-      id: "prices",
-      title: "Los precios salen de tu catálogo.",
-      body: "Cada cotización y cada total los calcula el sistema con tus datos reales. El modelo de IA nunca es la fuente de un precio.",
-    },
-    {
-      id: "discounts",
-      title: "Los descuentos son tu política.",
-      body: "El agente comunica las condiciones que tú definiste. No puede regalar margen, ni “hacer una excepción”, ni negociar por su cuenta.",
-    },
-    {
-      id: "payments",
-      title: "Un pago solo está pagado cuando tu equipo lo verifica.",
-      body: "El agente registra el comprobante que envía el cliente; darlo por recibido es siempre decisión de una persona.",
-    },
-    {
-      id: "escalation",
-      title: "Si no sabe, escala.",
-      body: "Cuando el cliente pide un asesor o la conversación supera al agente, pasa a tu equipo con una despedida natural — el cliente nunca queda hablando con una pared.",
-    },
-  ],
-  /** Tarjeta interactiva "pásale el cursor". */
-  vault: {
-    hint: "pásale el cursor",
-    caption: "Cada conversación pasa por aquí: datos de tu negocio, no invenciones de un modelo.",
-    vocabulary:
-      "hola tienes disponible talla M cuanto vale precio $129.900 pedido #1042 nequi comprobante gracias envio bogota agendar cita hoodie oversize stock catalogo pago verificado ",
-  },
-  punchlineLead: "Compruébalo en la demo:",
-  punchline: "pídele al agente un descuento que no autorizaste y mira qué hace.",
-} as const;
 
 /* ─────────────────────── §6 Medición (sección estrella) ─────────────── */
 
@@ -399,52 +234,6 @@ export const METRICS = {
 
 /* ─────────────────────── §7 Tu equipo, en control ───────────────────── */
 
-export const TEAM_CONTROL = {
-  title: "Tu equipo no desaparece. Se vuelve más valioso.",
-  intro:
-    "El agente atiende la primera línea: las mismas preguntas cien veces al día, a cualquier hora. Tu gente atiende lo que de verdad necesita criterio humano — y tiene el control total:",
-  capabilities: [
-    {
-      id: "take-over",
-      title: "Entra cuando quiera.",
-      body: "Cualquier asesor puede tomar una conversación en espera o intervenir una que el agente esté atendiendo. El historial es uno solo: el cliente nunca repite su cuento.",
-    },
-    {
-      id: "hand-back",
-      title: "Devuelve el control con instrucciones.",
-      body: "Al regresarle la conversación al agente, tu asesor puede dejarle una nota — y el agente la lee y la aplica. Es tu forma de enseñarle en caliente.",
-    },
-    {
-      id: "sla",
-      title: "Nada se queda esperando.",
-      body: "Si una conversación escalada no se atiende en 5 minutos, sube de prioridad y notifica al equipo. Los tiempos de espera dejan de ser invisibles.",
-    },
-  ],
-  closingLead: "Y si tu negocio supera el plan del mes, se pausa el agente — ",
-  closingStrong: "nunca tu operación",
-  closingTail:
-    ". Tu equipo sigue atendiendo desde el mismo lugar, con todo el historial. Con Axi, lo peor que puede pasar es que vuelvas a atender como hoy.",
-  /** Mockup del inbox del equipo. */
-  inbox: {
-    title: "Inbox del equipo",
-    badge: "3 EN COLA",
-    queue: [
-      { name: "Andrés M.", tag: "SLA 4:12", tagKind: "sla" as const, preview: "Pidió hablar con un asesor", active: true },
-      { name: "Carolina R.", tag: "IA", tagKind: "ai" as const, preview: "Cotizando 2 productos…", active: false },
-      { name: "Julián T.", tag: "IA", tagKind: "ai" as const, preview: "Pago reportado · por verificar", active: false },
-      { name: "Marcela P.", tag: "Laura", tagKind: "human" as const, preview: "Cambio de talla", active: false },
-    ],
-    thread: {
-      customerMessage: "¿Me pueden hacer un descuento si llevo dos?",
-      systemPill: "Laura tomó la conversación",
-      agentReply: "Hola Andrés, soy Laura. Te confirmo el combo por dos unidades 👇",
-      noteLead: "Nota para el agente: ",
-      note: "“El combo x2 aplica solo esta semana.”",
-      inputPlaceholder: "Escribe un mensaje…",
-      returnAction: "Devolver a la IA",
-    },
-  },
-} as const;
 
 /* ─────────────────────────────── §8 Casos ───────────────────────────── */
 
@@ -954,6 +743,7 @@ export function daysUntil(iso: string, now: Date): number {
   return Math.ceil((deadlineInstant(iso) - now.getTime()) / 86_400_000);
 }
 
+
 export type CountdownParts = {
   days: number;
   hours: number;
@@ -1030,6 +820,12 @@ export const FAQ = {
  * jamás imágenes oficiales de Apple — inventario y tratamiento en
  * `docs/plans/public-gtm-f8-reconocimiento.md` anexo A. Cifras de demo.
  */
+export interface RecognitionTile {
+  id: string;
+  imageSrc: string;
+  match?: boolean;
+}
+
 /**
  * Versión de las fotos: `next/image` cachea cada variante por URL durante 31 días
  * (`minimumCacheTTL`) en disco y en el navegador; al reemplazar un archivo con
@@ -1095,42 +891,9 @@ export const RECOGNITION = {
   quotaLine: { suffix: "al mes", note: "Fotos, capturas y publicaciones compartidas" },
 } as const;
 
-export interface RecognitionTile {
-  id: string;
-  imageSrc: string;
-  match?: boolean;
-}
 
 /* ──────────────────────── §10b Terminal (plantilla v2) ──────────────── */
 
-export const TERMINAL = {
-  title: "El futuro es conversacional.",
-  intro: "Tu negocio ya vive en el chat. Esto es lo que pasa ahí dentro, paso a paso, cada vez que alguien te escribe.",
-  windowTitle: "axi connect — conversación en vivo",
-  prompt: "axi ~ $ ",
-  script: [
-    {
-      cmd: "axi atender --canal whatsapp --hora 21:47",
-      results: ["✔ Contacto reconocido: Andrés M. (ya escribió por Instagram)", "✔ Conversación abierta · agente en turno"],
-    },
-    {
-      cmd: 'axi cotizar "hodie oversize talla M"',
-      results: ["✔ Producto encontrado en tu catálogo: Hoodie Heavy · M", "✔ Precio calculado por el servidor: $129.900"],
-    },
-    {
-      cmd: "axi cerrar --pedido",
-      results: ["✔ Pedido #1042 creado · inventario descontado", "✔ Medios de pago compartidos: Nequi, link", "✔ Pago verificado por Laura (tu equipo)"],
-    },
-    {
-      cmd: "axi medir --mes julio",
-      results: ["1.240 conversaciones · 223 pagadas · 18 % de cierre", "$19.4M en ventas atribuidas al chat"],
-    },
-    {
-      cmd: "El futuro es conversacional. El futuro es axi connect.",
-      results: [],
-    },
-  ],
-} as const;
 
 /* ─────────────────────────── §11 CTA final ──────────────────────────── */
 

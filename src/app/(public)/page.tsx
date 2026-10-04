@@ -7,34 +7,26 @@ import { faqSchema, organizationSchema, webSiteSchema } from "@/core/seo/site";
 import { FAQ } from "@/modules/landing/ui/content/landing.content";
 import { loadPublicCatalog } from "@/modules/landing/infrastructure/pricing-catalog.loader";
 
-import LandingHero from "@/modules/landing/ui/sections/LandingHero";
-import LandingSocialProof from "@/modules/landing/ui/sections/LandingSocialProof";
-import LandingProblem from "@/modules/landing/ui/sections/LandingProblem";
-import LandingHowItWorks from "@/modules/landing/ui/sections/LandingHowItWorks";
-import LandingAiGuardrails from "@/modules/landing/ui/sections/LandingAiGuardrails";
-import LandingMetrics from "@/modules/landing/ui/sections/LandingMetrics";
-import LandingRecognition from "@/modules/landing/ui/sections/LandingRecognition";
-import LandingTeamControl from "@/modules/landing/ui/sections/LandingTeamControl";
-import LandingCases from "@/modules/landing/ui/sections/LandingCases";
-import LandingPricing from "@/modules/landing/ui/sections/LandingPricing";
-import LandingFaq from "@/modules/landing/ui/sections/LandingFaq";
-import LandingTerminal from "@/modules/landing/ui/sections/LandingTerminal";
-import LandingFinalCta from "@/modules/landing/ui/sections/LandingFinalCta";
+import { FilmPage } from "@/modules/landing/ui/film/FilmPage";
 
 /**
- * Landing de conversión de Axi Connect.
- * Estructura y copy: `axi/docs/business/landing-copy.md`.
- * La versión anterior quedó como backup en
- * `shared/components/layout/site/legacy/LegacyLandingPage.tsx`.
+ * La home de Axi Connect: una película por scroll (programa «Landing
+ * cinematográfica», `docs/plans/landing_cinematica_plan.md`). La home anterior
+ * quedó archivada en el tag git `landing-v1-archive`.
  */
-const HOME_TITLE = "Axi Connect — El futuro es conversacional";
+const HOME_TITLE = "Axi Connect · Vende en cada conversación";
+// El lead del hero, tal cual (título y descripción salen de la película).
 const HOME_DESCRIPTION =
-  "Axi Connect pone a tu mejor vendedor en cada conversación: responde en segundos, cotiza con tus precios reales, arma el pedido y te muestra —en pesos— lo que produjo cada chat.";
+  "Axi atiende tus canales digitales como tu mejor vendedor: responde en segundos, cotiza con tus precios, cobra y te lleva a tu meta del mes.";
+// La de la tarjeta de enlace, corta para que el chat no la corte a mitad de
+// frase (plan §26.3: 92 caracteres). La de buscadores es la de arriba.
+const HOME_CARD_DESCRIPTION =
+  "Axi atiende tus canales digitales como tu mejor vendedor. Prueba 7 días gratis, sin tarjeta.";
 
 /**
  * `title.absolute` y no un string suelto: el template del layout raíz
  * (`"%s — Axi Connect"`) se aplica a los títulos hijos, así que este mismo
- * texto renderizaba "Axi Connect — El futuro es conversacional — Axi Connect".
+ * texto se renderizaría con «— Axi Connect» repetido al final.
  */
 export const metadata: Metadata = {
   title: { absolute: HOME_TITLE },
@@ -45,14 +37,14 @@ export const metadata: Metadata = {
     siteName: "Axi Connect",
     locale: "es_CO",
     title: HOME_TITLE,
-    description: HOME_DESCRIPTION,
+    description: HOME_CARD_DESCRIPTION,
     url: siteUrl("/"),
     images: [OG_IMAGE],
   },
   twitter: {
     card: "summary_large_image",
     title: HOME_TITLE,
-    description: HOME_DESCRIPTION,
+    description: HOME_CARD_DESCRIPTION,
     images: [OG_IMAGE.url],
   },
 };
@@ -73,26 +65,12 @@ export default async function Home() {
   return (
     <div className="w-full">
       {/* La identidad de la marca se declara una sola vez, en la home. El
-          FAQPage es indispensable aquí: el acordeón desmonta las respuestas
-          cerradas, así que este bloque es la única vía por la que ese copy
-          llega a Google. */}
+          FAQPage repite las preguntas de `FAQ`, las mismas que pinta la escena
+          de preguntas con `<details>` (el texto ya está en el HTML). */}
       <JsonLd data={organizationSchema()} />
       <JsonLd data={webSiteSchema()} />
       <JsonLd data={faqSchema(FAQ.items)} />
-      <LandingHero />
-      <LandingSocialProof />
-      <LandingProblem />
-      <LandingHowItWorks />
-      <LandingAiGuardrails />
-      <LandingMetrics />
-      {/* Isla oscura del reconocimiento (F8): entre dos secciones claras a propósito. */}
-      <LandingRecognition />
-      <LandingTeamControl />
-      <LandingCases />
-      <LandingPricing catalog={catalog} />
-      <LandingFaq />
-      <LandingTerminal />
-      <LandingFinalCta />
+      <FilmPage catalog={catalog} />
     </div>
   );
 }

@@ -1,0 +1,31 @@
+/*
+ * El hilo de luz (ui/film/thread). Solo lo carga `thread.ts`, que viaja en el
+ * chunk diferido del motor: nada de esto llega a otras rutas.
+ *
+ * El protagonista de cada escena lleva `data-thread-target`; cuando la luz llega,
+ * la sección recibe `data-thread-lit` y el protagonista se enciende una vez, con
+ * una transición (no se anima por frame). Borrar el hilo deja estos atributos
+ * inertes.
+ */
+.film-thread {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.film-thread[data-off] { visibility: hidden; }
+
+[data-thread-target] {
+  transition: box-shadow 0.9s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.9s ease;
+}
+[data-thread-lit] [data-thread-target] {
+  border-color: color-mix(in srgb, var(--foreground) 45%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--foreground) 22%, transparent),
+    0 0 56px color-mix(in srgb, var(--foreground) 9%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-thread-target] { transition: none; }
+}

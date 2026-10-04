@@ -2802,3 +2802,9 @@ h1, h2, h3, h4, h5, h6, .font-heading {
    del video, con los mismos tokens del lienzo de WhatsApp, sin colores nuevos. */
 .wa-media { background: color-mix(in oklab, var(--wa-muted) 18%, transparent); color: var(--wa-muted); }
 .wa-video { background: color-mix(in oklab, var(--wa-ink) 82%, transparent); color: var(--wa-bubble); }
+
+/* `Reveal` (landing): con movimiento reducido se ve en su sitio desde el primer
+   frame. Gana al estilo en línea que framer-motion deja en el HTML del servidor. */
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] { opacity: 1 !important; transform: none !important; }
+}

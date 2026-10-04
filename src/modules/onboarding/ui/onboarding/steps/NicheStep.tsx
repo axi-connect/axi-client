@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { NICHES } from "@/modules/onboarding/domain/niches";
+import { readFilmNicheHint } from "@/modules/onboarding/infrastructure/film-niche-hint";
 import { FlowActions } from "@/modules/onboarding/ui/flow/FlowActions";
 import { FlowScreen } from "@/modules/onboarding/ui/flow/FlowScreen";
 import { FlowTile } from "@/modules/onboarding/ui/flow/FlowTile";
@@ -27,6 +28,14 @@ export function NicheStep({
   onContinue: (nicheCode: string) => void;
 }) {
   const [selected, setSelected] = useState<string | null>(initial);
+
+  // Sin nicho guardado, se preselecciona el que eligió en la home (pista, no
+  // decisión). Tras montar: `localStorage` no existe en el servidor.
+  useEffect(() => {
+    if (initial) return;
+    const hint = readFilmNicheHint();
+    if (hint && NICHES.some((n) => n.code === hint)) setSelected((current) => current ?? hint);
+  }, [initial]);
 
   return (
     <FlowScreen

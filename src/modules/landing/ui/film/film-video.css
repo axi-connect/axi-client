@@ -1,0 +1,290 @@
+/*
+ * El video inmersivo (plan §23). El marco es la pantalla entera escalada: el
+ * motor solo anima su `transform` (y la opacidad de la viñeta y la frase). Sin
+ * motor, el reposo es el marco a 0,6 bajo el titular. Sin filter ni blur salvo
+ * el cristal del control de sonido, que no se anima. En móvil no hay marco: el
+ * video va entero a lo ancho desde el principio.
+ */
+/* Claro: la escena es del fondo del tema, blanca (la dueña, 2026-10-03: el
+   negro en el tema claro se veía mal); solo el marco es negro, el del video.
+   Oscuro: el negro del video, fundido con la tinta arriba y abajo. El negro
+   empieza al 8 %: el titular (desde 76 px) queda entero sobre negro. */
+.film-video { position: relative; height: 100svh; min-height: 560px; overflow: clip; background: var(--film-ink); }
+.dark .film-video { background: linear-gradient(180deg, var(--film-ink), #000 8%, #000 86%, var(--film-ink)); }
+.film-video-head {
+  position: absolute;
+  inset: clamp(76px, 9vh, 96px) 0 auto;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  pointer-events: none;
+  /* Sobre el fondo de la escena: tinta del tema (blanca en oscuro, negra en claro). */
+  color: var(--foreground);
+}
+.film-video-head .film-eyebrow { margin: 0; }
+.film-video-dim { color: var(--film-dim-text); }
+.film-video-title { margin: 0; font-size: clamp(34px, 4.3vw, 62px); line-height: 1.02; letter-spacing: -0.045em; }
+
+.film-video-frame {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  transform: translate3d(0, 9%, 0) scale(0.6);
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+.film-video-clip {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 46.67px; /* 28 px vistos a escala 0,6 */
+  background: #000;
+  /* Solo el filete: la luz no va detrás, la pone el anillo por fuera del borde (§25). */
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--foreground) 10%, transparent);
+}
+/* Entero, nunca recortado: su fondo negro se funde con la tinta de la película. */
+.film-video-media { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #000; }
+.film-video-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.3;
+  background:
+    radial-gradient(120% 90% at 50% 50%, rgb(7 7 8 / 0) 50%, rgb(7 7 8 / 0.75) 100%),
+    linear-gradient(180deg, rgb(7 7 8 / 0.55), rgb(7 7 8 / 0) 22%, rgb(7 7 8 / 0) 68%, rgb(7 7 8 / 0.85));
+  will-change: opacity;
+}
+.film-video-cap {
+  position: absolute;
+  left: clamp(16px, 3.4vw, 48px);
+  bottom: clamp(24px, 4.4vh, 40px);
+  max-width: min(640px, 60%);
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #f5f5f7;
+}
+.film-video-kicker { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; font-weight: 600; color: rgb(245 245 247 / 0.6); }
+.film-video-line { font-family: var(--font-nexa), var(--font-poppins), sans-serif; font-weight: 200; font-size: clamp(22px, 2.1vw, 30px); letter-spacing: -0.03em; line-height: 1.15; }
+
+/* El control de sonido: cristal de la isla, abajo a la derecha del marco. */
+.film-video-pill {
+  all: unset;
+  position: absolute;
+  right: clamp(16px, 3.4vw, 48px);
+  bottom: clamp(24px, 4.4vh, 40px);
+  z-index: 2;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  padding: 0 18px 0 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  color: #f5f5f7;
+  font-size: 13px;
+  font-weight: 500;
+  background: rgb(20 20 24 / 0.82);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14), 0 20px 40px rgb(0 0 0 / 0.4);
+}
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .film-video-pill { background: rgb(20 20 24 / 0.55); -webkit-backdrop-filter: blur(22px) saturate(1.7); backdrop-filter: blur(22px) saturate(1.7); }
+}
+.film-video-pill:focus-visible { outline: 2px solid #f5f5f7; outline-offset: 4px; }
+.film-video-eq { display: flex; align-items: flex-end; gap: 2px; height: 14px; }
+.film-video-eq i { width: 2.5px; height: 40%; border-radius: 2px; background: currentColor; }
+.film-video-pill[data-on] .film-video-eq i { animation: film-video-eq 1s ease-in-out infinite; }
+.film-video-pill[data-on] .film-video-eq i:nth-child(2) { animation-delay: -0.3s; }
+.film-video-pill[data-on] .film-video-eq i:nth-child(3) { animation-delay: -0.6s; }
+.film-video-pill[data-on] .film-video-eq i:nth-child(4) { animation-delay: -0.15s; }
+@keyframes film-video-eq { 50% { height: 100%; } }
+
+/* Móvil: el video entero a lo ancho desde el principio, el titular encima. */
+@media (max-width: 767px) {
+  /* En móvil el video ocupa toda la escena y el titular va encima: claro en los dos temas. */
+  .film-video-head { color: #f5f5f7; }
+  .film-video-dim { color: rgb(245 245 247 / 0.6); }
+  .film-video-head { align-items: flex-start; padding-inline: 16px; text-align: left; }
+  .film-video-frame { transform: none; }
+  .film-video-clip { border-radius: 0; box-shadow: none; }
+  .film-video-vignette { opacity: 1; }
+  .film-video-cap { max-width: none; right: 16px; bottom: 84px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .film-video-pill[data-on] .film-video-eq i { animation: none; height: 70%; }
+}
+
+/* ───────────── La luz del hero abraza el marco (plan §25) ─────────────
+   Geometría del marco en reposo, en % de la escena: x 20–80 %, y 29–89 %
+   (escala 0,6 un 9 % bajo el centro), radio 28 px vistos. Sin motor nada de
+   esto se ve; el motor solo escribe transform y opacity (y el dashoffset de
+   los arcos durante el contacto). Desenfoques y degradados son estáticos: no
+   se anima ni un filter ni un fondo. */
+.film-vlight {
+  /* Claro: el núcleo y el filo en ámbar y coral (el blanco se perdería sobre el hero claro). */
+  /* Claro: el filo y la banda caliente en ámbar y coral (el anillo va sobre el
+     blanco de la escena: un blanco cálido no se vería). */
+  --vl-hot: color-mix(in srgb, var(--axi-amber) 70%, var(--axi-brand));
+  --vl-hot-edge: color-mix(in srgb, var(--axi-brand) 85%, transparent);
+  --vl-hot-band: color-mix(in srgb, var(--axi-amber) 88%, white);
+  --vl-hot-band-2: var(--axi-amber);
+  --vl-amber: var(--axi-amber);
+  --vl-coral: var(--axi-brand);
+  --vl-violet: var(--axi-violet);
+  position: absolute;
+  inset: 0;
+  /* Sobre el marco (1, antes en el DOM) y bajo el titular (2): la luz pasa por detrás del texto. */
+  z-index: 1;
+  pointer-events: none;
+}
+.dark .film-vlight {
+  --vl-hot: #fff4e2;
+  --vl-hot-edge: color-mix(in srgb, var(--axi-amber) 85%, transparent);
+  --vl-hot-band: #fff3dc;
+  --vl-hot-band-2: #ffe2a6;
+}
+.film-vlight > * { position: absolute; opacity: 0; }
+/* Grano estático para los degradados largos sobre negro: una máscara de ruido
+   con alfa 0,92–1 (dither), pintada una vez. Sin él, el bloom hace escalones a 8 bits. */
+.film-vlight-bloom > i, .film-vlight-core {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -.16 1.06'/%3E%3C/filter%3E%3Crect width='128' height='128' filter='url(%23n)'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -.16 1.06'/%3E%3C/filter%3E%3Crect width='128' height='128' filter='url(%23n)'/%3E%3C/svg%3E");
+  -webkit-mask-size: 128px;
+  mask-size: 128px;
+}
+
+/* El anillo: cuatro bandas de ocho piezas. Los filos solo se estiran a lo
+   largo (su grosor no cambia al abrirse) y las esquinas siguen el radio del
+   recorte. El lado brillante del disco gira con la opacidad de cada pieza
+   (capas ya compuestas: nada se vuelve a rasterizar al girar). */
+.film-vlight-ring { inset: 0; will-change: opacity; }
+.film-vlight-band { position: absolute; inset: 0; }
+.film-vlight-band > i { position: absolute; display: block; will-change: transform, opacity; }
+/* La banda caliente se desvanece hacia los cabos de cada pieza: cada pieza
+   tiene una sola opacidad, y sin esto el brillo cortaba en seco donde se unen
+   filo y esquina. Filos y esquinas se encuentran al 45 % (no en 0: dejaría un
+   nudo oscuro en cada unión) y el escalón entre piezas queda a la mitad.
+   Máscaras estáticas: van cacheadas con la capa de cada pieza. */
+.film-vlight-hot > .film-vlight-t, .film-vlight-hot > .film-vlight-b {
+  -webkit-mask-image: linear-gradient(90deg, rgb(0 0 0 / 0.45), #000 32%, #000 68%, rgb(0 0 0 / 0.45));
+  mask-image: linear-gradient(90deg, rgb(0 0 0 / 0.45), #000 32%, #000 68%, rgb(0 0 0 / 0.45));
+}
+.film-vlight-hot > .film-vlight-l, .film-vlight-hot > .film-vlight-r {
+  -webkit-mask-image: linear-gradient(180deg, rgb(0 0 0 / 0.45), #000 32%, #000 68%, rgb(0 0 0 / 0.45));
+  mask-image: linear-gradient(180deg, rgb(0 0 0 / 0.45), #000 32%, #000 68%, rgb(0 0 0 / 0.45));
+}
+/* Las esquinas: un cuarto de vuelta desde el centro del arco, con el pico a 45°. */
+.film-vlight-hot > .film-vlight-tl { -webkit-mask-image: conic-gradient(from 270deg at 100% 100%, rgb(0 0 0 / 0.45), #000 45deg, rgb(0 0 0 / 0.45) 90deg, transparent 90deg); mask-image: conic-gradient(from 270deg at 100% 100%, rgb(0 0 0 / 0.45), #000 45deg, rgb(0 0 0 / 0.45) 90deg, transparent 90deg); }
+.film-vlight-hot > .film-vlight-tr { -webkit-mask-image: conic-gradient(from 0deg at 0 100%, rgb(0 0 0 / 0.45), #000 45deg, rgb(0 0 0 / 0.45) 90deg, transparent 90deg); mask-image: conic-gradient(from 0deg at 0 100%, rgb(0 0 0 / 0.45), #000 45deg, rgb(0 0 0 / 0.45) 90deg, transparent 90deg); }
+.film-vlight-hot > .film-vlight-br { -webkit-mask-image: conic-gradient(from 90deg at 0 0, rgb(0 0 0 / 0.45), #000 45deg, rgb(0 0 0 / 0.45) 90deg, transparent 90deg); mask-image: conic-gradient(from 90deg at 0 0, rgb(0 0 0 / 0.45), #000 45deg, rgb(0 0 0 / 0.45) 90deg, transparent 90deg); }
+.film-vlight-hot > .film-vlight-bl { -webkit-mask-image: conic-gradient(from 180deg at 100% 0, rgb(0 0 0 / 0.45), #000 45deg, rgb(0 0 0 / 0.45) 90deg, transparent 90deg); mask-image: conic-gradient(from 180deg at 100% 0, rgb(0 0 0 / 0.45), #000 45deg, rgb(0 0 0 / 0.45) 90deg, transparent 90deg); }
+/* Sin motor (movimiento reducido), el lado caliente queda quieto abajo a la izquierda. */
+.film-vlight-hot > i { opacity: 0; }
+.film-vlight-hot > .film-vlight-bl { opacity: 0.9; }
+.film-vlight-hot > .film-vlight-b, .film-vlight-hot > .film-vlight-l { opacity: 0.35; }
+/* El perfil de cada banda, en px desde el filo hacia fuera (δ): `--o` es dónde
+   cae el filo dentro de la pieza (el lado de dentro en los filos, el radio en
+   las esquinas). Filo: 1,5 px vistos de luz caliente. */
+.film-vlight-filo { --b: 4px; --i: 0px; }
+.film-vlight-filo > i {
+  --g: transparent calc(var(--o) + 0.7px), var(--vl-hot) calc(var(--o) + 1.2px), var(--vl-hot) calc(var(--o) + 2.3px), var(--vl-hot-edge) calc(var(--o) + 2.9px), transparent calc(var(--o) + 3.7px);
+}
+/* Corona: coral de ~6 px con poco desenfoque, ámbar junto al filo. */
+.film-vlight-corona { --b: 12px; --i: 3px; }
+.film-vlight-corona > i {
+  --g: transparent calc(var(--o) - 3px), color-mix(in srgb, var(--vl-coral) 28%, transparent) var(--o), color-mix(in srgb, var(--vl-amber) 62%, transparent) calc(var(--o) + 1.6px), color-mix(in srgb, var(--vl-coral) 66%, transparent) calc(var(--o) + 3.2px), color-mix(in srgb, var(--vl-coral) 30%, transparent) calc(var(--o) + 5.5px), transparent calc(var(--o) + 10px);
+}
+/* La banda caliente del lado brillante: ámbar casi blanco, fina, sobre el filo. */
+.film-vlight-hot { --b: 8px; --i: 1px; }
+.film-vlight-hot > i {
+  --g: transparent calc(var(--o) - 1px), var(--vl-hot-band) calc(var(--o) + 0.9px), color-mix(in srgb, var(--vl-hot-band-2) 85%, transparent) calc(var(--o) + 2.4px), color-mix(in srgb, var(--vl-amber) 45%, transparent) calc(var(--o) + 4.2px), transparent calc(var(--o) + 7.5px);
+}
+/* Bloom: ancho y tenue, se pierde en la tinta; violeta solo en el borde lejano. */
+.film-vlight-bloom { --b: 72px; --i: 4px; }
+.film-vlight-bloom > i {
+  --g: transparent calc(var(--o) - 4px), color-mix(in srgb, var(--vl-coral) 12%, transparent) var(--o), color-mix(in srgb, var(--vl-coral) 15%, transparent) calc(var(--o) + 3px), color-mix(in srgb, var(--vl-coral) 11%, transparent) calc(var(--o) + 10px), color-mix(in srgb, var(--vl-coral) 6%, transparent) calc(var(--o) + 22px), color-mix(in srgb, var(--vl-violet) 3%, transparent) calc(var(--o) + 44px), transparent calc(var(--o) + 72px);
+}
+.film-vlight-t, .film-vlight-b { left: calc(20% + 28px); width: calc(60% - 56px); height: calc(var(--b) + var(--i)); }
+.film-vlight-l, .film-vlight-r { top: calc(29% + 28px); height: calc(60% - 56px); width: calc(var(--b) + var(--i)); }
+.film-vlight-t { --o: var(--i); top: calc(29% - var(--b)); background: linear-gradient(to top, var(--g)); }
+.film-vlight-b { --o: var(--i); top: calc(89% - var(--i)); background: linear-gradient(to bottom, var(--g)); }
+.film-vlight-l { --o: var(--i); left: calc(20% - var(--b)); background: linear-gradient(to left, var(--g)); }
+.film-vlight-r { --o: var(--i); left: calc(80% - var(--i)); background: linear-gradient(to right, var(--g)); }
+.film-vlight-tl, .film-vlight-tr, .film-vlight-bl, .film-vlight-br { --o: 28px; width: calc(var(--b) + 28px); height: calc(var(--b) + 28px); }
+.film-vlight-tl { left: calc(20% - var(--b)); top: calc(29% - var(--b)); background: radial-gradient(circle at 100% 100%, var(--g)); }
+.film-vlight-tr { left: calc(80% - 28px); top: calc(29% - var(--b)); background: radial-gradient(circle at 0 100%, var(--g)); }
+.film-vlight-bl { left: calc(20% - var(--b)); top: calc(89% - 28px); background: radial-gradient(circle at 100% 0, var(--g)); }
+.film-vlight-br { left: calc(80% - 28px); top: calc(89% - 28px); background: radial-gradient(circle at 0 0, var(--g)); }
+/* Al abrirse, el radio visible del recorte baja: las esquinas escalan con él
+   desde la esquina del marco, así siguen tangentes a los filos (adelgazan
+   mientras se apagan, sin hueco en la diagonal). */
+.film-vlight-tl { transform-origin: var(--b) var(--b); }
+.film-vlight-tr { transform-origin: 28px var(--b); }
+.film-vlight-bl { transform-origin: var(--b) 28px; }
+.film-vlight-br { transform-origin: 28px 28px; }
+
+/* Los arcos del contacto: dos trazos desde el centro de arriba hasta el de abajo. */
+.film-vlight-arcs { inset: 0; width: 100%; height: 100%; overflow: visible; will-change: opacity; }
+.film-vlight-arcs path { fill: none; stroke-linecap: round; }
+.film-vlight-arc-glow { stroke: color-mix(in srgb, var(--vl-coral) 34%, transparent); stroke-width: 7px; }
+.film-vlight-arc-core { stroke: var(--vl-hot); stroke-width: 1.6px; }
+.film-vlight-arc-head { stroke: var(--vl-hot); stroke-width: 3.4px; }
+
+/* El destello anamórfico: una raya breve sobre el filo superior. */
+.film-vlight-flash {
+  left: calc(50% - 300px);
+  top: calc(29% - 14px);
+  width: 600px;
+  height: 28px;
+  background: radial-gradient(closest-side, var(--vl-hot), color-mix(in srgb, var(--vl-amber) 75%, transparent) 20%, color-mix(in srgb, var(--vl-coral) 30%, transparent) 52%, transparent);
+  will-change: transform, opacity;
+}
+
+/* La gota: el mismo nudo del hero (`--knot-bg`, film.css) con su estela. */
+.film-vlight-drop { left: calc(50% - 140px); top: -140px; width: 280px; height: 280px; will-change: transform, opacity; }
+.film-vlight-core { position: absolute; inset: 0; border-radius: 50%; background: var(--knot-bg); }
+.film-vlight-trail {
+  position: absolute;
+  left: calc(50% - 26px);
+  bottom: 50%;
+  width: 52px;
+  height: 250px;
+  opacity: 0;
+  background: radial-gradient(50% 100% at 50% 100%, color-mix(in srgb, var(--vl-amber) 50%, transparent), color-mix(in srgb, var(--vl-coral) 18%, transparent) 45%, transparent 78%);
+  will-change: opacity;
+}
+
+/* El filamento (< 1024): una sola capa que se abre del centro a los lados. */
+.film-vlight-filament {
+  left: 0;
+  right: 0;
+  top: -7px;
+  height: 14px;
+  transform: scaleX(0);
+  background: radial-gradient(50% 50% at 50% 50%, var(--vl-hot), color-mix(in srgb, var(--vl-amber) 70%, transparent) 18%, color-mix(in srgb, var(--vl-coral) 32%, transparent) 46%, transparent 72%);
+  will-change: transform, opacity;
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  .film-vlight-filament { left: 20%; right: 20%; top: calc(29% - 7px); }
+}
+/* Escritorio: la gota baja desde el nudo del hero, por encima del borde de la
+   escena; a los lados se sigue recortando (el bloom no da scroll horizontal). */
+@media (min-width: 1024px) {
+  .film-video { overflow-x: clip; overflow-y: visible; }
+  .film-vlight-filament { display: none; }
+}
+@media (max-width: 1023px) {
+  .film-vlight-ring, .film-vlight-arcs, .film-vlight-flash, .film-vlight-drop { display: none; }
+}
+/* Movimiento reducido (sin motor): el anillo quieto y cerrado alrededor del marco, sin caída. */
+@media (prefers-reduced-motion: reduce) and (min-width: 768px) {
+  /* El video no se abre sin motor (§23): un marco iluminado, tenue, no un efecto (§25.5). */
+  .film-vlight-ring { display: block; opacity: 0.7; }
+  .film-vlight-bloom, .film-vlight-hot { display: none; }
+  .film-vlight-filament { display: none; }
+}

@@ -1,0 +1,506 @@
+/*
+ * Tanda 3 · vender (plan §13): foto, llamada, bóveda y equipo.
+ *
+ * Valores de los lienzos aprobados, en tinta. Nada se anima desde CSS: el
+ * motor (`engine/sell-scenes.ts`) decide desde dónde llega cada pieza y, sin
+ * él, cada escena está en su fotograma final.
+ */
+
+/* ───────────────────────────── compartido ───────────────────────────── */
+
+.film-sell-spot { position: absolute; border-radius: 50%; pointer-events: none; z-index: 0; }
+/* Texto atenuado: --film-dim-text (50 % en oscuro, 62 % en claro) llega a 4,5:1 en los dos temas. */
+.film-sell-dim { color: var(--film-dim-text, var(--film-dim)); }
+.film-sell-muted { color: color-mix(in srgb, var(--foreground) 62%, transparent); }
+.film-sell-head { position: relative; z-index: 2; }
+.film-sell-head .film-eyebrow { margin: 0 0 20px; }
+.film-sell-title { font-size: clamp(38px, 5vw, 72px); line-height: 1.02; letter-spacing: -0.035em; }
+.film-sell-lead { margin: 22px 0 0; max-width: 440px; font-size: clamp(14.5px, 1.25vw, 18px); line-height: 1.6; }
+
+.film-sell-in,
+.film-sell-out {
+  max-width: 360px;
+  padding: 11px 15px 9px;
+  font-size: 15px;
+  line-height: 1.45;
+}
+.film-sell-in { align-self: flex-start; background: color-mix(in srgb, var(--foreground) 12.5%, var(--background)); border-radius: 20px 20px 20px 6px; }
+.film-sell-out { align-self: flex-end; background: color-mix(in srgb, var(--background) 4.8%, var(--foreground)); color: var(--background); border-radius: 20px 20px 6px 20px; }
+.film-sell-out-meta { display: block; margin-top: 4px; font-size: 10.5px; color: color-mix(in srgb, color-mix(in srgb, var(--foreground) 6.9%, var(--background)) 72%, transparent); text-align: right; }
+
+/* ─────────────────────────────── foto ─────────────────────────────── */
+
+.film-photo-spot { left: 33%; top: 60px; width: 900px; height: 900px; background: radial-gradient(closest-side, color-mix(in srgb, var(--foreground) 5.5%, transparent), transparent); }
+.film-photo-grid {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+  padding: clamp(88px, 13vh, 120px) clamp(16px, 4vw, 60px) 72px clamp(16px, 8.3vw, 120px);
+  display: grid;
+  grid-template-columns: minmax(0, 520px) 300px minmax(0, 230px);
+  grid-template-areas:
+    "head  sheet reply"
+    "shelf sheet reply"
+    "shelf rec   reply";
+  grid-template-rows: auto 1fr auto;
+  column-gap: clamp(32px, 4.5vw, 72px);
+  row-gap: 32px;
+  align-items: start;
+}
+.film-photo-head { grid-area: head; }
+.film-photo-shelf-wrap { grid-area: shelf; position: relative; height: 340px; perspective: 1300px; perspective-origin: 50% 0%; align-self: end; }
+.film-photo-shelf {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 100%;
+  transform: rotateX(34deg);
+  box-sizing: border-box;
+  padding: 18px;
+  border-radius: 24px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 9%, transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--foreground) 3.5%, transparent), color-mix(in srgb, var(--foreground) 1.2%, transparent));
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.film-photo-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 14px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--foreground) 8.2%, var(--background));
+  border: 1px solid color-mix(in srgb, var(--foreground) 7%, transparent);
+  color: color-mix(in srgb, var(--foreground) 70%, transparent);
+  opacity: 0.55;
+}
+.film-photo-tile[data-anim="photo-slot"] { opacity: 0; }
+/* En claro la tesela al 55 % sobre fondo claro desaparecía: más opaca, con
+   filete y una sombra corta que la asienta en el estante. */
+html:not(.dark) .film-photo-tile:not([data-anim="photo-slot"]) {
+  opacity: 0.85;
+  border-color: color-mix(in srgb, var(--foreground) 12%, transparent);
+  box-shadow: 0 6px 14px -8px rgb(0 0 0 / 0.18);
+}
+.film-photo-tile-name { font-size: 12.5px; font-weight: 600; color: var(--foreground); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.film-photo-tile-price { font-size: 11.5px; color: color-mix(in srgb, var(--foreground) 50%, transparent); font-variant-numeric: tabular-nums; }
+/* El producto exacto: fuera del plano inclinado, así queda de frente. */
+.film-photo-match {
+  position: absolute;
+  top: 30px;
+  left: calc(18px + var(--col, 0) * ((100% - 60px) / 3 + 12px));
+  width: calc((100% - 60px) / 3);
+  min-width: 150px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 18px;
+  background: linear-gradient(165deg, var(--foreground), color-mix(in srgb, var(--background) 8.6%, var(--foreground)));
+  color: var(--background);
+  transform: translateY(-46px);
+  box-shadow: 0 50px 70px rgb(0 0 0 / 0.7), 0 0 0 1px color-mix(in srgb, var(--foreground) 95%, transparent), 0 0 60px color-mix(in srgb, var(--foreground) 22%, transparent);
+}
+.film-photo-match-name { font-size: 13.5px; font-weight: 600; }
+.film-photo-match-price { font-size: 12px; color: color-mix(in srgb, var(--background) 60%, transparent); font-variant-numeric: tabular-nums; }
+.film-photo-match-sim { align-self: flex-start; font-size: 10.5px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: color-mix(in srgb, var(--background) 8%, transparent); }
+
+.film-photo-sheet-wrap { grid-area: sheet; position: relative; height: min(640px, 70svh); perspective: 1400px; }
+.film-photo-sheet {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  transform: rotateY(-16deg) rotateX(5deg);
+  border-radius: 30px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--foreground) 8.2%, var(--background));
+  border: 1px solid color-mix(in srgb, var(--foreground) 12%, transparent);
+  box-shadow: 0 50px 110px rgb(0 0 0 / 0.7);
+}
+.film-photo-sheet-top { display: flex; align-items: center; gap: 10px; padding: 16px 18px; font-size: 13px; }
+.film-photo-avatar { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, color-mix(in srgb, var(--background) 16.3%, var(--foreground)), #52525b); }
+.film-photo-source { margin-left: auto; font-size: 11px; color: color-mix(in srgb, var(--foreground) 50%, transparent); }
+.film-photo-shot {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: color-mix(in srgb, var(--foreground) 78%, transparent);
+  background: radial-gradient(120% 80% at 50% 10%, color-mix(in srgb, var(--foreground) 17%, var(--background)), color-mix(in srgb, var(--foreground) 6.1%, var(--background)));
+}
+/* Que se lea como una foto de producto: el objeto llena el encuadre y lo
+   asienta una luz de estudio (QA: la lámina se veía vacía). */
+.film-photo-shot svg { position: relative; z-index: 1; width: 62%; height: auto; max-height: 72%; }
+/* La foto del cliente llena el cuadro de la publicación; sin la sombra del ícono de antes. */
+.film-photo-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.film-photo-shot:has(.film-photo-img)::after { content: none; }
+.film-photo-shot::after {
+  content: "";
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  bottom: 9%;
+  height: 16%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--foreground) 12%, transparent), color-mix(in srgb, var(--foreground) 0%, transparent));
+}
+.film-photo-caption { margin: 0; padding: 16px 18px; font-size: 12px; color: color-mix(in srgb, var(--foreground) 50%, transparent); }
+/* El haz de escaneo: una línea propia (el hilo está archivado). Recorre la
+   foto moviendo su pista con `transform`; sin motor, apagado. */
+.film-photo-scan {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: var(--shot-top, 62px);
+  bottom: var(--shot-bottom, 47px);
+  pointer-events: none;
+  opacity: 0;
+}
+.film-photo-scan::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  background: var(--foreground);
+  box-shadow: 0 0 24px 6px color-mix(in srgb, var(--foreground) 45%, transparent);
+}
+.film-photo-recognized {
+  grid-area: rec;
+  justify-self: start;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  font-size: 13px;
+  padding: 9px 15px;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 12%, transparent);
+  background: color-mix(in srgb, var(--foreground) 5%, transparent);
+}
+/* Sin elipsis: el reconocimiento va en dos líneas (QA de solapes, 2026-10-01). */
+.film-photo-recognized-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; line-height: 1.3; }
+.film-photo-reply { grid-area: reply; align-self: center; justify-self: start; max-width: 230px; font-size: 14px; }
+
+@media (max-width: 1279px) {
+  .film-photo-grid {
+    grid-template-columns: minmax(0, 1fr) 280px;
+    grid-template-areas:
+      "head  sheet"
+      "shelf sheet"
+      "shelf rec"
+      "shelf reply";
+    grid-template-rows: auto 1fr auto auto;
+  }
+  .film-photo-reply { justify-self: end; margin-top: -8px; }
+}
+
+@media (max-width: 1023px) {
+  .film-photo-grid {
+    padding: 88px 16px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "head" "sheet" "rec" "reply";
+    grid-template-rows: none;
+    row-gap: 24px;
+  }
+  /* En móvil no hay estante: la captura a la izquierda y el producto a su lado. */
+  .film-photo-shelf-wrap { grid-area: sheet; height: 320px; perspective: none; align-self: start; }
+  .film-photo-shelf { display: none; }
+  .film-photo-match { top: 120px; left: auto; right: 0; width: 150px; min-width: 0; padding: 12px; transform: none; }
+  .film-photo-sheet-wrap { height: 300px; width: 180px; perspective: 900px; }
+  .film-photo-sheet { transform: rotateY(12deg); border-radius: 22px; }
+  .film-photo-sheet-top, .film-photo-caption { display: none; }
+  .film-photo-sheet { --shot-top: 0px; --shot-bottom: 0px; }
+  .film-photo-shot svg { width: 66%; }
+  .film-photo-recognized { font-size: 12px; white-space: normal; }
+  .film-photo-reply { justify-self: end; max-width: 280px; font-size: 13px; margin: 0; }
+}
+
+/* La llamada vive en film-call.css (plan §20). */
+
+/* ─────────────────────────────── bóveda ─────────────────────────────── */
+
+.film-vault-spot { left: 42%; top: 120px; width: 860px; height: 860px; background: radial-gradient(closest-side, color-mix(in srgb, var(--foreground) 6%, transparent), transparent); }
+.film-vault-layout {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+  padding: clamp(88px, 13vh, 130px) clamp(16px, 8vw, 200px) 72px clamp(16px, 8.3vw, 120px);
+  display: grid;
+  grid-template-columns: minmax(0, 520px) 260px;
+  grid-template-areas: "head hang" "chat hang" "lead hang";
+  grid-template-rows: auto auto 1fr;
+  justify-content: space-between;
+  row-gap: 40px;
+}
+.film-vault-head { grid-area: head; }
+.film-vault-chat { grid-area: chat; display: flex; flex-direction: column; gap: 12px; max-width: 480px; }
+.film-vault-lead { grid-area: lead; margin: 0; max-width: 480px; font-size: 17px; line-height: 1.6; }
+.film-vault-hang { grid-area: hang; position: relative; align-self: center; padding-top: 40px; }
+/* El cordón del que cuelga la etiqueta: un trazo propio (el hilo está archivado). */
+.film-vault-cord {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% - 70px);
+  width: 1px;
+  height: 60vh;
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--foreground) 25%, transparent) 40%);
+}
+/*
+ * La etiqueta se balancea por frame: sin `filter` (un drop-shadow de 60 px se
+ * recalculaba en cada giro: p50 de 33 ms en el perfil). La sombra y el halo son
+ * degradados ya pintados que giran con ella.
+ */
+.film-vault-tag-swing { position: relative; z-index: 0; width: 260px; transform-origin: 130px 30px; will-change: transform; }
+.film-vault-tag-swing::before,
+.film-vault-tag-swing::after { content: ""; position: absolute; z-index: -1; pointer-events: none; border-radius: 50%; }
+.film-vault-tag-swing::before { inset: 8% -22% -26% -22%; translate: 0 40px; background: radial-gradient(closest-side, rgb(0 0 0 / 0.7), rgb(0 0 0 / 0)); }
+.film-vault-tag-swing::after { inset: -6% -14%; background: radial-gradient(closest-side, rgb(255 255 255 / 0.16), rgb(255 255 255 / 0) 80%); }
+.film-vault-tag {
+  position: relative;
+  box-sizing: border-box;
+  min-height: 390px;
+  padding: 70px 24px 22px;
+  clip-path: polygon(22% 0, 78% 0, 100% 12%, 100% 100%, 0 100%, 0 12%);
+  border-radius: 0 0 22px 22px;
+  background: linear-gradient(160deg, #f4f4f6 0%, #d9d9dd 45%, #eeeef0 60%, #c7c7cc 100%);
+  color: #111113;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.film-vault-tag p { margin: 0; }
+.film-vault-eyelet { position: absolute; left: 117px; top: 18px; width: 26px; height: 26px; border-radius: 50%; background: #0a0a0b; box-shadow: inset 0 2px 3px rgb(0 0 0 / 0.8), 0 1px 0 rgb(255 255 255 / 0.7); }
+.film-vault-item { font-size: 12px; font-weight: 600; color: rgb(17 17 19 / 0.6); text-shadow: 0 1px 0 rgb(255 255 255 / 0.7); }
+.film-vault-price {
+  font-family: var(--font-nexa), var(--font-poppins), sans-serif;
+  font-weight: 700;
+  font-size: 34px;
+  letter-spacing: -0.03em;
+  /* La etiqueta es metal claro en los dos temas: el grabado no sigue al tema
+     (en claro, el reflejo por token se volvía una sombra negra y el precio
+     quedaba en 1,1:1). Los valores del lienzo. */
+  color: #1a1a1d;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 0 rgb(255 255 255 / 0.8), 0 -1px 0 rgb(0 0 0 / 0.25);
+  white-space: nowrap;
+}
+.film-vault-rule { height: 1px; background: rgb(17 17 19 / 0.18); box-shadow: 0 1px 0 rgb(255 255 255 / 0.6); }
+.film-vault-rules { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.film-vault-rules li { display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 9px; align-items: center; font-size: 12px; color: rgb(17 17 19 / 0.75); text-shadow: 0 1px 0 rgb(255 255 255 / 0.6); }
+.film-vault-rules strong { font-weight: 600; color: #111113; }
+.film-vault-coupon {
+  margin: 10px 0 0;
+  padding: 12px 16px;
+  border-radius: 4px 4px 12px 12px;
+  background: #fafafa;
+  color: #111113;
+  border-top: 2px dashed rgb(17 17 19 / 0.25);
+}
+.film-vault-coupon p { margin: 0; display: flex; justify-content: space-between; gap: 10px; }
+/* Las cifras nunca se parten (QA a 390: «−10 %» en dos líneas y el total fuera). */
+.film-vault-coupon-line span, .film-vault-coupon-total strong { white-space: nowrap; }
+.film-vault-coupon-total span { min-width: 0; }
+.film-vault-coupon-line { font-size: 11.5px; font-weight: 600; }
+.film-vault-coupon-total { margin-top: 6px !important; align-items: baseline; font-size: 11px; color: rgb(17 17 19 / 0.6); }
+.film-vault-coupon-total strong { font-family: var(--font-nexa), var(--font-poppins), sans-serif; font-weight: 700; font-size: 20px; color: #111113; white-space: nowrap; }
+
+@media (max-width: 1023px) {
+  .film-vault-layout {
+    padding: 88px 16px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "head" "hang" "chat" "lead";
+    grid-template-rows: none;
+    row-gap: 28px;
+  }
+  .film-vault-hang { justify-self: end; margin-right: 24px; padding-top: 24px; }
+  .film-vault-cord { height: 140px; }
+  .film-vault-tag-swing { width: 210px; transform-origin: 105px 24px; }
+  .film-vault-tag { min-height: 0; padding: 54px 16px 16px; gap: 8px; }
+  .film-vault-eyelet { left: 95px; top: 14px; width: 20px; height: 20px; }
+  .film-vault-price { font-size: 26px; }
+  .film-vault-rules li { font-size: 10.5px; }
+  .film-vault-coupon { padding: 10px 12px; }
+  .film-vault-coupon-total { flex-wrap: wrap; justify-content: flex-end !important; gap: 2px 10px !important; }
+  .film-vault-coupon-total span { flex: 1 0 100%; }
+  .film-vault-coupon-total strong { font-size: 17px; }
+  .film-sell-in, .film-sell-out { font-size: 13px; }
+  .film-vault-lead { font-size: 14.5px; }
+}
+
+/* ─────────────────────────────── equipo ─────────────────────────────── */
+
+.film-team-spot { left: 39%; top: 100px; width: 900px; height: 900px; background: radial-gradient(closest-side, color-mix(in srgb, var(--foreground) 6%, transparent), transparent); }
+.film-team-layout {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+  padding: clamp(88px, 11vh, 110px) clamp(16px, 5.5vw, 80px) 72px clamp(16px, 8.3vw, 120px);
+  display: grid;
+  grid-template-columns: minmax(0, 430px) minmax(0, 720px);
+  justify-content: space-between;
+  align-items: center;
+  gap: 48px;
+}
+.film-team-head .film-sell-title { font-size: clamp(34px, 3.6vw, 52px); line-height: 1.05; }
+.film-team-modes { margin: 0 0 24px; padding: 0; list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.film-team-modes li { display: flex; align-items: center; gap: 10px; }
+.film-team-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 14%, transparent);
+  color: color-mix(in srgb, var(--foreground) 70%, transparent);
+  transition: background-color 0.2s, color 0.2s;
+}
+.film-team-mode-dot { width: 7px; height: 7px; border-radius: 50%; background: color-mix(in srgb, var(--foreground) 55%, transparent); }
+/* Axi atiende: el punto violeta es la voz del agente. */
+[data-mode-chip="0"] .film-team-mode-dot { background: #a78bfa; }
+[data-mode-chip="2"] .film-team-mode-dot { background: var(--foreground); }
+.film-team[data-mode="0"] [data-mode-chip="0"] .film-team-mode,
+.film-team[data-mode="1"] [data-mode-chip="1"] .film-team-mode,
+.film-team[data-mode="2"] [data-mode-chip="2"] .film-team-mode { background: var(--foreground); color: var(--background); border-color: var(--foreground); }
+.film-team[data-mode="2"] [data-mode-chip="2"] .film-team-mode-dot { background: var(--background); }
+
+.film-team-lid { position: relative; aspect-ratio: 720 / 440; transform-origin: 50% 100%; transform: rotateX(6deg); }
+/* El portátil de frente, como en una foto de producto: pantalla de vidrio negro con su
+   cámara, marco de aluminio fino y el labio de la base con su muesca. Aluminio en los dos
+   temas (gris espacial en oscuro, plata en claro); el vidrio y el bisel, negros siempre. */
+/* `position: relative`: la base y la sombra se colocan contra el portátil. En
+   escritorio lo hacía de rebote la `perspective`; en móvil (sin ella) la base caía
+   88 px por debajo, contra la sección. */
+.film-team-laptop { position: relative; perspective: 1800px; perspective-origin: 50% 10%; padding-bottom: 46px; }
+.film-team-laptop::after {
+  content: ""; position: absolute; left: 4%; right: 4%; bottom: 4px; height: 44px; z-index: -1; pointer-events: none;
+  background: radial-gradient(50% 50% at 50% 50%, rgb(0 0 0 / 0.42), rgb(0 0 0 / 0));
+}
+/* El bisel llena la tapa: sin `inset: 0` quedaba 86 px más corto (escritorio) o
+   se desbordaba 50 px (móvil), con un hueco hasta la base. */
+.film-team-bezel {
+  position: absolute;
+  inset: 0;
+  padding: 12px 12px 16px;
+  border-radius: 20px 20px 6px 6px;
+  background: #0b0b0d;
+  box-shadow:
+    0 0 0 1.5px color-mix(in srgb, var(--foreground) 34%, var(--background)),
+    0 0 0 3px color-mix(in srgb, var(--foreground) 16%, var(--background)),
+    0 1px 0 3px color-mix(in srgb, var(--foreground) 9%, var(--background)),
+    0 40px 90px -30px rgb(0 0 0 / 0.55);
+}
+.film-team-bezel::before {
+  content: ""; position: absolute; left: 50%; top: 0; z-index: 3; width: 74px; height: 13px; margin-left: -37px;
+  border-radius: 0 0 9px 9px; background: radial-gradient(circle at 50% 46%, #23252e 0 2.4px, #3d4150 2.6px 3.2px, #0b0b0d 3.4px);
+}
+/* La base va absoluta bajo la tapa: sin `position`, `top` y `left` se ignoraban y
+   el labio quedaba en el flujo, arriba y de borde a borde (QA de temas, 13). */
+.film-team-base {
+  position: absolute; left: -7%; width: 114%; top: calc(100% - 46px); height: 15px;
+  transform: none; border-radius: 1px 1px 16px 16px / 1px 1px 12px 12px;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--foreground) 36%, var(--background)) 0,
+    color-mix(in srgb, var(--foreground) 18%, var(--background)) 22%,
+    color-mix(in srgb, var(--foreground) 12%, var(--background)) 60%,
+    color-mix(in srgb, var(--foreground) 22%, var(--background)) 100%);
+  box-shadow: 0 10px 18px -8px rgb(0 0 0 / 0.45);
+}
+.film-team-base::after {
+  content: ""; position: absolute; left: 50%; top: 0; width: 15%; height: 5px; margin-left: -7.5%;
+  border-radius: 0 0 9px 9px; background: color-mix(in srgb, var(--foreground) 30%, var(--background));
+  box-shadow: inset 0 -1px 1px rgb(0 0 0 / 0.18);
+}
+/* El dorso de la tapa: se ve mientras está casi cerrada. */
+.film-team-shell { position: absolute; inset: 0; border-radius: 22px 22px 6px 6px; background: linear-gradient(180deg, color-mix(in srgb, var(--foreground) 29%, var(--background)), color-mix(in srgb, var(--foreground) 17%, var(--background))); opacity: 0; }
+
+.film-team-screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--background);
+  display: grid;
+  grid-template-columns: minmax(150px, 200px) minmax(0, 1fr);
+  color: var(--foreground);
+}
+.film-team-inbox { border-right: 1px solid color-mix(in srgb, var(--foreground) 7%, transparent); padding: 12px 10px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.film-team-inbox-title { margin: 0 0 6px 8px; font-size: 9.5px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 600; color: var(--film-dim-text, var(--film-dim)); }
+.film-team-row { display: flex; align-items: center; gap: 9px; padding: 8px; border-radius: 10px; min-width: 0; }
+.film-team-row.is-active { background: color-mix(in srgb, var(--foreground) 6%, transparent); }
+.film-team-row-avatar { width: 26px; height: 26px; flex-shrink: 0; border-radius: 50%; background: color-mix(in srgb, var(--foreground) 15.4%, var(--background)); }
+.film-team-row-name { display: block; font-size: 11.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.film-team-row-last { display: block; font-size: 10px; line-height: 1.35; color: var(--film-dim-text, var(--film-dim)); }
+.film-team-thread { display: flex; flex-direction: column; min-width: 0; }
+.film-team-thread-top { min-height: 46px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; padding: 8px 14px; border-bottom: 1px solid color-mix(in srgb, var(--foreground) 7%, transparent); font-size: 12.5px; }
+/* El nombre del cliente cabe entero: en ventanas estrechas pasa a dos líneas. */
+.film-team-thread-top strong { flex: 1 1 auto; min-width: 0; font-weight: 600; line-height: 1.25; }
+/* Si no cabe junto al nombre (el anillo y la escala de la animación ocupan más
+   que su caja), «Devolver a Axi» baja a su propia línea en vez de taparlo. */
+.film-team-thread-top .film-team-return { flex: none; margin-block: 2px; }
+.film-team-return {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 11px;
+  border-radius: 999px;
+  font-size: 11px;
+  white-space: nowrap;
+  border: 1px solid color-mix(in srgb, var(--foreground) 16%, transparent);
+  color: var(--foreground);
+  transition: background-color 0.2s, color 0.2s;
+}
+.film-team[data-returned] .film-team-return { background: var(--foreground); color: var(--background); border-color: var(--foreground); box-shadow: 0 0 0 4px color-mix(in srgb, var(--foreground) 14%, transparent); }
+.film-team-msgs { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 9px; padding: 12px 14px; min-height: 0; }
+.film-team-in,
+.film-team-out { max-width: 300px; padding: 9px 12px 7px; font-size: 12px; line-height: 1.4; }
+.film-team-in { align-self: flex-start; background: color-mix(in srgb, var(--foreground) 12.5%, var(--background)); border-radius: 16px 16px 16px 5px; }
+.film-team-out { align-self: flex-end; background: color-mix(in srgb, var(--background) 4.8%, var(--foreground)); color: var(--background); border-radius: 16px 16px 5px 16px; }
+.film-team-meta { display: block; margin-top: 3px; font-size: 9.5px; color: var(--film-dim-text, var(--film-dim)); }
+/* Sobre la burbuja gris del cliente el tono atenuado común no llega (4,3:1). */
+.film-team-in .film-team-meta { color: color-mix(in srgb, var(--foreground) 66%, transparent); }
+.film-team-out .film-team-meta { color: color-mix(in srgb, color-mix(in srgb, var(--foreground) 6.9%, var(--background)) 72%, transparent); text-align: right; }
+.film-team-note,
+.film-team-back { align-self: center; margin: 0; padding: 5px 11px; border-radius: 999px; font-size: 10px; text-align: center; }
+.film-team-note { background: color-mix(in srgb, var(--foreground) 5%, transparent); color: color-mix(in srgb, var(--foreground) 60%, transparent); }
+/* Volvió a Axi: su voz, en violeta. */
+.film-team-back { background: rgb(167 139 250 / 0.12); color: #c4b5fd; }
+html:not(.dark) .film-team-back { background: rgb(124 58 237 / 0.1); color: #6d28d9; }
+.film-team-composer { margin: 0 12px 12px; height: 34px; display: flex; align-items: center; padding: 0 12px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--foreground) 8%, transparent); font-size: 11px; color: var(--film-dim-text, var(--film-dim)); }
+.film-team-glare { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(115deg, transparent 35%, color-mix(in srgb, var(--foreground) 6%, transparent) 48%, transparent 60%); }
+
+@media (max-width: 1023px) {
+  .film-team-layout { padding: 88px 16px; grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  .film-team-modes { gap: 6px; margin-bottom: 14px; }
+  .film-team-modes svg { display: none; }
+  .film-team-mode { height: 28px; padding: 0 11px; font-size: 11px; }
+  /* En móvil el portátil se ve de frente: sin 3D, sin bandeja. */
+  .film-team-laptop { perspective: none; padding-bottom: 22px; }
+  .film-team-laptop::after { bottom: 0; height: 26px; }
+  .film-team-lid { aspect-ratio: auto; height: 300px; transform: none; }
+  .film-team-bezel { padding: 10px 10px 12px; border-radius: 16px 16px 5px 5px; }
+  .film-team-bezel::before { width: 54px; height: 10px; margin-left: -27px; }
+  .film-team-screen { grid-template-columns: minmax(0, 1fr); }
+  .film-team-inbox { display: none; }
+  .film-team-base { left: -12px; width: calc(100% + 24px); top: auto; bottom: 10px; height: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .film-team-mode, .film-team-return { transition: none; }
+}
