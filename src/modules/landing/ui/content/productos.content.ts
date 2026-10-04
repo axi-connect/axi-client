@@ -272,10 +272,61 @@ export const PIECES_SCENE = {
   island: { title: "Pieza por pieza", sub: (tab: string, n: number, total: number) => `${tab} · ${n} de ${total}` },
 } as const;
 
+/**
+ * La ventana del panel que enmarca cada pieza (AppShell): la barra lateral de
+ * la app con el negocio de ejemplo y la sección activa de cada pieza. Los
+ * nombres de sección son los del menú real del panel.
+ */
+const ICON = {
+  home: "M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z",
+  inbox: "M3 13l3-8h12l3 8v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1zM3 13h5l1 3h6l1-3h5",
+  bot: "M12 3v3M5 9h14v10H5zM9 14h.01M15 14h.01M2 13v3M22 13v3",
+  phone: "M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z",
+  kanban: "M4 4h4v16H4zM10 4h4v10h-4zM16 4h4v13h-4z",
+  package: "M21 8 12 3 3 8v8l9 5 9-5V8zM3 8l9 5 9-5M12 13v8",
+  wallet: "M3 7h15a3 3 0 0 1 3 3v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 7l12-3v3M17 14h.01",
+  chart: "M4 20V10M10 20V4M16 20v-7M22 20H2",
+  search: "M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4-4",
+  bell: "M6 16V11a6 6 0 0 1 12 0v5l2 2H4l2-2zM10 21h4",
+} as const;
+
+export const APP_SHELL = {
+  business: "Óptica Vértice",
+  role: "Dueña",
+  me: { name: "Laura Arango", mail: "laura@opticavertice.co" },
+  crumbRoot: "Workspace",
+  search: "Buscar",
+  searchIcon: ICON.search,
+  bellIcon: ICON.bell,
+  home: { label: "Inicio", icon: ICON.home },
+  groups: [
+    {
+      label: "Atender",
+      items: [
+        { label: "Inbox", icon: ICON.inbox, piece: "inbox", badge: "7" },
+        { label: "Agentes", icon: ICON.bot, piece: "configura" },
+        { label: "Llamadas", icon: ICON.phone, piece: "llamadas" },
+      ],
+    },
+    {
+      label: "Vender",
+      items: [
+        { label: "CRM", icon: ICON.kanban, piece: "crm" },
+        { label: "Catálogo", icon: ICON.package, piece: "catalogo" },
+        { label: "Cartera", icon: ICON.wallet, piece: "cobros" },
+      ],
+    },
+    {
+      label: "Medir",
+      items: [{ label: "Analítica", icon: ICON.chart, piece: "medicion" }],
+    },
+  ] as readonly { label: string; items: readonly { label: string; icon: string; piece?: PieceId; badge?: string }[] }[],
+} as const;
+
 export const PIECES: readonly Piece[] = [
-  { id: "inbox", tab: "Bandeja", tone: "violet", strong: "Todo tu chat.", thin: "Una sola bandeja.", sample: false },
+  { id: "inbox", tab: "Bandeja", tone: "violet", strong: "Todo tu chat.", thin: "Una sola bandeja.", sample: true },
   { id: "configura", tab: "Agente", tone: "violet", strong: "Lo configuras.", thin: "No lo programas.", sample: false },
-  { id: "catalogo", tab: "Catálogo", tone: "coral", strong: "Tu catálogo,", thin: "entendido.", sample: false },
+  { id: "catalogo", tab: "Catálogo", tone: "coral", strong: "Tu catálogo,", thin: "entendido.", sample: true },
   { id: "crm", tab: "CRM", tone: "coral", strong: "Cada conversación,", thin: "una oportunidad.", sample: true },
   { id: "llamadas", tab: "Llamadas", tone: "violet", strong: "Cuando hay que llamar,", thin: "llama.", sample: true },
   { id: "cobros", tab: "Cobros", tone: "amber", strong: "Te deben.", thin: "Axi te dice a quién primero.", sample: true },
@@ -294,27 +345,45 @@ export type ScreenTone = GameTone | "ok" | "muted";
 export interface PieceScreens {
   inbox: {
     title: string;
-    views: readonly string[];
-    rows: readonly { initials: string; name: string; preview: string; holder: string; tone: ScreenTone }[];
-    thread: readonly { from: "customer" | "agent"; text: string }[];
-    handoff: string;
+    folders: readonly { label: string; count: number; on?: boolean }[];
+    channelsLabel: string;
+    channels: readonly { label: string; note?: string }[];
+    listTitle: string;
+    listSub: string;
+    search: string;
+    rows: readonly { initials: string; name: string; preview: string; time: string; holder: string; tone: ScreenTone; unread?: number; on?: boolean }[];
+    head: { initials: string; name: string; channel: string };
+    day: string;
+    thread: readonly { from: "customer" | "agent"; text: string; time: string }[];
+    events: readonly string[];
     claim: { label: string; action: string };
+    footer: string;
     actions: readonly string[];
   };
   configura: {
-    name: string;
-    role: string;
-    status: string;
-    toneLabel: string;
-    tones: readonly { label: string; hint: string; selected: boolean }[];
-    rolesLabel: string;
-    roles: readonly string[];
-    rules: readonly { label: string; text: string }[];
-    saved: string;
+    title: string;
+    sub: string;
+    create: string;
+    agents: readonly {
+      name: string;
+      status: string;
+      statusTone: ScreenTone;
+      role: string;
+      character: "nova" | "strobi" | "cloudee";
+      color: "coral" | "mint" | "cloud" | "violet" | "amber";
+      expression: "proud" | "curious" | "neutral";
+      channel: string;
+      voice: string;
+    }[];
+    createCard: { title: string; sub: string };
   };
   catalogo: {
+    title: string;
+    sub: string;
+    products: readonly { name: string; price: string; stock: string; on?: boolean; out?: boolean }[];
     name: string;
     price: string;
+    category: string;
     imageSrc: string;
     imageAlt: string;
     variantsLabel: string;
@@ -325,11 +394,28 @@ export interface PieceScreens {
   };
   crm: {
     title: string;
-    forecast: { label: string; value: string };
-    stages: readonly { name: string; count: number; deals: readonly { name: string; value: string; note?: string; byAxi?: boolean }[] }[];
+    pipeline: string;
+    sub: string;
+    views: readonly string[];
+    summaryAction: string;
+    newAction: string;
+    forecast: { label: string; value: string; of: string; ratio: number };
+    won: { label: string; value: string; note: string };
+    rate: { label: string; value: string; note: string };
+    next: { kicker: string; title: string; text: string; action: string };
+    stages: readonly {
+      name: string;
+      prob: string;
+      count: number;
+      total: string;
+      deals: readonly { name: string; initials: string; value: string; product: string; note?: string; stale?: boolean; byAxi?: boolean }[];
+    }[];
     byAxi: string;
   };
   llamadas: {
+    title: string;
+    tabs: readonly string[];
+    calls: readonly { who: string; kind: string; length: string; result: string; tone: ScreenTone; on?: boolean }[];
     who: string;
     result: string;
     stages: readonly { label: string; reached: boolean }[];
@@ -338,69 +424,95 @@ export interface PieceScreens {
     summary: string;
   };
   cobros: {
+    title: string;
+    views: readonly string[];
     owedLabel: string;
     owed: string;
     overdueLabel: string;
     overdue: string;
+    summary: string;
     order: string;
-    island: { kicker: string; name: string; amount: string; actions: readonly string[] };
-    rows: readonly { initials: string; name: string; concept: string; amount: string; state: string; tone: ScreenTone }[];
+    island: { kicker: string; name: string; amount: string; why: string; facts: readonly { label: string; value: string }[]; actions: readonly string[] };
+    groups: readonly { label: string; tone: ScreenTone }[];
+    write: string;
+    rows: readonly { initials: string; name: string; concept: string; ref: string; amount: string; state: string; tone: ScreenTone; group: number }[];
   };
   medicion: {
+    title: string;
+    sub: string;
+    tabs: readonly string[];
     salesLabel: string;
     sales: string;
     flow: string;
+    salesNote: string;
     funnelLabel: string;
     funnel: readonly { label: string; value: number }[];
     qualityLabel: string;
     quality: number;
     qualityOf: string;
+    qualityNote: string;
     subscores: readonly { label: string; value: number }[];
     fixLabel: string;
     fixes: readonly string[];
+    fixCounts: readonly string[];
   };
 }
 
 export const PIECE_SCREENS: PieceScreens = {
   inbox: {
     title: "Inbox",
-    views: ["En cola", "Contigo", "Axi atiende"],
+    folders: [
+      { label: "En cola", count: 3, on: true },
+      { label: "Contigo", count: 5 },
+      { label: "Axi atiende", count: 12 },
+      { label: "Todas abiertas", count: 24 },
+      { label: "Cerradas", count: 0 },
+    ],
+    channelsLabel: "Canales",
+    channels: [{ label: "WhatsApp Ventas" }, { label: "WhatsApp Taller", note: "Exámenes y entregas" }],
+    listTitle: "En cola",
+    listSub: "3 esperan a alguien del equipo",
+    search: "Buscar por nombre o teléfono",
     rows: [
-      { initials: "AM", name: "Andrés M.", preview: "Prefiero hablar con una persona", holder: "En cola · 2 min", tone: "amber" },
-      { initials: "VR", name: "Valentina R.", preview: "¿Me hacen el examen visual?", holder: "Axi atiende", tone: "violet" },
-      { initials: "LC", name: "Lucía C.", preview: "Gracias, Laura", holder: "Con el equipo", tone: "coral" },
+      { initials: "AM", name: "Andrés M.", preview: "Prefiero hablar con una persona", time: "9:28", holder: "En cola · 2 min", tone: "amber", unread: 1, on: true },
+      { initials: "PN", name: "Pedro N.", preview: "¿Hacen progresivos?", time: "9:21", holder: "En cola · 9 min", tone: "amber", unread: 2 },
+      { initials: "LC", name: "Lucía C.", preview: "Necesito cambiar la cita", time: "9:02", holder: "En cola · 28 min", tone: "coral" },
     ],
+    head: { initials: "AM", name: "Andrés M.", channel: "WhatsApp Ventas" },
+    day: "Hoy",
     thread: [
-      { from: "customer", text: "¿Me las dejas más baratas?" },
-      { from: "agent", text: "Con el cupón PRIMERAVEZ te quedan en $170.100." },
-      { from: "customer", text: "Prefiero hablar con una persona" },
+      { from: "customer", text: "¿Me las dejas más baratas?", time: "9:26" },
+      { from: "agent", text: "Con el cupón PRIMERAVEZ te quedan en $170.100.", time: "9:26" },
+      { from: "customer", text: "Prefiero hablar con una persona", time: "9:28" },
     ],
-    handoff: "Axi pasó la conversación al equipo: El cliente pidió hablar con una persona.",
-    claim: { label: "Axi te la pasó · 14 min", action: "Atender" },
+    events: ["Axi pasó la conversación al equipo: el cliente pidió hablar con una persona · 9:28", "Lleva 2 min en cola; si nadie la toma en 5, sube de prioridad"],
+    claim: { label: "Axi te la pasó · 2 min", action: "Atender" },
+    footer: "Atiéndela para responder. Axi ya no le escribe.",
     actions: ["Devolver a Axi", "Marcar como resuelta"],
   },
   configura: {
-    name: "Vera",
-    role: "Vende y toma pedidos",
-    status: "Activo",
-    toneLabel: "Tono",
-    tones: [
-      { label: "Cercano", hint: "De tú, cálido", selected: true },
-      { label: "Formal", hint: "De usted, sin apodos", selected: false },
-      { label: "Directo", hint: "Sin rodeos ni relleno", selected: false },
+    title: "Agentes",
+    sub: "Cada agente tiene una cara, una voz y unas reglas. Los canales deciden con cuál atienden.",
+    create: "Crear agente",
+    agents: [
+      { name: "Vera", status: "Activo", statusTone: "ok", role: "Vende y toma pedidos", character: "nova", color: "coral", expression: "proud", channel: "Ventas · WhatsApp", voice: "Lucía" },
+      { name: "Sofía", status: "Activo", statusTone: "ok", role: "Gestiona la agenda", character: "strobi", color: "mint", expression: "curious", channel: "Taller · WhatsApp", voice: "Camila" },
+      { name: "Mateo", status: "Borrador", statusTone: "muted", role: "Atiende soporte", character: "cloudee", color: "cloud", expression: "neutral", channel: "Sin canal asignado", voice: "Sin voz" },
     ],
-    rolesLabel: "Lo que hace de verdad",
-    roles: ["Vende y toma pedidos", "Gestiona la agenda"],
-    rules: [
-      { label: "Lo que siempre hace", text: "Ofrece el estuche con cada montura." },
-      { label: "Lo que nunca hace", text: "Nunca inventes precios ni tiempos de entrega." },
-      { label: "Cuándo pasa a una persona", text: "Si lo pide, o si falla 2 veces seguidas." },
-    ],
-    saved: "Todo guardado",
+    createCard: { title: "Crear agente", sub: "Personaje, voz y reglas en cinco minutos" },
   },
   catalogo: {
+    title: "Catálogo",
+    sub: "38 productos · 4 categorías · tu agente los busca aunque escriban mal",
+    products: [
+      { name: "Aviador Ámbar", price: "$189.000", stock: "11 en stock", on: true },
+      { name: "Clubmaster Carey", price: "$215.000", stock: "6 en stock" },
+      { name: "Redonda Titanio", price: "$248.000", stock: "3 en stock" },
+      { name: "Wayfarer Negra", price: "$169.000", stock: "Agotado", out: true },
+    ],
     name: "Aviador Ámbar",
     price: "$189.000",
+    category: "Monturas de sol",
     imageSrc: PRODUCT_IMAGE,
     imageAlt: "Gafas Aviador Ámbar",
     variantsLabel: "Variantes y stock (3)",
@@ -415,16 +527,50 @@ export const PIECE_SCREENS: PieceScreens = {
   },
   crm: {
     title: "Pipeline",
-    forecast: { label: "Pronóstico ponderado", value: "$ 1,9 M" },
+    pipeline: "Ventas",
+    sub: "21 oportunidades abiertas · $ 6,2 M en juego · arrastra una tarjeta para cambiarla de etapa",
+    views: ["Tablero", "Tabla"],
+    summaryAction: "Resumen de Axi",
+    newAction: "Nueva oportunidad",
+    forecast: { label: "Pronóstico ponderado", value: "$ 1,9 M", of: "de $ 6,2 M", ratio: 0.31 },
+    won: { label: "Ganadas · octubre", value: "9", note: "$ 2,4 M cobrados" },
+    rate: { label: "Tasa de cierre · octubre", value: "32 %", note: "9 de 28 que llegaron a cotizar" },
+    next: { kicker: "Lo próximo", title: "2 se enfrían", text: "Llevan más días de los que aguanta su etapa. La primera: Andrés M., 6 días en Compromiso.", action: "Ver la primera" },
     stages: [
-      { name: "Nuevo", count: 6, deals: [{ name: "Juan P.", value: "Monturas niño" }, { name: "Sara L.", value: "Lentes de contacto" }] },
-      { name: "Cotizado", count: 4, deals: [{ name: "Valentina R.", value: "$170.100", note: "Entró hoy a la etapa", byAxi: true }] },
-      { name: "Compromiso", count: 2, deals: [{ name: "Andrés M.", value: "$412.000", note: "cierra el viernes" }] },
-      { name: "Ganado", count: 9, deals: [{ name: "Lucía C.", value: "$189.000" }] },
+      {
+        name: "Nuevo", prob: "10 %", count: 6, total: "$ 1,1 M",
+        deals: [
+          { name: "Juan P.", initials: "JP", value: "$ 380.000", product: "Monturas niño", byAxi: true },
+          { name: "Sara L.", initials: "SL", value: "$ 240.000", product: "Lentes de contacto" },
+        ],
+      },
+      {
+        name: "Cotizado", prob: "40 %", count: 4, total: "$ 1,6 M",
+        deals: [
+          { name: "Valentina R.", initials: "VR", value: "$ 170.100", product: "Aviador Ámbar + fórmula", note: "Entró hoy a la etapa", byAxi: true },
+          { name: "Pedro N.", initials: "PN", value: "$ 520.000", product: "Progresivos" },
+        ],
+      },
+      {
+        name: "Compromiso", prob: "70 %", count: 2, total: "$ 0,9 M",
+        deals: [{ name: "Andrés M.", initials: "AM", value: "$ 412.000", product: "Examen + montura", note: "6 días sin moverse", stale: true }],
+      },
+      {
+        name: "Ganado", prob: "100 %", count: 9, total: "$ 2,4 M",
+        deals: [{ name: "Lucía C.", initials: "LC", value: "$ 189.000", product: "Aviador Ámbar" }],
+      },
     ],
     byAxi: "La abrió Axi",
   },
   llamadas: {
+    title: "Llamadas",
+    tabs: ["Monitoreo", "Historial", "Marcos", "Configuración"],
+    calls: [
+      { who: "Andrés M.", kind: "Saliente · retomar cotización", length: "2:14", result: "Objetivo cumplido", tone: "ok", on: true },
+      { who: "Lucía C.", kind: "Saliente · confirmar cita", length: "0:58", result: "Cita confirmada", tone: "ok" },
+      { who: "Pedro N.", kind: "Saliente · cobranza", length: "1:31", result: "Prometió pagar", tone: "violet" },
+      { who: "Sara L.", kind: "Saliente · seguimiento", length: "0:12", result: "No contestó", tone: "muted" },
+    ],
     who: "Axi llamó a Andrés M. · 2:14",
     result: "Objetivo cumplido",
     stages: [
@@ -443,23 +589,47 @@ export const PIECE_SCREENS: PieceScreens = {
     summary: "Resumen escrito por Axi al colgar",
   },
   cobros: {
+    title: "Cartera",
+    views: ["Todo", "Por vencer", "En mora"],
     owedLabel: "Te deben",
     owed: "$ 3,4 M",
     overdueLabel: "Vencido",
     overdue: "$ 820.000",
+    summary: "4 clientes con saldo. $ 820.000 ya venció y $ 128.100 tiene promesa para el viernes.",
     order: "Ordenada por a quién escribir primero, no por nombre ni por monto.",
-    island: { kicker: "Escribe primero a", name: "Andrés M.", amount: "$ 820.000 vencidos", actions: ["Escribirle", "Anotar promesa"] },
+    island: {
+      kicker: "Escribe primero a",
+      name: "Andrés M.",
+      amount: "$ 820.000",
+      why: "Lleva 4 días en mora y no ha respondido el recordatorio: es la deuda que más rápido envejece.",
+      facts: [
+        { label: "Venció", value: "hace 4 días" },
+        { label: "Último aviso", value: "ayer · recordatorio automático" },
+      ],
+      actions: ["Escribirle", "Anotar promesa"],
+    },
+    groups: [
+      { label: "En mora", tone: "coral" },
+      { label: "Con promesa", tone: "violet" },
+      { label: "Por vencer", tone: "amber" },
+      { label: "Al día", tone: "ok" },
+    ],
+    write: "Escribir",
     rows: [
-      { initials: "AM", name: "Andrés M.", concept: "Cuota 2 de 3", amount: "$ 820.000", state: "En mora · 4 días", tone: "amber" },
-      { initials: "VR", name: "Valentina R.", concept: "Saldo", amount: "$ 128.100", state: "Promesa · viernes", tone: "violet" },
-      { initials: "JP", name: "Juan P.", concept: "Cuota 1 de 2", amount: "$ 1.250.000", state: "Por vencer", tone: "muted" },
-      { initials: "SL", name: "Sara L.", concept: "Saldo", amount: "$ 1.201.900", state: "Al día", tone: "ok" },
+      { initials: "AM", name: "Andrés M.", concept: "Cuota 2 de 3", ref: "#1031", amount: "$ 820.000", state: "En mora · 4 días", tone: "coral", group: 0 },
+      { initials: "VR", name: "Valentina R.", concept: "Saldo", ref: "#1042", amount: "$ 128.100", state: "Prometió pagar el viernes", tone: "violet", group: 1 },
+      { initials: "JP", name: "Juan P.", concept: "Cuota 1 de 2", ref: "#1036", amount: "$ 1.250.000", state: "Vence el jue 9", tone: "amber", group: 2 },
+      { initials: "SL", name: "Sara L.", concept: "Saldo", ref: "#1028", amount: "$ 1.201.900", state: "Al día · vence en 20 días", tone: "ok", group: 3 },
     ],
   },
   medicion: {
+    title: "Analítica",
+    sub: "Septiembre · todos los canales y agentes",
+    tabs: ["Embudo", "Calidad", "Alertas"],
     salesLabel: "Ventas pagadas · septiembre",
     sales: "$ 48,6 M",
     flow: "1.240 conversaciones → 171 pagadas",
+    salesNote: "Si una persona cerró la venta tras un relevo, cuenta para tu negocio, no para Axi.",
     funnelLabel: "Embudo de ventas",
     funnel: [
       { label: "Con intención", value: 612 },
@@ -470,14 +640,16 @@ export const PIECE_SCREENS: PieceScreens = {
     qualityLabel: "Calidad general",
     quality: 86,
     qualityOf: "de 100",
+    qualityNote: "Juicio de una IA supervisora sobre conversaciones cerradas, no contabilidad.",
     subscores: [
       { label: "Precisión", value: 91 },
       { label: "Uso de datos", value: 88 },
       { label: "Cierre de venta", value: 74 },
       { label: "Tono", value: 92 },
     ],
-    fixLabel: "Problemas más frecuentes",
+    fixLabel: "Qué corregir primero",
     fixes: ["Cierre no intentado", "Ignoró el inventario"],
+    fixCounts: ["14 conversaciones", "6 conversaciones"],
   },
 };
 

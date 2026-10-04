@@ -15,6 +15,7 @@
   --pj-dim: color-mix(in srgb, var(--foreground) 58%, transparent);
   --pj-surface: color-mix(in srgb, var(--foreground) 4%, var(--background));
   --pj-surface-2: color-mix(in srgb, var(--foreground) 8%, var(--background));
+  --pj-island: color-mix(in srgb, var(--background) 78%, transparent);
   /* Las burbujas: el cliente en superficie, Axi en tinta invertida (como la home). */
   --pj-bubble-in: color-mix(in srgb, var(--foreground) 9%, var(--background));
   --pj-bubble-out: var(--foreground);
@@ -174,11 +175,6 @@
 .pj-ph-glass {
   position: relative; display: flex; flex-direction: column; width: 100%; height: 100%;
   overflow: hidden; border-radius: 47px; background: var(--ph-screen); color: var(--foreground);
-}
-.pj-ph-glare {
-  position: absolute; inset: 0; pointer-events: none;
-  background: linear-gradient(118deg, transparent 0%, color-mix(in srgb, var(--foreground) 13%, transparent) 14%, color-mix(in srgb, var(--foreground) 3%, transparent) 26%, transparent 34%);
-  transform: translateX(var(--glare, 70%));
 }
 .pj-ph-bar { position: relative; display: flex; flex-shrink: 0; align-items: center; justify-content: space-between; height: 50px; padding: 0 26px 0 30px; font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
 .pj-ph-island { position: absolute; left: 50%; top: 11px; width: 104px; height: 30px; margin-left: -52px; border-radius: 20px; background: #000; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--foreground) 4%, transparent); }

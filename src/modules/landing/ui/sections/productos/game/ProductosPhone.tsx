@@ -93,7 +93,6 @@ export function ProductosPhone({
                     <div className="pj-ph-home" aria-hidden="true">
                       <span />
                     </div>
-                    <div className="pj-ph-glare" aria-hidden="true" />
                   </div>
                 </div>
               </div>

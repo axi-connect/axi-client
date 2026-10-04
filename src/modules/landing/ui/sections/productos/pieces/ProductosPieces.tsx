@@ -7,6 +7,7 @@ import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type Reac
 import { PIECES, PIECES_SCENE, type PieceId } from "@/modules/landing/ui/content/productos.content";
 import { emitFilmEvent } from "@/modules/landing/ui/film/film-events";
 import { PAGE_ISLAND_EVENT, type PageIslandDetail } from "@/shared/components/layout/site/site-island";
+import { AppShell, PiecesNav } from "./AppShell";
 import { CatalogoScreen } from "./CatalogoScreen";
 import { CobrosScreen } from "./CobrosScreen";
 import { ConfiguraScreen } from "./ConfiguraScreen";
@@ -232,6 +233,7 @@ export function ProductosPieces() {
   const current = PIECES.find((p) => p.id === active) ?? PIECES[0];
 
   return (
+    <PiecesNav.Provider value={choose}>
     <div ref={rootRef} className="pp" data-mode={mode}>
       <div ref={trackRef} className="pp-track">
         {mode === "pinned"
@@ -316,7 +318,9 @@ export function ProductosPieces() {
                     {piece.sample ? <span className="pp-sample" data-on="">{PIECES_SCENE.sampleLabel}</span> : null}
                   </div>
                   <div className="pp-screen">
-                    <Screen />
+                    <AppShell piece={piece.id}>
+                      <Screen />
+                    </AppShell>
                   </div>
                 </section>
               );
@@ -325,5 +329,6 @@ export function ProductosPieces() {
         </div>
       </div>
     </div>
+    </PiecesNav.Provider>
   );
 }
