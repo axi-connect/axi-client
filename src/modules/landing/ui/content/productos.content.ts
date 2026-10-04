@@ -703,6 +703,65 @@ export const VIDEO_SCENE = {
   play: "Reproducir el video",
 } as const;
 
+/* ─────────────── 4b · Así suena un negocio con Axi (el muro) ─────────────── */
+
+/**
+ * El muro de conversaciones del /productos original (productos-v1-archive),
+ * recuperado a pedido de la dueña entre el video y el cierre. Adaptado por
+ * honestidad (INVENTARIO §2.2):
+ * - sin «En vivo» ni «con datos reales»: los negocios y los mensajes son de
+ *   ejemplo, y lo dice;
+ * - solo WhatsApp: Instagram y Messenger están integrados pero no probados con
+ *   clientes, así que no se enseñan respondiendo;
+ * - sin moda con tallas (el cierre con variantes sigue abierto): retail, comida
+ *   y servicios con agenda, los tres nichos del estudio de mercado;
+ * - cada respuesta usa algo que el agente hace de verdad: stock y precio del
+ *   catálogo, foto, cupón de envío gratis, medios de pago, estado del pedido,
+ *   agenda con recordatorio.
+ */
+export interface WallMessage {
+  id: string;
+  business: string;
+  from: "customer" | "agent";
+  text: string;
+}
+
+export const WALL = {
+  anchor: "conversaciones",
+  eyebrow: "En tus canales",
+  strong: "Así suena un negocio",
+  thin: "con Axi.",
+  lead: "Clientes de retail, comida y servicios escribiendo a cualquier hora, y el agente respondiendo en segundos con el catálogo, el stock y la agenda de cada negocio.",
+  sample: "Negocios y conversaciones de ejemplo",
+  label: "Conversaciones de ejemplo con el agente",
+  channel: "WhatsApp",
+  agent: "Agente · IA",
+  customer: "Cliente",
+  columns: [
+    [
+      { id: "w1", business: "Casa Nórdica", from: "customer", text: "¿La lámpara de mesa en roble la tienen?" },
+      { id: "w2", business: "Casa Nórdica", from: "agent", text: "Quedan 3, a $129.900. ¿Te armo el pedido?" },
+      { id: "w3", business: "Casa Nórdica", from: "customer", text: "Vi la cafetera del reel, ¿en cuánto sale?" },
+      { id: "w4", business: "Casa Nórdica", from: "agent", text: "Es la Moka de 6 tazas: $189.900, y hoy el envío va gratis. Te paso las fotos." },
+      { id: "w5", business: "Dulce Alma", from: "customer", text: "Necesito una torta para 20 personas el sábado." },
+    ],
+    [
+      { id: "w6", business: "Burger 33", from: "customer", text: "¿Llegan hasta Cedritos?" },
+      { id: "w7", business: "Burger 33", from: "agent", text: "Sí, en unos 35 minutos. ¿Qué te mando?" },
+      { id: "w8", business: "Burger 33", from: "customer", text: "¿El combo familiar trae gaseosa?" },
+      { id: "w9", business: "Burger 33", from: "agent", text: "Trae una de 1,5 L. ¿Lo confirmo para las 8:00?" },
+      { id: "w10", business: "Dulce Alma", from: "agent", text: "Para 20 tenemos la de tres leches o la de chocolate. ¿Cuál te cotizo?" },
+    ],
+    [
+      { id: "w11", business: "TechNova", from: "agent", text: "Tu pedido #1043 está en camino." },
+      { id: "w12", business: "TechNova", from: "customer", text: "¿Puedo pagar con Nequi?" },
+      { id: "w13", business: "TechNova", from: "agent", text: "Sí: Nequi, Daviplata o transferencia. Te paso los datos." },
+      { id: "w14", business: "BarberLab", from: "customer", text: "¿Tienen cita mañana a las 10:00?" },
+      { id: "w15", business: "BarberLab", from: "agent", text: "Las 10:00 están libres. Te agendo y te llega un recordatorio." },
+    ],
+  ],
+} as const;
+
 /* ──────────────────────────────── 5 · Cierre ──────────────────────────────── */
 
 export const PRODUCTOS_CLOSE = {

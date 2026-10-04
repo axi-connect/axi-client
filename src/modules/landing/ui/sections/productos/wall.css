@@ -1,0 +1,60 @@
+/*
+ * #conversaciones — el muro «Así suena un negocio con Axi» (recuperado del
+ * /productos original). Solo tokens: el claro sale solo. El cliente va en
+ * superficie y el agente en tinta invertida, como el chat del juego.
+ */
+
+.pj-wall .pj-glow { width: 1000px; height: 640px; left: 50%; top: 58%; transform: translate(-50%, -50%); }
+
+.pj-wall-sample {
+  display: inline-flex; align-items: center; height: 26px; padding: 0 12px;
+  border-radius: 999px; border: 1px solid var(--pj-line);
+  font-size: 11.5px; color: var(--pj-dim);
+}
+
+.pj-wall-stage {
+  position: relative; z-index: 1;
+  width: min(1100px, 100%); height: 540px;
+  overflow: hidden;
+  perspective: 420px;
+  /* El muro emerge del fondo: se funde por los cuatro bordes. */
+  -webkit-mask: linear-gradient(to bottom, transparent, black 18%, black 74%, transparent), linear-gradient(to right, transparent, black 16%, black 84%, transparent);
+  -webkit-mask-composite: source-in;
+  mask: linear-gradient(to bottom, transparent, black 18%, black 74%, transparent), linear-gradient(to right, transparent, black 16%, black 84%, transparent);
+  mask-composite: intersect;
+}
+.pj-wall-tilt {
+  display: flex; justify-content: center; gap: 16px; height: 100%;
+  transform: translateZ(-60px) rotateX(14deg) rotateY(-9deg) rotateZ(9deg);
+  transform-style: preserve-3d;
+}
+.pj-wall-col { width: 252px; flex: none; }
+
+.pj-wall-card {
+  margin: 0; padding: 14px 16px 12px; border-radius: 20px;
+  background: var(--pj-bubble-in);
+  border: 1px solid var(--pj-line);
+  box-shadow: 0 18px 40px -24px rgb(0 0 0 / 0.55);
+}
+.pj-wall-card[data-from="agent"] {
+  background: var(--pj-bubble-out); color: var(--pj-bubble-out-fg);
+  border-color: color-mix(in srgb, var(--axi-brand) 40%, transparent);
+}
+.pj-wall-who { display: flex; align-items: center; gap: 10px; }
+.pj-wall-av {
+  width: 30px; height: 30px; flex: none; border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: var(--font-nexa), var(--font-poppins), sans-serif; font-weight: 700; font-size: 13px;
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+.pj-wall-biz { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pj-wall-ch { font-size: 10px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.55; }
+.pj-wall-text { margin: 10px 0 0; font-size: 13px; line-height: 1.5; text-wrap: pretty; }
+.pj-wall-by { margin: 10px 0 0; display: flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 500; opacity: 0.6; }
+.pj-wall-card[data-from="agent"] .pj-wall-by { opacity: 0.85; }
+
+@media (max-width: 767px) {
+  .pj-wall-stage { height: 460px; }
+  .pj-wall-col { width: 220px; }
+  .pj-wall-col-last { display: none; }
+}

@@ -10,6 +10,7 @@ import { ProductosOpening } from "@/modules/landing/ui/sections/productos/Produc
 import { ProductosGame } from "@/modules/landing/ui/sections/productos/game/ProductosGame";
 import { ProductosPieces } from "@/modules/landing/ui/sections/productos/pieces/ProductosPieces";
 import { ProductosVideoScene } from "@/modules/landing/ui/sections/productos/ProductosVideoScene";
+import { ProductosWall } from "@/modules/landing/ui/sections/productos/ProductosWall";
 import { ProductosClose } from "@/modules/landing/ui/sections/productos/ProductosClose";
 import { ProductosHashRouter } from "@/modules/landing/ui/sections/productos/ProductosHashRouter";
 
@@ -17,9 +18,9 @@ import { ProductosHashRouter } from "@/modules/landing/ui/sections/productos/Pro
  * `/productos` — «Escríbele. Mira cómo vende.» (plan
  * `docs/plans/productos_juego_plan.md`, lienzo aprobado el 2026-10-03).
  *
- * Cinco escenas: apertura, el juego (#agente), pieza por pieza (#piezas, con
- * una pestaña por ancla), el video del fundador (#video) y el cierre
- * (#empezar). Los enlaces del menú caen en su pieza exacta vía
+ * Seis escenas: apertura, el juego (#agente), pieza por pieza (#piezas, con
+ * una pestaña por ancla), el video del fundador (#video), el muro «Así suena
+ * un negocio con Axi» (#conversaciones) y el cierre (#empezar). Los enlaces del menú caen en su pieza exacta vía
  * `ProductosHashRouter`; `productos-anchors.test.tsx` vigila que existan.
  *
  * Ningún wrapper lleva overflow-y: las escenas fijas dependen de que el sticky
@@ -45,6 +46,7 @@ export default function ProductosPage() {
         <ProductosPieces />
       </section>
       <ProductosVideoScene />
+      <ProductosWall />
       <ProductosClose />
       <ProductosHashRouter />
     </div>
