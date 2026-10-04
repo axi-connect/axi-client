@@ -63,14 +63,14 @@ test("una jugada descubre su habilidad: la isla del nav la anuncia y la lista la
 test("con el juego en pantalla, la isla del nav dice «Juega a ser tu cliente · N de 7»; al salir, se suelta", () => {
   render(<ProductosGame />);
   act(() => ioCallback?.([{ isIntersecting: true }]));
-  expect(islands.at(-1)).toEqual({ title: GAME.island.title, sub: GAME.island.count(0, GAME_ABILITIES.length), ring: 0 });
+  expect(islands.at(-1)).toEqual({ source: "game", text: { title: GAME.island.title, sub: GAME.island.count(0, GAME_ABILITIES.length), ring: 0 } });
 
   fireEvent.click(move(GAME_MOVES[0].label));
   act(() => jest.advanceTimersByTime(1200));
-  expect(islands.at(-1)).toEqual({ title: GAME.island.title, sub: GAME.island.count(1, GAME_ABILITIES.length), ring: 1 / GAME_ABILITIES.length });
+  expect(islands.at(-1)).toEqual({ source: "game", text: { title: GAME.island.title, sub: GAME.island.count(1, GAME_ABILITIES.length), ring: 1 / GAME_ABILITIES.length } });
 
   act(() => ioCallback?.([{ isIntersecting: false }]));
-  expect(islands.at(-1)).toBeNull();
+  expect(islands.at(-1)).toEqual({ source: "game", text: null });
 });
 
 test("«Háblale» suena primero el cliente y, al terminar, la respuesta de Axi", async () => {

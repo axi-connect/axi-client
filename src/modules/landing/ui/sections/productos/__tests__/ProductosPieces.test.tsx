@@ -104,7 +104,7 @@ describe("Pieza por pieza · solo una pieza a la vez en escritorio", () => {
 
 describe("Pieza por pieza · la isla del nav", () => {
   it("dice la pieza activa y su avance", () => {
-    expect(pieceIsland("cobros")).toEqual({ title: "Pieza por pieza", sub: "Cobros · 6 de 7", ring: 6 / 7 });
+    expect(pieceIsland("cobros")).toEqual({ source: "pieces", text: { title: "Pieza por pieza", sub: "Cobros · 6 de 7", ring: 6 / 7 } });
   });
 
   it("toma la isla al entrar, sigue a la pestaña y la devuelve al salir", () => {
@@ -128,7 +128,7 @@ describe("Pieza por pieza · la isla del nav", () => {
     fireEvent.click(screen.getByRole("tab", { name: /Medición/ }));
     expect(seen.at(-1)).toEqual(pieceIsland("medicion"));
     cross(false);
-    expect(seen.at(-1)).toBeNull();
+    expect(seen.at(-1)).toEqual({ source: "pieces", text: null });
     window.removeEventListener(PAGE_ISLAND_EVENT, listen);
   });
 });

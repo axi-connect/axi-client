@@ -43,7 +43,20 @@ export function islandOnPage(pathname: string, read: number): IslandText {
  * la devuelve a lo leído. Los avisos usan `film:activity`, como en la home.
  */
 export const PAGE_ISLAND_EVENT = "site:island";
-export type PageIslandDetail = IslandText | null;
+/**
+ * Cada escena firma lo que manda (`source`). Al cruzar de una escena a otra
+ * las dos hablan en el mismo frame —la que sale suelta (`text: null`), la que
+ * entra toma la isla— y el orden no está garantizado: por eso una escena solo
+ * puede soltar la isla si es suya (QA 2026-10-03, la isla volvía a «% leído»
+ * dentro del juego).
+ */
+export type PageIslandDetail = { source: string; text: IslandText | null };
+
+/** Quién tiene la isla después de un mensaje: el que la toma, o nadie si la suelta su dueño. */
+export function nextPageIsland(current: PageIslandDetail | null, msg: PageIslandDetail): PageIslandDetail | null {
+  if (msg.text) return msg;
+  return current && current.source === msg.source ? null : current;
+}
 
 /** A partir de cuántos px de scroll la barra se vuelve isla (§18.1: «unos 120 px»). */
 export const ISLAND_AT = 120;

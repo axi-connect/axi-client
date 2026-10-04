@@ -14,7 +14,7 @@ import { SiteMenuPanel } from '@/shared/components/layout/site/SiteMenuPanel';
 import { SiteMenuSheet } from '@/shared/components/layout/site/SiteMenuSheet';
 import { SiteThemeChoice } from '@/shared/components/layout/site/SiteThemeChoice';
 import { INTENT_OF, IntentIcon } from '@/shared/components/layout/site/IntentIcon';
-import { ISLAND_AT, PAGE_ISLAND_EVENT, islandOnFilm, islandOnPage, readProgress, type IslandChapter, type PageIslandDetail } from '@/shared/components/layout/site/site-island';
+import { ISLAND_AT, PAGE_ISLAND_EVENT, islandOnFilm, islandOnPage, nextPageIsland, readProgress, type IslandChapter, type PageIslandDetail } from '@/shared/components/layout/site/site-island';
 import {
     SITE_INTENTS,
     SITE_ISLAND,
@@ -95,7 +95,7 @@ export default function SiteHeader() {
         let top = el.scrollTop;
         // Una escena de la página puede tomar la isla (PAGE_ISLAND_EVENT); mientras
         // tanto, lo leído no la pisa.
-        let page: PageIslandDetail = null;
+        let page: PageIslandDetail | null = null;
         const update = () => {
             frame = 0;
             show(top > ISLAND_AT);
@@ -133,8 +133,8 @@ export default function SiteHeader() {
             timer = window.setTimeout(() => setToast(null), TOAST_MS);
         };
         const onPage = (e: Event) => {
-            page = (e as CustomEvent<PageIslandDetail>).detail;
-            if (page) paint(page.title, page.sub, page.ring);
+            page = nextPageIsland(page, (e as CustomEvent<PageIslandDetail>).detail);
+            if (page?.text) paint(page.text.title, page.text.sub, page.text.ring);
             else update();
         };
         if (onFilm) {

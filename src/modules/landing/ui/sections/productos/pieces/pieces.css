@@ -90,7 +90,8 @@
   height: 640px;
   overflow: hidden;
 }
-.pp[data-mode="pinned"] .pp-frame { height: auto; flex: 1 1 auto; max-height: 660px; min-height: 380px; }
+/* Tamaño de diseño fijo: ProductosPieces lo escala con zoom si no cabe. */
+.pp[data-mode="pinned"] .pp-frame { flex: none; }
 .pp[data-mode="pinned"] .pp-dock,
 .pp[data-mode="tabs"] .pp-dock { order: 3; }
 .pp[data-mode="pinned"] .pp-panel,

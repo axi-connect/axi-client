@@ -48,7 +48,7 @@ const LOCK_MS = 700;
 export function pieceIsland(id: PieceId): PageIslandDetail {
   const index = IDS.indexOf(id);
   const piece = PIECES[index] ?? PIECES[0];
-  return { title: PIECES_SCENE.island.title, sub: PIECES_SCENE.island.sub(piece.tab, index + 1, IDS.length), ring: (index + 1) / IDS.length };
+  return { source: "pieces", text: { title: PIECES_SCENE.island.title, sub: PIECES_SCENE.island.sub(piece.tab, index + 1, IDS.length), ring: (index + 1) / IDS.length } };
 }
 
 function scroller(): HTMLElement | null {
@@ -189,6 +189,33 @@ export function ProductosPieces() {
     if (dock && tab && dock.scrollWidth > dock.clientWidth) dock.scrollTo?.({ left: tab.offsetLeft - (dock.clientWidth - tab.clientWidth) / 2, behavior: "smooth" });
   }, [active, mode]);
 
+  /* Escritorio: la ventana se dibuja a su tamaño de diseño y se escala (zoom)
+     hasta caber entre el titular y el dock, como fitToViewport en la home. Así
+     a 1366×657 no se corta nada y sigue siendo la misma app (QA 2026-10-03). */
+  useEffect(() => {
+    if (mode !== "pinned" && mode !== "tabs") return;
+    const frame = stripRef.current;
+    const dock = dockRef.current;
+    const stage = frame?.parentElement;
+    if (!frame || !dock || !stage) return;
+    const fit = () => {
+      frame.style.zoom = "";
+      const s = stage.getBoundingClientRect();
+      const f = frame.getBoundingClientRect();
+      const pad = parseFloat(getComputedStyle(stage).paddingBottom) || 0;
+      const gap = parseFloat(getComputedStyle(stage).rowGap) || 0;
+      const room = mode === "pinned" ? s.bottom - pad - dock.offsetHeight - gap - f.top : f.height;
+      const z = Math.max(0.55, Math.min(1, room / f.height, (s.width - 32) / f.width));
+      frame.style.zoom = z < 0.999 ? z.toFixed(3) : "";
+    };
+    fit();
+    window.addEventListener("resize", fit);
+    return () => {
+      window.removeEventListener("resize", fit);
+      frame.style.zoom = "";
+    };
+  }, [mode]);
+
   /* Mientras la escena cruza la franja central, la isla del nav dice qué pieza se ve (como el juego). */
   useEffect(() => {
     const el = rootRef.current;
@@ -196,14 +223,14 @@ export function ProductosPieces() {
     const io = new IntersectionObserver(
       ([entry]) => {
         inView.current = entry.isIntersecting;
-        emitFilmEvent<PageIslandDetail>(PAGE_ISLAND_EVENT, entry.isIntersecting ? pieceIsland(activeRef.current) : null);
+        emitFilmEvent<PageIslandDetail>(PAGE_ISLAND_EVENT, entry.isIntersecting ? pieceIsland(activeRef.current) : { source: "pieces", text: null });
       },
       { root: el.closest<HTMLElement>("[data-app-scroll]"), rootMargin: "-45% 0px -45% 0px" },
     );
     io.observe(el);
     return () => {
       io.disconnect();
-      emitFilmEvent<PageIslandDetail>(PAGE_ISLAND_EVENT, null);
+      emitFilmEvent<PageIslandDetail>(PAGE_ISLAND_EVENT, { source: "pieces", text: null });
     };
   }, []);
   useEffect(() => {

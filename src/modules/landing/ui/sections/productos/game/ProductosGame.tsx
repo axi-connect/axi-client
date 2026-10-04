@@ -128,7 +128,7 @@ export function ProductosGame() {
 
   /* Mientras el juego está en pantalla, la isla del nav dice «Juega a ser tu cliente · N de 7». */
   const islandText = useCallback(
-    (n: number): PageIslandDetail => ({ title: GAME.island.title, sub: GAME.island.count(n, TOTAL_ABILITIES), ring: n / TOTAL_ABILITIES }),
+    (n: number): PageIslandDetail => ({ source: "game", text: { title: GAME.island.title, sub: GAME.island.count(n, TOTAL_ABILITIES), ring: n / TOTAL_ABILITIES } }),
     [],
   );
   const gotRef = useRef(0);
@@ -140,7 +140,7 @@ export function ProductosGame() {
     const io = new IntersectionObserver(
       ([entry]) => {
         inView.current = entry.isIntersecting;
-        emitFilmEvent<PageIslandDetail>(PAGE_ISLAND_EVENT, entry.isIntersecting ? islandText(gotRef.current) : null);
+        emitFilmEvent<PageIslandDetail>(PAGE_ISLAND_EVENT, entry.isIntersecting ? islandText(gotRef.current) : { source: "game", text: null });
       },
       // «En pantalla» = cruza la franja central de la ventana.
       { root, rootMargin: "-45% 0px -45% 0px" },
@@ -148,7 +148,7 @@ export function ProductosGame() {
     io.observe(el);
     return () => {
       io.disconnect();
-      emitFilmEvent<PageIslandDetail>(PAGE_ISLAND_EVENT, null);
+      emitFilmEvent<PageIslandDetail>(PAGE_ISLAND_EVENT, { source: "game", text: null });
     };
   }, [islandText]);
   useEffect(() => {
