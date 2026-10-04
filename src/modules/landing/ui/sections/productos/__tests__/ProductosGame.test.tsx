@@ -110,3 +110,27 @@ test("las notas de la demo nunca entran al chat del cliente", () => {
   const log = screen.getByRole("log");
   expect(log.textContent).not.toMatch(/CRM|30 % no existe|política/);
 });
+
+test("la consola: cada jugada dice su canal, transmite mientras Axi responde y queda «Completada»", () => {
+  const { container } = render(<ProductosGame />);
+  const foto = GAME_MOVES[0];
+  const row = () => move(foto.label).closest(".pj-con-row")!;
+  expect(move(foto.label)).toHaveTextContent(foto.channel);
+  expect(move(foto.label)).toHaveTextContent("01");
+
+  fireEvent.click(move(foto.label));
+  expect(move(foto.label)).toHaveAttribute("data-state", "tx");
+  expect(move(foto.label)).toHaveAttribute("aria-busy", "true");
+  expect(move(foto.label)).toHaveTextContent(GAME.console.sending);
+  expect(row()).toHaveAttribute("data-state", "tx");
+  // Mientras Axi responde, las demás esperan.
+  expect(move(GAME_MOVES[1].label)).toBeDisabled();
+  expect(move(GAME_MOVES[1].label)).not.toHaveAttribute("data-state");
+
+  act(() => jest.advanceTimersByTime(1500));
+  expect(move(foto.label)).toHaveAttribute("data-state", "done");
+  expect(move(foto.label)).toHaveTextContent(GAME.console.done);
+  expect(move(foto.label)).not.toHaveTextContent("01");
+  expect(move(GAME_MOVES[1].label)).toBeEnabled();
+  expect(container.querySelector(".pj-con-foot")).toHaveTextContent(GAME.console.motto);
+});

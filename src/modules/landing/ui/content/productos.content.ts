@@ -125,6 +125,8 @@ export type GameMessage =
 export interface GameMove {
   id: GameMoveId;
   label: string;
+  /** El canal de la jugada en la consola, en versalitas (lienzo v10). */
+  channel: string;
   /** Lo que escribe el visitante (el cliente). */
   customer: readonly GameMessage[];
   /** Lo que responde Axi (o el equipo), tras el «escribiendo…». */
@@ -148,6 +150,7 @@ export const GAME_MOVES: readonly GameMove[] = [
   {
     id: "foto",
     label: "Mándale una foto",
+    channel: "Imagen",
     customer: [
       { kind: "photo", from: "customer", imageSrc: PRODUCT_IMAGE, imageAlt: "Captura de un reel con unas gafas de lente ámbar", caption: "Captura de un reel" },
       { kind: "text", from: "customer", text: "¿Tienen estas?" },
@@ -160,6 +163,7 @@ export const GAME_MOVES: readonly GameMove[] = [
   {
     id: "voz",
     label: "Háblale",
+    channel: "Nota de voz",
     customer: [
       {
         kind: "voice",
@@ -180,12 +184,14 @@ export const GAME_MOVES: readonly GameMove[] = [
   {
     id: "descuento",
     label: "Pídele un 30 %",
+    channel: "Negocia",
     customer: [{ kind: "text", from: "customer", text: "¿Me las dejas un 30 % más baratas?" }],
     reply: [{ kind: "text", from: "agent", text: "Eso no lo tengo autorizado. Con el cupón PRIMERAVEZ te quedan en $170.100." }],
   },
   {
     id: "compra",
     label: "Cómpralas",
+    channel: "Pedido",
     customer: [{ kind: "text", from: "customer", text: "Me las llevo" }],
     reply: [
       { kind: "card", from: "agent", kicker: "Pedido #1042", title: "$170.100", meta: "Nequi · Bancolombia" },
@@ -196,12 +202,14 @@ export const GAME_MOVES: readonly GameMove[] = [
   {
     id: "agenda",
     label: "Pide una cita",
+    channel: "Agenda",
     customer: [{ kind: "text", from: "customer", text: "¿Me hacen el examen visual?" }],
     reply: [{ kind: "text", from: "agent", text: "Claro. El martes 3 tengo 10:00 a. m. o 4:00 p. m. Te lo recuerdo antes." }],
   },
   {
     id: "persona",
     label: "Pide una persona",
+    channel: "Humano",
     customer: [{ kind: "text", from: "customer", text: "Prefiero hablar con una persona" }],
     reply: [
       { kind: "event", text: "Laura entró a la conversación", tone: "amber" },
@@ -230,6 +238,13 @@ export const GAME = {
   },
   abilitiesTitle: "Habilidades",
   movesTitle: "Tú eres el cliente",
+  /** La consola de jugadas (lienzo v10, «El futuro es conversacional»). */
+  console: {
+    moves: (n: number) => `${String(n).padStart(2, "0")} jugadas`,
+    motto: "Axi · El futuro es conversacional",
+    sending: "Transmitiendo…",
+    done: "Completada",
+  },
   locked: { name: "Por descubrir", line: "Haz una jugada" },
   /** La habilidad del CRM se descubre sola tras estas jugadas. */
   crmAfterMoves: 3,

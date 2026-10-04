@@ -1,5 +1,7 @@
 "use client";
 
+import "./moves.css";
+
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
@@ -296,7 +298,6 @@ export function ProductosGame() {
         </ProductosPhone>
 
         <div className="min-w-0">
-          <p className="pj-eyebrow pj-dim mb-[18px] max-lg:hidden">{GAME.movesTitle}</p>
           {done ? (
             <div className="flex flex-col items-start gap-5 lg:pt-6">
               <p className="pj-h pj-h-lg">
@@ -310,17 +311,52 @@ export function ProductosGame() {
               </button>
             </div>
           ) : (
-            <div className="pj-moves" role="group" aria-label={GAME.movesTitle}>
-              {GAME_MOVES.map((m) => {
-                const used = state.used.includes(m.id);
-                const Icon = used ? Check : ICONS[m.id];
-                return (
-                  <button key={m.id} type="button" className="pj-move" data-tone={TONE[m.id]} data-used={used ? "" : undefined} data-hint={hint === m.id ? "" : undefined} disabled={used || state.pending !== null} onClick={() => onMove(m.id)}>
-                    <span className="pj-move-icon" aria-hidden="true"><Icon className="size-5" strokeWidth={used ? 2.6 : 2} /></span>
-                    <span>{m.label}</span>
-                  </button>
-                );
-              })}
+            <div className="pj-con">
+              <div className="pj-con-head">
+                <p className="pj-eyebrow max-lg:text-[10.5px]">{GAME.movesTitle}</p>
+                <span className="pj-con-rule" aria-hidden="true" />
+                <span className="pj-con-mono pj-con-total max-lg:hidden" aria-hidden="true">{GAME.console.moves(GAME_MOVES.length)}</span>
+                <span className="pj-con-tick" aria-hidden="true" />
+                <span className="pj-con-tick opacity-50" aria-hidden="true" />
+                <span className="pj-con-mono pj-con-count lg:hidden" aria-hidden="true">
+                  {String(n).padStart(2, "0")}<span>/{String(TOTAL_ABILITIES).padStart(2, "0")}</span>
+                </span>
+              </div>
+              <div className="pj-con-list" role="group" aria-label={GAME.movesTitle}>
+                {GAME_MOVES.map((m, i) => {
+                  const used = state.used.includes(m.id);
+                  const sending = state.pending === m.id;
+                  const status = sending ? "tx" : used ? "done" : undefined;
+                  const Icon = ICONS[m.id];
+                  return (
+                    <div key={m.id} className="pj-con-row" data-state={status}>
+                      <span className="pj-con-node" aria-hidden="true" />
+                      <span className="pj-con-conn" aria-hidden="true" />
+                      <button type="button" className="pj-jug" data-tone={TONE[m.id]} data-state={status} data-hint={hint === m.id ? "" : undefined} aria-busy={sending || undefined} disabled={used || state.pending !== null} onClick={() => onMove(m.id)}>
+                        <span className="pj-jug-scan" aria-hidden="true" />
+                        <span className="pj-jug-acc" aria-hidden="true" />
+                        <span className="pj-jug-bar" aria-hidden="true" />
+                        <span className="pj-jug-idx pj-con-mono" aria-hidden="true">
+                          {used && !sending ? <Check className="size-3.5" strokeWidth={2.6} /> : String(i + 1).padStart(2, "0")}
+                        </span>
+                        <span className="pj-jug-glyph" aria-hidden="true"><Icon className="size-[18px]" strokeWidth={2} /></span>
+                        <span className="pj-jug-lbl">
+                          <b>{m.label}</b>
+                          <small aria-hidden="true">{sending ? GAME.console.sending : used ? GAME.console.done : m.channel}</small>
+                        </span>
+                        <span className="pj-jug-chev" aria-hidden="true" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="pj-con-foot" aria-hidden="true">
+                <span className="pj-con-mono text-[9.5px]">{GAME.console.motto}</span>
+                <span className="pj-con-rule" />
+                <span className="pj-con-mono pj-con-count">
+                  {String(n).padStart(2, "0")}<span>/{String(TOTAL_ABILITIES).padStart(2, "0")}</span>
+                </span>
+              </div>
             </div>
           )}
         </div>
