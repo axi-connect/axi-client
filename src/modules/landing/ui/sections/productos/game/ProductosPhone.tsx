@@ -18,16 +18,17 @@ const KEYS = [
  * hero, a distintas profundidades: `fx` es la posición horizontal como
  * fracción del ancho disponible (−1 a 1), `y` los px sobre el borde de arriba
  * del teléfono y `z` la lejanía (0 cerca y nítida, 1 lejos, pequeña y
- * desenfocada). `m: false` se oculta en móvil, donde el teléfono ocupa el ancho.
+ * desenfocada). La columna central queda libre: ahí van los botones del hero.
+ * `m: false` se oculta en móvil, donde el teléfono ocupa el ancho.
  */
 const ORBS = [
-  { fx: -0.94, y: 18, z: 0.7, m: false },
-  { fx: -0.66, y: -128, z: 0.1, m: true },
-  { fx: -0.44, y: -18, z: 0.42, m: false },
-  { fx: 0.08, y: -140, z: 0.62, m: true },
-  { fx: 0.46, y: -76, z: 0.05, m: true },
-  { fx: 0.7, y: 34, z: 0.48, m: false },
-  { fx: 0.95, y: -112, z: 0.82, m: true },
+  { fx: -0.88, y: 24, z: 0.72, m: false },
+  { fx: -0.66, y: -104, z: 0.12, m: true },
+  { fx: -0.42, y: -26, z: 0.46, m: false },
+  { fx: 0.4, y: -112, z: 0.58, m: true },
+  { fx: 0.5, y: -14, z: 0.06, m: false },
+  { fx: 0.72, y: 40, z: 0.5, m: false },
+  { fx: 0.86, y: -96, z: 0.8, m: true },
 ] as const;
 
 /**
