@@ -9,8 +9,9 @@ describe("vuelo del teléfono", () => {
     const f = flightAt(0, geo);
     expect(screenTop(0)).toBeCloseTo(geo.vh - geo.peek);
     expect(f.t).toBe(0);
-    expect(f.rx).toBeCloseTo(24);
-    expect(f.scale).toBeCloseTo(0.86);
+    expect(f.rx).toBeCloseTo(22);
+    // En el hero se ve más grande (pedido de la dueña) y se ajusta al aterrizar.
+    expect(f.scale).toBeCloseTo(1.14);
   });
 
   it("aterriza en su sitio justo cuando el juego toca el techo, sin salto", () => {

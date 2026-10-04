@@ -113,6 +113,8 @@
   --ti-rim: color-mix(in srgb, var(--foreground) 36%, var(--background));
   --ti-rim-out: color-mix(in srgb, var(--foreground) 14%, var(--background));
   --ph-screen: color-mix(in srgb, var(--foreground) 1%, var(--background));
+  --ph-in: color-mix(in srgb, var(--foreground) 9%, var(--background));
+  --ph-out: color-mix(in srgb, var(--foreground) 95%, var(--background));
   position: relative;
   flex-shrink: 0;
   justify-self: center;
@@ -181,7 +183,7 @@
 .pj-ph-bar { position: relative; display: flex; flex-shrink: 0; align-items: center; justify-content: space-between; height: 50px; padding: 0 26px 0 30px; font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
 .pj-ph-island { position: absolute; left: 50%; top: 11px; width: 104px; height: 30px; margin-left: -52px; border-radius: 20px; background: #000; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--foreground) 4%, transparent); }
 .pj-ph-island span { position: absolute; right: 12px; top: 9px; width: 12px; height: 12px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--axi-violet) 35%, #000), #000 60%); }
-.pj-ph-head { display: flex; flex-shrink: 0; align-items: center; gap: 10px; padding: 4px 14px 11px; border-bottom: 1px solid color-mix(in srgb, var(--foreground) 7%, transparent); }
+.pj-ph-head { display: flex; flex-shrink: 0; align-items: center; gap: 10px; padding: 4px 14px 11px 12px; border-bottom: 1px solid color-mix(in srgb, var(--foreground) 7%, transparent); }
 .pj-ph-compose { display: flex; flex-shrink: 0; align-items: center; gap: 8px; padding: 6px 11px 8px; }
 .pj-ph-input {
   display: flex; flex: 1; align-items: center; height: 32px; padding: 0 13px; border-radius: 16px;
@@ -218,16 +220,33 @@
    vuelo), coronando su borde de arriba, y se apagan al despegar. Sin JS no se
    ven: sin vuelo no hay hero que coronar. */
 .pj-ph-orbs { position: absolute; left: 50%; top: calc(20px * var(--s)); width: 0; height: 0; opacity: 0; pointer-events: none; }
+/* Cristal líquido: un orbe que refracta lo que tiene detrás (desenfoque +
+   saturación), con borde de luz, brillo especular arriba y sombra de contacto.
+   La lejanía (--z) lo achica, lo desenfoca y lo apaga: así unos parecen más
+   cerca que otros. */
 .pj-orb {
+  --d: calc(58px - var(--z) * 24px);
   position: absolute;
-  width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%;
+  width: var(--d); height: var(--d); margin: calc(var(--d) / -2) 0 0 calc(var(--d) / -2);
+  border-radius: 50%;
   display: grid; place-items: center;
-  border: 1px solid var(--pj-line);
-  background: color-mix(in srgb, var(--background) 60%, transparent);
-  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-  color: var(--pj-dim);
-  transform: translate(calc(var(--x) * var(--s)), calc(var(--y) * var(--s)));
+  color: color-mix(in srgb, var(--foreground) 78%, transparent);
+  background:
+    radial-gradient(120% 120% at 30% 20%, color-mix(in srgb, white 28%, transparent), transparent 46%),
+    linear-gradient(160deg, color-mix(in srgb, var(--foreground) 14%, transparent), color-mix(in srgb, var(--foreground) 3%, transparent));
+  border: 1px solid color-mix(in srgb, var(--foreground) 22%, transparent);
+  box-shadow:
+    inset 0 1px 1px color-mix(in srgb, white 55%, transparent),
+    inset 0 -10px 18px color-mix(in srgb, var(--axi-brand) 10%, transparent),
+    0 14px 30px -10px rgb(0 0 0 / 0.55);
+  backdrop-filter: blur(12px) saturate(1.8);
+  -webkit-backdrop-filter: blur(12px) saturate(1.8);
+  opacity: calc(1 - var(--z) * 0.45);
+  filter: blur(calc(var(--z) * var(--z) * 3.2px));
+  transform: translate(calc(var(--fx) * min(44vw, 640px)), calc(var(--y) * var(--s)));
 }
+.pj-orb svg { width: calc(var(--d) * 0.34); height: calc(var(--d) * 0.34); }
+@media (max-width: 639px) { .pj-orb[data-m="off"] { display: none; } }
 
 /* ───────────── 2 · El juego ───────────── */
 .pj-game { position: relative; z-index: 3; justify-content: center; gap: 20px; }
@@ -268,39 +287,78 @@
 [data-tone="amber"] { --pj-tone: var(--axi-amber); }
 [data-tone="ok"] { --pj-tone: var(--axi-success); }
 
-.pj-chat-log { flex: 1; min-height: 0; padding: 10px 11px; mask-image: linear-gradient(to bottom, transparent, black 24px); display: flex; flex-direction: column; justify-content: flex-end; gap: 8px; overflow: hidden; }
-
-/* Los mensajes no se encogen: lo que no cabe se va por arriba, como en un chat. */
-.pj-chat-log > * { flex-shrink: 0; }
-.pj-bubble { max-width: 82%; padding: 9px 13px; border-radius: 18px; font-size: 13px; line-height: 1.42; animation: pj-pop 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
-.pj-bubble[data-from="customer"] { align-self: flex-start; background: var(--pj-bubble-in); border-bottom-left-radius: 6px; }
-.pj-bubble[data-from="agent"] { align-self: flex-end; background: var(--pj-bubble-out); color: var(--pj-bubble-out-fg); border-bottom-right-radius: 6px; }
-.pj-bubble[data-from="human"] { align-self: flex-end; background: var(--axi-brand); color: var(--axi-on-brand); border-bottom-right-radius: 6px; }
-.pj-bubble-author { display: block; font-size: 10.5px; font-weight: 600; opacity: 0.75; margin-bottom: 2px; }
-.pj-event {
-  align-self: center; display: inline-flex; align-items: center; gap: 6px;
-  font-size: 10.5px; color: var(--pj-muted);
-  padding: 5px 11px; border-radius: 999px; border: 1px solid var(--pj-line);
-  animation: pj-pop 0.35s ease both;
+/* ───── El chat: el mismo del teléfono de la home (tinta y superficie) ───── */
+.pj-ph-avatar {
+  display: grid; place-items: center; flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%;
+  background: var(--foreground); color: var(--background);
+  font-family: var(--font-nexa), var(--font-poppins), sans-serif; font-size: 13px; font-weight: 700; letter-spacing: -0.02em;
 }
-.pj-event::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--pj-tone); }
-.pj-card { width: 216px; border-radius: 18px; overflow: hidden; animation: pj-pop 0.35s ease both; }
-.pj-card[data-from="agent"] { align-self: flex-end; background: var(--pj-bubble-out); color: var(--pj-bubble-out-fg); }
-.pj-card[data-from="customer"] { align-self: flex-start; background: var(--pj-bubble-in); }
-.pj-card img { display: block; width: 100%; height: 110px; object-fit: cover; }
-.pj-card-kicker { font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 600; opacity: 0.6; }
-.pj-photo { align-self: flex-start; width: 180px; border-radius: 18px; overflow: hidden; background: var(--pj-bubble-in); animation: pj-pop 0.35s ease both; }
-.pj-photo img { display: block; width: 180px; height: 120px; object-fit: cover; }
-.pj-voice { width: 28px; height: 28px; flex: none; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, currentColor 18%, transparent); cursor: pointer; }
+.pj-ph-status { display: flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--pj-dim); }
+.pj-ph-online { width: 6px; height: 6px; border-radius: 50%; background: var(--axi-success); }
+.pj-ph-plus { display: grid; place-items: center; width: 30px; height: 30px; flex: none; border-radius: 50%; background: color-mix(in srgb, var(--foreground) 8%, transparent); color: var(--pj-dim); }
+
+.pj-chat-log {
+  position: relative; display: flex; flex: 1; flex-direction: column; justify-content: flex-end; min-height: 0; overflow: hidden;
+  padding: 10px 11px;
+  /* Los turnos se van por debajo de la cabecera, sin chocar con ella. */
+  mask-image: linear-gradient(to bottom, transparent, black 24px);
+}
+/* Pegado abajo aunque no quepa: lo que sobra se va por arriba, como en un chat. */
+.pj-chat-feed { display: flex; flex-shrink: 0; flex-direction: column; gap: 7px; }
+.pj-chat-day {
+  align-self: center; margin-bottom: 4px; padding: 3px 10px; border-radius: 999px;
+  background: color-mix(in srgb, var(--foreground) 6%, transparent); color: var(--pj-dim); font-size: 10.5px;
+}
+.pj-msg { display: flex; animation: pj-pop 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.pj-msg[data-side="in"] { justify-content: flex-start; transform-origin: left bottom; }
+.pj-msg[data-side="out"] { justify-content: flex-end; transform-origin: right bottom; }
+.pj-msg[data-side="system"] { justify-content: center; }
+.pj-chat-bub {
+  max-width: 78%; margin: 0; padding: 8px 12px 7px; border-radius: 18px 18px 6px 18px;
+  background: var(--ph-out); color: var(--background);
+  font-size: 13px; line-height: 1.38; letter-spacing: -0.005em; overflow-wrap: anywhere;
+}
+.pj-msg[data-side="in"] .pj-chat-bub { max-width: 76%; border-radius: 18px 18px 18px 6px; background: var(--ph-in); color: var(--foreground); }
+.pj-chat-author { display: block; margin-bottom: 1px; font-size: 10.5px; font-weight: 600; color: var(--axi-brand); }
+.pj-chat-meta {
+  display: inline-flex; align-items: center; gap: 2px; float: right; margin: 5px 0 -2px 10px;
+  font-size: 9.5px; font-variant-numeric: tabular-nums; color: color-mix(in srgb, var(--background) 64%, var(--ph-out));
+}
+.pj-msg[data-side="in"] .pj-chat-meta { color: var(--pj-dim); }
+.pj-chat-card .pj-chat-meta { float: none; margin: 0; }
+.pj-chat-system {
+  display: flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 8%, transparent);
+  background: color-mix(in srgb, var(--foreground) 7%, transparent);
+  color: color-mix(in srgb, var(--foreground) 84%, transparent); font-size: 11px;
+}
+.pj-chat-system svg { color: var(--pj-tone); }
+.pj-chat-typing {
+  display: flex; gap: 4px; padding: 11px 14px; border-radius: 18px 18px 6px 18px; background: var(--ph-out);
+}
+.pj-chat-typing i { width: 5px; height: 5px; border-radius: 50%; background: color-mix(in srgb, var(--background) 55%, var(--ph-out)); animation: pj-dot 1s infinite; }
+.pj-chat-typing i:nth-child(2) { animation-delay: 0.15s; }
+.pj-chat-typing i:nth-child(3) { animation-delay: 0.3s; }
+/* La tarjeta: papel en tinta, con la foto del catálogo en su marco. */
+.pj-chat-card { width: 196px; overflow: hidden; border-radius: 18px 18px 6px 18px; background: var(--ph-out); color: var(--background); }
+.pj-msg[data-side="in"] .pj-chat-card { border-radius: 18px 18px 18px 6px; background: var(--ph-in); color: var(--foreground); }
+.pj-chat-card-art { height: 128px; overflow: hidden; background: radial-gradient(120% 90% at 50% 10%, var(--foreground), color-mix(in srgb, var(--foreground) 86%, var(--background)) 70%); }
+.pj-chat-card-art img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.pj-chat-kicker { margin: 0 0 1px; font-size: 9.5px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.6; }
+.pj-chat-card p { margin: 0; }
+.pj-chat-photo { width: 190px; overflow: hidden; border-radius: 18px 18px 18px 6px; background: var(--ph-in); }
+.pj-chat-photo img { display: block; width: 190px; height: 128px; object-fit: cover; }
+.pj-chat-photo figcaption { padding: 6px 11px 7px; font-size: 10.5px; color: var(--pj-dim); }
+.pj-chat-voice { display: flex; flex-direction: column; gap: 6px; width: 238px; max-width: 82%; }
+.pj-chat-voice .pj-chat-meta { align-self: flex-end; float: none; margin: -2px 0 -2px; }
+.pj-voice { width: 28px; height: 28px; flex: none; border: 0; border-radius: 50%; display: grid; place-items: center; color: inherit; background: color-mix(in srgb, currentColor 16%, transparent); cursor: pointer; }
 .pj-wave { display: flex; align-items: center; gap: 2px; height: 18px; }
 .pj-wave i { width: 3px; height: 16px; border-radius: 2px; background: currentColor; opacity: 0.7; transform: scaleY(0.4); }
+.pj-wave i:nth-child(3n) { transform: scaleY(0.75); }
+.pj-wave i:nth-child(4n) { transform: scaleY(0.55); }
 .pj-wave[data-playing] i { animation: pj-eq 0.7s ease-in-out infinite; }
 .pj-wave i:nth-child(2n) { animation-delay: 0.12s; }
 .pj-wave i:nth-child(3n) { animation-delay: 0.24s; }
-.pj-typing { display: inline-flex; gap: 4px; }
-.pj-typing i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: pj-dot 1s infinite; }
-.pj-typing i:nth-child(2) { animation-delay: 0.15s; }
-.pj-typing i:nth-child(3) { animation-delay: 0.3s; }
 
 .pj-moves { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 /* Una jugada: un mando de cristal con su orbe al centro. Al pasar, el orbe se
@@ -388,7 +446,7 @@
 @keyframes pj-dot { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .pj-bubble, .pj-event, .pj-card, .pj-photo, .pj-wave[data-playing] i, .pj-typing i { animation: none; }
+  .pj-msg, .pj-wave[data-playing] i, .pj-chat-typing i { animation: none; }
   .pj-abilities-rail > span, .pj-move, .pj-move-icon, .pj-cta { transition: none; }
   .pj-ph-rise { animation: none; }
 }

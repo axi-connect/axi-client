@@ -212,9 +212,13 @@ export const GAME_MOVES: readonly GameMove[] = [
 
 export const GAME = {
   business: "Óptica Vértice",
+  /** El avatar del chat: iniciales en tinta, como el teléfono de la home. */
+  initials: "ÓV",
+  day: "Hoy",
+  read: "leído",
   /** Decorativo (`alt` vacío): el nombre va escrito al lado. */
   avatar: { src: "/images/landing/optica-vertice-logo.png", alt: "" },
-  online: "en línea",
+  online: "agente en línea",
   typing: "escribiendo…",
   greeting: PRODUCTOS_HERO.greeting,
   composer: "Elige tu jugada",

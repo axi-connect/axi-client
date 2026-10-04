@@ -8,6 +8,7 @@ import {
   CalendarClock,
   Camera,
   Check,
+  CheckCheck,
   ContactRound,
   CreditCard,
   Lock,
@@ -255,11 +256,14 @@ export function ProductosGame() {
           orbsRef={orbsRef}
           head={
             <div className="pj-ph-head">
-              <Image src={GAME.avatar.src} alt={GAME.avatar.alt} width={36} height={36} className="size-9 rounded-full bg-white object-cover" />
+              <svg width="10" height="17" viewBox="0 0 10 17" aria-hidden="true">
+                <path d="M8.5 1.5 1.8 8.5l6.7 7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span className="pj-ph-avatar" aria-hidden="true">{GAME.initials}</span>
               <div className="flex min-w-0 flex-col">
-                <span className="text-sm font-semibold">{GAME.business}</span>
-                <span className="flex items-center gap-1.5 text-[11.5px] text-[var(--pj-dim)]">
-                  <span className="size-1.5 rounded-full bg-[var(--axi-success)]" aria-hidden="true" />
+                <span className="text-sm leading-tight font-semibold">{GAME.business}</span>
+                <span className="pj-ph-status">
+                  <span className="pj-ph-online" aria-hidden="true" />
                   {state.pending ? GAME.typing : GAME.online}
                 </span>
               </div>
@@ -267,19 +271,27 @@ export function ProductosGame() {
           }
           compose={
             <div className="pj-ph-compose" aria-hidden="true">
-              <span className="pj-ph-input">{GAME.composer} →</span>
+              <span className="pj-ph-plus">
+                <svg width="12" height="12" viewBox="0 0 12 12">
+                  <path d="M6 1v10M1 6h10" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                </svg>
+              </span>
+              <span className="pj-ph-input">{GAME.composer}</span>
             </div>
           }
         >
           <div className="pj-chat-log" role="log" aria-label={GAME.chatLabel}>
-            {state.log.slice(-8).map((entry) => (
-              <Message key={entry.key} id={entry.key} message={entry.message} playing={playing === entry.key} onVoice={(src) => (playing === entry.key ? stopAudio() : playAudio(entry.key, src))} />
-            ))}
-            {state.pending ? (
-              <div className="pj-bubble" data-from="agent" aria-label={GAME.typing}>
-                <span className="pj-typing" aria-hidden="true"><i /><i /><i /></span>
-              </div>
-            ) : null}
+            <div className="pj-chat-feed">
+              <span className="pj-chat-day">{GAME.day}</span>
+              {state.log.map((entry, i) => (
+                <Message key={entry.key} id={entry.key} time={clockAt(i)} message={entry.message} playing={playing === entry.key} onVoice={(src) => (playing === entry.key ? stopAudio() : playAudio(entry.key, src))} />
+              ))}
+              {state.pending ? (
+                <div className="pj-msg" data-side="out" aria-label={GAME.typing}>
+                  <span className="pj-chat-typing" aria-hidden="true"><i /><i /><i /></span>
+                </div>
+              ) : null}
+            </div>
           </div>
         </ProductosPhone>
 
@@ -317,49 +329,99 @@ export function ProductosGame() {
   );
 }
 
-function Message({ id, message, playing, onVoice }: { id: string; message: GameMessage; playing: boolean; onVoice: (src: string) => void }) {
+/** La hora de cada mensaje: el chat empezó a las 9:32 y la barra marca las 9:41. */
+function clockAt(i: number) {
+  return `9:${String(Math.min(41, 32 + i)).padStart(2, "0")}`;
+}
+
+/** El lado del hilo: el cliente entra a la izquierda; Axi y el equipo salen a la derecha, en tinta. */
+const SIDE = { customer: "in", agent: "out", human: "out" } as const;
+
+function Meta({ time, out }: { time: string; out: boolean }) {
+  return (
+    <span className="pj-chat-meta">
+      {time}
+      {out ? <CheckCheck className="size-3" aria-label={GAME.read} /> : null}
+    </span>
+  );
+}
+
+function Message({ id, time, message, playing, onVoice }: { id: string; time: string; message: GameMessage; playing: boolean; onVoice: (src: string) => void }) {
   switch (message.kind) {
-    case "text":
+    case "text": {
+      const side = SIDE[message.from];
       return (
-        <div className="pj-bubble" data-from={message.from}>
-          {message.author ? <span className="pj-bubble-author">{message.author}</span> : null}
-          {message.text}
+        <div className="pj-msg" data-side={side}>
+          <p className="pj-chat-bub" data-human={message.from === "human" ? "" : undefined}>
+            {message.author ? <span className="pj-chat-author">{message.author}</span> : null}
+            {message.text}
+            <Meta time={time} out={side === "out"} />
+          </p>
         </div>
       );
+    }
     case "event":
-      return <div className="pj-event" data-tone={message.tone}>{message.text}</div>;
+      return (
+        <div className="pj-msg" data-side="system">
+          <span className="pj-chat-system" data-tone={message.tone}>
+            <Check className="size-3" aria-hidden="true" />
+            {message.text}
+          </span>
+        </div>
+      );
     case "photo":
       return (
-        <figure className="pj-photo m-0">
-          <Image src={message.imageSrc} alt={message.imageAlt} width={180} height={120} />
-          <figcaption className="pj-dim px-[11px] py-1.5 text-[10.5px]">{message.caption}</figcaption>
-        </figure>
+        <div className="pj-msg" data-side="in">
+          <figure className="pj-chat-photo m-0">
+            <Image src={message.imageSrc} alt={message.imageAlt} width={190} height={128} />
+            <figcaption>
+              {message.caption}
+              <Meta time={time} out={false} />
+            </figcaption>
+          </figure>
+        </div>
       );
-    case "card":
+    case "card": {
+      const side = SIDE[message.from === "agent" ? "agent" : "customer"];
       return (
-        <div className="pj-card" data-from={message.from}>
-          {message.imageSrc ? <Image src={message.imageSrc} alt={message.imageAlt ?? ""} width={216} height={110} /> : null}
-          <div className="flex flex-col gap-0.5 px-[13px] py-2.5">
-            <span className="pj-card-kicker">{message.kicker}</span>
-            <span className="text-sm font-semibold">{message.title}</span>
-            <span className="text-[11.5px] opacity-70">{message.meta}</span>
+        <div className="pj-msg" data-side={side}>
+          <div className="pj-chat-card">
+            {message.imageSrc ? (
+              <div className="pj-chat-card-art">
+                <Image src={message.imageSrc} alt={message.imageAlt ?? ""} width={196} height={128} />
+              </div>
+            ) : null}
+            <div className="px-3 pt-[9px] pb-[10px]">
+              <p className="pj-chat-kicker">{message.kicker}</p>
+              <p className="text-[13px] font-semibold tabular-nums">{message.title}</p>
+              <p className="flex items-center justify-between gap-2 text-xs tabular-nums opacity-70">
+                <span className="truncate">{message.meta}</span>
+                <Meta time={time} out={side === "out"} />
+              </p>
+            </div>
           </div>
         </div>
       );
-    case "voice":
+    }
+    case "voice": {
+      const side = SIDE[message.from];
       return (
-        <div className="pj-bubble flex w-[236px] flex-col gap-1.5" data-from={message.from} id={`voz-${id}`}>
-          <div className="flex items-center gap-2.5">
-            <button type="button" className="pj-voice" onClick={() => onVoice(message.audio.src)} aria-label={playing ? GAME.pauseVoice : GAME.playVoice}>
-              {playing ? <Pause className="size-3" fill="currentColor" aria-hidden="true" /> : <Play className="size-3" fill="currentColor" aria-hidden="true" />}
-            </button>
-            <span className="pj-wave" data-playing={playing ? "" : undefined} aria-hidden="true">
-              {Array.from({ length: 16 }, (_, i) => <i key={i} />)}
-            </span>
-            <span className="text-[10.5px] opacity-60">{message.audio.duration}</span>
+        <div className="pj-msg" data-side={side} id={`voz-${id}`}>
+          <div className="pj-chat-bub pj-chat-voice">
+            <div className="flex items-center gap-2.5">
+              <button type="button" className="pj-voice" onClick={() => onVoice(message.audio.src)} aria-label={playing ? GAME.pauseVoice : GAME.playVoice}>
+                {playing ? <Pause className="size-3" fill="currentColor" aria-hidden="true" /> : <Play className="size-3" fill="currentColor" aria-hidden="true" />}
+              </button>
+              <span className="pj-wave" data-playing={playing ? "" : undefined} aria-hidden="true">
+                {Array.from({ length: 18 }, (_, i) => <i key={i} />)}
+              </span>
+              <span className="text-[10.5px] tabular-nums opacity-60">{message.audio.duration}</span>
+            </div>
+            <span className="text-[11px] leading-snug opacity-75">«{message.text}»</span>
+            <Meta time={time} out={side === "out"} />
           </div>
-          <span className="text-[11px] opacity-75">«{message.text}»</span>
         </div>
       );
+    }
   }
 }

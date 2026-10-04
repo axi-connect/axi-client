@@ -13,9 +13,21 @@ const KEYS = [
   { side: "r", top: 420, h: 44 },
 ] as const;
 
-/** Las siete habilidades por descubrir, en corona sobre el teléfono (px a escala 1, desde el centro de su borde de arriba). */
+/**
+ * Las siete habilidades por descubrir, sueltas alrededor del teléfono en el
+ * hero, a distintas profundidades: `fx` es la posición horizontal como
+ * fracción del ancho disponible (−1 a 1), `y` los px sobre el borde de arriba
+ * del teléfono y `z` la lejanía (0 cerca y nítida, 1 lejos, pequeña y
+ * desenfocada). `m: false` se oculta en móvil, donde el teléfono ocupa el ancho.
+ */
 const ORBS = [
-  [-250, 34], [-214, -40], [-132, -94], [0, -114], [132, -94], [214, -40], [250, 34],
+  { fx: -0.94, y: 18, z: 0.7, m: false },
+  { fx: -0.66, y: -128, z: 0.1, m: true },
+  { fx: -0.44, y: -18, z: 0.42, m: false },
+  { fx: 0.08, y: -140, z: 0.62, m: true },
+  { fx: 0.46, y: -76, z: 0.05, m: true },
+  { fx: 0.7, y: 34, z: 0.48, m: false },
+  { fx: 0.95, y: -112, z: 0.82, m: true },
 ] as const;
 
 /**
@@ -49,9 +61,14 @@ export function ProductosPhone({
     <div ref={slotRef} className="pj-ph">
       <div ref={flightRef} className="pj-ph-flight">
         <div ref={orbsRef} className="pj-ph-orbs" aria-hidden="true">
-          {ORBS.map(([x, y]) => (
-            <span key={`${x}${y}`} className="pj-orb" style={{ "--x": `${x}px`, "--y": `${y}px` } as CSSProperties}>
-              <Lock className="size-4" />
+          {ORBS.map((o) => (
+            <span
+              key={`${o.fx}${o.y}`}
+              className="pj-orb"
+              data-m={o.m ? undefined : "off"}
+              style={{ "--fx": o.fx, "--y": `${o.y}px`, "--z": o.z } as CSSProperties}
+            >
+              <Lock />
             </span>
           ))}
         </div>

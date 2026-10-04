@@ -11,7 +11,7 @@ const smooth = (t: number) => t * t * (3 - 2 * t);
 
 /** La pose del cuerpo: en el hero mira hacia arriba, saliendo de la luz; en el juego, de tres cuartos. */
 const POSE = {
-  hero: { rx: 24, ry: 0, rz: 0, scale: 0.86 },
+  hero: { rx: 22, ry: 0, rz: 0, scale: 1.14 },
   game: { rx: 6, ry: -14, rz: 1, scale: 1 },
 } as const;
 
