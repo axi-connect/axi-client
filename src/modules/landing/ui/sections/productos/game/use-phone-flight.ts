@@ -62,7 +62,12 @@ export function flightAt(s: number, { slotDoc, land, vh, peek }: { slotDoc: numb
  * teléfono»). Solo escribe `transform` en dos elementos por frame y solo lee
  * cuando hay scroll. Con movimiento reducido no vuela: queda en su sitio.
  */
-export function usePhoneFlight(slot: RefObject<HTMLElement | null>, flight: RefObject<HTMLElement | null>, body: RefObject<HTMLElement | null>) {
+export function usePhoneFlight(
+  slot: RefObject<HTMLElement | null>,
+  flight: RefObject<HTMLElement | null>,
+  body: RefObject<HTMLElement | null>,
+  orbs: RefObject<HTMLElement | null>,
+) {
   useEffect(() => {
     const scroller = document.querySelector<HTMLElement>("[data-app-scroll]");
     const hero = document.getElementById(PRODUCTOS_ANCHORS.hero);
@@ -70,11 +75,12 @@ export function usePhoneFlight(slot: RefObject<HTMLElement | null>, flight: RefO
     const slotEl = slot.current;
     const flightEl = flight.current;
     const bodyEl = body.current;
+    const orbsEl = orbs.current;
     if (!scroller || !hero || !game || !slotEl || !flightEl || !bodyEl) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    // El mismo `--pj-peek` de productos.css: min(300px, 32svh).
-    const peekOf = (vh: number) => Math.min(300, vh * 0.32);
+    // El mismo `--pj-peek` de productos.css: min(260px, 26svh).
+    const peekOf = (vh: number) => Math.min(260, vh * 0.26);
 
     let geo = { slotDoc: 0, land: 0, vh: 0, peek: 0 };
     const measure = () => {
@@ -98,6 +104,8 @@ export function usePhoneFlight(slot: RefObject<HTMLElement | null>, flight: RefO
       last = move;
       flightEl.style.transform = move;
       bodyEl.style.transform = `rotateX(${f.rx.toFixed(2)}deg) rotateY(${f.ry.toFixed(2)}deg) rotateZ(${f.rz.toFixed(2)}deg)`;
+      // Las esferas coronan el teléfono en el hero y se apagan al despegar.
+      if (orbsEl) orbsEl.style.opacity = Math.max(0, 1 - f.t * 3).toFixed(3);
       if (f.t < 1) flightEl.setAttribute("data-flying", "");
       else flightEl.removeAttribute("data-flying");
     };
@@ -124,6 +132,7 @@ export function usePhoneFlight(slot: RefObject<HTMLElement | null>, flight: RefO
       flightEl.removeAttribute("style");
       flightEl.removeAttribute("data-flying");
       bodyEl.removeAttribute("style");
+      orbsEl?.removeAttribute("style");
     };
-  }, [slot, flight, body]);
+  }, [slot, flight, body, orbs]);
 }

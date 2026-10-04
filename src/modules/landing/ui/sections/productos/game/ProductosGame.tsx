@@ -7,6 +7,7 @@ import { useReducedMotion } from "framer-motion";
 import {
   CalendarClock,
   Camera,
+  Check,
   ContactRound,
   CreditCard,
   Lock,
@@ -76,9 +77,10 @@ export function ProductosGame() {
   const slotRef = useRef<HTMLDivElement | null>(null);
   const flightRef = useRef<HTMLDivElement | null>(null);
   const bodyRef = useRef<HTMLDivElement | null>(null);
+  const orbsRef = useRef<HTMLDivElement | null>(null);
   const inView = useRef(false);
 
-  usePhoneFlight(slotRef, flightRef, bodyRef);
+  usePhoneFlight(slotRef, flightRef, bodyRef, orbsRef);
 
   const later = useCallback((ms: number, fn: () => void) => {
     timers.current.push(window.setTimeout(fn, reduced ? 0 : ms));
@@ -198,7 +200,6 @@ export function ProductosGame() {
 
   return (
     <section ref={sectionRef} id={PRODUCTOS_ANCHORS.game} aria-labelledby="agente-title" className="pj-scene pj-game">
-      <div className="pj-glow" aria-hidden="true" />
       <h2 id="agente-title" className="sr-only">{GAME.island.title}</h2>
       <p className="sr-only">{GAME.note}</p>
       <ul className="sr-only">
@@ -251,6 +252,7 @@ export function ProductosGame() {
           slotRef={slotRef}
           flightRef={flightRef}
           bodyRef={bodyRef}
+          orbsRef={orbsRef}
           head={
             <div className="pj-ph-head">
               <Image src={GAME.avatar.src} alt={GAME.avatar.alt} width={36} height={36} className="size-9 rounded-full bg-white object-cover" />
@@ -298,10 +300,11 @@ export function ProductosGame() {
           ) : (
             <div className="pj-moves" role="group" aria-label={GAME.movesTitle}>
               {GAME_MOVES.map((m) => {
-                const Icon = ICONS[m.id];
+                const used = state.used.includes(m.id);
+                const Icon = used ? Check : ICONS[m.id];
                 return (
-                  <button key={m.id} type="button" className="pj-move" data-tone={TONE[m.id]} data-hint={hint === m.id ? "" : undefined} disabled={state.used.includes(m.id) || state.pending !== null} onClick={() => onMove(m.id)}>
-                    <span className="pj-move-icon" aria-hidden="true"><Icon className="size-4" /></span>
+                  <button key={m.id} type="button" className="pj-move" data-tone={TONE[m.id]} data-used={used ? "" : undefined} data-hint={hint === m.id ? "" : undefined} disabled={used || state.pending !== null} onClick={() => onMove(m.id)}>
+                    <span className="pj-move-icon" aria-hidden="true"><Icon className="size-5" strokeWidth={used ? 2.6 : 2} /></span>
                     <span>{m.label}</span>
                   </button>
                 );

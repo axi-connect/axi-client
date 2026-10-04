@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode, Ref } from "react";
+import { Lock } from "lucide-react";
 
 /** El canto: nueve láminas en Z, como el teléfono premium de la home. */
 const EDGES = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
@@ -10,6 +11,11 @@ const KEYS = [
   { side: "l", top: 238, h: 56 },
   { side: "r", top: 196, h: 88 },
   { side: "r", top: 420, h: 44 },
+] as const;
+
+/** Las siete habilidades por descubrir, en corona sobre el teléfono (px a escala 1, desde el centro de su borde de arriba). */
+const ORBS = [
+  [-250, 34], [-214, -40], [-132, -94], [0, -114], [132, -94], [214, -40], [250, 34],
 ] as const;
 
 /**
@@ -29,6 +35,7 @@ export function ProductosPhone({
   slotRef,
   flightRef,
   bodyRef,
+  orbsRef,
 }: {
   children: ReactNode;
   head: ReactNode;
@@ -36,10 +43,18 @@ export function ProductosPhone({
   slotRef?: Ref<HTMLDivElement>;
   flightRef?: Ref<HTMLDivElement>;
   bodyRef?: Ref<HTMLDivElement>;
+  orbsRef?: Ref<HTMLDivElement>;
 }) {
   return (
     <div ref={slotRef} className="pj-ph">
       <div ref={flightRef} className="pj-ph-flight">
+        <div ref={orbsRef} className="pj-ph-orbs" aria-hidden="true">
+          {ORBS.map(([x, y]) => (
+            <span key={`${x}${y}`} className="pj-orb" style={{ "--x": `${x}px`, "--y": `${y}px` } as CSSProperties}>
+              <Lock className="size-4" />
+            </span>
+          ))}
+        </div>
         <div className="pj-ph-rise">
           <div className="pj-ph-stage">
             <div className="pj-ph-floor" aria-hidden="true" />

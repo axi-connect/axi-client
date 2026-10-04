@@ -1,12 +1,7 @@
 import Link from "next/link";
-import { Lock, Play } from "lucide-react";
+import { Play } from "lucide-react";
 
 import { PRODUCTOS_ANCHORS, PRODUCTOS_HERO, PRODUCTOS_TRIAL } from "@/modules/landing/ui/content/productos.content";
-
-/** Las siete habilidades por descubrir, en arco sobre el teléfono (x, y en px desde el centro). */
-const ORBS = [
-  [-250, 34], [-212, -40], [-130, -96], [0, -122], [130, -96], [212, -40], [250, 34],
-] as const;
 
 /**
  * #inicio — «Escríbele. / Mira cómo vende.» Server Component: llega completo
@@ -16,7 +11,6 @@ const ORBS = [
 export function ProductosOpening() {
   return (
     <section id={PRODUCTOS_ANCHORS.hero} aria-labelledby="inicio-title" className="pj-scene pj-opening">
-      <div className="pj-sun" aria-hidden="true" />
       <h1 id="inicio-title" className="pj-h pj-h-xl relative z-[2]">
         <span className="block">{PRODUCTOS_HERO.strong}</span>
         <span className="t block">{PRODUCTOS_HERO.thin}</span>
@@ -32,16 +26,8 @@ export function ProductosOpening() {
         </Link>
       </div>
 
-      <div className="pj-orbs max-md:hidden" aria-hidden="true">
-        {ORBS.map(([x, y], i) => (
-          <span key={i} className="pj-orb" style={{ transform: `translate(${x}px, ${y}px)` }}>
-            <Lock className="size-4" />
-          </span>
-        ))}
-      </div>
-
-      {/* El teléfono no vive aquí: es el del juego, que asoma desde esta luz y
-          sube con el scroll hasta su sitio (usePhoneFlight). */}
+      {/* El teléfono (con sus siete esferas) no vive aquí: es el del juego, que
+          asoma desde la luz compartida y sube con el scroll (usePhoneFlight). */}
     </section>
   );
 }

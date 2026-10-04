@@ -35,8 +35,12 @@ export default function ProductosPage() {
   return (
     <div className="pj">
       <JsonLd data={breadcrumbSchema(["/productos"])} />
-      <ProductosOpening />
-      <ProductosGame />
+      {/* Hero y juego bajo una sola luz: el teléfono viaja de uno a otro. */}
+      <div className="pj-stage">
+        <div className="pj-stage-light" aria-hidden="true" />
+        <ProductosOpening />
+        <ProductosGame />
+      </div>
       <section id={PRODUCTOS_ANCHORS.pieces} aria-labelledby="piezas-title" className="pj-scene pj-pieces">
         <ProductosPieces />
       </section>
