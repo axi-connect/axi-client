@@ -115,6 +115,9 @@
 .pp[data-mode="tabs"] .pp-stage { padding-top: 8px; }
 
 @media (max-height: 760px) {
+  /* Pantallas bajas: una ventana de diseño más baja (el bento del CRM ya se
+     oculta), para que el zoom no la deje diminuta. */
+  .pp[data-mode="pinned"] .pp-frame, .pp[data-mode="tabs"] .pp-frame { height: 540px; }
   .pp[data-mode="pinned"] .pp-headline { font-size: clamp(30px, 6.2svh, 52px); }
   .pp[data-mode="pinned"] .pp-stage { gap: 12px; padding-top: 84px; }
 }
