@@ -23,8 +23,11 @@
   mask: linear-gradient(to bottom, transparent, black 18%, black 74%, transparent), linear-gradient(to right, transparent, black 16%, black 84%, transparent);
   mask-composite: intersect;
 }
+/* El plano inclinado es más alto que el escenario: así su borde superior queda
+   fuera de cuadro y el fundido lo disuelve, sin corte recto ni hueco arriba. */
 .pj-wall-tilt {
-  display: flex; justify-content: center; gap: 16px; height: 100%;
+  position: absolute; inset: -22% 0 -12%;
+  display: flex; justify-content: center; gap: 16px;
   transform: translateZ(-60px) rotateX(14deg) rotateY(-9deg) rotateZ(9deg);
   transform-style: preserve-3d;
 }
@@ -55,6 +58,11 @@
 
 @media (max-width: 767px) {
   .pj-wall-stage { height: 460px; }
-  .pj-wall-col { width: 220px; }
+  .pj-wall-tilt { gap: 12px; transform: translateZ(-40px) rotateX(10deg) rotateY(-6deg) rotateZ(6deg); }
+  .pj-wall-col { width: 168px; }
   .pj-wall-col-last { display: none; }
+  .pj-wall-card { padding: 12px 13px 10px; border-radius: 18px; }
+  /* Todas son de WhatsApp: en móvil el canal sobra y el nombre del negocio cabe. */
+  .pj-wall-ch { display: none; }
+  .pj-wall-text { font-size: 12.5px; }
 }
