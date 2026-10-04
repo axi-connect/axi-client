@@ -37,5 +37,13 @@ export function islandOnPage(pathname: string, read: number): IslandText {
   return { title: pageName(pathname), sub: SITE_ISLAND.read(Math.round(r * 100)), ring: r };
 }
 
+/**
+ * Una página fuera de la home puede tomar la isla mientras una escena suya
+ * está en pantalla (/productos: «Juega a ser tu cliente · 3 de 7»). `null`
+ * la devuelve a lo leído. Los avisos usan `film:activity`, como en la home.
+ */
+export const PAGE_ISLAND_EVENT = "site:island";
+export type PageIslandDetail = IslandText | null;
+
 /** A partir de cuántos px de scroll la barra se vuelve isla (§18.1: «unos 120 px»). */
 export const ISLAND_AT = 120;

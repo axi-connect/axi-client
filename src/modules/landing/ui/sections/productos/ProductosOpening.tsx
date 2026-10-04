@@ -1,8 +1,7 @@
-import Image from "next/image";
 import Link from "next/link";
 import { Lock, Play } from "lucide-react";
 
-import { GAME, PRODUCTOS_ANCHORS, PRODUCTOS_HERO, PRODUCTOS_TRIAL } from "@/modules/landing/ui/content/productos.content";
+import { PRODUCTOS_ANCHORS, PRODUCTOS_HERO, PRODUCTOS_TRIAL } from "@/modules/landing/ui/content/productos.content";
 
 /** Las siete habilidades por descubrir, en arco sobre el teléfono (x, y en px desde el centro). */
 const ORBS = [
@@ -11,8 +10,8 @@ const ORBS = [
 
 /**
  * #inicio — «Escríbele. / Mira cómo vende.» Server Component: llega completo
- * en el HTML. El teléfono asoma desde el sol del hero de la home y el arco de
- * esferas promete las siete habilidades del juego.
+ * en el HTML. El arco de esferas promete las siete habilidades del juego; el
+ * teléfono que asoma desde la luz es el mismo del juego (vuela con el scroll).
  */
 export function ProductosOpening() {
   return (
@@ -41,16 +40,8 @@ export function ProductosOpening() {
         ))}
       </div>
 
-      <div aria-hidden="true" className="pj-device pj-opening-phone relative z-[1]">
-        <div className="pj-screen">
-          <div className="flex items-center gap-2.5 border-b border-[var(--pj-line)] pb-2.5">
-            <Image src={GAME.avatar.src} alt="" width={28} height={28} className="size-7 rounded-full bg-white" />
-            <span className="text-[13px] font-semibold">{GAME.business}</span>
-            <span className="text-[10.5px] text-[var(--axi-success)]">{GAME.online}</span>
-          </div>
-          <div className="pj-bubble self-end text-left" data-from="agent">{PRODUCTOS_HERO.greeting}</div>
-        </div>
-      </div>
+      {/* El teléfono no vive aquí: es el del juego, que asoma desde esta luz y
+          sube con el scroll hasta su sitio (usePhoneFlight). */}
     </section>
   );
 }

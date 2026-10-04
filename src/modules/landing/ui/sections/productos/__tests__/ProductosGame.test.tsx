@@ -12,7 +12,26 @@ jest.mock("framer-motion", () => ({ useReducedMotion: () => false }));
 
 let audios: { src: string; play: jest.Mock; pause: jest.Mock; onended: (() => void) | null }[] = [];
 
+let islands: unknown[] = [];
+let activity: { title: string; detail: string }[] = [];
+const onIsland = (e: Event) => islands.push((e as CustomEvent).detail);
+const onActivity = (e: Event) => activity.push((e as CustomEvent).detail);
+let ioCallback: ((entries: { isIntersecting: boolean }[]) => void) | null = null;
+
+beforeAll(() => {
+  window.IntersectionObserver = jest.fn((cb) => {
+    ioCallback = cb;
+    return { observe: jest.fn(), disconnect: jest.fn(), unobserve: jest.fn() };
+  }) as unknown as typeof IntersectionObserver;
+  window.ResizeObserver = jest.fn(() => ({ observe: jest.fn(), disconnect: jest.fn(), unobserve: jest.fn() })) as unknown as typeof ResizeObserver;
+  window.matchMedia = jest.fn().mockImplementation((q: string) => ({ matches: false, media: q, addEventListener: jest.fn(), removeEventListener: jest.fn() })) as unknown as typeof window.matchMedia;
+});
+
 beforeEach(() => {
+  islands = [];
+  activity = [];
+  window.addEventListener("site:island", onIsland);
+  window.addEventListener("film:activity", onActivity);
   jest.useFakeTimers();
   audios = [];
   window.Audio = jest.fn((src: string) => {
@@ -21,21 +40,37 @@ beforeEach(() => {
     return a;
   }) as unknown as typeof Audio;
 });
-afterEach(() => jest.useRealTimers());
+afterEach(() => {
+  jest.useRealTimers();
+  window.removeEventListener("site:island", onIsland);
+  window.removeEventListener("film:activity", onActivity);
+});
 
 const move = (label: string) => screen.getByRole("button", { name: label });
 
-test("una jugada descubre su habilidad: la isla la anuncia y la lista la enciende", () => {
+test("una jugada descubre su habilidad: la isla del nav la anuncia y la lista la enciende", () => {
   render(<ProductosGame />);
-  expect(screen.getByText(GAME.island.count(0, GAME_ABILITIES.length))).toBeInTheDocument();
-
   fireEvent.click(move(GAME_MOVES[0].label));
   expect(move(GAME_MOVES[0].label)).toBeDisabled();
   act(() => jest.advanceTimersByTime(1200));
 
   const foto = GAME_ABILITIES.find((a) => a.id === "foto")!;
-  expect(screen.getByText(GAME.island.discovered(foto.name))).toBeInTheDocument();
-  expect(screen.getByText(GAME.island.count(1, GAME_ABILITIES.length))).toBeInTheDocument();
+  expect(activity).toEqual([{ title: GAME.island.discovered(foto.name), detail: foto.line }]);
+  expect(screen.getByText(foto.name)).toBeInTheDocument();
+  expect(screen.getByRole("status")).toHaveTextContent(GAME.island.count(1, GAME_ABILITIES.length));
+});
+
+test("con el juego en pantalla, la isla del nav dice «Juega a ser tu cliente · N de 7»; al salir, se suelta", () => {
+  render(<ProductosGame />);
+  act(() => ioCallback?.([{ isIntersecting: true }]));
+  expect(islands.at(-1)).toEqual({ title: GAME.island.title, sub: GAME.island.count(0, GAME_ABILITIES.length), ring: 0 });
+
+  fireEvent.click(move(GAME_MOVES[0].label));
+  act(() => jest.advanceTimersByTime(1200));
+  expect(islands.at(-1)).toEqual({ title: GAME.island.title, sub: GAME.island.count(1, GAME_ABILITIES.length), ring: 1 / GAME_ABILITIES.length });
+
+  act(() => ioCallback?.([{ isIntersecting: false }]));
+  expect(islands.at(-1)).toBeNull();
 });
 
 test("«Háblale» suena primero el cliente y, al terminar, la respuesta de Axi", async () => {
@@ -62,7 +97,7 @@ test("las seis jugadas completan el juego y «Jugar otra vez» lo reinicia", () 
 
   expect(screen.getByText(GAME.done.thin)).toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: GAME.done.replay }));
-  expect(screen.getByText(GAME.island.count(0, GAME_ABILITIES.length))).toBeInTheDocument();
+  expect(screen.queryByText(GAME.done.thin)).toBeNull();
   expect(move(GAME_MOVES[0].label)).toBeEnabled();
 });
 

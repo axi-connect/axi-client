@@ -14,7 +14,7 @@ import { SiteMenuPanel } from '@/shared/components/layout/site/SiteMenuPanel';
 import { SiteMenuSheet } from '@/shared/components/layout/site/SiteMenuSheet';
 import { SiteThemeChoice } from '@/shared/components/layout/site/SiteThemeChoice';
 import { INTENT_OF, IntentIcon } from '@/shared/components/layout/site/IntentIcon';
-import { ISLAND_AT, islandOnFilm, islandOnPage, readProgress, type IslandChapter } from '@/shared/components/layout/site/site-island';
+import { ISLAND_AT, PAGE_ISLAND_EVENT, islandOnFilm, islandOnPage, readProgress, type IslandChapter, type PageIslandDetail } from '@/shared/components/layout/site/site-island';
 import {
     SITE_INTENTS,
     SITE_ISLAND,
@@ -93,10 +93,13 @@ export default function SiteHeader() {
             if (next !== shown) setIsland((shown = next));
         };
         let top = el.scrollTop;
+        // Una escena de la página puede tomar la isla (PAGE_ISLAND_EVENT); mientras
+        // tanto, lo leído no la pisa.
+        let page: PageIslandDetail = null;
         const update = () => {
             frame = 0;
             show(top > ISLAND_AT);
-            if (!onFilm) {
+            if (!onFilm && !page) {
                 const t = islandOnPage(pathname, readProgress(top, el.scrollHeight, el.clientHeight));
                 paint(t.title, t.sub, t.ring);
             }
@@ -129,12 +132,19 @@ export default function SiteHeader() {
             window.clearTimeout(timer);
             timer = window.setTimeout(() => setToast(null), TOAST_MS);
         };
+        const onPage = (e: Event) => {
+            page = (e as CustomEvent<PageIslandDetail>).detail;
+            if (page) paint(page.title, page.sub, page.ring);
+            else update();
+        };
         if (onFilm) {
             const t = islandOnFilm(null);
             paint(t.title, t.sub, t.ring);
             window.addEventListener(FILM_CHAPTER_EVENT, onChapter);
-            window.addEventListener(FILM_ACTIVITY_EVENT, onActivity);
+        } else {
+            window.addEventListener(PAGE_ISLAND_EVENT, onPage);
         }
+        window.addEventListener(FILM_ACTIVITY_EVENT, onActivity);
         if (io) show(el.scrollTop > ISLAND_AT);
         else {
             update();
@@ -146,6 +156,7 @@ export default function SiteHeader() {
             el.removeEventListener('scroll', onScroll);
             window.removeEventListener(FILM_CHAPTER_EVENT, onChapter);
             window.removeEventListener(FILM_ACTIVITY_EVENT, onActivity);
+            window.removeEventListener(PAGE_ISLAND_EVENT, onPage);
             window.clearTimeout(timer);
             if (frame) cancelAnimationFrame(frame);
             setToast(null);

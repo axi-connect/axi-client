@@ -7,7 +7,6 @@ import { useReducedMotion } from "framer-motion";
 import {
   CalendarClock,
   Camera,
-  Check,
   ContactRound,
   CreditCard,
   Lock,
@@ -29,6 +28,10 @@ import {
   type GameMessage,
   type GameMoveId,
 } from "@/modules/landing/ui/content/productos.content";
+import { FILM_ACTIVITY_EVENT, emitFilmEvent, type FilmActivityDetail } from "@/modules/landing/ui/film/film-events";
+import { PAGE_ISLAND_EVENT, type PageIslandDetail } from "@/shared/components/layout/site/site-island";
+import { ProductosPhone } from "./ProductosPhone";
+import { usePhoneFlight } from "./use-phone-flight";
 import { GAME_HINT_EVENT, TOTAL_ABILITIES, crmDue, initialGame, isDone, play, reply, unlockCrm, type GameState } from "./game-state";
 
 const ICONS: Record<GameAbilityId, LucideIcon> = {
@@ -69,6 +72,13 @@ export function ProductosGame() {
   const timers = useRef<number[]>([]);
   const audio = useRef<HTMLAudioElement | null>(null);
   const prevGot = useRef(0);
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const slotRef = useRef<HTMLDivElement | null>(null);
+  const flightRef = useRef<HTMLDivElement | null>(null);
+  const bodyRef = useRef<HTMLDivElement | null>(null);
+  const inView = useRef(false);
+
+  usePhoneFlight(slotRef, flightRef, bodyRef);
 
   const later = useCallback((ms: number, fn: () => void) => {
     timers.current.push(window.setTimeout(fn, reduced ? 0 : ms));
@@ -98,16 +108,47 @@ export function ProductosGame() {
     audio.current?.pause();
   }, []);
 
-  /* Cada habilidad nueva se anuncia en la isla. */
+  /* Cada habilidad nueva se anuncia en la isla del nav, como el pago en la home. */
   useEffect(() => {
     const grew = state.got.length > prevGot.current;
     prevGot.current = state.got.length;
     if (!grew) return;
     const last = state.got[state.got.length - 1];
+    const ability = GAME_ABILITIES.find((a) => a.id === last);
+    if (ability) emitFilmEvent<FilmActivityDetail>(FILM_ACTIVITY_EVENT, { title: GAME.island.discovered(ability.name), detail: ability.line });
     setToast(last);
     const t = window.setTimeout(() => setToast((cur) => (cur === last ? null : cur)), 2600);
     return () => clearTimeout(t);
   }, [state.got]);
+
+  /* Mientras el juego está en pantalla, la isla del nav dice «Juega a ser tu cliente · N de 7». */
+  const islandText = useCallback(
+    (n: number): PageIslandDetail => ({ title: GAME.island.title, sub: GAME.island.count(n, TOTAL_ABILITIES), ring: n / TOTAL_ABILITIES }),
+    [],
+  );
+  const gotRef = useRef(0);
+  gotRef.current = state.got.length;
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const root = el.closest<HTMLElement>("[data-app-scroll]");
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        inView.current = entry.isIntersecting;
+        emitFilmEvent<PageIslandDetail>(PAGE_ISLAND_EVENT, entry.isIntersecting ? islandText(gotRef.current) : null);
+      },
+      // «En pantalla» = cruza la franja central de la ventana.
+      { root, rootMargin: "-45% 0px -45% 0px" },
+    );
+    io.observe(el);
+    return () => {
+      io.disconnect();
+      emitFilmEvent<PageIslandDetail>(PAGE_ISLAND_EVENT, null);
+    };
+  }, [islandText]);
+  useEffect(() => {
+    if (inView.current) emitFilmEvent<PageIslandDetail>(PAGE_ISLAND_EVENT, islandText(state.got.length));
+  }, [state.got.length, islandText]);
 
   /* El CRM llega solo, un momento después de la tercera respuesta. */
   useEffect(() => {
@@ -154,10 +195,9 @@ export function ProductosGame() {
   const n = state.got.length;
   const done = isDone(state);
   const toastAbility = GAME_ABILITIES.find((a) => a.id === toast);
-  const ring = 88 - (88 * n) / TOTAL_ABILITIES;
 
   return (
-    <section id={PRODUCTOS_ANCHORS.game} aria-labelledby="agente-title" className="pj-scene pj-game">
+    <section ref={sectionRef} id={PRODUCTOS_ANCHORS.game} aria-labelledby="agente-title" className="pj-scene pj-game">
       <div className="pj-glow" aria-hidden="true" />
       <h2 id="agente-title" className="sr-only">{GAME.island.title}</h2>
       <p className="sr-only">{GAME.note}</p>
@@ -167,38 +207,10 @@ export function ProductosGame() {
         ))}
       </ul>
 
-      {/* La isla: título, progreso y la noticia de cada habilidad. */}
-      <div className="pj-island" role="status" aria-live="polite">
-        <div className="flex h-[60px] items-center gap-3 pr-2 pl-3">
-          <svg width="26" height="26" viewBox="0 0 36 36" aria-hidden="true">
-            <circle cx="18" cy="18" r="14" fill="none" stroke="currentColor" strokeOpacity="0.14" strokeWidth="3.5" />
-            <circle cx="18" cy="18" r="14" fill="none" stroke="currentColor" strokeWidth="3.5" strokeDasharray="88" strokeDashoffset={ring} strokeLinecap="round" transform="rotate(-90 18 18)" style={{ transition: "stroke-dashoffset .5s" }} />
-          </svg>
-          <div className="flex min-w-0 flex-1 flex-col">
-            <span className="truncate text-sm font-semibold">{GAME.island.title}</span>
-            <span className="pj-dim text-[11.5px]">{GAME.island.count(n, TOTAL_ABILITIES)}</span>
-          </div>
-          <Link href={PRODUCTOS_TRIAL.href} prefetch={false} className="bg-primary text-primary-foreground inline-flex h-11 items-center rounded-full px-[18px] text-sm font-semibold whitespace-nowrap">
-            {PRODUCTOS_TRIAL.label}
-          </Link>
-        </div>
-        <div className="pj-island-toast" data-open={toastAbility ? "" : undefined}>
-          <div>
-            {toastAbility ? (
-              <div className="mx-3.5 flex items-center gap-3 border-t border-[var(--pj-line)] py-3">
-                <span className="pj-ability-orb !size-8" data-tone={toastAbility.tone} style={{ background: "var(--pj-tone)", color: "var(--background)" }}>
-                  <Check className="size-4" strokeWidth={2.6} aria-hidden="true" />
-                </span>
-                <div className="flex min-w-0 flex-1 flex-col">
-                  <span className="text-[13.5px] font-semibold">{GAME.island.discovered(toastAbility.name)}</span>
-                  <span className="pj-dim text-[11.5px]">{toastAbility.line}</span>
-                </div>
-                <span className="pj-dim text-[11px]">{GAME.island.now}</span>
-              </div>
-            ) : null}
-          </div>
-        </div>
-      </div>
+      {/* La noticia de cada habilidad la ve la isla del nav; aquí, para lectores de pantalla. */}
+      <p className="sr-only" role="status" aria-live="polite">
+        {toastAbility ? `${GAME.island.discovered(toastAbility.name)}. ${toastAbility.line}. ${GAME.island.count(n, TOTAL_ABILITIES)}.` : ""}
+      </p>
 
       {/* Móvil: el progreso en siete puntos. */}
       <div className="pj-dots flex gap-2.5" aria-hidden="true">
@@ -231,30 +243,39 @@ export function ProductosGame() {
           })}
         </div>
 
-        <div className="pj-device pj-phone">
-          <div className="pj-screen">
-            <div className="pj-chat-head">
-              <Image src={GAME.avatar.src} alt={GAME.avatar.alt} width={34} height={34} className="size-[34px] rounded-full bg-white object-cover" />
-              <div className="flex flex-col">
+        <ProductosPhone
+          slotRef={slotRef}
+          flightRef={flightRef}
+          bodyRef={bodyRef}
+          head={
+            <div className="pj-ph-head">
+              <Image src={GAME.avatar.src} alt={GAME.avatar.alt} width={36} height={36} className="size-9 rounded-full bg-white object-cover" />
+              <div className="flex min-w-0 flex-col">
                 <span className="text-sm font-semibold">{GAME.business}</span>
-                <span className="text-[11px] text-[var(--axi-success)]">{state.pending ? GAME.typing : GAME.online}</span>
+                <span className="flex items-center gap-1.5 text-[11.5px] text-[var(--pj-dim)]">
+                  <span className="size-1.5 rounded-full bg-[var(--axi-success)]" aria-hidden="true" />
+                  {state.pending ? GAME.typing : GAME.online}
+                </span>
               </div>
             </div>
-            <div className="pj-chat-log" role="log" aria-label={GAME.chatLabel}>
-              {state.log.slice(-8).map((entry) => (
-                <Message key={entry.key} id={entry.key} message={entry.message} playing={playing === entry.key} onVoice={(src) => (playing === entry.key ? stopAudio() : playAudio(entry.key, src))} />
-              ))}
-              {state.pending ? (
-                <div className="pj-bubble" data-from="agent" aria-label={GAME.typing}>
-                  <span className="pj-typing" aria-hidden="true"><i /><i /><i /></span>
-                </div>
-              ) : null}
+          }
+          compose={
+            <div className="pj-ph-compose" aria-hidden="true">
+              <span className="pj-ph-input">{GAME.composer} →</span>
             </div>
-            <div className="pj-composer" aria-hidden="true">
-              <div>{GAME.composer} →</div>
-            </div>
+          }
+        >
+          <div className="pj-chat-log" role="log" aria-label={GAME.chatLabel}>
+            {state.log.slice(-8).map((entry) => (
+              <Message key={entry.key} id={entry.key} message={entry.message} playing={playing === entry.key} onVoice={(src) => (playing === entry.key ? stopAudio() : playAudio(entry.key, src))} />
+            ))}
+            {state.pending ? (
+              <div className="pj-bubble" data-from="agent" aria-label={GAME.typing}>
+                <span className="pj-typing" aria-hidden="true"><i /><i /><i /></span>
+              </div>
+            ) : null}
           </div>
-        </div>
+        </ProductosPhone>
 
         <div className="min-w-0">
           <p className="pj-eyebrow pj-dim mb-[18px] max-lg:hidden">{GAME.movesTitle}</p>
