@@ -5,6 +5,8 @@ import "./pieces.css";
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 
 import { PIECES, PIECES_SCENE, type PieceId } from "@/modules/landing/ui/content/productos.content";
+import { emitFilmEvent } from "@/modules/landing/ui/film/film-events";
+import { PAGE_ISLAND_EVENT, type PageIslandDetail } from "@/shared/components/layout/site/site-island";
 import { CatalogoScreen } from "./CatalogoScreen";
 import { CobrosScreen } from "./CobrosScreen";
 import { ConfiguraScreen } from "./ConfiguraScreen";
@@ -41,6 +43,13 @@ type Mode = "stack" | "pinned" | "tabs" | "swipe";
 /** Mientras dura un salto programado, el observador no cambia la pestaña. */
 const LOCK_MS = 700;
 
+/** La isla del nav con la pieza activa: «Pieza por pieza · Cobros · 6 de 7». */
+export function pieceIsland(id: PieceId): PageIslandDetail {
+  const index = IDS.indexOf(id);
+  const piece = PIECES[index] ?? PIECES[0];
+  return { title: PIECES_SCENE.island.title, sub: PIECES_SCENE.island.sub(piece.tab, index + 1, IDS.length), ring: (index + 1) / IDS.length };
+}
+
 function scroller(): HTMLElement | null {
   return document.querySelector<HTMLElement>("[data-app-scroll]");
 }
@@ -66,6 +75,10 @@ export function ProductosPieces() {
   const panels = useRef<(HTMLElement | null)[]>([]);
   const dockRef = useRef<HTMLDivElement | null>(null);
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const inView = useRef(false);
+  const activeRef = useRef<PieceId>(IDS[0]);
+  activeRef.current = active;
 
   useEffect(() => {
     const wide = window.matchMedia("(min-width: 1024px) and (min-height: 600px)");
@@ -175,6 +188,27 @@ export function ProductosPieces() {
     if (dock && tab && dock.scrollWidth > dock.clientWidth) dock.scrollTo?.({ left: tab.offsetLeft - (dock.clientWidth - tab.clientWidth) / 2, behavior: "smooth" });
   }, [active, mode]);
 
+  /* Mientras la escena cruza la franja central, la isla del nav dice qué pieza se ve (como el juego). */
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        inView.current = entry.isIntersecting;
+        emitFilmEvent<PageIslandDetail>(PAGE_ISLAND_EVENT, entry.isIntersecting ? pieceIsland(activeRef.current) : null);
+      },
+      { root: el.closest<HTMLElement>("[data-app-scroll]"), rootMargin: "-45% 0px -45% 0px" },
+    );
+    io.observe(el);
+    return () => {
+      io.disconnect();
+      emitFilmEvent<PageIslandDetail>(PAGE_ISLAND_EVENT, null);
+    };
+  }, []);
+  useEffect(() => {
+    if (inView.current) emitFilmEvent<PageIslandDetail>(PAGE_ISLAND_EVENT, pieceIsland(active));
+  }, [active]);
+
   const choose = (id: PieceId) => {
     reveal(id);
     window.history.replaceState(window.history.state, "", `#${id}`);
@@ -198,7 +232,7 @@ export function ProductosPieces() {
   const current = PIECES.find((p) => p.id === active) ?? PIECES[0];
 
   return (
-    <div className="pp" data-mode={mode}>
+    <div ref={rootRef} className="pp" data-mode={mode}>
       <div ref={trackRef} className="pp-track">
         {mode === "pinned"
           ? IDS.map((id, i) => (

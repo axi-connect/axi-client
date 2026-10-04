@@ -6,7 +6,8 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 
 import { PIECES, PIECES_SCENE, PIECE_SCREENS } from "@/modules/landing/ui/content/productos.content";
-import { ProductosPieces } from "../pieces/ProductosPieces";
+import { PAGE_ISLAND_EVENT } from "@/shared/components/layout/site/site-island";
+import { ProductosPieces, pieceIsland } from "../pieces/ProductosPieces";
 
 jest.mock("next/image", () => ({
   __esModule: true,
@@ -98,6 +99,37 @@ describe("Pieza por pieza · solo una pieza a la vez en escritorio", () => {
     const { container } = render(<ProductosPieces />);
     const inert = Array.from(container.querySelectorAll("section[id]")).filter((s) => s.hasAttribute("inert")).map((s) => s.id);
     expect(inert).toEqual(PIECES.filter((p) => p.id !== "inbox").map((p) => p.id));
+  });
+});
+
+describe("Pieza por pieza · la isla del nav", () => {
+  it("dice la pieza activa y su avance", () => {
+    expect(pieceIsland("cobros")).toEqual({ title: "Pieza por pieza", sub: "Cobros · 6 de 7", ring: 6 / 7 });
+  });
+
+  it("toma la isla al entrar, sigue a la pestaña y la devuelve al salir", () => {
+    mockMedia(true);
+    const callbacks: { cb: IntersectionObserverCallback; targets: Element[] }[] = [];
+    window.IntersectionObserver = jest.fn((cb: IntersectionObserverCallback) => {
+      const rec = { cb, targets: [] as Element[] };
+      callbacks.push(rec);
+      return { observe: (t: Element) => rec.targets.push(t), disconnect: jest.fn(), unobserve: jest.fn() };
+    }) as unknown as typeof IntersectionObserver;
+    const seen: unknown[] = [];
+    const listen = (e: Event) => seen.push((e as CustomEvent).detail);
+    window.addEventListener(PAGE_ISLAND_EVENT, listen);
+    const { container } = render(<ProductosPieces />);
+    const root = container.querySelector(".pp")!;
+    const island = callbacks.find((c) => c.targets.includes(root))!;
+    const cross = (on: boolean) => act(() => island.cb([{ isIntersecting: on, target: root } as unknown as IntersectionObserverEntry], {} as IntersectionObserver));
+
+    cross(true);
+    expect(seen.at(-1)).toEqual(pieceIsland("inbox"));
+    fireEvent.click(screen.getByRole("tab", { name: /Medición/ }));
+    expect(seen.at(-1)).toEqual(pieceIsland("medicion"));
+    cross(false);
+    expect(seen.at(-1)).toBeNull();
+    window.removeEventListener(PAGE_ISLAND_EVENT, listen);
   });
 });
 

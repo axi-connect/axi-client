@@ -264,6 +264,8 @@ export const PIECES_SCENE = {
   tablistLabel: "Piezas del producto",
   /** El evento con el que el router abre una pieza. */
   event: "productos:piece",
+  /** La isla del nav mientras la escena está en pantalla: «Pieza por pieza · Cobros · 6 de 7». */
+  island: { title: "Pieza por pieza", sub: (tab: string, n: number, total: number) => `${tab} · ${n} de ${total}` },
 } as const;
 
 export const PIECES: readonly Piece[] = [
