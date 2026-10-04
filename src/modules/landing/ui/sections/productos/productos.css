@@ -319,6 +319,7 @@
   .pj-move { flex: none; min-height: 0; height: 46px; flex-direction: row; align-items: center; gap: 8px; padding: 0 16px 0 6px; border-radius: 999px; scroll-snap-align: start; white-space: nowrap; }
   .pj-move-icon { width: 34px; height: 34px; }
 }
+.pj-game-title-m { text-align: center; letter-spacing: 0.14em; white-space: nowrap; font-size: 10.5px; }
 @media (min-width: 1024px) { .pj-dots, .pj-game-title-m { display: none; } }
 
 /* ───────────── 4 · El video ───────────── */
