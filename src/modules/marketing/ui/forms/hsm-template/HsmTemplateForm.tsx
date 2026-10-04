@@ -619,7 +619,13 @@ export function HsmTemplateForm({
             }}
           >
             {submitting ? <LoaderCircle aria-hidden className="size-4 animate-spin" /> : null}
-            {submitting ? "Enviando…" : isEditing ? "Guardar y reenviar a revisión" : "Enviar a revisión de Meta"}
+            {submitting
+              ? "Enviando…"
+              : isEditing
+                ? "Guardar y reenviar a revisión"
+                : libraryInstant
+                  ? "Crear plantilla"
+                  : "Enviar a revisión de Meta"}
           </Button>
         </div>
       </Island>

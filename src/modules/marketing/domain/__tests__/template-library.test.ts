@@ -149,6 +149,17 @@ describe("placeholderButtonIssue · el example.com de Meta no sale", () => {
     expect(placeholderButtonIssue([{ type: "url", text: "Ver cuenta", url: "https://www.example.com" }])).toBe(issue);
     expect(placeholderButtonIssue([{ type: "url", text: "Ver cuenta", url: "https://example.com/pagar" }])).toBe(issue);
     expect(placeholderButtonIssue([{ type: "url", text: "Ver cuenta", url: "www.example.com" }])).toBe(issue);
+    // Las de servicio público traen example.gov
+    expect(placeholderButtonIssue([{ type: "url", text: "Ver cuenta", url: "https://example.gov/transit-updates" }])).toBe(
+      issue,
+    );
+  });
+
+  it("bloquea el teléfono de ejemplo de Meta (+1 800 555 1234), escrito como sea", () => {
+    const issue = "Pon el teléfono de tu negocio en «Llamar»";
+    expect(placeholderButtonIssue([{ type: "phone_number", text: "Llamar", phone_number: "+18005551234" }])).toBe(issue);
+    expect(placeholderButtonIssue([{ type: "phone_number", text: "Llamar", phone_number: "+1 800-555-1234" }])).toBe(issue);
+    expect(placeholderButtonIssue([{ type: "phone_number", text: "Llamar", phone_number: "+573001234567" }])).toBeNull();
   });
 
   it("deja pasar el del negocio y los que no son enlace", () => {

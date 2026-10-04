@@ -160,7 +160,13 @@ export function isStillLibrary(origin: HsmLibraryTemplateDTO, current: LibraryCo
   });
 }
 
-const PLACEHOLDER_HOSTS = new Set(["example.com", "www.example.com"]);
+/**
+ * Lo que la biblioteca trae de ejemplo (sonda con token real, 2026-10-03): los
+ * enlaces van a `example.com` o, en las de servicio público, a `example.gov`; y
+ * TODOS los botones de llamada traen `+18005551234`.
+ */
+const PLACEHOLDER_HOSTS = new Set(["example.com", "www.example.com", "example.gov", "www.example.gov"]);
+const PLACEHOLDER_PHONE_DIGITS = "18005551234";
 
 /** Si el enlace apunta al de ejemplo de Meta (con o sin `https://`). */
 function isPlaceholderUrl(raw: string): boolean {
@@ -174,16 +180,27 @@ function isPlaceholderUrl(raw: string): boolean {
   }
 }
 
+/** Si el teléfono es el de ejemplo de Meta, con o sin `+`, espacios o guiones. */
+function isPlaceholderPhone(raw: string): boolean {
+  return raw.replace(/\D/g, "") === PLACEHOLDER_PHONE_DIGITS;
+}
+
 /**
- * Un botón de enlace que sigue en el `example.com` de Meta: bloquea el envío.
- * La biblioteca los trae así y, aprobada al instante, la plantilla mandaría a
- * cada cliente a una página que no es del negocio. Se nombra el botón, que es
- * lo que el operador ve.
+ * Un botón que sigue con el enlace o el teléfono de ejemplo de Meta: bloquea el
+ * envío. La biblioteca los trae así y, aprobada al instante, la plantilla
+ * mandaría a cada cliente a una página que no es del negocio, o lo haría llamar
+ * a un número de Meta. Se nombra el botón, que es lo que el operador ve.
  */
 export function placeholderButtonIssue(buttons: readonly TemplateButton[]): string | null {
-  const button = buttons.find((item) => item.type === "url" && isPlaceholderUrl(item.url));
-  if (button === undefined || button.type !== "url") return null;
-  return `Pon la dirección de tu negocio en «${button.text.trim() || "el botón de enlace"}»`;
+  for (const button of buttons) {
+    if (button.type === "url" && isPlaceholderUrl(button.url)) {
+      return `Pon la dirección de tu negocio en «${button.text.trim() || "el botón de enlace"}»`;
+    }
+    if (button.type === "phone_number" && isPlaceholderPhone(button.phone_number)) {
+      return `Pon el teléfono de tu negocio en «${button.text.trim() || "el botón de llamada"}»`;
+    }
+  }
+  return null;
 }
 
 /** Sin tildes ni mayúsculas: «Cita» encuentra «cita» y «pago» encuentra «Pagó». */

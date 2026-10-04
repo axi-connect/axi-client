@@ -82,7 +82,8 @@ function fill(name = "Sesión en vivo", body = "Gracias por escribirnos, ya te a
   fireEvent.change(screen.getByPlaceholderText(/Hola \{\{1\}\}, te escribo/), { target: { value: body } });
 }
 
-const send = () => fireEvent.click(screen.getByRole("button", { name: "Enviar a revisión de Meta" }));
+// Con aprobación al instante (biblioteca intacta) el botón dice «Crear plantilla».
+const send = () => fireEvent.click(screen.getByRole("button", { name: /^(Enviar a revisión de Meta|Crear plantilla)$/ }));
 
 describe("nombre y versión: se escribe como se dice", () => {
   it("Meta recibe el formato, con la versión libre ya puesta", () => {
@@ -688,6 +689,8 @@ describe("biblioteca de Meta (F5)", () => {
 
     expect(screen.getByText(/Aprobación inmediata: es de la biblioteca de Meta/)).toBeInTheDocument();
     expect(within(screen.getByRole("contentinfo")).getByText("Se aprueba al instante")).toBeInTheDocument();
+    // No va «a revisión»: el botón dice lo que pasa
+    expect(screen.getByRole("button", { name: "Crear plantilla" })).toBeInTheDocument();
     send();
 
     await waitFor(() => expect(api.createHsmTemplate).toHaveBeenCalled());
