@@ -35,7 +35,7 @@
   flex-direction: column;
   align-items: center;
   min-height: 100svh;
-  padding: clamp(96px, 14vh, 140px) 16px clamp(56px, 9vh, 96px);
+  padding: clamp(112px, 15vh, 140px) 16px clamp(56px, 9vh, 96px);
   scroll-margin-top: 0;
 }
 
@@ -240,6 +240,8 @@
   gap: clamp(32px, 5vw, 72px);
   width: min(1248px, 100%);
 }
+/* En escritorio, aire para la píldora del tema (fija a la derecha). */
+@media (min-width: 1024px) { .pj-board { width: min(1248px, calc(100% - 128px)); } }
 .pj-abilities { display: flex; flex-direction: column; gap: 4px; position: relative; padding-left: 28px; }
 .pj-abilities-rail { position: absolute; left: 0; top: 46px; bottom: 8px; width: 2px; border-radius: 2px; background: var(--pj-line); }
 .pj-abilities-rail > span {
