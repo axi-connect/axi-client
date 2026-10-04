@@ -313,14 +313,11 @@ export function ProductosGame() {
           ) : (
             <div className="pj-con">
               <div className="pj-con-head">
-                <p className="pj-eyebrow max-lg:text-[10.5px]">{GAME.movesTitle}</p>
+                <p className="pj-eyebrow">{GAME.movesTitle}</p>
                 <span className="pj-con-rule" aria-hidden="true" />
-                <span className="pj-con-mono pj-con-total max-lg:hidden" aria-hidden="true">{GAME.console.moves(GAME_MOVES.length)}</span>
+                <span className="pj-con-mono" aria-hidden="true">{GAME.console.moves(GAME_MOVES.length)}</span>
                 <span className="pj-con-tick" aria-hidden="true" />
                 <span className="pj-con-tick opacity-50" aria-hidden="true" />
-                <span className="pj-con-mono pj-con-count lg:hidden" aria-hidden="true">
-                  {String(n).padStart(2, "0")}<span>/{String(TOTAL_ABILITIES).padStart(2, "0")}</span>
-                </span>
               </div>
               <div className="pj-con-list" role="group" aria-label={GAME.movesTitle}>
                 {GAME_MOVES.map((m, i) => {

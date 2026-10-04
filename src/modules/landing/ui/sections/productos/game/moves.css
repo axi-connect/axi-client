@@ -138,10 +138,10 @@
 
 /* Móvil: la misma jugada como chip en una cinta deslizable, sin columna ni canal. */
 @media (max-width: 1023px) {
-  .pj-con-head { margin: 0 0 10px; }
-  .pj-con-head .pj-con-tick, .pj-con-head .pj-con-total, .pj-con-foot { display: none; }
+  /* En móvil el título y el contador ya están arriba («Juega a ser tu cliente · N de 7»): la cinta va sola, como antes. */
+  .pj-con-head, .pj-con-foot { display: none; }
   .pj-con-list {
-    flex-direction: row; gap: 10px; padding: 4px 16px 8px; margin: 0 -16px;
+    flex-direction: row; gap: 10px; padding: 2px 16px 4px; margin: 0 -16px;
     overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
   }
   .pj-con-list::-webkit-scrollbar { display: none; }
