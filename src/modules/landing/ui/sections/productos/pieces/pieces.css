@@ -706,3 +706,12 @@
 .pp-metrics2-fixrow small { font-size: 11.5px; color: rgb(244 244 245 / 0.62); }
 .pp-metrics2-qnote { margin-top: auto; font-size: 11px; color: rgb(244 244 245 / 0.55); }
 @media (max-width: 1023px) { .pp-metrics2-grid { grid-template-columns: minmax(0, 1fr); } .pp-metrics2-step { grid-template-columns: 110px minmax(0, 1fr) 36px; } }
+
+/* Móvil: la cabecera de cada pantalla se apila; el titular de la escena ya la explica. */
+@media (max-width: 1023px) {
+  .pp-page-head { flex-direction: column; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
+  .pp-page-head .pp-seg2, .pp-page-sub, .pp-crm2-pick { display: none; }
+  .pp-page-title { font-size: 24px; }
+  .pp-crm2-bento { grid-template-columns: minmax(0, 1fr); }
+  .pp-crm2-bento .pp-crm2-tile { display: none; }
+}
