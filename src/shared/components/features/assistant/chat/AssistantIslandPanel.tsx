@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronUp, Pause, Volume2, X } from "lucide-react";
+import { ChevronUp, Pause, Play, Volume2, X } from "lucide-react";
 import { useId, type KeyboardEvent } from "react";
 
 import { useSpeech } from "@/core/hooks/use-speech";
@@ -24,8 +24,10 @@ interface AssistantIslandPanelProps {
  * Vive dentro de la tinta de `AssistantDock`, así que usa los tokens de
  * siempre y botones `contrast` + `glass` (DESIGN-SYSTEM §9.5.1).
  *
- * La pregunta es un `group` con nombre; aviso y resumen son regiones vivas
- * corteses. `Escape` con el foco dentro pliega, y la isla nunca roba el foco.
+ * La pregunta es un `group` con nombre y el resumen una `region`. Lo que se
+ * ANUNCIA no vive aquí: este panel nace con su texto, y una región viva que
+ * nace con su contenido no se lee; el dock tiene la suya siempre montada.
+ * `Escape` con el foco dentro pliega, y la isla nunca roba el foco.
  */
 export function AssistantIslandPanel({ item, name, onFold, onDismiss }: AssistantIslandPanelProps) {
   const titleId = useId();
@@ -37,7 +39,7 @@ export function AssistantIslandPanel({ item, name, onFold, onDismiss }: Assistan
 
   if (item.kind === "notice") {
     return (
-      <div className="assistant-island__notice" role="status" aria-live="polite" onKeyDown={onKeyDown}>
+      <div className="assistant-island__notice" onKeyDown={onKeyDown}>
         <div className="min-w-0 flex-1">
           <p className="assistant-island__notice-title">{item.title}</p>
           {item.body === undefined ? null : <p className="assistant-island__muted text-[12.5px] leading-snug">{item.body}</p>}
@@ -63,7 +65,6 @@ export function AssistantIslandPanel({ item, name, onFold, onDismiss }: Assistan
       className="assistant-island__panel"
       role={item.kind === "question" ? "group" : "region"}
       aria-labelledby={titleId}
-      aria-live={item.kind === "summary" ? "polite" : undefined}
       onKeyDown={onKeyDown}
     >
       <div className="flex min-h-[22px] items-center gap-1.5">
@@ -87,8 +88,8 @@ export function AssistantIslandPanel({ item, name, onFold, onDismiss }: Assistan
       ) : null}
       {item.kind === "summary" && item.highlights !== undefined && item.highlights.length > 0 ? (
         <ul className="assistant-island__highlights">
-          {item.highlights.slice(0, 3).map((line) => (
-            <li key={line.label} data-tone={line.tone}>
+          {item.highlights.slice(0, 3).map((line, index) => (
+            <li key={index} data-tone={line.tone}>
               {line.label} <b>{line.detail}</b>
             </li>
           ))}
@@ -128,13 +129,19 @@ function SpeakButton({ id, text }: { id: string; text: string }) {
     <button
       type="button"
       className="assistant-island__icon"
-      aria-pressed={speech.speaking}
-      aria-label={speech.speaking ? "Pausar la lectura" : "Escuchar"}
+      aria-pressed={speech.state !== "idle"}
+      aria-label={speech.state === "speaking" ? "Pausar la lectura" : speech.state === "paused" ? "Seguir leyendo" : "Escuchar"}
       onClick={() => {
         speech.toggle(text);
       }}
     >
-      {speech.speaking ? <Pause className="size-4" aria-hidden="true" /> : <Volume2 className="size-4" aria-hidden="true" />}
+      {speech.state === "speaking" ? (
+        <Pause className="size-4" aria-hidden="true" />
+      ) : speech.state === "paused" ? (
+        <Play className="size-4" aria-hidden="true" />
+      ) : (
+        <Volume2 className="size-4" aria-hidden="true" />
+      )}
     </button>
   );
 }

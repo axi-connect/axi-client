@@ -7,26 +7,36 @@ import { useCallback, useSyncExternalStore } from "react";
  *
  * Es el «Escuchar la pregunta» de la entrevista de Alba y el «Escuchar» del
  * resumen de Axel (plan island_live_plan.md, decisión D3 del dueño: voz del
- * navegador, cero backend). Tres decisiones:
+ * navegador, cero backend). El informe de la entrevista lo pide con estas
+ * palabras: «reproducción y pausa, manteniendo el texto visible». Cuatro
+ * decisiones:
  *
  * 1. **Un solo hablante en toda la página.** El sintetizador es global: si la
  *    isla y la burbuja tuvieran cada una su estado, una se quedaría «sonando»
  *    cuando la otra la corta. El estado vive en un almacén de módulo y cada
  *    botón lee si la que suena es SU clave.
- * 2. **Sin soporte no hay botón**, igual que el micrófono: `supported` es falso
- *    en el servidor y en navegadores sin la API, y quien pinta el botón lo
- *    esconde. El texto sigue en pantalla siempre.
- * 3. **Se calla al ocultar la pestaña** y al desmontar quien hablaba: una voz
- *    que sigue leyendo desde una pestaña escondida es un susto.
+ * 2. **Pausa de verdad.** El mismo botón pausa y sigue (`pause`/`resume`),
+ *    no vuelve a empezar desde el principio.
+ * 3. **Por frases.** Chrome corta una lectura larga a los ~15 s sin avisar
+ *    (`onend` nunca llega y el botón se quedaba en «Pausar»). Cada frase es un
+ *    enunciado propio en la cola del sintetizador; el último cierra.
+ * 4. **Sin soporte no hay botón**, y se calla al ocultar la pestaña o al
+ *    desmontarse el último que escuchaba.
  */
 
+export type SpeechState = "idle" | "speaking" | "paused";
+
 interface SpeechSnapshot {
-  /** La clave del texto que suena ahora, o `null`. */
-  speaking: string | null;
+  /** La clave del texto que suena (o está en pausa), o `null`. */
+  key: string | null;
+  state: SpeechState;
 }
 
-let snapshot: SpeechSnapshot = { speaking: null };
+const IDLE: SpeechSnapshot = { key: null, state: "idle" };
+let snapshot: SpeechSnapshot = IDLE;
 const listeners = new Set<() => void>();
+/** Cada lectura tiene su número: el `onend` tardío de una lectura cortada no apaga la nueva. */
+let run = 0;
 
 function emit(next: SpeechSnapshot) {
   snapshot = next;
@@ -53,8 +63,6 @@ function onHidden() {
   if (document.visibilityState === "hidden") stopSpeaking();
 }
 
-const SERVER_SNAPSHOT: SpeechSnapshot = { speaking: null };
-
 export function speechSupported(): boolean {
   return typeof window !== "undefined" && "speechSynthesis" in window && typeof SpeechSynthesisUtterance !== "undefined";
 }
@@ -65,36 +73,50 @@ function spanishVoice(): SpeechSynthesisVoice | undefined {
   return voices.find((voice) => /^es[-_]CO/i.test(voice.lang)) ?? voices.find((voice) => /^es/i.test(voice.lang));
 }
 
+/** Frases: el punto, la interrogación o la exclamación cierran una; los saltos de línea también. */
+export function speechChunks(text: string): string[] {
+  return text
+    .split(/(?<=[.!?…])\s+|\n+/)
+    .map((part) => part.trim())
+    .filter((part) => part !== "");
+}
+
 export function stopSpeaking() {
+  run += 1;
   if (speechSupported()) window.speechSynthesis.cancel();
-  if (snapshot.speaking !== null) emit({ speaking: null });
+  if (snapshot.key !== null) emit(IDLE);
 }
 
 function speak(key: string, text: string) {
-  if (!speechSupported() || text.trim() === "") return;
+  const chunks = speechChunks(text);
+  if (!speechSupported() || chunks.length === 0) return;
   const synth = window.speechSynthesis;
   synth.cancel();
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "es-CO";
+  run += 1;
+  const mine = run;
   const voice = spanishVoice();
-  if (voice !== undefined) utterance.voice = voice;
-  const done = () => {
-    // Solo la que sigue sonando limpia: un `cancel` por otra lectura dispara el
-    // `onend` de la anterior DESPUÉS de que la nueva ya tomó la clave.
-    if (snapshot.speaking === key) emit({ speaking: null });
-  };
-  utterance.onend = done;
-  utterance.onerror = done;
-  emit({ speaking: key });
-  synth.speak(utterance);
+  chunks.forEach((chunk, index) => {
+    const utterance = new SpeechSynthesisUtterance(chunk);
+    utterance.lang = "es-CO";
+    if (voice !== undefined) utterance.voice = voice;
+    const last = index === chunks.length - 1;
+    utterance.onend = () => {
+      if (last && run === mine) emit(IDLE);
+    };
+    utterance.onerror = () => {
+      if (run === mine) emit(IDLE);
+    };
+    synth.speak(utterance);
+  });
+  emit({ key, state: "speaking" });
 }
 
 export interface Speech {
   /** El navegador puede leer en voz alta. Falso en el servidor. */
   supported: boolean;
-  /** Esta clave es la que suena ahora. */
-  speaking: boolean;
-  /** Lee el texto, o lo calla si ya sonaba (el mismo botón hace las dos cosas). */
+  /** Qué hace ESTA clave: callada, leyendo o en pausa. */
+  state: SpeechState;
+  /** Lee, pausa o sigue, según el estado (el mismo botón hace las tres cosas). */
   toggle: (text: string) => void;
 }
 
@@ -103,15 +125,24 @@ export interface Speech {
  *   botones con la misma clave se ven sonando a la vez, porque leen lo mismo.
  */
 export function useSpeech(key: string): Speech {
-  const state = useSyncExternalStore(subscribe, () => snapshot, () => SERVER_SNAPSHOT);
+  const current = useSyncExternalStore(subscribe, () => snapshot, () => IDLE);
   const supported = useSyncExternalStore(subscribe, speechSupported, () => false);
-  const speaking = state.speaking === key;
+  const state: SpeechState = current.key === key ? current.state : "idle";
   const toggle = useCallback(
     (text: string) => {
-      if (snapshot.speaking === key) stopSpeaking();
-      else speak(key, text);
+      if (snapshot.key !== key) {
+        speak(key, text);
+        return;
+      }
+      if (snapshot.state === "speaking") {
+        window.speechSynthesis.pause();
+        emit({ key, state: "paused" });
+      } else {
+        window.speechSynthesis.resume();
+        emit({ key, state: "speaking" });
+      }
     },
     [key],
   );
-  return { supported, speaking, toggle };
+  return { supported, state, toggle };
 }

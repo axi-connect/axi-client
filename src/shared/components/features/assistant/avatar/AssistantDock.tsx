@@ -37,6 +37,12 @@ interface AssistantDockProps {
   onExpand?: () => void;
   /** El micrófono graba: la isla toma la forma E. */
   listening?: Listening | null;
+  /**
+   * El chat está vacío: manda el escenario L y la isla no despliega nada. Vive
+   * aquí y no solo en CSS: un panel oculto con `opacity` seguiría en el orden
+   * de tabulación y en el árbol de accesibilidad (auditoría F1, B1).
+   */
+  empty?: boolean;
   className?: string;
 }
 
@@ -47,7 +53,9 @@ export function islandShape(state: {
   working: boolean;
   item: AssistantIslandItem | null;
   listening: boolean;
+  empty?: boolean;
 }): AssistantIslandShape {
+  if (state.empty === true) return "pill";
   if (state.listening) return "listening";
   if (state.working) return "working";
   return state.item?.kind ?? "pill";
@@ -97,11 +105,12 @@ export function AssistantDock({
   pending = 0,
   onExpand,
   listening = null,
+  empty = false,
   className,
 }: AssistantDockProps) {
   const barRef = useRef<HTMLDivElement>(null);
   const pillRef = useRef<HTMLElement | null>(null);
-  const shape = islandShape({ working, item, listening: listening !== null });
+  const shape = islandShape({ working, item, listening: listening !== null, empty });
   const expandable = pending > 0 && onExpand !== undefined && shape === "pill";
   const badge = pending === 1 ? "1 pendiente" : `${String(pending)} pendientes`;
 
@@ -142,6 +151,13 @@ export function AssistantDock({
   );
   const pillClass = cn(INK, "assistant-island assistant-island--s");
   const panelItem = shape === "question" || shape === "notice" || shape === "summary" ? item : null;
+  // Lo que se anuncia: SIEMPRE montado y vacío en reposo. Un lector de pantalla
+  // solo lee los cambios dentro de una región que ya existía; un aviso que nace
+  // con su texto no se anuncia (auditoría F1, B2).
+  const announcement =
+    panelItem === null || panelItem.kind === "question"
+      ? ""
+      : [panelItem.title, panelItem.kind === "notice" ? panelItem.body : undefined].filter(Boolean).join(". ");
 
   return (
     <header
@@ -187,6 +203,9 @@ export function AssistantDock({
         </div>
         <div className="assistant-dock__hero">{hero}</div>
       </div>
+      <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {announcement}
+      </p>
     </header>
   );
 }

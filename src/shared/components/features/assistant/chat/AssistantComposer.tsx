@@ -61,6 +61,7 @@ interface AssistantComposerProps {
   /**
    * Mientras graba, el estado del dictado para que la isla lo refleje (forma E).
    * Detener y Cancelar son los del compositor: la isla no tiene otro grabador.
+   * Se lee por ref: un callback en línea no provoca un vaivén por render.
    */
   onListeningChange?: (listening: AssistantIslandListeningState | null) => void;
   /**
@@ -145,10 +146,13 @@ export function AssistantComposer({
      recibe un objeto nuevo por segundo (el reloj), no por cada render. */
   const finishRef = useRef<() => void>(() => undefined);
   const cancelRef = useRef(recorder.cancel);
+  const listeningRef = useRef(onListeningChange);
+  useEffect(() => {
+    listeningRef.current = onListeningChange;
+  });
   const listeningSeconds = recorder.state === "recording" ? recorder.seconds : null;
   useEffect(() => {
-    if (onListeningChange === undefined) return;
-    onListeningChange(
+    listeningRef.current?.(
       listeningSeconds === null
         ? null
         : {
@@ -161,8 +165,13 @@ export function AssistantComposer({
             },
           },
     );
-  }, [listeningSeconds, onListeningChange]);
-  useEffect(() => () => onListeningChange?.(null), [onListeningChange]);
+  }, [listeningSeconds]);
+  useEffect(
+    () => () => {
+      listeningRef.current?.(null);
+    },
+    [],
+  );
 
   const autosize = (el: HTMLTextAreaElement) => {
     el.style.height = "auto";
@@ -346,14 +355,14 @@ export function AssistantComposer({
           Lo dicté yo · revísalo antes de enviar
         </p>
       ) : null}
-      {voiceError !== null ? (
-        <p className="mt-2 text-center text-[11.5px] text-destructive">{voiceError}</p>
-      ) : null}
-      {problem !== null && onVoiceProblem === undefined ? (
-        <p className="mt-2 text-center text-[11.5px] text-muted-foreground" role="status">
-          {VOICE_PROBLEM_COPY[problem].title}. {VOICE_PROBLEM_COPY[problem].body}
-        </p>
-      ) : null}
+      {/* Siempre montado: el motivo se ANUNCIA al aparecer (una región que nace
+          con su texto no se lee). Vacío si no hay nada que decir. */}
+      <p className="mt-2 text-center text-[11.5px] text-muted-foreground empty:hidden" role="status" aria-live="polite">
+        {voiceError ??
+          (problem !== null && onVoiceProblem === undefined
+            ? `${VOICE_PROBLEM_COPY[problem].title}. ${VOICE_PROBLEM_COPY[problem].body}`
+            : "")}
+      </p>
 
       {footer}
     </div>

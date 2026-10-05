@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 
-import { stopSpeaking, useSpeech } from "../use-speech";
+import { speechChunks, stopSpeaking, useSpeech } from "../use-speech";
 
 class FakeUtterance {
   lang = "";
@@ -14,6 +14,8 @@ const spoken: FakeUtterance[] = [];
 const synth = {
   speak: jest.fn((u: FakeUtterance) => spoken.push(u)),
   cancel: jest.fn(),
+  pause: jest.fn(),
+  resume: jest.fn(),
   getVoices: jest.fn(() => [{ lang: "en-US" }, { lang: "es-MX" }]),
 };
 
@@ -30,21 +32,36 @@ afterEach(() => {
 });
 
 describe("useSpeech", () => {
-  it("lee en español y el mismo botón lo calla", () => {
+  it("lee en español, por frases, y el mismo botón pausa y sigue (no vuelve a empezar)", () => {
     const { result } = renderHook(() => useSpeech("q1"));
     expect(result.current.supported).toBe(true);
     act(() => {
-      result.current.toggle("¿Es así su horario?");
+      result.current.toggle("¿Es así su horario? Lo vi en su web.");
     });
-    expect(spoken[0]?.text).toBe("¿Es así su horario?");
+    expect(spoken.map((u) => u.text)).toEqual(["¿Es así su horario?", "Lo vi en su web."]);
     expect(spoken[0]?.lang).toBe("es-CO");
     expect(spoken[0]?.voice).toEqual({ lang: "es-MX" });
-    expect(result.current.speaking).toBe(true);
+    expect(result.current.state).toBe("speaking");
     act(() => {
-      result.current.toggle("¿Es así su horario?");
+      result.current.toggle("¿Es así su horario? Lo vi en su web.");
     });
-    expect(synth.cancel).toHaveBeenCalled();
-    expect(result.current.speaking).toBe(false);
+    expect(synth.pause).toHaveBeenCalled();
+    expect(result.current.state).toBe("paused");
+    act(() => {
+      result.current.toggle("¿Es así su horario? Lo vi en su web.");
+    });
+    expect(synth.resume).toHaveBeenCalled();
+    expect(spoken).toHaveLength(2);
+    expect(result.current.state).toBe("speaking");
+    // Solo la última frase cierra la lectura.
+    act(() => {
+      spoken[0]?.onend?.();
+    });
+    expect(result.current.state).toBe("speaking");
+    act(() => {
+      spoken[1]?.onend?.();
+    });
+    expect(result.current.state).toBe("idle");
   });
 
   it("un solo hablante: leer otra clave apaga la anterior, y su `onend` tardío no apaga la nueva", () => {
@@ -56,16 +73,21 @@ describe("useSpeech", () => {
     act(() => {
       b.result.current.toggle("dos");
     });
-    expect(a.result.current.speaking).toBe(false);
-    expect(b.result.current.speaking).toBe(true);
+    expect(a.result.current.state).toBe("idle");
+    expect(b.result.current.state).toBe("speaking");
     act(() => {
       spoken[0]?.onend?.();
     });
-    expect(b.result.current.speaking).toBe(true);
+    expect(b.result.current.state).toBe("speaking");
     act(() => {
       spoken[1]?.onend?.();
     });
-    expect(b.result.current.speaking).toBe(false);
+    expect(b.result.current.state).toBe("idle");
+  });
+
+  it("parte en frases por puntuación y saltos de línea", () => {
+    expect(speechChunks("Hola. ¿Cómo vas?\nBien!  ")).toEqual(["Hola.", "¿Cómo vas?", "Bien!"]);
+    expect(speechChunks("   ")).toEqual([]);
   });
 
   it("se calla al ocultar la pestaña", () => {
@@ -77,7 +99,7 @@ describe("useSpeech", () => {
     act(() => {
       document.dispatchEvent(new Event("visibilitychange"));
     });
-    expect(result.current.speaking).toBe(false);
+    expect(result.current.state).toBe("idle");
     Object.defineProperty(document, "visibilityState", { configurable: true, value: "visible" });
   });
 });

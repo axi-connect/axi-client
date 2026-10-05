@@ -2581,16 +2581,6 @@ button.assistant-island--s:focus-visible {
   transform: translate(calc(50cqw - var(--e-w) / 2 + 10px), 7px) scale(var(--a-scale));
 }
 
-/* En el vacío manda el escenario L: lo que el slice empuje espera a la
-   conversación (el saludo del vacío ya cuenta lo suyo). */
-.assistant-chat[data-empty] .assistant-dock :is(.assistant-island--p, .assistant-island--e) {
-  opacity: 0;
-  pointer-events: none;
-}
-.assistant-chat[data-empty] .assistant-dock .assistant-dock__hero {
-  transform: translate(calc(50cqw - 68px), 34px) scale(1);
-}
-
 /* Columna estrecha: como M, las formas nuevas se alinean a la izquierda,
    toman el ancho y las acciones de la esquina ceden mientras la isla habla. */
 @container assistant-chat (max-width: 899px) {

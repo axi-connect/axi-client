@@ -70,7 +70,7 @@ describe("useIslandQueue", () => {
     expect(result.current.current?.id).toBe("q2");
   });
 
-  it("un aviso sin botón se pliega solo; con botón no; y un solo timer, solo mientras está abierto", () => {
+  it("un aviso sin botón se va solo (descartado, no al punto); con botón no; un solo timer, solo mientras está abierto", () => {
     const { result } = renderHook(() => useIslandQueue());
     expect(jest.getTimerCount()).toBe(0);
     act(() => {
@@ -81,7 +81,8 @@ describe("useIslandQueue", () => {
       jest.advanceTimersByTime(ISLAND_NOTICE_MS);
     });
     expect(result.current.current).toBeNull();
-    expect(result.current.pending).toBe(1);
+    // Ya se vio: no se acumula en el punto («6 pendientes» de cosas leídas).
+    expect(result.current.pending).toBe(0);
     expect(jest.getTimerCount()).toBe(0);
 
     act(() => {

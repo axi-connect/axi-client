@@ -4,7 +4,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type { AssistantIslandItem, AssistantIslandQuestion } from "../types";
 
-/** Un aviso sin botón se pliega solo a este plazo y deja el punto (DESIGN-SYSTEM §9.4: advertencia 7 s). */
+/**
+ * Un aviso sin botón se va solo a este plazo (DESIGN-SYSTEM §9.4: advertencia
+ * 7 s). Se DESCARTA, no se pliega: estuvo en pantalla y se vio; dejarlo en el
+ * punto hacía que la píldora acumulara «6 pendientes» de cosas ya leídas
+ * (auditoría F1, M3). Solo lo que la persona pliega a mano queda en el punto.
+ */
 export const ISLAND_NOTICE_MS = 7000;
 
 /** Prioridad de lo que la isla despliega: menor gana. */
@@ -48,6 +53,7 @@ interface Options {
  *
  * - Prioridad: pregunta > aviso > resumen; a igual prioridad, lo más reciente.
  * - Plegar deja el ítem en el punto de la píldora; tocarla lo vuelve a abrir.
+ *   El aviso que se va solo, en cambio, se descarta: ya se vio.
  * - **Un solo timer**, y solo mientras hay un aviso sin botón desplegado y la
  *   pestaña está visible: en reposo la isla no tiene nada corriendo (§6).
  */
@@ -111,7 +117,7 @@ export function useIslandQueue({ question = null, paused = false }: Options = {}
       if (timer !== null || document.visibilityState === "hidden") return;
       timer = setTimeout(() => {
         timer = null;
-        setEntries((list) => list.map((entry) => (entry.item.id === timedId ? { ...entry, folded: true } : entry)));
+        setEntries((list) => list.filter((entry) => entry.item.id !== timedId));
       }, timedMs);
     };
     const disarm = () => {

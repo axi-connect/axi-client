@@ -874,10 +874,10 @@ button.assistant-island--s { cursor: pointer; font: inherit; color: inherit; bor
 
   const GALLERY = [
     ['S', 'Reposo', 'Nombre, meta y el estado del producto. Es la forma de siempre.', { shape: 'pill' }, 'alba', 'progress', 70],
-    ['S', 'Con algo pendiente', 'Un aviso plegado deja el punto. Tocar la isla lo despliega.', { shape: 'pill-badge', badgeText: '1 pendiente' }, 'alba', '', 70],
+    ['S', 'Con algo pendiente', 'Lo que plegaste deja el punto. Tocar la isla lo despliega.', { shape: 'pill-badge', badgeText: '1 pendiente' }, 'alba', '', 70],
     ['M', 'Trabajando', 'El paso anterior, el actual y los chips de lo que está leyendo.', STATES.axel.working, 'axel', '', 168],
     ['P', 'Pregunta', 'Solo cuando la burbuja de la pregunta no está a la vista. No se pliega sola.', STATES.alba.question, 'alba', '', 256],
-    ['A', 'Aviso', 'Algo pasó. Una línea, un botón como mucho. Se pliega en 7 s y deja el punto.', STATES.alba.noticeFound, 'alba', '', 92],
+    ['A', 'Aviso', 'Algo pasó. Una línea, un botón como mucho. Sin botón se va solo a los 7 s.', STATES.alba.noticeFound, 'alba', '', 92],
     ['A', 'Advertencia', 'Ámbar, con un motivo y una salida. No se pliega sola si tiene botón.', STATES.alba.noticeMic, 'alba', '', 92],
     ['R', 'Resumen', 'El informe del día de Axel, en tres líneas. Se puede escuchar.', STATES.axel.summary, 'axel', '', 252],
     ['E', 'Escuchando', 'El dictado en curso, con detener y cancelar a mano.', STATES.alba.listening, 'alba', '', 78],

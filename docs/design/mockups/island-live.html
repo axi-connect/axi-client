@@ -273,6 +273,12 @@ button:focus-visible, a:focus-visible, textarea:focus-visible, input:focus-visib
   display: inline-flex;
   align-items: center;
   margin-left: 6px;
+  /* El tema largo («Lo que el asistente NO debe hacer») no se corta: dentro de
+     la píldora caben dos líneas de 12 px (informe de la entrevista, rec. 12). */
+  min-width: 0;
+  max-width: min(320px, 60cqw);
+  white-space: normal;
+  line-height: 1.2;
 }
 /* En una columna estrecha (móvil) la meta cede su sitio al estado: la píldora
    no puede salirse de la isla. */
@@ -721,16 +727,6 @@ button.assistant-island--s:focus-visible {
 }
 .assistant-dock[data-shape="listening"] .assistant-dock__hero {
   transform: translate(calc(50cqw - var(--e-w) / 2 + 10px), 7px) scale(var(--a-scale));
-}
-
-/* En el vacío manda el escenario L: lo que el slice empuje espera a la
-   conversación (el saludo del vacío ya cuenta lo suyo). */
-.assistant-chat[data-empty] .assistant-dock :is(.assistant-island--p, .assistant-island--e) {
-  opacity: 0;
-  pointer-events: none;
-}
-.assistant-chat[data-empty] .assistant-dock .assistant-dock__hero {
-  transform: translate(calc(50cqw - 68px), 34px) scale(1);
 }
 
 /* Columna estrecha: como M, las formas nuevas se alinean a la izquierda,
@@ -1798,10 +1794,10 @@ button.assistant-island--s { cursor: pointer; font: inherit; color: inherit; bor
 
   const GALLERY = [
     ['S', 'Reposo', 'Nombre, meta y el estado del producto. Es la forma de siempre.', { shape: 'pill' }, 'alba', 'progress', 70],
-    ['S', 'Con algo pendiente', 'Un aviso plegado deja el punto. Tocar la isla lo despliega.', { shape: 'pill-badge', badgeText: '1 pendiente' }, 'alba', '', 70],
+    ['S', 'Con algo pendiente', 'Lo que plegaste deja el punto. Tocar la isla lo despliega.', { shape: 'pill-badge', badgeText: '1 pendiente' }, 'alba', '', 70],
     ['M', 'Trabajando', 'El paso anterior, el actual y los chips de lo que está leyendo.', STATES.axel.working, 'axel', '', 168],
     ['P', 'Pregunta', 'Solo cuando la burbuja de la pregunta no está a la vista. No se pliega sola.', STATES.alba.question, 'alba', '', 256],
-    ['A', 'Aviso', 'Algo pasó. Una línea, un botón como mucho. Se pliega en 7 s y deja el punto.', STATES.alba.noticeFound, 'alba', '', 92],
+    ['A', 'Aviso', 'Algo pasó. Una línea, un botón como mucho. Sin botón se va solo a los 7 s.', STATES.alba.noticeFound, 'alba', '', 92],
     ['A', 'Advertencia', 'Ámbar, con un motivo y una salida. No se pliega sola si tiene botón.', STATES.alba.noticeMic, 'alba', '', 92],
     ['R', 'Resumen', 'El informe del día de Axel, en tres líneas. Se puede escuchar.', STATES.axel.summary, 'axel', '', 252],
     ['E', 'Escuchando', 'El dictado en curso, con detener y cancelar a mano.', STATES.alba.listening, 'alba', '', 78],

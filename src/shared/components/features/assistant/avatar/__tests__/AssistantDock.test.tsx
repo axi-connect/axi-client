@@ -169,4 +169,27 @@ describe("AssistantDock · la isla viva", () => {
     render(<AssistantDock title="Alba" hero={<span data-testid="hero" />} item={question} />);
     expect(screen.getAllByTestId("hero")).toHaveLength(1);
   });
+
+  it("en el vacío manda L: el ítem no se despliega ni queda en el orden de tabulación", () => {
+    const { container } = render(<AssistantDock title="Axel" hero={<span />} empty item={question} />);
+    expect(container.querySelector(".assistant-dock")).toHaveAttribute("data-shape", "pill");
+    expect(screen.queryByRole("button", { name: "Así es" })).toBeNull();
+    expect(screen.getByRole("status")).toBeEmptyDOMElement();
+  });
+
+  it("la región viva existe ANTES del aviso y recibe su texto al llegar (así se anuncia)", () => {
+    const { rerender } = render(<AssistantDock title="Axel" hero={<span />} />);
+    const live = screen.getByRole("status");
+    expect(live).toHaveAttribute("aria-live", "polite");
+    expect(live).toBeEmptyDOMElement();
+    rerender(
+      <AssistantDock
+        title="Axel"
+        hero={<span />}
+        item={{ kind: "notice", id: "b", glow: "ai", title: "Llegó tu informe", body: "3 por decidir" }}
+      />,
+    );
+    expect(screen.getByRole("status")).toBe(live);
+    expect(live).toHaveTextContent("Llegó tu informe. 3 por decidir");
+  });
 });

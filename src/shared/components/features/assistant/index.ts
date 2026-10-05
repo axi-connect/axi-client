@@ -89,7 +89,13 @@ export { AssistantIslandActivity } from "./chat/AssistantIslandActivity";
 export { AssistantIslandPanel } from "./chat/AssistantIslandPanel";
 export { AssistantIslandListening } from "./chat/AssistantIslandListening";
 export { AssistantMarkdown } from "./chat/AssistantMarkdown";
-export { AssistantComposer, COMPOSER_MAX_PX, type AssistantComposerVoice } from "./chat/AssistantComposer";
+export {
+  AssistantComposer,
+  COMPOSER_MAX_PX,
+  VOICE_PROBLEM_COPY,
+  type AssistantComposerVoice,
+} from "./chat/AssistantComposer";
+export type { RecorderProblem } from "@/core/hooks/use-voice-recorder";
 export { StarterPills } from "./chat/StarterPills";
 
 export { AssistantChatShell } from "./shell/AssistantChatShell";
