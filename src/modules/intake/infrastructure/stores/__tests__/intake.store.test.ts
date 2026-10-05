@@ -208,9 +208,12 @@ describe("intake.store — revisar lo encontrado sin gastar turnos (island-live 
   it("«Enviar a revisión» cierra sin modelo y la pantalla pasa a terminada con la vista del servidor", async () => {
     finish.mockResolvedValueOnce({ ...session(), status: "completed", closing: "Listo" });
     useIntakeStore.setState({ finalReviewOpen: true });
+    window.localStorage.setItem(`intake.later.${"t".repeat(32)}`, JSON.stringify({ later: ["a"], deferred: false, total: 3 }));
     await useIntakeStore.getState().finish();
     expect(message).not.toHaveBeenCalled();
     expect(useIntakeStore.getState().session?.status).toBe("completed");
+    // Cerrada, lo apartado ya no sirve: no queda una entrada por enlace para siempre.
+    expect(window.localStorage.getItem(`intake.later.${"t".repeat(32)}`)).toBeNull();
     expect(useIntakeStore.getState().finalReviewOpen).toBe(false);
   });
 

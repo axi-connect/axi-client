@@ -104,6 +104,11 @@ interface IntakeState {
  * puede encontrárselos delante otra vez (informe, «conservar las decisiones
  * anteriores»; auditoría F3, C2). Se guarda también cuánto había por revisar,
  * para que «3 de 11» no vuelva a «0 de 8» al recargar (C4).
+ *
+ * «Revisar el resto después» (o escribir) aparta las tarjetas SOLO en esta
+ * visita: al volver, lo que sigue sin confirmar se vuelve a ofrecer —el paso 1
+ * del informe es «siempre se ofrece»—, salvo lo marcado «Después», que espera
+ * en la revisión final. Al enviar a revisión, la entrada se borra.
  */
 const laterKey = (token: string): string => `intake.later.${token}`;
 
@@ -120,11 +125,21 @@ function readLater(token: string): RememberedReview {
     const parsed = JSON.parse(raw) as { later?: unknown; deferred?: unknown; total?: unknown };
     return {
       later: Array.isArray(parsed.later) ? parsed.later.filter((code): code is string => typeof code === "string") : [],
-      deferred: parsed.deferred === true,
+      // `deferred` no se lee al volver: es de la visita, no del enlace.
+      deferred: false,
       total: typeof parsed.total === "number" && Number.isFinite(parsed.total) ? Math.max(0, parsed.total) : 0,
     };
   } catch {
     return { later: [], deferred: false, total: 0 };
+  }
+}
+
+/** Cerrada la entrevista, lo apartado ya no sirve: no se deja una entrada por enlace para siempre. */
+function forgetLater(token: string): void {
+  try {
+    window.localStorage.removeItem(laterKey(token));
+  } catch {
+    // Nada que hacer.
   }
 }
 
@@ -533,6 +548,7 @@ export const useIntakeStore = create<IntakeState>((set, get) => ({
     try {
       const session = await intakeService.finish(token);
       set({ session, messages: session.messages, finishing: false, finalReviewOpen: false });
+      forgetLater(token);
     } catch (error) {
       if (errorCode(error) === SESSION_CLOSED) {
         set((state) => ({ finishing: false, finalReviewOpen: false, session: closedLocally(state.session) }));

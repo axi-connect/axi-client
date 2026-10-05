@@ -6,6 +6,8 @@
 > - Cliente `feat/island-live`: F0 `95ec6ec3` · F1 `214599a3` + `23936de4` + `0b20a11d` (**F1 CERTIFICADA**) · F3 `58e9df53` · F4+F4b `5c4139ab` · F5 docs (este commit).
 > - Servidor `feat/island-live`: F2 `d24ac44e` (seis verjas del CI verdes en frío, e2e 18/18) + `a19f95ec` (arreglos de su auditoría y `docs/runbooks/island_live_deploy.md`).
 > - Despliegue: **servidor y cliente juntos**, con el paso de los saludos (runbook).
+> - Contrato: `npm run api:types:check` resuelve `../axi-server/openapi/openapi.json`; desde un worktree no existe esa ruta, así que se corre desde el checkout principal tras fusionar, o a mano con la ruta del worktree del servidor (`npx openapi-typescript <ruta>/openapi/openapi.json -o /tmp/x.d.ts && diff -q /tmp/x.d.ts src/core/api/schema.d.ts`).
+> - **CERTIFICADO por la auditora 2026-10-05**: servidor `a19f95ec` (seis verjas del CI) + `6da2a4f2` (docs); cliente `9979a0a6` (jest completo 646/4928, tsc, lint, `next build`, contrato cruzado).
 > - Cambios sobre lo escrito abajo, decididos al implementar: «Después» no escribe nada (B1 de F2); el aviso sin botón se descarta a los 7 s; el contador «Trabajando · N» convive con los chips (lo fija `AxelChat.test`); la isla global vive solo desde lg; la tarjeta es `SetupReviewCard`, no `ConfirmCard`.
 >
 > **Estado 2026-10-05.** Plan aprobado por el dueño. F0 (mockup `docs/design/mockups/island-live.html`, https://claude.ai/artifact/WZb7Phtp1AtTd3qv1sE6Fz) **APROBADO por el dueño 2026-10-05** («aprobado todo, me gusta mucho»), **incluida la isla global**, que entra en esta tanda como pieza del kit compartido (fase F4b). Rama `feat/island-live` (cliente; el servidor abre la suya en F2). Informe de origen: `informe-entrevista-axi-con-imagenes` (Descargas del dueño).
