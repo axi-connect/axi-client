@@ -42,7 +42,7 @@ describe("AssistantIslandActivity", () => {
     expect(screen.getByText("Pensando…")).toBeInTheDocument();
   });
 
-  it("los chips: cuatro como mucho, los últimos, el actual marcado, y reemplazan el contador", () => {
+  it("los chips: cuatro como mucho, los últimos, el actual marcado, junto al contador", () => {
     const chip = (id: string, current = false) => ({ id, label: id, icon: BookOpen, tone: "read" as const, current });
     render(
       <AssistantIslandActivity
@@ -53,6 +53,6 @@ describe("AssistantIslandActivity", () => {
     expect(screen.queryByText("uno")).toBeNull();
     expect(screen.getAllByRole("listitem").filter((li) => li.classList.contains("assistant-island__chip"))).toHaveLength(4);
     expect(screen.getByText("cinco").closest("li")).toHaveAttribute("data-current");
-    expect(screen.queryByText(/Trabajando ·/)).toBeNull();
+    expect(screen.getByText(/Trabajando · 1 lectura/)).toBeInTheDocument();
   });
 });

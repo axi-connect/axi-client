@@ -134,9 +134,15 @@ type PrivateHeaderProps = {
 	actions?: React.ReactNode
 	/** Migas que conocen los módulos (rutas sin página, segmentos dinámicos). */
 	breadcrumbs?: readonly BreadcrumbConfig[]
+	/**
+	    El centro de la cabecera: la isla global del asistente (island-live F4b).
+	    Se inyecta desde la capa app, como `actions`. Solo desde lg: más estrecho
+	    taparía las migas o las acciones.
+	*/
+	center?: React.ReactNode
 }
 
-export function PrivateHeader({ actions, breadcrumbs }: PrivateHeaderProps) {
+export function PrivateHeader({ actions, breadcrumbs, center }: PrivateHeaderProps) {
 	const pathname = usePathname()
 	const { state, isMobile } = useSidebar()
 	// Este trigger NO es redundante con el botón de la cabecera del sidebar: en
@@ -157,7 +163,15 @@ export function PrivateHeader({ actions, breadcrumbs }: PrivateHeaderProps) {
 		// Sin `sticky`/`z` propios: los aporta el grupo pegado del layout, que
 		// agrupa header + banner de trial. Y SIN altura fija a propósito —
 		// ninguna vista debe depender de cuánto mide (DESIGN-SYSTEM §4.2).
-		<div className="glass py-2">
+		<div className="glass relative py-2">
+			{center === undefined || center === null ? null : (
+				// Centrada en el header como la Dynamic Island: el contenedor no
+				// atrapa el ratón, solo la isla (sus capas desbordan hacia abajo,
+				// por encima del contenido, cuando avisa o resume).
+				<div className="pointer-events-none absolute inset-x-0 top-0 z-10 hidden justify-center pt-1 lg:flex">
+					<div className="pointer-events-auto w-[min(560px,46vw)]">{center}</div>
+				</div>
+			)}
 			<div className="mx-auto flex w-full max-w-7xl items-center gap-3 px-4 md:px-6">
 			<Tooltip>
 				<TooltipTrigger asChild>

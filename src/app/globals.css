@@ -2368,7 +2368,7 @@ button.assistant-island--s:focus-visible {
 
 /* M con chips: una fila más. */
 .assistant-island--m:has(.assistant-island__chips) {
-  height: 146px;
+  height: 164px;
 }
 .assistant-island__chips {
   display: flex;
@@ -2579,6 +2579,24 @@ button.assistant-island--s:focus-visible {
 }
 .assistant-dock[data-shape="listening"] .assistant-dock__hero {
   transform: translate(calc(50cqw - var(--e-w) / 2 + 10px), 7px) scale(var(--a-scale));
+}
+
+/* La isla global (cabecera del panel, F4b): no es sticky en ningún scroller,
+   va donde la pone la cabecera, y sus capas desbordan hacia abajo por encima
+   del contenido. Sin escenario L: fuera del chat no hay vacío que llenar. */
+.assistant-dock--global {
+  position: relative;
+  top: 0;
+  z-index: 50;
+}
+.assistant-dock--global .assistant-dock__bar {
+  --dock-h: 46px;
+}
+.assistant-dock--global .assistant-island--s {
+  top: 0;
+}
+.assistant-dock--global .assistant-dock__hero {
+  transform: translate(calc(50cqw - var(--pill-w, 150px) / 2 + 7px), 7px) scale(var(--s-scale));
 }
 
 /* Columna estrecha: como M, las formas nuevas se alinean a la izquierda,

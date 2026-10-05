@@ -90,7 +90,7 @@ export function AssistantIslandActivity({ steps = [], phrases = [], chips = [], 
           })}
         </ul>
       ) : null}
-      {done > 0 && chips.length === 0 ? (
+      {done > 0 ? (
         <p className="text-[11px] text-muted-foreground tabular-nums">
           Trabajando · {done} {done === 1 ? "lectura" : "lecturas"}
         </p>

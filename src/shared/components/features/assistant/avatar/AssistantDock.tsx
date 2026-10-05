@@ -45,6 +45,11 @@ interface AssistantDockProps {
   empty?: boolean;
   /** Al empezar una lectura en voz alta desde la isla: para contarla. */
   onListen?: () => void;
+  /**
+   * Sin nada plegado, la píldora también puede ser un botón: la isla global
+   * de Axel abre /cmo. Sin esto, en reposo la píldora no es interactiva.
+   */
+  onPillClick?: () => void;
   className?: string;
 }
 
@@ -109,6 +114,7 @@ export function AssistantDock({
   listening = null,
   empty = false,
   onListen,
+  onPillClick,
   className,
 }: AssistantDockProps) {
   const barRef = useRef<HTMLDivElement>(null);
@@ -116,6 +122,9 @@ export function AssistantDock({
   const shape = islandShape({ working, item, listening: listening !== null, empty });
   const expandable = pending > 0 && onExpand !== undefined && shape === "pill";
   const badge = pending === 1 ? "1 pendiente" : `${String(pending)} pendientes`;
+  const pillAction = expandable ? onExpand : shape === "pill" ? onPillClick : undefined;
+  const pillLabel = expandable ? `${title}: ${badge}. Abrir` : `Abrir ${title}`;
+  const pillIsButton = pillAction !== undefined;
 
   useIsoLayoutEffect(() => {
     const bar = barRef.current;
@@ -132,7 +141,7 @@ export function AssistantDock({
       observer.disconnect();
     };
     // La píldora cambia de elemento (div ↔ botón) al haber algo plegado: se vuelve a medir el nuevo.
-  }, [expandable]);
+  }, [pillIsButton]);
 
   const pillContent = (
     <>
@@ -171,15 +180,15 @@ export function AssistantDock({
     >
       <div ref={barRef} className="assistant-dock__bar">
         <div className={cn(INK, "assistant-island assistant-island--l")} aria-hidden="true" />
-        {expandable ? (
+        {pillAction !== undefined ? (
           <button
             ref={(node) => {
               pillRef.current = node;
             }}
             type="button"
             className={pillClass}
-            aria-label={`${title}: ${badge}. Abrir`}
-            onClick={onExpand}
+            aria-label={pillLabel}
+            onClick={pillAction}
           >
             {pillContent}
           </button>

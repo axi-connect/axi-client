@@ -123,6 +123,22 @@ export interface LiveTurn {
   seq: number;
 }
 
+/**
+ * Lo que la isla de Axel tiene que contar (plan island_live_plan.md, F4): el
+ * socket trae el titular del informe y el nombre de cada propuesta, y hasta
+ * island-live se tiraban sin enseñarse. La isla los consume uno a uno.
+ */
+export interface AxelNews {
+  id: string;
+  kind: "briefing" | "proposal";
+  title: string;
+  body: string;
+  proposal_id: string | null;
+}
+
+/** Más novedades sin leer que esto no se cuentan una a una: con cinco ya es «mira el tablero». */
+const MAX_NEWS = 5;
+
 interface CmoState {
   settings: Section<CmoSettingsDTO>;
   briefing: Section<BriefingDTO | null>;
@@ -138,6 +154,8 @@ interface CmoState {
   live: LiveTurn | null;
   /** Propuestas nuevas llegadas por WS que el usuario aún no ha visto. */
   unseen: number;
+  /** Novedades por socket que la isla aún no contó. */
+  news: AxelNews[];
   /**
    * Propuestas del hilo que ya NO están en el tablero, por id.
    *
@@ -199,6 +217,14 @@ interface CmoState {
   markSeen: () => void;
   /** Resuelve una propuesta del hilo que el tablero ya no lista. Idempotente. */
   resolveSettled: (proposalId: string) => Promise<void>;
+  /** La isla ya tomó esta novedad: sale de la lista. */
+  takeNews: (id: string) => void;
+  /**
+   * Anota una novedad SIN recargar nada: lo usa la isla global, que vive fuera
+   * de /cmo y no tiene tablero que refrescar.
+   */
+  noteBriefingReady: (event: CmoBriefingReadyEvent) => void;
+  noteProposalCreated: (event: CmoProposalCreatedEvent) => void;
   onBriefingReady: (event: CmoBriefingReadyEvent) => void;
   onProposalCreated: (event: CmoProposalCreatedEvent) => void;
   onProposalDecided: (event: CmoProposalDecidedEvent) => void;
@@ -272,6 +298,7 @@ export const useCmoStore = create<CmoState>((set, get) => {
   blocker: null,
   live: null,
   unseen: 0,
+  news: [],
   settled: {},
   threads: idle(),
   restored: false,
@@ -641,7 +668,22 @@ export const useCmoStore = create<CmoState>((set, get) => {
     }
   },
 
-  onBriefingReady: () => {
+  takeNews: (id) => {
+    set((state) => (state.news.some((item) => item.id === id) ? { news: state.news.filter((item) => item.id !== id) } : state));
+  },
+
+  noteBriefingReady: (event) => {
+    set((state) => ({ news: addNews(state.news, briefingNews(event)) }));
+  },
+
+  noteProposalCreated: (event) => {
+    // Lo que nació en la conversación ya se ve anclado en el hilo: no se avisa dos veces.
+    if (event.source === "chat") return;
+    set((state) => ({ news: addNews(state.news, proposalNews(event)) }));
+  },
+
+  onBriefingReady: (event) => {
+    get().noteBriefingReady(event);
     // El evento NO trae el briefing completo (el WS avisa, no sincroniza): se
     // recarga desde el servidor, que es la única fuente de verdad.
     void getLatestBriefing()
@@ -654,7 +696,8 @@ export const useCmoStore = create<CmoState>((set, get) => {
     void get().reloadProposals();
   },
 
-  onProposalCreated: () => {
+  onProposalCreated: (event) => {
+    get().noteProposalCreated(event);
     set((state) => ({ unseen: state.unseen + 1 }));
     void get().reloadProposals();
   },
@@ -816,4 +859,37 @@ function toUiMessage(message: CmoMessageDTO): UiMessage {
     proposal_id: message.proposal_id,
     question: message.question,
   };
+}
+
+/** La novedad del informe: el titular del día, y cuántas propuestas trae. */
+export function briefingNews(event: CmoBriefingReadyEvent): AxelNews {
+  const count = event.proposals_created;
+  return {
+    id: `briefing-${event.briefing_id}`,
+    kind: "briefing",
+    title: "Llegó tu informe de hoy",
+    body:
+      count === 0
+        ? event.headline
+        : count === 1
+          ? "1 propuesta por decidir"
+          : `${String(count)} propuestas por decidir`,
+    proposal_id: null,
+  };
+}
+
+export function proposalNews(event: CmoProposalCreatedEvent): AxelNews {
+  return {
+    id: `proposal-${event.proposal_id}`,
+    kind: "proposal",
+    title: "Nueva propuesta",
+    body: event.title,
+    proposal_id: event.proposal_id,
+  };
+}
+
+/** Añade sin duplicar (un evento reentregado tras reconectar no cuenta dos veces) y con tope. */
+function addNews(list: AxelNews[], item: AxelNews): AxelNews[] {
+  if (list.some((entry) => entry.id === item.id)) return list;
+  return [...list, item].slice(-MAX_NEWS);
 }
