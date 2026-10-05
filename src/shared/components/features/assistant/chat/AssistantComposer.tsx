@@ -357,7 +357,16 @@ export function AssistantComposer({
       ) : null}
       {/* Siempre montado: el motivo se ANUNCIA al aparecer (una región que nace
           con su texto no se lee). Vacío si no hay nada que decir. */}
-      <p className="mt-2 text-center text-[11.5px] text-muted-foreground empty:hidden" role="status" aria-live="polite">
+      {/* Sin `display:none` cuando está vacío: una región oculta así sale del árbol
+          de accesibilidad y su texto nuevo no se anunciaría. Vacía no ocupa alto. */}
+      <p
+        className={cn(
+          "text-center text-[11.5px] [&:not(:empty)]:mt-2",
+          voiceError !== null ? "text-destructive" : "text-muted-foreground",
+        )}
+        role="status"
+        aria-live="polite"
+      >
         {voiceError ??
           (problem !== null && onVoiceProblem === undefined
             ? `${VOICE_PROBLEM_COPY[problem].title}. ${VOICE_PROBLEM_COPY[problem].body}`

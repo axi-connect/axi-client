@@ -75,8 +75,11 @@ function spanishVoice(): SpeechSynthesisVoice | undefined {
 
 /** Frases: el punto, la interrogación o la exclamación cierran una; los saltos de línea también. */
 export function speechChunks(text: string): string[] {
+  // Sin lookbehind a propósito: un literal de regex no se transpila, y en un
+  // navegador sin él el módulo entero no parsearía (y con él, el chat).
   return text
-    .split(/(?<=[.!?…])\s+|\n+/)
+    .split(/\n+/)
+    .flatMap((line) => line.match(/[^.!?…]+[.!?…]*/g) ?? [])
     .map((part) => part.trim())
     .filter((part) => part !== "");
 }
@@ -91,23 +94,31 @@ function speak(key: string, text: string) {
   const chunks = speechChunks(text);
   if (!speechSupported() || chunks.length === 0) return;
   const synth = window.speechSynthesis;
+  // `cancel()` y `speak()` en la misma vuelta dejan mudo a Chrome cuando algo
+  // sonaba: si había lectura en curso, la nueva arranca en la vuelta siguiente.
+  const busy = synth.speaking || synth.pending;
   synth.cancel();
   run += 1;
   const mine = run;
   const voice = spanishVoice();
-  chunks.forEach((chunk, index) => {
-    const utterance = new SpeechSynthesisUtterance(chunk);
-    utterance.lang = "es-CO";
-    if (voice !== undefined) utterance.voice = voice;
-    const last = index === chunks.length - 1;
-    utterance.onend = () => {
-      if (last && run === mine) emit(IDLE);
-    };
-    utterance.onerror = () => {
-      if (run === mine) emit(IDLE);
-    };
-    synth.speak(utterance);
-  });
+  const go = () => {
+    if (run !== mine) return;
+    chunks.forEach((chunk, index) => {
+      const utterance = new SpeechSynthesisUtterance(chunk);
+      utterance.lang = "es-CO";
+      if (voice !== undefined) utterance.voice = voice;
+      const last = index === chunks.length - 1;
+      utterance.onend = () => {
+        if (last && run === mine) emit(IDLE);
+      };
+      utterance.onerror = () => {
+        if (run === mine) emit(IDLE);
+      };
+      synth.speak(utterance);
+    });
+  };
+  if (busy) setTimeout(go, 0);
+  else go();
   emit({ key, state: "speaking" });
 }
 
