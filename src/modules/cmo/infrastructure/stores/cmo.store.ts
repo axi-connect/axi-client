@@ -291,6 +291,24 @@ function isTimeout(error: unknown): boolean {
 
 const TIMEOUT_MESSAGE = "Tardé más de lo normal. Si terminé, la respuesta aparece sola.";
 
+/**
+ * La copia del fallo de un turno, en la burbuja de Axel.
+ *
+ * El 502 del proveedor y el 500 genérico pintaban su título técnico («Error del
+ * proveedor IA», «Error interno inesperado»). Se traducen AQUÍ y no en el mapa
+ * global: allí el `message` del servidor es a veces lo único con lo que un
+ * operador de la consola diagnostica un 500.
+ */
+const ASK_FAILURE_BY_CODE: Record<string, string> = {
+  "ai/provider_error": "El servicio de IA no respondió a tiempo. Vuelve a intentarlo en un momento",
+  "internal/unexpected": "Algo falló de nuestro lado. Vuelve a intentarlo en un momento",
+};
+
+function askFailureCopy(error: unknown): string {
+  if (isTimeout(error)) return TIMEOUT_MESSAGE;
+  return (error instanceof HttpError ? ASK_FAILURE_BY_CODE[error.code] : undefined) ?? errorMessage(error);
+}
+
 export const useCmoStore = create<CmoState>((set, get) => {
   /** Ids de propuesta decidida que se están pidiendo ahora mismo. Vive en el
    *  closure del store (no a nivel de módulo): un Set global sobrevivía a HMR
@@ -597,7 +615,7 @@ export const useCmoStore = create<CmoState>((set, get) => {
               ? {
                   ...item,
                   pending: false,
-                  failed: isTimeout(error) ? TIMEOUT_MESSAGE : errorMessage(error),
+                  failed: askFailureCopy(error),
                 }
               : item,
           ),

@@ -109,10 +109,6 @@ const MESSAGES_BY_CODE: Record<string, string> = {
     "Axel todavía está respondiendo tu mensaje anterior. Espera a que termine y vuelve a enviarlo",
   "intake/turn_in_progress":
     "Todavía estoy respondiendo tu mensaje anterior. Espera un momento y vuelve a enviarlo",
-  // Sin estas dos se pintaba el título técnico («Error del proveedor IA»,
-  // «Error interno inesperado») en la burbuja de Axel y en los toasts.
-  "ai/provider_error": "El servicio de IA no respondió a tiempo. Vuelve a intentarlo en un momento",
-  "internal/unexpected": "Algo falló de nuestro lado. Vuelve a intentarlo en un momento",
   "cmo/proposal_nothing_to_apply":
     "Este es un hallazgo, no una acción: no hay nada que encender. Puedes descartarlo",
   "channels/provider_account_taken": "Ese número/cuenta ya está conectado en otro canal",

@@ -1,4 +1,6 @@
 import type { CmoReplyDTO } from "@/modules/cmo/domain/cmo";
+import { HttpError } from "@/core/api/problem";
+import { errorMessage } from "@/core/lib/error-messages";
 import { useCmoStore } from "../cmo.store";
 
 /**
@@ -138,6 +140,28 @@ describe("presupuesto de espera", () => {
     expect(failed).not.toContain("timed out");
     expect(failed).toContain("aparece sola");
     expect(useCmoStore.getState().live).toBeNull();
+  });
+
+  it("un 502 o un 500 se leen en la burbuja sin el título técnico (hotfix)", async () => {
+    api.sendMessage.mockRejectedValueOnce(
+      new HttpError({ status: 502, code: "ai/provider_error", message: "Error del proveedor IA" }),
+    );
+    await useCmoStore.getState().ask("¿Cómo vamos?");
+    expect(useCmoStore.getState().thread.messages[0]?.failed).toContain("no respondió a tiempo");
+
+    api.sendMessage.mockRejectedValueOnce(
+      new HttpError({ status: 500, code: "internal/unexpected", message: "Error interno inesperado" }),
+    );
+    await useCmoStore.getState().ask("¿Y la semana?");
+    const failed = useCmoStore.getState().thread.messages.at(-1)?.failed ?? "";
+    expect(failed).toContain("de nuestro lado");
+    expect(failed).not.toContain("Error interno");
+  });
+
+  it("esa copia es de la burbuja: el mapa global conserva el detalle del 500", () => {
+    // La consola de plataforma diagnostica con el `message` del servidor.
+    const boom = new HttpError({ status: 500, code: "internal/unexpected", message: "boom" });
+    expect(errorMessage(boom)).toMatch(/boom|error inesperado/i);
   });
 
   it("si el turno termina DESPUÉS de vencer la espera, la respuesta aparece sola (hotfix)", async () => {
