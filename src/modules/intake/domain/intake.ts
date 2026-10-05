@@ -244,7 +244,7 @@ export interface PatchAnswersResult {
 export function fichaCounts(
   topics: IntakeTopicView[],
   progress: IntakeProgress,
-): { confirmed: number; total: number; review: number; undefined: number; notApplicable: number } {
+): { confirmed: number; total: number; review: number; undefined: number; later: number; notApplicable: number } {
   const skips = topics.flatMap((topic) => topic.fields).flatMap((field) =>
     field.value === null && field.skipped !== null ? [field.skipped] : [],
   );
@@ -253,6 +253,7 @@ export function fichaCounts(
     total: progress.essential.total,
     review: progress.pending_review,
     undefined: skips.filter((skip) => skip.reason === "no_sabe").length,
+    later: skips.filter((skip) => skip.reason === "luego").length,
     notApplicable: skips.filter((skip) => skip.reason === "no_aplica").length,
   };
 }

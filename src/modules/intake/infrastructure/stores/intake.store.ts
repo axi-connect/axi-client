@@ -98,29 +98,42 @@ interface IntakeState {
   reset: () => void;
 }
 
-/** Lo apartado se recuerda en esta pestaña: recargar no vuelve a poner delante lo que dijo «después». */
+/**
+ * Lo apartado se recuerda en ESTE navegador (`localStorage`), no solo en la
+ * pestaña: quien dice «Después» a cinco datos y vuelve mañana por el enlace no
+ * puede encontrárselos delante otra vez (informe, «conservar las decisiones
+ * anteriores»; auditoría F3, C2). Se guarda también cuánto había por revisar,
+ * para que «3 de 11» no vuelva a «0 de 8» al recargar (C4).
+ */
 const laterKey = (token: string): string => `intake.later.${token}`;
 
-function readLater(token: string): { later: string[]; deferred: boolean } {
+interface RememberedReview {
+  later: string[];
+  deferred: boolean;
+  total: number;
+}
+
+function readLater(token: string): RememberedReview {
   try {
-    const raw = window.sessionStorage.getItem(laterKey(token));
-    if (raw === null) return { later: [], deferred: false };
-    const parsed = JSON.parse(raw) as { later?: unknown; deferred?: unknown };
+    const raw = window.localStorage.getItem(laterKey(token));
+    if (raw === null) return { later: [], deferred: false, total: 0 };
+    const parsed = JSON.parse(raw) as { later?: unknown; deferred?: unknown; total?: unknown };
     return {
       later: Array.isArray(parsed.later) ? parsed.later.filter((code): code is string => typeof code === "string") : [],
       deferred: parsed.deferred === true,
+      total: typeof parsed.total === "number" && Number.isFinite(parsed.total) ? Math.max(0, parsed.total) : 0,
     };
   } catch {
-    return { later: [], deferred: false };
+    return { later: [], deferred: false, total: 0 };
   }
 }
 
-function writeLater(token: string | null, later: string[], deferred: boolean): void {
+function writeLater(token: string | null, later: string[], deferred: boolean, total: number): void {
   if (token === null) return;
   try {
-    window.sessionStorage.setItem(laterKey(token), JSON.stringify({ later, deferred }));
+    window.localStorage.setItem(laterKey(token), JSON.stringify({ later, deferred, total }));
   } catch {
-    // Sin almacenamiento la revisión funciona igual; solo no se recuerda al recargar.
+    // Sin almacenamiento la revisión funciona igual; solo no se recuerda al volver.
   }
 }
 
@@ -185,11 +198,13 @@ export const useIntakeStore = create<IntakeState>((set, get) => ({
     try {
       const session = await intakeService.open(token);
       const remembered = readLater(token);
+      const reviewTotal = Math.max(remembered.total, session.progress.pending_review);
+      writeLater(token, remembered.later, remembered.deferred, reviewTotal);
       set({
         session,
         messages: session.messages,
         loading: false,
-        reviewTotal: session.progress.pending_review,
+        reviewTotal,
         reviewLater: remembered.later,
         reviewDeferred: remembered.deferred,
         reviewResolved: [],
@@ -211,6 +226,11 @@ export const useIntakeStore = create<IntakeState>((set, get) => ({
 
     const body = message.trim();
     if (body === "") return;
+
+    // Escribir aparta las tarjetas de revisión: la persona eligió conversar, y
+    // la isla tiene que seguir lo que está haciendo, no una tarjeta que dejó
+    // atrás. Lo apartado espera en la revisión final (auditoría F3, C1).
+    if (!get().reviewDeferred && session.progress.pending_review > 0) get().deferReview();
 
     // Mensaje optimista: un turno tarda segundos y sin esto la pantalla se
     // queda quieta con el texto desaparecido.
@@ -463,7 +483,7 @@ export const useIntakeStore = create<IntakeState>((set, get) => ({
           },
         };
       });
-      writeLater(token, get().reviewLater, get().reviewDeferred);
+      writeLater(token, get().reviewLater, get().reviewDeferred, get().reviewTotal);
       return true;
     } catch (error) {
       set((state) => ({
@@ -481,7 +501,7 @@ export const useIntakeStore = create<IntakeState>((set, get) => ({
       reviewResolved: resolve(state.reviewResolved, field, displayOf(value), "corrected"),
       reviewLater: state.reviewLater.filter((code) => code !== field.code),
     }));
-    writeLater(get().token, get().reviewLater, get().reviewDeferred);
+    writeLater(get().token, get().reviewLater, get().reviewDeferred, get().reviewTotal);
     return true;
   },
 
@@ -490,12 +510,12 @@ export const useIntakeStore = create<IntakeState>((set, get) => ({
       reviewLater: state.reviewLater.includes(field.code) ? state.reviewLater : [...state.reviewLater, field.code],
       reviewResolved: resolve(state.reviewResolved, field, field.display, "later"),
     }));
-    writeLater(get().token, get().reviewLater, get().reviewDeferred);
+    writeLater(get().token, get().reviewLater, get().reviewDeferred, get().reviewTotal);
   },
 
   deferReview() {
     set({ reviewDeferred: true });
-    writeLater(get().token, get().reviewLater, true);
+    writeLater(get().token, get().reviewLater, true, get().reviewTotal);
   },
 
   openFinalReview() {

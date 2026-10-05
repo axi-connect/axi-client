@@ -79,6 +79,9 @@ export function useAxelIsland(input: AxelIslandInput) {
      re-renderiza, la lista vuelve y se empuja de nuevo. */
   const delivered = useRef(new Set<string>());
   useEffect(() => {
+    // En el vacío no se toma nada: la isla no lo enseñaría (manda L) y, si la
+    // persona se va sin conversar, la novedad se habría perdido.
+    if (empty) return;
     for (const item of news) {
       takeNews(item.id);
       if (delivered.current.has(item.id)) continue;
@@ -112,7 +115,7 @@ export function useAxelIsland(input: AxelIslandInput) {
         },
       });
     }
-  }, [news, takeNews, push, dismiss]);
+  }, [news, empty, takeNews, push, dismiss]);
 
   return queue;
 }

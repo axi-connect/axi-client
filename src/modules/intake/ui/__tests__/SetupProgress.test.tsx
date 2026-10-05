@@ -76,8 +76,9 @@ describe("SetupProgress", () => {
   });
 
   it("lo por revisar, por definir y lo que no aplica van aparte y con palabras", () => {
-    render(<SetupProgress progress={PROGRESS} counts={{ review: 3, undefined: 1, notApplicable: 2 }} />);
+    render(<SetupProgress progress={PROGRESS} counts={{ review: 3, undefined: 1, later: 1, notApplicable: 2 }} />);
     expect(screen.getByText("3 por revisar")).toBeInTheDocument();
+    expect(screen.getByText("1 para después")).toBeInTheDocument();
     expect(screen.getByText("1 por definir")).toBeInTheDocument();
     expect(screen.getByText("2 no aplican")).toBeInTheDocument();
   });

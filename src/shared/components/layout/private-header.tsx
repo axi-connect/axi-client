@@ -169,7 +169,10 @@ export function PrivateHeader({ actions, breadcrumbs, center }: PrivateHeaderPro
 				// atrapa el ratón, solo la isla (sus capas desbordan hacia abajo,
 				// por encima del contenido, cuando avisa o resume).
 				<div className="pointer-events-none absolute inset-x-0 top-0 z-10 hidden justify-center pt-1 lg:flex">
-					<div className="pointer-events-auto w-[min(560px,46vw)]">{center}</div>
+					{/* Sin `pointer-events-auto` aquí: la franja es más ancha que la
+					    píldora y capturaría el ratón sin verse. Solo las capas visibles
+					    de la isla lo recogen (lo dice su CSS). */}
+					<div className="w-[min(560px,46vw)]">{center}</div>
 				</div>
 			)}
 			<div className="mx-auto flex w-full max-w-7xl items-center gap-3 px-4 md:px-6">

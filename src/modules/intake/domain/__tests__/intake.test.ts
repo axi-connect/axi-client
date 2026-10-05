@@ -85,6 +85,7 @@ describe("fichaCounts", () => {
       total: 5,
       review: 1,
       undefined: 1,
+      later: 1,
       notApplicable: 1,
     });
   });

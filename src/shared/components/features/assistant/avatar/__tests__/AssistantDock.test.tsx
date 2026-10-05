@@ -140,6 +140,15 @@ describe("AssistantDock · la isla viva", () => {
     expect(onExpand).toHaveBeenCalled();
   });
 
+  it("la píldora-botón conserva su estado en palabras como descripción (el aria-label taparía el contenido)", () => {
+    render(
+      <AssistantDock title="Alba" hero={<span />} status={<span>Ahora: Tu negocio.</span>} pending={1} onExpand={jest.fn()} />,
+    );
+    expect(screen.getByRole("button", { name: "Alba: 1 pendiente. Abrir" })).toHaveAccessibleDescription(
+      "Ahora: Tu negocio.",
+    );
+  });
+
   it("el resumen enseña tres líneas como mucho, con su tono", () => {
     render(
       <AssistantDock

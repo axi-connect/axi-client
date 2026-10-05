@@ -75,6 +75,7 @@ function session(): IntakeSessionView {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  window.localStorage.clear();
   useIntakeStore.setState({
     token: "t".repeat(32),
     session: session(),
@@ -170,15 +171,38 @@ describe("intake.store — revisar lo encontrado sin gastar turnos (island-live 
     ]);
   });
 
-  it("«Después» no escribe nada: aparta la tarjeta y lo recuerda en esta pestaña", () => {
-    useIntakeStore.setState({ session: withDerived() });
+  it("«Después» no escribe nada: aparta la tarjeta y lo recuerda en este navegador, con el total", () => {
+    useIntakeStore.setState({ session: withDerived(), reviewTotal: 11 });
     useIntakeStore.getState().laterField(derived);
     expect(patchAnswers).not.toHaveBeenCalled();
     expect(useIntakeStore.getState().reviewLater).toEqual(["ciudad"]);
-    expect(JSON.parse(window.sessionStorage.getItem(`intake.later.${"t".repeat(32)}`) ?? "{}")).toEqual({
+    // localStorage y no sessionStorage: volver mañana por el enlace no repite lo apartado (C2).
+    expect(JSON.parse(window.localStorage.getItem(`intake.later.${"t".repeat(32)}`) ?? "{}")).toEqual({
       later: ["ciudad"],
       deferred: false,
+      total: 11,
     });
+  });
+
+  it("escribir aparta la revisión: la isla sigue a la conversación, no a una tarjeta dejada atrás (C1)", async () => {
+    const pending = { ...session().progress, pending_review: 2 };
+    useIntakeStore.setState({ session: { ...withDerived(), progress: pending }, reviewDeferred: false });
+    message.mockResolvedValueOnce({
+      reply: "ok",
+      question: null,
+      captured: [],
+      progress: pending,
+      finished: false,
+      closing: null,
+      summary: null,
+      turns_left: 39,
+      captured_values: [],
+      skipped_now: [],
+      removed: [],
+      reopened: [],
+    });
+    await useIntakeStore.getState().send("hola");
+    expect(useIntakeStore.getState().reviewDeferred).toBe(true);
   });
 
   it("«Enviar a revisión» cierra sin modelo y la pantalla pasa a terminada con la vista del servidor", async () => {

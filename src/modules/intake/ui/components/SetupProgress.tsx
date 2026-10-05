@@ -26,7 +26,7 @@ export function SetupProgress({
   className,
 }: {
   progress: IntakeProgress;
-  counts: { review: number; undefined: number; notApplicable: number };
+  counts: { review: number; undefined: number; later?: number; notApplicable: number };
   className?: string;
 }) {
   const { confirmed, total } = progress.essential;
@@ -52,7 +52,7 @@ export function SetupProgress({
           style={{ width: `${String(percent)}%` }}
         />
       </span>
-      {counts.review + counts.undefined + counts.notApplicable > 0 ? (
+      {counts.review + counts.undefined + (counts.later ?? 0) + counts.notApplicable > 0 ? (
         <p className="flex flex-wrap gap-x-3.5 gap-y-1 text-[12.5px] text-muted-foreground">
           {counts.review > 0 ? (
             <span className="inline-flex items-center gap-1">
@@ -64,6 +64,12 @@ export function SetupProgress({
             <span className="inline-flex items-center gap-1">
               <CircleDashed className="size-3.5" aria-hidden="true" />
               {counts.undefined} por definir
+            </span>
+          ) : null}
+          {(counts.later ?? 0) > 0 ? (
+            <span className="inline-flex items-center gap-1">
+              <Clock3 className="size-3.5" aria-hidden="true" />
+              {counts.later} para después
             </span>
           ) : null}
           {counts.notApplicable > 0 ? (

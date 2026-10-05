@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 
 import { cn } from "@/core/lib/utils";
 import { islandClassName } from "@/shared/components/features/island";
@@ -125,6 +125,9 @@ export function AssistantDock({
   const pillAction = expandable ? onExpand : shape === "pill" ? onPillClick : undefined;
   const pillLabel = expandable ? `${title}: ${badge}. Abrir` : `Abrir ${title}`;
   const pillIsButton = pillAction !== undefined;
+  // El `aria-label` de un botón tapa su contenido: el estado (que el slice
+  // pinta con texto para lectores) se enlaza como descripción (auditoría F3, C3).
+  const statusId = useId();
 
   useIsoLayoutEffect(() => {
     const bar = barRef.current;
@@ -153,7 +156,11 @@ export function AssistantDock({
           {meta}
         </span>
       )}
-      {status === null || status === undefined ? null : <span className="assistant-dock__status">{status}</span>}
+      {status === null || status === undefined ? null : (
+        <span id={statusId} className="assistant-dock__status">
+          {status}
+        </span>
+      )}
       {expandable ? (
         <span className="assistant-dock__badge" aria-hidden="true">
           {badge}
@@ -188,6 +195,7 @@ export function AssistantDock({
             type="button"
             className={pillClass}
             aria-label={pillLabel}
+            aria-describedby={status === null || status === undefined ? undefined : statusId}
             onClick={pillAction}
           >
             {pillContent}

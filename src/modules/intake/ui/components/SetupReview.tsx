@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Check, CircleAlert, CircleDashed, Minus, Plus, Send } from "lucide-react";
+import { ArrowLeft, Check, CircleAlert, CircleDashed, Clock3, Minus, Plus, Send } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
 import {
@@ -96,6 +96,7 @@ export function SetupReview({
           {counts.undefined > 0 ? (
             <Count icon={CircleDashed}>{counts.undefined} por definir</Count>
           ) : null}
+          {counts.later > 0 ? <Count icon={Clock3}>{counts.later} para después</Count> : null}
           {counts.notApplicable > 0 ? (
             <Count icon={Minus}>
               {counts.notApplicable} no {counts.notApplicable === 1 ? "aplica" : "aplican"}
