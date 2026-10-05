@@ -14,9 +14,17 @@ import { useCallback, useEffect, useRef, useState } from "react";
  * 2. **Las pistas se cierran siempre** (`stop()` en cada una), incluso si el
  *    componente se desmonta a media grabación. Sin eso el indicador de
  *    micrófono activo se queda encendido y la gente lo nota — y con razón.
- * 3. **`unsupported` es un estado, no un error.** Si el navegador no graba, el
- *    botón no se pinta y la entrada de texto sigue funcionando igual. El
- *    dictado es un acelerador, nunca la única puerta.
+ * 3. **Cada fallo dice su motivo** (informe de la entrevista de Alba, rec. 16:
+ *    «el micrófono no reaccionaba ni pedía permiso»). Antes todo fallo era
+ *    `denied` y, peor, el botón ya no hacía nada al volver a pulsarlo. Ahora:
+ *    `denied` (el permiso está bloqueado), `no_device` (no hay micrófono),
+ *    `failed` (otro programa lo tiene o el navegador falló) y `unsupported`
+ *    (el navegador no graba, o la página no es segura). Desde cualquiera de
+ *    los tres primeros se puede reintentar. El dictado es un acelerador, nunca
+ *    la única puerta: el texto sigue disponible siempre.
+ * 4. **Si el permiso ya está bloqueado se sabe antes de pulsar**
+ *    (`navigator.permissions`, donde exista): el compositor puede decirlo sin
+ *    que la persona tenga que adivinar por qué no pasa nada.
  *
  * Hay un segundo grabador en `modules/inbox/infrastructure/hooks/use-voice-recorder.ts`
  * (nota de voz que se ENVÍA como audio: añade `preview`, `object_url`,
@@ -26,7 +34,25 @@ import { useCallback, useEffect, useRef, useState } from "react";
  * LATAM vive en `docs/plans/conversational_intake_plan.md` del servidor.
  */
 
-export type RecorderState = "idle" | "requesting" | "recording" | "unsupported" | "denied";
+export type RecorderState = "idle" | "requesting" | "recording" | "unsupported" | "denied" | "no_device" | "failed";
+
+/** Los estados en los que el micrófono no está disponible y la persona necesita saber por qué. */
+export type RecorderProblem = Extract<RecorderState, "unsupported" | "denied" | "no_device" | "failed">;
+
+export function recorderProblem(state: RecorderState): RecorderProblem | null {
+  return state === "unsupported" || state === "denied" || state === "no_device" || state === "failed" ? state : null;
+}
+
+/** El nombre del `DOMException` de `getUserMedia` dice qué pasó. */
+function failureState(error: unknown): RecorderState {
+  const name = typeof error === "object" && error !== null && "name" in error ? String(error.name) : "";
+  if (name === "NotAllowedError" || name === "SecurityError" || name === "PermissionDeniedError") return "denied";
+  if (name === "NotFoundError" || name === "DevicesNotFoundError" || name === "OverconstrainedError") return "no_device";
+  return "failed";
+}
+
+/** Se puede volver a pulsar desde aquí: el permiso pudo cambiar o el micrófono quedar libre. */
+const STARTABLE: ReadonlySet<RecorderState> = new Set(["idle", "denied", "no_device", "failed"]);
 
 export interface VoiceRecorder {
   state: RecorderState;
@@ -76,10 +102,36 @@ export function useVoiceRecorder(enabled: boolean): VoiceRecorder {
       typeof MediaRecorder !== "undefined" &&
       navigator.mediaDevices !== undefined;
     setState(supported ? "idle" : "unsupported");
+    if (!supported) return;
+
+    // Un permiso ya bloqueado se sabe sin pedirlo; y si la persona lo cambia en
+    // el candado del navegador, el botón vuelve a estar listo sin recargar.
+    let status: PermissionStatus | null = null;
+    let alive = true;
+    const sync = () => {
+      if (status === null) return;
+      setState((current) => {
+        if (status?.state === "denied") return current === "recording" || current === "requesting" ? current : "denied";
+        return current === "denied" ? "idle" : current;
+      });
+    };
+    void navigator.permissions
+      ?.query({ name: "microphone" as PermissionName })
+      .then((result) => {
+        if (!alive) return;
+        status = result;
+        sync();
+        result.addEventListener("change", sync);
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+      status?.removeEventListener("change", sync);
+    };
   }, [enabled]);
 
   const start = useCallback(() => {
-    if (state !== "idle") return;
+    if (!STARTABLE.has(state)) return;
     setState("requesting");
 
     void navigator.mediaDevices
@@ -106,9 +158,9 @@ export function useVoiceRecorder(enabled: boolean): VoiceRecorder {
           });
         }, 1000);
       })
-      .catch(() => {
-        // Denegado o sin dispositivo: el compositor de texto sigue ahí.
-        setState("denied");
+      .catch((error: unknown) => {
+        // Cada motivo con su nombre; el compositor de texto sigue ahí.
+        setState(failureState(error));
         release();
       });
   }, [state, release]);

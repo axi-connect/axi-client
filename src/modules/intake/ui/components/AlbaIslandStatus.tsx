@@ -34,9 +34,10 @@ export const AlbaIslandStatus = memo(function AlbaIslandStatus({ progress }: { p
           />
         ))}
       </span>
-      <span className="whitespace-nowrap">
+      {/* Puede partirse en dos líneas: el nombre del tema se lee entero (rec. 12). */}
+      <span className="min-w-0">
         {current === null ? null : <b className="font-semibold">{current.title}</b>}
-        <span className="text-muted-foreground tabular-nums">
+        <span className="assistant-island__muted whitespace-nowrap tabular-nums">
           {current === null ? "" : " · "}
           {done} de {counted.length}
         </span>

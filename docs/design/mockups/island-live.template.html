@@ -178,6 +178,10 @@ button.assistant-island--s { cursor: pointer; font: inherit; color: inherit; bor
 .listen { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 10px; border-radius: 9999px; font-size: 12px; font-weight: 500; color: var(--color-muted-foreground); background: var(--color-secondary); }
 .listen[aria-pressed="true"] { color: var(--axi-violet); background: color-mix(in oklab, var(--axi-violet) 12%, transparent); }
 .bub-u { align-self: flex-end; max-width: 82%; padding: 10px 14px; border-radius: 20px 20px 6px 20px; font-size: 15px; line-height: 1.5; }
+.why { margin-top: 8px; font-size: 13.5px; }
+.why summary { cursor: pointer; width: fit-content; font-size: 13px; font-weight: 600; color: var(--color-muted-foreground); }
+.why summary:hover { color: var(--color-foreground); }
+.why p { margin: 6px 0 0; color: var(--color-muted-foreground); line-height: 1.5; }
 .captured { display: flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 12px; color: var(--axi-success); }
 .note-sys { align-self: center; padding: 4px 12px; border-radius: 9999px; background: var(--color-secondary); font-size: 11.5px; color: var(--color-muted-foreground); }
 
@@ -437,7 +441,7 @@ button.assistant-island--s { cursor: pointer; font: inherit; color: inherit; bor
                 <div class="thread">
                   <div class="bub-a"><div class="bub-h">{{ic:sparkles:14}} Alba</div>
                     <p>Hola, Cristian. Soy Alba y voy a dejar listo el asistente de Hagogi.</p>
-                    <p>Encontré <b>11 datos</b> en su web y en su cuenta. Los revisamos uno a uno: confirmas, corriges o lo dejas para después. Son unos 2 minutos.</p>
+                    <p>Encontré <b>11 datos</b> en su web y en su cuenta. Los revisamos uno a uno: confirmas, corriges o lo dejas para después.</p>
                   </div>
                   <div class="bub-a"><div class="bub-h">{{ic:sparkles:14}} Alba</div>
                     <p>Esto ya lo teníamos en su cuenta.</p>
@@ -513,6 +517,7 @@ button.assistant-island--s { cursor: pointer; font: inherit; color: inherit; bor
                   <div class="bub-u assistant-bubble-user">no lo tengo claro, la empresa es nueva</div>
                   <div class="bub-a" id="live-q"><div class="bub-h">{{ic:sparkles:14}} Alba<span class="sp"></span><button class="listen" type="button" data-say="Normal al empezar. ¿Lo armamos juntos? Puedo proponerte un saludo y tú lo ajustas." aria-pressed="false">{{ic:volume-2:13}} Escuchar</button></div>
                     <p>Normal al empezar. ¿Lo armamos juntos?</p>
+                    <details class="why"><summary>¿Por qué lo pregunto?</summary><p>Es lo primero que lee quien les escribe. Con un saludo propio el asistente suena a Hagogi y no a un robot.</p></details>
                     <p class="q-eyebrow">{{ic:sparkles:12}} Elige una</p>
                     <ul class="grouped-list q-list">
                       <li class="grouped-row"><button class="q-row" type="button"><span class="t"><b>Ayúdame a definirlo</b><span>Te propongo uno y lo ajustas</span></span>{{ic:chevron-right:16}}</button></li>
@@ -781,7 +786,7 @@ button.assistant-island--s { cursor: pointer; font: inherit; color: inherit; bor
       noticeOk: { shape: 'notice', tone: 'success', title: 'Listo: Cuándo y dónde atienden', body: 'Vamos 2 de 6 temas', act: null },
       noticeFound: { shape: 'notice', tone: 'ai', title: 'Encontré 11 datos en su web', body: 'Los revisamos uno a uno', act: ['Empezar', 'contrast'] },
       noticeMic: { shape: 'notice', tone: 'warning', title: 'El micrófono está bloqueado', body: 'Actívalo en el candado del navegador', act: ['Escribir', 'glass'] },
-      noticeBack: { shape: 'notice', tone: 'ai', title: 'Seguimos donde quedaste', body: 'Faltan 3 temas · unos 4 minutos', act: ['Continuar', 'contrast'] },
+      noticeBack: { shape: 'notice', tone: 'ai', title: 'Seguimos donde quedaste', body: 'Faltan 3 temas y 4 datos por revisar', act: ['Continuar', 'contrast'] },
       working: { shape: 'working', before: 'Anoté «Todo es en línea»', now: 'Pensando la siguiente pregunta…', chips: [['Anotado', 'done', IC.done, 'before'], ['Siguiente tema', 'read', IC.book, 'now']] },
       listening: { shape: 'listening' },
     },

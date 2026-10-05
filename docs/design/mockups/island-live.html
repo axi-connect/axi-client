@@ -454,12 +454,330 @@ button:focus-visible, a:focus-visible, textarea:focus-visible, input:focus-visib
   --island-glow: none;
 }
 
+/* --------------------------------------------------------------------------
+   La isla viva (docs/plans/island_live_plan.md, F1; maqueta aprobada
+   docs/design/mockups/island-live.html). Cuatro formas más, siempre una a la
+   vez: `data-shape` en `.assistant-dock` la elige (`islandShape`).
+
+   · P `question` — la pregunta viva cuando su burbuja no está a la vista.
+   · A `notice`   — un aviso: una línea, un botón como mucho.
+   · R `summary`  — un resumen corto (el informe de Axel).
+   · E `listening`— el micrófono graba.
+
+   P, A y R comparten la capa `--p` (cambia el contenido); E tiene la suya.
+   Mismas reglas que L/S/M: capas absolutas que se funden por opacity, el
+   avatar viaja por transform y nada anima su tamaño. Los anchos son fijos por
+   forma (variables de la barra), así que el avatar no necesita medir nada.
+   -------------------------------------------------------------------------- */
+.assistant-dock__bar {
+  --p-w: min(540px, 100cqw);
+  --a-w: min(460px, 100cqw);
+  --e-w: min(440px, 100cqw);
+  --p-scale: 0.3529; /* 48 px */
+  --a-scale: 0.2941; /* 40 px */
+}
+
+/* S con algo plegado: la píldora es un botón y enseña el punto. */
+button.assistant-island--s {
+  cursor: pointer;
+  font: inherit;
+  border: 0;
+}
+button.assistant-island--s:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--axi-violet) 70%, white);
+  outline-offset: 2px;
+}
+.assistant-dock__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 4px;
+  padding: 3px 9px 3px 7px;
+  border-radius: 9999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  background: color-mix(in oklab, var(--axi-violet) 26%, transparent);
+  color: color-mix(in oklab, var(--axi-violet) 30%, var(--foreground));
+}
+.assistant-dock__badge::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--axi-violet);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--axi-violet) 30%, transparent);
+}
+
+/* M con chips: una fila más. */
+.assistant-island--m:has(.assistant-island__chips) {
+  height: 146px;
+}
+.assistant-island__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.assistant-island__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px 0 4px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  background: color-mix(in srgb, var(--foreground) 8%, transparent);
+  color: color-mix(in srgb, var(--foreground) 86%, transparent);
+}
+.assistant-island__chip > i {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  color: var(--background);
+  background: var(--axi-violet);
+}
+.assistant-island__chip > i svg {
+  width: 11px;
+  height: 11px;
+}
+.assistant-island__chip[data-tone="calc"] > i { background: var(--axi-amber); }
+.assistant-island__chip[data-tone="send"] > i { background: var(--axi-info); }
+.assistant-island__chip[data-tone="done"] > i { background: var(--axi-success); }
+.assistant-island__chip[data-current] {
+  color: var(--foreground);
+  background: color-mix(in oklab, var(--axi-violet) 22%, transparent);
+}
+
+/* P/A/R — la capa del panel. */
+.assistant-island--p {
+  --island-glow: radial-gradient(circle 12rem at 6% 0%, color-mix(in oklab, var(--axi-violet) 34%, transparent), transparent 70%);
+  left: 50%;
+  width: var(--p-w);
+  max-height: min(300px, 62vh);
+  border-radius: 28px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  transform: translateX(-50%) scale(0.94);
+  transform-origin: 50% 0;
+}
+.assistant-dock[data-shape="notice"] .assistant-island--p {
+  width: var(--a-w);
+  border-radius: 26px;
+}
+.assistant-dock[data-glow="success"] .assistant-island--p {
+  --island-glow: radial-gradient(circle 10rem at 8% 120%, color-mix(in oklab, var(--axi-success) 40%, transparent), transparent 70%);
+}
+.assistant-dock[data-glow="warning"] .assistant-island--p {
+  --island-glow: radial-gradient(circle 10rem at 8% 120%, color-mix(in oklab, var(--axi-warning) 42%, transparent), transparent 70%);
+}
+.assistant-dock[data-glow="neutral"] .assistant-island--p {
+  --island-glow: none;
+}
+.assistant-dock:is([data-shape="question"], [data-shape="notice"], [data-shape="summary"]) .assistant-island--p {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+  pointer-events: auto;
+}
+.assistant-dock:is([data-shape="question"], [data-shape="notice"], [data-shape="summary"], [data-shape="listening"]) .assistant-island--s {
+  opacity: 0;
+  pointer-events: none;
+}
+.assistant-island__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 18px 16px 78px;
+}
+.assistant-island__notice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 12px 12px 12px 64px;
+}
+.assistant-island__panel > *,
+.assistant-island__notice > * {
+  animation: assistant-rise 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.assistant-island__muted {
+  color: color-mix(in srgb, var(--foreground) 64%, transparent);
+}
+.assistant-island__mark {
+  color: color-mix(in oklab, var(--axi-violet) 55%, var(--foreground));
+}
+.assistant-island__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-wrap: pretty;
+}
+.assistant-island__notice-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.assistant-island__datum {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--foreground) 7%, transparent);
+}
+.assistant-island__highlights {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.assistant-island__highlights li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13px;
+  color: color-mix(in srgb, var(--foreground) 76%, transparent);
+}
+.assistant-island__highlights li::before {
+  content: "";
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  transform: translateY(-1px);
+  background: color-mix(in srgb, var(--foreground) 40%, transparent);
+}
+.assistant-island__highlights li[data-tone="up"]::before { background: var(--axi-success); }
+.assistant-island__highlights li[data-tone="warn"]::before { background: var(--axi-warning); }
+.assistant-island__highlights li[data-tone="down"]::before { background: var(--axi-destructive); }
+.assistant-island__highlights b {
+  font-weight: 600;
+  color: var(--foreground);
+}
+.assistant-island__icon {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  color: color-mix(in srgb, var(--foreground) 70%, transparent);
+  transition: background-color 150ms ease, color 150ms ease;
+}
+.assistant-island__icon:hover,
+.assistant-island__icon[aria-pressed="true"] {
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--foreground) 10%, transparent);
+}
+.assistant-island__icon[aria-pressed="true"] {
+  color: color-mix(in oklab, var(--axi-violet) 55%, var(--foreground));
+}
+.assistant-island__icon:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--foreground) 50%, transparent);
+  outline-offset: 1px;
+}
+
+/* E — escuchando. */
+.assistant-island--e {
+  left: 50%;
+  width: var(--e-w);
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 8px 0 62px;
+  border-radius: 9999px;
+  transform: translateX(-50%) scale(0.94);
+  transform-origin: 50% 0;
+}
+.assistant-dock[data-shape="listening"] .assistant-island--e {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+  pointer-events: auto;
+}
+.assistant-island--e .assistant-wave > i {
+  background: var(--axi-violet);
+}
+.assistant-island__rec {
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* El avatar viaja a cada forma. */
+.assistant-dock:is([data-shape="question"], [data-shape="summary"]) .assistant-dock__hero {
+  transform: translate(calc(50cqw - var(--p-w) / 2 + 17px), 15px) scale(var(--p-scale));
+}
+.assistant-dock[data-shape="notice"] .assistant-dock__hero {
+  transform: translate(calc(50cqw - var(--a-w) / 2 + 13px), 12px) scale(var(--a-scale));
+}
+.assistant-dock[data-shape="listening"] .assistant-dock__hero {
+  transform: translate(calc(50cqw - var(--e-w) / 2 + 10px), 7px) scale(var(--a-scale));
+}
+
+/* En el vacío manda el escenario L: lo que el slice empuje espera a la
+   conversación (el saludo del vacío ya cuenta lo suyo). */
+.assistant-chat[data-empty] .assistant-dock :is(.assistant-island--p, .assistant-island--e) {
+  opacity: 0;
+  pointer-events: none;
+}
+.assistant-chat[data-empty] .assistant-dock .assistant-dock__hero {
+  transform: translate(calc(50cqw - 68px), 34px) scale(1);
+}
+
+/* Columna estrecha: como M, las formas nuevas se alinean a la izquierda,
+   toman el ancho y las acciones de la esquina ceden mientras la isla habla. */
+@container assistant-chat (max-width: 899px) {
+  .assistant-island--p,
+  .assistant-island--e,
+  .assistant-dock[data-shape="notice"] .assistant-island--p {
+    left: 0;
+    width: calc(100cqw + var(--actions-w, 0px) + 8px);
+    transform: scale(0.94);
+    transform-origin: 0 0;
+  }
+  .assistant-dock:is([data-shape="question"], [data-shape="notice"], [data-shape="summary"]) .assistant-island--p,
+  .assistant-dock[data-shape="listening"] .assistant-island--e {
+    transform: scale(1);
+  }
+  .assistant-island__panel {
+    padding: 14px 14px 14px 72px;
+  }
+  /* El dictado se maneja desde el compositor, bajo el pulgar: la isla solo dice que escucha. */
+  .assistant-island__rec-btn {
+    display: none;
+  }
+  .assistant-dock:is([data-shape="question"], [data-shape="summary"]) .assistant-dock__hero {
+    transform: translate(17px, 15px) scale(var(--p-scale));
+  }
+  .assistant-dock[data-shape="notice"] .assistant-dock__hero {
+    transform: translate(13px, 12px) scale(var(--a-scale));
+  }
+  .assistant-dock[data-shape="listening"] .assistant-dock__hero {
+    transform: translate(10px, 7px) scale(var(--a-scale));
+  }
+  .assistant-chat:has(.assistant-dock:not([data-shape="pill"])) .assistant-chat__actions {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .assistant-island,
   .assistant-dock__hero {
     transition: none;
   }
-  .assistant-island__line--now {
+  .assistant-island__line--now,
+  .assistant-island__panel > *,
+  .assistant-island__notice > * {
     animation: none;
   }
 }
@@ -737,6 +1055,10 @@ button.assistant-island--s { cursor: pointer; font: inherit; color: inherit; bor
 .listen { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 10px; border-radius: 9999px; font-size: 12px; font-weight: 500; color: var(--color-muted-foreground); background: var(--color-secondary); }
 .listen[aria-pressed="true"] { color: var(--axi-violet); background: color-mix(in oklab, var(--axi-violet) 12%, transparent); }
 .bub-u { align-self: flex-end; max-width: 82%; padding: 10px 14px; border-radius: 20px 20px 6px 20px; font-size: 15px; line-height: 1.5; }
+.why { margin-top: 8px; font-size: 13.5px; }
+.why summary { cursor: pointer; width: fit-content; font-size: 13px; font-weight: 600; color: var(--color-muted-foreground); }
+.why summary:hover { color: var(--color-foreground); }
+.why p { margin: 6px 0 0; color: var(--color-muted-foreground); line-height: 1.5; }
 .captured { display: flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 12px; color: var(--axi-success); }
 .note-sys { align-self: center; padding: 4px 12px; border-radius: 9999px; background: var(--color-secondary); font-size: 11.5px; color: var(--color-muted-foreground); }
 
@@ -996,7 +1318,7 @@ button.assistant-island--s { cursor: pointer; font: inherit; color: inherit; bor
                 <div class="thread">
                   <div class="bub-a"><div class="bub-h"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg> Alba</div>
                     <p>Hola, Cristian. Soy Alba y voy a dejar listo el asistente de Hagogi.</p>
-                    <p>Encontré <b>11 datos</b> en su web y en su cuenta. Los revisamos uno a uno: confirmas, corriges o lo dejas para después. Son unos 2 minutos.</p>
+                    <p>Encontré <b>11 datos</b> en su web y en su cuenta. Los revisamos uno a uno: confirmas, corriges o lo dejas para después.</p>
                   </div>
                   <div class="bub-a"><div class="bub-h"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg> Alba</div>
                     <p>Esto ya lo teníamos en su cuenta.</p>
@@ -1072,6 +1394,7 @@ button.assistant-island--s { cursor: pointer; font: inherit; color: inherit; bor
                   <div class="bub-u assistant-bubble-user">no lo tengo claro, la empresa es nueva</div>
                   <div class="bub-a" id="live-q"><div class="bub-h"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg> Alba<span class="sp"></span><button class="listen" type="button" data-say="Normal al empezar. ¿Lo armamos juntos? Puedo proponerte un saludo y tú lo ajustas." aria-pressed="false"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"/><path d="M16 9a5 5 0 0 1 0 6"/><path d="M19.364 18.364a9 9 0 0 0 0-12.728"/></svg> Escuchar</button></div>
                     <p>Normal al empezar. ¿Lo armamos juntos?</p>
+                    <details class="why"><summary>¿Por qué lo pregunto?</summary><p>Es lo primero que lee quien les escribe. Con un saludo propio el asistente suena a Hagogi y no a un robot.</p></details>
                     <p class="q-eyebrow"><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg> Elige una</p>
                     <ul class="grouped-list q-list">
                       <li class="grouped-row"><button class="q-row" type="button"><span class="t"><b>Ayúdame a definirlo</b><span>Te propongo uno y lo ajustas</span></span><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></li>
@@ -1387,7 +1710,7 @@ button.assistant-island--s { cursor: pointer; font: inherit; color: inherit; bor
       noticeOk: { shape: 'notice', tone: 'success', title: 'Listo: Cuándo y dónde atienden', body: 'Vamos 2 de 6 temas', act: null },
       noticeFound: { shape: 'notice', tone: 'ai', title: 'Encontré 11 datos en su web', body: 'Los revisamos uno a uno', act: ['Empezar', 'contrast'] },
       noticeMic: { shape: 'notice', tone: 'warning', title: 'El micrófono está bloqueado', body: 'Actívalo en el candado del navegador', act: ['Escribir', 'glass'] },
-      noticeBack: { shape: 'notice', tone: 'ai', title: 'Seguimos donde quedaste', body: 'Faltan 3 temas · unos 4 minutos', act: ['Continuar', 'contrast'] },
+      noticeBack: { shape: 'notice', tone: 'ai', title: 'Seguimos donde quedaste', body: 'Faltan 3 temas y 4 datos por revisar', act: ['Continuar', 'contrast'] },
       working: { shape: 'working', before: 'Anoté «Todo es en línea»', now: 'Pensando la siguiente pregunta…', chips: [['Anotado', 'done', IC.done, 'before'], ['Siguiente tema', 'read', IC.book, 'now']] },
       listening: { shape: 'listening' },
     },

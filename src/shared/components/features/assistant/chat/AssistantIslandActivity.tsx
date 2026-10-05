@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Check, Search } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
-import type { AssistantLiveStep } from "../types";
+import type { AssistantActivityChip, AssistantLiveStep } from "../types";
 
 /** Cada frase del respaldo dura lo suficiente para leerse sin parecer un carrusel. */
 const PHASE_MS = 6000;
@@ -14,8 +14,16 @@ interface AssistantIslandActivityProps {
   steps?: readonly AssistantLiveStep[];
   /** Frases de respaldo cuando no hay pasos (sin socket, o un asistente sin pasos). */
   phrases?: readonly string[];
+  /**
+   * Lo que va tocando, como chips bajo las dos líneas (la referencia del dueño:
+   * «Asking Research · Sending…»). Cuatro como mucho: los últimos.
+   */
+  chips?: readonly AssistantActivityChip[];
   className?: string;
 }
+
+/** Más de cuatro chips ya no se leen de un vistazo y empujan la isla a tres filas. */
+const MAX_CHIPS = 4;
 
 interface Line {
   label: string;
@@ -32,7 +40,7 @@ interface Line {
  * Sin pasos, las frases de respaldo con la misma forma: la anterior arriba y la
  * de ahora debajo. Se detienen en la última; seguir rotando sería un bucle.
  */
-export function AssistantIslandActivity({ steps = [], phrases = [], className }: AssistantIslandActivityProps) {
+export function AssistantIslandActivity({ steps = [], phrases = [], chips = [], className }: AssistantIslandActivityProps) {
   const phase = usePhase(steps.length > 0 ? 0 : phrases.length);
   const lines = steps.length > 0 ? stepLines(steps) : phraseLines(phrases, phase);
   const done = steps.filter((step) => step.done).length;
@@ -67,7 +75,22 @@ export function AssistantIslandActivity({ steps = [], phrases = [], className }:
       </ol>
       {/* Lo que se puede afirmar sin inventar: cuántas lecturas van hechas. El
           cliente no sabe cuántas faltan, así que no promete un total. */}
-      {done > 0 ? (
+      {chips.length > 0 ? (
+        <ul className="assistant-island__chips" aria-label="Lo que está revisando">
+          {chips.slice(-MAX_CHIPS).map((chip) => {
+            const Icon = chip.icon;
+            return (
+              <li key={chip.id} className="assistant-island__chip" data-tone={chip.tone} data-current={chip.current ? "" : undefined}>
+                <i aria-hidden="true">
+                  <Icon />
+                </i>
+                {chip.label}
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
+      {done > 0 && chips.length === 0 ? (
         <p className="text-[11px] text-muted-foreground tabular-nums">
           Trabajando · {done} {done === 1 ? "lectura" : "lecturas"}
         </p>
