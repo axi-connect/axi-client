@@ -1,4 +1,5 @@
 import { act, render, screen } from "@testing-library/react";
+import { BookOpen } from "lucide-react";
 
 import { AssistantIslandActivity } from "../AssistantIslandActivity";
 
@@ -39,5 +40,19 @@ describe("AssistantIslandActivity", () => {
     const { container } = render(<AssistantIslandActivity />);
     expect(container.firstChild).toHaveAttribute("aria-live", "polite");
     expect(screen.getByText("Pensando…")).toBeInTheDocument();
+  });
+
+  it("los chips: cuatro como mucho, los últimos, el actual marcado, junto al contador", () => {
+    const chip = (id: string, current = false) => ({ id, label: id, icon: BookOpen, tone: "read" as const, current });
+    render(
+      <AssistantIslandActivity
+        steps={[step("Ventas", true, 100), step("Comparando", false)]}
+        chips={[chip("uno"), chip("dos"), chip("tres"), chip("cuatro"), chip("cinco", true)]}
+      />,
+    );
+    expect(screen.queryByText("uno")).toBeNull();
+    expect(screen.getAllByRole("listitem").filter((li) => li.classList.contains("assistant-island__chip"))).toHaveLength(4);
+    expect(screen.getByText("cinco").closest("li")).toHaveAttribute("data-current");
+    expect(screen.getByText(/Trabajando · 1 lectura/)).toBeInTheDocument();
   });
 });

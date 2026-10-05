@@ -19,6 +19,7 @@ const recorder: VoiceRecorder & { state: RecorderState } = {
 };
 let recorderEnabled = false;
 jest.mock("@/core/hooks/use-voice-recorder", () => ({
+  ...jest.requireActual<object>("@/core/hooks/use-voice-recorder"),
   useVoiceRecorder: (enabled: boolean) => {
     recorderEnabled = enabled;
     return recorder;
@@ -112,21 +113,23 @@ describe("la voz es de quien la pide", () => {
   it("sin `voice` no hay micrófono ni grabadora encendida", () => {
     view();
     expect(recorderEnabled).toBe(false);
-    expect(screen.queryByRole("button", { name: "Dictar" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Dictar respuesta" })).not.toBeInTheDocument();
   });
 
   it("con `voice` el micrófono aparece, pide permiso al PULSAR y no antes", () => {
     view({ voice: { transcribe: jest.fn(async () => "hola") } });
     expect(recorderEnabled).toBe(true);
     expect(recorder.start).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: "Dictar" }));
+    fireEvent.click(screen.getByRole("button", { name: "Dictar respuesta" }));
     expect(recorder.start).toHaveBeenCalledTimes(1);
   });
 
-  it("si el navegador no graba, el botón no se pinta y el texto sigue funcionando", () => {
+  it("si el navegador no graba, el botón lo dice al pulsarlo (no antes) y el texto sigue funcionando", () => {
     recorder.state = "unsupported";
     const { onSend, textarea } = view({ voice: { transcribe: jest.fn() } });
-    expect(screen.queryByRole("button", { name: "Dictar" })).not.toBeInTheDocument();
+    expect(screen.queryByText(/no puede dictar/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Dictar respuesta" }));
+    expect(screen.getByRole("status")).toHaveTextContent("Este navegador no puede dictar. Escribe tu respuesta");
     fireEvent.change(textarea, { target: { value: "a mano" } });
     fireEvent.keyDown(textarea, { key: "Enter" });
     expect(onSend).toHaveBeenCalledWith("a mano", { voice: false });
@@ -160,5 +163,36 @@ describe("la voz es de quien la pide", () => {
 
     fireEvent.keyDown(textarea, { key: "Enter" });
     expect(onSend).toHaveBeenCalledWith("abrimos de nueve a siete", { voice: true });
+  });
+});
+
+describe("la isla refleja el dictado", () => {
+  it("grabando avisa a la isla con el reloj, Detener y Cancelar del compositor; al parar avisa null", () => {
+    recorder.state = "recording";
+    recorder.seconds = 7;
+    const onListeningChange = jest.fn();
+    const { rerender } = render(
+      <AssistantComposer onSend={jest.fn()} placeholder="Escribe…" ariaLabel="Mensaje" voice={{ transcribe: jest.fn() }} onListeningChange={onListeningChange} />,
+    );
+    const last = onListeningChange.mock.calls.at(-1)?.[0] as { seconds: number; onCancel: () => void } | null;
+    expect(last?.seconds).toBe(7);
+    last?.onCancel();
+    expect(recorder.cancel).toHaveBeenCalled();
+
+    recorder.state = "idle";
+    rerender(
+      <AssistantComposer onSend={jest.fn()} placeholder="Escribe…" ariaLabel="Mensaje" voice={{ transcribe: jest.fn() }} onListeningChange={onListeningChange} />,
+    );
+    expect(onListeningChange).toHaveBeenLastCalledWith(null);
+  });
+
+  it("con `onVoiceProblem` el motivo lo cuenta el llamador y aquí no se repite", () => {
+    recorder.state = "denied";
+    const onVoiceProblem = jest.fn();
+    view({ voice: { transcribe: jest.fn() }, onVoiceProblem });
+    expect(onVoiceProblem).toHaveBeenLastCalledWith(null);
+    fireEvent.click(screen.getByRole("button", { name: "Dictar respuesta" }));
+    expect(onVoiceProblem).toHaveBeenLastCalledWith("denied");
+    expect(screen.queryByText(/bloqueado/)).not.toBeInTheDocument();
   });
 });

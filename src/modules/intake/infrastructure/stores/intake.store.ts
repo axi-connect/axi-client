@@ -30,6 +30,16 @@ import { intakeService } from "../services/intake-service.adapter";
 
 export type UiMessage = IntakeMessage & { pending?: boolean; failed?: boolean };
 
+/** Cómo resolvió la persona una tarjeta de revisión en esta visita. */
+export type ReviewOutcome = "confirmed" | "corrected" | "later";
+
+export interface ReviewResolved {
+  code: string;
+  label: string;
+  display: string | null;
+  outcome: ReviewOutcome;
+}
+
 interface IntakeState {
   token: string | null;
   session: IntakeSessionView | null;
@@ -44,6 +54,22 @@ interface IntakeState {
   /** Guardando desde la ficha: el control se atenúa sin bloquear nada más. */
   savingField: string | null;
 
+  /* --- La revisión de lo encontrado (island-live F3; informe, rec. 1–3) --- */
+  /** Cuánto había por revisar al abrir: el denominador de «3 de 11 revisados». */
+  reviewTotal: number;
+  /** Lo que la persona dejó «para después» en las tarjetas. Va a la revisión final. */
+  reviewLater: string[];
+  /** «Revisar el resto después»: las tarjetas se apartan hasta la revisión final. */
+  reviewDeferred: boolean;
+  /** Las tarjetas resueltas en esta visita, para pintar su «✓ Confirmado». */
+  reviewResolved: ReviewResolved[];
+  /** La revisión final (antes de «Enviar a revisión») está abierta. */
+  finalReviewOpen: boolean;
+  /** Enviando a revisión: el botón se atenúa. */
+  finishing: boolean;
+  /** No se pudo enviar: se dice junto al botón y se puede reintentar. */
+  finishError: string | null;
+
   load: (token: string) => Promise<void>;
   send: (message: string, voice?: boolean) => Promise<void>;
   retry: () => Promise<void>;
@@ -55,7 +81,73 @@ interface IntakeState {
   deferTopic: (code: string) => Promise<void>;
   resumeTopic: (code: string) => Promise<void>;
   patchTopics: (body: { defer?: string[]; resume?: string[] }) => Promise<void>;
+  /** «Así es»: lo encontrado pasa a confirmado tal cual. Sin turno, sin IA. */
+  confirmField: (field: IntakeField) => Promise<boolean>;
+  /** Corregir desde la tarjeta de revisión: guarda y la tarjeta dice «Corregido». */
+  correctField: (field: IntakeField, value: unknown) => Promise<boolean>;
+  /** «Después»: la tarjeta pasa a la siguiente; el dato sigue pendiente y espera en la revisión final. */
+  laterField: (field: IntakeField) => void;
+  /** «Revisar el resto después»: aparta todas las tarjetas que quedan. */
+  deferReview: () => void;
+  openFinalReview: () => void;
+  closeFinalReview: () => void;
+  /** «Enviar a revisión»: cierra sin modelo; la pantalla pasa a «Listo». */
+  finish: () => Promise<void>;
+  /** La persona pidió «Escuchar». Solo se cuenta; nunca falla hacia arriba. */
+  listened: () => void;
   reset: () => void;
+}
+
+/**
+ * Lo apartado se recuerda en ESTE navegador (`localStorage`), no solo en la
+ * pestaña: quien dice «Después» a cinco datos y vuelve mañana por el enlace no
+ * puede encontrárselos delante otra vez (informe, «conservar las decisiones
+ * anteriores»; auditoría F3, C2). Se guarda también cuánto había por revisar,
+ * para que «3 de 11» no vuelva a «0 de 8» al recargar (C4).
+ *
+ * «Revisar el resto después» (o escribir) aparta las tarjetas SOLO en esta
+ * visita: al volver, lo que sigue sin confirmar se vuelve a ofrecer —el paso 1
+ * del informe es «siempre se ofrece»—, salvo lo marcado «Después», que espera
+ * en la revisión final. Al enviar a revisión, la entrada se borra.
+ */
+const laterKey = (token: string): string => `intake.later.${token}`;
+
+interface RememberedReview {
+  later: string[];
+  total: number;
+}
+
+function readLater(token: string): RememberedReview {
+  try {
+    const raw = window.localStorage.getItem(laterKey(token));
+    if (raw === null) return { later: [], total: 0 };
+    const parsed = JSON.parse(raw) as { later?: unknown; total?: unknown };
+    return {
+      later: Array.isArray(parsed.later) ? parsed.later.filter((code): code is string => typeof code === "string") : [],
+      total: typeof parsed.total === "number" && Number.isFinite(parsed.total) ? Math.max(0, parsed.total) : 0,
+    };
+  } catch {
+    return { later: [], total: 0 };
+  }
+}
+
+/** Cerrada la entrevista, lo apartado ya no sirve: no se deja una entrada por enlace para siempre. */
+function forgetLater(token: string): void {
+  try {
+    window.localStorage.removeItem(laterKey(token));
+  } catch {
+    // Nada que hacer.
+  }
+}
+
+/** `deferred` NO se guarda: vale por visita (al volver, lo no confirmado se vuelve a ofrecer). */
+function writeLater(token: string | null, later: string[], total: number): void {
+  if (token === null) return;
+  try {
+    window.localStorage.setItem(laterKey(token), JSON.stringify({ later, total }));
+  } catch {
+    // Sin almacenamiento la revisión funciona igual; solo no se recuerda al volver.
+  }
 }
 
 /** La sesión, ya cerrada en el servidor, tal como debe verse aquí. */
@@ -106,12 +198,30 @@ export const useIntakeStore = create<IntakeState>((set, get) => ({
   blocked: null,
   turnError: null,
   savingField: null,
+  reviewTotal: 0,
+  reviewLater: [],
+  reviewDeferred: false,
+  reviewResolved: [],
+  finalReviewOpen: false,
+  finishing: false,
+  finishError: null,
 
   async load(token) {
     set({ token, loading: true, blocked: null });
     try {
       const session = await intakeService.open(token);
-      set({ session, messages: session.messages, loading: false });
+      const remembered = readLater(token);
+      const reviewTotal = Math.max(remembered.total, session.progress.pending_review);
+      writeLater(token, remembered.later, reviewTotal);
+      set({
+        session,
+        messages: session.messages,
+        loading: false,
+        reviewTotal,
+        reviewLater: remembered.later,
+        reviewDeferred: false,
+        reviewResolved: [],
+      });
     } catch (error) {
       const code = isHttpError(error) ? error.code : "";
       set({
@@ -129,6 +239,11 @@ export const useIntakeStore = create<IntakeState>((set, get) => ({
 
     const body = message.trim();
     if (body === "") return;
+
+    // Escribir aparta las tarjetas de revisión: la persona eligió conversar, y
+    // la isla tiene que seguir lo que está haciendo, no una tarjeta que dejó
+    // atrás. Lo apartado espera en la revisión final (auditoría F3, C1).
+    if (!get().reviewDeferred && session.progress.pending_review > 0) get().deferReview();
 
     // Mensaje optimista: un turno tarda segundos y sin esto la pantalla se
     // queda quieta con el texto desaparecido.
@@ -359,6 +474,102 @@ export const useIntakeStore = create<IntakeState>((set, get) => ({
     }
   },
 
+  async confirmField(field) {
+    const { token } = get();
+    if (token === null) return false;
+    set({ savingField: field.code });
+    try {
+      const result = await intakeService.patchAnswers(token, { confirm: [field.code] });
+      set((state) => {
+        if (state.session === null) return { savingField: null };
+        return {
+          savingField: null,
+          reviewResolved: resolve(state.reviewResolved, field, field.display, "confirmed"),
+          reviewLater: state.reviewLater.filter((code) => code !== field.code),
+          session: {
+            ...state.session,
+            progress: result.progress,
+            topics: patchField(state.session.topics, field.code, {
+              source: "stated",
+              needs_confirmation: false,
+            }),
+          },
+        };
+      });
+      writeLater(token, get().reviewLater, get().reviewTotal);
+      return true;
+    } catch (error) {
+      set((state) => ({
+        savingField: null,
+        ...(errorCode(error) === SESSION_CLOSED ? { session: closedLocally(state.session) } : {}),
+      }));
+      return false;
+    }
+  },
+
+  async correctField(field, value) {
+    const ok = await get().saveField(field, value);
+    if (!ok) return false;
+    set((state) => ({
+      reviewResolved: resolve(state.reviewResolved, field, displayOf(value), "corrected"),
+      reviewLater: state.reviewLater.filter((code) => code !== field.code),
+    }));
+    writeLater(get().token, get().reviewLater, get().reviewTotal);
+    return true;
+  },
+
+  laterField(field) {
+    set((state) => ({
+      reviewLater: state.reviewLater.includes(field.code) ? state.reviewLater : [...state.reviewLater, field.code],
+      reviewResolved: resolve(state.reviewResolved, field, field.display, "later"),
+    }));
+    writeLater(get().token, get().reviewLater, get().reviewTotal);
+  },
+
+  deferReview() {
+    set({ reviewDeferred: true });
+  },
+
+  openFinalReview() {
+    set({ finalReviewOpen: true, finishError: null });
+  },
+
+  closeFinalReview() {
+    set({ finalReviewOpen: false, finishError: null });
+  },
+
+  async finish() {
+    const { token, finishing } = get();
+    if (token === null || finishing) return;
+    set({ finishing: true, finishError: null });
+    try {
+      const session = await intakeService.finish(token);
+      set({ session, messages: session.messages, finishing: false, finalReviewOpen: false });
+      forgetLater(token);
+    } catch (error) {
+      if (errorCode(error) === SESSION_CLOSED) {
+        // Otra pestaña la cerró: igual de cerrada, lo apartado tampoco sirve ya.
+        forgetLater(token);
+        set((state) => ({ finishing: false, finalReviewOpen: false, session: closedLocally(state.session) }));
+        return;
+      }
+      set({
+        finishing: false,
+        finishError: isHttpError(error)
+          ? error.message
+          : "No pudimos enviarlo. Revisa tu conexión y vuelve a intentarlo.",
+      });
+    }
+  },
+
+  listened() {
+    const { token } = get();
+    if (token === null) return;
+    intakeService.listened(token).catch(() => {
+      // Un contador: si falla, la persona no tiene nada que hacer con eso.
+    });
+  },
+
   reset() {
     set({
       token: null,
@@ -369,6 +580,13 @@ export const useIntakeStore = create<IntakeState>((set, get) => ({
       blocked: null,
       turnError: null,
       savingField: null,
+      reviewTotal: 0,
+      reviewLater: [],
+      reviewDeferred: false,
+      reviewResolved: [],
+      finalReviewOpen: false,
+      finishing: false,
+      finishError: null,
     });
   },
 }));
@@ -443,6 +661,16 @@ function patchField(
     ...topic,
     fields: topic.fields.map((field) => (field.code === code ? { ...field, ...patch } : field)),
   }));
+}
+
+/** Anota (o reescribe) cómo se resolvió una tarjeta, en el orden en que se resolvió. */
+function resolve(
+  list: ReviewResolved[],
+  field: IntakeField,
+  display: string | null,
+  outcome: ReviewOutcome,
+): ReviewResolved[] {
+  return [...list.filter((entry) => entry.code !== field.code), { code: field.code, label: field.label, display, outcome }];
 }
 
 function displayOf(value: unknown): string | null {

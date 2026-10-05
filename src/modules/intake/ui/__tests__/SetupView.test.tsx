@@ -91,9 +91,13 @@ function session(city = "Medellín"): IntakeSessionView {
       next_field: null,
       has_pending_required: false,
       has_pending_confirmation: false,
+      essential: { confirmed: 0, total: 1, complete: false },
+      pending_review: 0,
+      next_ask: null,
     },
     closing: null,
     summary: null,
+    resume: null,
   };
 }
 
@@ -119,13 +123,14 @@ afterEach(() => {
 describe("SetupView", () => {
   it("en escritorio hay UNA sola ficha en el DOM", async () => {
     await mount();
-    expect(screen.getAllByRole("heading", { name: "Lo que ya sabemos" })).toHaveLength(1);
+    expect(screen.getAllByRole("heading", { name: "Tu avance" })).toHaveLength(1);
   });
 
   it("guardar un dato repinta la ficha, no el hilo", async () => {
     await mount();
     const before = threadRenders.mock.calls.length;
 
+    fireEvent.click(screen.getByRole("button", { name: "Ver todo lo anotado" }));
     act(() => {
       useIntakeStore.setState({ session: session("Bogotá") });
     });
@@ -142,10 +147,10 @@ describe("SetupView", () => {
   it("en móvil la ficha vive en una hoja que se abre desde su botón", async () => {
     Object.defineProperty(window, "innerWidth", { configurable: true, value: 390 });
     await mount();
-    expect(screen.queryByRole("heading", { name: "Lo que ya sabemos" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Tu avance" })).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: /Abrir la ficha/ }));
     expect(screen.getByRole("dialog")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Lo que ya sabemos" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Tu avance" })).toBeInTheDocument();
   });
 });

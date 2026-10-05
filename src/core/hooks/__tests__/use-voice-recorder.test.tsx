@@ -87,11 +87,50 @@ describe("useVoiceRecorder", () => {
   });
 
   it("si el permiso se niega, queda en `denied` y el texto sigue disponible", async () => {
-    getUserMedia.mockRejectedValueOnce(new Error("NotAllowed"));
+    getUserMedia.mockRejectedValueOnce(Object.assign(new Error("x"), { name: "NotAllowedError" }));
     const { result } = renderHook(() => useVoiceRecorder(true));
     await act(async () => {
       result.current.start();
     });
     expect(result.current.state).toBe("denied");
+  });
+
+  it("cada fallo dice su motivo: sin micrófono, y ocupado o roto", async () => {
+    getUserMedia.mockRejectedValueOnce(Object.assign(new Error("x"), { name: "NotFoundError" }));
+    const { result } = renderHook(() => useVoiceRecorder(true));
+    await act(async () => {
+      result.current.start();
+    });
+    expect(result.current.state).toBe("no_device");
+
+    getUserMedia.mockRejectedValueOnce(Object.assign(new Error("x"), { name: "NotReadableError" }));
+    await act(async () => {
+      result.current.start();
+    });
+    expect(result.current.state).toBe("failed");
+  });
+
+  it("tras un fallo, volver a pulsar vuelve a pedir el micrófono (antes no hacía nada)", async () => {
+    getUserMedia.mockRejectedValueOnce(Object.assign(new Error("x"), { name: "NotAllowedError" }));
+    const { result } = renderHook(() => useVoiceRecorder(true));
+    await act(async () => {
+      result.current.start();
+    });
+    expect(result.current.state).toBe("denied");
+    await act(async () => {
+      result.current.start();
+    });
+    expect(getUserMedia).toHaveBeenCalledTimes(2);
+    expect(result.current.state).toBe("recording");
+  });
+
+  it("un permiso ya bloqueado se sabe al montar, sin pedirlo", async () => {
+    const status = { state: "denied", addEventListener: jest.fn(), removeEventListener: jest.fn() };
+    Object.defineProperty(navigator, "permissions", { configurable: true, value: { query: jest.fn(async () => status) } });
+    const { result } = renderHook(() => useVoiceRecorder(true));
+    await act(async () => undefined);
+    expect(result.current.state).toBe("denied");
+    expect(getUserMedia).not.toHaveBeenCalled();
+    Object.defineProperty(navigator, "permissions", { configurable: true, value: undefined });
   });
 });

@@ -1,9 +1,12 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 
 import { cn } from "@/core/lib/utils";
 import { islandClassName } from "@/shared/components/features/island";
+import { AssistantIslandListening } from "../chat/AssistantIslandListening";
+import { AssistantIslandPanel } from "../chat/AssistantIslandPanel";
+import type { AssistantIslandItem, AssistantIslandListeningState as Listening } from "../types";
 
 interface AssistantDockProps {
   /** Nombre del asistente; va en la píldora. */
@@ -20,8 +23,52 @@ interface AssistantDockProps {
    */
   activity?: ReactNode;
   working?: boolean;
+  /**
+   * Lo que la isla despliega (pregunta, aviso o resumen). Lo decide
+   * `useIslandQueue`; el dock solo lo pinta. Trabajando o dictando, espera.
+   */
+  item?: AssistantIslandItem | null;
+  /** Pliega lo desplegado (chevron, ✕ sin `onDismiss`, `Escape`). */
+  onFold?: () => void;
+  /** Descarta un aviso con su ✕. */
+  onDismiss?: (id: string) => void;
+  /** Cuántas cosas quedaron plegadas: la píldora enseña el punto y se vuelve un botón. */
+  pending?: number;
+  onExpand?: () => void;
+  /** El micrófono graba: la isla toma la forma E. */
+  listening?: Listening | null;
+  /**
+   * El chat está vacío: manda el escenario L y la isla no despliega nada. Vive
+   * aquí y no solo en CSS: un panel oculto con `opacity` seguiría en el orden
+   * de tabulación y en el árbol de accesibilidad (auditoría F1, B1).
+   */
+  empty?: boolean;
+  /** Al empezar una lectura en voz alta desde la isla: para contarla. */
+  onListen?: () => void;
+  /**
+   * Sin nada plegado, la píldora también puede ser un botón: la isla global
+   * de Axel abre /cmo. Sin esto, en reposo la píldora no es interactiva.
+   */
+  onPillClick?: () => void;
   className?: string;
 }
+
+export type AssistantIslandShape = "pill" | "working" | "question" | "notice" | "summary" | "listening";
+
+/** Qué forma toma la isla. Dictar y trabajar mandan: un aviso que llega mientras tanto espera su turno. */
+export function islandShape(state: {
+  working: boolean;
+  item: AssistantIslandItem | null;
+  listening: boolean;
+  empty?: boolean;
+}): AssistantIslandShape {
+  if (state.empty === true) return "pill";
+  if (state.listening) return "listening";
+  if (state.working) return "working";
+  return state.item?.kind ?? "pill";
+}
+
+const NO_OP = () => undefined;
 
 const INK = islandClassName({ material: "ink", glow: "none" });
 
@@ -38,15 +85,49 @@ const useIsoLayoutEffect = typeof window === "undefined" ? useEffect : useLayout
  *   avatar, el nombre y la meta.
  * - **M** — mientras trabaja (`working`): la isla crece y enseña sus pasos.
  *
- * Aquí vive **la única instancia viva del avatar**. Las tres formas son capas
+ * Con la isla viva (plan island_live_plan.md) gana cuatro formas más, siempre
+ * una a la vez (`data-shape`):
+ *
+ * - **P** — una pregunta cuya burbuja no está a la vista, con el dato y sus botones.
+ * - **A** — un aviso: una línea, un botón como mucho, brillo por tono.
+ * - **R** — un resumen corto (el informe de Axel).
+ * - **E** — escuchando: el micrófono graba.
+ *
+ * Aquí vive **la única instancia viva del avatar**. Todas las formas son capas
  * que se funden por `opacity`, y el avatar viaja entre ellas con un solo
  * `transform`: ni un segundo componente, ni animaciones de tamaño. El ancho de
  * la píldora depende de su texto, así que se mide una vez por cambio con un
  * `ResizeObserver` y se escribe en una variable CSS por ref, sin estado.
  */
-export function AssistantDock({ title, hero, meta, status, activity, working = false, className }: AssistantDockProps) {
+export function AssistantDock({
+  title,
+  hero,
+  meta,
+  status,
+  activity,
+  working = false,
+  item = null,
+  onFold = NO_OP,
+  onDismiss,
+  pending = 0,
+  onExpand,
+  listening = null,
+  empty = false,
+  onListen,
+  onPillClick,
+  className,
+}: AssistantDockProps) {
   const barRef = useRef<HTMLDivElement>(null);
-  const pillRef = useRef<HTMLDivElement>(null);
+  const pillRef = useRef<HTMLElement | null>(null);
+  const shape = islandShape({ working, item, listening: listening !== null, empty });
+  const expandable = pending > 0 && onExpand !== undefined && shape === "pill";
+  const badge = pending === 1 ? "1 pendiente" : `${String(pending)} pendientes`;
+  const pillAction = expandable ? onExpand : shape === "pill" ? onPillClick : undefined;
+  const pillLabel = expandable ? `${title}: ${badge}. Abrir` : `Abrir ${title}`;
+  const pillIsButton = pillAction !== undefined;
+  // El `aria-label` de un botón tapa su contenido: el estado (que el slice
+  // pinta con texto para lectores) se enlaza como descripción (auditoría F3, C3).
+  const statusId = useId();
 
   useIsoLayoutEffect(() => {
     const bar = barRef.current;
@@ -62,28 +143,96 @@ export function AssistantDock({ title, hero, meta, status, activity, working = f
     return () => {
       observer.disconnect();
     };
-  }, []);
+    // La píldora cambia de elemento (div ↔ botón) al haber algo plegado: se vuelve a medir el nuevo.
+  }, [pillIsButton]);
+
+  const pillContent = (
+    <>
+      <span className="assistant-dock__title font-heading" aria-hidden="true">
+        {title}
+      </span>
+      {meta === null || meta === undefined ? null : (
+        <span className="assistant-dock__meta" aria-hidden="true">
+          {meta}
+        </span>
+      )}
+      {status === null || status === undefined ? null : (
+        <span id={statusId} className="assistant-dock__status">
+          {status}
+        </span>
+      )}
+      {expandable ? (
+        <span className="assistant-dock__badge" aria-hidden="true">
+          {badge}
+        </span>
+      ) : null}
+    </>
+  );
+  const pillClass = cn(INK, "assistant-island assistant-island--s");
+  const panelItem = shape === "question" || shape === "notice" || shape === "summary" ? item : null;
+  // Lo que se anuncia: SIEMPRE montado y vacío en reposo. Un lector de pantalla
+  // solo lee los cambios dentro de una región que ya existía; un aviso que nace
+  // con su texto no se anuncia (auditoría F1, B2).
+  const announcement =
+    panelItem === null || panelItem.kind === "question"
+      ? ""
+      : [panelItem.title, panelItem.kind === "notice" ? panelItem.body : undefined].filter(Boolean).join(". ");
 
   return (
-    <header className={cn("assistant-dock", className)} data-working={working ? "" : undefined}>
+    <header
+      className={cn("assistant-dock", className)}
+      data-shape={shape}
+      data-glow={panelItem?.kind === "notice" ? panelItem.glow : undefined}
+      data-working={shape === "working" ? "" : undefined}
+    >
       <div ref={barRef} className="assistant-dock__bar">
         <div className={cn(INK, "assistant-island assistant-island--l")} aria-hidden="true" />
-        <div ref={pillRef} className={cn(INK, "assistant-island assistant-island--s")}>
-          <span className="assistant-dock__title font-heading" aria-hidden="true">
-            {title}
-          </span>
-          {meta === null || meta === undefined ? null : (
-            <span className="assistant-dock__meta" aria-hidden="true">
-              {meta}
-            </span>
-          )}
-          {status === null || status === undefined ? null : <span className="assistant-dock__status">{status}</span>}
-        </div>
+        {pillAction !== undefined ? (
+          <button
+            ref={(node) => {
+              pillRef.current = node;
+            }}
+            type="button"
+            className={pillClass}
+            aria-label={pillLabel}
+            aria-describedby={status === null || status === undefined ? undefined : statusId}
+            onClick={pillAction}
+          >
+            {pillContent}
+          </button>
+        ) : (
+          <div
+            ref={(node) => {
+              pillRef.current = node;
+            }}
+            className={pillClass}
+          >
+            {pillContent}
+          </div>
+        )}
         <div className={cn(INK, "assistant-island assistant-island--m")}>
-          {working && activity !== undefined && activity !== null ? activity : null}
+          {shape === "working" && activity !== undefined && activity !== null ? activity : null}
+        </div>
+        <div className={cn(INK, "assistant-island assistant-island--p")}>
+          {panelItem === null ? null : (
+            <AssistantIslandPanel
+              key={panelItem.id}
+              item={panelItem}
+              name={title}
+              onFold={onFold}
+              onDismiss={onDismiss}
+              onListen={onListen}
+            />
+          )}
+        </div>
+        <div className={cn(INK, "assistant-island assistant-island--e")}>
+          {shape === "listening" && listening !== null ? <AssistantIslandListening {...listening} /> : null}
         </div>
         <div className="assistant-dock__hero">{hero}</div>
       </div>
+      <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {announcement}
+      </p>
     </header>
   );
 }

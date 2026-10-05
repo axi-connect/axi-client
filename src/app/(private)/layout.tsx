@@ -8,6 +8,7 @@ import { AppReadySignal } from "@/core/providers/app-ready-signal";
 import { PrivateHeader } from "@/shared/components/layout/private-header";
 import { SidebarProvider, SidebarInset } from "@/shared/components/layout/sidebar/core"
 import { NotificationBell } from "@/modules/notifications/ui/components/NotificationBell";
+import { AxelGlobalIsland } from "@/modules/cmo/ui/components/AxelGlobalIsland";
 import { CompanyIdentity } from "@/modules/companies/ui/components/CompanyIdentity";
 import { TrialStatusChip } from "@/modules/companies/ui/components/TrialStatusChip";
 import { TrialCountdownBanner } from "@/modules/companies/ui/components/TrialCountdownBanner";
@@ -92,7 +93,13 @@ export default async function PrivateLayout({
           <SupportSessionBar />
           {/* La campana monta el realtime de notificaciones para todo el panel;
               el chip de trial es permanente */}
-          <PrivateHeader actions={<><TrialStatusChip /><NotificationBell /></>} breadcrumbs={BREADCRUMBS} />
+          {/* La isla de Axel en el centro (island-live F4b): avisa del informe y de
+              las propuestas en cualquier pantalla; en /cmo no se monta. */}
+          <PrivateHeader
+            actions={<><TrialStatusChip /><NotificationBell /></>}
+            breadcrumbs={BREADCRUMBS}
+            center={<AxelGlobalIsland />}
+          />
           {/* Últimos 2 días de trial: en flujo, empuja el contenido */}
           <TrialCountdownBanner />
           {/* Pago vencido: avisa con el plazo antes de la suspensión. No

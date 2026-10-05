@@ -33,6 +33,8 @@ const mockState = {
   answer: jest.fn(),
   retryLast: jest.fn(),
   newThread: jest.fn(),
+  news: [] as never[],
+  takeNews: jest.fn(),
 };
 
 // El chip «Meta · N %» del briefing sale del slice comercial: aquí no hay meta.
