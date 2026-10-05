@@ -179,7 +179,6 @@ describe("intake.store — revisar lo encontrado sin gastar turnos (island-live 
     // localStorage y no sessionStorage: volver mañana por el enlace no repite lo apartado (C2).
     expect(JSON.parse(window.localStorage.getItem(`intake.later.${"t".repeat(32)}`) ?? "{}")).toEqual({
       later: ["ciudad"],
-      deferred: false,
       total: 11,
     });
   });
@@ -208,13 +207,21 @@ describe("intake.store — revisar lo encontrado sin gastar turnos (island-live 
   it("«Enviar a revisión» cierra sin modelo y la pantalla pasa a terminada con la vista del servidor", async () => {
     finish.mockResolvedValueOnce({ ...session(), status: "completed", closing: "Listo" });
     useIntakeStore.setState({ finalReviewOpen: true });
-    window.localStorage.setItem(`intake.later.${"t".repeat(32)}`, JSON.stringify({ later: ["a"], deferred: false, total: 3 }));
+    window.localStorage.setItem(`intake.later.${"t".repeat(32)}`, JSON.stringify({ later: ["a"], total: 3 }));
     await useIntakeStore.getState().finish();
     expect(message).not.toHaveBeenCalled();
     expect(useIntakeStore.getState().session?.status).toBe("completed");
     // Cerrada, lo apartado ya no sirve: no queda una entrada por enlace para siempre.
     expect(window.localStorage.getItem(`intake.later.${"t".repeat(32)}`)).toBeNull();
     expect(useIntakeStore.getState().finalReviewOpen).toBe(false);
+  });
+
+  it("si otra pestaña ya la cerró, la pantalla pasa a terminada y lo apartado se borra igual", async () => {
+    finish.mockRejectedValueOnce(closed());
+    window.localStorage.setItem(`intake.later.${"t".repeat(32)}`, JSON.stringify({ later: ["a"], total: 3 }));
+    await useIntakeStore.getState().finish();
+    expect(useIntakeStore.getState().session?.status).toBe("completed");
+    expect(window.localStorage.getItem(`intake.later.${"t".repeat(32)}`)).toBeNull();
   });
 
   it("si enviar falla, lo dice junto al botón y deja reintentar", async () => {

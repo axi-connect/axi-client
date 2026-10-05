@@ -114,23 +114,20 @@ const laterKey = (token: string): string => `intake.later.${token}`;
 
 interface RememberedReview {
   later: string[];
-  deferred: boolean;
   total: number;
 }
 
 function readLater(token: string): RememberedReview {
   try {
     const raw = window.localStorage.getItem(laterKey(token));
-    if (raw === null) return { later: [], deferred: false, total: 0 };
-    const parsed = JSON.parse(raw) as { later?: unknown; deferred?: unknown; total?: unknown };
+    if (raw === null) return { later: [], total: 0 };
+    const parsed = JSON.parse(raw) as { later?: unknown; total?: unknown };
     return {
       later: Array.isArray(parsed.later) ? parsed.later.filter((code): code is string => typeof code === "string") : [],
-      // `deferred` no se lee al volver: es de la visita, no del enlace.
-      deferred: false,
       total: typeof parsed.total === "number" && Number.isFinite(parsed.total) ? Math.max(0, parsed.total) : 0,
     };
   } catch {
-    return { later: [], deferred: false, total: 0 };
+    return { later: [], total: 0 };
   }
 }
 
@@ -143,10 +140,11 @@ function forgetLater(token: string): void {
   }
 }
 
-function writeLater(token: string | null, later: string[], deferred: boolean, total: number): void {
+/** `deferred` NO se guarda: vale por visita (al volver, lo no confirmado se vuelve a ofrecer). */
+function writeLater(token: string | null, later: string[], total: number): void {
   if (token === null) return;
   try {
-    window.localStorage.setItem(laterKey(token), JSON.stringify({ later, deferred, total }));
+    window.localStorage.setItem(laterKey(token), JSON.stringify({ later, total }));
   } catch {
     // Sin almacenamiento la revisión funciona igual; solo no se recuerda al volver.
   }
@@ -214,14 +212,14 @@ export const useIntakeStore = create<IntakeState>((set, get) => ({
       const session = await intakeService.open(token);
       const remembered = readLater(token);
       const reviewTotal = Math.max(remembered.total, session.progress.pending_review);
-      writeLater(token, remembered.later, remembered.deferred, reviewTotal);
+      writeLater(token, remembered.later, reviewTotal);
       set({
         session,
         messages: session.messages,
         loading: false,
         reviewTotal,
         reviewLater: remembered.later,
-        reviewDeferred: remembered.deferred,
+        reviewDeferred: false,
         reviewResolved: [],
       });
     } catch (error) {
@@ -498,7 +496,7 @@ export const useIntakeStore = create<IntakeState>((set, get) => ({
           },
         };
       });
-      writeLater(token, get().reviewLater, get().reviewDeferred, get().reviewTotal);
+      writeLater(token, get().reviewLater, get().reviewTotal);
       return true;
     } catch (error) {
       set((state) => ({
@@ -516,7 +514,7 @@ export const useIntakeStore = create<IntakeState>((set, get) => ({
       reviewResolved: resolve(state.reviewResolved, field, displayOf(value), "corrected"),
       reviewLater: state.reviewLater.filter((code) => code !== field.code),
     }));
-    writeLater(get().token, get().reviewLater, get().reviewDeferred, get().reviewTotal);
+    writeLater(get().token, get().reviewLater, get().reviewTotal);
     return true;
   },
 
@@ -525,12 +523,11 @@ export const useIntakeStore = create<IntakeState>((set, get) => ({
       reviewLater: state.reviewLater.includes(field.code) ? state.reviewLater : [...state.reviewLater, field.code],
       reviewResolved: resolve(state.reviewResolved, field, field.display, "later"),
     }));
-    writeLater(get().token, get().reviewLater, get().reviewDeferred, get().reviewTotal);
+    writeLater(get().token, get().reviewLater, get().reviewTotal);
   },
 
   deferReview() {
     set({ reviewDeferred: true });
-    writeLater(get().token, get().reviewLater, true, get().reviewTotal);
   },
 
   openFinalReview() {
@@ -551,6 +548,8 @@ export const useIntakeStore = create<IntakeState>((set, get) => ({
       forgetLater(token);
     } catch (error) {
       if (errorCode(error) === SESSION_CLOSED) {
+        // Otra pestaña la cerró: igual de cerrada, lo apartado tampoco sirve ya.
+        forgetLater(token);
         set((state) => ({ finishing: false, finalReviewOpen: false, session: closedLocally(state.session) }));
         return;
       }
