@@ -76,7 +76,11 @@ export function useIslandQueue({ question = null, paused = false }: Options = {}
   }, []);
 
   const dismiss = useCallback((id: string) => {
-    setEntries((list) => list.filter((entry) => entry.item.id !== id));
+    // Sin nada que quitar, el MISMO array: descartar lo que no está no puede
+    // provocar un render (ni, desde un efecto, un bucle de ellos).
+    setEntries((list) =>
+      list.some((entry) => entry.item.id === id) ? list.filter((entry) => entry.item.id !== id) : list,
+    );
   }, []);
 
   const fold = useCallback(() => {

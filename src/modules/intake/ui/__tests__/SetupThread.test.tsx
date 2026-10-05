@@ -29,6 +29,7 @@ const QUESTION = {
     { label: "Profesional, de usted", hint: null },
   ],
   allow_free_text: true,
+  why: null,
 };
 
 function view(messages: UiMessage[], over: Partial<Parameters<typeof SetupThread>[0]> = {}) {
@@ -79,7 +80,7 @@ describe("el hilo de la entrevista", () => {
     expect(live).toBeDefined();
     fireEvent.click(live!);
     expect(onPick).toHaveBeenCalledWith("Profesional, de usted");
-    fireEvent.click(screen.getByRole("button", { name: "Prefiero contarlo yo" }));
+    fireEvent.click(screen.getByRole("button", { name: "Otra respuesta: escribirla yo" }));
     expect(onWriteInstead).toHaveBeenCalledTimes(1);
   });
 

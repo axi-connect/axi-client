@@ -43,6 +43,8 @@ interface AssistantDockProps {
    * de tabulación y en el árbol de accesibilidad (auditoría F1, B1).
    */
   empty?: boolean;
+  /** Al empezar una lectura en voz alta desde la isla: para contarla. */
+  onListen?: () => void;
   className?: string;
 }
 
@@ -106,6 +108,7 @@ export function AssistantDock({
   onExpand,
   listening = null,
   empty = false,
+  onListen,
   className,
 }: AssistantDockProps) {
   const barRef = useRef<HTMLDivElement>(null);
@@ -195,7 +198,14 @@ export function AssistantDock({
         </div>
         <div className={cn(INK, "assistant-island assistant-island--p")}>
           {panelItem === null ? null : (
-            <AssistantIslandPanel key={panelItem.id} item={panelItem} name={title} onFold={onFold} onDismiss={onDismiss} />
+            <AssistantIslandPanel
+              key={panelItem.id}
+              item={panelItem}
+              name={title}
+              onFold={onFold}
+              onDismiss={onDismiss}
+              onListen={onListen}
+            />
           )}
         </div>
         <div className={cn(INK, "assistant-island assistant-island--e")}>

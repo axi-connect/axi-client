@@ -10,10 +10,14 @@ import type { IntakeField, IntakeSessionView } from "@/modules/intake/domain/int
 
 const message = jest.fn();
 const patchAnswers = jest.fn();
+const finish = jest.fn();
+const listened = jest.fn<Promise<void>, unknown[]>(() => Promise.resolve());
 jest.mock("@/modules/intake/infrastructure/services/intake-service.adapter", () => ({
   intakeService: {
     message: (...args: unknown[]) => message(...args),
     patchAnswers: (...args: unknown[]) => patchAnswers(...args),
+    finish: (...args: unknown[]) => finish(...args),
+    listened: (...args: unknown[]) => listened(...args),
   },
 }));
 
@@ -59,9 +63,13 @@ function session(): IntakeSessionView {
       next_field: null,
       has_pending_required: false,
       has_pending_confirmation: false,
+      essential: { confirmed: 0, total: 1, complete: false },
+      pending_review: 0,
+      next_ask: null,
     },
     closing: null,
     summary: null,
+    resume: null,
   };
 }
 
@@ -139,5 +147,61 @@ describe("intake.store — el turno que termina trae el resumen del cierre", () 
     expect(state?.status).toBe("completed");
     expect(state?.closing).toBe("Listo, Isabel.");
     expect(state?.summary).toEqual(summary);
+  });
+});
+
+describe("intake.store — revisar lo encontrado sin gastar turnos (island-live F3)", () => {
+  const derived: IntakeField = { ...FIELD, source: "derived", needs_confirmation: true };
+  const withDerived = (): IntakeSessionView => ({
+    ...session(),
+    topics: [{ code: "negocio", title: "Tu negocio", fields: [derived] }],
+  });
+
+  it("«Así es» manda `confirm` (no el valor) y deja el dato confirmado, sin turno", async () => {
+    useIntakeStore.setState({ session: withDerived() });
+    patchAnswers.mockResolvedValueOnce({ progress: session().progress, applied: ["ciudad"], rejected: [], skipped: [], unskipped: [] });
+    await expect(useIntakeStore.getState().confirmField(derived)).resolves.toBe(true);
+    expect(patchAnswers).toHaveBeenCalledWith("t".repeat(32), { confirm: ["ciudad"] });
+    expect(message).not.toHaveBeenCalled();
+    const field = useIntakeStore.getState().session?.topics[0]?.fields[0];
+    expect(field).toMatchObject({ source: "stated", needs_confirmation: false, value: "Bogotá" });
+    expect(useIntakeStore.getState().reviewResolved).toEqual([
+      { code: "ciudad", label: "Ciudad", display: "Bogotá", outcome: "confirmed" },
+    ]);
+  });
+
+  it("«Después» no escribe nada: aparta la tarjeta y lo recuerda en esta pestaña", () => {
+    useIntakeStore.setState({ session: withDerived() });
+    useIntakeStore.getState().laterField(derived);
+    expect(patchAnswers).not.toHaveBeenCalled();
+    expect(useIntakeStore.getState().reviewLater).toEqual(["ciudad"]);
+    expect(JSON.parse(window.sessionStorage.getItem(`intake.later.${"t".repeat(32)}`) ?? "{}")).toEqual({
+      later: ["ciudad"],
+      deferred: false,
+    });
+  });
+
+  it("«Enviar a revisión» cierra sin modelo y la pantalla pasa a terminada con la vista del servidor", async () => {
+    finish.mockResolvedValueOnce({ ...session(), status: "completed", closing: "Listo" });
+    useIntakeStore.setState({ finalReviewOpen: true });
+    await useIntakeStore.getState().finish();
+    expect(message).not.toHaveBeenCalled();
+    expect(useIntakeStore.getState().session?.status).toBe("completed");
+    expect(useIntakeStore.getState().finalReviewOpen).toBe(false);
+  });
+
+  it("si enviar falla, lo dice junto al botón y deja reintentar", async () => {
+    finish.mockRejectedValueOnce(new HttpError({ status: 500, code: "x", message: "Algo falló" }));
+    await useIntakeStore.getState().finish();
+    expect(useIntakeStore.getState().finishError).toBe("Algo falló");
+    expect(useIntakeStore.getState().finishing).toBe(false);
+  });
+
+  it("escuchar se cuenta y nunca falla hacia arriba", () => {
+    listened.mockRejectedValueOnce(new Error("red"));
+    expect(() => {
+      useIntakeStore.getState().listened();
+    }).not.toThrow();
+    expect(listened).toHaveBeenCalledWith("t".repeat(32));
   });
 });

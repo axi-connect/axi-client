@@ -17,6 +17,8 @@ interface AssistantIslandPanelProps {
   onFold: () => void;
   /** Descartar un aviso (la ✕). Sin esto, la ✕ pliega. */
   onDismiss?: (id: string) => void;
+  /** Al empezar una lectura en voz alta: para contarla. */
+  onListen?: () => void;
 }
 
 /**
@@ -29,7 +31,7 @@ interface AssistantIslandPanelProps {
  * nace con su contenido no se lee; el dock tiene la suya siempre montada.
  * `Escape` con el foco dentro pliega, y la isla nunca roba el foco.
  */
-export function AssistantIslandPanel({ item, name, onFold, onDismiss }: AssistantIslandPanelProps) {
+export function AssistantIslandPanel({ item, name, onFold, onDismiss, onListen }: AssistantIslandPanelProps) {
   const titleId = useId();
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key !== "Escape") return;
@@ -71,7 +73,7 @@ export function AssistantIslandPanel({ item, name, onFold, onDismiss }: Assistan
         <AssistantMark name={name} size="sm" className="assistant-island__mark" />
         <span className="assistant-island__muted text-[12px]">{item.eyebrow}</span>
         <span className="flex-1" />
-        {item.speech === undefined ? null : <SpeakButton id={item.id} text={item.speech} />}
+        {item.speech === undefined ? null : <SpeakButton id={item.id} text={item.speech} onListen={onListen} />}
         <button type="button" className="assistant-island__icon" aria-label="Plegar" onClick={onFold}>
           <ChevronUp className="size-4" aria-hidden="true" />
         </button>
@@ -122,7 +124,7 @@ function IslandButton({ action, strong }: { action: AssistantIslandAction; stron
   );
 }
 
-function SpeakButton({ id, text }: { id: string; text: string }) {
+function SpeakButton({ id, text, onListen }: { id: string; text: string; onListen?: () => void }) {
   const speech = useSpeech(id);
   if (!speech.supported) return null;
   return (
@@ -132,6 +134,7 @@ function SpeakButton({ id, text }: { id: string; text: string }) {
       aria-pressed={speech.state !== "idle"}
       aria-label={speech.state === "speaking" ? "Pausar la lectura" : speech.state === "paused" ? "Seguir leyendo" : "Escuchar"}
       onClick={() => {
+        if (speech.state === "idle") onListen?.();
         speech.toggle(text);
       }}
     >

@@ -4,9 +4,9 @@ import type { IntakeProgress } from "@/modules/intake/domain/intake";
 import { SetupProgress, SetupTopicList } from "../components/SetupProgress";
 
 /**
- * El progreso se cuenta POR TEMA y los aplazados salen del denominador. Si
- * contaran, la barra nunca llegaría al final y la persona cargaría para siempre
- * con una deuda que ya decidió no pagar.
+ * El avance principal es el de lo ESENCIAL confirmado de verdad (informe de la
+ * entrevista, rec. 9), y cada tema dice su estado en palabras con su nombre
+ * entero (rec. 10, 12 y 13).
  */
 
 const PROGRESS: IntakeProgress = {
@@ -41,7 +41,7 @@ const PROGRESS: IntakeProgress = {
     },
     {
       code: "venta",
-      title: "Cómo cierran",
+      title: "Lo que el asistente NO debe hacer nunca con un cliente",
       required: 1,
       resolved: 0,
       pending_confirmation: 0,
@@ -59,49 +59,49 @@ const PROGRESS: IntakeProgress = {
   next_field: null,
   has_pending_required: true,
   has_pending_confirmation: false,
+  essential: { confirmed: 2, total: 5, complete: false },
+  pending_review: 1,
+  next_ask: { topic: "atencion", field: "horario" },
 };
 
 describe("SetupProgress", () => {
-  it("cuenta los temas SIN los aplazados", () => {
-    render(<SetupProgress progress={PROGRESS} />);
-    expect(screen.getByText("1 de 2 temas")).toBeInTheDocument();
+  it("un solo contador: lo esencial confirmado, con su barra accesible", () => {
+    render(<SetupProgress progress={PROGRESS} counts={{ review: 1, undefined: 0, notApplicable: 0 }} />);
+    expect(screen.getByText("2 de 5")).toBeInTheDocument();
+    expect(screen.getByText(/datos esenciales confirmados/)).toBeInTheDocument();
+    expect(screen.getByRole("progressbar", { name: "Datos esenciales confirmados" })).toHaveAttribute(
+      "aria-valuenow",
+      "2",
+    );
   });
 
-  /**
-   * Con un solo tema pendiente gana «Queda uno» sobre cualquier porcentaje: es
-   * más concreto y más corto, que es lo que se lee de reojo en un móvil.
-   */
-  it("habla en palabras, no en porcentajes", () => {
-    render(<SetupProgress progress={PROGRESS} />);
-    expect(screen.getByText("Queda uno")).toBeInTheDocument();
-    expect(screen.queryByText("50%")).toBeNull();
+  it("lo por revisar, por definir y lo que no aplica van aparte y con palabras", () => {
+    render(<SetupProgress progress={PROGRESS} counts={{ review: 3, undefined: 1, notApplicable: 2 }} />);
+    expect(screen.getByText("3 por revisar")).toBeInTheDocument();
+    expect(screen.getByText("1 por definir")).toBeInTheDocument();
+    expect(screen.getByText("2 no aplican")).toBeInTheDocument();
   });
 });
 
 describe("SetupTopicList", () => {
-  /**
-   * Que aplazar sea un botón a la vista, y no algo que haya que pedir hablando,
-   * es el permiso explícito para no saber algo.
-   */
-  it("ofrece aplazar lo que sigue abierto", () => {
-    const onDefer = jest.fn();
-    render(<SetupTopicList progress={PROGRESS} onDefer={onDefer} onResume={jest.fn()} />);
-
-    const buttons = screen.getAllByRole("button", { name: "Luego" });
-    expect(buttons).toHaveLength(1);
-    fireEvent.click(buttons[0]!);
-    expect(onDefer).toHaveBeenCalledWith("atencion");
+  it("cada tema dice su estado en palabras, y ya no hay «Luego»", () => {
+    render(<SetupTopicList progress={PROGRESS} onResume={jest.fn()} />);
+    expect(screen.getByText("Confirmado")).toBeInTheDocument();
+    expect(screen.getByText("Sin empezar")).toBeInTheDocument();
+    expect(screen.getByText("Pospuesto · lo retomamos al final")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Luego" })).toBeNull();
   });
 
-  it("un tema ya cerrado no ofrece aplazarse", () => {
-    render(<SetupTopicList progress={PROGRESS} onDefer={jest.fn()} onResume={jest.fn()} />);
-    expect(screen.getByText("Tu negocio")).toBeInTheDocument();
-    expect(screen.getAllByRole("button", { name: "Luego" })).toHaveLength(1);
+  it("el nombre del tema no se corta con puntos suspensivos: dos líneas", () => {
+    render(<SetupTopicList progress={PROGRESS} onResume={jest.fn()} />);
+    const title = screen.getByText("Lo que el asistente NO debe hacer nunca con un cliente");
+    expect(title).toHaveClass("line-clamp-2");
+    expect(title).not.toHaveClass("truncate");
   });
 
-  it("un aplazado se puede retomar", () => {
+  it("un pospuesto se puede retomar", () => {
     const onResume = jest.fn();
-    render(<SetupTopicList progress={PROGRESS} onDefer={jest.fn()} onResume={onResume} />);
+    render(<SetupTopicList progress={PROGRESS} onResume={onResume} />);
     fireEvent.click(screen.getByRole("button", { name: "Retomar" }));
     expect(onResume).toHaveBeenCalledWith("venta");
   });

@@ -88,6 +88,7 @@ export { AssistantThinking } from "./chat/AssistantThinking";
 export { AssistantIslandActivity } from "./chat/AssistantIslandActivity";
 export { AssistantIslandPanel } from "./chat/AssistantIslandPanel";
 export { AssistantIslandListening } from "./chat/AssistantIslandListening";
+export { AssistantListenButton } from "./chat/AssistantListenButton";
 export { AssistantMarkdown } from "./chat/AssistantMarkdown";
 export {
   AssistantComposer,

@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactNode, Ref } from "react";
 
 import { cn } from "@/core/lib/utils";
 import { AssistantMark } from "./AssistantMark";
@@ -17,6 +17,10 @@ interface AssistantBubbleProps {
   fresh?: boolean;
   /** Lo que cuelga del mensaje: la pregunta, la línea «Anotado», extras del slice. */
   children?: ReactNode;
+  /** A la derecha de la cabecera: una acción del mensaje («Escuchar»). */
+  aside?: ReactNode;
+  /** Para saber si la tarjeta está a la vista (la isla toma su pregunta si no). */
+  ref?: Ref<HTMLDivElement>;
   className?: string;
 }
 
@@ -36,10 +40,13 @@ export function AssistantBubble({
   streaming = false,
   fresh = false,
   children,
+  aside,
+  ref,
   className,
 }: AssistantBubbleProps) {
   return (
     <div
+      ref={ref}
       className={cn(
         "self-stretch overflow-hidden rounded-[20px] rounded-bl-[6px] bg-background shadow-float",
         fresh && "assistant-rise",
@@ -57,6 +64,7 @@ export function AssistantBubble({
             {sourcesCount} {sourcesCount === 1 ? "fuente" : "fuentes"}
           </span>
         ) : null}
+        {aside === undefined || aside === null ? null : <span className="ml-auto flex-none">{aside}</span>}
       </div>
       {body === "" ? null : (
         <AssistantMarkdown

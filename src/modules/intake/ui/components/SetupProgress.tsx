@@ -1,148 +1,158 @@
 "use client";
 
-import { Check, Clock3 } from "lucide-react";
+import { CircleAlert, CircleCheck, CircleDashed, CircleDot, Clock3, type LucideIcon } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
-import { progressLabel, type IntakeProgress } from "@/modules/intake/domain/intake";
+import {
+  topicState,
+  type IntakeProgress,
+  type TopicProgress,
+  type TopicTone,
+} from "@/modules/intake/domain/intake";
 
 /**
- * El progreso de la entrevista.
+ * El avance de la entrevista: UN contador principal, el de los datos
+ * esenciales confirmados DE VERDAD (informe de la entrevista, rec. 9). Antes la
+ * barra era una cápsula por tema cuyo estado solo se sabía por el color y un
+ * `title=` invisible al tacto (rec. 10, «los segmentos morados y blancos no eran
+ * claros»): ahora la cifra se lee y la barra solo la acompaña.
  *
- * **Por tema y en palabras, no en campos y en porcentaje.** «12 de 37 campos»
- * es una auditoría y desanima; «vamos por la mitad» es un recorrido y anima.
- * Quien contesta no está midiendo su rendimiento: le está haciendo un favor a
- * su propio negocio entre dos cosas, y lo que necesita saber es que queda poco.
- *
- * Las cápsulas son la otra mitad de la misma idea. Fijar la expectativa por
- * delante —cuántos temas hay y cuáles quedan— es la mitigación documentada del
- * formato «una pregunta a la vez», que sin panorama se siente más largo de lo
- * que es. Finas (4px) y con aire entre ellas: es un indicador, no una barra de
- * carga.
- *
- * Un tema aplazado se pinta gris y **no cuenta**: aplazar es una respuesta
- * válida, y si siguiera contando la barra nunca llegaría al final.
+ * Lo encontrado en la web no sube la barra hasta que alguien dice «así es»: la
+ * precarga no puede parecer trabajo terminado por la persona.
  */
 export function SetupProgress({
   progress,
+  counts,
   className,
 }: {
   progress: IntakeProgress;
+  counts: { review: number; undefined: number; notApplicable: number };
   className?: string;
 }) {
-  const counted = progress.topics.filter((topic) => !topic.deferred);
-  const done = counted.filter((topic) => topic.status === "done").length;
-
+  const { confirmed, total } = progress.essential;
+  const percent = total === 0 ? 100 : Math.round((confirmed / total) * 100);
   return (
-    <div className={cn("flex flex-col gap-[7px]", className)}>
-      <div className="flex items-baseline justify-between gap-3">
-        <p className="text-[13px] font-semibold tracking-[-0.005em] text-foreground">
-          {progressLabel(progress)}
+    <div className={cn("flex flex-col gap-2", className)}>
+      <p className="text-[14px] text-foreground">
+        <b className="text-[15px] font-semibold tabular-nums">
+          {confirmed} de {total}
+        </b>{" "}
+        datos esenciales confirmados
+      </p>
+      <span
+        className="h-1.5 overflow-hidden rounded-full bg-foreground/10"
+        role="progressbar"
+        aria-label="Datos esenciales confirmados"
+        aria-valuemin={0}
+        aria-valuemax={total}
+        aria-valuenow={confirmed}
+      >
+        <i
+          className="block h-full rounded-full bg-accent-violet transition-[width] duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]"
+          style={{ width: `${String(percent)}%` }}
+        />
+      </span>
+      {counts.review + counts.undefined + counts.notApplicable > 0 ? (
+        <p className="flex flex-wrap gap-x-3.5 gap-y-1 text-[12.5px] text-muted-foreground">
+          {counts.review > 0 ? (
+            <span className="inline-flex items-center gap-1">
+              <CircleAlert className="size-3.5 text-warning" aria-hidden="true" />
+              {counts.review} por revisar
+            </span>
+          ) : null}
+          {counts.undefined > 0 ? (
+            <span className="inline-flex items-center gap-1">
+              <CircleDashed className="size-3.5" aria-hidden="true" />
+              {counts.undefined} por definir
+            </span>
+          ) : null}
+          {counts.notApplicable > 0 ? (
+            <span>
+              {counts.notApplicable} no {counts.notApplicable === 1 ? "aplica" : "aplican"}
+            </span>
+          ) : null}
         </p>
-        <p className="text-[12px] text-muted-foreground tabular-nums">
-          {done} de {counted.length} temas
-        </p>
-      </div>
-
-      <ol className="flex items-center gap-[5px]" aria-label="Avance de la conversación">
-        {progress.topics.map((topic) => (
-          <li
-            key={topic.code}
-            className="h-1 flex-1 overflow-hidden rounded-full bg-foreground/[0.06]"
-            title={`${topic.title}${topic.deferred ? " · lo dejaron para después" : ""}`}
-          >
-            <span
-              className={cn(
-                "block h-full rounded-full transition-[width,background-color] duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]",
-                topic.status === "done" && "w-full bg-foreground",
-                topic.status === "in_progress" && "w-1/2 bg-accent-violet/80",
-                topic.status === "deferred" && "w-full bg-muted-foreground/30",
-                topic.status === "pending" && "w-0",
-              )}
-            />
-          </li>
-        ))}
-      </ol>
+      ) : null}
     </div>
   );
 }
 
+const TONE_ICON: Record<TopicTone, { icon: LucideIcon; className: string }> = {
+  done: { icon: CircleCheck, className: "text-success" },
+  now: { icon: CircleDot, className: "text-accent-violet" },
+  review: { icon: CircleAlert, className: "text-warning" },
+  waiting: { icon: CircleDashed, className: "text-muted-foreground/60" },
+  deferred: { icon: Clock3, className: "text-muted-foreground/60" },
+};
+
+/** El icono del estado de un tema: forma Y color, nunca solo color (rec. 10). */
+export function TopicStateIcon({ tone, className }: { tone: TopicTone; className?: string }) {
+  const { icon: Icon, className: color } = TONE_ICON[tone];
+  return <Icon className={cn("size-4 flex-none", color, className)} aria-hidden="true" />;
+}
+
 /**
- * El detalle tema a tema, con la salida de «lo vemos luego» a la vista.
- *
- * Es una lista agrupada más de la ficha: mismo radio, mismos hairlines. Que
- * aplazar sea un botón visible y no algo que haya que pedir hablando es
- * deliberado — es el permiso explícito para no saber algo. En onboarding B2B
- * la mayor parte del tiempo perdido no es complejidad real, son pasos en los
- * que alguien se queda trabado sin una salida clara.
+ * Los temas, con su nombre ENTERO (dos líneas si hace falta; antes se cortaban
+ * con puntos suspensivos, rec. 12) y su estado en palabras. «Luego» desaparece:
+ * se leía como un estado (rec. 13). Posponer vive en el bloque «Ahora», como
+ * verbo y con su efecto dicho; aquí solo se retoma lo pospuesto.
  */
 export function SetupTopicList({
   progress,
-  onDefer,
   onResume,
   readOnly = false,
   className,
 }: {
   progress: IntakeProgress;
-  onDefer: (code: string) => void;
   onResume: (code: string) => void;
-  /** Sesión terminada: ya no hay nada que aplazar ni retomar. */
+  /** Sesión terminada: ya no hay nada que retomar. */
   readOnly?: boolean;
   className?: string;
 }) {
   return (
     <ul className={cn("grouped-list shadow-float", className)}>
       {progress.topics.map((topic) => (
-        <li key={topic.code} className="grouped-row flex items-center gap-3 py-2.5 pr-3.5 pl-4">
-          <span
-            className={cn(
-              "flex size-[22px] flex-none items-center justify-center rounded-full",
-              topic.status === "done" && "bg-success text-white",
-              topic.status === "deferred" && "bg-foreground/[0.06] text-muted-foreground/60",
-              topic.status === "in_progress" && "bg-accent-violet/12 text-accent-violet",
-              topic.status === "pending" && "bg-foreground/[0.06] text-muted-foreground/50",
-            )}
-          >
-            {topic.status === "done" ? (
-              <Check className="size-3 [stroke-width:3]" aria-hidden="true" />
-            ) : topic.status === "deferred" ? (
-              <Clock3 className="size-3" aria-hidden="true" />
-            ) : (
-              <span className="size-1.5 rounded-full bg-current" />
-            )}
-          </span>
-
-          <span
-            className={cn(
-              "min-w-0 flex-1 truncate text-[15px] tracking-[-0.005em]",
-              topic.status === "deferred" ? "text-muted-foreground/60" : "text-foreground",
-            )}
-          >
-            {topic.title}
-          </span>
-
-          {readOnly ? null : topic.status === "deferred" ? (
-            <button
-              type="button"
-              onClick={() => {
-                onResume(topic.code);
-              }}
-              className="flex-none text-[13px] font-semibold text-foreground underline-offset-4 transition-opacity hover:underline active:opacity-60"
-            >
-              Retomar
-            </button>
-          ) : topic.status === "done" ? null : (
-            <button
-              type="button"
-              onClick={() => {
-                onDefer(topic.code);
-              }}
-              className="flex-none text-[13px] font-semibold text-foreground underline-offset-4 transition-opacity hover:underline active:opacity-60"
-            >
-              Luego
-            </button>
-          )}
-        </li>
+        <TopicRow key={topic.code} topic={topic} onResume={onResume} readOnly={readOnly} />
       ))}
     </ul>
+  );
+}
+
+function TopicRow({
+  topic,
+  onResume,
+  readOnly,
+}: {
+  topic: TopicProgress;
+  onResume: (code: string) => void;
+  readOnly: boolean;
+}) {
+  const state = topicState(topic);
+  return (
+    <li className="grouped-row flex items-start gap-3 py-[11px] pr-3.5 pl-4">
+      <TopicStateIcon tone={state.tone} className="mt-[3px]" />
+      <span className="min-w-0 flex-1">
+        <span
+          className={cn(
+            "line-clamp-2 block text-[14.5px] leading-snug font-medium tracking-[-0.005em]",
+            state.tone === "deferred" ? "text-muted-foreground" : "text-foreground",
+          )}
+        >
+          {topic.title}
+        </span>
+        <span className="mt-0.5 block text-[12px] text-muted-foreground">{state.label}</span>
+      </span>
+      {readOnly || state.tone !== "deferred" ? null : (
+        <button
+          type="button"
+          onClick={() => {
+            onResume(topic.code);
+          }}
+          className="flex-none pt-0.5 text-[12.5px] font-semibold text-foreground underline-offset-4 transition-opacity hover:underline active:opacity-60"
+        >
+          Retomar
+        </button>
+      )}
+    </li>
   );
 }

@@ -67,6 +67,9 @@ const PROGRESS: IntakeProgress = {
   next_field: null,
   has_pending_required: false,
   has_pending_confirmation: true,
+  essential: { confirmed: 1, total: 1, complete: true },
+  pending_review: 1,
+  next_ask: null,
 };
 
 function view(readOnly: boolean) {
@@ -74,6 +77,8 @@ function view(readOnly: boolean) {
   const onConfirm = jest.fn();
   const onAskAbout = jest.fn();
   const onDefer = jest.fn();
+  const onReviewPending = jest.fn();
+  const onOpenFinalReview = jest.fn();
   render(
     <SetupSummary
       topics={TOPICS}
@@ -86,21 +91,39 @@ function view(readOnly: boolean) {
       onUnskip={jest.fn()}
       onDefer={onDefer}
       onResume={jest.fn()}
+      onReviewPending={onReviewPending}
+      onOpenFinalReview={onOpenFinalReview}
       readOnly={readOnly}
     />,
   );
-  return { onSave, onConfirm, onAskAbout, onDefer };
+  return { onSave, onConfirm, onAskAbout, onDefer, onReviewPending, onOpenFinalReview };
 }
 
 describe("SetupSummary", () => {
-  it("en curso: se corrige, se confirma y se aplaza", () => {
+  it("en curso: primero lo que hace falta; el aviso de lo pendiente LLEVA a revisarlo", () => {
+    const { onReviewPending, onDefer, onOpenFinalReview } = view(false);
+    expect(screen.getByRole("heading", { name: "Tu avance" })).toBeInTheDocument();
+    expect(screen.getByText(/lo saqué de su página web/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Revisar" }));
+    expect(onReviewPending).toHaveBeenCalledTimes(1);
+    // «Ahora»: el tema en curso, con «Posponer tema» como verbo y su efecto.
+    expect(screen.getByText("Vuelve al final de la lista")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Posponer tema" }));
+    expect(onDefer).toHaveBeenCalledWith("negocio");
+    fireEvent.click(screen.getByRole("button", { name: "Revisar y enviar" }));
+    expect(onOpenFinalReview).toHaveBeenCalledTimes(1);
+  });
+
+  it("el detalle va plegado tras «Ver todo lo anotado», y desde ahí se corrige y se confirma", () => {
     const { onConfirm } = view(false);
+    expect(screen.queryByRole("button", { name: "Corregir Ciudad" })).not.toBeInTheDocument();
+    const toggle = screen.getByRole("button", { name: "Ver todo lo anotado" });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
     expect(screen.getByRole("button", { name: "Corregir Ciudad" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Así es" }));
     expect(onConfirm).toHaveBeenCalledTimes(1);
-    expect(screen.getByRole("button", { name: "Luego" })).toBeInTheDocument();
-    expect(screen.getByText(/toca cualquiera para corregirlo/)).toBeInTheDocument();
-    expect(screen.getByText(/lo saqué de su página web/)).toBeInTheDocument();
   });
 
   it("terminada: los datos se leen, sin corregir, confirmar ni aplazar", () => {
@@ -109,8 +132,9 @@ describe("SetupSummary", () => {
     expect(screen.getByText("Ropa deportiva")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Corregir/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Así es" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Luego" })).not.toBeInTheDocument();
-    expect(screen.getByText(/la conversación ya terminó/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Posponer tema" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Revisar y enviar" })).not.toBeInTheDocument();
+    expect(screen.getByText(/La conversación ya terminó/)).toBeInTheDocument();
     // Una deducción que ya no se puede confirmar no se anuncia como pendiente.
     expect(screen.queryByText(/falta que lo confirmes/)).not.toBeInTheDocument();
   });

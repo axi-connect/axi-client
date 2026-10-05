@@ -1,32 +1,31 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useState } from "react";
+import { ChevronDown, ChevronRight, Clock3, Send } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
 import {
-  countCaptured,
-  pendingConfirmations,
+  currentTopic,
+  fichaCounts,
+  reviewQueue,
+  topicState,
   type IntakeField,
   type IntakeProgress,
+  type IntakeSkipReason,
   type IntakeTopicView,
 } from "@/modules/intake/domain/intake";
-import { AssistantMark } from "@/shared/components/features/assistant";
 import { SetupFieldRow } from "./SetupFieldRow";
-import { SetupProgress, SetupTopicList } from "./SetupProgress";
+import { SetupProgress, SetupTopicList, TopicStateIcon } from "./SetupProgress";
 
 /**
- * La ficha viva, con la forma de Contactos: título grande, secciones con
- * cabecera en mayúsculas pequeñas, y las filas agrupadas en tarjetas blancas
- * sobre el suelo gris.
+ * La ficha, compacta (informe de la entrevista, rec. 11: «demasiada
+ * información, campos vacíos y una agrupación poco evidente»). Primero lo que
+ * hace falta para seguir —el avance, lo que toca ahora y lo pendiente—, y el
+ * detalle completo tras «Ver todo lo anotado».
  *
- * **Es la pieza que hace que esto no se rompa con volumen.** Un chat que
- * recorre cuarenta datos de uno en uno se siente más largo que una página
- * entera y no deja ver el alcance, editar lo anterior ni saltar adelante. Con
- * la ficha al lado, la conversación pasa a ser un método de entrada cómodo para
- * un documento que siempre está completo a la vista.
- *
- * Y es una LISTA, no una tabla: etiqueta → valor, una línea secundaria, un solo
- * indicador, acciones al pasar el ratón.
+ * Sigue siendo la mitad del diseño: todo se puede corregir aquí sin hablar con
+ * nadie, sin gastar turno ni IA. Lo que cambia es el orden: el documento
+ * entero ya no se impone a quien solo quería saber en qué va.
  */
 export const SetupSummary = memo(function SetupSummary({
   topics,
@@ -39,6 +38,8 @@ export const SetupSummary = memo(function SetupSummary({
   onUnskip,
   onDefer,
   onResume,
+  onReviewPending,
+  onOpenFinalReview,
   readOnly = false,
   className,
 }: {
@@ -48,10 +49,14 @@ export const SetupSummary = memo(function SetupSummary({
   onSave: (field: IntakeField, value: unknown) => Promise<boolean>;
   onConfirm: (field: IntakeField) => void;
   onAskAbout: (field: IntakeField) => void;
-  onSkip: (field: IntakeField) => void;
+  onSkip: (field: IntakeField, reason: IntakeSkipReason) => void;
   onUnskip: (field: IntakeField) => void;
   onDefer: (code: string) => void;
   onResume: (code: string) => void;
+  /** Llevar a revisar lo encontrado (la tarjeta del hilo, o la revisión final). */
+  onReviewPending?: () => void;
+  /** «Revisar y enviar»: la revisión final. */
+  onOpenFinalReview?: () => void;
   /**
    * La conversación terminó: la ficha se relee, no se corrige. El servidor
    * rechaza toda escritura sobre una sesión cerrada, así que ofrecer «Así es» o
@@ -60,72 +65,132 @@ export const SetupSummary = memo(function SetupSummary({
   readOnly?: boolean;
   className?: string;
 }) {
-  const { filled, skipped, total } = countCaptured(topics);
-  const pending = readOnly ? [] : pendingConfirmations(topics);
-  // N6: lo deducido de la web y lo propuesto por el tipo de negocio no salen
-  // del mismo sitio, y el aviso no puede decir «de su página web» de algo que
-  // salió del preset del nicho.
+  const counts = fichaCounts(topics, progress);
+  const pending = readOnly ? [] : reviewQueue(topics);
   const derived = pending.filter((field) => field.source === "derived").length;
   const proposed = pending.length - derived;
   const deferred = new Set(progress.topics.filter((topic) => topic.deferred).map((topic) => topic.code));
+  const now = readOnly ? null : currentTopic(progress);
+  const [showAll, setShowAll] = useState(readOnly);
+  const expanded = showAll || readOnly;
 
   return (
     <aside className={cn("setup-ficha flex min-h-0 flex-col", className)}>
       <header className="flex-none px-[22px] pt-5 pb-3">
         <h2 className="text-[22px] leading-[1.15] font-heading font-bold tracking-[-0.02em] text-foreground">
-          Lo que ya sabemos
+          Tu avance
         </h2>
-        <p className="mt-1 text-[13px] text-muted-foreground">
-          {filled} de {total} datos
-          {skipped > 0 ? ` · ${String(skipped)} no ${skipped === 1 ? "aplica" : "aplican"}` : ""}
-          {" · "}
-          {readOnly ? "la conversación ya terminó" : "toca cualquiera para corregirlo"}
-        </p>
-        <SetupProgress progress={progress} className="mt-3.5" />
+        {readOnly ? <p className="mt-1 text-[13px] text-muted-foreground">La conversación ya terminó.</p> : null}
+        <SetupProgress progress={progress} counts={counts} className="mt-3" />
       </header>
 
-      {pending.length > 0 ? (
-        <div className="mx-5 mt-1.5 mb-1 flex flex-none items-start gap-2.5 rounded-[14px] bg-accent-violet/9 px-3.5 py-3">
-          <AssistantMark size="sm" className="mt-0.5" />
-          <p className="text-[13px] leading-[1.45] text-foreground">{pendingNotice(derived, proposed)}</p>
-        </div>
-      ) : null}
+      <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-1 pb-7">
+        {pending.length > 0 && onReviewPending !== undefined ? (
+          // El aviso de lo pendiente LLEVA a la acción (figura 3 del informe:
+          // «avisaba que faltaba confirmar sin llevar a la acción»).
+          <div className="mt-1.5 flex items-center gap-3 rounded-[14px] bg-warning/10 px-3.5 py-3">
+            <p className="min-w-0 flex-1 text-[13px] leading-[1.45] text-foreground">{pendingNotice(derived, proposed)}</p>
+            <button
+              type="button"
+              onClick={onReviewPending}
+              className="flex-none rounded-full bg-foreground px-3.5 py-1.5 text-[12.5px] font-semibold text-background transition-transform active:scale-[.96]"
+            >
+              Revisar
+            </button>
+          </div>
+        ) : null}
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-2 pb-7">
-        {topics.map((topic) => (
-          <section key={topic.code} className="mt-[22px] first:mt-2.5">
-            <h3 className="mb-2 px-4 text-[12.5px] font-medium tracking-[0.03em] text-muted-foreground uppercase">
-              {topic.title}
-              {deferred.has(topic.code) ? (
-                <span className="ml-1.5 tracking-normal normal-case text-muted-foreground/60">
-                  para después
-                </span>
-              ) : null}
+        {now === null ? null : (
+          <section className="mt-5" aria-labelledby="ficha-now">
+            <h3 id="ficha-now" className="mb-2 px-1 text-[11.5px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
+              Ahora
             </h3>
-            <ul className="grouped-list shadow-float">
-              {topic.fields.map((field) => (
-                <SetupFieldRow
-                  key={field.code}
-                  field={field}
-                  saving={savingField === field.code}
-                  readOnly={readOnly}
-                  onSave={onSave}
-                  onConfirm={onConfirm}
-                  onAskAbout={onAskAbout}
-                  onSkip={onSkip}
-                  onUnskip={onUnskip}
-                />
-              ))}
-            </ul>
+            <div className="rounded-2xl bg-background px-4 py-3.5 shadow-float">
+              <p className="text-[15px] leading-snug font-semibold text-foreground">{now.title}</p>
+              <p className="mt-1 flex items-center gap-1.5 text-[12.5px] text-muted-foreground">
+                <TopicStateIcon tone={topicState(now).tone} className="size-3.5" />
+                {topicState(now).label}
+              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onDefer(now.code);
+                  }}
+                  className="inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[13px] font-semibold text-foreground ring-1 ring-border transition-[background-color,transform] hover:bg-foreground/[0.04] active:scale-[.97]"
+                >
+                  <Clock3 className="size-3.5" aria-hidden="true" />
+                  Posponer tema
+                </button>
+                <span className="text-[11.5px] text-muted-foreground">Vuelve al final de la lista</span>
+              </div>
+            </div>
           </section>
-        ))}
+        )}
 
-        <section className="mt-[22px]">
-          <h3 className="mb-2 px-4 text-[12.5px] font-medium tracking-[0.03em] text-muted-foreground uppercase">
+        <section className="mt-5" aria-labelledby="ficha-topics">
+          <h3 id="ficha-topics" className="mb-2 px-1 text-[11.5px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
             Temas
           </h3>
-          <SetupTopicList progress={progress} onDefer={onDefer} onResume={onResume} readOnly={readOnly} />
+          <SetupTopicList progress={progress} onResume={onResume} readOnly={readOnly} />
         </section>
+
+        {readOnly ? null : (
+          <button
+            type="button"
+            aria-expanded={expanded}
+            onClick={() => {
+              setShowAll((value) => !value);
+            }}
+            className="mt-4 flex w-full items-center justify-between rounded-[14px] bg-background px-4 py-3 text-[14px] font-semibold text-foreground shadow-float transition-colors hover:bg-foreground/[0.02]"
+          >
+            Ver todo lo anotado
+            {expanded ? (
+              <ChevronDown className="size-4 text-muted-foreground" aria-hidden="true" />
+            ) : (
+              <ChevronRight className="size-4 text-muted-foreground" aria-hidden="true" />
+            )}
+          </button>
+        )}
+
+        {expanded
+          ? topics.map((topic) => (
+              <section key={topic.code} className="mt-[22px] first:mt-2.5">
+                <h3 className="mb-2 px-4 text-[12.5px] font-medium tracking-[0.03em] text-muted-foreground uppercase">
+                  {topic.title}
+                  {deferred.has(topic.code) ? (
+                    <span className="ml-1.5 tracking-normal normal-case text-muted-foreground/60">pospuesto</span>
+                  ) : null}
+                </h3>
+                <ul className="grouped-list shadow-float">
+                  {topic.fields.map((field) => (
+                    <SetupFieldRow
+                      key={field.code}
+                      field={field}
+                      saving={savingField === field.code}
+                      readOnly={readOnly}
+                      onSave={onSave}
+                      onConfirm={onConfirm}
+                      onAskAbout={onAskAbout}
+                      onSkip={onSkip}
+                      onUnskip={onUnskip}
+                    />
+                  ))}
+                </ul>
+              </section>
+            ))
+          : null}
+
+        {readOnly || onOpenFinalReview === undefined ? null : (
+          <button
+            type="button"
+            onClick={onOpenFinalReview}
+            className="mt-6 inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-[14px] font-semibold text-background transition-[background-color,transform] hover:bg-foreground/90 active:scale-[.98]"
+          >
+            <Send className="size-[15px]" aria-hidden="true" />
+            Revisar y enviar
+          </button>
+        )}
       </div>
     </aside>
   );
