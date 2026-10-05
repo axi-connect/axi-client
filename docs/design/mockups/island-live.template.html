@@ -1,0 +1,981 @@
+<title>Isla viva de Alba y Axel</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+{{GOOGLE}}
+<style>
+{{FONTS}}
+
+{{TOKENS_CSS}}
+
+/* Superficie con esquema propio (globals.css, capa 1): la isla es tinta en los dos temas. */
+.surface-dark {
+  --background: #0a0a0a; --foreground: #ededed;
+  --axi-violet: #a78bfa; --axi-amber: #fbbf24; --axi-success: #4ade80; --axi-warning: #fbbf24;
+  --axi-destructive: #f87171; --axi-info: #60a5fa; --axi-on-color: #0a0a0a;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-border: color-mix(in srgb, var(--foreground) 12%, var(--background));
+  color: var(--foreground);
+}
+:root { --axi-info: #2563eb; }
+:root[data-theme="dark"] { --axi-info: #60a5fa; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --axi-info: #60a5fa; } }
+
+/* Material de la isla (globals.css, bloque ISLAS: `.island`, `.island-ink`). */
+.island { --island-glow: none; position: relative; isolation: isolate; overflow: hidden; border-radius: 1.5rem; color: var(--foreground); }
+.island-ink { background: var(--island-glow), var(--background); }
+:root[data-theme="dark"] .island-ink { outline: 1px solid color-mix(in srgb, var(--foreground) 12%, var(--background)); outline-offset: -1px; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .island-ink { outline: 1px solid color-mix(in srgb, var(--foreground) 12%, var(--background)); outline-offset: -1px; } }
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--mk-ground); color: var(--color-foreground); font-family: var(--font-sans); font-size: 14px; line-height: 1.5; padding-block: 0 48px; -webkit-font-smoothing: antialiased; }
+h1, h2, h3, .font-heading { font-family: var(--font-heading); }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; padding: 0; }
+button:focus-visible, a:focus-visible, textarea:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--axi-violet); outline-offset: 2px; }
+.ic { flex: none; }
+[hidden] { display: none !important; }
+
+/* ======================================================================
+   Del kit (tal cual): el aura, el escenario y la cara
+   ====================================================================== */
+{{FIELD_CSS}}
+{{STAGE_CSS}}
+
+/* ======================================================================
+   Del producto (globals.css, tal cual): la isla L/S/M y el hilo
+   ====================================================================== */
+.assistant-chat { position: relative; display: flex; flex-direction: column; min-height: 0; flex: 1; }
+.assistant-scroller { position: relative; min-height: 0; flex: 1; overflow-y: auto; padding: 8px 24px 8px; scrollbar-width: thin; }
+.assistant-col { margin: 0 auto; width: 100%; max-width: 640px; display: flex; flex-direction: column; }
+.assistant-chat__actions { position: absolute; top: 10px; right: 14px; z-index: 30; display: flex; gap: 4px; }
+{{ISLAND_CSS}}
+{{CHAT_CSS}}
+
+/* ======================================================================
+   NUEVO (F1 del plan) — las formas que faltan. Mismas reglas que L/S/M:
+   capas absolutas que se funden por opacity y un solo avatar que viaja
+   por transform. Nada anima height ni width.
+   ====================================================================== */
+.assistant-dock__bar {
+  --p-w: min(540px, 100cqw);   /* pregunta y resumen */
+  --a-w: min(460px, 100cqw);   /* aviso */
+  --e-w: min(440px, 100cqw);   /* escuchando */
+  --p-scale: 0.3529;           /* avatar a 48 px */
+  --a-scale: 0.2941;           /* avatar a 40 px */
+}
+
+/* El punto de «hay algo»: S pasa a ser un botón. */
+.assistant-island--s { cursor: default; }
+button.assistant-island--s { cursor: pointer; font: inherit; color: inherit; border: 0; }
+.assistant-dock__badge { position: relative; display: inline-flex; align-items: center; gap: 6px; margin-left: 4px; padding: 3px 9px 3px 7px; border-radius: 9999px; font-size: 11.5px; font-weight: 600; background: color-mix(in oklab, var(--axi-violet) 26%, transparent); color: color-mix(in oklab, var(--axi-violet) 30%, var(--foreground)); }
+.assistant-dock__badge::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--axi-violet); box-shadow: 0 0 0 3px color-mix(in oklab, var(--axi-violet) 30%, transparent); }
+
+/* M con chips: la misma isla, una fila más. */
+.assistant-island--m.has-chips { --m-h: 146px; align-items: center; }
+.assistant-dock__bar:has(.has-chips) { --m-h: 146px; }
+.isl-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.isl-chip { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px 0 4px; border-radius: 9999px; font-size: 12px; font-weight: 500; background: color-mix(in srgb, var(--foreground) 8%, transparent); color: color-mix(in srgb, var(--foreground) 86%, transparent); white-space: nowrap; }
+.isl-chip i { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; color: var(--background); }
+.isl-chip i .ic { width: 11px; height: 11px; }
+.isl-chip[data-tone="read"] i { background: var(--axi-violet); }
+.isl-chip[data-tone="calc"] i { background: var(--axi-amber); }
+.isl-chip[data-tone="send"] i { background: var(--axi-info); }
+.isl-chip[data-tone="done"] i { background: var(--axi-success); }
+.isl-chip[data-state="now"] { background: color-mix(in oklab, var(--axi-violet) 22%, transparent); color: var(--foreground); }
+
+/* P/A/R — una capa, tres formas de contenido. */
+.assistant-island--p {
+  --island-glow: radial-gradient(circle 12rem at 6% 0%, color-mix(in oklab, var(--axi-violet) 34%, transparent), transparent 70%);
+  left: 50%; width: var(--p-w); max-height: min(300px, 62vh);
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 16px 18px 16px 78px; border-radius: 28px;
+  overflow: auto; overscroll-behavior: contain; scrollbar-width: none;
+  transform: translateX(-50%) scale(0.94); transform-origin: 50% 0;
+}
+.assistant-dock[data-shape="notice"] .assistant-island--p { width: var(--a-w); flex-direction: row; align-items: center; gap: 12px; padding: 12px 12px 12px 64px; border-radius: 26px; }
+.assistant-dock[data-shape="notice"][data-tone="success"] .assistant-island--p { --island-glow: radial-gradient(circle 10rem at 8% 120%, color-mix(in oklab, var(--axi-success) 40%, transparent), transparent 70%); }
+.assistant-dock[data-shape="notice"][data-tone="warning"] .assistant-island--p { --island-glow: radial-gradient(circle 10rem at 8% 120%, color-mix(in oklab, var(--axi-warning) 42%, transparent), transparent 70%); }
+.assistant-dock[data-shape="notice"][data-tone="neutral"] .assistant-island--p { --island-glow: none; }
+.assistant-dock:is([data-shape="question"], [data-shape="notice"], [data-shape="summary"]) .assistant-island--p { opacity: 1; transform: translateX(-50%) scale(1); pointer-events: auto; }
+.assistant-dock:is([data-shape="question"], [data-shape="notice"], [data-shape="summary"], [data-shape="listening"]) .assistant-island--s { opacity: 0; pointer-events: none; }
+.assistant-island--p > * { animation: assistant-rise 320ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* E — escuchando: una píldora ancha, la onda del compositor. */
+.assistant-island--e { left: 50%; width: var(--e-w); height: 56px; display: flex; align-items: center; gap: 12px; padding: 0 8px 0 62px; border-radius: 9999px; transform: translateX(-50%) scale(0.94); transform-origin: 50% 0; }
+.assistant-dock[data-shape="listening"] .assistant-island--e { opacity: 1; transform: translateX(-50%) scale(1); pointer-events: auto; }
+.assistant-island--e .assistant-wave > i { background: var(--axi-violet); }
+.isl-rec { font-size: 13.5px; font-weight: 600; white-space: nowrap; }
+.isl-rec span { font-weight: 500; font-variant-numeric: tabular-nums; color: color-mix(in srgb, var(--foreground) 64%, transparent); margin-left: 6px; }
+
+/* El avatar viaja a cada forma. */
+.assistant-dock:is([data-shape="question"], [data-shape="summary"]) .assistant-dock__hero { transform: translate(calc(50cqw - var(--p-w) / 2 + 17px), 15px) scale(var(--p-scale)); }
+.assistant-dock[data-shape="notice"] .assistant-dock__hero { transform: translate(calc(50cqw - var(--a-w) / 2 + 13px), 13px) scale(var(--a-scale)); }
+.assistant-dock[data-shape="listening"] .assistant-dock__hero { transform: translate(calc(50cqw - var(--e-w) / 2 + 10px), 7px) scale(var(--a-scale)); }
+
+@container assistant-chat (max-width: 899px) {
+  .assistant-island--p, .assistant-island--e { left: 0; transform: scale(0.94); transform-origin: 0 0; width: calc(100cqw + var(--actions-w, 0px) + 8px); }
+  .assistant-dock[data-shape="notice"] .assistant-island--p { width: calc(100cqw + var(--actions-w, 0px) + 8px); }
+  .assistant-dock:is([data-shape="question"], [data-shape="notice"], [data-shape="summary"]) .assistant-island--p,
+  .assistant-dock[data-shape="listening"] .assistant-island--e { transform: scale(1); }
+  .assistant-dock:is([data-shape="question"], [data-shape="summary"]) .assistant-dock__hero { transform: translate(17px, 15px) scale(var(--p-scale)); }
+  .assistant-dock[data-shape="notice"] .assistant-dock__hero { transform: translate(13px, 13px) scale(var(--a-scale)); }
+  .assistant-dock[data-shape="listening"] .assistant-dock__hero { transform: translate(10px, 7px) scale(var(--a-scale)); }
+  .assistant-chat:has(.assistant-dock:not([data-shape="pill"])) .assistant-chat__actions { opacity: 0; pointer-events: none; }
+  /* En el móvil los botones del dictado ya están bajo el pulgar, en el compositor: la isla solo dice que escucha. */
+  .assistant-island--e .b { display: none; }
+  .assistant-island--p .b { height: 30px; padding: 0 12px; font-size: 12.5px; }
+  .assistant-island--p { padding: 14px 14px 14px 72px; }
+}
+
+/* Contenido de la isla */
+.isl-head { display: flex; align-items: center; gap: 6px; min-height: 22px; }
+.isl-mark { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: color-mix(in oklab, var(--axi-violet) 55%, var(--foreground)); }
+.isl-mark .ic { color: var(--axi-violet); }
+.isl-mark small { font-weight: 500; color: color-mix(in srgb, var(--foreground) 56%, transparent); font-size: 12px; }
+.isl-sp { flex: 1; }
+.isl-ib { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; color: color-mix(in srgb, var(--foreground) 70%, transparent); }
+.isl-ib:hover { background: color-mix(in srgb, var(--foreground) 10%, transparent); color: var(--foreground); }
+.isl-ib[aria-pressed="true"] { color: var(--axi-violet); background: color-mix(in oklab, var(--axi-violet) 18%, transparent); }
+.isl-title { margin: 0; font-size: 15px; font-weight: 600; line-height: 1.4; text-wrap: pretty; }
+.isl-body { margin: 0; font-size: 13px; line-height: 1.45; color: color-mix(in srgb, var(--foreground) 70%, transparent); }
+.isl-datum { display: grid; gap: 2px; padding: 10px 12px; border-radius: 14px; background: color-mix(in srgb, var(--foreground) 7%, transparent); }
+.isl-datum .lbl { font-size: 11.5px; color: color-mix(in srgb, var(--foreground) 60%, transparent); }
+.isl-datum .val { font-size: 14px; line-height: 1.4; }
+.isl-datum .org { display: inline-flex; align-items: center; gap: 5px; margin-top: 3px; font-size: 11.5px; color: color-mix(in srgb, var(--foreground) 60%, transparent); }
+.isl-acts { display: flex; flex-wrap: wrap; gap: 6px; }
+.isl-notice-txt { flex: 1; min-width: 0; }
+.isl-notice-txt b { display: block; font-size: 14px; font-weight: 600; line-height: 1.3; }
+.isl-notice-txt span { display: block; font-size: 12.5px; line-height: 1.35; color: color-mix(in srgb, var(--foreground) 64%, transparent); }
+.isl-hl { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.isl-hl li { display: flex; align-items: baseline; gap: 8px; font-size: 13px; color: color-mix(in srgb, var(--foreground) 76%, transparent); }
+.isl-hl li::before { content: ""; flex: none; width: 7px; height: 7px; border-radius: 50%; transform: translateY(-1px); background: color-mix(in srgb, var(--foreground) 40%, transparent); }
+.isl-hl li[data-tone="up"]::before { background: var(--axi-success); }
+.isl-hl li[data-tone="warn"]::before { background: var(--axi-warning); }
+.isl-hl li[data-tone="down"]::before { background: var(--axi-destructive); }
+.isl-hl b { color: var(--foreground); font-weight: 600; }
+
+/* Botones dentro de la isla: `contrast` y `glass` (Button). */
+.b { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 34px; padding: 0 14px; border-radius: 9999px; font-size: 13px; font-weight: 600; white-space: nowrap; transition: opacity 150ms, background 150ms; }
+.b .ic { width: 14px; height: 14px; }
+.b-contrast { background: var(--foreground); color: var(--background); }
+.b-contrast:hover { opacity: .9; }
+.b-glass { background: color-mix(in srgb, var(--foreground) 10%, transparent); color: var(--foreground); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--foreground) 12%, transparent); }
+.b-glass:hover { background: color-mix(in srgb, var(--foreground) 16%, transparent); }
+.b-sm { height: 30px; padding: 0 12px; font-size: 12.5px; }
+
+/* ======================================================================
+   El hilo y lo nuevo del informe (F3)
+   ====================================================================== */
+.thread { display: flex; flex-direction: column; gap: 14px; padding-bottom: 12px; }
+.bub-a { align-self: flex-start; width: 100%; max-width: 560px; background: var(--color-background); border-radius: 20px 20px 20px 6px; box-shadow: var(--shadow-float); padding: 14px 16px; font-size: 15px; line-height: 1.55; }
+:root[data-theme="dark"] .bub-a { background: color-mix(in srgb, var(--foreground) 7%, var(--background)); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .bub-a { background: color-mix(in srgb, var(--foreground) 7%, var(--background)); } }
+.bub-a p { margin: 0; }
+.bub-a p + p { margin-top: 8px; }
+.bub-h { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 13px; font-weight: 600; }
+.bub-h .ic { color: var(--axi-violet); }
+.bub-h .sp { flex: 1; }
+.listen { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 10px; border-radius: 9999px; font-size: 12px; font-weight: 500; color: var(--color-muted-foreground); background: var(--color-secondary); }
+.listen[aria-pressed="true"] { color: var(--axi-violet); background: color-mix(in oklab, var(--axi-violet) 12%, transparent); }
+.bub-u { align-self: flex-end; max-width: 82%; padding: 10px 14px; border-radius: 20px 20px 6px 20px; font-size: 15px; line-height: 1.5; }
+.captured { display: flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 12px; color: var(--axi-success); }
+.note-sys { align-self: center; padding: 4px 12px; border-radius: 9999px; background: var(--color-secondary); font-size: 11.5px; color: var(--color-muted-foreground); }
+
+/* La tarjeta del dato: confirmar junto al dato (rec. 1, 2, 3). */
+.datum { margin-top: 10px; display: grid; gap: 2px; padding: 12px 14px; border-radius: 16px; background: var(--color-secondary); }
+.datum .lbl { font-size: 12px; color: var(--color-muted-foreground); }
+.datum .val { font-size: 15px; line-height: 1.45; }
+.datum .org { display: inline-flex; align-items: center; gap: 5px; margin-top: 4px; font-size: 12px; color: var(--color-muted-foreground); }
+.datum-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.c { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 38px; padding: 0 16px; border-radius: 9999px; font-size: 14px; font-weight: 600; white-space: nowrap; }
+.c .ic { width: 15px; height: 15px; }
+.c-ink { background: var(--color-foreground); color: var(--color-background); }
+.c-soft { background: var(--color-background); box-shadow: inset 0 0 0 1px var(--color-border); }
+.c-ghost { color: var(--color-muted-foreground); }
+.c-ghost:hover, .c-soft:hover { background: color-mix(in srgb, var(--foreground) 6%, var(--color-background)); color: var(--color-foreground); }
+.datum-done { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 13px; }
+.datum-done .st { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px 3px 8px; border-radius: 9999px; font-weight: 600; font-size: 12.5px; }
+.st-ok { color: var(--axi-success); background: color-mix(in srgb, var(--axi-success) 12%, transparent); }
+.st-later { color: var(--color-muted-foreground); background: var(--color-secondary); }
+.datum-done .chg { margin-left: auto; font-size: 12.5px; font-weight: 600; color: var(--color-muted-foreground); }
+.edit { margin-top: 10px; display: grid; gap: 8px; }
+.edit textarea { width: 100%; min-height: 72px; resize: vertical; border-radius: 12px; border: 1px solid var(--color-border); background: var(--color-background); color: var(--color-foreground); font: inherit; font-size: 15px; padding: 10px 12px; }
+.review-meter { display: flex; align-items: center; gap: 10px; margin-top: 12px; font-size: 12px; color: var(--color-muted-foreground); }
+.review-meter .bar { flex: 1; height: 4px; border-radius: 9999px; background: color-mix(in srgb, var(--foreground) 10%, transparent); overflow: hidden; }
+.review-meter .bar i { display: block; height: 100%; border-radius: inherit; background: var(--color-foreground); }
+
+/* Opciones cerradas: la lista agrupada de la pregunta. */
+.q-eyebrow { display: flex; align-items: center; gap: 5px; margin: 12px 0 6px; font-size: 11.5px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--axi-violet); }
+.q-list { box-shadow: 0 0 0 1px var(--color-border); }
+.q-row { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 48px; padding: 10px 14px 10px 16px; text-align: left; }
+.q-row:hover { background: color-mix(in srgb, var(--foreground) 4%, transparent); }
+.q-row .t { flex: 1; min-width: 0; }
+.q-row .t b { display: block; font-weight: 500; font-size: 14.5px; }
+.q-row .t span { display: block; font-size: 12.5px; color: var(--color-muted-foreground); }
+.q-row .ic { color: var(--color-muted-foreground); }
+.q-row.other b { color: var(--color-muted-foreground); }
+
+/* Compositor (cápsula .glass) */
+.composer-wrap { flex: none; padding: 10px 24px 16px; }
+.composer { max-width: 640px; margin: 0 auto; display: flex; align-items: flex-end; gap: 8px; padding: 8px 8px 8px 18px; border-radius: 26px; background: color-mix(in srgb, var(--color-background) 65%, transparent); -webkit-backdrop-filter: blur(16px) saturate(160%); backdrop-filter: blur(16px) saturate(160%); box-shadow: var(--shadow-float), 0 0 0 1px var(--color-border); }
+.composer .ph { flex: 1; min-height: 36px; display: flex; align-items: center; font-size: 15px; color: var(--color-muted-foreground); }
+.composer .dict { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border-radius: 9999px; font-size: 13px; font-weight: 600; color: var(--color-muted-foreground); }
+.composer .dict:hover { background: var(--color-secondary); color: var(--color-foreground); }
+.composer .send { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; }
+.composer.rec .ph { color: var(--color-foreground); gap: 10px; }
+.trust { max-width: 640px; margin: 8px auto 0; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 11.5px; color: var(--color-muted-foreground); text-align: center; }
+.trust .ic { color: var(--axi-violet); }
+
+/* La ficha compacta (rec. 9–13) */
+.rail { width: 360px; flex: none; border-left: 1px solid var(--color-border); background: color-mix(in srgb, var(--color-secondary) 55%, var(--color-background)); overflow-y: auto; padding: 22px 20px 28px; }
+.rail h3 { margin: 0; font-size: 21px; letter-spacing: -.02em; }
+.meter { margin-top: 12px; }
+.meter .big { font-size: 14px; }
+.meter .big b { font-size: 15px; }
+.meter .bar { margin-top: 8px; height: 6px; border-radius: 9999px; background: color-mix(in srgb, var(--foreground) 10%, transparent); overflow: hidden; }
+.meter .bar i { display: block; height: 100%; border-radius: inherit; background: var(--axi-violet); }
+.meter .sub { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 8px; font-size: 12.5px; color: var(--color-muted-foreground); }
+.meter .sub span { display: inline-flex; align-items: center; gap: 5px; }
+.rail .sec, .sheet .sec { margin: 22px 0 8px 2px; font-size: 11.5px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--color-muted-foreground); }
+.now { padding: 14px 16px; border-radius: 16px; background: var(--color-background); box-shadow: var(--shadow-float); }
+.now b { display: block; font-size: 15px; line-height: 1.35; }
+.now .st-line { display: flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 12.5px; color: var(--color-muted-foreground); }
+.now .acts { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+.now .acts small { font-size: 11.5px; color: var(--color-muted-foreground); }
+.topics .t-row { display: flex; align-items: flex-start; gap: 10px; padding: 11px 14px; }
+.topics .t-ic { flex: none; margin-top: 2px; }
+.topics .t-txt { flex: 1; min-width: 0; }
+.topics .t-txt b { display: block; font-size: 14px; font-weight: 500; line-height: 1.35; }
+.topics .t-txt span { display: block; font-size: 12px; color: var(--color-muted-foreground); }
+.t-ok { color: var(--axi-success); }
+.t-now { color: var(--axi-violet); }
+.t-wait { color: color-mix(in srgb, var(--foreground) 40%, transparent); }
+.t-review { color: var(--axi-warning); }
+.topics .t-act { flex: none; font-size: 12px; font-weight: 600; color: var(--color-muted-foreground); padding: 2px 0; }
+.see-all { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-top: 14px; padding: 12px 16px; border-radius: 14px; background: var(--color-background); box-shadow: var(--shadow-float); font-size: 14px; font-weight: 600; }
+
+/* ======================================================================
+   Marco del mockup (no producto)
+   ====================================================================== */
+.mk-bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 60; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 10px 16px; background: color-mix(in srgb, var(--color-background) 84%, transparent); -webkit-backdrop-filter: saturate(160%) blur(16px); backdrop-filter: saturate(160%) blur(16px); border-bottom: 1px solid var(--color-border); }
+.mk-bar .tag { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--axi-violet); background: color-mix(in srgb, var(--axi-violet) 12%, transparent); padding: 3px 8px; border-radius: 999px; margin-right: 8px; }
+.mk-bar .tab { padding: 6px 12px; border-radius: 9999px; font-size: 13px; font-weight: 500; color: var(--color-muted-foreground); }
+.mk-bar .tab[aria-pressed="true"] { background: var(--color-foreground); color: var(--color-background); }
+.mk-bar .tab:not([aria-pressed="true"]):hover { color: var(--color-foreground); background: var(--color-secondary); }
+.mk-bar .sp { flex: 1; }
+.theme { display: inline-flex; border: 1px solid var(--color-border); border-radius: 999px; overflow: hidden; }
+.theme button { padding: 5px 12px; font-size: 12.5px; font-weight: 500; color: var(--color-muted-foreground); }
+.theme button[aria-pressed="true"] { background: var(--color-foreground); color: var(--color-background); }
+.mk-note { max-width: 1180px; margin: 22px auto 16px; padding: 0 16px; font-size: 13.5px; color: var(--color-muted-foreground); }
+.mk-note b { color: var(--color-foreground); font-weight: 600; }
+.mk-note ul { margin: 6px 0 0; padding-left: 18px; }
+.mk-note li { margin: 3px 0; }
+.stage { padding: 0 16px; }
+.view { display: flex; flex-direction: column; align-items: center; gap: 22px; }
+.mk-ctrl { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; max-width: 1180px; }
+.mk-ctrl button { height: 32px; padding: 0 12px; border-radius: 9999px; font-size: 12.5px; font-weight: 500; background: var(--color-background); box-shadow: 0 0 0 1px var(--color-border); color: var(--color-muted-foreground); }
+.mk-ctrl button[aria-pressed="true"] { background: var(--color-foreground); color: var(--color-background); box-shadow: none; }
+.mk-ctrl button.go { color: var(--axi-violet); box-shadow: 0 0 0 1px color-mix(in srgb, var(--axi-violet) 40%, transparent); }
+.desk { width: 100%; max-width: 1180px; height: 720px; min-width: 0; border-radius: 18px; overflow: hidden; display: flex; flex-direction: column; background: var(--color-background); box-shadow: var(--shadow-overlay), 0 0 0 1px var(--color-border); }
+.desk.short { height: 520px; }
+.desk-top { height: 40px; flex: none; display: flex; align-items: center; gap: 7px; padding: 0 14px; border-bottom: 1px solid var(--color-border); font-size: 12px; color: var(--color-muted-foreground); }
+.desk-top .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--color-border); }
+.desk-top .url { margin-left: 10px; padding: 3px 12px; border-radius: 9999px; background: var(--color-secondary); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.desk-body { display: flex; flex: 1; min-height: 0; }
+.desk-body > .assistant-field { flex: 1; min-width: 0; display: flex; }
+.phones { display: flex; flex-wrap: wrap; justify-content: center; gap: 24px; width: 100%; }
+.phone { width: 380px; max-width: 100%; height: 760px; border-radius: 46px; border: 8px solid #1b1b1f; overflow: hidden; background: var(--color-background); box-shadow: var(--shadow-overlay); position: relative; display: flex; flex-direction: column; }
+.phone .status { height: 44px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 26px; font-size: 13px; font-weight: 600; }
+.phone .status::after { content: ""; position: absolute; top: 9px; left: 50%; transform: translateX(-50%); width: 100px; height: 28px; border-radius: 9999px; background: #1b1b1f; }
+.phone > .assistant-field { flex: 1; min-height: 0; display: flex; }
+.phone .cap { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); width: 120px; height: 5px; border-radius: 9999px; background: color-mix(in srgb, var(--foreground) 30%, transparent); }
+.phone-cap { width: 380px; max-width: 100%; text-align: center; font-size: 12.5px; color: var(--color-muted-foreground); margin-top: -12px; }
+.chip-act { display: inline-flex; align-items: center; gap: 5px; height: 32px; padding: 0 12px; border-radius: 9999px; font-size: 12.5px; font-weight: 600; background: var(--color-background); box-shadow: 0 0 0 1px var(--color-border); }
+
+/* La hoja de la ficha en el móvil */
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; height: 56%; z-index: 40; border-radius: 26px 26px 0 0; background: var(--color-background); box-shadow: 0 -18px 50px -20px rgb(0 0 0 / .35), 0 0 0 1px var(--color-border); padding: 10px 18px 24px; overflow-y: auto; }
+.sheet::before { content: ""; display: block; width: 38px; height: 5px; border-radius: 9999px; margin: 0 auto 12px; background: color-mix(in srgb, var(--foreground) 18%, transparent); }
+.sheet h3 { margin: 0; font-size: 19px; }
+
+/* Galería de formas */
+.gallery { display: grid; grid-template-columns: 1fr; gap: 14px; width: 100%; max-width: 1180px; }
+.tile { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 0; border-radius: 18px; overflow: hidden; background: var(--color-background); box-shadow: var(--shadow-float), 0 0 0 1px var(--color-border); }
+.tile .cap { padding: 16px 18px; border-right: 1px solid var(--color-border); }
+.tile .cap b { display: block; font-size: 14px; }
+.tile .cap b em { font-style: normal; display: inline-grid; place-items: center; min-width: 22px; height: 22px; margin-right: 6px; border-radius: 7px; background: var(--color-foreground); color: var(--color-background); font-size: 12px; }
+.tile .cap span { display: block; margin-top: 4px; font-size: 12.5px; color: var(--color-muted-foreground); }
+.tile .box { position: relative; min-width: 0; padding: 14px 18px; }
+.tile .box .assistant-chat { container: tile / inline-size; }
+@media (max-width: 760px) { .tile { grid-template-columns: 1fr; } .tile .cap { border-right: 0; border-bottom: 1px solid var(--color-border); } }
+
+/* Isla global (decisión pendiente) */
+.app { display: flex; flex: 1; min-height: 0; }
+.app-side { width: 220px; flex: none; border-right: 1px solid var(--color-border); padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--color-muted-foreground); }
+.app-side .logo { display: flex; align-items: center; gap: 8px; margin: 0 6px 14px; font-weight: 700; color: var(--color-foreground); font-family: var(--font-heading); }
+.app-side .logo i { width: 22px; height: 22px; border-radius: 7px; background: linear-gradient(135deg, var(--axi-brand), var(--axi-brand-2)); }
+.app-side a { display: flex; align-items: center; gap: 9px; padding: 7px 8px; border-radius: 9px; color: inherit; text-decoration: none; }
+.app-side a.on { background: var(--color-secondary); color: var(--color-foreground); font-weight: 600; }
+.app-main { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.app-head { position: relative; height: 58px; flex: none; display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid var(--color-border); }
+.app-head h2 { margin: 0; font-size: 17px; }
+.app-head .gl { position: absolute; left: 0; right: 0; top: 6px; height: 52px; pointer-events: none; }
+.app-head .gl .assistant-dock { position: relative; top: 0; pointer-events: none; }
+.app-head .gl .assistant-dock * { pointer-events: auto; }
+.app-head .right { margin-left: auto; display: flex; gap: 8px; color: var(--color-muted-foreground); }
+.app-body { flex: 1; min-height: 0; overflow: hidden; padding: 22px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-content: start; }
+.app-card { border-radius: 20px; padding: 18px; background: var(--color-background); box-shadow: var(--shadow-float), 0 0 0 1px var(--color-border); }
+.app-card small { font-size: 12px; color: var(--color-muted-foreground); }
+.app-card b { display: block; margin-top: 6px; font-size: 26px; font-family: var(--font-heading); }
+.app-card.wide { grid-column: span 2; height: 200px; }
+@media (max-width: 860px) { .app-side { display: none; } .app-body { grid-template-columns: 1fr; } .app-card.wide { grid-column: auto; } }
+
+/* Revisión final (rec. 15) */
+.final { width: 100%; max-width: 820px; margin: 0 auto; padding: 32px 28px; overflow-y: auto; }
+.final h2 { margin: 0; font-size: 28px; letter-spacing: -.02em; text-wrap: balance; }
+.final .lead { margin: 8px 0 0; font-size: 15px; color: var(--color-muted-foreground); }
+.final .counts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.pill { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px; border-radius: 9999px; font-size: 12.5px; font-weight: 600; background: var(--color-secondary); }
+.pill.ok { color: var(--axi-success); background: color-mix(in srgb, var(--axi-success) 12%, transparent); }
+.pill.rev { color: var(--axi-warning); background: color-mix(in srgb, var(--axi-warning) 14%, transparent); }
+.final .grp { margin-top: 24px; }
+.final .grp h3 { margin: 0 0 8px 4px; font-size: 12px; font-family: var(--font-sans); font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--color-muted-foreground); }
+.final .grp h3.rev { color: var(--axi-warning); }
+.final .grouped-list { box-shadow: var(--shadow-float), 0 0 0 1px var(--color-border); }
+.f-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; }
+.f-row .t { flex: 1; min-width: 0; }
+.f-row .t .lbl { display: block; font-size: 12px; color: var(--color-muted-foreground); }
+.f-row .t .val { display: block; font-size: 15px; line-height: 1.45; overflow-wrap: anywhere; }
+.f-row .t .meta { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 3px; font-size: 12px; color: var(--color-muted-foreground); }
+.f-row .t .meta span { display: inline-flex; align-items: center; gap: 4px; }
+.f-row .t .meta .ok { color: var(--axi-success); }
+.f-row .t .meta .rev { color: var(--axi-warning); }
+.f-row .acts { flex: none; display: flex; gap: 6px; }
+.final .foot { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 28px; }
+.final .foot .sp { flex: 1; }
+.final .foot-note { margin-top: 10px; font-size: 12.5px; color: var(--color-muted-foreground); text-align: right; }
+@media (max-width: 640px) { .f-row { flex-wrap: wrap; } .f-row .acts { width: 100%; } .final .foot-note { text-align: left; } }
+
+@media (max-width: 760px) {
+  .rail { display: none; }
+  .desk { height: 680px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .assistant-island--p > * { animation: none; }
+}
+</style>
+
+<header class="mk-bar">
+  <span class="tag">Mockup F0 · no es producto</span>
+  <button class="tab" type="button" data-view="isla" aria-pressed="true">La isla</button>
+  <button class="tab" type="button" data-view="revisar" aria-pressed="false">Alba · revisar lo encontrado</button>
+  <button class="tab" type="button" data-view="preguntar" aria-pressed="false">Alba · preguntas</button>
+  <button class="tab" type="button" data-view="movil" aria-pressed="false">Alba · móvil</button>
+  <button class="tab" type="button" data-view="axel" aria-pressed="false">Axel</button>
+  <button class="tab" type="button" data-view="final" aria-pressed="false">Revisión final</button>
+  <button class="tab" type="button" data-view="global" aria-pressed="false">Isla global · decidir</button>
+  <span class="sp"></span>
+  <div class="theme" role="group" aria-label="Tema">
+    <button type="button" data-theme-set="light" aria-pressed="true">Claro</button>
+    <button type="button" data-theme-set="dark" aria-pressed="false">Oscuro</button>
+  </div>
+</header>
+
+<p class="mk-note" id="note"></p>
+
+<main class="stage">
+
+  <!-- ============================== 1 · LA ISLA ============================== -->
+  <section class="view" id="v-isla">
+    <div class="mk-ctrl" role="group" aria-label="Forma de la isla">
+      <button type="button" data-demo="pill" aria-pressed="true">S · reposo</button>
+      <button type="button" data-demo="pill-badge" aria-pressed="false">S · con algo pendiente</button>
+      <button type="button" data-demo="working" aria-pressed="false">M · trabajando</button>
+      <button type="button" data-demo="question" aria-pressed="false">P · pregunta</button>
+      <button type="button" data-demo="notice-ok" aria-pressed="false">A · aviso</button>
+      <button type="button" data-demo="notice-warn" aria-pressed="false">A · advertencia</button>
+      <button type="button" data-demo="summary" aria-pressed="false">R · resumen</button>
+      <button type="button" data-demo="listening" aria-pressed="false">E · escuchando</button>
+      <button type="button" class="go" data-demo="tour" aria-pressed="false">Simular un recorrido</button>
+    </div>
+    <div class="desk short">
+      <div class="desk-top"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">axi-connect.co/configurar/hg7…</span></div>
+      <div class="desk-body">
+        <div class="assistant-field">
+          <div class="assistant-chat" id="demo-chat">
+            <div class="assistant-scroller">
+              <div class="assistant-col">
+                <div data-dock="demo" data-name="Alba" data-acc="headset" data-meta="Poniendo a punto Hagogi"></div>
+                <div class="assistant-hero-spacer"></div>
+                <div class="thread">
+                  <div class="bub-a"><div class="bub-h">{{ic:sparkles:14}} Alba</div><p>Listo, ya quedó cómo dividen lo que ofrecen.</p><div class="captured">{{ic:check:13}} Confirmado · Cómo agrupas lo que vendes</div></div>
+                  <div class="bub-u assistant-bubble-user">Sí, así es</div>
+                  <div class="bub-a"><div class="bub-h">{{ic:sparkles:14}} Alba</div><p>Ahora el horario. Lo vi en su web: <b>lunes a sábado, de 9 a 6</b>.</p><p>¿Es así?</p></div>
+                </div>
+              </div>
+            </div>
+            <div class="composer-wrap"><div class="composer"><span class="ph">Escribe o dicta…</span><button class="dict" type="button">{{ic:mic:15}} Dictar</button><button class="send assistant-send" type="button" aria-label="Enviar">{{ic:arrow-up:17}}</button></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gallery" id="gallery"></div>
+  </section>
+
+  <!-- ===================== 2 · ALBA · REVISAR LO ENCONTRADO ===================== -->
+  <section class="view" id="v-revisar" hidden>
+    <div class="desk">
+      <div class="desk-top"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">axi-connect.co/configurar/hg7…</span></div>
+      <div class="desk-body">
+        <div class="assistant-field">
+          <div class="assistant-chat">
+            <div class="assistant-scroller">
+              <div class="assistant-col">
+                <div data-dock="rev" data-name="Alba" data-acc="headset" data-meta="Revisando lo que encontré" data-status="review"></div>
+                <div class="assistant-hero-spacer"></div>
+                <div class="thread">
+                  <div class="bub-a"><div class="bub-h">{{ic:sparkles:14}} Alba</div>
+                    <p>Hola, Cristian. Soy Alba y voy a dejar listo el asistente de Hagogi.</p>
+                    <p>Encontré <b>11 datos</b> en su web y en su cuenta. Los revisamos uno a uno: confirmas, corriges o lo dejas para después. Son unos 2 minutos.</p>
+                  </div>
+                  <div class="bub-a"><div class="bub-h">{{ic:sparkles:14}} Alba</div>
+                    <p>Esto ya lo teníamos en su cuenta.</p>
+                    <div class="datum"><span class="lbl">Tipo de negocio</span><span class="val">Educación y cursos</span><span class="org">{{ic:database:12}} Ya lo teníamos</span></div>
+                    <div class="datum-done"><span class="st st-ok">{{ic:check:13}} Confirmado</span><button class="chg" type="button">Cambiar</button></div>
+                  </div>
+                  <div class="bub-a"><div class="bub-h">{{ic:sparkles:14}} Alba</div>
+                    <p>Lo vi en su web.</p>
+                    <div class="datum"><span class="lbl">Qué venden</span><span class="val">Una aplicación para capacitar equipos y aprender idiomas.</span><span class="org">{{ic:globe:12}} Lo vi en hagogi.com</span></div>
+                    <div class="datum-done"><span class="st st-ok">{{ic:pen-line:13}} Corregido</span><span style="font-size:12.5px;color:var(--color-muted-foreground)">«…y clases de canto.»</span><button class="chg" type="button">Cambiar</button></div>
+                  </div>
+                  <div class="bub-a" id="rev-card"><div class="bub-h">{{ic:sparkles:14}} Alba<span class="sp"></span><button class="listen" type="button" data-say="Lo vi en su web. Por qué les compran a ustedes: ayudamos a aprender inglés y canto de forma activa y práctica, con retroalimentación que convierte los errores en oportunidades. ¿Es así?" aria-pressed="false">{{ic:volume-2:13}} Escuchar</button></div>
+                    <p>Lo vi en su web. ¿Es así?</p>
+                    <div class="datum"><span class="lbl">Por qué les compran a ustedes</span><span class="val">Ayudamos a aprender inglés y canto de forma activa y práctica, con retroalimentación que convierte los errores en oportunidades.</span><span class="org">{{ic:globe:12}} Lo vi en hagogi.com</span></div>
+                    <div class="datum-acts" id="rev-acts">
+                      <button class="c c-ink" type="button" data-rev="ok">{{ic:check:15}} Así es</button>
+                      <button class="c c-soft" type="button" data-rev="edit">{{ic:pen-line:15}} Corregir</button>
+                      <button class="c c-ghost" type="button" data-rev="later">{{ic:clock:15}} Después</button>
+                    </div>
+                    <div class="edit" id="rev-edit" hidden>
+                      <textarea id="rev-text" aria-label="Por qué les compran a ustedes">Ayudamos a aprender inglés y canto de forma activa y práctica, con retroalimentación que convierte los errores en oportunidades.</textarea>
+                      <div class="datum-acts" style="margin-top:0"><button class="c c-ink" type="button" data-rev="save">Guardar</button><button class="c c-ghost" type="button" data-rev="cancel">Cancelar</button></div>
+                    </div>
+                    <div class="datum-done" id="rev-done" hidden></div>
+                    <div class="review-meter"><span id="rev-count">3 de 11 revisados</span><span class="bar"><i id="rev-bar" style="width:27%"></i></span><button class="chg" type="button" style="font-weight:600">Revisar el resto después</button></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="composer-wrap"><div class="composer"><span class="ph">Escribe o dicta…</span><button class="dict" type="button">{{ic:mic:15}} Dictar</button><button class="send assistant-send" type="button" aria-label="Enviar">{{ic:arrow-up:17}}</button></div>
+              <p class="trust">{{ic:sparkles:12}} Nada se aplica sin que alguien de tu equipo lo revise · se guarda solo</p></div>
+          </div>
+        </div>
+        <aside class="rail setup-ficha" data-rail="review"></aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================== 3 · ALBA · PREGUNTAS ========================== -->
+  <section class="view" id="v-preguntar" hidden>
+    <div class="desk">
+      <div class="desk-top"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">axi-connect.co/configurar/hg7…</span></div>
+      <div class="desk-body">
+        <div class="assistant-field">
+          <div class="assistant-chat" id="ask-chat">
+            <div class="assistant-scroller" id="ask-scroller">
+              <div class="assistant-col">
+                <div data-dock="ask" data-name="Alba" data-acc="headset" data-meta="Poniendo a punto Hagogi" data-status="progress"></div>
+                <div class="assistant-hero-spacer"></div>
+                <div class="thread">
+                  <div class="note-sys">Revisaste los 11 datos que encontré · 8 confirmados, 2 corregidos, 1 para después</div>
+                  <div class="bub-a"><div class="bub-h">{{ic:sparkles:14}} Alba</div>
+                    <p>¿Atienden en un lugar físico o todo es en línea?</p>
+                    <p class="q-eyebrow">{{ic:sparkles:12}} Elige una</p>
+                    <ul class="grouped-list q-list">
+                      <li class="grouped-row"><button class="q-row" type="button" disabled><span class="t"><b>Tenemos un local</b><span>Te pido la dirección después</span></span>{{ic:chevron-right:16}}</button></li>
+                      <li class="grouped-row"><button class="q-row" type="button" disabled><span class="t"><b>Todo es en línea</b></span>{{ic:chevron-right:16}}</button></li>
+                      <li class="grouped-row"><button class="q-row" type="button" disabled><span class="t"><b>Las dos cosas</b></span>{{ic:chevron-right:16}}</button></li>
+                    </ul>
+                  </div>
+                  <div class="bub-u assistant-bubble-user">está bien</div>
+                  <div class="bub-a"><div class="bub-h">{{ic:sparkles:14}} Alba</div>
+                    <p>No quiero anotar algo que no dijiste. ¿Cuál de estas es?</p>
+                    <p class="q-eyebrow">{{ic:sparkles:12}} Elige una</p>
+                    <ul class="grouped-list q-list">
+                      <li class="grouped-row"><button class="q-row" type="button" disabled><span class="t"><b>Tenemos un local</b></span>{{ic:chevron-right:16}}</button></li>
+                      <li class="grouped-row"><button class="q-row" type="button" disabled><span class="t"><b>Todo es en línea</b></span>{{ic:chevron-right:16}}</button></li>
+                    </ul>
+                  </div>
+                  <div class="bub-u assistant-bubble-user">Todo es en línea</div>
+                  <div class="bub-a"><div class="bub-h">{{ic:sparkles:14}} Alba</div><p>Anotado: atienden en línea.</p><div class="captured">{{ic:check:13}} Confirmado por ti · Modalidad de atención</div></div>
+                  <div class="bub-a"><div class="bub-h">{{ic:sparkles:14}} Alba</div><p>¿Cómo saludan cuando alguien les escribe por primera vez?</p></div>
+                  <div class="bub-u assistant-bubble-user">no lo tengo claro, la empresa es nueva</div>
+                  <div class="bub-a" id="live-q"><div class="bub-h">{{ic:sparkles:14}} Alba<span class="sp"></span><button class="listen" type="button" data-say="Normal al empezar. ¿Lo armamos juntos? Puedo proponerte un saludo y tú lo ajustas." aria-pressed="false">{{ic:volume-2:13}} Escuchar</button></div>
+                    <p>Normal al empezar. ¿Lo armamos juntos?</p>
+                    <p class="q-eyebrow">{{ic:sparkles:12}} Elige una</p>
+                    <ul class="grouped-list q-list">
+                      <li class="grouped-row"><button class="q-row" type="button"><span class="t"><b>Ayúdame a definirlo</b><span>Te propongo uno y lo ajustas</span></span>{{ic:chevron-right:16}}</button></li>
+                      <li class="grouped-row"><button class="q-row" type="button"><span class="t"><b>Usar un ejemplo</b><span>«¡Hola! Bienvenido a Hagogi, ¿en qué te ayudo?»</span></span>{{ic:chevron-right:16}}</button></li>
+                      <li class="grouped-row"><button class="q-row" type="button"><span class="t"><b>Definirlo después</b><span>Queda «Por definir», no «No aplica»</span></span>{{ic:chevron-right:16}}</button></li>
+                      <li class="grouped-row"><button class="q-row other" type="button"><span class="t"><b>Otra respuesta: escribirla yo</b></span>{{ic:pen-line:15}}</button></li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="composer-wrap"><div class="composer"><span class="ph">Escribe o dicta…</span><button class="dict" type="button">{{ic:mic:15}} Dictar</button><button class="send assistant-send" type="button" aria-label="Enviar">{{ic:arrow-up:17}}</button></div>
+              <p class="trust">{{ic:sparkles:12}} Nada se aplica sin que alguien de tu equipo lo revise · se guarda solo</p></div>
+          </div>
+        </div>
+        <aside class="rail setup-ficha" data-rail="ask"></aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================= 4 · ALBA · MÓVIL ============================= -->
+  <section class="view" id="v-movil" hidden>
+    <div class="phones">
+      <div>
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>{{ic:wifi:14}}</span></div>
+          <div class="assistant-field">
+            <div class="assistant-chat">
+              <div class="assistant-chat__actions"><span class="chip-act">{{ic:list-checks:14}} 5/9</span></div>
+              <div class="assistant-scroller" style="padding:8px 14px">
+                <div class="assistant-col">
+                  <div data-dock="m1" data-name="Alba" data-acc="headset" data-meta="Hagogi" data-status="progress"></div>
+                  <div class="assistant-hero-spacer"></div>
+                  <div class="thread"><div class="bub-a"><p>Normal al empezar. ¿Lo armamos juntos?</p></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="sheet" data-rail="sheet"></div>
+          <span class="cap"></span>
+        </div>
+        <p class="phone-cap" style="margin-top:12px">La ficha abierta tapa el chat: la pregunta viva sigue en la isla.</p>
+      </div>
+      <div>
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>{{ic:wifi:14}}</span></div>
+          <div class="assistant-field">
+            <div class="assistant-chat">
+              <div class="assistant-chat__actions"><span class="chip-act">{{ic:list-checks:14}} 5/9</span></div>
+              <div class="assistant-scroller" style="padding:8px 14px">
+                <div class="assistant-col">
+                  <div data-dock="m2" data-name="Alba" data-acc="headset" data-meta="Hagogi"></div>
+                  <div class="assistant-hero-spacer"></div>
+                  <div class="thread">
+                    <div class="bub-a"><p>¿Cómo saludan cuando alguien les escribe por primera vez?</p></div>
+                  </div>
+                </div>
+              </div>
+              <div class="composer-wrap" style="padding:10px 12px 22px"><div class="composer rec"><span class="ph"><span class="assistant-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span> 0:07</span><button class="dict" type="button">Cancelar</button><button class="send assistant-send" type="button" aria-label="Detener">{{ic:square:13}}</button></div></div>
+            </div>
+          </div>
+          <span class="cap"></span>
+        </div>
+        <p class="phone-cap" style="margin-top:12px">Dictando: la isla dice que escucha. Al detener, el texto queda para revisar antes de enviar.</p>
+      </div>
+      <div>
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>{{ic:wifi:14}}</span></div>
+          <div class="assistant-field">
+            <div class="assistant-chat">
+              <div class="assistant-chat__actions"><span class="chip-act">{{ic:list-checks:14}} 5/9</span></div>
+              <div class="assistant-scroller" style="padding:8px 14px">
+                <div class="assistant-col">
+                  <div data-dock="m3" data-name="Alba" data-acc="headset" data-meta="Hagogi"></div>
+                  <div class="assistant-hero-spacer"></div>
+                  <div class="thread">
+                    <div class="bub-a"><p>¿Cómo saludan cuando alguien les escribe por primera vez?</p></div>
+                  </div>
+                </div>
+              </div>
+              <div class="composer-wrap" style="padding:10px 12px 22px"><div class="composer"><span class="ph">Escribe tu respuesta…</span><button class="dict" type="button" style="opacity:.5">{{ic:mic-off:15}} Dictar</button><button class="send assistant-send" type="button" aria-label="Enviar">{{ic:arrow-up:17}}</button></div></div>
+            </div>
+          </div>
+          <span class="cap"></span>
+        </div>
+        <p class="phone-cap" style="margin-top:12px">El micrófono falla con un motivo y una salida: escribir.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================== 5 · AXEL ================================== -->
+  <section class="view" id="v-axel" hidden>
+    <div class="mk-ctrl" role="group" aria-label="Momento de Axel">
+      <button type="button" data-axel="notice" aria-pressed="true">Llega el informe</button>
+      <button type="button" data-axel="summary" aria-pressed="false">Abrir el resumen</button>
+      <button type="button" data-axel="proposal" aria-pressed="false">Nueva propuesta</button>
+      <button type="button" data-axel="working" aria-pressed="false">Trabajando con chips</button>
+      <button type="button" data-axel="pill-badge" aria-pressed="false">Plegado</button>
+    </div>
+    <div class="desk">
+      <div class="desk-top"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">axi-connect.co/cmo</span></div>
+      <div class="desk-body">
+        <div class="assistant-field">
+          <div class="assistant-chat">
+            <div class="assistant-chat__actions"><button class="isl-ib" type="button" aria-label="Conversaciones" style="color:var(--color-muted-foreground)">{{ic:messages-square:17}}</button><button class="isl-ib" type="button" aria-label="Nueva" style="color:var(--color-muted-foreground)">{{ic:square-pen:17}}</button></div>
+            <div class="assistant-scroller">
+              <div class="assistant-col">
+                <div data-dock="axel" data-name="Axel" data-acc="none" data-meta="lun 5 oct"></div>
+                <div class="assistant-hero-spacer"></div>
+                <div class="thread">
+                  <div class="bub-u assistant-bubble-user">¿Cómo vamos con la campaña de octubre?</div>
+                  <div class="bub-a"><div class="bub-h">{{ic:sparkles:14}} Axel</div><p>Vamos bien: 312 conversaciones esta semana, 18 % más que la anterior. La plantilla de bienvenida es la que más responde.</p><p>Te dejé una propuesta para subir el presupuesto del fin de semana.</p></div>
+                </div>
+              </div>
+            </div>
+            <div class="composer-wrap"><div class="composer"><span class="ph">Pregúntale a Axel…</span><button class="send assistant-send" type="button" aria-label="Enviar">{{ic:arrow-up:17}}</button></div><p class="trust">{{ic:sparkles:12}} Nada sale sin tu aprobación.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ 6 · REVISIÓN FINAL ============================ -->
+  <section class="view" id="v-final" hidden>
+    <div class="desk" style="height:auto;max-height:none">
+      <div class="desk-top"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">axi-connect.co/configurar/hg7… · revisar</span></div>
+      <div class="assistant-field" style="display:block">
+        <div class="final">
+          <h2>Revisa antes de enviar</h2>
+          <p class="lead">Cada dato dice de dónde salió y si lo confirmaste. Puedes editar cualquiera.</p>
+          <div class="counts"><span class="pill ok">{{ic:check:13}} 14 confirmados</span><span class="pill rev">{{ic:circle-alert:13}} 3 por revisar</span><span class="pill">{{ic:circle-dashed:13}} 2 por definir</span><span class="pill">{{ic:minus:13}} 1 no aplica</span></div>
+
+          <section class="grp"><h3 class="rev">Por revisar · 3</h3>
+            <ul class="grouped-list">
+              <li class="grouped-row"><div class="f-row"><span class="t"><span class="lbl">Cómo saludan</span><span class="val">¡Hola! Bienvenido a Hagogi, ¿en qué te ayudo?</span><span class="meta"><span>{{ic:sparkles:12}} Lo propuso Alba</span><span class="rev">{{ic:circle-alert:12}} Falta tu visto</span></span></span><span class="acts"><button class="c c-ink" type="button" style="height:34px">Así es</button><button class="c c-soft" type="button" style="height:34px">Editar</button></span></div></li>
+              <li class="grouped-row"><div class="f-row"><span class="t"><span class="lbl">Tono</span><span class="val">Cálido y muy servicial</span><span class="meta"><span>{{ic:layers:12}} Propuesto para tu tipo de negocio</span><span class="rev">{{ic:circle-alert:12}} Falta tu visto</span></span></span><span class="acts"><button class="c c-ink" type="button" style="height:34px">Así es</button><button class="c c-soft" type="button" style="height:34px">Editar</button></span></div></li>
+              <li class="grouped-row"><div class="f-row"><span class="t"><span class="lbl">Qué no debe decir nunca</span><span class="val">Precios de planes empresariales</span><span class="meta"><span>{{ic:globe:12}} Lo vi en hagogi.com</span><span class="rev">{{ic:clock:12}} Lo dejaste para después</span></span></span><span class="acts"><button class="c c-ink" type="button" style="height:34px">Así es</button><button class="c c-soft" type="button" style="height:34px">Editar</button></span></div></li>
+            </ul>
+          </section>
+
+          <section class="grp"><h3>Tu negocio en una frase</h3>
+            <ul class="grouped-list">
+              <li class="grouped-row"><div class="f-row"><span class="t"><span class="lbl">Qué venden</span><span class="val">Una aplicación para capacitar equipos y aprender idiomas, y clases de canto.</span><span class="meta"><span>{{ic:globe:12}} De su web</span><span class="ok">{{ic:pen-line:12}} Corregido por ti</span></span></span><span class="acts"><button class="c c-soft" type="button" style="height:34px">Editar</button></span></div></li>
+              <li class="grouped-row"><div class="f-row"><span class="t"><span class="lbl">Tipo de negocio</span><span class="val">Educación y cursos</span><span class="meta"><span>{{ic:database:12}} Ya lo teníamos</span><span class="ok">{{ic:check:12}} Confirmado</span></span></span><span class="acts"><button class="c c-soft" type="button" style="height:34px">Editar</button></span></div></li>
+            </ul>
+          </section>
+
+          <section class="grp"><h3>Cuándo y dónde atienden</h3>
+            <ul class="grouped-list">
+              <li class="grouped-row"><div class="f-row"><span class="t"><span class="lbl">Horario</span><span class="val">Lunes a sábado, 9:00 a 18:00</span><span class="meta"><span>{{ic:globe:12}} De su web</span><span class="ok">{{ic:check:12}} Confirmado</span></span></span><span class="acts"><button class="c c-soft" type="button" style="height:34px">Editar</button></span></div></li>
+              <li class="grouped-row"><div class="f-row"><span class="t"><span class="lbl">Modalidad de atención</span><span class="val">Todo en línea</span><span class="meta"><span>{{ic:message-circle:12}} Tu respuesta</span><span class="ok">{{ic:check:12}} Confirmado</span></span></span><span class="acts"><button class="c c-soft" type="button" style="height:34px">Editar</button></span></div></li>
+              <li class="grouped-row"><div class="f-row"><span class="t"><span class="lbl">Dirección</span><span class="val" style="color:var(--color-muted-foreground)">No aplica: atienden en línea</span></span><span class="acts"><button class="c c-soft" type="button" style="height:34px">Cambiar</button></span></div></li>
+            </ul>
+          </section>
+
+          <div class="foot">
+            <button class="c c-soft" type="button">{{ic:arrow-left:15}} Volver a la entrevista</button>
+            <span class="sp"></span>
+            <button class="c c-ghost" type="button">{{ic:plus:15}} Añadir detalles (opcional)</button>
+            <button class="c c-ink" type="button">{{ic:send:15}} Enviar a revisión</button>
+          </div>
+          <p class="foot-note">El equipo de axi lo revisa y lo deja aplicado en tu cuenta. Lo que esté por revisar no se aplica.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ 7 · ISLA GLOBAL ============================ -->
+  <section class="view" id="v-global" hidden>
+    <div class="mk-ctrl" role="group" aria-label="Isla global">
+      <button type="button" data-glob="pill" aria-pressed="false">En reposo</button>
+      <button type="button" data-glob="notice" aria-pressed="true">Llega el informe</button>
+      <button type="button" data-glob="summary" aria-pressed="false">Abrir el resumen</button>
+    </div>
+    <div class="desk">
+      <div class="desk-top"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">axi-connect.co/dashboard</span></div>
+      <div class="app">
+        <nav class="app-side" aria-label="Menú"><span class="logo"><i></i>axi</span>
+          <a class="on" href="#global">{{ic:layout-dashboard:15}} Panel</a><a href="#global">{{ic:inbox:15}} Bandeja</a><a href="#global">{{ic:users:15}} CRM</a><a href="#global">{{ic:megaphone:15}} Marketing</a><a href="#global">{{ic:sparkles:15}} Axel</a>
+        </nav>
+        <div class="app-main">
+          <div class="app-head"><h2>Panel</h2><span class="right">{{ic:bell:17}}{{ic:circle-user:17}}</span>
+            <div class="gl"><div class="assistant-chat" style="display:block"><div data-dock="global" data-name="Axel" data-acc="none" data-meta="3 por decidir"></div></div></div>
+          </div>
+          <div class="app-body">
+            <div class="app-card"><small>Conversaciones hoy</small><b>148</b></div>
+            <div class="app-card"><small>Ventas de la semana</small><b>$4,2 M</b></div>
+            <div class="app-card"><small>Tareas del agente</small><b>23</b></div>
+            <div class="app-card wide"><small>Conversaciones por canal</small></div>
+            <div class="app-card"><small>Lo próximo</small></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+(() => {
+  /* ---------- iconos para lo que pinta el script ---------- */
+  const IC = {
+    sparkles: `{{ic:sparkles:13}}`, volume: `{{ic:volume-2:15}}`, pause: `{{ic:pause:15}}`, chevUp: `{{ic:chevron-up:16}}`, x: `{{ic:x:15}}`,
+    globe: `{{ic:globe:12}}`, layers: `{{ic:layers:12}}`, check: `{{ic:check:14}}`, pen: `{{ic:pen-line:14}}`, clock: `{{ic:clock:14}}`,
+    search: `{{ic:search:15}}`, chart: `{{ic:chart-column:11}}`, book: `{{ic:book-open:11}}`, send: `{{ic:send:11}}`, done: `{{ic:check:11}}`,
+    calc: `{{ic:calculator:11}}`, arrow: `{{ic:arrow-right:14}}`, mic: `{{ic:mic-off:14}}`, keyboard: `{{ic:keyboard:14}}`,
+    ok: `{{ic:circle-check:16}}`, now: `{{ic:circle-dot:16}}`, wait: `{{ic:circle-dashed:16}}`, rev: `{{ic:circle-alert:16}}`, later: `{{ic:clock:16}}`,
+    sq: `{{ic:square:12}}`, chevR: `{{ic:chevron-right:16}}`, db: `{{ic:database:12}}`,
+  };
+
+  /* ---------- tema ---------- */
+  const root = document.documentElement;
+  const themeBtns = document.querySelectorAll('[data-theme-set]');
+  const setTheme = (t) => { root.dataset.theme = t; themeBtns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.themeSet === t))); try { localStorage.setItem('isla.theme', t); } catch (e) {} };
+  themeBtns.forEach(b => b.addEventListener('click', () => setTheme(b.dataset.themeSet)));
+  let saved = null; try { saved = localStorage.getItem('isla.theme'); } catch (e) {}
+  setTheme(saved || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+{{RIG_JS}}
+
+  /* ---------- la isla: un dock por [data-dock] ---------- */
+  const ALBA_TOPICS = [
+    { t: 'Tu negocio en una frase', s: 'done' }, { t: 'Cuándo y dónde atienden', s: 'done' }, { t: 'Cómo le hablan a un cliente', s: 'now' },
+    { t: 'Lo que siempre les preguntan', s: 'wait' }, { t: 'Lo que el asistente NO debe hacer', s: 'wait' }, { t: 'Tu asistente', s: 'wait' },
+  ];
+  function statusHtml(kind) {
+    if (kind === 'review') return `<span class="assistant-dock__status" style="font-size:12px;color:color-mix(in srgb,var(--foreground) 70%,transparent)"><b style="color:var(--foreground);font-weight:600">3 de 11</b>&nbsp;revisados</span>`;
+    if (kind !== 'progress') return '';
+    const caps = ALBA_TOPICS.map(x => `<i style="display:inline-block;width:14px;height:4px;border-radius:9999px;background:${x.s === 'done' ? 'var(--foreground)' : x.s === 'now' ? 'var(--axi-violet)' : 'color-mix(in srgb,var(--foreground) 20%,transparent)'}"></i>`).join('');
+    return `<span class="assistant-dock__status" style="gap:8px;font-size:12px;color:color-mix(in srgb,var(--foreground) 70%,transparent)"><span style="display:inline-flex;gap:3px">${caps}</span><span><b style="color:var(--foreground);font-weight:600">Cómo le hablan a un cliente</b> · 2 de 6</span></span>`;
+  }
+  const INK = 'island island-ink surface-dark';
+  function mountDock(host) {
+    const { name, acc, meta, status } = host.dataset;
+    const dock = document.createElement('header');
+    dock.className = 'assistant-dock';
+    dock.dataset.shape = 'pill';
+    dock.dataset.dock = host.dataset.dock;
+    dock.innerHTML = `<div class="assistant-dock__bar">
+      <div class="${INK} assistant-island assistant-island--l" aria-hidden="true"></div>
+      <div class="${INK} assistant-island assistant-island--s" data-s><span class="assistant-dock__title font-heading">${name}</span><span class="assistant-dock__meta">${meta || ''}</span>${statusHtml(status)}<span data-badge></span></div>
+      <div class="${INK} assistant-island assistant-island--m"><div style="min-width:0;flex:1" data-m></div></div>
+      <div class="${INK} assistant-island assistant-island--p" data-p></div>
+      <div class="${INK} assistant-island assistant-island--e" data-e></div>
+      <div class="assistant-dock__hero"><span data-avatar="neutral" data-acc="${acc}"></span></div>
+    </div>`;
+    host.replaceWith(dock);
+    dock.querySelectorAll('[data-avatar]').forEach(mountStage);
+    measurePill(dock);
+    return dock;
+  }
+  function measurePill(dock) {
+    const bar = dock.querySelector('.assistant-dock__bar'); const pill = dock.querySelector('[data-s]');
+    const write = () => bar.style.setProperty('--pill-w', pill.offsetWidth + 'px');
+    write(); new ResizeObserver(write).observe(pill);
+  }
+  const DOCKS = {};
+  document.querySelectorAll('[data-dock]').forEach(h => { DOCKS[h.dataset.dock] = mountDock(h); });
+
+  const MOOD = { pill: 'neutral', 'pill-badge': 'neutral', working: 'thinking', question: 'curious', notice: 'speaking', summary: 'speaking', listening: 'listening' };
+
+  /* Estados de ejemplo: lo que cada producto mete en la cola. */
+  const STATES = {
+    alba: {
+      question: { shape: 'question', eyebrow: 'te pregunta', title: '¿Es así su horario?', datum: { lbl: 'Horario', val: 'Lunes a sábado, de 9:00 a 18:00', org: IC.globe + ' Lo vi en hagogi.com' }, acts: [['Así es', 'contrast', IC.check], ['Corregir', 'glass', IC.pen], ['Después', 'glass', IC.clock]], say: '¿Es así su horario? Lunes a sábado, de nueve a seis. Lo vi en su web.' },
+      questionOpts: { shape: 'question', eyebrow: 'te pregunta', title: 'Normal al empezar. ¿Lo armamos juntos?', acts: [['Ayúdame a definirlo', 'contrast'], ['Usar un ejemplo', 'glass'], ['Definirlo después', 'glass'], ['Escribir', 'glass', IC.keyboard]], say: 'Normal al empezar. ¿Lo armamos juntos?' },
+      noticeOk: { shape: 'notice', tone: 'success', title: 'Listo: Cuándo y dónde atienden', body: 'Vamos 2 de 6 temas', act: null },
+      noticeFound: { shape: 'notice', tone: 'ai', title: 'Encontré 11 datos en su web', body: 'Los revisamos uno a uno', act: ['Empezar', 'contrast'] },
+      noticeMic: { shape: 'notice', tone: 'warning', title: 'El micrófono está bloqueado', body: 'Actívalo en el candado del navegador', act: ['Escribir', 'glass'] },
+      noticeBack: { shape: 'notice', tone: 'ai', title: 'Seguimos donde quedaste', body: 'Faltan 3 temas · unos 4 minutos', act: ['Continuar', 'contrast'] },
+      working: { shape: 'working', before: 'Anoté «Todo es en línea»', now: 'Pensando la siguiente pregunta…', chips: [['Anotado', 'done', IC.done, 'before'], ['Siguiente tema', 'read', IC.book, 'now']] },
+      listening: { shape: 'listening' },
+    },
+    axel: {
+      notice: { shape: 'notice', tone: 'ai', title: 'Llegó tu informe de hoy', body: '3 propuestas por decidir', act: ['Ver', 'contrast'] },
+      proposal: { shape: 'notice', tone: 'ai', title: 'Nueva propuesta', body: 'Subir el presupuesto del fin de semana', act: ['Ver', 'contrast'] },
+      summary: { shape: 'summary', eyebrow: 'Informe de hoy · lun 5 oct', title: 'La semana cerró mejor que la anterior y la plantilla de bienvenida es la que más convierte.', hl: [['up', 'Conversaciones', '+18 %'], ['warn', 'Leads sin responder', '7 de más de 24 h'], ['neutral', 'Por decidir', '3 propuestas']], acts: [['Ver propuestas', 'contrast', IC.arrow], ['Escuchar', 'glass', IC.volume, 'say']], say: 'Informe de hoy. La semana cerró mejor que la anterior y la plantilla de bienvenida es la que más convierte. Conversaciones, más dieciocho por ciento. Siete leads sin responder hace más de un día. Tres propuestas por decidir.' },
+      working: { shape: 'working', before: 'Leí las ventas de la semana · 412 ms', now: 'Comparando con la semana anterior', chips: [['Ventas', 'read', IC.chart, 'before'], ['Campañas', 'read', IC.book, 'before'], ['Comparando', 'calc', IC.calc, 'now']] },
+      badge: '1 nuevo',
+    },
+  };
+
+  let speaking = null;
+  function say(text, btn) {
+    try {
+      if (!('speechSynthesis' in window)) { btn && (btn.title = 'Este navegador no puede leer en voz alta'); return; }
+      if (speaking === btn) { speechSynthesis.cancel(); speaking = null; btn.setAttribute('aria-pressed', 'false'); return; }
+      speechSynthesis.cancel();
+      document.querySelectorAll('[aria-pressed="true"][data-say], .isl-ib[aria-pressed="true"]').forEach(b => b.setAttribute('aria-pressed', 'false'));
+      const u = new SpeechSynthesisUtterance(text); u.lang = 'es-CO';
+      const v = speechSynthesis.getVoices().find(v => /^es/i.test(v.lang)); if (v) u.voice = v;
+      u.onend = () => { if (btn) btn.setAttribute('aria-pressed', 'false'); speaking = null; };
+      speaking = btn; btn && btn.setAttribute('aria-pressed', 'true'); speechSynthesis.speak(u);
+    } catch (e) {}
+  }
+  document.querySelectorAll('[data-say]').forEach(b => b.addEventListener('click', () => say(b.dataset.say, b)));
+
+  function btnHtml([lbl, kind, icon, role], i) {
+    return `<button type="button" class="b b-${kind}" data-role="${role || 'act'}">${icon || ''}${lbl}</button>`;
+  }
+  function renderIsland(dock, st, who) {
+    const name = who === 'axel' ? 'Axel' : 'Alba';
+    dock.dataset.shape = st.shape === 'pill-badge' ? 'pill' : st.shape;
+    dock.dataset.tone = st.tone || 'ai';
+    if (st.shape === 'working') dock.setAttribute('data-working', ''); else dock.removeAttribute('data-working');
+    const badge = dock.querySelector('[data-badge]');
+    badge.innerHTML = st.shape === 'pill-badge' ? `<span class="assistant-dock__badge">${st.badgeText || '1 pendiente'}</span>` : '';
+    const s = dock.querySelector('[data-s]');
+    s.setAttribute('role', st.shape === 'pill-badge' ? 'button' : 'presentation'); s.tabIndex = st.shape === 'pill-badge' ? 0 : -1;
+    const m = dock.querySelector('[data-m]'); const mWrap = m.parentElement;
+    if (st.shape === 'working') {
+      mWrap.classList.toggle('has-chips', !!st.chips);
+      const chips = st.chips ? `<div class="isl-chips">${st.chips.map(([l, tone, ic, state]) => `<span class="isl-chip" data-tone="${tone}" data-state="${state}"><i>${ic}</i>${l}</span>`).join('')}</div>` : '';
+      m.innerHTML = `<ol class="assistant-island__activity" aria-live="polite"><li class="assistant-island__line assistant-island__line--before">${IC.check.replace('width="14" height="14"', 'width="13" height="13"')}<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${st.before}</span></li><li class="assistant-island__line assistant-island__line--now">${IC.search}<span>${st.now}</span></li></ol>${chips}`;
+    } else { m.innerHTML = ''; mWrap.classList.remove('has-chips'); }
+    const p = dock.querySelector('[data-p]');
+    if (st.shape === 'question' || st.shape === 'summary') {
+      const head = `<div class="isl-head"><span class="isl-mark">${IC.sparkles} ${st.shape === 'summary' ? name + ' · ' : name + ' '}<small>${st.eyebrow}</small></span><span class="isl-sp"></span>${st.say && st.shape === 'question' ? `<button type="button" class="isl-ib" data-role="say" aria-pressed="false" aria-label="Escuchar la pregunta">${IC.volume}</button>` : ''}<button type="button" class="isl-ib" data-role="fold" aria-label="Plegar">${IC.chevUp}</button></div>`;
+      const datum = st.datum ? `<div class="isl-datum"><span class="lbl">${st.datum.lbl}</span><span class="val">${st.datum.val}</span><span class="org">${st.datum.org}</span></div>` : '';
+      const hl = st.hl ? `<ul class="isl-hl">${st.hl.map(([t, l, d]) => `<li data-tone="${t}">${l} <b>${d}</b></li>`).join('')}</ul>` : '';
+      p.setAttribute('role', st.shape === 'question' ? 'group' : 'region'); p.setAttribute('aria-label', st.shape === 'question' ? `${name} te pregunta` : 'Resumen');
+      p.innerHTML = `${head}<p class="isl-title">${st.title}</p>${datum}${hl}<div class="isl-acts">${st.acts.map(btnHtml).join('')}</div>`;
+    } else if (st.shape === 'notice') {
+      p.setAttribute('role', 'status'); p.removeAttribute('aria-label');
+      p.innerHTML = `<div class="isl-notice-txt"><b>${st.title}</b>${st.body ? `<span>${st.body}</span>` : ''}</div>${st.act ? btnHtml(st.act, 0) : ''}<button type="button" class="isl-ib" data-role="fold" aria-label="Plegar">${IC.x}</button>`;
+    } else { p.innerHTML = ''; }
+    const e = dock.querySelector('[data-e]');
+    e.innerHTML = st.shape === 'listening' ? `<span class="assistant-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><span class="isl-rec" role="status">Te escucho<span>0:07</span></span><span class="isl-sp"></span><button type="button" class="b b-glass b-sm">Cancelar</button><button type="button" class="b b-contrast b-sm">${IC.sq}Detener</button>` : '';
+    const stage = dock.querySelector('.assistant-stage'); setExpression(stage, MOOD[st.shape] || 'neutral');
+    stage.classList.toggle('assistant-stage--busy', st.shape === 'working' || st.shape === 'listening');
+    p.querySelectorAll('[data-role="say"]').forEach(b => b.addEventListener('click', () => say(st.say, b)));
+    p.querySelectorAll('[data-role="fold"]').forEach(b => b.addEventListener('click', () => renderIsland(dock, { shape: 'pill-badge', badgeText: st.shape === 'question' ? 'Pregunta' : '1 pendiente' }, who)));
+    s.onclick = st.shape === 'pill-badge' ? () => renderIsland(dock, st.restore || (who === 'axel' ? STATES.axel.notice : STATES.alba.question), who) : null;
+  }
+  document.addEventListener('keydown', (ev) => { if (ev.key !== 'Escape') return; Object.entries(DOCKS).forEach(([k, d]) => { if (['question', 'notice', 'summary'].includes(d.dataset.shape)) renderIsland(d, { shape: 'pill-badge', badgeText: '1 pendiente' }, k === 'axel' || k === 'global' ? 'axel' : 'alba'); }); });
+
+  /* ---------- vista 1: demo + galería ---------- */
+  const DEMO = {
+    pill: { shape: 'pill' }, 'pill-badge': { shape: 'pill-badge', badgeText: 'Pregunta' }, working: STATES.alba.working,
+    question: STATES.alba.question, 'notice-ok': STATES.alba.noticeOk, 'notice-warn': STATES.alba.noticeMic, summary: STATES.axel.summary, listening: STATES.alba.listening,
+  };
+  let tourTimer = 0;
+  const demoBtns = document.querySelectorAll('[data-demo]');
+  function demo(key) {
+    clearTimeout(tourTimer);
+    demoBtns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.demo === key)));
+    if (key === 'tour') {
+      const steps = [[STATES.alba.working, 1800], [STATES.alba.noticeOk, 2600], [{ shape: 'pill-badge', badgeText: 'Pregunta' }, 1600], [STATES.alba.question, 3200], [STATES.alba.listening, 2200], [{ shape: 'pill' }, 0]];
+      let i = 0; const next = () => { const [st, ms] = steps[i++]; renderIsland(DOCKS.demo, st, 'alba'); if (ms) tourTimer = setTimeout(next, ms); }; next(); return;
+    }
+    renderIsland(DOCKS.demo, DEMO[key], key === 'summary' ? 'axel' : 'alba');
+  }
+  demoBtns.forEach(b => b.addEventListener('click', () => demo(b.dataset.demo)));
+  demo('question');
+
+  const GALLERY = [
+    ['S', 'Reposo', 'Nombre, meta y el estado del producto. Es la forma de siempre.', { shape: 'pill' }, 'alba', 'progress', 70],
+    ['S', 'Con algo pendiente', 'Un aviso plegado deja el punto. Tocar la isla lo despliega.', { shape: 'pill-badge', badgeText: '1 pendiente' }, 'alba', '', 70],
+    ['M', 'Trabajando', 'El paso anterior, el actual y los chips de lo que está leyendo.', STATES.axel.working, 'axel', '', 168],
+    ['P', 'Pregunta', 'Solo cuando la burbuja de la pregunta no está a la vista. No se pliega sola.', STATES.alba.question, 'alba', '', 256],
+    ['A', 'Aviso', 'Algo pasó. Una línea, un botón como mucho. Se pliega en 7 s y deja el punto.', STATES.alba.noticeFound, 'alba', '', 92],
+    ['A', 'Advertencia', 'Ámbar, con un motivo y una salida. No se pliega sola si tiene botón.', STATES.alba.noticeMic, 'alba', '', 92],
+    ['R', 'Resumen', 'El informe del día de Axel, en tres líneas. Se puede escuchar.', STATES.axel.summary, 'axel', '', 252],
+    ['E', 'Escuchando', 'El dictado en curso, con detener y cancelar a mano.', STATES.alba.listening, 'alba', '', 78],
+  ];
+  const gal = document.getElementById('gallery');
+  GALLERY.forEach(([letter, title, desc, st, who, status, h], i) => {
+    const tile = document.createElement('div'); tile.className = 'tile';
+    tile.innerHTML = `<div class="cap"><b><em>${letter}</em>${title}</b><span>${desc}</span></div><div class="box" style="height:${h + 28}px"><div class="assistant-chat"><div data-dock="g${i}" data-name="${who === 'axel' ? 'Axel' : 'Alba'}" data-acc="${who === 'axel' ? 'none' : 'headset'}" data-meta="${who === 'axel' ? 'lun 5 oct' : 'Hagogi'}" data-status="${status}"></div></div></div>`;
+    gal.appendChild(tile);
+    const d = mountDock(tile.querySelector('[data-dock]')); d.style.position = 'relative'; d.style.top = '0'; DOCKS['g' + i] = d; renderIsland(d, st, who);
+  });
+
+  /* ---------- la ficha compacta ---------- */
+  function railHtml(mode) {
+    const topics = mode === 'review'
+      ? [['ok', 'Tu negocio en una frase', 'Confirmado · 2 ya los teníamos'], ['rev', 'Cuándo y dónde atienden', 'Revisando · 2 datos de tu web'], ['rev', 'Cómo le hablan a un cliente', 'Pendiente de confirmar · 1 propuesto'], ['wait', 'Lo que siempre les preguntan', 'Sin empezar'], ['wait', 'Lo que el asistente NO debe hacer', 'Sin empezar · 1 de tu web'], ['wait', 'Tu asistente', 'Sin empezar']]
+      : [['ok', 'Tu negocio en una frase', 'Confirmado'], ['ok', 'Cuándo y dónde atienden', 'Confirmado · dirección no aplica'], ['now', 'Cómo le hablan a un cliente', 'En curso · 1 de 3 confirmados'], ['wait', 'Lo que siempre les preguntan', 'Sin empezar'], ['wait', 'Lo que el asistente NO debe hacer', 'Sin empezar'], ['later', 'Tu asistente', 'Pospuesto · lo retomamos al final']];
+    const ico = { ok: [IC.ok, 't-ok'], rev: [IC.rev, 't-review'], now: [IC.now, 't-now'], wait: [IC.wait, 't-wait'], later: [IC.later, 't-wait'] };
+    const confirmed = mode === 'review' ? 2 : 5;
+    const now = mode === 'review'
+      ? `<div class="now"><b>Revisa lo que encontré</b><span class="st-line">${IC.rev.replace('width="16" height="16"', 'width="14" height="14"')} 3 de 11 revisados · 8 pendientes de confirmar</span><div class="acts"><button class="c c-soft" type="button" style="height:32px;font-size:13px">Revisar el resto después</button></div></div>`
+      : `<div class="now"><b>Cómo le hablan a un cliente</b><span class="st-line">${IC.now.replace('width="16" height="16"', 'width="14" height="14"')} En curso · 1 de 3 confirmados</span><div class="acts"><button class="c c-soft" type="button" style="height:32px;font-size:13px">${IC.clock} Posponer tema</button><small>Vuelve al final de la lista</small></div></div>`;
+    return `<h3>Tu avance</h3>
+      <div class="meter"><div class="big"><b>${confirmed} de 9</b> datos esenciales confirmados</div><div class="bar"><i style="width:${Math.round(confirmed / 9 * 100)}%"></i></div>
+        <div class="sub"><span>${IC.rev.replace('width="16" height="16"', 'width="13" height="13"')} ${mode === 'review' ? 8 : 3} por revisar</span><span>${IC.wait.replace('width="16" height="16"', 'width="13" height="13"')} 1 por definir</span><span>1 no aplica</span></div></div>
+      <p class="sec">Ahora</p>${now}
+      <p class="sec">Temas</p>
+      <ul class="grouped-list topics" style="box-shadow:var(--shadow-float)">${topics.map(([k, t, s]) => `<li class="grouped-row"><div class="t-row"><span class="t-ic ${ico[k][1]}">${ico[k][0]}</span><span class="t-txt"><b>${t}</b><span>${s}</span></span>${k === 'later' ? '<button class="t-act" type="button">Retomar</button>' : ''}</div></li>`).join('')}</ul>
+      <button class="see-all" type="button">Ver todo lo anotado ${IC.chevR}</button>`;
+  }
+  document.querySelectorAll('[data-rail]').forEach(r => { r.innerHTML = railHtml(r.dataset.rail === 'review' ? 'review' : 'ask'); });
+
+  /* ---------- vista 2: la tarjeta del dato ---------- */
+  let reviewed = 3;
+  const revActs = document.getElementById('rev-acts'), revEdit = document.getElementById('rev-edit'), revDone = document.getElementById('rev-done');
+  function resolve(kind) {
+    revActs.hidden = true; revEdit.hidden = true; revDone.hidden = false; reviewed = Math.min(11, reviewed + 1);
+    revDone.innerHTML = kind === 'later' ? `<span class="st st-later">${IC.clock} Para después</span><span style="font-size:12.5px;color:var(--color-muted-foreground)">Te lo muestro en la revisión final</span><button class="chg" type="button" data-rev="undo">Deshacer</button>`
+      : `<span class="st st-ok">${kind === 'ok' ? IC.check + ' Confirmado' : IC.pen + ' Corregido'}</span><button class="chg" type="button" data-rev="undo">Cambiar</button>`;
+    document.getElementById('rev-count').textContent = `${reviewed} de 11 revisados`;
+    document.getElementById('rev-bar').style.width = Math.round(reviewed / 11 * 100) + '%';
+    revDone.querySelector('[data-rev="undo"]').addEventListener('click', () => { revDone.hidden = true; revActs.hidden = false; reviewed--; document.getElementById('rev-count').textContent = `${reviewed} de 11 revisados`; document.getElementById('rev-bar').style.width = Math.round(reviewed / 11 * 100) + '%'; });
+  }
+  document.querySelectorAll('#rev-card [data-rev]').forEach(b => b.addEventListener('click', () => {
+    const k = b.dataset.rev;
+    if (k === 'edit') { revActs.hidden = true; revEdit.hidden = false; document.getElementById('rev-text').focus(); }
+    else if (k === 'cancel') { revEdit.hidden = true; revActs.hidden = false; }
+    else if (k === 'save') resolve('edit');
+    else resolve(k);
+  }));
+
+  /* ---------- vista 3: la isla sigue a la pregunta viva (IntersectionObserver) ---------- */
+  const askScroller = document.getElementById('ask-scroller'); const liveQ = document.getElementById('live-q');
+  new IntersectionObserver(([en]) => {
+    renderIsland(DOCKS.ask, en.isIntersecting ? { shape: 'pill' } : STATES.alba.questionOpts, 'alba');
+  }, { root: askScroller, rootMargin: '-64px 0px 0px 0px', threshold: 0.35 }).observe(liveQ);
+
+  /* ---------- vista 4: móvil ---------- */
+  renderIsland(DOCKS.m1, STATES.alba.questionOpts, 'alba');
+  renderIsland(DOCKS.m2, STATES.alba.listening, 'alba');
+  renderIsland(DOCKS.m3, STATES.alba.noticeMic, 'alba');
+
+  /* ---------- vista 5: Axel ---------- */
+  const axelBtns = document.querySelectorAll('[data-axel]');
+  function axel(k) {
+    axelBtns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.axel === k)));
+    const st = k === 'pill-badge' ? { shape: 'pill-badge', badgeText: '1 nuevo', restore: STATES.axel.notice } : STATES.axel[k];
+    renderIsland(DOCKS.axel, st, 'axel');
+    const v = DOCKS.axel.querySelector('[data-role="act"]'); if (v && k === 'notice') v.addEventListener('click', () => axel('summary'));
+  }
+  axelBtns.forEach(b => b.addEventListener('click', () => axel(b.dataset.axel)));
+  axel('notice');
+
+  /* ---------- vista 7: isla global ---------- */
+  const globBtns = document.querySelectorAll('[data-glob]');
+  function glob(k) {
+    globBtns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.glob === k)));
+    renderIsland(DOCKS.global, k === 'pill' ? { shape: 'pill-badge', badgeText: '1 nuevo', restore: STATES.axel.notice } : STATES.axel[k], 'axel');
+    const v = DOCKS.global.querySelector('[data-role="act"]'); if (v && k === 'notice') v.addEventListener('click', () => glob('summary'));
+  }
+  globBtns.forEach(b => b.addEventListener('click', () => glob(b.dataset.glob)));
+  glob('notice');
+
+  /* ---------- vistas ---------- */
+  const NOTES = {
+    isla: '<b>La isla gana cuatro formas y nunca enseña dos a la vez.</b> Una cola decide cuál se ve: pregunta, luego aviso, luego resumen. Todo cambia por <i>opacity</i> y <i>transform</i>, con el mismo avatar que viaja de forma en forma. Prueba «Simular un recorrido», y Esc para plegar.',
+    revisar: '<b>Paso 1: revisar lo encontrado, dentro del chat y sin gastar turnos.</b> Cada dato de la web o de la cuenta llega en su tarjeta, con su origen y tres botones con texto: <i>Así es</i>, <i>Corregir</i> (aquí mismo) y <i>Después</i>. La tarjeta responde al pulsar y la isla lleva la cuenta. Recomendaciones 1, 2, 3 y 9 del informe.',
+    preguntar: '<b>Una pregunta a la vez, con opciones cerradas y salida libre.</b> «Está bien» a una pregunta con dos lecturas produce una aclaración, no un dato. «No lo sé» ofrece ayuda, un ejemplo o dejarlo «Por definir». <b>Sube en el hilo:</b> la pregunta viva pasa a la isla; baja y vuelve a su burbuja. Recomendaciones 4, 5, 6 y 9–13.',
+    movil: '<b>En el móvil la isla toma el ancho</b> y cede el sitio de las acciones mientras habla. Tres casos: la ficha abierta, el dictado y el micrófono bloqueado. Recomendación 16.',
+    axel: '<b>Axel deja de tirar sus avisos.</b> Hoy el socket ya trae el titular del informe y el nombre de cada propuesta y nadie los enseña. Con la isla: llega el aviso, «Ver» abre el resumen en tres líneas, y se puede escuchar.',
+    final: '<b>La revisión final antes de enviar.</b> Lo pendiente va arriba, cada dato dice su origen y su estado, y el botón nombra su efecto: <i>Enviar a revisión</i>. Nada pendiente se aplica. Recomendación 15.',
+    global: '<b>Para decidir, no entra en esta tanda.</b> La misma isla de Axel en la cabecera de toda la plataforma: avisa del informe y de las propuestas en cualquier pantalla, sin abrir /cmo. Toca el shell de todas las rutas, por eso va en un plan aparte.',
+  };
+  const tabs = document.querySelectorAll('.tab'); const note = document.getElementById('note');
+  const show = (key) => {
+    tabs.forEach(t => t.setAttribute('aria-pressed', String(t.dataset.view === key)));
+    document.querySelectorAll('.view').forEach(v => { v.hidden = v.id !== 'v-' + key; });
+    note.innerHTML = NOTES[key];
+    if (key === 'preguntar') askScroller.scrollTop = 0;
+    try { localStorage.setItem('isla.view', key); } catch (e) {}
+  };
+  tabs.forEach(t => t.addEventListener('click', () => show(t.dataset.view)));
+  let v0 = null; try { v0 = localStorage.getItem('isla.view'); } catch (e) {}
+  show(v0 && NOTES[v0] ? v0 : 'isla');
+})();
+</script>
