@@ -18769,6 +18769,7 @@ export interface components {
             }[];
             within_limit: boolean;
             max: number;
+            agent_tasks_enabled: boolean;
         };
         CreateBulkDto: {
             /** @enum {string} */
