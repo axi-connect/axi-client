@@ -2092,10 +2092,14 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   box-shadow: 0 18px 40px -20px rgb(0 0 0 / 0.55);
 }
 
-/* S — la píldora. */
+/* S — la píldora. Ancho de su contenido (`max-content`) con tope: con
+   `left: 50%`, el ancho disponible para encogerse era la MITAD de la barra y el
+   estado se partía en dos líneas sin necesidad (recorrido real, island-live). */
 .assistant-island--s {
   top: 3px;
   left: 50%;
+  width: max-content;
+  max-width: calc(100cqw - 8px);
   height: var(--pill-h);
   display: flex;
   align-items: center;
@@ -2579,6 +2583,12 @@ button.assistant-island--s:focus-visible {
 }
 .assistant-dock[data-shape="listening"] .assistant-dock__hero {
   transform: translate(calc(50cqw - var(--e-w) / 2 + 10px), 7px) scale(var(--a-scale));
+}
+
+/* El panel de la isla FUERA del dock (la pregunta viva dentro de la hoja de la
+   ficha en el móvil): sin avatar al lado, así que sin su hueco. */
+.assistant-island-inline .assistant-island__panel {
+  padding: 14px 16px;
 }
 
 /* La isla global (cabecera del panel, F4b): no es sticky en ningún scroller,

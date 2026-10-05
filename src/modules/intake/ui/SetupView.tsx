@@ -14,12 +14,14 @@ import {
   AssistantComposer,
   AssistantDock,
   AssistantIslandActivity,
+  AssistantIslandPanel,
   AssistantMark,
   useInView,
   type AssistantComposerVoice,
   type AssistantIslandListeningState,
   type RecorderProblem,
 } from "@/shared/components/features/assistant";
+import { islandClassName } from "@/shared/components/features/island";
 import { Sheet, SheetContent, SheetTitle } from "@/shared/components/ui/sheet";
 import { AlbaHeroAvatar } from "./components/AlbaHeroAvatar";
 import { AlbaIslandStatus } from "./components/AlbaIslandStatus";
@@ -484,6 +486,21 @@ export function SetupView({ token }: { token: string }) {
           >
             <SheetTitle className="sr-only">Ficha de {session.company_name}</SheetTitle>
             <span className="mx-auto h-[5px] w-9 flex-none rounded-full bg-foreground/[0.18]" aria-hidden="true" />
+            {/* Con la hoja abierta, el velo tapa la isla: la pregunta viva se
+                muestra aquí, arriba de la ficha, como la ÚNICA copia visible
+                (D1; lo destapó el recorrido real a 400 px). */}
+            {island.current?.kind === "question" ? (
+              <div
+                className={`${islandClassName({ material: "ink", glow: "ai" })} assistant-island-inline mx-4 mt-11 flex-none rounded-[24px]`}
+              >
+                <AssistantIslandPanel
+                  item={island.current}
+                  name={session.assistant_name}
+                  onFold={island.fold}
+                  onListen={listened}
+                />
+              </div>
+            ) : null}
             {summary("min-h-0 flex-1")}
           </SheetContent>
         </Sheet>
