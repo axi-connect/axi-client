@@ -22,7 +22,7 @@ jest.mock("@/modules/intake/infrastructure/services/intake-service.adapter", () 
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { useIntakeStore, SESSION_CLOSED_NOTICE } = require("../intake.store") as typeof import("../intake.store");
+const { useIntakeStore, SESSION_CLOSED_NOTICE, turnErrorCopy } = require("../intake.store") as typeof import("../intake.store");
 
 const closed = () =>
   new HttpError({
@@ -237,5 +237,39 @@ describe("intake.store — revisar lo encontrado sin gastar turnos (island-live 
       useIntakeStore.getState().listened();
     }).not.toThrow();
     expect(listened).toHaveBeenCalledWith("t".repeat(32));
+  });
+});
+
+describe("intake.store — lo que se lee cuando un turno no sale (hotfix de límites)", () => {
+  const http = (status: number, code: string, text = "detalle técnico") =>
+    new HttpError({ status, code, message: text });
+
+  it("los códigos de la entrevista conservan su texto, escrito para la persona", () => {
+    expect(turnErrorCopy(http(409, "intake/turn_in_progress", "Todavía estoy respondiendo."))).toBe(
+      "Todavía estoy respondiendo.",
+    );
+  });
+
+  it("una validación, un 502 o un 500 no pintan jerga en la burbuja", () => {
+    const validation = turnErrorCopy(http(400, "validation/failed", "message: Too big"));
+    expect(validation).not.toContain("Too big");
+    expect(validation).toContain("1.500 caracteres");
+    expect(turnErrorCopy(http(502, "ai/provider_error", "Error del proveedor IA"))).not.toContain(
+      "proveedor",
+    );
+    expect(turnErrorCopy(http(500, "internal/unexpected", "Error interno"))).toContain("sigue guardado");
+  });
+
+  it("el freno de peticiones y el tiempo agotado dicen qué hacer", () => {
+    expect(turnErrorCopy(http(429, "http/too_many_requests"))).toContain("Espera unos segundos");
+    expect(turnErrorCopy(new DOMException("timed out", "TimeoutError"))).toContain("Recarga la página");
+    expect(turnErrorCopy(new TypeError("Failed to fetch"))).toContain("Revisa tu conexión");
+  });
+
+  it("enviar va con presupuesto de espera y el fallo deja el texto propio", async () => {
+    message.mockRejectedValueOnce(http(502, "ai/provider_error", "Error del proveedor IA"));
+    await useIntakeStore.getState().send("Abrimos a las 9");
+    expect(message.mock.calls[0]?.[3]).toBeInstanceOf(AbortSignal);
+    expect(useIntakeStore.getState().turnError).toContain("Vuelve a enviarlo");
   });
 });

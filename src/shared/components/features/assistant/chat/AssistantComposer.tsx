@@ -56,6 +56,16 @@ interface AssistantComposerProps {
   after?: ReactNode;
   /** El pie: la promesa de confianza. */
   footer?: ReactNode;
+  /**
+   * Cuánto texto cabe en un mensaje (el tope del servidor de ese asistente).
+   * El compositor no deja pasarse: corta lo pegado o dictado que sobre y lo
+   * dice, y enseña la cuenta solo cuando queda poco. Antes el texto salía
+   * entero y el servidor devolvía un error de validación que nadie había
+   * anunciado (hotfix de límites, 2026-10-05).
+   */
+  maxChars?: number;
+  /** Menos de esto no se envía (el botón se apaga): el mínimo del servidor. */
+  minChars?: number;
   /** Atenúa la cápsula (asistente bloqueado). */
   dimmed?: boolean;
   /**
@@ -105,6 +115,8 @@ export function AssistantComposer({
   after,
   footer,
   dimmed = false,
+  maxChars,
+  minChars = 1,
   onListeningChange,
   onVoiceProblem,
   className,
@@ -178,9 +190,20 @@ export function AssistantComposer({
     el.style.height = `${String(Math.min(el.scrollHeight, COMPOSER_MAX_PX))}px`;
   };
 
+  const [clipped, setClipped] = useState(false);
+  const limit = maxChars ?? Number.POSITIVE_INFINITY;
+  /** Deja el texto en el tope y recuerda si hubo que cortar, para decirlo. */
+  const fit = (text: string): string => {
+    if (text.length <= limit) return text;
+    setClipped(true);
+    return text.slice(0, limit);
+  };
+
   const submit = () => {
     const body = draft.trim();
-    if (body === "" || locked) return;
+    // Con `maxLength` no debería pasar; si pasa (un valor puesto por código), no se envía algo que el servidor rechazará.
+    if (body.length < minChars || locked || body.length > limit) return;
+    setClipped(false);
     onSend(body, { voice: fromVoice });
     setDraft("");
     setFromVoice(false);
@@ -196,7 +219,9 @@ export function AssistantComposer({
     try {
       const text = (await voice.transcribe(audio)).trim();
       if (text !== "") {
-        setDraft((current) => (current.trim() === "" ? text : `${current.trim()} ${text}`));
+        // El dictado entra por otro camino que el teclado: también tiene que caber.
+        // Mientras graba el campo no se ve, así que el borrador no cambió entretanto.
+        setDraft(fit(draft.trim() === "" ? text : `${draft.trim()} ${text}`));
         setFromVoice(true);
       }
       requestAnimationFrame(() => {
@@ -219,7 +244,7 @@ export function AssistantComposer({
     cancelRef.current = recorder.cancel;
   });
 
-  const canSend = draft.trim() !== "" && !locked && !transcribing;
+  const canSend = draft.trim().length >= minChars && !locked && !transcribing;
   // Sin soporte el micrófono también se pinta: al pulsarlo dice por qué no dicta.
   const showMic = voice !== undefined && !locked;
   const micUnavailable = problem !== null;
@@ -266,10 +291,20 @@ export function AssistantComposer({
           <textarea
             ref={ref}
             value={draft}
+            maxLength={maxChars}
             onChange={(event) => {
               setDraft(event.target.value);
               if (event.target.value === "") setFromVoice(false);
+              if (event.target.value.length < limit) setClipped(false);
               autosize(event.target);
+            }}
+            onPaste={(event) => {
+              // `maxLength` corta lo pegado EN SILENCIO: aquí se sabe si sobró, para decirlo.
+              if (maxChars === undefined) return;
+              const target = event.currentTarget;
+              const pasted = event.clipboardData.getData("text");
+              const kept = target.value.length - (target.selectionEnd - target.selectionStart);
+              if (kept + pasted.length > maxChars) setClipped(true);
             }}
             onKeyDown={(event) => {
               if (event.key === "Enter" && !event.shiftKey) {
@@ -349,6 +384,8 @@ export function AssistantComposer({
 
       {after}
 
+      {maxChars === undefined ? null : <LengthNote length={draft.length} max={maxChars} clipped={clipped} />}
+
       {fromVoice && draft.trim() !== "" ? (
         <p className="mt-2 flex items-center justify-center gap-1.5 text-[11.5px] text-muted-foreground">
           <Mic className="size-3" aria-hidden="true" />
@@ -375,6 +412,38 @@ export function AssistantComposer({
 
       {footer}
     </div>
+  );
+}
+
+/** A partir de aquí se enseña la cuenta: antes es ruido, como el «0/1500» de un formulario. */
+const NEAR_LIMIT = 0.8;
+
+/**
+ * La cuenta de caracteres, solo cuando importa: cerca del tope, o si algo se
+ * cortó. Es una región viva siempre montada (vacía en reposo) para que llegar
+ * al tope se anuncie.
+ */
+function LengthNote({ length, max, clipped }: { length: number; max: number; clipped: boolean }) {
+  const near = length >= max * NEAR_LIMIT;
+  const format = (value: number) => value.toLocaleString("es-CO");
+  const text = clipped
+    ? `Caben ${format(max)} caracteres por mensaje: lo que sobraba quedó fuera. Puedes enviarlo en dos mensajes.`
+    : length >= max
+      ? `Llegaste al máximo de ${format(max)} caracteres. Si te falta, envíalo en dos mensajes.`
+      : near
+        ? `${format(length)} de ${format(max)} caracteres`
+        : "";
+  return (
+    <p
+      className={cn(
+        "text-center text-[11.5px] tabular-nums [&:not(:empty)]:mt-2",
+        clipped || length >= max ? "text-foreground" : "text-muted-foreground",
+      )}
+      role="status"
+      aria-live="polite"
+    >
+      {text}
+    </p>
   );
 }
 

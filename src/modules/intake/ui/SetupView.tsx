@@ -5,7 +5,12 @@ import { ClipboardList } from "lucide-react";
 import { useShallow } from "zustand/react/shallow";
 
 import { useIsMobile } from "@/core/hooks/use-mobile";
-import { reviewQueue, type IntakeField, type IntakeSkipReason } from "@/modules/intake/domain/intake";
+import {
+  INTAKE_MESSAGE_MAX_CHARS,
+  reviewQueue,
+  type IntakeField,
+  type IntakeSkipReason,
+} from "@/modules/intake/domain/intake";
 import { useAlbaIsland } from "@/modules/intake/infrastructure/hooks/use-alba-island";
 import { intakeService } from "@/modules/intake/infrastructure/services/intake-service.adapter";
 import { useIntakeStore } from "@/modules/intake/infrastructure/stores/intake.store";
@@ -436,6 +441,7 @@ export function SetupView({ token }: { token: string }) {
                   busy={thinking}
                   placeholder={PLACEHOLDER}
                   ariaLabel="Tu respuesta"
+                  maxChars={INTAKE_MESSAGE_MAX_CHARS}
                   voice={session.voice_enabled ? voice : undefined}
                   focusToken={focusToken}
                   onTypingChange={setClientTyping}

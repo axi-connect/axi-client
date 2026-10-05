@@ -12,6 +12,20 @@
  * tener sentido.
  */
 
+/**
+ * Cuánto cabe en un mensaje a Alba. El MISMO tope que el servidor
+ * (`sendIntakeMessageSchema.message`, `max(1_500)`): el compositor no deja
+ * pasarse, así que el 400 de validación deja de ser algo que la persona ve.
+ */
+export const INTAKE_MESSAGE_MAX_CHARS = 1500;
+
+/**
+ * Lo que la pantalla espera un turno. El servidor lo corta a los 45 s
+ * (`INTAKE_TURN_TIMEOUT_MS`); si a los 60 no ha respondido, el problema está
+ * en el camino y seguir esperando deja a la persona mirando «escribiendo…».
+ */
+export const INTAKE_TURN_BUDGET_MS = 60_000;
+
 export type IntakeFieldKind =
   | "text"
   | "long_text"

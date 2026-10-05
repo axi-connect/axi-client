@@ -3,8 +3,10 @@
 import { create } from "zustand";
 
 import { isHttpError } from "@/core/api/problem";
-import type {
-  IntakeField,
+import {
+  INTAKE_MESSAGE_MAX_CHARS,
+  INTAKE_TURN_BUDGET_MS,
+  type IntakeField,
   IntakeMessage,
   IntakeSessionView,
   IntakeSkipReason,
@@ -168,6 +170,31 @@ const BLOCKING_CODES = new Set(["intake/link_invalid", "intake/link_expired"]);
 const SESSION_CLOSED = "intake/session_closed";
 export const SESSION_CLOSED_NOTICE = "Esta conversación ya terminó; lo que anotamos queda como está.";
 
+/**
+ * Lo que la persona lee cuando un turno no sale.
+ *
+ * Los códigos `intake/*` traen un texto escrito para ella desde el servidor
+ * (tope de mensajes, otro mensaje en camino…) y se respetan. Lo demás no: el
+ * detalle de una validación de Zod, el de un 502 del proveedor o el título de
+ * un 500 son jerga, y antes se pintaban tal cual en la burbuja del chat.
+ */
+export function turnErrorCopy(error: unknown): string {
+  if (error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError")) {
+    return "Tardé demasiado en responder. Recarga la página: si alcancé a contestarte, ahí estará.";
+  }
+  if (!isHttpError(error)) {
+    return "No pudimos enviar tu mensaje. Revisa tu conexión y vuelve a intentarlo.";
+  }
+  if (error.code.startsWith("intake/") && error.message !== "") return error.message;
+  if (error.code === "validation/failed") {
+    return `No pude leer ese mensaje. Si es largo, envíalo en partes: caben ${INTAKE_MESSAGE_MAX_CHARS.toLocaleString("es-CO")} caracteres por mensaje.`;
+  }
+  if (error.status === 429) {
+    return "Vas más rápido que yo. Espera unos segundos y vuelve a enviarlo.";
+  }
+  return "Me enredé respondiendo. Vuelve a enviarlo en un momento; lo que ya anotamos sigue guardado.";
+}
+
 function errorCode(error: unknown): string {
   return isHttpError(error) ? error.code : "";
 }
@@ -239,6 +266,12 @@ export const useIntakeStore = create<IntakeState>((set, get) => ({
 
     const body = message.trim();
     if (body === "") return;
+    // El compositor ya no deja pasarse; esto cubre cualquier otro camino (una
+    // opción tocada, un reintento) sin gastar un viaje que el servidor rechazaría.
+    if (body.length > INTAKE_MESSAGE_MAX_CHARS) {
+      set({ turnError: `Caben ${INTAKE_MESSAGE_MAX_CHARS.toLocaleString("es-CO")} caracteres por mensaje. Envíalo en dos partes.` });
+      return;
+    }
 
     // Escribir aparta las tarjetas de revisión: la persona eligió conversar, y
     // la isla tiene que seguir lo que está haciendo, no una tarjeta que dejó
@@ -264,7 +297,12 @@ export const useIntakeStore = create<IntakeState>((set, get) => ({
     }));
 
     try {
-      const result = await intakeService.message(token, body, voice);
+      const result = await intakeService.message(
+        token,
+        body,
+        voice,
+        AbortSignal.timeout(INTAKE_TURN_BUDGET_MS),
+      );
 
       set((state) => ({
         thinking: false,
@@ -323,9 +361,7 @@ export const useIntakeStore = create<IntakeState>((set, get) => ({
         messages: state.messages.map((entry) =>
           entry.id === optimistic.id ? { ...entry, pending: false, failed: true } : entry,
         ),
-        turnError: isHttpError(error)
-          ? error.message
-          : "No pudimos enviar tu mensaje. Revisa tu conexión y vuelve a intentarlo.",
+        turnError: turnErrorCopy(error),
       }));
     }
   },

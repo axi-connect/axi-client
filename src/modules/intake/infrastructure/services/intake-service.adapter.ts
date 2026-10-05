@@ -33,11 +33,16 @@ export const intakeService = {
     });
   },
 
-  message(token: string, message: string, voice: boolean): Promise<IntakeTurnResult> {
+  message(
+    token: string,
+    message: string,
+    voice: boolean,
+    signal?: AbortSignal,
+  ): Promise<IntakeTurnResult> {
     return http.post<IntakeTurnResult>(
       `${base(token)}/messages`,
       { message, voice },
-      { authenticate: false },
+      { authenticate: false, ...(signal === undefined ? {} : { signal }) },
     );
   },
 

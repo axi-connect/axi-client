@@ -196,3 +196,48 @@ describe("la isla refleja el dictado", () => {
     expect(screen.queryByText(/bloqueado/)).not.toBeInTheDocument();
   });
 });
+
+describe("el tope de caracteres (hotfix de límites)", () => {
+  it("no deja pasarse: el campo lleva maxLength y la cuenta sale solo cerca del tope", () => {
+    const { textarea } = view({ maxChars: 100 });
+    expect(textarea).toHaveAttribute("maxLength", "100");
+    fireEvent.change(textarea, { target: { value: "a".repeat(50) } });
+    expect(screen.queryByText(/de 100 caracteres/)).not.toBeInTheDocument();
+    fireEvent.change(textarea, { target: { value: "a".repeat(85) } });
+    expect(screen.getByText("85 de 100 caracteres")).toBeInTheDocument();
+    fireEvent.change(textarea, { target: { value: "a".repeat(100) } });
+    expect(screen.getByText(/Llegaste al máximo de 100 caracteres/)).toBeInTheDocument();
+  });
+
+  it("un pegado que se pasa avisa de que lo que sobraba quedó fuera", () => {
+    const { textarea } = view({ maxChars: 10 });
+    fireEvent.paste(textarea, { clipboardData: { getData: () => "texto demasiado largo" } });
+    fireEvent.change(textarea, { target: { value: "texto dema" } });
+    expect(screen.getByText(/lo que sobraba quedó fuera/)).toBeInTheDocument();
+  });
+
+  it("el dictado también cabe: se corta al tope y se dice", async () => {
+    recorder.state = "recording";
+    const transcribe = jest.fn(async () => "x".repeat(30));
+    const { rerender } = render(
+      <AssistantComposer onSend={jest.fn()} placeholder="Escribe…" ariaLabel="Mensaje" voice={{ transcribe }} maxChars={20} />,
+    );
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Detener y transcribir" }));
+      recorder.state = "idle";
+      rerender(
+        <AssistantComposer onSend={jest.fn()} placeholder="Escribe…" ariaLabel="Mensaje" voice={{ transcribe }} maxChars={20} />,
+      );
+    });
+    expect((screen.getByLabelText("Mensaje") as HTMLTextAreaElement).value).toHaveLength(20);
+    expect(screen.getByText(/lo que sobraba quedó fuera/)).toBeInTheDocument();
+  });
+
+  it("por debajo del mínimo no se envía", () => {
+    const { onSend, textarea } = view({ minChars: 2 });
+    fireEvent.change(textarea, { target: { value: "k" } });
+    fireEvent.keyDown(textarea, { key: "Enter" });
+    expect(onSend).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Enviar" })).toBeDisabled();
+  });
+});

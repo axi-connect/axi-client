@@ -3,7 +3,12 @@
 import { Fragment, memo, useCallback, useEffect, useMemo, useRef, useState, type Ref } from "react";
 import { BarChart3, BookOpen, Calculator, Check, Flame, Lock, Megaphone, Send } from "lucide-react";
 
-import type { BriefingDTO, ProposalDTO } from "@/modules/cmo/domain/cmo";
+import {
+  CMO_MESSAGE_MAX_CHARS,
+  CMO_MESSAGE_MIN_CHARS,
+  type BriefingDTO,
+  type ProposalDTO,
+} from "@/modules/cmo/domain/cmo";
 import { useAxelIsland } from "@/modules/cmo/infrastructure/hooks/use-axel-island";
 import { getLatestBriefing } from "@/modules/cmo/infrastructure/services/cmo-service.adapter";
 import {
@@ -231,6 +236,8 @@ export function AxelChat({
       placeholder={PLACEHOLDER_IDLE}
       placeholderPhrases={PLACEHOLDER_PHRASES}
       ariaLabel="Mensaje para Axel"
+      maxChars={CMO_MESSAGE_MAX_CHARS}
+      minChars={CMO_MESSAGE_MIN_CHARS}
       textareaRef={textareaRef}
       onTypingChange={setOwnerTyping}
       after={isEmpty ? <StarterPills starters={STARTERS} onPick={submit} disabled={thread.thinking} className="mt-3" /> : null}

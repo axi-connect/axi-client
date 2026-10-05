@@ -21,6 +21,7 @@ import type {
   CmoSettingsDTO,
   ProposalDTO,
 } from "@/modules/cmo/domain/cmo";
+import { CMO_MESSAGE_MAX_CHARS, CMO_MESSAGE_MIN_CHARS } from "@/modules/cmo/domain/cmo";
 import {
   approveProposal,
   archiveThread as archiveThreadApi,
@@ -152,6 +153,12 @@ interface CmoState {
   blocker: CmoBlocker;
   /** El turno en curso, contado en vivo. `null` cuando no hay ninguno. */
   live: LiveTurn | null;
+  /**
+   * El turno que venció en el navegador pero puede seguir en el servidor. Su
+   * cierre por WS todavía se acepta: es lo que cumple «si terminé, la respuesta
+   * aparece sola». `null` cuando no hay ninguno pendiente.
+   */
+  late: string | null;
   /** Propuestas nuevas llegadas por WS que el usuario aún no ha visto. */
   unseen: number;
   /** Novedades por socket que la isla aún no contó. */
@@ -297,6 +304,7 @@ export const useCmoStore = create<CmoState>((set, get) => {
   thread: { id: null, messages: [], thinking: false },
   blocker: null,
   live: null,
+  late: null,
   unseen: 0,
   news: [],
   settled: {},
@@ -381,6 +389,7 @@ export const useCmoStore = create<CmoState>((set, get) => {
     set({
       thread: { id: threadId, messages: [], thinking: false },
       live: null,
+      late: null,
       settled: {},
       blocker: null,
     });
@@ -457,7 +466,10 @@ export const useCmoStore = create<CmoState>((set, get) => {
    */
   ask: async (message: string) => {
     const trimmed = message.trim();
-    if (trimmed === "" || get().thread.thinking) return;
+    // Los topes del servidor: fuera de ellos el POST sería un 400 que nadie anunció.
+    if (trimmed.length < CMO_MESSAGE_MIN_CHARS || trimmed.length > CMO_MESSAGE_MAX_CHARS || get().thread.thinking) {
+      return;
+    }
 
     const optimistic: UiMessage = {
       id: nextLocalId(),
@@ -482,6 +494,7 @@ export const useCmoStore = create<CmoState>((set, get) => {
       },
       blocker: null,
       live: { turn_id: turnId, iteration: 0, text: "", steps: [], seq: 0 },
+      late: null,
     }));
 
     /* Presupuesto explícito. El servidor corta el turno a los 90 s; si a los 100
@@ -574,6 +587,8 @@ export const useCmoStore = create<CmoState>((set, get) => {
       set((state) => ({
         blocker,
         live: null,
+        // Venció la espera, no el turno: su cierre por WS todavía puede llegar.
+        late: isTimeout(error) ? (state.live?.turn_id ?? null) : null,
         thread: {
           ...state.thread,
           thinking: false,
@@ -617,6 +632,7 @@ export const useCmoStore = create<CmoState>((set, get) => {
     set({
       thread: { id: null, messages: [], thinking: false },
       live: null,
+      late: null,
       blocker: null,
       settled: {},
     });
@@ -785,6 +801,33 @@ export const useCmoStore = create<CmoState>((set, get) => {
   },
 
   onTurnCompleted: (event) => {
+    if (acceptLate(get(), event)) {
+      // El POST se rindió antes que el servidor: el turno terminó y su mensaje
+      // ya está guardado. Se pinta y el aviso de espera de la burbuja se quita,
+      // en vez de invitar a reintentar (y a pagar) un análisis que ya existe.
+      set((state) => ({
+        late: null,
+        thread: {
+          ...state.thread,
+          messages: [
+            ...state.thread.messages.map((item) =>
+              item.failed === TIMEOUT_MESSAGE ? withoutFailure(item) : item,
+            ),
+            {
+              id: event.message_id,
+              role: "axel" as const,
+              body: event.body,
+              created_at: new Date().toISOString(),
+              tool_calls: null,
+              proposal_id: event.proposal_id,
+              question: event.question,
+            },
+          ],
+        },
+      }));
+      if (event.proposal_id !== null) void get().reloadProposals();
+      return;
+    }
     const live = accept(get(), event);
     if (live === null) return;
     const state = get();
@@ -818,6 +861,10 @@ export const useCmoStore = create<CmoState>((set, get) => {
   },
 
   onTurnFailed: (event) => {
+    if (acceptLate(get(), event)) {
+      set({ late: null });
+      return;
+    }
     const live = accept(get(), event);
     if (live === null) return;
     set({
@@ -847,6 +894,17 @@ function accept(state: CmoState, event: { turn_id: string; seq: number }): LiveT
   if (live === null || live.turn_id !== event.turn_id) return null;
   if (event.seq <= live.seq) return null;
   return live;
+}
+
+/** El evento es del turno que venció en esta pestaña y no hay otro en vivo. */
+function acceptLate(state: CmoState, event: { turn_id: string }): boolean {
+  return state.live === null && state.late !== null && state.late === event.turn_id;
+}
+
+function withoutFailure(message: UiMessage): UiMessage {
+  const { failed, ...rest } = message;
+  void failed;
+  return rest;
 }
 
 function toUiMessage(message: CmoMessageDTO): UiMessage {
