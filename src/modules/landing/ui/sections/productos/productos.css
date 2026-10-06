@@ -362,14 +362,33 @@
 .pj-recover { border-top: 1px solid var(--pj-line); padding-bottom: 48px; }
 /* Pieza por pieza: el escenario fijado ya deja su aire bajo el nav (pieces.css). */
 .pj-scene.pj-pieces { padding-top: 24px; padding-bottom: 24px; }
-.pj-rec-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 56px auto 0; list-style: none; }
-.pj-rec-card { display: flex; flex-direction: column; gap: 10px; padding: 24px; }
-.pj-rec-card .pj-card-title { margin-bottom: 12px; }
-.pj-rec-msg { margin: auto 0 0; padding: 14px; border-radius: 18px; border: 1px solid var(--pj-line); background: color-mix(in srgb, var(--foreground) 2%, var(--background)); }
-.pj-rec-when { display: flex; align-items: center; gap: 7px; margin-bottom: 10px; font-size: 11.5px; color: var(--pj-dim); }
-/* Lo escribe el agente: el punto va en violeta (DESIGN §7.1, «Axi propone en voz baja»). */
-.pj-rec-when::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--axi-violet); }
-.pj-rec-msg blockquote { margin: 0; padding: 10px 13px; border-radius: 16px 16px 16px 5px; background: var(--foreground); color: var(--background); font-size: 13.5px; line-height: 1.45; }
+.pj-sample { display: inline-flex; align-items: center; height: 26px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--pj-line); font-size: 11.5px; color: var(--pj-dim); }
+.pj-rec-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 56px auto 0; list-style: none; }
+/* Fichas premium: superficie con canto de luz arriba y sombra larga, sin color de adorno. */
+.pj-rec-card {
+  position: relative; display: flex; flex-direction: column; gap: 14px; padding: 26px 24px 24px; border-radius: 28px;
+  border: 1px solid var(--pj-line);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--foreground) 5%, var(--background)), var(--pj-surface) 40%);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--foreground) 8%, transparent), 0 40px 80px -50px rgb(0 0 0 / 0.6);
+}
+.pj-rec-top { display: flex; align-items: center; gap: 12px; }
+.pj-rec-glyph { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 13px; flex: none; background: var(--foreground); color: var(--background); }
+.pj-rec-kicker { font-size: 13px; color: var(--pj-dim); }
+.pj-rec-card .pj-card-title { font-size: 22px; }
+/* Lo que quedó quieto: el dato del pedido o del trato, con su estado. */
+.pj-rec-ctx { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border-radius: 16px; border: 1px solid var(--pj-line); background: color-mix(in srgb, var(--foreground) 2%, var(--background)); }
+.pj-rec-ctx-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.pj-rec-ctx small { font-size: 11.5px; color: var(--pj-dim); }
+.pj-rec-ctx b { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+.pj-rec-state { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 999px; font-size: 11.5px; color: var(--pj-muted); background: var(--pj-surface-2); }
+.pj-rec-state::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--axi-warning); }
+/* Cuándo escribe Axi: el punto violeta firma lo que hace el agente. */
+.pj-rec-when { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--pj-dim); }
+.pj-rec-when i { width: 6px; height: 6px; border-radius: 50%; background: var(--axi-violet); flex: none; }
+.pj-rec-when::after { content: ""; flex: 1; border-top: 1px dashed color-mix(in srgb, var(--foreground) 16%, transparent); }
+.pj-rec-msg { margin: auto 0 0; display: flex; flex-direction: column; align-items: flex-end; }
+.pj-rec-msg blockquote { margin: 0; align-self: stretch; padding: 12px 14px; border-radius: 18px 18px 6px 18px; background: var(--foreground); color: var(--background); font-size: 13.5px; line-height: 1.5; }
+.pj-rec-msg figcaption { margin-top: 4px; font-size: 11px; color: var(--pj-dim); letter-spacing: -0.05em; }
 .pj-rec-closing { margin-top: 64px; font-size: clamp(28px, 3vw, 40px); }
 @media (max-width: 1023px) { .pj-rec-grid { grid-template-columns: minmax(0, 1fr); max-width: 560px; } }
 
@@ -378,6 +397,21 @@
 .pj-price-box { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 40px; border-radius: 32px; border: 1px solid color-mix(in srgb, var(--foreground) 14%, transparent); background: var(--pj-surface); overflow: hidden; }
 .pj-price-box > * { padding: 38px 34px; margin: 0; }
 .pj-price-box > * + * { border-left: 1px solid var(--pj-line); }
+/* La comparativa ocupa la primera fila de la caja: el porcentaje grande y dos barras a escala real. */
+.pj-price-box > .pj-price-compare { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 32px; align-items: center; padding: 34px; border-bottom: 1px solid var(--pj-line); }
+.pj-price-box > .pj-price-compare + * { border-left: 0; }
+.pj-price-save { margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.pj-price-save b { font-size: clamp(44px, 4.6vw, 64px); line-height: 1; }
+.pj-price-save span { font-size: 15px; color: var(--pj-muted); }
+.pj-price-bars { display: flex; flex-direction: column; gap: 14px; }
+.pj-price-bar { display: grid; grid-template-columns: 56px minmax(0, 1fr); align-items: center; gap: 12px; }
+.pj-price-bar small { font-size: 13px; color: var(--pj-dim); }
+.pj-price-bar i { display: block; height: 12px; border-radius: 6px; background: color-mix(in srgb, var(--foreground) 22%, transparent); }
+.pj-price-bar[data-axi] i { background: var(--axi-brand); }
+.pj-price-bar[data-axi] small { color: var(--foreground); font-weight: 600; }
+@media (max-width: 1023px) {
+  .pj-price-box > .pj-price-compare { grid-template-columns: minmax(0, 1fr); gap: 20px; padding: 24px 22px; }
+}
 .pj-price-label { margin: 0 0 12px; font-size: 13px; color: var(--pj-dim); }
 .pj-price-n { margin: 0; font-family: var(--font-nexa), var(--font-poppins), sans-serif; font-weight: 700; font-size: clamp(38px, 3.6vw, 52px); line-height: 1; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
 .pj-price-n.t { font-weight: 200; }

@@ -4,7 +4,7 @@ import { Check } from "lucide-react";
 import type { PublicCatalog } from "@/modules/landing/domain/public-catalog";
 import { formatCop } from "@/modules/landing/ui/content/landing.content";
 import { PRICE, PRODUCTOS_ANCHORS } from "@/modules/landing/ui/content/productos.content";
-import { esencialPrice } from "./productos-price";
+import { esencialPrice, savingsVsAdvisor } from "./productos-price";
 
 /**
  * #precio — «Lo que cuesta. Sin letra pequeña.» (plan productos_tinta §4.6).
@@ -14,6 +14,7 @@ import { esencialPrice } from "./productos-price";
  */
 export function ProductosPrice({ catalog, now }: { catalog: PublicCatalog | null; now: Date }) {
   const price = esencialPrice(catalog, now);
+  const saving = savingsVsAdvisor(price?.monthlyCop ?? null);
   return (
     <section id={PRODUCTOS_ANCHORS.price} aria-labelledby="precio-title" className="pj-band pj-price">
       <div className="pj-wrap">
@@ -21,6 +22,25 @@ export function ProductosPrice({ catalog, now }: { catalog: PublicCatalog | null
           {PRICE.strong} <span className="t">{PRICE.thin}</span>
         </h2>
         <div className="pj-price-box">
+          {/* La comparativa, con el precio de hoy del catálogo: sin catálogo no hay porcentaje. */}
+          {saving ? (
+            <div className="pj-price-compare">
+              <p className="pj-price-save">
+                <b className="pj-h">{PRICE.compare.savings(saving.pct)}</b>
+                <span>{PRICE.compare.line}</span>
+              </p>
+              <div className="pj-price-bars" aria-hidden="true">
+                <span className="pj-price-bar">
+                  <small>{PRICE.compare.advisorBar}</small>
+                  <i style={{ width: "100%" }} />
+                </span>
+                <span className="pj-price-bar" data-axi="">
+                  <small>{PRICE.compare.axiBar}</small>
+                  <i style={{ width: `${Math.max(2, saving.share * 100).toFixed(1)}%` }} />
+                </span>
+              </div>
+            </div>
+          ) : null}
           <div>
             <p className="pj-price-label">{PRICE.advisor.label}</p>
             <p className="pj-price-n t">{PRICE.advisor.value}</p>

@@ -35,3 +35,15 @@ describe("esencialPrice — el precio de /productos sale del catálogo", () => {
     expect(esencialPrice(sinTramo, AFTER_ALL)).toBeNull();
   });
 });
+
+describe("savingsVsAdvisor — la comparativa con el asesor", () => {
+  const { savingsVsAdvisor } = jest.requireActual("../productos-price");
+  it("redondea hacia abajo: nunca promete un punto de más", () => {
+    expect(savingsVsAdvisor(155_900)).toEqual({ pct: 94, share: 155_900 / 2_820_000 });
+    expect(savingsVsAdvisor(259_900)?.pct).toBe(90);
+  });
+  it("sin precio, o si Axi no sale más barato, no compara", () => {
+    expect(savingsVsAdvisor(null)).toBeNull();
+    expect(savingsVsAdvisor(3_000_000)).toBeNull();
+  });
+});

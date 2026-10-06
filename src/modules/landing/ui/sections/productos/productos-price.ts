@@ -33,3 +33,15 @@ export function esencialPrice(catalog: PublicCatalog | null, now: Date): Esencia
   const founder = promo !== null && promotionOpen(catalog, now) && promotionAppliesTo(promo, "packages") && monthly < list;
   return { monthlyCop: monthly, listCop: founder ? list : null, volumeLabel: volume.label };
 }
+
+/**
+ * Cuánto menos cuesta Axi que un asesor, en un porcentaje entero y HACIA ABAJO
+ * (nunca prometer un punto de más): con el asesor a $2.820.000 y Axi a
+ * $155.900, 94 %. `share` es la fracción del costo del asesor que paga, para
+ * dibujar las barras. `null` si no hay precio que comparar.
+ */
+export function savingsVsAdvisor(monthlyCop: number | null): { pct: number; share: number } | null {
+  if (monthlyCop === null || monthlyCop <= 0 || monthlyCop >= PRICE.advisor.cop) return null;
+  const share = monthlyCop / PRICE.advisor.cop;
+  return { pct: Math.floor((1 - share) * 100), share };
+}

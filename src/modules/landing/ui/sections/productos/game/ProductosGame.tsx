@@ -17,6 +17,7 @@ import {
   Pause,
   Play,
   ShieldCheck,
+  Sparkles,
   UserRound,
   type LucideIcon,
 } from "lucide-react";
@@ -33,7 +34,6 @@ import {
   type GameMoveId,
 } from "@/modules/landing/ui/content/productos.content";
 import { FILM_ACTIVITY_EVENT, emitFilmEvent, type FilmActivityDetail } from "@/modules/landing/ui/film/film-events";
-import { islandClassName } from "@/shared/components/features/island/Island";
 import { PAGE_ISLAND_EVENT, type PageIslandDetail } from "@/shared/components/layout/site/site-island";
 import { ProductosPhone } from "./ProductosPhone";
 import { usePhoneFlight } from "./use-phone-flight";
@@ -204,6 +204,7 @@ export function ProductosGame() {
   /* La isla de tinta cuenta la última habilidad descubierta (la del CRM llega sola). */
   const last = state.got[state.got.length - 1];
   const note = last ? GAME_NOTES[last] : GAME.note.intro;
+  const NoteIcon = last ? ICONS[last] : Sparkles;
 
   return (
     <section ref={sectionRef} id={PRODUCTOS_ANCHORS.game} aria-labelledby="agente-title" className="pj-scene pj-game">
@@ -320,11 +321,27 @@ export function ProductosGame() {
         </ProductosPhone>
 
         <div className="pj-side" data-rail="r">
-          {/* Isla de tinta con brillo de IA: cuenta lo que hizo el agente (DS §9.5.1). */}
-          <div className={`${islandClassName({ material: "ink", glow: "ai" })} pj-note`} aria-hidden="true">
-            <span className="pj-note-kicker text-muted-foreground">{GAME.note.kicker}</span>
+          {/* «Lo que acabas de ver»: ficha sobria; el violeta solo en el punto que firma a Axi (DESIGN §7.1). */}
+          <div className="pj-note" aria-hidden="true">
+            <div className="pj-note-head">
+              <span className="pj-note-glyph">
+                <NoteIcon className="size-[18px]" strokeWidth={1.8} />
+              </span>
+              <span className="pj-note-kicker">
+                <i />
+                {GAME.note.kicker}
+              </span>
+            </div>
             <p className="pj-note-title">{note.title}</p>
-            <p className="pj-note-text text-muted-foreground">{note.text}</p>
+            <p className="pj-note-text">{note.text}</p>
+            {note.uses.length > 0 ? (
+              <p className="pj-note-uses">
+                <span>{GAME.note.uses}</span>
+                {note.uses.map((u) => (
+                  <b key={u}>{u}</b>
+                ))}
+              </p>
+            ) : null}
           </div>
           <div className="pj-prog">
             <p className="pj-prog-top">

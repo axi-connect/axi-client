@@ -46,14 +46,24 @@
 
 /* ───── Columna derecha: la isla, el progreso y el final ───── */
 .pj-side { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-.pj-note { padding: 24px 24px 26px; border-radius: 24px; }
-.pj-note-kicker { display: block; font-size: 12.5px; }
+.pj-note {
+  display: flex; flex-direction: column; gap: 10px; padding: 22px 22px 20px; border-radius: 24px;
+  border: 1px solid var(--pj-line); background: var(--pj-surface);
+  box-shadow: 0 24px 60px -40px rgb(0 0 0 / 0.5);
+}
+.pj-note-head { display: flex; align-items: center; gap: 12px; }
+.pj-note-glyph { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 13px; flex: none; background: var(--foreground); color: var(--background); }
+.pj-note-kicker { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--pj-dim); }
+.pj-note-kicker i { width: 6px; height: 6px; border-radius: 50%; background: var(--axi-violet); }
 .pj-note-title {
-  margin: 12px 0 8px;
+  margin: 4px 0 0;
   font-family: var(--font-nexa), var(--font-poppins), sans-serif; font-weight: 700;
   font-size: 24px; line-height: 1.1; letter-spacing: -0.02em;
 }
-.pj-note-text { margin: 0; font-size: 14.5px; line-height: 1.6; }
+.pj-note-text { margin: 0; font-size: 14.5px; line-height: 1.6; color: var(--pj-muted); }
+.pj-note-uses { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 4px 0 0; padding-top: 12px; border-top: 1px solid var(--pj-line); font-size: 12px; color: var(--pj-dim); }
+.pj-note-uses span { margin-right: 2px; }
+.pj-note-uses b { font-weight: 500; color: var(--foreground); padding: 4px 10px; border-radius: 999px; background: var(--pj-surface-2); }
 
 .pj-prog { padding: 20px 22px; border-radius: 24px; border: 1px solid var(--pj-line); background: var(--pj-surface); }
 .pj-prog-top { display: flex; align-items: baseline; justify-content: space-between; margin: 0 0 14px; font-size: 13px; }

@@ -89,8 +89,8 @@ export type AgentTool = (typeof AGENT_TOOLS)[number];
 export const PRODUCTOS_HERO = {
   strong: "Escríbele.",
   thin: "Mira cómo vende.",
-  /** Qué es Axi, en una frase, para quien llega por un anuncio (D-hero del plan en tinta). */
-  lead: "Un agente que vende por tu WhatsApp con tu catálogo, tus precios y tu equipo al lado. Juega a ser tu cliente y compruébalo.",
+  /** Qué es Axi, en una frase, para quien llega por un anuncio. «Canales digitales», como la home: no solo WhatsApp. */
+  lead: "Un agente que vende por tus canales digitales con tu catálogo, tus precios y tu equipo al lado. Juega a ser tu cliente y compruébalo.",
   play: { label: "Jugar ahora", href: `#${PRODUCTOS_ANCHORS.game}` },
   /** El saludo del teléfono que asoma desde la luz. */
   greeting: "Hola, soy Vera. ¿Qué estás buscando?",
@@ -258,7 +258,8 @@ export const GAME = {
   /** La isla de tinta «Lo que acabas de ver» (brillo de IA: cuenta lo que hizo el agente). */
   note: {
     kicker: "Lo que acabas de ver",
-    intro: { title: "Empieza por una jugada", text: "Escríbele como lo haría tu cliente. Aquí verás qué hizo Axi y con qué parte de tu negocio lo resolvió." },
+    intro: { title: "Empieza por una jugada", text: "Escríbele como lo haría tu cliente. Aquí verás qué hizo Axi y con qué parte de tu negocio lo resolvió.", uses: [] as readonly string[] },
+    uses: "Usó",
   },
   progress: { of: "de 7", label: "habilidades" },
   /** La habilidad del CRM se descubre sola tras estas jugadas. */
@@ -275,14 +276,14 @@ export const GAME = {
  * Lo que cuenta la isla tras cada respuesta. Fuera del chat del cliente: la
  * demo explica, el chat no (regla de la página).
  */
-export const GAME_NOTES: Readonly<Record<GameAbilityId, { title: string; text: string }>> = {
-  foto: { title: "Reconoce fotos", text: "Encontró la referencia exacta en tu catálogo y dijo cuántas quedan. Si duda, muestra hasta tres opciones." },
-  voz: { title: "Habla y escucha", text: "Entiende la nota de voz y responde con voz, con una de diez voces latinas. Solo por WhatsApp." },
-  descuento: { title: "Cuida tu margen", text: "El 30 % no existe. Ofreció el único cupón que autorizaste, con el precio calculado por el sistema." },
-  compra: { title: "Pedido y pago en el chat", text: "Creó el pedido con su número y guardó el comprobante. Una persona de tu equipo confirma el pago." },
-  agenda: { title: "Agenda citas", text: "Ofrece solo horas libres de tu agenda y deja programados los recordatorios de 24 h y 1 h antes." },
-  persona: { title: "Llama a tu equipo", text: "Laura entró a la misma conversación y Axi dejó de escribir. Puede devolvérsela con una nota." },
-  crm: { title: "Anota en tu CRM", text: "Sin que nadie digite: Valentina R. ya es una oportunidad en Cotizado, con el producto y el valor." },
+export const GAME_NOTES: Readonly<Record<GameAbilityId, { title: string; text: string; uses: readonly string[] }>> = {
+  foto: { title: "Reconoce fotos", text: "Encontró la referencia exacta en tu catálogo y dijo cuántas quedan. Si duda, muestra hasta tres opciones.", uses: ["Catálogo", "Stock"] },
+  voz: { title: "Habla y escucha", text: "Entiende la nota de voz y responde con voz, con una de diez voces latinas. Solo por WhatsApp.", uses: ["Voz", "Catálogo"] },
+  descuento: { title: "Cuida tu margen", text: "El 30 % no existe. Ofreció el único cupón que autorizaste, con el precio calculado por el sistema.", uses: ["Cupones", "Precios"] },
+  compra: { title: "Pedido y pago en el chat", text: "Creó el pedido con su número y guardó el comprobante. Una persona de tu equipo confirma el pago.", uses: ["Pedidos", "Medios de pago"] },
+  agenda: { title: "Agenda citas", text: "Ofrece solo horas libres de tu agenda y deja programados los recordatorios de 24 h y 1 h antes.", uses: ["Agenda", "Recordatorios"] },
+  persona: { title: "Llama a tu equipo", text: "Laura entró a la misma conversación y Axi dejó de escribir. Puede devolvérsela con una nota.", uses: ["Bandeja", "Equipo"] },
+  crm: { title: "Anota en tu CRM", text: "Sin que nadie digite: Valentina R. ya es una oportunidad en Cotizado, con el producto y el valor.", uses: ["CRM", "Contactos"] },
 };
 
 /* ─────────────────── 2b · Lo que no cerraste hoy (recuperar) ─────────────────── */
@@ -298,13 +299,36 @@ export const RECOVER = {
   strong: "Lo que no cerraste hoy,",
   thin: "Axi lo vuelve a buscar.",
   lead: "Detecta conversaciones que se enfriaron, carritos abandonados y oportunidades que quedaron a medias.",
+  /** La marca de ejemplo, como «Datos de ejemplo» en las piezas. */
+  sample: "Mensajes de ejemplo",
+  writes: "Axi le escribe",
   triggers: [
-    { id: "carrito", kicker: "Carrito abandonado", title: "Armó un pedido y no lo terminó.", when: "Hace 1 día · pedido #1051", message: "Hola, Camila. Tu pedido de las Redonda Titanio quedó a medias. ¿Te ayudo a terminarlo?" },
-    { id: "frio", kicker: "Conversación que se enfrió", title: "Preguntó, le respondimos y no volvió.", when: "Hace 3 días · progresivos", message: "Hola, Pedro. ¿Pudiste ver la cotización de los progresivos? Si quieres, te agendo el examen." },
-    { id: "trato", kicker: "Oportunidad a medias", title: "Un trato del CRM lleva días sin moverse.", when: "6 días en Compromiso", message: "Hola, Andrés. Seguimos con tu examen y la montura cuando quieras. ¿Te sirve el jueves?" },
+    {
+      id: "carrito",
+      kicker: "Carrito abandonado",
+      title: "Armó un pedido y no lo terminó.",
+      context: { label: "Pedido #1051", detail: "Redonda Titanio · $248.000", state: "Sin pagar" },
+      when: "hace 1 día",
+      message: "Hola, Camila. Tu pedido de las Redonda Titanio quedó a medias. ¿Te ayudo a terminarlo?",
+    },
+    {
+      id: "frio",
+      kicker: "Conversación que se enfrió",
+      title: "Preguntó, le respondimos y no volvió.",
+      context: { label: "Cotización", detail: "Progresivos · $520.000", state: "Sin respuesta" },
+      when: "hace 3 días",
+      message: "Hola, Pedro. ¿Pudiste ver la cotización de los progresivos? Si quieres, te agendo el examen.",
+    },
+    {
+      id: "trato",
+      kicker: "Oportunidad a medias",
+      title: "Un trato del CRM lleva días sin moverse.",
+      context: { label: "Compromiso", detail: "Examen + montura · $412.000", state: "6 días quieto" },
+      when: "hoy",
+      message: "Hola, Andrés. Seguimos con tu examen y la montura cuando quieras. ¿Te sirve el jueves?",
+    },
   ],
   closing: { strong: "No vuelvas a empezar una venta.", thin: "Retómala donde quedó." },
-  fine: "Las reglas nacen apagadas: tú decides cuándo se encienden. Nunca más de un mensaje de marketing al día por cliente. En los planes Crecimiento y Escala. Mensajes de ejemplo.",
   label: "Mensaje de ejemplo de Axi",
 } as const;
 
@@ -853,7 +877,15 @@ export const WALL = {
 export const PRICE = {
   strong: "Lo que cuesta.",
   thin: "Sin letra pequeña.",
-  advisor: { label: "Un asesor de tiempo completo", value: "$ 2,8 M", note: "al mes, con prestaciones. Atiende en horario y de a una conversación." },
+  /** `cop`: el costo mensual de un asesor (MS §1.1: COP 2,82 M con prestaciones); de ahí sale el ahorro. */
+  advisor: { label: "Un asesor de tiempo completo", value: "$ 2,8 M", cop: 2_820_000, note: "al mes, con prestaciones. Atiende en horario y de a una conversación." },
+  /** La comparativa: se calcula con el precio vivo del catálogo; sin catálogo no se muestra. */
+  compare: {
+    savings: (pct: number) => `${pct} % menos`,
+    line: "que un asesor de tiempo completo",
+    advisorBar: "Asesor",
+    axiBar: "Axi",
+  },
   plan: {
     label: "Axi · plan Esencial",
     /** `volume` es la etiqueta del tramo del catálogo («1.000»). */
