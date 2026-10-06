@@ -38,6 +38,11 @@ export const PURPOSE_META: Record<DecisionPurpose, { label: string; description:
     label: "Frase en la llamada",
     description: "Qué dijo el cliente al teléfono: pregunta, objeción, acepta, rechaza o buzón",
   },
+  // Hotfix 131049: Jev clasifica la plantilla de Meta mientras se escribe.
+  template_category: {
+    label: "Categoría de plantilla",
+    description: "Si Meta leerá la plantilla como marketing, utilidad o autenticación",
+  },
   custom: { label: "Uso libre", description: "Cualquier otra decisión de un módulo" },
 };
 

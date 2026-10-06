@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { HttpError } from "@/core/api/problem";
 import type { HsmLibraryTemplateDTO, HsmTemplateDTO } from "@/modules/marketing/domain/template-catalog";
 import { HsmTemplateForm } from "../HsmTemplateForm";
@@ -19,6 +19,8 @@ jest.mock("@/modules/marketing/infrastructure/services/templates-service.adapter
   listHsmTemplates: jest.fn(),
   listHsmLibrary: jest.fn(),
   uploadHsmHeaderMedia: jest.fn(),
+  reviewTemplateCategory: jest.fn(),
+  proposeUtilityRewrite: jest.fn(),
 }));
 
 // jsdom no tiene object URLs: la previa local del archivo elegido.
@@ -32,6 +34,8 @@ const api = require("@/modules/marketing/infrastructure/services/templates-servi
   listHsmTemplates: jest.Mock;
   listHsmLibrary: jest.Mock;
   uploadHsmHeaderMedia: jest.Mock;
+  reviewTemplateCategory: jest.Mock;
+  proposeUtilityRewrite: jest.Mock;
 };
 /* eslint-enable @typescript-eslint/no-require-imports */
 
@@ -55,6 +59,24 @@ const template = (over: Partial<HsmTemplateDTO> = {}): HsmTemplateDTO =>
     ...over,
   }) as HsmTemplateDTO;
 
+const review = (over: Record<string, unknown> = {}) => ({
+  category: "marketing",
+  confidence: 0.92,
+  probabilities: { marketing: 0.92, utility: 0.07, authentication: 0.01 },
+  confident: true,
+  source: "jev",
+  signals: [
+    {
+      kind: "conversion_offer",
+      field: "body",
+      phrase: "Si continúas, quedas en el plan Crecimiento.",
+      reason: "Oferta: invita a contratar.",
+    },
+  ],
+  review_key: "k",
+  ...over,
+});
+
 const handlers = () => ({
   onSaved: jest.fn(),
   onViewExisting: jest.fn(),
@@ -69,6 +91,8 @@ beforeEach(() => {
   api.createHsmTemplate.mockResolvedValue(template({ id: "nueva", name: "sesion_en_vivo_v1" }));
   api.listHsmTemplates.mockResolvedValue([]);
   api.listHsmLibrary.mockResolvedValue([]);
+  // Jev sin certeza por defecto: ni cambia la categoría ni pregunta al enviar.
+  api.reviewTemplateCategory.mockResolvedValue(review({ category: "utility", confident: false }));
 });
 
 function renderNew(templates: HsmTemplateDTO[] = []) {
@@ -738,3 +762,106 @@ describe("biblioteca de Meta (F5)", () => {
     expect(body()).toHaveValue(AUTO_PAY.body);
   });
 });
+
+/**
+ * Jev (hotfix 131049, maqueta v2): lee el texto en la pausa, vive en la isla
+ * y nunca bloquea el envío.
+ */
+describe("Jev clasifica la plantilla", () => {
+  const MARKETING_BODY = "Tu prueba empieza hoy. Si continúas, quedas en el plan Crecimiento, {{1}}.";
+
+  beforeEach(() => jest.useFakeTimers());
+  afterEach(() => jest.useRealTimers());
+
+  async function typeAndPause(body: string) {
+    fireEvent.change(screen.getByPlaceholderText(/Hola \{\{1\}\}, te escribo/), { target: { value: body } });
+    await act(async () => {
+      jest.advanceTimersByTime(1_800);
+    });
+  }
+
+  it("no la habías elegido: la pasa a marketing y deja deshacer", async () => {
+    api.reviewTemplateCategory.mockResolvedValue(review());
+    renderNew();
+    await typeAndPause(MARKETING_BODY);
+
+    expect(await screen.findByRole("button", { name: /Jev cambió la categoría a marketing/ })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: /Marketing/ })).toHaveAttribute("aria-checked", "true");
+
+    fireEvent.click(screen.getByRole("button", { name: "Deshacer" }));
+    expect(screen.getByRole("radio", { name: /Utilidad/ })).toHaveAttribute("aria-checked", "true");
+  });
+
+  it("si la elegiste tú, solo lo propone: la categoría no cambia", async () => {
+    api.reviewTemplateCategory.mockResolvedValue(review());
+    renderNew();
+    fireEvent.click(screen.getByRole("radio", { name: /Utilidad/ }));
+    await typeAndPause(MARKETING_BODY);
+
+    expect(await screen.findByRole("button", { name: /Meta la leerá como marketing/ })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: /Utilidad/ })).toHaveAttribute("aria-checked", "true");
+  });
+
+  it("escribir seguido no llama a Jev; la pausa, una vez", async () => {
+    renderNew();
+    const box = screen.getByPlaceholderText(/Hola \{\{1\}\}, te escribo/);
+    for (const text of ["Gracias por escribirnos, ya te atend", "Gracias por escribirnos, ya te atendemos hoy."]) {
+      fireEvent.change(box, { target: { value: text } });
+      act(() => {
+        jest.advanceTimersByTime(600);
+      });
+    }
+    expect(api.reviewTemplateCategory).not.toHaveBeenCalled();
+    await act(async () => {
+      jest.advanceTimersByTime(1_800);
+    });
+    expect(api.reviewTemplateCategory).toHaveBeenCalledTimes(1);
+  });
+
+  it("al enviar con otra categoría pregunta en la isla; «Enviar igual» la envía", async () => {
+    api.reviewTemplateCategory.mockResolvedValue(review());
+    renderNew();
+    fireEvent.click(screen.getByRole("radio", { name: /Utilidad/ }));
+    fireEvent.change(screen.getByLabelText("Nombre"), { target: { value: "Bienvenida prueba" } });
+    await typeAndPause(MARKETING_BODY);
+    fireEvent.change(screen.getByLabelText("Ejemplo de la variable 1"), { target: { value: "Ana" } });
+
+    await act(async () => {
+      send();
+    });
+    expect(await screen.findByText("¿La envías como utilidad?")).toBeInTheDocument();
+    expect(api.createHsmTemplate).not.toHaveBeenCalled();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Enviar igual" }));
+    });
+    await waitFor(() => expect(api.createHsmTemplate).toHaveBeenCalledTimes(1));
+    expect(api.createHsmTemplate.mock.calls[0][0]).toMatchObject({ category: "utility" });
+  });
+
+  it("«Versión de utilidad» propone; «Aplicar» cambia el texto y conserva el ejemplo de cada variable", async () => {
+    api.reviewTemplateCategory.mockResolvedValue(review());
+    api.proposeUtilityRewrite.mockResolvedValue({
+      body: "Hola {{1}}, confirmamos que tu prueba comenzó hoy.",
+      footer: null,
+      removed: [{ phrase: "Si continúas, quedas en el plan Crecimiento", why: "Oferta" }],
+      variables: [1],
+    });
+    renderNew();
+    fireEvent.click(screen.getByRole("radio", { name: /Utilidad/ }));
+    await typeAndPause(MARKETING_BODY);
+
+    fireEvent.click(await screen.findByRole("button", { name: /Meta la leerá como marketing/ }));
+    await act(async () => {
+      fireEvent.click(await screen.findByRole("button", { name: "Versión de utilidad" }));
+    });
+    const sheet = await screen.findByRole("dialog", { name: "Versión de utilidad" });
+    expect(within(sheet).getByText("Hola {{1}}, confirmamos que tu prueba comenzó hoy.")).toBeInTheDocument();
+
+    fireEvent.click(within(sheet).getByRole("button", { name: "Aplicar" }));
+    expect(screen.getByPlaceholderText(/Hola \{\{1\}\}, te escribo/)).toHaveValue(
+      "Hola {{1}}, confirmamos que tu prueba comenzó hoy.",
+    );
+  });
+});
+

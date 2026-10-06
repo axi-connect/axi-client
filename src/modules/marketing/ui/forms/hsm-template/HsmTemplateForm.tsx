@@ -30,6 +30,7 @@ import { Input } from "@/shared/components/ui/input";
 import { SegmentedControl } from "@/shared/components/ui/segmented";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
 import { Textarea } from "@/shared/components/ui/textarea";
+import { HSM_CATEGORY_LABELS } from "@/modules/marketing/domain/enums";
 import type { HeaderMediaKind } from "@/modules/marketing/domain/header-media";
 import type { HsmDraftErrors } from "@/modules/marketing/domain/hsm-template-draft";
 import type { HsmFormStep } from "@/modules/marketing/domain/meta-template-view";
@@ -41,11 +42,14 @@ import { HsmPreview } from "@/modules/marketing/ui/components/HsmPreview";
 import { HsmSubmitNotice } from "@/modules/marketing/ui/components/HsmSubmitNotice";
 import { TemplateButtonsEditor } from "@/modules/marketing/ui/components/TemplateButtonsEditor";
 import { HeaderMediaField } from "./HeaderMediaField";
+import { JevIslandControl } from "./JevIslandControl";
+import { JevRewriteSheet } from "./JevRewriteSheet";
 import { LibrarySheet } from "./LibrarySheet";
 import { PurposeCards } from "./PurposeCards";
 import { StartStrip } from "./StartStrip";
 import { TemplateNameField } from "./TemplateNameField";
 import { LANGUAGES, useHsmTemplateDraft, type HeaderKind } from "./use-hsm-template-draft";
+import { useJevAdvisor } from "./use-jev-advisor";
 
 const START_OPTIONS = SUGGESTED_OPENING_TEMPLATES.map((suggestion) => ({
   key: suggestion.key,
@@ -168,6 +172,23 @@ export function HsmTemplateForm({
     counter,
     previewProps,
   } = useHsmTemplateDraft({ channelId, templates: initialTemplates, editing, onSaved, onDirtyChange });
+  // Jev (hotfix 131049): lee la categoría mientras se escribe y vive en la isla.
+  const jev = useJevAdvisor({
+    headerText: header,
+    body,
+    footer,
+    buttons,
+    examples,
+    category,
+    locked: categoryLocked,
+    isEditing,
+    invalid,
+    setBody,
+    setFooter,
+    setExamples,
+    setCategory,
+    submit,
+  });
   const [libraryOpen, setLibraryOpen] = useState(false);
   // Las que se asoman en «Empieza desde»: solo cuando la biblioteca ya llegó.
   const libraryItems = library.kind === "ready" ? library.items : null;
@@ -259,7 +280,7 @@ export function HsmTemplateForm({
               onToggle={() => setOpenSteps((previous) => ({ ...previous, purpose: !previous.purpose }))}
               flush
             >
-              <PurposeCards value={category} onChange={setCategory} locked={categoryLocked} />
+              <PurposeCards value={category} onChange={jev.pickCategory} locked={categoryLocked} />
               {isEditing && (
                 <p className="text-muted-foreground text-xs">
                   {categoryLocked
@@ -359,6 +380,7 @@ export function HsmTemplateForm({
                   id="hsm-body"
                   value={body}
                   onChange={(event) => setBody(event.target.value)}
+                  onBlur={jev.flush}
                   rows={4}
                   aria-invalid={touched && Boolean(errors.body)}
                   className="min-h-28 rounded-xl text-sm leading-relaxed"
@@ -591,18 +613,44 @@ export function HsmTemplateForm({
       >
         <StepTramos className="w-34 shrink-0" checks={dockChecks} />
         <span aria-hidden="true" className="bg-border hidden h-7 w-px shrink-0 sm:block" />
-        <div className="min-w-0 flex-1 sm:max-w-88">
-          <p className="flex items-baseline gap-2 text-[13px] leading-tight font-semibold">
-            {dockTitle}
-            <span className="text-xs font-normal tabular-nums opacity-70">
-              {countPassing(dockChecks)}/{dockChecks.length}
-            </span>
-          </p>
-          <p id="hsm-dock-detail" className="text-muted-foreground truncate text-xs leading-tight" title={dockDetail}>
-            {dockDetail}
-          </p>
-        </div>
-        <div className="flex w-full justify-end gap-2 sm:ml-1.5 sm:w-auto sm:shrink-0">
+        {jev.confirming ? (
+          // Jev la ve de otra categoría: una pregunta antes de enviar. Avisa,
+          // no bloquea — Meta decide.
+          <div className="min-w-0 flex-1 sm:max-w-88" role="alert">
+            <p className="text-[13px] leading-tight font-semibold">
+              ¿La envías como {HSM_CATEGORY_LABELS[category].toLowerCase()}?
+            </p>
+            <p className="text-muted-foreground text-xs leading-tight">
+              Jev la ve como{" "}
+              {jev.review === null ? "otra categoría" : HSM_CATEGORY_LABELS[jev.review.category].toLowerCase()}: Meta
+              puede reclasificarla.
+            </p>
+          </div>
+        ) : (
+          <div className="min-w-0 flex-1 sm:max-w-88">
+            <p className="flex items-baseline gap-2 text-[13px] leading-tight font-semibold">
+              {dockTitle}
+              <span className="text-xs font-normal tabular-nums opacity-70">
+                {countPassing(dockChecks)}/{dockChecks.length}
+              </span>
+            </p>
+            <p id="hsm-dock-detail" className="text-muted-foreground truncate text-xs leading-tight" title={dockDetail}>
+              {dockDetail}
+            </p>
+          </div>
+        )}
+        {jev.confirming ? (
+          <div className="flex w-full justify-end gap-2 sm:ml-1.5 sm:w-auto sm:shrink-0">
+            <Button variant="glass" type="button" size="sm" onClick={jev.reviewBeforeSubmit}>
+              Revisar
+            </Button>
+            <Button type="button" variant="contrast" size="sm" className="rounded-full" onClick={jev.confirmSubmit}>
+              Enviar igual
+            </Button>
+          </div>
+        ) : (
+        <div className="flex w-full flex-wrap justify-end gap-2 sm:ml-1.5 sm:w-auto sm:shrink-0 sm:flex-nowrap">
+          <JevIslandControl jev={jev} />
           <Button variant="glass" type="button" size="sm" onClick={onCancel}>
             Cancelar
           </Button>
@@ -615,7 +663,7 @@ export function HsmTemplateForm({
             aria-describedby={invalid ? "hsm-dock-detail" : undefined}
             onClick={() => {
               if (submitting || checking || failure?.kind === "unknown") return;
-              void submit();
+              void jev.guardedSubmit();
             }}
           >
             {submitting ? <LoaderCircle aria-hidden className="size-4 animate-spin" /> : null}
@@ -628,7 +676,16 @@ export function HsmTemplateForm({
                   : "Enviar a revisión de Meta"}
           </Button>
         </div>
+        )}
       </Island>
+
+      <JevRewriteSheet
+        state={jev.rewrite}
+        variableCount={variableCount}
+        onApply={jev.applyRewrite}
+        onClose={jev.closeRewrite}
+        onRetry={() => void jev.requestRewrite()}
+      />
     </div>
   );
 }

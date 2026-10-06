@@ -6916,6 +6916,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/marketing/hsm-templates/category-review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["TemplateAdvisorController_categoryReview_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketing/hsm-templates/utility-rewrite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["TemplateAdvisorController_utilityRewrite_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/scheduling/reminders": {
         parameters: {
             query?: never;
@@ -11552,7 +11584,7 @@ export interface components {
         DecisionRoutesViewDto: {
             routes: {
                 /** @enum {string} */
-                purpose: "intent" | "reply_reaction" | "lead_fit" | "lead_intent" | "message_fit" | "handoff_urgency" | "voice_utterance" | "custom";
+                purpose: "intent" | "reply_reaction" | "lead_fit" | "lead_intent" | "message_fit" | "handoff_urgency" | "voice_utterance" | "template_category" | "custom";
                 /** @enum {string} */
                 mode: "off" | "shadow" | "primary";
                 primary: {
@@ -11588,7 +11620,7 @@ export interface components {
         };
         SavedDecisionRouteDto: {
             /** @enum {string} */
-            purpose: "intent" | "reply_reaction" | "lead_fit" | "lead_intent" | "message_fit" | "handoff_urgency" | "voice_utterance" | "custom";
+            purpose: "intent" | "reply_reaction" | "lead_fit" | "lead_intent" | "message_fit" | "handoff_urgency" | "voice_utterance" | "template_category" | "custom";
             /** @enum {string} */
             mode: "off" | "shadow" | "primary";
             primary: {
@@ -21012,6 +21044,45 @@ export interface components {
                     detail: string;
                 }[];
             }[];
+        };
+        TemplateDraftTextDto: {
+            header?: string | null;
+            body: string;
+            footer?: string | null;
+            buttons?: string[];
+        };
+        TemplateCategoryReviewDto: {
+            /** @enum {string} */
+            category: "marketing" | "utility" | "authentication";
+            confidence: number | null;
+            probabilities: {
+                marketing: number;
+                utility: number;
+                authentication: number;
+            } | null;
+            confident: boolean;
+            /** @enum {string} */
+            source: "jev" | "rules";
+            signals: {
+                /** @enum {string} */
+                kind: "conversion_offer" | "payment_details" | "promo_language" | "promo_emoji" | "marketing_cta" | "otp";
+                /** @enum {string} */
+                field: "header" | "body" | "footer" | "button";
+                phrase: string;
+                reason: string;
+            }[];
+            review_key: string;
+        };
+        UtilityRewriteResultDto: {
+            proposal: {
+                body: string;
+                footer: string | null;
+                removed: {
+                    phrase: string;
+                    why: string;
+                }[];
+                variables: number[];
+            } | null;
         };
         RemindersListDto: {
             data: {
@@ -36925,6 +36996,52 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MarginCellsDto"];
+                };
+            };
+        };
+    };
+    TemplateAdvisorController_categoryReview_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TemplateDraftTextDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TemplateCategoryReviewDto"];
+                };
+            };
+        };
+    };
+    TemplateAdvisorController_utilityRewrite_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TemplateDraftTextDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UtilityRewriteResultDto"];
                 };
             };
         };

@@ -10,6 +10,11 @@ import type {
   TemplateDTO,
   UpdateTemplateDTO,
 } from "@/modules/marketing/domain/template-catalog";
+import type {
+  TemplateCategoryReview,
+  TemplateDraftTextDTO,
+  UtilityRewrite,
+} from "@/modules/marketing/domain/template-category-review";
 
 /**
  * Plantillas del tenant (`/marketing/templates`) y plantillas de Meta
@@ -118,4 +123,22 @@ export function uploadHsmHeaderMedia(channelId: string, file: File): Promise<Hsm
   form.append("channel_id", channelId);
   form.append("file", file);
   return http.post<HsmHeaderMediaUploadDTO>("/marketing/hsm-templates/media", form);
+}
+
+/**
+ * Jev revisa el borrador (hotfix 131049): categoría con probabilidad y las
+ * frases que lo vuelven marketing. Responde siempre (sin Jev, con las reglas
+ * de Meta). `signal` aborta la revisión vieja cuando el texto cambia.
+ */
+export function reviewTemplateCategory(
+  draft: TemplateDraftTextDTO,
+  signal?: AbortSignal,
+): Promise<TemplateCategoryReview> {
+  return http.post<TemplateCategoryReview>("/marketing/hsm-templates/category-review", draft, { signal });
+}
+
+/** «Proponer versión de utilidad»: solo a pedido. `null` = no hubo una versión que Meta aceptaría. */
+export async function proposeUtilityRewrite(draft: TemplateDraftTextDTO): Promise<UtilityRewrite | null> {
+  const res = await http.post<{ proposal: UtilityRewrite | null }>("/marketing/hsm-templates/utility-rewrite", draft);
+  return res.proposal;
 }
