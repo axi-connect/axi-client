@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { Play } from "lucide-react";
 
 import { PRODUCTOS_ANCHORS, PRODUCTOS_HERO, PRODUCTOS_TRIAL } from "@/modules/landing/ui/content/productos.content";
+import { ProductosPlayLink } from "./ProductosPlayLink";
 
 /**
  * #inicio — «Escríbele. / Mira cómo vende.» Server Component: llega completo
@@ -17,10 +17,7 @@ export function ProductosOpening() {
       </h1>
       <p className="pj-lead relative z-[2] max-w-[36rem] text-pretty">{PRODUCTOS_HERO.lead}</p>
       <div className="relative z-[2] flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
-        <a href={PRODUCTOS_HERO.play.href} className="pj-cta">
-          <Play className="size-3.5" fill="currentColor" aria-hidden="true" />
-          {PRODUCTOS_HERO.play.label}
-        </a>
+        <ProductosPlayLink />
         <Link href={PRODUCTOS_TRIAL.href} prefetch={false} className="pj-link">
           {PRODUCTOS_TRIAL.label}
         </Link>

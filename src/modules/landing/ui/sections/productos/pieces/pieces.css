@@ -389,9 +389,7 @@
   background: color-mix(in srgb, var(--foreground) 1.5%, var(--background));
 }
 .pp-app-brand { display: flex; align-items: center; gap: 10px; padding: 0 8px; }
-/* El logo va sobre ficha blanca: es tinta sobre blanco y en oscuro se perdería. */
-.pp-app-logo { width: 30px; height: 30px; flex: none; border-radius: 9px; overflow: hidden; background: #fff; display: grid; place-items: center; box-shadow: 0 0 0 1px color-mix(in srgb, var(--foreground) 10%, transparent); }
-.pp-app-logo img { width: 26px; height: 26px; }
+.pp-app-brand .pp-app-logo { width: 30px; height: 30px; flex: none; border-radius: 9px; display: grid; place-items: center; background: var(--foreground); color: var(--background); font-family: var(--font-nexa), var(--font-poppins), sans-serif; font-weight: 700; font-size: 11.5px; letter-spacing: -0.02em; }
 .pp-app-brand span, .pp-app-me span { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
 .pp-app-brand b, .pp-app-me b { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pp-app-brand small, .pp-app-me small { font-size: 11px; color: var(--pj-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -629,18 +627,20 @@
 .pp-catalog2-item { display: flex; align-items: center; gap: 12px; padding: 9px 10px; border-radius: 14px; font-size: 12.5px; }
 .pp-catalog2-item[data-on] { background: color-mix(in srgb, var(--foreground) 7%, transparent); }
 .pp-catalog2-thumb { width: 44px; height: 44px; flex: none; overflow: hidden; border-radius: 11px; display: grid; place-items: center; color: var(--pj-dim); background: color-mix(in srgb, var(--foreground) 8%, transparent); }
-.pp-catalog2-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.pp-catalog2-thumb img { width: 100%; height: 100%; object-fit: contain; padding: 3px; background: #fff; }
 /* Cada variante con su foto, como la galería por variante del panel. */
-.pp-catalog2-var { display: inline-flex; align-items: center; gap: 8px; }
+.pp-catalog2-var { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.pp-catalog2-table td { white-space: nowrap; }
 .pp-catalog2-vthumb { width: 28px; height: 28px; flex: none; overflow: hidden; border-radius: 8px; display: grid; place-items: center; color: var(--pj-dim); background: color-mix(in srgb, var(--foreground) 8%, transparent); }
-.pp-catalog2-vthumb img { width: 100%; height: 100%; object-fit: cover; }
+.pp-catalog2-vthumb img { width: 100%; height: 100%; object-fit: contain; padding: 2px; background: #fff; }
 .pp-catalog2-itembody { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .pp-catalog2-itembody b { font-weight: 600; font-size: 13px; }
 .pp-catalog2-itembody small { color: var(--pj-dim); font-size: 11.5px; }
 .pp-catalog2-itembody small[data-out] { color: var(--axi-brand); }
 .pp-catalog2-detail { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 20px; padding: 16px; min-height: 0; overflow: hidden; }
-.pp-catalog2-photo { overflow: hidden; border-radius: 16px; background: color-mix(in srgb, var(--foreground) 6%, transparent); }
-.pp-catalog2-photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+/* Foto de producto sobre blanco en los dos temas (pedido de la dueña): se ve entera, nunca recortada. */
+.pp-catalog2-photo { overflow: hidden; border-radius: 16px; background: #fff; display: grid; place-items: center; aspect-ratio: 1; align-self: start; }
+.pp-catalog2-photo img { display: block; width: 100%; height: 100%; object-fit: contain; padding: 12px; }
 .pp-catalog2-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .pp-catalog2-name { font-size: 24px; }
 .pp-catalog2-price { font-size: 18px; color: var(--pj-muted); }

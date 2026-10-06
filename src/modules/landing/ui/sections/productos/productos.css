@@ -44,15 +44,18 @@
   font-family: var(--font-nexa), var(--font-poppins), sans-serif;
   font-weight: 700;
   letter-spacing: -0.035em;
-  line-height: 0.98;
+  /* La misma interlínea que los titulares de la home (1,04). */
+  line-height: 1.04;
   text-wrap: balance;
   margin: 0;
 }
 .pj-h .t { font-weight: 200; letter-spacing: -0.03em; }
 .pj-h-xl { font-size: clamp(44px, min(7.4vw, 12svh), 108px); }
-.pj-h-lg { font-size: clamp(36px, 4.4vw, 62px); line-height: 1.02; }
-.pj-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 0.24em; text-transform: uppercase; margin: 0; }
-.pj-lead { color: var(--pj-muted); font-weight: 300; font-size: clamp(16px, 1.4vw, 19px); line-height: 1.55; margin: 0; }
+.pj-h-lg { font-size: clamp(34px, 4.4vw, 64px); line-height: 1.02; }
+/* El titular del cierre: un escalón sobre las secciones, nunca del tamaño del h1. */
+.pj-h-close { font-size: clamp(40px, 5.4vw, 78px); line-height: 1.02; }
+.pj-eyebrow { font-size: 11.5px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; margin: 0; }
+.pj-lead { color: var(--pj-muted); font-weight: 400; font-size: clamp(15px, 1.25vw, 18px); line-height: 1.6; margin: 0; }
 .pj-dim { color: var(--pj-dim); }
 
 .pj-glow {
@@ -71,17 +74,19 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  height: 56px;
-  padding: 0 30px;
+  /* El CTA de la home: 50 px en el teléfono, 54 px desde tableta. */
+  height: 50px;
+  padding: 0 22px;
   border-radius: 999px;
   background: var(--axi-brand);
   color: var(--axi-on-brand);
   font-weight: 600;
-  font-size: 16px;
+  font-size: 14px;
   white-space: nowrap;
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--axi-brand) 30%, transparent), 0 14px 44px color-mix(in srgb, var(--axi-brand) 34%, transparent);
   transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
+@media (min-width: 768px) { .pj-cta { height: 54px; padding: 0 30px; font-size: 15.5px; } }
 .pj-cta:hover { transform: translateY(-2px); background: color-mix(in srgb, var(--axi-brand) 88%, white); }
 .pj-cta:active { transform: scale(0.97); }
 .pj-link {

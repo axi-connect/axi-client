@@ -4,6 +4,7 @@ import "@/modules/landing/ui/sections/productos/productos.css";
 import { pageMetadata } from "@/core/seo/metadata";
 import { JsonLd } from "@/core/seo/json-ld";
 import { breadcrumbSchema } from "@/core/seo/site";
+import { pricingSchema } from "@/modules/landing/ui/seo/landing-schema";
 
 import { PRODUCTOS_ANCHORS, PRODUCTOS_SEO } from "@/modules/landing/ui/content/productos.content";
 import { ProductosOpening } from "@/modules/landing/ui/sections/productos/ProductosOpening";
@@ -50,6 +51,8 @@ export default async function ProductosPage() {
   return (
     <div className="pj">
       <JsonLd data={breadcrumbSchema(["/productos"])} />
+      {/* El producto y sus ofertas con el precio vivo del catálogo, como en /precios. */}
+      <JsonLd data={pricingSchema(catalog)} />
       {/* Hero y juego bajo una sola luz: el teléfono viaja de uno a otro. */}
       <div className="pj-stage">
         <div className="pj-stage-light" aria-hidden="true" />

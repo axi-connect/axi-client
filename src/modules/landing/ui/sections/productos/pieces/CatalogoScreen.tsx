@@ -4,7 +4,8 @@ import { PIECE_SCREENS } from "@/modules/landing/ui/content/productos.content";
 import { GLYPHS, Glyph } from "./parts";
 
 const S = PIECE_SCREENS.catalogo;
-const GLASSES = "M2 13a4 4 0 1 0 8 0 4 4 0 0 0-8 0M14 13a4 4 0 1 0 8 0 4 4 0 0 0-8 0M10 13h4M2 13l2-6h3M22 13l-2-6h-3";
+/** Variante sin foto (agotada): una caja, como el glifo de producto del panel. */
+const BOX = "M21 8 12 3 3 8v8l9 5 9-5V8zM3 8l9 5 9-5M12 13v8";
 
 /**
  * El catálogo, como en el panel: la lista de productos con su foto y su stock,
@@ -62,7 +63,7 @@ export function CatalogoScreen() {
                   <tr key={v.sku} data-out={v.out ? "" : undefined}>
                     <td>
                       <span className="pp-catalog2-var">
-                        <span className="pp-catalog2-vthumb">{v.imageSrc ? <Image src={v.imageSrc} alt="" width={28} height={28} sizes="28px" /> : <Glyph d={GLASSES} size={14} />}</span>
+                        <span className="pp-catalog2-vthumb">{v.imageSrc ? <Image src={v.imageSrc} alt="" width={28} height={28} sizes="28px" /> : <Glyph d={BOX} size={14} />}</span>
                         {v.name}
                       </span>
                     </td>

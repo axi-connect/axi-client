@@ -141,15 +141,28 @@ export interface GameMove {
 /** El logo del negocio de ejemplo: el mismo en el chat del juego y en la ventana del panel. */
 const BUSINESS_LOGO = "/images/landing/optica-vertice-logo.png";
 
-const PRODUCT_IMAGE = "/images/landing/gafas-aviador-ambar.jpg";
 /**
- * Fotos de licencia libre (Unsplash), encuadradas y con la marca ajena
- * difuminada. La del cliente es casera a propósito: el reconocimiento por foto
- * vale justo cuando no se parece a la del catálogo (pedido de la dueña).
+ * El par de «Mándale una foto»: el MISMO modelo en dos fotos distintas (pedido
+ * de la dueña). El cliente comparte un post de Instagram con las gafas puestas;
+ * el catálogo tiene la foto del producto. Pexels (licencia libre), misma sesión
+ * del fotógrafo.
  */
-const PHOTOS = "/images/landing/productos";
-const CUSTOMER_PHOTO = `${PHOTOS}/cliente-foto-piscina.jpg`;
-const AVIADOR_DORADO = `${PHOTOS}/aviador-dorado-ambar.jpg`;
+/**
+ * Las fotos de /productos viven en Cloudinary (carpeta `landing/productos`), no
+ * en el repo: el build y el despliegue no cargan con ellas (pedido de la dueña).
+ * `f_auto,q_auto` deja que Cloudinary sirva AVIF o WebP según el navegador.
+ */
+const CLD = "https://res.cloudinary.com/dpfnxj52w/image/upload/f_auto,q_auto";
+const PHOTOS = `${CLD}/landing/productos`;
+/**
+ * El catálogo de la tienda de tecnología: producto solo sobre fondo blanco
+ * (Unsplash y Pexels, licencia libre). La protagonista es el Apple Watch
+ * Series 11 que eligió la dueña (foto oficial de Apple: decisión suya).
+ */
+const TECH = (file: string) => `${PHOTOS}/${file}`;
+const WATCH_HERO = TECH("watch-series-11.jpg");
+const CUSTOMER_PHOTO = `${PHOTOS}/cliente-redonda-carey.jpg`;
+const REDONDA_CAREY = `${PHOTOS}/redonda-carey.jpg`;
 const AUDIO = "/assets/audio";
 
 export const GAME_ABILITIES: readonly GameAbility[] = [
@@ -166,14 +179,14 @@ export const GAME_MOVES: readonly GameMove[] = [
   {
     id: "foto",
     label: "Mándale una foto",
-    hint: "Una foto que tomó",
+    hint: "Un post de Instagram",
     customer: [
-      { kind: "photo", from: "customer", imageSrc: CUSTOMER_PHOTO, imageAlt: "Foto casera de unas gafas aviador de lente ámbar sobre el borde de una piscina", caption: "Foto del cliente" },
+      { kind: "photo", from: "customer", imageSrc: CUSTOMER_PHOTO, imageAlt: "Post de Instagram: un hombre con unas gafas de sol redondas de carey", caption: "Captura de Instagram" },
       { kind: "text", from: "customer", text: "¿Tienen estas?" },
     ],
     reply: [
-      { kind: "text", from: "agent", text: "Sí, son las Aviador Ámbar en dorado. Nos quedan 7." },
-      { kind: "card", from: "agent", kicker: "De tu catálogo", title: "Aviador Ámbar · Dorado", meta: "$189.000 · quedan 7", imageSrc: AVIADOR_DORADO, imageAlt: "Gafas Aviador Ámbar con montura dorada, foto de catálogo" },
+      { kind: "text", from: "agent", text: "Sí, son las Redonda Carey. Nos quedan 4." },
+      { kind: "card", from: "agent", kicker: "De tu catálogo", title: "Redonda Carey", meta: "$189.000 · quedan 4", imageSrc: REDONDA_CAREY, imageAlt: "Gafas de sol Redonda Carey, foto de catálogo" },
     ],
   },
   {
@@ -384,10 +397,14 @@ const ICON = {
 } as const;
 
 export const APP_SHELL = {
-  business: "Óptica Vértice",
-  logo: { src: BUSINESS_LOGO },
+  /**
+   * El mismo negocio ficticio de la home («Tecnología, Medellín», Apple): la
+   * ventana del panel enseña otro caso de uso que el juego (la óptica).
+   */
+  business: "Tecnología, Medellín",
+  monogram: "TM",
   role: "Dueña",
-  me: { name: "Laura Arango", mail: "laura@opticavertice.co" },
+  me: { name: "Laura Arango", mail: "laura@tecnologiamedellin.co" },
   crumbRoot: "Workspace",
   search: "Buscar",
   searchIcon: ICON.search,
@@ -575,20 +592,20 @@ export const PIECE_SCREENS: PieceScreens = {
       { label: "Cerradas", count: 0 },
     ],
     channelsLabel: "Canales",
-    channels: [{ label: "WhatsApp Ventas" }, { label: "WhatsApp Taller", note: "Exámenes y entregas" }],
+    channels: [{ label: "WhatsApp Ventas" }, { label: "WhatsApp Servicio técnico", note: "Reparaciones y garantías" }],
     listTitle: "En cola",
     listSub: "3 esperan a alguien del equipo",
     search: "Buscar por nombre o teléfono",
     rows: [
-      { initials: "AM", name: "Andrés M.", preview: "Prefiero hablar con una persona", time: "9:28", holder: "En cola · 2 min", tone: "amber", unread: 1, on: true },
-      { initials: "PN", name: "Pedro N.", preview: "¿Hacen progresivos?", time: "9:21", holder: "En cola · 9 min", tone: "amber", unread: 2 },
-      { initials: "LC", name: "Lucía C.", preview: "Necesito cambiar la cita", time: "9:02", holder: "En cola · 28 min", tone: "coral" },
+      { initials: "DR", name: "Daniel R.", preview: "Prefiero hablar con una persona", time: "9:28", holder: "En cola · 2 min", tone: "amber", unread: 1, on: true },
+      { initials: "VG", name: "Valeria G.", preview: "¿Tienen los AirPods Pro?", time: "9:21", holder: "En cola · 9 min", tone: "amber", unread: 2 },
+      { initials: "CP", name: "Camilo P.", preview: "Necesito cambiar la cita del técnico", time: "9:02", holder: "En cola · 28 min", tone: "coral" },
     ],
-    head: { initials: "AM", name: "Andrés M.", channel: "WhatsApp Ventas" },
+    head: { initials: "DR", name: "Daniel R.", channel: "WhatsApp Ventas" },
     day: "Hoy",
     thread: [
-      { from: "customer", text: "¿Me las dejas más baratas?", time: "9:26" },
-      { from: "agent", text: "Con el cupón PRIMERAVEZ te quedan en $170.100.", time: "9:26" },
+      { from: "customer", text: "¿Me dejas el Apple Watch más barato?", time: "9:26" },
+      { from: "agent", text: "Con el cupón PRIMERAVEZ te queda en $2.249.100.", time: "9:26" },
       { from: "customer", text: "Prefiero hablar con una persona", time: "9:28" },
     ],
     events: ["Axi pasó la conversación al equipo: el cliente pidió hablar con una persona · 9:28", "Lleva 2 min en cola; si nadie la toma en 5, sube de prioridad"],
@@ -602,97 +619,98 @@ export const PIECE_SCREENS: PieceScreens = {
     create: "Crear agente",
     agents: [
       { name: "Vera", status: "Activo", statusTone: "ok", role: "Vende y toma pedidos", character: "nova", color: "coral", expression: "proud", channel: "Ventas · WhatsApp", voice: "Con voz" },
-      { name: "Sofía", status: "Activo", statusTone: "ok", role: "Gestiona la agenda", character: "strobi", color: "mint", expression: "curious", channel: "Taller · WhatsApp", voice: "Con voz" },
+      { name: "Sofía", status: "Activo", statusTone: "ok", role: "Agenda el servicio técnico", character: "strobi", color: "mint", expression: "curious", channel: "Servicio técnico · WhatsApp", voice: "Con voz" },
       { name: "Mateo", status: "Borrador", statusTone: "muted", role: "Atiende soporte", character: "cloudee", color: "cloud", expression: "neutral", channel: "Sin canal asignado", voice: "Sin voz" },
     ],
     createCard: { title: "Crear agente", sub: "Personaje, voz y reglas en cinco minutos" },
   },
   catalogo: {
     title: "Catálogo",
-    sub: "38 productos · 4 categorías · tu agente los busca aunque escriban mal",
+    sub: "126 productos · 6 categorías · tu agente los busca aunque escriban mal",
     products: [
-      { name: "Aviador Ámbar", price: "$189.000", stock: "11 en stock", imageSrc: PRODUCT_IMAGE, on: true },
-      { name: "Clubmaster Carey", price: "$215.000", stock: "6 en stock", imageSrc: `${PHOTOS}/clubmaster-carey.jpg` },
-      { name: "Redonda Titanio", price: "$248.000", stock: "3 en stock", imageSrc: `${PHOTOS}/redonda-titanio.jpg` },
-      { name: "Wayfarer Negra", price: "$169.000", stock: "Agotado", imageSrc: `${PHOTOS}/wayfarer-negra.jpg`, out: true },
+      { name: "Apple Watch Series 11", price: "$2.499.000", stock: "9 en stock", imageSrc: WATCH_HERO, on: true },
+      { name: "iPhone 17 256 GB", price: "$5.499.000", stock: "6 en stock", imageSrc: TECH("iphone.jpg") },
+      { name: "AirPods Pro 2", price: "$1.099.000", stock: "14 en stock", imageSrc: TECH("airpods.jpg") },
+      { name: "MacBook Air 13", price: "$4.899.000", stock: "3 en stock", imageSrc: TECH("macbook.jpg") },
+      { name: "iPad 11", price: "$2.299.000", stock: "Agotado", imageSrc: TECH("ipad.jpg"), out: true },
     ],
-    name: "Aviador Ámbar",
-    price: "$189.000",
-    category: "Monturas de sol",
-    imageSrc: PRODUCT_IMAGE,
-    imageAlt: "Gafas Aviador Ámbar",
+    name: "Apple Watch Series 11",
+    price: "$2.499.000",
+    category: "Relojes inteligentes",
+    imageSrc: WATCH_HERO,
+    imageAlt: "Apple Watch Series 11 de titanio pizarra con correa de eslabones",
     variantsLabel: "Variantes y stock (3)",
     columns: ["Variante", "SKU", "Stock"],
     variants: [
-      { name: "Negro / Ámbar", sku: "AV-NA-01", stock: "4 · disponible", out: false, imageSrc: PRODUCT_IMAGE },
-      { name: "Dorado / Ámbar", sku: "AV-DA-02", stock: "7 · disponible", out: false, imageSrc: AVIADOR_DORADO },
-      { name: "Plata / Gris", sku: "AV-PG-03", stock: "agotado", out: true },
+      { name: "Pizarra 46", sku: "S11-PZ46", stock: "5 disponibles", out: false, imageSrc: WATCH_HERO },
+      { name: "Pizarra 42", sku: "S11-PZ42", stock: "4 disponibles", out: false, imageSrc: WATCH_HERO },
+      { name: "Natural 46", sku: "S11-NT46", stock: "agotado", out: true },
     ],
-    readiness: "Plata / Gris está agotada · tu agente ofrece las demás",
-    search: { label: "Búsqueda con IA", typed: "aviadro ambar", found: "Aviador Ámbar" },
+    readiness: "Natural 46 está agotado · tu agente ofrece las demás",
+    search: { label: "Búsqueda con IA", typed: "apel wach 11", found: "Apple Watch Series 11" },
   },
   crm: {
     title: "Pipeline",
     pipeline: "Ventas",
-    sub: "12 oportunidades abiertas · $ 3,6 M en juego · arrastra una tarjeta para cambiarla de etapa",
+    sub: "12 oportunidades abiertas · $ 22,7 M en juego · arrastra una tarjeta para cambiarla de etapa",
     views: ["Tablero", "Tabla"],
     summaryAction: "Resumen de Axi",
     newAction: "Nueva oportunidad",
-    forecast: { label: "Pronóstico ponderado", value: "$ 1,4 M", of: "de $ 3,6 M", ratio: 0.38 },
-    won: { label: "Ganadas · septiembre", value: "9", note: "$ 2,4 M ganados" },
+    forecast: { label: "Pronóstico ponderado", value: "$ 9,2 M", of: "de $ 22,7 M", ratio: 0.41 },
+    won: { label: "Ganadas · septiembre", value: "9", note: "$ 14,8 M ganados" },
     rate: { label: "Tasa de cierre · septiembre", value: "32 %", note: "9 de 28 que llegaron a cotizar" },
-    next: { kicker: "Lo próximo", title: "2 se enfrían", text: "Llevan más días de los que aguanta su etapa. La primera: Andrés M., 6 días en Compromiso.", action: "Ver la primera" },
+    next: { kicker: "Lo próximo", title: "2 se enfrían", text: "Llevan más días de los que aguanta su etapa. La primera: Daniel R., 6 días en Compromiso.", action: "Ver la primera" },
     stages: [
       {
-        name: "Nuevo", prob: "10 %", count: 6, total: "$ 1,1 M",
+        name: "Nuevo", prob: "10 %", count: 6, total: "$ 6,2 M",
         deals: [
-          { name: "Juan P.", initials: "JP", value: "$ 380.000", product: "Monturas niño", byAxi: true },
-          { name: "Sara L.", initials: "SL", value: "$ 240.000", product: "Lentes de contacto" },
+          { name: "Juan P.", initials: "JP", value: "$ 1.099.000", product: "AirPods Pro 2", byAxi: true },
+          { name: "Sara L.", initials: "SL", value: "$ 2.299.000", product: "iPad 11" },
         ],
       },
       {
-        name: "Cotizado", prob: "40 %", count: 4, total: "$ 1,6 M",
+        name: "Cotizado", prob: "40 %", count: 4, total: "$ 9,8 M",
         deals: [
-          { name: "Valentina R.", initials: "VR", value: "$ 170.100", product: "Aviador Ámbar + fórmula", note: "Entró hoy a la etapa", byAxi: true },
-          { name: "Pedro N.", initials: "PN", value: "$ 520.000", product: "Progresivos" },
+          { name: "Valeria G.", initials: "VG", value: "$ 2.249.100", product: "Apple Watch Series 11", note: "Entró hoy a la etapa", byAxi: true },
+          { name: "Camilo P.", initials: "CP", value: "$ 4.899.000", product: "MacBook Air 13" },
         ],
       },
       {
-        name: "Compromiso", prob: "70 %", count: 2, total: "$ 0,9 M",
-        deals: [{ name: "Andrés M.", initials: "AM", value: "$ 412.000", product: "Examen + montura", note: "6 días sin moverse", stale: true }],
+        name: "Compromiso", prob: "70 %", count: 2, total: "$ 6,7 M",
+        deals: [{ name: "Daniel R.", initials: "DR", value: "$ 5.499.000", product: "iPhone 17 256 GB", note: "6 días sin moverse", stale: true }],
       },
       {
-        name: "Ganado", prob: "100 %", count: 9, total: "$ 2,4 M",
-        deals: [{ name: "Lucía C.", initials: "LC", value: "$ 189.000", product: "Aviador Ámbar" }],
+        name: "Ganado", prob: "100 %", count: 9, total: "$ 14,8 M",
+        deals: [{ name: "Lucía C.", initials: "LC", value: "$ 2.499.000", product: "Apple Watch Series 11" }],
       },
     ],
     byAxi: "La abrió Axi",
   },
   llamadas: {
     back: "Historial",
-    who: "Andrés M.",
+    who: "Daniel R.",
     result: "Objetivo cumplido",
     meta: "+57 300 555 0142 · Retomar cotización · saliente · hoy",
     action: "Ver contacto",
-    recording: { title: "Grabación", agent: "Vera (IA)", caller: "Andrés", at: "0:26", total: "2:14", rates: ["1×", "1,5×", "2×"] },
+    recording: { title: "Grabación", agent: "Vera (IA)", caller: "Daniel", at: "0:26", total: "2:14", rates: ["1×", "1,5×", "2×"] },
     transcriptLabel: "Conversación",
     transcript: [
-      { role: "agent", clock: "0:02", text: "Hola, Andrés. Te habla Vera, de Óptica Vértice. ¿Tienes un minuto?" },
+      { role: "agent", clock: "0:02", text: "Hola, Daniel. Te habla Vera, de Tecnología Medellín. ¿Tienes un minuto?" },
       { role: "caller", clock: "0:07", text: "Sí, dime." },
-      { role: "agent", clock: "0:10", text: "Te llamo por la cotización del examen y la montura. Esta semana tengo cita el jueves a las 4:00 p. m." },
-      { role: "caller", clock: "0:21", text: "El jueves me sirve. ¿Me mandas el pedido por WhatsApp?" },
+      { role: "agent", clock: "0:10", text: "Te llamo por la cotización del iPhone 17 de 256 GB. Hoy lo tenemos en negro y en lavanda." },
+      { role: "caller", clock: "0:21", text: "Lo quiero en negro. ¿Me mandas el pedido por WhatsApp?" },
       { role: "agent", clock: "0:26", text: "Claro, te lo envío ahora mismo." },
     ],
     summary: {
       kicker: "Así fue la llamada",
       title: "Objetivo cumplido",
-      text: "Andrés retomó la cotización del examen y la montura. Quedó para el jueves a las 4:00 p. m. y pidió el pedido por WhatsApp.",
+      text: "Daniel retomó la cotización del iPhone 17 de 256 GB. Lo eligió en negro y pidió el pedido por WhatsApp.",
       reachedLabel: "Llegó a",
       reached: "Cierre",
       of: "4 de 4",
       stages: [{ label: "Apertura" }, { label: "Motivo" }, { label: "Propuesta" }, { label: "Cierre", note: "Aquí se cumplió el objetivo" }],
       verdict: "Meta cumplida · confianza alta",
-      reason: "Aceptó la cita y pidió el pedido por WhatsApp.",
+      reason: "Eligió el color y pidió el pedido por WhatsApp.",
       foot: "Resumen escrito por Axi al colgar",
     },
   },
@@ -700,15 +718,15 @@ export const PIECE_SCREENS: PieceScreens = {
     title: "Cartera",
     views: ["Todo", "En mora"],
     owedLabel: "Te deben",
-    owed: "$ 3,4 M",
+    owed: "$ 6,4 M",
     overdueLabel: "Vencido",
-    overdue: "$ 820.000",
-    summary: "4 clientes con saldo. $ 820.000 ya venció y $ 128.100 tiene promesa para el viernes.",
+    overdue: "$ 1.833.000",
+    summary: "4 clientes con saldo. $ 1.833.000 ya venció y $ 899.000 tiene promesa para el viernes.",
     order: "Ordenada por a quién escribir primero, no por nombre ni por monto.",
     island: {
       kicker: "Escribe primero a",
-      name: "Andrés M.",
-      amount: "$ 820.000",
+      name: "Daniel R.",
+      amount: "$ 1.833.000",
       why: "Lleva 4 días en mora; el recordatorio de ayer sigue sin respuesta.",
       facts: [
         { label: "Venció", value: "hace 4 días" },
@@ -723,10 +741,10 @@ export const PIECE_SCREENS: PieceScreens = {
     ],
     write: "Escribir",
     rows: [
-      { initials: "AM", name: "Andrés M.", concept: "Cuota 2 de 3", ref: "#1031", amount: "$ 820.000", state: "En mora · 4 días", tone: "coral", group: 0 },
-      { initials: "VR", name: "Valentina R.", concept: "Saldo", ref: "#1042", amount: "$ 128.100", state: "Promesa viva · viernes", tone: "violet", group: 1 },
-      { initials: "JP", name: "Juan P.", concept: "Cuota 1 de 2", ref: "#1036", amount: "$ 1.250.000", state: "Vence el jue 9", tone: "amber", group: 1 },
-      { initials: "SL", name: "Sara L.", concept: "Saldo", ref: "#1028", amount: "$ 1.201.900", state: "Al día · vence en 20 días", tone: "ok", group: 2 },
+      { initials: "DR", name: "Daniel R.", concept: "Cuota 2 de 3", ref: "#2061", amount: "$ 1.833.000", state: "En mora · 4 días", tone: "coral", group: 0 },
+      { initials: "VG", name: "Valeria G.", concept: "Saldo", ref: "#2087", amount: "$ 899.000", state: "Promesa viva · viernes", tone: "violet", group: 1 },
+      { initials: "CP", name: "Camilo P.", concept: "Cuota 1 de 2", ref: "#2074", amount: "$ 2.449.500", state: "Vence el jue 9", tone: "amber", group: 1 },
+      { initials: "SM", name: "Sofía M.", concept: "Saldo", ref: "#2052", amount: "$ 1.218.500", state: "Al día · vence en 20 días", tone: "ok", group: 2 },
     ],
   },
   medicion: {
@@ -734,7 +752,7 @@ export const PIECE_SCREENS: PieceScreens = {
     sub: "Septiembre · todos los canales y agentes",
     tabs: ["Conversión", "Calidad", "Alertas"],
     salesLabel: "Ventas pagadas · septiembre",
-    sales: "$ 48,6 M",
+    sales: "$ 186,4 M",
     flow: "1.240 conversaciones → 171 pagadas",
     salesNote: "Si una persona cerró la venta tras un relevo, cuenta para tu negocio, no para Axi.",
     funnelLabel: "Embudo de ventas",
@@ -945,7 +963,8 @@ export const PRODUCTOS_CLOSE = {
 /* ─────────────────────────────────── SEO ─────────────────────────────────── */
 
 export const PRODUCTOS_SEO = {
-  title: "Productos",
+  /** Con la plantilla del sitio: «Productos: agente de ventas con IA — Axi Connect». */
+  title: "Productos: agente de ventas con IA",
   description:
-    "Juega a ser tu cliente y mira cómo vende Axi: reconoce fotos, responde en voz, cuida tu margen, toma el pedido y agenda. Bandeja, CRM, catálogo, llamadas, cobros y medición en pesos.",
+    "Juega a ser tu cliente y mira cómo vende Axi por tus canales digitales: reconoce fotos, cuida tu margen, toma pedidos, recupera ventas y mide en pesos.",
 } as const;

@@ -15,7 +15,7 @@ export function ProductosClose() {
   return (
     <section id={PRODUCTOS_ANCHORS.close} aria-labelledby="empezar-title" className="pj-band pj-close">
       <div className="pj-glow" aria-hidden="true" />
-      <h2 id="empezar-title" className="pj-h pj-h-xl relative z-[1]">
+      <h2 id="empezar-title" className="pj-h pj-h-close relative z-[1]">
         <span className="block">{PRODUCTOS_CLOSE.strong}</span>{" "}
         <span className="t block">{PRODUCTOS_CLOSE.thin}</span>
       </h2>
@@ -30,7 +30,7 @@ export function ProductosClose() {
         ))}
       </ol>
       <div className="relative z-[1] flex flex-col items-center gap-4">
-        <Link href={PRODUCTOS_TRIAL.href} prefetch={false} className="pj-cta h-[60px] px-[34px] text-[17px]">
+        <Link href={PRODUCTOS_TRIAL.href} prefetch={false} className="pj-cta">
           {PRODUCTOS_TRIAL.label} <ArrowRight className="size-4" aria-hidden="true" />
         </Link>
         <p className="pj-dim m-0 text-[13.5px]">{PRODUCTOS_CLOSE.micro}</p>

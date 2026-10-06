@@ -67,10 +67,10 @@ describe("contenido de /productos", () => {
       expect(sinDetonante.map((m) => m.id)).toEqual([]);
     });
 
-    it("las imágenes salen de /images/, la única carpeta de imágenes pública", () => {
+    it("las fotos del juego viven en Cloudinary, no en el repo (pedido de la dueña: no engordar el build)", () => {
       const imgs = all.flatMap((m) => ("imageSrc" in m && m.imageSrc ? [m.imageSrc] : []));
       expect(imgs.length).toBeGreaterThan(0);
-      expect(imgs.filter((src) => !src.startsWith("/images/"))).toEqual([]);
+      expect(imgs.filter((src) => !src.startsWith("https://res.cloudinary.com/dpfnxj52w/image/upload/"))).toEqual([]);
     });
 
     it("el pago lo verifica una persona: ningún mensaje lo da por confirmado", () => {

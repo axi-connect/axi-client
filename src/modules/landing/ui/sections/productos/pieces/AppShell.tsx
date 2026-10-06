@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { createContext, useContext, type ReactNode } from "react";
 
 import { APP_SHELL, type PieceId } from "@/modules/landing/ui/content/productos.content";
@@ -26,9 +25,9 @@ export function AppShell({ piece, children }: { piece: PieceId; children: ReactN
     <div className="pp-app">
       <aside className="pp-app-side" aria-hidden="true">
         <div className="pp-app-brand">
-          {/* El mismo logo del negocio que el chat del juego: es la misma Óptica Vértice. */}
-          <span className="pp-app-logo">
-            <Image src={APP_SHELL.logo.src} alt="" width={30} height={30} />
+          {/* El monograma de «Tecnología, Medellín», el negocio de la home. */}
+          <span className="pp-app-logo" aria-hidden="true">
+            {APP_SHELL.monogram}
           </span>
           <span>
             <b>{APP_SHELL.business}</b>

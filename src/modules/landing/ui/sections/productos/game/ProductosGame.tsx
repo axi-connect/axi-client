@@ -208,7 +208,6 @@ export function ProductosGame() {
 
   return (
     <section ref={sectionRef} id={PRODUCTOS_ANCHORS.game} aria-labelledby="agente-title" className="pj-scene pj-game">
-      <h2 id="agente-title" className="sr-only">{`${GAME.island.title}. ${GAME.heading.strong} ${GAME.heading.thin}`}</h2>
       <p className="sr-only">{GAME.disclaimer}</p>
       <ul className="sr-only">
         {GAME_ABILITIES.map((a) => (
@@ -228,10 +227,11 @@ export function ProductosGame() {
       <div className="pj-board">
         <div className="pj-moves-col" data-rail="l">
           <p className="pj-eyebrow text-[var(--axi-brand)]">{GAME.heading.eyebrow}</p>
-          <p className="pj-h pj-game-h" aria-hidden="true">
+          {/* El h2 de la escena es el titular visible (en el teléfono queda solo para lectores). */}
+          <h2 id="agente-title" className="pj-h pj-game-h">
             <span className="block">{GAME.heading.strong}</span>{" "}
             <span className="t block">{GAME.heading.thin}</span>
-          </p>
+          </h2>
           <p className="pj-moves-sub">
             <b>{GAME.movesTitle}</b>
             <span className="pj-dim">{GAME.movesSub}</span>
