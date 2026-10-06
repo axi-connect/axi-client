@@ -359,7 +359,6 @@ export interface Piece {
   id: PieceId;
   /** El nombre en el dock. */
   tab: string;
-  tone: GameTone;
   strong: string;
   thin: string;
   /** Qué hace por ti, en una línea bajo el titular. */
@@ -435,13 +434,13 @@ export const APP_SHELL = {
 } as const;
 
 export const PIECES: readonly Piece[] = [
-  { id: "inbox", tab: "Bandeja", tone: "violet", strong: "Todo tu chat.", thin: "Una sola bandeja.", line: "Axi atiende y, cuando hace falta, te pasa la conversación con su motivo. Tú la tomas con un toque.", sample: true },
-  { id: "configura", tab: "Agente", tone: "violet", strong: "Lo configuras.", thin: "No lo programas.", line: "Cara, voz y reglas en minutos. Las reglas las escribes como se las dirías a un vendedor nuevo.", sample: false },
-  { id: "catalogo", tab: "Catálogo", tone: "coral", strong: "Tu catálogo,", thin: "entendido.", line: "Variantes, SKU y stock. El agente encuentra el producto aunque el cliente escriba mal.", sample: true },
-  { id: "crm", tab: "CRM", tone: "coral", strong: "Cada conversación,", thin: "una oportunidad.", line: "Axi abre la oportunidad y la mueve de etapa. Tú ves cuáles se enfrían antes de perderlas.", sample: true },
-  { id: "llamadas", tab: "Llamadas", tone: "violet", strong: "Cuando hay que llamar,", thin: "llama.", line: "Llama desde tu número para retomar cotizaciones, confirmar citas o cobrar, y te deja el resumen.", sample: true },
-  { id: "cobros", tab: "Cobros", tone: "amber", strong: "Te deben.", thin: "Axi te dice a quién primero.", line: "Cuotas, promesas y recordatorios. La cartera se ordena por a quién escribir hoy.", sample: true },
-  { id: "medicion", tab: "Medición", tone: "amber", strong: "Ventas en pesos.", thin: "No mensajes.", line: "El embudo termina en dinero pagado, y una IA supervisora te dice qué corregir.", sample: true },
+  { id: "inbox", tab: "Bandeja", strong: "Todo tu chat.", thin: "Una sola bandeja.", line: "Axi atiende y, cuando hace falta, te pasa la conversación con su motivo. Tú la tomas con un toque.", sample: true },
+  { id: "configura", tab: "Agente", strong: "Lo configuras.", thin: "No lo programas.", line: "Cara, voz y reglas en minutos. Las reglas las escribes como se las dirías a un vendedor nuevo.", sample: false },
+  { id: "catalogo", tab: "Catálogo", strong: "Tu catálogo,", thin: "entendido.", line: "Variantes, SKU y stock. El agente encuentra el producto aunque el cliente escriba mal.", sample: true },
+  { id: "crm", tab: "CRM", strong: "Cada conversación,", thin: "una oportunidad.", line: "Axi abre la oportunidad y la mueve de etapa. Tú ves cuáles se enfrían antes de perderlas.", sample: true },
+  { id: "llamadas", tab: "Llamadas", strong: "Cuando hay que llamar,", thin: "llama.", line: "Llama desde tu número para retomar cotizaciones, confirmar citas o cobrar, y te deja el resumen.", sample: true },
+  { id: "cobros", tab: "Cobros", strong: "Te deben.", thin: "Axi te dice a quién primero.", line: "Cuotas, promesas y recordatorios. La cartera se ordena por a quién escribir hoy.", sample: true },
+  { id: "medicion", tab: "Medición", strong: "Ventas en pesos.", thin: "No mensajes.", line: "El embudo termina en dinero pagado, y una IA supervisora te dice qué corregir.", sample: true },
 ];
 
 /**
