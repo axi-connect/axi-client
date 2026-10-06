@@ -40,6 +40,14 @@ export type ProposalEvidence = ProposalDTO["evidence"][number];
  * quiere nombrar es la pregunta, no su ausencia.
  */
 export type CmoQuestionDTO = NonNullable<CmoMessageDTO["question"]>;
+
+/**
+ * Los topes de un mensaje a Axel: los MISMOS del servidor (`cmo.dto.ts`,
+ * `min(2).max(2000)`). El compositor no deja pasarse del máximo ni enviar
+ * menos del mínimo, así que el 400 de validación deja de verse.
+ */
+export const CMO_MESSAGE_MAX_CHARS = 2000;
+export const CMO_MESSAGE_MIN_CHARS = 2;
 export type CmoQuestionOption = CmoQuestionDTO["options"][number];
 
 /** Payload de `POST /cmo/messages`. */

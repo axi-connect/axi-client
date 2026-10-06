@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
-import { ArrowUp, Loader2, Mic, Square } from "lucide-react";
+import { ArrowUp, Loader2, Mic, MicOff, Square } from "lucide-react";
 
 import { useTypewriterPlaceholder } from "@/core/hooks/use-typewriter-placeholder";
-import { useVoiceRecorder } from "@/core/hooks/use-voice-recorder";
+import { recorderProblem, useVoiceRecorder, type RecorderProblem } from "@/core/hooks/use-voice-recorder";
 import { cn } from "@/core/lib/utils";
+import type { AssistantIslandListeningState } from "../types";
 
 /** Altura máxima del campo, en px: una sola fuente para el estilo y el JS. */
 export const COMPOSER_MAX_PX = 120;
@@ -17,6 +18,17 @@ export interface AssistantComposerVoice {
   /** Convierte el audio en texto; el kit lo añade al borrador para que se revise antes de enviar. */
   transcribe: (audio: Blob) => Promise<string>;
 }
+
+/**
+ * Qué decirle a la persona cuando el micrófono no está: el motivo y la salida
+ * (informe de la entrevista, rec. 16). El título cabe en un aviso (≤ 34).
+ */
+export const VOICE_PROBLEM_COPY: Record<RecorderProblem, { title: string; body: string }> = {
+  denied: { title: "El micrófono está bloqueado", body: "Actívalo en el candado del navegador, o escribe tu respuesta." },
+  no_device: { title: "No encontré un micrófono", body: "Conecta uno, o escribe tu respuesta." },
+  unsupported: { title: "Este navegador no puede dictar", body: "Escribe tu respuesta; todo lo demás funciona igual." },
+  failed: { title: "No pude abrir el micrófono", body: "Puede que otra aplicación lo esté usando. Inténtalo de nuevo o escribe." },
+};
 
 interface AssistantComposerProps {
   onSend: (body: string, meta: { voice: boolean }) => void;
@@ -44,8 +56,31 @@ interface AssistantComposerProps {
   after?: ReactNode;
   /** El pie: la promesa de confianza. */
   footer?: ReactNode;
+  /**
+   * Cuánto texto cabe en un mensaje (el tope del servidor de ese asistente).
+   * El compositor no deja pasarse: corta lo pegado o dictado que sobre y lo
+   * dice, y enseña la cuenta solo cuando queda poco. Antes el texto salía
+   * entero y el servidor devolvía un error de validación que nadie había
+   * anunciado (hotfix de límites, 2026-10-05).
+   */
+  maxChars?: number;
+  /** Menos de esto no se envía (el botón se apaga): el mínimo del servidor. */
+  minChars?: number;
   /** Atenúa la cápsula (asistente bloqueado). */
   dimmed?: boolean;
+  /**
+   * Mientras graba, el estado del dictado para que la isla lo refleje (forma E).
+   * Detener y Cancelar son los del compositor: la isla no tiene otro grabador.
+   * Se lee por ref: un callback en línea no provoca un vaivén por render.
+   */
+  onListeningChange?: (listening: AssistantIslandListeningState | null) => void;
+  /**
+   * Quién cuenta por qué el micrófono no está. Sin esto, el compositor lo dice
+   * debajo de la cápsula; con esto, lo cuenta el llamador (la isla de Alba) y
+   * aquí no se repite: una sola copia visible. Solo se avisa DESPUÉS de pulsar
+   * el micrófono: nadie quiere un reproche al abrir la pantalla.
+   */
+  onVoiceProblem?: (problem: RecorderProblem | null) => void;
   className?: string;
 }
 
@@ -80,6 +115,10 @@ export function AssistantComposer({
   after,
   footer,
   dimmed = false,
+  maxChars,
+  minChars = 1,
+  onListeningChange,
+  onVoiceProblem,
   className,
 }: AssistantComposerProps) {
   const innerRef = useRef<HTMLTextAreaElement | null>(null);
@@ -92,6 +131,8 @@ export function AssistantComposer({
   const recorder = useVoiceRecorder(voice !== undefined);
   const recording = recorder.state === "recording" || recorder.state === "requesting";
   const locked = disabled || busy;
+  const [micTried, setMicTried] = useState(false);
+  const problem = voice !== undefined && micTried ? recorderProblem(recorder.state) : null;
 
   useTypewriterPlaceholder(ref, {
     phrases: placeholderPhrases ?? NO_PHRASES,
@@ -109,14 +150,60 @@ export function AssistantComposer({
     onTypingChange?.(typing);
   }, [typing, onTypingChange]);
 
+  useEffect(() => {
+    onVoiceProblem?.(problem);
+  }, [problem, onVoiceProblem]);
+
+  /* El espejo de la isla. `finishRecording` y `cancel` se leen por ref: la isla
+     recibe un objeto nuevo por segundo (el reloj), no por cada render. */
+  const finishRef = useRef<() => void>(() => undefined);
+  const cancelRef = useRef(recorder.cancel);
+  const listeningRef = useRef(onListeningChange);
+  useEffect(() => {
+    listeningRef.current = onListeningChange;
+  });
+  const listeningSeconds = recorder.state === "recording" ? recorder.seconds : null;
+  useEffect(() => {
+    listeningRef.current?.(
+      listeningSeconds === null
+        ? null
+        : {
+            seconds: listeningSeconds,
+            onStop: () => {
+              finishRef.current();
+            },
+            onCancel: () => {
+              cancelRef.current();
+            },
+          },
+    );
+  }, [listeningSeconds]);
+  useEffect(
+    () => () => {
+      listeningRef.current?.(null);
+    },
+    [],
+  );
+
   const autosize = (el: HTMLTextAreaElement) => {
     el.style.height = "auto";
     el.style.height = `${String(Math.min(el.scrollHeight, COMPOSER_MAX_PX))}px`;
   };
 
+  const [clipped, setClipped] = useState(false);
+  const limit = maxChars ?? Number.POSITIVE_INFINITY;
+  /** Deja el texto en el tope y recuerda si hubo que cortar, para decirlo. */
+  const fit = (text: string): string => {
+    if (text.length <= limit) return text;
+    setClipped(true);
+    return text.slice(0, limit);
+  };
+
   const submit = () => {
     const body = draft.trim();
-    if (body === "" || locked) return;
+    // Con `maxLength` no debería pasar; si pasa (un valor puesto por código), no se envía algo que el servidor rechazará.
+    if (body.length < minChars || locked || body.length > limit) return;
+    setClipped(false);
     onSend(body, { voice: fromVoice });
     setDraft("");
     setFromVoice(false);
@@ -132,7 +219,9 @@ export function AssistantComposer({
     try {
       const text = (await voice.transcribe(audio)).trim();
       if (text !== "") {
-        setDraft((current) => (current.trim() === "" ? text : `${current.trim()} ${text}`));
+        // El dictado entra por otro camino que el teclado: también tiene que caber.
+        // Mientras graba el campo no se ve, así que el borrador no cambió entretanto.
+        setDraft(fit(draft.trim() === "" ? text : `${draft.trim()} ${text}`));
         setFromVoice(true);
       }
       requestAnimationFrame(() => {
@@ -148,8 +237,17 @@ export function AssistantComposer({
     }
   };
 
-  const canSend = draft.trim() !== "" && !locked && !transcribing;
-  const showMic = voice !== undefined && recorder.state !== "unsupported" && !locked;
+  useEffect(() => {
+    finishRef.current = () => {
+      void finishRecording();
+    };
+    cancelRef.current = recorder.cancel;
+  });
+
+  const canSend = draft.trim().length >= minChars && !locked && !transcribing;
+  // Sin soporte el micrófono también se pinta: al pulsarlo dice por qué no dicta.
+  const showMic = voice !== undefined && !locked;
+  const micUnavailable = problem !== null;
 
   return (
     <div className={className}>
@@ -193,10 +291,20 @@ export function AssistantComposer({
           <textarea
             ref={ref}
             value={draft}
+            maxLength={maxChars}
             onChange={(event) => {
               setDraft(event.target.value);
               if (event.target.value === "") setFromVoice(false);
+              if (event.target.value.length < limit) setClipped(false);
               autosize(event.target);
+            }}
+            onPaste={(event) => {
+              // `maxLength` corta lo pegado EN SILENCIO: aquí se sabe si sobró, para decirlo.
+              if (maxChars === undefined) return;
+              const target = event.currentTarget;
+              const pasted = event.clipboardData.getData("text");
+              const kept = target.value.length - (target.selectionEnd - target.selectionStart);
+              if (kept + pasted.length > maxChars) setClipped(true);
             }}
             onKeyDown={(event) => {
               if (event.key === "Enter" && !event.shiftKey) {
@@ -226,17 +334,28 @@ export function AssistantComposer({
         {showMic && !recording ? (
           <button
             type="button"
-            onClick={recorder.start}
+            onClick={() => {
+              setMicTried(true);
+              recorder.start();
+            }}
             disabled={transcribing}
-            aria-label="Dictar"
-            title="Dictar"
-            className={cn(ROUND, "text-muted-foreground hover:bg-foreground/[0.06] hover:text-foreground")}
+            aria-label="Dictar respuesta"
+            className={cn(
+              "inline-flex h-9 flex-none items-center gap-1.5 rounded-full px-3 text-[13px] font-semibold transition-colors",
+              "focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+              micUnavailable
+                ? "text-muted-foreground/70 hover:text-foreground"
+                : "text-muted-foreground hover:bg-foreground/[0.06] hover:text-foreground",
+            )}
           >
             {transcribing ? (
-              <Loader2 className="size-[18px] animate-spin" aria-hidden="true" />
+              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+            ) : micUnavailable ? (
+              <MicOff className="size-4" aria-hidden="true" />
             ) : (
-              <Mic className="size-[18px]" aria-hidden="true" />
+              <Mic className="size-4" aria-hidden="true" />
             )}
+            <span aria-hidden="true">{transcribing ? "Transcribiendo" : "Dictar"}</span>
           </button>
         ) : null}
 
@@ -265,23 +384,66 @@ export function AssistantComposer({
 
       {after}
 
+      {maxChars === undefined ? null : <LengthNote length={draft.length} max={maxChars} clipped={clipped} />}
+
       {fromVoice && draft.trim() !== "" ? (
         <p className="mt-2 flex items-center justify-center gap-1.5 text-[11.5px] text-muted-foreground">
           <Mic className="size-3" aria-hidden="true" />
           Lo dicté yo · revísalo antes de enviar
         </p>
       ) : null}
-      {voiceError !== null ? (
-        <p className="mt-2 text-center text-[11.5px] text-destructive">{voiceError}</p>
-      ) : null}
-      {voice !== undefined && recorder.state === "denied" ? (
-        <p className="mt-2 text-center text-[11.5px] text-muted-foreground">
-          El micrófono está bloqueado en este navegador. Puedes escribir igual.
-        </p>
-      ) : null}
+      {/* Siempre montado: el motivo se ANUNCIA al aparecer (una región que nace
+          con su texto no se lee). Vacío si no hay nada que decir. */}
+      {/* Sin `display:none` cuando está vacío: una región oculta así sale del árbol
+          de accesibilidad y su texto nuevo no se anunciaría. Vacía no ocupa alto. */}
+      <p
+        className={cn(
+          "text-center text-[11.5px] [&:not(:empty)]:mt-2",
+          voiceError !== null ? "text-destructive" : "text-muted-foreground",
+        )}
+        role="status"
+        aria-live="polite"
+      >
+        {voiceError ??
+          (problem !== null && onVoiceProblem === undefined
+            ? `${VOICE_PROBLEM_COPY[problem].title}. ${VOICE_PROBLEM_COPY[problem].body}`
+            : "")}
+      </p>
 
       {footer}
     </div>
+  );
+}
+
+/** A partir de aquí se enseña la cuenta: antes es ruido, como el «0/1500» de un formulario. */
+const NEAR_LIMIT = 0.8;
+
+/**
+ * La cuenta de caracteres, solo cuando importa: cerca del tope, o si algo se
+ * cortó. Es una región viva siempre montada (vacía en reposo) para que llegar
+ * al tope se anuncie.
+ */
+function LengthNote({ length, max, clipped }: { length: number; max: number; clipped: boolean }) {
+  const near = length >= max * NEAR_LIMIT;
+  const format = (value: number) => value.toLocaleString("es-CO");
+  const text = clipped
+    ? `Caben ${format(max)} caracteres por mensaje: lo que sobraba quedó fuera. Puedes enviarlo en dos mensajes.`
+    : length >= max
+      ? `Llegaste al máximo de ${format(max)} caracteres. Si te falta, envíalo en dos mensajes.`
+      : near
+        ? `${format(length)} de ${format(max)} caracteres`
+        : "";
+  return (
+    <p
+      className={cn(
+        "text-center text-[11.5px] tabular-nums [&:not(:empty)]:mt-2",
+        clipped || length >= max ? "text-foreground" : "text-muted-foreground",
+      )}
+      role="status"
+      aria-live="polite"
+    >
+      {text}
+    </p>
   );
 }
 

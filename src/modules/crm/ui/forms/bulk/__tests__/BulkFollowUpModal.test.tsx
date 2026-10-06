@@ -59,8 +59,8 @@ jest.mock("@/shared/components/ui/modal", () => ({
 
 const AUDIENCE = { source: "contacts" as const, contact_ids: ["c1", "c2", "c3"] };
 
-function preview(over: Partial<{ total: number; eligible: number; needs_opening: number; skipped: unknown[] }> = {}) {
-  return { total: 3, eligible: 2, needs_opening: 1, skipped: [{ reason: "no_channel", count: 1, contact_ids: ["c3"] }], within_limit: true, max: 5000, ...over };
+function preview(over: Partial<{ total: number; eligible: number; needs_opening: number; skipped: unknown[]; agent_tasks_enabled: boolean }> = {}) {
+  return { total: 3, eligible: 2, needs_opening: 1, skipped: [{ reason: "no_channel", count: 1, contact_ids: ["c3"] }], within_limit: true, max: 5000, agent_tasks_enabled: true, ...over };
 }
 
 describe("BulkFollowUpModal — quién recibe esto (F4/F5)", () => {
@@ -116,6 +116,14 @@ describe("BulkFollowUpModal — quién recibe esto (F4/F5)", () => {
     expect(screen.getByRole("button", { name: "Programar" })).toBeDisabled();
     expect(screen.queryByText(/Programar 0/)).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Agente")).not.toBeInTheDocument();
+  });
+
+  it("con las tareas de agente apagadas avisa, enlaza a Ajustes y no deja programar", async () => {
+    previewBulk.mockResolvedValue(preview({ needs_opening: 0, agent_tasks_enabled: false }));
+    render(<BulkFollowUpModal open audience={AUDIENCE} audienceLabel="x" onOpenChange={jest.fn()} onScheduled={jest.fn()} />);
+    expect(await screen.findByText(/Las tareas de agente están apagadas/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Enciéndelas en Ajustes" })).toHaveAttribute("href", "/crm/settings/agent-tasks");
+    expect(screen.getByRole("button", { name: "Programar 2 seguimientos" })).toBeDisabled();
   });
 
   it("el singular no se pluraliza a la fuerza", async () => {

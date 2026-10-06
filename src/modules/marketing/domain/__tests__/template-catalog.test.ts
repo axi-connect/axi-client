@@ -126,6 +126,7 @@ describe("template-catalog — apertura (F2)", () => {
     edit_blocked_reason: null,
     edit_retry_at: null,
     external_id: null,
+    header_media: null,
     updated_at: "2026-09-14T00:00:00.000Z",
   };
 

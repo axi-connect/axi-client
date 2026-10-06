@@ -8,9 +8,9 @@ import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { EmptyState } from "@/shared/components/features/empty-state";
+import { FormStep } from "@/shared/components/features/form-steps";
 import { UnsavedChangesDock } from "@/shared/components/features/island";
 import { OptionsInput } from "@/shared/components/features/options-input";
-import { StepCard } from "@/shared/components/features/step-card";
 import { Input } from "@/shared/components/ui/input";
 import {
   Select,
@@ -235,7 +235,7 @@ export function RoutineEditorView({ routineId }: { routineId: string | null }) {
       <div className="@container/ed">
         <div className="grid gap-4 @[60rem]/ed:grid-cols-[minmax(0,1fr)_20rem] @[60rem]/ed:items-start">
           <div className="flex min-w-0 flex-col gap-3">
-            <StepCard {...STEP_LOOK} index={1} title="¿Dónde busca?" summary={summaries.where} state={stepState("where")} open={openStep === "where"} onToggle={() => toggle("where")}>
+            <FormStep {...STEP_LOOK} number={1} title="¿Dónde busca?" summary={summaries.where} state={stepState("where")} open={openStep === "where"} onToggle={() => toggle("where")}>
               <Group foot={hints.search}>
                 <Rows>
                   <Row label="Nombre" htmlFor="route-name" stack>
@@ -308,9 +308,9 @@ export function RoutineEditorView({ routineId }: { routineId: string | null }) {
                   )}
                 </Rows>
               </Group>
-            </StepCard>
+            </FormStep>
 
-            <StepCard {...STEP_LOOK} index={2} title="¿A quién deja pasar?" summary={summaries.who} state={stepState("who")} open={openStep === "who"} onToggle={() => toggle("who")}>
+            <FormStep {...STEP_LOOK} number={2} title="¿A quién deja pasar?" summary={summaries.who} state={stepState("who")} open={openStep === "who"} onToggle={() => toggle("who")}>
               <Group foot="Lo que no califica no gasta contacto.">
                 <Rows>
                   <Row label="Puntaje mínimo" stack>
@@ -347,9 +347,9 @@ export function RoutineEditorView({ routineId }: { routineId: string | null }) {
                   />
                 </Rows>
               </Group>
-            </StepCard>
+            </FormStep>
 
-            <StepCard {...STEP_LOOK} index={3} title="¿Cómo les escribe?" summary={summaries.how} state={stepState("how")} open={openStep === "how"} onToggle={() => toggle("how")}>
+            <FormStep {...STEP_LOOK} number={3} title="¿Cómo les escribe?" summary={summaries.how} state={stepState("how")} open={openStep === "how"} onToggle={() => toggle("how")}>
               <Group title="Antes de escribirles" foot={ROUTINE_MODE_META[draft.mode].hint}>
                 <SegmentedControl
                   label="Antes de escribirles"
@@ -433,11 +433,11 @@ export function RoutineEditorView({ routineId }: { routineId: string | null }) {
                   </Row>
                 </Rows>
               </Group>
-            </StepCard>
+            </FormStep>
 
-            <StepCard
+            <FormStep
               {...STEP_LOOK}
-              index={4}
+              number={4}
               title="¿Cuándo sale y cuánto gasta?"
               summary={summaries.when}
               state={stepState("when")}
@@ -525,7 +525,7 @@ export function RoutineEditorView({ routineId }: { routineId: string | null }) {
                   </Row>
                 </Rows>
               </Group>
-            </StepCard>
+            </FormStep>
           </div>
           <FlightPreview
             headline={previewHeadline(draft.schedule.leads_per_run, estimate)}
@@ -555,8 +555,11 @@ export function RoutineEditorView({ routineId }: { routineId: string | null }) {
 
 type StepId = "where" | "who" | "how" | "when";
 
-/** La cara de los pasos del editor (la del mockup): chevrón, y «!» dicho como algo por corregir. */
-const STEP_LOOK = { id: "pilot-step", variant: "chevron", blockedHint: "tiene algo por corregir" } as const;
+/**
+ * La cara de los pasos del editor (la del mockup): chevrón, y «!» dicho como algo
+ * por corregir. El paso plegado desmonta sus campos, como siempre lo hizo aquí.
+ */
+const STEP_LOOK = { id: "pilot-step", variant: "chevron", blockedHint: "tiene algo por corregir", unmountWhenClosed: true } as const;
 
 /** En qué paso se arregla cada error de `validateRoutine`. */
 const STEP_OF_FIELD: Record<string, StepId | undefined> = {

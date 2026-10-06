@@ -15,6 +15,10 @@ jest.mock("@/core/providers/alert-provider", () => ({
   useAlert: () => ({ showAlert, showModal, closeModal: jest.fn() }),
 }));
 
+const push = jest.fn();
+const replace = jest.fn();
+jest.mock("next/navigation", () => ({ useRouter: () => ({ push, replace }) }));
+
 jest.mock("@/modules/channels/public", () => ({ listChannels: jest.fn() }));
 jest.mock("@/modules/marketing/infrastructure/services/templates-service.adapter", () => ({
   deleteHsmTemplate: jest.fn(),
@@ -48,6 +52,7 @@ function hsm(over: Partial<HsmTemplateDTO> = {}): HsmTemplateDTO {
     edit_blocked_reason: null,
     edit_retry_at: null,
     external_id: null,
+    header_media: null,
     updated_at: "2026-08-01T00:00:00.000Z",
     ...over,
   };
@@ -112,6 +117,21 @@ describe("canal cloud con plantillas", () => {
       ),
     );
     expect(api.listHsmTemplates).toHaveBeenCalledTimes(2);
+  });
+
+  it("si quedan archivos de cabecera por traer (tope del sync), dice que se sincronice otra vez", async () => {
+    api.syncHsmTemplates.mockResolvedValue({ synced: 8, removed: 1, media_pending: 3 });
+    fireEvent.click(screen.getByRole("button", { name: /Sincronizar/ }));
+
+    await waitFor(() =>
+      expect(showAlert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "8 plantillas sincronizadas",
+          description:
+            "1 ya no está en Meta y se retiró de aquí. Faltan 3 archivos de cabecera por traer de Meta: sincroniza otra vez.",
+        }),
+      ),
+    );
   });
 
   it("si Meta rechaza la sincronización, lo dice sin romper la tabla", async () => {
@@ -326,5 +346,38 @@ describe("lo próximo y los estados (lienzo 2026-09-28)", () => {
     render(<MetaTemplatesView />);
     expect((await screen.findAllByText("En revisión"))[0]).toBeInTheDocument();
     expect(screen.queryByText("Pendiente")).not.toBeInTheDocument();
+  });
+});
+
+describe("crear y editar son páginas (hsm-media F3)", () => {
+  beforeEach(() => {
+    channelsApi.listChannels.mockResolvedValue(CLOUD);
+    api.listHsmTemplates.mockResolvedValue([hsm(), hsm({ id: "h9", name: "promo_rechazada", approval_status: "rejected" })]);
+  });
+
+  it("«Nueva plantilla» abre la página con el canal elegido", async () => {
+    render(<MetaTemplatesView />);
+    await screen.findByText("promo_agosto");
+
+    fireEvent.click(screen.getByRole("button", { name: "Nueva plantilla" }));
+
+    expect(push).toHaveBeenCalledWith("/settings/meta-templates/new?channel=ch1");
+  });
+
+  it("«Corregir» abre la página de esa plantilla", async () => {
+    render(<MetaTemplatesView />);
+    await screen.findByText("promo_rechazada");
+
+    fireEvent.click(screen.getAllByRole("button", { name: /Corregir promo_rechazada/ })[0]);
+
+    expect(push).toHaveBeenCalledWith("/settings/meta-templates/h9/edit?channel=ch1");
+  });
+
+  it("al volver con ?point= la señala una vez y limpia la URL", async () => {
+    render(<MetaTemplatesView initialChannelId="ch1" pointId="h9" />);
+    await screen.findByText("promo_rechazada");
+
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/settings/meta-templates?channel=ch1", { scroll: false }));
+    expect(replace).toHaveBeenCalledTimes(1);
   });
 });

@@ -3,6 +3,8 @@ import type {
   CreateHsmTemplateDTO,
   UpdateHsmTemplateDTO,
   CreateTemplateDTO,
+  HsmHeaderMediaUploadDTO,
+  HsmLibraryTemplateDTO,
   HsmTemplateDTO,
   MessagingWindowDTO,
   TemplateDTO,
@@ -73,14 +75,47 @@ export async function listHsmTemplates(params: {
 }
 
 /** Pull desde Meta. 502 `channels/template_sync_failed` con el detalle de Meta. */
-export function syncHsmTemplates(channelId: string): Promise<{ synced: number; removed?: number }> {
+export function syncHsmTemplates(
+  channelId: string,
+): Promise<{ synced: number; removed?: number; media_pending?: number }> {
   // `removed` llega desde el servidor que retira lo que Meta ya no lista; uno viejo no lo manda.
-  return http.post<{ synced: number; removed?: number }>("/marketing/hsm-templates/sync", {
+  // `media_pending`: imágenes del Business Manager que no cupieron en el tope de este sync.
+  return http.post<{ synced: number; removed?: number; media_pending?: number }>("/marketing/hsm-templates/sync", {
     channel_id: channelId,
   });
 }
 
-/** Crea la plantilla EN META: queda `pending` hasta que Meta la apruebe. */
+/**
+ * Crea la plantilla EN META: queda `pending` hasta que Meta la apruebe. Con
+ * `library_template_name` se crea desde la biblioteca de Meta y, si el texto
+ * fijo no cambió, vuelve ya aprobada.
+ */
 export function createHsmTemplate(dto: CreateHsmTemplateDTO): Promise<HsmTemplateDTO> {
   return http.post<HsmTemplateDTO>("/marketing/hsm-templates", dto);
+}
+
+/**
+ * La biblioteca de plantillas de Meta para la WABA del canal (hsm-media F5):
+ * unas 170 de utilidad en `es`, sin las que traen botones que axi no maneja.
+ * `search` filtra en el servidor; la página filtra en cliente y no lo usa.
+ */
+export async function listHsmLibrary(channelId: string, search?: string): Promise<HsmLibraryTemplateDTO[]> {
+  const res = await http.get<{ data: HsmLibraryTemplateDTO[] }>("/marketing/hsm-templates/library", {
+    channel_id: channelId,
+    ...(search !== undefined && search.trim() !== "" ? { search: search.trim() } : {}),
+  });
+  return res.data;
+}
+
+/**
+ * Sube el archivo de la cabecera (hsm-media F4): el servidor guarda la copia de
+ * axi —la que se reenvía en cada envío— y lo sube a Meta para el ejemplo de la
+ * revisión. Devuelve las dos cosas para mandarlas luego con la plantilla.
+ * Multipart: `http` no fija `Content-Type` y el navegador pone el boundary.
+ */
+export function uploadHsmHeaderMedia(channelId: string, file: File): Promise<HsmHeaderMediaUploadDTO> {
+  const form = new FormData();
+  form.append("channel_id", channelId);
+  form.append("file", file);
+  return http.post<HsmHeaderMediaUploadDTO>("/marketing/hsm-templates/media", form);
 }

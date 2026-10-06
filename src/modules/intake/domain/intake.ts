@@ -12,6 +12,20 @@
  * tener sentido.
  */
 
+/**
+ * Cuánto cabe en un mensaje a Alba. El MISMO tope que el servidor
+ * (`sendIntakeMessageSchema.message`, `max(1_500)`): el compositor no deja
+ * pasarse, así que el 400 de validación deja de ser algo que la persona ve.
+ */
+export const INTAKE_MESSAGE_MAX_CHARS = 1500;
+
+/**
+ * Lo que la pantalla espera un turno. El servidor lo corta a los 45 s
+ * (`INTAKE_TURN_TIMEOUT_MS`); si a los 60 no ha respondido, el problema está
+ * en el camino y seguir esperando deja a la persona mirando «escribiendo…».
+ */
+export const INTAKE_TURN_BUDGET_MS = 60_000;
+
 export type IntakeFieldKind =
   | "text"
   | "long_text"
@@ -59,6 +73,8 @@ export interface IntakeQuestion {
   question: string;
   options: IntakeQuestionOption[];
   allow_free_text: boolean;
+  /** «¿Por qué lo pregunto?»: contexto o ejemplo que se pinta PLEGADO bajo la pregunta. */
+  why: string | null;
 }
 
 export interface IntakeMessage {
@@ -122,6 +138,16 @@ export interface IntakeProgress {
   next_field: string | null;
   has_pending_required: boolean;
   has_pending_confirmation: boolean;
+  /**
+   * Lo esencial confirmado DE VERDAD: la barra principal de la ficha (informe
+   * de la entrevista, rec. 9). Lo encontrado en la web sin confirmar no cuenta.
+   * `complete` = ningún obligatorio sin preguntar: se ofrece la revisión final.
+   */
+  essential: { confirmed: number; total: number; complete: boolean };
+  /** Lo encontrado o propuesto que espera la revisión de la persona. */
+  pending_review: number;
+  /** Lo siguiente que preguntará Alba (solo lo abierto). */
+  next_ask: { topic: string; field: string } | null;
 }
 
 /** Los pasos de activación que Alba no resuelve y se le dicen a la persona. */
@@ -181,6 +207,8 @@ export interface IntakeSessionView {
   progress: IntakeProgress;
   closing: string | null;
   summary: IntakeSummary | null;
+  /** La persona vuelve a una entrevista a medias: qué falta. `null` si no aplica. */
+  resume: { missing_topics: string[]; pending_review: number } | null;
 }
 
 export interface IntakeTurnResult {
@@ -221,25 +249,72 @@ export interface PatchAnswersResult {
 }
 
 /**
- * Cuántos datos se han recogido de verdad.
- *
- * Cuenta campos, no temas — al revés que el progreso de la barra. No es una
- * incoherencia: la barra mide AVANCE (y ahí lo que importa es cerrar temas,
- * porque «12 de 37 campos» desanima y «vamos por el tercero de seis» anima),
- * mientras que esto mide lo que hay EN LA FICHA, donde la unidad natural es el
- * dato. Son dos preguntas distintas con dos respuestas distintas.
+ * Lo que dice la cabecera de la ficha, en el orden del informe de la entrevista
+ * (rec. 9 y 10): lo esencial confirmado, lo que espera tu revisión, lo que
+ * quedó por definir y lo que no aplica. Antes se contaba como «lleno» todo lo
+ * que tenía valor —incluido lo encontrado en la web sin confirmar— y se llamaba
+ * «no aplica» a cualquier salto, también a un «no lo sé».
  */
-export function countCaptured(topics: IntakeTopicView[]): {
-  filled: number;
-  skipped: number;
-  total: number;
-} {
-  const all = topics.flatMap((topic) => topic.fields);
+export function fichaCounts(
+  topics: IntakeTopicView[],
+  progress: IntakeProgress,
+): { confirmed: number; total: number; review: number; undefined: number; later: number; notApplicable: number } {
+  const skips = topics.flatMap((topic) => topic.fields).flatMap((field) =>
+    field.value === null && field.skipped !== null ? [field.skipped] : [],
+  );
   return {
-    filled: all.filter((field) => field.value !== null).length,
-    skipped: all.filter((field) => field.value === null && field.skipped !== null).length,
-    total: all.length,
+    confirmed: progress.essential.confirmed,
+    total: progress.essential.total,
+    review: progress.pending_review,
+    undefined: skips.filter((skip) => skip.reason === "no_sabe").length,
+    later: skips.filter((skip) => skip.reason === "luego").length,
+    notApplicable: skips.filter((skip) => skip.reason === "no_aplica").length,
   };
+}
+
+/**
+ * Lo encontrado o propuesto que espera un «así es», en el orden del guion: la
+ * cola de las tarjetas de revisión del hilo (paso 1 del informe).
+ */
+export function reviewQueue(topics: IntakeTopicView[]): IntakeField[] {
+  return topics.flatMap((topic) => topic.fields.filter((field) => field.needs_confirmation));
+}
+
+/**
+ * El estado de un tema, en palabras y con su forma: el color no puede ser lo
+ * único que lo diga (informe, rec. 10 y 17). Origen del dato y estado del tema
+ * van separados: «Tu asistente» no sale «Confirmado» por llevar algo precargado.
+ */
+export type TopicTone = "done" | "now" | "review" | "waiting" | "deferred";
+
+export function topicState(topic: TopicProgress): { label: string; tone: TopicTone } {
+  if (topic.deferred) return { label: "Pospuesto · lo retomamos al final", tone: "deferred" };
+  if (topic.status === "done") return { label: "Confirmado", tone: "done" };
+  if (topic.pending_confirmation > 0) {
+    return {
+      label:
+        topic.pending_confirmation === 1
+          ? "Pendiente de confirmar · 1 dato"
+          : `Pendiente de confirmar · ${String(topic.pending_confirmation)} datos`,
+      tone: "review",
+    };
+  }
+  if (topic.status === "in_progress") {
+    return {
+      label: `En curso · ${String(topic.answered + topic.skipped)} de ${String(topic.total)}`,
+      tone: "now",
+    };
+  }
+  return { label: "Sin empezar", tone: "waiting" };
+}
+
+/** El tema que toca ahora: el que está en curso, o el siguiente que preguntará Alba. */
+export function currentTopic(progress: IntakeProgress): TopicProgress | null {
+  return (
+    progress.topics.find((topic) => topic.status === "in_progress" && !topic.deferred) ??
+    progress.topics.find((topic) => topic.code === (progress.next_ask?.topic ?? progress.next_topic)) ??
+    null
+  );
 }
 
 /**
@@ -252,39 +327,15 @@ export function skipLabel(skip: IntakeFieldSkip): string {
   switch (skip.reason) {
     case "no_aplica":
       return "No aplica";
+    // «Por definir», no «No lo sabías»: no saber algo no es un reproche, y no
+    // equivale a que no aplique (informe de la entrevista, rec. 6).
     case "no_sabe":
-      return "No lo sabías";
+      return "Por definir";
     case "luego":
-      return "Lo dejaste para después";
+      return "Para después";
     default:
       return "Saltado";
   }
-}
-
-/** Los datos deducidos de la web que siguen esperando un sí o un no. */
-export function pendingConfirmations(topics: IntakeTopicView[]): IntakeField[] {
-  return topics.flatMap((topic) => topic.fields.filter((field) => field.needs_confirmation));
-}
-
-/**
- * El aliento del progreso, en palabras.
- *
- * Es copy y no un porcentaje porque un porcentaje es una auditoría. Quien
- * contesta esto no está midiendo su rendimiento: está haciéndole un favor a su
- * propio negocio entre dos cosas, en el móvil, y lo que necesita es saber que
- * queda poco.
- */
-export function progressLabel(progress: IntakeProgress): string {
-  const pending = progress.topics.filter(
-    (topic) => !topic.deferred && topic.status !== "done",
-  ).length;
-
-  if (pending === 0) return "Ya está todo";
-  if (progress.percent === 0) return "Empezamos";
-  if (pending === 1) return "Queda uno";
-  if (progress.percent >= 60) return "Ya casi";
-  if (progress.percent >= 40) return "Vamos por la mitad";
-  return `Quedan ${String(pending)}`;
 }
 
 /** Etiqueta de la procedencia de un dato. La ficha la pinta como matiz. */
@@ -370,4 +421,35 @@ export function handoffNote(kind: IntakeFieldKind, help: string | null): string 
   return isStructuredList(kind)
     ? "Solo se añade lo que falte. Nada de lo que ya tengas se reordena ni se borra."
     : "";
+}
+
+/** El valor actual, en texto editable. */
+export function draftOf(field: Pick<IntakeField, "value">): string {
+  if (field.value === null || field.value === undefined) return "";
+  if (Array.isArray(field.value)) return field.value.map((item) => String(item)).join(", ");
+  if (typeof field.value === "boolean") return field.value ? "sí" : "no";
+  return String(field.value);
+}
+
+/**
+ * El texto editado, de vuelta al tipo del campo. `null` = no se pudo
+ * interpretar. La validación de verdad la hace el backend, con el mismo
+ * normalizador que usa el asistente; esto solo evita mandar una lista vacía o
+ * un texto en blanco.
+ */
+export function valueFromDraft(field: Pick<IntakeField, "kind">, draft: string): unknown {
+  const trimmed = draft.trim();
+  if (trimmed === "") return null;
+  switch (field.kind) {
+    case "list":
+    case "multi_choice":
+      return trimmed
+        .split(",")
+        .map((item) => item.trim())
+        .filter((item) => item !== "");
+    case "boolean":
+      return ["sí", "si", "true", "1"].includes(trimmed.toLowerCase());
+    default:
+      return trimmed;
+  }
 }

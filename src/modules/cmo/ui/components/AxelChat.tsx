@@ -1,10 +1,22 @@
 "use client";
 
-import { Fragment, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { BarChart3, Flame, Lock, Megaphone } from "lucide-react";
+import { Fragment, memo, useCallback, useEffect, useMemo, useRef, useState, type Ref } from "react";
+import { BarChart3, BookOpen, Calculator, Check, Flame, Lock, Megaphone, Send } from "lucide-react";
 
-import type { BriefingDTO, ProposalDTO } from "@/modules/cmo/domain/cmo";
-import { useCmoStore, type CmoBlocker, type UiMessage } from "@/modules/cmo/infrastructure/stores/cmo.store";
+import {
+  CMO_MESSAGE_MAX_CHARS,
+  CMO_MESSAGE_MIN_CHARS,
+  type BriefingDTO,
+  type ProposalDTO,
+} from "@/modules/cmo/domain/cmo";
+import { useAxelIsland } from "@/modules/cmo/infrastructure/hooks/use-axel-island";
+import { getLatestBriefing } from "@/modules/cmo/infrastructure/services/cmo-service.adapter";
+import {
+  useCmoStore,
+  type CmoBlocker,
+  type LiveStep,
+  type UiMessage,
+} from "@/modules/cmo/infrastructure/stores/cmo.store";
 import {
   AssistantBubble,
   AssistantChatShell,
@@ -17,7 +29,9 @@ import {
   StarterPills,
   SystemNote,
   UserBubble,
+  useInView,
   useTodayLabel,
+  type AssistantActivityChip,
   type AssistantStarter,
 } from "@/shared/components/features/assistant";
 import { AxelHeroAvatar } from "./AxelHeroAvatar";
@@ -73,6 +87,10 @@ interface AxelChatProps {
   canManage: boolean;
   /** La carga inicial aún no decidió qué pantalla toca: el chat espera invisible. */
   settling?: boolean;
+  /** «Ver propuestas» desde la isla: el tablero (el panel superpuesto bajo xl). */
+  onOpenBoard?: () => void;
+  /** «Ver» de una propuesta nueva desde la isla. */
+  onOpenProposal?: (proposalId: string) => void;
 }
 
 /**
@@ -106,6 +124,8 @@ export function AxelChat({
   blocked,
   canManage,
   settling = false,
+  onOpenBoard,
+  onOpenProposal,
 }: AxelChatProps) {
   const thread = useCmoStore((state) => state.thread);
   /* Solo SI hay texto en vivo, no el texto: un booleano cambia dos veces por
@@ -154,6 +174,41 @@ export function AxelChat({
     [ask],
   );
 
+  /* La isla (island-live F4): los avisos del socket, el resumen del informe y
+     la pregunta viva cuando su burbuja no se ve. */
+  const news = useCmoStore((state) => state.news);
+  const takeNews = useCmoStore((state) => state.takeNews);
+  const [liveEl, setLiveEl] = useState<HTMLDivElement | null>(null);
+  const liveInView = useInView(liveEl, { rootMargin: "-72px 0px 0px 0px", threshold: 0.3 });
+  const lastMessage = thread.messages.at(-1);
+  const liveQuestion =
+    lastMessage !== undefined && lastMessage.role === "axel" && lastMessage.question !== null
+      ? { id: lastMessage.id, question: lastMessage.question }
+      : null;
+  const openBoard = useCallback(() => {
+    onOpenBoard?.();
+  }, [onOpenBoard]);
+  const openProposal = useCallback(
+    (proposalId: string) => {
+      onOpenProposal?.(proposalId);
+    },
+    [onOpenProposal],
+  );
+  const island = useAxelIsland({
+    news,
+    takeNews,
+    briefing,
+    loadBriefing: getLatestBriefing,
+    liveQuestion,
+    liveVisible: liveInView,
+    thinking: thread.thinking,
+    empty: isEmpty,
+    onPick,
+    onWrite: onWriteInstead,
+    onOpenBoard: openBoard,
+    onOpenProposal: openProposal,
+  });
+
   const byId = useMemo(() => new Map(proposals.map((item) => [item.id, item])), [proposals]);
 
   /* Las propuestas que nacieron EN la conversación se pintan pegadas al mensaje
@@ -181,6 +236,8 @@ export function AxelChat({
       placeholder={PLACEHOLDER_IDLE}
       placeholderPhrases={PLACEHOLDER_PHRASES}
       ariaLabel="Mensaje para Axel"
+      maxChars={CMO_MESSAGE_MAX_CHARS}
+      minChars={CMO_MESSAGE_MIN_CHARS}
       textareaRef={textareaRef}
       onTypingChange={setOwnerTyping}
       after={isEmpty ? <StarterPills starters={STARTERS} onPick={submit} disabled={thread.thinking} className="mt-3" /> : null}
@@ -212,6 +269,12 @@ export function AxelChat({
             meta={today}
             working={thread.thinking && !writing}
             activity={<AxelIslandSteps />}
+            empty={isEmpty}
+            item={island.current}
+            pending={island.pending}
+            onFold={island.fold}
+            onExpand={island.expand}
+            onDismiss={island.dismiss}
           />
         ) : undefined
       }
@@ -252,6 +315,7 @@ export function AxelChat({
                     message={message}
                     fresh={fresh}
                     onRetry={retryLast}
+                    bubbleRef={message.id === lastMessageId && message.question !== null ? setLiveEl : undefined}
                     questionLive={message.id === lastMessageId}
                     busy={thread.thinking}
                     onPick={onPick}
@@ -288,8 +352,48 @@ export function AxelChat({
  */
 function AxelIslandSteps() {
   const steps = useCmoStore((state) => state.live?.steps);
-  return <AssistantIslandActivity steps={steps ?? []} phrases={THINKING_PHASES} />;
+  const chips = useMemo(() => stepChips(steps ?? []), [steps]);
+  return <AssistantIslandActivity steps={steps ?? []} phrases={THINKING_PHASES} chips={chips} />;
 }
+
+/**
+ * Lo que Axel va tocando, como chips (la segunda referencia del dueño): una
+ * lectura en violeta, un cálculo en ámbar, una propuesta en azul, lo hecho en
+ * verde. El tipo sale del nombre de la herramienta; el texto, de su etiqueta:
+ * lo que mira, en tres palabras como mucho, para que quepan cuatro.
+ */
+export function stepChips(steps: readonly LiveStep[]): AssistantActivityChip[] {
+  return steps.map((step, index) => {
+    const tone = step.done ? "done" : chipTone(step.name);
+    return {
+      id: `${String(index)}-${step.name}`,
+      label: shortLabel(step.label),
+      icon: tone === "done" ? Check : tone === "calc" ? Calculator : tone === "send" ? Send : BookOpen,
+      tone,
+      current: !step.done && index === steps.length - 1,
+    };
+  });
+}
+
+function chipTone(name: string): AssistantActivityChip["tone"] {
+  if (/propos|create|draft|send|campaign/i.test(name)) return "send";
+  if (/calc|compute|forecast|estimate|score|pace/i.test(name)) return "calc";
+  return "read";
+}
+
+/** Lo que mira, no lo que hace: «Leyendo tus ventas del mes» → «Ventas del mes». */
+export function shortLabel(label: string): string {
+  const words = label.replace(/…$/, "").trim().split(/\s+/).filter((word) => word !== "");
+  if (words.length > 1 && /ndo$/i.test(words[0] ?? "")) words.shift();
+  while (words.length > 1 && LEADING.has((words[0] ?? "").toLowerCase())) words.shift();
+  const kept = words.slice(0, 3);
+  while (kept.length > 1 && TRAILING.has((kept.at(-1) ?? "").toLowerCase())) kept.pop();
+  const short = kept.join(" ");
+  return short.charAt(0).toUpperCase() + short.slice(1);
+}
+
+const LEADING = new Set(["el", "la", "los", "las", "un", "una", "tu", "tus", "su", "sus", "lo"]);
+const TRAILING = new Set(["de", "del", "en", "con", "para", "por", "y", "a", "al", "la", "el", "los", "las"]);
 
 /** El borrador que se escribe en vivo. Es lo ÚNICO que se repinta por fragmento. */
 function LiveBubble() {
@@ -301,6 +405,7 @@ const MessageBubble = memo(function MessageBubble({
   message,
   fresh,
   onRetry,
+  bubbleRef,
   questionLive,
   busy,
   onPick,
@@ -309,6 +414,8 @@ const MessageBubble = memo(function MessageBubble({
   message: UiMessage;
   fresh: boolean;
   onRetry: () => void;
+  /** La burbuja de la pregunta viva: si no se ve, la isla la toma (D1). */
+  bubbleRef?: Ref<HTMLDivElement>;
   /** true = es el último mensaje del hilo, así que su pregunta se puede tocar. */
   questionLive: boolean;
   busy: boolean;
@@ -334,7 +441,13 @@ const MessageBubble = memo(function MessageBubble({
   }
 
   return (
-    <AssistantBubble name="Axel" body={message.body} sourcesCount={message.tool_calls?.length ?? 0} fresh={fresh}>
+    <AssistantBubble
+      ref={bubbleRef}
+      name="Axel"
+      body={message.body}
+      sourcesCount={message.tool_calls?.length ?? 0}
+      fresh={fresh}
+    >
       {message.question === null ? null : (
         <AssistantQuestion
           question={message.question}

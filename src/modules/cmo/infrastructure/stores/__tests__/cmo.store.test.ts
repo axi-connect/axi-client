@@ -1,4 +1,6 @@
 import type { CmoReplyDTO } from "@/modules/cmo/domain/cmo";
+import { HttpError } from "@/core/api/problem";
+import { errorMessage } from "@/core/lib/error-messages";
 import { useCmoStore } from "../cmo.store";
 
 /**
@@ -63,6 +65,7 @@ beforeEach(() => {
   useCmoStore.setState({
     thread: { id: "t1", messages: [], thinking: false },
     live: null,
+    late: null,
     blocker: null,
     settled: {},
   });
@@ -137,6 +140,76 @@ describe("presupuesto de espera", () => {
     expect(failed).not.toContain("timed out");
     expect(failed).toContain("aparece sola");
     expect(useCmoStore.getState().live).toBeNull();
+  });
+
+  it("un 502 o un 500 se leen en la burbuja sin el título técnico (hotfix)", async () => {
+    api.sendMessage.mockRejectedValueOnce(
+      new HttpError({ status: 502, code: "ai/provider_error", message: "Error del proveedor IA" }),
+    );
+    await useCmoStore.getState().ask("¿Cómo vamos?");
+    expect(useCmoStore.getState().thread.messages[0]?.failed).toContain("no respondió a tiempo");
+
+    api.sendMessage.mockRejectedValueOnce(
+      new HttpError({ status: 500, code: "internal/unexpected", message: "Error interno inesperado" }),
+    );
+    await useCmoStore.getState().ask("¿Y la semana?");
+    const failed = useCmoStore.getState().thread.messages.at(-1)?.failed ?? "";
+    expect(failed).toContain("de nuestro lado");
+    expect(failed).not.toContain("Error interno");
+  });
+
+  it("esa copia es de la burbuja: el mapa global conserva el detalle del 500", () => {
+    // La consola de plataforma diagnostica con el `message` del servidor.
+    const boom = new HttpError({ status: 500, code: "internal/unexpected", message: "boom" });
+    expect(errorMessage(boom)).toMatch(/boom|error inesperado/i);
+  });
+
+  it("si el turno termina DESPUÉS de vencer la espera, la respuesta aparece sola (hotfix)", async () => {
+    let turnId = "";
+    api.sendMessage.mockImplementationOnce((dto: { client_turn_id: string }) => {
+      turnId = dto.client_turn_id;
+      return Promise.reject(new DOMException("The operation timed out.", "TimeoutError"));
+    });
+    await useCmoStore.getState().ask("¿Cómo vamos?");
+    expect(useCmoStore.getState().late).toBe(turnId);
+
+    useCmoStore.getState().onTurnCompleted({
+      company_id: "c1",
+      thread_id: "t1",
+      turn_id: turnId,
+      seq: 9,
+      message_id: "m-late",
+      body: "Vas mejor en plata.",
+      proposal_id: null,
+      tool_calls: 1,
+      question: null,
+    } as never);
+
+    const { messages } = useCmoStore.getState().thread;
+    expect(messages.map((item) => item.role)).toEqual(["owner", "axel"]);
+    expect(messages[1]?.body).toBe("Vas mejor en plata.");
+    // El aviso de espera se quita: ya no hay nada que reintentar.
+    expect(messages[0]?.failed).toBeUndefined();
+    expect(useCmoStore.getState().late).toBeNull();
+  });
+
+  it("el cierre de OTRO turno no se cuela por la puerta del tardío", async () => {
+    api.sendMessage.mockRejectedValueOnce(
+      new DOMException("The operation timed out.", "TimeoutError"),
+    );
+    await useCmoStore.getState().ask("¿Cómo vamos?");
+    useCmoStore.getState().onTurnCompleted({
+      company_id: "c1",
+      thread_id: "t1",
+      turn_id: "turn-de-otra-pestana",
+      seq: 9,
+      message_id: "m-otra",
+      body: "no es mío",
+      proposal_id: null,
+      tool_calls: 0,
+      question: null,
+    } as never);
+    expect(useCmoStore.getState().thread.messages).toHaveLength(1);
   });
 });
 

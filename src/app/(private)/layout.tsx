@@ -8,16 +8,18 @@ import { AppReadySignal } from "@/core/providers/app-ready-signal";
 import { PrivateHeader } from "@/shared/components/layout/private-header";
 import { SidebarProvider, SidebarInset } from "@/shared/components/layout/sidebar/core"
 import { NotificationBell } from "@/modules/notifications/ui/components/NotificationBell";
+import { AxelGlobalIsland } from "@/modules/cmo/ui/components/AxelGlobalIsland";
 import { CompanyIdentity } from "@/modules/companies/ui/components/CompanyIdentity";
 import { TrialStatusChip } from "@/modules/companies/ui/components/TrialStatusChip";
 import { TrialCountdownBanner } from "@/modules/companies/ui/components/TrialCountdownBanner";
 import { DunningBanner } from "@/modules/billing/ui/DunningBanner";
 import { COMMERCIAL_BREADCRUMBS } from "@/modules/commercial/public";
+import { META_TEMPLATES_BREADCRUMBS } from "@/modules/marketing/public";
 import { SCHEDULING_BREADCRUMBS } from "@/modules/scheduling/public";
 import { SupportSessionBar } from "@/modules/support-access/ui/SupportSessionBar";
 
 /** Las migas que conocen los módulos (rutas sin página y segmentos dinámicos). */
-const BREADCRUMBS = [COMMERCIAL_BREADCRUMBS, SCHEDULING_BREADCRUMBS];
+const BREADCRUMBS = [COMMERCIAL_BREADCRUMBS, SCHEDULING_BREADCRUMBS, META_TEMPLATES_BREADCRUMBS];
 
 /**
  * Precarga del árbol de navegación en el servidor: `http` en server lee la
@@ -91,7 +93,13 @@ export default async function PrivateLayout({
           <SupportSessionBar />
           {/* La campana monta el realtime de notificaciones para todo el panel;
               el chip de trial es permanente */}
-          <PrivateHeader actions={<><TrialStatusChip /><NotificationBell /></>} breadcrumbs={BREADCRUMBS} />
+          {/* La isla de Axel en el centro (island-live F4b): avisa del informe y de
+              las propuestas en cualquier pantalla; en /cmo no se monta. */}
+          <PrivateHeader
+            actions={<><TrialStatusChip /><NotificationBell /></>}
+            breadcrumbs={BREADCRUMBS}
+            center={<AxelGlobalIsland />}
+          />
           {/* Últimos 2 días de trial: en flujo, empuja el contenido */}
           <TrialCountdownBanner />
           {/* Pago vencido: avisa con el plazo antes de la suspensión. No

@@ -104,6 +104,11 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   "cmo/directive_duplicate": "Ya tienes una directriz activa con ese mismo texto",
   "cmo/proposal_not_found": "Esta propuesta ya no está: venció o alguien la decidió",
   "cmo/proposal_not_pending": "La propuesta ya fue decidida por alguien de tu equipo",
+  // Un turno a la vez por hilo (hotfix de límites): doble envío o dos pestañas.
+  "cmo/turn_in_progress":
+    "Axel todavía está respondiendo tu mensaje anterior. Espera a que termine y vuelve a enviarlo",
+  "intake/turn_in_progress":
+    "Todavía estoy respondiendo tu mensaje anterior. Espera un momento y vuelve a enviarlo",
   "cmo/proposal_nothing_to_apply":
     "Este es un hallazgo, no una acción: no hay nada que encender. Puedes descartarlo",
   "channels/provider_account_taken": "Ese número/cuenta ya está conectado en otro canal",

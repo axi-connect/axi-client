@@ -1,12 +1,16 @@
 import {
-  countCaptured,
+  currentTopic,
+  draftOf,
+  fichaCounts,
   handoffNote,
   isEditableInline,
   isStructuredList,
-  pendingConfirmations,
-  progressLabel,
+  reviewQueue,
+  skipLabel,
   sourceLabel,
   toListItems,
+  topicState,
+  valueFromDraft,
   type IntakeProgress,
   type IntakeTopicView,
 } from "../intake";
@@ -52,25 +56,43 @@ function progress(
     next_field: null,
     has_pending_required: false,
     has_pending_confirmation: false,
+    essential: { confirmed: 2, total: 5, complete: false },
+    pending_review: 1,
+    next_ask: null,
   };
 }
 
-describe("countCaptured", () => {
-  it("cuenta los campos con valor, no los temas", () => {
+describe("fichaCounts", () => {
+  /**
+   * Informe de la entrevista, rec. 9 y 10: lo esencial cuenta solo lo
+   * confirmado (lo da el servidor), y «no aplica» no se mezcla con «no lo sé».
+   */
+  it("separa lo confirmado, lo por revisar, lo por definir y lo que no aplica", () => {
     const topics: IntakeTopicView[] = [
       {
         code: "t1",
         title: "T1",
-        fields: [field({ code: "a", value: "x" }), field({ code: "b" })],
+        fields: [
+          field({ code: "a", value: "x", source: "derived", needs_confirmation: true }),
+          field({ code: "b", skipped: { reason: "no_sabe", source: "chat", note: null } }),
+          field({ code: "c", skipped: { reason: "no_aplica", source: "ficha", note: null } }),
+          field({ code: "d", skipped: { reason: "luego", source: "chat", note: null } }),
+        ],
       },
-      { code: "t2", title: "T2", fields: [field({ code: "c", value: 3 })] },
     ];
-    expect(countCaptured(topics)).toEqual({ filled: 2, skipped: 0, total: 3 });
+    expect(fichaCounts(topics, progress([{ status: "in_progress" }], 0))).toEqual({
+      confirmed: 2,
+      total: 5,
+      review: 1,
+      undefined: 1,
+      later: 1,
+      notApplicable: 1,
+    });
   });
 });
 
-describe("pendingConfirmations", () => {
-  it("devuelve solo lo deducido de la web que sigue sin confirmar", () => {
+describe("reviewQueue", () => {
+  it("devuelve lo encontrado o propuesto que sigue sin confirmar, en el orden del guion", () => {
     const topics: IntakeTopicView[] = [
       {
         code: "t1",
@@ -81,41 +103,49 @@ describe("pendingConfirmations", () => {
           field({ code: "c", value: "z", source: "known" }),
         ],
       },
+      { code: "t2", title: "T2", fields: [field({ code: "d", value: ["e"], source: "proposed", needs_confirmation: true })] },
     ];
-    expect(pendingConfirmations(topics).map((row) => row.code)).toEqual(["a"]);
+    expect(reviewQueue(topics).map((row) => row.code)).toEqual(["a", "d"]);
   });
 });
 
-describe("progressLabel", () => {
-  /**
-   * Es copy, no un porcentaje: quien contesta no está midiendo su rendimiento,
-   * le está haciendo un favor a su negocio entre dos cosas.
-   */
-  it("anima en vez de auditar", () => {
-    expect(progressLabel(progress([{ status: "done" }, { status: "done" }], 100))).toBe(
-      "Ya está todo",
+describe("topicState / currentTopic", () => {
+  /** Rec. 10 y 17: el estado en palabras, y lo precargado no parece terminado. */
+  it("dice el estado de cada tema en palabras", () => {
+    const base = progress([{ status: "done" }], 100).topics[0];
+    if (base === undefined) throw new Error("sin tema");
+    expect(topicState({ ...base, status: "done" })).toEqual({ label: "Confirmado", tone: "done" });
+    expect(topicState({ ...base, status: "in_progress", pending_confirmation: 2 }).label).toBe(
+      "Pendiente de confirmar · 2 datos",
     );
-    expect(progressLabel(progress([{ status: "pending" }, { status: "pending" }], 0))).toBe(
-      "Empezamos",
-    );
-    expect(progressLabel(progress([{ status: "done" }, { status: "pending" }], 50))).toBe(
-      "Queda uno",
-    );
+    expect(topicState({ ...base, status: "in_progress", answered: 1, total: 3 }).label).toBe("En curso · 1 de 3");
+    expect(topicState({ ...base, status: "pending" })).toEqual({ label: "Sin empezar", tone: "waiting" });
+    expect(topicState({ ...base, status: "deferred", deferred: true }).tone).toBe("deferred");
   });
 
-  it("un tema aplazado no cuenta como pendiente", () => {
-    const label = progressLabel(
-      progress([{ status: "done" }, { status: "pending", deferred: true }], 100),
-    );
-    expect(label).toBe("Ya está todo");
+  it("el tema de ahora es el que está en curso, o el que Alba preguntará", () => {
+    const p = progress([{ status: "done" }, { status: "pending" }, { status: "in_progress" }], 33);
+    expect(currentTopic(p)?.code).toBe("t2");
+    const next = { ...progress([{ status: "done" }, { status: "pending" }], 50), next_ask: { topic: "t1", field: "x" } };
+    expect(currentTopic(next)?.code).toBe("t1");
   });
+});
 
-  it("con varios pendientes dice cuántos", () => {
-    expect(
-      progressLabel(
-        progress([{ status: "done" }, { status: "pending" }, { status: "pending" }], 33),
-      ),
-    ).toBe("Quedan 2");
+describe("skipLabel", () => {
+  it("«Por definir» y «Para después», sin reproche", () => {
+    expect(skipLabel({ reason: "no_sabe", source: "chat", note: null })).toBe("Por definir");
+    expect(skipLabel({ reason: "luego", source: "chat", note: null })).toBe("Para después");
+    expect(skipLabel({ reason: "no_aplica", source: "niche", note: null })).toBe("No aplica a tu tipo de negocio");
+  });
+});
+
+describe("draftOf / valueFromDraft", () => {
+  it("ida y vuelta entre el valor y el texto editable", () => {
+    expect(draftOf({ value: ["a", "b"] })).toBe("a, b");
+    expect(draftOf({ value: true })).toBe("sí");
+    expect(valueFromDraft({ kind: "list" }, " a , b ,")).toEqual(["a", "b"]);
+    expect(valueFromDraft({ kind: "boolean" }, "Sí")).toBe(true);
+    expect(valueFromDraft({ kind: "text" }, "   ")).toBeNull();
   });
 });
 

@@ -1,7 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { metaTemplatesHref } from "@/core/lib/hsm-copy";
 import { ChevronRight, Lock, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { errorMessage } from "@/core/lib/error-messages";
@@ -31,7 +33,6 @@ import {
   hsmStatusNote,
   namesLine,
 } from "@/modules/marketing/domain/meta-template-view";
-import { CreateHsmTemplateModal } from "@/modules/marketing/ui/components/CreateHsmTemplateModal";
 import { LoadError, TableCard, TD, TH } from "@/modules/marketing/ui/components/premium";
 import {
   deleteHsmTemplate,
@@ -60,7 +61,19 @@ import {
 const MAX_PENDING_POLLS = 80;
 const POLL_MS = 15_000;
 
-export function MetaTemplatesView() {
+/**
+ * `initialChannelId` y `pointId` llegan en la URL al volver de la página de una
+ * plantilla (hsm-media F3): el canal en que se estaba y la plantilla que se
+ * acaba de enviar, para señalarla en la lista como hacía la modal al cerrarse.
+ */
+export function MetaTemplatesView({
+  initialChannelId = null,
+  pointId = null,
+}: {
+  initialChannelId?: string | null;
+  pointId?: string | null;
+} = {}) {
+  const router = useRouter();
   const { hasPermission } = useAuth();
   const canManage = hasPermission("marketing:manage");
   const { showAlert, showModal, closeModal } = useAlert();
@@ -72,8 +85,6 @@ export function MetaTemplatesView() {
   const [templates, setTemplates] = useState<HsmTemplateDTO[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
-  const [creating, setCreating] = useState(false);
-  const [editing, setEditing] = useState<HsmTemplateDTO | null>(null);
   // La fila que un aviso mandó a mirar («Ver la plantilla», «Lo próximo»): se señala un momento.
   const [highlightId, setHighlightId] = useState<string | null>(null);
   // El sondeo llegó a su techo con alguna todavía en revisión.
@@ -85,10 +96,11 @@ export function MetaTemplatesView() {
         // Solo los cloud: las HSM viven en la WABA, y wweb no las admite.
         const cloud = res.data.filter((c) => c.kind === "whatsapp_cloud");
         setChannels(cloud);
-        setChannelId(cloud[0]?.id ?? null);
+        setChannelId((cloud.find((c) => c.id === initialChannelId) ?? cloud[0])?.id ?? null);
       })
       .catch(() => setChannels([]));
-  }, []);
+    // `initialChannelId` sale de la URL y no cambia al limpiar `?point=`: no recarga.
+  }, [initialChannelId]);
 
   const load = useCallback(async (id: string, options: { quiet?: boolean } = {}) => {
     // `quiet`: recarga con la lista de antes a la vista (tras un envío), sin volver a la silueta.
@@ -143,6 +155,22 @@ export function MetaTemplatesView() {
     };
   }, [hasPending, channelId]);
 
+  // Al volver de la página de una plantilla: se señala UNA vez y se limpia la
+  // URL, o recargar la lista la volvería a señalar.
+  const pointed = useRef(false);
+  useEffect(() => {
+    if (pointed.current || pointId === null || templates === null) return;
+    pointed.current = true;
+    pointAt(pointId);
+    router.replace(metaTemplatesHref(channelId), { scroll: false });
+  }, [pointId, templates, channelId, router]);
+
+  /** La página de una plantilla: crear, o editar/corregir esta. */
+  function openTemplate(template: HsmTemplateDTO | null) {
+    const query = channelId === null ? "" : `?channel=${channelId}`;
+    router.push(template === null ? `/settings/meta-templates/new${query}` : `/settings/meta-templates/${template.id}/edit${query}`);
+  }
+
   /** Lleva a la fila y la señala un momento: el aviso dijo «está ahí», que se vea dónde. */
   function pointAt(templateId: string | null) {
     if (templateId === null) return;
@@ -193,18 +221,23 @@ export function MetaTemplatesView() {
     if (!channelId) return;
     setSyncing(true);
     try {
-      const { synced, removed = 0 } = await syncHsmTemplates(channelId);
+      const { synced, removed = 0, media_pending: mediaPending = 0 } = await syncHsmTemplates(channelId);
+      // Lo que se retiró y los archivos de cabecera que faltan por traer, en una sola descripción.
+      const notes = [
+        removed > 0
+          ? `${removed} ${removed === 1 ? "ya no está en Meta y se retiró" : "ya no están en Meta y se retiraron"} de aquí.`
+          : null,
+        mediaPending > 0
+          ? `Faltan ${mediaPending} ${mediaPending === 1 ? "archivo de cabecera" : "archivos de cabecera"} por traer de Meta: sincroniza otra vez.`
+          : null,
+      ].filter((note): note is string => note !== null);
       showAlert({
         tone: "success",
         title:
           synced === 0 && removed === 0
             ? "Meta no devolvió plantillas nuevas"
             : `${synced} ${synced === 1 ? "plantilla sincronizada" : "plantillas sincronizadas"}`,
-        ...(removed > 0
-          ? {
-              description: `${removed} ${removed === 1 ? "ya no está en Meta y se retiró" : "ya no están en Meta y se retiraron"} de aquí.`,
-            }
-          : {}),
+        ...(notes.length > 0 ? { description: notes.join(" ") } : {}),
       });
       await load(channelId, { quiet: true });
     } catch (err) {
@@ -258,7 +291,7 @@ export function MetaTemplatesView() {
             className="rounded-full"
             disabled={!template.editable}
             title={hint}
-            onClick={() => setEditing(template)}
+            onClick={() => openTemplate(template)}
           >
             <Pencil aria-hidden className="size-3.5" />
             <span className="hidden sm:inline">{fixing ? "Corregir" : "Editar"}</span>
@@ -295,7 +328,7 @@ export function MetaTemplatesView() {
         {canManage && (
           <div className="flex flex-wrap items-center gap-2">
             {syncButton}
-            <Button size="sm" className="rounded-full" disabled={channelId === null} onClick={() => setCreating(true)}>
+            <Button size="sm" className="rounded-full" disabled={channelId === null} onClick={() => openTemplate(null)}>
               <Plus aria-hidden="true" className="size-4" />
               Nueva plantilla
             </Button>
@@ -351,31 +384,8 @@ export function MetaTemplatesView() {
           pollStopped={pollStopped}
           canManage={canManage}
           syncing={syncing}
-          onFix={(template) => (template.editable ? setEditing(template) : pointAt(template.id))}
+          onFix={(template) => (template.editable ? openTemplate(template) : pointAt(template.id))}
           onPoint={pointAt}
-          onSync={() => void handleSync()}
-        />
-      )}
-
-      {channelId !== null && (
-        <CreateHsmTemplateModal
-          // `key` distinta por plantilla: fuerza el remontaje y así los valores
-          // se cargan del estado inicial, sin un efecto que sincronice props.
-          key={editing?.id ?? "nueva"}
-          open={creating || editing !== null}
-          channelId={channelId}
-          editing={editing}
-          onOpenChange={(open) => {
-            if (open) return;
-            setCreating(false);
-            setEditing(null);
-          }}
-          onCreated={(template) => {
-            setEditing(null);
-            void load(channelId, { quiet: true }).then(() => pointAt(template.id));
-          }}
-          onExists={() => void load(channelId, { quiet: true })}
-          onViewTemplate={pointAt}
           onSync={() => void handleSync()}
         />
       )}
@@ -403,7 +413,7 @@ export function MetaTemplatesView() {
           action={
             canManage ? (
               <div className="flex flex-wrap justify-center gap-2">
-                <Button size="sm" className="rounded-full" onClick={() => setCreating(true)}>
+                <Button size="sm" className="rounded-full" onClick={() => openTemplate(null)}>
                   <Plus aria-hidden="true" className="size-4" />
                   Crear la primera
                 </Button>

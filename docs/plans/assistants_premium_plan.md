@@ -7,6 +7,8 @@
 > 2. Las propuestas de Axel van sin violeta, con el lenguaje de las fichas de /comercial y botones de cristal.
 > 3. La barra es una **isla de tinta tipo Dynamic Island** en varios tamaños. Referencia: los videos igexport que mandó el dueño.
 >
+> **Continúa en `island_live_plan.md` (2026-10-05):** la isla gana las formas P/A/R/E, la cola, la voz del navegador y la isla global de Axel en la cabecera.
+>
 > Listas de paridad: `alba_configurar_premium_inventario.md` y `cmo_rediseno_inventario.md`. Arnés: `docs/qa/assistants-premium/` en la raíz del monorepo.
 
 ## Context

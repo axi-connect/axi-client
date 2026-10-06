@@ -2092,10 +2092,14 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   box-shadow: 0 18px 40px -20px rgb(0 0 0 / 0.55);
 }
 
-/* S — la píldora. */
+/* S — la píldora. Ancho de su contenido (`max-content`) con tope: con
+   `left: 50%`, el ancho disponible para encogerse era la MITAD de la barra y el
+   estado se partía en dos líneas sin necesidad (recorrido real, island-live). */
 .assistant-island--s {
   top: 3px;
   left: 50%;
+  width: max-content;
+  max-width: calc(100cqw - 8px);
   height: var(--pill-h);
   display: flex;
   align-items: center;
@@ -2125,6 +2129,12 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   display: inline-flex;
   align-items: center;
   margin-left: 6px;
+  /* El tema largo («Lo que el asistente NO debe hacer») no se corta: dentro de
+     la píldora caben dos líneas de 12 px (informe de la entrevista, rec. 12). */
+  min-width: 0;
+  max-width: min(320px, 60cqw);
+  white-space: normal;
+  line-height: 1.2;
 }
 /* En una columna estrecha (móvil) la meta cede su sitio al estado: la píldora
    no puede salirse de la isla. */
@@ -2306,12 +2316,344 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   --island-glow: none;
 }
 
+/* --------------------------------------------------------------------------
+   La isla viva (docs/plans/island_live_plan.md, F1; maqueta aprobada
+   docs/design/mockups/island-live.html). Cuatro formas más, siempre una a la
+   vez: `data-shape` en `.assistant-dock` la elige (`islandShape`).
+
+   · P `question` — la pregunta viva cuando su burbuja no está a la vista.
+   · A `notice`   — un aviso: una línea, un botón como mucho.
+   · R `summary`  — un resumen corto (el informe de Axel).
+   · E `listening`— el micrófono graba.
+
+   P, A y R comparten la capa `--p` (cambia el contenido); E tiene la suya.
+   Mismas reglas que L/S/M: capas absolutas que se funden por opacity, el
+   avatar viaja por transform y nada anima su tamaño. Los anchos son fijos por
+   forma (variables de la barra), así que el avatar no necesita medir nada.
+   -------------------------------------------------------------------------- */
+.assistant-dock__bar {
+  --p-w: min(540px, 100cqw);
+  --a-w: min(460px, 100cqw);
+  --e-w: min(440px, 100cqw);
+  --p-scale: 0.3529; /* 48 px */
+  --a-scale: 0.2941; /* 40 px */
+}
+
+/* S con algo plegado: la píldora es un botón y enseña el punto. */
+button.assistant-island--s {
+  cursor: pointer;
+  font: inherit;
+  border: 0;
+}
+button.assistant-island--s:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--axi-violet) 70%, white);
+  outline-offset: 2px;
+}
+.assistant-dock__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 4px;
+  padding: 3px 9px 3px 7px;
+  border-radius: 9999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  background: color-mix(in oklab, var(--axi-violet) 26%, transparent);
+  color: color-mix(in oklab, var(--axi-violet) 30%, var(--foreground));
+}
+.assistant-dock__badge::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--axi-violet);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--axi-violet) 30%, transparent);
+}
+
+/* M con chips: una fila más. */
+.assistant-island--m:has(.assistant-island__chips) {
+  height: 164px;
+}
+.assistant-island__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.assistant-island__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px 0 4px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  background: color-mix(in srgb, var(--foreground) 8%, transparent);
+  color: color-mix(in srgb, var(--foreground) 86%, transparent);
+}
+.assistant-island__chip > i {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  color: var(--background);
+  background: var(--axi-violet);
+}
+.assistant-island__chip > i svg {
+  width: 11px;
+  height: 11px;
+}
+.assistant-island__chip[data-tone="calc"] > i { background: var(--axi-amber); }
+.assistant-island__chip[data-tone="send"] > i { background: var(--axi-info); }
+.assistant-island__chip[data-tone="done"] > i { background: var(--axi-success); }
+.assistant-island__chip[data-current] {
+  color: var(--foreground);
+  background: color-mix(in oklab, var(--axi-violet) 22%, transparent);
+}
+
+/* P/A/R — la capa del panel. */
+.assistant-island--p {
+  --island-glow: radial-gradient(circle 12rem at 6% 0%, color-mix(in oklab, var(--axi-violet) 34%, transparent), transparent 70%);
+  left: 50%;
+  width: var(--p-w);
+  max-height: min(300px, 62vh);
+  border-radius: 28px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  transform: translateX(-50%) scale(0.94);
+  transform-origin: 50% 0;
+}
+.assistant-dock[data-shape="notice"] .assistant-island--p {
+  width: var(--a-w);
+  border-radius: 26px;
+}
+.assistant-dock[data-glow="success"] .assistant-island--p {
+  --island-glow: radial-gradient(circle 10rem at 8% 120%, color-mix(in oklab, var(--axi-success) 40%, transparent), transparent 70%);
+}
+.assistant-dock[data-glow="warning"] .assistant-island--p {
+  --island-glow: radial-gradient(circle 10rem at 8% 120%, color-mix(in oklab, var(--axi-warning) 42%, transparent), transparent 70%);
+}
+.assistant-dock[data-glow="neutral"] .assistant-island--p {
+  --island-glow: none;
+}
+.assistant-dock:is([data-shape="question"], [data-shape="notice"], [data-shape="summary"]) .assistant-island--p {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+  pointer-events: auto;
+}
+.assistant-dock:is([data-shape="question"], [data-shape="notice"], [data-shape="summary"], [data-shape="listening"]) .assistant-island--s {
+  opacity: 0;
+  pointer-events: none;
+}
+.assistant-island__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 18px 16px 78px;
+}
+.assistant-island__notice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 12px 12px 12px 64px;
+}
+.assistant-island__panel > *,
+.assistant-island__notice > * {
+  animation: assistant-rise 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.assistant-island__muted {
+  color: color-mix(in srgb, var(--foreground) 64%, transparent);
+}
+.assistant-island__mark {
+  color: color-mix(in oklab, var(--axi-violet) 55%, var(--foreground));
+}
+.assistant-island__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-wrap: pretty;
+}
+.assistant-island__notice-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.assistant-island__datum {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--foreground) 7%, transparent);
+}
+.assistant-island__highlights {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.assistant-island__highlights li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13px;
+  color: color-mix(in srgb, var(--foreground) 76%, transparent);
+}
+.assistant-island__highlights li::before {
+  content: "";
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  transform: translateY(-1px);
+  background: color-mix(in srgb, var(--foreground) 40%, transparent);
+}
+.assistant-island__highlights li[data-tone="up"]::before { background: var(--axi-success); }
+.assistant-island__highlights li[data-tone="warn"]::before { background: var(--axi-warning); }
+.assistant-island__highlights li[data-tone="down"]::before { background: var(--axi-destructive); }
+.assistant-island__highlights b {
+  font-weight: 600;
+  color: var(--foreground);
+}
+.assistant-island__icon {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  color: color-mix(in srgb, var(--foreground) 70%, transparent);
+  transition: background-color 150ms ease, color 150ms ease;
+}
+.assistant-island__icon:hover,
+.assistant-island__icon[aria-pressed="true"] {
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--foreground) 10%, transparent);
+}
+.assistant-island__icon[aria-pressed="true"] {
+  color: color-mix(in oklab, var(--axi-violet) 55%, var(--foreground));
+}
+.assistant-island__icon:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--foreground) 50%, transparent);
+  outline-offset: 1px;
+}
+
+/* E — escuchando. */
+.assistant-island--e {
+  left: 50%;
+  width: var(--e-w);
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 8px 0 62px;
+  border-radius: 9999px;
+  transform: translateX(-50%) scale(0.94);
+  transform-origin: 50% 0;
+}
+.assistant-dock[data-shape="listening"] .assistant-island--e {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+  pointer-events: auto;
+}
+.assistant-island--e .assistant-wave > i {
+  background: var(--axi-violet);
+}
+.assistant-island__rec {
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* El avatar viaja a cada forma. */
+.assistant-dock:is([data-shape="question"], [data-shape="summary"]) .assistant-dock__hero {
+  transform: translate(calc(50cqw - var(--p-w) / 2 + 17px), 15px) scale(var(--p-scale));
+}
+.assistant-dock[data-shape="notice"] .assistant-dock__hero {
+  transform: translate(calc(50cqw - var(--a-w) / 2 + 13px), 12px) scale(var(--a-scale));
+}
+.assistant-dock[data-shape="listening"] .assistant-dock__hero {
+  transform: translate(calc(50cqw - var(--e-w) / 2 + 10px), 7px) scale(var(--a-scale));
+}
+
+/* El panel de la isla FUERA del dock (la pregunta viva dentro de la hoja de la
+   ficha en el móvil): sin avatar al lado, así que sin su hueco. */
+.assistant-island-inline .assistant-island__panel {
+  padding: 14px 16px;
+}
+
+/* La isla global (cabecera del panel, F4b): no es sticky en ningún scroller,
+   va donde la pone la cabecera, y sus capas desbordan hacia abajo por encima
+   del contenido. Sin escenario L: fuera del chat no hay vacío que llenar. */
+.assistant-dock--global {
+  position: relative;
+  top: 0;
+  z-index: 50;
+}
+.assistant-dock--global .assistant-dock__bar {
+  --dock-h: 46px;
+}
+.assistant-dock--global .assistant-island--s {
+  top: 0;
+}
+.assistant-dock--global .assistant-dock__hero {
+  transform: translate(calc(50cqw - var(--pill-w, 150px) / 2 + 7px), 7px) scale(var(--s-scale));
+}
+
+/* Columna estrecha: como M, las formas nuevas se alinean a la izquierda,
+   toman el ancho y las acciones de la esquina ceden mientras la isla habla. */
+@container assistant-chat (max-width: 899px) {
+  .assistant-island--p,
+  .assistant-island--e,
+  .assistant-dock[data-shape="notice"] .assistant-island--p {
+    left: 0;
+    width: calc(100cqw + var(--actions-w, 0px) + 8px);
+    transform: scale(0.94);
+    transform-origin: 0 0;
+  }
+  .assistant-dock:is([data-shape="question"], [data-shape="notice"], [data-shape="summary"]) .assistant-island--p,
+  .assistant-dock[data-shape="listening"] .assistant-island--e {
+    transform: scale(1);
+  }
+  .assistant-island__panel {
+    padding: 14px 14px 14px 72px;
+  }
+  /* El dictado se maneja desde el compositor, bajo el pulgar: la isla solo dice que escucha. */
+  .assistant-island__rec-btn {
+    display: none;
+  }
+  .assistant-dock:is([data-shape="question"], [data-shape="summary"]) .assistant-dock__hero {
+    transform: translate(17px, 15px) scale(var(--p-scale));
+  }
+  .assistant-dock[data-shape="notice"] .assistant-dock__hero {
+    transform: translate(13px, 12px) scale(var(--a-scale));
+  }
+  .assistant-dock[data-shape="listening"] .assistant-dock__hero {
+    transform: translate(10px, 7px) scale(var(--a-scale));
+  }
+  .assistant-chat:has(.assistant-dock:not([data-shape="pill"])) .assistant-chat__actions {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .assistant-island,
   .assistant-dock__hero {
     transition: none;
   }
-  .assistant-island__line--now {
+  .assistant-island__line--now,
+  .assistant-island__panel > *,
+  .assistant-island__notice > * {
     animation: none;
   }
 }
@@ -2798,6 +3140,10 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .wa-muted { color: var(--wa-muted); }
 .wa-link { color: var(--wa-link); border-top: 1px solid color-mix(in oklab, var(--wa-muted) 22%, transparent); }
 .wa-mark { background: var(--wa-mark); color: inherit; border-radius: 4px; padding: 0 2px; }
+/* La cabecera multimedia de la burbuja (hsm-media F4): hueco del medio y póster
+   del video, con los mismos tokens del lienzo de WhatsApp, sin colores nuevos. */
+.wa-media { background: color-mix(in oklab, var(--wa-muted) 18%, transparent); color: var(--wa-muted); }
+.wa-video { background: color-mix(in oklab, var(--wa-ink) 82%, transparent); color: var(--wa-bubble); }
 
 /* `Reveal` (landing): con movimiento reducido se ve en su sitio desde el primer
    frame. Gana al estilo en línea que framer-motion deja en el HTML del servidor. */

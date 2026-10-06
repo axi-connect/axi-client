@@ -221,6 +221,7 @@ export function BulkFollowUpModal({
   const needsOpening = preview?.needs_opening ?? 0;
   const counted = preview !== null && preview.within_limit;
   const nobody = counted && eligible === 0;
+  const switchedOff = preview?.agent_tasks_enabled === false;
   const startsAtIso = when === undefined ? "" : businessDateTimeToIso(when.date, when.time, tz);
   const finishes =
     startsAtIso === "" ? null : bulkFinishesAt(new Date(startsAtIso), perHour, eligible);
@@ -249,6 +250,7 @@ export function BulkFollowUpModal({
   const canSubmit =
     !saving &&
     counted &&
+    !switchedOff &&
     eligible > 0 &&
     agentId !== "" &&
     objective.trim().length >= OBJECTIVE_MIN &&
@@ -354,6 +356,16 @@ export function BulkFollowUpModal({
             Esa audiencia tiene <strong>{preview.total}</strong> contactos y el tope de un lote son{" "}
             <strong>{preview.max}</strong>. Divídela en segmentos más pequeños: un lote que tarda
             semanas en salir es una secuencia, y eso se configura aparte.
+          </Callout>
+        )}
+
+        {switchedOff && (
+          <Callout tone="warn" icon={TriangleAlert}>
+            Las tareas de agente están apagadas en esta empresa: el lote no crearía ninguna.{" "}
+            <Link href="/crm/settings/agent-tasks" className="font-semibold underline">
+              Enciéndelas en Ajustes
+            </Link>{" "}
+            y vuelve a intentarlo.
           </Callout>
         )}
 

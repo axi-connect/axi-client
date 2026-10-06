@@ -37,6 +37,10 @@ export {
   formatUsd,
   type BulkOpeningCost,
 } from "./domain/template-cost";
+// Las migas de las plantillas de Meta (el layout privado las junta con las de otros módulos).
+export { META_TEMPLATES_BREADCRUMBS } from "./domain/breadcrumbs";
 export { MarketingHeader } from "./ui/components/MarketingHeader";
+// La bandeja pinta la imagen, el video o el documento de una plantilla enviada.
+export { TemplateMediaHeader } from "./ui/components/TemplateMediaHeader";
 export { SendTemplateButton } from "./ui/components/SendTemplateButton";
 export { presetToSearchParams, type PresetAudience } from "./domain/campaign-draft";

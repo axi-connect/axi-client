@@ -5,14 +5,15 @@ import { useRouter } from "next/navigation";
 import { useAlert } from "@/core/providers/alert-provider";
 
 /**
- * Cambios sin guardar en la ficha (catálogo premium F3, inventario D.1 #14).
- * Cada sección guarda por su cuenta y avisa si está sucia; el hook junta esas
- * señales y protege las dos salidas:
+ * Cambios sin guardar en un formulario de página completa. Cada sección avisa si
+ * está sucia; el hook junta esas señales y protege las dos salidas:
  * - cerrar o recargar la pestaña: lo pregunta el navegador (`beforeunload`);
  * - el enlace de vuelta de la vista: confirmación antes de navegar.
  *
- * Antes no había ningún aviso y los cambios de Información se perdían en
- * silencio.
+ * Nació en la ficha del catálogo (premium F3, inventario D.1 #14), donde los
+ * cambios de Información se perdían en silencio. Vive en `core` desde que la
+ * página de plantillas de Meta (hsm-media F3) lo necesitó también: una sola
+ * copia para todos los formularios de página.
  */
 export function useUnsavedGuard() {
   const router = useRouter();

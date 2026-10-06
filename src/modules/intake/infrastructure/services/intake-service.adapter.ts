@@ -33,11 +33,16 @@ export const intakeService = {
     });
   },
 
-  message(token: string, message: string, voice: boolean): Promise<IntakeTurnResult> {
+  message(
+    token: string,
+    message: string,
+    voice: boolean,
+    signal?: AbortSignal,
+  ): Promise<IntakeTurnResult> {
     return http.post<IntakeTurnResult>(
       `${base(token)}/messages`,
       { message, voice },
-      { authenticate: false },
+      { authenticate: false, ...(signal === undefined ? {} : { signal }) },
     );
   },
 
@@ -51,11 +56,26 @@ export const intakeService = {
       /** Saltar un dato con motivo, o reabrir uno saltado («sí aplica»). */
       skip?: { field_code: string; reason: IntakeSkipReason; note?: string | null }[];
       unskip?: string[];
+      /** «Así es»: lo encontrado pasa a confirmado tal cual, sin reenviar el valor. */
+      confirm?: string[];
     },
   ): Promise<PatchAnswersResult> {
     return http.patch<PatchAnswersResult>(`${base(token)}/answers`, body, {
       authenticate: false,
     });
+  },
+
+  /**
+   * «Enviar a revisión»: cierra la entrevista SIN modelo ni turno y devuelve la
+   * vista ya terminada (cierre y resumen) para pintar «Listo» con ella.
+   */
+  finish(token: string): Promise<IntakeSessionView> {
+    return http.post<IntakeSessionView>(`${base(token)}/finish`, undefined, { authenticate: false });
+  },
+
+  /** La persona pidió «Escuchar»: solo se cuenta. Un fallo aquí no le importa a nadie. */
+  listened(token: string): Promise<void> {
+    return http.post<void>(`${base(token)}/listened`, undefined, { authenticate: false });
   },
 
   /**

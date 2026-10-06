@@ -7,13 +7,16 @@ import { cn } from "@/core/lib/utils";
 import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
 import {
+  draftOf,
   handoffNote,
   isEditableInline,
   isStructuredList,
   skipLabel,
   sourceLabel,
   toListItems,
+  valueFromDraft,
   type IntakeField,
+  type IntakeSkipReason,
 } from "@/modules/intake/domain/intake";
 import { SetupListEditor } from "./SetupListEditor";
 
@@ -52,8 +55,11 @@ export const SetupFieldRow = memo(function SetupFieldRow({
   onConfirm: (field: IntakeField) => void;
   /** Llevar la duda al chat cuando el dato no se puede teclear en una fila. */
   onAskAbout: (field: IntakeField) => void;
-  /** «No aplica» desde la ficha: el dato queda saltado con motivo, sin turno. */
-  onSkip: (field: IntakeField) => void;
+  /**
+   * Saltar desde la ficha, con motivo, sin turno: «No aplica», o «Por definir»
+   * en un dato opcional (no saber no es que no aplique, rec. 6 del informe).
+   */
+  onSkip: (field: IntakeField, reason: IntakeSkipReason) => void;
   /** «Sí aplica»: reabre un dato saltado (por la persona o por su tipo de negocio). */
   onUnskip: (field: IntakeField) => void;
   /** Sesión terminada: la fila se lee, sin chevron, sin «Así es», sin edición. */
@@ -87,13 +93,13 @@ export const SetupFieldRow = memo(function SetupFieldRow({
       onAskAbout(field);
       return;
     }
-    setDraft(toDraft(field));
+    setDraft(draftOf(field));
     setError(null);
     setEditing(true);
   }
 
   async function commit(): Promise<void> {
-    const value = fromDraft(field, draft);
+    const value = valueFromDraft(field, draft);
     if (value === null) {
       setError("No pude entender ese valor");
       return;
@@ -240,18 +246,33 @@ export const SetupFieldRow = memo(function SetupFieldRow({
           ) : null}
 
           {open ? (
-            // «No aplica» desde la ficha, al pasar el ratón: saltar cuesta una
-            // palabra también aquí, y queda anotado igual que en el chat.
-            <button
-              type="button"
-              onClick={() => {
-                onSkip(field);
-              }}
-              disabled={saving}
-              className="flex-none rounded-full px-[11px] py-1.5 text-[12.5px] font-medium text-muted-foreground transition-[background-color,opacity,transform] hover:bg-foreground/[0.06] hover:text-foreground active:scale-[.95] disabled:opacity-50 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
-            >
-              No aplica
-            </button>
+            // Saltar desde la ficha: en táctil siempre a la vista, con ratón al
+            // pasar por encima. «Por definir» solo en lo opcional: un
+            // obligatorio solo se salta porque no aplica (regla del servidor).
+            <span className="flex flex-none items-center md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100">
+              {field.required ? null : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onSkip(field, "no_sabe");
+                  }}
+                  disabled={saving}
+                  className="rounded-full px-[11px] py-1.5 text-[12.5px] font-medium text-muted-foreground transition-[background-color,transform] hover:bg-foreground/[0.06] hover:text-foreground active:scale-[.95] disabled:opacity-50"
+                >
+                  Por definir
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  onSkip(field, "no_aplica");
+                }}
+                disabled={saving}
+                className="rounded-full px-[11px] py-1.5 text-[12.5px] font-medium text-muted-foreground transition-[background-color,transform] hover:bg-foreground/[0.06] hover:text-foreground active:scale-[.95] disabled:opacity-50"
+              >
+                No aplica
+              </button>
+            </span>
           ) : null}
 
           {confirmable ? (
@@ -343,7 +364,7 @@ function RowSurface({
   );
 }
 
-function FieldEditor({
+export function FieldEditor({
   field,
   draft,
   setDraft,
@@ -411,37 +432,4 @@ function FieldEditor({
       className="mt-2 h-9 rounded-xl border-foreground/[0.14] bg-foreground/[0.04] text-[15px]"
     />
   );
-}
-
-/** El valor actual, en texto editable. */
-function toDraft(field: IntakeField): string {
-  if (field.value === null || field.value === undefined) return "";
-  if (Array.isArray(field.value)) return field.value.map((item) => String(item)).join(", ");
-  if (typeof field.value === "boolean") return field.value ? "sí" : "no";
-  return String(field.value);
-}
-
-/**
- * El texto editado, de vuelta al tipo del campo.
- *
- * `null` = no se pudo interpretar. La validación de verdad la hace el backend,
- * con el mismo normalizador que usa el asistente; esto solo evita mandar una
- * lista vacía o un texto en blanco.
- */
-function fromDraft(field: IntakeField, draft: string): unknown {
-  const trimmed = draft.trim();
-  if (trimmed === "") return null;
-
-  switch (field.kind) {
-    case "list":
-    case "multi_choice":
-      return trimmed
-        .split(",")
-        .map((item) => item.trim())
-        .filter((item) => item !== "");
-    case "boolean":
-      return ["sí", "si", "true", "1"].includes(trimmed.toLowerCase());
-    default:
-      return trimmed;
-  }
 }

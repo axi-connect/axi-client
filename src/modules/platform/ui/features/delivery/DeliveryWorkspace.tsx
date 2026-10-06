@@ -2,7 +2,7 @@
 
 /**
  * «Preparar entrega» (entrega_premium_plan.md, F2): los pasos llegan
- * precargados y plegados en su resumen (StepCard, uno abierto a la vez), la
+ * precargados y plegados en su resumen (FormStep, uno abierto a la vez), la
  * vista previa en vivo fija a la derecha (debajo en el celular), «Antes de
  * enviar» siempre a la vista y la barra de envío flotante con qué falta y
  * «Enviar bienvenida». El borrador se guarda solo en este navegador.
@@ -22,8 +22,8 @@ import { formatDayTime } from "../../../domain/dates";
 import { cn } from "@/core/lib/utils";
 import { useAlert } from "@/core/providers/alert-provider";
 import { DynamicForm } from "@/shared/components/features/dynamic-form";
+import { FormStep, StepProgress, type StepProgressState } from "@/shared/components/features/form-steps";
 import { Island } from "@/shared/components/features/island";
-import { StepCard } from "@/shared/components/features/step-card";
 import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
@@ -48,6 +48,7 @@ import {
   timeZoneLabel,
   warningFor,
   zonedInputToIso,
+  type CheckState,
   type DeliveryIssue,
   type DeliveryStepId,
 } from "../../../domain/delivery";
@@ -82,6 +83,9 @@ import {
 } from "./delivery-form.config";
 
 const FORM_ID = "delivery-form";
+
+/** Cada grupo de la revisión, como tramo de la barra: un bloqueo queda por resolver. */
+const PROGRESS_STATE: Record<CheckState, StepProgressState> = { ok: "ready", warn: "warning", blocked: "pending" };
 
 
 
@@ -627,7 +631,6 @@ export function DeliveryWorkspace({
   };
 
   // ------------------------------------------------ la barra de envío
-  const readyGroups = checks.filter((check) => check.state !== "blocked").length;
   const dockTitle = canSend
     ? "Lista para enviar"
     : !roleAllowed
@@ -715,10 +718,11 @@ export function DeliveryWorkspace({
                 const id = item.id as "offer" | "trial" | "mail";
                 const open = step === id;
                 return (
-                  <StepCard
+                  <FormStep
                     key={id}
+                    variant="edit"
                     id="delivery-step"
-                    index={index + 1}
+                    number={index + 1}
                     title={item.label}
                     summary={summaries[id]}
                     state={stepState(id)}
@@ -732,7 +736,7 @@ export function DeliveryWorkspace({
                         {stepExtras.after}
                       </>
                     ) : null}
-                  </StepCard>
+                  </FormStep>
                 );
               })}
               <BeforeSendCard issues={issues} onGo={setStep} onSupport={canEnterSupport ? setSupportIssue : undefined} />
@@ -774,39 +778,17 @@ export function DeliveryWorkspace({
         aria-label="Estado del envío"
         className="sticky bottom-3 z-10 mx-auto flex w-full max-w-4xl flex-wrap items-center gap-x-4 gap-y-3 p-3 pl-5 shadow-[var(--shadow-overlay)] sm:flex-nowrap sm:rounded-full"
       >
-        <div className="min-w-0 flex-1 space-y-1.5">
-          <div className="flex items-baseline gap-2">
-            <span className="text-sm font-semibold whitespace-nowrap">{dockTitle}</span>
-            <span className="text-xs tabular-nums opacity-70">
-              {readyGroups}/{checks.length}
-            </span>
-          </div>
-          <ul className="-my-2 flex gap-1" aria-label="Qué falta">
-            {checks.map((check) => (
-              <li key={check.id} className="flex-1">
-                <button
-                  type="button"
-                  onClick={() => setStep(check.step)}
-                  title={check.label}
-                  className="flex h-6 w-full items-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
-                >
-                  <span
-                    aria-hidden="true"
-                    className={cn(
-                      "block h-1.5 w-full rounded-full",
-                      check.state === "ok" ? "bg-current" : check.state === "warn" ? "bg-warning" : "bg-current/20",
-                    )}
-                  />
-                  <span className="sr-only">
-                    {check.label}
-                    {check.state === "ok" ? ": listo" : check.state === "warn" ? ": con un aviso" : ": por resolver"}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-          <p className="truncate text-xs opacity-70">{dockDetail}</p>
-        </div>
+        <StepProgress
+          className="flex-1"
+          title={dockTitle}
+          checks={checks.map((check) => ({
+            id: check.id,
+            label: check.label,
+            state: PROGRESS_STATE[check.state],
+            onGo: () => setStep(check.step),
+          }))}
+          detail={dockDetail}
+        />
         <Button
           type="submit"
           form={FORM_ID}

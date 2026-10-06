@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { LayoutPanelLeft } from "lucide-react";
 import { useShallow } from "zustand/react/shallow";
 
@@ -50,6 +51,7 @@ export function CmoView() {
     );
 
   const [railOpen, setRailOpen] = useState(false);
+  const router = useRouter();
 
   // Escape cierra el panel superpuesto del tablero: es la expectativa de todo
   // overlay (A4 de la auditoría).
@@ -114,6 +116,15 @@ export function CmoView() {
           // Sin ajustes ni hilo decidido no se sabe qué pantalla toca (vacío,
           // conversación o bloqueo): se espera en vez de pintar una y saltar.
           settling={!restored || settings.status === "idle" || settings.status === "loading"}
+          // «Ver propuestas» desde la isla: en xl el tablero ya está a la vista;
+          // debajo, se abre el panel superpuesto (y cuenta como visto).
+          onOpenBoard={() => {
+            markSeen();
+            setRailOpen(true);
+          }}
+          onOpenProposal={(proposalId) => {
+            router.push(`/cmo/proposals/${proposalId}`);
+          }}
         />
       </main>
 

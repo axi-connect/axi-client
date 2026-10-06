@@ -1,5 +1,6 @@
-import { Copy, CornerUpLeft, ExternalLink, Phone } from "lucide-react";
+import { Copy, CornerUpLeft, ExternalLink, FileText, ImageIcon, Phone, Play } from "lucide-react";
 import { cn } from "@/core/lib/utils";
+import type { HeaderMediaKind } from "@/modules/marketing/domain/header-media";
 import { visibleButtons, type TemplateButton } from "@/modules/marketing/domain/template-pieces";
 
 /**
@@ -10,6 +11,7 @@ import { visibleButtons, type TemplateButton } from "@/modules/marketing/domain/
  */
 export function HsmPreview({
   header,
+  media = null,
   body,
   examples,
   footer,
@@ -17,6 +19,11 @@ export function HsmPreview({
   className,
 }: {
   header: string | null;
+  /**
+   * La cabecera de imagen, video o documento (F4). `url`: la previa local del
+   * archivo recién elegido o la firmada del guardado; `null` mientras no hay.
+   */
+  media?: { kind: HeaderMediaKind; url: string | null; fileName?: string } | null;
   body: string;
   examples: readonly string[];
   footer: string | null;
@@ -28,6 +35,7 @@ export function HsmPreview({
   return (
     <div className={cn("wa-preview flex flex-col rounded-3xl p-4 sm:p-5", className)}>
       <div className="wa-bubble max-w-xs self-start overflow-hidden rounded-[4px_14px_14px_14px]">
+        {media !== null ? <MediaHeader media={media} /> : null}
         <div className="flex flex-col gap-1 px-3 pt-2 pb-1.5 text-sm leading-snug">
           {header?.trim() ? <p className="font-bold text-pretty">{header}</p> : null}
           <p className="text-pretty whitespace-pre-line">
@@ -59,6 +67,37 @@ export function HsmPreview({
         )}
       </div>
     </div>
+  );
+}
+
+/** La cabecera de medio como la pinta WhatsApp: la imagen recortada, el póster del video o la ficha del documento. */
+function MediaHeader({ media }: { media: { kind: HeaderMediaKind; url: string | null; fileName?: string } }) {
+  if (media.kind === "document") {
+    return (
+      <div className="wa-media mx-1 mt-1 grid grid-cols-[2.25rem_minmax(0,1fr)] items-center gap-2.5 rounded-[10px] p-2.5">
+        <span aria-hidden className="bg-destructive text-background grid h-10 w-9 place-items-center rounded-md">
+          <FileText className="size-4.5" />
+        </span>
+        <span className="min-w-0 truncate text-[13px] font-medium">{media.fileName ?? "Documento"}</span>
+      </div>
+    );
+  }
+  if (media.kind === "video") {
+    return (
+      <div className="wa-video mx-1 mt-1 grid aspect-[1.91/1] place-items-center rounded-[10px]" aria-label="Video de la cabecera" role="img">
+        <span aria-hidden className="grid size-11 place-items-center rounded-full bg-current/20">
+          <Play className="size-5" />
+        </span>
+      </div>
+    );
+  }
+  return media.url === null ? (
+    <div className="wa-media mx-1 mt-1 grid aspect-[1.91/1] place-items-center rounded-[10px]" aria-label="Imagen de la cabecera" role="img">
+      <ImageIcon aria-hidden className="size-6" />
+    </div>
+  ) : (
+    // eslint-disable-next-line @next/next/no-img-element -- previa local (object URL) o firmada que caduca: next/image no aporta nada aquí
+    <img src={media.url} alt="Imagen de la cabecera" className="mx-1 mt-1 block aspect-[1.91/1] w-[calc(100%-0.5rem)] rounded-[10px] object-cover" />
   );
 }
 

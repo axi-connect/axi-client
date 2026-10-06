@@ -298,6 +298,8 @@ El registro `/comenzar` (rediseño «Flow», 2026-09-05) pinta sus controles —
 
 > **La isla del asistente y el chat en tinta** (dueño, 2026-09-28; lienzo https://claude.ai/artifact/N9NQ1hEPBhU746ub1bdEbT). La barra de Axel y Alba es una isla de tinta tipo Dynamic Island con tres formas que se funden por `opacity` y un solo avatar que viaja entre ellas por `transform`: **L** escenario del estado vacío (`[data-empty]`), **S** píldora con conversación, **M** trabajando (`working`, con `AssistantIslandActivity`: el paso anterior y el actual). Las pantallas sin chat (bloqueo, carga, cierre) usan `AssistantIslandStage` con el brillo del estado (`ai`, `warning`, `success`, `neutral`). **El chat no lleva coral**: la burbuja de la persona y Enviar van en tinta (`.assistant-bubble-user`, `.assistant-send`), como lo que sale en el inbox; el violeta queda para la IA. Las propuestas de Axel usan el lenguaje de las fichas de /comercial: monocromas, tipo en un cuadro de tinta, botón `contrast` + `glass`.
 
+> **La isla viva** (dueño, 2026-10-05; maqueta aprobada `docs/design/mockups/island-live.html`, https://claude.ai/artifact/WZb7Phtp1AtTd3qv1sE6Fz; plan `docs/plans/island_live_plan.md`). La isla gana cuatro formas más, siempre **una a la vez** (`data-shape` en `.assistant-dock`, la decide `islandShape()`): **P** pregunta (la pregunta viva, solo cuando su burbuja NO está a la vista: la decisión D1 del dueño; nunca dos copias visibles — en el móvil, con la hoja de la ficha abierta, el velo modal tapa la isla y el mismo `AssistantIslandPanel` se pinta arriba de la hoja, `.assistant-island-inline`: hay dos sitios en el código, una sola copia visible y accesible, porque Radix deja el resto `aria-hidden`), **A** aviso (una línea ≤ 34 caracteres, un botón como mucho, brillo por tono), **R** resumen (el informe de Axel en tres líneas, que se puede escuchar) y **E** escuchando (el dictado en curso, espejo del compositor). M gana chips de lo que el asistente va tocando. Reglas: **una isla, una cola, un timer** (`useIslandQueue`: pregunta > aviso > resumen; un solo `setTimeout`, solo para un aviso sin botón abierto; el aviso que se va solo se descarta, lo plegado a mano deja el punto en S); en el vacío manda L por prop (`empty`), no por CSS, para que nada oculto quede en el orden de tabulación; lo que se anuncia va a una región viva **siempre montada** del dock (una región que nace con su texto no se lee); los anchos son fijos por forma (`--p-w`, `--a-w`, `--e-w`) y el avatar viaja sin medir nada. **La isla global** de Axel vive en el centro de la cabecera del panel (`PrivateHeader` `center`, desde lg): avatar quieto, solo con `cmo:read`, y nunca en /cmo (un solo Axel vivo por pantalla).
+
 > **Un solo avatar vivo por pantalla** (estudio de agentes, 2026-09-21): en una vista con varios personajes (rejilla de agentes, selector de personaje, vista previa del onboarding) solo el del escenario lleva vida (`useAvatarLife`/`useAvatarGaze`); el resto son `AssistantAvatar` estáticos con `transitionMs={0}`. Cinco caras parpadeando a la vez son cinco loops en reposo, que es justo lo que esta sección prohíbe.
 
 Presets centralizados en **`src/core/styles/motion.ts`** — nunca duraciones/curvas ad-hoc:
@@ -448,7 +450,7 @@ Los primitivos viven en `shared/components/ui/` (shadcn) y los features en `shar
 | Navegación jerárquica en el sidebar | `NavItemNode` + `nav-tree` / `nav-active` (ver §9.2) |
 | Pestañas, sub-navegación de sección y filtros segmentados | La pastilla de §9.3 — `NavTabs`, `Tabs variant="pill"` o `SegmentedControl` |
 | Carga de vista/tabla/formulario | Ver §9.1 (Estados de carga) |
-| Conversación con un asistente de IA (avatar, isla de tinta, burbujas, pregunta con opciones, «pensando», compositor con voz opcional, píldoras, aura) | El kit `shared/components/features/assistant` (`AssistantChatShell` + `AssistantDock` (la isla L/S/M) + `AssistantIslandActivity` + `AssistantIslandStage` (pantallas sin chat) + `AssistantHeroAvatar` + `AssistantBubble`/`UserBubble`/`SystemNote` + `AssistantQuestion` + `AssistantThinking` + `AssistantComposer` + `StarterPills`; el campo es `.assistant-field`). Lo consumen Axel (`cmo`) y Alba (`intake`); cada slice aporta store, copy y personaje (nombre + accesorio). La firma «✦ nombre» es SIEMPRE `AssistantMark`. El inbox de operadores es mensajería (ticks, media) y sigue aparte |
+| Conversación con un asistente de IA (avatar, isla de tinta, burbujas, pregunta con opciones, «pensando», compositor con voz opcional, píldoras, aura) | El kit `shared/components/features/assistant` (`AssistantChatShell` + `AssistantDock` (la isla L/S/M y P/A/R/E, con `useIslandQueue` y `useInView`) + `AssistantIslandActivity` (con chips) + `AssistantIslandPanel` + `AssistantListenButton` (voz del navegador, `core/hooks/use-speech`) + `AssistantIslandStage` (pantallas sin chat) + `AssistantHeroAvatar` + `AssistantBubble`/`UserBubble`/`SystemNote` + `AssistantQuestion` + `AssistantThinking` + `AssistantComposer` + `StarterPills`; el campo es `.assistant-field`). Lo consumen Axel (`cmo`) y Alba (`intake`); cada slice aporta store, copy y personaje (nombre + accesorio). La firma «✦ nombre» es SIEMPRE `AssistantMark`. El inbox de operadores es mensajería (ticks, media) y sigue aparte |
 
 **Tablas y scroll** (regla del dueño, 2026-09-26: «las tablas no pueden desbordar en los diferentes tamaños y el
 scroll debe ser optimizado, con el estilo de axi del scroll»):
@@ -615,6 +617,9 @@ solo aviso (nunca «Guardando» + «Guardado»).
   sobre el anterior (lo nativo de sileo). Errores y advertencias llevan id propio
   y se apilan: nunca se pisan. Ese `id` no está en los tipos de sileo; lo fija
   `core/notifications/__tests__/sileo-contract.test.tsx`.
+- **Dentro del chat de un asistente, el aviso es la forma A de su isla**, no un
+  toast (§5.2, «La isla viva»): mismas recetas de copy (título ≤ 34, un botón,
+  7 s sin botón), una ranura, y vive donde mira quien conversa.
 - **Nunca para confirmar ni para un estado que dura**: eso es `showModal` o
   `Alert` en línea.
 - **Nada de avisos por cargar**: un GET que carga la vista no avisa si sale
@@ -831,8 +836,9 @@ sin `<style>` por render y con `color-mix` en lugar de `oklch(from …)`):
 
 Para un formulario de varios pasos que llega precargado (Preparar entrega):
 
-- **Pasos plegables, no pestañas ni asistente.** Cada paso es una `StepCard`
-  (`modules/platform/ui/features/delivery/DeliveryWorkspace.tsx`): cabecera que
+- **Pasos plegables, no pestañas ni asistente.** Cada paso es un `FormStep`
+  (`shared/components/features/form-steps/`, una pieza para todos los formularios por pasos
+  desde 2026-10-03; su marca es `StepMark`): cabecera que
   es un solo `<button aria-expanded aria-controls>` con el número o ✓ (o «!» si está
   bloqueado), el título y, **cerrado, el resumen de lo elegido**. Uno abierto a la vez; se
   abre el que tenga un bloqueo o un error al enviar. La revisión deja de ser un paso: los
@@ -843,7 +849,7 @@ Para un formulario de varios pasos que llega precargado (Preparar entrega):
 - **«Antes de enviar» siempre a la vista**: cada bloqueo en una fila con su acción debajo
   del texto (no al lado: a 555 px de columna el texto se partía en tres líneas), o un
   `<Alert variant="success">` cuando no hay nada.
-- **Barra de acción** (en `DeliveryWorkspace`): `Island as="footer" material="ink"` (§9.5.1: las barras van siempre en tinta) `sticky bottom-3`, `rounded-full` desde
+- **Barra de acción** (en `DeliveryWorkspace`; los tramos son `StepProgress`, de la misma carpeta): `Island as="footer" material="ink"` (§9.5.1: las barras van siempre en tinta) `sticky bottom-3`, `rounded-full` desde
   `sm`. Lleva el estado en una palabra («Casi lista», «Lista para enviar»), los tramos de
   progreso —uno por grupo de la revisión, cada uno es un botón de **24 px de alto** con la
   barra de 6 px dentro, que lleva a su paso, con su estado en `sr-only`—, **qué falta

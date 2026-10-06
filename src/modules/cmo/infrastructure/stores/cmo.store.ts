@@ -21,6 +21,7 @@ import type {
   CmoSettingsDTO,
   ProposalDTO,
 } from "@/modules/cmo/domain/cmo";
+import { CMO_MESSAGE_MAX_CHARS, CMO_MESSAGE_MIN_CHARS } from "@/modules/cmo/domain/cmo";
 import {
   approveProposal,
   archiveThread as archiveThreadApi,
@@ -123,6 +124,22 @@ export interface LiveTurn {
   seq: number;
 }
 
+/**
+ * Lo que la isla de Axel tiene que contar (plan island_live_plan.md, F4): el
+ * socket trae el titular del informe y el nombre de cada propuesta, y hasta
+ * island-live se tiraban sin enseñarse. La isla los consume uno a uno.
+ */
+export interface AxelNews {
+  id: string;
+  kind: "briefing" | "proposal";
+  title: string;
+  body: string;
+  proposal_id: string | null;
+}
+
+/** Más novedades sin leer que esto no se cuentan una a una: con cinco ya es «mira el tablero». */
+const MAX_NEWS = 5;
+
 interface CmoState {
   settings: Section<CmoSettingsDTO>;
   briefing: Section<BriefingDTO | null>;
@@ -136,8 +153,16 @@ interface CmoState {
   blocker: CmoBlocker;
   /** El turno en curso, contado en vivo. `null` cuando no hay ninguno. */
   live: LiveTurn | null;
+  /**
+   * El turno que venció en el navegador pero puede seguir en el servidor. Su
+   * cierre por WS todavía se acepta: es lo que cumple «si terminé, la respuesta
+   * aparece sola». `null` cuando no hay ninguno pendiente.
+   */
+  late: string | null;
   /** Propuestas nuevas llegadas por WS que el usuario aún no ha visto. */
   unseen: number;
+  /** Novedades por socket que la isla aún no contó. */
+  news: AxelNews[];
   /**
    * Propuestas del hilo que ya NO están en el tablero, por id.
    *
@@ -199,6 +224,14 @@ interface CmoState {
   markSeen: () => void;
   /** Resuelve una propuesta del hilo que el tablero ya no lista. Idempotente. */
   resolveSettled: (proposalId: string) => Promise<void>;
+  /** La isla ya tomó esta novedad: sale de la lista. */
+  takeNews: (id: string) => void;
+  /**
+   * Anota una novedad SIN recargar nada: lo usa la isla global, que vive fuera
+   * de /cmo y no tiene tablero que refrescar.
+   */
+  noteBriefingReady: (event: CmoBriefingReadyEvent) => void;
+  noteProposalCreated: (event: CmoProposalCreatedEvent) => void;
   onBriefingReady: (event: CmoBriefingReadyEvent) => void;
   onProposalCreated: (event: CmoProposalCreatedEvent) => void;
   onProposalDecided: (event: CmoProposalDecidedEvent) => void;
@@ -258,6 +291,24 @@ function isTimeout(error: unknown): boolean {
 
 const TIMEOUT_MESSAGE = "Tardé más de lo normal. Si terminé, la respuesta aparece sola.";
 
+/**
+ * La copia del fallo de un turno, en la burbuja de Axel.
+ *
+ * El 502 del proveedor y el 500 genérico pintaban su título técnico («Error del
+ * proveedor IA», «Error interno inesperado»). Se traducen AQUÍ y no en el mapa
+ * global: allí el `message` del servidor es a veces lo único con lo que un
+ * operador de la consola diagnostica un 500.
+ */
+const ASK_FAILURE_BY_CODE: Record<string, string> = {
+  "ai/provider_error": "El servicio de IA no respondió a tiempo. Vuelve a intentarlo en un momento",
+  "internal/unexpected": "Algo falló de nuestro lado. Vuelve a intentarlo en un momento",
+};
+
+function askFailureCopy(error: unknown): string {
+  if (isTimeout(error)) return TIMEOUT_MESSAGE;
+  return (error instanceof HttpError ? ASK_FAILURE_BY_CODE[error.code] : undefined) ?? errorMessage(error);
+}
+
 export const useCmoStore = create<CmoState>((set, get) => {
   /** Ids de propuesta decidida que se están pidiendo ahora mismo. Vive en el
    *  closure del store (no a nivel de módulo): un Set global sobrevivía a HMR
@@ -271,7 +322,9 @@ export const useCmoStore = create<CmoState>((set, get) => {
   thread: { id: null, messages: [], thinking: false },
   blocker: null,
   live: null,
+  late: null,
   unseen: 0,
+  news: [],
   settled: {},
   threads: idle(),
   restored: false,
@@ -354,6 +407,7 @@ export const useCmoStore = create<CmoState>((set, get) => {
     set({
       thread: { id: threadId, messages: [], thinking: false },
       live: null,
+      late: null,
       settled: {},
       blocker: null,
     });
@@ -430,7 +484,10 @@ export const useCmoStore = create<CmoState>((set, get) => {
    */
   ask: async (message: string) => {
     const trimmed = message.trim();
-    if (trimmed === "" || get().thread.thinking) return;
+    // Los topes del servidor: fuera de ellos el POST sería un 400 que nadie anunció.
+    if (trimmed.length < CMO_MESSAGE_MIN_CHARS || trimmed.length > CMO_MESSAGE_MAX_CHARS || get().thread.thinking) {
+      return;
+    }
 
     const optimistic: UiMessage = {
       id: nextLocalId(),
@@ -455,6 +512,7 @@ export const useCmoStore = create<CmoState>((set, get) => {
       },
       blocker: null,
       live: { turn_id: turnId, iteration: 0, text: "", steps: [], seq: 0 },
+      late: null,
     }));
 
     /* Presupuesto explícito. El servidor corta el turno a los 90 s; si a los 100
@@ -547,6 +605,8 @@ export const useCmoStore = create<CmoState>((set, get) => {
       set((state) => ({
         blocker,
         live: null,
+        // Venció la espera, no el turno: su cierre por WS todavía puede llegar.
+        late: isTimeout(error) ? (state.live?.turn_id ?? null) : null,
         thread: {
           ...state.thread,
           thinking: false,
@@ -555,7 +615,7 @@ export const useCmoStore = create<CmoState>((set, get) => {
               ? {
                   ...item,
                   pending: false,
-                  failed: isTimeout(error) ? TIMEOUT_MESSAGE : errorMessage(error),
+                  failed: askFailureCopy(error),
                 }
               : item,
           ),
@@ -590,6 +650,7 @@ export const useCmoStore = create<CmoState>((set, get) => {
     set({
       thread: { id: null, messages: [], thinking: false },
       live: null,
+      late: null,
       blocker: null,
       settled: {},
     });
@@ -641,7 +702,22 @@ export const useCmoStore = create<CmoState>((set, get) => {
     }
   },
 
-  onBriefingReady: () => {
+  takeNews: (id) => {
+    set((state) => (state.news.some((item) => item.id === id) ? { news: state.news.filter((item) => item.id !== id) } : state));
+  },
+
+  noteBriefingReady: (event) => {
+    set((state) => ({ news: addNews(state.news, briefingNews(event)) }));
+  },
+
+  noteProposalCreated: (event) => {
+    // Lo que nació en la conversación ya se ve anclado en el hilo: no se avisa dos veces.
+    if (event.source === "chat") return;
+    set((state) => ({ news: addNews(state.news, proposalNews(event)) }));
+  },
+
+  onBriefingReady: (event) => {
+    get().noteBriefingReady(event);
     // El evento NO trae el briefing completo (el WS avisa, no sincroniza): se
     // recarga desde el servidor, que es la única fuente de verdad.
     void getLatestBriefing()
@@ -654,7 +730,8 @@ export const useCmoStore = create<CmoState>((set, get) => {
     void get().reloadProposals();
   },
 
-  onProposalCreated: () => {
+  onProposalCreated: (event) => {
+    get().noteProposalCreated(event);
     set((state) => ({ unseen: state.unseen + 1 }));
     void get().reloadProposals();
   },
@@ -742,6 +819,33 @@ export const useCmoStore = create<CmoState>((set, get) => {
   },
 
   onTurnCompleted: (event) => {
+    if (acceptLate(get(), event)) {
+      // El POST se rindió antes que el servidor: el turno terminó y su mensaje
+      // ya está guardado. Se pinta y el aviso de espera de la burbuja se quita,
+      // en vez de invitar a reintentar (y a pagar) un análisis que ya existe.
+      set((state) => ({
+        late: null,
+        thread: {
+          ...state.thread,
+          messages: [
+            ...state.thread.messages.map((item) =>
+              item.failed === TIMEOUT_MESSAGE ? withoutFailure(item) : item,
+            ),
+            {
+              id: event.message_id,
+              role: "axel" as const,
+              body: event.body,
+              created_at: new Date().toISOString(),
+              tool_calls: null,
+              proposal_id: event.proposal_id,
+              question: event.question,
+            },
+          ],
+        },
+      }));
+      if (event.proposal_id !== null) void get().reloadProposals();
+      return;
+    }
     const live = accept(get(), event);
     if (live === null) return;
     const state = get();
@@ -775,6 +879,10 @@ export const useCmoStore = create<CmoState>((set, get) => {
   },
 
   onTurnFailed: (event) => {
+    if (acceptLate(get(), event)) {
+      set({ late: null });
+      return;
+    }
     const live = accept(get(), event);
     if (live === null) return;
     set({
@@ -806,6 +914,17 @@ function accept(state: CmoState, event: { turn_id: string; seq: number }): LiveT
   return live;
 }
 
+/** El evento es del turno que venció en esta pestaña y no hay otro en vivo. */
+function acceptLate(state: CmoState, event: { turn_id: string }): boolean {
+  return state.live === null && state.late !== null && state.late === event.turn_id;
+}
+
+function withoutFailure(message: UiMessage): UiMessage {
+  const { failed, ...rest } = message;
+  void failed;
+  return rest;
+}
+
 function toUiMessage(message: CmoMessageDTO): UiMessage {
   return {
     id: message.id,
@@ -816,4 +935,37 @@ function toUiMessage(message: CmoMessageDTO): UiMessage {
     proposal_id: message.proposal_id,
     question: message.question,
   };
+}
+
+/** La novedad del informe: el titular del día, y cuántas propuestas trae. */
+export function briefingNews(event: CmoBriefingReadyEvent): AxelNews {
+  const count = event.proposals_created;
+  return {
+    id: `briefing-${event.briefing_id}`,
+    kind: "briefing",
+    title: "Llegó tu informe de hoy",
+    body:
+      count === 0
+        ? event.headline
+        : count === 1
+          ? "1 propuesta por decidir"
+          : `${String(count)} propuestas por decidir`,
+    proposal_id: null,
+  };
+}
+
+export function proposalNews(event: CmoProposalCreatedEvent): AxelNews {
+  return {
+    id: `proposal-${event.proposal_id}`,
+    kind: "proposal",
+    title: "Nueva propuesta",
+    body: event.title,
+    proposal_id: event.proposal_id,
+  };
+}
+
+/** Añade sin duplicar (un evento reentregado tras reconectar no cuenta dos veces) y con tope. */
+function addNews(list: AxelNews[], item: AxelNews): AxelNews[] {
+  if (list.some((entry) => entry.id === item.id)) return list;
+  return [...list, item].slice(-MAX_NEWS);
 }

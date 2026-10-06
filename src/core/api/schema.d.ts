@@ -4356,6 +4356,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/marketing/hsm-templates/library": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["HsmTemplatesController_library_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/marketing/hsm-templates": {
         parameters: {
             query?: never;
@@ -4386,6 +4402,22 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["HsmTemplatesController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/marketing/hsm-templates/media": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["HsmTemplatesController_uploadMedia_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/marketing/hsm-templates/sync": {
@@ -8194,6 +8226,38 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["PublicIntakeController_answers_v1"];
+        trace?: never;
+    };
+    "/api/v1/public/intake/{token}/finish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PublicIntakeController_finish_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/intake/{token}/listened": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PublicIntakeController_listened_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/public/intake/{token}/voice": {
@@ -15574,6 +15638,35 @@ export interface components {
             used: number;
             remaining: number | null;
         };
+        HsmLibraryListDto: {
+            data: {
+                name: string;
+                language: string;
+                topic: string;
+                usecase: string;
+                industries: string[];
+                header: string | null;
+                header_example: string | null;
+                body: string;
+                body_examples: string[];
+                footer: string | null;
+                buttons: ({
+                    /** @enum {string} */
+                    type: "quick_reply";
+                    text: string;
+                } | {
+                    /** @enum {string} */
+                    type: "url";
+                    text: string;
+                    url: string;
+                } | {
+                    /** @enum {string} */
+                    type: "phone_number";
+                    text: string;
+                    phone_number: string;
+                })[];
+            }[];
+        };
         HsmTemplatesListDto: {
             data: {
                 /** Format: uuid */
@@ -15595,6 +15688,18 @@ export interface components {
                 /** Format: date-time */
                 edit_retry_at: string | null;
                 external_id: string | null;
+                header_media: {
+                    /** @enum {string} */
+                    mode: "fixed" | "per_send";
+                    /** @enum {string} */
+                    kind: "image" | "video" | "document";
+                    storage_key: string;
+                    mime_type: string;
+                    byte_size: number;
+                    handle: string;
+                    file_name?: string;
+                    preview_url: string | null;
+                } | null;
                 /** Format: date-time */
                 updated_at: string;
             }[];
@@ -15635,6 +15740,17 @@ export interface components {
                 type: "copy_code";
                 example: string;
             })[] | null;
+            header_media?: {
+                /** @enum {string} */
+                mode: "fixed" | "per_send";
+                /** @enum {string} */
+                kind: "image" | "video" | "document";
+                storage_key: string;
+                mime_type: string;
+                byte_size: number;
+                handle: string;
+                file_name?: string;
+            } | null;
         };
         HsmTemplateDto: {
             /** Format: uuid */
@@ -15656,8 +15772,30 @@ export interface components {
             /** Format: date-time */
             edit_retry_at: string | null;
             external_id: string | null;
+            header_media: {
+                /** @enum {string} */
+                mode: "fixed" | "per_send";
+                /** @enum {string} */
+                kind: "image" | "video" | "document";
+                storage_key: string;
+                mime_type: string;
+                byte_size: number;
+                handle: string;
+                file_name?: string;
+                preview_url: string | null;
+            } | null;
             /** Format: date-time */
             updated_at: string;
+        };
+        HsmHeaderMediaUploadDto: {
+            handle: string;
+            storage_key: string;
+            /** @enum {string} */
+            kind: "image" | "video" | "document";
+            mime_type: string;
+            byte_size: number;
+            file_name: string;
+            preview_url: string;
         };
         SyncHsmTemplatesDto: {
             /** Format: uuid */
@@ -15666,6 +15804,7 @@ export interface components {
         SyncHsmResultDto: {
             synced: number;
             removed: number;
+            media_pending: number;
         };
         CreateHsmTemplateDto: {
             /** Format: uuid */
@@ -15707,6 +15846,18 @@ export interface components {
                 type: "copy_code";
                 example: string;
             })[];
+            header_media?: {
+                /** @enum {string} */
+                mode: "fixed" | "per_send";
+                /** @enum {string} */
+                kind: "image" | "video" | "document";
+                storage_key: string;
+                mime_type: string;
+                byte_size: number;
+                handle: string;
+                file_name?: string;
+            };
+            library_template_name?: string;
         };
         AutomationsListDto: {
             data: {
@@ -18650,6 +18801,7 @@ export interface components {
             }[];
             within_limit: boolean;
             max: number;
+            agent_tasks_enabled: boolean;
         };
         CreateBulkDto: {
             /** @enum {string} */
@@ -22438,6 +22590,7 @@ export interface components {
                         hint: string | null;
                     }[];
                     allow_free_text: boolean;
+                    why: string | null;
                 } | null;
                 captured: {
                     code: string;
@@ -22493,6 +22646,16 @@ export interface components {
                 next_field: string | null;
                 has_pending_required: boolean;
                 has_pending_confirmation: boolean;
+                essential: {
+                    confirmed: number;
+                    total: number;
+                    complete: boolean;
+                };
+                pending_review: number;
+                next_ask: {
+                    topic: string;
+                    field: string;
+                } | null;
             };
             closing: string | null;
             summary: {
@@ -22519,6 +22682,10 @@ export interface components {
                     delta_pct: number | null;
                 } | null;
             } | null;
+            resume: {
+                missing_topics: string[];
+                pending_review: number;
+            } | null;
         };
         SendIntakeMessageDto: {
             message: string;
@@ -22533,6 +22700,7 @@ export interface components {
                     hint: string | null;
                 }[];
                 allow_free_text: boolean;
+                why: string | null;
             } | null;
             captured: {
                 code: string;
@@ -22559,6 +22727,16 @@ export interface components {
                 next_field: string | null;
                 has_pending_required: boolean;
                 has_pending_confirmation: boolean;
+                essential: {
+                    confirmed: number;
+                    total: number;
+                    complete: boolean;
+                };
+                pending_review: number;
+                next_ask: {
+                    topic: string;
+                    field: string;
+                } | null;
             };
             finished: boolean;
             closing: string | null;
@@ -22619,6 +22797,7 @@ export interface components {
                 note?: string | null;
             }[];
             unskip?: string[];
+            confirm?: string[];
         };
         PatchIntakeAnswersResultDto: {
             progress: {
@@ -22642,6 +22821,16 @@ export interface components {
                 next_field: string | null;
                 has_pending_required: boolean;
                 has_pending_confirmation: boolean;
+                essential: {
+                    confirmed: number;
+                    total: number;
+                    complete: boolean;
+                };
+                pending_review: number;
+                next_ask: {
+                    topic: string;
+                    field: string;
+                } | null;
             };
             applied: string[];
             rejected: {
@@ -22650,6 +22839,124 @@ export interface components {
             }[];
             skipped: string[];
             unskipped: string[];
+        };
+        IntakeFinishResultDto: {
+            /** @enum {string} */
+            status: "in_progress" | "completed" | "applied";
+            assistant_name: string;
+            company_name: string;
+            invite_name: string | null;
+            estimated_minutes: number;
+            turns_left: number;
+            voice_enabled: boolean;
+            messages: {
+                id: string;
+                /** @enum {string} */
+                role: "assistant" | "client";
+                body: string;
+                question: {
+                    question: string;
+                    options: {
+                        label: string;
+                        hint: string | null;
+                    }[];
+                    allow_free_text: boolean;
+                    why: string | null;
+                } | null;
+                captured: {
+                    code: string;
+                    label: string;
+                }[];
+                voice: boolean;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+            topics: {
+                code: string;
+                title: string;
+                fields: {
+                    code: string;
+                    label: string;
+                    /** @enum {string} */
+                    kind: "text" | "long_text" | "number" | "money" | "email" | "phone" | "url" | "choice" | "multi_choice" | "boolean" | "weekly_hours" | "faq_list" | "list";
+                    required: boolean;
+                    help: string | null;
+                    options: string[] | null;
+                    value: unknown;
+                    display: string | null;
+                    /** @enum {string|null} */
+                    source: "known" | "derived" | "stated" | "proposed" | null;
+                    needs_confirmation: boolean;
+                    skipped: {
+                        /** @enum {string} */
+                        reason: "no_aplica" | "no_sabe" | "luego";
+                        /** @enum {string} */
+                        source: "chat" | "ficha" | "niche";
+                        note: string | null;
+                    } | null;
+                }[];
+            }[];
+            progress: {
+                topics: {
+                    code: string;
+                    title: string;
+                    required: number;
+                    resolved: number;
+                    pending_confirmation: number;
+                    captured: number;
+                    answered: number;
+                    skipped: number;
+                    open: number;
+                    total: number;
+                    deferred: boolean;
+                    /** @enum {string} */
+                    status: "done" | "in_progress" | "pending" | "deferred";
+                }[];
+                percent: number;
+                next_topic: string | null;
+                next_field: string | null;
+                has_pending_required: boolean;
+                has_pending_confirmation: boolean;
+                essential: {
+                    confirmed: number;
+                    total: number;
+                    complete: boolean;
+                };
+                pending_review: number;
+                next_ask: {
+                    topic: string;
+                    field: string;
+                } | null;
+            };
+            closing: string | null;
+            summary: {
+                axi_applies: number;
+                applied: boolean;
+                you_do: {
+                    label: string;
+                    value: string;
+                    where: string;
+                }[];
+                to_activate: {
+                    /** @enum {string} */
+                    step: "niche" | "business_hours" | "catalog" | "agents" | "whatsapp" | "channel_agent";
+                    label: string;
+                    where: string;
+                }[];
+                goal: {
+                    target_cents: number;
+                    currency: string;
+                    month_label: string;
+                    needed_sales: number | null;
+                    avg_ticket_cents: number | null;
+                    last_month_revenue_cents: number | null;
+                    delta_pct: number | null;
+                } | null;
+            } | null;
+            resume: {
+                missing_topics: string[];
+                pending_review: number;
+            } | null;
         };
         IntakeTranscriptionDto: {
             text: string;
@@ -22891,6 +23198,16 @@ export interface components {
                 next_field: string | null;
                 has_pending_required: boolean;
                 has_pending_confirmation: boolean;
+                essential: {
+                    confirmed: number;
+                    total: number;
+                    complete: boolean;
+                };
+                pending_review: number;
+                next_ask: {
+                    topic: string;
+                    field: string;
+                } | null;
             };
             topics: {
                 code: string;
@@ -32228,6 +32545,28 @@ export interface operations {
             };
         };
     };
+    HsmTemplatesController_library_v1: {
+        parameters: {
+            query: {
+                channel_id: string;
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HsmLibraryListDto"];
+                };
+            };
+        };
+    };
     HsmTemplatesController_list_v1: {
         parameters: {
             query: {
@@ -32314,6 +32653,34 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HsmTemplateDto"];
+                };
+            };
+        };
+    };
+    HsmTemplatesController_uploadMedia_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                    /** Format: uuid */
+                    channel_id: string;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HsmHeaderMediaUploadDto"];
                 };
             };
         };
@@ -38732,6 +39099,46 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["PatchIntakeAnswersResultDto"];
                 };
+            };
+        };
+    };
+    PublicIntakeController_finish_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntakeFinishResultDto"];
+                };
+            };
+        };
+    };
+    PublicIntakeController_listened_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

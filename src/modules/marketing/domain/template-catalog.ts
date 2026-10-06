@@ -13,6 +13,19 @@ export type MessagingWindowDTO = Schemas["MessagingWindowDto"];
 export type CreateHsmTemplateDTO = Schemas["CreateHsmTemplateDto"];
 /** Con cabecera, pie y botones: el tipo a mano los omitía aunque el modal los manda. */
 export type UpdateHsmTemplateDTO = Schemas["UpdateHsmTemplateDto"];
+/** Lo que devuelve la subida del archivo de una cabecera: el handle para Meta y la copia de axi. */
+export type HsmHeaderMediaUploadDTO = Schemas["HsmHeaderMediaUploadDto"];
+/** El medio guardado con la plantilla (`header_media` de la vista), con su previa firmada. */
+export type HsmHeaderMediaDTO = NonNullable<HsmTemplateDTO["header_media"]>;
+
+/**
+ * Una plantilla de la Biblioteca de Meta (`GET /marketing/hsm-templates/library`,
+ * hsm-media F5): de utilidad, ya redactada por Meta, en `es`. Si se crea sin
+ * cambiar su texto fijo (`library_template_name` en el alta), Meta la aprueba
+ * al instante. Los botones traen la URL o el teléfono de ejemplo de Meta.
+ */
+export type HsmLibraryTemplateDTO = Schemas["HsmLibraryListDto"]["data"][number];
+export type HsmLibraryButton = HsmLibraryTemplateDTO["buttons"][number];
 
 /**
  * Para qué se va a usar una plantilla de Meta. Cada flujo tenía su propia
