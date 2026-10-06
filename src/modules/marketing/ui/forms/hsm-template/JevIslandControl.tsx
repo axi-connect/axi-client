@@ -3,7 +3,7 @@
 import { Sparkles, X } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { AssistantMark } from "@/shared/components/features/assistant";
-import { Button } from "@/shared/components/ui/button";
+import { Button, buttonVariants } from "@/shared/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/components/ui/popover";
 import { HSM_CATEGORY_LABELS } from "@/modules/marketing/domain/enums";
 import {
@@ -13,8 +13,12 @@ import {
 } from "@/modules/marketing/domain/template-category-review";
 import type { JevAdvisor, JevPillState } from "./use-jev-advisor";
 
-const PILL =
-  "glass-control inline-flex h-9 shrink-0 items-center gap-2 rounded-full px-3.5 text-[13px] transition-colors focus-visible:ring-[3px] focus-visible:ring-accent-violet/40 focus-visible:outline-none";
+/**
+ * La píldora es un botón MÁS de la isla: misma receta que «Cancelar» (cristal,
+ * `sm`), así comparte alto, radio, relleno y tipografía por construcción y no
+ * se descuadra si la isla cambia de tamaño.
+ */
+const PILL = cn(buttonVariants({ variant: "glass", size: "sm" }), "focus-visible:ring-accent-violet/40");
 
 /**
  * Jev en la isla (hotfix 131049, maqueta v2): una píldora siempre a la vista,
@@ -56,7 +60,7 @@ export function JevIslandControl({ jev }: { jev: JevAdvisor }) {
               aria-hidden
               className={cn("size-3.5", pill.kind === "agrees" ? "opacity-70" : "text-accent-violet")}
             />
-            <span className="font-semibold">{pillText(pill)}</span>
+            <span>{pillText(pill)}</span>
             <PillMeta pill={pill} />
           </button>
         </PopoverTrigger>
@@ -74,7 +78,7 @@ export function JevIslandControl({ jev }: { jev: JevAdvisor }) {
         <button
           type="button"
           onClick={jev.undoSwitch}
-          className="text-foreground/80 hover:text-foreground h-9 rounded-full px-2.5 text-[13px] underline underline-offset-4"
+          className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "text-foreground/80 rounded-full underline underline-offset-4")}
         >
           Deshacer
         </button>
