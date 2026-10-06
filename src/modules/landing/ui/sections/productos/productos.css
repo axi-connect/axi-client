@@ -350,6 +350,8 @@
   background: #000;
   box-shadow: 0 60px 140px rgb(0 0 0 / 0.5), 0 0 0 10px color-mix(in srgb, var(--foreground) 2%, transparent);
 }
+/* En claro la sombra negra al 50 % dejaba una nube gris bajo el video: una sombra corta y suave. */
+:root:not(.dark) .pj-video-frame { box-shadow: 0 40px 90px -40px rgb(0 0 0 / 0.28), 0 0 0 10px color-mix(in srgb, var(--foreground) 2%, transparent); }
 @media (max-width: 767px) { .pj-video-frame { aspect-ratio: 9 / 16; max-height: 78svh; width: auto; border-radius: 24px; } }
 
 /* ───────────── Escenas de altura natural (plan productos_tinta §4.9) ─────────────
@@ -492,7 +494,9 @@
    aunque nadie lo viera). `contain-intrinsic-size: auto` recuerda el alto real
    tras el primer render, así la barra de scroll y los saltos a un ancla no
    bailan. «Pieza por pieza» queda fuera: es sticky y mide su escenario. */
-.pj-recover, .pj-video, .pj-wall, .pj-price, .pj-control, .pj-close {
+/* El video y el muro quedan fuera: su luz cruza el borde entre las dos escenas
+   y la contención de pintura la cortaba en seco (revisión de la dueña). */
+.pj-recover, .pj-price, .pj-control, .pj-close {
   content-visibility: auto;
   contain-intrinsic-size: auto 900px;
 }
