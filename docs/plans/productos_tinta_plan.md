@@ -86,7 +86,7 @@ Regla de rendimiento: solo `transform` y `opacity` escritos directo, sin variabl
 
 ### 4.4 Recuperar
 Tres fichas, una por disparador real, cada una con un mensaje de ejemplo que sigue a los clientes del juego:
-- Valentina: pedido #1042 a medias.
+- Camila: pedido #1051 a medias (clienta nueva: el #1042 del juego ya está pagado; revisión de honestidad).
 - Pedro: progresivos.
 - Andrés: 6 días en Compromiso.
 
@@ -108,7 +108,7 @@ Al pie: «Las reglas nacen apagadas… Nunca más de un mensaje de marketing al 
 - Un cambio en /platform tarda como máximo unos 120 s en verse: 60 s de Redis más 60 s de ISR.
 
 ### 4.7 Control
-Cuatro fichas: no inventa precios, no regala margen, el pago lo verifica tu equipo, y si no sabe te la pasa (2 fallos o lo pide el cliente; cola de 5 min que sube de prioridad). Debajo, una franja de tinta con la regla «Nunca inventes precios ni tiempos de entrega.» y «Si se acaba tu plan, Axi se pausa y tu bandeja sigue funcionando.».
+Cuatro fichas: no inventa precios (los totales los calcula el sistema, no la IA), no regala margen, el pago lo verifica tu equipo, y si no sabe te la pasa (varios fallos seguidos —configurable— o lo pide el cliente; cola de 5 min que sube de prioridad). Debajo, una franja de tinta con la regla «Nunca inventes precios ni tiempos de entrega.» y «Si se acaba tu plan, Axi se pausa y tu bandeja sigue funcionando.».
 
 ### 4.8 Cierre
 Ruta monocroma: línea de puntos, «Hoy» en coral y el día 2 en tinta. Cada paso trae su respuesta:

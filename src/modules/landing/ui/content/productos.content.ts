@@ -287,7 +287,8 @@ export const GAME_NOTES: Readonly<Record<GameAbilityId, { title: string; text: s
 /**
  * El diferenciador, con el copy de la dueña (2026-10-06). Los tres
  * disparadores son los de `/marketing/automations` (INVENTARIO §1.9) y los
- * mensajes siguen a los clientes del juego y de las piezas. La recuperación
+ * mensajes siguen a los clientes de las piezas (el carrito es de una clienta
+ * nueva: el #1042 del juego ya está pagado). La recuperación
  * NO está en Esencial: la página lo dice al pie (INVENTARIO §2.3).
  */
 export const RECOVER = {
@@ -295,7 +296,7 @@ export const RECOVER = {
   thin: "Axi lo vuelve a buscar.",
   lead: "Detecta conversaciones que se enfriaron, carritos abandonados y oportunidades que quedaron a medias.",
   triggers: [
-    { id: "carrito", kicker: "Carrito abandonado", title: "Armó un pedido y no lo terminó.", when: "Hace 1 día · pedido #1042", message: "Hola, Valentina. Tu pedido de las Aviador Ámbar quedó a medias. ¿Te ayudo a terminarlo?" },
+    { id: "carrito", kicker: "Carrito abandonado", title: "Armó un pedido y no lo terminó.", when: "Hace 1 día · pedido #1051", message: "Hola, Camila. Tu pedido de las Redonda Titanio quedó a medias. ¿Te ayudo a terminarlo?" },
     { id: "frio", kicker: "Conversación que se enfrió", title: "Preguntó, le respondimos y no volvió.", when: "Hace 3 días · progresivos", message: "Hola, Pedro. ¿Pudiste ver la cotización de los progresivos? Si quieres, te agendo el examen." },
     { id: "trato", kicker: "Oportunidad a medias", title: "Un trato del CRM lleva días sin moverse.", when: "6 días en Compromiso", message: "Hola, Andrés. Seguimos con tu examen y la montura cuando quieras. ¿Te sirve el jueves?" },
   ],
@@ -856,10 +857,10 @@ export const CONTROL = {
   thin: "Nunca sin ti.",
   lead: "Axi trabaja dentro de las reglas que pones. Lo que no sabe, no lo inventa: se lo pasa a tu equipo.",
   rules: [
-    { id: "precios", title: "Nunca inventa precios.", text: "Cotiza con los de tu catálogo, calculados en el servidor. La IA no escribe la cifra." },
+    { id: "precios", title: "Nunca inventa precios.", text: "Cotiza con los de tu catálogo. Los totales los calcula el sistema, no la IA." },
     { id: "margen", title: "No regala tu margen.", text: "Solo aplica los descuentos y cupones que autorizaste. El 30 % que piden no existe." },
     { id: "pago", title: "El pago lo verifica tu equipo.", text: "Axi registra el comprobante en el pedido. Una persona confirma que el dinero llegó." },
-    { id: "relevo", title: "Si no sabe, te la pasa.", text: "Cuando el cliente pide una persona o Axi falla dos veces, entra tu equipo. Si nadie la toma en 5 minutos, sube de prioridad." },
+    { id: "relevo", title: "Si no sabe, te la pasa.", text: "Cuando el cliente pide una persona o Axi falla varias veces seguidas, entra tu equipo. Si nadie la toma en 5 minutos, sube de prioridad." },
   ],
   rule: { kicker: "Así se lo dices a tu agente", quote: "Nunca inventes precios ni tiempos de entrega.", aside: "Si se acaba tu plan, Axi se pausa y tu bandeja sigue funcionando." },
 } as const;
