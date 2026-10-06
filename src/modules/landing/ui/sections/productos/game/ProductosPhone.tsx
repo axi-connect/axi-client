@@ -39,7 +39,9 @@ export function ProductosPhone({
   bodyRef?: Ref<HTMLDivElement>;
 }) {
   return (
-    <div ref={slotRef} className="pj-ph">
+    // Negro en los dos temas (pedido de la dueña): `surface-dark` le da al
+    // teléfono el esquema oscuro aunque la página esté en claro (DS §9.5.1).
+    <div ref={slotRef} className="pj-ph surface-dark">
       <div ref={flightRef} className="pj-ph-flight">
         <div className="pj-ph-rise">
           <div className="pj-ph-stage">

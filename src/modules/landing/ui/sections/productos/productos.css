@@ -126,6 +126,16 @@
   width: calc(360px * var(--s));
   height: calc(740px * var(--s));
 }
+/* Negro en los dos temas: dentro de `surface-dark` las mezclas --pj-* se
+   recalculan con el esquema oscuro (las de .pj se resolvieron en claro). */
+.pj-ph.surface-dark {
+  --pj-line: color-mix(in srgb, var(--foreground) 10%, transparent);
+  --pj-muted: color-mix(in srgb, var(--foreground) 64%, transparent);
+  --pj-dim: color-mix(in srgb, var(--foreground) 50%, transparent);
+  --pj-surface: color-mix(in srgb, var(--foreground) 4%, var(--background));
+  --pj-surface-2: color-mix(in srgb, var(--foreground) 8%, var(--background));
+  color: var(--foreground);
+}
 @media (max-height: 959px) { .pj-ph { --s: 0.9; } }
 @media (max-height: 860px) { .pj-ph { --s: 0.82; } }
 @media (max-height: 780px) { .pj-ph { --s: 0.76; } }
@@ -145,7 +155,8 @@
 }
 .pj-ph-floor {
   position: absolute; left: 35px; bottom: 6px; width: 290px; height: 44px; border-radius: 50%;
-  background: radial-gradient(closest-side, color-mix(in srgb, var(--background) 85%, transparent), color-mix(in srgb, var(--background) 40%, transparent) 60%, transparent);
+  /* Sombra de contacto suave: el teléfono es negro también sobre la página clara. */
+  background: radial-gradient(closest-side, rgb(0 0 0 / 0.35), rgb(0 0 0 / 0.12) 60%, transparent);
 }
 .pj-ph-body {
   position: absolute; left: 20px; top: 20px; width: 320px; height: 660px;
