@@ -91,12 +91,6 @@ export const PRODUCTOS_HERO = {
   thin: "Mira cómo vende.",
   /** Qué es Axi, en una frase, para quien llega por un anuncio (D-hero del plan en tinta). */
   lead: "Un agente que vende por tu WhatsApp con tu catálogo, tus precios y tu equipo al lado. Juega a ser tu cliente y compruébalo.",
-  /** Tres garantías reales bajo el CTA (INVENTARIO §2.1: canales y transversal). */
-  trust: [
-    { id: "oficial", label: "WhatsApp oficial, alta en un botón" },
-    { id: "prueba", label: "7 días sin tarjeta" },
-    { id: "usuarios", label: "No cobramos por usuario" },
-  ],
   play: { label: "Jugar ahora", href: `#${PRODUCTOS_ANCHORS.game}` },
   /** El saludo del teléfono que asoma desde la luz. */
   greeting: "Hola, soy Vera. ¿Qué estás buscando?",
@@ -144,7 +138,18 @@ export interface GameMove {
   reply: readonly GameMessage[];
 }
 
+/** El logo del negocio de ejemplo: el mismo en el chat del juego y en la ventana del panel. */
+const BUSINESS_LOGO = "/images/landing/optica-vertice-logo.png";
+
 const PRODUCT_IMAGE = "/images/landing/gafas-aviador-ambar.jpg";
+/**
+ * Fotos de licencia libre (Unsplash), encuadradas y con la marca ajena
+ * difuminada. La del cliente es casera a propósito: el reconocimiento por foto
+ * vale justo cuando no se parece a la del catálogo (pedido de la dueña).
+ */
+const PHOTOS = "/images/landing/productos";
+const CUSTOMER_PHOTO = `${PHOTOS}/cliente-foto-piscina.jpg`;
+const AVIADOR_DORADO = `${PHOTOS}/aviador-dorado-ambar.jpg`;
 const AUDIO = "/assets/audio";
 
 export const GAME_ABILITIES: readonly GameAbility[] = [
@@ -161,14 +166,14 @@ export const GAME_MOVES: readonly GameMove[] = [
   {
     id: "foto",
     label: "Mándale una foto",
-    hint: "La captura de un reel",
+    hint: "Una foto que tomó",
     customer: [
-      { kind: "photo", from: "customer", imageSrc: PRODUCT_IMAGE, imageAlt: "Captura de un reel con unas gafas de lente ámbar", caption: "Captura de un reel" },
+      { kind: "photo", from: "customer", imageSrc: CUSTOMER_PHOTO, imageAlt: "Foto casera de unas gafas aviador de lente ámbar sobre el borde de una piscina", caption: "Foto del cliente" },
       { kind: "text", from: "customer", text: "¿Tienen estas?" },
     ],
     reply: [
-      { kind: "text", from: "agent", text: "Sí, son las Aviador Ámbar. Nos quedan 4." },
-      { kind: "card", from: "agent", kicker: "De tu catálogo", title: "Aviador Ámbar", meta: "$189.000 · quedan 4", imageSrc: PRODUCT_IMAGE, imageAlt: "Gafas Aviador Ámbar" },
+      { kind: "text", from: "agent", text: "Sí, son las Aviador Ámbar en dorado. Nos quedan 7." },
+      { kind: "card", from: "agent", kicker: "De tu catálogo", title: "Aviador Ámbar · Dorado", meta: "$189.000 · quedan 7", imageSrc: AVIADOR_DORADO, imageAlt: "Gafas Aviador Ámbar con montura dorada, foto de catálogo" },
     ],
   },
   {
@@ -231,12 +236,10 @@ export const GAME_MOVES: readonly GameMove[] = [
 
 export const GAME = {
   business: "Óptica Vértice",
-  /** El avatar del chat: iniciales en tinta, como el teléfono de la home. */
-  initials: "ÓV",
   day: "Hoy",
   read: "leído",
   /** Decorativo (`alt` vacío): el nombre va escrito al lado. */
-  avatar: { src: "/images/landing/optica-vertice-logo.png", alt: "" },
+  avatar: { src: BUSINESS_LOGO, alt: "" },
   online: "agente en línea",
   typing: "escribiendo…",
   greeting: PRODUCTOS_HERO.greeting,
@@ -358,6 +361,7 @@ const ICON = {
 
 export const APP_SHELL = {
   business: "Óptica Vértice",
+  logo: { src: BUSINESS_LOGO },
   role: "Dueña",
   me: { name: "Laura Arango", mail: "laura@opticavertice.co" },
   crumbRoot: "Workspace",
@@ -446,7 +450,7 @@ export interface PieceScreens {
   catalogo: {
     title: string;
     sub: string;
-    products: readonly { name: string; price: string; stock: string; on?: boolean; out?: boolean }[];
+    products: readonly { name: string; price: string; stock: string; imageSrc: string; on?: boolean; out?: boolean }[];
     name: string;
     price: string;
     category: string;
@@ -454,7 +458,7 @@ export interface PieceScreens {
     imageAlt: string;
     variantsLabel: string;
     columns: readonly [string, string, string];
-    variants: readonly { name: string; sku: string; stock: string; out: boolean }[];
+    variants: readonly { name: string; sku: string; stock: string; out: boolean; imageSrc?: string }[];
     readiness: string;
     search: { label: string; typed: string; found: string };
   };
@@ -478,16 +482,28 @@ export interface PieceScreens {
     }[];
     byAxi: string;
   };
+  /** La llamada terminada, como `FinishedCallView` del panel (llamadas premium F4). */
   llamadas: {
-    title: string;
-    tabs: readonly string[];
-    calls: readonly { who: string; kind: string; length: string; result: string; tone: ScreenTone; on?: boolean }[];
+    back: string;
     who: string;
     result: string;
-    stages: readonly { label: string; reached: boolean }[];
-    notesLabel: string;
-    notes: readonly { label: string; text: string }[];
-    summary: string;
+    meta: string;
+    action: string;
+    recording: { title: string; agent: string; caller: string; at: string; total: string; rates: readonly string[] };
+    transcriptLabel: string;
+    transcript: readonly { role: "agent" | "caller"; clock: string; text: string }[];
+    summary: {
+      kicker: string;
+      title: string;
+      text: string;
+      reachedLabel: string;
+      reached: string;
+      of: string;
+      stages: readonly { label: string; note?: string }[];
+      verdict: string;
+      reason: string;
+      foot: string;
+    };
   };
   cobros: {
     title: string;
@@ -571,10 +587,10 @@ export const PIECE_SCREENS: PieceScreens = {
     title: "Catálogo",
     sub: "38 productos · 4 categorías · tu agente los busca aunque escriban mal",
     products: [
-      { name: "Aviador Ámbar", price: "$189.000", stock: "11 en stock", on: true },
-      { name: "Clubmaster Carey", price: "$215.000", stock: "6 en stock" },
-      { name: "Redonda Titanio", price: "$248.000", stock: "3 en stock" },
-      { name: "Wayfarer Negra", price: "$169.000", stock: "Agotado", out: true },
+      { name: "Aviador Ámbar", price: "$189.000", stock: "11 en stock", imageSrc: PRODUCT_IMAGE, on: true },
+      { name: "Clubmaster Carey", price: "$215.000", stock: "6 en stock", imageSrc: `${PHOTOS}/clubmaster-carey.jpg` },
+      { name: "Redonda Titanio", price: "$248.000", stock: "3 en stock", imageSrc: `${PHOTOS}/redonda-titanio.jpg` },
+      { name: "Wayfarer Negra", price: "$169.000", stock: "Agotado", imageSrc: `${PHOTOS}/wayfarer-negra.jpg`, out: true },
     ],
     name: "Aviador Ámbar",
     price: "$189.000",
@@ -584,8 +600,8 @@ export const PIECE_SCREENS: PieceScreens = {
     variantsLabel: "Variantes y stock (3)",
     columns: ["Variante", "SKU", "Stock"],
     variants: [
-      { name: "Negro / Ámbar", sku: "AV-NA-01", stock: "4 · disponible", out: false },
-      { name: "Dorado / Verde", sku: "AV-DV-02", stock: "7 · disponible", out: false },
+      { name: "Negro / Ámbar", sku: "AV-NA-01", stock: "4 · disponible", out: false, imageSrc: PRODUCT_IMAGE },
+      { name: "Dorado / Ámbar", sku: "AV-DA-02", stock: "7 · disponible", out: false, imageSrc: AVIADOR_DORADO },
       { name: "Plata / Gris", sku: "AV-PG-03", stock: "agotado", out: true },
     ],
     readiness: "Plata / Gris está agotada · tu agente ofrece las demás",
@@ -629,30 +645,32 @@ export const PIECE_SCREENS: PieceScreens = {
     byAxi: "La abrió Axi",
   },
   llamadas: {
-    title: "Llamadas",
-    tabs: ["Monitoreo", "Historial", "Marcos", "Configuración"],
-    calls: [
-      { who: "Andrés M.", kind: "Saliente · Venta", length: "2:14", result: "Objetivo cumplido", tone: "ok", on: true },
-      { who: "Lucía C.", kind: "Saliente · Recordatorio de cita", length: "0:58", result: "Objetivo cumplido", tone: "ok" },
-      { who: "Pedro N.", kind: "Saliente · Cobranza", length: "1:31", result: "Pidió que lo llamen", tone: "violet" },
-      { who: "Sara L.", kind: "Saliente · Seguimiento", length: "0:12", result: "Sin respuesta", tone: "muted" },
-    ],
-    who: "Axi llamó a Andrés M. · 2:14",
+    back: "Historial",
+    who: "Andrés M.",
     result: "Objetivo cumplido",
-    stages: [
-      { label: "Apertura", reached: true },
-      { label: "Motivo", reached: true },
-      { label: "Propuesta", reached: true },
-      { label: "Cierre", reached: true },
+    meta: "+57 300 555 0142 · Retomar cotización · saliente · hoy",
+    action: "Ver contacto",
+    recording: { title: "Grabación", agent: "Vera (IA)", caller: "Andrés", at: "0:26", total: "2:14", rates: ["1×", "1,5×", "2×"] },
+    transcriptLabel: "Conversación",
+    transcript: [
+      { role: "agent", clock: "0:02", text: "Hola, Andrés. Te habla Vera, de Óptica Vértice. ¿Tienes un minuto?" },
+      { role: "caller", clock: "0:07", text: "Sí, dime." },
+      { role: "agent", clock: "0:10", text: "Te llamo por la cotización del examen y la montura. Esta semana tengo cita el jueves a las 4:00 p. m." },
+      { role: "caller", clock: "0:21", text: "El jueves me sirve. ¿Me mandas el pedido por WhatsApp?" },
+      { role: "agent", clock: "0:26", text: "Claro, te lo envío ahora mismo." },
     ],
-    notesLabel: "Lo que Axi anota",
-    notes: [
-      { label: "Motivo", text: "Retomar la cotización" },
-      { label: "Busca", text: "Gafas negras, lente naranja" },
-      { label: "Producto", text: "Aviador Ámbar" },
-      { label: "Siguiente paso", text: "Enviarle el pedido por WhatsApp" },
-    ],
-    summary: "Resumen escrito por Axi al colgar",
+    summary: {
+      kicker: "Así fue la llamada",
+      title: "Objetivo cumplido",
+      text: "Andrés retomó la cotización del examen y la montura. Quedó para el jueves a las 4:00 p. m. y pidió el pedido por WhatsApp.",
+      reachedLabel: "Llegó a",
+      reached: "Cierre",
+      of: "4 de 4",
+      stages: [{ label: "Apertura" }, { label: "Motivo" }, { label: "Propuesta" }, { label: "Cierre", note: "Aquí se cumplió el objetivo" }],
+      verdict: "Meta cumplida · confianza alta",
+      reason: "Aceptó la cita y pidió el pedido por WhatsApp.",
+      foot: "Resumen escrito por Axi al colgar",
+    },
   },
   cobros: {
     title: "Cartera",
@@ -775,6 +793,8 @@ export interface WallMessage {
   business: string;
   from: "customer" | "agent";
   text: string;
+  /** La hora del mensaje, como en WhatsApp: el muro se lee como chats de verdad. */
+  time: string;
 }
 
 export const WALL = {
@@ -790,25 +810,32 @@ export const WALL = {
   customer: "Cliente",
   columns: [
     [
-      { id: "w1", business: "Casa Nórdica", from: "customer", text: "¿La lámpara de mesa en roble la tienen?" },
-      { id: "w2", business: "Casa Nórdica", from: "agent", text: "Quedan 3, a $129.900. ¿Te armo el pedido?" },
-      { id: "w3", business: "Casa Nórdica", from: "customer", text: "Vi la cafetera del reel, ¿en cuánto sale?" },
-      { id: "w4", business: "Casa Nórdica", from: "agent", text: "Es la Moka de 6 tazas: $189.900, y hoy el envío va gratis. Te paso las fotos." },
-      { id: "w5", business: "Dulce Alma", from: "customer", text: "Necesito una torta para 20 personas el sábado." },
+      { id: "w1", business: "Casa Nórdica", from: "customer", text: "¿La lámpara de mesa en roble la tienen?", time: "9:02" },
+      { id: "w2", business: "Casa Nórdica", from: "agent", text: "Quedan 3, a $129.900. ¿Te armo el pedido?", time: "9:02" },
+      { id: "w3", business: "Casa Nórdica", from: "customer", text: "Vi la cafetera del reel, ¿en cuánto sale?", time: "9:15" },
+      { id: "w4", business: "Casa Nórdica", from: "agent", text: "Es la Moka de 6 tazas: $189.900, y hoy el envío va gratis. Te paso las fotos.", time: "9:16" },
+      { id: "w5", business: "Dulce Alma", from: "customer", text: "Necesito una torta para 20 personas el sábado.", time: "9:31" },
     ],
     [
-      { id: "w6", business: "Burger 33", from: "customer", text: "¿Llegan hasta Cedritos?" },
-      { id: "w7", business: "Burger 33", from: "agent", text: "Sí, en unos 35 minutos. ¿Qué te mando?" },
-      { id: "w8", business: "Burger 33", from: "customer", text: "¿El combo familiar trae gaseosa?" },
-      { id: "w9", business: "Burger 33", from: "agent", text: "Trae una de 1,5 L. ¿Lo confirmo para las 8:00?" },
-      { id: "w10", business: "Dulce Alma", from: "agent", text: "Para 20 tenemos la de tres leches o la de chocolate. ¿Cuál te cotizo?" },
+      { id: "w6", business: "Burger 33", from: "customer", text: "¿Llegan hasta Cedritos?", time: "8:47" },
+      { id: "w7", business: "Burger 33", from: "agent", text: "Sí, en unos 35 minutos. ¿Qué te mando?", time: "8:47" },
+      { id: "w8", business: "Burger 33", from: "customer", text: "¿El combo familiar trae gaseosa?", time: "8:52" },
+      { id: "w9", business: "Burger 33", from: "agent", text: "Trae una de 1,5 L. ¿Lo confirmo para las 8:00?", time: "8:53" },
+      { id: "w10", business: "Dulce Alma", from: "agent", text: "Para 20 tenemos la de tres leches o la de chocolate. ¿Cuál te cotizo?", time: "9:31" },
     ],
     [
-      { id: "w11", business: "TechNova", from: "agent", text: "Tu pedido #1043 está en camino." },
-      { id: "w12", business: "TechNova", from: "customer", text: "¿Puedo pagar con Nequi?" },
-      { id: "w13", business: "TechNova", from: "agent", text: "Sí: Nequi, Daviplata o transferencia. Te paso los datos." },
-      { id: "w14", business: "BarberLab", from: "customer", text: "¿Tienen cita mañana a las 10:00?" },
-      { id: "w15", business: "BarberLab", from: "agent", text: "Las 10:00 están libres. Te agendo y te llega un recordatorio." },
+      { id: "w11", business: "TechNova", from: "agent", text: "Tu pedido #1043 está en camino.", time: "10:04" },
+      { id: "w12", business: "TechNova", from: "customer", text: "¿Puedo pagar con Nequi?", time: "10:11" },
+      { id: "w13", business: "TechNova", from: "agent", text: "Sí: Nequi, Daviplata o transferencia. Te paso los datos.", time: "10:11" },
+      { id: "w14", business: "BarberLab", from: "customer", text: "¿Tienen cita mañana a las 10:00?", time: "7:58" },
+      { id: "w15", business: "BarberLab", from: "agent", text: "Las 10:00 están libres. Te agendo y te llega un recordatorio.", time: "7:58" },
+    ],
+    [
+      { id: "w16", business: "Óptica Vértice", from: "customer", text: "¿Me recuerdan la cita del martes?", time: "18:20" },
+      { id: "w17", business: "Óptica Vértice", from: "agent", text: "Claro: martes 3 a las 10:00 a. m. Te escribo un día antes y una hora antes.", time: "18:20" },
+      { id: "w18", business: "BarberLab", from: "customer", text: "¿Cuánto vale el corte con barba?", time: "12:40" },
+      { id: "w19", business: "BarberLab", from: "agent", text: "$35.000. ¿Te agendo hoy a las 6:00 p. m.?", time: "12:40" },
+      { id: "w20", business: "Casa Nórdica", from: "agent", text: "Tu pedido #1088 está en camino.", time: "11:05" },
     ],
   ],
 } as const;

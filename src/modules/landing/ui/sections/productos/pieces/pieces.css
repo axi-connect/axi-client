@@ -389,6 +389,9 @@
   background: color-mix(in srgb, var(--foreground) 1.5%, var(--background));
 }
 .pp-app-brand { display: flex; align-items: center; gap: 10px; padding: 0 8px; }
+/* El logo va sobre ficha blanca: es tinta sobre blanco y en oscuro se perdería. */
+.pp-app-logo { width: 30px; height: 30px; flex: none; border-radius: 9px; overflow: hidden; background: #fff; display: grid; place-items: center; box-shadow: 0 0 0 1px color-mix(in srgb, var(--foreground) 10%, transparent); }
+.pp-app-logo img { width: 26px; height: 26px; }
 .pp-app-brand span, .pp-app-me span { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
 .pp-app-brand b, .pp-app-me b { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pp-app-brand small, .pp-app-me small { font-size: 11px; color: var(--pj-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -627,6 +630,10 @@
 .pp-catalog2-item[data-on] { background: color-mix(in srgb, var(--foreground) 7%, transparent); }
 .pp-catalog2-thumb { width: 44px; height: 44px; flex: none; overflow: hidden; border-radius: 11px; display: grid; place-items: center; color: var(--pj-dim); background: color-mix(in srgb, var(--foreground) 8%, transparent); }
 .pp-catalog2-thumb img { width: 100%; height: 100%; object-fit: cover; }
+/* Cada variante con su foto, como la galería por variante del panel. */
+.pp-catalog2-var { display: inline-flex; align-items: center; gap: 8px; }
+.pp-catalog2-vthumb { width: 28px; height: 28px; flex: none; overflow: hidden; border-radius: 8px; display: grid; place-items: center; color: var(--pj-dim); background: color-mix(in srgb, var(--foreground) 8%, transparent); }
+.pp-catalog2-vthumb img { width: 100%; height: 100%; object-fit: cover; }
 .pp-catalog2-itembody { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .pp-catalog2-itembody b { font-weight: 600; font-size: 13px; }
 .pp-catalog2-itembody small { color: var(--pj-dim); font-size: 11.5px; }
@@ -651,40 +658,72 @@
   .pp-catalog2-photo { height: 160px; }
 }
 
-/* ── Llamadas ── */
-.pp-calls2 { display: flex; flex-direction: column; height: 100%; min-height: 0; }
-.pp-calls2 .pp-page-head { align-items: center; }
-.pp-calls2-grid { display: grid; grid-template-columns: 330px minmax(0, 1fr); gap: 14px; flex: 1; min-height: 0; }
-.pp-calls2-list { display: flex; flex-direction: column; gap: 2px; padding: 8px; min-height: 0; }
-.pp-calls2-row { display: flex; align-items: center; gap: 11px; padding: 10px; border-radius: 14px; }
-.pp-calls2-row[data-on] { background: color-mix(in srgb, var(--foreground) 7%, transparent); }
-.pp-calls2-ico { width: 34px; height: 34px; flex: none; border-radius: 50%; display: grid; place-items: center; color: var(--axi-violet); background: color-mix(in srgb, var(--axi-violet) 12%, transparent); }
-.pp-calls2-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.pp-calls2-body b { font-size: 13px; font-weight: 600; }
-.pp-calls2-body small { font-size: 11.5px; color: var(--pj-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pp-calls2-side { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
-.pp-calls2-side small { font-size: 11px; color: var(--pj-dim); }
-.pp-calls2-res { height: 22px; padding: 0 9px; border-radius: 999px; display: inline-flex; align-items: center; font-size: 10.5px; color: var(--pj-muted); background: color-mix(in srgb, var(--foreground) 7%, transparent); white-space: nowrap; }
-.pp-calls2-res[data-tone="ok"] { color: var(--axi-success); background: color-mix(in srgb, var(--axi-success) 12%, transparent); }
-.pp-calls2-res[data-tone="violet"] { color: var(--axi-violet); background: color-mix(in srgb, var(--axi-violet) 12%, transparent); }
-.pp-calls2-detail { display: flex; flex-direction: column; gap: 12px; padding: 18px 20px; min-height: 0; overflow: hidden; }
-.pp-calls2-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 15px; }
-.pp-calls2-player { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: 16px; background: color-mix(in srgb, var(--foreground) 5%, transparent); }
-.pp-calls2-play { width: 38px; height: 38px; flex: none; border-radius: 50%; display: grid; place-items: center; font-size: 13px; color: var(--background); background: var(--foreground); }
-.pp-calls2-wave { flex: 1; display: flex; align-items: center; gap: 3px; height: 30px; overflow: hidden; }
-.pp-calls2-wave i { flex: 1; max-width: 4px; border-radius: 2px; background: color-mix(in srgb, var(--foreground) 25%, transparent); }
-.pp-calls2-wave i[data-past] { background: var(--axi-violet); }
-.pp-calls2-stages { display: flex; gap: 6px; flex-wrap: wrap; }
-.pp-calls2-stages span { display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 12px 0 5px; border-radius: 999px; font-size: 12px; border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent); }
-.pp-calls2-stages i { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-size: 10.5px; background: color-mix(in srgb, var(--foreground) 9%, transparent); }
-.pp-calls2-stages span[data-on] i { background: var(--axi-violet); color: var(--background); }
-.pp-calls2-notes { margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 18px; }
-.pp-calls2-notes div { display: flex; flex-direction: column; gap: 2px; padding-top: 8px; border-top: 1px solid color-mix(in srgb, var(--foreground) 8%, transparent); }
-.pp-calls2-notes dt { font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--pj-dim); font-weight: 600; }
-.pp-calls2-notes dd { margin: 0; font-size: 13px; }
-.pp-calls2-sum { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; }
-.pp-calls2-sum svg { color: var(--axi-violet); }
-@media (max-width: 1023px) { .pp-calls2-grid { grid-template-columns: minmax(0, 1fr); } .pp-calls2-list, .pp-calls2 .pp-seg2 { display: none; } }
+/* ── Llamadas: la llamada terminada, como FinishedCallView del panel ── */
+.pp-fcall { display: flex; flex-direction: column; gap: 14px; height: 100%; min-height: 0; }
+.pp-fcall-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 16px; row-gap: 4px; align-items: end; }
+.pp-fcall-back { grid-column: 1 / -1; font-size: 11.5px; color: var(--pj-dim); }
+.pp-fcall-title { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.pp-fcall-title b { font-family: var(--font-nexa), var(--font-poppins), sans-serif; font-weight: 700; font-size: 24px; letter-spacing: -0.02em; line-height: 1; }
+.pp-fcall-pill { height: 22px; padding: 0 9px; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 500; color: var(--axi-success); background: color-mix(in srgb, var(--axi-success) 12%, transparent); white-space: nowrap; }
+.pp-fcall-pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.pp-fcall-head small { grid-column: 1; font-size: 12px; color: var(--pj-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pp-fcall-action { grid-column: 2; grid-row: 2 / span 2; align-self: center; height: 32px; padding: 0 14px; border-radius: 10px; display: inline-flex; align-items: center; font-size: 12.5px; font-weight: 500; border: 1px solid color-mix(in srgb, var(--foreground) 14%, transparent); }
+.pp-fcall-grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 14px; flex: 1; min-height: 0; }
+.pp-fcall-main { display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+/* La grabación es tinta en los dos temas, como surface-dark del panel. */
+.pp-fcall-rec { --rec-fg: #ededed; display: flex; flex-direction: column; gap: 12px; padding: 16px 18px; border-radius: 22px; background: #0e0e10; color: var(--rec-fg); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06); }
+.pp-fcall-rec-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 12px; }
+.pp-fcall-rec-top b { font-size: 13px; font-weight: 600; }
+.pp-fcall-rec-top span { display: inline-flex; align-items: center; gap: 6px; color: rgb(237 237 237 / 0.62); }
+.pp-fcall-rec-top span i:nth-of-type(2) { margin-left: 10px; }
+.pp-fcall-rec-top i[data-role], .pp-fcall-turn i[data-role] { display: inline-block; width: 6px; height: 6px; border-radius: 50%; flex: none; }
+[data-role="agent"] { --role: var(--axi-violet); }
+[data-role="caller"] { --role: var(--axi-brand); }
+.pp-fcall-rec-top i[data-role], .pp-fcall-turn i[data-role] { background: var(--role); }
+.pp-fcall-wave { display: flex; align-items: center; gap: 3px; width: 100%; height: 50px; }
+.pp-fcall-wave i { flex: 1; min-width: 2px; border-radius: 3px; background: var(--role); opacity: 0.28; }
+.pp-fcall-wave i[data-past] { opacity: 1; }
+.pp-fcall-rec-bar { display: flex; align-items: center; gap: 12px; font-size: 13px; }
+.pp-fcall-rec-bar .pp-dim { color: rgb(237 237 237 / 0.55); }
+.pp-fcall-play { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: #ededed; color: #0a0a0a; }
+.pp-fcall-rates { margin-left: auto; display: flex; gap: 2px; padding: 3px; border-radius: 999px; background: rgb(255 255 255 / 0.06); font-size: 11.5px; }
+.pp-fcall-rates span { padding: 3px 9px; border-radius: 999px; color: rgb(237 237 237 / 0.6); }
+.pp-fcall-rates span[data-on] { background: #ededed; color: #0a0a0a; }
+.pp-fcall-talk { flex: 1; min-height: 0; overflow: hidden; padding: 6px; display: flex; flex-direction: column; }
+.pp-fcall-turn { display: grid; grid-template-columns: 38px minmax(0, 1fr); gap: 10px; padding: 8px 10px; border-radius: 14px; font-size: 12.5px; line-height: 1.45; color: color-mix(in srgb, var(--foreground) 80%, transparent); }
+.pp-fcall-turn[data-on] { background: color-mix(in srgb, var(--foreground) 6%, transparent); color: var(--foreground); }
+.pp-fcall-turn > .pp-num { font-size: 11px; padding-top: 1px; }
+.pp-fcall-turn b { display: flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; color: var(--foreground); }
+/* «Así fue la llamada»: isla de tinta con brillo de IA (lo escribe Axi). */
+.pp-fcall-island {
+  position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 10px; padding: 18px; border-radius: 22px;
+  background: radial-gradient(120% 70% at 100% 0%, color-mix(in srgb, var(--axi-violet) 26%, transparent), transparent 60%), #111113;
+  color: #ededed; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.07);
+}
+.pp-fcall-island .pp-kicker { color: rgb(237 237 237 / 0.55); }
+.pp-fcall-island-title { font-family: var(--font-nexa), var(--font-poppins), sans-serif; font-weight: 700; font-size: 20px; letter-spacing: -0.02em; }
+.pp-fcall-island p { margin: 0; font-size: 12.5px; line-height: 1.5; color: rgb(237 237 237 / 0.7); }
+.pp-fcall-route { display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 16px; border: 1px solid rgb(255 255 255 / 0.08); background: rgb(255 255 255 / 0.03); }
+.pp-fcall-route-top { display: flex; justify-content: space-between; align-items: baseline; font-size: 12.5px; }
+.pp-fcall-route-top .pp-dim { color: rgb(237 237 237 / 0.55); }
+.pp-fcall-route ol { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; }
+.pp-fcall-route li { position: relative; display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 10px; padding-bottom: 8px; font-size: 12px; }
+.pp-fcall-route li:last-child { padding-bottom: 0; }
+.pp-fcall-route li:not(:last-child)::after { content: ""; position: absolute; left: 8.5px; top: 19px; bottom: 1px; width: 1px; background: color-mix(in srgb, var(--axi-violet) 45%, transparent); }
+.pp-fcall-route li i { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-size: 10px; font-style: normal; font-weight: 700; background: var(--axi-violet); color: #0a0a0a; }
+.pp-fcall-route li[data-met] i { background: var(--axi-success); }
+.pp-fcall-route li small { display: block; font-size: 11px; color: #ededed; font-weight: 500; }
+.pp-fcall-verdict { display: flex; gap: 10px; padding-top: 10px; border-top: 1px solid rgb(255 255 255 / 0.08); font-size: 12px; }
+.pp-fcall-verdict i { width: 6px; height: 6px; margin-top: 6px; border-radius: 50%; flex: none; background: var(--axi-success); }
+.pp-fcall-verdict span { display: flex; flex-direction: column; gap: 2px; }
+.pp-fcall-verdict small { color: rgb(237 237 237 / 0.6); }
+.pp-fcall-foot { margin-top: auto; display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: rgb(237 237 237 / 0.6); }
+@media (max-width: 1023px) {
+  .pp-fcall-grid { grid-template-columns: minmax(0, 1fr); }
+  .pp-fcall-talk { display: none; }
+  .pp-fcall-action { display: none; }
+}
+@media (max-height: 760px) { .pp-fcall-route ol, .pp-fcall-verdict { display: none; } }
 
 /* ── Analítica ── */
 .pp-metrics2 { display: flex; flex-direction: column; height: 100%; min-height: 0; }

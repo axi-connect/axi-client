@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { createContext, useContext, type ReactNode } from "react";
 
 import { APP_SHELL, type PieceId } from "@/modules/landing/ui/content/productos.content";
@@ -25,11 +26,10 @@ export function AppShell({ piece, children }: { piece: PieceId; children: ReactN
     <div className="pp-app">
       <aside className="pp-app-side" aria-hidden="true">
         <div className="pp-app-brand">
-          <svg width="26" height="26" viewBox="0 0 24 24">
-            <path d="M4 18 C 8 2, 14 2, 20 18" stroke="var(--axi-brand)" strokeWidth="3" fill="none" strokeLinecap="round" />
-            <path d="M6 8 C 12 22, 16 14, 20 6" stroke="var(--axi-violet)" strokeWidth="3" fill="none" strokeLinecap="round" />
-            <path d="M3 12 C 9 9, 15 9, 21 13" stroke="var(--axi-amber)" strokeWidth="2.4" fill="none" strokeLinecap="round" />
-          </svg>
+          {/* El mismo logo del negocio que el chat del juego: es la misma Óptica Vértice. */}
+          <span className="pp-app-logo">
+            <Image src={APP_SHELL.logo.src} alt="" width={30} height={30} />
+          </span>
           <span>
             <b>{APP_SHELL.business}</b>
             <small>{APP_SHELL.role}</small>

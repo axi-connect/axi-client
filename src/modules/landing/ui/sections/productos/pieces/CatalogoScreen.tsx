@@ -7,8 +7,8 @@ const S = PIECE_SCREENS.catalogo;
 const GLASSES = "M2 13a4 4 0 1 0 8 0 4 4 0 0 0-8 0M14 13a4 4 0 1 0 8 0 4 4 0 0 0-8 0M10 13h4M2 13l2-6h3M22 13l-2-6h-3";
 
 /**
- * El catálogo, como en el panel: la lista de productos con su stock y la ficha
- * abierta con sus variantes por SKU. Debajo, la búsqueda que entiende al
+ * El catálogo, como en el panel: la lista de productos con su foto y su stock,
+ * y la ficha abierta con sus variantes por SKU (cada una con su foto). Debajo, la búsqueda que entiende al
  * cliente aunque escriba mal. No se promete cerrar pedidos con variantes.
  */
 export function CatalogoScreen() {
@@ -30,7 +30,7 @@ export function CatalogoScreen() {
           {S.products.map((p) => (
             <span key={p.name} className="pp-catalog2-item" data-on={p.on ? "" : undefined}>
               <span className="pp-catalog2-thumb">
-                {p.on ? <Image src={S.imageSrc} alt="" width={44} height={44} /> : <Glyph d={GLASSES} size={20} />}
+                <Image src={p.imageSrc} alt="" width={44} height={44} sizes="44px" />
               </span>
               <span className="pp-catalog2-itembody">
                 <b>{p.name}</b>
@@ -42,7 +42,7 @@ export function CatalogoScreen() {
         </div>
         <div className="pp-card pp-catalog2-detail">
           <div className="pp-catalog2-photo">
-            <Image src={S.imageSrc} alt={S.imageAlt} width={300} height={225} />
+            <Image src={S.imageSrc} alt={S.imageAlt} width={300} height={225} sizes="300px" />
           </div>
           <div className="pp-catalog2-info">
             <span className="pp-dim">{S.category}</span>
@@ -60,7 +60,12 @@ export function CatalogoScreen() {
               <tbody>
                 {S.variants.map((v) => (
                   <tr key={v.sku} data-out={v.out ? "" : undefined}>
-                    <td>{v.name}</td>
+                    <td>
+                      <span className="pp-catalog2-var">
+                        <span className="pp-catalog2-vthumb">{v.imageSrc ? <Image src={v.imageSrc} alt="" width={28} height={28} sizes="28px" /> : <Glyph d={GLASSES} size={14} />}</span>
+                        {v.name}
+                      </span>
+                    </td>
                     <td className="pp-dim">{v.sku}</td>
                     <td>{v.stock}</td>
                   </tr>

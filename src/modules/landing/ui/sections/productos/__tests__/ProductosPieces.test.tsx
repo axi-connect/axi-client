@@ -157,6 +157,8 @@ describe("cifras de ejemplo", () => {
   });
 
   it("la llamada de ejemplo es saliente (las entrantes solo toman recado)", () => {
-    expect(PIECE_SCREENS.llamadas.who).toMatch(/^Axi llamó a /);
+    expect(PIECE_SCREENS.llamadas.meta).toMatch(/· saliente ·/);
+    // Abre el agente: es él quien llama.
+    expect(PIECE_SCREENS.llamadas.transcript[0].role).toBe("agent");
   });
 });

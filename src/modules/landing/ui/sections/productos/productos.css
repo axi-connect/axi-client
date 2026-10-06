@@ -244,9 +244,11 @@
 /* ───── El chat: el mismo del teléfono de la home (tinta y superficie) ───── */
 .pj-ph-avatar {
   display: grid; place-items: center; flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%;
-  background: var(--foreground); color: var(--background);
-  font-family: var(--font-nexa), var(--font-poppins), sans-serif; font-size: 13px; font-weight: 700; letter-spacing: -0.02em;
+  /* El logo de Óptica Vértice (el mismo de la ventana del panel), en ficha blanca. */
+  background: #fff; overflow: hidden;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--foreground) 10%, transparent);
 }
+.pj-ph-avatar img { width: 30px; height: 30px; }
 .pj-ph-status { display: flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--pj-dim); }
 .pj-ph-online { width: 6px; height: 6px; border-radius: 50%; background: var(--axi-success); }
 .pj-ph-plus { display: grid; place-items: center; width: 30px; height: 30px; flex: none; border-radius: 50%; background: color-mix(in srgb, var(--foreground) 8%, transparent); color: var(--pj-dim); }
@@ -356,11 +358,6 @@
 .pj-btn-ink:hover { transform: translateY(-1px); }
 .pj-btn-ink:focus-visible { outline: 2px solid var(--foreground); outline-offset: 3px; }
 
-/* Hero: las tres garantías bajo el CTA. */
-.pj-trust { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 30px; margin: 4px 0 0; padding: 0; list-style: none; font-size: 13.5px; color: var(--pj-muted); }
-.pj-trust li { display: flex; align-items: center; gap: 8px; }
-.pj-trust svg { color: var(--foreground); opacity: 0.8; }
-
 /* ───────────── 2b · Lo que no cerraste hoy ───────────── */
 .pj-recover { border-top: 1px solid var(--pj-line); padding-bottom: 48px; }
 /* Pieza por pieza: el escenario fijado ya deja su aire bajo el nav (pieces.css). */
@@ -439,6 +436,18 @@
   .pj-stop-dot { grid-row: span 3; margin-top: 2px; }
   .pj-stop-detail { max-width: none; }
 }
+
+/* ───────────── Rendimiento (hotfix 2026-10-06) ─────────────
+   Las escenas bajo el pliegue no se pintan hasta que se acercan: el navegador
+   salta su layout, su pintura y sus animaciones (el marquee 3D del muro corría
+   aunque nadie lo viera). `contain-intrinsic-size: auto` recuerda el alto real
+   tras el primer render, así la barra de scroll y los saltos a un ancla no
+   bailan. «Pieza por pieza» queda fuera: es sticky y mide su escenario. */
+.pj-recover, .pj-video, .pj-wall, .pj-price, .pj-control, .pj-close {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 900px;
+}
+.pj-price { contain-intrinsic-size: auto 760px; }
 
 @keyframes pj-pop { from { opacity: 0; transform: translateY(8px) scale(0.98); } to { opacity: 1; transform: none; } }
 @keyframes pj-eq { 0%, 100% { transform: scaleY(0.35); } 50% { transform: scaleY(1); } }

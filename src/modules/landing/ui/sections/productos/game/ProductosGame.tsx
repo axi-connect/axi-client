@@ -275,7 +275,9 @@ export function ProductosGame() {
               <svg width="10" height="17" viewBox="0 0 10 17" aria-hidden="true">
                 <path d="M8.5 1.5 1.8 8.5l6.7 7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              <span className="pj-ph-avatar" aria-hidden="true">{GAME.initials}</span>
+              <span className="pj-ph-avatar" aria-hidden="true">
+                <Image src={GAME.avatar.src} alt={GAME.avatar.alt} width={30} height={30} />
+              </span>
               <div className="flex min-w-0 flex-col">
                 <span className="text-sm leading-tight font-semibold">{GAME.business}</span>
                 <span className="pj-ph-status">
