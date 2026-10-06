@@ -29,6 +29,7 @@ import {
   taskBadgeMap,
   taskDisplayState,
   endSentence,
+  openingRetryAt,
   resendRunIds,
   runDeliveryLabel,
   taskRunReasonLabel,
@@ -106,6 +107,8 @@ export function TaskRunsSheet({
   useSocketEvent(socket, "crm.agent_task_run_finished", onRunEvent);
 
   const state = task === null ? null : taskDisplayState(task);
+  // Hotfix 131049: Meta pidió esperar; reenviar ahora el servidor lo rechaza.
+  const retryAt = task === null ? null : openingRetryAt(task);
 
   const resends = resendRunIds(runs ?? []);
   const items: TimelineItem[] =
@@ -206,7 +209,18 @@ export function TaskRunsSheet({
             {isOpeningNotDelivered(task) ? (
               <div className="space-y-2.5">
                 <p className="text-xs text-pretty text-muted-foreground">
-                  {failureSentence(task)} En pausa: el agente no vuelve a escribir hasta que la reenvíes.
+                  {failureSentence(task)}{" "}
+                  {retryAt !== null ? (
+                    <>
+                      Meta pidió esperar: podrás reenviarla desde el{" "}
+                      <time dateTime={retryAt} className="tabular-nums">
+                        {formatDayTime(retryAt)}
+                      </time>
+                      .
+                    </>
+                  ) : (
+                    "En pausa: el agente no vuelve a escribir hasta que la reenvíes."
+                  )}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {task.last_opening?.conversation_id != null && (
@@ -214,7 +228,7 @@ export function TaskRunsSheet({
                       <Link href={`/workspace/inbox/${task.last_opening.conversation_id}`}>Ver en el chat</Link>
                     </Button>
                   )}
-                  {onResend && task.last_opening?.message_id != null && (
+                  {onResend && retryAt === null && task.last_opening?.message_id != null && (
                     <Button
                       type="button"
                       size="sm"

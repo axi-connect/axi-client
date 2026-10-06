@@ -1,6 +1,7 @@
 import { HSM_WINDOW_REASON } from "@/core/lib/hsm-copy";
 import type { FieldValues, Path, UseFormReturn } from "react-hook-form";
-import { API_ERROR_CODES, isHttpError } from "@/core/api/problem";
+import { API_ERROR_CODES, isHttpError, type HttpError } from "@/core/api/problem";
+import { formatDayTime } from "@/core/lib/format";
 
 /**
  * Mensajes en español por `code` RFC 7807 del backend.
@@ -140,6 +141,8 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   "channels/qr_not_available": "El código QR aún no está disponible",
   "channels/no_worker_available": "No hay workers de WhatsApp Web disponibles",
   // Media saliente y acciones rápidas (F9)
+  // Hotfix 131049: Meta frenó el envío por su ritmo; `details.retry_at` dice desde cuándo
+  "conversations/resend_paced": "Meta pidió esperar antes de reenviar este mensaje",
   "conversations/upload_not_found": "El adjunto ya no existe: vuelve a subirlo",
   "conversations/upload_already_used": "Ese adjunto ya fue enviado",
   "conversations/upload_unsupported_type": "Tipo de archivo no soportado",
@@ -229,6 +232,7 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   "crm/task_run_not_found": "Esa ejecución ya no existe",
   "crm/task_already_running": "El agente ya está ejecutando esta tarea",
   "crm/task_not_runnable": "Esta tarea ya no se puede ejecutar",
+  "crm/task_paced": "Meta pidió esperar antes de volver a escribirle a este contacto",
   "crm/agent_task_contact_limit": "Ese contacto ya tiene una tarea de agente pendiente",
   "crm/tag_not_found": "La etiqueta ya no existe",
   "crm/tag_name_taken": "Ya existe una etiqueta con ese nombre",
@@ -408,10 +412,27 @@ export function messageForCode(code: string, fallback = "Ocurrió un error inesp
   return MESSAGES_BY_CODE[code] ?? fallback;
 }
 
+/**
+ * Los rechazos por ritmo de Meta traen `details.retry_at`: sin la hora, el
+ * aviso no dice cuándo se puede (hotfix 131049). Es la carrera en la que el
+ * botón seguía visible y el servidor ya sabía que había que esperar.
+ */
+const CODES_WITH_RETRY_AT = new Set(["conversations/resend_paced", "crm/task_paced"]);
+
+function retryAtSuffix(error: HttpError): string {
+  if (!CODES_WITH_RETRY_AT.has(error.code)) return "";
+  const retryAt = error.problem?.details?.retry_at;
+  if (typeof retryAt !== "string") return "";
+  const when = formatDayTime(retryAt);
+  return when === "" ? "" : `: podrás intentarlo desde el ${when}`;
+}
+
 export function errorMessage(error: unknown, fallback = "Ocurrió un error inesperado"): string {
   if (isHttpError(error)) {
     const known = MESSAGES_BY_CODE[error.code];
     if (known) {
+      const retryAt = retryAtSuffix(error);
+      if (retryAt !== "") return `${known}${retryAt}`;
       const detail = error.problem?.detail;
       return CODES_WITH_USEFUL_DETAIL.has(error.code) && detail !== undefined && detail !== ""
         ? `${known}. ${detail}`

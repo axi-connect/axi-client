@@ -184,7 +184,7 @@ export function taskDisplayState(
     ActivityDTO,
     "kind" | "assignee_type" | "task_status" | "last_run_status" | "last_run_reason"
   > &
-    Partial<Pick<ActivityDTO, "awaiting_reply_until">>,
+    Partial<Pick<ActivityDTO, "awaiting_reply_until" | "last_opening">>,
 ): TaskDisplayState {
   const human = { label: null, tone: "neutral" as const, transient: false, reason: null };
 
@@ -224,7 +224,11 @@ export function taskDisplayState(
       label: OPENING_NOT_DELIVERED_LABEL,
       tone: "destructive",
       transient: false,
-      reason: "La plantilla de apertura no llegó. Reenvíala desde Programados o desde el chat.",
+      // Hotfix 131049: con la espera de Meta, reenviar ya no es la salida.
+      reason:
+        openingRetryAt(task) !== null
+          ? "La plantilla de apertura no llegó: Meta pidió esperar antes de volver a escribirle."
+          : "La plantilla de apertura no llegó. Reenvíala desde Programados o desde el chat.",
     };
   }
 
@@ -270,19 +274,38 @@ export function taskBadgeMap(state: TaskDisplayState): StatusMap {
 }
 
 /**
+ * Hotfix 131049: Meta rechazó la apertura por su ritmo (tope de marketing por
+ * usuario o plantilla pausada) y pide esperar. Devuelve desde cuándo se puede
+ * volver a intentar, o `null` si ya se puede. La hora la calcula el servidor
+ * (`last_opening.retry_at`); aquí solo se compara con el reloj.
+ */
+export function openingRetryAt(
+  task: Partial<Pick<ActivityDTO, "last_opening">>,
+  now: number | Date = Date.now(),
+): string | null {
+  const retryAt = task.last_opening?.retry_at ?? null;
+  if (retryAt === null) return null;
+  const at = Date.parse(retryAt);
+  return Number.isNaN(at) || at <= Number(now) ? null : retryAt;
+}
+
+/**
  * Una tarea de agente se puede lanzar a mano si sigue abierta y no está
  * corriendo. `run-now` es un bypass del RELOJ, no del anti-spam: el backend
  * vuelve a pasar todos los guards.
  */
 export function canRunNow(
   task: Pick<ActivityDTO, "kind" | "assignee_type" | "task_status" | "last_run_status"> &
-    Partial<Pick<ActivityDTO, "awaiting_reply_until">>,
+    Partial<Pick<ActivityDTO, "awaiting_reply_until" | "last_opening">>,
+  now: number | Date = Date.now(),
 ): boolean {
   if (!isAgentTask(task)) return false;
   if (task.task_status !== "open") return false;
   // F1: esperando respuesta no hay nada que adelantar — el backend responde 409
   // y adelantarlo mandaría la plantilla otra vez.
   if (task.awaiting_reply_until !== undefined && task.awaiting_reply_until !== null) return false;
+  // Hotfix 131049: Meta pidió esperar; el backend responde 409 `crm/task_paced`.
+  if (openingRetryAt(task, now) !== null) return false;
   return task.last_run_status !== "running";
 }
 

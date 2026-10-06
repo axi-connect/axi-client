@@ -186,7 +186,13 @@ export function useInboxSocket() {
   useSocketEvent(socket, "conversation.message_status", (payload) => {
     store
       .getState()
-      .applyMessageStatus(payload.conversation_id, payload.message_id, payload.status, payload.error_code ?? null)
+      .applyMessageStatus(
+        payload.conversation_id,
+        payload.message_id,
+        payload.status,
+        payload.error_code ?? null,
+        payload.resend_available_at,
+      )
   })
 
   useSocketEvent(socket, "conversation.typing", (payload) => {

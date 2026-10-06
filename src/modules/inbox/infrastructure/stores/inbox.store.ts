@@ -197,6 +197,8 @@ type InboxStore = {
     messageId: string,
     status: MessageStatus,
     errorCode?: string | null,
+    /** Hotfix 131049: lo manda el servidor con el `failed` por ritmo de Meta. */
+    resendAvailableAt?: string | null,
   ) => void
   appendMessage: (conversationId: string, message: UiMessage) => void
   /** Reemplaza un mensaje por id con datos frescos de servidor (attachments), preservando lo local. */
@@ -535,6 +537,7 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
       status: "queued",
       status_updated_at: null,
       error: null,
+      resend_available_at: null,
       attachments: [],
       created_at: new Date().toISOString(),
       delivery: "pending",
@@ -621,7 +624,7 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
     })
   },
 
-  applyMessageStatus: (conversationId, messageId, status, errorCode = null) => {
+  applyMessageStatus: (conversationId, messageId, status, errorCode = null, resendAvailableAt) => {
     set((state) => {
       const current = state.messagesById[conversationId]
       if (!current) return state
@@ -634,7 +637,9 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
               if (m.id !== messageId) return m
               const next = mergeDeliveryStatus(m.status, status)
               const error = next === "failed" && m.error == null && errorCode ? { code: errorCode } : m.error
-              return { ...m, status: next, error, delivery: deliveryFor(next, m.delivery) }
+              const resend_available_at =
+                next === "failed" && resendAvailableAt !== undefined ? resendAvailableAt : m.resend_available_at
+              return { ...m, status: next, error, resend_available_at, delivery: deliveryFor(next, m.delivery) }
             }),
           },
         },

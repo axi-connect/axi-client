@@ -12,7 +12,7 @@ import { useSendMessage } from "@/modules/inbox/infrastructure/realtime/use-send
 import { useConversationEvents } from "@/modules/inbox/infrastructure/hooks/use-conversation-events"
 import type { InboxCommands } from "@/modules/inbox/infrastructure/realtime/use-inbox-socket"
 import { isReadOnlyConversation, sentFromBusinessApp, type ConversationDTO, type UiMessage } from "@/modules/inbox/domain/inbox"
-import { resentByOf, resentFrom } from "@/modules/inbox/domain/template-message"
+import { resendBlockedUntil, resentByOf, resentFrom } from "@/modules/inbox/domain/template-message"
 import { buildEventLines, closedBy, handoffReason } from "@/modules/inbox/domain/conversation-events"
 import { useMinuteTick } from "@/modules/inbox/ui/hooks/use-minute-tick"
 import { MessageBubble } from "./MessageBubble"
@@ -302,6 +302,8 @@ function OpenConversation({
                             onRetry={retry}
                             onResend={canReply && !readOnly ? resend : undefined}
                             resentAt={resentAt.get(item.message.id) ?? null}
+                            resendWaitUntil={resendBlockedUntil(item.message, now)}
+                            timeZone={tz}
                             channelId={conversation.channel_id}
                             first={item.first}
                             last={item.last}

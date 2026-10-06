@@ -17,6 +17,7 @@ import {
   failureCopy,
   parseMessageError,
 } from "@/modules/inbox/domain/template-message"
+import { formatDayTime } from "@/core/lib/format"
 import { useChannelTemplate } from "@/modules/inbox/infrastructure/hooks/use-channel-templates"
 import { InteractiveMessage, InteractiveReplyChip } from "./interactive"
 import { TemplateButtons, TemplateContent } from "./TemplateMessage"
@@ -66,6 +67,8 @@ export function MessageBubble({
   onRetry,
   onResend,
   resentAt = null,
+  resendWaitUntil = null,
+  timeZone,
   channelId = null,
   first = true,
   last = true,
@@ -78,6 +81,13 @@ export function MessageBubble({
   onResend?: (message: UiMessage) => Promise<void>
   /** Si este fallido ya se reenvió: la hora del reenvío. */
   resentAt?: string | null
+  /**
+   * Hotfix 131049: Meta frenó el envío por su ritmo y no se reenvía antes de
+   * esta hora (la calcula el servidor). Mientras dure, no hay «Reenviar».
+   */
+  resendWaitUntil?: string | null
+  /** Zona del negocio para decir desde cuándo se puede reenviar. */
+  timeZone?: string
   /** Canal de la conversación: de su catálogo sale el texto de una plantilla. */
   channelId?: string | null
   /** Primero de un grupo del mismo autor: lleva el autor arriba (F2). */
@@ -215,8 +225,20 @@ export function MessageBubble({
                 {" "}Se reenvió a las <MessageTime iso={resentAt} />.
               </>
             )}
+            {!resentAt && resendWaitUntil && (
+              <>
+                {" "}Podrás reenviarlo desde el{" "}
+                <time dateTime={resendWaitUntil} className="tabular-nums">
+                  {formatDayTime(resendWaitUntil, timeZone)}
+                </time>
+                .
+              </>
+            )}
           </p>
-          {!resentAt && onResend && (message.content_type === "template" || message.content_type === "text") && (
+          {!resentAt &&
+            !resendWaitUntil &&
+            onResend &&
+            (message.content_type === "template" || message.content_type === "text") && (
             <button
               type="button"
               disabled={resending}

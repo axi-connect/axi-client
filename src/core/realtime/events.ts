@@ -182,6 +182,8 @@ export type MessageStatusEvent = {
   company_id: string;
   status: Schemas["EnqueuedMessageDto"]["status"];
   error_code?: string;
+  /** Hotfix 131049: fallo por ritmo de Meta; no se reenvía antes de esta hora. */
+  resend_available_at?: string | null;
 };
 
 export type TypingEvent = {

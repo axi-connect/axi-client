@@ -16,7 +16,8 @@ import {
   whenLabel,
   type AgendaWaitingGroup,
 } from "@/modules/crm/domain/scheduled-agenda";
-import { TASK_BADGE_KEY, taskBadgeMap, taskDisplayState } from "@/modules/crm/domain/task-execution";
+import { TASK_BADGE_KEY, openingRetryAt, taskBadgeMap, taskDisplayState } from "@/modules/crm/domain/task-execution";
+import { formatDayTime } from "@/core/lib/format";
 import { addDaysToKey, minutesIntoDay, todayKey, type DayKey } from "@/core/lib/business-time";
 
 /**
@@ -152,14 +153,28 @@ function FailedRow({
     task.bulk_id !== null && task.title ? `lote «${task.title}»` : null,
   ].filter((part): part is string => part !== null);
   const sentAt = opening?.sent_at ? whenLabel(opening.sent_at, now, tz) : null;
-  const canResend = onResend !== undefined && opening?.conversation_id != null && opening.message_id != null;
+  // Hotfix 131049: con la espera de Meta no se ofrece lo que el servidor rechazaría.
+  const retryAt = openingRetryAt(task, now);
+  const canResend =
+    retryAt === null && onResend !== undefined && opening?.conversation_id != null && opening.message_id != null;
 
   return (
     <li className="grid grid-cols-[20px_minmax(0,1fr)] items-start gap-x-3 gap-y-3 px-5 py-3.5 md:grid-cols-[20px_minmax(0,0.8fr)_minmax(0,1.6fr)_auto] md:items-center">
       <AlertCircle aria-label="No llegó" className="mt-0.5 size-4 text-destructive md:mt-0" />
       <ContactCell task={task} sub={task.contact_phone} />
       <div className="col-start-2 min-w-0 md:col-start-auto">
-        <p className="text-sm text-pretty text-foreground/85">{failureSentence(task)}</p>
+        <p className="text-sm text-pretty text-foreground/85">
+          {failureSentence(task)}
+          {retryAt !== null && (
+            <>
+              {" "}Podrás reenviarla desde el{" "}
+              <time dateTime={retryAt} className="tabular-nums">
+                {formatDayTime(retryAt, tz)}
+              </time>
+              .
+            </>
+          )}
+        </p>
         {(meta.length > 0 || sentAt !== null) && (
           <p className="flex min-w-0 gap-1 text-xs text-muted-foreground">
             {meta.length > 0 && <span className="min-w-0 truncate">{meta.join(" · ")}</span>}

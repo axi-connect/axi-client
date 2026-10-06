@@ -14544,6 +14544,8 @@ export interface components {
                     delivery_updated_at: string | null;
                     failed_reason: string | null;
                     failed_detail: string | null;
+                    /** Format: date-time */
+                    retry_at: string | null;
                 } | null;
                 /** Format: date-time */
                 created_at: string;
@@ -14656,6 +14658,8 @@ export interface components {
                 delivery_updated_at: string | null;
                 failed_reason: string | null;
                 failed_detail: string | null;
+                /** Format: date-time */
+                retry_at: string | null;
             } | null;
             /** Format: date-time */
             created_at: string;
@@ -16802,6 +16806,8 @@ export interface components {
                 /** Format: date-time */
                 status_updated_at: string | null;
                 error: unknown;
+                /** Format: date-time */
+                resend_available_at: string | null;
                 attachments: {
                     /** Format: uuid */
                     id: string;
@@ -16864,6 +16870,8 @@ export interface components {
             /** Format: date-time */
             status_updated_at: string | null;
             error: unknown;
+            /** Format: date-time */
+            resend_available_at: string | null;
             /** @default [] */
             attachments: {
                 /** Format: uuid */

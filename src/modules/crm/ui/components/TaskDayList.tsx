@@ -385,7 +385,7 @@ function TaskRow({
               <History className="size-3.5" aria-hidden />
               Ver ejecuciones
             </Button>
-            {canRunNow(task) && (
+            {canRunNow(task, now) && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -422,7 +422,7 @@ function TaskRow({
                 <Pencil className="size-4" /> Editar
               </span>
             </DropdownMenuItem>
-            {canRunNow(task) && (
+            {canRunNow(task, now) && (
               <DropdownMenuItem onClick={() => void launch()}>
                 <span className="flex items-center gap-2">
                   <Send className="size-4" /> Ejecutar ahora

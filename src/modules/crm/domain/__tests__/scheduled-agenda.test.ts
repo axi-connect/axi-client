@@ -73,6 +73,7 @@ const REJECTED = task({
     delivery_updated_at: "2026-09-29T21:05:12Z",
     failed_reason: "opening_rejected",
     failed_detail: "Meta no cobró el envío: revisa el método de pago de tu cuenta de WhatsApp Business",
+    retry_at: null,
   },
 });
 
@@ -91,6 +92,7 @@ function waiting(id: string, name: string, sent: string, status: "sent" | "deliv
       delivery_updated_at: sent,
       failed_reason: null,
       failed_detail: null,
+      retry_at: null,
     },
   });
 }

@@ -112,6 +112,24 @@ describe("MessageBubble — plantilla de Meta (hotfix 2026-09-29)", () => {
     await waitFor(() => expect(screen.getByRole("button", { name: /Reenviar/ })).toBeEnabled())
   })
 
+  it("hotfix 131049: Meta pidió esperar → sin «Reenviar», con el motivo y desde cuándo", () => {
+    const failed = templateMessage({ status: "failed", error: { code: 131049, title: "healthy ecosystem" } })
+    render(
+      <MessageBubble
+        message={failed}
+        conversationId="c1"
+        channelId="ch1"
+        onResend={jest.fn(async () => {})}
+        resendWaitUntil="2026-10-07T16:04:08Z"
+        timeZone="America/Bogota"
+      />,
+    )
+    expect(screen.getByText(/tope de mensajes de marketing/)).toBeInTheDocument()
+    expect(screen.getByText(/Podrás reenviarlo desde el/)).toBeInTheDocument()
+    expect(screen.getByText(/mié 7 oct · 11:04 a\. m\./)).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /Reenviar/ })).not.toBeInTheDocument()
+  })
+
   it("ya reenviada: sin botón, con la hora del reenvío", () => {
     render(
       <MessageBubble

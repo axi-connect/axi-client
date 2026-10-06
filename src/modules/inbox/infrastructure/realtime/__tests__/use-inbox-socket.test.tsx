@@ -100,6 +100,7 @@ function makeMessage(overrides: Partial<UiMessage> = {}): UiMessage {
     status: "received",
     status_updated_at: null,
     error: null,
+    resend_available_at: null,
     attachments: [],
     created_at: "2026-08-05T00:00:00Z",
     ...overrides,

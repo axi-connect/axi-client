@@ -105,14 +105,15 @@ const META_FAILURE_DETAIL: Record<string, string> = {
   "131031": "Meta bloqueó temporalmente la cuenta de WhatsApp Business",
   "131047": "pasaron más de 24 h desde su último mensaje: solo se le puede escribir con una plantilla",
   "131048": "Meta limitó los envíos de este número por reportes de spam",
-  "131049": "Meta frenó el envío para cuidar la experiencia del destinatario",
+  "131049":
+    "Meta frenó el envío por su tope de mensajes de marketing a este contacto: espera 24 h o que te escriba primero",
   "131050": "el contacto pidió no recibir mensajes de marketing en WhatsApp",
   "131051": "Meta no admite este tipo de mensaje",
   "131056": "se le enviaron demasiados mensajes seguidos a este contacto; espera un poco y reenvía",
   "130472": "Meta retuvo el mensaje por un experimento suyo con este contacto",
   "132000": "a la plantilla le faltaron datos: revisa sus huecos",
   "132001": "la plantilla no existe en Meta con ese nombre e idioma",
-  "132015": "Meta pausó la plantilla por su calidad",
+  "132015": "Meta pausó la plantilla por su calidad: espera 24 h antes de reintentar",
   "132016": "Meta desactivó la plantilla",
   "131000": "Meta tuvo un error al enviarlo; reenvíalo en unos minutos",
   "131016": "Meta tuvo un error al enviarlo; reenvíalo en unos minutos",
@@ -123,6 +124,7 @@ const PLATFORM_FAILURE_DETAIL: Record<string, string> = {
   "channels/invalid_credentials": "la conexión con WhatsApp venció: vuelve a conectar el canal",
   "channels/provider_error": "WhatsApp no respondió al enviarla; reenvíala en unos minutos",
   "channels/send_failed": "no se pudo enviar por el canal de WhatsApp",
+  "channels/pacing_deferred": "Meta frenó el envío por su ritmo: espera 24 h antes de reintentar",
   "channels/not_connected": "el canal de WhatsApp no está conectado",
   "usage/limit_exceeded": "se agotó el cupo de mensajes del plan",
   "auth/company_suspended": "la cuenta está suspendida: no salen mensajes",
@@ -153,6 +155,21 @@ export function asSentence(text: string): string {
  */
 export function failureCopy(failure: MessageFailure | null, errorCode: string | null = null): string {
   return asSentence(failureDetail(failure?.code ?? errorCode));
+}
+
+/**
+ * Hotfix 131049: hasta cuándo Meta pidió esperar para reenviar, o `null` si ya
+ * se puede. La hora la calcula el SERVIDOR (`resend_available_at`): aquí solo
+ * se compara con el reloj para que el botón vuelva solo cuando vence.
+ */
+export function resendBlockedUntil(
+  message: { resend_available_at?: string | null },
+  now: number = Date.now(),
+): string | null {
+  const until = message.resend_available_at;
+  if (typeof until !== "string") return null;
+  const at = Date.parse(until);
+  return Number.isNaN(at) || at <= now ? null : until;
 }
 
 /**

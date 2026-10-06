@@ -174,3 +174,25 @@ describe("errorMessage — integraciones (Shopify)", () => {
     ).toMatch(/USD.*COP/);
   });
 });
+
+describe("errorMessage — ritmo de Meta (hotfix 131049)", () => {
+  const paced = (code: string, details?: Record<string, unknown>) =>
+    new HttpError({
+      status: 409,
+      code,
+      message: code,
+      problem: { type: "x", title: "Conflict", status: 409, code, detail: "detalle crudo", details },
+    });
+
+  it("dice desde cuándo se puede volver a intentar", () => {
+    const message = errorMessage(paced("conversations/resend_paced", { retry_at: "2026-10-07T16:04:08Z" }));
+    expect(message).toMatch(/^Meta pidió esperar antes de reenviar este mensaje: podrás intentarlo desde el /);
+    expect(message).not.toContain("detalle crudo");
+  });
+
+  it("sin retry_at cae al mensaje de la tabla", () => {
+    expect(errorMessage(paced("crm/task_paced"))).toBe(
+      "Meta pidió esperar antes de volver a escribirle a este contacto",
+    );
+  });
+});

@@ -4,6 +4,7 @@ import {
   failureCopy,
   mergeDeliveryStatus,
   parseMessageError,
+  resendBlockedUntil,
   resentByOf,
   resentFrom,
 } from "@/modules/inbox/domain/template-message";
@@ -155,5 +156,25 @@ describe("parsePreview de una plantilla (B9)", () => {
     expect(parsePreview("Plantilla: sesion_en_vivo_v2").text).toBe("Plantilla · sesion_en_vivo_v2");
     expect(parsePreview("[template]").text).toBe("Plantilla");
     expect(parsePreview("hola").text).toBe("hola");
+  });
+});
+
+describe("resendBlockedUntil (hotfix 131049)", () => {
+  const NOW = Date.parse("2026-10-06T16:10:00Z");
+
+  it("devuelve la hora del servidor mientras no vence", () => {
+    expect(resendBlockedUntil({ resend_available_at: "2026-10-07T16:04:08Z" }, NOW)).toBe("2026-10-07T16:04:08Z");
+  });
+
+  it("vencida, ausente o ilegible: se puede reenviar", () => {
+    expect(resendBlockedUntil({ resend_available_at: "2026-10-06T16:00:00Z" }, NOW)).toBeNull();
+    expect(resendBlockedUntil({ resend_available_at: null }, NOW)).toBeNull();
+    expect(resendBlockedUntil({}, NOW)).toBeNull();
+    expect(resendBlockedUntil({ resend_available_at: "mañana" }, NOW)).toBeNull();
+  });
+
+  it("131049 y pacing_deferred dicen que hay que esperar", () => {
+    expect(failureCopy({ code: "131049", title: null, detail: null })).toMatch(/espera 24 h/);
+    expect(failureCopy({ code: "channels/pacing_deferred", title: null, detail: null })).toMatch(/espera 24 h/);
   });
 });

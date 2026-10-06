@@ -57,6 +57,7 @@ const REJECTED = task({
     delivery_updated_at: "2026-09-29T21:05:12Z",
     failed_reason: "opening_rejected",
     failed_detail: "Meta no cobró el envío: revisa el método de pago de tu cuenta de WhatsApp Business",
+    retry_at: null,
   },
 });
 
@@ -75,14 +76,15 @@ const WAITING = ["Alejandro", "Mónica"].map((name, index) =>
       delivery_updated_at: "2026-09-29T21:09:00Z",
       failed_reason: null,
       failed_detail: null,
+      retry_at: null,
     },
   }),
 );
 
-function renderAgenda(onResend = jest.fn(async () => {})) {
+function renderAgenda(onResend = jest.fn(async () => {}), failed: ActivityDTO = REJECTED) {
   render(
     <ScheduledAgenda
-      tasks={[REJECTED, ...WAITING]}
+      tasks={[failed, ...WAITING]}
       loading={false}
       tz="America/Bogota"
       agentNames={new Map([["ag1", "Laura Sofía"]])}
@@ -106,6 +108,24 @@ describe("ScheduledAgenda — a quién, con qué y cómo va (hotfix plantillas)"
 
     fireEvent.click(within(failed).getByRole("button", { name: /Reenviar/ }));
     expect(onResend).toHaveBeenCalledWith(REJECTED);
+  });
+
+  it("hotfix 131049: Meta pidió esperar → sin «Reenviar», con desde cuándo", () => {
+    const paced = task({
+      ...REJECTED,
+      last_opening: {
+        ...REJECTED.last_opening!,
+        failed_detail: "Meta frenó el envío por su tope de mensajes de marketing a este contacto",
+        retry_at: new Date(Date.now() + 23 * 60 * 60 * 1000).toISOString(),
+      },
+    });
+    renderAgenda(jest.fn(async () => {}), paced);
+    const failed = screen.getByRole("region", { name: "No llegaron" });
+
+    expect(within(failed).getByText(/tope de mensajes de marketing/)).toBeInTheDocument();
+    expect(within(failed).getByText(/Podrás reenviarla desde el/)).toBeInTheDocument();
+    expect(within(failed).queryByRole("button", { name: /Reenviar/ })).not.toBeInTheDocument();
+    expect(within(failed).getByRole("link", { name: "Ver en el chat" })).toBeInTheDocument();
   });
 
   it("«Esperando respuesta» agrupa el lote: el título una vez, cada contacto con su entrega", () => {

@@ -3,6 +3,7 @@ import { isOverdue } from "../activity";
 import {
   canRunNow,
   isAgentTask,
+  openingRetryAt,
   TASK_BADGE_KEY,
   taskBadgeMap,
   taskDisplayState,
@@ -204,6 +205,27 @@ describe("canRunNow", () => {
     expect(canRunNow(task({ assignee_type: "agent", last_run_status: "running" }))).toBe(false);
     expect(canRunNow(task({ assignee_type: "agent", task_status: "completed" }))).toBe(false);
     expect(canRunNow(task())).toBe(false);
+  });
+});
+
+describe("hotfix 131049 — la espera de Meta tras una apertura frenada", () => {
+  const NOW = Date.parse("2026-10-06T16:10:00Z");
+  const paced = (retry_at: string | null) => ({
+    ...task({ assignee_type: "agent", last_run_status: "failed", last_run_reason: "opening_rejected" }),
+    last_opening: { retry_at } as ActivityDTO["last_opening"],
+  });
+
+  it("mientras dura la espera no se puede lanzar ni se pide reenviar", () => {
+    const frenada = paced("2026-10-07T16:04:08Z");
+    expect(openingRetryAt(frenada, NOW)).toBe("2026-10-07T16:04:08Z");
+    expect(canRunNow(frenada, NOW)).toBe(false);
+    expect(taskDisplayState(frenada).reason).toMatch(/Meta pidió esperar/);
+  });
+
+  it("vencida la espera, o sin ella, vuelve a lo de siempre", () => {
+    expect(canRunNow(paced("2026-10-06T16:00:00Z"), NOW)).toBe(true);
+    expect(canRunNow(paced(null), NOW)).toBe(true);
+    expect(openingRetryAt(paced(null), NOW)).toBeNull();
   });
 });
 
