@@ -13,7 +13,6 @@ import {
   CheckCheck,
   ContactRound,
   CreditCard,
-  Lock,
   Mic,
   Pause,
   Play,
@@ -26,6 +25,7 @@ import {
   GAME,
   GAME_ABILITIES,
   GAME_MOVES,
+  GAME_NOTES,
   PRODUCTOS_ANCHORS,
   PRODUCTOS_TRIAL,
   type GameAbilityId,
@@ -33,6 +33,7 @@ import {
   type GameMoveId,
 } from "@/modules/landing/ui/content/productos.content";
 import { FILM_ACTIVITY_EVENT, emitFilmEvent, type FilmActivityDetail } from "@/modules/landing/ui/film/film-events";
+import { islandClassName } from "@/shared/components/features/island/Island";
 import { PAGE_ISLAND_EVENT, type PageIslandDetail } from "@/shared/components/layout/site/site-island";
 import { ProductosPhone } from "./ProductosPhone";
 import { usePhoneFlight } from "./use-phone-flight";
@@ -48,7 +49,6 @@ const ICONS: Record<GameAbilityId, LucideIcon> = {
   crm: ContactRound,
 };
 
-const TONE: Record<GameAbilityId, string> = Object.fromEntries(GAME_ABILITIES.map((a) => [a.id, a.tone])) as Record<GameAbilityId, string>;
 
 
 export { GAME_HINT_EVENT } from "./game-state";
@@ -65,7 +65,9 @@ function reducer(state: GameState, action: Action): GameState {
 /**
  * #agente — «Juega a ser tu cliente» (plan §3). El visitante hace jugadas;
  * Axi responde con guion y cada jugada descubre una habilidad. Las notas de
- * voz suenan con los audios reales y solo tras un clic.
+ * voz suenan con los audios reales y solo tras un clic. En tinta (plan
+ * productos_tinta §4.3): jugadas sobrias a la izquierda; a la derecha la isla
+ * «Lo que acabas de ver», el progreso en siete tramos y el CTA al terminar.
  */
 export function ProductosGame() {
   const reduced = useReducedMotion();
@@ -80,10 +82,9 @@ export function ProductosGame() {
   const slotRef = useRef<HTMLDivElement | null>(null);
   const flightRef = useRef<HTMLDivElement | null>(null);
   const bodyRef = useRef<HTMLDivElement | null>(null);
-  const orbsRef = useRef<HTMLDivElement | null>(null);
   const inView = useRef(false);
 
-  usePhoneFlight(slotRef, flightRef, bodyRef, orbsRef);
+  usePhoneFlight(slotRef, flightRef, bodyRef);
 
   const later = useCallback((ms: number, fn: () => void) => {
     timers.current.push(window.setTimeout(fn, reduced ? 0 : ms));
@@ -200,11 +201,14 @@ export function ProductosGame() {
   const n = state.got.length;
   const done = isDone(state);
   const toastAbility = GAME_ABILITIES.find((a) => a.id === toast);
+  /* La isla de tinta cuenta la última habilidad descubierta (la del CRM llega sola). */
+  const last = state.got[state.got.length - 1];
+  const note = last ? GAME_NOTES[last] : GAME.note.intro;
 
   return (
     <section ref={sectionRef} id={PRODUCTOS_ANCHORS.game} aria-labelledby="agente-title" className="pj-scene pj-game">
-      <h2 id="agente-title" className="sr-only">{GAME.island.title}</h2>
-      <p className="sr-only">{GAME.note}</p>
+      <h2 id="agente-title" className="sr-only">{`${GAME.island.title}. ${GAME.heading.strong} ${GAME.heading.thin}`}</h2>
+      <p className="sr-only">{GAME.disclaimer}</p>
       <ul className="sr-only">
         {GAME_ABILITIES.map((a) => (
           <li key={a.id}>{`${a.name}: ${a.line}`}</li>
@@ -216,46 +220,56 @@ export function ProductosGame() {
         {toastAbility ? `${GAME.island.discovered(toastAbility.name)}. ${toastAbility.line}. ${GAME.island.count(n, TOTAL_ABILITIES)}.` : ""}
       </p>
 
-      {/* Móvil: la isla del nav lleva la marca, así que el capítulo va aquí, sobre los siete puntos. */}
+      {/* Móvil: la isla del nav lleva la marca, así que el capítulo va aquí, sobre el teléfono. */}
       <p className="pj-game-title-m pj-eyebrow text-[var(--axi-brand)]" aria-hidden="true">
         {GAME.island.title} · {GAME.island.count(n, TOTAL_ABILITIES)}
       </p>
-      {/* Móvil: el progreso en siete puntos. */}
-      <div className="pj-dots flex gap-2.5" aria-hidden="true">
-        {GAME_ABILITIES.map((a) => {
-          const on = state.got.includes(a.id);
-          return <span key={a.id} data-tone={a.tone} className="size-2.5 rounded-full transition-colors duration-500" style={{ background: on ? "var(--pj-tone)" : "var(--pj-line)", boxShadow: on ? "0 0 12px var(--pj-tone)" : "none" }} />;
-        })}
-      </div>
-
       <div className="pj-board">
-        <div className="pj-abilities" aria-label={GAME.abilitiesTitle}>
-          <div className="pj-abilities-rail" aria-hidden="true">
-            <span style={{ height: `${(100 * n) / TOTAL_ABILITIES}%` }} />
+        <div className="pj-moves-col" data-rail="l">
+          <p className="pj-eyebrow text-[var(--axi-brand)]">{GAME.heading.eyebrow}</p>
+          <p className="pj-h pj-game-h" aria-hidden="true">
+            <span className="block">{GAME.heading.strong}</span>{" "}
+            <span className="t block">{GAME.heading.thin}</span>
+          </p>
+          <p className="pj-moves-sub">
+            <b>{GAME.movesTitle}</b>
+            <span className="pj-dim">{GAME.movesSub}</span>
+          </p>
+          <div className="pj-moves" role="group" aria-label={GAME.movesTitle}>
+            {GAME_MOVES.map((m) => {
+              const used = state.used.includes(m.id);
+              const sending = state.pending === m.id;
+              const status = sending ? "tx" : used ? "done" : undefined;
+              const Icon = ICONS[m.id];
+              const next = !used && state.used.length === 0 && m.id === GAME_MOVES[0].id;
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  className="pj-move"
+                  data-state={status}
+                  data-next={next ? "" : undefined}
+                  data-hint={hint === m.id ? "" : undefined}
+                  aria-busy={sending || undefined}
+                  disabled={used || state.pending !== null}
+                  onClick={() => onMove(m.id)}
+                >
+                  <span className="pj-move-glyph" aria-hidden="true"><Icon className="size-[18px]" strokeWidth={1.8} /></span>
+                  <span className="pj-move-lbl">
+                    {m.label}
+                    <small aria-hidden="true">{m.hint}</small>
+                  </span>
+                  <span className="pj-move-check" aria-hidden="true">{used && !sending ? <Check className="size-3" strokeWidth={3} /> : null}</span>
+                </button>
+              );
+            })}
           </div>
-          <p className="pj-eyebrow mb-3 text-[var(--axi-brand)]">{GAME.abilitiesTitle}</p>
-          {GAME_ABILITIES.map((a) => {
-            const on = state.got.includes(a.id);
-            const Icon = on ? ICONS[a.id] : Lock;
-            return (
-              <div key={a.id} className="pj-ability" data-tone={a.tone} data-locked={on ? undefined : ""}>
-                <span className="pj-ability-orb">
-                  <Icon className="size-[17px]" aria-hidden="true" />
-                </span>
-                <div className="flex flex-col">
-                  <span className="text-[15px] font-semibold">{on ? a.name : GAME.locked.name}</span>
-                  <span className="pj-dim text-[12.5px]">{on ? a.line : GAME.locked.line}</span>
-                </div>
-              </div>
-            );
-          })}
         </div>
 
         <ProductosPhone
           slotRef={slotRef}
           flightRef={flightRef}
           bodyRef={bodyRef}
-          orbsRef={orbsRef}
           head={
             <div className="pj-ph-head">
               <svg width="10" height="17" viewBox="0 0 10 17" aria-hidden="true">
@@ -285,6 +299,12 @@ export function ProductosGame() {
           <div className="pj-chat-log" role="log" aria-label={GAME.chatLabel}>
             <div className="pj-chat-feed">
               <span className="pj-chat-day">{GAME.day}</span>
+              {/* Al aterrizar el teléfono, Vera «escribe» su saludo (solo con vuelo; ver usePhoneFlight). */}
+              {state.log.length === 1 ? (
+                <div className="pj-msg pj-greet-typing" data-side="out" aria-hidden="true">
+                  <span className="pj-chat-typing"><i /><i /><i /></span>
+                </div>
+              ) : null}
               {state.log.map((entry, i) => (
                 <Message key={entry.key} id={entry.key} time={clockAt(i)} message={entry.message} playing={playing === entry.key} onVoice={(src) => (playing === entry.key ? stopAudio() : playAudio(entry.key, src))} />
               ))}
@@ -297,65 +317,42 @@ export function ProductosGame() {
           </div>
         </ProductosPhone>
 
-        <div className="min-w-0">
+        <div className="pj-side" data-rail="r">
+          {/* Isla de tinta con brillo de IA: cuenta lo que hizo el agente (DS §9.5.1). */}
+          <div className={`${islandClassName({ material: "ink", glow: "ai" })} pj-note`} aria-hidden="true">
+            <span className="pj-note-kicker text-muted-foreground">{GAME.note.kicker}</span>
+            <p className="pj-note-title">{note.title}</p>
+            <p className="pj-note-text text-muted-foreground">{note.text}</p>
+          </div>
+          <div className="pj-prog">
+            <p className="pj-prog-top">
+              <b className="pj-h">{n} <span className="t">{GAME.progress.of}</span></b>
+              <span className="pj-dim">{GAME.progress.label}</span>
+            </p>
+            <div className="pj-prog-track" aria-hidden="true">
+              {GAME_ABILITIES.map((a) => <i key={a.id} data-on={state.got.includes(a.id) ? "" : undefined} />)}
+            </div>
+            <ul className="pj-prog-chips" aria-label={GAME.abilitiesTitle}>
+              {GAME_ABILITIES.map((a) => (
+                <li key={a.id} data-on={state.got.includes(a.id) ? "" : undefined}>{a.name}</li>
+              ))}
+            </ul>
+          </div>
           {done ? (
-            <div className="flex flex-col items-start gap-5 lg:pt-6">
-              <p className="pj-h pj-h-lg">
-                {GAME.done.strong} <span className="t">{GAME.done.thin}</span>
+            <div className="pj-finish">
+              <p className="pj-h pj-finish-h">
+                <span className="block">{GAME.done.strong}</span>{" "}
+                <span className="t block">{GAME.done.thin}</span>
               </p>
-              <Link href={PRODUCTOS_TRIAL.href} prefetch={false} className="pj-cta">
-                {PRODUCTOS_TRIAL.label} →
+              <Link href={PRODUCTOS_TRIAL.href} prefetch={false} className="pj-cta w-full">
+                {PRODUCTOS_TRIAL.label}
               </Link>
-              <button type="button" onClick={reset} className="pj-link text-[13px]">
+              <p className="pj-dim m-0 text-center text-[13px]">{PRODUCTOS_TRIAL.micro}</p>
+              <button type="button" onClick={reset} className="pj-link mx-auto text-[13px]">
                 {GAME.done.replay}
               </button>
             </div>
-          ) : (
-            <div className="pj-con">
-              <div className="pj-con-head">
-                <p className="pj-eyebrow">{GAME.movesTitle}</p>
-                <span className="pj-con-rule" aria-hidden="true" />
-                <span className="pj-con-mono" aria-hidden="true">{GAME.console.moves(GAME_MOVES.length)}</span>
-                <span className="pj-con-tick" aria-hidden="true" />
-                <span className="pj-con-tick opacity-50" aria-hidden="true" />
-              </div>
-              <div className="pj-con-list" role="group" aria-label={GAME.movesTitle}>
-                {GAME_MOVES.map((m, i) => {
-                  const used = state.used.includes(m.id);
-                  const sending = state.pending === m.id;
-                  const status = sending ? "tx" : used ? "done" : undefined;
-                  const Icon = ICONS[m.id];
-                  return (
-                    <div key={m.id} className="pj-con-row" data-state={status}>
-                      <span className="pj-con-node" aria-hidden="true" />
-                      <span className="pj-con-conn" aria-hidden="true" />
-                      <button type="button" className="pj-jug" data-tone={TONE[m.id]} data-state={status} data-hint={hint === m.id ? "" : undefined} aria-busy={sending || undefined} disabled={used || state.pending !== null} onClick={() => onMove(m.id)}>
-                        <span className="pj-jug-scan" aria-hidden="true" />
-                        <span className="pj-jug-acc" aria-hidden="true" />
-                        <span className="pj-jug-bar" aria-hidden="true" />
-                        <span className="pj-jug-idx pj-con-mono" aria-hidden="true">
-                          {used && !sending ? <Check className="size-3.5" strokeWidth={2.6} /> : String(i + 1).padStart(2, "0")}
-                        </span>
-                        <span className="pj-jug-glyph" aria-hidden="true"><Icon className="size-[18px]" strokeWidth={2} /></span>
-                        <span className="pj-jug-lbl">
-                          <b>{m.label}</b>
-                          <small aria-hidden="true">{sending ? GAME.console.sending : used ? GAME.console.done : m.channel}</small>
-                        </span>
-                        <span className="pj-jug-chev" aria-hidden="true" />
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="pj-con-foot" aria-hidden="true">
-                <span className="pj-con-mono text-[9.5px]">{GAME.console.motto}</span>
-                <span className="pj-con-rule" />
-                <span className="pj-con-mono pj-con-count">
-                  {String(n).padStart(2, "0")}<span>/{String(TOTAL_ABILITIES).padStart(2, "0")}</span>
-                </span>
-              </div>
-            </div>
-          )}
+          ) : null}
         </div>
       </div>
     </section>
@@ -384,7 +381,7 @@ function Message({ id, time, message, playing, onVoice }: { id: string; time: st
     case "text": {
       const side = SIDE[message.from];
       return (
-        <div className="pj-msg" data-side={side}>
+        <div className="pj-msg" data-side={side} data-greeting={id === "greeting" ? "" : undefined}>
           <p className="pj-chat-bub" data-human={message.from === "human" ? "" : undefined}>
             {message.author ? <span className="pj-chat-author">{message.author}</span> : null}
             {message.text}

@@ -10,7 +10,7 @@ const SPEEDS = ["46s", "58s", "52s"] as const;
 /**
  * #conversaciones — «Así suena un negocio con Axi», el muro del /productos
  * original recuperado entre el video y el cierre (pedido de la dueña). Tres
- * columnas en marquee CSS (compositor, cero JS: es RSC) inclinadas en
+ * columnas en marquee CSS (a la derecha del texto desde la vuelta en tinta) (compositor, cero JS: es RSC) inclinadas en
  * perspectiva; el hover pausa y movimiento reducido lo deja quieto.
  *
  * Negocios y mensajes de ejemplo, solo WhatsApp (ver `WALL` en el contenido).
@@ -18,14 +18,17 @@ const SPEEDS = ["46s", "58s", "52s"] as const;
  */
 export function ProductosWall() {
   return (
-    <section id={WALL.anchor} aria-labelledby="muro-title" className="pj-scene pj-wall justify-center gap-10">
+    <section id={WALL.anchor} aria-labelledby="muro-title" className="pj-wall">
       <div className="pj-glow" aria-hidden="true" />
-      <div className="relative z-[1] flex flex-col items-center gap-3 text-center">
+      {/* Dos columnas (plan productos_tinta §4, D4): el texto a la izquierda y el
+          muro, el mismo de siempre, ocupando la altura a la derecha. */}
+      <div className="pj-wall-text">
         <p className="pj-eyebrow text-[var(--axi-brand)]">{WALL.eyebrow}</p>
         <h2 id="muro-title" className="pj-h pj-h-lg">
-          {WALL.strong} <span className="t">{WALL.thin}</span>
+          <span className="block">{WALL.strong}</span>{" "}
+          <span className="t block">{WALL.thin}</span>
         </h2>
-        <p className="pj-lead max-w-[46ch] text-pretty">{WALL.lead}</p>
+        <p className="pj-lead max-w-[30rem] text-pretty">{WALL.lead}</p>
         <span className="pj-wall-sample">{WALL.sample}</span>
       </div>
 

@@ -278,7 +278,7 @@ export function ProductosPieces() {
             ))
           : null}
         <div className="pp-stage">
-          <div className="pp-glow" data-tone={current.tone} aria-hidden="true" />
+          <div className="pp-glow" aria-hidden="true" />
           <header className="pp-head">
             <h2 id="piezas-title" className="pj-eyebrow pp-eyebrow">
               {PIECES_SCENE.eyebrow}
@@ -286,6 +286,11 @@ export function ProductosPieces() {
             {tabbed ? (
               <p className="pj-h pj-h-lg pp-headline" aria-hidden="true" key={current.id}>
                 {current.strong} <span className="t">{current.thin}</span>
+              </p>
+            ) : null}
+            {tabbed ? (
+              <p className="pj-lead pp-line" aria-hidden="true" key={`${current.id}-line`}>
+                {current.line}
               </p>
             ) : null}
             {tabbed ? (
@@ -309,10 +314,8 @@ export function ProductosPieces() {
                   aria-selected={piece.id === active}
                   aria-controls={piece.id}
                   tabIndex={piece.id === active ? 0 : -1}
-                  data-tone={piece.tone}
                   onClick={() => choose(piece.id)}
                 >
-                  <span className="pp-dot" aria-hidden="true" />
                   {piece.tab}
                 </button>
               ))}
@@ -332,7 +335,6 @@ export function ProductosPieces() {
                   }}
                   id={piece.id}
                   className="pp-panel"
-                  data-tone={piece.tone}
                   data-on={on ? "" : undefined}
                   role={tabbed ? "tabpanel" : undefined}
                   aria-labelledby={tabbed ? `pp-tab-${piece.id}` : `pp-h-${piece.id}`}
@@ -342,6 +344,7 @@ export function ProductosPieces() {
                     <h3 id={`pp-h-${piece.id}`} className="pj-h pj-h-lg">
                       {piece.strong} <span className="t">{piece.thin}</span>
                     </h3>
+                    <p className="pj-lead pp-line">{piece.line}</p>
                     {piece.sample ? <span className="pp-sample" data-on="">{PIECES_SCENE.sampleLabel}</span> : null}
                   </div>
                   <div className="pp-screen">

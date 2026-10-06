@@ -19,7 +19,22 @@ describe("vuelo del teléfono", () => {
     // Sin salto: un px de scroll antes, el teléfono está a menos de un px de su sitio.
     expect(Math.abs(screenTop(geo.land - 1) - screenTop(geo.land))).toBeLessThan(1.5);
     expect(flightAt(geo.land + 300, geo).ty).toBe(0);
-    expect(flightAt(geo.land, geo).ry).toBeCloseTo(-14);
+    // Aterriza DE FRENTE: el chat se lee (plan productos_tinta §4.2).
+    expect(flightAt(geo.land, geo).ry).toBeCloseTo(0);
+    expect(flightAt(geo.land, geo).rx).toBeCloseTo(0);
+  });
+
+  it("a mitad de vuelo gira en Y y vuelve; la pantalla se enciende al despegar", () => {
+    expect(flightAt(geo.land / 2, geo).ry).toBeCloseTo(-12);
+    expect(flightAt(0, geo).screen).toBe(0);
+    expect(flightAt(geo.land * 0.45, geo).screen).toBe(1);
+  });
+
+  it("las columnas del juego entran solo al final del vuelo, y el brillo cruza el cristal", () => {
+    expect(flightAt(geo.land * 0.7, geo).rails).toBe(0);
+    expect(flightAt(geo.land, geo).rails).toBe(1);
+    expect(flightAt(0, geo).sheen).toBe(-1);
+    expect(flightAt(geo.land, geo).sheen).toBe(1);
   });
 
   it("sube siempre (nunca baja) y más despacio que la página mientras el hero se va", () => {

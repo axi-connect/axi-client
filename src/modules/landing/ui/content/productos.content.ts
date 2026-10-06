@@ -29,8 +29,12 @@
 export const PRODUCTOS_ANCHORS = {
   hero: "inicio",
   game: "agente",
+  /** «Lo que no cerraste hoy»: la recuperación (plan productos_tinta §4.4). */
+  recover: "recuperar",
   pieces: "piezas",
   video: "video",
+  price: "precio",
+  control: "control",
   close: "empezar",
 } as const;
 
@@ -85,7 +89,14 @@ export type AgentTool = (typeof AGENT_TOOLS)[number];
 export const PRODUCTOS_HERO = {
   strong: "Escríbele.",
   thin: "Mira cómo vende.",
-  lead: "Juega a ser tu cliente. Así responde Axi.",
+  /** Qué es Axi, en una frase, para quien llega por un anuncio (D-hero del plan en tinta). */
+  lead: "Un agente que vende por tu WhatsApp con tu catálogo, tus precios y tu equipo al lado. Juega a ser tu cliente y compruébalo.",
+  /** Tres garantías reales bajo el CTA (INVENTARIO §2.1: canales y transversal). */
+  trust: [
+    { id: "oficial", label: "WhatsApp oficial, alta en un botón" },
+    { id: "prueba", label: "7 días sin tarjeta" },
+    { id: "usuarios", label: "No cobramos por usuario" },
+  ],
   play: { label: "Jugar ahora", href: `#${PRODUCTOS_ANCHORS.game}` },
   /** El saludo del teléfono que asoma desde la luz. */
   greeting: "Hola, soy Vera. ¿Qué estás buscando?",
@@ -125,8 +136,8 @@ export type GameMessage =
 export interface GameMove {
   id: GameMoveId;
   label: string;
-  /** El canal de la jugada en la consola, en versalitas (lienzo v10). */
-  channel: string;
+  /** La pista corta bajo el nombre de la jugada. */
+  hint: string;
   /** Lo que escribe el visitante (el cliente). */
   customer: readonly GameMessage[];
   /** Lo que responde Axi (o el equipo), tras el «escribiendo…». */
@@ -150,7 +161,7 @@ export const GAME_MOVES: readonly GameMove[] = [
   {
     id: "foto",
     label: "Mándale una foto",
-    channel: "Imagen",
+    hint: "La captura de un reel",
     customer: [
       { kind: "photo", from: "customer", imageSrc: PRODUCT_IMAGE, imageAlt: "Captura de un reel con unas gafas de lente ámbar", caption: "Captura de un reel" },
       { kind: "text", from: "customer", text: "¿Tienen estas?" },
@@ -163,7 +174,7 @@ export const GAME_MOVES: readonly GameMove[] = [
   {
     id: "voz",
     label: "Háblale",
-    channel: "Nota de voz",
+    hint: "Una nota de voz",
     customer: [
       {
         kind: "voice",
@@ -184,14 +195,14 @@ export const GAME_MOVES: readonly GameMove[] = [
   {
     id: "descuento",
     label: "Pídele un 30 %",
-    channel: "Negocia",
+    hint: "Negocia el precio",
     customer: [{ kind: "text", from: "customer", text: "¿Me las dejas un 30 % más baratas?" }],
     reply: [{ kind: "text", from: "agent", text: "Eso no lo tengo autorizado. Con el cupón PRIMERAVEZ te quedan en $170.100." }],
   },
   {
     id: "compra",
     label: "Cómpralas",
-    channel: "Pedido",
+    hint: "Pide y paga en el chat",
     customer: [{ kind: "text", from: "customer", text: "Me las llevo" }],
     reply: [
       { kind: "card", from: "agent", kicker: "Pedido #1042", title: "$170.100", meta: "Nequi · Bancolombia" },
@@ -202,14 +213,14 @@ export const GAME_MOVES: readonly GameMove[] = [
   {
     id: "agenda",
     label: "Pide una cita",
-    channel: "Agenda",
+    hint: "El examen visual",
     customer: [{ kind: "text", from: "customer", text: "¿Me hacen el examen visual?" }],
     reply: [{ kind: "text", from: "agent", text: "Claro. El martes 3 tengo 10:00 a. m. o 4:00 p. m. Te lo recuerdo antes." }],
   },
   {
     id: "persona",
     label: "Pide una persona",
-    channel: "Humano",
+    hint: "Que te atienda alguien",
     customer: [{ kind: "text", from: "customer", text: "Prefiero hablar con una persona" }],
     reply: [
       { kind: "event", text: "Laura entró a la conversación", tone: "amber" },
@@ -236,16 +247,17 @@ export const GAME = {
     discovered: (name: string) => `Descubriste: ${name}`,
     now: "ahora",
   },
+  /** La cabecera visible de la columna de jugadas. */
+  heading: { eyebrow: "Juega a ser tu cliente", strong: "Tú escribes.", thin: "Axi atiende." },
   abilitiesTitle: "Habilidades",
-  movesTitle: "Tú eres el cliente",
-  /** La consola de jugadas (lienzo v10, «El futuro es conversacional»). */
-  console: {
-    moves: (n: number) => `${String(n).padStart(2, "0")} jugadas`,
-    motto: "Axi · El futuro es conversacional",
-    sending: "Transmitiendo…",
-    done: "Completada",
+  movesTitle: "Tu jugada",
+  movesSub: "Toca una. Puedes ir en cualquier orden.",
+  /** La isla de tinta «Lo que acabas de ver» (brillo de IA: cuenta lo que hizo el agente). */
+  note: {
+    kicker: "Lo que acabas de ver",
+    intro: { title: "Empieza por una jugada", text: "Escríbele como lo haría tu cliente. Aquí verás qué hizo Axi y con qué parte de tu negocio lo resolvió." },
   },
-  locked: { name: "Por descubrir", line: "Haz una jugada" },
+  progress: { of: "de 7", label: "habilidades" },
   /** La habilidad del CRM se descubre sola tras estas jugadas. */
   crmAfterMoves: 3,
   done: { strong: "7 de 7.", thin: "Ahora, con tu catálogo.", replay: "Jugar otra vez" },
@@ -253,7 +265,43 @@ export const GAME = {
   pauseVoice: "Pausar nota de voz",
   chatLabel: "Chat de ejemplo con Óptica Vértice",
   /** Para lectores de pantalla y buscadores: el juego tiene guion. */
-  note: "Demostración con guion: las respuestas son de ejemplo y los audios son reales.",
+  disclaimer: "Demostración con guion: las respuestas son de ejemplo y las notas de voz son reales.",
+} as const;
+
+/**
+ * Lo que cuenta la isla tras cada respuesta. Fuera del chat del cliente: la
+ * demo explica, el chat no (regla de la página).
+ */
+export const GAME_NOTES: Readonly<Record<GameAbilityId, { title: string; text: string }>> = {
+  foto: { title: "Reconoce fotos", text: "Encontró la referencia exacta en tu catálogo y dijo cuántas quedan. Si duda, muestra hasta tres opciones." },
+  voz: { title: "Habla y escucha", text: "Entiende la nota de voz y responde con voz, con una de diez voces latinas. Solo por WhatsApp." },
+  descuento: { title: "Cuida tu margen", text: "El 30 % no existe. Ofreció el único cupón que autorizaste, con el precio calculado por el sistema." },
+  compra: { title: "Pedido y pago en el chat", text: "Creó el pedido con su número y guardó el comprobante. Una persona de tu equipo confirma el pago." },
+  agenda: { title: "Agenda citas", text: "Ofrece solo horas libres de tu agenda y deja programados los recordatorios de 24 h y 1 h antes." },
+  persona: { title: "Llama a tu equipo", text: "Laura entró a la misma conversación y Axi dejó de escribir. Puede devolvérsela con una nota." },
+  crm: { title: "Anota en tu CRM", text: "Sin que nadie digite: Valentina R. ya es una oportunidad en Cotizado, con el producto y el valor." },
+};
+
+/* ─────────────────── 2b · Lo que no cerraste hoy (recuperar) ─────────────────── */
+
+/**
+ * El diferenciador, con el copy de la dueña (2026-10-06). Los tres
+ * disparadores son los de `/marketing/automations` (INVENTARIO §1.9) y los
+ * mensajes siguen a los clientes del juego y de las piezas. La recuperación
+ * NO está en Esencial: la página lo dice al pie (INVENTARIO §2.3).
+ */
+export const RECOVER = {
+  strong: "Lo que no cerraste hoy,",
+  thin: "Axi lo vuelve a buscar.",
+  lead: "Detecta conversaciones que se enfriaron, carritos abandonados y oportunidades que quedaron a medias.",
+  triggers: [
+    { id: "carrito", kicker: "Carrito abandonado", title: "Armó un pedido y no lo terminó.", when: "Hace 1 día · pedido #1042", message: "Hola, Valentina. Tu pedido de las Aviador Ámbar quedó a medias. ¿Te ayudo a terminarlo?" },
+    { id: "frio", kicker: "Conversación que se enfrió", title: "Preguntó, le respondimos y no volvió.", when: "Hace 3 días · progresivos", message: "Hola, Pedro. ¿Pudiste ver la cotización de los progresivos? Si quieres, te agendo el examen." },
+    { id: "trato", kicker: "Oportunidad a medias", title: "Un trato del CRM lleva días sin moverse.", when: "6 días en Compromiso", message: "Hola, Andrés. Seguimos con tu examen y la montura cuando quieras. ¿Te sirve el jueves?" },
+  ],
+  closing: { strong: "No vuelvas a empezar una venta.", thin: "Retómala donde quedó." },
+  fine: "Las reglas nacen apagadas: tú decides cuándo se encienden. Nunca más de un mensaje de marketing al día por cliente. En los planes Crecimiento y Escala. Mensajes de ejemplo.",
+  label: "Mensaje de ejemplo de Axi",
 } as const;
 
 /* ─────────────────────────── 3 · Pieza por pieza ─────────────────────────── */
@@ -273,6 +321,8 @@ export interface Piece {
   tone: GameTone;
   strong: string;
   thin: string;
+  /** Qué hace por ti, en una línea bajo el titular. */
+  line: string;
   /** Lleva la marca «Datos de ejemplo» junto al título (D3). */
   sample: boolean;
 }
@@ -339,13 +389,13 @@ export const APP_SHELL = {
 } as const;
 
 export const PIECES: readonly Piece[] = [
-  { id: "inbox", tab: "Bandeja", tone: "violet", strong: "Todo tu chat.", thin: "Una sola bandeja.", sample: true },
-  { id: "configura", tab: "Agente", tone: "violet", strong: "Lo configuras.", thin: "No lo programas.", sample: false },
-  { id: "catalogo", tab: "Catálogo", tone: "coral", strong: "Tu catálogo,", thin: "entendido.", sample: true },
-  { id: "crm", tab: "CRM", tone: "coral", strong: "Cada conversación,", thin: "una oportunidad.", sample: true },
-  { id: "llamadas", tab: "Llamadas", tone: "violet", strong: "Cuando hay que llamar,", thin: "llama.", sample: true },
-  { id: "cobros", tab: "Cobros", tone: "amber", strong: "Te deben.", thin: "Axi te dice a quién primero.", sample: true },
-  { id: "medicion", tab: "Medición", tone: "amber", strong: "Ventas en pesos.", thin: "No mensajes.", sample: true },
+  { id: "inbox", tab: "Bandeja", tone: "violet", strong: "Todo tu chat.", thin: "Una sola bandeja.", line: "Axi atiende y, cuando hace falta, te pasa la conversación con su motivo. Tú la tomas con un toque.", sample: true },
+  { id: "configura", tab: "Agente", tone: "violet", strong: "Lo configuras.", thin: "No lo programas.", line: "Cara, voz y reglas en minutos. Las reglas las escribes como se las dirías a un vendedor nuevo.", sample: false },
+  { id: "catalogo", tab: "Catálogo", tone: "coral", strong: "Tu catálogo,", thin: "entendido.", line: "Variantes, SKU y stock. El agente encuentra el producto aunque el cliente escriba mal.", sample: true },
+  { id: "crm", tab: "CRM", tone: "coral", strong: "Cada conversación,", thin: "una oportunidad.", line: "Axi abre la oportunidad y la mueve de etapa. Tú ves cuáles se enfrían antes de perderlas.", sample: true },
+  { id: "llamadas", tab: "Llamadas", tone: "violet", strong: "Cuando hay que llamar,", thin: "llama.", line: "Llama desde tu número para retomar cotizaciones, confirmar citas o cobrar, y te deja el resumen.", sample: true },
+  { id: "cobros", tab: "Cobros", tone: "amber", strong: "Te deben.", thin: "Axi te dice a quién primero.", line: "Cuotas, promesas y recordatorios. La cartera se ordena por a quién escribir hoy.", sample: true },
+  { id: "medicion", tab: "Medición", tone: "amber", strong: "Ventas en pesos.", thin: "No mensajes.", line: "El embudo termina en dinero pagado, y una IA supervisora te dice qué corregir.", sample: true },
 ];
 
 /**
@@ -764,18 +814,72 @@ export const WALL = {
 
 /* ──────────────────────────────── 5 · Cierre ──────────────────────────────── */
 
+/* ─────────────────────── 6 · Lo que cuesta (precio vivo) ─────────────────────── */
+
+/**
+ * El precio de Esencial NO vive aquí: sale del catálogo público
+ * (`loadPublicCatalog`, el mismo de `/` y `/precios`) con el tramo de 1.000
+ * conversaciones. Sin catálogo no se pinta ninguna cifra (D6 del plan en tinta).
+ * El ancla del asesor es del estudio de mercado (MS §1.1), con su fuente al pie.
+ */
+export const PRICE = {
+  strong: "Lo que cuesta.",
+  thin: "Sin letra pequeña.",
+  advisor: { label: "Un asesor de tiempo completo", value: "$ 2,8 M", note: "al mes, con prestaciones. Atiende en horario y de a una conversación." },
+  plan: {
+    label: "Axi · plan Esencial",
+    /** `volume` es la etiqueta del tramo del catálogo («1.000»). */
+    note: (volume: string) => `al mes con ${volume} conversaciones. Atiende a toda hora y a todos a la vez.`,
+    founder: "Precio fundador",
+    /** Sin catálogo no hay cifra: se dice dónde verla, sin inventarla. */
+    empty: "El precio depende de cuántas conversaciones atiendes al mes. Míralo por volumen en los planes.",
+    cta: { label: "Ver todos los planes", href: "/precios" },
+  },
+  bullets: [
+    "No cobramos por usuario: suma a todo tu equipo.",
+    "7 días de prueba, sin tarjeta.",
+    "Inbox, agente, catálogo, pedidos, CRM, agenda y analítica.",
+    "La recuperación de ventas y las llamadas van en Crecimiento y Escala.",
+  ],
+  source: "Costo de un asesor según el estudio de mercado de Axi (salario y prestaciones en Colombia). Precios en pesos colombianos.",
+  /** El tramo que se muestra: se busca por conversaciones, no por código. */
+  conversations: 1000,
+  planSlug: "esencial",
+} as const;
+
+/* ─────────────────────── 7 · Vende solo. Nunca sin ti. ─────────────────────── */
+
+/** Los guardarraíles reales del agente (INVENTARIO §2.1, Agente IA e Inbox). */
+export const CONTROL = {
+  eyebrow: "Tú tienes el control",
+  strong: "Vende solo.",
+  thin: "Nunca sin ti.",
+  lead: "Axi trabaja dentro de las reglas que pones. Lo que no sabe, no lo inventa: se lo pasa a tu equipo.",
+  rules: [
+    { id: "precios", title: "Nunca inventa precios.", text: "Cotiza con los de tu catálogo, calculados en el servidor. La IA no escribe la cifra." },
+    { id: "margen", title: "No regala tu margen.", text: "Solo aplica los descuentos y cupones que autorizaste. El 30 % que piden no existe." },
+    { id: "pago", title: "El pago lo verifica tu equipo.", text: "Axi registra el comprobante en el pedido. Una persona confirma que el dinero llegó." },
+    { id: "relevo", title: "Si no sabe, te la pasa.", text: "Cuando el cliente pide una persona o Axi falla dos veces, entra tu equipo. Si nadie la toma en 5 minutos, sube de prioridad." },
+  ],
+  rule: { kicker: "Así se lo dices a tu agente", quote: "Nunca inventes precios ni tiempos de entrega.", aside: "Si se acaba tu plan, Axi se pausa y tu bandeja sigue funcionando." },
+} as const;
+
+/* ──────────────────────────────── 8 · Cierre ──────────────────────────────── */
+
 export const PRODUCTOS_CLOSE = {
   strong: "Siete días.",
   thin: "Tus clientes reales.",
-  /** RouteLine: recorrido y lo que falta. */
+  /** RouteLine monocroma: «Hoy» en coral (es la acción), el resto en tinta. Cada paso responde una duda de quien ya decidió. */
   route: [
-    { day: "Día 1", label: "Conectas WhatsApp", tone: "coral" },
-    { day: "Día 2", label: "Subes tu catálogo", tone: "amber" },
-    { day: "Día 3", label: "Vende de verdad", tone: null },
-    { day: "Día 7", label: "Decides", tone: "violet" },
-  ] as readonly { day: string; label: string; tone: GameTone | null }[],
+    { day: "Hoy", label: "Conectas WhatsApp", detail: "En un botón, por el canal oficial de Meta. La verificación del número la hacemos contigo." },
+    { day: "Día 2", label: "Subes tu catálogo", detail: "Fotos, precios y stock. Si vendes en Shopify, se sincroniza." },
+    { day: "Día 3", label: "Vende de verdad", detail: "Con tus clientes reales. Tu equipo lo ve todo en la bandeja." },
+    { day: "Día 7", label: "Decides", detail: "Sin tarjeta. Si sigues, eliges plan; si no, tus datos quedan intactos." },
+  ],
+  micro: "Sin tarjeta. Te acompañamos en la activación.",
   pricing: { label: "Ver precios", href: "/precios" },
-  agent: "Habla con nuestro agente",
+  agent: "Escríbele a nuestro agente",
+  more: { label: "Más preguntas", href: "/#preguntas" },
 } as const;
 
 /* ─────────────────────────────────── SEO ─────────────────────────────────── */

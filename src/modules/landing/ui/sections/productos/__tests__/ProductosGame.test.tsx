@@ -1,6 +1,6 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 
-import { GAME, GAME_ABILITIES, GAME_MOVES } from "@/modules/landing/ui/content/productos.content";
+import { GAME, GAME_ABILITIES, GAME_MOVES, GAME_NOTES, PRODUCTOS_TRIAL } from "@/modules/landing/ui/content/productos.content";
 import { ProductosGame } from "../game/ProductosGame";
 
 jest.mock("next/image", () => ({
@@ -56,7 +56,7 @@ test("una jugada descubre su habilidad: la isla del nav la anuncia y la lista la
 
   const foto = GAME_ABILITIES.find((a) => a.id === "foto")!;
   expect(activity).toEqual([{ title: GAME.island.discovered(foto.name), detail: foto.line }]);
-  expect(screen.getByText(foto.name)).toBeInTheDocument();
+  expect(within(screen.getByRole("list", { name: GAME.abilitiesTitle })).getByText(foto.name)).toHaveAttribute("data-on");
   expect(screen.getByRole("status")).toHaveTextContent(GAME.island.count(1, GAME_ABILITIES.length));
 });
 
@@ -111,26 +111,37 @@ test("las notas de la demo nunca entran al chat del cliente", () => {
   expect(log.textContent).not.toMatch(/CRM|30 % no existe|política/);
 });
 
-test("la consola: cada jugada dice su canal, transmite mientras Axi responde y queda «Completada»", () => {
-  const { container } = render(<ProductosGame />);
+test("las jugadas: cada una dice su pista, late mientras Axi responde y queda hecha; la isla cuenta lo que hizo", () => {
+  render(<ProductosGame />);
   const foto = GAME_MOVES[0];
-  const row = () => move(foto.label).closest(".pj-con-row")!;
-  expect(move(foto.label)).toHaveTextContent(foto.channel);
-  expect(move(foto.label)).toHaveTextContent("01");
+  expect(move(foto.label)).toHaveTextContent(foto.hint);
+  // La primera se ofrece sola hasta que se juega.
+  expect(move(foto.label)).toHaveAttribute("data-next");
+  expect(screen.getByText(GAME.note.intro.title)).toBeInTheDocument();
 
   fireEvent.click(move(foto.label));
   expect(move(foto.label)).toHaveAttribute("data-state", "tx");
   expect(move(foto.label)).toHaveAttribute("aria-busy", "true");
-  expect(move(foto.label)).toHaveTextContent(GAME.console.sending);
-  expect(row()).toHaveAttribute("data-state", "tx");
   // Mientras Axi responde, las demás esperan.
   expect(move(GAME_MOVES[1].label)).toBeDisabled();
-  expect(move(GAME_MOVES[1].label)).not.toHaveAttribute("data-state");
 
   act(() => jest.advanceTimersByTime(1500));
   expect(move(foto.label)).toHaveAttribute("data-state", "done");
-  expect(move(foto.label)).toHaveTextContent(GAME.console.done);
-  expect(move(foto.label)).not.toHaveTextContent("01");
   expect(move(GAME_MOVES[1].label)).toBeEnabled();
-  expect(container.querySelector(".pj-con-foot")).toHaveTextContent(GAME.console.motto);
+  expect(screen.getByText(GAME_NOTES.foto.text)).toBeInTheDocument();
+});
+
+test("al terminar, el CTA de la prueba aparece dentro del juego", () => {
+  render(<ProductosGame />);
+  expect(screen.queryByRole("link", { name: PRODUCTOS_TRIAL.label })).toBeNull();
+  for (const m of GAME_MOVES.filter((x) => x.id !== "voz")) {
+    fireEvent.click(move(m.label));
+    act(() => jest.advanceTimersByTime(1500));
+    act(() => jest.advanceTimersByTime(3000));
+  }
+  fireEvent.click(move("Háblale"));
+  act(() => audios[0].onended?.());
+  act(() => jest.advanceTimersByTime(800));
+  act(() => jest.advanceTimersByTime(3000));
+  expect(screen.getByRole("link", { name: PRODUCTOS_TRIAL.label })).toHaveAttribute("href", PRODUCTOS_TRIAL.href);
 });

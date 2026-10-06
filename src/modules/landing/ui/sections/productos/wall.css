@@ -4,7 +4,20 @@
  * superficie y el agente en tinta invertida, como el chat del juego.
  */
 
-.pj-wall .pj-glow { width: 1000px; height: 640px; left: 50%; top: 58%; transform: translate(-50%, -50%); }
+/* Dos columnas (plan productos_tinta, D4): texto a la izquierda, el muro a la
+   derecha a toda la altura y sangrando hasta el borde. Así no queda hueco bajo
+   el título ni tarjetas cortadas arriba. */
+.pj-wall {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  align-items: center;
+  min-height: min(880px, 100svh);
+  padding-left: max(16px, calc((100% - 1200px) / 2 + 16px));
+  overflow: hidden;
+}
+.pj-wall .pj-glow { width: 900px; height: 640px; left: 62%; top: 50%; transform: translate(-50%, -50%); }
+.pj-wall-text { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: flex-start; gap: 18px; padding: 96px 0; }
 
 .pj-wall-sample {
   display: inline-flex; align-items: center; height: 26px; padding: 0 12px;
@@ -14,13 +27,13 @@
 
 .pj-wall-stage {
   position: relative; z-index: 1;
-  width: min(1100px, 100%); height: 540px;
+  width: 100%; height: min(880px, 100svh);
   overflow: hidden;
   perspective: 420px;
-  /* El muro emerge del fondo: se funde por los cuatro bordes. */
-  -webkit-mask: linear-gradient(to bottom, transparent, black 18%, black 74%, transparent), linear-gradient(to right, transparent, black 16%, black 84%, transparent);
+  /* El muro emerge del fondo: se funde arriba, abajo y hacia el texto; a la derecha sangra. */
+  -webkit-mask: linear-gradient(to bottom, transparent, black 16%, black 80%, transparent), linear-gradient(to right, transparent, black 20%, black);
   -webkit-mask-composite: source-in;
-  mask: linear-gradient(to bottom, transparent, black 18%, black 74%, transparent), linear-gradient(to right, transparent, black 16%, black 84%, transparent);
+  mask: linear-gradient(to bottom, transparent, black 16%, black 80%, transparent), linear-gradient(to right, transparent, black 20%, black);
   mask-composite: intersect;
 }
 /* El plano inclinado es más grande que el escenario y va hacia el fondo (Z):
@@ -57,6 +70,11 @@
 .pj-wall-by { margin: 10px 0 0; display: flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 500; opacity: 0.6; }
 .pj-wall-card[data-from="agent"] .pj-wall-by { opacity: 0.85; }
 
+@media (max-width: 1023px) {
+  .pj-wall { grid-template-columns: minmax(0, 1fr); padding: 72px 0 0; min-height: 0; }
+  .pj-wall-text { padding: 0 16px; }
+  .pj-wall .pj-glow { left: 50%; top: 70%; }
+}
 @media (max-width: 767px) {
   .pj-wall-stage { height: 460px; }
   .pj-wall-tilt { gap: 12px; transform: translateZ(-120px) rotateX(10deg) rotateY(-6deg) rotateZ(6deg); }

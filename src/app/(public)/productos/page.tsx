@@ -12,27 +12,41 @@ import { ProductosPieces } from "@/modules/landing/ui/sections/productos/pieces/
 import { ProductosVideoScene } from "@/modules/landing/ui/sections/productos/ProductosVideoScene";
 import { ProductosWall } from "@/modules/landing/ui/sections/productos/ProductosWall";
 import { ProductosClose } from "@/modules/landing/ui/sections/productos/ProductosClose";
+import { ProductosControl } from "@/modules/landing/ui/sections/productos/ProductosControl";
+import { ProductosPrice } from "@/modules/landing/ui/sections/productos/ProductosPrice";
+import { ProductosRecover } from "@/modules/landing/ui/sections/productos/ProductosRecover";
+import { loadPublicCatalog } from "@/modules/landing/infrastructure/pricing-catalog.loader";
 import { ProductosHashRouter } from "@/modules/landing/ui/sections/productos/ProductosHashRouter";
 
 /**
- * `/productos` — «Escríbele. Mira cómo vende.» (plan
- * `docs/plans/productos_juego_plan.md`, lienzo aprobado el 2026-10-03).
+ * `/productos` — «Escríbele. Mira cómo vende.» en tinta (plan
+ * `docs/plans/productos_tinta_plan.md`, lienzo aprobado el 2026-10-06; parte de
+ * `productos_juego_plan.md`).
  *
- * Seis escenas: apertura, el juego (#agente), pieza por pieza (#piezas, con
- * una pestaña por ancla), el video del fundador (#video), el muro «Así suena
- * un negocio con Axi» (#conversaciones) y el cierre (#empezar). Los enlaces del menú caen en su pieza exacta vía
- * `ProductosHashRouter`; `productos-anchors.test.tsx` vigila que existan.
+ * Nueve escenas: apertura, el juego (#agente), lo que no cerraste hoy
+ * (#recuperar), pieza por pieza (#piezas, una pestaña por ancla), el video del
+ * fundador (#video), el muro (#conversaciones), lo que cuesta (#precio), vende
+ * solo, nunca sin ti (#control) y el cierre (#empezar). Los enlaces del menú
+ * caen en su pieza exacta vía `ProductosHashRouter`; `productos-anchors.test.tsx`
+ * vigila que existan.
+ *
+ * El precio de Esencial sale del catálogo público, como en `/` y `/precios`:
+ * si cambia en /platform, cambia aquí en la siguiente revalidación.
  *
  * Ningún wrapper lleva overflow-y: las escenas fijas dependen de que el sticky
  * alcance al scroller `[data-app-scroll]`.
  */
+/** Literal (no la constante importada): Next la exige estática. Vigilado por catalog-revalidate.test. */
+export const revalidate = 60;
+
 export const metadata: Metadata = pageMetadata({
   title: PRODUCTOS_SEO.title,
   description: PRODUCTOS_SEO.description,
   path: "/productos",
 });
 
-export default function ProductosPage() {
+export default async function ProductosPage() {
+  const catalog = await loadPublicCatalog();
   return (
     <div className="pj">
       <JsonLd data={breadcrumbSchema(["/productos"])} />
@@ -42,11 +56,14 @@ export default function ProductosPage() {
         <ProductosOpening />
         <ProductosGame />
       </div>
+      <ProductosRecover />
       <section id={PRODUCTOS_ANCHORS.pieces} aria-labelledby="piezas-title" className="pj-scene pj-pieces">
         <ProductosPieces />
       </section>
       <ProductosVideoScene />
       <ProductosWall />
+      <ProductosPrice catalog={catalog} now={new Date()} />
+      <ProductosControl />
       <ProductosClose />
       <ProductosHashRouter />
     </div>

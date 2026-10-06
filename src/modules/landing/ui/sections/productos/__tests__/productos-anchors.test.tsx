@@ -25,6 +25,10 @@ jest.mock("next/image", () => ({
 }));
 // moduleNameMapper resuelve primero el alias @/ y la hoja de estilos llegaría cruda.
 jest.mock("@/modules/landing/ui/sections/productos/productos.css", () => ({}));
+// La página es async y lee el catálogo público en el servidor: aquí, el del fixture.
+jest.mock("@/modules/landing/infrastructure/pricing-catalog.loader", () => ({
+  loadPublicCatalog: async () => jest.requireActual("@/modules/landing/domain/testing/catalog.fixture").FIXTURE_CATALOG,
+}));
 jest.mock("@/core/config/env", () => ({ ...jest.requireActual("@/core/config/env"), salesWhatsAppUrl: () => "https://wa.me/570000000000" }));
 
 beforeAll(() => {
@@ -60,8 +64,8 @@ function literalAnchors(dir: string, out: { file: string; anchor: string }[] = [
 
 const productosAnchor = (href: string) => href.match(/^\/productos#([\w-]+)$/)?.[1] ?? null;
 
-test("los enlaces a /productos#x caen en una escena o pieza que existe", () => {
-  const { container } = render(<ProductosPage />);
+test("los enlaces a /productos#x caen en una escena o pieza que existe", async () => {
+  const { container } = render(await ProductosPage());
   const ids = new Set(Array.from(container.querySelectorAll("[id]")).map((el) => el.id));
   const lands = (anchor: string) => {
     if (!ids.has(anchor) && !resolveHash(`#${anchor}`)) return false;
@@ -83,14 +87,22 @@ test("los enlaces a /productos#x caen en una escena o pieza que existe", () => {
   expect(broken).toEqual([]);
 });
 
-test("cada pieza tiene su sección con id dentro de #piezas y el router la abre", () => {
-  const { container } = render(<ProductosPage />);
+test("cada pieza tiene su sección con id dentro de #piezas y el router la abre", async () => {
+  const { container } = render(await ProductosPage());
   const pieces = container.querySelector("#piezas");
   expect(pieces).not.toBeNull();
   for (const piece of PIECES) {
     expect(pieces?.querySelector(`#${piece.id}`)).not.toBeNull();
     expect(resolveHash(`#${piece.id}`)).toEqual({ scene: "piezas", piece: piece.id });
   }
+});
+
+test("el precio de Esencial se pinta con la cifra del catálogo, no con una del código", async () => {
+  const { getByTestId } = render(await ProductosPage());
+  const { FIXTURE_CATALOG } = jest.requireActual("@/modules/landing/domain/testing/catalog.fixture");
+  const { esencialPrice } = jest.requireActual("../productos-price");
+  const { formatCop } = jest.requireActual("@/modules/landing/ui/content/landing.content");
+  expect(getByTestId("precio-esencial")).toHaveTextContent(formatCop(esencialPrice(FIXTURE_CATALOG, new Date()).monthlyCop));
 });
 
 test("#reconocimiento lleva al juego y resalta la jugada de la foto; un hash cualquiera no se toca", () => {

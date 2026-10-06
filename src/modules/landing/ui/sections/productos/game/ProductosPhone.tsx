@@ -1,5 +1,4 @@
 import type { CSSProperties, ReactNode, Ref } from "react";
-import { Lock } from "lucide-react";
 
 /** El canto: nueve láminas en Z, como el teléfono premium de la home. */
 const EDGES = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
@@ -14,31 +13,14 @@ const KEYS = [
 ] as const;
 
 /**
- * Las siete habilidades por descubrir, sueltas alrededor del teléfono en el
- * hero, a distintas profundidades: `fx` es la posición horizontal como
- * fracción del ancho disponible (−1 a 1), `y` los px sobre el borde de arriba
- * del teléfono y `z` la lejanía (0 cerca y nítida, 1 lejos, pequeña y
- * desenfocada). La columna central queda libre: ahí van los botones del hero.
- * `m: false` se oculta en móvil, donde el teléfono ocupa el ancho.
- */
-const ORBS = [
-  { fx: -0.88, y: 24, z: 0.72, m: false },
-  { fx: -0.66, y: -104, z: 0.12, m: true },
-  { fx: -0.42, y: -26, z: 0.46, m: false },
-  { fx: 0.4, y: -112, z: 0.58, m: true },
-  { fx: 0.5, y: -14, z: 0.06, m: false },
-  { fx: 0.72, y: 40, z: 0.5, m: false },
-  { fx: 0.86, y: -96, z: 0.8, m: true },
-] as const;
-
-/**
  * El teléfono de /productos: el mismo titanio, canto en láminas, isla
  * dinámica y reflejo del teléfono premium de la home (lienzo «Teléfono
  * premium», opción A), dibujado a 360 × 740 y escalado entero con `--s`.
  *
  * Es UNO solo en la página: vive en el juego y `usePhoneFlight` lo lleva
- * desde la luz del hero hasta su sitio. `flightRef` recibe el traslado y
- * `bodyRef` la pose (transform directo, sin variables: no recalcula el
+ * desde la luz del hero hasta su sitio. `flightRef` recibe el traslado,
+ * `bodyRef` la pose, y `.pj-ph-off`, `.pj-ph-sheen` y `.pj-ph-floor` la
+ * coreografía (transform y opacity directos, sin variables: no recalcula el
  * subárbol en cada frame).
  */
 export function ProductosPhone({
@@ -48,7 +30,6 @@ export function ProductosPhone({
   slotRef,
   flightRef,
   bodyRef,
-  orbsRef,
 }: {
   children: ReactNode;
   head: ReactNode;
@@ -56,23 +37,10 @@ export function ProductosPhone({
   slotRef?: Ref<HTMLDivElement>;
   flightRef?: Ref<HTMLDivElement>;
   bodyRef?: Ref<HTMLDivElement>;
-  orbsRef?: Ref<HTMLDivElement>;
 }) {
   return (
     <div ref={slotRef} className="pj-ph">
       <div ref={flightRef} className="pj-ph-flight">
-        <div ref={orbsRef} className="pj-ph-orbs" aria-hidden="true">
-          {ORBS.map((o) => (
-            <span
-              key={`${o.fx}${o.y}`}
-              className="pj-orb"
-              data-m={o.m ? undefined : "off"}
-              style={{ "--fx": o.fx, "--y": `${o.y}px`, "--z": o.z } as CSSProperties}
-            >
-              <Lock />
-            </span>
-          ))}
-        </div>
         <div className="pj-ph-rise">
           <div className="pj-ph-stage">
             <div className="pj-ph-floor" aria-hidden="true" />
@@ -86,13 +54,19 @@ export function ProductosPhone({
               <div className="pj-ph-frame">
                 <div className="pj-ph-bezel">
                   <div className="pj-ph-glass">
-                    <StatusBar />
-                    {head}
-                    {children}
-                    {compose}
-                    <div className="pj-ph-home" aria-hidden="true">
-                      <span />
+                    <div className="pj-ph-screen">
+                      <StatusBar />
+                      {head}
+                      {children}
+                      {compose}
+                      <div className="pj-ph-home" aria-hidden="true">
+                        <span />
+                      </div>
                     </div>
+                    {/* La pantalla apagada: una capa que se desvanece al despegar (más barata que atenuar todo el contenido). */}
+                    <div className="pj-ph-off" aria-hidden="true" />
+                    {/* El brillo que cruza el cristal mientras el teléfono gira. */}
+                    <div className="pj-ph-sheen" aria-hidden="true" />
                   </div>
                 </div>
               </div>

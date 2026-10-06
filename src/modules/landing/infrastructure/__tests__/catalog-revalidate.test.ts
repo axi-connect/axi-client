@@ -16,7 +16,7 @@ import { CATALOG_REVALIDATE_SECONDS } from "@/modules/landing/infrastructure/pri
  * páginas la repiten a mano; este spec impide que el literal y el `revalidate`
  * del `fetch` diverjan sin que nadie lo note.
  */
-const PAGES = ["src/app/(public)/page.tsx", "src/app/(public)/precios/page.tsx", "src/app/comenzar/page.tsx"];
+const PAGES = ["src/app/(public)/page.tsx", "src/app/(public)/precios/page.tsx", "src/app/(public)/productos/page.tsx", "src/app/comenzar/page.tsx"];
 
 describe("revalidate de las páginas con catálogo público", () => {
   it.each(PAGES)("%s declara el mismo literal que el loader", (page) => {
