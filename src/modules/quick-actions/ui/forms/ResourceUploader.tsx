@@ -8,6 +8,7 @@ import { formatBytes } from "@/core/lib/format"
 import { useAlert } from "@/core/providers/alert-provider"
 import type { QuickActionAssetDTO } from "@/modules/quick-actions/domain/quick-action"
 import { uploadQuickActionAsset } from "@/modules/quick-actions/infrastructure/services/quick-action-service.adapter"
+import { reportQuotaExceeded, useStorageQuotaState } from "@/modules/storage/public"
 
 const ACCEPT = "application/pdf,image/jpeg,image/png,image/webp,video/mp4,audio/ogg,audio/mpeg"
 const MAX_ASSETS = 10
@@ -30,6 +31,8 @@ export function ResourceUploader({
   const { showAlert } = useAlert()
   const inputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
+  // Espacio lleno: el botón se apaga antes de chocar con el 507 (storage T2).
+  const { blocksUploads, blockedHint } = useStorageQuotaState()
 
   const handleFiles = async (files: FileList) => {
     if (assets.length + files.length > MAX_ASSETS) {
@@ -37,14 +40,19 @@ export function ResourceUploader({
       return
     }
     setUploading(true)
+    let current: string | null = null
     try {
       const uploaded: QuickActionAssetDTO[] = []
       for (const file of Array.from(files)) {
+        current = file.name
         uploaded.push(await uploadQuickActionAsset(file))
       }
       onChange([...assets, ...uploaded])
     } catch (err) {
-      showAlert({ tone: "error", title: errorMessage(err, "No se pudo subir el archivo") })
+      // El 507 de espacio lleno trae su propia píldora con «Ver espacio».
+      if (!reportQuotaExceeded(err, current)) {
+        showAlert({ tone: "error", title: errorMessage(err, "No se pudo subir el archivo") })
+      }
     } finally {
       setUploading(false)
     }
@@ -105,16 +113,17 @@ export function ResourceUploader({
       </ul>
       <button
         type="button"
-        disabled={uploading}
+        disabled={uploading || blocksUploads}
         onClick={() => inputRef.current?.click()}
         className={cn(
-          "flex items-center justify-center gap-2 rounded-lg border border-dashed border-border px-3 py-2.5 text-xs text-muted-foreground transition-colors hover:border-brand hover:text-brand",
+          "flex items-center justify-center gap-2 rounded-lg border border-dashed border-border px-3 py-2.5 text-xs text-muted-foreground transition-colors hover:border-brand hover:text-brand disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-border disabled:hover:text-muted-foreground",
           error && "border-destructive text-destructive",
         )}
       >
         {uploading ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
         {uploading ? "Subiendo…" : "Subir PDF o imágenes"}
       </button>
+      {blocksUploads && <p className="text-xs text-muted-foreground">{blockedHint}</p>}
       {assets.length > 1 && (
         <p className="text-[10px] text-muted-foreground">
           El orden de la lista es el orden en que se envían los archivos.

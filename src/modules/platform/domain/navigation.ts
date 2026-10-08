@@ -68,6 +68,8 @@ const SECTIONS: readonly PlatformNavSection[] = [
     items: [
       { label: "Auditoría", path: "/platform/audit", icon: "scroll-text" },
       { label: "Analytics", path: "/platform/analytics", icon: "activity" },
+      // Control de almacenamiento: el disco del servidor y lo que ocupa cada tenant.
+      { label: "Almacenamiento", path: "/platform/storage", icon: "hard-drive" },
     ],
   },
   {

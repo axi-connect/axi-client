@@ -34,7 +34,7 @@ function message(overrides: Partial<UiMessage> & { id: string }): UiMessage {
 }
 
 function attachment(id: string, filename: string, mime: string) {
-  return { id, filename, mime_type: mime, size_bytes: 2048 };
+  return { id, filename, mime_type: mime, size_bytes: 2048, purged_at: null };
 }
 
 /** Carga el hilo en el store real: el panel es un selector derivado de él. */

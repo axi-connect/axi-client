@@ -1,4 +1,4 @@
-import { cycleLabel } from "../UsagePanel";
+import { cycleLabel, formatUsageQuantity } from "../UsagePanel";
 
 describe("cycleLabel", () => {
   it("la ventana [inicio, fin) en la zona del negocio: el fin exclusivo no suma un día", () => {
@@ -12,5 +12,15 @@ describe("cycleLabel", () => {
 
   it("fechas ilegibles no inventan un ciclo", () => {
     expect(cycleLabel("x", "y", "America/Bogota")).toBe("");
+  });
+});
+
+describe("formatUsageQuantity", () => {
+  it("storage_bytes es caudal en bytes: se escribe en GB es-CO, no como entero", () => {
+    expect(formatUsageQuantity("storage_bytes", 1.5 * 1024 ** 3)).toBe("1,5 GB");
+  });
+
+  it("las demás métricas siguen siendo enteros", () => {
+    expect(formatUsageQuantity("messages_sent", 1500)).not.toContain("GB");
   });
 });

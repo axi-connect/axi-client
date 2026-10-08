@@ -19,7 +19,7 @@ describe("navegación de platform por secciones", () => {
     expect(PLATFORM_NAV_SECTIONS[2]?.items.map((item) => item.label)).toEqual(["Planes", "Pricing IA", "Facturación"]);
   });
 
-  it("las secciones cubren las 13 rutas de la consola sin repetir ninguna", () => {
+  it("las secciones cubren las 14 rutas de la consola sin repetir ninguna", () => {
     const paths = PLATFORM_NAV.map((item) => item.path);
     expect(new Set(paths).size).toBe(paths.length);
     expect(paths.sort()).toEqual(
@@ -35,6 +35,7 @@ describe("navegación de platform por secciones", () => {
         "/platform/pricing",
         "/platform/prospecting",
         "/platform/quality",
+        "/platform/storage",
         "/platform/tenants",
         "/platform/voices",
       ].sort(),

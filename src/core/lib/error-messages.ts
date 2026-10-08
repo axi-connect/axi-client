@@ -147,6 +147,11 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   "conversations/upload_already_used": "Ese adjunto ya fue enviado",
   "conversations/upload_unsupported_type": "Tipo de archivo no soportado",
   "conversations/upload_too_large": "El archivo supera el tamaño permitido",
+  // Control de almacenamiento (storage_control_plan). El 507 lo atiende además
+  // `useStorageQuotaNotice` (modules/storage) con la píldora y «Ver espacio».
+  "storage/quota_exceeded": "Tu espacio está lleno. Pide más espacio a un administrador o a soporte",
+  "conversations/attachment_purged":
+    "Este archivo se eliminó por la política de almacenamiento: ya no se puede ver ni descargar",
   "conversations/voice_note_transcode_failed":
     "No se pudo procesar la nota de voz. Intenta grabarla de nuevo",
   "channels/template_not_supported": "Este canal no soporta plantillas",

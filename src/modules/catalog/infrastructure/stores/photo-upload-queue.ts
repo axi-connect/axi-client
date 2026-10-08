@@ -8,6 +8,7 @@ import {
   uploadProductImage,
   uploadVariantImage,
 } from "@/modules/catalog/infrastructure/services/product-image-service.adapter";
+import { reportQuotaExceeded } from "@/modules/storage/public";
 
 /**
  * Cola de subida de fotos del catálogo (plan catalog_images_gallery, D11/D13).
@@ -55,6 +56,17 @@ type Job = { item: UploadItem; file: File; prepared: File | null };
 type Listener = () => void;
 type DoneListener = (productId: string) => void;
 
+type QueueDeps = {
+  prepare: typeof prepareImageForUpload;
+  uploadProduct: typeof uploadProductImage;
+  uploadVariant: typeof uploadVariantImage;
+  createObjectUrl: (file: File) => string;
+  revokeObjectUrl: (url: string) => void;
+  concurrency: number;
+  /** Fallo de subida: el 507 de espacio lleno se avisa aparte (modules/storage). */
+  onError?: (error: unknown, fileName: string) => void;
+};
+
 let seq = 0;
 
 export class PhotoUploadQueue {
@@ -65,13 +77,16 @@ export class PhotoUploadQueue {
   private readonly doneListeners = new Set<DoneListener>();
 
   constructor(
-    private readonly deps = {
+    private readonly deps: QueueDeps = {
       prepare: prepareImageForUpload,
       uploadProduct: uploadProductImage,
       uploadVariant: uploadVariantImage,
       createObjectUrl: (file: File) => URL.createObjectURL(file),
       revokeObjectUrl: (url: string) => URL.revokeObjectURL(url),
       concurrency: UPLOAD_CONCURRENCY,
+      onError: (error, fileName) => {
+        reportQuotaExceeded(error, fileName);
+      },
     },
   ) {}
 
@@ -158,6 +173,9 @@ export class PhotoUploadQueue {
       this.update(job, { status: "done", progress: 1 });
       for (const listener of this.doneListeners) listener(job.item.product_id);
     } catch (error) {
+      // 507 con el espacio lleno: la miniatura dice por qué y la píldora
+      // (vigía del layout) ofrece «Ver espacio» a quien administra.
+      this.deps.onError?.(error, job.item.file_name);
       const message =
         error instanceof ImagePreparationError ? error.message : errorMessage(error, "No se pudo subir la foto");
       this.update(job, { status: "failed", error: message });

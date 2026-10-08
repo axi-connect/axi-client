@@ -10,6 +10,8 @@ import { formatBytes } from "@/core/lib/format"
 import { HttpError } from "@/core/api/problem"
 import { useAlert } from "@/core/providers/alert-provider"
 import { Button } from "@/shared/components/ui/button"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/components/ui/tooltip"
+import { useStorageQuotaState } from "@/modules/storage/public"
 import { useChannelStatus } from "@/modules/channels/public"
 import { COMPOSER_ACCEPT, MAX_UPLOAD_BYTES, type ConversationDTO, type SendInput } from "@/modules/inbox/domain/inbox"
 import { firstNameOf } from "@/modules/inbox/domain/inbox-summary"
@@ -85,6 +87,10 @@ export function Composer({
   })
 
   const uploads = useUploadQueue(conversation.id)
+  // Espacio lleno (storage_control_ui T2): el clip se apaga antes de chocar con
+  // el 507; escribir sigue igual.
+  const storageQuota = useStorageQuotaState()
+  const uploadsBlocked = storageQuota.blocksUploads
   const recorder = useVoiceRecorder()
   const replyWin = useReplyWindow(conversation)
   const channelStatus = useChannelStatus(conversation.channel_id)
@@ -339,6 +345,10 @@ export function Composer({
             const files = Array.from(e.clipboardData.files)
             if (files.length === 0) return
             e.preventDefault()
+            if (uploadsBlocked) {
+              showAlert({ tone: "info", title: "Tu espacio está lleno", description: storageQuota.blockedHint })
+              return
+            }
             uploads.add(files)
           }}
           rows={1}
@@ -352,7 +362,7 @@ export function Composer({
           </p>
         )}
         <div className="flex items-center gap-0.5 px-1.5 pt-1 pb-1.5">
-          <AttachButton disabled={!canWrite || sending} onFiles={uploads.add} />
+          <AttachButton disabled={!canWrite || sending} blockedHint={uploadsBlocked ? storageQuota.blockedHint : null} onFiles={uploads.add} />
           <ToolButton label="Acciones rápidas" title="Acciones rápidas · también con «/»" pressed={qaOpen} disabled={!canWrite} onClick={() => setQaOpen((open) => !open)}>
             <Zap className="size-[17px]" />
           </ToolButton>
@@ -449,7 +459,7 @@ export function Composer({
           </div>
         )}
         {content}
-        {canWrite && dropTargetRef !== undefined && <DropZone targetRef={dropTargetRef} firstName={firstName} onFiles={uploads.add} />}
+        {canWrite && !uploadsBlocked && dropTargetRef !== undefined && <DropZone targetRef={dropTargetRef} firstName={firstName} onFiles={uploads.add} />}
       </div>
     </QuickActionsMenu>
   )
@@ -542,9 +552,41 @@ function ToolButton({
   )
 }
 
-/** El clip: abre el selector de archivos (multi-selección). */
-function AttachButton({ disabled, onFiles }: { disabled: boolean; onFiles: (files: FileList) => void }) {
+/**
+ * El clip: abre el selector de archivos (multi-selección). Con el espacio
+ * lleno queda apagado pero ENFOCABLE (`aria-disabled`, no `disabled`) para que
+ * el tooltip diga por qué y qué hacer, con ratón y con teclado.
+ */
+function AttachButton({
+  disabled,
+  blockedHint,
+  onFiles,
+}: {
+  disabled: boolean
+  blockedHint: string | null
+  onFiles: (files: FileList) => void
+}) {
   const inputRef = useRef<HTMLInputElement>(null)
+  if (blockedHint !== null && !disabled) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            aria-label="Adjuntar archivo"
+            aria-disabled="true"
+            onClick={(event) => event.preventDefault()}
+            className="grid size-9 shrink-0 cursor-not-allowed place-items-center rounded-full text-foreground/75 opacity-40 focus-visible:opacity-70 focus-visible:outline-2 focus-visible:outline-ring"
+          >
+            <Paperclip className="size-[17px]" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-64 text-left">
+          {blockedHint}
+        </TooltipContent>
+      </Tooltip>
+    )
+  }
   return (
     <>
       <input

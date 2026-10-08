@@ -13,6 +13,11 @@ jest.mock("@/shared/auth/features.hooks", () => ({
   useFeatures: () => mockFeatures,
 }));
 
+const mockHasPermission = jest.fn<boolean, [string]>(() => false);
+jest.mock("@/shared/auth/auth.hooks", () => ({
+  useAuth: () => ({ hasPermission: mockHasPermission }),
+}));
+
 import {
   CompanySettingsNav,
   companySettingsTabs,
@@ -23,6 +28,7 @@ describe("CompanySettingsNav", () => {
     mockPathname.mockReturnValue("/settings/company");
     mockFeatures.loaded = true;
     mockFeatures.hasFeature.mockImplementation(() => false);
+    mockHasPermission.mockImplementation(() => false);
   });
 
   it("General es exacto: en /settings/company/sucursales no queda activo", () => {
@@ -77,5 +83,22 @@ describe("CompanySettingsNav", () => {
     expect(
       companySettingsTabs(() => true, true).map((tab) => tab.href),
     ).toContain("/settings/company/documentos");
+  });
+
+  it("«Almacenamiento» aparece solo con storage:read (owner/admin), al final", () => {
+    render(<CompanySettingsNav />);
+    expect(screen.queryByRole("link", { name: /Almacenamiento/ })).toBeNull();
+
+    mockHasPermission.mockImplementation((permission) => permission === "storage:read");
+    render(<CompanySettingsNav />);
+    expect(screen.getByRole("link", { name: /Almacenamiento/ })).toHaveAttribute(
+      "href",
+      "/settings/company/almacenamiento",
+    );
+    const hrefs = companySettingsTabs(() => false, true, true).map((tab) => tab.href);
+    expect(hrefs[hrefs.length - 1]).toBe("/settings/company/almacenamiento");
+    expect(companySettingsTabs(() => false, true, false).map((tab) => tab.href)).not.toContain(
+      "/settings/company/almacenamiento",
+    );
   });
 });
