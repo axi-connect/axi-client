@@ -210,6 +210,15 @@ describe("canRunNow", () => {
 
 describe("hotfix 131049 — la espera de Meta tras una apertura frenada", () => {
   const NOW = Date.parse("2026-10-06T16:10:00Z");
+  /* El reloj se congela porque `taskDisplayState` NO recibe `now`: lo lee por
+     dentro. Con el reloj real, la espera del fixture caducaba sola y el caso se
+     ponía rojo al día siguiente de escribirlo (pasó el 2026-10-07). */
+  beforeAll(() => {
+    jest.useFakeTimers().setSystemTime(NOW);
+  });
+  afterAll(() => {
+    jest.useRealTimers();
+  });
   const paced = (retry_at: string | null) => ({
     ...task({ assignee_type: "agent", last_run_status: "failed", last_run_reason: "opening_rejected" }),
     last_opening: { retry_at } as ActivityDTO["last_opening"],
