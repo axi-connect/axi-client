@@ -9619,6 +9619,7 @@ export interface components {
                     /** @default true */
                     enabled: boolean;
                 }[];
+                storage_quota_bytes: number | null;
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
@@ -9658,6 +9659,8 @@ export interface components {
                 /** @default true */
                 enabled: boolean;
             }[];
+            /** @default null */
+            storage_quota_bytes: number | null;
         };
         CreatedPlanDto: {
             /** Format: uuid */
@@ -9666,8 +9669,7 @@ export interface components {
         UpdatePlanDto: {
             name?: string;
             description?: string | null;
-            /** @default [] */
-            default_limits: {
+            default_limits?: {
                 /** @enum {string} */
                 metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                 /** @enum {string} */
@@ -9685,6 +9687,7 @@ export interface components {
                 /** @default true */
                 enabled: boolean;
             }[];
+            storage_quota_bytes?: number | null;
             is_active?: boolean;
         };
         TenantPlanViewDto: {
@@ -9712,6 +9715,7 @@ export interface components {
                     /** @default true */
                     enabled: boolean;
                 }[];
+                storage_quota_bytes: number | null;
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
