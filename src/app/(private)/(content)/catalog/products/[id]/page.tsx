@@ -120,6 +120,12 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     () => [...variantAxes].sort((a, b) => a.position - b.position).map((axis) => axis.code),
     [variantAxes],
   );
+  // La tarjeta de Atributos solo si el tipo tiene atributos de PRODUCTO: con solo ejes de variante
+  // (el tipo «Lote» de Enblanco) la sección no pinta nada y quedaba una tarjeta vacía.
+  const hasProductAttributes = useMemo(
+    () => productType?.attributes.some((attribute) => attribute.scope === "product") ?? false,
+    [productType],
+  );
 
   // F17: producto espejado de una integración — los campos gobernados se
   // muestran como valores de lectura (ocultar, no deshabilitar) y la fuente es
@@ -282,7 +288,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 />
               </div>
 
-              {productType && (
+              {productType && hasProductAttributes && (
                 <div className={CARD}>
                   <ProductAttributesSection
                     product={product}
