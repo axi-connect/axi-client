@@ -17,6 +17,7 @@ import {
   saveCmoSettings,
 } from "@/modules/cmo/infrastructure/services/cmo-service.adapter";
 import { useAxelAccessory } from "@/modules/cmo/infrastructure/hooks/use-axel-appearance";
+import { useCmoStore } from "@/modules/cmo/infrastructure/stores/cmo.store";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
@@ -46,6 +47,7 @@ const ORIGIN_LABELS: Record<string, string> = {
 export function CmoSettingsView() {
   const { hasPermission } = useAuth();
   const { showAlert } = useAlert();
+  const noteSettings = useCmoStore((state) => state.noteSettings);
   const canManage = hasPermission("cmo:approve");
 
   const [settings, setSettings] = useState<CmoSettingsDTO | null>(null);
@@ -80,7 +82,12 @@ export function CmoSettingsView() {
       // El PUT es de sección COMPLETA (el backend reemplaza, no hace merge), así
       // que se manda todo el objeto y se guarda lo que el servidor devuelve —
       // que puede haber acotado algún valor.
-      setSettings(await saveCmoSettings(next));
+      const saved = await saveCmoSettings(next);
+      setSettings(saved);
+      // Y también al store, que es de donde la isla de la cabecera lee el
+      // interruptor. Sin esto, encender a Axel aquí y volver al dashboard
+      // dejaba la isla escondida hasta recargar la página entera.
+      noteSettings(saved);
     } catch (error) {
       showAlert({ tone: "error", title: errorMessage(error) });
     } finally {

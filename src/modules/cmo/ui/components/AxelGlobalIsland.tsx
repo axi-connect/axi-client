@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { useAxelAccessory } from "@/modules/cmo/infrastructure/hooks/use-axel-appearance";
+import { useAxelEnabled } from "@/modules/cmo/infrastructure/hooks/use-axel-enabled";
 import { useAxelIsland } from "@/modules/cmo/infrastructure/hooks/use-axel-island";
 import { useCmoNewsSocket } from "@/modules/cmo/infrastructure/realtime/use-cmo-news-socket";
 import { getLatestBriefing } from "@/modules/cmo/infrastructure/services/cmo-service.adapter";
@@ -23,17 +24,24 @@ import {
  * informe del día y de cada propuesta nueva en cualquier pantalla, sin abrir
  * /cmo; «Ver» despliega el resumen o abre la propuesta.
  *
- * Tres reglas:
+ * Cuatro reglas:
  * - **En /cmo no se monta**: allí vive la isla del chat y su Axel vivo; dos
  *   Axel a la vez rompen «un solo avatar vivo por pantalla».
  * - **El avatar es quieto** (una expresión por forma, sin timers): no hay
  *   turno vivo que justifique una cara con vida fuera del despacho.
  * - **Sin permiso de Axel, nada**: la isla no existe para quien no lo ve.
+ * - **Con Axel apagado, tampoco**: el interruptor del tenant nace en `false` y
+ *   la isla lo ignoraba, así que quien nunca encendió a Axel lo veía igual en
+ *   toda la plataforma y al escribirle recibía `cmo/disabled`. La guarda va
+ *   aquí y no dentro de `GlobalIsland` porque ese abre el socket de novedades:
+ *   apagado no hay por qué abrirlo.
  */
 export function AxelGlobalIsland() {
   const pathname = usePathname();
   const { hasPermission } = useAuth();
-  if (pathname.startsWith("/cmo") || !hasPermission("cmo:read")) return null;
+  const applies = !pathname.startsWith("/cmo") && hasPermission("cmo:read");
+  const enabled = useAxelEnabled(applies);
+  if (!applies || !enabled) return null;
   return <GlobalIsland />;
 }
 

@@ -187,6 +187,17 @@ interface CmoState {
   restored: boolean;
 
   load: () => Promise<void>;
+  /**
+   * Los ajustes solos, y SOLO si nadie los ha pedido todavía.
+   *
+   * La isla de la cabecera necesita saber si Axel está encendido en cualquier
+   * pantalla, y `load()` no sirve para eso: arrastra informe, propuestas e
+   * hilos, que fuera de /cmo no se miran. Al ser perezosa, la cabecera pregunta
+   * una vez por sesión y las navegaciones siguientes no cuestan nada.
+   */
+  ensureSettings: () => Promise<void>;
+  /** Deja unos ajustes recién guardados como los vigentes (los escribe /cmo/settings). */
+  noteSettings: (data: CmoSettingsDTO) => void;
   refreshThreads: () => Promise<void>;
   /** Abre otra conversación. Ignorado mientras Axel trabaja o si ya es la actual. */
   selectThread: (threadId: string) => Promise<void>;
@@ -389,6 +400,24 @@ export const useCmoStore = create<CmoState>((set, get) => {
           set((state) => ({ restored: true, threads: failed(state.threads, errorMessage(error)) }));
         }),
     ]);
+  },
+
+  ensureSettings: async () => {
+    // Una sola vez: `idle` es «nadie preguntó». Con `loading` hay una petición
+    // en vuelo, con `ready` ya se sabe, y con `error` se decidió fallar abierta
+    // (ver `useAxelEnabled`), así que reintentar en cada navegación solo
+    // repetiría una petición que ya falló.
+    if (get().settings.status !== "idle") return;
+    set((state) => ({ settings: loading(state.settings) }));
+    try {
+      set({ settings: ready(await getCmoSettings()) });
+    } catch (error) {
+      set((state) => ({ settings: failed(state.settings, errorMessage(error)) }));
+    }
+  },
+
+  noteSettings: (data: CmoSettingsDTO) => {
+    set({ settings: ready(data) });
   },
 
   refreshThreads: async () => {
