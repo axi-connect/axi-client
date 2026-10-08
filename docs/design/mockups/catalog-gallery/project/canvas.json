@@ -1,0 +1,259 @@
+{
+ "v": 3,
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-10-08T18:00:00Z"
+ },
+ "title": "Galería del catálogo",
+ "launch": {
+  "view": "canvas"
+ },
+ "pages": [],
+ "boards": {
+  "Ficha.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 1141,
+   "title": "1 · Ficha › Fotos — una galería, la principal y sus variantes"
+  },
+  "FichaMovil.dc.html": {
+   "x": 1520,
+   "y": 0,
+   "w": 390,
+   "h": 2201,
+   "title": "1 · Ficha › Fotos — celular"
+  },
+  "FichaOscuro.dc.html": {
+   "x": 1990,
+   "y": 0,
+   "w": 1440,
+   "h": 1141,
+   "title": "1 · Ficha › Fotos — oscuro"
+  },
+  "FichaMovilOscuro.dc.html": {
+   "x": 3510,
+   "y": 0,
+   "w": 390,
+   "h": 2201,
+   "title": "1 · Ficha › Fotos — celular oscuro"
+  },
+  "UsarEnVariante.dc.html": {
+   "x": 0,
+   "y": 2621,
+   "w": 1440,
+   "h": 1240,
+   "title": "2 · Usar en variante… — popover"
+  },
+  "UsarEnVarianteMovil.dc.html": {
+   "x": 1520,
+   "y": 2621,
+   "w": 390,
+   "h": 844,
+   "title": "2 · Usar en variante… — hoja en el celular"
+  },
+  "UsarEnVarianteOscuro.dc.html": {
+   "x": 1990,
+   "y": 2621,
+   "w": 1440,
+   "h": 1240,
+   "title": "2 · Usar en variante… — oscuro"
+  },
+  "Variantes.dc.html": {
+   "x": 0,
+   "y": 4281,
+   "w": 1440,
+   "h": 1200,
+   "title": "3 · Variantes — miniatura por fila y selector de la galería"
+  },
+  "VariantesMovil.dc.html": {
+   "x": 1520,
+   "y": 4281,
+   "w": 390,
+   "h": 844,
+   "title": "3 · Variantes — selector en hoja"
+  },
+  "FiltroVariante.dc.html": {
+   "x": 1990,
+   "y": 4281,
+   "w": 1440,
+   "h": 1044,
+   "title": "3b · Tras elegir: aviso con Deshacer y filtro por variante"
+  },
+  "Subida.dc.html": {
+   "x": 0,
+   "y": 5901,
+   "w": 1440,
+   "h": 822,
+   "title": "4 · Subida — soltar, progreso por foto, reintento, tope"
+  },
+  "SubidaMovil.dc.html": {
+   "x": 1520,
+   "y": 5901,
+   "w": 390,
+   "h": 2229,
+   "title": "4 · Subida — celular («Tomar o elegir fotos»)"
+  },
+  "SubidaOscuro.dc.html": {
+   "x": 1990,
+   "y": 5901,
+   "w": 1440,
+   "h": 822,
+   "title": "4 · Subida — oscuro"
+  },
+  "Crear.dc.html": {
+   "x": 0,
+   "y": 8550,
+   "w": 1440,
+   "h": 1064,
+   "title": "5 · Crear producto — paso Fotos sin URL"
+  },
+  "CrearMovil.dc.html": {
+   "x": 1520,
+   "y": 8550,
+   "w": 390,
+   "h": 1620,
+   "title": "5 · Crear producto — celular"
+  },
+  "ListadoTabla.dc.html": {
+   "x": 0,
+   "y": 10590,
+   "w": 1440,
+   "h": 553,
+   "title": "6 · Listado — tabla con la principal"
+  },
+  "ListadoTarjetas.dc.html": {
+   "x": 1520,
+   "y": 10590,
+   "w": 1440,
+   "h": 544,
+   "title": "6b · Listado — tarjetas con la principal"
+  },
+  "ListadoMovil.dc.html": {
+   "x": 3040,
+   "y": 10590,
+   "w": 390,
+   "h": 2005,
+   "title": "6b · Listado — celular"
+  },
+  "ListadoOscuro.dc.html": {
+   "x": 3510,
+   "y": 10590,
+   "w": 1440,
+   "h": 553,
+   "title": "6 · Listado — oscuro"
+  },
+  "Estados.dc.html": {
+   "x": 0,
+   "y": 13015,
+   "w": 1440,
+   "h": 1214,
+   "title": "7 · Estados — vacía, importándose, Shopify, borrar la principal, cabecera"
+  },
+  "EstadosOscuro.dc.html": {
+   "x": 1520,
+   "y": 13015,
+   "w": 1440,
+   "h": 1214,
+   "title": "7 · Estados — oscuro"
+  },
+  "EstadosMovil.dc.html": {
+   "x": 3040,
+   "y": 13015,
+   "w": 390,
+   "h": 2646,
+   "title": "7 · Estados — celular"
+  },
+  "FichaAnilloCoral.dc.html": {
+   "x": 0,
+   "y": 16081,
+   "w": 1440,
+   "h": 1141,
+   "title": "Comparación · la principal con anillo coral"
+  }
+ },
+ "order": [
+  "Ficha.dc.html",
+  "FichaMovil.dc.html",
+  "FichaOscuro.dc.html",
+  "FichaMovilOscuro.dc.html",
+  "UsarEnVariante.dc.html",
+  "UsarEnVarianteMovil.dc.html",
+  "UsarEnVarianteOscuro.dc.html",
+  "Variantes.dc.html",
+  "VariantesMovil.dc.html",
+  "FiltroVariante.dc.html",
+  "Subida.dc.html",
+  "SubidaMovil.dc.html",
+  "SubidaOscuro.dc.html",
+  "Crear.dc.html",
+  "CrearMovil.dc.html",
+  "ListadoTabla.dc.html",
+  "ListadoTarjetas.dc.html",
+  "ListadoMovil.dc.html",
+  "ListadoOscuro.dc.html",
+  "Estados.dc.html",
+  "EstadosOscuro.dc.html",
+  "EstadosMovil.dc.html",
+  "FichaAnilloCoral.dc.html"
+ ],
+ "notes": {
+  "row0": {
+   "x": 0,
+   "y": -300,
+   "text": "La galería en la ficha",
+   "kind": "title1",
+   "maxW": 4000
+  },
+  "row1": {
+   "x": 0,
+   "y": 2321,
+   "text": "Usar una foto en variantes",
+   "kind": "title1",
+   "maxW": 4000
+  },
+  "row2": {
+   "x": 0,
+   "y": 3981,
+   "text": "La principal de cada variante",
+   "kind": "title1",
+   "maxW": 4000
+  },
+  "row3": {
+   "x": 0,
+   "y": 5601,
+   "text": "Subir fotos",
+   "kind": "title1",
+   "maxW": 4000
+  },
+  "row4": {
+   "x": 0,
+   "y": 8250,
+   "text": "Crear producto",
+   "kind": "title1",
+   "maxW": 4000
+  },
+  "row5": {
+   "x": 0,
+   "y": 10290,
+   "text": "El listado",
+   "kind": "title1",
+   "maxW": 4000
+  },
+  "row6": {
+   "x": 0,
+   "y": 12715,
+   "text": "Estados",
+   "kind": "title1",
+   "maxW": 4000
+  },
+  "row7": {
+   "x": 0,
+   "y": 15781,
+   "text": "Comparación del anillo",
+   "kind": "title1",
+   "maxW": 4000
+  }
+ },
+ "designSystems": []
+}

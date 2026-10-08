@@ -1,0 +1,24 @@
+{
+ "1440": {
+  "ficha": 1141,
+  "usar": 1240,
+  "variantes": 1200,
+  "filtro": 1044,
+  "subida": 822,
+  "crear": 1064,
+  "tabla": 553,
+  "tarjetas": 544,
+  "estados": 1214
+ },
+ "390": {
+  "ficha": 2201,
+  "usar": 844,
+  "variantes": 844,
+  "filtro": 1985,
+  "subida": 2229,
+  "crear": 1620,
+  "tabla": 754,
+  "tarjetas": 2005,
+  "estados": 2646
+ }
+}
