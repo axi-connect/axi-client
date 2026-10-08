@@ -27,7 +27,16 @@ import {
 } from "../../../domain/storage";
 import { usePurgeOptions, useTenantStorage } from "../../../infrastructure/api/hooks/use-storage";
 import { usePlatformRole } from "../../../infrastructure/auth/use-platform-role";
-import { LegendRow, ORIGIN_SWATCH, OriginBar, Provenance, Sparkline, StorageMeter, TileFailure, TileLoading } from "./parts";
+import {
+  LegendRow,
+  ORIGIN_SWATCH,
+  OriginBar,
+  Provenance,
+  Sparkline,
+  StorageMeter,
+  TileFailure,
+  TileLoading,
+} from "./parts";
 import { PurgePanel } from "./PurgePanel";
 import { PurgeRunsCard } from "./PurgeRunsCard";
 import { QuotaSheet } from "./QuotaSheet";
@@ -43,13 +52,30 @@ const KIND_ICONS: Record<PanelKind, React.ComponentType<{ className?: string }>>
   imports: FileSpreadsheet,
 };
 
-function UsageTile({ storage, onQuota, onPurge, canEdit }: { storage: TenantStorage; onQuota: () => void; onPurge: () => void; canEdit: boolean }) {
+function UsageTile({
+  storage,
+  onQuota,
+  onPurge,
+  canEdit,
+}: {
+  storage: TenantStorage;
+  onQuota: () => void;
+  onPurge: () => void;
+  canEdit: boolean;
+}) {
   const state = STATE_LABELS[storage.state];
   const unlimited = storage.quota_bytes === null;
   const figure = unlimited ? bytesFigure(storage.used_bytes) : bytesFigure(storage.used_bytes);
   return (
-    <BentoTile label={`Espacio de ${storage.name}`} className="md:col-span-2" aside={<StatePill tone={state.tone}>{state.label}</StatePill>}>
-      <BentoFigure value={figure.value} unit={unlimited ? `${figure.unit} ocupados` : `${figure.unit} de ${formatBytes(storage.quota_bytes)}`} />
+    <BentoTile
+      label={`Espacio de ${storage.name}`}
+      className="md:col-span-2"
+      aside={<StatePill tone={state.tone}>{state.label}</StatePill>}
+    >
+      <BentoFigure
+        value={figure.value}
+        unit={unlimited ? `${figure.unit} ocupados` : `${figure.unit} de ${formatBytes(storage.quota_bytes)}`}
+      />
       {unlimited ? null : (
         <>
           <StorageMeter pct={storage.pct_used} tone={meterTone(storage.state)} label="Uso de la cuota" />
@@ -62,13 +88,18 @@ function UsageTile({ storage, onQuota, onPurge, canEdit }: { storage: TenantStor
       <p className="text-sm text-pretty text-muted-foreground">
         {storage.state === "full" ? (
           <>
-            Las subidas de su equipo están en pausa. <span className="font-medium text-foreground">Los mensajes de sus clientes siguen llegando completos</span> y cuentan en el espacio.
+            Las subidas de su equipo están en pausa.{" "}
+            <span className="font-medium text-foreground">Los mensajes de sus clientes siguen llegando completos</span>{" "}
+            y cuentan en el espacio.
           </>
         ) : unlimited ? (
           "Su plan no fija cuota: nada se pausa por espacio."
         ) : (
           <>
-            Le quedan <span className="font-medium text-foreground">{formatBytes(Math.max(0, (storage.quota_bytes ?? 0) - storage.used_bytes))}</span>
+            Le quedan{" "}
+            <span className="font-medium text-foreground">
+              {formatBytes(Math.max(0, (storage.quota_bytes ?? 0) - storage.used_bytes))}
+            </span>
             {storage.growth.days_to_full !== null ? ` · a su ritmo, ${humanDays(storage.growth.days_to_full)}` : ""}.
           </>
         )}
@@ -95,10 +126,16 @@ function GrowthTile({ storage }: { storage: TenantStorage }) {
   return (
     <BentoTile label="Crecimiento">
       {perMonth === null ? (
-        <p className="text-sm text-pretty text-muted-foreground">Estamos aprendiendo su ritmo: con unos días de fotos diarias habrá tendencia.</p>
+        <p className="text-sm text-pretty text-muted-foreground">
+          Estamos aprendiendo su ritmo: con unos días de fotos diarias habrá tendencia.
+        </p>
       ) : (
         <>
-          <BentoFigure size="md" value={`${perMonth >= 0 ? "+" : "−"}${bytesFigure(Math.abs(perMonth)).value}`} unit={`${bytesFigure(Math.abs(perMonth)).unit} al mes`} />
+          <BentoFigure
+            size="md"
+            value={`${perMonth >= 0 ? "+" : "−"}${bytesFigure(Math.abs(perMonth)).value}`}
+            unit={`${bytesFigure(Math.abs(perMonth)).unit} al mes`}
+          />
           <Sparkline points={points} />
         </>
       )}
@@ -111,7 +148,11 @@ function BreakdownTile({ storage }: { storage: TenantStorage }) {
   const origins = byOrigin(storage.by_category);
   const rows = storage.by_category.filter((row) => row.origin !== "platform");
   return (
-    <BentoTile label="En qué se va" className="md:col-span-2" aside={<span className="text-xs text-muted-foreground">Clientes · Equipo · Sistema</span>}>
+    <BentoTile
+      label="En qué se va"
+      className="md:col-span-2"
+      aside={<span className="text-xs text-muted-foreground">Clientes · Equipo · Sistema</span>}
+    >
       <OriginBar parts={origins} />
       {rows.length === 0 ? (
         <p className="text-sm text-muted-foreground">Aún no hay archivos. Se mide desde el primer mensaje con foto.</p>
@@ -120,7 +161,9 @@ function BreakdownTile({ storage }: { storage: TenantStorage }) {
           {rows.map((row) => (
             <LegendRow
               key={row.category}
-              swatch={ORIGIN_SWATCH[(CATEGORY_LABELS[row.category]?.origin ?? row.origin) as "customer" | "team" | "system"]}
+              swatch={
+                ORIGIN_SWATCH[(CATEGORY_LABELS[row.category]?.origin ?? row.origin) as "customer" | "team" | "system"]
+              }
               title={categoryLabel(row.category)}
               hint={`${new Intl.NumberFormat("es-CO").format(row.objects)} ${row.objects === 1 ? "archivo" : "archivos"}`}
               value={formatBytes(row.bytes)}
@@ -156,7 +199,13 @@ function NextIsland({
       </h2>
       {media !== undefined && media.up_to_bytes > 0 ? (
         <div className="grid grid-cols-[10px_minmax(0,1fr)] gap-2.5 border-t border-current/10 py-3">
-          <span aria-hidden="true" className={cn("mt-1.5 size-2 rounded-full", storage.state === "full" ? "bg-destructive" : urgent ? "bg-warning" : "bg-muted-foreground")} />
+          <span
+            aria-hidden="true"
+            className={cn(
+              "mt-1.5 size-2 rounded-full",
+              storage.state === "full" ? "bg-destructive" : urgent ? "bg-warning" : "bg-muted-foreground",
+            )}
+          />
           <div>
             <p className="text-sm font-semibold">Hasta {formatBytes(media.up_to_bytes)} en media de chats</p>
             <p className="text-xs opacity-75">La vista previa dice cuánto de eso es viejo y qué se conserva.</p>
@@ -183,7 +232,13 @@ function NextIsland({
       ) : null}
       {canEdit ? (
         <div className="mt-1 flex flex-wrap gap-2">
-          <Button type="button" variant="contrast" size="sm" className="rounded-full" onClick={() => onPreview("conversation_media")}>
+          <Button
+            type="button"
+            variant="contrast"
+            size="sm"
+            className="rounded-full"
+            onClick={() => onPreview("conversation_media")}
+          >
             Ver vista previa
           </Button>
           <Button type="button" variant="glass" size="sm" onClick={onQuota}>
@@ -195,7 +250,15 @@ function NextIsland({
   );
 }
 
-function PurgeCards({ options, active, onPick }: { options: PurgeOption[] | undefined; active: PanelKind | null; onPick: (kind: PanelKind) => void }) {
+function PurgeCards({
+  options,
+  active,
+  onPick,
+}: {
+  options: PurgeOption[] | undefined;
+  active: PanelKind | null;
+  onPick: (kind: PanelKind) => void;
+}) {
   return (
     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
       {PURGE_KINDS.map((item) => {
@@ -221,9 +284,16 @@ function PurgeCards({ options, active, onPick }: { options: PurgeOption[] | unde
               {option === undefined ? (
                 <span className="text-muted-foreground">…</span>
               ) : item.kind === "large_files" ? (
-                <>Los más pesados de <span className="font-medium">{new Intl.NumberFormat("es-CO").format(option.files)}</span></>
+                <>
+                  Los más pesados de{" "}
+                  <span className="font-medium">{new Intl.NumberFormat("es-CO").format(option.files)}</span>
+                </>
+              ) : option.up_to_bytes === 0 ? (
+                <span className="text-muted-foreground">Nada que liberar</span>
               ) : (
-                <>Recuperable: <span className="font-medium">hasta {formatBytes(option.up_to_bytes)}</span></>
+                <>
+                  Recuperable: <span className="font-medium">hasta {formatBytes(option.up_to_bytes)}</span>
+                </>
               )}
             </span>
           </button>
@@ -263,26 +333,46 @@ export function TenantStorageView({ tenantId }: { tenantId: string }) {
     options.data === undefined
       ? null
       : options.data
-          .filter((option) => option.kind === "conversation_media" || option.kind === "call_recordings" || option.kind === "imports")
+          .filter(
+            (option) =>
+              option.kind === "conversation_media" || option.kind === "call_recordings" || option.kind === "imports",
+          )
           .reduce((sum, option) => sum + option.up_to_bytes, 0);
 
   return (
     <div className="flex flex-col gap-5">
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <UsageTile storage={data} canEdit={canEdit} onQuota={() => setQuotaOpen(true)} onPurge={() => openPanel("conversation_media")} />
+        <UsageTile
+          storage={data}
+          canEdit={canEdit}
+          onQuota={() => setQuotaOpen(true)}
+          onPurge={() => openPanel("conversation_media")}
+        />
         <GrowthTile storage={data} />
         <BreakdownTile storage={data} />
-        <NextIsland storage={data} options={options.data} canEdit={canEdit} onPreview={openPanel} onQuota={() => setQuotaOpen(true)} />
+        <NextIsland
+          storage={data}
+          options={options.data}
+          canEdit={canEdit}
+          onPreview={openPanel}
+          onQuota={() => setQuotaOpen(true)}
+        />
       </div>
 
       {canEdit ? (
         <section ref={purgeRef} aria-labelledby="purge-title" className="flex scroll-mt-4 flex-col gap-3">
           <div>
-            <h2 id="purge-title" className="font-sans text-[17px] font-semibold tracking-tight">Depurar</h2>
-            <p className="text-sm text-muted-foreground">Lo que se borra aquí se borra ya. Antes verás cuánto liberas y qué se conserva.</p>
+            <h2 id="purge-title" className="font-sans text-[17px] font-semibold tracking-tight">
+              Depurar
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Lo que se borra aquí se borra ya. Antes verás cuánto liberas y qué se conserva.
+            </p>
           </div>
           <PurgeCards options={options.data} active={panel} onPick={openPanel} />
-          {panel !== null ? <PurgePanel key={panel} kind={panel} storage={data} onClose={() => setPanel(null)} /> : null}
+          {panel !== null ? (
+            <PurgePanel key={panel} kind={panel} storage={data} onClose={() => setPanel(null)} />
+          ) : null}
         </section>
       ) : null}
 

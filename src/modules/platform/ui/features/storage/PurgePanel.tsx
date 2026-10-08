@@ -42,6 +42,12 @@ import {
 } from "../../../infrastructure/api/hooks/use-storage";
 import { StorageMeter } from "./parts";
 
+const SHORT_DATE = new Intl.DateTimeFormat("es-CO", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+});
+
 function Chip({ pressed, onClick, children }: { pressed: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button
@@ -105,21 +111,31 @@ function LargeFilesPicker({
   onToggle: (key: string) => void;
 }) {
   const [age, setAge] = useState<number | undefined>(undefined);
-  const query = useLargeFiles(tenantId, { older_than_days: age, limit: 50, offset: 0 });
+  const query = useLargeFiles(tenantId, {
+    older_than_days: age,
+    limit: 50,
+    offset: 0,
+  });
   const rows = query.data ?? [];
   return (
     <div className="flex flex-col gap-3">
       <Field label="Más antiguos que">
-        <Chip pressed={age === undefined} onClick={() => setAge(undefined)}>Todos</Chip>
+        <Chip pressed={age === undefined} onClick={() => setAge(undefined)}>
+          Todos
+        </Chip>
         {AGE_OPTIONS.map((option) => (
-          <Chip key={option.days} pressed={age === option.days} onClick={() => setAge(option.days)}>{option.label}</Chip>
+          <Chip key={option.days} pressed={age === option.days} onClick={() => setAge(option.days)}>
+            {option.label}
+          </Chip>
         ))}
       </Field>
       <div className="@container axi-scroll overflow-x-auto rounded-2xl border border-border">
         <Table className="min-w-[640px]">
           <TableHeader>
             <TableRow>
-              <TableHead className="w-10 pl-4"><span className="sr-only">Elegir</span></TableHead>
+              <TableHead className="w-10 pl-4">
+                <span className="sr-only">Elegir</span>
+              </TableHead>
               <TableHead>Archivo</TableHead>
               <TableHead className="hidden @xl:table-cell">Otros usos</TableHead>
               <TableHead className="text-right">Tamaño</TableHead>
@@ -132,14 +148,16 @@ function LargeFilesPicker({
               return (
                 <TableRow key={row.key} data-state={selected.has(row.key) ? "selected" : undefined}>
                   <TableCell className="pl-4">
-                    <input
-                      type="checkbox"
-                      className="size-4 accent-foreground"
-                      checked={selected.has(row.key)}
-                      disabled={locked}
-                      onChange={() => onToggle(row.key)}
-                      aria-label={`Elegir ${row.key.split("/").pop() ?? row.key}`}
-                    />
+                    <label className="-m-1 grid size-8 cursor-pointer place-items-center rounded-lg hover:bg-muted">
+                      <input
+                        type="checkbox"
+                        className="size-4 accent-foreground"
+                        checked={selected.has(row.key)}
+                        disabled={locked}
+                        onChange={() => onToggle(row.key)}
+                        aria-label={`Elegir ${row.key.split("/").pop() ?? row.key}`}
+                      />
+                    </label>
                   </TableCell>
                   <TableCell className="max-w-[320px]">
                     <div className="flex min-w-0 items-center gap-3">
@@ -149,7 +167,7 @@ function LargeFilesPicker({
                       <span className="min-w-0">
                         <span className="block truncate font-medium">{categoryLabel(row.category)}</span>
                         <span className="block text-xs text-muted-foreground">
-                          {new Intl.DateTimeFormat("es-CO", { dateStyle: "medium" }).format(new Date(row.created_at))}
+                          {SHORT_DATE.format(new Date(row.created_at))}
                         </span>
                       </span>
                     </div>
@@ -157,20 +175,28 @@ function LargeFilesPicker({
                   <TableCell className="hidden text-xs text-muted-foreground @xl:table-cell">
                     {locked ? (
                       <span className="inline-flex items-center gap-1.5">
-                        {row.kept_reason === "evidence" ? <Receipt className="size-3" aria-hidden="true" /> : <Link2 className="size-3" aria-hidden="true" />}
+                        {row.kept_reason === "evidence" ? (
+                          <Receipt className="size-3" aria-hidden="true" />
+                        ) : (
+                          <Link2 className="size-3" aria-hidden="true" />
+                        )}
                         {row.kept_reason === "evidence" ? "Evidencia: se conserva" : "En uso: se conserva"}
                       </span>
                     ) : (
                       usesLabel(row.references)
                     )}
                   </TableCell>
-                  <TableCell className="text-right font-medium tabular-nums whitespace-nowrap">{formatBytes(row.size_bytes)}</TableCell>
+                  <TableCell className="text-right font-medium tabular-nums whitespace-nowrap">
+                    {formatBytes(row.size_bytes)}
+                  </TableCell>
                 </TableRow>
               );
             })}
             {rows.length === 0 && !query.isPending ? (
               <TableRow>
-                <TableCell colSpan={4} className="py-8 text-center text-sm text-muted-foreground">No hay archivos con ese filtro.</TableCell>
+                <TableCell colSpan={4} className="py-8 text-center text-sm text-muted-foreground">
+                  No hay archivos con ese filtro.
+                </TableCell>
               </TableRow>
             ) : null}
           </TableBody>
@@ -208,7 +234,10 @@ function ConfirmPurgeDialog({
     if (!finished || run.data === undefined) return;
     showAlert({
       tone: run.data.status === "done" ? "success" : "error",
-      title: run.data.status === "done" ? `Liberamos ${formatBytes(run.data.freed_bytes)}` : "La depuración terminó con fallos",
+      title:
+        run.data.status === "done"
+          ? `Liberamos ${formatBytes(run.data.freed_bytes)}`
+          : "La depuración terminó con fallos",
       description:
         run.data.status === "done"
           ? `${files(run.data.deleted_files)} eliminados de ${tenantName}.`
@@ -222,9 +251,19 @@ function ConfirmPurgeDialog({
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     try {
-      setRunId(await execute.mutateAsync({ preview_id: preview.preview_id, confirm_phrase: phrase, password }));
+      setRunId(
+        await execute.mutateAsync({
+          preview_id: preview.preview_id,
+          confirm_phrase: phrase,
+          password,
+        }),
+      );
     } catch (error) {
-      showAlert({ tone: "error", title: "No se ejecutó la depuración", description: errorMessage(error) });
+      showAlert({
+        tone: "error",
+        title: "No se ejecutó la depuración",
+        description: errorMessage(error),
+      });
     }
   }
 
@@ -233,9 +272,12 @@ function ConfirmPurgeDialog({
     <Dialog open={open} onOpenChange={(next) => (!running ? onOpenChange(next) : undefined)}>
       <DialogContent className="max-w-lg rounded-3xl">
         <DialogHeader>
-          <DialogTitle>Eliminar {formatBytes(preview.bytes)} de {tenantName}</DialogTitle>
+          <DialogTitle>
+            Eliminar {formatBytes(preview.bytes)} de {tenantName}
+          </DialogTitle>
           <DialogDescription>
-            Se borran ya {files(preview.files)}. Los mensajes quedan con «Archivo eliminado». No hay papelera ni forma de recuperarlos.
+            Se borran ya {files(preview.files)}. Los mensajes quedan con «Archivo eliminado». No hay papelera ni forma
+            de recuperarlos.
           </DialogDescription>
         </DialogHeader>
         <div className="grid grid-cols-3 gap-2">
@@ -264,7 +306,9 @@ function ConfirmPurgeDialog({
             </p>
             {finished ? (
               <div className="flex justify-end">
-                <Button type="button" className="rounded-full" onClick={() => onOpenChange(false)}>Cerrar</Button>
+                <Button type="button" className="rounded-full" onClick={() => onOpenChange(false)}>
+                  Cerrar
+                </Button>
               </div>
             ) : null}
           </div>
@@ -274,14 +318,27 @@ function ConfirmPurgeDialog({
               <Label htmlFor="purge-phrase">
                 Escribe <span className="font-mono text-[13px]">{preview.confirm_phrase}</span> para confirmar
               </Label>
-              <Input id="purge-phrase" autoComplete="off" value={phrase} onChange={(event) => setPhrase(event.target.value)} />
+              <Input
+                id="purge-phrase"
+                autoComplete="off"
+                value={phrase}
+                onChange={(event) => setPhrase(event.target.value)}
+              />
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="purge-password">Tu contraseña</Label>
-              <Input id="purge-password" type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} />
+              <Input
+                id="purge-password"
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+              />
             </div>
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" className="rounded-full" onClick={() => onOpenChange(false)}>Cancelar</Button>
+              <Button type="button" variant="outline" className="rounded-full" onClick={() => onOpenChange(false)}>
+                Cancelar
+              </Button>
               <Button
                 type="submit"
                 variant="destructive"
@@ -345,7 +402,14 @@ export function PurgePanel({
         label={PURGE_KIND_TITLES[kind] ?? kind}
         className="gap-5"
         aside={
-          <Button type="button" variant="ghost" size="icon" className="size-8 rounded-full" aria-label="Cerrar depuración" onClick={onClose}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="size-8 rounded-full"
+            aria-label="Cerrar depuración"
+            onClick={onClose}
+          >
             <X className="size-4" aria-hidden="true" />
           </Button>
         }
@@ -354,23 +418,33 @@ export function PurgePanel({
           <div className="grid gap-4 md:grid-cols-3">
             <Field label="Tipo">
               {MIME_CLASSES.map((value) => (
-                <Chip key={value} pressed={classes.includes(value)} onClick={() => toggle(value)}>{MIME_CLASS_LABELS[value]}</Chip>
+                <Chip key={value} pressed={classes.includes(value)} onClick={() => toggle(value)}>
+                  {MIME_CLASS_LABELS[value]}
+                </Chip>
               ))}
             </Field>
             <Field label="Más antiguos que">
               {AGE_OPTIONS.map((option) => (
-                <Chip key={option.days} pressed={age === option.days} onClick={() => setAge(option.days)}>{option.label}</Chip>
+                <Chip key={option.days} pressed={age === option.days} onClick={() => setAge(option.days)}>
+                  {option.label}
+                </Chip>
               ))}
             </Field>
             <Field label="De">
-              <Chip pressed={origin === "customer"} onClick={() => setOrigin("customer")}>Clientes</Chip>
-              <Chip pressed={origin === "team"} onClick={() => setOrigin("team")}>Equipo</Chip>
+              <Chip pressed={origin === "customer"} onClick={() => setOrigin("customer")}>
+                Clientes
+              </Chip>
+              <Chip pressed={origin === "team"} onClick={() => setOrigin("team")}>
+                Equipo
+              </Chip>
             </Field>
           </div>
         ) : kind === "call_recordings" || kind === "imports" ? (
           <Field label="Más antiguos que">
             {[{ days: 30, label: "30 días" }, ...AGE_OPTIONS].map((option) => (
-              <Chip key={option.days} pressed={age === option.days} onClick={() => setAge(option.days)}>{option.label}</Chip>
+              <Chip key={option.days} pressed={age === option.days} onClick={() => setAge(option.days)}>
+                {option.label}
+              </Chip>
             ))}
           </Field>
         ) : kind === "large_files" ? (
@@ -387,32 +461,47 @@ export function PurgePanel({
             }
           />
         ) : (
-          <p className="text-sm text-muted-foreground">Lo que el equipo ya borró del catálogo y de los recursos. Si un mensaje enviado lo usa, se conserva.</p>
+          <p className="text-sm text-muted-foreground">
+            Lo que el equipo ya borró del catálogo y de los recursos. Si un mensaje enviado lo usa, se conserva.
+          </p>
         )}
 
         {preview.isError ? (
-          <p className="text-sm text-muted-foreground">No pudimos calcular la vista previa: {errorMessage(preview.error)}</p>
+          <p className="text-sm text-muted-foreground">
+            No pudimos calcular la vista previa: {errorMessage(preview.error)}
+          </p>
         ) : result === null ? (
-          kind === "large_files" ? <p className="text-sm text-muted-foreground">Elige los archivos que quieres eliminar.</p> : null
+          kind === "large_files" ? (
+            <p className="text-sm text-muted-foreground">Elige los archivos que quieres eliminar.</p>
+          ) : null
         ) : (
-          <div className={cn("grid gap-5 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]", preview.isPending && "opacity-60")} aria-busy={preview.isPending}>
+          <div
+            className={cn("grid gap-5 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]", preview.isPending && "opacity-60")}
+            aria-busy={preview.isPending}
+          >
             <div className="flex min-w-0 flex-col gap-3">
-              <BentoFigure value={bytesFigure(result.bytes).value} unit={`${bytesFigure(result.bytes).unit} en ${files(result.files)}`} />
+              <BentoFigure
+                value={bytesFigure(result.bytes).value}
+                unit={`${bytesFigure(result.bytes).unit} en ${files(result.files)}`}
+              />
               {after !== null && storage.quota_bytes !== null ? (
                 <>
                   <StorageMeter pct={(after / storage.quota_bytes) * 100} label="Espacio después de depurar" />
                   <p className="text-sm text-muted-foreground">
-                    {storage.name} pasaría de <span className="font-medium text-foreground">{formatBytes(storage.used_bytes)}</span> a{" "}
+                    {storage.name} pasaría de{" "}
+                    <span className="font-medium text-foreground">{formatBytes(storage.used_bytes)}</span> a{" "}
                     <span className="font-medium text-foreground">{formatBytes(after)}</span>
-                    {storage.blocks_uploads && after < storage.quota_bytes ? " y su equipo podría volver a subir archivos." : "."}
+                    {storage.blocks_uploads && after < storage.quota_bytes
+                      ? " y su equipo podría volver a subir archivos."
+                      : "."}
                   </p>
                 </>
               ) : null}
               {result.sample.length > 0 ? (
                 <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <CalendarDays className="size-3" aria-hidden="true" />
-                  Del {new Intl.DateTimeFormat("es-CO", { dateStyle: "medium" }).format(new Date(result.sample[result.sample.length - 1].created_at))} al{" "}
-                  {new Intl.DateTimeFormat("es-CO", { dateStyle: "medium" }).format(new Date(result.sample[0].created_at))} (muestra de los más pesados)
+                  Del {SHORT_DATE.format(new Date(result.sample[result.sample.length - 1].created_at))} al{" "}
+                  {SHORT_DATE.format(new Date(result.sample[0].created_at))} (muestra de los más pesados)
                 </p>
               ) : null}
             </div>
@@ -426,7 +515,9 @@ export function PurgePanel({
                 ) : null,
               )}
               {kind === "conversation_media" || kind === "large_files" ? (
-                <p className="text-pretty text-muted-foreground">Los mensajes no se borran: cada archivo queda como «Archivo eliminado».</p>
+                <p className="text-pretty text-muted-foreground">
+                  Los mensajes no se borran: cada archivo queda como «Archivo eliminado».
+                </p>
               ) : null}
               {result.kept.shared.files + result.kept.in_use.files + result.kept.evidence.files === 0 ? (
                 <p className="text-muted-foreground">Nada: todo lo elegido se puede borrar.</p>
@@ -445,12 +536,22 @@ export function PurgePanel({
           className="sticky bottom-3 z-10 flex flex-wrap items-center justify-between gap-3 rounded-3xl p-3 pl-5 shadow-[var(--shadow-overlay)]"
         >
           <div className="min-w-0 text-sm">
-            <p className="font-semibold">Eliminar {formatBytes(result.bytes)} · {files(result.files)}</p>
+            <p className="font-semibold">
+              Eliminar {formatBytes(result.bytes)} · {files(result.files)}
+            </p>
             <p className="text-xs opacity-75">Es inmediato y no se puede deshacer.</p>
           </div>
           <div className="flex gap-2">
-            <Button type="button" variant="glass" size="sm" onClick={onClose}>Cancelar</Button>
-            <Button type="button" variant="destructive" size="sm" className="rounded-full" onClick={() => setConfirming(true)}>
+            <Button type="button" variant="glass" size="sm" onClick={onClose}>
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              className="rounded-full"
+              onClick={() => setConfirming(true)}
+            >
               Eliminar {formatBytes(result.bytes)}
             </Button>
           </div>

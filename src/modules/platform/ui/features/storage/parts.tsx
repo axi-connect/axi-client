@@ -32,7 +32,11 @@ export function StorageMeter({
   className?: string;
 }) {
   const width = pct === null ? 0 : Math.max(0, Math.min(100, pct));
-  const fill = { default: "bg-foreground", warning: "bg-warning", destructive: "bg-destructive" }[tone];
+  const fill = {
+    default: "bg-foreground",
+    warning: "bg-warning",
+    destructive: "bg-destructive",
+  }[tone];
   return (
     <div
       role="progressbar"
@@ -42,7 +46,10 @@ export function StorageMeter({
       aria-valuemax={100}
       className={cn("relative h-2 w-full rounded-full bg-muted", className)}
     >
-      <span className={cn("absolute inset-y-0 left-0 rounded-full transition-[width] duration-300", fill)} style={{ width: `${String(width)}%` }} />
+      <span
+        className={cn("absolute inset-y-0 left-0 rounded-full transition-[width] duration-300", fill)}
+        style={{ width: `${String(width)}%` }}
+      />
       {showMark ? (
         <span
           aria-hidden="true"
@@ -54,13 +61,23 @@ export function StorageMeter({
   );
 }
 
-export function OriginBar({ parts, className }: { parts: { origin: StorageOrigin; pct: number }[]; className?: string }) {
+export function OriginBar({
+  parts,
+  className,
+}: {
+  parts: { origin: StorageOrigin; pct: number }[];
+  className?: string;
+}) {
   return (
     <div aria-hidden="true" className={cn("flex h-2.5 gap-0.5 overflow-hidden rounded-full bg-muted", className)}>
       {parts
         .filter((part) => part.pct > 0)
         .map((part) => (
-          <span key={part.origin} className={cn("h-full", ORIGIN_SWATCH[part.origin])} style={{ width: `${String(part.pct)}%` }} />
+          <span
+            key={part.origin}
+            className={cn("h-full", ORIGIN_SWATCH[part.origin])}
+            style={{ width: `${String(part.pct)}%` }}
+          />
         ))}
     </div>
   );
@@ -119,10 +136,15 @@ export function Sparkline({
   const width = 300;
   const height = 56;
   const all = [...points, ...(projection ?? [])];
-  const max = Math.max(...all) * 1.08 || 1;
+  // Dominio ajustado a los datos (con aire): desde 0 una serie de 230→312 GB se vería plana
+  const low = Math.min(...all);
+  const high = Math.max(...all);
+  const pad = (high - low) * 0.15 || high * 0.05 || 1;
+  const min = Math.max(0, low - pad);
+  const max = high + pad;
   const total = points.length + (projection === undefined ? 0 : projection.length - 1);
   const x = (index: number) => (index * width) / Math.max(1, total - 1);
-  const y = (value: number) => height - (value / max) * height;
+  const y = (value: number) => height - ((value - min) / (max - min)) * height;
   const line = points.map((value, index) => `${x(index).toFixed(1)},${y(value).toFixed(1)}`).join(" ");
   const area = `0,${String(height)} ${line} ${x(points.length - 1).toFixed(1)},${String(height)}`;
   const projected =
@@ -130,9 +152,19 @@ export function Sparkline({
       ? null
       : projection.map((value, index) => `${x(points.length - 1 + index).toFixed(1)},${y(value).toFixed(1)}`).join(" ");
   return (
-    <svg viewBox={`0 0 ${String(width)} ${String(height)}`} preserveAspectRatio="none" aria-hidden="true" className={cn("block h-14 w-full", className)}>
+    <svg
+      viewBox={`0 0 ${String(width)} ${String(height)}`}
+      preserveAspectRatio="none"
+      aria-hidden="true"
+      className={cn("block h-14 w-full", className)}
+    >
       <polygon points={area} className="fill-foreground/[0.06]" />
-      <polyline points={line} className="fill-none stroke-foreground" strokeWidth={1.6} vectorEffect="non-scaling-stroke" />
+      <polyline
+        points={line}
+        className="fill-none stroke-foreground"
+        strokeWidth={1.6}
+        vectorEffect="non-scaling-stroke"
+      />
       {projected === null ? null : (
         <polyline
           points={projected}
@@ -147,7 +179,13 @@ export function Sparkline({
 }
 
 /** Una línea de procedencia: de dónde sale la cifra, al lado de la cifra. */
-export function Provenance({ icon: Icon, children }: { icon: React.ComponentType<{ className?: string }>; children: React.ReactNode }) {
+export function Provenance({
+  icon: Icon,
+  children,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  children: React.ReactNode;
+}) {
   return (
     <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
       <Icon aria-hidden="true" className="size-3 shrink-0" />
@@ -171,7 +209,11 @@ export function TileFailure({ label, onRetry, className }: { label: string; onRe
 
 export function TileLoading({ className }: { className?: string }) {
   return (
-    <div className={cn("flex flex-col gap-3 rounded-3xl border border-border p-5", className)} role="status" aria-label="Cargando">
+    <div
+      className={cn("flex flex-col gap-3 rounded-3xl border border-border p-5", className)}
+      role="status"
+      aria-label="Cargando"
+    >
       <Skeleton className="h-3 w-28" />
       <Skeleton className="h-9 w-2/3" />
       <Skeleton className="h-2 w-full" />

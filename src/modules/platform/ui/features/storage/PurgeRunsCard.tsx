@@ -26,8 +26,13 @@ export function PurgeRunsCard({ tenantId }: { tenantId: string }) {
   if (query.isError) return <TileFailure label="Historial de depuración" onRetry={() => void query.refetch()} />;
   const runs = query.data ?? [];
   return (
-    <section className="@container min-w-0 overflow-hidden rounded-3xl border border-border bg-card" aria-label="Historial de depuración">
-      <h2 className="border-b border-border/60 px-5 py-4 font-sans text-[15px] font-semibold tracking-normal">Historial de depuración</h2>
+    <section
+      className="@container min-w-0 overflow-hidden rounded-3xl border border-border bg-card"
+      aria-label="Historial de depuración"
+    >
+      <h2 className="border-b border-border/60 px-5 py-4 font-sans text-[15px] font-semibold tracking-normal">
+        Historial de depuración
+      </h2>
       {runs.length === 0 && !query.isPending ? (
         <p className="px-5 py-6 text-sm text-muted-foreground">Aún no se ha depurado nada en este tenant.</p>
       ) : (
@@ -45,7 +50,10 @@ export function PurgeRunsCard({ tenantId }: { tenantId: string }) {
               {runs.map((run) => (
                 <TableRow key={run.id}>
                   <TableCell className="pl-5 whitespace-nowrap text-muted-foreground">
-                    {new Intl.DateTimeFormat("es-CO", { dateStyle: "medium", timeStyle: "short" }).format(new Date(run.executed_at ?? run.created_at))}
+                    {new Intl.DateTimeFormat("es-CO", {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    }).format(new Date(run.executed_at ?? run.created_at))}
                   </TableCell>
                   <TableCell>
                     <span className="font-medium">{PURGE_KIND_TITLES[run.kind] ?? run.kind}</span>
@@ -64,4 +72,3 @@ export function PurgeRunsCard({ tenantId }: { tenantId: string }) {
     </section>
   );
 }
-

@@ -20,6 +20,7 @@ import {
   formatBytes,
   humanDays,
   meterTone,
+  ORIGIN_LABELS,
   STATE_LABELS,
   type StorageOrigin,
   type StorageOverview,
@@ -31,7 +32,7 @@ import {
   useStorageTenants,
   type StorageTenantsParams,
 } from "../../../infrastructure/api/hooks/use-storage";
-import { ago, OriginBar, OriginLegend, Provenance, Sparkline, StorageMeter, TileFailure, TileLoading } from "./parts";
+import { ago, ORIGIN_SWATCH, OriginBar, Provenance, Sparkline, StorageMeter, TileFailure, TileLoading } from "./parts";
 
 const GRID =
   "grid gap-4 md:grid-cols-2 xl:grid-flow-dense xl:grid-cols-3 min-[1400px]:grid-cols-[repeat(3,minmax(0,1fr))_minmax(17rem,20rem)]";
@@ -55,8 +56,8 @@ function DiskTile({ provider }: { provider: StorageProviderView | undefined }) {
       <BentoTile label={label} className="md:col-span-2" aside={<StatePill tone="neutral">Sin lectura</StatePill>}>
         <p className="text-sm font-medium">Aún no hay lectura del disco</p>
         <p className="text-sm text-pretty text-muted-foreground">
-          Falta el acceso a las métricas de MinIO (MINIO_METRICS_TOKEN). Las subidas funcionan igual; el freno por
-          disco lleno queda suspendido hasta tener lectura.
+          Falta el acceso a las métricas de MinIO (MINIO_METRICS_TOKEN). Las subidas funcionan igual; el freno por disco
+          lleno queda suspendido hasta tener lectura.
         </p>
       </BentoTile>
     );
@@ -88,7 +89,8 @@ function DiskTile({ provider }: { provider: StorageProviderView | undefined }) {
       <Sparkline points={used} />
       {provider.growth_per_month_bytes !== null && provider.growth_per_month_bytes > 0 ? (
         <p className="text-sm text-muted-foreground">
-          Crece <span className="font-medium text-foreground">≈ {formatBytes(provider.growth_per_month_bytes)} al mes</span>
+          Crece{" "}
+          <span className="font-medium text-foreground">≈ {formatBytes(provider.growth_per_month_bytes)} al mes</span>
           {provider.days_to_full !== null ? (
             <>
               . A este ritmo el disco se llena en{" "}
@@ -115,14 +117,25 @@ function QuotasTile({ overview }: { overview: StorageOverview }) {
   return (
     <BentoTile
       label="Cuotas"
-      aside={ratio === null ? undefined : <StatePill tone={ratio > 1.5 ? "warning" : "info"}>×{String(Math.round(ratio * 10) / 10).replace(".", ",")} del disco</StatePill>}
+      aside={
+        ratio === null ? undefined : (
+          <StatePill tone={ratio > 1.5 ? "warning" : "info"}>
+            ×{String(Math.round(ratio * 10) / 10).replace(".", ",")} del disco
+          </StatePill>
+        )
+      }
     >
-      <BentoFigure size="md" {...bytesFigure(overview.totals.quota_sum_bytes)} unit={`${bytesFigure(overview.totals.quota_sum_bytes).unit} prometidos`} />
+      <BentoFigure
+        size="md"
+        {...bytesFigure(overview.totals.quota_sum_bytes)}
+        unit={`${bytesFigure(overview.totals.quota_sum_bytes).unit} prometidos`}
+      />
       <p className="text-sm text-pretty text-muted-foreground">
         {total === null
           ? "Suma de las cuotas de todos los tenants."
           : `Los tenants tienen derecho a ${formatBytes(overview.totals.quota_sum_bytes)} y el disco mide ${formatBytes(total)}. `}
-        Hoy usan <span className="font-medium text-foreground">{formatBytes(overview.totals.tenant_bytes)}</span> entre todos.
+        Hoy usan <span className="font-medium text-foreground">{formatBytes(overview.totals.tenant_bytes)}</span> entre
+        todos.
       </p>
       <Provenance icon={Layers}>Suma de cuotas de plan y ampliaciones</Provenance>
     </BentoTile>
@@ -130,13 +143,30 @@ function QuotasTile({ overview }: { overview: StorageOverview }) {
 }
 
 function OriginTile({ overview }: { overview: StorageOverview }) {
-  const rows = (["customer", "team", "system"] as const).map((origin) => ({ origin, bytes: overview.by_origin[origin] }));
+  const rows = (["customer", "team", "system"] as const).map((origin) => ({
+    origin,
+    bytes: overview.by_origin[origin],
+  }));
   const sum = rows.reduce((acc, row) => acc + row.bytes, 0);
   return (
     <BentoTile label="Quién llena el disco" className="md:col-span-2">
-      <OriginBar parts={rows.map((row) => ({ origin: row.origin as StorageOrigin, pct: sum === 0 ? 0 : (row.bytes / sum) * 100 }))} />
-      <div className="grid gap-x-6 sm:grid-cols-3">
-        <OriginLegend rows={rows} />
+      <OriginBar
+        parts={rows.map((row) => ({
+          origin: row.origin as StorageOrigin,
+          pct: sum === 0 ? 0 : (row.bytes / sum) * 100,
+        }))}
+      />
+      <div className="grid gap-4 sm:grid-cols-3">
+        {rows.map((row) => (
+          <div key={row.origin} className="grid min-w-0 grid-cols-[10px_minmax(0,1fr)] items-start gap-x-2.5">
+            <span aria-hidden="true" className={cn("mt-1.5 size-2.5 rounded-[3px]", ORIGIN_SWATCH[row.origin])} />
+            <div className="min-w-0">
+              <p className="text-sm font-medium">{ORIGIN_LABELS[row.origin].label}</p>
+              <p className="font-heading text-xl font-bold tabular-nums">{formatBytes(row.bytes)}</p>
+              <p className="text-xs text-pretty text-muted-foreground">{ORIGIN_LABELS[row.origin].hint}</p>
+            </div>
+          </div>
+        ))}
       </div>
     </BentoTile>
   );
@@ -150,11 +180,17 @@ function AttentionTile({ overview }: { overview: StorageOverview }) {
       <p className="text-sm text-pretty text-muted-foreground">
         {tenants_full > 0 ? (
           <>
-            <span className="font-medium text-foreground">{tenants_full} {tenants_full === 1 ? "lleno" : "llenos"}</span>: sus subidas
-            del equipo están en pausa.{" "}
+            <span className="font-medium text-foreground">
+              {tenants_full} {tenants_full === 1 ? "lleno" : "llenos"}
+            </span>
+            : sus subidas del equipo están en pausa.{" "}
           </>
         ) : null}
-        {tenants_warning > 0 ? `${String(tenants_warning)} pasan del 80 %.` : tenants_full === 0 ? "Todos tienen espacio." : null}
+        {tenants_warning > 0
+          ? `${String(tenants_warning)} pasan del 80 %.`
+          : tenants_full === 0
+            ? "Todos tienen espacio."
+            : null}
       </p>
       <Provenance icon={Bell}>Les avisamos al 80 % y al 100 %</Provenance>
     </BentoTile>
@@ -177,19 +213,33 @@ function NextIsland({ overview }: { overview: StorageOverview }) {
       <h2 className="font-heading text-[22px] leading-tight font-bold">{title}</h2>
       {diskAlert && disk?.capacity ? (
         <div className="grid grid-cols-[10px_minmax(0,1fr)] gap-2.5 border-t border-current/10 py-3">
-          <span aria-hidden="true" className={cn("mt-1.5 size-2 rounded-full", disk.level === "critical" ? "bg-destructive" : "bg-warning")} />
+          <span
+            aria-hidden="true"
+            className={cn("mt-1.5 size-2 rounded-full", disk.level === "critical" ? "bg-destructive" : "bg-warning")}
+          />
           <div>
             <p className="text-sm font-semibold">Disco al {Math.round(100 - disk.capacity.usable_free_pct)} %</p>
-            <p className="text-xs opacity-75">Quedan {formatBytes(disk.capacity.free_bytes)}. Amplía el VPS o depura media vieja.</p>
+            <p className="text-xs opacity-75">
+              Quedan {formatBytes(disk.capacity.free_bytes)}. Amplía el VPS o depura media vieja.
+            </p>
           </div>
         </div>
       ) : null}
       {attention.slice(0, 3).map((row) => (
-        <div key={row.company_id} className="grid grid-cols-[10px_minmax(0,1fr)] gap-2.5 border-t border-current/10 py-3">
-          <span aria-hidden="true" className={cn("mt-1.5 size-2 rounded-full", row.state === "full" ? "bg-destructive" : "bg-warning")} />
+        <div
+          key={row.company_id}
+          className="grid grid-cols-[10px_minmax(0,1fr)] gap-2.5 border-t border-current/10 py-3"
+        >
+          <span
+            aria-hidden="true"
+            className={cn("mt-1.5 size-2 rounded-full", row.state === "full" ? "bg-destructive" : "bg-warning")}
+          />
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold">
-              {row.name} · {row.state === "full" ? `${formatBytes(row.used_bytes)} de ${formatBytes(row.quota_bytes)}` : `${Math.round(row.pct_used ?? 0)} %`}
+              {row.name} ·{" "}
+              {row.state === "full"
+                ? `${formatBytes(row.used_bytes)} de ${formatBytes(row.quota_bytes)}`
+                : `${Math.round(row.pct_used ?? 0)} %`}
             </p>
             <p className="text-xs opacity-75">
               {row.state === "full"
@@ -232,18 +282,42 @@ function TenantsTable() {
   const total = query.data?.meta.total ?? 0;
 
   return (
-    <section className="@container min-w-0 overflow-hidden rounded-3xl border border-border bg-card" aria-label="Consumo por tenant">
+    <section
+      className="@container min-w-0 overflow-hidden rounded-3xl border border-border bg-card"
+      aria-label="Consumo por tenant"
+    >
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 px-5 py-4">
         <h2 className="font-sans text-[15px] font-semibold tracking-normal">Consumo por tenant</h2>
         <div className="flex flex-wrap items-center gap-2">
-          <SearchField value={q} onChange={(next) => { setQ(next); setPage(1); }} placeholder="Buscar tenant" label="Buscar tenant" className="w-full sm:w-60" />
-          <SegmentedControl label="Orden" size="sm" surface="inline" value={sort} onValueChange={(next) => { setSort(next); setPage(1); }} items={SORTS} />
+          <SearchField
+            value={q}
+            onChange={(next) => {
+              setQ(next);
+              setPage(1);
+            }}
+            placeholder="Buscar tenant"
+            label="Buscar tenant"
+            className="w-full sm:w-60"
+          />
+          <SegmentedControl
+            label="Orden"
+            size="sm"
+            surface="inline"
+            value={sort}
+            onValueChange={(next) => {
+              setSort(next);
+              setPage(1);
+            }}
+            items={SORTS}
+          />
         </div>
       </div>
       {query.isError ? (
         <div className="p-5">
           <p className="text-sm text-muted-foreground">No pudimos cargar los tenants.</p>
-          <Button variant="outline" size="sm" className="mt-2 rounded-full" onClick={() => void query.refetch()}>Reintentar</Button>
+          <Button variant="outline" size="sm" className="mt-2 rounded-full" onClick={() => void query.refetch()}>
+            Reintentar
+          </Button>
         </div>
       ) : (
         <div className="axi-scroll overflow-x-auto">
@@ -270,28 +344,46 @@ function TenantsTable() {
                     <TableCell className="max-w-[280px] pl-5">
                       <span className="block truncate font-medium">{row.name}</span>
                       <span className="block text-xs text-muted-foreground">
-                        {row.quota_source === "override" ? "Ampliada" : row.plan_name === null ? "Sin plan" : `Plan ${row.plan_name}`}
+                        {row.quota_source === "override"
+                          ? "Ampliada"
+                          : row.plan_name === null
+                            ? "Sin plan"
+                            : `Plan ${row.plan_name}`}
                       </span>
                     </TableCell>
                     <TableCell className="w-36">
                       {row.quota_bytes === null ? (
                         <span className="text-xs text-muted-foreground">Sin cuota</span>
                       ) : (
-                        <StorageMeter pct={row.pct_used} tone={meterTone(row.state)} label={`Uso de ${row.name}`} className="h-1.5" />
+                        <StorageMeter
+                          pct={row.pct_used}
+                          tone={meterTone(row.state)}
+                          label={`Uso de ${row.name}`}
+                          className="h-1.5"
+                        />
                       )}
                     </TableCell>
                     <TableCell className="text-right tabular-nums whitespace-nowrap">
                       <span className="font-medium">{formatBytes(row.used_bytes)}</span>
-                      {row.quota_bytes === null ? null : <span className="text-muted-foreground"> de {formatBytes(row.quota_bytes)}</span>}
+                      {row.quota_bytes === null ? null : (
+                        <span className="text-muted-foreground"> de {formatBytes(row.quota_bytes)}</span>
+                      )}
                     </TableCell>
                     <TableCell className="hidden text-right text-muted-foreground tabular-nums @xl:table-cell">
-                      {row.growth_30d_bytes === null ? "—" : `${row.growth_30d_bytes >= 0 ? "+" : "−"}${formatBytes(Math.abs(row.growth_30d_bytes))}`}
+                      {row.growth_30d_bytes === null
+                        ? "—"
+                        : `${row.growth_30d_bytes >= 0 ? "+" : "−"}${formatBytes(Math.abs(row.growth_30d_bytes))}`}
                     </TableCell>
                     <TableCell>
                       <StatePill tone={state.tone}>{state.label}</StatePill>
                     </TableCell>
                     <TableCell>
-                      <Link href={`/platform/tenants/${row.company_id}/storage`} aria-label={`Abrir ${row.name}`} onClick={(event) => event.stopPropagation()} className="grid size-8 place-items-center rounded-full hover:bg-muted">
+                      <Link
+                        href={`/platform/tenants/${row.company_id}/storage`}
+                        aria-label={`Abrir ${row.name}`}
+                        onClick={(event) => event.stopPropagation()}
+                        className="grid size-8 place-items-center rounded-full hover:bg-muted"
+                      >
                         <ChevronRight className="size-4" aria-hidden="true" />
                       </Link>
                     </TableCell>
@@ -315,8 +407,24 @@ function TenantsTable() {
             {(page - 1) * 25 + 1}–{Math.min(page * 25, total)} de {total}
           </span>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="rounded-full" disabled={page === 1} onClick={() => setPage(page - 1)}>Anterior</Button>
-            <Button variant="outline" size="sm" className="rounded-full" disabled={page * 25 >= total} onClick={() => setPage(page + 1)}>Siguiente</Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full"
+              disabled={page === 1}
+              onClick={() => setPage(page - 1)}
+            >
+              Anterior
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full"
+              disabled={page * 25 >= total}
+              onClick={() => setPage(page + 1)}
+            >
+              Siguiente
+            </Button>
           </div>
         </div>
       ) : null}
@@ -331,7 +439,8 @@ export function StorageOverviewView() {
       <header>
         <h1 className="font-heading text-3xl font-bold tracking-tight">Almacenamiento</h1>
         <p className="mt-1 max-w-[62ch] text-sm text-muted-foreground">
-          El disco del servidor y lo que ocupa cada tenant. Las cuotas y la depuración se manejan desde la ficha de cada uno.
+          El disco del servidor y lo que ocupa cada tenant. Las cuotas y la depuración se manejan desde la ficha de cada
+          uno.
         </p>
       </header>
       {overview.isPending ? (
@@ -346,7 +455,11 @@ export function StorageOverviewView() {
         <TileFailure label="Almacenamiento" onRetry={() => void overview.refetch()} />
       ) : (
         <div className={GRID}>
-          <DiskTile provider={overview.data.providers.find((provider) => provider.kind === "physical") ?? overview.data.providers[0]} />
+          <DiskTile
+            provider={
+              overview.data.providers.find((provider) => provider.kind === "physical") ?? overview.data.providers[0]
+            }
+          />
           <QuotasTile overview={overview.data} />
           <NextIsland overview={overview.data} />
           <OriginTile overview={overview.data} />

@@ -55,12 +55,26 @@ export function QuotaSheet({
       await mutation.mutateAsync(
         mode === "plan"
           ? { mode: "plan", grace_pct: 0, reason: reason.trim() }
-          : { mode: "override", quota_bytes: nextBytes, grace_pct: grace, reason: reason.trim() },
+          : {
+              mode: "override",
+              quota_bytes: nextBytes,
+              grace_pct: grace,
+              reason: reason.trim(),
+            },
       );
-      showAlert({ tone: "success", title: "Cuota guardada", description: "Las subidas del equipo siguen la nueva cuota desde ya.", autoCloseMs: 5000 });
+      showAlert({
+        tone: "success",
+        title: "Cuota guardada",
+        description: "Las subidas del equipo siguen la nueva cuota desde ya.",
+        autoCloseMs: 5000,
+      });
       onOpenChange(false);
     } catch (error) {
-      showAlert({ tone: "error", title: "No se pudo guardar la cuota", description: errorMessage(error) });
+      showAlert({
+        tone: "error",
+        title: "No se pudo guardar la cuota",
+        description: errorMessage(error),
+      });
     }
   }
 
@@ -72,16 +86,37 @@ export function QuotaSheet({
       subtitle={`Hoy usa ${formatBytes(storage.used_bytes)}${storage.quota_bytes === null ? "" : ` de ${formatBytes(storage.quota_bytes)}`}`}
       size="md"
       renderFooter={() => (
-        <Island as="footer" material="ink" glow="none" className="m-3 flex flex-wrap items-center justify-between gap-3 rounded-3xl p-3 pl-5">
+        <Island
+          as="footer"
+          material="ink"
+          glow="none"
+          className="m-3 flex flex-wrap items-center justify-between gap-3 rounded-3xl p-3 pl-5"
+        >
           <div className="min-w-0 text-sm">
             <p className="font-semibold">
-              {mode === "plan" ? "Vuelve a la cuota del plan" : `${currentGb === null ? "Sin tope" : `${String(currentGb).replace(".", ",")} GB`} → ${nextBytes === null ? "sin tope" : formatBytes(nextBytes)}`}
+              {mode === "plan"
+                ? "Vuelve a la cuota del plan"
+                : `${currentGb === null ? "Sin tope" : `${String(currentGb).replace(".", ",")} GB`} → ${nextBytes === null ? "sin tope" : formatBytes(nextBytes)}`}
             </p>
             <p className="text-xs opacity-75">Las subidas del equipo se reanudan al guardar.</p>
           </div>
           <div className="flex gap-2">
-            <Button type="button" variant="glass" size="sm" className="rounded-full" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button type="button" size="sm" className="rounded-full" disabled={!valid || mutation.isPending} onClick={() => void save()}>
+            <Button
+              type="button"
+              variant="glass"
+              size="sm"
+              className="rounded-full"
+              onClick={() => onOpenChange(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              className="rounded-full"
+              disabled={!valid || mutation.isPending}
+              onClick={() => void save()}
+            >
               {mutation.isPending ? "Guardando…" : "Guardar cuota"}
             </Button>
           </div>
@@ -89,7 +124,11 @@ export function QuotaSheet({
       )}
     >
       <div className="flex flex-col gap-5 p-5">
-        <div role="radiogroup" aria-label="Origen de la cuota" className="grid grid-cols-2 gap-1 rounded-2xl bg-muted p-1">
+        <div
+          role="radiogroup"
+          aria-label="Origen de la cuota"
+          className="grid grid-cols-2 gap-1 rounded-2xl bg-muted p-1"
+        >
           {(
             [
               ["plan", "La del plan", storage.plan_name ?? "Sin plan"],
@@ -119,8 +158,18 @@ export function QuotaSheet({
               <Label htmlFor="quota-gb">Espacio</Label>
               <div className="flex flex-wrap items-center gap-2">
                 <div className="relative w-36">
-                  <Input id="quota-gb" inputMode="decimal" value={text} placeholder="Sin tope" onChange={(event) => setText(event.target.value)} className="pr-10 font-medium tabular-nums" aria-invalid={gb === undefined || undefined} />
-                  <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">GB</span>
+                  <Input
+                    id="quota-gb"
+                    inputMode="decimal"
+                    value={text}
+                    placeholder="Sin tope"
+                    onChange={(event) => setText(event.target.value)}
+                    className="pr-10 font-medium tabular-nums"
+                    aria-invalid={gb === undefined || undefined}
+                  />
+                  <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">
+                    GB
+                  </span>
                 </div>
                 {STEPS_GB.map((step) => (
                   <button
@@ -152,24 +201,36 @@ export function QuotaSheet({
                     type="button"
                     aria-pressed={grace === value}
                     onClick={() => setGrace(value)}
-                    className={cn("h-8 rounded-full px-3 text-[13px] font-medium", grace === value ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground")}
+                    className={cn(
+                      "h-8 rounded-full px-3 text-[13px] font-medium",
+                      grace === value ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
+                    )}
                   >
                     {value === 0 ? "Sin margen" : `+${String(value)} %`}
                   </button>
                 ))}
               </div>
-              <p className="text-xs text-muted-foreground">Un margen deja subir un poco más allá de la cuota mientras se resuelve.</p>
+              <p className="text-xs text-muted-foreground">
+                Un margen deja subir un poco más allá de la cuota mientras se resuelve.
+              </p>
             </div>
           </>
         ) : (
           <p className="rounded-2xl bg-muted px-4 py-3 text-sm text-muted-foreground">
-            Se borra la ampliación y vuelve a regir {storage.plan_name === null ? "la cuota de su plan" : `la cuota del plan ${storage.plan_name}`}.
+            Se borra la ampliación y vuelve a regir{" "}
+            {storage.plan_name === null ? "la cuota de su plan" : `la cuota del plan ${storage.plan_name}`}.
           </p>
         )}
 
         <div className="flex flex-col gap-2">
           <Label htmlFor="quota-reason">Motivo</Label>
-          <Textarea id="quota-reason" value={reason} onChange={(event) => setReason(event.target.value)} placeholder="Ej.: paquete +10 GB acordado el 8 oct, se factura en noviembre." rows={3} />
+          <Textarea
+            id="quota-reason"
+            value={reason}
+            onChange={(event) => setReason(event.target.value)}
+            placeholder="Ej.: paquete +10 GB acordado el 8 oct, se factura en noviembre."
+            rows={3}
+          />
           <p className="text-xs text-muted-foreground">Queda en la auditoría del tenant.</p>
         </div>
       </div>

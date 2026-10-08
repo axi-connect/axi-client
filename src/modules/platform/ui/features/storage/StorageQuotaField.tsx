@@ -67,7 +67,10 @@ export function StorageQuotaField({ value, onChange, hint }: StorageQuotaFieldPr
               type="button"
               aria-pressed={value === gb}
               onClick={() => onChange(gb)}
-              className={cn(chip, value === gb ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground")}
+              className={cn(
+                chip,
+                value === gb ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
+              )}
             >
               {gb} GB
             </button>
@@ -76,7 +79,10 @@ export function StorageQuotaField({ value, onChange, hint }: StorageQuotaFieldPr
             type="button"
             aria-pressed={value === null}
             onClick={() => onChange(null)}
-            className={cn(chip, value === null ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground")}
+            className={cn(
+              chip,
+              value === null ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
+            )}
           >
             Sin límite
           </button>
