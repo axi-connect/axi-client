@@ -52,6 +52,7 @@ import {
   updateHsmTemplate,
   uploadHsmHeaderMedia,
 } from "@/modules/marketing/infrastructure/services/templates-service.adapter";
+import { reportQuotaExceeded } from "@/modules/storage/public";
 import type { HeaderMediaStatus } from "./HeaderMediaField";
 
 type Category = HsmTemplateDTO["category"];
@@ -476,6 +477,8 @@ export function useHsmTemplateDraft({
       if (ticket !== uploadTicket.current) return;
       // Solo un error del servidor trae un motivo que leer; uno de red o del
       // navegador («Failed to fetch») no se enseña crudo.
+      // 507 con el espacio lleno: la píldora con «Ver espacio» y el subidor apagado.
+      reportQuotaExceeded(err, file.name);
       const fallback = "Meta no aceptó el archivo y no se guardó nada. Vuelve a intentarlo; si se repite, prueba con otro.";
       setMediaStatus({ kind: "error", message: isHttpError(err) ? errorMessage(err, fallback) : fallback });
     }

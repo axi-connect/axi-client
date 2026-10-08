@@ -1,0 +1,236 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "ArchivosGrandes.dc.html": {
+      "h": 920,
+      "title": "P2d · Archivos grandes en lote",
+      "w": 1440,
+      "x": 3510,
+      "y": 6780
+    },
+    "Avisos.dc.html": {
+      "h": 700,
+      "title": "T2 · Avisos y archivo eliminado",
+      "w": 1440,
+      "x": 0,
+      "y": 12850
+    },
+    "AvisosMovil.dc.html": {
+      "h": 1150,
+      "title": "T2 · celular",
+      "w": 390,
+      "x": 1520,
+      "y": 12850
+    },
+    "Confirmar.dc.html": {
+      "h": 1100,
+      "title": "P2c · Confirmación fuerte",
+      "w": 1440,
+      "x": 1520,
+      "y": 6780
+    },
+    "Cuota.dc.html": {
+      "h": 1100,
+      "title": "P2e · Cambiar cuota",
+      "w": 1440,
+      "x": 0,
+      "y": 9290
+    },
+    "Depurar.dc.html": {
+      "h": 1100,
+      "title": "P2b · Depurar — vista previa y barra en tinta",
+      "w": 1440,
+      "x": 0,
+      "y": 6780
+    },
+    "DepurarMovil.dc.html": {
+      "h": 2090,
+      "title": "P2b · celular",
+      "w": 390,
+      "x": 3040,
+      "y": 6780
+    },
+    "Estados.dc.html": {
+      "h": 740,
+      "title": "Estados de platform",
+      "w": 1440,
+      "x": 3040,
+      "y": 9290
+    },
+    "Main.dc.html": {
+      "h": 1340,
+      "title": "P1 · Almacenamiento — disco, cuotas y tenants",
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "MiEmpresa.dc.html": {
+      "h": 1020,
+      "title": "T1 · Mi empresa › Almacenamiento (84 %)",
+      "w": 1440,
+      "x": 0,
+      "y": 10810
+    },
+    "MiEmpresaLleno.dc.html": {
+      "h": 1030,
+      "title": "T1b · lleno",
+      "w": 1440,
+      "x": 3510,
+      "y": 10810
+    },
+    "MiEmpresaMovil.dc.html": {
+      "h": 1620,
+      "title": "T1 · celular",
+      "w": 390,
+      "x": 3040,
+      "y": 10810
+    },
+    "MiEmpresaOscuro.dc.html": {
+      "h": 1020,
+      "title": "T1 · oscuro",
+      "w": 1440,
+      "x": 1520,
+      "y": 10810
+    },
+    "MiEmpresaSinCuota.dc.html": {
+      "h": 820,
+      "title": "T1c · sin cuota",
+      "w": 1440,
+      "x": 5030,
+      "y": 10810
+    },
+    "OverviewMovil.dc.html": {
+      "h": 2530,
+      "title": "P1 · celular",
+      "w": 390,
+      "x": 3040,
+      "y": 0
+    },
+    "OverviewOscuro.dc.html": {
+      "h": 1340,
+      "title": "P1 · oscuro",
+      "w": 1440,
+      "x": 1520,
+      "y": 0
+    },
+    "OverviewSinLectura.dc.html": {
+      "h": 1300,
+      "title": "P1b · disco sin lectura",
+      "w": 1440,
+      "x": 3510,
+      "y": 0
+    },
+    "Plan.dc.html": {
+      "h": 980,
+      "title": "P3 · Plan › almacenamiento incluido",
+      "w": 1440,
+      "x": 1520,
+      "y": 9290
+    },
+    "Tenant.dc.html": {
+      "h": 2030,
+      "title": "P2 · Tenant › Almacenamiento",
+      "w": 1440,
+      "x": 0,
+      "y": 2950
+    },
+    "TenantMovil.dc.html": {
+      "h": 3410,
+      "title": "P2 · celular",
+      "w": 390,
+      "x": 3040,
+      "y": 2950
+    },
+    "TenantOscuro.dc.html": {
+      "h": 2030,
+      "title": "P2 · oscuro",
+      "w": 1440,
+      "x": 1520,
+      "y": 2950
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-10-08T21:00:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {
+    "row0": {
+      "kind": "title1",
+      "maxW": 5030,
+      "text": "Platform · el disco y los tenants",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "row1": {
+      "kind": "title1",
+      "maxW": 3510,
+      "text": "Platform · la ficha del tenant",
+      "w": 240,
+      "x": 0,
+      "y": 2650
+    },
+    "row2": {
+      "kind": "title1",
+      "maxW": 5030,
+      "text": "Platform · depurar",
+      "w": 240,
+      "x": 0,
+      "y": 6480
+    },
+    "row3": {
+      "kind": "title1",
+      "maxW": 4560,
+      "text": "Platform · cuota, plan y estados",
+      "w": 240,
+      "x": 0,
+      "y": 8990
+    },
+    "row4": {
+      "kind": "title1",
+      "maxW": 6550,
+      "text": "Tenant · Mi empresa › Almacenamiento",
+      "w": 240,
+      "x": 0,
+      "y": 10510
+    },
+    "row5": {
+      "kind": "title1",
+      "maxW": 1990,
+      "text": "Tenant · avisos",
+      "w": 240,
+      "x": 0,
+      "y": 12550
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "OverviewOscuro.dc.html",
+    "OverviewMovil.dc.html",
+    "OverviewSinLectura.dc.html",
+    "Tenant.dc.html",
+    "TenantOscuro.dc.html",
+    "TenantMovil.dc.html",
+    "Depurar.dc.html",
+    "Confirmar.dc.html",
+    "DepurarMovil.dc.html",
+    "ArchivosGrandes.dc.html",
+    "Cuota.dc.html",
+    "Plan.dc.html",
+    "Estados.dc.html",
+    "MiEmpresa.dc.html",
+    "MiEmpresaOscuro.dc.html",
+    "MiEmpresaMovil.dc.html",
+    "MiEmpresaLleno.dc.html",
+    "MiEmpresaSinCuota.dc.html",
+    "Avisos.dc.html",
+    "AvisosMovil.dc.html"
+  ],
+  "pages": [],
+  "title": "Almacenamiento · control por tenant"
+}

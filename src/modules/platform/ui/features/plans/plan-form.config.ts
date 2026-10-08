@@ -29,6 +29,8 @@ export const planFormSchema = z.object({
         });
       }
     }),
+  /** GB de almacenamiento incluido; `null` = sin tope. Viaja en bytes. */
+  storage_quota_gb: z.number().min(0, "No puede ser negativo").nullable(),
 });
 
 export type PlanFormValues = z.infer<typeof planFormSchema>;
@@ -39,4 +41,5 @@ export const defaultPlanFormValues: PlanFormValues = {
   description: "",
   tier: "sbs",
   default_limits: [],
+  storage_quota_gb: null,
 };

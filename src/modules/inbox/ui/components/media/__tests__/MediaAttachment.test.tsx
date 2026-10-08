@@ -47,7 +47,7 @@ describe("MediaAttachment — media sin attachment", () => {
 })
 
 describe("MediaAttachment — video", () => {
-  const attachment = { id: "a1", filename: "reel.mp4", mime_type: "video/mp4", size_bytes: 1 }
+  const attachment = { id: "a1", filename: "reel.mp4", mime_type: "video/mp4", size_bytes: 1, purged_at: null }
 
   it("un reel de Instagram compartido muestra «Analizando el reel…» bajo el reproductor", () => {
     render(
@@ -79,5 +79,44 @@ describe("MediaAttachment — video", () => {
       />,
     )
     expect(screen.queryByRole("status")).not.toBeInTheDocument()
+  })
+})
+
+describe("MediaAttachment — adjunto depurado (control de almacenamiento T3)", () => {
+  const purged = {
+    id: "a9",
+    filename: "visita.mp4",
+    mime_type: "video/mp4",
+    size_bytes: 32 * 1024 * 1024,
+    purged_at: "2026-10-08T15:00:00Z",
+  }
+
+  it("dice «Archivo eliminado» con tipo, peso y fecha, sin vista previa ni descarga", () => {
+    const { getAttachmentUrl } = jest.requireMock("@/modules/inbox/infrastructure/services/inbox-service.adapter")
+    ;(getAttachmentUrl as jest.Mock).mockClear()
+    render(
+      <MediaAttachment
+        message={makeMessage({ content_type: "video", attachments: [purged] })}
+        conversationId="c1"
+        outbound={false}
+      />,
+    )
+    expect(screen.getByText("Archivo eliminado")).toBeInTheDocument()
+    expect(screen.getByText("Video de 32 MB · depurado el 8 oct")).toBeInTheDocument()
+    expect(screen.queryByRole("button")).toBeNull()
+    // Ni siquiera pide la URL firmada: respondería 410.
+    expect(getAttachmentUrl).not.toHaveBeenCalled()
+  })
+
+  it("el mismo adjunto SIN purged_at sigue siendo un video normal", () => {
+    render(
+      <MediaAttachment
+        message={makeMessage({ content_type: "document", attachments: [{ ...purged, filename: "a.pdf", mime_type: "application/pdf", purged_at: null }] })}
+        conversationId="c1"
+        outbound={false}
+      />,
+    )
+    expect(screen.queryByText("Archivo eliminado")).toBeNull()
+    expect(screen.getByRole("button", { name: /Descargar/ })).toBeInTheDocument()
   })
 })

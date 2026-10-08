@@ -35,6 +35,7 @@ const PLAN: PlanListItem = {
   public_slug: null,
   self_service: false,
   default_limits: [],
+  storage_quota_bytes: 15 * 1024 ** 3,
   is_active: true,
   subscriptions_count: 12,
   created_at: "2026-06-01T00:00:00Z",
@@ -80,7 +81,56 @@ describe("PlanFormSheet", () => {
 
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
     expect(createMutateAsync).toHaveBeenCalledWith(
-      expect.objectContaining({ code: "starter", name: "Starter", tier: "sbs", default_limits: [] }),
+      expect.objectContaining({
+        code: "starter",
+        name: "Starter",
+        tier: "sbs",
+        default_limits: [],
+        storage_quota_bytes: null,
+      }),
+    );
+  });
+
+  it("en edición muestra la cuota en GB y un atajo la cambia; viaja en bytes", async () => {
+    updateMutateAsync.mockResolvedValueOnce(undefined);
+    render(<PlanFormSheet open onOpenChange={() => {}} plan={PLAN} />);
+
+    const input = screen.getByLabelText("Almacenamiento incluido en GB");
+    expect(input).toHaveValue("15");
+    expect(screen.getByRole("button", { name: "15 GB" })).toHaveAttribute("aria-pressed", "true");
+
+    fireEvent.click(screen.getByRole("button", { name: "40 GB" }));
+    expect(input).toHaveValue("40");
+    fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+
+    await waitFor(() =>
+      expect(updateMutateAsync).toHaveBeenCalledWith({
+        id: "p-1",
+        body: expect.objectContaining({ storage_quota_bytes: 40 * 1024 ** 3 }),
+      }),
+    );
+  });
+
+  it("«Sin límite» envía null y el texto con coma decimal se respeta", async () => {
+    updateMutateAsync.mockResolvedValue(undefined);
+    render(<PlanFormSheet open onOpenChange={() => {}} plan={PLAN} />);
+
+    fireEvent.change(screen.getByLabelText("Almacenamiento incluido en GB"), { target: { value: "2,5" } });
+    fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+    await waitFor(() =>
+      expect(updateMutateAsync).toHaveBeenLastCalledWith({
+        id: "p-1",
+        body: expect.objectContaining({ storage_quota_bytes: Math.round(2.5 * 1024 ** 3) }),
+      }),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Sin límite" }));
+    fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+    await waitFor(() =>
+      expect(updateMutateAsync).toHaveBeenLastCalledWith({
+        id: "p-1",
+        body: expect.objectContaining({ storage_quota_bytes: null }),
+      }),
     );
   });
 });

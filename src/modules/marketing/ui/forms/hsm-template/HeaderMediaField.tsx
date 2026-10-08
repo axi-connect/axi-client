@@ -10,6 +10,7 @@ import {
   headerMediaHint,
   type HeaderMediaKind,
 } from "@/modules/marketing/domain/header-media";
+import { useStorageQuotaState } from "@/modules/storage/public";
 
 /** El archivo que ya hay: el recién subido o el guardado con la plantilla. */
 export interface HeaderMediaFile {
@@ -74,7 +75,11 @@ export function HeaderMediaField({
   const [dragging, setDragging] = useState(false);
   const Icon = ICONS[kind];
 
+  // Espacio lleno (storage T2): el subidor se apaga antes de chocar con el 507.
+  const { blocksUploads, blockedHint } = useStorageQuotaState();
+
   function pick(files: FileList | null) {
+    if (blocksUploads) return;
     const picked = files?.[0];
     if (picked !== undefined) onPick(picked);
   }
@@ -163,6 +168,7 @@ export function HeaderMediaField({
       <button
         id="hsm-header-media"
         type="button"
+        disabled={blocksUploads}
         onClick={() => inputRef.current?.click()}
         onDragOver={(event) => {
           event.preventDefault();
@@ -176,7 +182,7 @@ export function HeaderMediaField({
         }}
         className={cn(
           "text-muted-foreground flex w-full flex-col items-center justify-center gap-1.5 rounded-2xl border-[1.5px] border-dashed px-4 py-5 text-center text-[13px] transition-colors",
-          "focus-visible:outline-ring focus-visible:outline-2 focus-visible:outline-offset-2",
+          "focus-visible:outline-ring focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
           dragging ? "border-foreground/40 bg-secondary" : status.kind === "error" ? "border-destructive/55" : "border-border hover:border-foreground/30",
         )}
       >
@@ -187,6 +193,7 @@ export function HeaderMediaField({
         <span>{headerMediaHint(kind)}</span>
       </button>
       {input}
+      {blocksUploads ? <p className="text-muted-foreground text-xs">{blockedHint}</p> : null}
       {status.kind === "error" ? (
         <p className="text-destructive text-xs" role="alert">
           {status.message}

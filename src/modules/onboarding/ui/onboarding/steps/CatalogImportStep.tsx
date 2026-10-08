@@ -28,6 +28,7 @@ import { ImportDropzone } from "@/modules/onboarding/ui/catalog-import/ImportDro
 import { CatalogScan } from "@/modules/onboarding/ui/catalog-import/CatalogScan";
 import { FlowActions, FlowBackButton } from "@/modules/onboarding/ui/flow/FlowActions";
 import { FlowScreen } from "@/modules/onboarding/ui/flow/FlowScreen";
+import { reportQuotaExceeded, useStorageQuotaState } from "@/modules/storage/public";
 
 const NICHE_HINTS: Record<string, string> = {
   restaurants: "Para restaurantes ya creamos las categorías Entradas, Platos, Bebidas y Postres. La IA acomoda cada producto en la suya.",
@@ -71,6 +72,8 @@ export function CatalogImportStep({
   const [committing, setCommitting] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const { job, error: jobError, stalled, resume, restart, setJob } = useCatalogImportJob(importId);
+  // Espacio lleno (storage T2): la zona se apaga antes de chocar con el 507.
+  const { blocksUploads, blockedHint } = useStorageQuotaState();
 
   // El job cambia de id → la revisión empieza limpia.
   useEffect(() => {
@@ -86,6 +89,7 @@ export function CatalogImportStep({
       setImportId(created.id);
       onImportStarted(created.id);
     } catch (error) {
+      reportQuotaExceeded(error, file.name);
       setActionError(errorMessage(error, "No pudimos subir el archivo. Inténtalo de nuevo."));
     } finally {
       setUploading(false);
@@ -149,7 +153,8 @@ export function CatalogImportStep({
     <FlowScreen focusHeading size={phase === "review" ? "full" : phase === "processing" ? "wide" : "narrow"} title={copy.title} lead={copy.lead}>
       {phase === "upload" ? (
         <div className="w-full max-w-[560px] text-left">
-          <ImportDropzone onFile={(file) => void upload(file)} disabled={uploading} nicheHint={hint} />
+          <ImportDropzone onFile={(file) => void upload(file)} disabled={uploading || blocksUploads} nicheHint={hint} />
+          {blocksUploads && !uploading ? <p className="text-muted-foreground mt-3 text-sm text-pretty">{blockedHint}</p> : null}
           {uploading ? (
             <p role="status" className="text-muted-foreground mt-3 flex items-center gap-2 text-sm">
               <LoaderCircle aria-hidden="true" className="text-brand size-4 animate-spin" />

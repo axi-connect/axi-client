@@ -1,9 +1,10 @@
 "use client";
 
 import { forwardRef, useImperativeHandle, useRef, useState } from "react";
-import { Ban, ImagePlus } from "lucide-react";
+import { Ban, HardDrive, ImagePlus } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { ACCEPTED_IMAGE_ACCEPT } from "@/modules/catalog/domain/product";
+import { useStorageQuotaState } from "@/modules/storage/public";
 
 export type PhotoPickerHandle = { open: () => void };
 
@@ -37,7 +38,9 @@ export const PhotoPickerInput = forwardRef<PhotoPickerHandle, { onFiles: (files:
 
 /**
  * Tile de subida al final de una banda: clic o arrastre. Lleva los cupos que
- * quedan («quedan 3»); sin cupo dice «Galería llena» y no recibe nada.
+ * quedan («quedan 3»); sin cupo dice «Galería llena» y no recibe nada. Con el
+ * espacio de la empresa lleno dice «Espacio lleno» (storage T2) en vez de
+ * dejar elegir fotos que el servidor rechazaría con 507.
  */
 export function PhotoDropTile({
   remaining,
@@ -51,7 +54,21 @@ export function PhotoDropTile({
   label?: string;
 }) {
   const [dragOver, setDragOver] = useState(false);
+  const { blocksUploads, blockedHint } = useStorageQuotaState();
   const full = remaining <= 0;
+
+  if (blocksUploads && !full) {
+    return (
+      <div
+        title={blockedHint}
+        className="flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl border border-dashed border-border text-muted-foreground"
+      >
+        <HardDrive className="size-5" aria-hidden />
+        <span className="px-1 text-center text-[11px] leading-tight">Espacio lleno</span>
+        <span className="sr-only">{blockedHint}</span>
+      </div>
+    );
+  }
 
   if (full) {
     return (

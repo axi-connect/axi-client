@@ -54,6 +54,42 @@ export const MEDIA_PREVIEW_LABELS: Record<MediaContentKind, string> = {
 };
 
 /**
+ * Adjunto depurado por la política de almacenamiento (`purged_at`, control de
+ * almacenamiento T3): el mensaje se conserva con su fecha, pero el archivo ya
+ * no existe —su URL respondería 410 `conversations/attachment_purged`—. Un
+ * evento WS viejo puede no traer el campo: se lee como «no depurado».
+ */
+export function isAttachmentPurged(attachment: { purged_at?: string | null } | null | undefined): boolean {
+  return typeof attachment?.purged_at === "string" && attachment.purged_at !== "";
+}
+
+/** Nombre del tipo en la burbuja depurada: un audio cualquiera no es «nota de voz». */
+export const PURGED_KIND_LABELS: Record<MediaContentKind, string> = {
+  image: "Foto",
+  audio: "Audio",
+  video: "Video",
+  document: "Documento",
+  sticker: "Sticker",
+  location: "Ubicación",
+};
+
+const PURGED_DAY = new Intl.DateTimeFormat("es-CO", { day: "numeric", month: "short" });
+
+/** «Video de 32 MB · depurado el 8 oct». `sizeText` llega ya formateado. */
+export function purgedAttachmentLine(kind: MediaContentKind, sizeText: string, purgedAt: string): string {
+  const date = new Date(purgedAt);
+  // Por partes: es-CO formatea «8 de oct.» y la burbuja dice «8 oct».
+  const day = Number.isNaN(date.getTime())
+    ? ""
+    : PURGED_DAY.formatToParts(date)
+        .filter((part) => part.type === "day" || part.type === "month")
+        .map((part) => part.value.replace(".", ""))
+        .join(" ");
+  const head = sizeText ? `${PURGED_KIND_LABELS[kind]} de ${sizeText}` : PURGED_KIND_LABELS[kind];
+  return day ? `${head} · depurado el ${day}` : `${head} · depurado`;
+}
+
+/**
  * `last_message_preview` del backend: el body/caption, o el token `[audio]`,
  * `[image]`… cuando la media no tiene texto. Traduce el token a etiqueta ES;
  * la UI le antepone el icono del tipo (patrón WhatsApp).
@@ -571,6 +607,8 @@ export const ATTACHMENT_CATEGORY_LABELS: Record<AttachmentCategory, string> = {
  */
 export function isAttachmentMessage(message: UiMessage): boolean {
   if (message.content_type === "location") return false;
+  // Lo depurado ya no es un archivo que se pueda abrir: fuera del panel (la burbuja lo dice).
+  if (message.attachments.length > 0 && message.attachments.every(isAttachmentPurged)) return false;
   return (
     message.attachments.length > 0 ||
     (message.local_previews?.length ?? 0) > 0 ||

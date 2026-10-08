@@ -4,7 +4,7 @@ import { useRef, useState } from "react"
 import { cn } from "@/core/lib/utils"
 import { useAttachmentUrl } from "@/modules/inbox/infrastructure/hooks/use-attachment-url"
 import { attachmentDisplayName, type MessageAttachment } from "@/modules/inbox/domain/inbox"
-import { MEDIA_FRAME, MediaError, MediaSkeleton } from "./MediaStates"
+import { MEDIA_FRAME, MediaError, MediaSkeleton, MediaPurged } from "./MediaStates"
 import { MediaLightbox } from "./MediaLightbox"
 
 /**
@@ -36,6 +36,11 @@ export function ImageBubble({
 
   const src = previewUrl ?? url
   const kind = sticker ? "sticker" : "image"
+
+  // Depurado por platform mientras la conversación estaba abierta (410)
+  if (status === "purged") {
+    return <MediaPurged kind="image" sizeBytes={attachment?.size_bytes ?? 0} purgedAt="" />
+  }
 
   if (broken || status === "error") {
     return (
