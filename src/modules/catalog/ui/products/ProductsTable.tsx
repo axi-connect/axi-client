@@ -44,7 +44,7 @@ export function ProductsTable({ rows, busy }: { rows: ProductRow[]; busy: boolea
                 className="flex min-w-0 items-center gap-3 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               >
                 <ProductThumb
-                  src={row.image_url}
+                  src={row.thumb_url}
                   alt={`Imagen de ${row.name}`}
                   kind={row.kind}
                   className="size-11 shrink-0 rounded-xl"

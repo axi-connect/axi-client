@@ -27,6 +27,7 @@ import { ProductDetailHeader } from "@/modules/catalog/ui/components/ProductDeta
 import { ProductDetailSkeleton } from "@/modules/catalog/ui/components/ProductDetailSkeleton";
 import { ProductEnrichmentSection } from "@/modules/catalog/ui/components/ProductEnrichmentSection";
 import { ProductPhotosSection } from "@/modules/catalog/ui/components/ProductPhotosSection";
+import { ProductGalleryProvider } from "@/modules/catalog/ui/components/photos/product-gallery.context";
 import { ProductReadinessIsland } from "@/modules/catalog/ui/components/ProductReadinessIsland";
 import { useUnsavedGuard } from "@/core/hooks/use-unsaved-guard";
 import { VariantsTable } from "@/modules/catalog/ui/components/VariantsTable";
@@ -113,6 +114,11 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const variantAxes = useMemo(
     () => productType?.attributes.filter((attribute) => attribute.scope === "variant") ?? [],
     [productType],
+  );
+  // Las etiquetas de variante («M · Negro») siguen el orden de los ejes del tipo
+  const axisOrder = useMemo(
+    () => [...variantAxes].sort((a, b) => a.position - b.position).map((axis) => axis.code),
+    [variantAxes],
   );
 
   // F17: producto espejado de una integración — los campos gobernados se
@@ -244,18 +250,21 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             </Alert>
           )}
 
+          {/* Una galería por producto: la comparten «Fotos» y la tabla de variantes */}
+          <ProductGalleryProvider
+            product={product}
+            canManage={canManage && !locked.has("images")}
+            lockedByStore={locked.has("images")}
+            axisOrder={axisOrder}
+            onSaved={setProduct}
+            setAlert={showAlert}
+          >
           <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] [&>*]:min-w-0">
             {/* Derecha en escritorio; primero en el celular (canvas tablero 5). */}
             <div className="flex flex-col gap-4 lg:col-start-2 lg:row-start-1">
               <ProductReadinessIsland readiness={readiness} canManage={canManage} />
               <div className={CARD}>
-                <ProductPhotosSection
-                  product={product}
-                  canManage={canManage && !locked.has("images")}
-                  lockedByStore={locked.has("images")}
-                  onSaved={setProduct}
-                  setAlert={showAlert}
-                />
+                <ProductPhotosSection />
               </div>
             </div>
 
@@ -318,6 +327,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               </div>
             </div>
           </div>
+          </ProductGalleryProvider>
 
           {/* Metadatos con IA: lo generado es de axi y se edita también en un
               espejado; solo «Aplicar categoría» respeta el gobierno del sync */}

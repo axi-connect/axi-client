@@ -17,7 +17,7 @@ const product = {
   kind: "product",
   name: "Protector solar FPS 50",
   description: "Toque seco",
-  image_url: null,
+
   product_type_id: null,
   price_cents: 7_200_000,
   currency: "COP",

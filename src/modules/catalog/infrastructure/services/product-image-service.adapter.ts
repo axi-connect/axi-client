@@ -1,49 +1,54 @@
-import { http } from "@/core/services/http";
+import { http, type UploadOptions } from "@/core/services/http";
 import type {
+  ProductDTO,
   ProductImageDTO,
   ProductImageUrlDTO,
   ReorderProductImagesDTO,
+  SetVariantPrimaryImagesDTO,
 } from "@/modules/catalog/domain/product";
 
 /**
- * Adapter HTTP de la galería de imágenes del catálogo (F16).
+ * Adapter HTTP de la galería del catálogo (F16 + plan catalog_images_gallery).
+ * Es la ÚNICA entrada de fotos del panel: ya no hay campo URL en producto ni
+ * variante.
  *
- * Los uploads viajan como `multipart/form-data`: el `http` singleton detecta
- * `FormData` y NO fija `Content-Type` (el navegador pone el boundary). El
- * campo binario se llama `file`; `alt_text` es opcional.
+ * Las subidas son `multipart/form-data` por `http.upload` (XHR, para tener
+ * progreso real). El campo binario es `file`; `make_primary` deja la foto como
+ * principal de su contenedor aunque ya hubiera otra.
  *
- * `url` de cada imagen es un thumbnail PRESIGNED con TTL ~300 s: tratarla como
- * efímera y, ante un 403 al pintarla, re-fetch del detalle del producto.
+ * La `url` de cada imagen es un thumbnail presigned estable durante una hora
+ * (cacheable): ante un error al pintarla, re-pedir el detalle del producto.
  */
-function buildImageForm(file: File, altText?: string): FormData {
+export type UploadImageInput = {
+  file: File;
+  altText?: string;
+  makePrimary?: boolean;
+};
+
+function buildImageForm({ file, altText, makePrimary }: UploadImageInput): FormData {
   const form = new FormData();
   form.append("file", file, file.name);
   if (altText && altText.trim()) form.append("alt_text", altText.trim());
+  if (makePrimary) form.append("make_primary", "true");
   return form;
 }
 
-/** Sube una foto a la galería del PRODUCTO (comodín para todas las variantes). */
+/** Sube una foto GENERAL del producto (de todas sus variantes). */
 export function uploadProductImage(
   productId: string,
-  file: File,
-  altText?: string,
+  input: UploadImageInput,
+  options?: UploadOptions,
 ): Promise<ProductImageDTO> {
-  return http.post<ProductImageDTO>(
-    `/catalog/products/${productId}/images`,
-    buildImageForm(file, altText),
-  );
+  return http.upload<ProductImageDTO>(`/catalog/products/${productId}/images`, buildImageForm(input), options);
 }
 
-/** Sube una foto a la galería de una VARIANTE (el backend deriva el producto). */
+/** Sube una foto PROPIA de una variante (el backend deriva el producto). */
 export function uploadVariantImage(
   variantId: string,
-  file: File,
-  altText?: string,
+  input: UploadImageInput,
+  options?: UploadOptions,
 ): Promise<ProductImageDTO> {
-  return http.post<ProductImageDTO>(
-    `/catalog/variants/${variantId}/images`,
-    buildImageForm(file, altText),
-  );
+  return http.upload<ProductImageDTO>(`/catalog/variants/${variantId}/images`, buildImageForm(input), options);
 }
 
 /** Presigned del ORIGINAL (para el lightbox/zoom); pedirla fresca al abrir. */
@@ -52,18 +57,34 @@ export function getImageOriginalUrl(imageId: string): Promise<ProductImageUrlDTO
 }
 
 /**
- * Replace-set del orden de UN contenedor (producto o una variante).
+ * Replace-set del orden de UN contenedor (generales o las de una variante).
  * `image_ids` debe ser el set COMPLETO de la galería (parcial/ajeno → 404).
- * La primera posición es la foto principal (la que la IA envía primero).
  */
-export function reorderProductImages(
-  productId: string,
-  dto: ReorderProductImagesDTO,
-): Promise<void> {
+export function reorderProductImages(productId: string, dto: ReorderProductImagesDTO): Promise<void> {
   return http.put(`/catalog/products/${productId}/images/reorder`, dto);
 }
 
-/** Soft-delete: desaparece de la galería; los mensajes enviados conservan su copia. */
+/** Soft-delete: si era principal, la reemplaza la siguiente lista. */
 export function deleteProductImage(imageId: string): Promise<void> {
   return http.delete(`/catalog/images/${imageId}`);
+}
+
+/** Foto por URL (importador) cuya descarga falló: vuelve a intentarse en su misma fila. */
+export function retryImageImport(imageId: string): Promise<ProductImageDTO> {
+  return http.post<ProductImageDTO>(`/catalog/images/${imageId}/retry-import`, {});
+}
+
+/** Elige la principal del producto. Devuelve el producto entero, ya repintable. */
+export function setProductPrimaryImage(productId: string, imageId: string): Promise<ProductDTO> {
+  return http.put<ProductDTO>(`/catalog/products/${productId}/primary-image`, { image_id: imageId });
+}
+
+/** Principal de UNA variante; `null` = vuelve a usar la del producto. */
+export function setVariantPrimaryImage(variantId: string, imageId: string | null): Promise<ProductDTO> {
+  return http.put<ProductDTO>(`/catalog/variants/${variantId}/primary-image`, { image_id: imageId });
+}
+
+/** «Usar en variante…»: varias variantes en un guardado, todo o nada. */
+export function setVariantPrimaryImages(productId: string, dto: SetVariantPrimaryImagesDTO): Promise<ProductDTO> {
+  return http.put<ProductDTO>(`/catalog/products/${productId}/variant-primary-images`, dto);
 }

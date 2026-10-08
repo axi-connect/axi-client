@@ -13,7 +13,6 @@ import type { GovernedField, ProductDTO } from "@/modules/catalog/domain/product
 import { updateProduct } from "@/modules/catalog/infrastructure/services/product-service.adapter";
 import { useCatalog } from "@/modules/catalog/infrastructure/stores/catalog.context";
 import { EffectiveCategoryField } from "./EffectiveCategoryField";
-import { ProductThumb } from "./ProductThumb";
 import { PriceInput } from "./PriceInput";
 import {
   NONE_VALUE,
@@ -94,7 +93,6 @@ export function ProductBaseSection({
   }, [product]);
 
   const currency = form.watch("currency");
-  const imageUrl = form.watch("image_url");
   const isDirty = form.formState.isDirty;
   useEffect(() => {
     onDirtyChange?.(isDirty);
@@ -134,7 +132,7 @@ export function ProductBaseSection({
             </p>
           ) : null}
           <fieldset disabled={!editable} className="space-y-4">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div>
               <FormField
                 name="name"
                 control={form.control}
@@ -145,31 +143,6 @@ export function ProductBaseSection({
                       <Input maxLength={200} {...field} />
                     </FormControl>
                     {lockHint("name")}
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                name="image_url"
-                control={form.control}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Imagen (URL)</FormLabel>
-                    <div className="flex items-center gap-2">
-                      <FormControl>
-                        <Input type="url" placeholder="https://…/producto.png" {...field} />
-                      </FormControl>
-                      {/* Misma vista previa que al crear (inventario B §3.6). */}
-                      <ProductThumb
-                        src={imageUrl || null}
-                        alt="Vista previa de la imagen"
-                        kind={product.kind}
-                        className="h-9 w-9 shrink-0 rounded-lg"
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      La descargaremos y la serviremos desde axi para que siempre cargue rápido
-                    </p>
                     <FormMessage />
                   </FormItem>
                 )}

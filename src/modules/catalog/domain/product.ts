@@ -25,25 +25,37 @@ export type ProductAttributeValueDTO = ProductDTO["attribute_values"][number];
 export type ProductKind = ProductDTO["kind"];
 
 /**
- * Galería de imágenes del producto (F16). Una imagen pertenece al producto
- * (`variant_id: null`, "comodín" para todas las variantes) o a una variante
- * concreta. `url` es un thumbnail PRESIGNED con TTL ~300 s (efímero).
+ * Galería de imágenes del producto (F16 + plan catalog_images_gallery). Una
+ * imagen es general (`variant_id: null`, de todas las variantes) o propia de
+ * una variante. `url` es un thumbnail presigned estable durante una hora: el
+ * navegador la cachea, y ante un error de carga se re-pide el detalle. La
+ * principal y su lógica viven en `product-gallery.ts`.
  */
 export type ProductImageDTO = Schemas["ProductImageDto"];
 export type ProductImageUrlDTO = Schemas["ProductImageUrlDto"];
 export type ReorderProductImagesDTO = Schemas["ReorderProductImagesDto"];
+export type SetVariantPrimaryImagesDTO = Schemas["SetVariantPrimaryImagesDto"];
+export type PrimaryImageDTO = ProductDTO["primary_image"];
 export type ProductImageStatus = ProductImageDTO["status"];
 
 /** Límites del backend, espejados para validar en cliente antes de subir. */
 export const PRODUCT_IMAGE_MAX_BYTES = 5 * 1024 * 1024; // 5 MB (tope de WhatsApp Cloud API)
-export const PRODUCT_GALLERY_MAX = 10; // fotos "comodín" del producto
-export const VARIANT_GALLERY_MAX = 5; // fotos por variante
+export const PRODUCT_GALLERY_MAX = 10; // fotos generales del producto
+export const VARIANT_GALLERY_MAX = 5; // fotos propias por variante
+/** Lo que el servidor recibe: la reducción en el navegador convierte el resto a JPEG. */
 export const ACCEPTED_IMAGE_MIME = [
   "image/jpeg",
   "image/png",
   "image/webp",
 ] as const;
-export const ACCEPTED_IMAGE_ACCEPT = ACCEPTED_IMAGE_MIME.join(",");
+/**
+ * Lo que se puede ELEGIR: además HEIC/HEIF (fotos de iPhone). El navegador las
+ * reduce a JPEG antes de subir; si no sabe decodificarlas, lo dice esa foto.
+ */
+export const SELECTABLE_IMAGE_MIME = [...ACCEPTED_IMAGE_MIME, "image/heic", "image/heif"] as const;
+export const ACCEPTED_IMAGE_ACCEPT = [...SELECTABLE_IMAGE_MIME, ".heic", ".heif"].join(",");
+/** Antes de reducir: una foto de celular sin tocar pesa 4–12 MB. */
+export const PRODUCT_IMAGE_INPUT_MAX_BYTES = 40 * 1024 * 1024;
 
 /** Polling del import por URL (no hay evento WS en esta fase). */
 export const IMAGE_IMPORT_POLL_MS = 3_000;
@@ -70,46 +82,21 @@ export function imageImportPollInterval(
   return IMAGE_IMPORT_POLL_MS;
 }
 
-/** Resultado de validar un archivo en cliente: `null` = válido, string = motivo. */
-export function validateImageFile(file: File): string | null {
-  if (
-    !ACCEPTED_IMAGE_MIME.includes(
-      file.type as (typeof ACCEPTED_IMAGE_MIME)[number],
-    )
-  ) {
-    return "Formato no soportado: usa JPEG, PNG o WebP.";
+/**
+ * Validación de lo ELEGIDO, antes de reducir: `null` = válido, string =
+ * motivo. Windows no siempre etiqueta el HEIC, así que la extensión también
+ * cuenta. El tope de 5 MB se aplica DESPUÉS de reducir (en la cola).
+ */
+export function validateImageFile(file: Pick<File, "name" | "type" | "size">): string | null {
+  const byType = SELECTABLE_IMAGE_MIME.includes(file.type as (typeof SELECTABLE_IMAGE_MIME)[number]);
+  const byExtension = /\.(jpe?g|png|webp|heic|heif)$/i.test(file.name);
+  if (!byType && !byExtension) {
+    return "Formato no soportado: usa JPG, PNG, WebP o HEIC.";
   }
-  if (file.size > PRODUCT_IMAGE_MAX_BYTES) {
-    return "La imagen supera el máximo de 5 MB.";
+  if (file.size > PRODUCT_IMAGE_INPUT_MAX_BYTES) {
+    return "La foto supera los 40 MB.";
   }
   return null;
-}
-
-/**
- * Separa la galería en fotos del producto (comodín) y fotos por variante,
- * cada contenedor ordenado por `position`. El backend ya entrega el array
- * ordenado, pero reordenamos por robustez ante mutaciones optimistas.
- */
-export function groupProductImages(images: ProductImageDTO[] | undefined): {
-  productImages: ProductImageDTO[];
-  byVariant: Map<string, ProductImageDTO[]>;
-} {
-  const productImages: ProductImageDTO[] = [];
-  const byVariant = new Map<string, ProductImageDTO[]>();
-  for (const image of images ?? []) {
-    if (image.variant_id === null) {
-      productImages.push(image);
-    } else {
-      const bucket = byVariant.get(image.variant_id) ?? [];
-      bucket.push(image);
-      byVariant.set(image.variant_id, bucket);
-    }
-  }
-  const byPosition = (a: ProductImageDTO, b: ProductImageDTO) =>
-    a.position - b.position;
-  productImages.sort(byPosition);
-  for (const bucket of byVariant.values()) bucket.sort(byPosition);
-  return { productImages, byVariant };
 }
 
 export const PRODUCT_KIND_LABELS: Record<ProductKind, string> = {
@@ -153,7 +140,8 @@ export type ProductRow = {
   id: string;
   name: string;
   kind: ProductKind;
-  image_url: string | null;
+  /** Miniatura de la foto principal (firmada, estable por una hora); null = sin fotos */
+  thumb_url: string | null;
   /** D5: la categoría EFECTIVA (propia o automática aplicada), no `category_id`. */
   category_id: string | null;
   category_name: string;

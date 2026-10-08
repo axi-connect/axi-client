@@ -29,7 +29,6 @@ export const productFormSchema = z
     kind: z.enum(["product", "service"]),
     name: z.string().trim().min(1, "Nombre requerido").max(200, "Máximo 200 caracteres"),
     description: z.string().trim().max(2000, "Máximo 2000 caracteres").optional().or(z.literal("")),
-    image_url: z.url("URL inválida").optional().or(z.literal("")),
     catalog_id: z.string().min(1, "Selecciona el catálogo"),
     category_id: z.string().optional(),
     product_type_id: z.string().optional(),
@@ -90,7 +89,6 @@ export const defaultProductFormValues: ProductFormValues = {
   kind: "product",
   name: "",
   description: "",
-  image_url: "",
   catalog_id: "",
   category_id: NONE_VALUE,
   product_type_id: NONE_VALUE,
@@ -120,7 +118,6 @@ export function toCreateProductDTO(values: ProductFormValues): CreateProductDTO 
     price_cents: values.price_cents ?? 0,
     currency: values.currency,
     ...(values.description ? { description: values.description } : {}),
-    ...(values.image_url ? { image_url: values.image_url } : {}),
     ...(categoryId ? { category_id: categoryId } : {}),
     ...(productTypeId ? { product_type_id: productTypeId } : {}),
     ...(isService
@@ -149,7 +146,6 @@ export const productBaseFormSchema = z
   .object({
     name: z.string().trim().min(1, "Nombre requerido").max(200, "Máximo 200 caracteres"),
     description: z.string().trim().max(2000, "Máximo 2000 caracteres").optional().or(z.literal("")),
-    image_url: z.url("URL inválida").optional().or(z.literal("")),
     product_type_id: z.string().optional(),
     price_cents: z
       .number({ message: "Precio requerido" })
@@ -189,7 +185,6 @@ export function productToBaseFormValues(product: ProductDTO): ProductBaseFormVal
   return {
     name: product.name,
     description: product.description ?? "",
-    image_url: product.image_url ?? "",
     product_type_id: product.product_type_id ?? NONE_VALUE,
     price_cents: product.price_cents,
     currency: product.currency,
@@ -205,7 +200,6 @@ export function toUpdateProductDTO(values: ProductBaseFormValues): UpdateProduct
   return {
     name: values.name,
     description: values.description || null,
-    image_url: values.image_url || null,
     // La categoría NO viaja en el PATCH: se fija por PUT /catalog/products/:id/category
     // (categoría efectiva, D5), que en un espejo escribe la clasificación y no el
     // campo gobernado.

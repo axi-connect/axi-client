@@ -15,6 +15,7 @@ const variant = (id: string, overrides: Partial<Variant> = {}): Variant => ({
   is_default: false,
   is_active: true,
   position: 0,
+  primary_image_id: null,
   stock: { on_hand: 10, out_of_stock_threshold: 0, available: true },
   ...overrides,
 });
@@ -49,11 +50,23 @@ describe("«Para que tu agente lo venda» (catálogo premium F3)", () => {
     const readiness = productReadiness(product(), type);
     expect(readiness.items.map((item) => [item.key, item.title, item.href])).toEqual([
       ["missing_attributes", "Falta el tipo de piel", "#atributos"],
-      ["variants_without_photos", "50 ml no tiene fotos", "#fotos"],
+      ["variants_without_photos", "50 ml no tiene foto propia", "#fotos"],
     ]);
     expect(readiness.items[0].action).toBe("Completar el tipo de piel");
-    expect(readiness.ready).toEqual(["4 fotos", "las 2 variantes tienen stock", "búsqueda con IA lista"]);
+    // Cuenta toda la galería: 4 generales y 1 de 30 ml
+    expect(readiness.ready).toEqual(["5 fotos", "las 2 variantes tienen stock", "búsqueda con IA lista"]);
     expect(readinessHeadline(readiness)).toBe("Le faltan 2 cosas a esta ficha");
+  });
+
+  it("una variante con una foto general ELEGIDA para ella ya está cubierta; sin elegir, no", () => {
+    const covered = productReadiness(
+      product({ variants: [variant("v30", { name: "30 ml" }), variant("v50", { name: "50 ml", primary_image_id: "i2" })] }),
+      null,
+    );
+    expect(covered.items.map((item) => item.key)).not.toContain("variants_without_photos");
+
+    const uncovered = productReadiness(product(), null);
+    expect(uncovered.items.find((item) => item.key === "variants_without_photos")?.action).toBe("Elegir la foto de 50 ml");
   });
 
   it("sin fotos del producto: lo dice (y no se queja de las variantes, que usarían las del producto)", () => {

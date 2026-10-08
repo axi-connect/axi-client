@@ -13,6 +13,7 @@ import type { ProductDTO, ProductVariantDTO, StockDTO } from "@/modules/catalog/
 import { deleteVariant } from "@/modules/catalog/infrastructure/services/product-service.adapter";
 import { VariantForm } from "@/modules/catalog/ui/forms/VariantForm";
 import { StockAdjustPopover } from "./StockAdjustPopover";
+import { VariantPrimaryNote, VariantPrimaryThumb } from "./photos/VariantPrimaryThumb";
 import { DepartureCalendar, departureLabel } from "./DepartureCalendar";
 import {
   Table,
@@ -200,7 +201,6 @@ export function VariantsTable({
               {/* Nombre y atributos en una celda (canvas tablero 4): la tabla cabe en su columna. */}
               <TableHead>{hasAxes ? "Variante" : "Nombre"}</TableHead>
               <TableHead>Precio</TableHead>
-              <TableHead>Estado</TableHead>
               <TableHead>{isService ? "" : "Stock"}</TableHead>
               {(canManage || canAdjustStock) && (
                 <TableHead className="text-right">
@@ -221,25 +221,28 @@ export function VariantsTable({
                   </span>
                 </TableCell>
                 <TableCell className="text-sm">
-                  <span className="flex min-w-0 flex-col gap-0.5">
-                    <span>{variant.name || "—"}</span>
-                    {hasAxes && formatAttributes(variant) ? (
-                      <span className="text-xs text-muted-foreground">{formatAttributes(variant)}</span>
-                    ) : null}
+                  <span className="flex min-w-0 items-center gap-3">
+                    <VariantPrimaryThumb variant={variant} />
+                    <span className="flex min-w-0 flex-col gap-0.5">
+                      <span>{variant.name || "—"}</span>
+                      {hasAxes && formatAttributes(variant) ? (
+                        <span className="text-xs text-muted-foreground">{formatAttributes(variant)}</span>
+                      ) : null}
+                      <VariantPrimaryNote variant={variant} />
+                      {/* Sin columna «Estado» (lienzo de la galería): la miniatura
+                          necesita el ancho. Activa es lo normal; solo se marca la
+                          inactiva, con el estado en el punto (DS §10). */}
+                      {!variant.is_active ? (
+                        <span className="inline-flex items-center gap-1.5 text-xs whitespace-nowrap">
+                          <span aria-hidden="true" className="size-1.5 rounded-full bg-muted-foreground" />
+                          Inactiva
+                        </span>
+                      ) : null}
+                    </span>
                   </span>
                 </TableCell>
                 <TableCell className="text-sm whitespace-nowrap tabular-nums">
                   {formatMoney(variant.price_cents, product.currency)}
-                </TableCell>
-                <TableCell>
-                  {/* El estado en el punto, el texto en foreground (DS §10). */}
-                  <span className="inline-flex items-center gap-1.5 text-sm whitespace-nowrap">
-                    <span
-                      aria-hidden="true"
-                      className={cn("size-1.5 rounded-full", variant.is_active ? "bg-success" : "bg-muted-foreground")}
-                    />
-                    {variant.is_active ? "Activa" : "Inactiva"}
-                  </span>
                 </TableCell>
                 <TableCell>
                   <VariantStockCell variant={variant} isService={isService} />

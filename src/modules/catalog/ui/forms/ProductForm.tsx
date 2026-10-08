@@ -19,9 +19,10 @@ import { applyServerValidation, errorMessage } from "@/core/lib/error-messages";
 import { flattenCategoryTree } from "@/modules/catalog/domain/category";
 import { PRODUCT_KIND_LABELS, type ProductDTO, type ProductKind } from "@/modules/catalog/domain/product";
 import { createProduct } from "@/modules/catalog/infrastructure/services/product-service.adapter";
+import { photoUploadQueue } from "@/modules/catalog/infrastructure/stores/photo-upload-queue";
 import { useCatalog } from "@/modules/catalog/infrastructure/stores/catalog.context";
 import { PriceInput } from "@/modules/catalog/ui/components/PriceInput";
-import { ProductThumb } from "@/modules/catalog/ui/components/ProductThumb";
+import { DraftPhotosField, type DraftPhoto } from "@/modules/catalog/ui/components/photos/DraftPhotosField";
 import { VariantRowsEditor } from "@/modules/catalog/ui/components/VariantRowsEditor";
 import {
   defaultProductFormValues,
@@ -49,13 +50,12 @@ import {
 } from "@/shared/components/ui/select";
 import type { AppAlert } from "@/core/notifications";
 
-type StepKey = "kind" | "basic" | "class" | "price" | "schedule" | "variants";
+type StepKey = "kind" | "basic" | "photos" | "class" | "price" | "schedule" | "variants";
 
 /** Campos del formulario → el paso que los contiene (para abrir el que tenga errores al enviar). */
 const STEP_OF_FIELD: Record<string, StepKey> = {
   kind: "kind",
   name: "basic",
-  image_url: "basic",
   description: "basic",
   catalog_id: "class",
   category_id: "class",
@@ -121,10 +121,16 @@ export type ProductFormProps = {
  * Creación de producto: un solo POST atómico (datos base + clasificación +
  * precio + agendamiento condicional + `default_sku` XOR `variants[]`).
  * Los atributos ámbito producto se completan después, en el detalle.
+ *
+ * Fotos (plan catalog_images_gallery): se eligen del dispositivo —ya no hay
+ * campo URL— y, creado el producto, la cola de subida las reduce y sube con
+ * la principal marcada. La cola sigue en la ficha, adonde se navega enseguida.
  */
 export function ProductForm({ onCreated, setAlert, onDirtyChange, onCancel }: ProductFormProps) {
   const { catalogs, categoryTree, productTypes } = useCatalog();
   const [submitting, setSubmitting] = useState(false);
+  const [photos, setPhotos] = useState<DraftPhoto[]>([]);
+  const [principalPhotoId, setPrincipalPhotoId] = useState<string | null>(null);
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
@@ -133,7 +139,6 @@ export function ProductForm({ onCreated, setAlert, onDirtyChange, onCancel }: Pr
 
   const kind = form.watch("kind");
   const variantMode = form.watch("variant_mode");
-  const imageUrl = form.watch("image_url");
   const currency = form.watch("currency");
   const productTypeId = form.watch("product_type_id");
 
@@ -164,7 +169,7 @@ export function ProductForm({ onCreated, setAlert, onDirtyChange, onCancel }: Pr
     setClosed((previous) => new Set([...previous].filter((key) => !withErrors.has(key))));
   };
 
-  const isDirty = form.formState.isDirty;
+  const isDirty = form.formState.isDirty || photos.length > 0;
   useEffect(() => {
     onDirtyChange?.(isDirty);
   }, [isDirty, onDirtyChange]);
@@ -191,10 +196,13 @@ export function ProductForm({ onCreated, setAlert, onDirtyChange, onCancel }: Pr
 
   const kindSummary = isService ? "Servicio · se agenda con duración y reserva" : "Producto · maneja variantes y stock";
   const basicSummary = nameFilled
-    ? [name.trim(), descriptionText ? "con descripción" : "sin descripción", imageUrl ? "imagen por URL" : null]
-        .filter(Boolean)
-        .join(" · ")
+    ? [name.trim(), descriptionText ? "con descripción" : "sin descripción"].join(" · ")
     : "Falta el nombre";
+  const principalPhoto = photos.find((photo) => photo.id === principalPhotoId) ?? null;
+  const photosSummary =
+    photos.length === 0
+      ? "Sin fotos: tu agente solo podrá describirlo"
+      : `${photos.length} ${photos.length === 1 ? "foto" : "fotos"} · principal: «${principalPhoto?.file.name ?? ""}»`;
   const classSummary = catalogName
     ? [catalogName, categoryName ?? "sin categoría: la clasificación propone una", selectedType?.name].filter(Boolean).join(" · ")
     : "Falta el catálogo";
@@ -245,7 +253,16 @@ export function ProductForm({ onCreated, setAlert, onDirtyChange, onCancel }: Pr
           } as Check,
         ]
       : []),
-    { key: "photos", state: "note", text: "Las fotos se suben en la ficha, cuando el producto ya existe" },
+    photos.length > 0
+      ? {
+          key: "photos",
+          state: "done",
+          text: `${photos.length} ${photos.length === 1 ? "foto" : "fotos"}, con «${principalPhoto?.file.name ?? ""}» como principal`,
+        }
+      : { key: "photos", state: "note", text: "Sin fotos tu agente no podrá mostrar este producto." },
+    ...(photos.length > 0
+      ? [{ key: "photos-upload", state: "note", text: "Las fotos se suben al crear. Puedes seguir en la ficha mientras terminan." } as Check]
+      : []),
   ];
   const hasErrors = Object.keys(errors).length > 0;
   const dockMessage = hasErrors
@@ -259,6 +276,14 @@ export function ProductForm({ onCreated, setAlert, onDirtyChange, onCancel }: Pr
     setSubmitting(true);
     try {
       const created = await createProduct(toCreateProductDTO(values));
+      if (photos.length > 0) {
+        const index = photos.findIndex((photo) => photo.id === principalPhotoId);
+        photoUploadQueue.enqueue({
+          product_id: created.id,
+          files: photos.map((photo) => photo.file),
+          primary_index: index >= 0 ? index : 0,
+        });
+      }
       const pendingRequiredAttributes = Boolean(
         selectedType?.attributes.some((attribute) => attribute.scope === "product" && attribute.is_required),
       );
@@ -309,7 +334,7 @@ export function ProductForm({ onCreated, setAlert, onDirtyChange, onCancel }: Pr
             </FormStep>
 
             <FormStep number={2} title="Datos básicos" summary={basicSummary} state={nameFilled ? "done" : "pending"} open={isOpen("basic")} onToggle={() => toggle("basic")}>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
                 <FormField
                   name="name"
                   control={form.control}
@@ -319,30 +344,6 @@ export function ProductForm({ onCreated, setAlert, onDirtyChange, onCancel }: Pr
                       <FormControl>
                         <Input placeholder={isService ? "Corte de cabello" : "Camiseta básica"} maxLength={200} {...field} />
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  name="image_url"
-                  control={form.control}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Imagen (URL)</FormLabel>
-                      <div className="flex items-center gap-2">
-                        <FormControl>
-                          <Input type="url" placeholder="https://…/producto.png" {...field} />
-                        </FormControl>
-                        <ProductThumb
-                          src={imageUrl || null}
-                          alt="Vista previa de la imagen"
-                          kind={kind}
-                          className="h-9 w-9 shrink-0 rounded-lg"
-                        />
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        La descargaremos y la serviremos desde axi para que siempre cargue rápido
-                      </p>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -370,6 +371,26 @@ export function ProductForm({ onCreated, setAlert, onDirtyChange, onCancel }: Pr
 
             <FormStep
               number={3}
+              title="Fotos"
+              subtitle="Las que tu agente envía cuando un cliente pide ver el producto."
+              summary={photosSummary}
+              state={photos.length > 0 ? "done" : "pending"}
+              open={isOpen("photos")}
+              onToggle={() => toggle("photos")}
+            >
+              <DraftPhotosField
+                photos={photos}
+                principalId={principalPhotoId}
+                onChange={(next, principal) => {
+                  setPhotos(next);
+                  setPrincipalPhotoId(principal);
+                }}
+                setAlert={setAlert}
+              />
+            </FormStep>
+
+            <FormStep
+              number={4}
               title="Clasificación"
               subtitle="Dónde vive y cómo se tipa este producto."
               summary={classSummary}
@@ -472,7 +493,7 @@ export function ProductForm({ onCreated, setAlert, onDirtyChange, onCancel }: Pr
               </div>
             </FormStep>
 
-            <FormStep number={4} title="Precio" summary={priceSummary} state={priceFilled ? "done" : "pending"} open={isOpen("price")} onToggle={() => toggle("price")}>
+            <FormStep number={5} title="Precio" summary={priceSummary} state={priceFilled ? "done" : "pending"} open={isOpen("price")} onToggle={() => toggle("price")}>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <FormField
                   name="price_cents"
@@ -521,7 +542,7 @@ export function ProductForm({ onCreated, setAlert, onDirtyChange, onCancel }: Pr
 
             {isService && (
               <FormStep
-                number={5}
+                number={6}
                 title="Agendamiento"
                 subtitle="Cómo se reserva este servicio."
                 summary={scheduleSummary}
@@ -595,7 +616,7 @@ export function ProductForm({ onCreated, setAlert, onDirtyChange, onCancel }: Pr
             )}
 
             <FormStep
-              number={isService ? 6 : 5}
+              number={isService ? 7 : 6}
               title="Variantes"
               subtitle="Todo producto nace con al menos una variante (su SKU)."
               summary={variantsSummary}

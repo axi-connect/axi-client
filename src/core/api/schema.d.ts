@@ -2308,6 +2308,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/catalog/products/{id}/primary-image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["ProductImagesController_setProductPrimary_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/products/{id}/variant-primary-images": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["ProductImagesController_setVariantPrimaries_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/variants/{id}/primary-image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["ProductImagesController_setVariantPrimary_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/images/{id}/retry-import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProductImagesController_retryImport_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/catalog/images/{id}": {
         parameters: {
             query?: never;
@@ -11974,6 +12038,13 @@ export interface components {
                 price_cents: number;
                 currency: string;
                 image_url: string | null;
+                /** Format: uuid */
+                primary_image_id: string | null;
+                primary_image: {
+                    /** Format: uuid */
+                    id: string;
+                    url: string | null;
+                } | null;
                 is_active: boolean;
                 duration_minutes: number | null;
                 buffer_minutes: number | null;
@@ -12008,6 +12079,8 @@ export interface components {
                     is_default: boolean;
                     is_active: boolean;
                     position: number;
+                    /** Format: uuid */
+                    primary_image_id: string | null;
                     stock: {
                         on_hand: number;
                         out_of_stock_threshold: number;
@@ -12097,6 +12170,13 @@ export interface components {
             price_cents: number;
             currency: string;
             image_url: string | null;
+            /** Format: uuid */
+            primary_image_id: string | null;
+            primary_image: {
+                /** Format: uuid */
+                id: string;
+                url: string | null;
+            } | null;
             is_active: boolean;
             duration_minutes: number | null;
             buffer_minutes: number | null;
@@ -12131,6 +12211,8 @@ export interface components {
                 is_default: boolean;
                 is_active: boolean;
                 position: number;
+                /** Format: uuid */
+                primary_image_id: string | null;
                 stock: {
                     on_hand: number;
                     out_of_stock_threshold: number;
@@ -12206,8 +12288,6 @@ export interface components {
             description?: string;
             price_cents: number;
             currency?: string;
-            /** Format: uri */
-            image_url?: string;
             duration_minutes?: number;
             buffer_minutes?: number;
             requires_booking?: boolean;
@@ -12236,8 +12316,6 @@ export interface components {
             description?: string | null;
             price_cents?: number;
             currency?: string;
-            /** Format: uri */
-            image_url?: string | null;
             is_active?: boolean;
             duration_minutes?: number | null;
             buffer_minutes?: number | null;
@@ -12261,8 +12339,6 @@ export interface components {
             is_default?: boolean;
             is_active?: boolean;
             position?: number;
-            /** Format: uri */
-            image_url?: string;
         };
         UpdateVariantDto: {
             sku?: string;
@@ -12274,8 +12350,6 @@ export interface components {
             is_default?: boolean;
             is_active?: boolean;
             position?: number;
-            /** Format: uri */
-            image_url?: string;
         };
         AdjustStockDto: {
             /** @enum {string} */
@@ -12316,6 +12390,22 @@ export interface components {
             /** Format: uuid */
             variant_id?: string | null;
             image_ids: string[];
+        };
+        SetProductPrimaryImageDto: {
+            /** Format: uuid */
+            image_id: string;
+        };
+        SetVariantPrimaryImagesDto: {
+            assignments: {
+                /** Format: uuid */
+                variant_id: string;
+                /** Format: uuid */
+                image_id: string | null;
+            }[];
+        };
+        SetVariantPrimaryImageDto: {
+            /** Format: uuid */
+            image_id: string | null;
         };
         RecognitionIndexStatusDto: {
             enabled: boolean;
@@ -28393,6 +28483,8 @@ export interface operations {
                     /** Format: binary */
                     file: string;
                     alt_text?: string;
+                    /** @enum {string} */
+                    make_primary?: "true" | "false";
                 };
             };
         };
@@ -28422,6 +28514,8 @@ export interface operations {
                     /** Format: binary */
                     file: string;
                     alt_text?: string;
+                    /** @enum {string} */
+                    make_primary?: "true" | "false";
                 };
             };
         };
@@ -28477,6 +28571,102 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    ProductImagesController_setProductPrimary_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetProductPrimaryImageDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductDto"];
+                };
+            };
+        };
+    };
+    ProductImagesController_setVariantPrimaries_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetVariantPrimaryImagesDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductDto"];
+                };
+            };
+        };
+    };
+    ProductImagesController_setVariantPrimary_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetVariantPrimaryImageDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductDto"];
+                };
+            };
+        };
+    };
+    ProductImagesController_retryImport_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductImageDto"];
+                };
             };
         };
     };

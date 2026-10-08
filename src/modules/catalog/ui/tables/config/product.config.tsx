@@ -29,7 +29,7 @@ export function mapProductToRow(
     id: item.id,
     name: item.name,
     kind: item.kind,
-    image_url: item.image_url,
+    thumb_url: item.primary_image?.url ?? null,
     category_id: categoryId,
     category_name: categoryName ?? "Sin categoría",
     category_is_automatic: effective?.is_automatic ?? false,

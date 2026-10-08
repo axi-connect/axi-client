@@ -11,7 +11,7 @@ const row = (overrides: Partial<ProductRow> = {}): ProductRow => ({
   id: "p1",
   name: "Sérum de vitamina C al 15 %",
   kind: "product",
-  image_url: null,
+  thumb_url: null,
   category_id: "c1",
   category_name: "Sérums",
   category_is_automatic: true,

@@ -1,6 +1,6 @@
 "use client";
 
-import { Lock } from "lucide-react";
+import { ImagePlus, Lock } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { StatePill } from "@/shared/components/features/bento";
 import { formatMoney } from "@/core/lib/format";
@@ -49,14 +49,25 @@ export function ProductDetailHeader({
 
   return (
     <header id="ficha" className="flex scroll-mt-24 flex-col gap-5 sm:flex-row sm:items-center">
-      <ProductThumb
-        src={product.image_url}
-        alt={`Imagen de ${product.name}`}
-        kind={product.kind}
-        className="size-20 shrink-0 rounded-[22px] sm:size-28"
-        iconClassName="h-9 w-9"
-        sizes="112px"
-      />
+      {product.primary_image ? (
+        <ProductThumb
+          src={product.primary_image.url}
+          alt={`Imagen de ${product.name}`}
+          kind={product.kind}
+          className="size-20 shrink-0 rounded-[22px] sm:size-28"
+          iconClassName="h-9 w-9"
+          sizes="112px"
+        />
+      ) : (
+        // Sin fotos, el hueco lleva a la galería (lienzo, «Cabecera sin fotos»)
+        <a
+          href="#fotos"
+          className="flex size-20 shrink-0 flex-col items-center justify-center gap-1 rounded-[22px] border-[1.5px] border-dashed border-foreground/15 text-xs font-medium text-foreground transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:size-28"
+        >
+          <ImagePlus aria-hidden="true" className="size-5" />
+          Subir fotos
+        </a>
+      )}
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <StatePill tone={product.is_active ? "success" : "neutral"}>{product.is_active ? "Activo" : "Inactivo"}</StatePill>

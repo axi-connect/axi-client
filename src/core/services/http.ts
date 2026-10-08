@@ -36,6 +36,12 @@ export type HttpRequestOptions = {
 
 export type Params = Record<string, string | number | boolean | undefined>;
 
+export type UploadOptions = {
+  signal?: AbortSignal;
+  /** Fracción subida, 0..1. Solo existe en el browser (XHR): `fetch` no expone progreso. */
+  onProgress?: (fraction: number) => void;
+};
+
 type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
 export class HttpClient {
@@ -65,6 +71,41 @@ export class HttpClient {
     return this.request<T>("DELETE", path, { options });
   }
 
+  /**
+   * POST multipart con progreso de subida (galería del catálogo). Va por XHR
+   * porque `fetch` no informa cuántos bytes salieron; por lo demás es el mismo
+   * contrato que `post`: BFF, errores RFC 7807 y las mismas señales globales.
+   * Solo browser — en el server no hay a quién mostrarle una barra.
+   */
+  upload<T>(path: string, form: FormData, options: UploadOptions = {}): Promise<T> {
+    const url = this.buildUrl(path, true);
+    return new Promise<T>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", url);
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) options.onProgress?.(event.loaded / event.total);
+      };
+      xhr.onload = () => {
+        const headers = new Headers();
+        const contentType = xhr.getResponseHeader("content-type");
+        if (contentType) headers.set("content-type", contentType);
+        const res = new Response(xhr.status === 204 ? null : xhr.responseText, {
+          status: xhr.status,
+          headers,
+        });
+        if (!res.ok) {
+          void this.toError(res).then(reject, reject);
+          return;
+        }
+        resolve((xhr.responseText ? JSON.parse(xhr.responseText) : undefined) as T);
+      };
+      xhr.onerror = () => reject(new TypeError("Falló la conexión al subir el archivo"));
+      xhr.onabort = () => reject(new DOMException("Subida cancelada", "AbortError"));
+      options.signal?.addEventListener("abort", () => xhr.abort(), { once: true });
+      xhr.send(form);
+    });
+  }
+
   private async request<T>(
     method: Method,
     path: string,
@@ -89,33 +130,36 @@ export class HttpClient {
       ...(cacheable ? { next: { revalidate: options.revalidate } } : { cache: "no-store" }),
     });
 
-    if (!res.ok) {
-      const error = await parseHttpError(res);
-      // F15: la suspensión de la empresa puede llegar en CUALQUIER request.
-      // Único choke-point del interceptor: se anuncia al AuthProvider (pantalla
-      // bloqueante) y se re-lanza igual para no alterar el manejo local de los
-      // callers. Solo browser: en RSC el error fluye y el cliente lo ve al hidratar.
-      if (typeof window !== "undefined" && isSuspensionCode(error.code)) {
-        // El detail lleva el code: el AuthProvider elige la variante de copy
-        // (suspensión genérica vs prueba finalizada)
-        window.dispatchEvent(new CustomEvent(COMPANY_SUSPENDED_EVENT, { detail: error.code }));
-      }
-      // Acceso de soporte: la barra de soporte avisa «No disponible en
-      // soporte» o manda la pestaña al cierre. Fuera de soporte no llegan.
-      if (
-        typeof window !== "undefined" &&
-        (error.code === API_ERROR_CODES.supportActionForbidden ||
-          error.code === API_ERROR_CODES.supportSessionEnded)
-      ) {
-        window.dispatchEvent(new CustomEvent(SUPPORT_SESSION_EVENT, { detail: error.code }));
-      }
-      throw error;
-    }
+    if (!res.ok) throw await this.toError(res);
 
     // 202 (async aceptado) puede traer body; 204 nunca. Cualquier body vacío → undefined.
     if (res.status === 204) return undefined as T;
     const text = await res.text();
     return (text ? JSON.parse(text) : undefined) as T;
+  }
+
+  /** Error RFC 7807 de una respuesta fallida + las señales globales que dispara. */
+  private async toError(res: Response) {
+    const error = await parseHttpError(res);
+    // F15: la suspensión de la empresa puede llegar en CUALQUIER request.
+    // Único choke-point del interceptor: se anuncia al AuthProvider (pantalla
+    // bloqueante) y se re-lanza igual para no alterar el manejo local de los
+    // callers. Solo browser: en RSC el error fluye y el cliente lo ve al hidratar.
+    if (typeof window !== "undefined" && isSuspensionCode(error.code)) {
+      // El detail lleva el code: el AuthProvider elige la variante de copy
+      // (suspensión genérica vs prueba finalizada)
+      window.dispatchEvent(new CustomEvent(COMPANY_SUSPENDED_EVENT, { detail: error.code }));
+    }
+    // Acceso de soporte: la barra de soporte avisa «No disponible en
+    // soporte» o manda la pestaña al cierre. Fuera de soporte no llegan.
+    if (
+      typeof window !== "undefined" &&
+      (error.code === API_ERROR_CODES.supportActionForbidden ||
+        error.code === API_ERROR_CODES.supportSessionEnded)
+    ) {
+      window.dispatchEvent(new CustomEvent(SUPPORT_SESSION_EVENT, { detail: error.code }));
+    }
+    return error;
   }
 
   private buildUrl(path: string, authenticate: boolean, params?: Params): string {

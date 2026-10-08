@@ -14,6 +14,7 @@ function variant(overrides: Partial<Variant> = {}): Variant {
     is_default: true,
     is_active: true,
     position: 0,
+    primary_image_id: null,
     stock: null,
     ...overrides,
   };

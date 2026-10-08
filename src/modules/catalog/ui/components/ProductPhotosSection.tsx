@@ -1,147 +1,113 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { Lock, RefreshCw, Sparkles, X } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
+import { AlertCircle, ImagePlus, Info, Lock, Minimize2, RefreshCw, Store, TriangleAlert, Upload } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-import { Modal } from "@/shared/components/ui/modal";
-import { errorMessage } from "@/core/lib/error-messages";
+import { cn } from "@/core/lib/utils";
 import {
   PRODUCT_GALLERY_MAX,
   VARIANT_GALLERY_MAX,
-  groupProductImages,
   hasPendingImages,
-  type ProductDTO,
   type ProductImageDTO,
 } from "@/modules/catalog/domain/product";
 import {
-  deleteProductImage,
-  reorderProductImages,
-  uploadProductImage,
-  uploadVariantImage,
-} from "@/modules/catalog/infrastructure/services/product-image-service.adapter";
-import {
-  getProductById,
-  updateProduct,
-  updateVariant,
-} from "@/modules/catalog/infrastructure/services/product-service.adapter";
+  imagesForVariant,
+  principalFirst,
+  type GalleryFilter,
+} from "@/modules/catalog/domain/product-gallery";
 import { useProductImagesPolling } from "@/modules/catalog/infrastructure/hooks/use-product-images-polling";
-import { PhotoLightbox } from "./photos/PhotoLightbox";
+import { PhotoDropTile } from "./photos/PhotoUploader";
+import type { PhotoTileActions } from "./photos/PhotoTile";
 import { SortablePhotoGallery } from "./photos/SortablePhotoGallery";
-import type { AppAlert } from "@/core/notifications";
-
-const BANNER_DISMISSED_KEY = "axi.catalog.photos_banner_dismissed";
-
+import { UploadTile } from "./photos/UploadTile";
+import { useProductGallery } from "./photos/product-gallery.context";
 
 /**
- * Sección "Fotos" del detalle (F16): galería del producto (comodín para
- * todas las variantes) + galería por variante. La IA resuelve fotos así:
- * variante → producto → texto; la primera posición es la foto principal.
- *
- * Las `url` son presigned (TTL ~300 s): tras cada mutación se re-fetch el
- * detalle, y un error de carga dispara un refresh (nunca se cachean).
+ * Sección «Fotos» de la ficha (plan catalog_images_gallery, lienzo aprobado
+ * 2026-10-08): UNA galería por producto, con las fotos generales y las
+ * propias de cada variante en dos bandas, cada una con su tope. De aquí sale
+ * la principal del producto (anillo de tinta, siempre primera) y la de cada
+ * variante (la píldora «S · M» dice quién la usa). Es la única entrada de
+ * fotos del panel: ya no hay campo URL. El estado vive en
+ * `ProductGalleryProvider`, que comparte con la tabla de variantes.
  */
-export function ProductPhotosSection({
-  product,
-  canManage,
-  onSaved,
-  setAlert,
-  lockedByStore = false,
-}: {
-  product: ProductDTO;
-  canManage: boolean;
-  onSaved: (updated: ProductDTO) => void;
-  setAlert?: (alert: AppAlert) => void;
-  /** Catálogo premium F5: las fotos las manda la tienda conectada. */
-  lockedByStore?: boolean;
-}) {
-  const { productImages, byVariant } = groupProductImages(product.images);
-  const [lightbox, setLightbox] = useState<{ id: string; alt: string } | null>(null);
-  const [toDelete, setToDelete] = useState<ProductImageDTO | null>(null);
-  const [deleting, setDeleting] = useState(false);
-  const [showBanner, setShowBanner] = useState(false);
+export function ProductPhotosSection() {
+  const gallery = useProductGallery();
+  const { product, canManage, lockedByStore, principal, uploads, filter, setFilter } = gallery;
+  const images = useMemo(() => product.images ?? [], [product.images]);
+  const variants = useMemo(() => [...product.variants].sort((a, b) => a.position - b.position), [product.variants]);
+  const [dragging, setDragging] = useState(false);
 
-  // Banner educativo one-shot (localStorage, leído post-mount para no romper SSR).
-  useEffect(() => {
-    try {
-      setShowBanner(localStorage.getItem(BANNER_DISMISSED_KEY) !== "1");
-    } catch {
-      /* storage bloqueado: no mostrar */
-    }
-  }, []);
-  const dismissBanner = () => {
-    setShowBanner(false);
-    try {
-      localStorage.setItem(BANNER_DISMISSED_KEY, "1");
-    } catch {
-      /* best-effort */
-    }
+  const general = principalFirst(
+    images.filter((image) => image.variant_id === null),
+    principal?.variant_id === null ? principal.id : null,
+  );
+  const generalUploads = uploads.filter((item) => item.variant_id === null);
+  const generalRemaining = PRODUCT_GALLERY_MAX - general.length - generalUploads.filter((item) => item.status !== "done").length;
+  const withOwn = variants.filter(
+    (variant) =>
+      images.some((image) => image.variant_id === variant.id) || uploads.some((item) => item.variant_id === variant.id),
+  );
+  const isEmpty = images.length === 0 && uploads.length === 0;
+
+  const { stalled, resume } = useProductImagesPolling(hasPendingImages(product.images), gallery.refetch);
+  const onImageError = useCallback(() => {
+    void gallery.refetch().catch(() => undefined);
+  }, [gallery]);
+
+  const tileActions = {
+    onView: gallery.view,
+    onMakePrimary: gallery.makePrimary,
+    onUseInVariants: variants.length > 1 ? gallery.openUseInVariants : undefined,
+    onDelete: gallery.askDelete,
+    onRetryImport: gallery.retryImport,
+    onImageError,
   };
 
-  const refetch = useCallback(async () => {
-    const fresh = await getProductById(product.id);
-    onSaved(fresh);
-  }, [product.id, onSaved]);
+  const uploadTiles = (variantId: string | null) =>
+    uploads
+      .filter((item) => item.variant_id === variantId)
+      .map((item) => (
+        <UploadTile key={item.id} item={item} onRetry={gallery.retryUpload} onDiscard={gallery.discardUpload} />
+      ));
 
-  // Import por URL en curso → polling del detalle (3 s, tope ~30 s).
-  const pending = hasPendingImages(product.images);
-  const { stalled, resume } = useProductImagesPolling(pending, refetch);
+  const dropTile = (variantId: string | null, remaining: number, label?: string) =>
+    canManage ? (
+      <PhotoDropTile
+        remaining={remaining}
+        label={label}
+        onPick={() => gallery.pick(variantId)}
+        onFiles={(files) => gallery.addFiles(files, variantId)}
+      />
+    ) : null;
 
-  /** Un error de <img> (presigned vencida) → refresh silencioso del detalle. */
-  const handleImageError = useCallback(() => {
-    void refetch().catch(() => undefined);
-  }, [refetch]);
-
-  /** Reorden optimista: pinta ya, persiste después, rollback si falla. */
-  const handleReorder = async (variantId: string | null, next: ProductImageDTO[]) => {
-    const prevImages = product.images ?? [];
-    const rest = prevImages.filter((image) => image.variant_id !== variantId);
-    const reordered = next.map((image, index) => ({ ...image, position: index }));
-    onSaved({ ...product, images: [...rest, ...reordered] });
-    try {
-      await reorderProductImages(product.id, {
-        variant_id: variantId,
-        image_ids: next.map((image) => image.id),
-      });
-    } catch (err) {
-      onSaved({ ...product, images: prevImages });
-      setAlert?.({ tone: "error", title: errorMessage(err, "No se pudo guardar el orden") });
-    }
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!toDelete || deleting) return;
-    try {
-      setDeleting(true);
-      await deleteProductImage(toDelete.id);
-      setToDelete(null);
-      await refetch();
-    } catch (err) {
-      setAlert?.({ tone: "error", title: errorMessage(err, "No se pudo borrar la foto") });
-    } finally {
-      setDeleting(false);
-    }
-  };
-
-  /** Import fallido → re-guardar con la misma URL (el backend re-encola la fila). */
-  const handleRetryImport = async (image: ProductImageDTO) => {
-    if (!image.source_url) return;
-    try {
-      if (image.variant_id === null) {
-        await updateProduct(product.id, { image_url: image.source_url });
-      } else {
-        await updateVariant(image.variant_id, { image_url: image.source_url });
+  const dropHandlers = canManage
+    ? {
+        onDragOver: (event: React.DragEvent) => {
+          if (!event.dataTransfer.types.includes("Files")) return;
+          event.preventDefault();
+          setDragging(true);
+        },
+        onDragLeave: (event: React.DragEvent) => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDragging(false);
+        },
+        onDrop: (event: React.DragEvent) => {
+          if (!event.dataTransfer.types.includes("Files")) return;
+          event.preventDefault();
+          setDragging(false);
+          const target = filter.kind === "variant" ? filter.variantId : null;
+          gallery.addFiles(Array.from(event.dataTransfer.files), target);
+        },
       }
-      await refetch();
-    } catch (err) {
-      setAlert?.({ tone: "error", title: errorMessage(err, "No se pudo reintentar el import") });
-    }
-  };
-
-  const openLightbox = (image: ProductImageDTO, altFallback: string) =>
-    setLightbox({ id: image.id, alt: image.alt_text ?? altFallback });
+    : {};
 
   return (
-    <section id="fotos" className="scroll-mt-24 space-y-4" aria-label="Fotos del producto">
+    <section
+      id="fotos"
+      aria-label="Fotos del producto"
+      className={cn("relative scroll-mt-24 space-y-4 rounded-2xl", dragging && "outline-2 outline-offset-8 outline-dashed outline-foreground/40")}
+      {...dropHandlers}
+    >
       <div className="flex min-h-9 flex-wrap items-center justify-between gap-2">
         <div className="flex flex-col gap-0.5">
           <h2 className="text-[15px] font-semibold">Fotos</h2>
@@ -152,138 +118,318 @@ export function ProductPhotosSection({
             </p>
           ) : null}
         </div>
-        {stalled && (
-          <Button variant="outline" size="sm" onClick={() => void resume()}>
+        {stalled ? (
+          <Button variant="outline" size="sm" className="rounded-full" onClick={() => void resume()}>
             <RefreshCw className="size-3.5" aria-hidden />
             Actualizar
           </Button>
-        )}
-      </div>
-
-      {showBanner && (
-        <div className="relative flex items-start gap-3 rounded-lg border border-accent-violet/25 bg-accent-violet/8 p-3 pr-10">
-          <Sparkles className="mt-0.5 size-4 shrink-0 text-accent-violet" aria-hidden />
-          <p className="text-sm text-foreground">
-            Tu agente de ventas envía estas fotos por WhatsApp cuando un cliente pide ver un
-            producto. Sube fotos por color/talla para que muestre la variante exacta.
-          </p>
-          <button
-            type="button"
-            onClick={dismissBanner}
-            aria-label="Descartar aviso"
-            className="absolute top-1.5 right-1.5 flex size-7 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+        ) : canManage && !isEmpty ? (
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-full"
+            disabled={filter.kind !== "variant" && generalRemaining <= 0}
+            onClick={() => gallery.pick(filter.kind === "variant" ? filter.variantId : null)}
           >
-            <X className="size-3.5" aria-hidden />
-          </button>
-        </div>
-      )}
-
-      {/* Galería del producto (comodín) */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-sm text-muted-foreground">
-            Fotos del producto <span className="hidden sm:inline">(comodín para todas las variantes)</span>
-          </p>
-          <span className="text-xs tabular-nums text-muted-foreground">
-            {productImages.length}/{PRODUCT_GALLERY_MAX}
-          </span>
-        </div>
-        <SortablePhotoGallery
-          images={productImages}
-          max={PRODUCT_GALLERY_MAX}
-          altFallback={product.name}
-          canManage={canManage}
-          markFirstAsMain
-          uploadFn={(file) => uploadProductImage(product.id, file)}
-          onUploaded={refetch}
-          onReorder={(next) => void handleReorder(null, next)}
-          onView={(image) => openLightbox(image, product.name)}
-          onDelete={setToDelete}
-          onRetryImport={(image) => void handleRetryImport(image)}
-          onImageError={handleImageError}
-          setAlert={setAlert}
-          emptyHint={
-            !canManage ? (
-              <p className="text-sm text-muted-foreground">Este producto aún no tiene fotos.</p>
-            ) : undefined
-          }
-        />
+            <Upload className="size-3.5" aria-hidden />
+            Subir
+          </Button>
+        ) : null}
       </div>
 
-      {/* Galerías por variante */}
-      {product.variants.length > 0 && (
-        <div className="space-y-4">
-          <p className="text-sm font-medium">Por variante</p>
-          {product.variants.map((variant) => {
-            const images = byVariant.get(variant.id) ?? [];
-            const label = variant.name ?? variant.sku;
-            const altFallback = `${product.name} — ${label}`;
-            return (
-              <div key={variant.id} className="space-y-2">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex min-w-0 items-center gap-2">
-                    <span className="truncate text-sm" title={label}>
-                      {label}
-                    </span>
-                    <span className="rounded-full bg-muted px-2 py-0.5 font-mono text-[11px] text-muted-foreground">
-                      {variant.sku}
-                    </span>
-                  </div>
-                  <span className="text-xs tabular-nums text-muted-foreground">
-                    {images.length}/{VARIANT_GALLERY_MAX}
-                  </span>
-                </div>
+      {isEmpty ? (
+        <EmptyGallery canManage={canManage} onPick={() => gallery.pick(null)} productName={product.name} />
+      ) : (
+        <>
+          <UploadSummary />
+
+          {variants.length > 1 ? <FilterChips filter={filter} onChange={setFilter} /> : null}
+
+          {filter.kind === "variant" ? (
+            <VariantFilterView variantId={filter.variantId} tileActions={tileActions} uploadTiles={uploadTiles} dropTile={dropTile} />
+          ) : (
+            <>
+              <Band title="General" count={`${general.length} de ${PRODUCT_GALLERY_MAX}`}>
+                {general.length === 0 && generalUploads.length === 0 ? (
+                  <p className="mb-2 text-xs text-muted-foreground">Aún sin fotos generales: son las que comparten todas las variantes.</p>
+                ) : null}
                 <SortablePhotoGallery
-                  images={images}
-                  max={VARIANT_GALLERY_MAX}
-                  altFallback={altFallback}
+                  images={general}
+                  principalId={principal?.id ?? null}
+                  usedBy={gallery.usedBy}
+                  altFallback={product.name}
                   canManage={canManage}
-                  uploadFn={(file) => uploadVariantImage(variant.id, file)}
-                  onUploaded={refetch}
-                  onReorder={(next) => void handleReorder(variant.id, next)}
-                  onView={(image) => openLightbox(image, altFallback)}
-                  onDelete={setToDelete}
-                  onRetryImport={(image) => void handleRetryImport(image)}
-                  onImageError={handleImageError}
-                  setAlert={setAlert}
-                  emptyHint={
-                    <p className="text-xs text-muted-foreground">
-                      Sin fotos — usará las del producto.
-                    </p>
+                  onReorder={(next) => gallery.reorder(null, next)}
+                  trailing={
+                    <>
+                      {uploadTiles(null)}
+                      {dropTile(null, generalRemaining)}
+                    </>
                   }
+                  {...tileActions}
                 />
-              </div>
-            );
-          })}
-        </div>
+              </Band>
+
+              {filter.kind === "all" && withOwn.length > 0 ? (
+                <div className="space-y-3">
+                  {withOwn.map((variant, index) => {
+                    const own = images.filter((image) => image.variant_id === variant.id);
+                    const ownPrincipal = own.find((image) => image.id === principal?.id) ?? null;
+                    return (
+                      <Band
+                        key={variant.id}
+                        title={index === 0 ? "De una variante" : ""}
+                        count={`${gallery.labelOf(variant)} · ${own.length} de ${VARIANT_GALLERY_MAX}`}
+                      >
+                        <SortablePhotoGallery
+                          images={principalFirst(own, ownPrincipal?.id ?? null)}
+                          principalId={principal?.id ?? null}
+                          usedBy={gallery.usedBy}
+                          altFallback={`${product.name} — ${gallery.labelOf(variant)}`}
+                          canManage={canManage}
+                          onReorder={(next) => gallery.reorder(variant.id, next)}
+                          trailing={uploadTiles(variant.id)}
+                          {...tileActions}
+                        />
+                      </Band>
+                    );
+                  })}
+                </div>
+              ) : null}
+            </>
+          )}
+
+          <GalleryNotices generalRemaining={generalRemaining} />
+
+          {lockedByStore ? (
+            <Note icon={<Store className="size-3.5" aria-hidden />}>
+              La principal es la primera de Shopify y la de cada variante, la que le asignaste allá. Aquí solo se ven.
+            </Note>
+          ) : canManage && images.length > 0 ? (
+            <Note icon={<Info className="size-3.5" aria-hidden />}>
+              La píldora con tallas o colores dice qué variantes usan esa foto como principal; las demás usan la del
+              producto. Arrastra para ordenar: tu agente las envía en este orden, la principal primero.
+            </Note>
+          ) : null}
+        </>
       )}
-
-      <PhotoLightbox
-        open={lightbox !== null}
-        onOpenChange={(open) => !open && setLightbox(null)}
-        imageId={lightbox?.id ?? null}
-        alt={lightbox?.alt ?? product.name}
-      />
-
-      <Modal
-        open={toDelete !== null}
-        onOpenChange={(open) => !open && setToDelete(null)}
-        config={{
-          title: "Borrar foto",
-          description: "La foto desaparecerá de la galería y tu agente dejará de enviarla.",
-          actions: [
-            { label: "Cancelar", variant: "outline", asClose: true, id: "photo-delete-cancel" },
-            {
-              label: deleting ? "Borrando…" : "Borrar",
-              variant: "destructive",
-              asClose: false,
-              onClick: handleConfirmDelete,
-              id: "photo-delete-confirm",
-            },
-          ],
-          className: "sm:max-w-md",
-        }}
-      />
     </section>
+  );
+}
+
+function Band({ title, count, children }: { title: string; count: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between gap-2 text-sm">
+        <span className="font-medium">{title}</span>
+        <span className="text-xs text-muted-foreground tabular-nums">{count}</span>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function Note({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <p className="flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
+      <span className="mt-0.5 shrink-0">{icon}</span>
+      <span>{children}</span>
+    </p>
+  );
+}
+
+function EmptyGallery({ canManage, onPick, productName }: { canManage: boolean; onPick: () => void; productName: string }) {
+  return (
+    <div className="flex flex-col items-center gap-3 px-2 py-6 text-center">
+      <span className="flex size-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+        <ImagePlus className="size-5" aria-hidden />
+      </span>
+      <div className="space-y-1">
+        <p className="text-[15px] font-semibold">Aún sin fotos</p>
+        <p className="mx-auto max-w-sm text-sm text-muted-foreground">
+          Cuando un cliente pida ver {productName.toLowerCase()}, tu agente le envía la principal primero. Sin fotos,
+          solo puede describirlo.
+        </p>
+      </div>
+      {canManage ? (
+        <>
+          <Button className="rounded-full px-5" onClick={onPick}>
+            <ImagePlus className="size-4" aria-hidden />
+            Elegir fotos
+          </Button>
+          <p className="text-xs text-muted-foreground">También puedes arrastrarlas aquí · JPG, PNG, WebP o HEIC</p>
+        </>
+      ) : null}
+    </div>
+  );
+}
+
+function FilterChips({ filter, onChange }: { filter: GalleryFilter; onChange: (filter: GalleryFilter) => void }) {
+  const { product, labelOf } = useProductGallery();
+  const images = product.images ?? [];
+  const variants = [...product.variants].sort((a, b) => a.position - b.position);
+  const chip = (active: boolean) =>
+    cn(
+      "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-[13px] font-medium whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:ring-ring",
+      active ? "border-foreground bg-foreground text-background" : "border-border hover:bg-accent",
+    );
+  return (
+    <div
+      role="group"
+      aria-label="Filtrar fotos"
+      // Celular: una fila que se desliza; escritorio: envuelve (lienzo)
+      className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 sm:flex-wrap sm:overflow-visible"
+    >
+      <button type="button" aria-pressed={filter.kind === "all"} className={chip(filter.kind === "all")} onClick={() => onChange({ kind: "all" })}>
+        Todas <span className="opacity-70 tabular-nums">{images.length}</span>
+      </button>
+      <button
+        type="button"
+        aria-pressed={filter.kind === "general"}
+        className={chip(filter.kind === "general")}
+        onClick={() => onChange({ kind: "general" })}
+      >
+        General <span className="opacity-70 tabular-nums">{images.filter((image) => image.variant_id === null).length}</span>
+      </button>
+      {variants.map((variant) => {
+        const active = filter.kind === "variant" && filter.variantId === variant.id;
+        return (
+          <button
+            key={variant.id}
+            type="button"
+            aria-pressed={active}
+            className={chip(active)}
+            title={`Lo que muestra ${labelOf(variant)}`}
+            onClick={() => onChange({ kind: "variant", variantId: variant.id })}
+          >
+            {labelOf(variant)}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function VariantFilterView({
+  variantId,
+  tileActions,
+  uploadTiles,
+  dropTile,
+}: {
+  variantId: string;
+  tileActions: PhotoTileActions;
+  uploadTiles: (variantId: string | null) => React.ReactNode;
+  dropTile: (variantId: string | null, remaining: number, label?: string) => React.ReactNode;
+}) {
+  const { product, canManage, usedBy, uploads, labelOf } = useProductGallery();
+  const variant = product.variants.find((row) => row.id === variantId);
+  if (variant === undefined) return null;
+  const images = product.images ?? [];
+  const shown: ProductImageDTO[] = imagesForVariant(images, variant, product.primary_image_id);
+  const own = images.filter((image) => image.variant_id === variant.id).length;
+  const inFlight = uploads.filter((item) => item.variant_id === variant.id && item.status !== "done").length;
+  const label = labelOf(variant);
+  return (
+    <Band title={`Lo que muestra ${label}`} count={`${own} de ${VARIANT_GALLERY_MAX} propias`}>
+      {shown.length === 0 ? (
+        <p className="mb-2 text-xs text-muted-foreground">Usa la del producto. Sube una foto para que tenga la suya.</p>
+      ) : null}
+      {/* Sin arrastre: mezcla la principal elegida (quizá general) con las propias */}
+      <SortablePhotoGallery
+        images={shown}
+        principalId={shown[0]?.id ?? null}
+        usedBy={usedBy}
+        altFallback={`${product.name} — ${label}`}
+        canManage={canManage}
+        trailing={
+          <>
+            {uploadTiles(variant.id)}
+            {dropTile(variant.id, VARIANT_GALLERY_MAX - own - inFlight, `Subir para ${label}`)}
+          </>
+        }
+        {...tileActions}
+      />
+    </Band>
+  );
+}
+
+function UploadSummary() {
+  const { uploads } = useProductGallery();
+  const active = uploads.filter((item) => item.status !== "failed");
+  const pending = active.filter((item) => item.status !== "done");
+  if (pending.length === 0) return null;
+  const done = active.length - pending.length;
+  const progress = active.reduce((sum, item) => sum + (item.status === "done" ? 1 : item.progress), 0) / active.length;
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-3 text-sm">
+        <Upload className="size-4 shrink-0" aria-hidden />
+        <span className="font-medium whitespace-nowrap">
+          Subiendo {active.length} {active.length === 1 ? "foto" : "fotos"}
+        </span>
+        <span className="hidden text-xs text-muted-foreground sm:inline">
+          · {done} {done === 1 ? "lista" : "listas"} · de a 3
+        </span>
+        <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted" aria-hidden>
+          <span className="block h-full rounded-full bg-foreground transition-[width] duration-200" style={{ width: `${Math.round(progress * 100)}%` }} />
+        </span>
+      </div>
+      <Note icon={<Minimize2 className="size-3.5" aria-hidden />}>
+        Las reducimos en tu navegador antes de subirlas: un celular saca fotos de 8 MB y tu cliente las recibe de unos
+        600 KB, igual de nítidas en el chat.
+      </Note>
+    </div>
+  );
+}
+
+function GalleryNotices({ generalRemaining }: { generalRemaining: number }) {
+  const { uploads, notice, product, canManage } = useProductGallery();
+  const failed = uploads.filter((item) => item.status === "failed");
+  const pendingImports = (product.images ?? []).some((image) => image.status === "pending");
+  return (
+    <div className="space-y-2 empty:hidden">
+      {failed.length > 0 ? (
+        <Callout icon={<AlertCircle className="size-4 text-destructive" aria-hidden />}>
+          <span className="font-semibold">
+            {failed.length === 1 ? `${failed[0].file_name} no se subió:` : `${failed.length} fotos no se subieron:`}
+          </span>{" "}
+          {failed[0].error}. Las demás siguen. Toca «Reintentar» en esa foto.
+        </Callout>
+      ) : null}
+      {notice?.kind === "over_limit" ? (
+        <Callout icon={<TriangleAlert className="size-4 text-warning" aria-hidden />}>
+          <span className="font-semibold">
+            Elegiste {notice.accepted + notice.rejected.length} fotos y caben {notice.accepted}.
+          </span>{" "}
+          {notice.accepted > 0 ? `Subimos ${notice.accepted === 1 ? "la primera" : `las ${notice.accepted} primeras`}. ` : ""}
+          {notice.rejected.length === 1 ? "Quedó fuera" : "Quedaron fuera"} {notice.rejected.join(", ")}.
+        </Callout>
+      ) : null}
+      {notice?.kind === "invalid" ? (
+        <Callout icon={<TriangleAlert className="size-4 text-warning" aria-hidden />}>
+          <span className="font-semibold">{notice.files.join(", ")}:</span> {notice.reason}
+        </Callout>
+      ) : null}
+      {canManage && generalRemaining <= 0 ? (
+        <Callout icon={<Info className="size-4 text-info" aria-hidden />}>
+          <span className="font-semibold">Llegaste a {PRODUCT_GALLERY_MAX} fotos generales.</span> Borra una para subir
+          otra, o súbela a una variante: cada una admite {VARIANT_GALLERY_MAX} propias.
+        </Callout>
+      ) : null}
+      {pendingImports ? (
+        <Note icon={<Info className="size-3.5" aria-hidden />}>
+          La primera que llega queda como principal. Puedes cambiarla cuando terminen.
+        </Note>
+      ) : null}
+    </div>
+  );
+}
+
+function Callout({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div className="flex items-start gap-3 rounded-2xl bg-muted/70 px-4 py-3 text-sm leading-relaxed">
+      <span className="mt-0.5 shrink-0">{icon}</span>
+      <p className="min-w-0">{children}</p>
+    </div>
   );
 }

@@ -25,7 +25,7 @@ export function ProductGrid({ rows, busy = false, canManage }: { rows: ProductRo
       )}
     >
       {rows.map((row) => {
-        const noPhotos = row.image_count === 0 && row.image_url === null;
+        const noPhotos = row.image_count === 0;
         const line =
           row.kind === "service"
             ? ["Servicio", ...(row.duration_minutes !== null ? [`${row.duration_minutes} min`] : [])].join(" · ")
@@ -61,7 +61,7 @@ export function ProductGrid({ rows, busy = false, canManage }: { rows: ProductRo
                 </div>
               ) : (
                 <ProductThumb
-                  src={row.image_url}
+                  src={row.thumb_url}
                   alt={`Imagen de ${row.name}`}
                   kind={row.kind}
                   className="h-full w-full"

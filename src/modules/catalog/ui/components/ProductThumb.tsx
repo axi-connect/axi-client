@@ -7,9 +7,12 @@ import { cn } from "@/core/lib/utils";
 import type { ProductKind } from "@/modules/catalog/domain/product";
 
 /**
- * Imagen de producto con fallback a icono. `image_url` es una URL externa
- * arbitraria (el backend no aloja imágenes): se usa `unoptimized` para no
- * depender de `remotePatterns`, y `onError` cae al icono del kind.
+ * Miniatura de la foto PRINCIPAL del producto (plan catalog_images_gallery):
+ * la que pintan la tabla, las tarjetas y la cabecera, y la que el agente envía
+ * primero. Es el thumb de 320 px que sirve el propio storage de axi, firmado
+ * con ventana estable de una hora: el navegador la cachea tal cual, así que va
+ * `unoptimized` (el optimizador de Next la volvería a pedir con otra clave y
+ * no reconoce el host firmado). Sin foto o si falla, el icono del kind.
  */
 export function ProductThumb({
   src,

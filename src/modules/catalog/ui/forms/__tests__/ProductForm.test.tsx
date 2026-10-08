@@ -35,3 +35,36 @@ describe("ProductForm · modo de variantes", () => {
     errors.mockRestore();
   });
 });
+
+/**
+ * Plan catalog_images_gallery: el alta ya no tiene «Imagen (URL)». Las fotos
+ * se eligen del dispositivo en su propio paso, la primera queda como principal
+ * y «Antes de crear» lo dice.
+ */
+describe("ProductForm · fotos sin URL", () => {
+  beforeAll(() => {
+    URL.createObjectURL = jest.fn((file: Blob) => `blob:${(file as File).name}`);
+    URL.revokeObjectURL = jest.fn();
+  });
+
+  it("no hay campo de URL y el paso «Fotos» invita a elegirlas", () => {
+    render(<ProductForm onCreated={jest.fn()} />);
+    expect(screen.queryByText(/Imagen \(URL\)/)).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText(/https:\/\//)).not.toBeInTheDocument();
+    expect(screen.getByText("Fotos")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Agregar o arrastrar/ })).toBeInTheDocument();
+    expect(screen.getByText("Sin fotos tu agente no podrá mostrar este producto.")).toBeInTheDocument();
+  });
+
+  it("elegir fotos deja la primera como principal y «Antes de crear» lo cuenta", () => {
+    const { container } = render(<ProductForm onCreated={jest.fn()} />);
+    const input = container.querySelector<HTMLInputElement>('input[type="file"]');
+    expect(input).not.toBeNull();
+    const files = [new File(["a"], "frente.jpg", { type: "image/jpeg" }), new File(["b"], "espalda.jpg", { type: "image/jpeg" })];
+    fireEvent.change(input as HTMLInputElement, { target: { files } });
+
+    expect(screen.getAllByText("Principal")).toHaveLength(1);
+    expect(screen.getByText("2 fotos, con «frente.jpg» como principal")).toBeInTheDocument();
+    expect(screen.getByText(/Las fotos se suben al crear/)).toBeInTheDocument();
+  });
+});

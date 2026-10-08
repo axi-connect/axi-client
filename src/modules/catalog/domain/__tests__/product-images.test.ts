@@ -1,8 +1,7 @@
 import {
   IMAGE_IMPORT_POLL_MS,
   IMAGE_IMPORT_POLL_TIMEOUT_MS,
-  PRODUCT_IMAGE_MAX_BYTES,
-  groupProductImages,
+  PRODUCT_IMAGE_INPUT_MAX_BYTES,
   hasPendingImages,
   imageImportPollInterval,
   validateImageFile,
@@ -30,60 +29,42 @@ function image(overrides: Partial<ProductImageDTO> = {}): ProductImageDTO {
   };
 }
 
-describe("groupProductImages", () => {
-  it("separa fotos del producto (variant_id null) de las de variante", () => {
-    const images = [
-      image({ id: "p1" }),
-      image({ id: "v1", variant_id: "var-a" }),
-      image({ id: "p2", position: 1 }),
-      image({ id: "v2", variant_id: "var-b" }),
-    ];
-    const { productImages, byVariant } = groupProductImages(images);
-    expect(productImages.map((i) => i.id)).toEqual(["p1", "p2"]);
-    expect(byVariant.get("var-a")?.map((i) => i.id)).toEqual(["v1"]);
-    expect(byVariant.get("var-b")?.map((i) => i.id)).toEqual(["v2"]);
-  });
-
-  it("ordena por position dentro de cada contenedor (robusto ante desorden)", () => {
-    const images = [
-      image({ id: "p-b", position: 2 }),
-      image({ id: "p-a", position: 0 }),
-      image({ id: "v-b", variant_id: "var-a", position: 1 }),
-      image({ id: "p-m", position: 1 }),
-      image({ id: "v-a", variant_id: "var-a", position: 0 }),
-    ];
-    const { productImages, byVariant } = groupProductImages(images);
-    expect(productImages.map((i) => i.id)).toEqual(["p-a", "p-m", "p-b"]);
-    expect(byVariant.get("var-a")?.map((i) => i.id)).toEqual(["v-a", "v-b"]);
-  });
-
-  it("tolera undefined (campo opcional del DTO) y galería vacía", () => {
-    expect(groupProductImages(undefined)).toEqual({ productImages: [], byVariant: new Map() });
-    expect(groupProductImages([])).toEqual({ productImages: [], byVariant: new Map() });
-  });
-});
-
-describe("validateImageFile (validación cliente pre-upload)", () => {
-  const makeFile = (type: string, size: number) => {
-    const file = new File(["x"], "foto.jpg", { type });
+describe("validateImageFile (lo elegido, antes de reducir)", () => {
+  const makeFile = (name: string, type: string, size: number) => {
+    const file = new File(["x"], name, { type });
     Object.defineProperty(file, "size", { value: size });
     return file;
   };
 
-  it.each(["image/jpeg", "image/png", "image/webp"])("acepta %s dentro del límite", (type) => {
-    expect(validateImageFile(makeFile(type, 1024))).toBeNull();
+  it.each([
+    ["foto.jpg", "image/jpeg"],
+    ["foto.png", "image/png"],
+    ["foto.webp", "image/webp"],
+    ["IMG_4025.HEIC", "image/heic"],
+  ])("acepta %s", (name, type) => {
+    expect(validateImageFile(makeFile(name, type, 1024))).toBeNull();
   });
 
-  it.each(["image/gif", "application/pdf", "video/mp4", ""])(
-    "rechaza formato no soportado (%s)",
-    (type) => {
-      expect(validateImageFile(makeFile(type, 1024))).toMatch(/JPEG, PNG o WebP/);
-    },
-  );
+  it("acepta un HEIC sin tipo (Windows no lo etiqueta) por su extensión", () => {
+    expect(validateImageFile(makeFile("IMG_4025.heic", "", 1024))).toBeNull();
+  });
 
-  it("rechaza archivos de más de 5 MB (tope de WhatsApp)", () => {
-    expect(validateImageFile(makeFile("image/jpeg", PRODUCT_IMAGE_MAX_BYTES + 1))).toMatch(/5 MB/);
-    expect(validateImageFile(makeFile("image/jpeg", PRODUCT_IMAGE_MAX_BYTES))).toBeNull();
+  it.each([
+    ["animacion.gif", "image/gif"],
+    ["factura.pdf", "application/pdf"],
+    ["video.mp4", "video/mp4"],
+    ["sin-extension", ""],
+  ])("rechaza %s", (name, type) => {
+    expect(validateImageFile(makeFile(name, type, 1024))).toMatch(/JPG, PNG, WebP o HEIC/);
+  });
+
+  it("una foto de celular de 12 MB pasa: el tope de 5 MB se aplica DESPUÉS de reducir", () => {
+    expect(validateImageFile(makeFile("IMG.jpg", "image/jpeg", 12 * 1024 * 1024))).toBeNull();
+  });
+
+  it("más de 40 MB no se intenta reducir", () => {
+    expect(validateImageFile(makeFile("IMG.jpg", "image/jpeg", PRODUCT_IMAGE_INPUT_MAX_BYTES + 1))).toMatch(/40 MB/);
+    expect(validateImageFile(makeFile("IMG.jpg", "image/jpeg", PRODUCT_IMAGE_INPUT_MAX_BYTES))).toBeNull();
   });
 });
 

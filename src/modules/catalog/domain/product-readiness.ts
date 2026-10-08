@@ -1,3 +1,4 @@
+import { effectiveVariantPrimary } from "./product-gallery";
 import { enrichmentDisplayState, type ProductDTO } from "./product";
 import type { ProductTypeDTO } from "./product-type";
 
@@ -42,7 +43,10 @@ export function productReadiness(product: ProductDTO, productType: ProductTypeDT
   const items: ReadinessItem[] = [];
   const ready: string[] = [];
   const images = product.images ?? [];
-  const productPhotos = images.filter((image) => image.variant_id === null && image.status !== "failed");
+  // Plan catalog_images_gallery: cuenta toda la galería (un catálogo puede
+  // tener fotos solo por variante) y una variante está cubierta si tiene
+  // principal propia o elegida, no solo si subió fotos suyas
+  const productPhotos = images.filter((image) => image.status !== "failed");
   const activeVariants = product.variants.filter((variant) => variant.is_active);
   // F5: en un espejo, lo que manda la tienda se resuelve allá; la fila lo dice y su acción solo lleva a verlo.
   const locked = new Set(product.locked_fields ?? []);
@@ -125,21 +129,22 @@ export function productReadiness(product: ProductDTO, productType: ProductTypeDT
   }
 
   if (productPhotos.length > 0 && activeVariants.length > 1) {
-    const withPhotos = new Set(images.filter((image) => image.variant_id !== null).map((image) => image.variant_id));
-    const without = activeVariants.filter((variant) => !withPhotos.has(variant.id));
+    const without = activeVariants.filter(
+      (variant) => effectiveVariantPrimary(images, variant, product.primary_image_id).source === "product",
+    );
     if (without.length > 0) {
       items.push({
         key: "variants_without_photos",
         title:
-          without.length === 1 ? `${variantName(without[0])} no tiene fotos` : `${without.length} variantes sin fotos propias`,
+          without.length === 1 ? `${variantName(without[0])} no tiene foto propia` : `${without.length} variantes sin foto propia`,
         detail: locked.has("images") ? "se suben en tu tienda conectada" : "tu agente enviará las del producto",
         tone: "neutral",
         href: "#fotos",
         action: locked.has("images")
           ? "Ver las fotos"
           : without.length === 1
-            ? `Subir fotos de ${variantName(without[0])}`
-            : "Subir fotos por variante",
+            ? `Elegir la foto de ${variantName(without[0])}`
+            : "Elegir fotos por variante",
       });
     }
   }
