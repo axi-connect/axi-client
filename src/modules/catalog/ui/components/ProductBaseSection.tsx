@@ -116,7 +116,7 @@ export function ProductBaseSection({
   };
 
   return (
-    <section className="space-y-4" aria-label="Información del producto">
+    <section id="informacion" className="scroll-mt-24 space-y-4" aria-label="Información del producto">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
           <div className="flex min-h-9 flex-wrap items-center justify-between gap-2">

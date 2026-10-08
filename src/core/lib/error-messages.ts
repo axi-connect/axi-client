@@ -173,7 +173,10 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   "catalog/attribute_not_found": "El atributo ya no existe",
   "catalog/duplicate_code": "Ya existe un catálogo con ese código",
   "catalog/duplicate_sku": "Ya existe una variante con ese SKU",
-  "catalog/duplicate_variant": "Ya existe una variante con esa combinación de atributos",
+  "catalog/duplicate_variant": "Ya existe una variante con esos mismos valores (talla, color…). Cambia alguno para distinguirla",
+  // `catalog/variant_axes_required` NO va aquí a propósito (incidente 2026-10-08): el
+  // detalle del server ya es el accionable y distingue «asígnale un tipo» de
+  // «indica el valor de un eje»; un texto fijo taparía cuál de los dos es.
   "catalog/category_in_use": "La categoría tiene subcategorías o productos asociados",
   "catalog/product_type_in_use": "El tipo de producto está en uso por productos",
   "catalog/category_cycle": "Una categoría no puede ser descendiente de sí misma",

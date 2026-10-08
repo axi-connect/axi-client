@@ -54,6 +54,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
   const [product, setProduct] = useState<ProductDTO | null>(null);
   const [productType, setProductType] = useState<ProductTypeDTO | null>(null);
+  // Tipo cuya carga ya terminó (bien o mal): hasta entonces Variantes no decide
+  // si mostrar «Añadir variante» o el aviso de ejes (incidente 2026-10-08).
+  const [settledTypeId, setSettledTypeId] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [toggling, setToggling] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -82,12 +85,15 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       setProductType(null);
       return;
     }
+    const typeId = product.product_type_id;
     (async () => {
       try {
-        const fetched = await getProductTypeById(product.product_type_id as string);
+        const fetched = await getProductTypeById(typeId);
         if (!cancelled) setProductType(fetched);
       } catch {
         if (!cancelled) setProductType(null);
+      } finally {
+        if (!cancelled) setSettledTypeId(typeId);
       }
     })();
     return () => {
@@ -284,7 +290,14 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               <div className={CARD}>
                 <VariantsTable
                   product={product}
-                  axes={variantAxes}
+                  axes={productType?.id === product.product_type_id ? variantAxes : []}
+                  // Solo el tipo ACTUAL: tras cambiarlo en Información, el anterior sigue en estado un render
+                  productType={
+                    productType && productType.id === product.product_type_id
+                      ? { id: productType.id, name: productType.name }
+                      : null
+                  }
+                  axesReady={!product.product_type_id || settledTypeId === product.product_type_id}
                   canManage={canManage && !locked.has("variants")}
                   // El popover de ajuste queda OCULTO para espejados en vez de
                   // fallar con 409: el stock lo dicta la tienda

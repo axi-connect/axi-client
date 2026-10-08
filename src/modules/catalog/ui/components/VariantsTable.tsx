@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
-import { Lock, Pencil, Plus, Star, Trash2 } from "lucide-react";
+import { Info, Lock, Pencil, Plus, Star, Trash2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Modal } from "@/shared/components/ui/modal";
 import { cn } from "@/core/lib/utils";
@@ -44,6 +45,41 @@ function VariantStockCell({ variant, isService }: { variant: ProductVariantDTO; 
 }
 
 /**
+ * Sin ejes de variante solo cabe una variante (la clave son los valores de los
+ * ejes, que define el tipo): en vez de un «Añadir variante» condenado al 409, se
+ * dice qué falta y dónde se arregla (incidente 2026-10-08).
+ */
+function VariantAxesNote({ productType }: { productType: { id: string; name: string } | null }) {
+  const link = "font-medium text-foreground underline underline-offset-2";
+  return (
+    <p className="flex items-start gap-1.5 text-xs text-pretty text-muted-foreground">
+      <Info aria-hidden="true" className="mt-px size-3.5 shrink-0" />
+      {productType ? (
+        <span>
+          El tipo «{productType.name}» no tiene ejes de variante: añádele uno (talla, área…) para crear más
+          variantes.{" "}
+          <Link href={`/catalog/product-types/${productType.id}`} className={link}>
+            Editar el tipo
+          </Link>
+        </span>
+      ) : (
+        <span>
+          Para añadir otra variante, este producto necesita un tipo con ejes de variante (talla, color, área en
+          m²…).{" "}
+          <Link href="/catalog/product-types/create" className={link}>
+            Crear tipo de producto
+          </Link>
+          {" · "}
+          <a href="#informacion" className={link}>
+            Asignar tipo
+          </a>
+        </span>
+      )}
+    </p>
+  );
+}
+
+/**
  * Variantes y stock del detalle de producto (tabla local, no DataTable:
  * las filas traen objetos anidados y el set es pequeño).
  * ⚠️ Editar variante exige re-fetch del producto (el PATCH no lo devuelve).
@@ -51,6 +87,8 @@ function VariantStockCell({ variant, isService }: { variant: ProductVariantDTO; 
 export function VariantsTable({
   product,
   axes,
+  productType = null,
+  axesReady = true,
   canManage,
   canAdjustStock,
   onRefetch,
@@ -67,6 +105,10 @@ export function VariantsTable({
   setAlert?: (alert: AppAlert) => void;
   /** Catálogo premium F5: qué de esta sección manda la tienda conectada. */
   lockNote?: string;
+  /** El tipo del producto ya cargado (null = sin tipo, o su carga falló). */
+  productType?: { id: string; name: string } | null;
+  /** false mientras el tipo carga: ni el botón ni el aviso parpadean. */
+  axesReady?: boolean;
 }) {
   const isService = product.kind === "service";
   const [formOpen, setFormOpen] = useState(false);
@@ -76,6 +118,17 @@ export function VariantsTable({
 
   const variants = [...product.variants].sort((a, b) => a.position - b.position);
   const hasAxes = variants.some((variant) => Object.keys(variant.attributes).length > 0);
+  // Sin ejes (sin tipo, o tipo sin ejes de variante) la segunda variante es
+  // imposible. Si el tipo existe pero no cargó, se deja el botón como antes:
+  // mejor un 409 claro del server que esconder algo que quizá sí se puede.
+  const missingAxes = axes.length === 0 && (!product.product_type_id || productType !== null);
+  const canAdd = canManage && axesReady && !missingAxes;
+  const showAxesNote = canManage && axesReady && missingAxes;
+  // «Cada variante con valores distintos en Talla, Color» sugería que TODOS los ejes deben cambiar
+  const createHint =
+    axes.length === 1
+      ? `Cada variante lleva un valor distinto de ${axes[0].label}`
+      : `No repitas la misma combinación de ${axes.map((axis) => axis.label).join(", ")}`;
 
   const openCreate = () => {
     setEditing(undefined);
@@ -126,8 +179,9 @@ export function VariantsTable({
               {lockNote}
             </p>
           ) : null}
+          {showAxesNote ? <VariantAxesNote productType={productType} /> : null}
         </div>
-        {canManage && (
+        {canAdd && (
           <Button type="button" size="sm" variant="outline" className="rounded-full px-4" onClick={openCreate}>
             <Plus className="h-4 w-4" />
             Añadir variante
@@ -236,7 +290,7 @@ export function VariantsTable({
           title: editing ? `Editar variante ${editing.sku}` : "Añadir variante",
           description: editing
             ? "Actualiza los datos de la variante"
-            : "La combinación de atributos debe ser única en el producto",
+            : createHint,
           className: "sm:max-w-2xl",
         }}
       >

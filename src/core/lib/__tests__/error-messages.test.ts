@@ -196,3 +196,19 @@ describe("errorMessage — ritmo de Meta (hotfix 131049)", () => {
     );
   });
 });
+
+describe("errorMessage — variantes sin ejes (incidente 2026-10-08)", () => {
+  it("variant_axes_required muestra el detalle accionable del server, que distingue los dos casos", () => {
+    const noAxes =
+      "Este producto no tiene ejes de variante: asígnale un tipo de producto con ejes (talla, área…) para crear más de una variante";
+    const emptyAxes = "Indica el valor de al menos un eje de variante para distinguirla de las demás";
+    expect(errorMessage(httpError("catalog/variant_axes_required", noAxes))).toBe(noAxes);
+    expect(errorMessage(httpError("catalog/variant_axes_required", emptyAxes))).toBe(emptyAxes);
+  });
+
+  it("duplicate_variant ya no habla de una «combinación de atributos»", () => {
+    const message = errorMessage(httpError("catalog/duplicate_variant"));
+    expect(message).not.toMatch(/combinación de atributos/i);
+    expect(message).toMatch(/mismos valores/i);
+  });
+});
