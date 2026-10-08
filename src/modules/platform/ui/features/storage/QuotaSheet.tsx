@@ -132,7 +132,7 @@ export function QuotaSheet({
           {(
             [
               ["plan", "La del plan", storage.plan_name ?? "Sin plan"],
-              ["override", "Ampliada", "Solo para este tenant"],
+              ["override", "Ampliada", "Solo este tenant"],
             ] as const
           ).map(([value, title, hint]) => (
             <button

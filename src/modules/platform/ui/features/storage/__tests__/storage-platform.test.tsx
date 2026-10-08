@@ -129,7 +129,7 @@ describe("Depurar (platform)", () => {
     const dialogSubmit = buttons.at(-1) as HTMLButtonElement;
     expect(dialogSubmit).toBeDisabled();
 
-    fireEvent.change(screen.getByLabelText(/para confirmar/), {
+    fireEvent.change(screen.getByLabelText(/Para confirmar/), {
       target: { value: "ELIMINAR otra" },
     });
     fireEvent.change(screen.getByLabelText("Tu contraseña"), {
@@ -137,7 +137,7 @@ describe("Depurar (platform)", () => {
     });
     expect(dialogSubmit).toBeDisabled();
 
-    fireEvent.change(screen.getByLabelText(/para confirmar/), {
+    fireEvent.change(screen.getByLabelText(/Para confirmar/), {
       target: { value: "ELIMINAR clinica-dermalux" },
     });
     expect(dialogSubmit).toBeEnabled();

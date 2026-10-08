@@ -284,7 +284,7 @@ function ConfirmPurgeDialog({
           {[
             [new Intl.NumberFormat("es-CO").format(preview.files), "archivos"],
             [formatBytes(preview.bytes), "liberados"],
-            [new Intl.NumberFormat("es-CO").format(kept), "se conservan"],
+            [new Intl.NumberFormat("es-CO").format(kept), "conservados"],
           ].map(([value, label]) => (
             <div key={label} className="rounded-2xl bg-muted p-3">
               <p className="font-heading text-xl font-bold tabular-nums">{value}</p>
@@ -316,7 +316,10 @@ function ConfirmPurgeDialog({
           <form onSubmit={(event) => void submit(event)} className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="purge-phrase">
-                Escribe <span className="font-mono text-[13px]">{preview.confirm_phrase}</span> para confirmar
+                <span>
+                  Para confirmar, escribe{" "}
+                  <span className="font-mono text-[13px] whitespace-nowrap">{preview.confirm_phrase}</span>
+                </span>
               </Label>
               <Input
                 id="purge-phrase"
