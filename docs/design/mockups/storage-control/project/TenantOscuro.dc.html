@@ -475,6 +475,41 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
 .mtop{display:none}
 @container (max-width: 899px){ .psb{display:none} .mtop{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border)} .mtop b{font-weight:500;font-size:14px} }
 
+/* «Tu disco»: dispositivo ilustrado, cada cuadro = 1 GB (glifo, no superficie de datos) */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,360px);gap:28px;align-items:center}
+@container (max-width: 760px){ .hero{grid-template-columns:minmax(0,1fr)} }
+.hero .txt{display:flex;flex-direction:column;gap:12px;min-width:0}
+.drive{position:relative;border-radius:26px;padding:16px 16px 14px;border:1px solid var(--border);
+  background:linear-gradient(180deg, color-mix(in srgb, var(--foreground) 5%, var(--background)), color-mix(in srgb, var(--foreground) 1.5%, var(--background)));
+  box-shadow:inset 0 1px 0 color-mix(in srgb, var(--background) 70%, transparent), 0 1px 2px rgb(0 0 0/.04), 0 22px 40px -26px rgb(0 0 0/.35)}
+.drive .dtop{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted-foreground);font-weight:500}
+.drive .dtop .cap{font-family:var(--font-heading);letter-spacing:-.01em;text-transform:none;font-size:13px;color:var(--foreground)}
+.led{display:inline-flex;align-items:center;gap:6px}
+.led i{width:7px;height:7px;border-radius:50%;background:var(--axi-success);box-shadow:0 0 0 3px color-mix(in srgb, var(--axi-success) 18%, transparent)}
+.led.warn i{background:var(--axi-warning);box-shadow:0 0 0 3px color-mix(in srgb, var(--axi-warning) 20%, transparent)}
+.led.full i{background:var(--axi-destructive);box-shadow:0 0 0 3px color-mix(in srgb, var(--axi-destructive) 20%, transparent)}
+.cells{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.cell{aspect-ratio:1.55;border-radius:9px;background:var(--g);box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--foreground) 6%, transparent)}
+.cell.free{background:transparent;box-shadow:none;border:1.5px dashed color-mix(in srgb, var(--foreground) 20%, transparent)}
+.drive .dfoot{display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-size:11.5px;color:var(--muted-foreground)}
+.grille{display:flex;gap:3px}
+.grille i{width:14px;height:3px;border-radius:2px;background:color-mix(in srgb, var(--foreground) 14%, transparent)}
+.dleg{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted-foreground);margin-top:10px}
+.dleg span{display:inline-flex;align-items:center;gap:6px}
+.dleg i{width:9px;height:9px;border-radius:3px}
+.dleg i.fr{border:1.5px dashed color-mix(in srgb, var(--foreground) 30%, transparent)}
+
+/* «Tu ritmo»: recorrido + hoy + proyección hasta el tope */
+.route{width:100%;height:120px;display:block;overflow:visible}
+.route .cap{stroke:color-mix(in srgb, var(--foreground) 30%, transparent);stroke-dasharray:2 4;stroke-width:1.2}
+.route .done{fill:none;stroke:var(--foreground);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.route .area{fill:color-mix(in srgb, var(--foreground) 6%, transparent)}
+.route .proj{fill:none;stroke:var(--muted-foreground);stroke-width:1.8;stroke-dasharray:4 5;stroke-linecap:round}
+.route .now{fill:var(--background);stroke:var(--foreground);stroke-width:2.2}
+.route .end{fill:var(--axi-warning)}
+.route text{font-family:var(--font-body);font-size:10.5px;fill:var(--muted-foreground)}
+.route text.b{fill:var(--foreground);font-weight:500}
+
     body { margin: 0; background: var(--background); }
     a { color: inherit; } a:hover { color: inherit; }
   </style>

@@ -647,49 +647,150 @@ def view_plan() -> str:
 COMPANY_TABS = [("General", "building"), ("Sucursales", "map-pin"), ("Funciones", "sliders-horizontal"), ("Documentos", "file-text"), ("Almacenamiento", "hard-drive")]
 
 
+DRIVE_CSS = r"""
+/* «Tu disco»: dispositivo ilustrado, cada cuadro = 1 GB (glifo, no superficie de datos) */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,360px);gap:28px;align-items:center}
+@container (max-width: 760px){ .hero{grid-template-columns:minmax(0,1fr)} }
+.hero .txt{display:flex;flex-direction:column;gap:12px;min-width:0}
+.drive{position:relative;border-radius:26px;padding:16px 16px 14px;border:1px solid var(--border);
+  background:linear-gradient(180deg, color-mix(in srgb, var(--foreground) 5%, var(--background)), color-mix(in srgb, var(--foreground) 1.5%, var(--background)));
+  box-shadow:inset 0 1px 0 color-mix(in srgb, var(--background) 70%, transparent), 0 1px 2px rgb(0 0 0/.04), 0 22px 40px -26px rgb(0 0 0/.35)}
+.drive .dtop{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted-foreground);font-weight:500}
+.drive .dtop .cap{font-family:var(--font-heading);letter-spacing:-.01em;text-transform:none;font-size:13px;color:var(--foreground)}
+.led{display:inline-flex;align-items:center;gap:6px}
+.led i{width:7px;height:7px;border-radius:50%;background:var(--axi-success);box-shadow:0 0 0 3px color-mix(in srgb, var(--axi-success) 18%, transparent)}
+.led.warn i{background:var(--axi-warning);box-shadow:0 0 0 3px color-mix(in srgb, var(--axi-warning) 20%, transparent)}
+.led.full i{background:var(--axi-destructive);box-shadow:0 0 0 3px color-mix(in srgb, var(--axi-destructive) 20%, transparent)}
+.cells{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.cell{aspect-ratio:1.55;border-radius:9px;background:var(--g);box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--foreground) 6%, transparent)}
+.cell.free{background:transparent;box-shadow:none;border:1.5px dashed color-mix(in srgb, var(--foreground) 20%, transparent)}
+.drive .dfoot{display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-size:11.5px;color:var(--muted-foreground)}
+.grille{display:flex;gap:3px}
+.grille i{width:14px;height:3px;border-radius:2px;background:color-mix(in srgb, var(--foreground) 14%, transparent)}
+.dleg{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted-foreground);margin-top:10px}
+.dleg span{display:inline-flex;align-items:center;gap:6px}
+.dleg i{width:9px;height:9px;border-radius:3px}
+.dleg i.fr{border:1.5px dashed color-mix(in srgb, var(--foreground) 30%, transparent)}
+
+/* «Tu ritmo»: recorrido + hoy + proyección hasta el tope */
+.route{width:100%;height:120px;display:block;overflow:visible}
+.route .cap{stroke:color-mix(in srgb, var(--foreground) 30%, transparent);stroke-dasharray:2 4;stroke-width:1.2}
+.route .done{fill:none;stroke:var(--foreground);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.route .area{fill:color-mix(in srgb, var(--foreground) 6%, transparent)}
+.route .proj{fill:none;stroke:var(--muted-foreground);stroke-width:1.8;stroke-dasharray:4 5;stroke-linecap:round}
+.route .now{fill:var(--background);stroke:var(--foreground);stroke-width:2.2}
+.route .end{fill:var(--axi-warning)}
+.route text{font-family:var(--font-body);font-size:10.5px;fill:var(--muted-foreground)}
+.route text.b{fill:var(--foreground);font-weight:500}
+"""
+
+
+def _cell_bg(i: int, segs: list[tuple[str, float]]) -> str:
+    """Gradiente horizontal del cuadro i (cubre [i, i+1] GB) según los tramos por origen."""
+    cols = {"o1": "color-mix(in srgb, var(--foreground) 88%, var(--background))",
+            "o2": "color-mix(in srgb, var(--foreground) 50%, var(--background))",
+            "o3": "color-mix(in srgb, var(--foreground) 24%, var(--background))"}
+    free = "color-mix(in srgb, var(--foreground) 5%, var(--background))"
+    stops, start = [], 0.0
+    for cls, size in segs:
+        a, b = max(start, i), min(start + size, i + 1)
+        if b > a:
+            stops.append((cols[cls], (a - i) * 100, (b - i) * 100))
+        start += size
+    if not stops:
+        return ""
+    if stops[-1][2] < 100:
+        stops.append((free, stops[-1][2], 100))
+    return "linear-gradient(90deg," + ",".join(f"{c} {x:.0f}% {y:.0f}%" for c, x, y in stops) + ")"
+
+
+def drive(total: int, segs: list[tuple[str, float]], state: str, caption: str) -> str:
+    cells = ""
+    for i in range(total):
+        g = _cell_bg(i, segs)
+        cells += f'<span class="cell" style="--g:{g}"></span>' if g else '<span class="cell free"></span>'
+    led = {"ok": ("", "Con espacio"), "warn": ("warn", "Cerca del límite"), "full": ("full", "Lleno"), "none": ("", "Sin límite")}[state]
+    return f"""<figure class="drive" style="margin:0" aria-label="{caption}">
+      <div class="dtop"><span class="led {led[0]}" title="{led[1]}"><i></i>Tu disco</span><span class="cap">{caption}</span></div>
+      <div class="cells" aria-hidden="true">{cells}</div>
+      <div class="dfoot"><span class="grille" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span>Cada cuadro es 1 GB</span></div>
+    </figure>"""
+
+
+def route(state: str) -> str:
+    # x: 7 meses pasados (may→nov) + proyección; y: GB 0→16
+    W, Hh, top = 300, 96, 12
+    def X(m): return 8 + m * (W - 16) / 9
+    def Y(g): return top + (16 - g) / 16 * Hh
+    hist = [7.8, 8.5, 9.4, 10.1, 11.0, 11.8, 12.6] if state != "full" else [10.9, 11.8, 12.6, 13.4, 14.1, 14.7, 15.0]
+    pts = " ".join(f"{X(i):.1f},{Y(g):.1f}" for i, g in enumerate(hist))
+    area = f"{X(0):.1f},{Y(0):.1f} {pts} {X(6):.1f},{Y(0):.1f}"
+    cap_y = Y(15)
+    proj = ""
+    if state == "warn":
+        proj = f'<polyline class="proj" points="{X(6):.1f},{Y(12.6):.1f} {X(9):.1f},{Y(15):.1f}"/><circle class="end" cx="{X(9):.1f}" cy="{Y(15):.1f}" r="4"/><text class="b" x="{X(9) - 2:.1f}" y="{Y(15) - 9:.1f}" text-anchor="end">≈ ene</text>'
+    labels = "".join(f'<text x="{X(i):.1f}" y="{top + Hh + 14:.1f}" text-anchor="middle">{m}</text>' for i, m in [(0, "abr"), (3, "jul"), (6, "hoy"), (9, "ene")])
+    return f"""<svg class="route" viewBox="0 0 {W} {top + Hh + 18}" aria-hidden="true">
+      <line class="cap" x1="0" x2="{W}" y1="{cap_y:.1f}" y2="{cap_y:.1f}"/><text x="0" y="{cap_y - 5:.1f}">15 GB · tu tope</text>
+      <polygon class="area" points="{area}"/><polyline class="done" points="{pts}"/>{proj}
+      <circle class="now" cx="{X(6):.1f}" cy="{Y(hist[-1]):.1f}" r="5"/>{labels}
+    </svg>"""
+
+
 def view_tenant_self(state: str = "warn") -> str:
     if state == "full":
-        fig, pct, pill = ("0", 100, state_pill("full"))
+        pill, used = state_pill("full"), 15.0
+        head_fig = '<div class="fig"><b>0</b><span>GB libres de 15 GB</span></div>'
         line = "Tu espacio está lleno. <b>Los mensajes de tus clientes siguen llegando completos</b>; para subir archivos nuevos, pide más espacio."
         banner = f'<div class="banner">{ic("hard-drive", size=18)}<span><b>Tu equipo no puede subir archivos.</b> Fotos de catálogo, adjuntos y recursos esperan a que haya espacio.</span>{btn("Hablar con soporte", "message-circle", "r sm")}</div>'
-        used = "15,0"
+        segs, total, cap = [("o1", 9.6), ("o2", 3.6), ("o3", 1.8)], 15, "15 GB"
+        vals = ("9,6 GB", "3,6 GB", "1,8 GB")
+        pace = ("Lleno desde el 7 oct", "Llegaste al tope tras 6 meses creciendo ≈ 0,7 GB al mes. Con más espacio, tu equipo vuelve a subir archivos de inmediato.")
     elif state == "none":
-        fig, pct, pill = (None, 0, state_pill("none"))
+        pill, used = state_pill("none"), 3.4
+        head_fig = '<div class="fig"><b>3,4</b><span>GB ocupados</span></div>'
         line = "Tu plan no tiene límite de espacio. Aquí ves en qué se va."
         banner = ""
-        used = "3,4"
+        segs, total, cap = [("o1", 2.2), ("o2", 0.8), ("o3", 0.4)], 4, "Sin tope"
+        vals = ("2,2 GB", "0,8 GB", "0,4 GB")
+        pace = None
     else:
-        fig, pct, pill = ("2,4", 84, state_pill("warn"))
-        line = "Te quedan <b>2,4 GB</b>. A tu ritmo de 0,8 GB al mes alcanzan para unos 3 meses."
+        pill, used = state_pill("warn"), 12.6
+        head_fig = '<div class="fig"><b>2,4</b><span>GB libres de 15 GB</span></div>'
+        line = "Te quedan <b>2,4 GB</b>: unos 3 meses a tu ritmo actual."
         banner = ""
-        used = "12,6"
-    if fig is None:
-        head_fig = f'<div class="fig"><b>{used}</b><span>GB ocupados</span></div>'
-        m = ""
-    else:
-        head_fig = f'<div class="fig"><b>{fig}</b><span>GB libres de 15 GB</span></div>'
-        m = meter(pct) + f'<div class="mscale"><span>Usas {used} GB</span><span>Incluido en tu plan Crecimiento</span></div>'
+        segs, total, cap = [("o1", 8.1), ("o2", 3.0), ("o3", 1.5)], 15, "15 GB"
+        vals = ("8,1 GB", "3,0 GB", "1,5 GB")
+        pace = ("Llegas al tope hacia enero", "Creces ≈ 0,8 GB al mes, casi todo en videos que te mandan tus clientes.")
+    pct = used / 15 * 100
+    m = "" if state == "none" else meter(pct) + f'<div class="mscale"><span>Usas {str(used).replace(".", ",")} GB</span><span>Incluido en tu plan Crecimiento</span></div>'
+    hero = f"""<section class="tile span3"><header><h2>Tu espacio</h2>{pill}</header>
+      <div class="hero"><div class="txt">{head_fig}{m}<p class="ln">{line}</p>
+        <div class="dleg"><span><i class="o1"></i>Clientes {vals[0]}</span><span><i class="o2"></i>Tu equipo {vals[1]}</span><span><i class="o3"></i>Axi {vals[2]}</span>{"" if state != "warn" else '<span><i class="fr"></i>Libre 2,4 GB</span>'}</div>
+        <span class="prov">{ic("activity", size=12)}Medido hace 4 min</span></div>
+        {drive(total, segs, state if state != "none" else "none", cap)}</div></section>"""
     rows = [
-        ("o1", "Lo que te envían tus clientes", "Fotos, audios y videos de los chats", "8,1 GB" if state != "none" else "2,2 GB"),
-        ("o2", "Lo que sube tu equipo", "Catálogo, adjuntos y recursos", "3,0 GB" if state != "none" else "0,8 GB"),
-        ("o3", "Lo que genera Axi", "Grabaciones, PDF y notas de voz", "1,5 GB" if state != "none" else "0,4 GB"),
+        ("o1", "Lo que te envían tus clientes", "Fotos, audios y videos de los chats", vals[0]),
+        ("o2", "Lo que sube tu equipo", "Catálogo, adjuntos y recursos", vals[1]),
+        ("o3", "Lo que genera Axi", "Grabaciones, PDF y notas de voz", vals[2]),
     ]
     rr = "".join(f'<div class="r"><span class="sw2 {c}"></span><span><b>{t}</b><small>{s}</small></span><span class="v">{v}</span></div>' for c, t, s, v in rows)
-    cta = "" if state == "full" else f'<div class="tile" style="gap:8px"><header><h2>¿Necesitas más espacio?</h2></header><p class="ln">El equipo de Axi Connect amplía tu espacio o te ayuda a liberar el que tienes.</p><div>{btn("Hablar con soporte", "message-circle", "outline sm r")}</div></div>'
+    breakdown = f"""<section class="tile span2"><header><h2>En qué se va</h2></header>
+      <div class="leg">{rr}</div>
+      <span class="prov">{ic("info", size=12)}Los archivos los gestiona el equipo de Axi Connect.</span></section>"""
+    if pace:
+        side = f"""<section class="tile"><header><h2>Tu ritmo</h2></header>
+          <p style="font-weight:600;font-size:15px">{pace[0]}</p>{route(state)}<p class="ln">{pace[1]}</p>
+          <span class="prov">{ic("activity", size=12)}Según tus últimos 6 meses</span></section>"""
+    else:
+        side = f"""<section class="tile"><header><h2>Qué sigue funcionando</h2></header><p class="ln">Todo. Sin límite de espacio nada se pausa; solo te mostramos en qué se va.</p></section>"""
+    cta = "" if state in ("full", "none") else f'<section class="tile span3" style="flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:space-between"><div><p style="font-weight:500">¿Necesitas más espacio?</p><p class="ln">El equipo de Axi Connect amplía tu espacio o te ayuda a liberar el que tienes.</p></div>{btn("Hablar con soporte", "message-circle", "outline sm r")}</section>'
     return f"""<div class="pg" style="max-width:1040px">
       {K.crumb("Configuración", "Mi empresa")}
       <div class="hrow"><div><h1 style="font-family:var(--font-body);font-weight:600;font-size:28px">Mi empresa</h1></div></div>
       {K.nav(COMPANY_TABS, "Almacenamiento", "Secciones de Mi empresa", "inline")}
       {banner}
-      <div class="bento b3">
-        <section class="tile span2"><header><h2>Tu espacio</h2>{pill}</header>{head_fig}{m}<p class="ln">{line}</p>
-          <span class="prov">{ic("activity", size=12)}Medido hace 4 min</span></section>
-        {cta if cta else f'<section class="tile"><header><h2>Qué sigue funcionando</h2></header><p class="ln">Chats, IA, pedidos y cobros. Solo se pausan las subidas de tu equipo.</p></section>'}
-        <section class="tile span3"><header><h2>En qué se va</h2></header>
-          <div class="stk" aria-hidden="true"><i class="o1" style="width:64%"></i><i class="o2" style="width:24%"></i><i class="o3" style="width:12%"></i></div>
-          <div class="leg">{rr}</div>
-          <span class="prov">{ic("info", size=12)}Los archivos los gestiona el equipo de Axi Connect. Si tienes reglas de retención, te las contamos aquí.</span></section>
-      </div>
+      <div class="bento b3">{hero}{breakdown}{side}{cta}</div>
     </div>"""
 
 
@@ -745,10 +846,10 @@ BODY = {k: b for k, _, b, _ in VIEWS}
 
 H = {
     "overview": (1440, 1340), "tenant": (1440, 2030), "purge": (1440, 1100), "confirm": (1440, 1100), "files": (1440, 920),
-    "quota": (1440, 1100), "plan": (1440, 980), "self": (1440, 840), "selffull": (1440, 940), "selfnone": (1440, 790),
+    "quota": (1440, 1100), "plan": (1440, 980), "self": (1440, 1020), "selffull": (1440, 1030), "selfnone": (1440, 820),
     "notices": (1440, 700), "states": (1440, 740), "overviewna": (1440, 1300),
 }
-HM = {"overview": 2530, "tenant": 3410, "purge": 2090, "self": 1040, "notices": 1150}
+HM = {"overview": 2530, "tenant": 3410, "purge": 2090, "self": 1620, "notices": 1150}
 
 
 def boards() -> list[dict]:
@@ -808,6 +909,8 @@ def canvas(bs: list[dict]) -> dict:
     return {"v": 3, "createdOnFiles": {"v": 1, "at": "2026-10-08T21:00:00Z"}, "title": "Almacenamiento · control por tenant",
             "launch": {"view": "canvas"}, "pages": [], "boards": boards_out, "order": order, "notes": notes, "designSystems": []}
 
+
+K.extra_css += DRIVE_CSS
 
 if __name__ == "__main__":
     K.build_html("Almacenamiento", "Mockup · no es producto", "Control de almacenamiento", [(k, l, f'<div class="shell">{b}</div>', n) for k, l, b, n in VIEWS])
