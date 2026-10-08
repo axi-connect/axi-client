@@ -77,6 +77,11 @@ type GalleryContextValue = {
 const GalleryContext = createContext<GalleryContextValue | null>(null);
 const EMPTY_AXES: readonly string[] = [];
 
+/** Para piezas que también viven fuera de la ficha (la tabla de variantes): sin proveedor, null. */
+export function useOptionalProductGallery(): GalleryContextValue | null {
+  return useContext(GalleryContext);
+}
+
 export function useProductGallery(): GalleryContextValue {
   const value = useContext(GalleryContext);
   if (value === null) throw new Error("useProductGallery fuera de ProductGalleryProvider");

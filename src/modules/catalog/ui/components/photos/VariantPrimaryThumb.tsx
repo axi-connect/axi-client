@@ -4,17 +4,30 @@ import { ImageOff } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import type { ProductVariantDTO } from "@/modules/catalog/domain/product";
 import { effectiveVariantPrimary } from "@/modules/catalog/domain/product-gallery";
-import { useProductGallery } from "./product-gallery.context";
+import { useOptionalProductGallery } from "./product-gallery.context";
 
 const SOURCE_LABEL = { chosen: "elegida", own: "foto propia", product: "la del producto" } as const;
 
 /**
  * La principal de una variante en su fila (lienzo, artboard 3): atenuada si
  * hereda la del producto, y una nota que lo dice. Con permiso, tocarla abre el
- * selector de la galería; sin permiso es solo la miniatura.
+ * selector de la galería; sin permiso es solo la miniatura. Fuera de la
+ * ficha (sin `ProductGalleryProvider`) no pinta nada: la tabla sigue sirviendo.
  */
 export function VariantPrimaryThumb({ variant }: { variant: ProductVariantDTO }) {
-  const { product, canManage, openVariantPicker, labelOf } = useProductGallery();
+  const gallery = useOptionalProductGallery();
+  if (gallery === null) return null;
+  return <Thumb variant={variant} gallery={gallery} />;
+}
+
+function Thumb({
+  variant,
+  gallery,
+}: {
+  variant: ProductVariantDTO;
+  gallery: NonNullable<ReturnType<typeof useOptionalProductGallery>>;
+}) {
+  const { product, canManage, openVariantPicker, labelOf } = gallery;
   const { image, source } = effectiveVariantPrimary(product.images ?? [], variant, product.primary_image_id);
   const label = labelOf(variant);
   const note = source === "chosen" && image?.alt_text ? `«${image.alt_text}»` : SOURCE_LABEL[source];
@@ -59,7 +72,9 @@ export function VariantPrimaryThumb({ variant }: { variant: ProductVariantDTO })
 
 /** «la del producto» · «foto propia» · «Negra, de frente»: de dónde sale su foto. */
 export function VariantPrimaryNote({ variant }: { variant: ProductVariantDTO }) {
-  const { product } = useProductGallery();
+  const gallery = useOptionalProductGallery();
+  if (gallery === null) return null;
+  const { product } = gallery;
   const { image, source } = effectiveVariantPrimary(product.images ?? [], variant, product.primary_image_id);
   const note = image === null ? "sin foto" : source === "chosen" && image.alt_text ? `«${image.alt_text}»` : SOURCE_LABEL[source];
   return <span className="truncate text-xs text-muted-foreground">{note}</span>;
