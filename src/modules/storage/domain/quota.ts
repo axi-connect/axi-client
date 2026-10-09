@@ -107,7 +107,8 @@ export function quotaBatchNotice(
     count <= 1
       ? names[0] !== undefined
         ? `No subimos «${names[0].length > 40 ? `${names[0].slice(0, 39)}…` : names[0]}».`
-        : "No subimos el archivo."
+        : // Sin nombre: la cola de fotos avisa una vez por lote y no sabe cuántas eran
+          "No se subieron los archivos nuevos."
       : `No subimos ${String(count)} archivos.`;
   if (details.scope === "platform_capacity") {
     return {

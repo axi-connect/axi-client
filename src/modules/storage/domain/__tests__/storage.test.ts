@@ -308,6 +308,10 @@ describe("aviso del 507 por lote (C-3)", () => {
     expect(notice.showSeeStorage).toBe(false);
   });
 
+  it("un lote sin nombre (la cola de fotos) no habla de «el archivo»", () => {
+    expect(quotaBatchNotice(tenant, [null], true).description).toContain("No se subieron los archivos nuevos.");
+  });
+
   it("la reserva del servidor no culpa al tenant", () => {
     const notice = quotaBatchNotice({ ...tenant, scope: "platform_capacity" }, ["a.jpg"], true);
     expect(notice.title).toBe("El almacenamiento está en pausa");
