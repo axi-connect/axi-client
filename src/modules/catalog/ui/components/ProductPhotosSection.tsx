@@ -465,7 +465,6 @@ function GalleryNotices({ generalRemaining }: { generalRemaining: number }) {
  * se llenó es el almacenamiento de Axi, no es culpa ni tarea del tenant.
  */
 function StorageFullCallout({ pending = 0, platform = false }: { pending?: number; platform?: boolean }) {
-  const { blockedHint } = useStorageQuotaState();
   const waiting =
     pending > 0 ? ` ${pending === 1 ? "Quedó 1 foto sin subir" : `Quedaron ${String(pending)} fotos sin subir`}.` : "";
   return (
@@ -477,8 +476,8 @@ function StorageFullCallout({ pending = 0, platform = false }: { pending?: numbe
         </>
       ) : (
         <>
-          <span className="font-semibold">Tu espacio de almacenamiento está lleno.</span> {blockedHint}
-          {waiting}
+          <span className="font-semibold">Tu espacio de almacenamiento está lleno.</span> Pide más espacio a un
+          administrador o a soporte.{waiting}
         </>
       )}
     </Callout>
