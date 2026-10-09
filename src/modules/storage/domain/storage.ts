@@ -120,6 +120,14 @@ export const STATE_PILL: Record<StorageState, { tone: StorageTone; label: string
   unlimited: { tone: "neutral", label: "Sin cuota", led: "Sin límite" },
 };
 
+/** La píldora de estado: pasado el 100 % dentro del margen no es «Lleno» (C-2). */
+export function statePill(summary: Pick<StorageSummaryDTO, "state" | "blocks_uploads">) {
+  if (summary.state === "full" && !summary.blocks_uploads) {
+    return { tone: "warning" as StorageTone, label: "En el margen", led: "En el margen" };
+  }
+  return STATE_PILL[summary.state];
+}
+
 export function hasQuota(summary: Pick<StorageSummaryDTO, "quota_bytes">): summary is { quota_bytes: number } {
   return summary.quota_bytes !== null && summary.quota_bytes > 0;
 }

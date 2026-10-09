@@ -12,7 +12,7 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import {
   ORIGIN_GROUP_COPY,
   almostFull,
-  STATE_PILL,
+  statePill,
   STORAGE_READ_PERMISSION,
   driveModel,
   formatStorageBytes,
@@ -76,7 +76,9 @@ function StorageSummary({ summary }: { summary: StorageSummaryDTO }) {
     return () => clearInterval(timer);
   }, []);
 
-  const pill = STATE_PILL[summary.state];
+  const pill = statePill(summary);
+  // En el margen (pasado el 100 % pero sin pausa) se pinta como aviso, no como lleno (C-2)
+  const shownState = summary.state === "full" && !summary.blocks_uploads ? "warning" : summary.state;
   const figure = headFigure(summary);
   const pct = usedPct(summary);
   const provenance = quotaProvenance(summary);
@@ -123,7 +125,7 @@ function StorageSummary({ summary }: { summary: StorageSummaryDTO }) {
                 <BentoFigure value={figure.value} unit={figure.unit} />
                 {pct !== null ? (
                   <>
-                    <StorageMeter pct={pct} state={summary.state} />
+                    <StorageMeter pct={pct} state={shownState} />
                     <div className="text-muted-foreground flex flex-wrap justify-between gap-x-3 gap-y-1 text-[11.5px] tabular-nums">
                       <span className="whitespace-nowrap">Usas {formatStorageBytes(summary.used_bytes)}</span>
                       {provenance ? <span>{provenance}</span> : null}
@@ -149,7 +151,7 @@ function StorageSummary({ summary }: { summary: StorageSummaryDTO }) {
                 </ul>
                 <Provenance icon={<Activity className="size-3" />}>{measuredAgo(summary.measured_at, now)}</Provenance>
               </div>
-              <DriveGlyph model={drive} state={summary.state} label={driveLabel(summary)} />
+              <DriveGlyph model={drive} state={shownState} label={driveLabel(summary)} />
             </div>
           </div>
         </BentoTile>

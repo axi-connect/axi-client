@@ -84,6 +84,8 @@ describe("StorageView (Mi empresa › Almacenamiento)", () => {
     render(<StorageView />);
     expect(await screen.findByText("Estás usando el margen")).toBeInTheDocument();
     expect(screen.queryByText("Tu equipo no puede subir archivos nuevos.")).toBeNull();
+    expect(screen.getByText("En el margen")).toBeInTheDocument();
+    expect(screen.queryByText("Lleno")).toBeNull();
   });
 
   it("S-6: casi lleno avisa cuánto cabe aunque el porcentaje no llegue al 100 %", async () => {
