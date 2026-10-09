@@ -31,8 +31,7 @@ describe("StorageWarningNotice (aviso al 80 %)", () => {
   it("al 80 % dice lo que queda y cuánto alcanza, con enlace al espacio", () => {
     seed("warning");
     render(<StorageWarningNotice />);
-    expect(screen.getByText("Te quedan 2,4 GB de espacio.")).toBeInTheDocument();
-    expect(screen.getByText(/alcanza para unos 3 meses/)).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("Te quedan 2,4 GB de espacio · a tu ritmo, unos 3 meses");
     expect(screen.getByRole("link", { name: "Ver espacio" })).toHaveAttribute("href", "/settings/company/almacenamiento");
   });
 
@@ -44,6 +43,23 @@ describe("StorageWarningNotice (aviso al 80 %)", () => {
     unmount();
     render(<StorageWarningNotice />);
     expect(screen.queryByRole("status")).toBeNull();
+  });
+
+  it("C-10: queda visto con solo mostrarse (no vuelve aunque no se cierre)", () => {
+    seed("warning");
+    const { unmount } = render(<StorageWarningNotice />);
+    expect(screen.getByRole("status")).toBeInTheDocument();
+    unmount();
+    render(<StorageWarningNotice />);
+    expect(screen.queryByRole("status")).toBeNull();
+  });
+
+  it("C-10: una sola línea — el texto se trunca, sin botón debajo", () => {
+    seed("warning");
+    render(<StorageWarningNotice />);
+    const status = screen.getByRole("status");
+    expect(status.className).toContain("h-11");
+    expect(status.querySelector("p")?.className).toContain("truncate");
   });
 
   it("con espacio de sobra (o sin resumen) no dice nada", () => {
