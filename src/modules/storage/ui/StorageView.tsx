@@ -11,7 +11,8 @@ import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import {
   ORIGIN_GROUP_COPY,
-  STATE_PILL,
+  almostFull,
+  statePill,
   STORAGE_READ_PERMISSION,
   driveModel,
   formatStorageBytes,
@@ -75,7 +76,9 @@ function StorageSummary({ summary }: { summary: StorageSummaryDTO }) {
     return () => clearInterval(timer);
   }, []);
 
-  const pill = STATE_PILL[summary.state];
+  const pill = statePill(summary);
+  // En el margen (pasado el 100 % pero sin pausa) se pinta como aviso, no como lleno (C-2)
+  const shownState = summary.state === "full" && !summary.blocks_uploads ? "warning" : summary.state;
   const figure = headFigure(summary);
   const pct = usedPct(summary);
   const provenance = quotaProvenance(summary);
@@ -83,20 +86,31 @@ function StorageSummary({ summary }: { summary: StorageSummaryDTO }) {
   const free = freeBytes(summary);
   const drive = driveModel(summary);
   const pace = pacePhrases(summary, now);
-  const full = summary.state === "full";
+  // Pausa real (la decide el servidor) frente a «en el margen» o «casi lleno»
+  const blocked = summary.blocks_uploads;
+  const tight = almostFull(summary);
   const unlimited = !hasQuota(summary);
   const support = salesWhatsAppUrl(supportMessage(summary.name));
   const side = pace !== null || unlimited;
 
   return (
     <div className="@container flex flex-col gap-4">
-      {full ? (
-        <Alert className="bg-muted rounded-[20px] [&>svg]:text-destructive">
+      {blocked || tight ? (
+        <Alert className={cn("bg-muted rounded-[20px]", blocked ? "[&>svg]:text-destructive" : "[&>svg]:text-warning")}>
           <HardDrive />
           <AlertDescription className="text-foreground flex flex-col gap-3 @xl:flex-row @xl:items-center @xl:justify-between">
             <span className="text-pretty">
-              <b className="font-medium">Tu equipo no puede subir archivos.</b> Fotos de catálogo, adjuntos y recursos esperan a que haya
-              espacio.
+              {blocked ? (
+                <>
+                  <b className="font-medium">Tu equipo no puede subir archivos nuevos.</b> Las fotos de catálogo, los adjuntos y los
+                  recursos se rechazan hasta que haya más espacio.
+                </>
+              ) : (
+                <>
+                  <b className="font-medium">Casi no queda espacio:</b> caben {formatStorageBytes(summary.room_bytes ?? 0)} más. Una foto
+                  o un video grande ya puede no subir.
+                </>
+              )}
             </span>
             <SupportButton href={support} className="self-start @xl:self-auto" />
           </AlertDescription>
@@ -111,7 +125,7 @@ function StorageSummary({ summary }: { summary: StorageSummaryDTO }) {
                 <BentoFigure value={figure.value} unit={figure.unit} />
                 {pct !== null ? (
                   <>
-                    <StorageMeter pct={pct} state={summary.state} />
+                    <StorageMeter pct={pct} state={shownState} />
                     <div className="text-muted-foreground flex flex-wrap justify-between gap-x-3 gap-y-1 text-[11.5px] tabular-nums">
                       <span className="whitespace-nowrap">Usas {formatStorageBytes(summary.used_bytes)}</span>
                       {provenance ? <span>{provenance}</span> : null}
@@ -128,7 +142,7 @@ function StorageSummary({ summary }: { summary: StorageSummaryDTO }) {
                       {ORIGIN_GROUP_COPY[total.group].short} {formatStorageBytes(total.bytes)}
                     </li>
                   ))}
-                  {free !== null && free > 0 && !full ? (
+                  {free !== null && free > 0 && summary.state !== "full" ? (
                     <li className="inline-flex items-center gap-1.5 whitespace-nowrap">
                       <FreeSwatch />
                       Libre {formatStorageBytes(free)}
@@ -137,7 +151,7 @@ function StorageSummary({ summary }: { summary: StorageSummaryDTO }) {
                 </ul>
                 <Provenance icon={<Activity className="size-3" />}>{measuredAgo(summary.measured_at, now)}</Provenance>
               </div>
-              <DriveGlyph model={drive} state={summary.state} label={driveLabel(summary)} />
+              <DriveGlyph model={drive} state={shownState} label={driveLabel(summary)} />
             </div>
           </div>
         </BentoTile>
@@ -179,7 +193,7 @@ function StorageSummary({ summary }: { summary: StorageSummaryDTO }) {
           </BentoTile>
         ) : null}
 
-        {!full && !unlimited ? (
+        {!(blocked || tight) && !unlimited ? (
           <section className="border-border bg-card flex flex-wrap items-center justify-between gap-3 rounded-3xl border p-5 @2xl:col-span-2 @5xl:col-span-3">
             <div className="min-w-0">
               <p className="font-medium">¿Necesitas más espacio?</p>

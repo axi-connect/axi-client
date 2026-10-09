@@ -52,6 +52,16 @@ const KIND_ICONS: Record<PanelKind, React.ComponentType<{ className?: string }>>
   imports: FileSpreadsheet,
 };
 
+/** Una foto del catálogo son tres objetos (original, WhatsApp y miniatura): se cuentan fotos (S-8). */
+function objectsHint(category: string, objects: number): string {
+  const n = new Intl.NumberFormat("es-CO");
+  if (category === "catalog_image") {
+    const photos = Math.max(1, Math.round(objects / 3));
+    return `${n.format(photos)} ${photos === 1 ? "foto" : "fotos"} · 3 tamaños c/u`;
+  }
+  return `${n.format(objects)} ${objects === 1 ? "archivo" : "archivos"}`;
+}
+
 function UsageTile({
   storage,
   onQuota,
@@ -165,7 +175,7 @@ function BreakdownTile({ storage }: { storage: TenantStorage }) {
                 ORIGIN_SWATCH[(CATEGORY_LABELS[row.category]?.origin ?? row.origin) as "customer" | "team" | "system"]
               }
               title={categoryLabel(row.category)}
-              hint={`${new Intl.NumberFormat("es-CO").format(row.objects)} ${row.objects === 1 ? "archivo" : "archivos"}`}
+              hint={objectsHint(row.category, row.objects)}
               value={formatBytes(row.bytes)}
             />
           ))}
@@ -307,8 +317,8 @@ export function TenantStorageView({ tenantId }: { tenantId: string }) {
   const storage = useTenantStorage(tenantId);
   const options = usePurgeOptions(tenantId);
   const role = usePlatformRole();
-  // Ampliar y depurar: super admin y soporte (billing_ops solo mira)
-  const canEdit = role !== "billing_ops";
+  // Ampliar, depurar y retención: super admin y soporte (C-6: billing_ops solo mira)
+  const canEdit = role === "super_admin" || role === "support";
   const [quotaOpen, setQuotaOpen] = useState(false);
   const [panel, setPanel] = useState<PanelKind | null>(null);
   const purgeRef = useRef<HTMLDivElement>(null);
@@ -329,15 +339,6 @@ export function TenantStorageView({ tenantId }: { tenantId: string }) {
   }
   if (storage.isError) return <TileFailure label="Almacenamiento" onRetry={() => void storage.refetch()} />;
   const data = storage.data;
-  const recoverable =
-    options.data === undefined
-      ? null
-      : options.data
-          .filter(
-            (option) =>
-              option.kind === "conversation_media" || option.kind === "call_recordings" || option.kind === "imports",
-          )
-          .reduce((sum, option) => sum + option.up_to_bytes, 0);
 
   return (
     <div className="flex flex-col gap-5">
@@ -376,7 +377,7 @@ export function TenantStorageView({ tenantId }: { tenantId: string }) {
         </section>
       ) : null}
 
-      <RetentionCard tenantId={tenantId} recoverableBytes={recoverable} />
+      <RetentionCard tenantId={tenantId} canEdit={canEdit} />
       <PurgeRunsCard tenantId={tenantId} />
 
       {quotaOpen ? <QuotaSheet open={quotaOpen} onOpenChange={setQuotaOpen} storage={data} /> : null}

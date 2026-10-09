@@ -212,13 +212,18 @@ function ConfirmPurgeDialog({
   preview,
   tenantId,
   tenantName,
+  filterLabel,
   onFinished,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** La vista previa CONFIRMADA: una foto fija, no la que se recalcula detrás (C-5). */
   preview: PurgePreview;
   tenantId: string;
   tenantName: string;
+  /** Qué se va a borrar, en palabras: el filtro que produjo esta vista previa. */
+  filterLabel: string;
+  /** Al cerrar el diálogo tras una ejecución: refrescar cifras y vista previa (C-4). */
   onFinished: () => void;
 }) {
   const { showAlert } = useAlert();
@@ -244,9 +249,17 @@ function ConfirmPurgeDialog({
           : (run.data.error ?? "Algunos archivos no se pudieron borrar."),
       autoCloseMs: 6000,
     });
-    onFinished();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- una vez por corrida
   }, [finished]);
+
+  const running = runId !== null && !finished;
+  // El «Listo» se queda a la vista; las cifras se refrescan al cerrar (C-4)
+  const close = (next: boolean) => {
+    if (next) return;
+    if (running) return;
+    onOpenChange(false);
+    if (finished) onFinished();
+  };
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -267,9 +280,8 @@ function ConfirmPurgeDialog({
     }
   }
 
-  const running = runId !== null && !finished;
   return (
-    <Dialog open={open} onOpenChange={(next) => (!running ? onOpenChange(next) : undefined)}>
+    <Dialog open={open} onOpenChange={close}>
       <DialogContent className="max-w-lg rounded-3xl">
         <DialogHeader>
           <DialogTitle>
@@ -279,6 +291,10 @@ function ConfirmPurgeDialog({
             Se borran ya {files(preview.files)}. Los mensajes quedan con «Archivo eliminado». No hay papelera ni forma
             de recuperarlos.
           </DialogDescription>
+          <p className="rounded-xl bg-muted px-3 py-2 text-sm">
+            <span className="text-muted-foreground">Qué se borra: </span>
+            <span className="font-medium">{filterLabel}</span>
+          </p>
         </DialogHeader>
         <div className="grid grid-cols-3 gap-2">
           {[
@@ -306,7 +322,7 @@ function ConfirmPurgeDialog({
             </p>
             {finished ? (
               <div className="flex justify-end">
-                <Button type="button" className="rounded-full" onClick={() => onOpenChange(false)}>
+                <Button type="button" className="rounded-full" onClick={() => close(false)}>
                   Cerrar
                 </Button>
               </div>
@@ -339,7 +355,7 @@ function ConfirmPurgeDialog({
               />
             </div>
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" className="rounded-full" onClick={() => onOpenChange(false)}>
+              <Button type="button" variant="outline" className="rounded-full" onClick={() => close(false)}>
                 Cancelar
               </Button>
               <Button
@@ -360,6 +376,22 @@ function ConfirmPurgeDialog({
 
 const MIME_CLASSES: MimeClass[] = ["video", "audio", "image", "document"];
 
+/** El filtro en palabras, para que el diálogo diga QUÉ se borra y no solo cuánto. */
+export function describeFilter(kind: Exclude<PurgeKind, "offboarding">, filter: PurgeFilter | null): string {
+  const age = filter?.older_than_days;
+  const older = age === undefined ? "" : ` de más de ${AGE_OPTIONS.find((o) => o.days === age)?.label ?? `${String(age)} días`}`;
+  if (kind === "conversation_media") {
+    const classes = (filter?.mime_classes ?? []).map((value) => MIME_CLASS_LABELS[value as MimeClass].toLowerCase());
+    const what = classes.length === 0 ? "media" : classes.join(", ");
+    const who = filter?.origin === "team" ? "del equipo" : "de los clientes";
+    return `${what.charAt(0).toUpperCase()}${what.slice(1)} ${who}${older}`;
+  }
+  if (kind === "call_recordings") return `Grabaciones de llamadas${older}`;
+  if (kind === "imports") return `Archivos de importación${older}`;
+  if (kind === "trash") return "Fotos y recursos que el equipo ya borró";
+  return files(filter?.keys?.length ?? 0) + " elegidos a mano";
+}
+
 export function PurgePanel({
   kind,
   storage,
@@ -376,7 +408,8 @@ export function PurgePanel({
   const [age, setAge] = useState(180);
   const [origin, setOrigin] = useState<"customer" | "team">("customer");
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [confirming, setConfirming] = useState(false);
+  /** La vista previa que se está confirmando, congelada al abrir el diálogo (C-5). */
+  const [confirmed, setConfirmed] = useState<PurgePreview | null>(null);
 
   const filter: PurgeFilter | null = useMemo(() => {
     if (kind === "conversation_media") return { origin, mime_classes: classes, older_than_days: age };
@@ -395,6 +428,13 @@ export function PurgePanel({
   }, [kind, filterKey]);
 
   const result = filter === null ? null : (preview.data ?? null);
+  // La vista previa vale solo si salió de ESTE filtro y no hay otra en camino:
+  // durante la pausa de 300 ms la barra mostraba la del filtro anterior (C-5)
+  const fresh =
+    result !== null &&
+    !preview.isPending &&
+    preview.variables?.kind === kind &&
+    JSON.stringify(preview.variables.filter) === filterKey;
   const after = result === null ? null : Math.max(0, storage.used_bytes - result.bytes);
   const toggle = (value: MimeClass) =>
     setClasses((current) => (current.includes(value) ? current.filter((item) => item !== value) : [...current, value]));
@@ -553,25 +593,27 @@ export function PurgePanel({
               variant="destructive"
               size="sm"
               className="rounded-full"
-              onClick={() => setConfirming(true)}
+              disabled={!fresh}
+              onClick={() => setConfirmed(result)}
             >
-              Eliminar {formatBytes(result.bytes)}
+              {fresh ? `Eliminar ${formatBytes(result.bytes)}` : "Calculando…"}
             </Button>
           </div>
         </Island>
       ) : null}
 
-      {result !== null && confirming ? (
+      {confirmed !== null ? (
         <ConfirmPurgeDialog
-          open={confirming}
-          onOpenChange={setConfirming}
-          preview={result}
+          open
+          onOpenChange={(open) => (open ? undefined : setConfirmed(null))}
+          preview={confirmed}
           tenantId={tenantId}
           tenantName={storage.name}
+          filterLabel={describeFilter(kind, filter)}
           onFinished={() => {
             refresh();
             setSelected(new Set());
-            if (filter !== null) preview.mutate({ kind, filter });
+            if (filter !== null && kind !== "large_files") preview.mutate({ kind, filter });
           }}
         />
       ) : null}

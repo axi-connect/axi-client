@@ -90,3 +90,36 @@ export function quotaNotice(
     showSeeStorage: canSeeStorage,
   };
 }
+
+/**
+ * Una sola píldora por lote de rechazos (auditoría C-3): cuatro fotos que
+ * chocan con el espacio lleno no son cuatro avisos repetidos con un solo
+ * nombre. El título dice el motivo; la descripción, qué no se subió.
+ */
+export function quotaBatchNotice(
+  details: QuotaExceededDetails,
+  fileNames: readonly (string | null)[],
+  canSeeStorage: boolean,
+): { title: string; description: string; showSeeStorage: boolean } {
+  const names = [...new Set(fileNames.filter((name): name is string => name !== null && name.trim() !== ""))];
+  const count = Math.max(fileNames.length, names.length);
+  const what =
+    count <= 1
+      ? names[0] !== undefined
+        ? `No subimos «${names[0].length > 40 ? `${names[0].slice(0, 39)}…` : names[0]}».`
+        : // Sin nombre: la cola de fotos avisa una vez por lote y no sabe cuántas eran
+          "No se subieron los archivos nuevos."
+      : `No subimos ${String(count)} archivos.`;
+  if (details.scope === "platform_capacity") {
+    return {
+      title: "El almacenamiento está en pausa",
+      description: `${what} El espacio de Axi Connect está lleno por ahora; ya lo estamos atendiendo.`,
+      showSeeStorage: false,
+    };
+  }
+  return {
+    title: "Tu espacio está lleno",
+    description: canSeeStorage ? `${what} Pide más espacio a soporte para seguir subiendo.` : `${what} ${UPLOADS_BLOCKED_HINT}`,
+    showSeeStorage: canSeeStorage,
+  };
+}

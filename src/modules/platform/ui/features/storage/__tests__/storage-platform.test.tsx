@@ -34,6 +34,7 @@ const previewMutate = jest.fn();
 const executeMutateAsync = jest.fn();
 const quotaMutateAsync = jest.fn();
 let previewData: PurgePreview | undefined;
+let mockPreviewVariables: unknown;
 
 jest.mock("../../../../infrastructure/api/hooks/use-storage", () => ({
   usePurgePreview: () => ({
@@ -41,6 +42,7 @@ jest.mock("../../../../infrastructure/api/hooks/use-storage", () => ({
     data: previewData,
     isPending: false,
     isError: false,
+    variables: mockPreviewVariables,
   }),
   useExecutePurge: () => ({
     mutateAsync: executeMutateAsync,
@@ -66,6 +68,7 @@ const STORAGE: TenantStorage = {
   pct_used: 100,
   state: "full",
   blocks_uploads: true,
+  room_bytes: 0,
   by_category: [],
   growth: {
     per_month_bytes: 1.8 * GIB,
@@ -98,6 +101,10 @@ describe("Depurar (platform)", () => {
     jest.useFakeTimers();
     jest.clearAllMocks();
     previewData = PREVIEW;
+    mockPreviewVariables = {
+      kind: "conversation_media",
+      filter: { origin: "customer", mime_classes: ["video"], older_than_days: 180 },
+    };
   });
   afterEach(() => jest.useRealTimers());
 
@@ -179,5 +186,33 @@ describe("Cuota (platform)", () => {
   it("sin motivo no se guarda", () => {
     render(<QuotaSheet open onOpenChange={() => {}} storage={STORAGE} />);
     expect(screen.getByRole("button", { name: "Guardar cuota" })).toBeDisabled();
+  });
+});
+
+describe("Depurar: la vista previa vieja no se confirma (C-5)", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    previewData = PREVIEW;
+  });
+
+  it("si la vista previa salió de otro filtro, «Eliminar» espera y no abre el diálogo", () => {
+    mockPreviewVariables = {
+      kind: "conversation_media",
+      filter: { origin: "customer", mime_classes: ["video"], older_than_days: 90 },
+    };
+    render(<PurgePanel kind="conversation_media" storage={STORAGE} onClose={() => {}} />);
+    const button = screen.getByRole("button", { name: "Calculando…" });
+    expect(button).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "Eliminar 9,8 GB" })).toBeNull();
+  });
+
+  it("con la vista previa del filtro actual, el diálogo dice qué se borra", async () => {
+    mockPreviewVariables = {
+      kind: "conversation_media",
+      filter: { origin: "customer", mime_classes: ["video"], older_than_days: 180 },
+    };
+    render(<PurgePanel kind="conversation_media" storage={STORAGE} onClose={() => {}} />);
+    fireEvent.click(screen.getByRole("button", { name: "Eliminar 9,8 GB" }));
+    expect(await screen.findByText("Videos de los clientes de más de 6 meses")).toBeInTheDocument();
   });
 });

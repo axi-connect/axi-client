@@ -475,6 +475,23 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
 .mtop{display:none}
 @container (max-width: 899px){ .psb{display:none} .mtop{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border)} .mtop b{font-weight:500;font-size:14px} }
 
+.nline{display:flex;align-items:center;gap:10px;height:44px;padding:0 6px 0 14px;border-radius:16px;border:1px solid var(--border);background:var(--secondary);font-size:13.5px;min-width:0}
+.nline > .ic{color:var(--axi-warning);flex:none}
+.nline .msg{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nline .msg b{font-weight:600}
+.nline .rit{color:var(--muted-foreground)}
+@container (max-width: 639px){ .nline .rit,.nline .opt{display:none} }
+.nline .go{flex:none;display:inline-flex;align-items:center;gap:4px;font-weight:500;text-decoration:none;white-space:nowrap;padding:0 8px;height:32px;border-radius:10px}
+.nline .go:hover{background:var(--background)}
+.nline .x{flex:none;width:32px;height:32px;border-radius:10px;display:grid;place-items:center;color:var(--muted-foreground)}
+.panelhead{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.panelhead h1{font-size:40px;line-height:1.05}
+.panelhead .k{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-foreground);font-weight:500;margin-bottom:6px}
+.before{display:grid;grid-template-columns:20px minmax(0,1fr) auto;gap:12px;align-items:start;padding:12px 16px;border-radius:16px;border:1px solid var(--border);background:var(--secondary);font-size:13.5px}
+.before .ic{color:var(--axi-warning);margin-top:2px}
+.cmp{display:flex;flex-direction:column;gap:6px}
+.cmp > span{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted-foreground);font-weight:500}
+
 /* «Tu disco»: dispositivo ilustrado, cada cuadro = 1 GB (glifo, no superficie de datos) */
 .hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,360px);gap:28px;align-items:center}
 @container (max-width: 760px){ .hero{grid-template-columns:minmax(0,1fr)} }
