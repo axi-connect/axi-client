@@ -25,6 +25,8 @@ import {
 export type PhotoTileActions = {
   onView: (image: ProductImageDTO) => void;
   onMakePrimary?: (image: ProductImageDTO) => void;
+  /** Texto del menú: «Hacer principal» del producto o «Hacer principal de M · Negro» */
+  makePrimaryLabel?: string;
   onUseInVariants?: (image: ProductImageDTO) => void;
   onDelete?: (image: ProductImageDTO) => void;
   /** Foto por URL (importador) cuya descarga falló */
@@ -143,6 +145,20 @@ export function PhotoTile({
         </span>
       ) : null}
 
+      {/* Fallida, pendiente o rota: sin menú, pero se puede borrar (auditoría
+          C-7) — si no, ocupaba un cupo de la galería para siempre */}
+      {canManage && actions.onDelete && (!isReady || broken || !image.url) ? (
+        <button
+          type="button"
+          aria-label="Borrar foto"
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={() => actions.onDelete?.(image)}
+          className="absolute top-1.5 right-1.5 inline-flex size-7 items-center justify-center rounded-full bg-background/92 text-destructive shadow-sm hover:bg-background focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <Trash2 className="size-3.5" aria-hidden />
+        </button>
+      ) : null}
+
       {isReady && !broken && image.url ? (
         <div className="absolute top-1.5 right-1.5">
           <DropdownMenu>
@@ -161,7 +177,7 @@ export function PhotoTile({
               {canManage && actions.onMakePrimary && !isPrincipal ? (
                 <DropdownMenuItem className="flex items-center gap-2.5" onClick={() => actions.onMakePrimary?.(image)}>
                   <Star className="size-4" aria-hidden />
-                  Hacer principal
+                  {actions.makePrimaryLabel ?? "Hacer principal"}
                 </DropdownMenuItem>
               ) : null}
               {canManage && actions.onUseInVariants ? (

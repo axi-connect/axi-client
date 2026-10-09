@@ -91,7 +91,7 @@ export function validateImageFile(file: Pick<File, "name" | "type" | "size">): s
   const byType = SELECTABLE_IMAGE_MIME.includes(file.type as (typeof SELECTABLE_IMAGE_MIME)[number]);
   const byExtension = /\.(jpe?g|png|webp|heic|heif)$/i.test(file.name);
   if (!byType && !byExtension) {
-    return "Formato no soportado: usa JPG, PNG, WebP o HEIC.";
+    return "Formato no soportado: usa JPG, PNG o WebP.";
   }
   if (file.size > PRODUCT_IMAGE_INPUT_MAX_BYTES) {
     return "La foto supera los 40 MB.";

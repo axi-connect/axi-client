@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { AlertCircle, ImagePlus, Info, Lock, Minimize2, RefreshCw, Store, TriangleAlert, Upload } from "lucide-react";
+import { AlertCircle, HardDrive, ImagePlus, Info, Lock, Minimize2, RefreshCw, Store, TriangleAlert, Upload } from "lucide-react";
+import { useStorageQuotaState } from "@/modules/storage/public";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/core/lib/utils";
 import {
@@ -33,6 +34,8 @@ import { useProductGallery } from "./photos/product-gallery.context";
  */
 export function ProductPhotosSection() {
   const gallery = useProductGallery();
+  // Espacio lleno (auditoría C-3): todas las entradas se apagan ANTES del 507
+  const { blocksUploads } = useStorageQuotaState();
   const { product, canManage, lockedByStore, principal, uploads, filter, setFilter } = gallery;
   const images = useMemo(() => product.images ?? [], [product.images]);
   const variants = useMemo(() => [...product.variants].sort((a, b) => a.position - b.position), [product.variants]);
@@ -81,7 +84,7 @@ export function ProductPhotosSection() {
       />
     ) : null;
 
-  const dropHandlers = canManage
+  const dropHandlers = canManage && !blocksUploads
     ? {
         onDragOver: (event: React.DragEvent) => {
           if (!event.dataTransfer.types.includes("Files")) return;
@@ -128,7 +131,7 @@ export function ProductPhotosSection() {
             variant="outline"
             size="sm"
             className="rounded-full"
-            disabled={filter.kind !== "variant" && generalRemaining <= 0}
+            disabled={blocksUploads || (filter.kind !== "variant" && generalRemaining <= 0)}
             onClick={() => gallery.pick(filter.kind === "variant" ? filter.variantId : null)}
           >
             <Upload className="size-3.5" aria-hidden />
@@ -138,7 +141,15 @@ export function ProductPhotosSection() {
       </div>
 
       {isEmpty ? (
-        <EmptyGallery canManage={canManage} onPick={() => gallery.pick(null)} productName={product.name} />
+        <>
+          <EmptyGallery
+            canManage={canManage}
+            blocked={blocksUploads}
+            onPick={() => gallery.pick(null)}
+            productName={product.name}
+          />
+          {canManage && blocksUploads ? <StorageFullCallout /> : null}
+        </>
       ) : (
         <>
           <UploadSummary />
@@ -238,7 +249,17 @@ function Note({ icon, children }: { icon: React.ReactNode; children: React.React
   );
 }
 
-function EmptyGallery({ canManage, onPick, productName }: { canManage: boolean; onPick: () => void; productName: string }) {
+function EmptyGallery({
+  canManage,
+  blocked,
+  onPick,
+  productName,
+}: {
+  canManage: boolean;
+  blocked: boolean;
+  onPick: () => void;
+  productName: string;
+}) {
   return (
     <div className="flex flex-col items-center gap-3 px-2 py-6 text-center">
       <span className="flex size-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
@@ -253,11 +274,12 @@ function EmptyGallery({ canManage, onPick, productName }: { canManage: boolean; 
       </div>
       {canManage ? (
         <>
-          <Button className="rounded-full px-5" onClick={onPick}>
+          <Button className="rounded-full px-5" onClick={onPick} disabled={blocked}>
             <ImagePlus className="size-4" aria-hidden />
             Elegir fotos
           </Button>
-          <p className="text-xs text-muted-foreground">También puedes arrastrarlas aquí · JPG, PNG, WebP o HEIC</p>
+          {/* Sin HEIC en el texto (C-7): Chrome y Edge no lo leen; el iPhone ya lo convierte a JPG al subir */}
+          <p className="text-xs text-muted-foreground">También puedes arrastrarlas aquí · JPG, PNG o WebP</p>
         </>
       ) : null}
     </div>
@@ -321,7 +343,7 @@ function VariantFilterView({
   uploadTiles: (variantId: string | null) => React.ReactNode;
   dropTile: (variantId: string | null, remaining: number, label?: string) => React.ReactNode;
 }) {
-  const { product, canManage, usedBy, uploads, labelOf } = useProductGallery();
+  const { product, canManage, usedBy, uploads, labelOf, makeVariantPrimary } = useProductGallery();
   const variant = product.variants.find((row) => row.id === variantId);
   if (variant === undefined) return null;
   const images = product.images ?? [];
@@ -348,6 +370,10 @@ function VariantFilterView({
           </>
         }
         {...tileActions}
+        // Dentro del filtro, «Hacer principal» es de ESTA variante (auditoría
+        // C-7): antes cambiaba la portada de todo el producto
+        onMakePrimary={(image) => makeVariantPrimary(variant, image.id)}
+        makePrimaryLabel={`Hacer principal de ${label}`}
       />
     </Band>
   );
@@ -384,10 +410,18 @@ function UploadSummary() {
 
 function GalleryNotices({ generalRemaining }: { generalRemaining: number }) {
   const { uploads, notice, product, canManage } = useProductGallery();
-  const failed = uploads.filter((item) => item.status === "failed");
+  const { blocksUploads } = useStorageQuotaState();
+  const failed = uploads.filter((item) => item.status === "failed" && item.failure === "error");
+  const noSpace = uploads.filter((item) => item.failure === "storage_full" || item.failure === "platform_full");
   const pendingImports = (product.images ?? []).some((image) => image.status === "pending");
   return (
     <div className="space-y-2 empty:hidden">
+      {canManage && (blocksUploads || noSpace.length > 0) ? (
+        <StorageFullCallout
+          pending={noSpace.length}
+          platform={noSpace.some((item) => item.failure === "platform_full")}
+        />
+      ) : null}
       {failed.length > 0 ? (
         <Callout icon={<AlertCircle className="size-4 text-destructive" aria-hidden />}>
           <span className="font-semibold">
@@ -422,6 +456,32 @@ function GalleryNotices({ generalRemaining }: { generalRemaining: number }) {
         </Note>
       ) : null}
     </div>
+  );
+}
+
+/**
+ * Espacio lleno (auditoría C-3): un solo aviso por lote, con el motivo y qué
+ * hacer, en vez de una foto «No se subió · Reintentar» por archivo. Si el que
+ * se llenó es el almacenamiento de Axi, no es culpa ni tarea del tenant.
+ */
+function StorageFullCallout({ pending = 0, platform = false }: { pending?: number; platform?: boolean }) {
+  const { blockedHint } = useStorageQuotaState();
+  const waiting =
+    pending > 0 ? ` ${pending === 1 ? "Quedó 1 foto sin subir" : `Quedaron ${String(pending)} fotos sin subir`}.` : "";
+  return (
+    <Callout icon={<HardDrive className="size-4 text-warning" aria-hidden />}>
+      {platform ? (
+        <>
+          <span className="font-semibold">El almacenamiento de Axi está lleno por ahora.</span> Ya avisamos a soporte;
+          intenta de nuevo más tarde.{waiting}
+        </>
+      ) : (
+        <>
+          <span className="font-semibold">Tu espacio de almacenamiento está lleno.</span> {blockedHint}
+          {waiting}
+        </>
+      )}
+    </Callout>
   );
 }
 

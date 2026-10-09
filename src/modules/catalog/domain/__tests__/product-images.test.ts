@@ -55,7 +55,7 @@ describe("validateImageFile (lo elegido, antes de reducir)", () => {
     ["video.mp4", "video/mp4"],
     ["sin-extension", ""],
   ])("rechaza %s", (name, type) => {
-    expect(validateImageFile(makeFile(name, type, 1024))).toMatch(/JPG, PNG, WebP o HEIC/);
+    expect(validateImageFile(makeFile(name, type, 1024))).toMatch(/JPG, PNG o WebP/);
   });
 
   it("una foto de celular de 12 MB pasa: el tope de 5 MB se aplica DESPUÉS de reducir", () => {
