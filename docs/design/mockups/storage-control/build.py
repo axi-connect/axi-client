@@ -822,6 +822,43 @@ def view_states() -> str:
     return platform_shell("Almacenamiento", body)
 
 
+# ============================================================================ T2b · aviso al 80 % en una línea (C-10)
+K.extra_css += r"""
+.nline{display:flex;align-items:center;gap:10px;height:44px;padding:0 6px 0 14px;border-radius:16px;border:1px solid var(--border);background:var(--secondary);font-size:13.5px;min-width:0}
+.nline > .ic{color:var(--axi-warning);flex:none}
+.nline .msg{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nline .msg b{font-weight:600}
+.nline .rit{color:var(--muted-foreground)}
+@container (max-width: 639px){ .nline .rit,.nline .opt{display:none} }
+.nline .go{flex:none;display:inline-flex;align-items:center;gap:4px;font-weight:500;text-decoration:none;white-space:nowrap;padding:0 8px;height:32px;border-radius:10px}
+.nline .go:hover{background:var(--background)}
+.nline .x{flex:none;width:32px;height:32px;border-radius:10px;display:grid;place-items:center;color:var(--muted-foreground)}
+.panelhead{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.panelhead h1{font-size:40px;line-height:1.05}
+.panelhead .k{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-foreground);font-weight:500;margin-bottom:6px}
+.before{display:grid;grid-template-columns:20px minmax(0,1fr) auto;gap:12px;align-items:start;padding:12px 16px;border-radius:16px;border:1px solid var(--border);background:var(--secondary);font-size:13.5px}
+.before .ic{color:var(--axi-warning);margin-top:2px}
+.cmp{display:flex;flex-direction:column;gap:6px}
+.cmp > span{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted-foreground);font-weight:500}
+"""
+
+
+def notice_line() -> str:
+    return f"""<div class="nline" role="status">{ic("hard-drive", size=16)}<span class="msg">Te quedan <b>2,4 GB</b><span class="opt"> de espacio</span><span class="rit"> · a tu ritmo, unas 3 semanas</span></span><a class="go" href="#">Ver espacio {ic("arrow-right", size=14)}</a><button class="x" aria-label="Cerrar aviso de espacio">{ic("x", size=16)}</button></div>"""
+
+
+def view_notice_line() -> str:
+    before = f"""<div class="before">{ic("hard-drive", size=18)}<div><p><b style="font-weight:500">Te quedan 2,4 GB de espacio.</b> A tu ritmo alcanza para unas 3 semanas.</p><div style="margin-top:8px">{btn("Ver espacio", "", "outline xs r")}</div></div>{btn("", "x", "ghost icon sm", 'aria-label="Cerrar"')}</div>"""
+    tiles = "".join(f'<section class="tile" style="min-height:150px"><header><h2>{t}</h2></header><div class="fig md"><b>{v}</b><span>{u}</span></div></section>' for t, v, u in [("Vendido en 7 días", "$ 4,2", "M"), ("Conversaciones en 7 días", "318", "atendidas"), ("Clientes nuevos", "41", "contactos")])
+    return f"""<div class="pg">
+      <div class="panelhead"><div><p class="k">Axi Demo · jueves 8 de octubre</p><h1>Buenas tardes, Isabel</h1></div></div>
+      {notice_line()}
+      <div class="bento b3">{tiles}</div>
+      <div class="cmp" style="margin-top:28px"><span>Antes · 82 px en dos filas</span>{before}</div>
+      <div class="cmp"><span>Ahora · una línea de 44 px · en el celular se oculta «a tu ritmo…»</span>{notice_line()}</div>
+    </div>"""
+
+
 # ============================================================================ artboards
 def wrap(body: str) -> str:
     return body
@@ -838,6 +875,7 @@ VIEWS = [
     ("self", "T1 · Mi empresa › Almacenamiento", view_tenant_self("warn"), "Solo lectura para owner/admin. Lo que queda, en qué se va y soporte."),
     ("selffull", "T1b · Mi empresa · lleno", view_tenant_self("full"), "Banda informativa y CTA de soporte."),
     ("selfnone", "T1c · Mi empresa · sin cuota", view_tenant_self("none"), "Sin límite: solo el desglose."),
+    ("noticeline", "T2b · Aviso al 80 % en una línea", view_notice_line(), "El aviso del Panel en una sola fila: icono, lo que queda, el ritmo, «Ver espacio →» y la ✕."),
     ("notices", "T2 · Avisos", view_notices(), "Composer, subida rechazada, 80 % y archivo eliminado."),
     ("states", "Estados de platform", view_states(), "Disco sin lectura, cargando, error, tenant nuevo y sin cuota."),
     ("overviewna", "P1b · Disco sin lectura", view_overview(unavailable=True), "El último valor con su antigüedad."),
@@ -847,9 +885,9 @@ BODY = {k: b for k, _, b, _ in VIEWS}
 H = {
     "overview": (1440, 1340), "tenant": (1440, 2030), "purge": (1440, 1100), "confirm": (1440, 1100), "files": (1440, 920),
     "quota": (1440, 1100), "plan": (1440, 980), "self": (1440, 1020), "selffull": (1440, 1030), "selfnone": (1440, 820),
-    "notices": (1440, 700), "states": (1440, 740), "overviewna": (1440, 1300),
+    "notices": (1440, 700), "noticeline": (1440, 640), "states": (1440, 740), "overviewna": (1440, 1300),
 }
-HM = {"overview": 2530, "tenant": 3410, "purge": 2090, "self": 1620, "notices": 1150}
+HM = {"overview": 2530, "tenant": 3410, "purge": 2090, "self": 1620, "notices": 1150, "noticeline": 1100}
 
 
 def boards() -> list[dict]:
@@ -875,6 +913,9 @@ def boards() -> list[dict]:
         ("selfnone", 1440, False, "MiEmpresaSinCuota.dc.html", "T1c · sin cuota", 4),
         ("notices", 1440, False, "Avisos.dc.html", "T2 · Avisos y archivo eliminado", 5),
         ("notices", 390, False, "AvisosMovil.dc.html", "T2 · celular", 5),
+        ("noticeline", 1440, False, "AvisoUnaLinea.dc.html", "T2b · Aviso al 80 % en una línea (C-10)", 6),
+        ("noticeline", 1440, True, "AvisoUnaLineaOscuro.dc.html", "T2b · oscuro", 6),
+        ("noticeline", 390, False, "AvisoUnaLineaMovil.dc.html", "T2b · celular", 6),
     ]
     out = []
     for key, w, dark, file, title, row in plan:
@@ -885,7 +926,7 @@ def boards() -> list[dict]:
 
 
 ROW_NAMES = {0: "Platform · el disco y los tenants", 1: "Platform · la ficha del tenant", 2: "Platform · depurar",
-             3: "Platform · cuota, plan y estados", 4: "Tenant · Mi empresa › Almacenamiento", 5: "Tenant · avisos"}
+             3: "Platform · cuota, plan y estados", 4: "Tenant · Mi empresa › Almacenamiento", 5: "Tenant · avisos", 6: "Tenant · aviso al 80 % en una línea"}
 
 
 def canvas(bs: list[dict]) -> dict:

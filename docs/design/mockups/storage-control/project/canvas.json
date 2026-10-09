@@ -148,6 +148,27 @@
       "w": 1440,
       "x": 1520,
       "y": 2950
+    },
+    "AvisoUnaLinea.dc.html": {
+      "h": 640,
+      "title": "T2b · Aviso al 80 % en una línea (C-10)",
+      "w": 1440,
+      "x": 0,
+      "y": 14420
+    },
+    "AvisoUnaLineaOscuro.dc.html": {
+      "h": 640,
+      "title": "T2b · oscuro",
+      "w": 1440,
+      "x": 1520,
+      "y": 14420
+    },
+    "AvisoUnaLineaMovil.dc.html": {
+      "h": 1100,
+      "title": "T2b · celular",
+      "w": 390,
+      "x": 3040,
+      "y": 14420
     }
   },
   "createdOnFiles": {
@@ -206,6 +227,14 @@
       "w": 240,
       "x": 0,
       "y": 12550
+    },
+    "row6": {
+      "kind": "title1",
+      "maxW": 3510,
+      "text": "Tenant · aviso al 80 % en una línea",
+      "w": 240,
+      "x": 0,
+      "y": 14120
     }
   },
   "order": [
@@ -229,7 +258,10 @@
     "MiEmpresaLleno.dc.html",
     "MiEmpresaSinCuota.dc.html",
     "Avisos.dc.html",
-    "AvisosMovil.dc.html"
+    "AvisosMovil.dc.html",
+    "AvisoUnaLinea.dc.html",
+    "AvisoUnaLineaOscuro.dc.html",
+    "AvisoUnaLineaMovil.dc.html"
   ],
   "pages": [],
   "title": "Almacenamiento · control por tenant"
