@@ -17,6 +17,7 @@ function seed(state: "ok" | "warning" | "full") {
       pct_used: 84,
       state,
       blocks_uploads: false,
+      room_bytes: 2.4 * GIB,
       by_category: [],
       growth: { per_month_bytes: 0.8 * GIB, days_to_full: 90, series: [], window_days: 180 },
       measured_at: "2026-10-08T12:00:00.000Z",

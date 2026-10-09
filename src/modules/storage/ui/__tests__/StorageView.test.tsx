@@ -25,6 +25,7 @@ function summary(overrides: Partial<StorageSummaryDTO> = {}): StorageSummaryDTO 
     pct_used: 84,
     state: "warning",
     blocks_uploads: false,
+    room_bytes: 3.15 * GIB,
     by_category: [
       { category: "inbound_media", origin: "customer", bytes: 8.1 * GIB, objects: 10 },
       { category: "catalog_image", origin: "team", bytes: 3 * GIB, objects: 10 },
@@ -63,17 +64,32 @@ describe("StorageView (Mi empresa › Almacenamiento)", () => {
     expect(screen.getByText("Lo que genera Axi")).toBeInTheDocument();
     expect(screen.getByText(/Llegas al tope hacia/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Hablar con soporte/ })).toHaveAttribute("href", expect.stringContaining("wa.me"));
-    expect(screen.queryByText("Tu equipo no puede subir archivos.")).toBeNull();
+    expect(screen.queryByText("Tu equipo no puede subir archivos nuevos.")).toBeNull();
   });
 
   it("lleno: la banda informativa con soporte, y sin la ficha de «¿Necesitas más espacio?»", async () => {
     mockGetSummary.mockResolvedValue(summary({ state: "full", used_bytes: 15 * GIB, pct_used: 100, blocks_uploads: true }));
     render(<StorageView />);
-    expect(await screen.findByText("Tu equipo no puede subir archivos.")).toBeInTheDocument();
+    expect(await screen.findByText("Tu equipo no puede subir archivos nuevos.")).toBeInTheDocument();
     expect(screen.getByText("Lleno")).toBeInTheDocument();
     expect(screen.getByText("Llegaste al tope")).toBeInTheDocument();
     expect(screen.queryByText("¿Necesitas más espacio?")).toBeNull();
     expect(screen.getAllByRole("link", { name: /Hablar con soporte/ })).toHaveLength(1);
+  });
+
+  it("C-2: pasado el 100 % pero dentro del margen NO dice que el equipo no puede subir", async () => {
+    mockGetSummary.mockResolvedValue(
+      summary({ state: "full", used_bytes: 15.45 * GIB, pct_used: 103, blocks_uploads: false, room_bytes: 1.05 * GIB }),
+    );
+    render(<StorageView />);
+    expect(await screen.findByText("Estás usando el margen")).toBeInTheDocument();
+    expect(screen.queryByText("Tu equipo no puede subir archivos nuevos.")).toBeNull();
+  });
+
+  it("S-6: casi lleno avisa cuánto cabe aunque el porcentaje no llegue al 100 %", async () => {
+    mockGetSummary.mockResolvedValue(summary({ used_bytes: 14.99 * GIB, pct_used: 99.9, room_bytes: 10 * 1024 ** 2 }));
+    render(<StorageView />);
+    expect(await screen.findByText("Casi no queda espacio:")).toBeInTheDocument();
   });
 
   it("sin cuota: lo ocupado, sin medidor ni ritmo", async () => {

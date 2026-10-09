@@ -17388,6 +17388,7 @@ export interface components {
             /** @enum {string} */
             state: "ok" | "warning" | "full" | "unlimited";
             blocks_uploads: boolean;
+            room_bytes: number | null;
             by_category: {
                 /** @enum {string} */
                 category: "inbound_media" | "inbound_media_derived" | "history_import" | "outbound_upload" | "quick_action_asset" | "catalog_image" | "catalog_import_file" | "crm_import_file" | "hsm_template_media" | "tts_audio" | "call_recording" | "document_pdf" | "quality" | "platform_asset" | "other";

@@ -1,3 +1,4 @@
+import { quotaBatchNotice } from "../quota";
 import {
   GIB,
   cellStops,
@@ -32,6 +33,7 @@ function summary(overrides: Partial<StorageSummaryDTO> = {}): StorageSummaryDTO 
     pct_used: 84,
     state: "warning",
     blocks_uploads: false,
+    room_bytes: 3.15 * GIB,
     by_category: [
       { category: "inbound_media", origin: "customer", bytes: 8.1 * GIB, objects: 1200 },
       { category: "catalog_image", origin: "team", bytes: 2 * GIB, objects: 300 },
@@ -197,8 +199,12 @@ describe("«Tu ritmo»", () => {
   });
 
   it("lleno: llegó al tope, sin proyección", () => {
-    const pace = pacePhrases(summary({ state: "full", used_bytes: 15 * GIB }), now);
+    const pace = pacePhrases(summary({ state: "full", used_bytes: 15 * GIB, blocks_uploads: true, room_bytes: 0 }), now);
     expect(pace?.title).toBe("Llegaste al tope");
+    // C-2, el otro signo: pasado el 100 % pero dentro del margen se sigue subiendo
+    const margin = summary({ state: "full", used_bytes: 15.4 * GIB, blocks_uploads: false, room_bytes: 0.35 * GIB });
+    expect(pacePhrases(margin, now)?.title).toBe("Estás usando el margen");
+    expect(headLine(margin).map((part) => part.text).join("")).toContain("estás usando el margen");
     const route = routeModel(summary({ state: "full", used_bytes: 15 * GIB }));
     expect(route?.projection).toBeNull();
   });
@@ -283,5 +289,28 @@ describe("el 507 storage/quota_exceeded", () => {
     const notice = quotaNotice(details, "a.jpg", true);
     expect(notice.showSeeStorage).toBe(false);
     expect(notice.description).not.toContain("Tu espacio");
+  });
+});
+
+describe("aviso del 507 por lote (C-3)", () => {
+  const tenant = { scope: "tenant" as const, used_bytes: 1, quota_bytes: 1, incoming_bytes: 1, pct_used: 100, category: "catalog_image" };
+
+  it("un lote de cuatro es UNA píldora que dice el motivo", () => {
+    const notice = quotaBatchNotice(tenant, ["IMG_1.jpg", "IMG_2.jpg", "IMG_3.jpg", "IMG_4.jpg"], true);
+    expect(notice.title).toBe("Tu espacio está lleno");
+    expect(notice.description).toContain("No subimos 4 archivos.");
+    expect(notice.showSeeStorage).toBe(true);
+  });
+
+  it("uno solo lleva su nombre; sin permiso no ofrece «Ver espacio»", () => {
+    const notice = quotaBatchNotice(tenant, ["promo.jpg"], false);
+    expect(notice.description).toContain("No subimos «promo.jpg».");
+    expect(notice.showSeeStorage).toBe(false);
+  });
+
+  it("la reserva del servidor no culpa al tenant", () => {
+    const notice = quotaBatchNotice({ ...tenant, scope: "platform_capacity" }, ["a.jpg"], true);
+    expect(notice.title).toBe("El almacenamiento está en pausa");
+    expect(notice.showSeeStorage).toBe(false);
   });
 });

@@ -285,11 +285,20 @@ export function headFigure(summary: StorageSummaryDTO): { value: string; unit: s
 export type Phrase = { text: string; strong?: boolean }[];
 
 export function headLine(summary: StorageSummaryDTO): Phrase {
-  if (summary.state === "full") {
+  // La pausa la decide el servidor (blocks_uploads), no el porcentaje: con
+  // margen se puede pasar del 100 % y seguir subiendo (auditoría C-2)
+  if (summary.blocks_uploads) {
     return [
       { text: "Tu espacio está lleno. " },
       { text: "Los mensajes de tus clientes siguen llegando completos", strong: true },
-      { text: "; para subir archivos nuevos, pide más espacio." },
+      { text: "; los archivos nuevos de tu equipo no se suben hasta que haya más espacio." },
+    ];
+  }
+  if (summary.state === "full") {
+    return [
+      { text: "Pasaste tu espacio y estás usando el margen: caben " },
+      { text: formatStorageBytes(summary.room_bytes ?? 0), strong: true },
+      { text: " más antes de que se pausen las subidas." },
     ];
   }
   if (!hasQuota(summary)) return [{ text: "Tu plan no tiene límite de espacio. Aquí ves en qué se va." }];
@@ -320,7 +329,13 @@ export function pacePhrases(summary: StorageSummaryDTO, now: Date): { title: str
   const rate = perMonth !== null && perMonth > 0 ? `≈ ${formatStorageBytes(perMonth)} al mes` : null;
   const top = dominantOrigin(groupByOrigin(summary.by_category));
   const topTail = top ? ` Lo que más ocupa es ${ORIGIN_GROUP_COPY[top].topPhrase}.` : "";
-  if (summary.state === "full") {
+  if (summary.state === "full" && !summary.blocks_uploads) {
+    return {
+      title: "Estás usando el margen",
+      body: `Pasaste tu cuota y caben ${formatStorageBytes(summary.room_bytes ?? 0)} más antes de que se pausen las subidas.`,
+    };
+  }
+  if (summary.blocks_uploads) {
     return {
       title: "Llegaste al tope",
       body: `${rate ? `Creciste ${rate}. ` : ""}Con más espacio, tu equipo vuelve a subir archivos de inmediato.`,
@@ -338,4 +353,15 @@ export function pacePhrases(summary: StorageSummaryDTO, now: Date): { title: str
 export function supportMessage(companyName: string | null | undefined): string {
   const who = companyName ? ` de ${companyName}` : "";
   return `Hola, les escribo${who}. Necesitamos más espacio de almacenamiento en Axi Connect.`;
+}
+
+/**
+ * «Casi lleno» (S-6): una foto pesa ≈ 1,3 veces su tamaño (sus tres
+ * versiones), así que con menos de esto libre una subida normal ya puede
+ * rechazarse aunque el porcentaje diga que queda espacio.
+ */
+export const ALMOST_FULL_ROOM_BYTES = 25 * 1024 ** 2;
+
+export function almostFull(summary: Pick<StorageSummaryDTO, "room_bytes" | "blocks_uploads">): boolean {
+  return !summary.blocks_uploads && summary.room_bytes !== null && summary.room_bytes < ALMOST_FULL_ROOM_BYTES;
 }
