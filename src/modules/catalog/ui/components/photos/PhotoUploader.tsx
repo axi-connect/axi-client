@@ -85,11 +85,15 @@ export function PhotoDropTile({
       onClick={onPick}
       onDragOver={(event) => {
         event.preventDefault();
+        event.stopPropagation();
         setDragOver(true);
       }}
       onDragLeave={() => setDragOver(false)}
       onDrop={(event) => {
         event.preventDefault();
+        // La sección también recibe soltar (toda la tarjeta es zona de drop):
+        // sin esto el mismo archivo se subía dos veces (auditoría C-1)
+        event.stopPropagation();
         setDragOver(false);
         const files = Array.from(event.dataTransfer.files ?? []);
         if (files.length > 0) onFiles(files);

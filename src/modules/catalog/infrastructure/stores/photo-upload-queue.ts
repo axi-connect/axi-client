@@ -8,7 +8,7 @@ import {
   uploadProductImage,
   uploadVariantImage,
 } from "@/modules/catalog/infrastructure/services/product-image-service.adapter";
-import { reportQuotaExceeded } from "@/modules/storage/public";
+import { readQuotaExceeded, reportQuotaExceeded, type QuotaExceededDetails } from "@/modules/storage/public";
 
 /**
  * Cola de subida de fotos del catálogo (plan catalog_images_gallery, D11/D13).
@@ -26,6 +26,15 @@ import { reportQuotaExceeded } from "@/modules/storage/public";
  */
 export type UploadStatus = "preparing" | "queued" | "uploading" | "done" | "failed";
 
+/**
+ * Por qué falló: el espacio lleno (de la empresa o de Axi) no se arregla con
+ * «Reintentar», así que la UI lo trata aparte (auditoría C-3).
+ */
+export type UploadFailure = "storage_full" | "platform_full" | "error";
+
+export const STORAGE_FULL_MESSAGE = "Tu espacio de almacenamiento está lleno";
+export const PLATFORM_FULL_MESSAGE = "El almacenamiento de Axi está lleno por ahora";
+
 export type UploadItem = {
   id: string;
   product_id: string;
@@ -41,6 +50,7 @@ export type UploadItem = {
   prepared_bytes: number | null;
   make_primary: boolean;
   error: string | null;
+  failure: UploadFailure | null;
 };
 
 export type EnqueueRequest = {
@@ -64,7 +74,9 @@ type QueueDeps = {
   revokeObjectUrl: (url: string) => void;
   concurrency: number;
   /** Fallo de subida: el 507 de espacio lleno se avisa aparte (modules/storage). */
-  onError?: (error: unknown, fileName: string) => void;
+  onError?: (error: unknown, fileName: string | null) => void;
+  /** ¿Es el 507 de espacio lleno? Sus detalles, o null. */
+  readQuota?: (error: unknown) => QuotaExceededDetails | null;
 };
 
 let seq = 0;
@@ -87,8 +99,12 @@ export class PhotoUploadQueue {
       onError: (error, fileName) => {
         reportQuotaExceeded(error, fileName);
       },
+      readQuota: readQuotaExceeded,
     },
   ) {}
+
+  /** Tras un 507 de espacio lleno el lote se detiene; un reintento o una tanda nueva lo reabre. */
+  private haltedByQuota = false;
 
   subscribe = (listener: Listener): (() => void) => {
     this.listeners.add(listener);
@@ -119,9 +135,11 @@ export class PhotoUploadQueue {
         prepared_bytes: null,
         make_primary: request.primary_index === index,
         error: null,
+        failure: null,
       },
     }));
     this.jobs = [...this.jobs, ...added];
+    this.haltedByQuota = false;
     this.publish();
     this.pump();
     return added.map((job) => job.item);
@@ -131,7 +149,8 @@ export class PhotoUploadQueue {
   retry(id: string): void {
     const job = this.jobs.find((candidate) => candidate.item.id === id);
     if (job === undefined || job.item.status !== "failed") return;
-    this.update(job, { status: "queued", error: null, progress: 0 });
+    this.haltedByQuota = false;
+    this.update(job, { status: "queued", error: null, failure: null, progress: 0 });
     this.pump();
   }
 
@@ -173,12 +192,35 @@ export class PhotoUploadQueue {
       this.update(job, { status: "done", progress: 1 });
       for (const listener of this.doneListeners) listener(job.item.product_id);
     } catch (error) {
-      // 507 con el espacio lleno: la miniatura dice por qué y la píldora
-      // (vigía del layout) ofrece «Ver espacio» a quien administra.
+      const quota = this.deps.readQuota?.(error) ?? null;
+      if (quota !== null) {
+        this.haltOnQuota(job, quota, error);
+        return;
+      }
       this.deps.onError?.(error, job.item.file_name);
       const message =
         error instanceof ImagePreparationError ? error.message : errorMessage(error, "No se pudo subir la foto");
-      this.update(job, { status: "failed", error: message });
+      this.update(job, { status: "failed", error: message, failure: "error" });
+    }
+  }
+
+  /**
+   * 507 de espacio lleno (auditoría C-3): reintentar foto por foto no sirve y
+   * cada intento es otro 507. Se detiene el lote: esta y las que esperaban
+   * turno quedan con el motivo a la vista, y el aviso del espacio (vigía de
+   * storage) sale UNA vez por lote, no una por foto.
+   */
+  private haltOnQuota(job: Job, quota: QuotaExceededDetails, error: unknown): void {
+    const failure: UploadFailure = quota.scope === "platform_capacity" ? "platform_full" : "storage_full";
+    const message = failure === "platform_full" ? PLATFORM_FULL_MESSAGE : STORAGE_FULL_MESSAGE;
+    const halted = [job, ...this.jobs.filter((other) => other !== job && other.item.status === "queued")];
+    for (const target of halted) {
+      target.item = { ...target.item, status: "failed", error: message, failure };
+    }
+    this.publish();
+    if (!this.haltedByQuota) {
+      this.haltedByQuota = true;
+      this.deps.onError?.(error, halted.length === 1 ? job.item.file_name : null);
     }
   }
 

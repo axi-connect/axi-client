@@ -1,8 +1,10 @@
 "use client";
 
-import { AlertCircle, Check, Loader2, RotateCw, X } from "lucide-react";
+import { AlertCircle, Check, HardDrive, Loader2, RotateCw, X } from "lucide-react";
+import { cn } from "@/core/lib/utils";
 import { formatBytes } from "@/modules/catalog/domain/product-gallery";
 import type { UploadItem } from "@/modules/catalog/infrastructure/stores/photo-upload-queue";
+import { useStorageQuotaState } from "@/modules/storage/public";
 
 /**
  * Una foto en camino (lienzo «Subiendo, de a 3»): la miniatura local desde el
@@ -19,23 +21,43 @@ export function UploadTile({
   onRetry: (id: string) => void;
   onDiscard: (id: string) => void;
 }) {
+  const { blocksUploads } = useStorageQuotaState();
+
   if (item.status === "failed") {
+    // Espacio lleno (auditoría C-3): reintentar no sirve mientras siga lleno;
+    // el motivo va a la vista, no escondido en el `title`
+    const noSpace = item.failure === "storage_full" || item.failure === "platform_full";
+    const canRetry = !noSpace || !blocksUploads;
     return (
       <div
-        className="flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl border border-destructive/30 bg-destructive/8 p-2 text-center"
+        className={cn(
+          "flex aspect-square flex-col items-center justify-center gap-1 rounded-2xl border p-2 text-center",
+          noSpace ? "border-border bg-muted" : "border-destructive/30 bg-destructive/8",
+        )}
         title={item.error ?? undefined}
       >
-        <AlertCircle className="size-5 text-destructive" aria-hidden />
-        <span className="text-[11px] leading-tight text-foreground">No se subió</span>
+        {noSpace ? (
+          <HardDrive className="size-5 text-muted-foreground" aria-hidden />
+        ) : (
+          <AlertCircle className="size-5 text-destructive" aria-hidden />
+        )}
+        <span className="text-[11px] leading-tight font-medium text-foreground">
+          {noSpace ? "Sin espacio" : "No se subió"}
+        </span>
+        {!noSpace && item.error ? (
+          <span className="line-clamp-2 text-[10.5px] leading-tight text-muted-foreground">{item.error}</span>
+        ) : null}
         <span className="flex flex-wrap items-center justify-center gap-1">
-          <button
-            type="button"
-            onClick={() => onRetry(item.id)}
-            className="inline-flex min-h-7 items-center gap-1 rounded-full bg-background px-2.5 text-[11px] font-medium text-foreground shadow-sm hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <RotateCw className="size-3" aria-hidden />
-            Reintentar
-          </button>
+          {canRetry ? (
+            <button
+              type="button"
+              onClick={() => onRetry(item.id)}
+              className="inline-flex min-h-7 items-center gap-1 rounded-full bg-background px-2.5 text-[11px] font-medium text-foreground shadow-sm hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <RotateCw className="size-3" aria-hidden />
+              Reintentar
+            </button>
+          ) : null}
           <button
             type="button"
             onClick={() => onDiscard(item.id)}

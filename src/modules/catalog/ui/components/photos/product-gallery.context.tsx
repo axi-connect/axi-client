@@ -72,6 +72,8 @@ type GalleryContextValue = {
   askDelete: (image: ProductImageDTO) => void;
   openUseInVariants: (image: ProductImageDTO) => void;
   openVariantPicker: (variant: ProductVariantDTO) => void;
+  /** Principal de UNA variante (con «Deshacer»); `null` = la del producto */
+  makeVariantPrimary: (variant: ProductVariantDTO, imageId: string | null) => void;
 };
 
 const GalleryContext = createContext<GalleryContextValue | null>(null);
@@ -119,9 +121,22 @@ export function ProductGalleryProvider({
     productRef.current = product;
   }, [product]);
 
+  // Secuencia de escrituras (auditoría C-7): cada acción toma un turno y solo
+  // la respuesta del ÚLTIMO turno se pinta. Sin esto, un refetch lento que
+  // salió antes de «Hacer principal» llegaba después y deshacía la pantalla.
+  const seqRef = useRef(0);
+  const begin = useCallback(() => ++seqRef.current, []);
+  const applyIfLatest = useCallback(
+    (turn: number, fresh: ProductDTO) => {
+      if (turn === seqRef.current) onSaved(fresh);
+    },
+    [onSaved],
+  );
+
   const refetch = useCallback(async () => {
-    onSaved(await getProductById(productRef.current.id));
-  }, [onSaved]);
+    const turn = begin();
+    applyIfLatest(turn, await getProductById(productRef.current.id));
+  }, [applyIfLatest, begin]);
 
   const { items: uploads, enqueue, retry, discard } = usePhotoUploads(product.id, refetch);
   const [notice, setNotice] = useState<PickNotice | null>(null);
@@ -186,38 +201,48 @@ export function ProductGalleryProvider({
   const makePrimary = useCallback(
     (image: ProductImageDTO) => {
       const before = productRef.current;
+      const turn = begin();
       onSaved({ ...before, primary_image_id: image.id });
       void (async () => {
+        let updated: ProductDTO;
         try {
-          let updated = await setProductPrimaryImage(before.id, image.id);
-          // La principal pasa al frente de su banda: el orden es el de envío
-          const band = (updated.images ?? []).filter((row) => row.variant_id === image.variant_id);
-          const ordered = principalFirst(band, image.id);
-          if (ordered.some((row, index) => row.position !== index)) {
-            await reorderProductImages(before.id, { variant_id: image.variant_id, image_ids: ordered.map((row) => row.id) });
-            updated = await getProductById(before.id);
-          }
-          onSaved(updated);
+          updated = await setProductPrimaryImage(before.id, image.id);
         } catch (err) {
-          onSaved(before);
+          // No se guardó: se vuelve a la verdad del servidor, no a una copia vieja
           fail(err, "No se pudo cambiar la foto principal");
+          await refetch().catch(() => undefined);
+          return;
         }
+        applyIfLatest(turn, updated);
+        // La principal pasa al frente de su banda: el orden es el de envío. Si
+        // esto falla, la principal YA cambió (lo que se ve es lo guardado) y
+        // solo se avisa del orden
+        const band = (updated.images ?? []).filter((row) => row.variant_id === image.variant_id);
+        const ordered = principalFirst(band, image.id);
+        if (!ordered.some((row, index) => row.position !== index)) return;
+        try {
+          await reorderProductImages(before.id, { variant_id: image.variant_id, image_ids: ordered.map((row) => row.id) });
+        } catch (err) {
+          fail(err, "La principal cambió, pero no pudimos ordenar la galería");
+        }
+        await refetch().catch(() => undefined);
       })();
     },
-    [fail, onSaved],
+    [applyIfLatest, begin, fail, onSaved, refetch],
   );
 
   const reorder = useCallback(
     (variantId: string | null, next: ProductImageDTO[]) => {
       const before = productRef.current;
+      begin();
       const rest = (before.images ?? []).filter((image) => image.variant_id !== variantId);
       onSaved({ ...before, images: [...rest, ...next.map((image, index) => ({ ...image, position: index }))] });
       reorderProductImages(before.id, { variant_id: variantId, image_ids: next.map((image) => image.id) }).catch((err: unknown) => {
-        onSaved(before);
         fail(err, "No se pudo guardar el orden");
+        void refetch().catch(() => undefined);
       });
     },
-    [fail, onSaved],
+    [begin, fail, onSaved, refetch],
   );
 
   const retryImport = useCallback(
@@ -231,8 +256,9 @@ export function ProductGalleryProvider({
 
   const saveAssignments = useCallback(
     async (assignments: VariantAssignment[]) => {
+      const turn = begin();
       try {
-        onSaved(await setVariantPrimaryImages(productRef.current.id, { assignments }));
+        applyIfLatest(turn, await setVariantPrimaryImages(productRef.current.id, { assignments }));
         setAlert?.({
           tone: "success",
           title: assignments.length === 1 ? "Variante actualizada" : `${assignments.length} variantes actualizadas`,
@@ -242,17 +268,21 @@ export function ProductGalleryProvider({
         throw err;
       }
     },
-    [fail, onSaved, setAlert],
+    [applyIfLatest, begin, fail, setAlert],
   );
 
   const pickVariantPrimary = useCallback(
     (variant: ProductVariantDTO, imageId: string | null) => {
-      const previous = variant.primary_image_id;
+      // El valor VIGENTE, no el del momento en que se abrió el selector (C-8):
+      // «Deshacer» debe volver a lo que había justo antes de este cambio
+      const current = productRef.current.variants.find((row) => row.id === variant.id) ?? variant;
+      const previous = current.primary_image_id;
       if (previous === imageId) return;
       const label = labelOf(variant);
+      const turn = begin();
       setVariantPrimaryImage(variant.id, imageId)
         .then((updated) => {
-          onSaved(updated);
+          applyIfLatest(turn, updated);
           setAlert?.({
             tone: "success",
             title: `Foto principal de ${label} actualizada`,
@@ -260,8 +290,9 @@ export function ProductGalleryProvider({
               {
                 label: "Deshacer",
                 onClick: () => {
+                  const undoTurn = begin();
                   setVariantPrimaryImage(variant.id, previous)
-                    .then(onSaved)
+                    .then((restored) => applyIfLatest(undoTurn, restored))
                     .catch((err: unknown) => fail(err, "No se pudo deshacer"));
                 },
               },
@@ -270,7 +301,7 @@ export function ProductGalleryProvider({
         })
         .catch((err: unknown) => fail(err, "No se pudo cambiar la foto de la variante"));
     },
-    [fail, labelOf, onSaved, setAlert],
+    [applyIfLatest, begin, fail, labelOf, setAlert],
   );
 
   const confirmDelete = async () => {
@@ -311,6 +342,7 @@ export function ProductGalleryProvider({
     askDelete: setToDelete,
     openUseInVariants: setUseInVariants,
     openVariantPicker: setPickerVariant,
+    makeVariantPrimary: pickVariantPrimary,
   };
 
   return (

@@ -16,6 +16,7 @@ import {
   principalFirst,
   backToProductTarget,
 } from "@/modules/catalog/domain/product-gallery";
+import { useStorageQuotaState } from "@/modules/storage/public";
 import { AnchoredPanel } from "./AnchoredPanel";
 import { useProductGallery } from "./product-gallery.context";
 
@@ -91,6 +92,7 @@ function PickerBody({
   onUpload: () => void;
   onShowGallery: () => void;
 }) {
+  const { blocksUploads, blockedHint } = useStorageQuotaState();
   const images = product.images ?? [];
   const productPrincipal = effectivePrimaryImage(images, product.primary_image_id);
   const current = effectiveVariantPrimary(images, variant, product.primary_image_id);
@@ -206,7 +208,8 @@ function PickerBody({
           variant="outline"
           size="sm"
           className="rounded-full"
-          disabled={ownCount >= VARIANT_GALLERY_MAX}
+          disabled={ownCount >= VARIANT_GALLERY_MAX || blocksUploads}
+          title={blocksUploads ? blockedHint : undefined}
           onClick={onUpload}
         >
           <Upload className="size-3.5" aria-hidden />

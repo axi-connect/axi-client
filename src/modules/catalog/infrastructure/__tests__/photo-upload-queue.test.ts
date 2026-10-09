@@ -1,6 +1,16 @@
 import { PhotoUploadQueue } from "../stores/photo-upload-queue";
 import { ImagePreparationError, prepareImageForUpload, type ImageCodec } from "../services/image-preparation";
 import type { ProductImageDTO } from "@/modules/catalog/domain/product";
+import { readQuotaExceeded } from "@/modules/storage/domain/quota";
+
+/** El 507 de espacio lleno tal como lo lanza el cliente HTTP. */
+function quotaError(scope: "tenant" | "platform_capacity" = "tenant") {
+  return Object.assign(new Error("Espacio lleno"), {
+    status: 507,
+    code: "storage/quota_exceeded",
+    problem: { details: { scope } },
+  });
+}
 
 jest.mock("@/modules/catalog/infrastructure/services/product-image-service.adapter", () => ({
   uploadProductImage: jest.fn(),
@@ -17,6 +27,7 @@ type Deferred = { resolve: () => void; reject: (error: Error) => void };
 
 /** Cola con dependencias falsas: cada subida queda pendiente hasta que la prueba la resuelve. */
 function makeQueue(concurrency = 3) {
+  const reported: { error: unknown; fileName: string | null }[] = [];
   const uploads: { productId: string; variantId: string | null; makePrimary: boolean; name: string; deferred: Deferred }[] = [];
   const upload =
     (variant: boolean) =>
@@ -38,8 +49,10 @@ function makeQueue(concurrency = 3) {
     createObjectUrl: (input: File) => `blob:${input.name}`,
     revokeObjectUrl: () => undefined,
     concurrency,
+    onError: (error, fileName) => reported.push({ error, fileName }),
+    readQuota: readQuotaExceeded,
   });
-  return { queue, uploads };
+  return { queue, uploads, reported };
 }
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
@@ -105,6 +118,49 @@ describe("PhotoUploadQueue (D11: de a 3, progreso y reintento por foto)", () => 
     await flush();
     expect(uploads).toHaveLength(3);
     expect(uploads[2].name).toBe("rota.jpg");
+  });
+
+  // Auditoría C-3: con el espacio lleno reintentar foto por foto no sirve
+  it("un 507 de espacio lleno detiene el lote: las que esperaban no se intentan y el aviso sale UNA vez", async () => {
+    const { queue, uploads, reported } = makeQueue(1);
+    queue.enqueue({ product_id: "p1", files: [file("a.jpg"), file("b.jpg"), file("c.jpg")] });
+    await flush();
+
+    uploads[0].deferred.reject(quotaError());
+    await flush();
+    await flush();
+
+    expect(uploads).toHaveLength(1);
+    expect(queue.getSnapshot().map((item) => [item.status, item.failure])).toEqual([
+      ["failed", "storage_full"],
+      ["failed", "storage_full"],
+      ["failed", "storage_full"],
+    ]);
+    expect(reported).toHaveLength(1);
+    expect(reported[0].fileName).toBeNull();
+  });
+
+  it("un error común NO detiene el lote ni se marca como espacio lleno", async () => {
+    const { queue, uploads } = makeQueue(1);
+    queue.enqueue({ product_id: "p1", files: [file("a.jpg"), file("b.jpg")] });
+    await flush();
+
+    uploads[0].deferred.reject(new Error("se cortó la conexión"));
+    await flush();
+    await flush();
+
+    expect(uploads).toHaveLength(2);
+    expect(queue.getSnapshot()[0]).toMatchObject({ status: "failed", failure: "error" });
+  });
+
+  it("el lleno de la plataforma se distingue del de la empresa", async () => {
+    const { queue, uploads } = makeQueue(1);
+    queue.enqueue({ product_id: "p1", files: [file("a.jpg")] });
+    await flush();
+    uploads[0].deferred.reject(quotaError("platform_capacity"));
+    await flush();
+
+    expect(queue.getSnapshot()[0].failure).toBe("platform_full");
   });
 
   it("dismiss quita lo terminado pero nunca lo que está subiendo", async () => {
