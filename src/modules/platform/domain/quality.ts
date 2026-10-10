@@ -149,12 +149,40 @@ export const MAX_LLM_CALLS = 20;
 export const MAX_COST_USD = 50;
 export const MAX_TOOL_CALLS_MIN = 50;
 export const MAX_MEDIA_MIN = 20;
+export const MAX_TOLERANCE_MINUTES = 720;
+export const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+export const HOUR_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+/** Días de la semana del criterio de cita (valores sin tilde, espejo del backend). */
+export const WEEKDAYS = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"] as const;
+export type Weekday = (typeof WEEKDAYS)[number];
+export const WEEKDAY_LABELS: Record<Weekday, string> = {
+  lunes: "lunes",
+  martes: "martes",
+  miercoles: "miércoles",
+  jueves: "jueves",
+  viernes: "viernes",
+  sabado: "sábado",
+  domingo: "domingo",
+};
 
 export type SuccessCriterion =
   // v1
-  | { kind: "order_created"; min_items?: number; product_codes?: string[] }
+  | {
+      kind: "order_created";
+      min_items?: number;
+      max_items?: number;
+      product_codes?: string[];
+      exact_product_codes?: string[];
+    }
   | { kind: "order_not_created" }
-  | { kind: "appointment_created" }
+  | {
+      kind: "appointment_created";
+      expected_date?: string;
+      expected_weekday?: Weekday;
+      expected_time?: string;
+      tolerance_minutes?: number;
+    }
   | { kind: "escalated" }
   | { kind: "not_escalated" }
   | { kind: "reply_contains"; pattern: string }
@@ -171,11 +199,14 @@ export type SuccessCriterion =
   | { kind: "recognition_matched"; sku: string; max_rank: number }
   | { kind: "intent_detected"; intention_code: string }
   | { kind: "turns_to_outcome"; max: number; outcome: "order" | "appointment" }
+  | { kind: "confirmed_total_matches_order" }
   // v2 · Herramientas
   | { kind: "tool_called"; name: AgentToolName; min: number }
   | { kind: "tool_not_called"; name: AgentToolName }
   // v2 · Estilo y seguridad
   | { kind: "no_unverified_prices" }
+  | { kind: "no_unverified_claims" }
+  | { kind: "no_false_claims" }
   | { kind: "no_bot_phrases" }
   | { kind: "max_greetings"; max: number }
   // v2 · Rendimiento y costo
@@ -200,14 +231,20 @@ export const CRITERION_KINDS: {
   {
     value: "order_created",
     label: "Pedido creado",
-    description: "La conversación termina con un pedido (opcional: mínimo de unidades y productos esperados)",
+    description: "La conversación termina con un pedido (opcional: unidades, productos y SKU exactos)",
     family: "Resultado",
   },
   { value: "order_not_created", label: "Sin pedido", description: "La conversación NO debe crear un pedido", family: "Resultado" },
   {
+    value: "confirmed_total_matches_order",
+    label: "Total confirmado = cobrado",
+    description: "El último total que el agente mostró antes de crear el pedido es el total del pedido",
+    family: "Resultado",
+  },
+  {
     value: "appointment_created",
     label: "Cita agendada",
-    description: "La conversación deja una cita agendada (requiere un tenant con servicios agendables)",
+    description: "La conversación deja una cita agendada (opcional: día, fecha y hora local del negocio)",
     family: "Resultado",
   },
   { value: "escalated", label: "Escala a humano", description: "El agente debe transferir a un operador", family: "Resultado" },
@@ -299,6 +336,18 @@ export const CRITERION_KINDS: {
     family: "Estilo y seguridad",
   },
   {
+    value: "no_unverified_claims",
+    label: "Sin datos sin respaldo",
+    description: "Ningún guardarraíl tuvo que frenar precios, pedidos, pagos, citas o agotados sin respaldo",
+    family: "Estilo y seguridad",
+  },
+  {
+    value: "no_false_claims",
+    label: "Sin afirmaciones falsas de estado",
+    description: "Nunca dice «pedido confirmado», «pago registrado» o «va en camino» antes de que sea cierto",
+    family: "Estilo y seguridad",
+  },
+  {
     value: "no_bot_phrases",
     label: "Sin muletillas de sistema",
     description: "Ninguna respuesta con frases de bot («he transferido», «como asistente virtual»…)",
@@ -370,13 +419,29 @@ export function parseSuccessCriteria(raw: unknown): SuccessCriterion[] {
       case "order_created": {
         const criterion: SuccessCriterion = { kind: "order_created" };
         const minItems = asPositiveInt(record.min_items);
+        const maxItems = asPositiveInt(record.max_items);
         const productCodes = asStringArray(record.product_codes);
+        const exactCodes = asStringArray(record.exact_product_codes);
         if (minItems !== undefined) criterion.min_items = minItems;
+        if (maxItems !== undefined) criterion.max_items = maxItems;
         if (productCodes !== undefined) criterion.product_codes = productCodes;
+        if (exactCodes !== undefined && exactCodes.length > 0) criterion.exact_product_codes = exactCodes;
+        return criterion;
+      }
+      case "appointment_created": {
+        const criterion: SuccessCriterion = { kind: "appointment_created" };
+        const date = asNonEmptyString(record.expected_date);
+        const time = asNonEmptyString(record.expected_time);
+        const tolerance = asNonNegativeInt(record.tolerance_minutes);
+        if (date !== undefined) criterion.expected_date = date;
+        if ((WEEKDAYS as readonly string[]).includes(record.expected_weekday as string)) {
+          criterion.expected_weekday = record.expected_weekday as Weekday;
+        }
+        if (time !== undefined) criterion.expected_time = time;
+        if (tolerance !== undefined) criterion.tolerance_minutes = tolerance;
         return criterion;
       }
       case "order_not_created":
-      case "appointment_created":
       case "escalated":
       case "not_escalated":
       case "no_agent_error":
@@ -412,7 +477,10 @@ export function parseSuccessCriteria(raw: unknown): SuccessCriterion[] {
         return { kind: "media_sent", media: media as SentMediaKind, min: asPositiveInt(record.min) ?? 1 };
       }
       case "payment_reported":
+      case "confirmed_total_matches_order":
       case "no_unverified_prices":
+      case "no_unverified_claims":
+      case "no_false_claims":
       case "no_bot_phrases":
         return { kind: record.kind };
       case "delivery_set": {
@@ -467,13 +535,25 @@ export function criterionLabel(criterion: SuccessCriterion): string {
     case "order_created": {
       const parts = ["Pedido creado"];
       if (criterion.min_items !== undefined) parts.push(`≥ ${criterion.min_items} unidades`);
+      if (criterion.max_items !== undefined) parts.push(`≤ ${criterion.max_items} unidades`);
       if (criterion.product_codes?.length) parts.push(`con ${criterion.product_codes.join(", ")}`);
+      if (criterion.exact_product_codes?.length) parts.push(`SKU exactos ${criterion.exact_product_codes.join(", ")}`);
       return parts.join(" · ");
     }
     case "order_not_created":
       return "Sin pedido";
-    case "appointment_created":
-      return "Cita agendada";
+    case "appointment_created": {
+      const parts = ["Cita agendada"];
+      if (criterion.expected_weekday !== undefined) parts.push(WEEKDAY_LABELS[criterion.expected_weekday]);
+      if (criterion.expected_date !== undefined) parts.push(criterion.expected_date);
+      if (criterion.expected_time !== undefined) {
+        const tolerance = criterion.tolerance_minutes ?? 0;
+        parts.push(tolerance > 0 ? `${criterion.expected_time} ± ${tolerance} min` : criterion.expected_time);
+      }
+      return parts.join(" · ");
+    }
+    case "confirmed_total_matches_order":
+      return "Total confirmado = cobrado";
     case "escalated":
       return "Escala a humano";
     case "not_escalated":
@@ -511,6 +591,10 @@ export function criterionLabel(criterion: SuccessCriterion): string {
       return `No usa ${criterion.name}`;
     case "no_unverified_prices":
       return "Sin precios sin respaldo";
+    case "no_unverified_claims":
+      return "Sin datos sin respaldo";
+    case "no_false_claims":
+      return "Sin afirmaciones falsas de estado";
     case "no_bot_phrases":
       return "Sin muletillas de sistema";
     case "max_greetings":
@@ -568,6 +652,9 @@ export function validateCriteriaSet(criteria: SuccessCriterion[]): string[] {
   if (kinds.has("order_created") && kinds.has("order_not_created")) {
     errors.push("«Pedido creado» y «Sin pedido» son mutuamente excluyentes");
   }
+  if (kinds.has("confirmed_total_matches_order") && kinds.has("order_not_created")) {
+    errors.push("«Total confirmado = cobrado» y «Sin pedido» son mutuamente excluyentes");
+  }
   // v2: la misma tool exigida y prohibida a la vez
   const called = new Set(criteria.flatMap((c) => (c.kind === "tool_called" ? [c.name] : [])));
   for (const criterion of criteria) {
@@ -585,8 +672,27 @@ export function validateCriteriaSet(criteria: SuccessCriterion[]): string[] {
         errors.push(`El umbral de latencia debe estar entre 1 y ${MAX_THRESHOLD_MS} ms`);
       }
     }
-    if (criterion.kind === "order_created" && (criterion.product_codes?.length ?? 0) > MAX_PRODUCT_CODES) {
-      errors.push(`Máximo ${MAX_PRODUCT_CODES} códigos de producto por criterio`);
+    if (criterion.kind === "order_created") {
+      if ((criterion.product_codes?.length ?? 0) > MAX_PRODUCT_CODES || (criterion.exact_product_codes?.length ?? 0) > MAX_PRODUCT_CODES) {
+        errors.push(`Máximo ${MAX_PRODUCT_CODES} códigos de producto por criterio`);
+      }
+      if (criterion.min_items !== undefined && criterion.max_items !== undefined && criterion.max_items < criterion.min_items) {
+        errors.push("«Máx. unidades» no puede ser menor que «Mín. unidades»");
+      }
+    }
+    if (criterion.kind === "appointment_created") {
+      if (criterion.expected_date !== undefined && !ISO_DATE_REGEX.test(criterion.expected_date)) {
+        errors.push("La fecha de la cita va en formato AAAA-MM-DD");
+      }
+      if (criterion.expected_time !== undefined && !HOUR_REGEX.test(criterion.expected_time)) {
+        errors.push("La hora de la cita va en formato HH:mm de 24 horas (p. ej. 16:00)");
+      }
+      if (
+        criterion.tolerance_minutes !== undefined &&
+        (criterion.tolerance_minutes < 0 || criterion.tolerance_minutes > MAX_TOLERANCE_MINUTES)
+      ) {
+        errors.push(`La holgura de la cita debe estar entre 0 y ${MAX_TOLERANCE_MINUTES} minutos`);
+      }
     }
     // ---- v2 ----
     if (criterion.kind === "contact_field_captured") {

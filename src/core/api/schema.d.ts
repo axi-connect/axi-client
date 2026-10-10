@@ -10343,13 +10343,21 @@ export interface components {
                 /** @enum {string} */
                 kind: "order_created";
                 min_items?: number;
+                max_items?: number;
                 product_codes?: string[];
+                exact_product_codes?: string[];
             } | {
                 /** @enum {string} */
                 kind: "order_not_created";
             } | {
                 /** @enum {string} */
                 kind: "appointment_created";
+                /** Format: date */
+                expected_date?: string;
+                /** @enum {string} */
+                expected_weekday?: "lunes" | "martes" | "miercoles" | "jueves" | "viernes" | "sabado" | "domingo";
+                expected_time?: string;
+                tolerance_minutes?: number;
             } | {
                 /** @enum {string} */
                 kind: "escalated";
@@ -10434,6 +10442,15 @@ export interface components {
             } | {
                 /** @enum {string} */
                 kind: "no_unverified_prices";
+            } | {
+                /** @enum {string} */
+                kind: "no_unverified_claims";
+            } | {
+                /** @enum {string} */
+                kind: "no_false_claims";
+            } | {
+                /** @enum {string} */
+                kind: "confirmed_total_matches_order";
             } | {
                 /** @enum {string} */
                 kind: "no_bot_phrases";
@@ -10509,13 +10526,21 @@ export interface components {
                 /** @enum {string} */
                 kind: "order_created";
                 min_items?: number;
+                max_items?: number;
                 product_codes?: string[];
+                exact_product_codes?: string[];
             } | {
                 /** @enum {string} */
                 kind: "order_not_created";
             } | {
                 /** @enum {string} */
                 kind: "appointment_created";
+                /** Format: date */
+                expected_date?: string;
+                /** @enum {string} */
+                expected_weekday?: "lunes" | "martes" | "miercoles" | "jueves" | "viernes" | "sabado" | "domingo";
+                expected_time?: string;
+                tolerance_minutes?: number;
             } | {
                 /** @enum {string} */
                 kind: "escalated";
@@ -10600,6 +10625,15 @@ export interface components {
             } | {
                 /** @enum {string} */
                 kind: "no_unverified_prices";
+            } | {
+                /** @enum {string} */
+                kind: "no_unverified_claims";
+            } | {
+                /** @enum {string} */
+                kind: "no_false_claims";
+            } | {
+                /** @enum {string} */
+                kind: "confirmed_total_matches_order";
             } | {
                 /** @enum {string} */
                 kind: "no_bot_phrases";

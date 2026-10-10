@@ -160,7 +160,8 @@ describe("criterios v2", () => {
 
   it("parsea los dieciséis kinds v2 tal cual (ninguno cae a unknown)", () => {
     expect(parseSuccessCriteria(V2)).toEqual(V2);
-    expect(CRITERION_KINDS).toHaveLength(25);
+    // 25 + 3 de F0 partes críticas (confirmed_total_matches_order, no_unverified_claims, no_false_claims)
+    expect(CRITERION_KINDS).toHaveLength(28);
     expect(CRITERION_KINDS.every((kind) => CRITERION_FAMILIES.includes(kind.family))).toBe(true);
   });
 
@@ -236,3 +237,72 @@ describe("criterios v2", () => {
   });
 });
 
+describe("criterios de estado real (F0 partes críticas)", () => {
+  /** Criterios tal como quedaron migrados pc_total_coincide_t2 y pc_agendar_t3. */
+  const MIGRATED: Record<string, unknown>[] = [
+    {
+      kind: "order_created",
+      min_items: 3,
+      exact_product_codes: ["SVG-51478967353661", "SVG-47709800792381", "SVG-51536997646653"],
+    },
+    { kind: "no_unverified_claims" },
+    { kind: "confirmed_total_matches_order" },
+    { kind: "no_false_claims" },
+    { kind: "appointment_created", expected_weekday: "jueves", expected_time: "15:00", tolerance_minutes: 180 },
+    { kind: "appointment_created", expected_date: "2026-10-15" },
+  ];
+
+  it("parsea los criterios migrados sin perder un solo campo (antes se excluían al guardar)", () => {
+    expect(parseSuccessCriteria(MIGRATED)).toEqual(MIGRATED);
+  });
+
+  it("descarta solo los campos nuevos ilegibles, nunca el criterio", () => {
+    expect(
+      parseSuccessCriteria([
+        { kind: "appointment_created", expected_weekday: "miércoles", tolerance_minutes: -3 },
+        { kind: "order_created", max_items: 0, exact_product_codes: [] },
+      ]),
+    ).toEqual([{ kind: "appointment_created" }, { kind: "order_created" }]);
+  });
+
+  it("etiqueta los criterios nuevos como en el mockup aprobado", () => {
+    const [order, , total, claims, appointment, byDate] = parseSuccessCriteria(MIGRATED);
+    expect(criterionLabel(order)).toBe(
+      "Pedido creado · ≥ 3 unidades · SKU exactos SVG-51478967353661, SVG-47709800792381, SVG-51536997646653",
+    );
+    expect(criterionLabel(total)).toBe("Total confirmado = cobrado");
+    expect(criterionLabel(claims)).toBe("Sin afirmaciones falsas de estado");
+    expect(criterionLabel({ kind: "no_unverified_claims" })).toBe("Sin datos sin respaldo");
+    expect(criterionLabel(appointment)).toBe("Cita agendada · jueves · 15:00 ± 180 min");
+    expect(criterionLabel(byDate)).toBe("Cita agendada · 2026-10-15");
+    expect(criterionLabel({ kind: "appointment_created", expected_weekday: "sabado", expected_time: "12:00" })).toBe(
+      "Cita agendada · sábado · 12:00",
+    );
+  });
+
+  it("validateCriteriaSet avisa las reglas nuevas con los mensajes del mockup", () => {
+    const errors = validateCriteriaSet([
+      { kind: "order_created", min_items: 3, max_items: 2 },
+      { kind: "appointment_created", expected_date: "15/10/2026", expected_time: "4pm", tolerance_minutes: 900 },
+      { kind: "confirmed_total_matches_order" },
+      { kind: "order_not_created" },
+    ]);
+    expect(errors).toEqual(
+      expect.arrayContaining([
+        "«Total confirmado = cobrado» y «Sin pedido» son mutuamente excluyentes",
+        "«Máx. unidades» no puede ser menor que «Mín. unidades»",
+        "La fecha de la cita va en formato AAAA-MM-DD",
+        "La hora de la cita va en formato HH:mm de 24 horas (p. ej. 16:00)",
+        "La holgura de la cita debe estar entre 0 y 720 minutos",
+      ]),
+    );
+    expect(validateCriteriaSet(parseSuccessCriteria(MIGRATED))).toEqual([]);
+  });
+
+  it("los tres kinds nuevos están en el catálogo del editor, en su familia", () => {
+    const family = (value: string) => CRITERION_KINDS.find((kind) => kind.value === value)?.family;
+    expect(family("confirmed_total_matches_order")).toBe("Resultado");
+    expect(family("no_unverified_claims")).toBe("Estilo y seguridad");
+    expect(family("no_false_claims")).toBe("Estilo y seguridad");
+  });
+});

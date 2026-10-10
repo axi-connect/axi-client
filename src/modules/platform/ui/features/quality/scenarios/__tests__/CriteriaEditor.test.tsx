@@ -97,4 +97,82 @@ describe("CriteriaEditor", () => {
     expect(screen.queryByRole("button", { name: /Quitar criterio/ })).not.toBeInTheDocument();
     expect(screen.getByLabelText("Umbral de latencia del criterio 1")).toBeDisabled();
   });
+
+  describe("criterios de estado real (F0 partes críticas)", () => {
+    it("«Pedido creado» edita los SKU exactos y quita la clave al vaciarlos", () => {
+      const onChange = jest.fn();
+      const { rerender } = render(<CriteriaEditor value={[{ kind: "order_created", min_items: 1 }]} onChange={onChange} />);
+
+      fireEvent.change(screen.getByLabelText("SKU exactos del criterio 1"), {
+        target: { value: "SVG-51537005248829, SVG-1" },
+      });
+      expect(onChange).toHaveBeenLastCalledWith([
+        { kind: "order_created", min_items: 1, exact_product_codes: ["SVG-51537005248829", "SVG-1"] },
+      ]);
+
+      rerender(
+        <CriteriaEditor
+          value={[{ kind: "order_created", min_items: 1, exact_product_codes: ["SVG-1"], max_items: 2 }]}
+          onChange={onChange}
+        />,
+      );
+      fireEvent.change(screen.getByLabelText("SKU exactos del criterio 1"), { target: { value: " " } });
+      expect(onChange).toHaveBeenLastCalledWith([{ kind: "order_created", min_items: 1, max_items: 2 }]);
+      fireEvent.change(screen.getByLabelText("Máximo de unidades del criterio 1"), { target: { value: "" } });
+      expect(onChange).toHaveBeenLastCalledWith([{ kind: "order_created", min_items: 1, exact_product_codes: ["SVG-1"] }]);
+    });
+
+    it("«Cita agendada»: la holgura solo se habilita con hora y se va con ella", () => {
+      const onChange = jest.fn();
+      const { rerender } = render(<CriteriaEditor value={[{ kind: "appointment_created" }]} onChange={onChange} />);
+      expect(screen.getByLabelText("Holgura en minutos del criterio 1")).toBeDisabled();
+      expect(screen.getByText("Hora local del negocio. Sin día ni fecha basta con que exista la cita.")).toBeInTheDocument();
+
+      fireEvent.change(screen.getByLabelText("Hora de la cita del criterio 1"), { target: { value: "15:00" } });
+      expect(onChange).toHaveBeenLastCalledWith([{ kind: "appointment_created", expected_time: "15:00" }]);
+
+      rerender(
+        <CriteriaEditor
+          value={[{ kind: "appointment_created", expected_weekday: "jueves", expected_time: "15:00", tolerance_minutes: 180 }]}
+          onChange={onChange}
+        />,
+      );
+      expect(screen.getByLabelText("Holgura en minutos del criterio 1")).toBeEnabled();
+      fireEvent.change(screen.getByLabelText("Hora de la cita del criterio 1"), { target: { value: "" } });
+      expect(onChange).toHaveBeenLastCalledWith([{ kind: "appointment_created", expected_weekday: "jueves" }]);
+    });
+
+    it("el día se elige del selector y «Cualquier día» quita la clave", () => {
+      const onChange = jest.fn();
+      render(<CriteriaEditor value={[{ kind: "appointment_created", expected_weekday: "jueves" }]} onChange={onChange} />);
+      fireEvent.keyDown(screen.getByLabelText("Día de la cita del criterio 1"), { key: "ArrowDown" });
+      fireEvent.keyDown(screen.getByRole("option", { name: "sábado" }), { key: "Enter" });
+      expect(onChange).toHaveBeenLastCalledWith([{ kind: "appointment_created", expected_weekday: "sabado" }]);
+
+      fireEvent.keyDown(screen.getByLabelText("Día de la cita del criterio 1"), { key: "ArrowDown" });
+      fireEvent.keyDown(screen.getByRole("option", { name: "Cualquier día" }), { key: "Enter" });
+      expect(onChange).toHaveBeenLastCalledWith([{ kind: "appointment_created" }]);
+    });
+
+    it("el selector de tipo ofrece los tres criterios nuevos y no los pinta como ilegibles", () => {
+      const onChange = jest.fn();
+      render(
+        <CriteriaEditor
+          value={[{ kind: "no_false_claims" }, { kind: "no_unverified_claims" }, { kind: "confirmed_total_matches_order" }]}
+          onChange={onChange}
+        />,
+      );
+      expect(screen.queryByText(/se excluirá al guardar/)).not.toBeInTheDocument();
+      fireEvent.keyDown(screen.getByLabelText("Tipo del criterio 1"), { key: "ArrowDown" });
+      for (const name of ["Total confirmado = cobrado", "Sin datos sin respaldo", "Sin afirmaciones falsas de estado"]) {
+        expect(screen.getByRole("option", { name })).toBeInTheDocument();
+      }
+      fireEvent.keyDown(screen.getByRole("option", { name: "Total confirmado = cobrado" }), { key: "Enter" });
+      expect(onChange).toHaveBeenLastCalledWith([
+        { kind: "confirmed_total_matches_order" },
+        { kind: "no_unverified_claims" },
+        { kind: "confirmed_total_matches_order" },
+      ]);
+    });
+  });
 });
