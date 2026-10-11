@@ -11211,6 +11211,7 @@ export interface components {
                         productive: boolean | null;
                         unproductive_reason: string | null;
                         duration_ms: number | null;
+                        result_preview: string | null;
                     }[];
                     latency_ms: number | null;
                     tokens: {
@@ -11220,6 +11221,7 @@ export interface components {
                     } | null;
                     nudge_reason: string | null;
                     unverified_prices: string[];
+                    fact_evidence: string[];
                     final_no_tools: boolean;
                 }[];
                 replies: string[];
@@ -11614,7 +11616,7 @@ export interface components {
         AgentReadinessDto: {
             findings: {
                 /** @enum {string} */
-                code: "delivery_without_zones" | "sales_without_payment_methods" | "orders_stuck_on_form" | "catalog_not_enriched" | "prompt_hides_facts";
+                code: "delivery_without_zones" | "branches_missing" | "sales_without_payment_methods" | "orders_stuck_on_form" | "catalog_not_enriched" | "prompt_hides_facts";
                 /** @enum {string} */
                 severity: "blocker" | "improvement";
                 params: {

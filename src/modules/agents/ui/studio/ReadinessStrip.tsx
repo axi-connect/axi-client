@@ -8,6 +8,7 @@ import {
   EyeOff,
   Lightbulb,
   Loader2,
+  MapPin,
   Search,
   Sparkles,
   TriangleAlert,
@@ -35,6 +36,7 @@ import { Button } from "@/shared/components/ui/button";
 
 const ICONS: Record<ReadinessCode, LucideIcon> = {
   delivery_without_zones: Truck,
+  branches_missing: MapPin,
   sales_without_payment_methods: Wallet,
   orders_stuck_on_form: ClipboardList,
   catalog_not_enriched: Search,

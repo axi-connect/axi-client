@@ -27,6 +27,11 @@ describe("readinessCopy", () => {
       label: "Configurar envíos",
       href: "/settings/shipping",
     });
+    // H-67: hablar de sedes sin tener ninguna registrada lleva a registrarlas
+    expect(readinessCopy(finding("branches_missing"), { canEnrich: true })).toMatchObject({
+      title: "Menciona sedes que no están registradas",
+      action: { kind: "link", label: "Registrar sedes", href: "/settings/company/sucursales" },
+    });
     expect(readinessCopy(finding("sales_without_payment_methods"), { canEnrich: true }).action).toEqual({
       kind: "link",
       label: "Agregar medios de pago",

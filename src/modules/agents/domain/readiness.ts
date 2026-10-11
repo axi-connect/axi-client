@@ -44,6 +44,13 @@ export function readinessCopy(finding: ReadinessFindingDTO, options: { canEnrich
           "Tus reglas o tus políticas hablan de envíos y no hay zonas de envío activas para el agente: no puede decir cuánto cuesta ni si llega a la ciudad del cliente.",
         action: { kind: "link", label: "Configurar envíos", href: "/settings/shipping" },
       };
+    case "branches_missing":
+      return {
+        title: "Menciona sedes que no están registradas",
+        detail:
+          "Tus reglas o tus políticas hablan de puntos de venta o de recoger en tienda, y no hay sedes registradas: el agente no tiene direcciones reales que dar.",
+        action: { kind: "link", label: "Registrar sedes", href: "/settings/company/sucursales" },
+      };
     case "sales_without_payment_methods":
       return {
         title: "Toma pedidos pero no tiene medios de pago",
