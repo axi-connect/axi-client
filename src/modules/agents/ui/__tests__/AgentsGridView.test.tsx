@@ -16,6 +16,11 @@ jest.mock("@/modules/agents/infrastructure/services/agent-service.adapter", () =
   listAiModels: () => Promise.resolve({ data: [] }),
   deleteAgent: (...args: unknown[]) => deleteAgent(...args),
 }));
+const getAgentsReadiness = jest.fn();
+jest.mock("@/modules/agents/infrastructure/services/readiness-service.adapter", () => ({
+  getAgentReadiness: () => Promise.resolve([]),
+  getAgentsReadiness: () => getAgentsReadiness(),
+}));
 jest.mock("@/modules/agents/infrastructure/services/intention-service.adapter", () => ({ listIntentions: () => Promise.resolve({ data: [] }) }));
 jest.mock("@/modules/agents/infrastructure/services/voice-service.adapter", () => ({
   listAiVoices: () => Promise.resolve({ data: [] }),
@@ -54,7 +59,10 @@ const renderGrid = () =>
   );
 
 describe("AgentsGridView", () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    getAgentsReadiness.mockResolvedValue([]);
+  });
 
   it("sin agentes: el estado vacío con el trío y la única acción lleva a /admin/agents/new", async () => {
     listAgents.mockResolvedValueOnce({ data: [] });
@@ -90,5 +98,17 @@ describe("AgentsGridView", () => {
     config.actions.find((action) => action.id === "agents-delete-confirm")?.onClick?.();
     await waitFor(() => expect(deleteAgent).toHaveBeenCalledWith("a1"));
     expect(listAgents).toHaveBeenCalledTimes(2);
+  });
+  it("F11: solo lo que frena ventas llega a la tarjeta, como una pastilla más", async () => {
+    listAgents.mockResolvedValueOnce({ data: [agent({}), agent({ id: "a2", name: "Sofía" })] });
+    getAgentsReadiness.mockResolvedValueOnce([
+      { agent_id: "a1", blockers: 2, improvements: 1 },
+      { agent_id: "a2", blockers: 0, improvements: 3 },
+    ]);
+    renderGrid();
+    expect(await screen.findByText("2 frenan ventas")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /valentina, vende y toma pedidos, activo, 2 frenan ventas/i })).toBeInTheDocument();
+    // Sofía solo tiene mejoras: nada en la rejilla
+    expect(screen.queryByText(/mejora/)).toBeNull();
   });
 });

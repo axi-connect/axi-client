@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import type { AiAgentListItemDTO } from "@/modules/agents/domain/agent";
+import { useAgentsBlockers } from "@/modules/agents/infrastructure/hooks/use-agent-readiness";
 import { deleteAgent } from "@/modules/agents/infrastructure/services/agent-service.adapter";
 import { useAgent } from "@/modules/agents/infrastructure/stores/agent.context";
 import { AgentCard } from "@/modules/agents/ui/components/AgentCard";
@@ -25,6 +26,7 @@ import { Button } from "@/shared/components/ui/button";
 export function AgentsGridView() {
   const { agents, channels, error, fetchAgents, fetchChannels } = useAgent();
   const { showAlert, showModal, closeModal } = useAlert();
+  const blockers = useAgentsBlockers();
 
   useEffect(() => {
     void fetchAgents();
@@ -104,7 +106,7 @@ export function AgentsGridView() {
         <ul className="grid list-none gap-4 p-0 sm:grid-cols-2 xl:grid-cols-3" aria-label="Agentes">
           {agents.map((agent) => (
             <li key={agent.id} className="min-w-0">
-              <AgentCard agent={agent} channels={channels} onDelete={confirmDelete} />
+              <AgentCard agent={agent} channels={channels} onDelete={confirmDelete} blockers={blockers.get(agent.id) ?? 0} />
             </li>
           ))}
           <li className="min-w-0">

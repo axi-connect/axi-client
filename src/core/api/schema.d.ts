@@ -1716,6 +1716,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/ai-agents/readiness": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AiAgentsController_readinessSummary_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ai-agents/{id}/readiness": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AiAgentsController_agentReadiness_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/ai-agents/{id}": {
         parameters: {
             query?: never;
@@ -11570,6 +11602,31 @@ export interface components {
                 display_name: string;
                 is_default: boolean;
                 temperature_max: number;
+            }[];
+        };
+        AgentReadinessSummaryDto: {
+            data: {
+                agent_id: string;
+                blockers: number;
+                improvements: number;
+            }[];
+        };
+        AgentReadinessDto: {
+            findings: {
+                /** @enum {string} */
+                code: "delivery_without_zones" | "sales_without_payment_methods" | "orders_stuck_on_form" | "catalog_not_enriched" | "prompt_hides_facts";
+                /** @enum {string} */
+                severity: "blocker" | "improvement";
+                params: {
+                    count?: number;
+                    misses?: number;
+                    phrase?: string;
+                    location?: {
+                        /** @enum {string} */
+                        field: "goal" | "always" | "never" | "handoff_when" | "business_facts" | "system_prompt";
+                        index?: number;
+                    };
+                };
             }[];
         };
         AiAgentDto: {
@@ -27891,6 +27948,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AiModelListDto"];
+                };
+            };
+        };
+    };
+    AiAgentsController_readinessSummary_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentReadinessSummaryDto"];
+                };
+            };
+        };
+    };
+    AiAgentsController_agentReadiness_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentReadinessDto"];
                 };
             };
         };

@@ -31,6 +31,13 @@ jest.mock("@/modules/agents/infrastructure/services/agent-service.adapter", () =
   deleteAgent: jest.fn(),
   setAgentIntentions: (...args: unknown[]) => setAgentIntentions(...args),
 }));
+const getAgentReadiness = jest.fn();
+jest.mock("@/modules/agents/infrastructure/services/readiness-service.adapter", () => ({
+  getAgentReadiness: (...args: unknown[]) => getAgentReadiness(...args),
+  getAgentsReadiness: () => Promise.resolve([]),
+}));
+jest.mock("@/modules/agents/infrastructure/services/recognition-service.adapter", () => ({ requestEnrichmentBackfill: jest.fn() }));
+jest.mock("@/shared/auth/auth.hooks", () => ({ useAuth: () => ({ hasPermission: () => true }) }));
 jest.mock("@/modules/agents/infrastructure/services/intention-service.adapter", () => ({ listIntentions: () => Promise.resolve({ data: [] }) }));
 const voiceSettings = { ai_enabled: true };
 jest.mock("@/modules/agents/infrastructure/services/voice-service.adapter", () => ({
@@ -77,6 +84,7 @@ describe("AgentStudioView", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     voiceSettings.ai_enabled = true;
+    getAgentReadiness.mockResolvedValue([]);
   });
 
   it("crear: nombre + instrucciones bastan; manda el perfil por defecto (Nova/blanco, ventas, cercano), sin voz, y navega al agente", async () => {
@@ -191,5 +199,45 @@ describe("AgentStudioView", () => {
     } finally {
       jest.useRealTimers();
     }
+  });
+  it("F11: con avisos, la franja de salud va bajo el encabezado y se relee tras guardar", async () => {
+    getAgentById.mockResolvedValueOnce(AGENT);
+    getAgentReadiness.mockResolvedValueOnce([{ code: "delivery_without_zones", severity: "blocker", params: {} }]);
+    updateAgent.mockResolvedValueOnce(AGENT);
+    setAgentIntentions.mockResolvedValueOnce(AGENT);
+    renderStudio({ mode: "edit", agentId: "a1" });
+
+    expect(await screen.findByRole("button", { name: /1 cosa frena las ventas de Valentina/ })).toBeInTheDocument();
+    expect(screen.queryByText("Listo para vender")).toBeNull();
+    expect(getAgentReadiness).toHaveBeenCalledWith("a1");
+
+    fireEvent.change(screen.getByLabelText(/^nombre/i), { target: { value: "Vale" } });
+    fireEvent.click(screen.getByRole("button", { name: "Guardar cambios" }));
+    // Guardado con las reglas arregladas: la salud se relee y la franja se va
+    await waitFor(() => expect(getAgentReadiness).toHaveBeenCalledTimes(2));
+    expect(await screen.findByText("Listo para vender")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /frena las ventas/ })).toBeNull();
+  });
+
+  it("F11: sin avisos no hay franja, solo «Listo para vender»; al crear no se consulta", async () => {
+    getAgentById.mockResolvedValueOnce(AGENT);
+    const { unmount } = renderStudio({ mode: "edit", agentId: "a1" });
+    expect(await screen.findByText("Listo para vender")).toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Salud del agente" })).toBeNull();
+    unmount();
+
+    getAgentReadiness.mockClear();
+    renderStudio({ mode: "create" });
+    await screen.findByRole("button", { name: "Crear agente" });
+    expect(getAgentReadiness).not.toHaveBeenCalled();
+  });
+
+  it("F6/F11: el campo de traspaso explica frase frente a palabra suelta", async () => {
+    getAgentById.mockResolvedValueOnce(AGENT);
+    renderStudio({ mode: "edit", agentId: "a1" });
+    fireEvent.click(await screen.findByRole("button", { name: /Avanzado/ }));
+    expect(await screen.findByText("Pasa a una persona si escriben")).toBeInTheDocument();
+    expect(screen.getByText(/Una palabra suelta \(«asesor»\) solo le avisa al agente/)).toBeInTheDocument();
+    expect(screen.queryByText("Palabras que escalan")).toBeNull();
   });
 });
