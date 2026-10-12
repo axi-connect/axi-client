@@ -160,7 +160,7 @@ export function CriteriaEditor({ value, onChange, disabled = false }: CriteriaEd
                   onValueChange={(kind) => updateAt(index, blankCriterion(kind as KnownKind))}
                   disabled={disabled}
                 >
-                  <SelectTrigger size="sm" className="w-44 shrink-0 bg-card" aria-label={`Tipo del criterio ${index + 1}`}>
+                  <SelectTrigger size="sm" className="w-auto min-w-44 max-w-full shrink-0 bg-card" aria-label={`Tipo del criterio ${index + 1}`}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

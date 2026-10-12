@@ -2676,6 +2676,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/scheduling/exceptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ScheduleCalendarController_list_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/scheduling/exceptions/{date}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["ScheduleCalendarController_put_v1"];
+        post?: never;
+        delete: operations["ScheduleCalendarController_remove_v1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/scheduling/closures": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ScheduleCalendarController_closures_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/contacts/outreach-policy": {
         parameters: {
             query?: never;
@@ -12922,6 +12970,8 @@ export interface components {
             reminder_offsets_minutes: number[];
             /** @enum {string} */
             reminder_channel: "whatsapp" | "call" | "both";
+            closes_on_holidays: boolean;
+            holiday_country: string | null;
         };
         UpdateSchedulingSettingsDto: {
             slot_capacity?: number;
@@ -12931,6 +12981,49 @@ export interface components {
             reminder_offsets_minutes?: number[];
             /** @enum {string} */
             reminder_channel?: "whatsapp" | "call" | "both";
+            closes_on_holidays?: boolean;
+            /** @enum {string|null} */
+            holiday_country?: "CO" | null;
+        };
+        ScheduleExceptionListDto: {
+            items: {
+                /** Format: date */
+                date: string;
+                closed: boolean;
+                windows: {
+                    opens_at: string;
+                    closes_at: string;
+                }[];
+                note: string | null;
+            }[];
+        };
+        PutScheduleExceptionDto: {
+            closed: boolean;
+            /** @default [] */
+            windows: {
+                opens_at: string;
+                closes_at: string;
+            }[];
+            /** @default null */
+            note: string | null;
+        };
+        ClosuresDto: {
+            timezone: string;
+            closes_on_holidays: boolean;
+            holiday_country: string | null;
+            holiday_country_name: string | null;
+            days: {
+                /** Format: date */
+                date: string;
+                /** @enum {string} */
+                kind: "closed" | "special" | "holiday" | "weekly";
+                is_holiday: boolean;
+                windows: {
+                    opens_at: string;
+                    closes_at: string;
+                }[];
+                note: string | null;
+            }[];
         };
         OutreachPolicyViewDto: {
             policy: {
@@ -29806,6 +29899,91 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SchedulingSettingsDto"];
+                };
+            };
+        };
+    };
+    ScheduleCalendarController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleExceptionListDto"];
+                };
+            };
+        };
+    };
+    ScheduleCalendarController_put_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                date: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PutScheduleExceptionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleExceptionListDto"];
+                };
+            };
+        };
+    };
+    ScheduleCalendarController_remove_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                date: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ScheduleCalendarController_closures_v1: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClosuresDto"];
                 };
             };
         };

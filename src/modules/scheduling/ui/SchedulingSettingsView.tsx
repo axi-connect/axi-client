@@ -15,6 +15,7 @@ import {
 } from "@/modules/companies/public";
 import { useCalendarStore } from "@/modules/scheduling/infrastructure/stores/calendar.store";
 import { SettingsForm } from "./forms/SettingsForm";
+import { SpecialDaysCard } from "./components/settings/SpecialDaysCard";
 
 /**
  * Configuración de la agenda: dos cards — reglas de agendamiento
@@ -29,6 +30,8 @@ export function SchedulingSettingsView() {
   const [company, setCompany] = useState<CompanyDTO | null>(null);
   const [companyError, setCompanyError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  // S-05: guardar las reglas (el interruptor de festivos) refresca los días especiales
+  const [rulesVersion, setRulesVersion] = useState(0);
 
   const canManage = hasPermission("scheduling:manage");
 
@@ -57,7 +60,7 @@ export function SchedulingSettingsView() {
             IA</b> en las conversaciones. Los cambios rigen de inmediato, sin reinicios.
           </span>
         </p>
-        <SettingsForm canManage={canManage} />
+        <SettingsForm canManage={canManage} onSaved={() => setRulesVersion((v) => v + 1)} />
       </section>
 
       <section className="rounded-2xl border border-border bg-card p-5 md:p-6">
@@ -120,6 +123,14 @@ export function SchedulingSettingsView() {
             </ul>
           ))}
       </section>
+
+      {company !== null && (
+        <SpecialDaysCard
+          timezone={company.timezone}
+          canManage={canManage}
+          reloadKey={rulesVersion}
+        />
+      )}
     </div>
   );
 }
