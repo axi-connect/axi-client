@@ -102,6 +102,46 @@ export function readMessagingLimit(value: string | null | undefined): HealthRead
   return { label: value, tone: "neutral", hint };
 }
 
+/** Un error de entrega de Telegram de hace menos de esto se muestra; más viejo ya es historia. */
+const TELEGRAM_ERROR_RECENT_HOURS = 24;
+
+/**
+ * Recepción de un bot de Telegram: ¿nos está entregando los mensajes?
+ *
+ * Sale de `getWebhookInfo` (barrido de salud). Un error reciente no significa
+ * que el bot esté caído —Telegram reintenta y el barrido se autocura—, por eso
+ * es aviso y no fallo; el fallo es el token revocado, que dice `credentials_revoked`.
+ */
+export function readTelegramReception(channel: ChannelDTO, now: Date = new Date()): HealthReading {
+  const telegram = channel.telegram;
+  if (channel.credentials_revoked) {
+    return {
+      label: "El token ya no sirve",
+      tone: "bad",
+      hint: "Se revocó o regeneró en @BotFather. Pega el nuevo con «Rotar token».",
+    };
+  }
+  if (channel.status !== "connected" || telegram === null || telegram === undefined) {
+    return { label: "Detenida", tone: "neutral" };
+  }
+  if (telegram.transport === "polling") {
+    return { label: "Recibiendo (modo local)", tone: "good" };
+  }
+  const lastError = telegram.last_error_at === null ? null : new Date(telegram.last_error_at);
+  if (lastError !== null && now.getTime() - lastError.getTime() < TELEGRAM_ERROR_RECENT_HOURS * 3_600_000) {
+    return {
+      label: "Telegram no nos alcanzaba",
+      tone: "warning",
+      hint: `${formatClock(lastError)}${telegram.last_error ? ` · ${telegram.last_error}` : ""}. Telegram reintenta solo: los mensajes llegan completos.`,
+    };
+  }
+  return { label: "Recibiendo", tone: "good", hint: "Telegram nos entrega los mensajes al instante." };
+}
+
+function formatClock(date: Date): string {
+  return new Intl.DateTimeFormat("es-CO", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }).format(date);
+}
+
 /**
  * Acceso de Meta: es lo que decide si el canal puede RESPONDER.
  *
@@ -164,6 +204,8 @@ export function readConnectionMethod(value: ChannelDTO["connection_method"]): st
       return "Con código QR (canal retirado)";
     case "manual_token":
       return "Credenciales pegadas a mano";
+    case "bot_token":
+      return "Token de @BotFather";
     default:
       return "Sin datos";
   }
@@ -324,6 +366,13 @@ export type ChannelActions = {
  * una frase que en dos de tres canales era falsa.
  */
 function activeHint(kind: ChannelDTO["kind"]): string {
+  if (kind === "telegram") {
+    return (
+      "¿Regeneraste el token en @BotFather? Pégalo con «Rotar token» para no perder mensajes. " +
+      "Desconectar detiene el bot sin borrarlo. Al eliminar, el bot deja de recibir mensajes en Axi " +
+      "y las conversaciones quedan archivadas."
+    );
+  }
   const subject = kind === "whatsapp_cloud" ? "este número" : "este canal";
   return (
     "Renovar vuelve a pedir tu autorización en Meta; no pierdes historial ni configuración. " +
@@ -364,7 +413,9 @@ export function readChannelActions(channel: ChannelDTO, now: Date = new Date()):
   // producto de Meta. Antes era `isCloud`: coherente cuando Instagram y
   // Messenger no tenían alta por botón, pero desde F7 la tienen, y un canal de
   // Instagram revocado solo ofrecía «Eliminar».
-  const canReconnect = channelProvider(channel.kind).meta_product !== undefined;
+  // Telegram se reconecta pegando el token otra vez (rotar = re-armar el webhook)
+  const canReconnect =
+    channelProvider(channel.kind).meta_product !== undefined || channel.kind === "telegram";
   // Solo WhatsApp Cloud tiene PIN de registro, y solo mientras el canal esté
   // vivo: en uno desconectado primero hay que reconectar
   const canRegisterPin =
@@ -390,7 +441,10 @@ export function readChannelActions(channel: ChannelDTO, now: Date = new Date()):
       can_disconnect: false,
       can_reconnect: canReconnect,
       can_register_pin: false,
-      hint: "Meta revocó el acceso a este canal. Vuelve a conectarlo para seguir recibiendo mensajes.",
+      hint:
+        channel.kind === "telegram"
+          ? "El token del bot ya no sirve (se revocó o se regeneró en @BotFather). Pega el nuevo para seguir recibiendo mensajes."
+          : "Meta revocó el acceso a este canal. Vuelve a conectarlo para seguir recibiendo mensajes.",
     };
   }
 

@@ -19,7 +19,7 @@ import { ConnectChannelFlow } from "./ConnectChannelFlow";
  * correo sin verificar abría el popup, quemaba el `code` de un solo uso y
  * recibía «No pudimos conectar el canal» sin ninguna pista de por qué.
  */
-export function ConnectChannelView() {
+export function ConnectChannelView({ preselect = null }: { preselect?: "telegram" | null }) {
   const router = useRouter();
 
   return (
@@ -35,7 +35,10 @@ export function ConnectChannelView() {
         title="Verifica tu correo para conectar un canal"
         reason="Conectar un canal de Meta exige un correo verificado."
       >
-        <ConnectChannelFlow onManualCreated={() => router.push("/settings/channels")} />
+        <ConnectChannelFlow
+          only={preselect === null ? undefined : [preselect]}
+          onManualCreated={() => router.push("/settings/channels")}
+        />
       </EmailVerificationGate>
     </div>
   );

@@ -211,6 +211,19 @@ export type InteractiveOptions = Extract<InteractivePayload, { kind: "options" }
 export type InteractiveOption = InteractiveOptions["options"][number];
 
 /**
+ * Lo que el AGENTE puede mandar y un operador no (por eso no está en
+ * `SendMessageDto`): opciones agrupadas por `section` (los horarios por día) y
+ * la petición nativa del dato (Telegram: «Compartir mi número»). Es lo que se
+ * lee del hilo; `InteractivePayload` sigue siendo lo que se puede ENVIAR.
+ */
+export type ThreadInteractiveOption = InteractiveOption & { section?: string };
+export type InteractiveRequest = { kind: "request"; body: string; request: "phone" | "location" };
+export type ThreadInteractive =
+  | Exclude<InteractivePayload, { kind: "options" }>
+  | (Omit<InteractiveOptions, "options"> & { options: ThreadInteractiveOption[] })
+  | InteractiveRequest;
+
+/**
  * Respuesta del cliente a un interactivo, normalizada por la ingesta
  * (`payload.interactive_reply`). No viaja en el OpenAPI porque `payload` es
  * `unknown` en el contrato: se valida en runtime como el resto de parsers.
@@ -236,7 +249,7 @@ export const INTERACTIVE_REPLY_LABELS: Record<InteractiveReply["source"], string
  * `extractLocationPayload`: el payload es `unknown` y un JSONB viejo o
  * corrupto no debe romper el hilo — devuelve `null` y la burbuja cae a texto.
  */
-export function extractInteractivePayload(payload: unknown): InteractivePayload | null {
+export function extractInteractivePayload(payload: unknown): ThreadInteractive | null {
   if (typeof payload !== "object" || payload === null) return null;
   const interactive = (payload as { interactive?: unknown }).interactive;
   if (typeof interactive !== "object" || interactive === null) return null;
@@ -247,12 +260,23 @@ export function extractInteractivePayload(payload: unknown): InteractivePayload 
     if (typeof record.label !== "string" || typeof record.url !== "string") return null;
     return { kind: "cta_url", body: record.body, label: record.label, url: record.url };
   }
+  if (record.kind === "request") {
+    if (record.request !== "phone" && record.request !== "location") return null;
+    return { kind: "request", body: record.body, request: record.request };
+  }
   if (record.kind !== "options" || !Array.isArray(record.options)) return null;
-  const options = record.options.flatMap((raw): InteractiveOption[] => {
+  const options = record.options.flatMap((raw): ThreadInteractiveOption[] => {
     if (typeof raw !== "object" || raw === null) return [];
-    const { id, title, description } = raw as Record<string, unknown>;
+    const { id, title, description, section } = raw as Record<string, unknown>;
     if (typeof id !== "string" || typeof title !== "string") return [];
-    return [{ id, title, ...(typeof description === "string" ? { description } : {}) }];
+    return [
+      {
+        id,
+        title,
+        ...(typeof description === "string" ? { description } : {}),
+        ...(typeof section === "string" ? { section } : {}),
+      },
+    ];
   });
   if (options.length === 0) return null;
   return {
@@ -261,6 +285,35 @@ export function extractInteractivePayload(payload: unknown): InteractivePayload 
     options,
     ...(typeof record.menu_label === "string" ? { menu_label: record.menu_label } : {}),
   };
+}
+
+/**
+ * El cliente abrió el chat (Telegram `/start`): el texto que lee el agente es
+ * «Hola», pero el cliente no lo escribió — el hilo lo pinta como un aviso.
+ */
+export function startedChat(payload: unknown): boolean {
+  if (typeof payload !== "object" || payload === null) return false;
+  return (payload as { bot_command?: unknown }).bot_command === "start";
+}
+
+/** Contacto compartido con el botón nativo del canal (`payload.shared_contact`). */
+export interface SharedContact {
+  phone_number: string;
+  name: string | null;
+  /** Es SU propio número: Telegram lo garantiza. */
+  verified: boolean;
+}
+
+export function extractSharedContact(payload: unknown): SharedContact | null {
+  if (typeof payload !== "object" || payload === null) return null;
+  const raw = (payload as { shared_contact?: unknown }).shared_contact;
+  if (typeof raw !== "object" || raw === null) return null;
+  const record = raw as Record<string, unknown>;
+  if (typeof record.phone_number !== "string") return null;
+  const name = [record.first_name, record.last_name]
+    .filter((part): part is string => typeof part === "string" && part !== "")
+    .join(" ");
+  return { phone_number: record.phone_number, name: name === "" ? null : name, verified: record.verified === true };
 }
 
 /**

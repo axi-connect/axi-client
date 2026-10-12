@@ -75,6 +75,7 @@ const CHANNEL_LABEL: Record<NonNullable<ContactRow["channel_kind"]>, string> = {
   whatsapp_web: "WhatsApp",
   instagram_dm: "Instagram",
   facebook_messenger: "Messenger",
+  telegram: "Telegram",
 };
 
 export const contactColumns: ColumnDef<ContactRow>[] = [

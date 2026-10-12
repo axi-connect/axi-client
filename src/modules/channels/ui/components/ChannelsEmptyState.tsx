@@ -29,7 +29,8 @@ export function ChannelsEmptyState() {
             </Link>
           </Button>
           <p className="text-xs text-muted-foreground">
-            WhatsApp, Instagram o Messenger: los tres se conectan con un botón.
+            WhatsApp, Instagram o Messenger se conectan con un botón. ¿Solo quieres probar? Telegram,
+            en un minuto.
           </p>
         </div>
       }

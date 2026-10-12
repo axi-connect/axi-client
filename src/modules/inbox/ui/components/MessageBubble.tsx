@@ -3,12 +3,14 @@
 import { useState } from "react"
 import { cn } from "@/core/lib/utils"
 import { MessageTime } from "./timeline/MessageTime"
-import { AlertCircle, Check, CheckCheck, Clock, RotateCw, Smartphone, Sparkles } from "lucide-react"
+import { AlertCircle, Check, CheckCheck, Clock, Hand, Phone, RotateCw, ShieldCheck, Smartphone, Sparkles, UserRound } from "lucide-react"
 import {
   extractInteractivePayload,
   extractInteractiveReply,
+  extractSharedContact,
   isMediaContentType,
   sentFromBusinessApp,
+  startedChat,
   type UiMessage,
 } from "@/modules/inbox/domain/inbox"
 import {
@@ -124,6 +126,22 @@ export function MessageBubble({
     )
   }
 
+  // Telegram /start: el agente lee «Hola», pero el cliente solo abrió el chat —
+  // pintarlo como burbuja le atribuiría un texto que no escribió
+  if (!outbound && startedChat(message.payload)) {
+    return (
+      <div className="my-2 flex justify-center">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
+          <Hand aria-hidden className="size-3" />
+          Inició el chat
+        </span>
+      </div>
+    )
+  }
+
+  // Contacto compartido con el botón nativo (Telegram): una tarjeta, no un texto
+  const sharedContact = outbound ? null : extractSharedContact(message.payload)
+
   const footerTone = sticker
     ? "text-muted-foreground"
     : outbound
@@ -170,7 +188,30 @@ export function MessageBubble({
             </div>
           )
         )}
-        {!sentTemplate && (!media || (message.body && message.body.length > 0)) && (
+        {sharedContact !== null && (
+          <div className="min-w-60">
+            <div className="mb-1 flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+              <UserRound className="size-3 shrink-0" aria-hidden />
+              Contacto compartido
+            </div>
+            <div className="grid grid-cols-[36px_minmax(0,1fr)] items-center gap-2.5">
+              <span className="grid size-9 place-items-center rounded-full bg-secondary">
+                <Phone className="size-4" aria-hidden />
+              </span>
+              <span className="min-w-0">
+                {sharedContact.name !== null && <span className="block truncate font-medium">{sharedContact.name}</span>}
+                <span className="block text-xs text-muted-foreground tabular-nums">{sharedContact.phone_number}</span>
+              </span>
+            </div>
+            {sharedContact.verified && (
+              <span className="mt-1.5 inline-flex items-center gap-1 text-[11.5px] text-muted-foreground">
+                <ShieldCheck className="size-3 text-success" aria-hidden />
+                Su propio número, verificado por Telegram
+              </span>
+            )}
+          </div>
+        )}
+        {sharedContact === null && !sentTemplate && (!media || (message.body && message.body.length > 0)) && (
           <p className={cn("whitespace-pre-wrap break-words", media && edgeToEdge && "max-w-60 px-2 pt-1")}>
             {media ? message.body : (message.body ?? "(sin contenido)")}
           </p>
