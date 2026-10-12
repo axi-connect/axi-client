@@ -6,6 +6,7 @@ import { MessageTime } from "./timeline/MessageTime"
 import { AlertCircle, Check, CheckCheck, Clock, Hand, Phone, RotateCw, ShieldCheck, Smartphone, Sparkles, UserRound } from "lucide-react"
 import {
   extractInteractivePayload,
+  extractContactReaction,
   extractInteractiveReply,
   extractSharedContact,
   isMediaContentType,
@@ -115,6 +116,7 @@ export function MessageBubble({
   const interactive = extractInteractivePayload(message.payload)
   // Entrante: el cliente tocó una opción en vez de escribir
   const reply = extractInteractiveReply(message.payload)
+  const contactReaction = extractContactReaction(message.payload)
   // Imagen/video/sticker: media al borde de la burbuja; el texto va con padding propio
   const edgeToEdge = sticker || message.content_type === "image" || message.content_type === "video"
 
@@ -238,6 +240,18 @@ export function MessageBubble({
           </div>
         )}
       </div>
+      {contactReaction !== null && (
+        // Reacción del cliente (Telegram): un chip pegado al borde de la burbuja
+        <span
+          className={cn(
+            "relative z-[1] -mt-2 inline-flex items-center rounded-full border border-border bg-background px-1.5 py-px text-xs shadow-sm",
+            outbound ? "mr-2.5" : "ml-2.5",
+          )}
+          aria-label={`El cliente reaccionó con ${contactReaction}`}
+        >
+          {contactReaction}
+        </span>
+      )}
       {sentTemplate && <TemplateButtons catalog={catalog} muted={failed} />}
       {failed && neverReachedServer(message) ? (
         // Optimista que nunca obtuvo id real: se reintenta el mismo envío.

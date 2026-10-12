@@ -138,6 +138,8 @@ export type MessageUpdatedEvent = {
   unavailable_reason?: string;
   /** Texto con el que quedó el mensaje si se degradó a texto (compartido no descargable). */
   body?: string;
+  /** El cliente reaccionó (Telegram); `null` = quitó su reacción. */
+  contact_reaction?: { emoji: string; at: string } | null;
 };
 
 /**

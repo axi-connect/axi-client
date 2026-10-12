@@ -131,6 +131,12 @@ export function useInboxSocket() {
     if (payload.recognition !== undefined) {
       state.applyRecognition(payload.conversation_id, payload.message_id, payload.recognition)
     }
+    // Reacción del cliente (Telegram): se pinta sobre el mensaje, sin re-consultar
+    if (payload.contact_reaction !== undefined) {
+      state.applyPayloadPatch(payload.conversation_id, payload.message_id, {
+        contact_reaction: payload.contact_reaction,
+      })
+    }
   })
 
   // F9.1: mensaje outbound recién PERSISTIDO (reply de IA, quick action,

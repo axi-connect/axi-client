@@ -296,6 +296,15 @@ export function startedChat(payload: unknown): boolean {
   return (payload as { bot_command?: unknown }).bot_command === "start";
 }
 
+/** Emoji con el que el cliente reaccionó a un mensaje (`payload.contact_reaction`). */
+export function extractContactReaction(payload: unknown): string | null {
+  if (typeof payload !== "object" || payload === null) return null;
+  const raw = (payload as { contact_reaction?: unknown }).contact_reaction;
+  if (typeof raw !== "object" || raw === null) return null;
+  const emoji = (raw as { emoji?: unknown }).emoji;
+  return typeof emoji === "string" && emoji !== "" ? emoji : null;
+}
+
 /** Contacto compartido con el botón nativo del canal (`payload.shared_contact`). */
 export interface SharedContact {
   phone_number: string;

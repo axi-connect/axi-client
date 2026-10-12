@@ -220,6 +220,8 @@ type InboxStore = {
     messageId: string,
     recognition: ProductRecognition,
   ) => void
+  /** Funde campos en `payload` de un mensaje cargado (hoy: la reacción del cliente). */
+  applyPayloadPatch: (conversationId: string, messageId: string, patch: Record<string, unknown>) => void
 
   /**
    * Contador por contacto que invalida los paneles del rail de contexto.
@@ -928,6 +930,26 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
               const basePayload =
                 typeof m.payload === "object" && m.payload !== null ? m.payload : {}
               return { ...m, payload: { ...basePayload, recognition } }
+            }),
+          },
+        },
+      }
+    })
+  },
+
+  applyPayloadPatch: (conversationId, messageId, patch) => {
+    set((state) => {
+      const current = state.messagesById[conversationId]
+      if (!current) return {}
+      return {
+        messagesById: {
+          ...state.messagesById,
+          [conversationId]: {
+            ...current,
+            items: current.items.map((m) => {
+              if (m.id !== messageId) return m
+              const basePayload = typeof m.payload === "object" && m.payload !== null ? m.payload : {}
+              return { ...m, payload: { ...basePayload, ...patch } }
             }),
           },
         },
