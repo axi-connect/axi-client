@@ -194,7 +194,8 @@ export type SuccessCriterion =
   | { kind: "deal_stage_kind"; kind_expected?: StageKind }
   | { kind: "media_sent"; media: SentMediaKind; min: number }
   | { kind: "payment_reported" }
-  | { kind: "delivery_set"; method?: "shipping" | "pickup" }
+  // checkout_flow v2 (§6, H-117): la sede de recogida esperada, y que el agente no diga otra
+  | { kind: "delivery_set"; method?: "shipping" | "pickup"; expected_branch?: string }
   | { kind: "promotion_applied"; code?: string }
   | { kind: "recognition_matched"; sku: string; max_rank: number }
   | { kind: "intent_detected"; intention_code: string }
@@ -485,8 +486,12 @@ export function parseSuccessCriteria(raw: unknown): SuccessCriterion[] {
         return { kind: record.kind };
       case "delivery_set": {
         const method = record.method;
-        if (method === undefined || method === null) return { kind: "delivery_set" };
-        return method === "shipping" || method === "pickup" ? { kind: "delivery_set", method } : { kind: "unknown", raw: record };
+        const branch = asNonEmptyString(record.expected_branch);
+        const withBranch = branch === undefined ? {} : { expected_branch: branch };
+        if (method === undefined || method === null) return { kind: "delivery_set", ...withBranch };
+        return method === "shipping" || method === "pickup"
+          ? { kind: "delivery_set", method, ...withBranch }
+          : { kind: "unknown", raw: record };
       }
       case "promotion_applied": {
         const code = asNonEmptyString(record.code);
@@ -576,6 +581,7 @@ export function criterionLabel(criterion: SuccessCriterion): string {
     case "payment_reported":
       return "Pago reportado";
     case "delivery_set":
+      if (criterion.expected_branch) return `Entrega: recogida en ${criterion.expected_branch}`;
       return criterion.method ? `Entrega: ${criterion.method === "shipping" ? "envío" : "recogida"}` : "Entrega definida";
     case "promotion_applied":
       return criterion.code ? `Promoción ${criterion.code} aplicada` : "Promoción aplicada";

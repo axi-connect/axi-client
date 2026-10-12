@@ -10484,6 +10484,7 @@ export interface components {
                 kind: "delivery_set";
                 /** @enum {string} */
                 method?: "shipping" | "pickup";
+                expected_branch?: string;
             } | {
                 /** @enum {string} */
                 kind: "promotion_applied";
@@ -10667,6 +10668,7 @@ export interface components {
                 kind: "delivery_set";
                 /** @enum {string} */
                 method?: "shipping" | "pickup";
+                expected_branch?: string;
             } | {
                 /** @enum {string} */
                 kind: "promotion_applied";

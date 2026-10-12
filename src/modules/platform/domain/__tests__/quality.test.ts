@@ -306,3 +306,17 @@ describe("criterios de estado real (F0 partes críticas)", () => {
     expect(family("no_false_claims")).toBe("Estilo y seguridad");
   });
 });
+
+describe("delivery_set.expected_branch (checkout_flow v2, H-117)", () => {
+  it("viaja la sede esperada, con o sin método, y la etiqueta la nombra", () => {
+    const [withBranch, withMethod, plain] = parseSuccessCriteria([
+      { kind: "delivery_set", expected_branch: "Prado" },
+      { kind: "delivery_set", method: "pickup", expected_branch: "Prado" },
+      { kind: "delivery_set", expected_branch: "" },
+    ]);
+    expect(withBranch).toEqual({ kind: "delivery_set", expected_branch: "Prado" });
+    expect(withMethod).toEqual({ kind: "delivery_set", method: "pickup", expected_branch: "Prado" });
+    expect(plain).toEqual({ kind: "delivery_set" });
+    expect(criterionLabel(withBranch)).toBe("Entrega: recogida en Prado");
+  });
+});
