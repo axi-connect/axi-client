@@ -1,6 +1,8 @@
 import {
   fmtDateDmy,
   holidayCountryName,
+  holidayNote,
+  holidayTitle,
   QUARTER_HOURS,
   windowIssues,
   windowsLabel,
@@ -47,5 +49,21 @@ describe("días especiales (S-05)", () => {
     ).toBe("08:00–10:00, 14:00–16:00");
     expect(holidayCountryName("CO")).toBe("Colombia");
     expect(holidayCountryName("MX")).toBe("tu país");
+  });
+});
+
+describe("nombre del festivo (H-128)", () => {
+  it("la fila del festivo lleva su nombre; sin nombre, el del país", () => {
+    expect(holidayTitle("Día de la Raza", "Colombia")).toBe("Festivo · Día de la Raza");
+    expect(holidayTitle(null, "Colombia")).toBe("Festivo de Colombia");
+    expect(holidayTitle(null, "")).toBe("Festivo");
+  });
+
+  it("un día especial en festivo dice cuál; abierto a propósito si tiene horario", () => {
+    expect(holidayNote(true, true, "Todos los Santos")).toBe("Festivo: Todos los Santos");
+    expect(holidayNote(true, false, "Todos los Santos")).toBe(
+      "Festivo: Todos los Santos, abierto a propósito",
+    );
+    expect(holidayNote(false, true, null)).toBe("Sin nota");
   });
 });

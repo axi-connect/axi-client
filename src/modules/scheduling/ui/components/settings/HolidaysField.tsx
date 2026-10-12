@@ -94,6 +94,7 @@ export function HolidaysField({
                 className="max-w-full rounded-full border border-accent-amber/45 bg-accent-amber/10 px-2 py-0.5 text-[11px] [overflow-wrap:anywhere]"
               >
                 {fmtDayShort(day.date)}
+                {day.holiday_name !== null && ` · ${day.holiday_name}`}
               </li>
             ))}
           </ul>

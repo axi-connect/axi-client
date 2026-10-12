@@ -61,3 +61,16 @@ export function windowIssues(windows: readonly TimeWindow[]): string[] {
 export function windowsLabel(windows: readonly TimeWindow[]): string {
   return windows.map((window) => `${window.opens_at}–${window.closes_at}`).join(", ");
 }
+
+/** «Festivo · Día de la Raza» (H-128); sin nombre, «Festivo de Colombia». */
+export function holidayTitle(name: string | null, countryName: string): string {
+  if (name !== null) return `Festivo · ${name}`;
+  return `Festivo${countryName === "" ? "" : ` de ${countryName}`}`;
+}
+
+/** La nota por defecto de un día especial: si cae en festivo, cuál (H-128). */
+export function holidayNote(holiday: boolean, closed: boolean, name: string | null): string {
+  if (!holiday) return "Sin nota";
+  const which = name === null ? "Festivo" : `Festivo: ${name}`;
+  return closed ? which : `${which}, abierto a propósito`;
+}

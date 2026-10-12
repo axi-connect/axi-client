@@ -18,6 +18,8 @@ import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import {
   holidayCountryName,
+  holidayNote,
+  holidayTitle,
   windowsLabel,
   type ClosureDayDTO,
   type ScheduleExceptionDTO,
@@ -286,7 +288,7 @@ function DayRow({
               {exception.closed ? "Cerrado" : "Horario especial"}
             </Chip>
             <span className="min-w-0 [overflow-wrap:anywhere]">
-              {exception.note ?? (row.holiday ? `Festivo abierto a propósito` : "Sin nota")}
+              {exception.note ?? holidayNote(row.holiday, exception.closed, effective?.holiday_name ?? null)}
             </span>
           </p>
         </div>
@@ -311,7 +313,9 @@ function DayRow({
     <li className="grid grid-cols-[3.25rem_minmax(0,1fr)] items-center gap-x-3 gap-y-1 rounded-xl border border-dashed border-border bg-secondary/60 p-3 sm:grid-cols-[3.25rem_minmax(0,1fr)_auto]">
       <DateBadge date={row.date} />
       <div className="min-w-0">
-        <p className="text-sm font-medium">Festivo{countryName === "" ? "" : ` de ${countryName}`}</p>
+        <p className="text-sm font-medium [overflow-wrap:anywhere]">
+          {holidayTitle(effective?.holiday_name ?? null, countryName)}
+        </p>
         <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
           <Chip tone="holiday">{row.closes ? "Cerrado por festivo" : "Se atiende"}</Chip>
           <span className="min-w-0 [overflow-wrap:anywhere]">

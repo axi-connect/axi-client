@@ -13018,6 +13018,7 @@ export interface components {
                 /** @enum {string} */
                 kind: "closed" | "special" | "holiday" | "weekly";
                 is_holiday: boolean;
+                holiday_name: string | null;
                 windows: {
                     opens_at: string;
                     closes_at: string;
