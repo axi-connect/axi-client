@@ -12076,7 +12076,7 @@ export interface components {
         DecisionRoutesViewDto: {
             routes: {
                 /** @enum {string} */
-                purpose: "intent" | "reply_reaction" | "lead_fit" | "lead_intent" | "message_fit" | "handoff_urgency" | "voice_utterance" | "template_category" | "custom";
+                purpose: "intent" | "reply_reaction" | "lead_fit" | "lead_intent" | "message_fit" | "handoff_urgency" | "voice_utterance" | "template_category" | "checkout_confirmation" | "custom";
                 /** @enum {string} */
                 mode: "off" | "shadow" | "primary";
                 primary: {
@@ -12112,7 +12112,7 @@ export interface components {
         };
         SavedDecisionRouteDto: {
             /** @enum {string} */
-            purpose: "intent" | "reply_reaction" | "lead_fit" | "lead_intent" | "message_fit" | "handoff_urgency" | "voice_utterance" | "template_category" | "custom";
+            purpose: "intent" | "reply_reaction" | "lead_fit" | "lead_intent" | "message_fit" | "handoff_urgency" | "voice_utterance" | "template_category" | "checkout_confirmation" | "custom";
             /** @enum {string} */
             mode: "off" | "shadow" | "primary";
             primary: {
@@ -17444,6 +17444,8 @@ export interface components {
                     description?: string;
                 }[];
                 menu_label?: string;
+                /** @enum {string} */
+                text_fallback?: "numbered" | "body";
             } | {
                 /** @enum {string} */
                 kind: "cta_url";
