@@ -83,6 +83,8 @@ export const AGENT_TOOL_NAMES = [
   "apply_promotion",
   "book_appointment",
   "catalog_lookup",
+  // checkout_flow v2: el cierre en una herramienta (con el interruptor encendido)
+  "checkout",
   "close_conversation",
   "confirm_appointment",
   "create_order",

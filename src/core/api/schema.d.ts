@@ -9272,7 +9272,7 @@ export interface components {
                 readonly requires: string[];
             }[];
             niche_defaults: {
-                [key: string]: ("payment_plans" | "collections" | "fx_quotes" | "documents")[];
+                [key: string]: ("payment_plans" | "collections" | "fx_quotes" | "documents" | "checkout_flow")[];
             };
         };
         SetTenantFeatureDto: {
@@ -10512,14 +10512,14 @@ export interface components {
                 /** @enum {string} */
                 kind: "tool_called";
                 /** @enum {string} */
-                name: "advance_stage" | "apply_promotion" | "book_appointment" | "catalog_lookup" | "close_conversation" | "confirm_appointment" | "create_order" | "get_branches" | "get_business_policies" | "get_order_status" | "get_payment_methods" | "human_handoff" | "log_crm_activity" | "open_deal" | "quote_order" | "register_payment_promise" | "report_payment" | "reschedule_appointment" | "save_contact_data" | "schedule_availability" | "schedule_follow_up" | "send_payment_link" | "send_product_images" | "send_resource" | "set_delivery" | "validate_coupon";
+                name: "advance_stage" | "apply_promotion" | "book_appointment" | "catalog_lookup" | "checkout" | "close_conversation" | "confirm_appointment" | "create_order" | "get_branches" | "get_business_policies" | "get_order_status" | "get_payment_methods" | "human_handoff" | "log_crm_activity" | "open_deal" | "quote_order" | "register_payment_promise" | "report_payment" | "reschedule_appointment" | "save_contact_data" | "schedule_availability" | "schedule_follow_up" | "send_payment_link" | "send_product_images" | "send_resource" | "set_delivery" | "validate_coupon";
                 /** @default 1 */
                 min: number;
             } | {
                 /** @enum {string} */
                 kind: "tool_not_called";
                 /** @enum {string} */
-                name: "advance_stage" | "apply_promotion" | "book_appointment" | "catalog_lookup" | "close_conversation" | "confirm_appointment" | "create_order" | "get_branches" | "get_business_policies" | "get_order_status" | "get_payment_methods" | "human_handoff" | "log_crm_activity" | "open_deal" | "quote_order" | "register_payment_promise" | "report_payment" | "reschedule_appointment" | "save_contact_data" | "schedule_availability" | "schedule_follow_up" | "send_payment_link" | "send_product_images" | "send_resource" | "set_delivery" | "validate_coupon";
+                name: "advance_stage" | "apply_promotion" | "book_appointment" | "catalog_lookup" | "checkout" | "close_conversation" | "confirm_appointment" | "create_order" | "get_branches" | "get_business_policies" | "get_order_status" | "get_payment_methods" | "human_handoff" | "log_crm_activity" | "open_deal" | "quote_order" | "register_payment_promise" | "report_payment" | "reschedule_appointment" | "save_contact_data" | "schedule_availability" | "schedule_follow_up" | "send_payment_link" | "send_product_images" | "send_resource" | "set_delivery" | "validate_coupon";
             } | {
                 /** @enum {string} */
                 kind: "no_unverified_prices";
@@ -10540,6 +10540,34 @@ export interface components {
                 kind: "max_greetings";
                 /** @default 1 */
                 max: number;
+            } | {
+                /** @enum {string} */
+                kind: "chat_format";
+            } | {
+                /** @enum {string} */
+                kind: "max_reply_chars";
+                n: number;
+            } | {
+                /** @enum {string} */
+                kind: "max_data_asks";
+                /** @default 1 */
+                n: number;
+            } | {
+                /** @enum {string} */
+                kind: "no_reply_burst";
+            } | {
+                /** @enum {string} */
+                kind: "no_repeated_opening";
+            } | {
+                /** @enum {string} */
+                kind: "no_template_phrases";
+            } | {
+                /** @enum {string} */
+                kind: "no_split_turn";
+            } | {
+                /** @enum {string} */
+                kind: "max_wait_ms";
+                threshold_ms: number;
             } | {
                 /** @enum {string} */
                 kind: "max_llm_calls_per_turn";
@@ -10696,14 +10724,14 @@ export interface components {
                 /** @enum {string} */
                 kind: "tool_called";
                 /** @enum {string} */
-                name: "advance_stage" | "apply_promotion" | "book_appointment" | "catalog_lookup" | "close_conversation" | "confirm_appointment" | "create_order" | "get_branches" | "get_business_policies" | "get_order_status" | "get_payment_methods" | "human_handoff" | "log_crm_activity" | "open_deal" | "quote_order" | "register_payment_promise" | "report_payment" | "reschedule_appointment" | "save_contact_data" | "schedule_availability" | "schedule_follow_up" | "send_payment_link" | "send_product_images" | "send_resource" | "set_delivery" | "validate_coupon";
+                name: "advance_stage" | "apply_promotion" | "book_appointment" | "catalog_lookup" | "checkout" | "close_conversation" | "confirm_appointment" | "create_order" | "get_branches" | "get_business_policies" | "get_order_status" | "get_payment_methods" | "human_handoff" | "log_crm_activity" | "open_deal" | "quote_order" | "register_payment_promise" | "report_payment" | "reschedule_appointment" | "save_contact_data" | "schedule_availability" | "schedule_follow_up" | "send_payment_link" | "send_product_images" | "send_resource" | "set_delivery" | "validate_coupon";
                 /** @default 1 */
                 min: number;
             } | {
                 /** @enum {string} */
                 kind: "tool_not_called";
                 /** @enum {string} */
-                name: "advance_stage" | "apply_promotion" | "book_appointment" | "catalog_lookup" | "close_conversation" | "confirm_appointment" | "create_order" | "get_branches" | "get_business_policies" | "get_order_status" | "get_payment_methods" | "human_handoff" | "log_crm_activity" | "open_deal" | "quote_order" | "register_payment_promise" | "report_payment" | "reschedule_appointment" | "save_contact_data" | "schedule_availability" | "schedule_follow_up" | "send_payment_link" | "send_product_images" | "send_resource" | "set_delivery" | "validate_coupon";
+                name: "advance_stage" | "apply_promotion" | "book_appointment" | "catalog_lookup" | "checkout" | "close_conversation" | "confirm_appointment" | "create_order" | "get_branches" | "get_business_policies" | "get_order_status" | "get_payment_methods" | "human_handoff" | "log_crm_activity" | "open_deal" | "quote_order" | "register_payment_promise" | "report_payment" | "reschedule_appointment" | "save_contact_data" | "schedule_availability" | "schedule_follow_up" | "send_payment_link" | "send_product_images" | "send_resource" | "set_delivery" | "validate_coupon";
             } | {
                 /** @enum {string} */
                 kind: "no_unverified_prices";
@@ -10724,6 +10752,34 @@ export interface components {
                 kind: "max_greetings";
                 /** @default 1 */
                 max: number;
+            } | {
+                /** @enum {string} */
+                kind: "chat_format";
+            } | {
+                /** @enum {string} */
+                kind: "max_reply_chars";
+                n: number;
+            } | {
+                /** @enum {string} */
+                kind: "max_data_asks";
+                /** @default 1 */
+                n: number;
+            } | {
+                /** @enum {string} */
+                kind: "no_reply_burst";
+            } | {
+                /** @enum {string} */
+                kind: "no_repeated_opening";
+            } | {
+                /** @enum {string} */
+                kind: "no_template_phrases";
+            } | {
+                /** @enum {string} */
+                kind: "no_split_turn";
+            } | {
+                /** @enum {string} */
+                kind: "max_wait_ms";
+                threshold_ms: number;
             } | {
                 /** @enum {string} */
                 kind: "max_llm_calls_per_turn";
@@ -11058,6 +11114,7 @@ export interface components {
             suite_id?: string;
             scenario_ids?: string[];
             concurrency?: number;
+            burst_gap_ms?: number;
             /** @enum {string} */
             ai_mode?: "mock" | "real";
             conversations?: number;
