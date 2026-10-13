@@ -1092,22 +1092,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/channels": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["ChannelsController_list_v1"];
-        put?: never;
-        post: operations["ChannelsController_create_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/channels/telegram": {
         parameters: {
             query?: never;
@@ -1118,6 +1102,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["ChannelsController_connectTelegram_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/channels": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ChannelsController_list_v1"];
+        put?: never;
+        post: operations["ChannelsController_create_v1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -10182,10 +10182,10 @@ export interface components {
                 /** @enum {string} */
                 transport: "webhook" | "polling";
                 pending_updates: number | null;
+                foreign_webhook: boolean;
                 /** Format: date-time */
                 last_error_at: string | null;
                 last_error: string | null;
-                foreign_webhook: boolean;
             } | null;
             /** Format: date-time */
             created_at: string;
@@ -10222,6 +10222,12 @@ export interface components {
         };
         MetaRegisterPhoneDto: {
             register_pin: string;
+        };
+        ConnectTelegramBotDto: {
+            bot_token: string;
+            name?: string;
+            /** Format: uuid */
+            default_ai_agent_id?: string | null;
         };
         CreateChannelDto: {
             name: string;
@@ -10299,22 +10305,16 @@ export interface components {
                     /** @enum {string} */
                     transport: "webhook" | "polling";
                     pending_updates: number | null;
+                    foreign_webhook: boolean;
                     /** Format: date-time */
                     last_error_at: string | null;
                     last_error: string | null;
-                    foreign_webhook: boolean;
                 } | null;
                 /** Format: date-time */
                 created_at: string;
                 /** Format: date-time */
                 updated_at: string;
             }[];
-        };
-        ConnectTelegramBotDto: {
-            bot_token: string;
-            name?: string;
-            /** Format: uuid */
-            default_ai_agent_id?: string | null;
         };
         TelegramQrDto: {
             /** Format: uri */
@@ -17264,6 +17264,7 @@ export interface components {
                     id: string;
                     title: string;
                     description?: string;
+                    section?: string;
                 }[];
                 menu_label?: string;
             } | {
@@ -17273,6 +17274,12 @@ export interface components {
                 label: string;
                 /** Format: uri */
                 url: string;
+            } | {
+                /** @enum {string} */
+                kind: "request";
+                body: string;
+                /** @enum {string} */
+                request: "phone" | "location";
             };
         };
         EnqueuedMessageDto: {
@@ -26676,6 +26683,29 @@ export interface operations {
             };
         };
     };
+    ChannelsController_connectTelegram_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConnectTelegramBotDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChannelDto"];
+                };
+            };
+        };
+    };
     ChannelsController_list_v1: {
         parameters: {
             query?: never;
@@ -26705,29 +26735,6 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["CreateChannelDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ChannelDto"];
-                };
-            };
-        };
-    };
-    ChannelsController_connectTelegram_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ConnectTelegramBotDto"];
             };
         };
         responses: {
