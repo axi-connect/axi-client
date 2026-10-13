@@ -1092,6 +1092,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/channels/telegram": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ChannelsController_connectTelegram_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/channels": {
         parameters: {
             query?: never;
@@ -1122,6 +1138,22 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["ChannelsController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/channels/{id}/telegram/qr": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ChannelsController_telegramQr_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/channels/{id}/credentials": {
@@ -10169,7 +10201,7 @@ export interface components {
             id: string;
             name: string;
             /** @enum {string} */
-            kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "simulator";
+            kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "simulator" | "telegram";
             provider_account_id: string;
             /** @enum {string} */
             status: "pending_setup" | "connecting" | "connected" | "disconnected" | "error";
@@ -10190,7 +10222,7 @@ export interface components {
             disconnected_at: string | null;
             business_id: string | null;
             /** @enum {string} */
-            connection_method: "manual_token" | "embedded_signup" | "qr_pairing";
+            connection_method: "manual_token" | "embedded_signup" | "qr_pairing" | "bot_token";
             onboarding: {
                 status: string;
                 method: string | null;
@@ -10222,6 +10254,18 @@ export interface components {
                 disconnect_reason: string | null;
                 /** Format: date-time */
                 last_echo_at: string | null;
+            } | null;
+            telegram: {
+                username: string;
+                /** Format: uri */
+                link: string;
+                /** @enum {string} */
+                transport: "webhook" | "polling";
+                pending_updates: number | null;
+                foreign_webhook: boolean;
+                /** Format: date-time */
+                last_error_at: string | null;
+                last_error: string | null;
             } | null;
             /** Format: date-time */
             created_at: string;
@@ -10259,6 +10303,12 @@ export interface components {
         MetaRegisterPhoneDto: {
             register_pin: string;
         };
+        ConnectTelegramBotDto: {
+            bot_token: string;
+            name?: string;
+            /** Format: uuid */
+            default_ai_agent_id?: string | null;
+        };
         CreateChannelDto: {
             name: string;
             /** @enum {string} */
@@ -10274,7 +10324,7 @@ export interface components {
                 id: string;
                 name: string;
                 /** @enum {string} */
-                kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "simulator";
+                kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "simulator" | "telegram";
                 provider_account_id: string;
                 /** @enum {string} */
                 status: "pending_setup" | "connecting" | "connected" | "disconnected" | "error";
@@ -10295,7 +10345,7 @@ export interface components {
                 disconnected_at: string | null;
                 business_id: string | null;
                 /** @enum {string} */
-                connection_method: "manual_token" | "embedded_signup" | "qr_pairing";
+                connection_method: "manual_token" | "embedded_signup" | "qr_pairing" | "bot_token";
                 onboarding: {
                     status: string;
                     method: string | null;
@@ -10328,11 +10378,29 @@ export interface components {
                     /** Format: date-time */
                     last_echo_at: string | null;
                 } | null;
+                telegram: {
+                    username: string;
+                    /** Format: uri */
+                    link: string;
+                    /** @enum {string} */
+                    transport: "webhook" | "polling";
+                    pending_updates: number | null;
+                    foreign_webhook: boolean;
+                    /** Format: date-time */
+                    last_error_at: string | null;
+                    last_error: string | null;
+                } | null;
                 /** Format: date-time */
                 created_at: string;
                 /** Format: date-time */
                 updated_at: string;
             }[];
+        };
+        TelegramQrDto: {
+            /** Format: uri */
+            link: string;
+            size: number;
+            modules: string;
         };
         UpdateChannelDto: {
             name?: string;
@@ -13339,7 +13407,7 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
-                channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger";
+                channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "telegram";
                 external_id: string;
                 display_name: string | null;
                 /** Format: date-time */
@@ -13402,7 +13470,7 @@ export interface components {
                     /** Format: uuid */
                     id: string;
                     /** @enum {string} */
-                    channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger";
+                    channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "telegram";
                     external_id: string;
                     display_name: string | null;
                     /** Format: date-time */
@@ -13652,7 +13720,7 @@ export interface components {
             };
             usage_hint: {
                 any_enabled: boolean;
-                unsupported_kinds: ("whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger")[];
+                unsupported_kinds: ("whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "telegram")[];
             };
         };
         OrderNotificationSettingsDto: {
@@ -13706,7 +13774,7 @@ export interface components {
                 /** Format: uuid */
                 channel_id: string | null;
                 /** @enum {string|null} */
-                channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | null;
+                channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "telegram" | null;
                 subtotal_cents: number;
                 discount_cents: number;
                 shipping_cents: number;
@@ -13818,7 +13886,7 @@ export interface components {
                     status: "queued" | "sent" | "delivered" | "failed" | "skipped";
                     skip_reason: string | null;
                     /** @enum {string|null} */
-                    channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | null;
+                    channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "telegram" | null;
                     error_code: string | null;
                     /** Format: date-time */
                     queued_at: string | null;
@@ -13895,7 +13963,7 @@ export interface components {
             /** Format: uuid */
             channel_id: string | null;
             /** @enum {string|null} */
-            channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | null;
+            channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "telegram" | null;
             subtotal_cents: number;
             discount_cents: number;
             shipping_cents: number;
@@ -14007,7 +14075,7 @@ export interface components {
                 status: "queued" | "sent" | "delivered" | "failed" | "skipped";
                 skip_reason: string | null;
                 /** @enum {string|null} */
-                channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | null;
+                channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "telegram" | null;
                 error_code: string | null;
                 /** Format: date-time */
                 queued_at: string | null;
@@ -17327,7 +17395,7 @@ export interface components {
                     id: string;
                     name: string;
                     /** @enum {string} */
-                    kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger";
+                    kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "telegram";
                 };
                 /** Format: date-time */
                 created_at: string;
@@ -17376,7 +17444,7 @@ export interface components {
                 id: string;
                 name: string;
                 /** @enum {string} */
-                kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger";
+                kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "telegram";
             };
             /** Format: date-time */
             created_at: string;
@@ -17442,6 +17510,7 @@ export interface components {
                     id: string;
                     title: string;
                     description?: string;
+                    section?: string;
                 }[];
                 menu_label?: string;
                 /** @enum {string} */
@@ -17453,6 +17522,12 @@ export interface components {
                 label: string;
                 /** Format: uri */
                 url: string;
+            } | {
+                /** @enum {string} */
+                kind: "request";
+                body: string;
+                /** @enum {string} */
+                request: "phone" | "location";
             };
         };
         EnqueuedMessageDto: {
@@ -17545,7 +17620,7 @@ export interface components {
                     id: string;
                     name: string;
                     /** @enum {string} */
-                    kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger";
+                    kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "telegram";
                 };
                 /** Format: date-time */
                 created_at: string;
@@ -17617,7 +17692,7 @@ export interface components {
             /** Format: uuid */
             channel_id: string | null;
             /** @enum {string|null} */
-            channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "simulator" | null;
+            channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "simulator" | "telegram" | null;
             /** Format: date-time */
             last_inbound_at: string | null;
             window_hours: number | null;
@@ -26856,6 +26931,29 @@ export interface operations {
             };
         };
     };
+    ChannelsController_connectTelegram_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConnectTelegramBotDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChannelDto"];
+                };
+            };
+        };
+    };
     ChannelsController_list_v1: {
         parameters: {
             query?: never;
@@ -26959,6 +27057,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ChannelDto"];
+                };
+            };
+        };
+    };
+    ChannelsController_telegramQr_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TelegramQrDto"];
                 };
             };
         };

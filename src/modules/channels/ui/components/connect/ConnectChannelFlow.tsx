@@ -19,6 +19,7 @@ import { ConnectSuccess } from "./ConnectSuccess";
 import { PrerequisitesChecklist } from "./PrerequisitesChecklist";
 import { ProviderGallery } from "./ProviderGallery";
 import { WhatsAppNumberModeStep } from "./WhatsAppNumberModeStep";
+import { TelegramBotConnect } from "./TelegramBotConnect";
 
 /**
  * El wizard de conexión de canal, SIN cromo de página: lo monta
@@ -132,6 +133,8 @@ export function ConnectChannelFlow({
             onManualCreated={onManualCreated}
           />
         );
+      case "telegram":
+        return <TelegramBotConnect onConnected={goToSuccess} />;
       case "whatsapp":
         return (
           <EmbeddedSignupButton
@@ -241,8 +244,13 @@ function subtitle(stage: Stage, provider: ChannelProvider | null): string {
       if (signupFlavor(provider) === "manual") {
         return "Este canal se conecta con las credenciales de tu app de Meta.";
       }
+      if (signupFlavor(provider) === "telegram") {
+        return "Crea un bot en Telegram y pega su token. Nosotros hacemos el resto.";
+      }
       return "Se abrirá una ventana de Meta. Autoriza ahí y nosotros hacemos el resto.";
     case "success":
-      return "Tu canal quedó conectado y ya está recibiendo mensajes.";
+      return provider !== null && signupFlavor(provider) === "telegram"
+        ? "Tu bot quedó conectado y ya está recibiendo mensajes."
+        : "Tu canal quedó conectado y ya está recibiendo mensajes.";
   }
 }

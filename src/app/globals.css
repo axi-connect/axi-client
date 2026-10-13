@@ -64,6 +64,8 @@
   --logo-whatsapp: #25d366;
   --logo-instagram: #e1306c;
   --logo-messenger: #0084ff;
+  /* Canal Telegram (demos y primeras pruebas) */
+  --logo-telegram: #26a5e4;
   /* F17: proveedores de integraciones (mismo criterio que los de mensajería) */
   --logo-shopify: #96bf48;
   --logo-mercadopago: #00b1ea;
@@ -358,6 +360,7 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .brand-whatsapp { --ch-glow: var(--logo-whatsapp); }
 .brand-instagram { --ch-glow: var(--logo-instagram); }
 .brand-messenger { --ch-glow: var(--logo-messenger); }
+.brand-telegram { --ch-glow: var(--logo-telegram); }
 /* F17: integraciones — mismas superficies con el color del proveedor */
 .brand-shopify { --ch-glow: var(--logo-shopify); }
 .brand-mercadopago { --ch-glow: var(--logo-mercadopago); }
@@ -373,6 +376,7 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .text-logo-whatsapp { color: var(--logo-whatsapp); }
 .text-logo-instagram { color: var(--logo-instagram); }
 .text-logo-messenger { color: var(--logo-messenger); }
+.text-logo-telegram { color: var(--logo-telegram); }
 .text-logo-shopify { color: var(--logo-shopify); }
 .bg-logo-shopify { background-color: var(--logo-shopify); }
 .text-logo-mercadopago { color: var(--logo-mercadopago); }

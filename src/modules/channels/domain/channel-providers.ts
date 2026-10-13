@@ -21,17 +21,21 @@ import type { MetaOnboardingMode } from "./meta-signup";
  *   z-index.
  */
 
-/** Cómo se conecta el canal. `manual` es el escape hatch de soporte. */
-export type ChannelConnectStrategy = "embedded_signup" | "manual";
+/**
+ * Cómo se conecta el canal. `manual` es el escape hatch de soporte; `bot_token`
+ * es Telegram: el dueño pega el token que le dio @BotFather.
+ */
+export type ChannelConnectStrategy = "embedded_signup" | "manual" | "bot_token";
 
 /** Iconos permitidos. El diccionario que los resuelve vive en `ui/`. */
-export type ChannelIconId = "whatsapp" | "instagram" | "messenger" | "robot";
+export type ChannelIconId = "whatsapp" | "instagram" | "messenger" | "telegram" | "robot";
 
 /** Clases de resplandor definidas en `globals.css`. Conjunto cerrado. */
 export type ChannelBrandClass =
   | "brand-whatsapp"
   | "brand-instagram"
   | "brand-messenger"
+  | "brand-telegram"
   | "brand-fault";
 
 /**
@@ -66,6 +70,8 @@ export type ChannelProvider = {
   availability: ChannelAvailability;
   /** Se muestra primero y con distintivo. Solo uno debería llevarlo. */
   recommended?: boolean;
+  /** Distintivo neutro junto al nombre («Para probar»): para qué sirve, no un ranking. */
+  tag?: string;
   /** Nota corta bajo el tagline: coste real de la elección. */
   requirement_note?: string;
   prerequisites: readonly ChannelPrerequisite[];
@@ -211,6 +217,28 @@ const MESSENGER_PREREQUISITES: readonly ChannelPrerequisite[] = [
 ];
 
 /**
+ * Telegram no tiene trámite: ni Meta, ni número de empresa, ni revisión. Los
+ * dos puntos son los dos modos reales de fallo: no tener Telegram a mano y
+ * reutilizar un bot que ya entrega sus mensajes a otra herramienta (Telegram
+ * los entrega a UN solo sistema).
+ */
+const TELEGRAM_PREREQUISITES: readonly ChannelPrerequisite[] = [
+  {
+    id: "telegram_account",
+    label: "Tengo Telegram en mi celular o en el computador",
+    detail:
+      "El bot se crea desde tu propia cuenta de Telegram, con @BotFather. Es gratis y no pide número de empresa.",
+  },
+  {
+    id: "bot_not_in_use",
+    label: "El bot es nuevo, o no lo usa otra plataforma",
+    detail:
+      "Un bot solo puede entregar sus mensajes a un sistema. Si ya lo usas en otra herramienta, al conectarlo aquí dejará de recibir allí.",
+    critical: true,
+  },
+];
+
+/**
  * Un descriptor por cada `ChannelKind`. El test del registry comprueba que no
  * falte ninguno: un kind sin descriptor rompería la vista al pintarlo.
  */
@@ -272,6 +300,19 @@ export const CHANNEL_PROVIDERS: Readonly<Record<ChannelKind, ChannelProvider>> =
     prerequisites: MESSENGER_PREREQUISITES,
     meta_product: "messenger",
   },
+  telegram: {
+    kind: "telegram",
+    label: "Telegram",
+    tagline:
+      "Ideal para demos y para probar tu agente hoy mismo: botones, calendario y notas de voz nativos.",
+    icon_id: "telegram",
+    brand_class: "brand-telegram",
+    connect_strategy: "bot_token",
+    availability: "available",
+    requirement_note: "Pegas el token de tu bot · 1 minuto",
+    tag: "Para probar",
+    prerequisites: TELEGRAM_PREREQUISITES,
+  },
   simulator: {
     kind: "simulator",
     label: "Simulador (QA)",
@@ -305,9 +346,10 @@ export function channelProvider(kind: ChannelKind): ChannelProvider {
  * páginas solo el `code` (y añade elegir activo), y el manual no abre nada.
  * Antes era un `if (meta_product === …)` en la vista.
  */
-export type SignupFlavor = "whatsapp" | "page" | "manual";
+export type SignupFlavor = "whatsapp" | "page" | "manual" | "telegram";
 
 export function signupFlavor(provider: ChannelProvider): SignupFlavor {
+  if (provider.connect_strategy === "bot_token") return "telegram";
   if (effectiveConnectStrategy(provider) === "manual") return "manual";
   if (provider.meta_product === "whatsapp") return "whatsapp";
   if (provider.meta_product === undefined) return "manual";
@@ -346,3 +388,10 @@ export function connectableProviders(): readonly ChannelProvider[] {
     .filter((provider) => provider.availability !== "internal")
     .sort((a, b) => Number(b.recommended ?? false) - Number(a.recommended ?? false));
 }
+
+/**
+ * La forma del token de @BotFather (`<id del bot>:<secreto>`): solo ayuda de
+ * escritura para no enviar media línea copiada. La validez real la dice el
+ * servidor con `getMe` (misma regla que `TELEGRAM_BOT_TOKEN_PATTERN` allí).
+ */
+export const TELEGRAM_BOT_TOKEN = /^\d{5,15}:[A-Za-z0-9_-]{30,}$/;

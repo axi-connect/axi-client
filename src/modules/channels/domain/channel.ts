@@ -22,6 +22,7 @@ export const CHANNEL_KIND_LABELS: Record<ChannelKind, string> = {
   facebook_messenger: "Facebook Messenger",
   // Canal sintético del módulo quality (QA simulado): no se crea desde la UI
   simulator: "Simulador (QA)",
+  telegram: "Telegram",
 };
 
 export const CHANNEL_STATUS_LABELS: Record<ChannelStatus, string> = {

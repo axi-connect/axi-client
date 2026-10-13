@@ -139,6 +139,11 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   "channels/invalid_credentials": "Las credenciales del canal no son válidas",
   "channels/not_connected": "El canal no está conectado",
   "channels/qr_not_available": "El código QR aún no está disponible",
+  // Canal Telegram
+  "channels/telegram_bot_mismatch":
+    "Ese token es de otro bot. Pega el token del bot que ya está conectado",
+  "channels/telegram_webhook_not_configured":
+    "Telegram no está disponible en este momento. Avísale a soporte",
   "channels/no_worker_available": "No hay workers de WhatsApp Web disponibles",
   // Media saliente y acciones rápidas (F9)
   // Hotfix 131049: Meta frenó el envío por su ritmo; `details.retry_at` dice desde cuándo

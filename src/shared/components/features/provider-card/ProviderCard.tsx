@@ -17,6 +17,7 @@ const BRAND_CLASSES = {
   whatsapp: "brand-whatsapp",
   instagram: "brand-instagram",
   messenger: "brand-messenger",
+  telegram: "brand-telegram",
   shopify: "brand-shopify",
   mercadopago: "brand-mercadopago",
   salesforce: "brand-salesforce",

@@ -72,6 +72,7 @@ export const CHANNEL_KIND_LABEL: Record<ConversationDTO["channel"]["kind"], stri
   whatsapp_web: "WhatsApp",
   instagram_dm: "Instagram",
   facebook_messenger: "Messenger",
+  telegram: "Telegram",
 }
 
 /** Códigos del servidor que dicen «esto no sale por la ventana». */

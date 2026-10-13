@@ -7,6 +7,7 @@ import {
   readMessagingLimit,
   readMetaAccess,
   readQualityRating,
+  readTelegramReception,
 } from "@/modules/channels/domain/channel-health";
 import {
   ProviderCard,
@@ -62,12 +63,20 @@ export function ChannelCard({ channel }: { channel: ChannelDTO }) {
               },
             ]
           : []),
-        {
-          label: faulted ? "Última comprobación" : "Acceso de Meta",
-          value: faulted
-            ? readLastCheck(channel.last_health_check_at)
-            : readMetaAccess(channel).label,
-        },
+        channel.kind === "telegram"
+          ? {
+              // Telegram no tiene «acceso de Meta»: lo que importa es si entrega
+              label: faulted ? "Última comprobación" : "Recepción de mensajes",
+              value: faulted
+                ? readLastCheck(channel.last_health_check_at)
+                : readTelegramReception(channel).label,
+            }
+          : {
+              label: faulted ? "Última comprobación" : "Acceso de Meta",
+              value: faulted
+                ? readLastCheck(channel.last_health_check_at)
+                : readMetaAccess(channel).label,
+            },
       ]}
     />
   );

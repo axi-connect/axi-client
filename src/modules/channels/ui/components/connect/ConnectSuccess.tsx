@@ -14,6 +14,7 @@ import { ChannelFormSubmitButton } from "@/modules/channels/ui/forms/ChannelForm
 import { ChannelProviderIcon } from "../ChannelProviderIcon";
 import { ChannelStatusBadge } from "../ChannelStatusBadge";
 import { CoexistenceImportCard } from "./CoexistenceImportCard";
+import { TelegramQrCard } from "../TelegramQrCard";
 
 /**
  * Paso 4: listo.
@@ -37,69 +38,82 @@ export function ConnectSuccess({ channel: connected }: { channel: ChannelDTO }) 
   // F1: el número sigue en la app del celular. Cambia el copy y añade la
   // importación, que solo se puede pedir en las 24 h siguientes.
   const coexistence = channel.coexistence !== null && channel.coexistence !== undefined;
+  // Telegram: el final del alta es un QR — probar el agente es escanearlo
+  const telegram = channel.telegram ?? null;
+
+  const summaryCard = (
+    <div
+      className={cn(
+        "channel-surface space-y-5 rounded-lg border border-border bg-background p-4 md:p-6",
+        provider.brand_class,
+      )}
+    >
+      <div className="relative flex flex-wrap items-start gap-4">
+        <ChannelProviderIcon iconId={provider.icon_id} />
+        <div className="min-w-0 flex-1 basis-64">
+          <h2 className="text-xl font-semibold tracking-tight">
+            {`Tu ${provider.label} ya está conectado`}
+          </h2>
+          <p className="text-muted-foreground">
+            Desde ahora los mensajes que lleguen a{" "}
+            <span className="font-medium text-foreground">
+              {channel.display_phone_number ?? channel.name}
+            </span>{" "}
+            aparecen en Conversaciones.
+            {coexistence && " Tu celular sigue funcionando con normalidad."}
+          </p>
+        </div>
+        <ChannelStatusBadge status={channel.status} />
+      </div>
+
+      <hr className="border-border" />
+
+      {/* Id propio: el camino manual puede seguir montado en el mismo DOM */}
+      <ChannelForm
+        host={{ channel, onSuccess: setChannel }}
+        formId="connect-success-form"
+        renderSubmit={(state) => (
+          <div className="flex flex-wrap gap-2">
+            <ChannelFormSubmitButton {...state}>Guardar cambios</ChannelFormSubmitButton>
+          </div>
+        )}
+      />
+
+      {notice !== null && (
+        <div
+          className={cn(
+            "flex gap-3 rounded-md border p-4",
+            notice.tone === "warning"
+              ? "border-warning/40 bg-warning/[0.09]"
+              : "border-info/40 bg-info/[0.08]",
+          )}
+        >
+          <Info
+            aria-hidden="true"
+            className={cn(
+              "mt-0.5 size-4.5 shrink-0",
+              notice.tone === "warning" ? "text-warning" : "text-info",
+            )}
+          />
+          <div className="space-y-1.5">
+            <p className="font-semibold">{notice.title}</p>
+            <p className="text-muted-foreground">{notice.detail}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div className="space-y-5">
-      <div
-        className={cn(
-          "channel-surface space-y-5 rounded-lg border border-border bg-background p-4 md:p-6",
-          provider.brand_class,
-        )}
-      >
-        <div className="relative flex flex-wrap items-start gap-4">
-          <ChannelProviderIcon iconId={provider.icon_id} />
-          <div className="min-w-0 flex-1 basis-64">
-            <h2 className="text-xl font-semibold tracking-tight">
-              {`Tu ${provider.label} ya está conectado`}
-            </h2>
-            <p className="text-muted-foreground">
-              Desde ahora los mensajes que lleguen a{" "}
-              <span className="font-medium text-foreground">
-                {channel.display_phone_number ?? channel.name}
-              </span>{" "}
-              aparecen en Conversaciones.
-              {coexistence && " Tu celular sigue funcionando con normalidad."}
-            </p>
-          </div>
-          <ChannelStatusBadge status={channel.status} />
+      {telegram === null ? (
+        summaryCard
+      ) : (
+        <div className="grid items-start gap-5 md:grid-cols-[minmax(0,1fr)_248px]">
+          {summaryCard}
+          <TelegramQrCard channelId={channel.id} username={telegram.username} />
         </div>
-
-        <hr className="border-border" />
-
-        {/* Id propio: el camino manual puede seguir montado en el mismo DOM */}
-        <ChannelForm
-          host={{ channel, onSuccess: setChannel }}
-          formId="connect-success-form"
-          renderSubmit={(state) => (
-            <div className="flex flex-wrap gap-2">
-              <ChannelFormSubmitButton {...state}>Guardar cambios</ChannelFormSubmitButton>
-            </div>
-          )}
-        />
-
-        {notice !== null && (
-          <div
-            className={cn(
-              "flex gap-3 rounded-md border p-4",
-              notice.tone === "warning"
-                ? "border-warning/40 bg-warning/[0.09]"
-                : "border-info/40 bg-info/[0.08]",
-            )}
-          >
-            <Info
-              aria-hidden="true"
-              className={cn(
-                "mt-0.5 size-4.5 shrink-0",
-                notice.tone === "warning" ? "text-warning" : "text-info",
-              )}
-            />
-            <div className="space-y-1.5">
-              <p className="font-semibold">{notice.title}</p>
-              <p className="text-muted-foreground">{notice.detail}</p>
-            </div>
-          </div>
-        )}
-      </div>
+      )}
 
       {coexistence && <CoexistenceImportCard channel={channel} onChannel={setChannel} />}
 
@@ -108,9 +122,11 @@ export function ConnectSuccess({ channel: connected }: { channel: ChannelDTO }) 
         <div className="space-y-1">
           <p className="font-semibold">Pruébalo ahora</p>
           <p className="text-muted-foreground">
-            {channel.display_phone_number
-              ? "Escríbele a ese número desde otro teléfono: el mensaje aparecerá en Conversaciones en unos segundos."
-              : "Mándale un mensaje desde otra cuenta: aparecerá en Conversaciones en unos segundos."}
+            {telegram !== null
+              ? "Escanea el código o toca «Abrir en Telegram» y escríbele «Hola». Pídele horarios: verás el calendario con botones."
+              : channel.display_phone_number
+                ? "Escríbele a ese número desde otro teléfono: el mensaje aparecerá en Conversaciones en unos segundos."
+                : "Mándale un mensaje desde otra cuenta: aparecerá en Conversaciones en unos segundos."}
           </p>
         </div>
       </div>
@@ -126,11 +142,22 @@ export function ConnectSuccess({ channel: connected }: { channel: ChannelDTO }) 
           </p>
           <dl className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(13rem,1fr))]">
             <TechField label="Identificador del canal" value={channel.id} />
-            <TechField label="Phone number ID" value={channel.provider_account_id} />
-            <TechField label="WhatsApp Business Account ID" value={channel.waba_id ?? "—"} />
-            <TechField label="Business ID" value={channel.business_id ?? "—"} />
-            <TechField label="Forma de conexión" value={channel.connection_method} />
-            <TechField label="Estado del alta" value={channel.onboarding?.status ?? "—"} />
+            {telegram !== null ? (
+              <>
+                <TechField label="Id del bot" value={channel.provider_account_id} />
+                <TechField label="Usuario" value={`@${telegram.username}`} />
+                <TechField label="Forma de conexión" value={channel.connection_method} />
+                <TechField label="Recepción" value={telegram.transport === "polling" ? "Local (sondeo)" : "Webhook"} />
+              </>
+            ) : (
+              <>
+                <TechField label="Phone number ID" value={channel.provider_account_id} />
+                <TechField label="WhatsApp Business Account ID" value={channel.waba_id ?? "—"} />
+                <TechField label="Business ID" value={channel.business_id ?? "—"} />
+                <TechField label="Forma de conexión" value={channel.connection_method} />
+                <TechField label="Estado del alta" value={channel.onboarding?.status ?? "—"} />
+              </>
+            )}
           </dl>
         </div>
       </details>
