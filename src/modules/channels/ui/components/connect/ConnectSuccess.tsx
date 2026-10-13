@@ -147,7 +147,7 @@ export function ConnectSuccess({ channel: connected }: { channel: ChannelDTO }) 
                 <TechField label="Id del bot" value={channel.provider_account_id} />
                 <TechField label="Usuario" value={`@${telegram.username}`} />
                 <TechField label="Forma de conexión" value={channel.connection_method} />
-                <TechField label="Recepción" value={telegram.transport} />
+                <TechField label="Recepción" value={telegram.transport === "polling" ? "Local (sondeo)" : "Webhook"} />
               </>
             ) : (
               <>

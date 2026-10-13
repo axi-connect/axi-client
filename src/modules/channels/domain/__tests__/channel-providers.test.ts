@@ -38,9 +38,10 @@ describe("registry de proveedores de canal", () => {
       "brand-whatsapp",
       "brand-instagram",
       "brand-messenger",
+      "brand-telegram",
       "brand-fault",
     ];
-    const allowedIcons: ChannelIconId[] = ["whatsapp", "instagram", "messenger", "robot"];
+    const allowedIcons: ChannelIconId[] = ["whatsapp", "instagram", "messenger", "telegram", "robot"];
 
     for (const provider of Object.values(CHANNEL_PROVIDERS)) {
       expect(allowedBrandClasses).toContain(provider.brand_class);

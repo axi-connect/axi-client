@@ -10185,6 +10185,7 @@ export interface components {
                 /** Format: date-time */
                 last_error_at: string | null;
                 last_error: string | null;
+                foreign_webhook: boolean;
             } | null;
             /** Format: date-time */
             created_at: string;
@@ -10301,6 +10302,7 @@ export interface components {
                     /** Format: date-time */
                     last_error_at: string | null;
                     last_error: string | null;
+                    foreign_webhook: boolean;
                 } | null;
                 /** Format: date-time */
                 created_at: string;

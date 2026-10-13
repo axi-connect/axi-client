@@ -1,5 +1,10 @@
 import type { ChannelDTO } from "../channel";
-import { readChannelActions, readConnectionMethod, readTelegramReception } from "../channel-health";
+import {
+  describeTelegramError,
+  readChannelActions,
+  readConnectionMethod,
+  readTelegramReception,
+} from "../channel-health";
 import { channelProvider, signupFlavor } from "../channel-providers";
 
 const NOW = new Date("2026-10-12T15:00:00.000Z");
@@ -11,6 +16,7 @@ const TELEGRAM = {
   pending_updates: 0,
   last_error_at: null,
   last_error: null,
+  foreign_webhook: false,
 };
 
 function bot(overrides: Partial<ChannelDTO> = {}): ChannelDTO {
@@ -57,7 +63,16 @@ describe("canal Telegram", () => {
         NOW,
       );
       expect(reading).toMatchObject({ label: "Telegram no nos alcanzaba", tone: "warning" });
-      expect(reading.hint).toContain("Connection timed out");
+      // El error de Telegram llega en inglés: se muestra traducido, sin jerga
+      expect(reading.hint).not.toContain("Connection timed out");
+      expect(reading.hint).toContain("nuestro servidor tardó en responder");
+      expect(reading.hint).not.toContain("llegan completos");
+    });
+
+    it("otra herramienta con el bot es fallo y dice cómo recuperarlo", () => {
+      const reading = readTelegramReception(bot({ telegram: { ...TELEGRAM, foreign_webhook: true } }), NOW);
+      expect(reading).toMatchObject({ label: "Otra herramienta recibe los mensajes", tone: "bad" });
+      expect(reading.hint).toContain("Rotar token");
     });
 
     it("un error viejo ya no se muestra", () => {
@@ -87,5 +102,17 @@ describe("canal Telegram", () => {
 
   it("el texto de acciones habla de rotar el token, no de Meta", () => {
     expect(readChannelActions(bot(), NOW).hint).toContain("Rotar token");
+  });
+});
+
+describe("describeTelegramError", () => {
+  it.each([
+    ["Connection timed out", "nuestro servidor tardó en responder"],
+    ["Wrong response from the webhook: 401 Unauthorized", "desajuste de seguridad"],
+    ["Wrong response from the webhook: 502 Bad Gateway", "falla momentánea"],
+    ["Failed to resolve host: Name or service not known", "no pudo conectarse"],
+    [null, "no pudo entregarnos algunos mensajes"],
+  ])("«%s» se dice sin jerga", (raw, expected) => {
+    expect(describeTelegramError(raw)).toContain(expected);
   });
 });

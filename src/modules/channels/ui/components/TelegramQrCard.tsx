@@ -12,14 +12,16 @@ import {
   type TelegramQrDTO,
 } from "@/modules/channels/infrastructure/services/telegram.adapter";
 
+/** Zona de silencio alrededor del código, en módulos (ISO/IEC 18004 pide 4). */
+const QUIET_ZONE = 4;
+
 /**
  * «Escanéalo con tu celular»: el QR que abre el chat con el bot, más el enlace
  * para abrirlo o copiarlo (mockup `telegram-channel.html`, vistas «Listo» y
  * «Probar el agente»).
  *
- * El servidor entrega la MATRIZ del QR, no una imagen: aquí se pinta con
- * `currentColor` sobre el fondo del tema, así que se lee igual en claro y en
- * oscuro, y no se inyecta marcado ajeno en la página.
+ * El servidor entrega la MATRIZ del QR, no una imagen: aquí se pinta como SVG
+ * propio, así que no se inyecta marcado ajeno en la página.
  */
 export function TelegramQrCard({
   channelId,
@@ -120,6 +122,10 @@ function CopyLink({ link }: { link: string }) {
  * `<rect>` sueltos pesan más y se ven con costuras al escalar). La placa del
  * centro lleva el glifo de Telegram; la corrección de errores M del servidor
  * la tolera.
+ *
+ * Módulos SIEMPRE oscuros sobre placa blanca, también en modo oscuro: muchos
+ * lectores de Android no leen un QR invertido. Y zona de silencio de 4 módulos,
+ * la que pide la norma.
  */
 function QrMatrix({ size, modules }: { size: number; modules: string }) {
   const path = useMemo(() => {
@@ -143,16 +149,16 @@ function QrMatrix({ size, modules }: { size: number; modules: string }) {
   const offset = (size - plate) / 2;
 
   return (
-    <div className="relative size-full text-foreground">
+    <div className="relative size-full overflow-hidden rounded-lg bg-white">
       <svg
-        viewBox={`-2 -2 ${String(size + 4)} ${String(size + 4)}`}
+        viewBox={`-${String(QUIET_ZONE)} -${String(QUIET_ZONE)} ${String(size + QUIET_ZONE * 2)} ${String(size + QUIET_ZONE * 2)}`}
         className="size-full"
         role="img"
         aria-label="Código QR que abre el bot en Telegram"
         shapeRendering="crispEdges"
       >
-        <path d={path} fill="currentColor" />
-        <rect x={offset} y={offset} width={plate} height={plate} rx={plate * 0.22} className="fill-background" />
+        <path d={path} fill="#000" />
+        <rect x={offset} y={offset} width={plate} height={plate} rx={plate * 0.22} fill="#fff" />
       </svg>
       <span className="pointer-events-none absolute inset-0 grid place-items-center" aria-hidden>
         <FaTelegramPlane className="text-logo-telegram size-[26px]" />

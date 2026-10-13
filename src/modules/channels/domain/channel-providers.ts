@@ -388,3 +388,10 @@ export function connectableProviders(): readonly ChannelProvider[] {
     .filter((provider) => provider.availability !== "internal")
     .sort((a, b) => Number(b.recommended ?? false) - Number(a.recommended ?? false));
 }
+
+/**
+ * La forma del token de @BotFather (`<id del bot>:<secreto>`): solo ayuda de
+ * escritura para no enviar media línea copiada. La validez real la dice el
+ * servidor con `getMe` (misma regla que `TELEGRAM_BOT_TOKEN_PATTERN` allí).
+ */
+export const TELEGRAM_BOT_TOKEN = /^\d{5,15}:[A-Za-z0-9_-]{30,}$/;

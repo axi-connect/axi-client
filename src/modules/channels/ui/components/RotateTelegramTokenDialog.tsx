@@ -14,8 +14,7 @@ import { Modal } from "@/shared/components/ui/modal";
 import type { ChannelDTO } from "@/modules/channels/domain/channel";
 import { updateChannelCredentials } from "@/modules/channels/infrastructure/services/channels-service.adapter";
 import { useChannelStore } from "@/modules/channels/infrastructure/stores/channels.store";
-
-const BOT_TOKEN = /^\d{5,15}:[A-Za-z0-9_-]{30,}$/;
+import { TELEGRAM_BOT_TOKEN } from "@/modules/channels/domain/channel-providers";
 
 /**
  * Rotar el token de un bot de Telegram (mockup `telegram-channel.html`, vista
@@ -42,7 +41,7 @@ export function RotateTelegramTokenDialog({
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
-    if (!BOT_TOKEN.test(trimmed) || submitting) return;
+    if (!TELEGRAM_BOT_TOKEN.test(trimmed) || submitting) return;
     setSubmitting(true);
     setError(null);
     try {
@@ -112,7 +111,7 @@ export function RotateTelegramTokenDialog({
           <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={submitting}>
             Cancelar
           </Button>
-          <Button type="submit" disabled={!BOT_TOKEN.test(trimmed) || submitting}>
+          <Button type="submit" disabled={!TELEGRAM_BOT_TOKEN.test(trimmed) || submitting}>
             {submitting ? (
               <LoaderCircle className="size-4 animate-spin motion-reduce:animate-none" aria-hidden />
             ) : (

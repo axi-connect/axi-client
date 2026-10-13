@@ -127,15 +127,35 @@ export function readTelegramReception(channel: ChannelDTO, now: Date = new Date(
   if (telegram.transport === "polling") {
     return { label: "Recibiendo (modo local)", tone: "good" };
   }
+  if (telegram.foreign_webhook) {
+    return {
+      label: "Otra herramienta recibe los mensajes",
+      tone: "bad",
+      hint: "Este bot está entregando sus mensajes a otro sistema. Si quieres que el agente lo atienda aquí, pega de nuevo el token con «Rotar token».",
+    };
+  }
   const lastError = telegram.last_error_at === null ? null : new Date(telegram.last_error_at);
   if (lastError !== null && now.getTime() - lastError.getTime() < TELEGRAM_ERROR_RECENT_HOURS * 3_600_000) {
     return {
       label: "Telegram no nos alcanzaba",
       tone: "warning",
-      hint: `${formatClock(lastError)}${telegram.last_error ? ` · ${telegram.last_error}` : ""}. Telegram reintenta solo: los mensajes llegan completos.`,
+      hint: `${formatClock(lastError)} · ${describeTelegramError(telegram.last_error)}. Telegram reintenta solo durante 24 horas; si el aviso sigue, escríbenos.`,
     };
   }
   return { label: "Recibiendo", tone: "good", hint: "Telegram nos entrega los mensajes al instante." };
+}
+
+/**
+ * El último error de entrega lo escribe Telegram, en inglés y técnico. Se
+ * traducen los conocidos; el resto se resume sin jerga.
+ */
+export function describeTelegramError(raw: string | null): string {
+  const text = raw ?? "";
+  if (/timed? ?out|timeout/i.test(text)) return "nuestro servidor tardó en responder";
+  if (/401|unauthorized|403|forbidden/i.test(text)) return "rechazamos la entrega por un desajuste de seguridad que se repara solo";
+  if (/connection refused|failed to resolve|no route|ssl|certificate/i.test(text)) return "no pudo conectarse con nuestro servidor";
+  if (/5\d\d|internal server error|bad gateway|service unavailable/i.test(text)) return "nuestro servidor tuvo una falla momentánea";
+  return "no pudo entregarnos algunos mensajes";
 }
 
 function formatClock(date: Date): string {

@@ -12,9 +12,8 @@ import { Label } from "@/shared/components/ui/label";
 import type { ChannelDTO } from "@/modules/channels/domain/channel";
 import { connectTelegramBot } from "@/modules/channels/infrastructure/services/telegram.adapter";
 import { useChannelStore } from "@/modules/channels/infrastructure/stores/channels.store";
+import { TELEGRAM_BOT_TOKEN } from "@/modules/channels/domain/channel-providers";
 
-/** `<id numérico>:<secreto>`: la forma del token que da @BotFather. */
-const BOT_TOKEN = /^\d{5,15}:[A-Za-z0-9_-]{30,}$/;
 const BOTFATHER_URL = "https://t.me/BotFather";
 
 const STEPS = [
@@ -71,7 +70,7 @@ export function TelegramBotConnect({ onConnected }: { onConnected: (channel: Cha
   const upsertChannel = useChannelStore((state) => state.upsertChannel);
 
   const trimmed = token.trim();
-  const looksValid = BOT_TOKEN.test(trimmed);
+  const looksValid = TELEGRAM_BOT_TOKEN.test(trimmed);
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
