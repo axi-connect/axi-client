@@ -22,6 +22,7 @@ const plan = (over: Partial<PlanListItem>): PlanListItem => ({
   public_slug: null,
   self_service: false,
   default_limits: [],
+  storage_quota_bytes: null,
   is_active: true,
   subscriptions_count: 1,
   created_at: "2026-06-01T00:00:00Z",

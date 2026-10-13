@@ -1,4 +1,4 @@
-import { FaFacebookMessenger, FaInstagram, FaRobot, FaWhatsapp } from "react-icons/fa";
+import { FaFacebookMessenger, FaInstagram, FaRobot, FaTelegramPlane, FaWhatsapp } from "react-icons/fa";
 
 import { cn } from "@/core/lib/utils";
 import type { ChannelIconId } from "@/modules/channels/domain/channel-providers";
@@ -17,6 +17,7 @@ const ICONS: Record<ChannelIconId, React.ComponentType<{ className?: string }>> 
   whatsapp: FaWhatsapp,
   instagram: FaInstagram,
   messenger: FaFacebookMessenger,
+  telegram: FaTelegramPlane,
   robot: FaRobot,
 };
 
@@ -24,6 +25,7 @@ const GLYPH_COLOR: Record<ChannelIconId, string> = {
   whatsapp: "text-logo-whatsapp",
   instagram: "text-logo-instagram",
   messenger: "text-logo-messenger",
+  telegram: "text-logo-telegram",
   robot: "text-muted-foreground",
 };
 

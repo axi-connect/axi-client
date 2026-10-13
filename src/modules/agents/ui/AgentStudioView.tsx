@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronRight, MessageSquareText } from "lucide-react";
 import Link from "next/link";
+import { FaTelegramPlane } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -26,6 +27,8 @@ import { VoicePicker } from "@/modules/agents/ui/studio/VoicePicker";
 import { PROUD_MS } from "@/shared/components/features/assistant";
 import { PageHeader } from "@/shared/components/layout/page-header";
 import { Button } from "@/shared/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/shared/components/ui/popover";
+import { TelegramQrCard } from "@/modules/channels/public";
 
 function OptionBlock({ title, aside, children }: { title: string; aside?: string; children: React.ReactNode }) {
   return (
@@ -56,6 +59,8 @@ export function AgentStudioView({ mode, agentId = null }: { mode: "create" | "ed
   const router = useRouter();
   const { showAlert, showModal, closeModal } = useAlert();
   const { models, intentions, channels, voices, voiceSettings, fetchModels, fetchIntentions, fetchChannels, fetchVoices, fetchVoiceSettings, fetchAgents } = useAgent();
+  // «Probar en Telegram»: el primer bot conectado del tenant. Probar es escanear un QR.
+  const telegramChannel = channels.find((channel) => channel.kind === "telegram" && channel.status === "connected") ?? null;
 
   const [agent, setAgent] = useState<AiAgentDTO | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -262,19 +267,48 @@ export function AgentStudioView({ mode, agentId = null }: { mode: "create" | "ed
             // Sin canal, la bandeja está vacía y el simulador no existe para el
             // tenant: el botón no promete lo que no hay (QA real F6).
             channels.length > 0 ? (
-              <Button asChild variant="outline" size="sm" className="rounded-full">
-                <Link href="/workspace/inbox">
-                  <MessageSquareText className="size-4" aria-hidden />
-                  Probar en una conversación
-                </Link>
-              </Button>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button asChild variant="outline" size="sm" className="rounded-full">
+                  <Link href="/workspace/inbox">
+                    <MessageSquareText className="size-4" aria-hidden />
+                    Probar en una conversación
+                  </Link>
+                </Button>
+                {telegramChannel !== null && telegramChannel.telegram != null && (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className="rounded-full">
+                        <FaTelegramPlane className="text-logo-telegram size-4" aria-hidden />
+                        Probar en Telegram
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="end" className="w-80 p-0">
+                      <TelegramQrCard
+                        channelId={telegramChannel.id}
+                        username={telegramChannel.telegram.username}
+                        title={`Habla con ${agent?.name ?? "tu agente"} desde tu celular`}
+                        subtitle="Escanea el código: le escribes igual que un cliente, con botones, calendario y notas de voz."
+                        className="border-0"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                )}
+              </div>
             ) : (
-              <Button asChild variant="outline" size="sm" className="rounded-full">
-                <Link href="/settings/channels" title="Conecta WhatsApp para probar tu agente con conversaciones reales">
-                  <MessageSquareText className="size-4" aria-hidden />
-                  Conecta un canal para probarlo
-                </Link>
-              </Button>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button asChild variant="outline" size="sm" className="rounded-full">
+                  <Link href="/settings/channels/connect?canal=telegram" title="Telegram se conecta con el token de un bot, sin Meta ni número de empresa">
+                    <FaTelegramPlane className="text-logo-telegram size-4" aria-hidden />
+                    Conecta Telegram en 1 minuto
+                  </Link>
+                </Button>
+                <Button asChild variant="ghost" size="sm" className="rounded-full">
+                  <Link href="/settings/channels" title="Conecta WhatsApp para probar tu agente con conversaciones reales">
+                    <MessageSquareText className="size-4" aria-hidden />
+                    Otros canales
+                  </Link>
+                </Button>
+              </div>
             )
           ) : undefined
         }

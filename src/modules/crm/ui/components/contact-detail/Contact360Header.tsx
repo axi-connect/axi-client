@@ -28,6 +28,7 @@ const CHANNEL_LABEL = {
   whatsapp_web: "WhatsApp",
   instagram_dm: "Instagram",
   facebook_messenger: "Messenger",
+  telegram: "Telegram",
 } as const;
 
 /**

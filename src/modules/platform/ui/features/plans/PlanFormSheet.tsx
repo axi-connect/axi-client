@@ -28,9 +28,11 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { validateLimits, type LimitInput } from "../../../domain/limits";
+import { bytesToGb, gbToBytes } from "../../../domain/storage-quota";
 import type { PlanListItem } from "../../../domain/plan";
 import { useCreatePlan, useUpdatePlan } from "../../../infrastructure/api/hooks/use-plans";
 import { LimitsEditor } from "../limits/LimitsEditor";
+import { StorageQuotaField } from "../storage/StorageQuotaField";
 import { defaultPlanFormValues, planFormSchema, type PlanFormValues } from "./plan-form.config";
 
 type PlanFormSheetProps = {
@@ -60,6 +62,7 @@ export function PlanFormSheet({ open, onOpenChange, plan }: PlanFormSheetProps) 
         description: plan.description ?? "",
         tier: plan.tier,
         default_limits: plan.default_limits,
+        storage_quota_gb: bytesToGb(plan.storage_quota_bytes),
       }
     : defaultPlanFormValues;
 
@@ -97,6 +100,16 @@ export function PlanFormSheet({ open, onOpenChange, plan }: PlanFormSheetProps) 
       placeholder: "Para equipos en crecimiento…",
       colSpan: { base: 1, md: 2 },
     }),
+    createCustomField<PlanFormValues>(
+      "storage_quota_gb",
+      ({ value, setValue }) => (
+        <StorageQuotaField
+          value={(value as number | null | undefined) ?? null}
+          onChange={(gb) => setValue("storage_quota_gb", gb)}
+        />
+      ),
+      { label: "Almacenamiento incluido", colSpan: { base: 1, md: 2 } },
+    ),
     createCustomField<PlanFormValues>("default_limits", ({ value, setValue }) => {
       const limits = (value as LimitInput[]) ?? [];
       return (
@@ -118,8 +131,9 @@ export function PlanFormSheet({ open, onOpenChange, plan }: PlanFormSheetProps) 
           body: {
             name: values.name,
             description: values.description || null,
-            // Requerido por el DTO del PATCH: siempre viaja el set completo.
+            // Siempre viaja el set completo: ausente = no cambia.
             default_limits: values.default_limits,
+            storage_quota_bytes: gbToBytes(values.storage_quota_gb),
           },
         });
       } else {
@@ -128,6 +142,7 @@ export function PlanFormSheet({ open, onOpenChange, plan }: PlanFormSheetProps) 
           name: values.name,
           tier: values.tier,
           default_limits: values.default_limits,
+          storage_quota_bytes: gbToBytes(values.storage_quota_gb),
           ...(values.description ? { description: values.description } : {}),
         });
       }

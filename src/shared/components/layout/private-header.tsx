@@ -51,6 +51,7 @@ const LABELS: Record<string, string> = {
 	"funciones": "Funciones",
 	"documentos": "Documentos",
 	"sucursales": "Sucursales",
+	"almacenamiento": "Almacenamiento",
 	"payments": "Pagos",
 	"moneda": "Moneda y TRM",
 	"plan": "Plan de pagos",

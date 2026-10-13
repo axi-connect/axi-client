@@ -135,7 +135,7 @@ function message(overrides: Partial<UiMessage> = {}): UiMessage {
   } as UiMessage
 }
 
-const attachment = { id: "a1", filename: "foto.jpg", mime_type: "image/jpeg", size_bytes: 1024 }
+const attachment = { id: "a1", filename: "foto.jpg", mime_type: "image/jpeg", size_bytes: 1024, purged_at: null }
 
 describe("isAttachmentMessage", () => {
   it("ignora texto sin adjuntos", () => {

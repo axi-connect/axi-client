@@ -27,6 +27,8 @@ import { ChannelProviderIcon } from "./ChannelProviderIcon";
 import { ChannelStatusBadge } from "./ChannelStatusBadge";
 import { MetaPinDialog } from "./MetaPinDialog";
 import { ReconnectChannelDialog } from "./ReconnectChannelDialog";
+import { RotateTelegramTokenDialog } from "./RotateTelegramTokenDialog";
+import { TelegramQrCard } from "./TelegramQrCard";
 
 /**
  * `/settings/channels/[id]` — la versión completa del detalle, para quien
@@ -169,6 +171,19 @@ export function ChannelDetailView({ channelId }: { channelId: string }) {
         <ChannelHealthCard channel={channel} />
       </section>
 
+      {channel.telegram != null && channel.status === "connected" && (
+        <section className="grid items-center gap-5 rounded-lg border border-border p-6 md:grid-cols-[minmax(0,1fr)_248px]">
+          <div className="space-y-1">
+            <h2 className="text-base font-semibold">Pruébalo desde tu celular</h2>
+            <p className="text-sm text-muted-foreground">
+              Escanea el código o abre el enlace y escríbele al bot como lo haría un cliente: verás
+              los botones, el calendario y las notas de voz del agente.
+            </p>
+          </div>
+          <TelegramQrCard channelId={channel.id} username={channel.telegram.username} />
+        </section>
+      )}
+
       <section className="space-y-4 rounded-lg border border-border p-6">
         <div>
           <h2 className="text-base font-semibold">Nombre y agente</h2>
@@ -205,6 +220,12 @@ export function ChannelDetailView({ channelId }: { channelId: string }) {
           {/* Renovar solo tiene sentido en un canal VIVO: desconectado ofrece
               «Reconectar», que es la misma acción con otro nombre. Antes salían
               los dos botones a la vez sobre el mismo diálogo */}
+          {channel.kind === "telegram" && channel.status !== "disconnected" && (
+            <Button variant="outline" onClick={() => setReconnecting(true)}>
+              <KeyRound aria-hidden="true" className="size-4" />
+              Rotar token
+            </Button>
+          )}
           {provider.meta_product !== undefined && channel.status !== "disconnected" && (
             <Button
               variant={actions?.can_register_pin === true ? "outline" : "default"}
@@ -240,6 +261,9 @@ export function ChannelDetailView({ channelId }: { channelId: string }) {
 
       {/* Los tres productos de Meta se reconectan relanzando su alta por botón:
           antes solo WhatsApp, y un Instagram revocado solo ofrecía «Eliminar» */}
+      {channel.kind === "telegram" && (
+        <RotateTelegramTokenDialog channel={channel} open={reconnecting} onOpenChange={setReconnecting} />
+      )}
       {provider.meta_product !== undefined && (
         <ReconnectChannelDialog
           channel={channel}

@@ -17,7 +17,12 @@ jest.mock("@/modules/catalog/infrastructure/services/product-image-service.adapt
   getImageOriginalUrl: jest.fn(),
 }));
 
-import { setProductPrimaryImage } from "@/modules/catalog/infrastructure/services/product-image-service.adapter";
+import {
+  setProductPrimaryImage,
+  setVariantPrimaryImage,
+} from "@/modules/catalog/infrastructure/services/product-image-service.adapter";
+import { photoUploadQueue } from "@/modules/catalog/infrastructure/stores/photo-upload-queue";
+import { useStorageStore } from "@/modules/storage/infrastructure/stores/storage.store";
 import { ProductPhotosSection } from "../ProductPhotosSection";
 import { ProductGalleryProvider, deleteDescription } from "../photos/product-gallery.context";
 
@@ -131,5 +136,73 @@ describe("SortablePhotoGallery sin arrastre posible", () => {
     // La principal va fija; queda una sola movible: no se puede ordenar
     const menus = screen.getAllByRole("button", { name: "Acciones de la foto" });
     for (const menu of menus) expect(menu.closest('[aria-disabled="true"]')).toBeNull();
+  });
+});
+
+describe("Galería · hallazgos de la auditoría", () => {
+  afterEach(() => {
+    useStorageStore.setState((state) => ({ live: { ...state.live, blocks_uploads: false, state: "ok" } }));
+    jest.restoreAllMocks();
+  });
+
+  it("C-1: soltar UN archivo sobre el tile «Subir fotos» lo encola UNA sola vez", () => {
+    const enqueue = jest.spyOn(photoUploadQueue, "enqueue").mockReturnValue([]);
+    renderGallery();
+    const tile = screen.getByRole("button", { name: /Subir fotos/ });
+    const files = [new File(["x"], "foto.jpg", { type: "image/jpeg" })];
+
+    fireEvent.drop(tile, { dataTransfer: { files, types: ["Files"] } });
+
+    expect(enqueue).toHaveBeenCalledTimes(1);
+  });
+
+  it("C-1: soltar sobre la sección (fuera del tile) también encola una vez", () => {
+    const enqueue = jest.spyOn(photoUploadQueue, "enqueue").mockReturnValue([]);
+    renderGallery();
+    const files = [new File(["x"], "foto.jpg", { type: "image/jpeg" })];
+
+    fireEvent.drop(screen.getByRole("region", { name: "Fotos del producto" }), {
+      dataTransfer: { files, types: ["Files"] },
+    });
+
+    expect(enqueue).toHaveBeenCalledTimes(1);
+  });
+
+  it("C-7: dentro del filtro de una variante, «Hacer principal» es de ESA variante, no del producto", () => {
+    (setVariantPrimaryImage as jest.Mock).mockResolvedValue(product);
+    (setProductPrimaryImage as jest.Mock).mockClear();
+    const conPropias = {
+      ...product,
+      images: [image("frente"), image("m-1", { variant_id: "v-m" }), image("m-2", { variant_id: "v-m", position: 1 })],
+      primary_image_id: "frente",
+    } as ProductDTO;
+    renderGallery(conPropias);
+    fireEvent.click(within(screen.getByRole("group", { name: "Filtrar fotos" })).getByRole("button", { name: "M" }));
+    const segunda = document.querySelector('[data-photo-id="m-2"]') as HTMLElement;
+    fireEvent.click(within(segunda).getByRole("button", { name: "Acciones de la foto" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: /Hacer principal de M/ }));
+
+    expect(setVariantPrimaryImage).toHaveBeenCalledWith("v-m", "m-2");
+    expect(setProductPrimaryImage).not.toHaveBeenCalled();
+  });
+
+  it("C-7: una foto cuya descarga falló se puede borrar (no ocupa un cupo para siempre)", () => {
+    renderGallery({
+      ...product,
+      images: [image("frente"), image("rota", { status: "failed", url: null, source: "url_import", position: 1 })],
+    } as ProductDTO);
+    const rota = document.querySelector('[data-photo-id="rota"]') as HTMLElement;
+
+    fireEvent.click(within(rota).getByRole("button", { name: "Borrar foto" }));
+
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+  });
+
+  it("C-3: con el espacio lleno, «Subir» se apaga y un aviso dice por qué, antes de cualquier 507", () => {
+    useStorageStore.setState((state) => ({ live: { ...state.live, blocks_uploads: true, state: "full" } }));
+    renderGallery();
+
+    expect(screen.getByRole("button", { name: /^Subir$/ })).toBeDisabled();
+    expect(screen.getByText("Tu espacio de almacenamiento está lleno.")).toBeInTheDocument();
   });
 });

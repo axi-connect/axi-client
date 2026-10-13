@@ -7,6 +7,7 @@ import {
   extractLocationPayload,
   extractRecognition,
   extractTranscription,
+  isAttachmentPurged,
   isSharedPost,
   type MediaContentKind,
   type UiMessage,
@@ -17,7 +18,7 @@ import { ProductRecognitionChip } from "./ProductRecognitionChip"
 import { DocumentCard } from "./DocumentCard"
 import { ImageBubble } from "./ImageBubble"
 import { LocationBubble } from "./LocationBubble"
-import { MediaSkeleton, MediaUnavailable } from "./MediaStates"
+import { MediaPurged, MediaSkeleton, MediaUnavailable } from "./MediaStates"
 import { VideoBubble } from "./VideoBubble"
 
 /**
@@ -49,6 +50,12 @@ export function MediaAttachment({
     // `resolvePendingMedia` reintenta, se muestra el skeleton (no el error).
     if (message.media_pending) return <MediaSkeleton kind={kind} />
     return <MediaUnavailable kind={kind} outbound={outbound} />
+  }
+
+  // Depurado por la política de almacenamiento: ni vista previa ni descarga
+  // (la URL respondería 410). El mensaje se conserva con su fecha.
+  if (attachment && isAttachmentPurged(attachment)) {
+    return <MediaPurged kind={kind} sizeBytes={attachment.size_bytes} purgedAt={attachment.purged_at as string} />
   }
 
   switch (kind) {

@@ -14,6 +14,7 @@ import { cn } from "@/core/lib/utils";
 import { triggerDownload } from "@/core/lib/download";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
+import { reportQuotaExceeded } from "@/modules/storage/public";
 import { Button } from "@/shared/components/ui/button";
 import {
   Select,
@@ -176,6 +177,8 @@ export function ContactImportWizard({
       start(created);
       setStep("processing");
     } catch (err) {
+      // 507 con el espacio lleno: su píldora dice qué archivo y «Ver espacio».
+      if (reportQuotaExceeded(err, file.name)) return;
       showAlert({
         tone: "error",
         title: errorMessage(err, "No se pudo iniciar la importación"),

@@ -44,3 +44,9 @@ export { ConnectChannelFlow } from "./ui/components/connect/ConnectChannelFlow";
  * kind → icono; nadie vuelve a declarar `KIND_ICONS` a mano.
  */
 export { ChannelKindIcon } from "./ui/components/ChannelKindIcon";
+
+/**
+ * QR + enlace del bot de Telegram (agents: «Probar en Telegram» del estudio).
+ * Probar el agente desde el celular es escanear: una sola implementación.
+ */
+export { TelegramQrCard } from "./ui/components/TelegramQrCard";

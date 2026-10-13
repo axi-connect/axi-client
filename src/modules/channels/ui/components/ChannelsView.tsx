@@ -74,9 +74,9 @@ export function ChannelsView() {
           <div className="min-w-0 space-y-1.5">
             <p className="font-semibold">{channel.name} dejó de enviar mensajes</p>
             <p className="text-muted-foreground">
-              Meta retiró el acceso de este canal, probablemente porque alguien lo revocó desde el
-              Administrador comercial. Los mensajes que te escriben siguen llegando; no puedes
-              responder hasta reconectarlo.
+              {channel.kind === "telegram"
+                ? "El token del bot ya no sirve: se revocó o se regeneró en @BotFather. Pega el nuevo desde el detalle del canal para volver a recibir y responder."
+                : "Meta retiró el acceso de este canal, probablemente porque alguien lo revocó desde el Administrador comercial. Los mensajes que te escriben siguen llegando; no puedes responder hasta reconectarlo."}
             </p>
             <Button asChild variant="outline" size="sm" className="bg-background">
               <Link href={`/settings/channels/${channel.id}`}>Ver detalles</Link>

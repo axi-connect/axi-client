@@ -3,12 +3,15 @@
 import { useState } from "react"
 import { cn } from "@/core/lib/utils"
 import { MessageTime } from "./timeline/MessageTime"
-import { AlertCircle, Check, CheckCheck, Clock, RotateCw, Smartphone, Sparkles } from "lucide-react"
+import { AlertCircle, Check, CheckCheck, Clock, Hand, Phone, RotateCw, ShieldCheck, Smartphone, Sparkles, UserRound } from "lucide-react"
 import {
   extractInteractivePayload,
+  extractContactReaction,
   extractInteractiveReply,
+  extractSharedContact,
   isMediaContentType,
   sentFromBusinessApp,
+  startedChat,
   type UiMessage,
 } from "@/modules/inbox/domain/inbox"
 import {
@@ -113,6 +116,7 @@ export function MessageBubble({
   const interactive = extractInteractivePayload(message.payload)
   // Entrante: el cliente tocó una opción en vez de escribir
   const reply = extractInteractiveReply(message.payload)
+  const contactReaction = extractContactReaction(message.payload)
   // Imagen/video/sticker: media al borde de la burbuja; el texto va con padding propio
   const edgeToEdge = sticker || message.content_type === "image" || message.content_type === "video"
 
@@ -123,6 +127,22 @@ export function MessageBubble({
       </div>
     )
   }
+
+  // Telegram /start: el agente lee «Hola», pero el cliente solo abrió el chat —
+  // pintarlo como burbuja le atribuiría un texto que no escribió
+  if (!outbound && startedChat(message.payload)) {
+    return (
+      <div className="my-2 flex justify-center">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
+          <Hand aria-hidden className="size-3" />
+          Inició el chat
+        </span>
+      </div>
+    )
+  }
+
+  // Contacto compartido con el botón nativo (Telegram): una tarjeta, no un texto
+  const sharedContact = outbound ? null : extractSharedContact(message.payload)
 
   const footerTone = sticker
     ? "text-muted-foreground"
@@ -170,7 +190,30 @@ export function MessageBubble({
             </div>
           )
         )}
-        {!sentTemplate && (!media || (message.body && message.body.length > 0)) && (
+        {sharedContact !== null && (
+          <div className="min-w-60">
+            <div className="mb-1 flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+              <UserRound className="size-3 shrink-0" aria-hidden />
+              Contacto compartido
+            </div>
+            <div className="grid grid-cols-[36px_minmax(0,1fr)] items-center gap-2.5">
+              <span className="grid size-9 place-items-center rounded-full bg-secondary">
+                <Phone className="size-4" aria-hidden />
+              </span>
+              <span className="min-w-0">
+                {sharedContact.name !== null && <span className="block truncate font-medium">{sharedContact.name}</span>}
+                <span className="block text-xs text-muted-foreground tabular-nums">{sharedContact.phone_number}</span>
+              </span>
+            </div>
+            {sharedContact.verified && (
+              <span className="mt-1.5 inline-flex items-center gap-1 text-[11.5px] text-muted-foreground">
+                <ShieldCheck className="size-3 text-success" aria-hidden />
+                Su propio número, verificado por Telegram
+              </span>
+            )}
+          </div>
+        )}
+        {sharedContact === null && !sentTemplate && (!media || (message.body && message.body.length > 0)) && (
           <p className={cn("whitespace-pre-wrap break-words", media && edgeToEdge && "max-w-60 px-2 pt-1")}>
             {media ? message.body : (message.body ?? "(sin contenido)")}
           </p>
@@ -197,6 +240,18 @@ export function MessageBubble({
           </div>
         )}
       </div>
+      {contactReaction !== null && (
+        // Reacción del cliente (Telegram): un chip pegado al borde de la burbuja
+        <span
+          className={cn(
+            "relative z-[1] -mt-2 inline-flex items-center rounded-full border border-border bg-background px-1.5 py-px text-xs shadow-sm",
+            outbound ? "mr-2.5" : "ml-2.5",
+          )}
+          aria-label={`El cliente reaccionó con ${contactReaction}`}
+        >
+          {contactReaction}
+        </span>
+      )}
       {sentTemplate && <TemplateButtons catalog={catalog} muted={failed} />}
       {failed && neverReachedServer(message) ? (
         // Optimista que nunca obtuvo id real: se reintenta el mismo envío.

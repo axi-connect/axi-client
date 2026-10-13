@@ -9,6 +9,7 @@ import {
   type ComposerRejection,
 } from "@/modules/inbox/domain/inbox"
 import { uploadConversationFile } from "@/modules/inbox/infrastructure/services/inbox-service.adapter"
+import { reportQuotaExceeded } from "@/modules/storage/public"
 
 /**
  * Cola de adjuntos del composer (F9): valida mime/tamaño en cliente, sube
@@ -62,6 +63,9 @@ export function useUploadQueue(conversationId: string): UploadQueue {
       uploadConversationFile(conversationId, file, { filename: file.name })
         .then((upload) => patch(localId, { status: "uploaded", upload_id: upload.id }))
         .catch((err: unknown) => {
+          // 507 con el espacio lleno: además de la miniatura, la píldora con
+          // «Ver espacio» y el clip apagado (storage_control_ui T2).
+          reportQuotaExceeded(err, file.name)
           patch(localId, { status: "error", error_message: errorMessage(err, "No se pudo subir el archivo") })
         })
         .finally(() => {

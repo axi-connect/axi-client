@@ -1,6 +1,6 @@
 "use client";
 
-import { FaFacebookMessenger, FaInstagram, FaWhatsapp } from "react-icons/fa";
+import { FaFacebookMessenger, FaInstagram, FaTelegramPlane, FaWhatsapp } from "react-icons/fa";
 import { cn } from "@/core/lib/utils";
 import { formatShortDate } from "@/core/lib/format";
 import { relativeTime } from "@/core/lib/relative-time";
@@ -35,6 +35,7 @@ const CHANNEL_META: Record<
   whatsapp_web: { label: "WhatsApp", icon: FaWhatsapp },
   instagram_dm: { label: "Instagram", icon: FaInstagram },
   facebook_messenger: { label: "Messenger", icon: FaFacebookMessenger },
+  telegram: { label: "Telegram", icon: FaTelegramPlane },
 };
 
 function SectionLabel({ children }: { children: React.ReactNode }) {

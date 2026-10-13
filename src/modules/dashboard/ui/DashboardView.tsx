@@ -13,6 +13,7 @@ import { NextUpIsland } from "@/modules/dashboard/ui/components/NextUpIsland";
 import { SalesTiles } from "@/modules/dashboard/ui/components/SalesTiles";
 import { SystemHealthPanel } from "@/modules/dashboard/ui/components/SystemHealthPanel";
 import { UsagePanel } from "@/modules/dashboard/ui/components/UsagePanel";
+import { StorageWarningNotice } from "@/modules/storage/public";
 import { ConversationsFlowCard } from "@/modules/dashboard/ui/components/ConversationsFlowCard";
 import { NewCustomersCard } from "@/modules/dashboard/ui/components/NewCustomersCard";
 import { TopProductsCard } from "@/modules/dashboard/ui/components/TopProductsCard";
@@ -98,6 +99,8 @@ export function DashboardView() {
     <div className="flex flex-col gap-7">
       <DashboardHeader period={period} onPeriodChange={changePeriod} live={live} />
 
+      {/* Espacio por llenarse (≥ 80 %): solo owner/admin, una vez por sesión */}
+      <StorageWarningNotice />
       <div className={GRID}>
         <NextUpIsland
           perms={perms}

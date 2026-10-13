@@ -2,6 +2,7 @@
 
 import { formatInteger } from "@/core/lib/commercial-units";
 import {
+  BYTE_USAGE_METRICS,
   HIGHLIGHTED_USAGE_METRICS,
   USAGE_METRIC_LABELS,
   type UsageSummaryDTO,
@@ -9,6 +10,12 @@ import {
 import type { Section } from "@/modules/dashboard/infrastructure/stores/dashboard.store";
 import { TileError, TileSkeleton, UsageMeter } from "@/modules/dashboard/ui/components/parts";
 import { BentoTile } from "@/shared/components/features/bento";
+import { formatStorageBytes } from "@/modules/storage/public";
+
+/** La cantidad de una métrica: bytes en es-CO para las de archivos, entero para las demás. */
+export function formatUsageQuantity(metric: string, value: number): string {
+  return BYTE_USAGE_METRICS.has(metric) ? formatStorageBytes(value) : formatInteger(value);
+}
 
 /**
  * «ciclo 1 – 30 sept»: el ciclo de facturación, en corto y en la zona del
@@ -79,8 +86,8 @@ export function UsagePanel({
                 <div className="flex items-baseline justify-between gap-3">
                   <span className="truncate text-sm">{USAGE_METRIC_LABELS[metric.metric] ?? metric.metric}</span>
                   <span className="text-muted-foreground shrink-0 text-xs whitespace-nowrap tabular-nums">
-                    <b className="text-foreground font-semibold">{formatInteger(metric.used)}</b>
-                    {limit !== null ? ` de ${formatInteger(limit)}` : " · sin límite"}
+                    <b className="text-foreground font-semibold">{formatUsageQuantity(metric.metric, metric.used)}</b>
+                    {limit !== null ? ` de ${formatUsageQuantity(metric.metric, limit)}` : " · sin límite"}
                   </span>
                 </div>
                 {limit !== null ? <UsageMeter pct={metric.limit?.pct_used ?? 0} /> : null}

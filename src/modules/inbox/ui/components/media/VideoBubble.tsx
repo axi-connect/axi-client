@@ -6,7 +6,7 @@ import { cn } from "@/core/lib/utils"
 import { formatDuration } from "@/core/lib/format"
 import { useAttachmentUrl } from "@/modules/inbox/infrastructure/hooks/use-attachment-url"
 import { attachmentDisplayName, type MessageAttachment } from "@/modules/inbox/domain/inbox"
-import { MEDIA_FRAME, MediaError, MediaSkeleton } from "./MediaStates"
+import { MEDIA_FRAME, MediaError, MediaSkeleton, MediaPurged } from "./MediaStates"
 
 /**
  * Video del chat (F3): el mismo marco que la foto (nada salta al cargar). Antes
@@ -37,6 +37,11 @@ export function VideoBubble({
 
   const src = previewUrl ?? url
   const name = attachment !== undefined ? attachmentDisplayName(attachment) : "Video"
+
+  // Depurado por platform mientras la conversación estaba abierta (410)
+  if (status === "purged") {
+    return <MediaPurged kind="video" sizeBytes={attachment?.size_bytes ?? 0} purgedAt="" />
+  }
 
   if (broken || status === "error") {
     return (

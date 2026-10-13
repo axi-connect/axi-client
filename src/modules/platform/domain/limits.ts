@@ -39,7 +39,14 @@ export const METRICS: { value: LimitMetric; label: string; unit: MetricUnit }[] 
   { value: "template_sent", label: "Plantillas enviadas", unit: "count" },
   { value: "external_api_calls", label: "Llamadas API externas", unit: "count" },
   { value: "conversations_active", label: "Conversaciones activas", unit: "count" },
-  { value: "storage_bytes", label: "Almacenamiento", unit: "bytes" },
+  { value: "ai_conversations", label: "Conversaciones con IA", unit: "count" },
+  { value: "call_seconds", label: "Segundos de llamada", unit: "count" },
+  { value: "cmo_analyses", label: "Análisis de Axel", unit: "count" },
+  { value: "lead_discoveries", label: "Leads descubiertos", unit: "count" },
+  { value: "lead_enrichments", label: "Leads enriquecidos", unit: "count" },
+  { value: "product_recognitions", label: "Reconocimientos de producto", unit: "count" },
+  { value: "emails_sent", label: "Correos enviados", unit: "count" },
+  { value: "sms_sent", label: "SMS enviados", unit: "count" },
   // Voz (§10.5 F3): período recomendado billing_cycle, acción degrade — agotar
   // la voz solo pausa la voz, jamás la IA completa
   { value: "tts_characters", label: "Caracteres de voz", unit: "characters" },
@@ -49,8 +56,16 @@ export const METRICS: { value: LimitMetric; label: string; unit: MetricUnit }[] 
 ];
 
 export function metricInfo(metric: LimitMetric): { label: string; unit: MetricUnit } {
+  if (metric === STORAGE_METRIC) return { label: "Ingesta de archivos", unit: "bytes" };
   return METRICS.find((m) => m.value === metric) ?? { label: metric, unit: "count" };
 }
+
+/**
+ * `storage_bytes` es el CAUDAL de archivos subidos en el ciclo, no el espacio
+ * ocupado: no se ofrece como límite (el backend lo rechaza). El espacio se fija
+ * como «Almacenamiento incluido» del plan o cuota del tenant.
+ */
+export const STORAGE_METRIC = "storage_bytes" satisfies LimitMetric;
 
 export const PERIODS: { value: LimitPeriod; label: string }[] = [
   { value: "day", label: "Día" },
@@ -107,8 +122,15 @@ export function validateLimits(limits: LimitInput[]): LimitIssue[] {
   let costCapRow: number | null = null;
 
   limits.forEach((limit, row) => {
-    if (!(limit.limit_value > 0)) {
-      issues.push({ row, message: "El valor debe ser mayor que 0." });
+    // 0 es legítimo: «sin cuota» (el trial nace con call_seconds = 0).
+    if (!(limit.limit_value >= 0)) {
+      issues.push({ row, message: "El valor no puede ser negativo." });
+    }
+    if (limit.metric === STORAGE_METRIC) {
+      issues.push({
+        row,
+        message: "El almacenamiento no es un límite de consumo: fíjalo como almacenamiento incluido del plan.",
+      });
     }
     if (limit.grace_pct < 0 || limit.grace_pct > 100) {
       issues.push({ row, message: "La gracia debe estar entre 0 y 100 %." });

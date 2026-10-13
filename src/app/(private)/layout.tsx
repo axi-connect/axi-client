@@ -17,6 +17,7 @@ import { COMMERCIAL_BREADCRUMBS } from "@/modules/commercial/public";
 import { META_TEMPLATES_BREADCRUMBS } from "@/modules/marketing/public";
 import { SCHEDULING_BREADCRUMBS } from "@/modules/scheduling/public";
 import { SupportSessionBar } from "@/modules/support-access/ui/SupportSessionBar";
+import { StorageQuotaWatcher } from "@/modules/storage/public";
 
 /** Las migas que conocen los módulos (rutas sin página y segmentos dinámicos). */
 const BREADCRUMBS = [COMMERCIAL_BREADCRUMBS, SCHEDULING_BREADCRUMBS, META_TEMPLATES_BREADCRUMBS];
@@ -71,6 +72,9 @@ export default async function PrivateLayout({
     <SidebarProvider defaultOpen={sidebarOpen} className="h-dvh min-h-0 overflow-hidden">
       {/* Notifica al splash post-login que la app ya está montada */}
       <AppReadySignal />
+      {/* Vigía del espacio (WS `storage.quota_state`): apaga las subidas de
+          todo el panel cuando el espacio se llena, sin esperar al 507. */}
+      <StorageQuotaWatcher />
       {/* Identidad del tenant (logo/nombre de empresa): composición desde la
           capa app, igual que NotificationBell (arquitectura §3.3). */}
       <AppSidebar

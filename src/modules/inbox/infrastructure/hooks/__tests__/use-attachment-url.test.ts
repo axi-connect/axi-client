@@ -5,6 +5,7 @@ import {
   useAttachmentUrl,
 } from "../use-attachment-url"
 import { getAttachmentUrl } from "@/modules/inbox/infrastructure/services/inbox-service.adapter"
+import { HttpError } from "@/core/api/problem"
 
 jest.mock("@/modules/inbox/infrastructure/services/inbox-service.adapter", () => ({
   getAttachmentUrl: jest.fn(),
@@ -71,5 +72,19 @@ describe("use-attachment-url (cache de URLs firmadas)", () => {
 
     act(() => result.current.refresh())
     await waitFor(() => expect(result.current.status).toBe("ready"))
+  })
+
+  it("un 410 attachment_purged (depurado con la conversación abierta) es «purged», no un error con reintento", async () => {
+    mockedGetAttachmentUrl.mockRejectedValueOnce(
+      new HttpError({ status: 410, code: "conversations/attachment_purged", message: "eliminado" }),
+    )
+    const { result } = renderHook(() => useAttachmentUrl("c1", "m9", "a9"))
+    await waitFor(() => expect(result.current.status).toBe("purged"))
+  })
+
+  it("cualquier otro fallo sigue siendo «error»", async () => {
+    mockedGetAttachmentUrl.mockRejectedValueOnce(new HttpError({ status: 502, code: "storage/operation_failed", message: "x" }))
+    const { result } = renderHook(() => useAttachmentUrl("c1", "m8", "a8"))
+    await waitFor(() => expect(result.current.status).toBe("error"))
   })
 })

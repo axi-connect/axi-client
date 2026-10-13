@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
+import { isHttpError } from "@/core/api/problem"
 import { getAttachmentUrl } from "@/modules/inbox/infrastructure/services/inbox-service.adapter"
 
 /**
@@ -62,7 +63,8 @@ export function clearAttachmentUrlCache(): void {
   cache.clear()
 }
 
-export type AttachmentUrlStatus = "idle" | "loading" | "ready" | "error"
+/** `purged`: platform depuró el archivo después de cargar la conversación (410). */
+export type AttachmentUrlStatus = "idle" | "loading" | "ready" | "error" | "purged"
 
 /**
  * Hook de burbuja. `enabled: false` = carga perezosa (el audio no pide URL
@@ -89,9 +91,9 @@ export function useAttachmentUrl(
         setUrl(freshUrl)
         setStatus("ready")
       })
-      .catch(() => {
+      .catch((error: unknown) => {
         if (requestRef.current !== requestId) return
-        setStatus("error")
+        setStatus(isHttpError(error) && error.is("conversations/attachment_purged") ? "purged" : "error")
       })
   }, [conversationId, messageId, attachmentId])
 

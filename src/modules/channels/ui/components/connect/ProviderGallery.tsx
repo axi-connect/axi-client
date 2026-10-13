@@ -63,6 +63,11 @@ export function ProviderGallery({
                     Recomendado
                   </span>
                 )}
+                {provider.tag !== undefined && (
+                  <span className="bg-secondary text-muted-foreground rounded-full px-2 py-0.5 text-xs font-medium">
+                    {provider.tag}
+                  </span>
+                )}
                 {isSoon && (
                   <span className="bg-secondary text-muted-foreground rounded-full px-2 py-0.5 text-xs font-medium">
                     Muy pronto

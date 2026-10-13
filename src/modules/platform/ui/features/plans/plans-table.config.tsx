@@ -10,6 +10,7 @@ import type { PlanListItem, PlanTier } from "../../../domain/plan";
 import { RelativeDate } from "@/shared/components/ui/relative-date";
 import { StatusBadge } from "../../components/StatusBadge";
 import { PlanRowActions } from "./PlanRowActions";
+import { formatQuota } from "../../../domain/storage-quota";
 
 /** Fila plana para la tabla (solo primitivos — contrato del DataTable). */
 export type PlanRow = {
@@ -18,6 +19,8 @@ export type PlanRow = {
   name: string;
   tier: PlanTier;
   limits_count: number;
+  /** Bytes de almacenamiento incluido; `null` = sin tope. */
+  storage_quota_bytes: number | null;
   subscriptions_count: number;
   is_active: boolean;
   updated_at: string;
@@ -30,6 +33,7 @@ export function toPlanRow(plan: PlanListItem): PlanRow {
     name: plan.name,
     tier: plan.tier,
     limits_count: plan.default_limits.length,
+    storage_quota_bytes: plan.storage_quota_bytes,
     subscriptions_count: plan.subscriptions_count,
     is_active: plan.is_active,
     updated_at: plan.updated_at,
@@ -71,6 +75,15 @@ export function buildPlanColumns(handlers: {
         >
           {row.original.tier}
         </Badge>
+      ),
+    },
+    {
+      accessorKey: "storage_quota_bytes",
+      header: "Almacenamiento",
+      sortable: true,
+      minWidth: 130,
+      cell: ({ row }) => (
+        <span className="tabular-nums">{formatQuota(row.original.storage_quota_bytes)}</span>
       ),
     },
     {

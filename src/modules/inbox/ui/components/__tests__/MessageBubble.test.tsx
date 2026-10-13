@@ -25,7 +25,7 @@ function makeMessage(overrides: Partial<UiMessage> = {}): UiMessage {
   } as UiMessage
 }
 
-const ATTACHMENT = { id: "a1", filename: "foto.jpg", mime_type: "image/jpeg", size_bytes: 1024 }
+const ATTACHMENT = { id: "a1", filename: "foto.jpg", mime_type: "image/jpeg", size_bytes: 1024, purged_at: null }
 
 describe("MessageBubble — render por content_type (F9)", () => {
   it("texto: body plano, sin '(sin contenido)'", () => {

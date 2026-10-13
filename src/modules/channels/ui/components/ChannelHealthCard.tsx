@@ -15,6 +15,7 @@ import {
   readLastEcho,
   readOnboardingNotice,
   readQualityRating,
+  readTelegramReception,
   type HealthReading,
   type HealthTone,
 } from "@/modules/channels/domain/channel-health";
@@ -56,7 +57,8 @@ export function ChannelHealthCard({
    * existir, y escondía el que sí está. La etiqueta la decide el kind.
    */
   const hasPhone = isCloud;
-  const accountLabel = hasPhone ? "Teléfono" : "Cuenta";
+  const isTelegram = channel.kind === "telegram";
+  const accountLabel = hasPhone ? "Teléfono" : isTelegram ? "Bot" : "Cuenta";
   const quality = readQualityRating(channel.quality_rating);
   const limit = readMessagingLimit(channel.messaging_limit);
   const access = readMetaAccess(channel);
@@ -122,13 +124,18 @@ export function ChannelHealthCard({
           plain
         />
         <Reading
-          label="Nombre verificado"
+          label={isTelegram ? "Nombre del bot" : "Nombre verificado"}
           reading={{ label: channel.verified_name ?? "Sin datos", tone: "neutral" }}
           plain
         />
         {isCloud && <Reading label="Calidad del número" reading={quality} />}
         {isCloud && <Reading label="Puedes iniciar" reading={limit} />}
-        <Reading label="Acceso de Meta" reading={access} />
+        {/* Telegram no pasa por Meta: lo que importa es si nos entrega los mensajes */}
+        {isTelegram ? (
+          <Reading label="Recepción de mensajes" reading={readTelegramReception(channel)} />
+        ) : (
+          <Reading label="Acceso de Meta" reading={access} />
+        )}
         {lastEcho !== null && <Reading label="Último mensaje desde el celular" reading={lastEcho} />}
         <Reading
           label="Última comprobación"

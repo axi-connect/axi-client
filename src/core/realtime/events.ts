@@ -138,6 +138,8 @@ export type MessageUpdatedEvent = {
   unavailable_reason?: string;
   /** Texto con el que quedó el mensaje si se degradó a texto (compartido no descargable). */
   body?: string;
+  /** El cliente reaccionó (Telegram); `null` = quitó su reacción. */
+  contact_reaction?: { emoji: string; at: string } | null;
 };
 
 /**
@@ -233,6 +235,21 @@ export type UsageAlertEvent = {
   value_at_trigger: number;
   limit_value: number;
   period_start: string;
+};
+
+/**
+ * El espacio del tenant cambió de estado (ok ↔ warning ↔ full). Room de la
+ * company; lo escucha el vigía del layout (`modules/storage`) para apagar o
+ * encender las subidas sin esperar a chocar con el 507.
+ */
+export type StorageQuotaStateEvent = {
+  company_id: string;
+  state: "ok" | "warning" | "full";
+  previous: "ok" | "warning" | "full" | null;
+  pct_used: number | null;
+  used_bytes: number;
+  quota_bytes: number | null;
+  blocks_uploads: boolean;
 };
 
 export type NotificationCreatedEvent = {
@@ -1148,6 +1165,7 @@ export type InboxServerEvents = {
   "billing.activation_expired": (payload: BillingActivationExpiredEvent) => void;
   "usage.updated": (payload: UsageUpdatedEvent) => void;
   "usage.alert": (payload: UsageAlertEvent) => void;
+  "storage.quota_state": (payload: StorageQuotaStateEvent) => void;
   "analytics.alert": (payload: AnalyticsAlertEvent) => void;
   "analytics.evaluation_completed": (payload: AnalyticsEvaluationCompletedEvent) => void;
   "call.started": (payload: CallStartedEvent) => void;

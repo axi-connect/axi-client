@@ -54,10 +54,15 @@ export const USAGE_METRIC_LABELS: Record<string, string> = {
   template_sent: "Plantillas enviadas",
   external_api_calls: "Llamadas externas",
   conversations_active: "Conversaciones activas",
-  storage_bytes: "Almacenamiento",
+  // Es CAUDAL (lo subido en el ciclo), no el espacio ocupado: ese vive en
+  // Mi empresa › Almacenamiento (modules/storage).
+  storage_bytes: "Archivos subidos en el ciclo",
   tts_characters: "Caracteres de voz",
   ai_decisions: "Clasificadores",
 };
+
+/** Métricas que cuentan bytes: se escriben «1,2 GB», no «1.288.490.188». */
+export const BYTE_USAGE_METRICS: ReadonlySet<string> = new Set(["storage_bytes"]);
 
 // La fuente canónica de los labels de ciclo de vida es el slice crm (F1).
 export { CONTACT_STAGE_LABELS } from "@/modules/crm/domain/enums";

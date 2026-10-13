@@ -97,7 +97,12 @@ export class HttpClient {
           void this.toError(res).then(reject, reject);
           return;
         }
-        resolve((xhr.responseText ? JSON.parse(xhr.responseText) : undefined) as T);
+        // Un cuerpo que no es JSON no puede dejar la subida colgada (C-8)
+        try {
+          resolve((xhr.responseText ? JSON.parse(xhr.responseText) : undefined) as T);
+        } catch (error) {
+          reject(error instanceof Error ? error : new Error("Respuesta inválida del servidor"));
+        }
       };
       xhr.onerror = () => reject(new TypeError("Falló la conexión al subir el archivo"));
       xhr.onabort = () => reject(new DOMException("Subida cancelada", "AbortError"));

@@ -1,9 +1,10 @@
 "use client"
 
 import { cn } from "@/core/lib/utils"
-import { FileWarning, ImageOff, RotateCw } from "lucide-react"
+import { AudioLines, FileText, FileWarning, Film, ImageIcon, ImageOff, RotateCw } from "lucide-react"
 import { Skeleton } from "@/shared/components/ui/skeleton"
-import { MEDIA_PREVIEW_LABELS, type MediaContentKind } from "@/modules/inbox/domain/inbox"
+import { MEDIA_PREVIEW_LABELS, purgedAttachmentLine, type MediaContentKind } from "@/modules/inbox/domain/inbox"
+import { formatStorageBytes } from "@/modules/storage/public"
 
 /**
  * Marco de foto y video (F3): el contrato no trae dimensiones, así que la
@@ -71,6 +72,48 @@ export function MediaUnavailable({
     >
       <FileWarning className="size-4 shrink-0" aria-hidden />
       <span>{MEDIA_PREVIEW_LABELS[kind]} no disponible todavía</span>
+    </div>
+  )
+}
+
+const PURGED_ICON: Record<MediaContentKind, typeof FileWarning> = {
+  image: ImageIcon,
+  sticker: ImageIcon,
+  video: Film,
+  audio: AudioLines,
+  document: FileText,
+  location: FileWarning,
+}
+
+/**
+ * Adjunto depurado por la política de almacenamiento (T3 del control de
+ * almacenamiento): el glifo del tipo con borde punteado, «Archivo eliminado»
+ * y qué era. Sin vista previa ni descarga: el archivo ya no existe.
+ */
+export function MediaPurged({
+  kind,
+  sizeBytes,
+  purgedAt,
+}: {
+  kind: MediaContentKind
+  sizeBytes: number
+  purgedAt: string
+}) {
+  const Icon = PURGED_ICON[kind]
+  return (
+    <div className="flex w-[17rem] max-w-full items-center gap-2.5 py-0.5">
+      <span
+        aria-hidden
+        className="grid size-10 shrink-0 place-items-center rounded-xl border-[1.5px] border-dashed border-current/25 opacity-70"
+      >
+        <Icon className="size-[18px]" />
+      </span>
+      <span className="min-w-0">
+        <b className="block text-[13px] font-medium">Archivo eliminado</b>
+        <span className="block text-xs opacity-70">
+          {purgedAttachmentLine(kind, sizeBytes > 0 ? formatStorageBytes(sizeBytes) : "", purgedAt)}
+        </span>
+      </span>
     </div>
   )
 }

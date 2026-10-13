@@ -8,7 +8,7 @@ import { formatFullDateTime } from "@/core/lib/day-label"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/shared/components/ui/dialog"
 import { getFreshAttachmentUrl, useAttachmentUrl } from "@/modules/inbox/infrastructure/hooks/use-attachment-url"
 import { useInboxStore } from "@/modules/inbox/infrastructure/stores/inbox.store"
-import { attachmentDisplayName, type MessageAttachment } from "@/modules/inbox/domain/inbox"
+import { attachmentDisplayName, isAttachmentPurged, type MessageAttachment } from "@/modules/inbox/domain/inbox"
 
 type Slide = { messageId: string; attachment: MessageAttachment; caption: string | null; createdAt: string }
 
@@ -69,7 +69,7 @@ function LightboxBody({
     const list: Slide[] = []
     for (const message of items ?? []) {
       const first = message.attachments[0]
-      if (message.content_type === "image" && first) {
+      if (message.content_type === "image" && first && !isAttachmentPurged(first)) {
         list.push({ messageId: message.id, attachment: first, caption: message.body, createdAt: message.created_at })
       }
     }

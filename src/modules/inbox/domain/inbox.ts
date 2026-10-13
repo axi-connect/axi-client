@@ -54,6 +54,42 @@ export const MEDIA_PREVIEW_LABELS: Record<MediaContentKind, string> = {
 };
 
 /**
+ * Adjunto depurado por la política de almacenamiento (`purged_at`, control de
+ * almacenamiento T3): el mensaje se conserva con su fecha, pero el archivo ya
+ * no existe —su URL respondería 410 `conversations/attachment_purged`—. Un
+ * evento WS viejo puede no traer el campo: se lee como «no depurado».
+ */
+export function isAttachmentPurged(attachment: { purged_at?: string | null } | null | undefined): boolean {
+  return typeof attachment?.purged_at === "string" && attachment.purged_at !== "";
+}
+
+/** Nombre del tipo en la burbuja depurada: un audio cualquiera no es «nota de voz». */
+export const PURGED_KIND_LABELS: Record<MediaContentKind, string> = {
+  image: "Foto",
+  audio: "Audio",
+  video: "Video",
+  document: "Documento",
+  sticker: "Sticker",
+  location: "Ubicación",
+};
+
+const PURGED_DAY = new Intl.DateTimeFormat("es-CO", { day: "numeric", month: "short" });
+
+/** «Video de 32 MB · depurado el 8 oct». `sizeText` llega ya formateado. */
+export function purgedAttachmentLine(kind: MediaContentKind, sizeText: string, purgedAt: string): string {
+  const date = new Date(purgedAt);
+  // Por partes: es-CO formatea «8 de oct.» y la burbuja dice «8 oct».
+  const day = Number.isNaN(date.getTime())
+    ? ""
+    : PURGED_DAY.formatToParts(date)
+        .filter((part) => part.type === "day" || part.type === "month")
+        .map((part) => part.value.replace(".", ""))
+        .join(" ");
+  const head = sizeText ? `${PURGED_KIND_LABELS[kind]} de ${sizeText}` : PURGED_KIND_LABELS[kind];
+  return day ? `${head} · depurado el ${day}` : `${head} · depurado`;
+}
+
+/**
  * `last_message_preview` del backend: el body/caption, o el token `[audio]`,
  * `[image]`… cuando la media no tiene texto. Traduce el token a etiqueta ES;
  * la UI le antepone el icono del tipo (patrón WhatsApp).
@@ -175,6 +211,19 @@ export type InteractiveOptions = Extract<InteractivePayload, { kind: "options" }
 export type InteractiveOption = InteractiveOptions["options"][number];
 
 /**
+ * Lo que el AGENTE puede mandar y un operador no (por eso no está en
+ * `SendMessageDto`): opciones agrupadas por `section` (los horarios por día) y
+ * la petición nativa del dato (Telegram: «Compartir mi número»). Es lo que se
+ * lee del hilo; `InteractivePayload` sigue siendo lo que se puede ENVIAR.
+ */
+export type ThreadInteractiveOption = InteractiveOption & { section?: string };
+export type InteractiveRequest = { kind: "request"; body: string; request: "phone" | "location" };
+export type ThreadInteractive =
+  | Exclude<InteractivePayload, { kind: "options" }>
+  | (Omit<InteractiveOptions, "options"> & { options: ThreadInteractiveOption[] })
+  | InteractiveRequest;
+
+/**
  * Respuesta del cliente a un interactivo, normalizada por la ingesta
  * (`payload.interactive_reply`). No viaja en el OpenAPI porque `payload` es
  * `unknown` en el contrato: se valida en runtime como el resto de parsers.
@@ -200,7 +249,7 @@ export const INTERACTIVE_REPLY_LABELS: Record<InteractiveReply["source"], string
  * `extractLocationPayload`: el payload es `unknown` y un JSONB viejo o
  * corrupto no debe romper el hilo — devuelve `null` y la burbuja cae a texto.
  */
-export function extractInteractivePayload(payload: unknown): InteractivePayload | null {
+export function extractInteractivePayload(payload: unknown): ThreadInteractive | null {
   if (typeof payload !== "object" || payload === null) return null;
   const interactive = (payload as { interactive?: unknown }).interactive;
   if (typeof interactive !== "object" || interactive === null) return null;
@@ -211,12 +260,23 @@ export function extractInteractivePayload(payload: unknown): InteractivePayload 
     if (typeof record.label !== "string" || typeof record.url !== "string") return null;
     return { kind: "cta_url", body: record.body, label: record.label, url: record.url };
   }
+  if (record.kind === "request") {
+    if (record.request !== "phone" && record.request !== "location") return null;
+    return { kind: "request", body: record.body, request: record.request };
+  }
   if (record.kind !== "options" || !Array.isArray(record.options)) return null;
-  const options = record.options.flatMap((raw): InteractiveOption[] => {
+  const options = record.options.flatMap((raw): ThreadInteractiveOption[] => {
     if (typeof raw !== "object" || raw === null) return [];
-    const { id, title, description } = raw as Record<string, unknown>;
+    const { id, title, description, section } = raw as Record<string, unknown>;
     if (typeof id !== "string" || typeof title !== "string") return [];
-    return [{ id, title, ...(typeof description === "string" ? { description } : {}) }];
+    return [
+      {
+        id,
+        title,
+        ...(typeof description === "string" ? { description } : {}),
+        ...(typeof section === "string" ? { section } : {}),
+      },
+    ];
   });
   if (options.length === 0) return null;
   return {
@@ -225,6 +285,44 @@ export function extractInteractivePayload(payload: unknown): InteractivePayload 
     options,
     ...(typeof record.menu_label === "string" ? { menu_label: record.menu_label } : {}),
   };
+}
+
+/**
+ * El cliente abrió el chat (Telegram `/start`): el texto que lee el agente es
+ * «Hola», pero el cliente no lo escribió — el hilo lo pinta como un aviso.
+ */
+export function startedChat(payload: unknown): boolean {
+  if (typeof payload !== "object" || payload === null) return false;
+  return (payload as { bot_command?: unknown }).bot_command === "start";
+}
+
+/** Emoji con el que el cliente reaccionó a un mensaje (`payload.contact_reaction`). */
+export function extractContactReaction(payload: unknown): string | null {
+  if (typeof payload !== "object" || payload === null) return null;
+  const raw = (payload as { contact_reaction?: unknown }).contact_reaction;
+  if (typeof raw !== "object" || raw === null) return null;
+  const emoji = (raw as { emoji?: unknown }).emoji;
+  return typeof emoji === "string" && emoji !== "" ? emoji : null;
+}
+
+/** Contacto compartido con el botón nativo del canal (`payload.shared_contact`). */
+export interface SharedContact {
+  phone_number: string;
+  name: string | null;
+  /** Es SU propio número: Telegram lo garantiza. */
+  verified: boolean;
+}
+
+export function extractSharedContact(payload: unknown): SharedContact | null {
+  if (typeof payload !== "object" || payload === null) return null;
+  const raw = (payload as { shared_contact?: unknown }).shared_contact;
+  if (typeof raw !== "object" || raw === null) return null;
+  const record = raw as Record<string, unknown>;
+  if (typeof record.phone_number !== "string") return null;
+  const name = [record.first_name, record.last_name]
+    .filter((part): part is string => typeof part === "string" && part !== "")
+    .join(" ");
+  return { phone_number: record.phone_number, name: name === "" ? null : name, verified: record.verified === true };
 }
 
 /**
@@ -571,6 +669,8 @@ export const ATTACHMENT_CATEGORY_LABELS: Record<AttachmentCategory, string> = {
  */
 export function isAttachmentMessage(message: UiMessage): boolean {
   if (message.content_type === "location") return false;
+  // Lo depurado ya no es un archivo que se pueda abrir: fuera del panel (la burbuja lo dice).
+  if (message.attachments.length > 0 && message.attachments.every(isAttachmentPurged)) return false;
   return (
     message.attachments.length > 0 ||
     (message.local_previews?.length ?? 0) > 0 ||

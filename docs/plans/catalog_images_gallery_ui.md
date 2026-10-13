@@ -36,3 +36,23 @@ Evidencia en `qa/evidencia/catalogo-imagenes/` (capturas `qa-*.png`, scripts en 
 - **Hallazgo servidor (corregido, 46125a0a)**: las 3 subidas en paralelo quedaban con `position = 0` y el tope podía colarse → lock consultivo por producto + `max + 1`.
 - **Hallazgos cliente (corregidos)**: etiquetas en orden alfabético de claves («Negro · L») → orden de los ejes; píldora larga y truncada → compacta en dos líneas («Blanco ·» / «S M L»); la isla contaba como «sin fotos propias» a variantes con principal elegida; `aria-disabled` de dnd-kit dejaba deshabilitado el menú de una banda sin arrastre; tabla de variantes desbordada.
 - Verificado: «Usar en variante…» por lotes, selector + «Deshacer», filtro por variante, «Hacer principal» la pasa al frente, borrar la principal cae a la siguiente, la miniatura del listado conserva la URL entre recargas, claro/oscuro, 390 sin desborde horizontal, hoja inferior en el celular.
+
+## Auditoría 2026-10-09 (audit-almacenamiento-&-galeria), arreglos
+
+Informe: `qa/evidencia/auditoria/almacenamiento-galeria/INFORME.md`. Rama `fix/catalog-gallery-audit`.
+
+- **C-1, drop duplicado.** `PhotoDropTile` corta la propagación. Antes, la sección volvía a encolar el mismo archivo.
+- **C-3, espacio lleno.**
+  - La cola se detiene con el primer 507: las fotos en espera no se intentan, quedan «Sin espacio» y no ofrecen «Reintentar» mientras siga lleno.
+  - El aviso de storage sale una vez por lote.
+  - Hay un aviso propio que distingue la empresa de la plataforma.
+  - El botón «Subir», el estado vacío, el soltar sobre la sección y el selector de variante consultan `useStorageQuotaState` antes del primer 507.
+- **C-7.**
+  - Dentro del filtro de una variante, «Hacer principal» es de esa variante: «Hacer principal de M · Negro».
+  - Las escrituras van secuenciadas: la respuesta vieja no pisa a la nueva.
+  - «Hacer principal» aplica lo que guardó el servidor y, si algo falla, vuelve a pedir el detalle en vez de restaurar una copia vieja.
+  - Las fotos fallidas o rotas se pueden borrar.
+  - HEIC ya no se anuncia en los textos.
+- **C-8, parte propia.**
+  - «Deshacer» toma el valor vigente al elegir.
+  - `http.upload` ya no se cuelga si el cuerpo no es JSON.

@@ -183,7 +183,7 @@ describe("inbox.store — mensajería optimista", () => {
       content_type: "image",
       status: "queued",
       body: "mira",
-      attachments: [{ id: "a1", filename: "foto.png", mime_type: "image/png", size_bytes: 10 }],
+      attachments: [{ id: "a1", filename: "foto.png", mime_type: "image/png", size_bytes: 10, purged_at: null }],
     })
     useInboxStore.getState().reconcileSent(CID, localId, real)
 
@@ -205,7 +205,7 @@ describe("inbox.store — media entrante sin attachment (resolvePendingMedia)", 
       id,
       content_type: "image",
       body: null,
-      attachments: [{ id: "att-1", filename: "foto.png", mime_type: "image/png", size_bytes: 10 }],
+      attachments: [{ id: "att-1", filename: "foto.png", mime_type: "image/png", size_bytes: 10, purged_at: null }],
     })
 
   afterEach(() => getConversationMessages.mockReset())
@@ -230,7 +230,7 @@ describe("inbox.store — media entrante sin attachment (resolvePendingMedia)", 
         content_type: "audio",
         body: null,
         payload: { media: { id: "m1" } },
-        attachments: [{ id: "att-9", filename: "a.ogg", mime_type: "audio/ogg", size_bytes: 5 }],
+        attachments: [{ id: "att-9", filename: "a.ogg", mime_type: "audio/ogg", size_bytes: 5, purged_at: null }],
       }),
     )
 
@@ -731,7 +731,7 @@ describe("inbox.store — adjunto listo por evento (applyAttachments)", () => {
     useInboxStore.getState().resolvePendingMedia(CID, "px-9")
 
     useInboxStore.getState().applyAttachments(CID, "px-9", {
-      attachments: [{ id: "att", filename: "f.jpg", mime_type: "image/jpeg", size_bytes: 9 }],
+      attachments: [{ id: "att", filename: "f.jpg", mime_type: "image/jpeg", size_bytes: 9, purged_at: null }],
       content_type: "image",
     })
     const [message] = useInboxStore.getState().messagesById[CID].items

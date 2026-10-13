@@ -29,6 +29,7 @@ const CHANNEL_KIND_SHORT: Record<string, string> = {
   whatsapp_web: "WhatsApp Web",
   instagram_dm: "Instagram",
   facebook_messenger: "Messenger",
+  telegram: "Telegram",
 };
 
 export function channelKindLabel(kind: string): string {

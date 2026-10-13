@@ -1,6 +1,7 @@
 import {
   hasOtherCostCap,
   MAX_LIMITS,
+  METRICS,
   metricInfo,
   newLimitRow,
   validateLimits,
@@ -55,19 +56,36 @@ describe("validateLimits (invariantes del backend en UI)", () => {
     expect(issues[0].message).toMatch(/ciclo de facturación/i);
   });
 
-  it("rechaza valores no positivos y gracia fuera de rango", () => {
+  it("rechaza valores negativos y gracia fuera de rango", () => {
     const issues = validateLimits([
-      limit({ limit_value: 0 }),
+      limit({ limit_value: -1 }),
       limit({ metric: "messages_sent", grace_pct: 150 }),
     ]);
     expect(issues).toEqual([
-      { row: 0, message: "El valor debe ser mayor que 0." },
+      { row: 0, message: "El valor no puede ser negativo." },
       { row: 1, message: "La gracia debe estar entre 0 y 100 %." },
     ]);
   });
 
+  it("acepta 0 como «sin cuota», igual que el backend", () => {
+    expect(validateLimits([limit({ metric: "call_seconds", limit_value: 0 })])).toEqual([]);
+  });
+
+  it("rechaza storage_bytes: el espacio se fija como almacenamiento incluido del plan", () => {
+    const issues = validateLimits([limit({ metric: "storage_bytes" })]);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].message).toMatch(/almacenamiento incluido/);
+  });
+
+  it("el editor ya no ofrece storage_bytes y sí las métricas que el backend acepta", () => {
+    const offered = METRICS.map((m) => m.value);
+    expect(offered).not.toContain("storage_bytes");
+    expect(offered).toEqual(expect.arrayContaining(["call_seconds", "product_recognitions", "sms_sent"]));
+    expect(metricInfo("storage_bytes")).toEqual({ label: "Ingesta de archivos", unit: "bytes" });
+  });
+
   it("rechaza más de 30 límites (issue global, row -1)", () => {
-    const metrics = ["ai_tokens_input", "ai_tokens_output", "ai_requests", "messages_sent", "messages_received", "template_sent", "external_api_calls", "conversations_active", "storage_bytes"] as const;
+    const metrics = ["ai_tokens_input", "ai_tokens_output", "ai_requests", "messages_sent", "messages_received", "template_sent", "external_api_calls", "conversations_active", "call_seconds"] as const;
     // 31 filas sin duplicados (metric, period) reales es imposible con 9x2;
     // basta verificar el issue global de tamaño.
     const limits = Array.from({ length: MAX_LIMITS + 1 }, (_, i) =>

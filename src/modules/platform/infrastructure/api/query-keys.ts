@@ -39,6 +39,20 @@ export const platformKeys = {
     offerCatalog: () => ["platform", "offer-catalog"] as const,
   },
 
+  // Control de almacenamiento: la vista global y, por tenant, su espacio,
+  // depuración y retención. Invalidar el tenant no toca la vista global.
+  storage: {
+    all: ["platform", "storage"] as const,
+    overview: () => ["platform", "storage", "overview"] as const,
+    tenants: (params: unknown) => ["platform", "storage", "tenants", params] as const,
+    tenant: (id: string) => ["platform", "storage", "tenant", id] as const,
+    purgeOptions: (id: string) => ["platform", "storage", "tenant", id, "purge-options"] as const,
+    files: (id: string, params: unknown) => ["platform", "storage", "tenant", id, "files", params] as const,
+    retention: (id: string) => ["platform", "storage", "tenant", id, "retention"] as const,
+    runs: (id: string) => ["platform", "storage", "tenant", id, "runs"] as const,
+    run: (runId: string) => ["platform", "storage", "run", runId] as const,
+  },
+
   plans: {
     all: ["platform", "plans"] as const,
     list: () => [...platformKeys.plans.all, "list"] as const,

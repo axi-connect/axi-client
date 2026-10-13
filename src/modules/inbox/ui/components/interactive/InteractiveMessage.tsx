@@ -1,8 +1,8 @@
 "use client"
 
 import { cn } from "@/core/lib/utils"
-import { ExternalLink, List, MousePointerClick } from "lucide-react"
-import type { InteractivePayload } from "@/modules/inbox/domain/inbox"
+import { CalendarDays, ExternalLink, List, MapPin, MousePointerClick, Phone, Smartphone } from "lucide-react"
+import type { ThreadInteractive, ThreadInteractiveOption } from "@/modules/inbox/domain/inbox"
 
 /**
  * Mensaje interactivo en el hilo: botones, menú de lista o CTA de URL.
@@ -19,7 +19,7 @@ export function InteractiveMessage({
   interactive,
   outbound,
 }: {
-  interactive: InteractivePayload
+  interactive: ThreadInteractive
   outbound: boolean
 }) {
   if (interactive.kind === "cta_url") {
@@ -43,6 +43,61 @@ export function InteractiveMessage({
 
   // Espejo de la degradación del backend: con descripciones o más de 3
   // opciones, el canal lo pinta como menú de lista y no como botones
+  if (interactive.kind === "request") {
+    // Telegram: un botón nativo que comparte el dato con un toque. Se pinta
+    // como lo que vio el cliente, no como una opción que el operador pueda tocar
+    const phone = interactive.request === "phone"
+    return (
+      <InteractiveFrame
+        outbound={outbound}
+        icon={phone ? Smartphone : MapPin}
+        label={phone ? "Pidió compartir su teléfono" : "Pidió compartir su ubicación"}
+      >
+        <div
+          className={cn(
+            "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium",
+            outbound ? "bg-background/15 text-background" : "bg-background text-foreground",
+          )}
+        >
+          {phone ? <Phone className="size-3 shrink-0" aria-hidden /> : <MapPin className="size-3 shrink-0" aria-hidden />}
+          {phone ? "Compartir mi número" : "Enviar mi ubicación"}
+        </div>
+      </InteractiveFrame>
+    )
+  }
+
+  const sections = groupBySection(interactive.options)
+  if (sections !== null) {
+    // Horarios por día: así los vio el cliente (lista por secciones en
+    // WhatsApp, calendario de dos pasos en Telegram)
+    return (
+      <InteractiveFrame outbound={outbound} icon={CalendarDays} label="Opciones por día">
+        <div className="flex flex-col gap-2">
+          {sections.map((section) => (
+            <div key={section.title} className="flex flex-col gap-1">
+              <span className={cn("text-[10.5px] font-medium", outbound ? "text-background/70" : "text-muted-foreground")}>
+                {section.title}
+              </span>
+              <ul className="flex flex-wrap gap-1">
+                {section.options.map((option) => (
+                  <li
+                    key={option.id}
+                    className={cn(
+                      "rounded-lg px-3 py-1.5 text-xs font-medium",
+                      outbound ? "bg-background/15 text-background" : "bg-background text-foreground",
+                    )}
+                  >
+                    {option.title}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </InteractiveFrame>
+    )
+  }
+
   const asList =
     interactive.options.length > 3 || interactive.options.some((option) => option.description)
 
@@ -105,4 +160,18 @@ function InteractiveFrame({
       {children}
     </div>
   )
+}
+
+/** Grupos por `section`, en el orden en que aparecen; `null` si no hay al menos dos. */
+function groupBySection(
+  options: readonly ThreadInteractiveOption[],
+): { title: string; options: ThreadInteractiveOption[] }[] | null {
+  if (options.some((option) => option.section === undefined)) return null
+  const groups = new Map<string, ThreadInteractiveOption[]>()
+  for (const option of options) {
+    const key = option.section as string
+    groups.set(key, [...(groups.get(key) ?? []), option])
+  }
+  if (groups.size < 2) return null
+  return [...groups.entries()].map(([title, members]) => ({ title, options: members }))
 }

@@ -1092,6 +1092,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/channels/telegram": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ChannelsController_connectTelegram_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/channels": {
         parameters: {
             query?: never;
@@ -1122,6 +1138,22 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["ChannelsController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/channels/{id}/telegram/qr": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ChannelsController_telegramQr_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/channels/{id}/credentials": {
@@ -5134,6 +5166,230 @@ export interface paths {
         get: operations["ContactReachabilityController_reachabilityOf_v1"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/storage/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["StorageController_summary_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/storage/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformStorageController_overview_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/storage/tenants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformStorageController_tenants_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/storage/tenants/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformStorageController_tenant_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/storage/backfill": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformStorageController_backfill_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/storage/tenants/{id}/quota": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["PlatformStorageController_setQuota_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/storage/tenants/{id}/purge-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformStorageController_purgeOptions_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/storage/tenants/{id}/files": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformStorageController_files_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/storage/tenants/{id}/purge-previews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformStorageController_preview_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/storage/purge-previews/{id}/execute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformStorageController_execute_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/storage/purge-runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformStorageController_runs_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/storage/purge-runs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformStorageController_run_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/storage/tenants/{id}/retention-policies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformStorageController_retentionPolicies_v1"];
+        put: operations["PlatformStorageController_replaceRetention_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/storage/retention/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformStorageController_runRetention_v1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -9619,6 +9875,7 @@ export interface components {
                     /** @default true */
                     enabled: boolean;
                 }[];
+                storage_quota_bytes: number | null;
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
@@ -9658,6 +9915,8 @@ export interface components {
                 /** @default true */
                 enabled: boolean;
             }[];
+            /** @default null */
+            storage_quota_bytes: number | null;
         };
         CreatedPlanDto: {
             /** Format: uuid */
@@ -9666,8 +9925,7 @@ export interface components {
         UpdatePlanDto: {
             name?: string;
             description?: string | null;
-            /** @default [] */
-            default_limits: {
+            default_limits?: {
                 /** @enum {string} */
                 metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions" | "ai_decisions" | "emails_sent" | "sms_sent";
                 /** @enum {string} */
@@ -9685,6 +9943,7 @@ export interface components {
                 /** @default true */
                 enabled: boolean;
             }[];
+            storage_quota_bytes?: number | null;
             is_active?: boolean;
         };
         TenantPlanViewDto: {
@@ -9712,6 +9971,7 @@ export interface components {
                     /** @default true */
                     enabled: boolean;
                 }[];
+                storage_quota_bytes: number | null;
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
@@ -9861,7 +10121,7 @@ export interface components {
             id: string;
             name: string;
             /** @enum {string} */
-            kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "simulator";
+            kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "simulator" | "telegram";
             provider_account_id: string;
             /** @enum {string} */
             status: "pending_setup" | "connecting" | "connected" | "disconnected" | "error";
@@ -9882,7 +10142,7 @@ export interface components {
             disconnected_at: string | null;
             business_id: string | null;
             /** @enum {string} */
-            connection_method: "manual_token" | "embedded_signup" | "qr_pairing";
+            connection_method: "manual_token" | "embedded_signup" | "qr_pairing" | "bot_token";
             onboarding: {
                 status: string;
                 method: string | null;
@@ -9914,6 +10174,18 @@ export interface components {
                 disconnect_reason: string | null;
                 /** Format: date-time */
                 last_echo_at: string | null;
+            } | null;
+            telegram: {
+                username: string;
+                /** Format: uri */
+                link: string;
+                /** @enum {string} */
+                transport: "webhook" | "polling";
+                pending_updates: number | null;
+                foreign_webhook: boolean;
+                /** Format: date-time */
+                last_error_at: string | null;
+                last_error: string | null;
             } | null;
             /** Format: date-time */
             created_at: string;
@@ -9951,6 +10223,12 @@ export interface components {
         MetaRegisterPhoneDto: {
             register_pin: string;
         };
+        ConnectTelegramBotDto: {
+            bot_token: string;
+            name?: string;
+            /** Format: uuid */
+            default_ai_agent_id?: string | null;
+        };
         CreateChannelDto: {
             name: string;
             /** @enum {string} */
@@ -9966,7 +10244,7 @@ export interface components {
                 id: string;
                 name: string;
                 /** @enum {string} */
-                kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "simulator";
+                kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "simulator" | "telegram";
                 provider_account_id: string;
                 /** @enum {string} */
                 status: "pending_setup" | "connecting" | "connected" | "disconnected" | "error";
@@ -9987,7 +10265,7 @@ export interface components {
                 disconnected_at: string | null;
                 business_id: string | null;
                 /** @enum {string} */
-                connection_method: "manual_token" | "embedded_signup" | "qr_pairing";
+                connection_method: "manual_token" | "embedded_signup" | "qr_pairing" | "bot_token";
                 onboarding: {
                     status: string;
                     method: string | null;
@@ -10020,11 +10298,29 @@ export interface components {
                     /** Format: date-time */
                     last_echo_at: string | null;
                 } | null;
+                telegram: {
+                    username: string;
+                    /** Format: uri */
+                    link: string;
+                    /** @enum {string} */
+                    transport: "webhook" | "polling";
+                    pending_updates: number | null;
+                    foreign_webhook: boolean;
+                    /** Format: date-time */
+                    last_error_at: string | null;
+                    last_error: string | null;
+                } | null;
                 /** Format: date-time */
                 created_at: string;
                 /** Format: date-time */
                 updated_at: string;
             }[];
+        };
+        TelegramQrDto: {
+            /** Format: uri */
+            link: string;
+            size: number;
+            modules: string;
         };
         UpdateChannelDto: {
             name?: string;
@@ -12865,7 +13161,7 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
-                channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger";
+                channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "telegram";
                 external_id: string;
                 display_name: string | null;
                 /** Format: date-time */
@@ -12928,7 +13224,7 @@ export interface components {
                     /** Format: uuid */
                     id: string;
                     /** @enum {string} */
-                    channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger";
+                    channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "telegram";
                     external_id: string;
                     display_name: string | null;
                     /** Format: date-time */
@@ -13178,7 +13474,7 @@ export interface components {
             };
             usage_hint: {
                 any_enabled: boolean;
-                unsupported_kinds: ("whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger")[];
+                unsupported_kinds: ("whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "telegram")[];
             };
         };
         OrderNotificationSettingsDto: {
@@ -13232,7 +13528,7 @@ export interface components {
                 /** Format: uuid */
                 channel_id: string | null;
                 /** @enum {string|null} */
-                channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | null;
+                channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "telegram" | null;
                 subtotal_cents: number;
                 discount_cents: number;
                 shipping_cents: number;
@@ -13344,7 +13640,7 @@ export interface components {
                     status: "queued" | "sent" | "delivered" | "failed" | "skipped";
                     skip_reason: string | null;
                     /** @enum {string|null} */
-                    channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | null;
+                    channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "telegram" | null;
                     error_code: string | null;
                     /** Format: date-time */
                     queued_at: string | null;
@@ -13421,7 +13717,7 @@ export interface components {
             /** Format: uuid */
             channel_id: string | null;
             /** @enum {string|null} */
-            channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | null;
+            channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "telegram" | null;
             subtotal_cents: number;
             discount_cents: number;
             shipping_cents: number;
@@ -13533,7 +13829,7 @@ export interface components {
                 status: "queued" | "sent" | "delivered" | "failed" | "skipped";
                 skip_reason: string | null;
                 /** @enum {string|null} */
-                channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | null;
+                channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "telegram" | null;
                 error_code: string | null;
                 /** Format: date-time */
                 queued_at: string | null;
@@ -16853,7 +17149,7 @@ export interface components {
                     id: string;
                     name: string;
                     /** @enum {string} */
-                    kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger";
+                    kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "telegram";
                 };
                 /** Format: date-time */
                 created_at: string;
@@ -16902,7 +17198,7 @@ export interface components {
                 id: string;
                 name: string;
                 /** @enum {string} */
-                kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger";
+                kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "telegram";
             };
             /** Format: date-time */
             created_at: string;
@@ -16936,6 +17232,11 @@ export interface components {
                     filename: string;
                     mime_type: string;
                     size_bytes: number;
+                    /**
+                     * Format: date-time
+                     * @default null
+                     */
+                    purged_at: string | null;
                 }[];
                 /** Format: date-time */
                 created_at: string;
@@ -16963,6 +17264,7 @@ export interface components {
                     id: string;
                     title: string;
                     description?: string;
+                    section?: string;
                 }[];
                 menu_label?: string;
             } | {
@@ -16972,6 +17274,12 @@ export interface components {
                 label: string;
                 /** Format: uri */
                 url: string;
+            } | {
+                /** @enum {string} */
+                kind: "request";
+                body: string;
+                /** @enum {string} */
+                request: "phone" | "location";
             };
         };
         EnqueuedMessageDto: {
@@ -17001,6 +17309,11 @@ export interface components {
                 filename: string;
                 mime_type: string;
                 size_bytes: number;
+                /**
+                 * Format: date-time
+                 * @default null
+                 */
+                purged_at: string | null;
             }[];
             /** Format: date-time */
             created_at: string;
@@ -17059,7 +17372,7 @@ export interface components {
                     id: string;
                     name: string;
                     /** @enum {string} */
-                    kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger";
+                    kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "telegram";
                 };
                 /** Format: date-time */
                 created_at: string;
@@ -17131,11 +17444,312 @@ export interface components {
             /** Format: uuid */
             channel_id: string | null;
             /** @enum {string|null} */
-            channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "simulator" | null;
+            channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "simulator" | "telegram" | null;
             /** Format: date-time */
             last_inbound_at: string | null;
             window_hours: number | null;
             supports_templates: boolean;
+        };
+        TenantStorageSummaryDto: {
+            company_id: string;
+            name: string;
+            plan_name: string | null;
+            used_bytes: number;
+            quota_bytes: number | null;
+            /** @enum {string} */
+            quota_source: "override" | "plan" | "none";
+            grace_pct: number;
+            pct_used: number | null;
+            /** @enum {string} */
+            state: "ok" | "warning" | "full" | "unlimited";
+            blocks_uploads: boolean;
+            room_bytes: number | null;
+            by_category: {
+                /** @enum {string} */
+                category: "inbound_media" | "inbound_media_derived" | "history_import" | "outbound_upload" | "quick_action_asset" | "catalog_image" | "catalog_import_file" | "crm_import_file" | "hsm_template_media" | "tts_audio" | "call_recording" | "document_pdf" | "quality" | "platform_asset" | "other";
+                /** @enum {string} */
+                origin: "customer" | "team" | "system" | "platform";
+                bytes: number;
+                objects: number;
+            }[];
+            growth: {
+                per_month_bytes: number | null;
+                days_to_full: number | null;
+                series: {
+                    day: string;
+                    bytes: number;
+                }[];
+                window_days: number;
+            };
+            /** Format: date-time */
+            measured_at: string;
+        };
+        PlatformStorageOverviewDto: {
+            providers: {
+                id: string;
+                label: string;
+                /** @enum {string} */
+                kind: "physical" | "cloud";
+                capacity: {
+                    total_bytes: number;
+                    free_bytes: number;
+                    used_bytes: number;
+                    usable_free_pct: number;
+                    /** @enum {string} */
+                    source: "minio_metrics_v3" | "minio_metrics_v2";
+                    /** Format: date-time */
+                    observed_at: string;
+                } | null;
+                last_known: {
+                    total_bytes: number;
+                    free_bytes: number;
+                    used_bytes: number;
+                    usable_free_pct: number;
+                    /** @enum {string} */
+                    source: "minio_metrics_v3" | "minio_metrics_v2";
+                    /** Format: date-time */
+                    observed_at: string;
+                } | null;
+                /** @enum {string} */
+                level: "ok" | "warning" | "critical" | "unknown";
+                ledger_bytes: number;
+                objects: number;
+                trend: {
+                    day: string;
+                    total_bytes: number;
+                    free_bytes: number;
+                }[];
+                growth_per_month_bytes: number | null;
+                days_to_full: number | null;
+            }[];
+            totals: {
+                tenant_bytes: number;
+                quota_sum_bytes: number;
+                tenants: number;
+                tenants_full: number;
+                tenants_warning: number;
+            };
+            by_origin: {
+                customer: number;
+                team: number;
+                system: number;
+                platform: number;
+            };
+            trend: {
+                day: string;
+                bytes: number;
+            }[];
+            growth_per_month_bytes: number | null;
+            attention: {
+                company_id: string;
+                name: string;
+                plan_name: string | null;
+                used_bytes: number;
+                quota_bytes: number | null;
+                /** @enum {string} */
+                quota_source: "override" | "plan" | "none";
+                pct_used: number | null;
+                /** @enum {string} */
+                state: "ok" | "warning" | "full" | "unlimited";
+                growth_30d_bytes: number | null;
+            }[];
+            /** Format: date-time */
+            measured_at: string;
+        };
+        PlatformStorageTenantsDto: {
+            data: {
+                company_id: string;
+                name: string;
+                plan_name: string | null;
+                used_bytes: number;
+                quota_bytes: number | null;
+                /** @enum {string} */
+                quota_source: "override" | "plan" | "none";
+                pct_used: number | null;
+                /** @enum {string} */
+                state: "ok" | "warning" | "full" | "unlimited";
+                growth_30d_bytes: number | null;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
+        SetStorageQuotaDto: {
+            /** @enum {string} */
+            mode: "plan" | "override";
+            quota_bytes?: number | null;
+            /** @default 0 */
+            grace_pct: number;
+            reason: string;
+        };
+        PurgeOptionsDto: {
+            data: {
+                /** @enum {string} */
+                kind: "conversation_media" | "trash" | "large_files" | "call_recordings" | "imports" | "offboarding";
+                up_to_bytes: number;
+                files: number;
+            }[];
+        };
+        LargeFilesDto: {
+            data: {
+                key: string;
+                category: string;
+                size_bytes: number;
+                mime_type: string | null;
+                /** Format: date-time */
+                created_at: string;
+                references: {
+                    [key: string]: number;
+                };
+                /** @enum {string|null} */
+                kept_reason: "evidence" | "in_use" | null;
+            }[];
+        };
+        CreatePurgePreviewDto: {
+            /** @enum {string} */
+            kind: "conversation_media" | "trash" | "large_files" | "call_recordings" | "imports" | "offboarding";
+            /** @default {} */
+            filter: {
+                /** @enum {string} */
+                origin?: "customer" | "team";
+                mime_classes?: ("video" | "audio" | "image" | "document")[];
+                older_than_days?: number;
+                keys?: string[];
+            };
+        };
+        PurgePreviewDto: {
+            preview_id: string;
+            /** @enum {string} */
+            kind: "conversation_media" | "trash" | "large_files" | "call_recordings" | "imports" | "offboarding";
+            files: number;
+            bytes: number;
+            by_category: {
+                [key: string]: {
+                    files: number;
+                    bytes: number;
+                };
+            };
+            kept: {
+                evidence: {
+                    files: number;
+                    bytes: number;
+                };
+                in_use: {
+                    files: number;
+                    bytes: number;
+                };
+                shared: {
+                    files: number;
+                    bytes: number;
+                };
+            };
+            sample: {
+                key: string;
+                category: string;
+                size_bytes: number;
+                mime_type: string | null;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+            /** Format: date-time */
+            cutoff: string;
+            /** Format: date-time */
+            expires_at: string;
+            confirm_phrase: string;
+        };
+        ExecutePurgeDto: {
+            confirm_phrase: string;
+            password: string;
+        };
+        PurgeRunsDto: {
+            data: {
+                id: string;
+                company_id: string;
+                kind: string;
+                status: string;
+                filter: {
+                    [key: string]: unknown;
+                };
+                files: number;
+                bytes: number;
+                deleted_files: number;
+                freed_bytes: number;
+                error: string | null;
+                created_by: string | null;
+                executed_by: string | null;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                executed_at: string | null;
+                /** Format: date-time */
+                finished_at: string | null;
+            }[];
+        };
+        PurgeRunDto: {
+            id: string;
+            company_id: string;
+            kind: string;
+            status: string;
+            filter: {
+                [key: string]: unknown;
+            };
+            files: number;
+            bytes: number;
+            deleted_files: number;
+            freed_bytes: number;
+            error: string | null;
+            created_by: string | null;
+            executed_by: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            executed_at: string | null;
+            /** Format: date-time */
+            finished_at: string | null;
+        };
+        RetentionPoliciesDto: {
+            data: {
+                /** @enum {string} */
+                kind: "conversation_media" | "call_recordings" | "imports";
+                /** @default {} */
+                filter: {
+                    /** @enum {string} */
+                    origin?: "customer" | "team";
+                    mime_classes?: ("video" | "audio" | "image" | "document")[];
+                };
+                max_age_days: number;
+                id: string;
+                enabled: boolean;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+            recommended: {
+                /** @enum {string} */
+                kind: "conversation_media" | "call_recordings" | "imports";
+                /** @default {} */
+                filter: {
+                    /** @enum {string} */
+                    origin?: "customer" | "team";
+                    mime_classes?: ("video" | "audio" | "image" | "document")[];
+                };
+                max_age_days: number;
+            }[];
+        };
+        ReplaceRetentionPoliciesDto: {
+            policies: {
+                /** @enum {string} */
+                kind: "conversation_media" | "call_recordings" | "imports";
+                /** @default {} */
+                filter: {
+                    /** @enum {string} */
+                    origin?: "customer" | "team";
+                    mime_classes?: ("video" | "audio" | "image" | "document")[];
+                };
+                max_age_days: number;
+                enabled: boolean;
+            }[];
         };
         ReceivablesListDto: {
             data: {
@@ -26069,6 +26683,29 @@ export interface operations {
             };
         };
     };
+    ChannelsController_connectTelegram_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConnectTelegramBotDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChannelDto"];
+                };
+            };
+        };
+    };
     ChannelsController_list_v1: {
         parameters: {
             query?: never;
@@ -26172,6 +26809,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ChannelDto"];
+                };
+            };
+        };
+    };
+    ChannelsController_telegramQr_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TelegramQrDto"];
                 };
             };
         };
@@ -34112,6 +34770,328 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ContactReachabilityDto"];
                 };
+            };
+        };
+    };
+    StorageController_summary_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenantStorageSummaryDto"];
+                };
+            };
+        };
+    };
+    PlatformStorageController_overview_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformStorageOverviewDto"];
+                };
+            };
+        };
+    };
+    PlatformStorageController_tenants_v1: {
+        parameters: {
+            query?: {
+                q?: string;
+                state?: "ok" | "warning" | "full" | "unlimited";
+                sort?: "pct_desc" | "used_desc" | "growth_desc" | "name_asc";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformStorageTenantsDto"];
+                };
+            };
+        };
+    };
+    PlatformStorageController_tenant_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenantStorageSummaryDto"];
+                };
+            };
+        };
+    };
+    PlatformStorageController_backfill_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformStorageController_setQuota_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetStorageQuotaDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformStorageController_purgeOptions_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurgeOptionsDto"];
+                };
+            };
+        };
+    };
+    PlatformStorageController_files_v1: {
+        parameters: {
+            query?: {
+                category?: "inbound_media" | "inbound_media_derived" | "history_import" | "outbound_upload" | "quick_action_asset" | "catalog_image" | "catalog_import_file" | "crm_import_file" | "hsm_template_media" | "tts_audio" | "call_recording" | "document_pdf" | "quality" | "platform_asset" | "other";
+                older_than_days?: number;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LargeFilesDto"];
+                };
+            };
+        };
+    };
+    PlatformStorageController_preview_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePurgePreviewDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurgePreviewDto"];
+                };
+            };
+        };
+    };
+    PlatformStorageController_execute_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExecutePurgeDto"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformStorageController_runs_v1: {
+        parameters: {
+            query?: {
+                company_id?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurgeRunsDto"];
+                };
+            };
+        };
+    };
+    PlatformStorageController_run_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurgeRunDto"];
+                };
+            };
+        };
+    };
+    PlatformStorageController_retentionPolicies_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RetentionPoliciesDto"];
+                };
+            };
+        };
+    };
+    PlatformStorageController_replaceRetention_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplaceRetentionPoliciesDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformStorageController_runRetention_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
