@@ -10631,6 +10631,9 @@ export interface components {
                 kind: "no_template_phrases";
             } | {
                 /** @enum {string} */
+                kind: "no_example_echo";
+            } | {
+                /** @enum {string} */
                 kind: "no_split_turn";
             } | {
                 /** @enum {string} */
@@ -10841,6 +10844,9 @@ export interface components {
             } | {
                 /** @enum {string} */
                 kind: "no_template_phrases";
+            } | {
+                /** @enum {string} */
+                kind: "no_example_echo";
             } | {
                 /** @enum {string} */
                 kind: "no_split_turn";
@@ -11183,6 +11189,8 @@ export interface components {
             scenario_ids?: string[];
             concurrency?: number;
             burst_gap_ms?: number;
+            /** @enum {string} */
+            as_channel?: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "telegram";
             /** @enum {string} */
             ai_mode?: "mock" | "real";
             conversations?: number;
