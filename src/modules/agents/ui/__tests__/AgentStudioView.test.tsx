@@ -84,6 +84,7 @@ describe("AgentStudioView", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     voiceSettings.ai_enabled = true;
+    channelsData = CONNECTED;
     getAgentReadiness.mockResolvedValue([]);
   });
 
@@ -150,8 +151,10 @@ describe("AgentStudioView", () => {
     channelsData = [];
     getAgentById.mockResolvedValueOnce(AGENT);
     const { unmount } = renderStudio({ mode: "edit", agentId: "a1" });
-    const connect = await screen.findByRole("link", { name: /Conecta un canal para probarlo/ });
-    expect(connect).toHaveAttribute("href", "/settings/channels");
+    // Telegram: el canal que se conecta en un minuto, sin Meta; los demás, aparte
+    const telegram = await screen.findByRole("link", { name: /Conecta Telegram en 1 minuto/ });
+    expect(telegram).toHaveAttribute("href", "/settings/channels/connect?canal=telegram");
+    expect(screen.getByRole("link", { name: /Otros canales/ })).toHaveAttribute("href", "/settings/channels");
     expect(screen.queryByText(/simulador/i)).toBeNull();
     unmount();
 
@@ -160,7 +163,7 @@ describe("AgentStudioView", () => {
     renderStudio({ mode: "edit", agentId: "a1" });
     const test = await screen.findByRole("link", { name: /Probar en una conversación/ });
     expect(test).toHaveAttribute("href", "/workspace/inbox");
-    expect(screen.queryByRole("link", { name: /Conecta un canal/ })).toBeNull();
+    expect(screen.queryByRole("link", { name: /Conecta Telegram/ })).toBeNull();
   });
 
   it("con la voz de empresa apagada el bloque de voz se deshabilita y explica dónde encenderla", async () => {
