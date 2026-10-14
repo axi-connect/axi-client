@@ -210,8 +210,8 @@
 .pp-app-brand { display: flex; align-items: center; gap: 10px; padding: 0 8px; }
 .pp-app-brand .pp-app-logo { width: 30px; height: 30px; flex: none; border-radius: 9px; display: grid; place-items: center; background: var(--foreground); color: var(--background); font-family: var(--font-nexa), var(--font-poppins), sans-serif; font-weight: 700; font-size: 11.5px; letter-spacing: -0.02em; }
 .pp-app-brand span, .pp-app-me span { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
-.pp-app-brand b, .pp-app-me b { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pp-app-brand small, .pp-app-me small { font-size: 11px; color: var(--pj-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pp-app-brand b, .pp-app-me b { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: clip; }
+.pp-app-brand small, .pp-app-me small { font-size: 11px; color: var(--pj-dim); white-space: nowrap; overflow: hidden; text-overflow: clip; }
 .pp-app-nav { display: flex; flex-direction: column; gap: 2px; flex: 1; min-height: 0; }
 .pp-app-group { display: flex; flex-direction: column; gap: 2px; margin-top: 12px; }
 .pp-app-group-label { padding: 0 10px 4px; font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--pj-dim); }
@@ -297,7 +297,7 @@
 .pp-cobros2-row[data-tone="ok"] .pp-cobros2-dot { background: var(--axi-success); }
 .pp-cobros2-who { display: flex; flex-direction: column; min-width: 0; }
 .pp-cobros2-who b { font-size: 13.5px; font-weight: 600; }
-.pp-cobros2-who small, .pp-cobros2-state { font-size: 12px; color: var(--pj-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pp-cobros2-who small, .pp-cobros2-state { font-size: 12px; color: var(--pj-muted); white-space: nowrap; overflow: hidden; text-overflow: clip; }
 .pp-cobros2-amt { font-size: 14px; }
 .pp-cobros2-isle { display: flex; flex-direction: column; gap: 6px; min-height: 0; }
 .pp-cobros2-isle-name { font-size: 22px; margin-top: 8px; }
@@ -385,7 +385,7 @@
 .pp-inbox2-rowtop { display: flex; justify-content: space-between; gap: 6px; }
 .pp-inbox2-rowtop b { font-size: 13px; font-weight: 600; }
 .pp-inbox2-rowtop small { font-size: 11px; color: var(--pj-dim); }
-.pp-inbox2-prev { font-size: 12px; color: var(--pj-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pp-inbox2-prev { font-size: 12px; color: var(--pj-muted); white-space: nowrap; overflow: hidden; text-overflow: clip; }
 .pp-inbox2-holder { align-self: flex-start; margin-top: 4px; height: 20px; padding: 0 8px; border-radius: 999px; display: inline-flex; align-items: center; font-size: 10.5px; color: var(--pj-tone); background: color-mix(in srgb, var(--pj-tone) 12%, transparent); }
 .pp-inbox2-conv { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
 .pp-inbox2-head { display: flex; align-items: center; gap: 10px; height: 64px; padding: 0 18px; border-bottom: 1px solid color-mix(in srgb, var(--foreground) 7%, transparent); }
@@ -485,7 +485,7 @@
 .pp-fcall-title b { font-family: var(--font-nexa), var(--font-poppins), sans-serif; font-weight: 700; font-size: 24px; letter-spacing: -0.02em; line-height: 1; }
 .pp-fcall-pill { height: 22px; padding: 0 9px; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 500; color: var(--axi-success); background: color-mix(in srgb, var(--axi-success) 12%, transparent); white-space: nowrap; }
 .pp-fcall-pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-.pp-fcall-head small { grid-column: 1; font-size: 12px; color: var(--pj-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pp-fcall-head small { grid-column: 1; font-size: 12px; color: var(--pj-dim); white-space: nowrap; overflow: hidden; text-overflow: clip; }
 .pp-fcall-action { grid-column: 2; grid-row: 2 / span 2; align-self: center; height: 32px; padding: 0 14px; border-radius: 10px; display: inline-flex; align-items: center; font-size: 12.5px; font-weight: 500; border: 1px solid color-mix(in srgb, var(--foreground) 14%, transparent); }
 .pp-fcall-grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 14px; flex: 1; min-height: 0; }
 .pp-fcall-main { display: flex; flex-direction: column; gap: 12px; min-height: 0; }
@@ -590,4 +590,19 @@
 /* Pantallas bajas: la ventana manda; la línea «qué hace por ti» cede su sitio. */
 @media (max-height: 760px) {
   .pp[data-mode="pinned"] .pp-line, .pp[data-mode="tabs"] .pp-line { display: none; }
+}
+
+/* Truncado con difuminado (regla del dueño 2026-10-14, ver `truncate` en
+   globals.css): sin «…», el final se desvanece solo si el texto desborda. */
+@supports (animation-timeline: scroll()) {
+  .pp-app-brand b, .pp-app-me b,
+  .pp-app-brand small, .pp-app-me small,
+  .pp-cobros2-who small, .pp-cobros2-state,
+  .pp-inbox2-prev,
+  .pp-fcall-head small {
+    -webkit-mask-image: var(--truncate-mask-inline);
+    mask-image: var(--truncate-mask-inline);
+    animation: truncate-fade linear both;
+    animation-timeline: scroll(self inline);
+  }
 }

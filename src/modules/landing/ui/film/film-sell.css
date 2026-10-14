@@ -85,7 +85,7 @@ html:not(.dark) .film-photo-tile:not([data-anim="photo-slot"]) {
   border-color: color-mix(in srgb, var(--foreground) 12%, transparent);
   box-shadow: 0 6px 14px -8px rgb(0 0 0 / 0.18);
 }
-.film-photo-tile-name { font-size: 12.5px; font-weight: 600; color: var(--foreground); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.film-photo-tile-name { font-size: 12.5px; font-weight: 600; color: var(--foreground); overflow: hidden; text-overflow: clip; white-space: nowrap; }
 .film-photo-tile-price { font-size: 11.5px; color: color-mix(in srgb, var(--foreground) 50%, transparent); font-variant-numeric: tabular-nums; }
 /* El producto exacto: fuera del plano inclinado, así queda de frente. */
 .film-photo-match {
@@ -444,7 +444,7 @@ html:not(.dark) .film-photo-tile:not([data-anim="photo-slot"]) {
 .film-team-row { display: flex; align-items: center; gap: 9px; padding: 8px; border-radius: 10px; min-width: 0; }
 .film-team-row.is-active { background: color-mix(in srgb, var(--foreground) 6%, transparent); }
 .film-team-row-avatar { width: 26px; height: 26px; flex-shrink: 0; border-radius: 50%; background: color-mix(in srgb, var(--foreground) 15.4%, var(--background)); }
-.film-team-row-name { display: block; font-size: 11.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.film-team-row-name { display: block; font-size: 11.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: clip; }
 .film-team-row-last { display: block; font-size: 10px; line-height: 1.35; color: var(--film-dim-text, var(--film-dim)); }
 .film-team-thread { display: flex; flex-direction: column; min-width: 0; }
 .film-team-thread-top { min-height: 46px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; padding: 8px 14px; border-bottom: 1px solid color-mix(in srgb, var(--foreground) 7%, transparent); font-size: 12.5px; }
@@ -503,4 +503,16 @@ html:not(.dark) .film-team-back { background: rgb(124 58 237 / 0.1); color: #6d2
 
 @media (prefers-reduced-motion: reduce) {
   .film-team-mode, .film-team-return { transition: none; }
+}
+
+/* Truncado con difuminado (regla del dueño 2026-10-14, ver `truncate` en
+   globals.css): sin «…», el final se desvanece solo si el texto desborda. */
+@supports (animation-timeline: scroll()) {
+  .film-photo-tile-name,
+  .film-team-row-name {
+    -webkit-mask-image: var(--truncate-mask-inline);
+    mask-image: var(--truncate-mask-inline);
+    animation: truncate-fade linear both;
+    animation-timeline: scroll(self inline);
+  }
 }

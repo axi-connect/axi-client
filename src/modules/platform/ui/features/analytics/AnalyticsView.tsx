@@ -90,7 +90,7 @@ function TriageTab() {
               <ul className="space-y-1.5">
                 {data.alerts_by_company.map((entry) => (
                   <li key={entry.company_id} className="flex items-center justify-between gap-2 text-sm">
-                    <span className="truncate">{entry.company_name ?? `${entry.company_id.slice(0, 8)}…`}</span>
+                    <span className="truncate">{entry.company_name ?? `${entry.company_id.slice(0, 8)}`}</span>
                     <span className="shrink-0 tabular-nums text-muted-foreground">
                       {entry.triggered > 0 ? (
                         <span className="font-medium text-warning">{entry.triggered} ⚠</span>

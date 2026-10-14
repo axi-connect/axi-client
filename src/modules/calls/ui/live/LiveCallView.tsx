@@ -164,7 +164,9 @@ export function LiveCallView({
                 <p className="truncate text-xs text-muted-foreground">
                   {pending.length === 0
                     ? `${callTypeLabel(call.call_type)} · última etapa`
-                    : `faltan ${pending.slice(0, 2).join(" y ")}${pending.length > 2 ? "…" : ""}`}
+                    : pending.length > 2
+                      ? `faltan ${pending.slice(0, 2).join(", ")} y ${String(pending.length - 2)} más`
+                      : `faltan ${pending.join(" y ")}`}
                 </p>
               </BentoTile>
             )}

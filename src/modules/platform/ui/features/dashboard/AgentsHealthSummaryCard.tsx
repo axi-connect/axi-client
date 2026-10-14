@@ -47,7 +47,7 @@ export function AgentsHealthSummaryCard() {
               >
                 <span className="font-medium">{agent.agent_name}</span>
                 <span className="ml-1.5 text-xs text-muted-foreground">
-                  {agent.company_name ?? `${agent.company_id.slice(0, 8)}…`}
+                  {agent.company_name ?? `${agent.company_id.slice(0, 8)}`}
                 </span>
               </Link>
               <span className="flex shrink-0 items-center gap-3">

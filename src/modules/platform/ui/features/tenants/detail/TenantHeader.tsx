@@ -212,7 +212,7 @@ export function TenantHeader({ tenantId }: { tenantId: string }) {
                 aria-label={`Copiar id ${tenant.id}`}
                 className="inline-flex h-6 items-center gap-1 rounded-md px-1 font-mono text-xs transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
               >
-                {tenant.id.slice(0, 8)}…
+                {tenant.id.slice(0, 8)}
                 {copied ? <Check aria-hidden="true" className="size-3.5 text-success" /> : <Copy aria-hidden="true" className="size-3.5" />}
               </button>
             </span>

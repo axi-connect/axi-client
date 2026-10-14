@@ -266,11 +266,11 @@ describe("el 507 storage/quota_exceeded", () => {
     expect(readQuotaExceeded(null)).toBeNull();
   });
 
-  it("título de la píldora ≤ 34 caracteres, con el nombre recortado", () => {
+  it("título de la píldora con el nombre entero: lo corta la píldora con difuminado, sin «…»", () => {
     expect(quotaNoticeTitle("promo.jpg")).toBe("No subimos «promo.jpg»");
     const long = quotaNoticeTitle("catalogo-completo-temporada-navidad-2026.pdf");
-    expect(long.length).toBeLessThanOrEqual(34);
-    expect(long.endsWith("…»")).toBe(true);
+    expect(long).toBe("No subimos «catalogo-completo-temporada-navidad-2026.pdf»");
+    expect(long).not.toContain("…");
     expect(quotaNoticeTitle(null)).toBe("No subimos el archivo");
   });
 

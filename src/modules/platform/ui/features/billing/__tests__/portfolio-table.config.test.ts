@@ -44,7 +44,7 @@ describe("toPortfolioRow", () => {
     // Es una pantalla de cobranza: una fila sin identificar no sirve para nada,
     // y nadie llama a un uuid completo.
     const row = toPortfolioRow(invoice({ company_name: null }), NOW);
-    expect(row.company).toBe("018f0000…");
+    expect(row.company).toBe("018f0000");
     expect(row.company_id).toBe("018f0000-0000-7000-8000-0000000000c1");
   });
 

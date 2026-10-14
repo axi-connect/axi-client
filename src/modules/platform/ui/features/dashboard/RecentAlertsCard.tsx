@@ -40,7 +40,7 @@ export function RecentAlertsCard() {
               >
                 <span className="font-mono text-xs">{alert.rule}</span>
                 <span className="ml-1.5 text-xs text-muted-foreground">
-                  {alert.company_name ?? `${alert.company_id.slice(0, 8)}…`}
+                  {alert.company_name ?? `${alert.company_id.slice(0, 8)}`}
                 </span>
               </Link>
               <RelativeDate iso={alert.created_at} className="shrink-0 text-xs text-muted-foreground" />

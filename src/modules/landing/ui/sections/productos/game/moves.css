@@ -33,7 +33,7 @@
 }
 .pj-move-glyph { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; background: var(--pj-surface-2); }
 .pj-move-lbl { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 15px; font-weight: 500; line-height: 1.2; }
-.pj-move-lbl small { font-size: 12.5px; font-weight: 400; color: var(--pj-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pj-move-lbl small { font-size: 12.5px; font-weight: 400; color: var(--pj-dim); white-space: nowrap; overflow: hidden; text-overflow: clip; }
 .pj-move-check {
   display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%;
   border: 1px solid color-mix(in srgb, var(--foreground) 18%, transparent);
@@ -125,4 +125,15 @@
 @media (prefers-reduced-motion: reduce) {
   .pj-move, .pj-prog-track i, .pj-prog-chips li { transition: none; }
   .pj-move[data-state="tx"] .pj-move-check, .pj-finish, .pj-game[data-landed] .pj-greet-typing, .pj-game[data-landed] [data-greeting] { animation: none; }
+}
+
+/* Truncado con difuminado (regla del dueño 2026-10-14, ver `truncate` en
+   globals.css): sin «…», el final se desvanece solo si el texto desborda. */
+@supports (animation-timeline: scroll()) {
+  .pj-move-lbl small {
+    -webkit-mask-image: var(--truncate-mask-inline);
+    mask-image: var(--truncate-mask-inline);
+    animation: truncate-fade linear both;
+    animation-timeline: scroll(self inline);
+  }
 }

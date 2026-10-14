@@ -76,7 +76,7 @@ export function AlertsTable({ alerts }: { alerts: PlatformAlert[] }) {
                 )}
               </TableCell>
               <TableCell className="text-muted-foreground">
-                {alert.company_name ?? `${alert.company_id.slice(0, 8)}…`}
+                {alert.company_name ?? `${alert.company_id.slice(0, 8)}`}
               </TableCell>
               <TableCell><ThresholdBar alert={alert} /></TableCell>
               <TableCell className="text-xs text-muted-foreground">

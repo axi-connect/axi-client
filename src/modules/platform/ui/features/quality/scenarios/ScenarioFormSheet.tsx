@@ -226,7 +226,7 @@ export function ScenarioFormSheet({ open, onOpenChange, mode, scenario, onClone,
           <div className="mb-4 space-y-2">
             <Alert variant="info">
               <AlertDescription>
-                Borrador generado con IA a partir de la conversación {draft.source.conversation_id.slice(0, 8)}… (
+                Borrador generado con IA a partir de la conversación {draft.source.conversation_id.slice(0, 8)} (
                 {draft.source.messages} mensajes · {draft.source.outcome ?? "sin pedido ni cita"}). El transcript se
                 enmascaró antes de enviarlo al modelo; revísalo: nada se guarda hasta que pulses Guardar.
               </AlertDescription>
@@ -240,7 +240,7 @@ export function ScenarioFormSheet({ open, onOpenChange, mode, scenario, onClone,
                   </p>
                   <ul className="mt-1 list-disc space-y-0.5 pl-4 font-mono text-xs">
                     {draft.dropped.map((entry, index) => (
-                      <li key={index}>{droppedCriterionText(entry)}</li>
+                      <li key={index} className="line-clamp-2 break-all">{droppedCriterionText(entry)}</li>
                     ))}
                   </ul>
                 </AlertDescription>

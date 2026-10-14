@@ -69,7 +69,7 @@
 .pj-wall-av[data-tint="violet"] { --tint: var(--axi-violet); }
 .pj-wall-av[data-tint="amber"] { --tint: var(--axi-amber); }
 .pj-wall-av[data-tint="ok"] { --tint: var(--axi-success); }
-.pj-wall-biz { flex: 1; min-width: 0; font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pj-wall-biz { flex: 1; min-width: 0; font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: clip; }
 .pj-wall-ch { width: 14px; height: 14px; flex: none; }
 .pj-wall-text { margin: 6px 0 0; font-size: 12.5px; line-height: 1.42; text-wrap: pretty; }
 .pj-wall-by { margin: 6px 0 0; display: flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 500; opacity: 0.62; }
@@ -89,4 +89,15 @@
   .pj-wall-col-last { display: none; }
   .pj-wall-card { padding: 9px 10px 8px; border-radius: 14px; }
   .pj-wall-text { font-size: 12px; }
+}
+
+/* Truncado con difuminado (regla del dueño 2026-10-14, ver `truncate` en
+   globals.css): sin «…», el final se desvanece solo si el texto desborda. */
+@supports (animation-timeline: scroll()) {
+  .pj-wall-biz {
+    -webkit-mask-image: var(--truncate-mask-inline);
+    mask-image: var(--truncate-mask-inline);
+    animation: truncate-fade linear both;
+    animation-timeline: scroll(self inline);
+  }
 }

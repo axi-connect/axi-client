@@ -557,9 +557,9 @@ export function teamCopyFailed(recipients: readonly DeliveryRecipient[]): boolea
   return recipients.some((recipient) => recipient.role === "cc" && recipient.status === "failed");
 }
 
-/** «re_8f2c…»: el id del proveedor, corto para la ficha (el completo va al copiar). */
+/** «re_8f2c1a»: el id del proveedor, corto para la ficha (el completo va al copiar). */
 export function shortMessageId(id: string): string {
-  return id.length <= 10 ? id : `${id.slice(0, 8)}…`;
+  return id.length <= 10 ? id : `${id.slice(0, 8)}`;
 }
 
 // ------------------------------------------------------------------ vista previa del kit

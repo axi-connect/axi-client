@@ -182,8 +182,8 @@ export function parseIntentSuggested(raw: unknown): IntentSuggested | null {
 export function itemTitle(kind: DatasetKind, item: Pick<DatasetItem, "id" | "input">): string {
   if (kind === "catalog_search") return parseSearchInput(item.input)?.query ?? "(consulta ilegible)";
   if (kind === "intent") {
-    const text = parseIntentInput(item.input)?.text ?? "(texto ilegible)";
-    return text.length > 60 ? `${text.slice(0, 59)}…` : text;
+    // Entero: el corte lo hace la vista con `truncate` (difuminado, sin «…»)
+    return parseIntentInput(item.input)?.text ?? "(texto ilegible)";
   }
   return `Foto ${item.id.slice(-4)}`;
 }

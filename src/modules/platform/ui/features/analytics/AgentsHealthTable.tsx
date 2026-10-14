@@ -112,7 +112,7 @@ export function AgentsHealthTable({ agents }: { agents: AgentHealth[] }) {
             >
               <TableCell className="font-medium">{agent.agent_name}</TableCell>
               <TableCell className="text-muted-foreground">
-                {agent.company_name ?? `${agent.company_id.slice(0, 8)}…`}
+                {agent.company_name ?? `${agent.company_id.slice(0, 8)}`}
               </TableCell>
               <TableCell className="text-right tabular-nums">{agent.turns.toLocaleString("es-CO")}</TableCell>
               <TableCell className="text-right">

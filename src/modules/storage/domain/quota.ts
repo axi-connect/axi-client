@@ -53,16 +53,14 @@ export function readQuotaExceeded(error: unknown): QuotaExceededDetails | null {
 /** El tooltip del clip y de los botones de subir cuando el espacio está lleno. */
 export const UPLOADS_BLOCKED_HINT = "Tu espacio está lleno. Pide más espacio a un administrador o a soporte.";
 
-/** Título de la píldora ≤ 34 caracteres (DESIGN-SYSTEM §9.4): el nombre se recorta con «…». */
-const TITLE_MAX = 34;
-const TITLE_FRAME = "No subimos «»".length;
-
+/**
+ * Título de la píldora (DESIGN-SYSTEM §9.4). El nombre va entero: la píldora
+ * controla su ancho y lo corta con difuminado (`.site-island-title`), sin «…».
+ */
 export function quotaNoticeTitle(fileName?: string | null): string {
   const name = (fileName ?? "").trim();
   if (name === "") return "No subimos el archivo";
-  const room = TITLE_MAX - TITLE_FRAME;
-  const shown = name.length <= room ? name : `${name.slice(0, room - 1)}…`;
-  return `No subimos «${shown}»`;
+  return `No subimos «${name}»`;
 }
 
 /**
@@ -106,7 +104,7 @@ export function quotaBatchNotice(
   const what =
     count <= 1
       ? names[0] !== undefined
-        ? `No subimos «${names[0].length > 40 ? `${names[0].slice(0, 39)}…` : names[0]}».`
+        ? `No subimos «${names[0]}».`
         : // Sin nombre: la cola de fotos avisa una vez por lote y no sabe cuántas eran
           "No se subieron los archivos nuevos."
       : `No subimos ${String(count)} archivos.`;

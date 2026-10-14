@@ -3154,3 +3154,87 @@ button.assistant-island--s:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   [data-reveal] { opacity: 1 !important; transform: none !important; }
 }
+
+/* Truncado con difuminado (regla del dueño, 2026-10-14: «un truncate
+   profesional, nada de tres puntos, sino un difuminado que se funda con el
+   tema»). Redefine `truncate` y `line-clamp-*` de Tailwind: cada uso los
+   hereda.
+   - Sin «…»: el texto se corta y su final se desvanece con una máscara
+     (`mask-image`), que funciona sobre cualquier fondo y en los dos temas.
+   - SOLO cuando desborda: la máscara la mide una animación ligada al scroll
+     del propio elemento. Si el texto cabe no hay scroll, la línea de tiempo
+     está inactiva y `--truncate-fade` se queda en 0: sin máscara.
+   - Sin soporte de `animation-timeline`, corte limpio, sin puntos.
+   Para CSS propio (fuera de Tailwind) usar las mismas declaraciones:
+   `text-overflow: clip` y, dentro del @supports, `mask-image:
+   var(--truncate-mask-inline)` con la animación. */
+@property --truncate-fade {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@keyframes truncate-fade {
+  from { --truncate-fade: 2rem; }
+  to { --truncate-fade: 2rem; }
+}
+:root {
+  --truncate-mask-inline: linear-gradient(
+    to right,
+    #000 calc(100% - var(--truncate-fade)),
+    transparent
+  );
+}
+
+/* Sin capa a propósito: Tailwind ordena sus utilidades y su `.truncate` (con
+   `ellipsis`) puede salir después de una `@utility` propia. El CSS sin capa
+   gana a `@layer utilities` siempre; el corte y el `nowrap` los pone la suya. */
+.truncate {
+  text-overflow: clip;
+  @supports (animation-timeline: scroll()) {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - var(--truncate-fade)), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - var(--truncate-fade)), transparent);
+    animation: truncate-fade linear both;
+    animation-timeline: scroll(self inline);
+  }
+}
+
+/* Multilínea: con `-webkit-line-clamp` Chrome pinta «…» justo después de la
+   última palabra que cabe, a mitad de renglón, aunque se le pida `clip`. Aquí
+   el bloque se limita a N renglones (`max-height: N·1lh`, sin `-webkit-box`:
+   sin «…») y el ÚLTIMO renglón se difumina hacia abajo (sigue legible y se
+   nota que el texto continúa, termine donde termine el renglón); los de
+   arriba quedan intactos. Se activa solo si el contenido desborda en vertical, con la misma
+   línea de tiempo. `!important` en la forma porque el `line-clamp-N` de
+   Tailwind sale después y volvería a `-webkit-box`; `line-clamp-none` nunca
+   convive con un `line-clamp-N` (tailwind-merge lo quita). Con relleno
+   vertical en el mismo elemento el alto no cuadra: el relleno va en un padre. */
+@utility line-clamp-* {
+  overflow: hidden;
+  display: block !important;
+  -webkit-line-clamp: unset !important;
+  max-height: calc(--value(integer) * 1lh) !important;
+  @supports (animation-timeline: scroll()) {
+    -webkit-mask-image:
+      linear-gradient(#000, #000),
+      linear-gradient(#000, rgb(0 0 0 / calc(1 - var(--truncate-fade) / 2.5rem)));
+    -webkit-mask-size:
+      100% calc(100% - 1lh),
+      100% 1lh;
+    -webkit-mask-position:
+      top,
+      bottom;
+    -webkit-mask-repeat: no-repeat;
+    mask-image:
+      linear-gradient(#000, #000),
+      linear-gradient(#000, rgb(0 0 0 / calc(1 - var(--truncate-fade) / 2.5rem)));
+    mask-size:
+      100% calc(100% - 1lh),
+      100% 1lh;
+    mask-position:
+      top,
+      bottom;
+    mask-repeat: no-repeat;
+    animation: truncate-fade linear both;
+    animation-timeline: scroll(self block);
+  }
+}

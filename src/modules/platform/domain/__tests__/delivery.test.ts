@@ -198,7 +198,7 @@ describe("entrega enviada", () => {
   });
 
   it("acorta el id del mensaje para la ficha", () => {
-    expect(shortMessageId("re_8f2c9a77b")).toBe("re_8f2c9…");
+    expect(shortMessageId("re_8f2c9a77b")).toBe("re_8f2c9");
     expect(shortMessageId("re_1")).toBe("re_1");
   });
 });

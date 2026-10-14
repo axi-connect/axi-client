@@ -411,7 +411,7 @@
   background: var(--pl-fill);
 }
 .film-pilot-row[data-skipped] { opacity: 0.55; }
-.film-pilot-row-name { font-size: 12.5px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.film-pilot-row-name { font-size: 12.5px; min-width: 0; overflow: hidden; text-overflow: clip; white-space: nowrap; }
 .film-pilot-chip {
   flex: none;
   font-size: 11.5px;
@@ -521,4 +521,15 @@
   /* El botón reserva su sitio siempre: la cabina no cambia de alto al hacer scroll. */
   .film-pilot .film-pilot-approve-mob { display: block; text-align: center; font-size: 14px; padding: 13px; visibility: hidden; }
   .film-pilot[data-phase="lot"] .film-pilot-approve-mob { visibility: visible; }
+}
+
+/* Truncado con difuminado (regla del dueño 2026-10-14, ver `truncate` en
+   globals.css): sin «…», el final se desvanece solo si el texto desborda. */
+@supports (animation-timeline: scroll()) {
+  .film-pilot-row-name {
+    -webkit-mask-image: var(--truncate-mask-inline);
+    mask-image: var(--truncate-mask-inline);
+    animation: truncate-fade linear both;
+    animation-timeline: scroll(self inline);
+  }
 }

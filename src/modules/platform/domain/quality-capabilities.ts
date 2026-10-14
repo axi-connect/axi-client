@@ -107,5 +107,6 @@ export function draftCriteria(draft: Pick<ScenarioDraft, "success_criteria">): S
 /** Texto corto de un criterio descartado por el borrador. */
 export function droppedCriterionText(entry: ScenarioDraft["dropped"][number]): string {
   const raw = typeof entry.criterion === "object" && entry.criterion !== null ? JSON.stringify(entry.criterion) : String(entry.criterion);
-  return `${raw.length > 80 ? `${raw.slice(0, 79)}…` : raw} — ${entry.reason}`;
+  // Entero: el corte lo hace la vista (difuminado, sin «…»)
+  return `${raw} — ${entry.reason}`;
 }

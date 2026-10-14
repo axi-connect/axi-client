@@ -55,7 +55,7 @@ const UUID_LIKE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}
  */
 function TenantCrumb({ id }: { id: string }) {
   const { data: tenant } = useTenantQuery(id);
-  return <>{tenant?.name ?? `${id.slice(0, 8)}…`}</>;
+  return <>{tenant?.name ?? `${id.slice(0, 8)}`}</>;
 }
 
 export function PlatformHeader() {

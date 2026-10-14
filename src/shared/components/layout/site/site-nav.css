@@ -219,7 +219,7 @@ html:not(.dark) .site-nav:not(.dark) .site-glass::before { display: none; }
 .site-ring .track { stroke: color-mix(in srgb, var(--foreground) 14%, transparent); }
 .site-ring .value { stroke: var(--sn-fg); stroke-linecap: round; transition: stroke-dasharray 0.2s linear; }
 .site-island-text { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
-.site-island-title { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.site-island-title { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: clip; }
 .site-island-sub { font-size: 11px; color: var(--sn-dim); white-space: nowrap; }
 .site-island .site-cta { height: 38px; padding: 0 16px; font-size: 13.5px; box-shadow: none; }
 .site-island .site-menu-btn { width: 40px; padding: 0; justify-content: center; background: color-mix(in srgb, var(--foreground) 7%, transparent); }
@@ -247,7 +247,7 @@ html:not(.dark) .site-nav:not(.dark) .site-glass::before { display: none; }
   .site-island[data-toast] .site-island-text > .site-island-title,
   .site-island[data-toast] .site-island-text > .site-island-sub { display: none; }
   .site-island[data-toast] .site-island-alert { display: contents; }
-  .site-island-alert .site-island-sub { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+  .site-island-alert .site-island-sub { max-width: 100%; overflow: hidden; text-overflow: clip; }
 }
 .site-toast-check {
   width: 30px;
@@ -261,8 +261,8 @@ html:not(.dark) .site-nav:not(.dark) .site-glass::before { display: none; }
   justify-content: center;
 }
 .site-toast-text { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
-.site-toast-title { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.site-toast-detail { font-size: 11.5px; color: var(--sn-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.site-toast-title { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: clip; }
+.site-toast-detail { font-size: 11.5px; color: var(--sn-dim); white-space: nowrap; overflow: hidden; text-overflow: clip; }
 .site-toast-when { margin-left: auto; font-size: 11px; color: var(--sn-dim); }
 
 /* ─────────────────────────────── el panel ─────────────────────────────── */
@@ -457,4 +457,18 @@ html:not(.dark) .site-nav:not(.dark) .site-glass::before { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .site-bar, .site-island, .site-toast, .site-btn, .site-btn svg, .site-ring .value { transition: none; }
   .site-panel, .site-sheet { animation: none; }
+}
+
+/* Truncado con difuminado (regla del dueño 2026-10-14, ver `truncate` en
+   globals.css): sin «…», el final se desvanece solo si el texto desborda. */
+@supports (animation-timeline: scroll()) {
+  .site-island-title,
+  .site-island-alert .site-island-sub,
+  .site-toast-title,
+  .site-toast-detail {
+    -webkit-mask-image: var(--truncate-mask-inline);
+    mask-image: var(--truncate-mask-inline);
+    animation: truncate-fade linear both;
+    animation-timeline: scroll(self inline);
+  }
 }

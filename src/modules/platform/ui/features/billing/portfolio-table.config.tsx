@@ -33,7 +33,7 @@ export function toPortfolioRow(invoice: PlatformInvoice, now = new Date()): Port
     company_id: invoice.company_id,
     // Es una pantalla de cobranza y nadie llama a un uuid. Si el backend no
     // resolvió el nombre, se muestra el id truncado antes que una fila anónima.
-    company: invoice.company_name ?? `${invoice.company_id.slice(0, 8)}…`,
+    company: invoice.company_name ?? `${invoice.company_id.slice(0, 8)}`,
     number: invoice.number,
     status: invoice.status,
     due_at: invoice.due_at ?? "",

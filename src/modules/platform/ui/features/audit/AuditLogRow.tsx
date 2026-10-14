@@ -60,7 +60,7 @@ export function AuditLogRow({ log, tenantName, showTenant = true, actorLabel }: 
         </Badge>
         {showTenant && (
           <span className="w-32 shrink-0 truncate text-right text-xs text-muted-foreground">
-            {log.company_id ? tenantName ?? `${log.company_id.slice(0, 8)}…` : "—"}
+            {log.company_id ? tenantName ?? `${log.company_id.slice(0, 8)}` : "—"}
           </span>
         )}
       </button>
@@ -83,7 +83,7 @@ export function AuditLogRow({ log, tenantName, showTenant = true, actorLabel }: 
             )}
             {log.entity_type && (
               <span>
-                entidad <span className="font-mono">{log.entity_type}{log.entity_id ? `/${log.entity_id.slice(0, 8)}…` : ""}</span>
+                entidad <span className="font-mono">{log.entity_type}{log.entity_id ? `/${log.entity_id.slice(0, 8)}` : ""}</span>
               </span>
             )}
           </p>

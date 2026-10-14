@@ -107,7 +107,7 @@
 .film-drum-text { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
 .film-drum-chapter { display: none; font-size: 9.5px; letter-spacing: 0.18em; font-weight: 600; text-transform: uppercase; color: color-mix(in srgb, var(--foreground) 52%, transparent); }
 .film-drum-row[data-centered] .film-drum-chapter { display: block; }
-.film-drum-title { font-size: 14.5px; font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.film-drum-title { font-size: 14.5px; font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: clip; }
 .film-drum-row[data-centered] .film-drum-title {
   font-weight: 600;
   white-space: normal;
@@ -159,4 +159,15 @@
 @media (prefers-reduced-motion: reduce) {
   .film-drum, .film-drum[data-open], .film-drum-row { transition: none; filter: none; }
   .film-drum-toward { animation: none; }
+}
+
+/* Truncado con difuminado (regla del dueño 2026-10-14, ver `truncate` en
+   globals.css): sin «…», el final se desvanece solo si el texto desborda. */
+@supports (animation-timeline: scroll()) {
+  .film-drum-title {
+    -webkit-mask-image: var(--truncate-mask-inline);
+    mask-image: var(--truncate-mask-inline);
+    animation: truncate-fade linear both;
+    animation-timeline: scroll(self inline);
+  }
 }
