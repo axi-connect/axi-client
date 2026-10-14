@@ -13,6 +13,7 @@ import {
   type AgentStatus,
   type AiAgentListItemDTO,
 } from "@/modules/agents/domain/agent";
+import { blockersChipLabel } from "@/modules/agents/domain/readiness";
 import { KIT_CHARACTER } from "@/modules/agents/ui/studio/CharacterPicker";
 import { AssistantAvatar, AssistantStage, type AssistantExpressionName } from "@/shared/components/features/assistant";
 import { Badge } from "@/shared/components/ui/badge";
@@ -47,17 +48,21 @@ export function AgentCard({
   agent,
   channels,
   onDelete,
+  blockers = 0,
   className,
 }: {
   agent: AiAgentListItemDTO;
   /** Canales del tenant; se pintan los que tienen a este agente como predeterminado. */
   channels: ChannelDTO[];
   onDelete: (agent: AiAgentListItemDTO) => void;
+  /** Avisos de la salud del agente que frenan ventas (F11): solo esos llegan a la rejilla. */
+  blockers?: number;
   className?: string;
 }) {
   const used = channels.filter((channel) => channel.default_ai_agent_id === agent.id);
   const role = agent.brief?.role;
   const hasVoice = agentHasVoice(agent);
+  const blockersLabel = blockersChipLabel(blockers);
 
   return (
     <div
@@ -70,7 +75,7 @@ export function AgentCard({
       <Link
         href={`/admin/agents/${agent.id}`}
         className="absolute inset-0 rounded-[20px] focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
-        aria-label={`${agent.name}, ${role ? BRIEF_ROLE_LABELS[role].long.toLowerCase() : "sin rol"}, ${AGENT_STATUS_LABELS[agent.status].toLowerCase()}`}
+        aria-label={`${agent.name}, ${role ? BRIEF_ROLE_LABELS[role].long.toLowerCase() : "sin rol"}, ${AGENT_STATUS_LABELS[agent.status].toLowerCase()}${blockersLabel ? `, ${blockersLabel}` : ""}`}
       />
       <AssistantStage className="[--stage-h:108px] [--stage-w:104px]">
         <AssistantAvatar
@@ -110,6 +115,12 @@ export function AgentCard({
             {hasVoice ? <Mic className="size-3.5" aria-hidden /> : <MicOff className="size-3.5" aria-hidden />}
             {hasVoice ? "Con voz" : "Sin voz"}
           </span>
+          {blockersLabel ? (
+            <span className="inline-flex h-[26px] items-center gap-1.5 rounded-full border border-warning/40 bg-warning/[0.06] px-2.5 text-[12.5px]">
+              <span aria-hidden className="size-[7px] rounded-full bg-warning" />
+              {blockersLabel}
+            </span>
+          ) : null}
         </div>
       </div>
 

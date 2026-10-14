@@ -17,6 +17,7 @@ export function MonthPicker({
   todayKey,
   selected,
   availableDays,
+  marks,
   loading,
   onPick,
   onStepMonth,
@@ -27,6 +28,11 @@ export function MonthPicker({
   selected: DayKey | "";
   /** Días con horarios libres; `null` mientras carga o si no hay horario. */
   availableDays: ReadonlySet<DayKey> | null;
+  /**
+   * S-05: otra marca en lugar de «con horarios libres» (los festivos del
+   * selector de fecha de días especiales, con su punto ámbar).
+   */
+  marks?: { days: ReadonlySet<DayKey>; dotClassName: string; label: string };
   loading: boolean;
   onPick: (day: DayKey) => void;
   onStepMonth: (delta: 1 | -1) => void;
@@ -74,6 +80,7 @@ export function MonthPicker({
           const inMonth = monthOfKey(day) === month;
           const past = day < todayKey;
           const free = availableDays?.has(day) ?? false;
+          const marked = marks?.days.has(day) ?? false;
           const isSelected = day === selected;
           const isToday = day === todayKey;
           return (
@@ -83,7 +90,7 @@ export function MonthPicker({
               disabled={past || !inMonth}
               aria-pressed={isSelected}
               aria-current={isToday ? "date" : undefined}
-              aria-label={`${fmtDayLong(day)}${free ? ", con horarios libres" : ""}`}
+              aria-label={`${fmtDayLong(day)}${free ? ", con horarios libres" : ""}${marked ? `, ${marks?.label.toLowerCase() ?? ""}` : ""}`}
               onClick={() => onPick(day)}
               className="flex h-11 flex-col items-center justify-center gap-0.5 rounded-xl focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:cursor-default"
             >
@@ -101,11 +108,27 @@ export function MonthPicker({
               >
                 {dayNumber(day)}
               </span>
-              <span aria-hidden className={cn("size-1 rounded-full", free && !past && inMonth ? "bg-success" : "bg-transparent")} />
+              <span
+                aria-hidden
+                className={cn(
+                  "size-1 rounded-full",
+                  marked && inMonth
+                    ? marks?.dotClassName
+                    : free && !past && inMonth
+                      ? "bg-success"
+                      : "bg-transparent",
+                )}
+              />
             </button>
           );
         })}
       </div>
+      {marks !== undefined && (
+        <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <span aria-hidden className={cn("size-1.5 rounded-full", marks.dotClassName)} />
+          {marks.label}
+        </p>
+      )}
       {availableDays !== null && (
         <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <span aria-hidden className="size-1.5 rounded-full bg-success" />

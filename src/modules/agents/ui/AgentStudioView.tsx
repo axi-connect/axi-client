@@ -12,12 +12,14 @@ import { applyServerValidation, errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { agentHasVoice, CHARACTER_LABELS, COLOR_LABELS, type AiAgentDTO } from "@/modules/agents/domain/agent";
 import { createAgent, deleteAgent, getAgentById, setAgentIntentions, updateAgent } from "@/modules/agents/infrastructure/services/agent-service.adapter";
+import { useAgentReadiness } from "@/modules/agents/infrastructure/hooks/use-agent-readiness";
 import { useAgent } from "@/modules/agents/infrastructure/stores/agent.context";
 import { AdvancedSection } from "@/modules/agents/ui/studio/AdvancedSection";
 import { agentStudioSchema, type AgentStudioValues } from "@/modules/agents/ui/studio/agent-studio.schema";
 import { agentToStudioValues, defaultModelFor, defaultStudioValues, toAgentDto, toIntentionsDto, toUpdateDto } from "@/modules/agents/ui/studio/agent-studio.mappers";
 import { CharacterPicker } from "@/modules/agents/ui/studio/CharacterPicker";
 import { CharacterStage } from "@/modules/agents/ui/studio/CharacterStage";
+import { ReadinessStrip, ReadyBadge } from "@/modules/agents/ui/studio/ReadinessStrip";
 import { ColorPalette } from "@/modules/agents/ui/studio/ColorPalette";
 import { RulesPanel } from "@/modules/agents/ui/studio/RulesPanel";
 import { SpecsPanel } from "@/modules/agents/ui/studio/SpecsPanel";
@@ -70,6 +72,10 @@ export function AgentStudioView({ mode, agentId = null }: { mode: "create" | "ed
   const [nameFocused, setNameFocused] = useState(false);
   const [previewPlaying, setPreviewPlaying] = useState(false);
   const proudTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Salud del agente (F11 partes críticas): se relee tras cada guardado
+  const [readinessKey, setReadinessKey] = useState(0);
+  const [readinessResolved, setReadinessResolved] = useState(false);
+  const readiness = useAgentReadiness(mode === "edit" ? agentId : null, readinessKey);
 
   const form = useForm<AgentStudioValues>({
     resolver: zodResolver(agentStudioSchema),
@@ -144,6 +150,8 @@ export function AgentStudioView({ mode, agentId = null }: { mode: "create" | "ed
         setAgent(withIntentions);
         form.reset(agentToStudioValues(withIntentions));
         void fetchAgents();
+        setReadinessResolved(false);
+        setReadinessKey((key) => key + 1);
         celebrate();
         void updated;
       } else {
@@ -268,6 +276,7 @@ export function AgentStudioView({ mode, agentId = null }: { mode: "create" | "ed
             // tenant: el botón no promete lo que no hay (QA real F6).
             channels.length > 0 ? (
               <div className="flex flex-wrap items-center gap-2">
+                {readiness !== null && (readiness.length === 0 || readinessResolved) ? <ReadyBadge /> : null}
                 <Button asChild variant="outline" size="sm" className="rounded-full">
                   <Link href="/workspace/inbox">
                     <MessageSquareText className="size-4" aria-hidden />
@@ -313,6 +322,10 @@ export function AgentStudioView({ mode, agentId = null }: { mode: "create" | "ed
           ) : undefined
         }
       />
+
+      {readiness !== null && readiness.length > 0 && !readinessResolved ? (
+        <ReadinessStrip key={readinessKey} agentName={agent?.name ?? title} findings={readiness} onAllResolved={() => setReadinessResolved(true)} />
+      ) : null}
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(320px,372px)_minmax(0,1fr)] lg:gap-8">
         <div className="flex flex-col gap-[18px] lg:sticky lg:top-[74px]">

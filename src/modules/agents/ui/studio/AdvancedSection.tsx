@@ -3,6 +3,7 @@
 import { Settings2 } from "lucide-react";
 import { Controller, type UseFormReturn } from "react-hook-form";
 
+import { cn } from "@/core/lib/utils";
 import { AI_PROVIDER_LABELS, ASSIGNABLE_AI_PROVIDERS, type AiModelDTO, type AssignableAiProvider } from "@/modules/agents/domain/agent";
 import type { IntentionDTO } from "@/modules/agents/domain/intentions";
 import { AgentIntentionsEditor } from "@/modules/agents/ui/components/AgentIntentionsEditor";
@@ -15,22 +16,39 @@ import { Input } from "@/shared/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
 import { Switch } from "@/shared/components/ui/switch";
 
-function Field({ id, label, hint, error, children }: { id: string; label: string; hint?: string; error?: string; children: React.ReactNode }) {
+function Field({
+  id,
+  label,
+  hint,
+  help,
+  error,
+  className,
+  children,
+}: {
+  id: string;
+  label: string;
+  hint?: string;
+  /** Una frase bajo el control: qué hace de verdad este ajuste. */
+  help?: string;
+  error?: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="flex min-w-0 flex-col gap-1.5">
+    <div className={cn("flex min-w-0 flex-col gap-1.5", className)}>
       <label htmlFor={id} className="flex items-baseline justify-between text-[13px] font-medium">
         <span>{label}</span>
         {hint ? <span className="text-xs font-normal text-muted-foreground">{hint}</span> : null}
       </label>
       {children}
-      {error ? <p className="text-xs text-destructive">{error}</p> : null}
+      {error ? <p className="text-xs text-destructive">{error}</p> : help ? <p className="text-xs text-muted-foreground">{help}</p> : null}
     </div>
   );
 }
 
 /**
  * Lo técnico, plegado (D7): proveedor y modelo crudo, temperatura, tokens,
- * especialidades, palabras que escalan, fallos antes de escalar, intenciones y
+ * especialidades, frases que pasan a una persona, fallos antes de escalar, intenciones y
  * la política de voz. Cerrado por defecto: el estudio se lee sin esto.
  */
 export function AdvancedSection({
@@ -107,8 +125,15 @@ export function AdvancedSection({
             <Field id="studio-skills" label="Especialidades" hint="≤ 30">
               <Controller control={form.control} name="skills" render={({ field }) => <OptionsInput inputId="studio-skills" value={field.value} onChange={field.onChange} max={30} maxLength={80} ariaLabel="Nueva especialidad" />} />
             </Field>
-            <Field id="studio-keywords" label="Palabras que escalan" hint="además de las reglas">
-              <Controller control={form.control} name="handoff_keywords" render={({ field }) => <OptionsInput inputId="studio-keywords" value={field.value} onChange={field.onChange} max={50} maxLength={80} ariaLabel="Nueva palabra que escala" />} />
+            {/* F6/F11 partes críticas: una frase escala al instante; una palabra suelta solo avisa al agente */}
+            <Field
+              id="studio-keywords"
+              label="Pasa a una persona si escriben"
+              hint="además de las reglas"
+              help="Una frase («hablar con un asesor») pasa la conversación al instante. Una palabra suelta («asesor») solo le avisa al agente, que decide si el cliente de verdad pide a alguien."
+              className="sm:col-span-2"
+            >
+              <Controller control={form.control} name="handoff_keywords" render={({ field }) => <OptionsInput inputId="studio-keywords" value={field.value} onChange={field.onChange} max={50} maxLength={80} ariaLabel="Nueva frase que pasa a una persona" />} />
             </Field>
             <Field id="studio-max-failures" label="Fallos antes de escalar" hint="1 – 10" error={errors.max_failures?.message}>
               <Input id="studio-max-failures" {...form.register("max_failures")} inputMode="numeric" placeholder="3" className="tabular-nums" />

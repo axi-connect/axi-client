@@ -25,16 +25,20 @@ import {
   CRITERION_FAMILIES,
   CRITERION_KINDS,
   criterionLabel,
+  HOUR_REGEX,
   MAX_CRITERIA,
   SENT_MEDIA_KINDS,
   SENT_MEDIA_LABELS,
   STAGE_KIND_LABELS,
   STAGE_KINDS,
   validateCriteriaSet,
+  WEEKDAY_LABELS,
+  WEEKDAYS,
   type AgentToolName,
   type SentMediaKind,
   type StageKind,
   type SuccessCriterion,
+  type Weekday,
 } from "../../../../domain/quality";
 import { TonePill } from "../shared/premium";
 
@@ -86,6 +90,11 @@ function omit<T extends object, K extends keyof T>(value: T, key: K): Omit<T, K>
   const copy: Partial<T> = { ...value };
   delete copy[key];
   return copy as Omit<T, K>;
+}
+
+/** Lista separada por comas → códigos sin vacíos; vacía = quitar la clave. */
+function codesFrom(value: string): string[] {
+  return value.split(",").map((code) => code.trim()).filter(Boolean);
 }
 
 function numberOr(value: string, fallback: number): number {
@@ -151,7 +160,7 @@ export function CriteriaEditor({ value, onChange, disabled = false }: CriteriaEd
                   onValueChange={(kind) => updateAt(index, blankCriterion(kind as KnownKind))}
                   disabled={disabled}
                 >
-                  <SelectTrigger size="sm" className="w-44 shrink-0 bg-card" aria-label={`Tipo del criterio ${index + 1}`}>
+                  <SelectTrigger size="sm" className="w-auto min-w-44 max-w-full shrink-0 bg-card" aria-label={`Tipo del criterio ${index + 1}`}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -234,19 +243,101 @@ function CriterionFields({
             disabled={disabled}
           />
           <Input
+            type="number"
+            min={1}
+            value={criterion.max_items ?? ""}
+            onChange={(e) =>
+              onChange(e.target.value ? { ...criterion, max_items: Number(e.target.value) } : omit(criterion, "max_items"))
+            }
+            placeholder="Máx. unidades (opcional)"
+            aria-label={`Máximo de unidades del criterio ${n}`}
+            disabled={disabled}
+          />
+          <Input
             value={criterion.product_codes?.join(", ") ?? ""}
             onChange={(e) =>
               onChange({
                 ...criterion,
-                product_codes: e.target.value
-                  ? e.target.value.split(",").map((code) => code.trim()).filter(Boolean)
-                  : undefined,
+                product_codes: e.target.value ? codesFrom(e.target.value) : undefined,
               })
             }
-            placeholder="Productos esperados, separados por coma (opcional)"
+            placeholder="Productos que contiene (opcional)"
             aria-label={`Productos esperados del criterio ${n}`}
             disabled={disabled}
           />
+          <Input
+            value={criterion.exact_product_codes?.join(", ") ?? ""}
+            onChange={(e) => {
+              const codes = codesFrom(e.target.value);
+              onChange(codes.length > 0 ? { ...criterion, exact_product_codes: codes } : omit(criterion, "exact_product_codes"));
+            }}
+            placeholder="SKU exactos, separados por coma (opcional)"
+            aria-label={`SKU exactos del criterio ${n}`}
+            className="font-mono text-xs"
+            disabled={disabled}
+          />
+        </div>
+      );
+    case "appointment_created":
+      return (
+        <div className="space-y-2">
+          <div className="grid gap-2 sm:grid-cols-[1.25fr_1.25fr_1fr_1fr]">
+            <Select
+              value={criterion.expected_weekday ?? NONE}
+              onValueChange={(day) =>
+                onChange(day === NONE ? omit(criterion, "expected_weekday") : { ...criterion, expected_weekday: day as Weekday })
+              }
+              disabled={disabled}
+            >
+              <SelectTrigger aria-label={`Día de la cita del criterio ${n}`}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NONE}>Cualquier día</SelectItem>
+                {WEEKDAYS.map((day) => (
+                  <SelectItem key={day} value={day}>
+                    {WEEKDAY_LABELS[day]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input
+              type="date"
+              value={criterion.expected_date ?? ""}
+              onChange={(e) =>
+                onChange(e.target.value ? { ...criterion, expected_date: e.target.value } : omit(criterion, "expected_date"))
+              }
+              aria-label={`Fecha de la cita del criterio ${n}`}
+              disabled={disabled}
+            />
+            <Input
+              value={criterion.expected_time ?? ""}
+              onChange={(e) => {
+                const time = e.target.value.trim();
+                // Sin hora la holgura no significa nada: se va con ella
+                onChange(time ? { ...criterion, expected_time: time } : omit(omit(criterion, "expected_time"), "tolerance_minutes"));
+              }}
+              placeholder="Hora (HH:mm)"
+              aria-label={`Hora de la cita del criterio ${n}`}
+              aria-invalid={criterion.expected_time !== undefined && !HOUR_REGEX.test(criterion.expected_time)}
+              disabled={disabled}
+            />
+            <Input
+              type="number"
+              min={0}
+              max={720}
+              value={criterion.tolerance_minutes ?? ""}
+              onChange={(e) =>
+                onChange(
+                  e.target.value ? { ...criterion, tolerance_minutes: Number(e.target.value) } : omit(criterion, "tolerance_minutes"),
+                )
+              }
+              placeholder="Holgura (min)"
+              aria-label={`Holgura en minutos del criterio ${n}`}
+              disabled={disabled || criterion.expected_time === undefined}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">Hora local del negocio. Sin día ni fecha basta con que exista la cita.</p>
         </div>
       );
     case "reply_contains":

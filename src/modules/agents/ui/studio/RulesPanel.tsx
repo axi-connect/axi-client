@@ -77,7 +77,8 @@ export function RulesPanel({ form }: { form: UseFormReturn<AgentStudioValues> })
             control={form.control}
             name={`brief.${list.key}`}
             render={({ field, fieldState }) => (
-              <div>
+              // `data-rule-list`: la salud del agente baja aquí a la regla que pide esconder datos
+              <div data-rule-list={list.key}>
                 <RuleList
                   value={field.value}
                   onChange={field.onChange}

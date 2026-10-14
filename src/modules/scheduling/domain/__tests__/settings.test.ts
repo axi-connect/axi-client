@@ -41,15 +41,21 @@ describe("settings — helpers puros", () => {
       min_notice_minutes: 120,
       reminder_offsets_minutes: [60, 1440],
       reminder_channel: "call",
+      closes_on_holidays: true,
+      holiday_country: "CO",
     });
     expect(Object.keys(payload).sort()).toEqual([
+      "closes_on_holidays",
       "default_buffer_minutes",
       "default_duration_minutes",
+      "holiday_country",
       "min_notice_minutes",
       "reminder_channel",
       "reminder_offsets_minutes",
       "slot_capacity",
     ]);
+    // S-05: omitir el interruptor lo apagaría (PUT de sección completa)
+    expect(payload.closes_on_holidays).toBe(true);
     expect(payload.reminder_offsets_minutes).toEqual([1440, 60]);
     // calls F3: omitir el canal lo resetearía a whatsapp — por eso viaja siempre
     expect(payload.reminder_channel).toBe("call");

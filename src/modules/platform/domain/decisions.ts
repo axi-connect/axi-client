@@ -43,6 +43,11 @@ export const PURPOSE_META: Record<DecisionPurpose, { label: string; description:
     label: "Categoría de plantilla",
     description: "Si Meta leerá la plantilla como marketing, utilidad o autenticación",
   },
+  // El «sí» del cliente al total con el veto (regla + Jev); el toque y el «sí» exacto no lo llaman.
+  checkout_confirmation: {
+    label: "El «sí» al total del pedido",
+    description: "Si lo que escribió el cliente confirma el pedido (con la regla de siempre como veto)",
+  },
   custom: { label: "Uso libre", description: "Cualquier otra decisión de un módulo" },
 };
 

@@ -5,7 +5,8 @@ import type { Schemas } from "@/core/api/types";
  *
  * El GET devuelve la vista RESUELTA (defaults del sistema aplicados). El PUT
  * es de SECCIÓN COMPLETA: lo omitido vuelve al default del sistema — el
- * formulario debe enviar SIEMPRE los 5 campos (F3).
+ * formulario debe enviar SIEMPRE todos los campos (F3); entre ellos el
+ * interruptor de festivos y su país (S-05).
  */
 export type SchedulingSettingsDTO = Schemas["SchedulingSettingsDto"];
 export type UpdateSchedulingSettingsDTO = Schemas["UpdateSchedulingSettingsDto"];
@@ -65,6 +66,9 @@ export function buildSettingsPayload(values: {
   reminder_offsets_minutes: number[];
   /** calls F3: canal del recordatorio (whatsapp | call | both). */
   reminder_channel: SchedulingSettingsDTO["reminder_channel"];
+  /** S-05: no atiende en los festivos de `holiday_country` (por defecto el de la empresa). */
+  closes_on_holidays: boolean;
+  holiday_country: string | null;
 }): SchedulingSettingsDTO {
   return {
     slot_capacity: values.slot_capacity,
@@ -73,5 +77,7 @@ export function buildSettingsPayload(values: {
     min_notice_minutes: values.min_notice_minutes,
     reminder_offsets_minutes: normalizeOffsets(values.reminder_offsets_minutes),
     reminder_channel: values.reminder_channel,
+    closes_on_holidays: values.closes_on_holidays,
+    holiday_country: values.holiday_country,
   };
 }

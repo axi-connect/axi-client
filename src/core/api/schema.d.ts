@@ -1748,6 +1748,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/ai-agents/readiness": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AiAgentsController_readinessSummary_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ai-agents/{id}/readiness": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AiAgentsController_agentReadiness_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/ai-agents/{id}": {
         parameters: {
             query?: never;
@@ -2669,6 +2701,54 @@ export interface paths {
         };
         get: operations["SchedulingSettingsController_get_v1"];
         put: operations["SchedulingSettingsController_put_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/scheduling/exceptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ScheduleCalendarController_list_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/scheduling/exceptions/{date}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["ScheduleCalendarController_put_v1"];
+        post?: never;
+        delete: operations["ScheduleCalendarController_remove_v1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/scheduling/closures": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ScheduleCalendarController_closures_v1"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -9224,7 +9304,7 @@ export interface components {
                 readonly requires: string[];
             }[];
             niche_defaults: {
-                [key: string]: ("payment_plans" | "collections" | "fx_quotes" | "documents")[];
+                [key: string]: ("payment_plans" | "collections" | "fx_quotes" | "documents" | "checkout_flow")[];
             };
         };
         SetTenantFeatureDto: {
@@ -10411,13 +10491,21 @@ export interface components {
                 /** @enum {string} */
                 kind: "order_created";
                 min_items?: number;
+                max_items?: number;
                 product_codes?: string[];
+                exact_product_codes?: string[];
             } | {
                 /** @enum {string} */
                 kind: "order_not_created";
             } | {
                 /** @enum {string} */
                 kind: "appointment_created";
+                /** Format: date */
+                expected_date?: string;
+                /** @enum {string} */
+                expected_weekday?: "lunes" | "martes" | "miercoles" | "jueves" | "viernes" | "sabado" | "domingo";
+                expected_time?: string;
+                tolerance_minutes?: number;
             } | {
                 /** @enum {string} */
                 kind: "escalated";
@@ -10464,6 +10552,7 @@ export interface components {
                 kind: "delivery_set";
                 /** @enum {string} */
                 method?: "shipping" | "pickup";
+                expected_branch?: string;
             } | {
                 /** @enum {string} */
                 kind: "promotion_applied";
@@ -10491,17 +10580,26 @@ export interface components {
                 /** @enum {string} */
                 kind: "tool_called";
                 /** @enum {string} */
-                name: "advance_stage" | "apply_promotion" | "book_appointment" | "catalog_lookup" | "close_conversation" | "confirm_appointment" | "create_order" | "get_branches" | "get_business_policies" | "get_order_status" | "get_payment_methods" | "human_handoff" | "log_crm_activity" | "open_deal" | "quote_order" | "register_payment_promise" | "report_payment" | "reschedule_appointment" | "save_contact_data" | "schedule_availability" | "schedule_follow_up" | "send_payment_link" | "send_product_images" | "send_resource" | "set_delivery" | "validate_coupon";
+                name: "advance_stage" | "apply_promotion" | "book_appointment" | "catalog_lookup" | "checkout" | "close_conversation" | "confirm_appointment" | "create_order" | "get_branches" | "get_business_policies" | "get_order_status" | "get_payment_methods" | "human_handoff" | "log_crm_activity" | "open_deal" | "quote_order" | "register_payment_promise" | "report_payment" | "reschedule_appointment" | "save_contact_data" | "schedule_availability" | "schedule_follow_up" | "send_payment_link" | "send_product_images" | "send_resource" | "set_delivery" | "validate_coupon";
                 /** @default 1 */
                 min: number;
             } | {
                 /** @enum {string} */
                 kind: "tool_not_called";
                 /** @enum {string} */
-                name: "advance_stage" | "apply_promotion" | "book_appointment" | "catalog_lookup" | "close_conversation" | "confirm_appointment" | "create_order" | "get_branches" | "get_business_policies" | "get_order_status" | "get_payment_methods" | "human_handoff" | "log_crm_activity" | "open_deal" | "quote_order" | "register_payment_promise" | "report_payment" | "reschedule_appointment" | "save_contact_data" | "schedule_availability" | "schedule_follow_up" | "send_payment_link" | "send_product_images" | "send_resource" | "set_delivery" | "validate_coupon";
+                name: "advance_stage" | "apply_promotion" | "book_appointment" | "catalog_lookup" | "checkout" | "close_conversation" | "confirm_appointment" | "create_order" | "get_branches" | "get_business_policies" | "get_order_status" | "get_payment_methods" | "human_handoff" | "log_crm_activity" | "open_deal" | "quote_order" | "register_payment_promise" | "report_payment" | "reschedule_appointment" | "save_contact_data" | "schedule_availability" | "schedule_follow_up" | "send_payment_link" | "send_product_images" | "send_resource" | "set_delivery" | "validate_coupon";
             } | {
                 /** @enum {string} */
                 kind: "no_unverified_prices";
+            } | {
+                /** @enum {string} */
+                kind: "no_unverified_claims";
+            } | {
+                /** @enum {string} */
+                kind: "no_false_claims";
+            } | {
+                /** @enum {string} */
+                kind: "confirmed_total_matches_order";
             } | {
                 /** @enum {string} */
                 kind: "no_bot_phrases";
@@ -10510,6 +10608,37 @@ export interface components {
                 kind: "max_greetings";
                 /** @default 1 */
                 max: number;
+            } | {
+                /** @enum {string} */
+                kind: "chat_format";
+            } | {
+                /** @enum {string} */
+                kind: "max_reply_chars";
+                n: number;
+            } | {
+                /** @enum {string} */
+                kind: "max_data_asks";
+                /** @default 1 */
+                n: number;
+            } | {
+                /** @enum {string} */
+                kind: "no_reply_burst";
+            } | {
+                /** @enum {string} */
+                kind: "no_repeated_opening";
+            } | {
+                /** @enum {string} */
+                kind: "no_template_phrases";
+            } | {
+                /** @enum {string} */
+                kind: "no_example_echo";
+            } | {
+                /** @enum {string} */
+                kind: "no_split_turn";
+            } | {
+                /** @enum {string} */
+                kind: "max_wait_ms";
+                threshold_ms: number;
             } | {
                 /** @enum {string} */
                 kind: "max_llm_calls_per_turn";
@@ -10577,13 +10706,21 @@ export interface components {
                 /** @enum {string} */
                 kind: "order_created";
                 min_items?: number;
+                max_items?: number;
                 product_codes?: string[];
+                exact_product_codes?: string[];
             } | {
                 /** @enum {string} */
                 kind: "order_not_created";
             } | {
                 /** @enum {string} */
                 kind: "appointment_created";
+                /** Format: date */
+                expected_date?: string;
+                /** @enum {string} */
+                expected_weekday?: "lunes" | "martes" | "miercoles" | "jueves" | "viernes" | "sabado" | "domingo";
+                expected_time?: string;
+                tolerance_minutes?: number;
             } | {
                 /** @enum {string} */
                 kind: "escalated";
@@ -10630,6 +10767,7 @@ export interface components {
                 kind: "delivery_set";
                 /** @enum {string} */
                 method?: "shipping" | "pickup";
+                expected_branch?: string;
             } | {
                 /** @enum {string} */
                 kind: "promotion_applied";
@@ -10657,17 +10795,26 @@ export interface components {
                 /** @enum {string} */
                 kind: "tool_called";
                 /** @enum {string} */
-                name: "advance_stage" | "apply_promotion" | "book_appointment" | "catalog_lookup" | "close_conversation" | "confirm_appointment" | "create_order" | "get_branches" | "get_business_policies" | "get_order_status" | "get_payment_methods" | "human_handoff" | "log_crm_activity" | "open_deal" | "quote_order" | "register_payment_promise" | "report_payment" | "reschedule_appointment" | "save_contact_data" | "schedule_availability" | "schedule_follow_up" | "send_payment_link" | "send_product_images" | "send_resource" | "set_delivery" | "validate_coupon";
+                name: "advance_stage" | "apply_promotion" | "book_appointment" | "catalog_lookup" | "checkout" | "close_conversation" | "confirm_appointment" | "create_order" | "get_branches" | "get_business_policies" | "get_order_status" | "get_payment_methods" | "human_handoff" | "log_crm_activity" | "open_deal" | "quote_order" | "register_payment_promise" | "report_payment" | "reschedule_appointment" | "save_contact_data" | "schedule_availability" | "schedule_follow_up" | "send_payment_link" | "send_product_images" | "send_resource" | "set_delivery" | "validate_coupon";
                 /** @default 1 */
                 min: number;
             } | {
                 /** @enum {string} */
                 kind: "tool_not_called";
                 /** @enum {string} */
-                name: "advance_stage" | "apply_promotion" | "book_appointment" | "catalog_lookup" | "close_conversation" | "confirm_appointment" | "create_order" | "get_branches" | "get_business_policies" | "get_order_status" | "get_payment_methods" | "human_handoff" | "log_crm_activity" | "open_deal" | "quote_order" | "register_payment_promise" | "report_payment" | "reschedule_appointment" | "save_contact_data" | "schedule_availability" | "schedule_follow_up" | "send_payment_link" | "send_product_images" | "send_resource" | "set_delivery" | "validate_coupon";
+                name: "advance_stage" | "apply_promotion" | "book_appointment" | "catalog_lookup" | "checkout" | "close_conversation" | "confirm_appointment" | "create_order" | "get_branches" | "get_business_policies" | "get_order_status" | "get_payment_methods" | "human_handoff" | "log_crm_activity" | "open_deal" | "quote_order" | "register_payment_promise" | "report_payment" | "reschedule_appointment" | "save_contact_data" | "schedule_availability" | "schedule_follow_up" | "send_payment_link" | "send_product_images" | "send_resource" | "set_delivery" | "validate_coupon";
             } | {
                 /** @enum {string} */
                 kind: "no_unverified_prices";
+            } | {
+                /** @enum {string} */
+                kind: "no_unverified_claims";
+            } | {
+                /** @enum {string} */
+                kind: "no_false_claims";
+            } | {
+                /** @enum {string} */
+                kind: "confirmed_total_matches_order";
             } | {
                 /** @enum {string} */
                 kind: "no_bot_phrases";
@@ -10676,6 +10823,37 @@ export interface components {
                 kind: "max_greetings";
                 /** @default 1 */
                 max: number;
+            } | {
+                /** @enum {string} */
+                kind: "chat_format";
+            } | {
+                /** @enum {string} */
+                kind: "max_reply_chars";
+                n: number;
+            } | {
+                /** @enum {string} */
+                kind: "max_data_asks";
+                /** @default 1 */
+                n: number;
+            } | {
+                /** @enum {string} */
+                kind: "no_reply_burst";
+            } | {
+                /** @enum {string} */
+                kind: "no_repeated_opening";
+            } | {
+                /** @enum {string} */
+                kind: "no_template_phrases";
+            } | {
+                /** @enum {string} */
+                kind: "no_example_echo";
+            } | {
+                /** @enum {string} */
+                kind: "no_split_turn";
+            } | {
+                /** @enum {string} */
+                kind: "max_wait_ms";
+                threshold_ms: number;
             } | {
                 /** @enum {string} */
                 kind: "max_llm_calls_per_turn";
@@ -11010,6 +11188,9 @@ export interface components {
             suite_id?: string;
             scenario_ids?: string[];
             concurrency?: number;
+            burst_gap_ms?: number;
+            /** @enum {string} */
+            as_channel?: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "telegram";
             /** @enum {string} */
             ai_mode?: "mock" | "real";
             conversations?: number;
@@ -11213,6 +11394,7 @@ export interface components {
                         productive: boolean | null;
                         unproductive_reason: string | null;
                         duration_ms: number | null;
+                        result_preview: string | null;
                     }[];
                     latency_ms: number | null;
                     tokens: {
@@ -11222,6 +11404,7 @@ export interface components {
                     } | null;
                     nudge_reason: string | null;
                     unverified_prices: string[];
+                    fact_evidence: string[];
                     final_no_tools: boolean;
                 }[];
                 replies: string[];
@@ -11606,6 +11789,31 @@ export interface components {
                 temperature_max: number;
             }[];
         };
+        AgentReadinessSummaryDto: {
+            data: {
+                agent_id: string;
+                blockers: number;
+                improvements: number;
+            }[];
+        };
+        AgentReadinessDto: {
+            findings: {
+                /** @enum {string} */
+                code: "delivery_without_zones" | "branches_missing" | "sales_without_payment_methods" | "orders_stuck_on_form" | "catalog_not_enriched" | "prompt_hides_facts";
+                /** @enum {string} */
+                severity: "blocker" | "improvement";
+                params: {
+                    count?: number;
+                    misses?: number;
+                    phrase?: string;
+                    location?: {
+                        /** @enum {string} */
+                        field: "goal" | "always" | "never" | "handoff_when" | "business_facts" | "system_prompt";
+                        index?: number;
+                    };
+                };
+            }[];
+        };
         AiAgentDto: {
             /** Format: uuid */
             id: string;
@@ -11944,7 +12152,7 @@ export interface components {
         DecisionRoutesViewDto: {
             routes: {
                 /** @enum {string} */
-                purpose: "intent" | "reply_reaction" | "lead_fit" | "lead_intent" | "message_fit" | "handoff_urgency" | "voice_utterance" | "template_category" | "custom";
+                purpose: "intent" | "reply_reaction" | "lead_fit" | "lead_intent" | "message_fit" | "handoff_urgency" | "voice_utterance" | "template_category" | "checkout_confirmation" | "custom";
                 /** @enum {string} */
                 mode: "off" | "shadow" | "primary";
                 primary: {
@@ -11980,7 +12188,7 @@ export interface components {
         };
         SavedDecisionRouteDto: {
             /** @enum {string} */
-            purpose: "intent" | "reply_reaction" | "lead_fit" | "lead_intent" | "message_fit" | "handoff_urgency" | "voice_utterance" | "template_category" | "custom";
+            purpose: "intent" | "reply_reaction" | "lead_fit" | "lead_intent" | "message_fit" | "handoff_urgency" | "voice_utterance" | "template_category" | "checkout_confirmation" | "custom";
             /** @enum {string} */
             mode: "off" | "shadow" | "primary";
             primary: {
@@ -12897,6 +13105,8 @@ export interface components {
             reminder_offsets_minutes: number[];
             /** @enum {string} */
             reminder_channel: "whatsapp" | "call" | "both";
+            closes_on_holidays: boolean;
+            holiday_country: string | null;
         };
         UpdateSchedulingSettingsDto: {
             slot_capacity?: number;
@@ -12906,6 +13116,50 @@ export interface components {
             reminder_offsets_minutes?: number[];
             /** @enum {string} */
             reminder_channel?: "whatsapp" | "call" | "both";
+            closes_on_holidays?: boolean;
+            /** @enum {string|null} */
+            holiday_country?: "CO" | null;
+        };
+        ScheduleExceptionListDto: {
+            items: {
+                /** Format: date */
+                date: string;
+                closed: boolean;
+                windows: {
+                    opens_at: string;
+                    closes_at: string;
+                }[];
+                note: string | null;
+            }[];
+        };
+        PutScheduleExceptionDto: {
+            closed: boolean;
+            /** @default [] */
+            windows: {
+                opens_at: string;
+                closes_at: string;
+            }[];
+            /** @default null */
+            note: string | null;
+        };
+        ClosuresDto: {
+            timezone: string;
+            closes_on_holidays: boolean;
+            holiday_country: string | null;
+            holiday_country_name: string | null;
+            days: {
+                /** Format: date */
+                date: string;
+                /** @enum {string} */
+                kind: "closed" | "special" | "holiday" | "weekly";
+                is_holiday: boolean;
+                holiday_name: string | null;
+                windows: {
+                    opens_at: string;
+                    closes_at: string;
+                }[];
+                note: string | null;
+            }[];
         };
         OutreachPolicyViewDto: {
             policy: {
@@ -17267,6 +17521,8 @@ export interface components {
                     section?: string;
                 }[];
                 menu_label?: string;
+                /** @enum {string} */
+                text_fallback?: "numbered" | "body";
             } | {
                 /** @enum {string} */
                 kind: "cta_url";
@@ -27980,6 +28236,46 @@ export interface operations {
             };
         };
     };
+    AiAgentsController_readinessSummary_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentReadinessSummaryDto"];
+                };
+            };
+        };
+    };
+    AiAgentsController_agentReadiness_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentReadinessDto"];
+                };
+            };
+        };
+    };
     AiAgentsController_byId_v1: {
         parameters: {
             query?: never;
@@ -29792,6 +30088,91 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SchedulingSettingsDto"];
+                };
+            };
+        };
+    };
+    ScheduleCalendarController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleExceptionListDto"];
+                };
+            };
+        };
+    };
+    ScheduleCalendarController_put_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                date: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PutScheduleExceptionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleExceptionListDto"];
+                };
+            };
+        };
+    };
+    ScheduleCalendarController_remove_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                date: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ScheduleCalendarController_closures_v1: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClosuresDto"];
                 };
             };
         };

@@ -23,6 +23,7 @@ import {
   type TimeUnit,
 } from "@/modules/scheduling/domain/settings";
 import { ReminderOffsetsEditor } from "../../components/settings/ReminderOffsetsEditor";
+import { HolidaysField } from "../../components/settings/HolidaysField";
 
 /**
  * Config del formulario de reglas de agendamiento. El PUT es de sección
@@ -56,6 +57,9 @@ export const settingsFormSchema = z
       .max(SETTINGS_LIMITS.reminder_offsets_minutes.maxItems, "Máximo 6 recordatorios"),
     // calls F3/F4-D: canal del recordatorio (las llamadas cuestan — opt-in).
     reminder_channel: z.enum(["whatsapp", "call", "both"]),
+    // S-05: festivos (apagado por defecto) y el país de su calendario
+    closes_on_holidays: z.boolean(),
+    holiday_country: z.string().nullable(),
   })
   .superRefine((values, ctx) => {
     const total = unitToMinutes(values.min_notice_value, values.min_notice_unit);
@@ -81,6 +85,8 @@ export function fromSettingsDto(dto: SchedulingSettingsDTO): SettingsFormValues 
     min_notice_unit: notice.unit,
     reminder_offsets_minutes: dto.reminder_offsets_minutes,
     reminder_channel: dto.reminder_channel,
+    closes_on_holidays: dto.closes_on_holidays,
+    holiday_country: dto.holiday_country,
   };
 }
 
@@ -92,6 +98,8 @@ export function toSettingsPayload(values: SettingsFormValues): SchedulingSetting
     min_notice_minutes: unitToMinutes(values.min_notice_value, values.min_notice_unit),
     reminder_offsets_minutes: values.reminder_offsets_minutes,
     reminder_channel: values.reminder_channel,
+    closes_on_holidays: values.closes_on_holidays,
+    holiday_country: values.holiday_country,
   });
 }
 
@@ -237,6 +245,19 @@ export function buildSettingsFormFields(opts: {
           "Las llamadas consumen minutos del plan y solo aplican a recordatorios con 3+ horas de antelación (los demás van por WhatsApp). En «Llamada», si nadie contesta se reintenta a las 2 h y luego llega el WhatsApp.",
         colSpan: { base: 1, md: 2 },
       },
+    ),
+    createCustomField<SettingsFormValues>(
+      "closes_on_holidays",
+      ({ control, value, setValue }) => (
+        <HolidaysField
+          control={control}
+          closes={value === true}
+          disabled={!opts.canManage}
+          onClosesChange={(next) => setValue("closes_on_holidays", next)}
+          onCountryChange={(code) => setValue("holiday_country", code)}
+        />
+      ),
+      { colSpan: { base: 1, md: 2 } },
     ),
   ];
 }

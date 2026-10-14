@@ -26,7 +26,14 @@ import {
  * PUT es de sección completa: omitir un campo lo resetearía al default del
  * sistema). La respuesta del PUT es la vista resuelta → re-hidrata el form.
  */
-export function SettingsForm({ canManage }: { canManage: boolean }) {
+export function SettingsForm({
+  canManage,
+  onSaved,
+}: {
+  canManage: boolean;
+  /** Tras guardar (S-05: los días especiales se refrescan con el interruptor de festivos). */
+  onSaved?: () => void;
+}) {
   const { showAlert } = useAlert();
   const [settings, setSettings] = useState<SchedulingSettingsDTO | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -98,6 +105,7 @@ export function SettingsForm({ canManage }: { canManage: boolean }) {
           const resolved = await putSchedulingSettings(toSettingsPayload(values));
           setSettings(resolved);
           form.reset(fromSettingsDto(resolved));
+          onSaved?.();
           showAlert({
             tone: "success",
             title: "Reglas de agendamiento guardadas",
