@@ -99,7 +99,24 @@ export function ContactFieldList({
               return (
                 <li key={identity.id} className="flex items-center gap-2 text-sm">
                   <Icon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-                  <span className="min-w-0 truncate">{identity.display_name ?? meta.label}</span>
+                  {/* TG-19: el @usuario de Telegram, en gris, junto al nombre (lo que el
+                      operador busca en Telegram). El nombre conserva su ancho (hasta el
+                      60 %) y lo primero que cede es el @usuario; los dos se cortan con
+                      difuminado y el texto completo va en el title. */}
+                  <span
+                    className={cn("truncate", identity.username ? "max-w-[60%] shrink-0" : "min-w-0")}
+                    title={identity.display_name ?? undefined}
+                  >
+                    {identity.display_name ?? meta.label}
+                  </span>
+                  {identity.username && (
+                    <span
+                      className="min-w-0 truncate text-muted-foreground"
+                      title={`@${identity.username}`}
+                    >
+                      @{identity.username}
+                    </span>
+                  )}
                   {identity.last_seen_at !== null && (
                     <span className="ml-auto shrink-0 text-xs text-muted-foreground">
                       {relativeTime(identity.last_seen_at)}

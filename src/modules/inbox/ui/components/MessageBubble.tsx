@@ -76,6 +76,7 @@ export function MessageBubble({
   first = true,
   last = true,
   author = null,
+  contactName = null,
 }: {
   message: UiMessage
   conversationId: string
@@ -99,6 +100,8 @@ export function MessageBubble({
   last?: boolean
   /** «Axi», «Tú», «Desde el celular del negocio»…; `null` no pinta autor. */
   author?: string | null
+  /** Primer nombre del contacto, para decir quién recibió la parte que llegó (TG-32). */
+  contactName?: string | null
 }) {
   const outbound = message.direction === "outbound"
   const sentTemplate = message.content_type === "template" ? extractTemplatePayload(message.payload) : null
@@ -268,6 +271,16 @@ export function MessageBubble({
               <RotateCw aria-hidden className="size-3" /> Reintentar
             </button>
           )}
+        </div>
+      ) : failed && parseMessageError(message.error)?.partial ? (
+        // TG-32: un texto largo salió partido y llegó solo la primera parte. Ámbar,
+        // no rojo, y sin «Reenviar»: el reenvío le repetiría lo que ya leyó.
+        <div className="mt-1.5 flex max-w-[min(75%,34rem)] items-start justify-end gap-2" role="status">
+          <p className="text-right text-xs leading-relaxed text-foreground/80">
+            <span className="font-semibold text-warning">Llegó en parte.</span>{" "}
+            {contactName ?? "El contacto"} recibió la primera parte; el resto no salió. No se reenvía entero
+            para no repetirle lo que ya leyó: escríbele lo que faltó.
+          </p>
         </div>
       ) : failed ? (
         // Falló en el servidor o Meta lo rechazó: el motivo y, si se puede, reenviar.

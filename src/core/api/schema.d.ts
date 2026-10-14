@@ -13418,6 +13418,7 @@ export interface components {
                 channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "telegram";
                 external_id: string;
                 display_name: string | null;
+                username: string | null;
                 /** Format: date-time */
                 last_seen_at: string | null;
             }[];
@@ -13481,6 +13482,7 @@ export interface components {
                     channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "telegram";
                     external_id: string;
                     display_name: string | null;
+                    username: string | null;
                     /** Format: date-time */
                     last_seen_at: string | null;
                 }[];

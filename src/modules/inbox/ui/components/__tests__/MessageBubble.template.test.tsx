@@ -172,6 +172,28 @@ describe("MessageBubble — plantilla de Meta (hotfix 2026-09-29)", () => {
     expect(screen.queryByRole("button", { name: "Reintentar envío" })).not.toBeInTheDocument()
   })
 
+  it("TG-32: un texto partido que llegó solo en parte → ámbar, quién lo recibió y sin «Reenviar»", () => {
+    const partial = {
+      ...templateMessage({
+        id: "real-2",
+        content_type: "text",
+        body: "¡Claro, Laura! Te cuento cómo funciona el plan Pro…",
+        payload: null,
+        sender_type: "user",
+        status: "failed",
+        error: { code: "channels/send_failed", detail: "el trozo 2 no salió", partial_delivery: true },
+      }),
+      delivery: "failed" as const,
+    }
+    render(
+      <MessageBubble message={partial} conversationId="c1" contactName="Laura" onResend={jest.fn(async () => {})} />,
+    )
+    expect(screen.getByText("Llegó en parte.")).toBeInTheDocument()
+    expect(screen.getByText(/Laura recibió la primera parte; el resto no salió/)).toBeInTheDocument()
+    expect(screen.queryByText("No llegó.")).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /Reenviar/ })).not.toBeInTheDocument()
+  })
+
   it("un optimista local que no salió sigue con «Reintentar», no con «Reenviar»", () => {
     const local = {
       ...templateMessage({ id: "l1", content_type: "text", body: "hola", payload: null, sender_type: "user", status: "failed" }),

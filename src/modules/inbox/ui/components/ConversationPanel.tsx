@@ -308,6 +308,7 @@ function OpenConversation({
                             first={item.first}
                             last={item.last}
                             author={authorOf(item.message)}
+                            contactName={conversation.contact.full_name?.trim().split(/\s+/)[0] || null}
                           />
                         </div>
                       ),

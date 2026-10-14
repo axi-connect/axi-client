@@ -76,6 +76,7 @@ describe("parseMessageError + failureCopy", () => {
       code: "131042",
       title: "Business eligibility payment issue",
       detail: "Message failed to send because there were one or more errors related to your payment method.",
+      partial: false,
     });
     expect(failureCopy(failure)).toMatch(/método de pago/);
   });
@@ -174,7 +175,14 @@ describe("resendBlockedUntil (hotfix 131049)", () => {
   });
 
   it("131049 y pacing_deferred dicen que hay que esperar", () => {
-    expect(failureCopy({ code: "131049", title: null, detail: null })).toMatch(/espera 24 h/);
-    expect(failureCopy({ code: "channels/pacing_deferred", title: null, detail: null })).toMatch(/espera 24 h/);
+    expect(failureCopy({ code: "131049", title: null, detail: null, partial: false })).toMatch(/espera 24 h/);
+    expect(failureCopy({ code: "channels/pacing_deferred", title: null, detail: null, partial: false })).toMatch(/espera 24 h/);
+  });
+});
+
+describe("parseMessageError · TG-32", () => {
+  it("marca la entrega parcial de un texto partido", () => {
+    expect(parseMessageError({ code: "channels/send_failed", partial_delivery: true })?.partial).toBe(true);
+    expect(parseMessageError({ code: "channels/send_failed" })?.partial).toBe(false);
   });
 });

@@ -78,7 +78,16 @@ export function resentByOf(payload: unknown): string | null {
  * - el envío síncrono (`markFailed`): `{ code: "channels/…", detail }`;
  * - el webhook de Meta: `{ code: 131042, title, details }`.
  */
-export type MessageFailure = { code: string | null; title: string | null; detail: string | null };
+export type MessageFailure = {
+  code: string | null;
+  title: string | null;
+  detail: string | null;
+  /**
+   * TG-32: un texto largo salió partido (Telegram) y llegó solo la primera
+   * parte. No se reenvía entero: el cliente ya leyó esa parte.
+   */
+  partial: boolean;
+};
 
 export function parseMessageError(error: unknown): MessageFailure | null {
   if (typeof error !== "object" || error === null) return null;
@@ -90,8 +99,9 @@ export function parseMessageError(error: unknown): MessageFailure | null {
   const title = typeof record.title === "string" ? record.title : null;
   const rawDetail = record.details ?? record.detail;
   const detail = typeof rawDetail === "string" ? rawDetail : null;
-  if (code === null && title === null && detail === null) return null;
-  return { code, title, detail };
+  const partial = record.partial_delivery === true;
+  if (code === null && title === null && detail === null && !partial) return null;
+  return { code, title, detail, partial };
 }
 
 /**
