@@ -61,12 +61,21 @@ describe("mappers a DTO", () => {
     expect(dto.success_criteria).toEqual([{ kind: "order_created", min_items: 2 }]);
   });
 
-  it("los criterios `unknown` se excluyen del DTO (no son expresables en el wire)", () => {
+  it("AUD93-C1: los criterios que el editor no modela viajan tal cual; solo se descarta lo que no tiene kind", () => {
     const dto = toCreateScenarioDTO({
       ...VALID,
-      success_criteria: [{ kind: "no_agent_error" }, { kind: "unknown", raw: { kind: "future" } }],
+      success_criteria: [
+        { kind: "no_agent_error" },
+        { kind: "unknown", raw: { kind: "max_data_asks", max: 1 } },
+        { kind: "unknown", raw: { kind: "no_template_phrases" } },
+        { kind: "unknown", raw: { value: "basura" } },
+      ],
     });
-    expect(dto.success_criteria).toEqual([{ kind: "no_agent_error" }]);
+    expect(dto.success_criteria).toEqual([
+      { kind: "no_agent_error" },
+      { kind: "max_data_asks", max: 1 },
+      { kind: "no_template_phrases" },
+    ]);
   });
 
   it("toUpdateScenarioDTO no incluye code y manda description null al vaciarla", () => {

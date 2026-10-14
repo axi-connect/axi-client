@@ -44,7 +44,7 @@ describe("CriteriaEditor", () => {
     expect(onChange).toHaveBeenCalledWith([{ kind: "reply_contains", pattern: "gracias" }]);
   });
 
-  it("quita criterios y pinta los `unknown` como excluidos del guardado", () => {
+  it("quita criterios y pinta los `unknown` como conservados al guardar (AUD93-C1)", () => {
     const onChange = jest.fn();
     render(
       <CriteriaEditor
@@ -55,7 +55,7 @@ describe("CriteriaEditor", () => {
         onChange={onChange}
       />,
     );
-    expect(screen.getByText(/se excluirá al guardar/)).toBeInTheDocument();
+    expect(screen.getByText(/se conserva tal cual al guardar/)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Quitar criterio 2" }));
     expect(onChange).toHaveBeenCalledWith([{ kind: "unknown", raw: { kind: "future_kind" } }]);

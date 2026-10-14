@@ -5,8 +5,9 @@
  * con select de kind AGRUPADO por familia (Resultado · Herramientas · Estilo
  * y seguridad · Rendimiento y costo) + campos condicionales por kind, y
  * validación VIVA con los mismos mensajes que bloquean el submit
- * (`validateCriteriaSet`, espejo del backend). Los criterios `unknown` se
- * muestran bloqueados con aviso de que se excluirán al guardar.
+ * (`validateCriteriaSet`, espejo del backend). Los criterios `unknown` (kinds
+ * que este editor aún no modela) se muestran sin editor y se conservan tal
+ * cual al guardar.
  */
 import { Plus, X } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
@@ -139,8 +140,8 @@ export function CriteriaEditor({ value, onChange, disabled = false }: CriteriaEd
             return (
               <li key={index} className="flex items-center justify-between gap-2 rounded-2xl bg-muted px-3 py-2.5 text-sm">
                 <span className="flex min-w-0 items-center gap-2">
-                  <TonePill tone="warning">ilegible</TonePill>
-                  <span className="min-w-0 truncate">{criterionLabel(criterion)} — se excluirá al guardar</span>
+                  <TonePill tone="neutral">sin editor</TonePill>
+                  <span className="min-w-0 truncate">{criterionLabel(criterion)} — se conserva tal cual al guardar</span>
                 </span>
                 {!disabled && <RemoveButton index={index} onRemove={removeAt} />}
               </li>
