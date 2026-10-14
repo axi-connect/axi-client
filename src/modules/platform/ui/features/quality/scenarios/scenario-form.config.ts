@@ -112,12 +112,16 @@ export function scenarioToFormValues(scenario: Scenario): ScenarioFormValues {
 }
 
 /**
- * Los criterios `unknown` (no reconocidos por esta versión del editor) no
- * son expresables en el DTO de escritura: se excluyen al guardar (el editor
- * lo advierte en la fila).
+ * Los criterios `unknown` (kinds que el servidor ya publica y este editor aún
+ * no modela, p. ej. los de estilo de R1/R3) viajan tal cual llegaron: guardar
+ * el escenario por otro motivo no puede borrarlos (AUD93-C1). Solo se descarta
+ * lo que nunca fue un criterio (una entrada sin `kind`).
  */
 function toWireCriteria(criteria: SuccessCriterion[]): CreateScenarioDTO["success_criteria"] {
-  return criteria.filter((c) => c.kind !== "unknown") as CreateScenarioDTO["success_criteria"];
+  return criteria.flatMap((criterion) => {
+    if (criterion.kind !== "unknown") return [criterion];
+    return typeof criterion.raw.kind === "string" ? [criterion.raw] : [];
+  }) as CreateScenarioDTO["success_criteria"];
 }
 
 export function toCreateScenarioDTO(values: ScenarioFormValues): CreateScenarioDTO {
