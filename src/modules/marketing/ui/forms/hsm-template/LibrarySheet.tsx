@@ -199,19 +199,20 @@ function LibraryCard({
           <span className="text-[13.5px] font-semibold">{title}</span>
           <span className="text-muted-foreground shrink-0 text-[11.5px]">{libraryTopicLabel(template.topic)}</span>
         </span>
-        <span
-          id={bodyId}
-          className="bg-secondary line-clamp-5 rounded-xl px-3 py-2.5 text-[12.5px] leading-normal whitespace-pre-line"
-        >
-          {libraryBodyParts(template.body, template.body_examples).map((part, index) =>
-            part.example ? (
-              <mark key={index} className="bg-accent-violet/15 rounded px-0.5 text-inherit">
-                {part.text}
-              </mark>
-            ) : (
-              <span key={index}>{part.text}</span>
-            ),
-          )}
+        {/* El relleno va afuera: `line-clamp-5` mide 5 renglones del texto (sin «…»,
+            con difuminado) y con padding en el mismo elemento quedaba corto. */}
+        <span className="bg-secondary block rounded-xl px-3 py-2.5">
+          <span id={bodyId} className="line-clamp-5 text-[12.5px] leading-normal whitespace-pre-line">
+            {libraryBodyParts(template.body, template.body_examples).map((part, index) =>
+              part.example ? (
+                <mark key={index} className="bg-accent-violet/15 rounded px-0.5 text-inherit">
+                  {part.text}
+                </mark>
+              ) : (
+                <span key={index}>{part.text}</span>
+              ),
+            )}
+          </span>
         </span>
       </button>
       <div className="flex min-h-8 items-center justify-between gap-2">

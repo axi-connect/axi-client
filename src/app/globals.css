@@ -3206,8 +3206,8 @@ button.assistant-island--s:focus-visible {
    arriba quedan intactos. Se activa solo si el contenido desborda en vertical, con la misma
    línea de tiempo. `!important` en la forma porque el `line-clamp-N` de
    Tailwind sale después y volvería a `-webkit-box`; `line-clamp-none` nunca
-   convive con un `line-clamp-N` (tailwind-merge lo quita). Con relleno
-   vertical en el mismo elemento el alto no cuadra: el relleno va en un padre. */
+   convive con un `line-clamp-N` (tailwind-merge lo quita). El relleno
+   vertical va en un padre, no en el mismo elemento (LibrarySheet). */
 @utility line-clamp-* {
   overflow: hidden;
   display: block !important;
