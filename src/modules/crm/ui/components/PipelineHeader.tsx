@@ -69,7 +69,7 @@ export function PipelineHeader({ canOperate, stats }: { canOperate: boolean; sta
             ) : (
               active !== undefined && (
                 <span
-                  className="inline-flex h-9 max-w-[16rem] min-w-0 items-center truncate rounded-full border border-border bg-card px-4 text-sm font-medium"
+                  className="inline-flex h-9 max-w-[16rem] min-w-0 items-center rounded-full border border-border bg-card px-4 text-sm font-medium"
                   title={pipelineName}
                 >
                   <span className="truncate">{pipelineName}</span>

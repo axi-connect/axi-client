@@ -600,9 +600,7 @@
   .pp-cobros2-who small, .pp-cobros2-state,
   .pp-inbox2-prev,
   .pp-fcall-head small {
-    -webkit-mask-image: var(--truncate-mask-inline);
-    mask-image: var(--truncate-mask-inline);
-    animation: truncate-fade linear both;
+    animation: truncate-mask-inline linear both;
     animation-timeline: scroll(self inline);
   }
 }

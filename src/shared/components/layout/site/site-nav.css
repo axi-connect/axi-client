@@ -466,9 +466,7 @@ html:not(.dark) .site-nav:not(.dark) .site-glass::before { display: none; }
   .site-island-alert .site-island-sub,
   .site-toast-title,
   .site-toast-detail {
-    -webkit-mask-image: var(--truncate-mask-inline);
-    mask-image: var(--truncate-mask-inline);
-    animation: truncate-fade linear both;
+    animation: truncate-mask-inline linear both;
     animation-timeline: scroll(self inline);
   }
 }

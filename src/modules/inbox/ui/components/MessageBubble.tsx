@@ -274,10 +274,12 @@ export function MessageBubble({
         </div>
       ) : failed && parseMessageError(message.error)?.partial ? (
         // TG-32: un texto largo salió partido y llegó solo la primera parte. Ámbar,
-        // no rojo, y sin «Reenviar»: el reenvío le repetiría lo que ya leyó.
+        // no rojo, y sin «Reenviar»: el reenvío le repetiría lo que ya leyó. El
+        // ámbar va en el ícono; el texto en foreground (AA, FRIO-C3 TG-32).
         <div className="mt-1.5 flex max-w-[min(75%,34rem)] items-start justify-end gap-2" role="status">
+          <AlertCircle aria-hidden className="mt-0.5 size-3.5 shrink-0 text-warning" />
           <p className="text-right text-xs leading-relaxed text-foreground/80">
-            <span className="font-semibold text-warning">Llegó en parte.</span>{" "}
+            <span className="font-semibold text-foreground">Llegó en parte.</span>{" "}
             {contactName ?? "El contacto"} recibió la primera parte; el resto no salió. No se reenvía entero
             para no repetirle lo que ya leyó: escríbele lo que faltó.
           </p>

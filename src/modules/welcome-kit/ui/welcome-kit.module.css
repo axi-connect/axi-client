@@ -1243,16 +1243,18 @@
 }
 
 /* Truncado con difuminado (regla del dueño 2026-10-14, ver `truncate` en
-   globals.css): sin «…», el final se desvanece solo si el texto desborda. */
-@keyframes truncate-fade {
-  from { --truncate-fade: 2rem; }
-  to { --truncate-fade: 2rem; }
+   globals.css): sin «…», el final se desvanece solo si el texto desborda.
+   En un módulo el nombre de la animación es local: copia del @keyframes. */
+@keyframes truncate-mask-inline {
+  from,
+  to {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 2rem), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 2rem), transparent);
+  }
 }
 @supports (animation-timeline: scroll()) {
   .catalogFile {
-    -webkit-mask-image: var(--truncate-mask-inline);
-    mask-image: var(--truncate-mask-inline);
-    animation: truncate-fade linear both;
+    animation: truncate-mask-inline linear both;
     animation-timeline: scroll(self inline);
   }
 }

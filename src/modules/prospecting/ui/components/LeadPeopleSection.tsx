@@ -202,10 +202,10 @@ export function LeadPeopleSection({
                   </p>
                   {person.evidence_provider !== null && (
                     <span
-                      className="bg-muted inline-flex min-h-6 w-fit max-w-full items-center gap-1.5 truncate rounded-full px-2 text-[11px]"
+                      className="bg-muted inline-flex min-h-6 w-fit max-w-full min-w-0 items-center gap-1.5 rounded-full px-2 text-[11px] whitespace-nowrap"
                       title={person.evidence ?? undefined}
                     >
-                      <span className="font-semibold">
+                      <span className="min-w-0 truncate font-semibold">
                         {EVIDENCE_PROVIDER_LABELS[person.evidence_provider] ?? person.evidence_provider}
                       </span>
                       {person.evidence_level === "hypothesis" && <span className="text-muted-foreground">· hipótesis</span>}

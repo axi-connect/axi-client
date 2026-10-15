@@ -527,9 +527,7 @@
    globals.css): sin «…», el final se desvanece solo si el texto desborda. */
 @supports (animation-timeline: scroll()) {
   .film-pilot-row-name {
-    -webkit-mask-image: var(--truncate-mask-inline);
-    mask-image: var(--truncate-mask-inline);
-    animation: truncate-fade linear both;
+    animation: truncate-mask-inline linear both;
     animation-timeline: scroll(self inline);
   }
 }

@@ -55,7 +55,7 @@ export function RevealButtons({
   const emailButton =
     target.email !== null ? (
       <span
-        className="border-success/50 text-foreground inline-flex h-7 max-w-40 items-center gap-1.5 truncate rounded-full border px-2.5 text-xs font-medium"
+        className="border-success/50 text-foreground inline-flex h-7 max-w-40 min-w-0 items-center gap-1.5 rounded-full border px-2.5 text-xs font-medium whitespace-nowrap"
         title={target.email}
       >
         <Check aria-hidden className="text-success size-3.5 shrink-0" />

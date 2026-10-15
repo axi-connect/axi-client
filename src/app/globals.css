@@ -3161,28 +3161,32 @@ button.assistant-island--s:focus-visible {
    hereda.
    - Sin «…»: el texto se corta y su final se desvanece con una máscara
      (`mask-image`), que funciona sobre cualquier fondo y en los dos temas.
-   - SOLO cuando desborda: la máscara la mide una animación ligada al scroll
-     del propio elemento. Si el texto cabe no hay scroll, la línea de tiempo
-     está inactiva y `--truncate-fade` se queda en 0: sin máscara.
+   - SOLO cuando desborda: la máscara vive DENTRO de un @keyframes ligado al
+     scroll del propio elemento. Si el texto cabe no hay scroll, la línea de
+     tiempo está inactiva y no hay máscara (FRIO-C3-1: una máscara siempre
+     puesta, aunque midiera 0, recortaba el anillo de foco, el outline con
+     offset y las sombras de todo lo que lleva truncate, WCAG 2.4.7).
+   - Con foco de teclado no hay animación ni máscara: se ve el anillo (el del
+     navegador o el propio) y el final del texto, sin difuminar.
    - Sin soporte de `animation-timeline`, corte limpio, sin puntos.
-   Para CSS propio (fuera de Tailwind) usar las mismas declaraciones:
-   `text-overflow: clip` y, dentro del @supports, `mask-image:
-   var(--truncate-mask-inline)` con la animación. */
-@property --truncate-fade {
-  syntax: "<length>";
-  inherits: false;
-  initial-value: 0px;
+   Para CSS propio (fuera de Tailwind): `text-overflow: clip` y, dentro del
+   @supports, `animation: truncate-mask-inline linear both;
+   animation-timeline: scroll(self inline)`. En un `.module.css` el nombre de
+   la animación es local: declarar ahí una copia del @keyframes. Un elemento
+   con borde, fondo o sombra lleva el truncate en un span interno. */
+@keyframes truncate-mask-inline {
+  from,
+  to {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 2rem), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 2rem), transparent);
+  }
 }
-@keyframes truncate-fade {
-  from { --truncate-fade: 2rem; }
-  to { --truncate-fade: 2rem; }
-}
-:root {
-  --truncate-mask-inline: linear-gradient(
-    to right,
-    #000 calc(100% - var(--truncate-fade)),
-    transparent
-  );
+@keyframes truncate-mask-block {
+  from,
+  to {
+    -webkit-mask-image: linear-gradient(#000, #000), linear-gradient(#000, rgb(0 0 0 / 0.2));
+    mask-image: linear-gradient(#000, #000), linear-gradient(#000, rgb(0 0 0 / 0.2));
+  }
 }
 
 /* Sin capa a propósito: Tailwind ordena sus utilidades y su `.truncate` (con
@@ -3191,10 +3195,11 @@ button.assistant-island--s:focus-visible {
 .truncate {
   text-overflow: clip;
   @supports (animation-timeline: scroll()) {
-    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - var(--truncate-fade)), transparent);
-    mask-image: linear-gradient(to right, #000 calc(100% - var(--truncate-fade)), transparent);
-    animation: truncate-fade linear both;
+    animation: truncate-mask-inline linear both;
     animation-timeline: scroll(self inline);
+    &:focus-visible {
+      animation: none;
+    }
   }
 }
 
@@ -3203,20 +3208,18 @@ button.assistant-island--s:focus-visible {
    el bloque se limita a N renglones (`max-height: N·1lh`, sin `-webkit-box`:
    sin «…») y el ÚLTIMO renglón se difumina hacia abajo (sigue legible y se
    nota que el texto continúa, termine donde termine el renglón); los de
-   arriba quedan intactos. Se activa solo si el contenido desborda en vertical, con la misma
-   línea de tiempo. `!important` en la forma porque el `line-clamp-N` de
-   Tailwind sale después y volvería a `-webkit-box`; `line-clamp-none` nunca
-   convive con un `line-clamp-N` (tailwind-merge lo quita). El relleno
-   vertical va en un padre, no en el mismo elemento (LibrarySheet). */
+   arriba quedan intactos. Se activa solo si el contenido desborda en vertical,
+   con la misma regla (la máscara en el @keyframes, nada con foco de teclado).
+   `!important` en la forma porque el `line-clamp-N` de Tailwind sale después
+   y volvería a `-webkit-box`; `line-clamp-none` nunca convive con un
+   `line-clamp-N` (tailwind-merge lo quita). El relleno vertical va en un
+   padre, no en el mismo elemento (LibrarySheet). */
 @utility line-clamp-* {
   overflow: hidden;
   display: block !important;
   -webkit-line-clamp: unset !important;
   max-height: calc(--value(integer) * 1lh) !important;
   @supports (animation-timeline: scroll()) {
-    -webkit-mask-image:
-      linear-gradient(#000, #000),
-      linear-gradient(#000, rgb(0 0 0 / calc(1 - var(--truncate-fade) / 2.5rem)));
     -webkit-mask-size:
       100% calc(100% - 1lh),
       100% 1lh;
@@ -3224,9 +3227,6 @@ button.assistant-island--s:focus-visible {
       top,
       bottom;
     -webkit-mask-repeat: no-repeat;
-    mask-image:
-      linear-gradient(#000, #000),
-      linear-gradient(#000, rgb(0 0 0 / calc(1 - var(--truncate-fade) / 2.5rem)));
     mask-size:
       100% calc(100% - 1lh),
       100% 1lh;
@@ -3234,7 +3234,10 @@ button.assistant-island--s:focus-visible {
       top,
       bottom;
     mask-repeat: no-repeat;
-    animation: truncate-fade linear both;
+    animation: truncate-mask-block linear both;
     animation-timeline: scroll(self block);
+    &:focus-visible {
+      animation: none;
+    }
   }
 }

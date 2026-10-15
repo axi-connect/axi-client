@@ -151,8 +151,8 @@ export function OfferTile({
       </p>
       <div className="mt-auto flex min-w-0 flex-col items-start gap-1.5">
         {offer.promotion_name ? (
-          <span className="max-w-full truncate rounded-full bg-accent-violet/12 px-2.5 py-0.5 text-xs font-medium" title={offer.promotion_name}>
-            {offer.promotion_name}
+          <span className="inline-flex max-w-full min-w-0 rounded-full bg-accent-violet/12 px-2.5 py-0.5 text-xs font-medium" title={offer.promotion_name}>
+            <span className="truncate">{offer.promotion_name}</span>
           </span>
         ) : null}
         {discounted ? (
