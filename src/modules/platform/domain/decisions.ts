@@ -48,6 +48,11 @@ export const PURPOSE_META: Record<DecisionPurpose, { label: string; description:
     label: "El «sí» al total del pedido",
     description: "Si lo que escribió el cliente confirma el pedido (con la regla de siempre como veto)",
   },
+  // Turnos humanos: tras un corte en la llamada, Jev juzga solo lo que las reglas dejan dudoso.
+  voice_interruption: {
+    label: "Corte en la llamada",
+    description: "Si quien cortó al agente le hablaba a él, solo reaccionó, o era otra persona o ruido",
+  },
   custom: { label: "Uso libre", description: "Cualquier otra decisión de un módulo" },
 };
 
