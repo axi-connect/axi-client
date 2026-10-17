@@ -12152,7 +12152,7 @@ export interface components {
         DecisionRoutesViewDto: {
             routes: {
                 /** @enum {string} */
-                purpose: "intent" | "reply_reaction" | "lead_fit" | "lead_intent" | "message_fit" | "handoff_urgency" | "voice_utterance" | "template_category" | "checkout_confirmation" | "voice_interruption" | "custom";
+                purpose: "intent" | "reply_reaction" | "lead_fit" | "lead_intent" | "message_fit" | "handoff_urgency" | "voice_utterance" | "template_category" | "checkout_confirmation" | "voice_interruption" | "refusal" | "voice_mode" | "custom";
                 /** @enum {string} */
                 mode: "off" | "shadow" | "primary";
                 primary: {
@@ -12188,7 +12188,7 @@ export interface components {
         };
         SavedDecisionRouteDto: {
             /** @enum {string} */
-            purpose: "intent" | "reply_reaction" | "lead_fit" | "lead_intent" | "message_fit" | "handoff_urgency" | "voice_utterance" | "template_category" | "checkout_confirmation" | "voice_interruption" | "custom";
+            purpose: "intent" | "reply_reaction" | "lead_fit" | "lead_intent" | "message_fit" | "handoff_urgency" | "voice_utterance" | "template_category" | "checkout_confirmation" | "voice_interruption" | "refusal" | "voice_mode" | "custom";
             /** @enum {string} */
             mode: "off" | "shadow" | "primary";
             primary: {

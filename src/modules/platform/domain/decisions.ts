@@ -53,6 +53,16 @@ export const PURPOSE_META: Record<DecisionPurpose, { label: string; description:
     label: "Corte en la llamada",
     description: "Si quien cortó al agente le hablaba a él, solo reaccionó, o era otra persona o ruido",
   },
+  // Dos «no» (C2): Jev clasifica la respuesta del cliente a la propuesta; las reglas co-firman el cuelgue.
+  refusal: {
+    label: "Rechazo de la propuesta",
+    description: "Si el cliente rechaza comprar o agendar, cambia el pedido, lo acepta u otra cosa (regla de los dos «no»)",
+  },
+  // Modo del turno de voz: Jev en sombra frente a las reglas (no decide).
+  voice_mode: {
+    label: "Modo del turno de voz",
+    description: "Si el agente debe enganchar, explicar o cerrar en su próxima respuesta",
+  },
   custom: { label: "Uso libre", description: "Cualquier otra decisión de un módulo" },
 };
 
