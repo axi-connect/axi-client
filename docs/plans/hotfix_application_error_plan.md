@@ -1,6 +1,6 @@
 # Hotfix «Application error: a client-side exception has occurred» (2026-10-19)
 
-> **Estado:** implementado en `main` (pendiente de push y despliegue con OK del dueño).
+> **Estado:** EN PRODUCCIÓN desde 2026-10-19 (cliente `bf45804`, despliegue verificado: versión servida, chunks del build anterior en 200, retención de 20,6 MB y reproducción contra producción sin «Application error»).
 > **Alcance:** solo `axi-client` (más el workflow de deploy del cliente). Sin migraciones ni cambios en el servidor.
 > **Evidencia:** `docs/qa/hotfix-application-error/` (scripts de reproducción y capturas).
 
@@ -241,6 +241,9 @@ docker logs --since 24h <contenedor> 2>&1 | grep '"evt":"client_error"' | grep -
 | `docker build --target previous` | la etapa crea `static/` y `static-retention/` |
 | Reproducción contra producción, antes del arreglo | «Application error» reproducido |
 | Capa 2 inyectada sobre el HTML de producción, en Chromium | una recarga y página usable (once); sin bucle (always) |
+| **Después del despliegue** (`bf45804`): `reproducir.mjs` contra producción | `--once`: 1 recarga y sin pantalla genérica. Sin `--once` (24 chunks en 404 permanente): 1 recarga, el login se ve y no aparece la genérica. En este caso extremo la página puede quedar sin hidratar del todo (sin JS); los reportes llegan a la telemetría. Capturas `evidencia/despues-*.png` |
+| Chunks del build anterior tras el despliegue | `webpack-92ee21ece275dc36.js` y `app/(public)/page-195444a80f3f3902.js` responden **200** (antes del hotfix, 404) |
+| Línea del build | `retain-static: builds conservados=2 podados=0 archivos borrados=0 tamaño=20.6M` |
 
 **Lo que corre el dueño** (regla: él compila):
 1. `npm run build:safe && npm start`.
