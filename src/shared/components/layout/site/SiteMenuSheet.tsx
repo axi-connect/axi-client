@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import * as Dialog from '@radix-ui/react-dialog';
 import { ChevronDown, Menu, X } from 'lucide-react';
 
+import { onMediaQueryChange } from '@/core/lib/media-query';
 import { INTENT_OF, IntentIcon } from '@/shared/components/layout/site/IntentIcon';
 import { SiteThemeChoice } from '@/shared/components/layout/site/SiteThemeChoice';
 import {
@@ -49,10 +50,10 @@ export function SiteMenuSheet({
         const wide = window.matchMedia('(min-width: 1024px)');
         const onWide = () => wide.matches && setOpen(false);
         window.addEventListener('popstate', onPop);
-        wide.addEventListener('change', onWide);
+        const offWide = onMediaQueryChange(wide, onWide);
         return () => {
             window.removeEventListener('popstate', onPop);
-            wide.removeEventListener('change', onWide);
+            offWide();
             // Cerrada por Esc, un enlace o el botón: se retira la entrada que puso
             // y, si fue un enlace, se navega cuando el navegador ya volvió.
             const href = pending.current;

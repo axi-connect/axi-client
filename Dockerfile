@@ -14,6 +14,11 @@
 #
 # Requiere `output: "standalone"` en next.config.ts (ya configurado).
 
+# Imagen en servicio de la que se heredan los estáticos de builds anteriores (ver la
+# etapa `previous` y scripts/retain-static.sh). El workflow pasa la `:latest` de GHCR;
+# en local, sin argumento, es una alpine vacía y no se hereda nada.
+ARG PREV_IMAGE=node:22-alpine
+
 FROM node:22-alpine AS base
 # libc6-compat: algunas dependencias nativas de Next lo requieren en Alpine.
 RUN apk add --no-cache libc6-compat
@@ -69,6 +74,17 @@ COPY . .
 RUN npm run build
 
 # ---------------------------------------------------------------------------
+# previous — los estáticos de la imagen en servicio (hotfix «Application error»,
+# 2026-10-19, docs/plans/hotfix_application_error_plan.md). Cada despliegue
+# borraba los chunks de la versión anterior: un HTML viejo (pestaña restaurada,
+# ir/volver, swap a mitad de carga) pedía chunks que daban 404 y la app caía en
+# «Application error». El `mkdir` deja la etapa válida con cualquier imagen base.
+# ---------------------------------------------------------------------------
+FROM ${PREV_IMAGE} AS previous
+USER root
+RUN mkdir -p /app/.next/static /app/.next/static-retention
+
+# ---------------------------------------------------------------------------
 # runner — solo el servidor standalone; sin node_modules ni código fuente
 # ---------------------------------------------------------------------------
 FROM base AS runner
@@ -90,7 +106,16 @@ RUN addgroup -g 1001 -S nodejs && adduser -u 1001 -S nextjs -G nodejs
 # public/ incluye las fuentes Nexa, la marca y el sonido de notificación.
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Estáticos: los de los builds recientes (heredados) + los de este, con poda por
+# número de builds y antigüedad (scripts/retain-static.sh: 15 builds / 14 días).
+# Los nombres llevan hash de contenido: dos builds nunca pisan el mismo archivo.
+COPY --from=previous /app/.next/static ./.next/static
+COPY --from=previous /app/.next/static-retention ./.next/static-retention
+COPY --from=builder /app/.next/static ./.next/static-new
+COPY scripts/retain-static.sh /tmp/retain-static.sh
+RUN sh /tmp/retain-static.sh ./.next/static-new ./.next/static ./.next/static-retention "$BUILD_SHA" \
+    && rm -rf ./.next/static-new /tmp/retain-static.sh
 
 USER nextjs
 EXPOSE 3001

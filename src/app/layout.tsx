@@ -10,6 +10,7 @@ import { SplashProvider } from "@/core/providers/splash-provider";
 import { MotionProvider } from "@/core/providers/motion-provider";
 import { SITE_URL, siteUrl } from "@/core/config/env";
 import { OG_IMAGE, SITE } from "@/core/seo/site";
+import { CHUNK_RECOVERY_SCRIPT } from "@/core/lib/chunk-recovery";
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -117,6 +118,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" suppressHydrationWarning>
+      <head>
+        {/*
+          Recuperación de chunks, ANTES de cualquier JS de la app: si un chunk de
+          una versión anterior da 404 (despliegue reciente, pestaña restaurada),
+          recarga una vez en lugar de dejar la pantalla «Application error».
+          En línea a propósito: no puede vivir en un chunk (core/lib/chunk-recovery.ts).
+        */}
+        <script dangerouslySetInnerHTML={{ __html: CHUNK_RECOVERY_SCRIPT }} />
+      </head>
       <body
         className={`${geistMono.variable} ${nexa.variable} ${poppins.variable} antialiased`}
       >

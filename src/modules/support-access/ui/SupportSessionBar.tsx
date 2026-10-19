@@ -113,7 +113,8 @@ export function SupportSessionBar() {
           className="inline-flex h-6 shrink-0 items-center gap-1 rounded-full bg-background px-2.5 font-semibold text-foreground transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current disabled:opacity-70 dark:bg-foreground dark:text-background"
         >
           {leaving ? <LoaderCircle aria-hidden="true" className="size-3 animate-spin" /> : <LogOut aria-hidden="true" className="size-3" />}
-          Salir
+          {/* En su <span>: con el traductor del navegador, el texto suelto rompe el cambio de icono (react#11538). */}
+          <span>Salir</span>
         </button>
       </div>
     </div>

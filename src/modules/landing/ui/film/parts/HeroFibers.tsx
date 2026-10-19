@@ -64,7 +64,10 @@ const rgba = ([r, g, b]: Rgb, a: number) => `rgba(${r},${g},${b},${a})`;
 function radialSprite(radius: number, stops: readonly [number, string][]): HTMLCanvasElement {
   const c = document.createElement("canvas");
   c.width = c.height = Math.ceil(radius * 2);
-  const g = c.getContext("2d")!;
+  // Puede ser null: iOS lo niega al pasar su tope de memoria de canvas. Un
+  // sprite vacío no pinta nada, que es mejor que tumbar la página.
+  const g = c.getContext("2d");
+  if (!g) return c;
   const grad = g.createRadialGradient(radius, radius, 0, radius, radius, radius);
   for (const [at, color] of stops) grad.addColorStop(at, color);
   g.fillStyle = grad;

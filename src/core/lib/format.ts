@@ -183,3 +183,21 @@ export function formatShortDateTime(iso: string, tz?: string): string {
     }),
   );
 }
+
+/**
+ * La zona horaria del negocio, solo si este navegador la conoce. `Intl` lanza
+ * `RangeError` con una zona inválida o que su ICU no trae (WebViews viejos de
+ * Android, zonas recientes del IANA), y eso en el render del dashboard tumbaba
+ * la página entera tras el login (hotfix «Application error», 2026-10-19). Si
+ * no la conoce devuelve `undefined`: se pinta en la zona del navegador, que en
+ * el peor caso solo desplaza el saludo, nunca rompe la vista.
+ */
+export function safeTimeZone(tz: string | null | undefined): string | undefined {
+  if (!tz) return undefined;
+  try {
+    new Intl.DateTimeFormat("es-CO", { timeZone: tz });
+    return tz;
+  } catch {
+    return undefined;
+  }
+}

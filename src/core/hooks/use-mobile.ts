@@ -1,5 +1,7 @@
 import * as React from "react"
 
+import { onMediaQueryChange } from "@/core/lib/media-query"
+
 const MOBILE_BREAKPOINT = 1024
 
 export function useIsMobile() {
@@ -10,9 +12,9 @@ export function useIsMobile() {
     const onChange = () => {
       setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
     }
-    mql.addEventListener("change", onChange)
+    const unsubscribe = onMediaQueryChange(mql, onChange)
     setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    return () => mql.removeEventListener("change", onChange)
+    return unsubscribe
   }, [])
 
   return !!isMobile

@@ -162,7 +162,9 @@ export default function LoginForm() {
           {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
           <Button className="w-full" type="submit" disabled={isPending}>
             {isPending && <LoaderCircle aria-hidden="true" className="animate-spin" />}
-            {isPending ? "Ingresando…" : "Ingresar"}
+            {/* En su <span>: el traductor del navegador cambia los nodos de texto por <font> y
+                React ya no encuentra el hermano antes del que insertar el icono (react#11538). */}
+            <span>{isPending ? "Ingresando…" : "Ingresar"}</span>
           </Button>
         </form>
       </Form>

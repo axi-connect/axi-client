@@ -6,7 +6,7 @@ import { Avatar } from "@/shared/components/ui/avatar";
 import { BrandMark } from "@/shared/components/ui/brand-mark";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { formatInteger } from "@/core/lib/commercial-units";
-import { formatMillions } from "@/core/lib/format";
+import { formatMillions, safeTimeZone } from "@/core/lib/format";
 import { useMyCompany } from "@/modules/companies/public";
 import { PeriodSelector } from "@/modules/dashboard/ui/components/PeriodSelector";
 import { PERIOD_PHRASES, type DashboardPeriod } from "@/modules/dashboard/domain/dashboard";
@@ -57,7 +57,7 @@ export function DashboardHeader({
   // al hidratar («Buenas noches» a las 10 de la mañana). Hasta montar, silueta.
   const [now, setNow] = useState<Date | null>(null);
   useEffect(() => setNow(new Date()), []);
-  const timeZone = company?.timezone || undefined;
+  const timeZone = safeTimeZone(company?.timezone);
   const firstName = user?.name?.split(" ")[0] ?? "";
 
   const status: string[] = [];

@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic"
 import type { ModalConfig } from "../../shared/components/ui/modal"
 import type { AppAlert } from "@/core/notifications"
+import { QuietBoundary } from "@/shared/components/features/error-recovery/QuietBoundary"
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, ReactNode } from "react"
 
 /*
@@ -91,9 +92,15 @@ export function AlertProvider({ children }: { children: ReactNode }) {
   const pending = useRef<AppAlert[]>([])
   const wanted = useRef(false)
   const flush = useCallback(() => {
-    void Promise.all([loadToaster(), loadNotifications()]).then(([, m]) => {
-      for (const a of pending.current.splice(0)) m.notify.fromAlert(a)
-    })
+    // Sin el catch, un chunk que no carga (red cortada, versión anterior) dejaba
+    // un rechazo suelto. Los avisos siguen en la cola y salen con el próximo intento.
+    void Promise.all([loadToaster(), loadNotifications()])
+      .then(([, m]) => {
+        for (const a of pending.current.splice(0)) m.notify.fromAlert(a)
+      })
+      .catch(() => {
+        notificationsModule = null
+      })
   }, [])
   useEffect(() => {
     if (!toasterWanted) return
@@ -141,7 +148,12 @@ export function AlertProvider({ children }: { children: ReactNode }) {
   return (
     <AlertContext.Provider value={value}>
       {children}
-      {toasterWanted && <NotificationsToaster />}
+      {/* QuietBoundary: si el chunk de una pieza accesoria no carga, se oculta sin tumbar el layout raíz. */}
+      {toasterWanted && (
+        <QuietBoundary name="toaster">
+          <NotificationsToaster />
+        </QuietBoundary>
+      )}
       {/*
         SIN cuerpo fijo. El "Esta acción no se puede deshacer. Se eliminarán de
         forma permanente los datos asociados." que vivía aquí se pintaba en
@@ -152,12 +164,14 @@ export function AlertProvider({ children }: { children: ReactNode }) {
         necesite más, usa `config.body`.
       */}
       {modalWanted && (
-        <Modal
-          open={modalOpen}
-          key="modal-notification"
-          onOpenChange={setModalOpen}
-          config={modalConfig || undefined}
-        />
+        <QuietBoundary name="modal">
+          <Modal
+            open={modalOpen}
+            key="modal-notification"
+            onOpenChange={setModalOpen}
+            config={modalConfig || undefined}
+          />
+        </QuietBoundary>
       )}
     </AlertContext.Provider>
   )

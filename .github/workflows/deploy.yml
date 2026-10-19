@@ -41,6 +41,9 @@ jobs:
 
       # Las NEXT_PUBLIC_* se hornean en el bundle: son build args, no variables
       # de runtime. Se pueden sobreescribir con Variables del repositorio.
+      # PREV_IMAGE: la `:latest` todavía es la imagen en servicio (se re-etiqueta
+      # al final de este paso); de ella se heredan los chunks de los builds
+      # anteriores (Dockerfile, etapa `previous`; hotfix «Application error»).
       - uses: docker/build-push-action@v6
         with:
           context: .
@@ -58,6 +61,7 @@ jobs:
             NEXT_PUBLIC_META_PIXEL_ID=${{ vars.NEXT_PUBLIC_META_PIXEL_ID }}
             NEXT_PUBLIC_TURNSTILE_SITE_KEY=${{ vars.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}
             BUILD_SHA=${{ steps.meta.outputs.tag }}
+            PREV_IMAGE=${{ env.IMAGE }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

@@ -20,6 +20,7 @@ import { TopProductsCard } from "@/modules/dashboard/ui/components/TopProductsCa
 import { GoalProgressBlock } from "@/modules/commercial/public";
 import { PilotsSummaryCard } from "@/modules/autopilot/public";
 import { useMyCompany } from "@/modules/companies/public";
+import { safeTimeZone } from "@/core/lib/format";
 import type { NextUpSource } from "@/modules/dashboard/domain/next-up";
 import { useEntitlements } from "@/shared/auth/entitlements.hooks";
 
@@ -75,7 +76,7 @@ export function DashboardView() {
   const refreshChannels = useDashboardStore((state) => state.refreshChannels);
   const refreshAttention = useDashboardStore((state) => state.refreshAttention);
   // Las fechas de las fichas (horas de «Hoy», ciclo del consumo) en la zona del negocio.
-  const timeZone = useMyCompany().company?.timezone || undefined;
+  const timeZone = safeTimeZone(useMyCompany().company?.timezone);
 
   const retryNextUp = async (failed: NextUpSource[]) => {
     const refresh: Record<NextUpSource, () => Promise<void>> = {
