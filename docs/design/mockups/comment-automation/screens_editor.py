@@ -261,7 +261,7 @@ VARIANTS = [
     "ya va por mensaje. Si no aparece, búscalo en solicitudes.",
 ]
 KEYWORDS = ["INFO", "PRECIO", "LO QUIERO"]
-TRAMOS = [("Dónde", "ok"), ("Qué escriben", "ok"), ("Respuesta", "ok"), ("Mensaje", "ok"), ("Entrega", "ok"), ("Prueba", "pend")]
+TRAMOS = [("Dónde", "ok"), ("Qué escriben", "ok"), ("Respuesta", "ok"), ("Mensaje", "ok"), ("Entrega", "ok")]
 
 
 # ----------------------------------------------------------------------------- piezas
@@ -387,11 +387,7 @@ def dm_body():
   <div class="btnlabel">{K.input('Envíamelo')}<span class="count">9 / 20</span></div>
 </div>
 {K.notice('info', 'Meta deja enviar <b>un solo mensaje</b> antes de que la persona responda. El botón abre la conversación para entregar todo lo demás.')}
-<div class="trow off">
-  <span class="tt">Pedir que sigan la cuenta antes de entregar</span>
-  {K.switch(False, label="Pedir que sigan la cuenta antes de entregar")}
-  <p class="td">Al tocar «Envíamelo» revisamos si te sigue. Si no, le pedimos que te siga y toque otra vez. Es un paso más: úsalo si buscas seguidores.</p>
-</div>"""
+"""
 
 
 # 5. La entrega -----------------------------------------------------------------
@@ -432,6 +428,11 @@ def delivery_body(menu_open=False):
   <div class="blk-h">Llega en este orden<span class="count">5 bloques</span></div>
   <ol class="dblocks">{blocks}</ol>
   {add_menu(menu_open)}
+  <div class="trow off">
+    <span class="tt">Invitar a seguir la cuenta</span>
+    {K.switch(False, label="Invitar a seguir la cuenta")}
+    <p class="td">Al final de la entrega: «Síguenos para ver lo nuevo primero». Es una invitación, no una condición: la entrega ya salió. Meta no deja exigir que te sigan para recibir lo prometido.</p>
+  </div>
   <p class="hint">Solo la recibe quien tocó «Envíamelo»: con eso se abre la conversación por 24 horas. Hasta 10 imágenes; video y PDF de hasta 25 MB.</p>
 </div>"""
 
@@ -460,7 +461,7 @@ def steps(closed_upto=0, menu_open=False):
         ("¿Dónde?", "Instagram y Facebook · Colección Cápsula", where_body()),
         ("¿Qué escriben?", "INFO, PRECIO, LO QUIERO · entiende la intención", words_body()),
         ("Respuesta pública", "3 variantes · máximo 60 por hora", reply_body()),
-        ("Mensaje privado", "Botón «Envíamelo» · sin pedir que te sigan", dm_body()),
+        ("Mensaje privado", "Apertura y botón «Envíamelo»", dm_body()),
         ("La entrega", "Texto, 3 fotos, video, PDF y enlace", delivery_body(menu_open)),
         ("Después", "Alba sigue · 2 etiquetas", after_body()),
     ]
@@ -513,7 +514,7 @@ def before(items):
 BEFORE = [
     ("ok", "Instagram y Facebook con permiso para leer y responder comentarios.", ""),
     ("ok", "1 publicación: Colección Cápsula, en Instagram y en Facebook.", ""),
-    ("pend", "Prueba la automatización con tu cuenta antes de activarla.", "Probar con mi cuenta"),
+    ("pend", "Te recomendamos probarla con tu cuenta antes de activarla: ves lo mismo que verá quien comenta.", "Probar con mi cuenta"),
 ]
 
 
@@ -528,10 +529,10 @@ def dock():
   <ul class="tramos" aria-label="Qué falta">{tr}</ul>
   <span class="sep" aria-hidden="true"></span>
   <div class="state-text">
-    <span class="state-t">Casi lista<span class="n">{done}/{len(TRAMOS)}</span></span>
-    <span class="detail" id="falta">Falta probarla con tu cuenta</span>
+    <span class="state-t">Lista para activar<span class="n">{done}/{len(TRAMOS)}</span></span>
+    <span class="detail" id="falta">Sugerencia: pruébala antes con tu cuenta</span>
   </div>
-  <div class="acts">{btn('Guardar borrador', '', 'glass sm')}<button class="btn contrast sm" aria-disabled="true" aria-describedby="falta" style="opacity:.6">Activar</button></div>
+  <div class="acts">{btn('Guardar borrador', '', 'glass sm')}<button class="btn contrast sm">Activar</button></div>
 </footer>"""
 
 
