@@ -9076,6 +9076,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/social/assets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["SocialController_uploadAsset_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/social/channels": {
         parameters: {
             query?: never;
@@ -25065,10 +25081,10 @@ export interface components {
                 } | {
                     /** @enum {string} */
                     type: "media";
-                    storage_key: string;
-                    mime_type: string;
+                    /** Format: uuid */
+                    asset_id: string;
                     /** @enum {string} */
-                    media_kind: "image" | "video" | "document" | "audio";
+                    media_kind?: "image" | "video" | "document" | "audio";
                     filename?: string;
                     caption?: string;
                 } | {
@@ -25122,10 +25138,10 @@ export interface components {
             } | {
                 /** @enum {string} */
                 type: "media";
-                storage_key: string;
-                mime_type: string;
+                /** Format: uuid */
+                asset_id: string;
                 /** @enum {string} */
-                media_kind: "image" | "video" | "document" | "audio";
+                media_kind?: "image" | "video" | "document" | "audio";
                 filename?: string;
                 caption?: string;
             } | {
@@ -25165,10 +25181,10 @@ export interface components {
             } | {
                 /** @enum {string} */
                 type: "media";
-                storage_key: string;
-                mime_type: string;
+                /** Format: uuid */
+                asset_id: string;
                 /** @enum {string} */
-                media_kind: "image" | "video" | "document" | "audio";
+                media_kind?: "image" | "video" | "document" | "audio";
                 filename?: string;
                 caption?: string;
             } | {
@@ -25221,10 +25237,10 @@ export interface components {
             } | {
                 /** @enum {string} */
                 type: "media";
-                storage_key: string;
-                mime_type: string;
+                /** Format: uuid */
+                asset_id: string;
                 /** @enum {string} */
-                media_kind: "image" | "video" | "document" | "audio";
+                media_kind?: "image" | "video" | "document" | "audio";
                 filename?: string;
                 caption?: string;
             } | {
@@ -25270,6 +25286,15 @@ export interface components {
             }[];
             /** Format: uuid */
             next_cursor: string | null;
+        };
+        SocialAssetDto: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            media_kind: "image" | "video" | "audio" | "document";
+            filename: string;
+            mime_type: string;
+            size_bytes: number;
         };
         SocialChannelsListDto: {
             data: {
@@ -41936,6 +41961,32 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ActivityListDto"];
+                };
+            };
+        };
+    };
+    SocialController_uploadAsset_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SocialAssetDto"];
                 };
             };
         };

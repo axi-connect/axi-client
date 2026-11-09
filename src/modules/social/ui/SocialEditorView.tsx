@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Paperclip, Plus, Trash2 } from "lucide-react";
 import { isHttpError } from "@/core/api/problem";
 import { errorMessage } from "@/core/lib/error-messages";
 import { cn } from "@/core/lib/utils";
@@ -38,6 +38,7 @@ import {
   listSocialChannels,
   pauseSocialAutomation,
   updateSocialAutomation,
+  uploadSocialAsset,
 } from "@/modules/social/infrastructure/services/social-service.adapter";
 import { PhonePreview } from "./components/PhonePreview";
 import { AutomationStatus, Group, NetworkIcon, Row, Rows } from "./components/SocialPieces";
@@ -618,7 +619,7 @@ function MediaPicker({
   );
 }
 
-/** Bloques de la entrega: texto y enlace con botón (fotos, video y PDF: F4.2b). */
+/** Bloques de la entrega: texto, enlace con botón y archivos (foto, video o PDF). */
 function DeliveryEditor({
   blocks,
   onChange,
@@ -626,7 +627,25 @@ function DeliveryEditor({
   blocks: DeliveryBlock[];
   onChange: (blocks: DeliveryBlock[]) => void;
 }) {
+  const { showAlert } = useAlert();
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
   const update = (index: number, block: DeliveryBlock) => onChange(blocks.map((b, i) => (i === index ? block : b)));
+
+  async function upload(file: File) {
+    setUploading(true);
+    try {
+      const asset = await uploadSocialAsset(file);
+      onChange([
+        ...blocks,
+        { type: "media", asset_id: asset.id, media_kind: asset.media_kind, filename: asset.filename },
+      ]);
+    } catch (err) {
+      showAlert({ tone: "error", title: "No se subió el archivo", description: errorMessage(err) });
+    } finally {
+      setUploading(false);
+    }
+  }
   const move = (index: number, delta: -1 | 1) => {
     const next = [...blocks];
     const target = index + delta;
@@ -647,7 +666,13 @@ function DeliveryEditor({
               stack
               label={
                 <span className="flex items-center justify-between gap-2">
-                  <span>{block.type === "text" ? "Texto" : block.type === "link" ? "Enlace con botón" : "Archivo"}</span>
+                  <span className="min-w-0 truncate">
+                    {block.type === "text"
+                      ? "Texto"
+                      : block.type === "link"
+                        ? "Enlace con botón"
+                        : (block.filename ?? "Archivo")}
+                  </span>
                   <span className="flex items-center">
                     <Button variant="ghost" size="icon" aria-label="Subir" disabled={index === 0} onClick={() => move(index, -1)}>
                       <ArrowUp className="size-4" aria-hidden="true" />
@@ -695,7 +720,15 @@ function DeliveryEditor({
                   />
                 </div>
               )}
-              {block.type === "media" && <p className="text-muted-foreground text-sm">{block.filename ?? "Archivo"}</p>}
+              {block.type === "media" && (
+                <Input
+                  value={block.caption ?? ""}
+                  maxLength={1000}
+                  placeholder={`${block.filename ?? "Archivo"} · texto opcional debajo`}
+                  aria-label="Texto debajo del archivo"
+                  onChange={(event) => update(index, { ...block, caption: event.target.value || undefined })}
+                />
+              )}
             </Row>
           ))}
         </Rows>
@@ -715,6 +748,27 @@ function DeliveryEditor({
             <Plus className="size-4" aria-hidden="true" />
             Enlace con botón
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-full"
+            disabled={uploading}
+            onClick={() => fileInput.current?.click()}
+          >
+            <Paperclip className="size-4" aria-hidden="true" />
+            {uploading ? "Subiendo…" : "Foto, video o PDF"}
+          </Button>
+          <input
+            ref={fileInput}
+            type="file"
+            hidden
+            accept="image/*,video/*,application/pdf"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              event.target.value = "";
+              if (file !== undefined) void upload(file);
+            }}
+          />
         </div>
       )}
     </Group>

@@ -11,6 +11,7 @@ export type ActivityItemDTO = Schemas["ActivityListDto"]["data"][number];
 export type SocialChannelDTO = Schemas["SocialChannelsListDto"]["data"][number];
 export type SocialMediaDTO = Schemas["SocialMediaListDto"]["data"][number];
 export type DeliveryBlock = SocialAutomationDTO["delivery"][number];
+export type SocialAssetDTO = Schemas["SocialAssetDto"];
 export type ReadinessGap = SocialAutomationDTO["gaps"][number];
 export type Funnel = SocialAutomationDTO["funnel"];
 

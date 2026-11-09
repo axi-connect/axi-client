@@ -4,6 +4,7 @@ import type {
   CreateSocialAutomationDTO,
   SocialAutomationDTO,
   SocialChannelDTO,
+  SocialAssetDTO,
   SocialMediaDTO,
   UpdateSocialAutomationDTO,
 } from "@/modules/social/domain/social";
@@ -52,6 +53,16 @@ export function listSocialActivity(
 export async function listSocialChannels(): Promise<SocialChannelDTO[]> {
   const res = await http.get<{ data: SocialChannelDTO[] }>("/social/channels");
   return res.data;
+}
+
+/**
+ * Sube un archivo de la entrega a la biblioteca del negocio. El bloque lo
+ * referencia por `id`: el cliente nunca maneja rutas de almacenamiento.
+ */
+export function uploadSocialAsset(file: File): Promise<SocialAssetDTO> {
+  const form = new FormData();
+  form.append("file", file, file.name);
+  return http.post<SocialAssetDTO>("/social/assets", form);
 }
 
 export async function listChannelMedia(channelId: string): Promise<SocialMediaDTO[]> {
