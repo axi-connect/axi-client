@@ -44,6 +44,8 @@ export const IGNORE_LABELS: Record<string, string> = {
   too_old: "El comentario tenía más de 7 días",
   comment_removed: "Borró o se ocultó el comentario",
   live: "Fue en un en vivo",
+  paused: "La automatización estaba pausada",
+  policy_blocked: "No se le puede escribir por ese canal",
 };
 
 export const FAIL_LABELS: Record<string, string> = {
