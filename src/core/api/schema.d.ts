@@ -8996,6 +8996,118 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/social/automations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["SocialController_list_v1"];
+        put?: never;
+        post: operations["SocialController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/social/automations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["SocialController_byId_v1"];
+        put?: never;
+        post?: never;
+        delete: operations["SocialController_remove_v1"];
+        options?: never;
+        head?: never;
+        patch: operations["SocialController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/social/automations/{id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["SocialController_activate_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/social/automations/{id}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["SocialController_pause_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/social/automations/{id}/activity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["SocialController_activity_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/social/channels": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["SocialController_channels_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/social/channels/{id}/media": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["SocialController_media_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -24927,6 +25039,261 @@ export interface components {
             pays_with: string[];
             /** Format: date-time */
             kit_expires_at: string;
+        };
+        SocialAutomationsListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                channel_ids: string[];
+                /** @enum {string} */
+                scope: "selected" | "all";
+                media_ids: string[];
+                keywords: string[];
+                accept_thread_replies: boolean;
+                public_reply_enabled: boolean;
+                public_reply_variants: string[];
+                public_reply_hourly_cap: number;
+                opener: {
+                    text: string;
+                    button_title: string;
+                };
+                delivery: ({
+                    /** @enum {string} */
+                    type: "text";
+                    text: string;
+                } | {
+                    /** @enum {string} */
+                    type: "media";
+                    storage_key: string;
+                    mime_type: string;
+                    /** @enum {string} */
+                    media_kind: "image" | "video" | "document" | "audio";
+                    filename?: string;
+                    caption?: string;
+                } | {
+                    /** @enum {string} */
+                    type: "link";
+                    text: string;
+                    /** Format: uri */
+                    url: string;
+                    button_title: string;
+                })[];
+                invite_follow: boolean;
+                agent_goal: string | null;
+                test_mode: boolean;
+                test_account_ids: string[];
+                /** @enum {string} */
+                status: "draft" | "active" | "paused";
+                gaps: ("channels" | "media" | "keywords" | "opener" | "delivery" | "public_reply")[];
+                funnel: {
+                    comments: number;
+                    contacted: number;
+                    opened: number;
+                    delivered: number;
+                    ignored: number;
+                    failed: number;
+                };
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+        };
+        CreateSocialAutomationDto: {
+            name: string;
+            channel_ids?: string[];
+            /** @enum {string} */
+            scope?: "selected" | "all";
+            media_ids?: string[];
+            keywords?: string[];
+            accept_thread_replies?: boolean;
+            public_reply_enabled?: boolean;
+            public_reply_variants?: string[];
+            public_reply_hourly_cap?: number;
+            opener?: {
+                text: string;
+                button_title: string;
+            };
+            delivery?: ({
+                /** @enum {string} */
+                type: "text";
+                text: string;
+            } | {
+                /** @enum {string} */
+                type: "media";
+                storage_key: string;
+                mime_type: string;
+                /** @enum {string} */
+                media_kind: "image" | "video" | "document" | "audio";
+                filename?: string;
+                caption?: string;
+            } | {
+                /** @enum {string} */
+                type: "link";
+                text: string;
+                /** Format: uri */
+                url: string;
+                button_title: string;
+            })[];
+            invite_follow?: boolean;
+            agent_goal?: string | null;
+            test_mode?: boolean;
+            test_account_ids?: string[];
+        };
+        SocialAutomationDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            channel_ids: string[];
+            /** @enum {string} */
+            scope: "selected" | "all";
+            media_ids: string[];
+            keywords: string[];
+            accept_thread_replies: boolean;
+            public_reply_enabled: boolean;
+            public_reply_variants: string[];
+            public_reply_hourly_cap: number;
+            opener: {
+                text: string;
+                button_title: string;
+            };
+            delivery: ({
+                /** @enum {string} */
+                type: "text";
+                text: string;
+            } | {
+                /** @enum {string} */
+                type: "media";
+                storage_key: string;
+                mime_type: string;
+                /** @enum {string} */
+                media_kind: "image" | "video" | "document" | "audio";
+                filename?: string;
+                caption?: string;
+            } | {
+                /** @enum {string} */
+                type: "link";
+                text: string;
+                /** Format: uri */
+                url: string;
+                button_title: string;
+            })[];
+            invite_follow: boolean;
+            agent_goal: string | null;
+            test_mode: boolean;
+            test_account_ids: string[];
+            /** @enum {string} */
+            status: "draft" | "active" | "paused";
+            gaps: ("channels" | "media" | "keywords" | "opener" | "delivery" | "public_reply")[];
+            funnel: {
+                comments: number;
+                contacted: number;
+                opened: number;
+                delivered: number;
+                ignored: number;
+                failed: number;
+            };
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        UpdateSocialAutomationDto: {
+            name?: string;
+            channel_ids?: string[];
+            /** @enum {string} */
+            scope?: "selected" | "all";
+            media_ids?: string[];
+            keywords?: string[];
+            accept_thread_replies?: boolean;
+            public_reply_enabled?: boolean;
+            public_reply_variants?: string[];
+            public_reply_hourly_cap?: number;
+            opener?: {
+                text: string;
+                button_title: string;
+            };
+            delivery?: ({
+                /** @enum {string} */
+                type: "text";
+                text: string;
+            } | {
+                /** @enum {string} */
+                type: "media";
+                storage_key: string;
+                mime_type: string;
+                /** @enum {string} */
+                media_kind: "image" | "video" | "document" | "audio";
+                filename?: string;
+                caption?: string;
+            } | {
+                /** @enum {string} */
+                type: "link";
+                text: string;
+                /** Format: uri */
+                url: string;
+                button_title: string;
+            })[];
+            invite_follow?: boolean;
+            agent_goal?: string | null;
+            test_mode?: boolean;
+            test_account_ids?: string[];
+        };
+        ActivityListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                network: "instagram" | "facebook";
+                media_id: string;
+                from_username: string | null;
+                comment_text: string;
+                /** @enum {string} */
+                status: "pending" | "private_replied" | "opened" | "delivered" | "failed" | "ignored";
+                ignore_reason: string | null;
+                fail_reason: string | null;
+                /** @enum {string} */
+                public_reply_status: "none" | "sent" | "capped" | "disabled" | "failed";
+                /** Format: uuid */
+                conversation_id: string | null;
+                /** Format: date-time */
+                commented_at: string | null;
+                /** Format: date-time */
+                private_replied_at: string | null;
+                /** Format: date-time */
+                opened_at: string | null;
+                /** Format: date-time */
+                delivered_at: string | null;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+            /** Format: uuid */
+            next_cursor: string | null;
+        };
+        SocialChannelsListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                /** @enum {string} */
+                kind: "instagram_dm" | "facebook_messenger";
+                username: string | null;
+                status: string;
+                comments_subscribed: boolean | null;
+                comments_reason: string | null;
+            }[];
+        };
+        SocialMediaListDto: {
+            data: {
+                id: string;
+                caption: string | null;
+                media_type: string | null;
+                media_product_type: string | null;
+                permalink: string | null;
+                thumbnail_url: string | null;
+                published_at: string | null;
+            }[];
         };
     };
     responses: never;
@@ -41396,6 +41763,219 @@ export interface operations {
                 };
                 content: {
                     "text/calendar": string;
+                };
+            };
+        };
+    };
+    SocialController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SocialAutomationsListDto"];
+                };
+            };
+        };
+    };
+    SocialController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateSocialAutomationDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SocialAutomationDto"];
+                };
+            };
+        };
+    };
+    SocialController_byId_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SocialAutomationDto"];
+                };
+            };
+        };
+    };
+    SocialController_remove_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    SocialController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateSocialAutomationDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SocialAutomationDto"];
+                };
+            };
+        };
+    };
+    SocialController_activate_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SocialAutomationDto"];
+                };
+            };
+        };
+    };
+    SocialController_pause_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SocialAutomationDto"];
+                };
+            };
+        };
+    };
+    SocialController_activity_v1: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityListDto"];
+                };
+            };
+        };
+    };
+    SocialController_channels_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SocialChannelsListDto"];
+                };
+            };
+        };
+    };
+    SocialController_media_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SocialMediaListDto"];
                 };
             };
         };

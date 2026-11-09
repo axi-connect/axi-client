@@ -53,7 +53,10 @@ jest.mock("../../../auth/platform-auth.context", () => ({
   usePlatformAuth: () => ({ reloginOpen: false }),
 }));
 
-const mockedClient = platformClient as jest.Mocked<typeof platformClient>;
+// Solo lo que el test usa: `jest.Mocked<typeof platformClient>` mapea el tipo del
+// cliente con TODAS las rutas de la API y revienta el límite de profundidad de
+// TypeScript (TS2589) en cuanto la API crece (Redes, F4 de comentarios).
+const mockedClient = platformClient as unknown as { GET: jest.Mock; POST: jest.Mock };
 
 function createWrapper() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });

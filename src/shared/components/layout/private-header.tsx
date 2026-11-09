@@ -26,6 +26,7 @@ const LABELS: Record<string, string> = {
 	"campaigns": "Campañas",
 	"automations": "Recuperación",
 	"promotions": "Promociones",
+	"social": "Redes",
 	// Solo existe /marketing/settings/templates: los textos propios del tenant.
 	"templates": "Mensajes",
 	"meta-templates": "Plantillas de Meta",
@@ -96,6 +97,7 @@ const DETAIL_LABELS: Record<string, string> = {
 	"/marketing/campaigns": "Campaña",
 	"/marketing/autopilot": "Piloto",
 	"/marketing/autopilot/runs": "Salida",
+	"/marketing/social": "Automatización",
 }
 
 /**

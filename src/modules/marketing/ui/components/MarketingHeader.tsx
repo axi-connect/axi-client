@@ -17,6 +17,8 @@ export const MARKETING_SECTIONS: readonly NavTabItem[] = [
   { href: `${BASE}/campaigns`, label: "Campañas" },
   { href: `${BASE}/automations`, label: "Recuperación" },
   { href: `${BASE}/promotions`, label: "Promociones" },
+  // «Comenta y recibe» y lo que venga de redes (plan de comentarios §1.2).
+  { href: `${BASE}/social`, label: "Redes" },
   { href: `${BASE}/leads`, label: "Captación" },
   // El piloto (P5): sale a buscar, califica y escribe solo.
   { href: `${BASE}/autopilot`, label: "Piloto" },

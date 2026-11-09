@@ -285,6 +285,11 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   // Los mensajes explican qué hacer, no solo qué falló: el módulo escribe a
   // clientes reales y el operador necesita saber si puede reintentar.
   "marketing/campaign_not_found": "La campaña ya no existe",
+  // Redes («Comenta y recibe»)
+  "social/automation_not_found": "La automatización ya no existe",
+  "social/automation_not_ready": "A la automatización le falta algo para activarse",
+  "social/channel_not_eligible": "Esa cuenta no es de Instagram o Facebook, o ya no está conectada",
+  "social/media_unavailable": "No pudimos leer tus publicaciones. Revisa que la cuenta esté conectada con el permiso de comentarios",
   "marketing/campaign_not_editable":
     "La campaña ya se lanzó: su audiencia y su contenido quedaron congelados. Duplícala para cambiar algo",
   "marketing/template_not_found": "La plantilla ya no existe",

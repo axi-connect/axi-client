@@ -35,7 +35,8 @@ jest.mock("../../platform-client", () => ({
   },
 }));
 
-const mockedClient = platformClient as jest.Mocked<typeof platformClient>;
+// Ver use-quality-runs.test.tsx: el tipo completo del cliente revienta TS2589.
+const mockedClient = platformClient as unknown as Record<"GET" | "POST" | "PATCH" | "PUT" | "DELETE", jest.Mock>;
 
 function createWrapper() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
