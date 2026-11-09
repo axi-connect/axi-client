@@ -205,7 +205,10 @@ export function SocialView() {
                   <div className="flex min-w-0 flex-wrap items-start gap-3">
                     <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                       <div className="flex min-w-0 flex-wrap items-center gap-2">
-                        <h2 className="font-heading truncate text-lg leading-tight font-bold tracking-tight" title={automation.name}>
+                        <h2
+                          className="font-heading line-clamp-2 text-lg leading-tight font-bold tracking-tight"
+                          title={automation.name}
+                        >
                           {automation.name}
                         </h2>
                         <AutomationStatus status={automation.status} />

@@ -24,9 +24,8 @@ export function FunnelStrip({ funnel, compact = false }: { funnel: Funnel; compa
           <span className={cn("font-heading font-bold tabular-nums", compact ? "text-base" : "text-2xl")}>
             {stage.value.toLocaleString("es-CO")}
           </span>
-          <span className="text-muted-foreground truncate text-xs" title={stage.label}>
-            {stage.label}
-          </span>
+          {/* Pasa a dos líneas antes que cortarse: «Tocaron «Envíamelo»» es el dato */}
+          <span className="text-muted-foreground text-xs leading-snug text-pretty">{stage.label}</span>
           {!compact && index > 0 && (
             <span className="text-muted-foreground text-[11px] tabular-nums">
               {stage.rate === null ? "—" : `${String(stage.rate)} % de la anterior`}

@@ -49,7 +49,7 @@ export function PhonePreview({
         </p>
         <p className="text-sm">
           <b className="font-semibold">{commenter}</b>{" "}
-          {keyword === null ? <span className="text-muted-foreground">escribe la palabra…</span> : keyword}
+          {keyword === null ? <span className="text-muted-foreground">escribe la palabra</span> : keyword}
         </p>
         {publicReply !== null && publicReply.trim().length > 0 && (
           <p className="border-border border-l-2 pl-3 text-sm">

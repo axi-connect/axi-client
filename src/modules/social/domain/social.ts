@@ -128,6 +128,33 @@ export function sumFunnels(rows: readonly SocialAutomationDTO[]): Funnel {
   );
 }
 
+/**
+ * Lo que le falta al borrador, calculado en el cliente con la MISMA regla que
+ * el servidor (`automation_readiness.ts`): los pasos se marcan pendientes
+ * mientras se escribe, sin esperar a guardar.
+ */
+export function draftGaps(draft: {
+  channel_ids: readonly string[];
+  scope: "selected" | "all";
+  media_ids: readonly string[];
+  keywords: readonly string[];
+  opener: { text: string };
+  delivery: readonly unknown[];
+  public_reply_enabled: boolean;
+  public_reply_variants: readonly string[];
+}): ReadinessGap[] {
+  const gaps: ReadinessGap[] = [];
+  if (draft.channel_ids.length === 0) gaps.push("channels");
+  if (draft.scope === "selected" && draft.media_ids.length === 0) gaps.push("media");
+  if (!draft.keywords.some((keyword) => /[\p{L}\p{N}]/u.test(keyword))) gaps.push("keywords");
+  if (draft.opener.text.trim().length === 0) gaps.push("opener");
+  if (draft.delivery.length === 0) gaps.push("delivery");
+  if (draft.public_reply_enabled && !draft.public_reply_variants.some((v) => v.trim().length > 0)) {
+    gaps.push("public_reply");
+  }
+  return gaps;
+}
+
 /** «Te falta: …» en una frase. */
 export function describeGaps(gaps: readonly ReadinessGap[]): string | null {
   if (gaps.length === 0) return null;

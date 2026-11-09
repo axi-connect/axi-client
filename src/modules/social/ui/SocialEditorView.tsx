@@ -23,6 +23,7 @@ import {
   DEFAULT_BUTTON_TITLE,
   GAP_LABELS,
   describeGaps,
+  draftGaps,
   type DeliveryBlock,
   type EditorStep,
   type ReadinessGap,
@@ -169,9 +170,11 @@ export function SocialEditorView({ automationId }: { automationId: string | null
     };
   }, [draft, channels]);
 
-  const gaps = saved?.gaps ?? [];
-  const stepState = (step: EditorStep): "done" | "blocked" =>
-    gaps.some((gap) => GAP_LABELS[gap].step === step) && !dirty ? "blocked" : "done";
+  // Con la regla del servidor, sobre lo que se está escribiendo: un paso sin
+  // lo necesario se ve pendiente, nunca con el visto bueno
+  const gaps = draft === null ? [] : draftGaps(draft);
+  const stepState = (step: EditorStep): "done" | "pending" =>
+    gaps.some((gap) => GAP_LABELS[gap].step === step) ? "pending" : "done";
 
   async function persist(): Promise<SocialAutomationDTO | null> {
     if (draft === null) return null;
@@ -328,8 +331,8 @@ export function SocialEditorView({ automationId }: { automationId: string | null
                   onValueChange={(scope) => set({ scope })}
                   label="Qué publicaciones escucha"
                   items={[
-                    { value: "selected", label: "Las que elija" },
-                    { value: "all", label: "Todas, también las nuevas" },
+                    { value: "selected", label: "Las que elijas" },
+                    { value: "all", label: "Todas" },
                   ]}
                 />
                 {draft.scope === "selected" && (
