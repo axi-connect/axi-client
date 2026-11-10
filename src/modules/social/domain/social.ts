@@ -66,6 +66,16 @@ export const FAIL_LABELS: Record<string, string> = {
 
 export type ActivityTone = "success" | "info" | "warning" | "destructive" | "neutral";
 
+/**
+ * Quién comentó. En Instagram es un @usuario; en Facebook Meta manda el nombre
+ * visible, que no lleva @.
+ */
+export function commenterLabel(item: Pick<ActivityItemDTO, "network" | "from_username">): string {
+  const name = item.from_username?.trim();
+  if (!name) return "Alguien";
+  return item.network === "instagram" ? `@${name}` : name;
+}
+
 /** Cómo va cada comentario, en una frase y un tono. */
 export function describeActivity(item: ActivityItemDTO): { label: string; tone: ActivityTone } {
   switch (item.status) {

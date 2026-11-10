@@ -11,6 +11,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { LoadError } from "@/modules/marketing/ui/components/premium";
 import {
+  commenterLabel,
   describeActivity,
   type ActivityItemDTO,
   type SocialAutomationDTO,
@@ -96,7 +97,7 @@ export function ActivitySheet({
                     <div className="flex min-w-0 flex-1 flex-col gap-1">
                       <p className="flex min-w-0 flex-wrap items-baseline gap-x-2 text-sm">
                         <b className="truncate font-semibold">
-                          {item.from_username === null ? "Alguien" : `@${item.from_username}`}
+                          {commenterLabel(item)}
                         </b>
                         <span className="text-muted-foreground text-xs">
                           {relativeTime(item.commented_at ?? item.created_at)}
