@@ -9,7 +9,6 @@
  * de iconos: ningún componente con estado.
  */
 export {
-  ANNUAL_DISCOUNT,
   BILLING_PERIODS,
   FOUNDERS,
   MODULES,
