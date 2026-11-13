@@ -23,8 +23,10 @@ import {
 describe("copy del Programa Fundadores", () => {
   it("el titular y el sello se derivan del descuento y los cupos del catálogo", () => {
     expect(foundersHeadline("−40 %", 20)).toBe("−40 % de descuento para las primeras 20 empresas.")
-    expect(foundersHeadline("−40 %", null)).toBe("−40 % de descuento para las primeras empresas.")
+    expect(foundersHeadline("−25 %", null, false)).toBe("−25 % de descuento en los planes mensuales.")
+    expect(foundersHeadline("−25 %", null)).toBe("−25 % de descuento en todos los planes.")
     expect(foundersDiscountBadge("−40 %")).toBe("−40 % precio fundador")
+    expect(foundersDiscountBadge("−25 %", "Black Friday")).toBe("−25 % Black Friday")
   })
 
   it("la promesa es la del ajuste por inflación, no la de «congelada mientras sigas»", () => {
@@ -87,8 +89,8 @@ describe("fecha de cierre", () => {
 })
 
 describe("periodicidad", () => {
-  it("el anual anuncia un mes gratis, derivado de los meses facturados", () => {
-    expect(BILLING_PERIODS.find((period) => period.id === "annual")?.badge).toBe("1 mes gratis")
+  it("el anual anuncia su descuento", () => {
+    expect(BILLING_PERIODS.find((period) => period.id === "annual")?.badge).toBe("−15 % de descuento")
   })
 })
 

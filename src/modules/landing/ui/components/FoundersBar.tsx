@@ -45,11 +45,11 @@ export function FoundersBar({ promotion }: { promotion: CatalogPromotion }) {
             </p>
 
             <h3 className="font-heading mt-3 text-2xl leading-tight font-bold tracking-tight text-balance md:text-3xl">
-              {foundersHeadline(discountLabel(promotion), slots)}
+              {foundersHeadline(discountLabel(promotion), slots, promotion.stacksWithAnnual)}
             </h3>
 
             <p className="text-muted-foreground mt-3 max-w-xl text-sm leading-relaxed">
-              {FOUNDERS.promise}
+              {slots !== null ? FOUNDERS.promise : FOUNDERS.openPromise}
             </p>
 
             {slots !== null ? (

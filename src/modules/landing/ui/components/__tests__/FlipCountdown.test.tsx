@@ -66,7 +66,7 @@ describe("FlipCountdown", () => {
     // Sin aria-live: informa al recorrer la sección, no se anuncia cada segundo.
     expect(container.querySelector("[aria-live]")).toBeNull()
     expect(
-      screen.getByText("La oferta de fundadores cierra el 31 de octubre; quedan 3 días."),
+      screen.getByText("La oferta cierra el 31 de octubre; quedan 3 días."),
     ).toBeInTheDocument()
   })
 

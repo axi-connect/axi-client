@@ -907,7 +907,7 @@ export const PRICE = {
     label: "Axi · plan Esencial",
     /** `volume` es la etiqueta del tramo del catálogo («1.000»). */
     note: (volume: string) => `al mes con ${volume} conversaciones. Atiende a toda hora y a todos a la vez.`,
-    founder: "Precio fundador",
+    founder: "Precio de promoción",
     /** Sin catálogo no hay cifra: se dice dónde verla, sin inventarla. */
     empty: "El precio depende de cuántas conversaciones atiendes al mes. Míralo por volumen en los planes.",
     cta: { label: "Ver todos los planes", href: "/precios" },

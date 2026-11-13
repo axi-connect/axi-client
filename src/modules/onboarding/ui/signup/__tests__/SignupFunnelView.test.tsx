@@ -91,7 +91,7 @@ describe("SignupFunnelView", () => {
     const line = summary()
     expect(line.getByText(/escala/i)).toBeInTheDocument()
     expect(line.getByText(/5\.000 al mes/)).toBeInTheDocument()
-    expect(line.getByText(/anual, con 1 mes gratis/i)).toBeInTheDocument()
+    expect(line.getByText(/anual, con 15 % de descuento/i)).toBeInTheDocument()
   })
 
   it("manda Enterprise a ventas", async () => {

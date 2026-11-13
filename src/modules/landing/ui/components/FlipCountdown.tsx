@@ -63,8 +63,8 @@ export function FlipCountdown({
     <div className={className}>
       <span className="sr-only">
         {parts
-          ? `La oferta de fundadores cierra el ${deadlineLabel}; quedan ${parts.days} días.`
-          : `La oferta de fundadores cierra el ${deadlineLabel}.`}
+          ? `La oferta cierra el ${deadlineLabel}; quedan ${parts.days} días.`
+          : `La oferta cierra el ${deadlineLabel}.`}
       </span>
       <div aria-hidden className="flex gap-1.5 md:gap-2">
         {units.map((unit) => (

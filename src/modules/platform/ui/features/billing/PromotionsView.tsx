@@ -569,7 +569,7 @@ function PromotionSheet({
         <div className="flex flex-col gap-2 text-sm">
           <label className="flex items-center gap-3">
             <input type="checkbox" className="accent-brand size-4" checked={stacks} onChange={(event) => setStacks(event.target.checked)} />
-            Se apila con el mes gratis del anual
+            Se apila con el 15 % del anual
           </label>
           <label className="flex items-center gap-3">
             <input type="checkbox" className="accent-brand size-4" checked={isPublic} onChange={(event) => setIsPublic(event.target.checked)} />

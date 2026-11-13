@@ -46,8 +46,11 @@ function planUnitsFrom(raw: unknown): PlanUnit[] {
   return units;
 }
 
-/** Meses facturados en el anual: doce de servicio, once cobrados (D2). */
-export const ANNUAL_PAID_MONTHS = 11;
+/**
+ * El anual: doce meses al precio mensual con 15 % de descuento, redondeado
+ * hacia abajo al .900. Misma regla que `annual_pricing.ts` del servidor.
+ */
+export const ANNUAL_DISCOUNT = 0.15;
 export const MONTHS_PER_YEAR = 12;
 
 export type CatalogVolume = {
@@ -295,8 +298,20 @@ export function planUnitQuantity(catalog: PublicCatalog, slug: string, metric: s
   return unit ? unit.quantity : null;
 }
 
+export function annualMonthlyCop(monthlyCop: number): number {
+  return Math.max(900, Math.floor((monthlyCop * (1 - ANNUAL_DISCOUNT) - 900) / 1000) * 1000 + 900);
+}
+
 export function annualTotalCop(monthlyCop: number): number {
-  return monthlyCop * ANNUAL_PAID_MONTHS;
+  return annualMonthlyCop(monthlyCop) * MONTHS_PER_YEAR;
+}
+
+/**
+ * Mensual sobre la que se calcula el anual: la de promoción solo si la promo
+ * se apila con el anual; si no, el anual sale del precio de lista.
+ */
+export function annualBaseCop(catalog: PublicCatalog, listCop: number, monthlyCop: number): number {
+  return catalog.promotion?.stacksWithAnnual ? monthlyCop : listCop;
 }
 
 /* ───────────────────────────── promoción ───────────────────────────── */
@@ -324,6 +339,10 @@ export function promotionLastDay(promotion: CatalogPromotion): string | null {
 }
 
 /** «−40 %», derivado de la fracción para que titular y sello no puedan divergir. */
+export function annualDiscountLabel(): string {
+  return `−${Math.round(ANNUAL_DISCOUNT * 100)} %`;
+}
+
 export function discountLabel(promotion: CatalogPromotion): string {
   return `−${Math.round(promotion.discount * 100)} %`;
 }
