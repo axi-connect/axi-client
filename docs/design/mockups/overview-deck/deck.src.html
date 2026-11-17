@@ -1,0 +1,702 @@
+<meta charset="utf-8">
+<title>Axi Overview</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Qué es Axi Connect, qué resuelve y cómo se ve por dentro.">
+<style>
+/* Maqueta F0 · axi-connect.co/overview — escenario claro fijo (medio audiovisual, como los videos de Axi):
+   subtítulos «dos tamaños» arriba, la UI real abajo con cámara; cromo mínimo y una ruta de progreso al pie. */
+{{FONTS}}
+:root{
+  color-scheme: light;
+  --bg:#ffffff; --bg-2:#f4f1f8; --ink:#0a0a0a; --fg:#171717; --muted:#6b6b70; --line:rgba(23,23,23,.09);
+  --coral:#e65759; --coral-2:#e02f2f; --coral-soft:#fbe7e8; --violet:#7c3aed; --amber:#f0a431;
+  --pill:#171717; --on-pill:#ffffff;
+  --f-sub:"Inter Tight", "Helvetica Neue", Arial, sans-serif;
+  --f-body:"Poppins", "Helvetica Neue", Arial, sans-serif;
+  --f-display:"Nexa", "Poppins", Arial, sans-serif;
+  --key:clamp(40px, min(6.6vw, 10.5vh), 118px);
+  --ent:calc(var(--key) / 2.55);
+  --ease-out:cubic-bezier(.16,1,.3,1);
+  --gut:max(16px, env(safe-area-inset-left, 0px));
+  --gut-r:max(16px, env(safe-area-inset-right, 0px));
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);overflow:hidden;-webkit-font-smoothing:antialiased;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--coral);outline-offset:3px;border-radius:10px}
+
+/* Escenario: fondo vivo muy suave, nunca un degradado lineal a sangre */
+.bg{position:fixed;inset:0;z-index:-1;background:
+  radial-gradient(70% 60% at 30% 20%, #ffffff 0%, transparent 60%),
+  radial-gradient(80% 80% at 70% 90%, #efe9f7 0%, transparent 70%),
+  radial-gradient(60% 50% at 85% 10%, #fdf0f1 0%, transparent 70%), var(--bg)}
+
+.deck{position:fixed;inset:0;display:grid;grid-template-rows:auto minmax(0,1fr) auto;
+  padding:calc(env(safe-area-inset-top,0px) + 14px) var(--gut-r) calc(env(safe-area-inset-bottom,0px) + 12px) var(--gut)}
+
+/* Cromo superior */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-inline:max(0px, calc(3vw - 16px));min-width:0}
+.lockup{display:flex;align-items:center;gap:9px;text-decoration:none;color:inherit}
+.lockup svg{width:30px;height:30px;flex:none}
+.wordmark{font:700 19px/1 var(--f-display);letter-spacing:-.01em;text-transform:lowercase;
+  background:linear-gradient(100deg,var(--coral),var(--coral-2));-webkit-background-clip:text;background-clip:text;color:transparent;padding-top:3px}
+.tools{display:flex;align-items:center;gap:6px}
+.count{font:500 13px/1 var(--f-body);color:var(--muted);font-variant-numeric:tabular-nums;padding-inline:8px;letter-spacing:.02em}
+.icon-btn{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 12px;border-radius:12px;border:1px solid var(--line);
+  background:rgba(255,255,255,.7);font-size:13px;font-weight:500;cursor:pointer;transition:background .15s, transform .15s}
+.icon-btn:hover{background:#fff}
+.icon-btn:active{transform:scale(.97)}
+.icon-btn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.icon-btn[aria-pressed="true"]{background:var(--pill);color:var(--on-pill);border-color:var(--pill)}
+kbd{font:500 11px/1 var(--f-body);color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:2px 5px}
+.icon-btn[aria-pressed="true"] kbd{color:#bbb;border-color:#444}
+
+/* Láminas */
+.stage{position:relative;min-height:0}
+.slide{position:absolute;inset:0;display:grid;grid-template-rows:auto minmax(0,1fr);gap:clamp(14px,3vh,34px);
+  padding-block:clamp(10px,3.4vh,40px) clamp(8px,2vh,22px);opacity:0;visibility:hidden;pointer-events:none}
+.slide.is-active{opacity:1;visibility:visible;pointer-events:auto}
+.slide.is-leaving{visibility:visible;animation:ghost .3s ease-in forwards}
+.slide.solo{grid-template-rows:minmax(0,1fr)}
+.slide.text{grid-template-rows:auto auto;align-content:center;gap:clamp(28px,6vh,72px)}
+.slide.text > :last-child{align-self:start}
+@keyframes ghost{from{opacity:1;filter:blur(0)}to{opacity:0;filter:blur(12px);transform:scale(1.015)}}
+
+/* Subtítulo «dos tamaños» */
+.sub{display:flex;flex-direction:column;align-items:flex-start;width:fit-content;max-width:100%;margin-inline:auto;transform-origin:50% 60%}
+.ent{font:500 var(--ent)/1.04 var(--f-sub);letter-spacing:-.035em;color:var(--ink);text-transform:lowercase;padding-left:.04em}
+.key{font:800 var(--key)/.98 var(--f-sub);letter-spacing:-.06em;word-spacing:.07em;color:var(--ink);text-wrap:balance;padding-bottom:.08em}
+.key em,.ent em{font-style:normal;color:var(--coral)}
+.apoyo{margin:clamp(6px,1.2vh,12px) 0 0;font:400 clamp(14px,1.25vw,18px)/1.5 var(--f-body);color:var(--muted);max-width:52ch}
+.tu-caso{display:inline-flex;align-items:center;gap:6px;margin-bottom:10px;height:24px;padding:0 10px;border-radius:999px;
+  background:var(--coral-soft);color:#b8383a;font:600 11px/1 var(--f-body);letter-spacing:.08em;text-transform:uppercase}
+.tu-caso::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--coral)}
+
+.is-active .sub{animation:drift 9s linear .2s both}
+.is-active .ent{animation:entIn .1s ease-out .06s both}
+.is-active .key{animation:keyIn .3s var(--ease-out) .14s both}
+.is-active .apoyo,.is-active .tu-caso{animation:fadeUp .5s var(--ease-out) .32s both}
+@keyframes drift{from{transform:scale(1)}to{transform:scale(1.025)}}
+@keyframes entIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes keyIn{from{opacity:0;filter:blur(16px);transform:scale(1.06)}to{opacity:1;filter:blur(0);transform:none}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* Medio: la UI real dentro de un marco, con cámara */
+.media{min-height:0;container-type:size;display:grid;place-items:center}
+.screen{--r:1;position:relative;width:min(100cqw,160cqh);aspect-ratio:16/10;margin:0;perspective:2400px;perspective-origin:50% 30%}
+.tilt{position:absolute;inset:0;transform-style:preserve-3d}
+.frame{position:absolute;inset:0;border-radius:clamp(12px,1.4cqw,22px);overflow:hidden;background:#fff;
+  box-shadow:0 0 0 1px rgba(23,23,23,.08),0 2px 6px rgba(20,10,40,.06),0 40px 90px -30px rgba(40,20,80,.32)}
+.cam{position:absolute;left:0;top:0;width:100%;transform-origin:0 0;will-change:transform}
+.cam img{display:block;width:100%;height:auto;background:#f4f4f5}
+.cam img.m{display:none}
+.is-active .tilt{animation:tiltIn 1.7s var(--ease-out) .12s both}
+.is-active .cam{animation:camD 6.4s cubic-bezier(.65,0,.25,1) .12s both}
+@keyframes tiltIn{
+  from{transform:translateY(5%) rotateX(17deg) rotateY(-13deg) rotateZ(2deg) scale(.86);opacity:0}
+  18%{opacity:1}
+  to{transform:none;opacity:1}}
+@keyframes camD{
+  0%,36%{transform:translate(0,0) scale(1);filter:blur(0)}
+  47%{filter:blur(1.8px)}
+  58%{transform:translate(var(--tx),var(--ty)) scale(var(--z));filter:blur(0)}
+  100%{transform:translate(calc(var(--tx) - var(--dx)),calc(var(--ty) - var(--dy))) scale(calc(var(--z) * 1.035));filter:blur(0)}}
+.pendiente{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;
+  background:repeating-linear-gradient(135deg,#fafafa 0 14px,#f4f4f5 14px 28px);border:1.5px dashed rgba(23,23,23,.18);border-radius:inherit}
+.pendiente b{display:block;font:600 15px/1.4 var(--f-body);color:var(--fg)}
+.pendiente span{display:block;font:400 13px/1.5 var(--f-body);color:var(--muted);margin-top:4px}
+
+/* Chips de logos (solo canales e integraciones) */
+.logos{display:flex;flex-wrap:wrap;gap:8px;margin-top:clamp(8px,1.4vh,14px)}
+.logo{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:#fff;
+  font:500 13px/1 var(--f-body);color:var(--fg)}
+.logo svg{width:15px;height:15px;fill:currentColor}
+
+/* Portada y cierre */
+.cover{display:grid;place-items:center;align-content:center;gap:clamp(16px,3vh,30px);text-align:center}
+.cover .iso{width:clamp(64px,9vh,104px);height:auto}
+.cover .sub{align-items:flex-start;text-align:left}
+.para{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 14px;border-radius:999px;background:rgba(255,255,255,.8);
+  border:1px solid var(--line);font:500 13px/1 var(--f-body);color:var(--muted)}
+.para b{color:var(--fg);font-weight:600}
+.hint{font:400 13px/1 var(--f-body);color:var(--muted)}
+.hint .m{display:none}
+.cta-row{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 22px;border-radius:12px;font:600 15px/1 var(--f-body);
+  text-decoration:none;transition:transform .15s, filter .15s}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--coral);color:#fff;box-shadow:0 10px 30px -10px rgba(230,87,89,.6)}
+.btn.primary:hover{filter:brightness(1.05)}
+.btn.ghost{border:1px solid var(--line);background:#fff;color:var(--fg)}
+.btn svg{width:17px;height:17px;fill:currentColor}
+
+/* Diagnóstico */
+.diag{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:10px;width:min(100%,980px);margin-inline:auto;align-content:start}
+.chip{display:flex;align-items:center;gap:12px;min-height:58px;padding:12px 16px;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.85);
+  text-align:left;cursor:pointer;font:500 15px/1.35 var(--f-body);transition:border-color .15s, background .15s, transform .15s}
+.chip:hover{border-color:rgba(23,23,23,.2)}
+.chip:active{transform:scale(.98)}
+.chip .box{flex:none;width:22px;height:22px;border-radius:7px;border:1.5px solid rgba(23,23,23,.25);display:grid;place-items:center;transition:all .15s}
+.chip .box svg{width:13px;height:13px;stroke:#fff;stroke-width:3;fill:none;opacity:0}
+.chip[aria-pressed="true"]{border-color:var(--coral);background:#fff;box-shadow:0 0 0 3px var(--coral-soft)}
+.chip[aria-pressed="true"] .box{background:var(--coral);border-color:var(--coral)}
+.chip[aria-pressed="true"] .box svg{opacity:1}
+.diag-foot{grid-column:1/-1;font:400 13px/1.5 var(--f-body);color:var(--muted);text-align:center;margin-top:4px}
+.diag-wrap{min-height:0;overflow:auto;padding:4px 2px}
+
+/* Tres fracturas */
+.tri{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(16px,3vw,48px);width:min(100%,1100px);margin-inline:auto;align-self:center}
+.tri div{border-top:1px solid var(--line);padding-top:clamp(14px,2.4vh,24px)}
+.tri b{display:block;font:800 clamp(30px,4.2vw,64px)/1 var(--f-sub);letter-spacing:-.055em;color:var(--ink)}
+.tri span{display:block;margin-top:10px;font:400 clamp(14px,1.2vw,17px)/1.5 var(--f-body);color:var(--muted);max-width:30ch}
+
+/* Qué es Axi: las tres cintas */
+.pillars{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:clamp(24px,5vw,80px);width:min(100%,980px);margin-inline:auto;align-self:center}
+.pillars .iso{width:clamp(140px,22vw,300px);height:auto}
+.pillars ul{list-style:none;margin:0;padding:0;display:grid;gap:clamp(14px,2.6vh,26px)}
+.pillars li{display:grid;grid-template-columns:14px 1fr;column-gap:14px;align-items:baseline}
+.pillars li i{width:12px;height:12px;border-radius:4px;transform:translateY(-2px)}
+.pillars b{font:800 clamp(26px,3vw,46px)/1.05 var(--f-sub);letter-spacing:-.05em;color:var(--ink)}
+.pillars span{grid-column:2;font:400 clamp(14px,1.2vw,17px)/1.5 var(--f-body);color:var(--muted)}
+
+/* Integraciones: un nodo central y lo que el negocio ya usa */
+.hub{position:relative;width:min(100cqw,170cqh);aspect-ratio:17/10}
+.hub svg.wires{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.hub .wire{fill:none;stroke:rgba(23,23,23,.14);stroke-width:1.5}
+.hub .pulse{fill:none;stroke:var(--coral);stroke-width:2.2;stroke-linecap:round;stroke-dasharray:18 400;stroke-dashoffset:418}
+.is-active .hub .pulse{animation:pulse 2.6s cubic-bezier(.5,0,.3,1) infinite}
+@keyframes pulse{to{stroke-dashoffset:0}}
+.hub .core{position:absolute;left:50%;top:50%;width:18%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:28%;background:#fff;display:grid;place-items:center;
+  box-shadow:0 0 0 1px var(--line),0 30px 70px -25px rgba(230,87,89,.45)}
+.hub .core svg{width:62%;height:auto}
+.node{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.node .tile{display:flex;align-items:center;justify-content:center;gap:8px;min-width:clamp(96px,12cqw,170px);height:clamp(48px,7cqh,64px);padding:0 16px;border-radius:16px;
+  background:#fff;box-shadow:0 0 0 1px var(--line),0 12px 30px -16px rgba(20,10,40,.25);font:700 clamp(14px,1.7cqw,20px)/1 var(--f-body);color:var(--fg);letter-spacing:-.01em}
+.node .tile svg{width:1.2em;height:1.2em;fill:currentColor}
+.node small{font:400 12px/1.3 var(--f-body);color:var(--muted)}
+.wm{font-family:var(--f-display);letter-spacing:.02em}
+
+/* Cómo empezamos: la ruta */
+.route{position:relative;width:min(100%,1040px);margin-inline:auto;align-self:center;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(12px,2vw,28px);padding-top:34px}
+.route::before{content:"";position:absolute;left:10px;right:10px;top:9px;height:2px;background:rgba(23,23,23,.1);border-radius:2px}
+.route::after{content:"";position:absolute;left:10px;top:9px;height:2px;width:calc(100% - 20px);background:linear-gradient(90deg,var(--coral),var(--coral-2));border-radius:2px;transform-origin:0 50%;transform:scaleX(1)}
+.is-active .route::after{animation:grow 1.6s var(--ease-out) .4s both}
+@keyframes grow{from{transform:scaleX(0)}}
+.stop{position:relative}
+.stop::before{content:"";position:absolute;left:0;top:-34px;width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid var(--coral);box-shadow:0 0 0 5px var(--bg)}
+.stop b{display:block;font:800 clamp(30px,3.8vw,58px)/1 var(--f-sub);letter-spacing:-.055em;color:var(--ink)}
+.stop span{display:block;margin-top:8px;font:400 clamp(14px,1.2vw,17px)/1.5 var(--f-body);color:var(--muted);max-width:28ch}
+
+/* Planes, en vivo */
+.plans{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(10px,1.6vw,20px);width:min(100%,1040px);margin-inline:auto;align-self:center}
+.plan{position:relative;padding:clamp(18px,2.6vh,28px);border-radius:20px;background:#fff;box-shadow:0 0 0 1px var(--line),0 20px 50px -30px rgba(20,10,40,.25)}
+.plan.best{box-shadow:0 0 0 2px var(--coral),0 30px 60px -30px rgba(230,87,89,.5)}
+.plan .tag{position:absolute;top:-12px;left:20px;height:24px;padding:0 10px;border-radius:999px;background:var(--coral);color:#fff;font:600 11px/24px var(--f-body);letter-spacing:.06em;text-transform:uppercase}
+.plan h3{margin:0;font:600 16px/1.2 var(--f-body)}
+.plan .price{margin-top:12px;font:700 clamp(30px,3.4vw,46px)/1 var(--f-display);letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--ink)}
+.plan .price small{font:500 14px/1 var(--f-body);color:var(--muted);letter-spacing:0;margin-left:4px}
+.plan p{margin:12px 0 0;font:400 13.5px/1.5 var(--f-body);color:var(--muted)}
+.plans-foot{grid-column:1/-1;text-align:center;font:400 12.5px/1.5 var(--f-body);color:var(--muted)}
+.plans-foot b{font-weight:600;color:var(--fg)}
+.live{display:inline-block;width:7px;height:7px;border-radius:50%;background:#16a34a;margin-right:6px;transform:translateY(-1px)}
+
+/* Pie: la ruta del recorrido */
+.foot{display:flex;align-items:center;gap:14px;padding-inline:max(0px, calc(3vw - 16px))}
+.progress{position:relative;flex:1;height:28px;display:flex;align-items:center;min-width:0}
+.progress .track{position:absolute;left:0;right:0;height:2px;border-radius:2px;background:rgba(23,23,23,.1)}
+.progress .fill{position:absolute;left:0;height:2px;border-radius:2px;background:linear-gradient(90deg,var(--coral),var(--coral-2));transition:width .5s var(--ease-out)}
+.dots{position:relative;display:flex;justify-content:space-between;width:100%}
+.dot{width:14px;height:28px;display:grid;place-items:center;border:0;background:none;padding:0;cursor:pointer}
+.dot::before{content:"";width:6px;height:6px;border-radius:50%;background:#d4d4d8;transition:all .2s}
+.dot.done::before{background:var(--coral)}
+.dot.now::before{width:12px;height:12px;background:#fff;box-shadow:0 0 0 2.5px var(--coral)}
+.dot.mark::before{box-shadow:0 0 0 2px #fff,0 0 0 3.5px var(--coral)}
+.nav{display:flex;gap:6px}
+.nav button{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,.8);cursor:pointer;display:grid;place-items:center;transition:transform .15s,background .15s}
+.nav button:hover{background:#fff}
+.nav button:active{transform:scale(.94)}
+.nav svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.nav button:disabled{opacity:.35;cursor:default}
+
+/* Guion del vendedor: isla de tinta */
+.notes{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 64px);transform:translateX(-50%);width:min(calc(100% - 32px),760px);
+  background:var(--pill);color:var(--on-pill);border-radius:24px;padding:16px 20px 18px;box-shadow:0 30px 80px -20px rgba(0,0,0,.45);z-index:20}
+.notes .lbl{font:600 10.5px/1 var(--f-body);letter-spacing:.14em;text-transform:uppercase;color:#a1a1aa;display:flex;justify-content:space-between;gap:12px}
+.notes p{margin:9px 0 0;font:400 15px/1.55 var(--f-body)}
+.notes p q{color:#fda4ae}
+
+/* Índice */
+.index{position:fixed;inset:0;z-index:30;display:grid;place-items:center;padding:24px var(--gut-r) 24px var(--gut);background:rgba(250,250,250,.55);
+  -webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6)}
+.index-card{width:min(100%,980px);max-height:100%;overflow:auto;background:rgba(255,255,255,.88);border-radius:24px;padding:22px;
+  box-shadow:0 0 0 1px var(--line),0 40px 120px -30px rgba(20,10,40,.35)}
+.index-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+.index-head h2{margin:0;font:700 20px/1 var(--f-display);letter-spacing:-.01em}
+.index-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,200px),1fr));gap:8px}
+.ix{display:flex;align-items:center;gap:10px;text-align:left;padding:12px;border-radius:14px;border:1px solid var(--line);background:#fff;cursor:pointer;font:500 14px/1.3 var(--f-body)}
+.ix:hover{border-color:rgba(23,23,23,.22)}
+.ix .n{flex:none;width:28px;font:600 12px/1 var(--f-body);color:var(--muted);font-variant-numeric:tabular-nums}
+.ix .t{flex:1;min-width:0;overflow:hidden;white-space:nowrap;-webkit-mask-image:linear-gradient(90deg,#000 85%,transparent);mask-image:linear-gradient(90deg,#000 85%,transparent)}
+.ix .c{flex:none;width:8px;height:8px;border-radius:50%;background:var(--coral);visibility:hidden}
+.ix.mark .c{visibility:visible}
+.ix.now{border-color:var(--coral);box-shadow:0 0 0 3px var(--coral-soft)}
+.index-legend{margin-top:12px;font:400 12.5px/1.5 var(--f-body);color:var(--muted)}
+
+/* Celular y tablet vertical: encuadre 4:5 con la UI móvil real */
+@media (orientation:portrait) and (max-width:1024px){
+  :root{--key:clamp(32px,10.6vw,70px)}
+  .top{padding-inline:0}
+  .tools .lbl-txt,.tools kbd,#btn-full{display:none}
+  .icon-btn{padding:0 10px}
+  .slide{gap:14px;padding-block:14px 6px}
+  .apoyo{font-size:14px}
+  .screen{--r:.5776;width:min(100cqw,80cqh);aspect-ratio:4/5}
+  .cam img.d{display:none}
+  .cam img.m{display:block}
+  .is-active .cam{animation-name:camM}
+  .frame{border-radius:22px}
+  .tri{grid-template-columns:1fr;gap:14px;align-self:start}
+  .tri div{padding-top:12px}
+  .pillars{grid-template-columns:1fr;justify-items:center;gap:22px;align-self:start}
+  .pillars .iso{width:120px}
+  .route{grid-template-columns:1fr;gap:26px;padding:0 0 0 38px;align-self:start}
+  .route::before{left:9px;right:auto;top:6px;bottom:6px;width:2px;height:auto}
+  .route::after{left:9px;top:6px;width:2px;height:calc(100% - 12px);transform-origin:50% 0;transform:scaleY(1)}
+  .is-active .route::after{animation-name:growY}
+  .stop::before{left:-38px;top:4px}
+  .plans{grid-template-columns:1fr;align-self:start;gap:14px}
+  .plan{padding:16px 18px}
+  .plan .price{font-size:32px}
+  .hub{width:100cqw;aspect-ratio:auto;height:min(100cqh,135cqw)}
+  .nav{display:none}
+  .media{place-items:start center}
+  .slide.text{align-content:start;gap:22px}
+  .hub{height:auto;display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:start}
+  .hub svg.wires{display:none}
+  .hub .core{position:relative;left:auto;top:auto;transform:none;grid-column:1/-1;justify-self:center;width:88px;margin-bottom:8px}
+  .node{position:static;transform:none;align-items:stretch;text-align:left}
+  .node .tile{min-width:0;width:100%;height:52px;justify-content:flex-start}
+  .node small{padding-left:4px}
+  .node:last-child{grid-column:1/-1}
+  .hint .d{display:none}
+  .hint .m{display:inline}
+  .notes{bottom:calc(env(safe-area-inset-bottom,0px) + 50px)}
+}
+@keyframes growY{from{transform:scaleY(0)}}
+@keyframes camM{
+  0%,30%{transform:translate(0,0) scale(1);filter:blur(0)}
+  44%{filter:blur(1.4px)}
+  58%{transform:translate(var(--tx),var(--ty)) scale(var(--z));filter:blur(0)}
+  100%{transform:translate(calc(var(--tx) - var(--dx)),calc(var(--ty) - var(--dy))) scale(calc(var(--z) * 1.03));filter:blur(0)}}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .slide.is-leaving{visibility:hidden}
+}
+</style>
+
+<div class="bg" aria-hidden="true"></div>
+<div class="deck" id="deck">
+  <header class="top">
+    <a class="lockup" href="#portada" aria-label="axi connect, ir a la portada">{{ISO}}<span class="wordmark">axi connect</span></a>
+    <div class="tools">
+      <span class="count" id="count" aria-live="polite">01 / 20</span>
+      <button class="icon-btn" id="btn-notes" aria-pressed="false" title="Guion del vendedor (N)">
+        <svg viewBox="0 0 24 24"><path d="M4 5h16M4 10h16M4 15h10M4 20h7"/></svg><span class="lbl-txt">Guion</span> <kbd>N</kbd></button>
+      <button class="icon-btn" id="btn-index" title="Índice (G)">
+        <svg viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg><span class="lbl-txt">Índice</span> <kbd>G</kbd></button>
+      <button class="icon-btn" id="btn-full" title="Pantalla completa (F)">
+        <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><kbd>F</kbd></button>
+    </div>
+  </header>
+
+  <main class="stage" id="stage">
+
+    <section class="slide solo" id="portada" data-title="Portada"
+      data-note="Preséntate en una frase y di el objetivo: «en 15 minutos te muestro cómo Axi vende por ti en WhatsApp, y al final vemos si tiene sentido dejarlo funcionando».">
+      <div class="cover">
+        {{ISO_BIG}}
+        <div class="sub"><span class="ent">vende en cada</span><span class="key"><em>conversación.</em></span></div>
+        <span class="para">preparado para <b>Norte Studio</b></span>
+        <span class="hint"><span class="d">usa ← → para avanzar</span><span class="m">desliza para avanzar</span></span>
+      </div>
+    </section>
+
+    <section class="slide" id="gancho" data-title="Anoche te escribieron" data-tags="tarde"
+      data-note="Pregunta y calla: «¿qué pasa hoy con un mensaje que te llega a las 9 de la noche?». Deja que cuente. Lo que diga va en el diagnóstico.">
+      <div class="sub"><span class="ent">anoche te escribieron.</span><span class="key">¿quién <em>respondió?</em></span></div>
+      <div class="media"><figure class="screen" data-f="d:.24,.42,1.55 m:.5,.22,1.08"><div class="tilt"><div class="frame"><div class="cam">
+        <img class="d" alt="Bandeja real de Axi con 14 conversaciones abiertas, 13 atendidas por Axi" data-src="img/d-bandeja.webp">
+        <img class="m" alt="Bandeja real de Axi en el celular" data-src="img/m-bandeja.webp"></div></div></div></figure></div>
+    </section>
+
+    <section class="slide" id="diagnostico" data-title="¿Qué te está pasando?"
+      data-note="Marca con el cliente lo que diga, con sus palabras. Las láminas que responden a cada punto quedan señaladas en la ruta de abajo y en el índice: ve directo a ellas.">
+      <div class="sub"><span class="ent">¿qué te está</span><span class="key"><em>pasando?</em></span></div>
+      <div class="diag-wrap"><div class="diag" id="diag">
+        <button class="chip" data-tag="tarde" aria-pressed="false"><span class="box"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>Respondo tarde o fuera de horario</button>
+        <button class="chip" data-tag="disperso" aria-pressed="false"><span class="box"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>Pedidos por WhatsApp, redes y la tienda, cada uno por su lado</button>
+        <button class="chip" data-tag="excel" aria-pressed="false"><span class="box"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>Mis clientes están en un Excel o un cuaderno</button>
+        <button class="chip" data-tag="seguimiento" aria-pressed="false"><span class="box"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>Nadie hace seguimiento a las cotizaciones</button>
+        <button class="chip" data-tag="sistemas" aria-pressed="false"><span class="box"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>Mi tienda, mi ERP y mis pagos no se hablan</button>
+        <button class="chip" data-tag="control" aria-pressed="false"><span class="box"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>Me da miedo que una IA invente precios</button>
+        <button class="chip" data-tag="clientes" aria-pressed="false"><span class="box"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>Necesito clientes nuevos</button>
+        <button class="chip" data-tag="meta" aria-pressed="false"><span class="box"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>No sé si voy a llegar a la meta del mes</button>
+        <p class="diag-foot" id="diag-foot">Marca lo que te pasa. Lo que responde a eso queda señalado en el recorrido.</p>
+      </div></div>
+    </section>
+
+    <section class="slide text" id="problema" data-title="El problema"
+      data-note="Repite sus palabras, no las nuestras. Si marcó «respondo tarde», empieza por «tarde».">
+      <div class="sub"><span class="ent">el canal donde entra el dinero</span><span class="key">es el peor <em>atendido.</em></span></div>
+      <div class="tri">
+        <div><b>tarde.</b><span>El cliente de las 9 p. m. le compra a quien contesta primero.</span></div>
+        <div><b>disperso.</b><span>Pedidos en WhatsApp, redes y la tienda, cada uno por su lado.</span></div>
+        <div><b>olvidado.</b><span>Cotizaciones que nadie retoma y clientes que no vuelven.</span></div>
+      </div>
+    </section>
+
+    <section class="slide text" id="axi" data-title="Qué es Axi"
+      data-note="Una frase, sin tecnología: «Axi atiende tus canales como tu mejor vendedor: responde en segundos, cotiza con tus precios, cobra y te lleva a tu meta del mes».">
+      <div class="sub"><span class="ent">axi es tu</span><span class="key">mejor <em>vendedor.</em></span></div>
+      <div class="pillars">
+        {{ISO_PILLARS}}
+        <ul>
+          <li><i style="background:var(--coral)"></i><b>vende y cobra.</b><span>Más ingresos, menos costos.</span></li>
+          <li><i style="background:var(--amber)"></i><b>te hace crecer.</b><span>Más alcance, más clientes.</span></li>
+          <li><i style="background:var(--violet)"></i><b>atiende.</b><span>Más tiempo, menos carga.</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="slide" id="responde" data-title="Responde en segundos" data-tags="tarde"
+      data-note="No expliques: déjalo mirar. Si estás en vivo, pídele que le escriba al número de demo desde su celular.">
+      <div class="sub"><span class="ent">responde</span><span class="key"><em>en segundos,</em></span><p class="apoyo">a cualquier hora, como una persona de tu equipo.</p></div>
+      <div class="media"><figure class="screen" data-f="d:.81,.32,2.05 m:.5,.42,1.06"><div class="tilt"><div class="frame"><div class="cam">
+        <img class="d" alt="Conversación real con Laura: Axi arma el pedido" data-src="img/d-conversacion-laura.webp">
+        <img class="m" alt="Conversación real con Laura en el celular" data-src="img/m-conversacion-laura.webp"></div></div></div></figure></div>
+    </section>
+
+    <section class="slide" id="vende" data-title="Cotiza con tus precios" data-tags="tarde"
+      data-note="«Así cierra una venta sin ti: talla, dirección, total y pedido #1042». El pago queda por confirmar: lo confirma una persona o Shopify.">
+      <div class="sub"><span class="ent">cotiza con</span><span class="key"><em>tus precios.</em></span><p class="apoyo">Del primer mensaje al pedido, dentro del chat.</p></div>
+      <div class="media"><figure class="screen" data-f="d:.85,.24,2.1 m:.5,.66,1.08"><div class="tilt"><div class="frame"><div class="cam">
+        <img class="d" alt="Pedido #1042 de Laura en el panel de pedidos" data-src="img/d-conversacion-laura-pedido.webp">
+        <img class="m" alt="Pedido confirmado en la conversación" data-src="img/m-conversacion-laura.webp"></div></div></div></figure></div>
+    </section>
+
+    <section class="slide" id="control" data-title="No inventa nada" data-tags="control"
+      data-note="La prueba: <q>pídele un descuento del 30 %</q>. No lo da, porque los precios los calcula el sistema y no la IA. Pregunta: «¿qué te preocupa de dejar una IA hablando con tus clientes?».">
+      <div class="sub"><span class="ent">no inventa</span><span class="key">precios <em>ni promesas.</em></span></div>
+      <div class="media"><figure class="screen" data-f="d:.66,.8,1.65 m:.5,.74,1.08"><div class="tilt"><div class="frame"><div class="cam">
+        <img class="d" alt="Reglas reales del agente: lo que nunca hace" data-src="img/d-agente-reglas.webp">
+        <img class="m" alt="Reglas del agente en el celular" data-src="img/m-agente-reglas.webp"></div></div></div></figure></div>
+    </section>
+
+    <section class="slide" id="equipo" data-title="Tu equipo al mando" data-tags="control"
+      data-note="Un toque en «Intervenir» y la conversación es tuya; Axi se pausa hasta que se la devuelvas. Pregunta: «¿quién de tu equipo usaría esto?».">
+      <div class="sub"><span class="ent">tú tienes</span><span class="key">el <em>control.</em></span><p class="apoyo">Intervienes cuando quieras. Axi espera y retoma.</p></div>
+      <div class="media"><figure class="screen" data-f="d:.83,.93,2.2 m:.5,.95,1.12"><div class="tilt"><div class="frame"><div class="cam">
+        <img class="d" alt="Botón Intervenir en la conversación real" data-src="img/d-conversacion-laura.webp">
+        <img class="m" alt="Botón Intervenir en el celular" data-src="img/m-conversacion-laura.webp"></div></div></div></figure></div>
+    </section>
+
+    <section class="slide" id="un-lugar" data-title="Una sola bandeja" data-tags="disperso"
+      data-note="Si vende por varios canales: «hoy cada pedido está en un lado; aquí todo llega a la misma bandeja y a la misma ficha del cliente».">
+      <div class="sub"><span class="ent">redes, whatsapp y tienda,</span><span class="key">una sola <em>bandeja.</em></span>
+        <div class="logos">
+          <span class="logo">{{WA}}WhatsApp</span><span class="logo">{{IG}}Instagram</span><span class="logo">{{MS}}Messenger</span><span class="logo">{{SH}}Shopify</span>
+          <span class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>Teléfono</span>
+        </div></div>
+      <div class="media"><figure class="screen" data-f="d:.43,.28,1.85 m:.5,.42,1.04"><div class="tilt"><div class="frame"><div class="cam">
+        <img class="d" alt="Canales conectados en Axi" data-src="img/d-canales.webp">
+        <img class="m" alt="Canales conectados en el celular" data-src="img/m-canales.webp"></div></div></div></figure></div>
+    </section>
+
+    <section class="slide" id="clientes" data-title="Adiós al Excel" data-tags="excel"
+      data-note="Si lleva los clientes a mano: «cada persona que escribe queda con su ficha, su historia y su etapa, sin que nadie la escriba».">
+      <div class="sub"><span class="ent">adiós al</span><span class="key"><em>excel.</em></span><p class="apoyo">Cada cliente con su ficha, su historia y su etapa. Sin escribir nada.</p></div>
+      <div class="media"><figure class="screen"><div class="tilt"><div class="frame"><div class="pendiente"><div>
+        <b>Captura real pendiente (F1)</b><span>Contactos y pipeline de Norte Studio, con la cámara entrando a la ficha de Laura.</span></div></div></div></div></figure></div>
+    </section>
+
+    <section class="slide" id="seguimiento" data-title="Seguimiento solo" data-tags="seguimiento"
+      data-note="«¿Cuántas cotizaciones se te quedaron frías este mes?». Axi las retoma solo, en horario legal y con un contacto por día.">
+      <div class="sub"><span class="ent">el seguimiento</span><span class="key">se hace <em>solo.</em></span></div>
+      <div class="media"><figure class="screen" data-f="d:.6,.62,1.7 m:.5,.62,1.06"><div class="tilt"><div class="frame"><div class="cam">
+        <img class="d" alt="Tareas del agente: cotizaciones y carritos que retoma solo" data-src="img/d-tareas-agente.webp">
+        <img class="m" alt="Tareas del agente en el celular" data-src="img/m-tareas-agente.webp"></div></div></div></figure></div>
+    </section>
+
+    <section class="slide" id="integraciones" data-title="Se conecta con lo que usas" data-tags="sistemas disperso"
+      data-note="Pregunta: «¿qué sistema usas hoy para inventario, facturación y pagos?». Shopify, SIESA y pagos se conectan; si es otro, lo conectamos a la medida.">
+      <div class="sub"><span class="ent">se conecta con</span><span class="key">lo que <em>ya usas.</em></span></div>
+      <div class="media"><div class="hub" id="hub">
+        <svg class="wires" viewBox="0 0 1700 1000" preserveAspectRatio="none" aria-hidden="true"></svg>
+        <div class="core">{{ISO}}</div>
+        <div class="node" style="left:14%;top:22%"><span class="tile">{{SH}}Shopify</span><small>catálogo, stock y pedidos</small></div>
+        <div class="node" style="left:86%;top:22%"><span class="tile"><span class="wm">SIESA</span></span><small>ERP: inventario y facturación</small></div>
+        <div class="node" style="left:9%;top:72%"><span class="tile">Pagos</span><small>tarjeta, PSE y Nequi</small></div>
+        <div class="node" style="left:91%;top:72%"><span class="tile">{{WA}}WhatsApp</span><small>y tus redes</small></div>
+        <div class="node" style="left:50%;top:90%"><span class="tile">+ tu sistema</span><small>lo conectamos a la medida</small></div>
+      </div></div>
+    </section>
+
+    <section class="slide" id="llamadas" data-title="También contesta el teléfono" data-tags="tarde"
+      data-note="La llamada de Laura: 42 segundos, objetivo cumplido y el resumen escrito solo. La llamada avisa que la atiende un asistente virtual.">
+      <div class="sub"><span class="ent">también contesta</span><span class="key">el <em>teléfono.</em></span></div>
+      <div class="media"><figure class="screen" data-f="d:.6,.36,1.8 m:.5,.42,1.05"><div class="tilt"><div class="frame"><div class="cam">
+        <img class="d" alt="Llamada real atendida por Axi con su resumen" data-src="img/d-llamada.webp">
+        <img class="m" alt="Llamada en el celular" data-src="img/m-llamada.webp"></div></div></div></figure></div>
+    </section>
+
+    <section class="slide" id="recupera" data-title="Recupera ventas" data-tags="seguimiento"
+      data-note="Carritos sin confirmar y conversaciones sin respuesta: mensajes que salen solos cuando una venta se enfría. Tú decides cuándo se encienden.">
+      <div class="sub"><span class="ent">recupera las ventas</span><span class="key">que se <em>iban.</em></span></div>
+      <div class="media"><figure class="screen" data-f="d:.56,.42,1.7 m:.5,.6,1.06"><div class="tilt"><div class="frame"><div class="cam">
+        <img class="d" alt="Recuperación de ventas con sus reglas encendidas" data-src="img/d-recuperacion.webp">
+        <img class="m" alt="Recuperación de ventas en el celular" data-src="img/m-recuperacion.webp"></div></div></div></figure></div>
+    </section>
+
+    <section class="slide" id="busca" data-title="Busca clientes por ti" data-tags="clientes"
+      data-note="El piloto encuentra negocios que encajan contigo y les escribe con tu aprobación, dentro del presupuesto que pongas.">
+      <div class="sub"><span class="ent">busca clientes</span><span class="key"><em>por ti.</em></span></div>
+      <div class="media"><figure class="screen" data-f="d:.46,.4,1.75 m:.5,.62,1.06"><div class="tilt"><div class="frame"><div class="cam">
+        <img class="d" alt="El piloto: negocios encontrados, contactados y demos agendadas" data-src="img/d-pilotos.webp">
+        <img class="m" alt="El piloto en el celular" data-src="img/m-pilotos.webp"></div></div></div></figure></div>
+    </section>
+
+    <section class="slide" id="meta" data-title="La meta del mes" data-tags="meta"
+      data-note="Cierra la prueba con el progreso: «cada día sabes cuánto llevas, cuánto falta y qué hacer hoy para llegar».">
+      <div class="sub"><span class="ent">sabes si</span><span class="key"><em>llegas.</em></span><p class="apoyo">Tu meta del mes, el camino que falta y lo que toca hoy.</p></div>
+      <div class="media"><figure class="screen" data-f="d:.38,.34,1.9 m:.5,.78,1.08"><div class="tilt"><div class="frame"><div class="cam">
+        <img class="d" alt="Panel con la meta del mes y lo que espera ahora" data-src="img/d-panel.webp">
+        <img class="m" alt="Panel con la meta del mes en el celular" data-src="img/m-panel.webp"></div></div></div></figure></div>
+    </section>
+
+    <section class="slide text" id="empezamos" data-title="Cómo empezamos"
+      data-note="Literal: «El día de la sesión lo dejamos atendiendo en tu WhatsApp y te entrego tu acceso. Desde ese día tienes siete días gratis. El día 5 revisamos juntos qué vendió».">
+      <div class="sub"><span class="ent">lo dejamos</span><span class="key"><em>funcionando.</em></span></div>
+      <div class="route">
+        <div class="stop"><b>1 hora.</b><span>Lo configuramos contigo y queda atendiendo tu WhatsApp.</span></div>
+        <div class="stop"><b>7 días.</b><span>Gratis y con todo, desde que recibes tu acceso.</span></div>
+        <div class="stop"><b>día 5.</b><span>Revisamos juntos qué vendió y decides.</span></div>
+      </div>
+    </section>
+
+    <section class="slide text" id="planes" data-title="Planes"
+      data-note="Ancla siempre en Crecimiento. Si no necesita llamadas ni captación, baja a Esencial; si tiene varias líneas o volumen alto, Escala.">
+      <div class="sub"><span class="ent">un plan para</span><span class="key">cada <em>etapa.</em></span></div>
+      <div class="plans">
+        <div class="plan"><h3>Esencial</h3><div class="price">$259.900<small>/mes</small></div><p>El negocio que ya vende por chat y quiere ordenarlo y medirlo.</p></div>
+        <div class="plan best"><span class="tag">Más elegido</span><h3>Crecimiento</h3><div class="price">$369.900<small>/mes</small></div><p>El negocio que ya escala y necesita captación, llamadas y medición.</p></div>
+        <div class="plan"><h3>Escala</h3><div class="price">$569.900<small>/mes</small></div><p>Operación con varios equipos y volumen alto de conversación.</p></div>
+        <p class="plans-foot"><span class="live"></span>Precio en vivo al <b>17 nov. 2026</b> · con 1.000 conversaciones al mes · 7 días gratis</p>
+      </div>
+    </section>
+
+    <section class="slide solo" id="cierre" data-title="¿Qué día empezamos?"
+      data-note="La pregunta no es «¿lo compras?». Es: <q>¿jueves o viernes?</q> Dos opciones, nunca «¿cuándo puedes?».">
+      <div class="cover">
+        {{ISO_BIG}}
+        <div class="sub"><span class="ent">¿qué día lo dejamos</span><span class="key"><em>funcionando?</em></span></div>
+        <div class="cta-row">
+          <a class="btn primary" href="https://axi-connect.co/comenzar" target="_blank" rel="noopener">Prueba Axi 7 días gratis</a>
+          <a class="btn ghost" href="https://wa.me/573180139091" target="_blank" rel="noopener">{{WA}}+57 318 013 9091</a>
+        </div>
+        <span class="hint">axi-connect.co</span>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="foot">
+    <div class="progress"><div class="track"></div><div class="fill" id="fill"></div><div class="dots" id="dots"></div></div>
+    <div class="nav">
+      <button id="prev" aria-label="Lámina anterior"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <button id="next" aria-label="Lámina siguiente"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+    </div>
+  </footer>
+</div>
+
+<aside class="notes" id="notes" hidden aria-live="polite">
+  <div class="lbl"><span>Guion del vendedor</span><span id="notes-n"></span></div>
+  <p id="notes-p"></p>
+</aside>
+
+<div class="index" id="index" hidden role="dialog" aria-modal="true" aria-labelledby="ix-title">
+  <div class="index-card">
+    <div class="index-head"><h2 id="ix-title">Recorrido</h2><button class="icon-btn" id="ix-close">Cerrar <kbd>Esc</kbd></button></div>
+    <div class="index-grid" id="ix-grid"></div>
+    <p class="index-legend"><span class="live" style="background:var(--coral)"></span>Señaladas: responden a lo que marcaste en el diagnóstico.</p>
+  </div>
+</div>
+
+<script>
+(() => {
+  const slides = [...document.querySelectorAll(".slide")];
+  const N = slides.length, pad = n => String(n).padStart(2, "0");
+  const $ = id => document.getElementById(id);
+  const mobileQ = matchMedia("(orientation: portrait) and (max-width: 1024px)");
+  const marked = new Set();
+  let cur = -1, notesOn = false;
+
+  // Encuadre de cámara: punto (fx, fy) del contenido al centro del marco con zoom z, sin salirse de la imagen.
+  function frame(fig) {
+    const spec = fig.dataset.f; if (!spec) return;
+    const m = mobileQ.matches, part = spec.split(" ").find(s => s.startsWith(m ? "m:" : "d:"));
+    if (!part) return;
+    const [fx, fy, z] = part.slice(2).split(",").map(Number);
+    const r = m ? 0.5776 : 1;                       // alto del marco / alto de la imagen
+    let tx = 0.5 - fx * z, ty = r / 2 - fy * z;
+    tx = Math.min(0, Math.max(1 - z, tx));
+    ty = Math.min(0, Math.max(r - z, ty));
+    fig.style.setProperty("--tx", (tx * 100).toFixed(2) + "%");
+    fig.style.setProperty("--ty", (ty * 100).toFixed(2) + "%");
+    fig.style.setProperty("--z", z);
+    // deriva final hacia el centro del encuadre (1,75 % del zoom), para que el plano respire
+    fig.style.setProperty("--dx", ((z * 0.035) * fx * 100).toFixed(2) + "%");
+    fig.style.setProperty("--dy", ((z * 0.035) * fy * 100).toFixed(2) + "%");
+  }
+  document.querySelectorAll(".screen").forEach(frame);
+  mobileQ.addEventListener("change", () => { document.querySelectorAll(".screen").forEach(frame); load(cur); });
+
+  // Carga diferida: solo la lámina actual y las dos siguientes (y la anterior).
+  function load(i) {
+    const m = mobileQ.matches;
+    for (let k = i - 1; k <= i + 2; k++) {
+      const s = slides[k]; if (!s) continue;
+      s.querySelectorAll("img[data-src]").forEach(img => {
+        if (img.classList.contains(m ? "m" : "d") && !img.src) img.src = img.dataset.src;
+      });
+    }
+  }
+
+  // Ruta de progreso
+  const dots = $("dots");
+  slides.forEach((s, i) => {
+    const b = document.createElement("button");
+    b.className = "dot"; b.setAttribute("aria-label", `Ir a ${s.dataset.title}`);
+    b.addEventListener("click", () => go(i));
+    dots.appendChild(b);
+  });
+
+  function isMarked(s) { return (s.dataset.tags || "").split(" ").some(t => marked.has(t)); }
+
+  function paint() {
+    [...dots.children].forEach((d, i) => {
+      d.classList.toggle("done", i < cur); d.classList.toggle("now", i === cur);
+      d.classList.toggle("mark", isMarked(slides[i]) && i !== cur);
+    });
+    $("fill").style.width = (cur / (N - 1) * 100) + "%";
+    $("count").textContent = `${pad(cur + 1)} / ${pad(N)}`;
+    $("prev").disabled = cur === 0; $("next").disabled = cur === N - 1;
+    slides.forEach(s => {
+      const sub = s.querySelector(".sub"); let tag = sub && sub.querySelector(".tu-caso");
+      if (isMarked(s) && sub && !tag) { tag = document.createElement("span"); tag.className = "tu-caso"; tag.textContent = "tu caso"; sub.prepend(tag); }
+      if (!isMarked(s) && tag) tag.remove();
+    });
+    const s = slides[cur];
+    $("notes-n").textContent = `${pad(cur + 1)} · ${s.dataset.title}`;
+    $("notes-p").innerHTML = s.dataset.note || "";
+  }
+
+  function go(i, fromHash) {
+    i = Math.max(0, Math.min(N - 1, i));
+    if (i === cur) return;
+    const prev = slides[cur];
+    if (prev) { prev.classList.remove("is-active"); prev.classList.add("is-leaving"); setTimeout(() => prev.classList.remove("is-leaving"), 320); }
+    cur = i;
+    const s = slides[cur];
+    s.classList.remove("is-leaving"); void s.offsetWidth; s.classList.add("is-active");
+    load(cur); paint();
+    if (!fromHash && location.hash !== "#" + s.id) history.replaceState(null, "", "#" + s.id);
+  }
+  const next = () => go(cur + 1), back = () => go(cur - 1);
+
+  // Diagnóstico
+  $("diag").querySelectorAll(".chip").forEach(c => c.addEventListener("click", e => {
+    e.stopPropagation();
+    const on = c.getAttribute("aria-pressed") !== "true";
+    c.setAttribute("aria-pressed", on); on ? marked.add(c.dataset.tag) : marked.delete(c.dataset.tag);
+    const n = slides.filter(isMarked).length;
+    $("diag-foot").textContent = marked.size ? `${n} láminas responden a lo que marcaste. Quedan señaladas en la ruta.` : "Marca lo que te pasa. Lo que responde a eso queda señalado en el recorrido.";
+    paint();
+  }));
+
+  // Índice
+  function openIndex() {
+    const g = $("ix-grid"); g.innerHTML = "";
+    slides.forEach((s, i) => {
+      const b = document.createElement("button");
+      b.className = "ix" + (isMarked(s) ? " mark" : "") + (i === cur ? " now" : "");
+      b.innerHTML = `<span class="n">${pad(i + 1)}</span><span class="t"></span><span class="c"></span>`;
+      b.querySelector(".t").textContent = s.dataset.title;
+      b.addEventListener("click", () => { closeIndex(); go(i); });
+      g.appendChild(b);
+    });
+    $("index").hidden = false; (g.querySelector(".now") || g.firstChild).focus();
+  }
+  function closeIndex() { $("index").hidden = true; $("btn-index").focus(); }
+  $("btn-index").addEventListener("click", openIndex);
+  $("ix-close").addEventListener("click", closeIndex);
+  $("index").addEventListener("click", e => { if (e.target.id === "index") closeIndex(); });
+
+  // Guion
+  function toggleNotes() { notesOn = !notesOn; $("notes").hidden = !notesOn; $("btn-notes").setAttribute("aria-pressed", notesOn); }
+  $("btn-notes").addEventListener("click", toggleNotes);
+
+  // Pantalla completa
+  function full() {
+    const d = document;
+    if (d.fullscreenElement) d.exitFullscreen?.().catch(() => {});
+    else d.documentElement.requestFullscreen?.().catch(() => {});
+  }
+  $("btn-full").addEventListener("click", full);
+
+  $("prev").addEventListener("click", back); $("next").addEventListener("click", next);
+
+  // Teclado
+  addEventListener("keydown", e => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (!$("index").hidden) { if (e.key === "Escape") closeIndex(); return; }
+    const k = e.key;
+    if (["ArrowRight", "PageDown", " "].includes(k)) { e.preventDefault(); next(); }
+    else if (["ArrowLeft", "PageUp"].includes(k)) { e.preventDefault(); back(); }
+    else if (k === "Home") go(0); else if (k === "End") go(N - 1);
+    else if (k === "f" || k === "F") full();
+    else if (k === "g" || k === "G") openIndex();
+    else if (k === "n" || k === "N") toggleNotes();
+    else if (k === "Escape" && notesOn) toggleNotes();
+  });
+
+  // Deslizar y tocar
+  const stage = $("stage"); let sx = 0, sy = 0, st = 0;
+  stage.addEventListener("pointerdown", e => { sx = e.clientX; sy = e.clientY; st = Date.now(); });
+  stage.addEventListener("pointerup", e => {
+    if (e.target.closest("button, a, input")) return;
+    const dx = e.clientX - sx, dy = e.clientY - sy;
+    if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.2) { dx < 0 ? next() : back(); return; }
+    if (Math.abs(dx) < 8 && Math.abs(dy) < 8 && Date.now() - st < 400) {
+      const r = stage.getBoundingClientRect();
+      (e.clientX - r.left) < r.width * 0.3 ? back() : next();
+    }
+  });
+
+  // Integraciones: cables con pulso hacia el centro (geometría en el mismo viewBox 1700×1000)
+  const wires = document.querySelector("#hub svg.wires");
+  const pts = [[.14, .22], [.86, .22], [.09, .72], [.91, .72], [.5, .9]];
+  pts.forEach(([x, y], i) => {
+    const X = x * 1700, Y = y * 1000, cx = 850, cy = 500, mx = (X + cx) / 2;
+    const d = `M${X},${Y} C${mx},${Y} ${mx},${cy} ${cx},${cy}`;
+    wires.insertAdjacentHTML("beforeend", `<path class="wire" d="${d}"/><path class="pulse" d="${d}" style="animation-delay:${i * 0.45}s"/>`);
+  });
+
+  addEventListener("hashchange", () => { const i = slides.findIndex(s => "#" + s.id === location.hash); if (i >= 0) go(i, true); });
+  const start = slides.findIndex(s => "#" + s.id === location.hash);
+  go(start >= 0 ? start : 0, true);
+})();
+</script>
