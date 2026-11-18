@@ -263,6 +263,8 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   color: transparent;
 }
 .dark .text-brand-wordmark { background-image: none; color: var(--foreground); }
+/* /overview es siempre clara: el wordmark vuelve al degradado coral también con el sistema en oscuro. */
+.dark .overview-stage .text-brand-wordmark { background-image: linear-gradient(to right, var(--axi-brand), var(--axi-brand-2)); color: transparent; }
 
 /* Titular plata (hero de /productos): degradado del propio foreground hacia su
    mezcla con el fondo — premium/corporativo, sin color de marca. Derivado de
@@ -3248,10 +3250,37 @@ button.assistant-island--s:focus-visible {
 .overview-stage,
 .dark .overview-stage {
   color-scheme: light;
+  /* El texto heredado: sin esto, lo que no fija color (el botón «Rechazar» del aviso de cookies) hereda el del
+     body, que ya viene calculado en oscuro. */
+  color: var(--foreground);
   --background: #ffffff;
   --foreground: #171717;
   --axi-brand: var(--axi-brand-day);
   --axi-brand-2: var(--axi-brand-2-day);
+  /* Todo lo que `.dark` redefine, con su valor claro (los mismos de :root). Las variables con var() se calculan
+     donde se declaran: si no se vuelven a declarar aquí, llegan ya resueltas en oscuro (el texto de «Aceptar»
+     salía en tinta sobre el coral). */
+  --axi-violet: #7c3aed;
+  --axi-amber: #f0a431;
+  --axi-muted: #f4f4f5;
+  --axi-success: #16a34a;
+  --axi-warning: #d97706;
+  --axi-destructive: #dc2626;
+  --axi-info: #2563eb;
+  --axi-on-color: #ffffff;
+  --axi-on-brand: var(--axi-on-color);
+  --toast-fill: var(--foreground);
+  --toast-ink: var(--background);
+  --toast-success: #4ade80;
+  --toast-error: #f87171;
+  --toast-warning: #fbbf24;
+  --toast-info: #60a5fa;
+  --toast-action: #fb7185;
+  --toast-loading: #a1a1aa;
+  --color-background: var(--background);
+  --color-border: color-mix(in srgb, var(--foreground) 12%, var(--background));
+  --color-accent: color-mix(in srgb, var(--axi-brand) 14%, var(--background));
+  --color-accent-foreground: var(--foreground);
   --ov-bg: #ffffff;
   --ov-bg-mist: #efe9f7;
   --ov-bg-blush: #fdf0f1;
