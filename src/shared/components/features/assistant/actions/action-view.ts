@@ -1,7 +1,7 @@
-import type { ActionRisk } from "./cmo";
-
 /**
- * Vocabulario de las acciones preparadas por Axel (F3 «Axel OS») — módulo PURO.
+ * Vocabulario de las acciones preparadas por un asistente (F3 «Axel OS») — PURO.
+ * Vive en el kit porque la tarjeta la usan Axel (/cmo) y «Aplicaciones
+ * conectadas» (/cuenta, lo que pide Claude por MCP).
  *
  * Una acción tiene los cinco estados del servidor más `forbidden`, que NO es un
  * estado de la acción (para el servidor sigue pendiente: otra persona con
@@ -9,6 +9,39 @@ import type { ActionRisk } from "./cmo";
  * «Confirmar». Por eso vive aquí, en el vocabulario de la pantalla, y no en el
  * contrato.
  */
+/** R1 = `write` (interno y reversible, un toque) · R2 = `external` (llega al cliente final o cuesta). */
+export type ActionRisk = "write" | "external";
+
+/** Una línea del diff de la vista previa: `before` es `null` cuando el valor es nuevo. */
+export interface ActionPreviewLine {
+  label: string;
+  before: string | null;
+  after: string;
+}
+
+/**
+ * Lo que la tarjeta necesita de una acción. El kit no conoce los stores de los
+ * slices: cada uno (el `UiAction` de cmo, el de /cuenta) cumple esta forma.
+ */
+export interface AssistantActionView {
+  id: string;
+  risk: ActionRisk;
+  summary: string;
+  /** El diff antes → después. `null` hasta que llega el detalle, o si no aplica. */
+  lines: readonly ActionPreviewLine[] | null;
+  effects: readonly string[] | null;
+  expires_at: string | null;
+  phase: ActionPhase;
+  /** El resultado, el motivo del fallo o el aviso de permisos, tal cual del servidor. */
+  text: string | null;
+  /** La decisión en vuelo: deshabilita los botones hasta que responde el servidor. */
+  busy: "confirm" | "reject" | null;
+  /** El último intento no llegó (red, 5xx): sigue pendiente y se puede reintentar. */
+  error: string | null;
+  /** La app conectada que la pidió («Claude»); `null` = la preparó el asistente en el chat. */
+  origin: string | null;
+}
+
 export type ActionPhase = "pending" | "executed" | "failed" | "rejected" | "expired" | "forbidden";
 
 const PHASE_LABELS: Record<ActionPhase, string> = {

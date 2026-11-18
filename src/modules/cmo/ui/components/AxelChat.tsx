@@ -36,7 +36,7 @@ import {
   type AssistantActivityChip,
   type AssistantStarter,
 } from "@/shared/components/features/assistant";
-import { ActionConfirmCard } from "./ActionConfirmCard";
+import { ActionConfirmCard } from "@/shared/components/features/assistant";
 import { AxelHeroAvatar } from "./AxelHeroAvatar";
 import { BriefingHero } from "./BriefingHero";
 import { CmoActions } from "./CmoActions";

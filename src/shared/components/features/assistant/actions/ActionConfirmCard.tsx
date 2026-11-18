@@ -27,15 +27,15 @@ import {
   confirmVerb,
   visiblePhase,
   type ActionPhase,
-} from "@/modules/cmo/domain/action-labels";
-import type { ActionPreviewLine } from "@/modules/cmo/domain/cmo";
-import type { UiAction } from "@/modules/cmo/infrastructure/stores/cmo.store";
+  type ActionPreviewLine,
+  type AssistantActionView,
+} from "./action-view";
 import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import { Button } from "@/shared/components/ui/button";
 
 interface ActionConfirmCardProps {
   /** Las acciones de UN turno de Axel. Con más de una, la tarjeta se agrupa. */
-  actions: readonly UiAction[];
+  actions: readonly AssistantActionView[];
   /** El turno acaba de llegar en esta sesión: entrada y anillo, como la propuesta. */
   fresh?: boolean;
   /** Axel no está disponible: la tarjeta se lee pero no se decide. */
@@ -46,6 +46,8 @@ interface ActionConfirmCardProps {
   onConfirmAll: (actionIds: string[]) => void | Promise<void>;
   /** Reloj inyectable para las pruebas; por defecto, el del montaje. */
   now?: number;
+  /** Quién las preparó, para la tarjeta agrupada («Axel dejó 3 cambios listos»). */
+  author?: string;
 }
 
 /**
@@ -77,6 +79,7 @@ export const ActionConfirmCard = memo(function ActionConfirmCard({
   onReject,
   onConfirmAll,
   now,
+  author = "Axel",
 }: ActionConfirmCardProps) {
   /* El reloj se toma UNA vez al montar: la tarjeta no tiene por qué repintarse
      sola para vencer, y si alguien toca un botón vencido el servidor responde
@@ -126,7 +129,7 @@ export const ActionConfirmCard = memo(function ActionConfirmCard({
 
   return (
     <section
-      aria-label={`${changesLabel(actions.length)} preparados por Axel`}
+      aria-label={`${changesLabel(actions.length)} preparados por ${author}`}
       aria-busy={actions.some((action) => action.busy !== null)}
       className={cn(
         "axel-comet-card glass-overlay flex flex-col gap-4 rounded-3xl p-5",
@@ -145,7 +148,7 @@ export const ActionConfirmCard = memo(function ActionConfirmCard({
             }
           />
           <h3 className="font-heading text-lg leading-snug font-bold text-pretty">
-            Axel dejó {changesLabel(actions.length)} listos
+            {author} dejó {changesLabel(actions.length)} listos
           </h3>
         </div>
       </div>
@@ -198,7 +201,7 @@ function ActionBody({
   onReject,
   nested = false,
 }: {
-  action: UiAction;
+  action: AssistantActionView;
   phase: ActionPhase;
   disabled: boolean;
   onConfirm: (actionId: string) => void;
@@ -363,7 +366,7 @@ interface OutcomeView {
 }
 
 /** El desenlace que se le cuenta a la persona, o `null` si no hay nada que contar. */
-function outcomeOf(action: UiAction, phase: ActionPhase): OutcomeView | null {
+function outcomeOf(action: AssistantActionView, phase: ActionPhase): OutcomeView | null {
   switch (phase) {
     case "pending":
       return action.error === null

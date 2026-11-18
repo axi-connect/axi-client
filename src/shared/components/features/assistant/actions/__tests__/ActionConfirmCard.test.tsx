@@ -1,8 +1,8 @@
 import type { ComponentProps } from "react";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 
-import type { UiAction } from "@/modules/cmo/infrastructure/stores/cmo.store";
-import { ActionConfirmCard } from "../components/ActionConfirmCard";
+import type { AssistantActionView } from "../action-view";
+import { ActionConfirmCard } from "../ActionConfirmCard";
 
 /**
  * La tarjeta de confirmación (F3 «Axel OS»). Lo que se protege aquí es lo que
@@ -13,10 +13,9 @@ import { ActionConfirmCard } from "../components/ActionConfirmCard";
 
 const NOW = Date.parse("2026-11-18T12:00:00.000Z");
 
-function action(patch: Partial<UiAction> = {}): UiAction {
+function action(patch: Partial<AssistantActionView> = {}): AssistantActionView {
   return {
     id: "a1",
-    tool: "catalog_update_product",
     risk: "write",
     summary: "Subir el precio del Kit Hidratante",
     lines: [{ label: "Precio", before: "$ 89.000", after: "$ 95.000" }],
@@ -31,7 +30,7 @@ function action(patch: Partial<UiAction> = {}): UiAction {
   };
 }
 
-function renderCard(actions: UiAction[], handlers: Partial<ComponentProps<typeof ActionConfirmCard>> = {}) {
+function renderCard(actions: AssistantActionView[], handlers: Partial<ComponentProps<typeof ActionConfirmCard>> = {}) {
   const props = {
     onConfirm: jest.fn(),
     onReject: jest.fn(),

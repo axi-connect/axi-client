@@ -28,7 +28,7 @@ import type {
   PendingActionRef,
   ProposalDTO,
 } from "@/modules/cmo/domain/cmo";
-import type { ActionPhase } from "@/modules/cmo/domain/action-labels";
+import type { ActionPhase } from "@/shared/components/features/assistant/actions/action-view";
 import { actionOrigin, CMO_MESSAGE_MAX_CHARS, CMO_MESSAGE_MIN_CHARS, readPendingActions } from "@/modules/cmo/domain/cmo";
 import {
   approveProposal,

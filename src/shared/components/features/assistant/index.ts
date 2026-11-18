@@ -109,3 +109,19 @@ export { useComposerFlip } from "./shell/use-composer-flip";
 export { ISLAND_NOTICE_MS, useIslandQueue, type IslandQueue } from "./hooks/use-island-queue";
 export { useInView } from "./hooks/use-in-view";
 export { parseAssistantText, parseInline, type Block, type ListItem, type Span } from "./chat/markdown";
+
+/* Acciones preparadas por un asistente (F3 «Axel OS»): la tarjeta de
+   confirmar/descartar y su vocabulario. La usan /cmo y /cuenta (apps
+   conectadas por MCP). */
+export { ActionConfirmCard } from "./actions/ActionConfirmCard";
+export {
+  actionPhaseDot,
+  actionPhaseLabel,
+  changesLabel,
+  confirmVerb,
+  visiblePhase,
+  type ActionPhase,
+  type ActionPreviewLine,
+  type ActionRisk,
+  type AssistantActionView,
+} from "./actions/action-view";

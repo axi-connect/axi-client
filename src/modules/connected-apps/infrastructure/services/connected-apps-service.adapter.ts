@@ -1,4 +1,5 @@
 import { http } from "@/core/services/http"
+import type { AppActionDecisionDTO, AppActionDTO } from "@/modules/connected-apps/domain/app-actions"
 import type { ConnectedApp, ConsentRequest } from "@/modules/connected-apps/domain/connected-apps"
 
 /**
@@ -26,4 +27,23 @@ export async function listConnectedApps(): Promise<ConnectedApp[]> {
 /** 204: el acceso del cliente se corta al instante. */
 export function disconnectApp(grantId: string): Promise<void> {
   return http.delete(`/oauth/connected-apps/${encodeURIComponent(grantId)}`)
+}
+
+/**
+ * Lo que las apps conectadas pidieron con MI usuario y quedó por confirmar
+ * (más las ya decididas, hasta 50). Sin capacidad de plan: un negocio sin Axel
+ * también ve y decide lo que pidió Claude.
+ */
+export async function listAppActions(): Promise<AppActionDTO[]> {
+  const res = await http.get<{ data: AppActionDTO[] }>("/connected-apps/actions")
+  return res.data
+}
+
+/** El servidor vuelve a autorizar a quien confirma y ejecuta una sola vez. */
+export function confirmAppAction(id: string): Promise<AppActionDecisionDTO> {
+  return http.post<AppActionDecisionDTO>(`/connected-apps/actions/${encodeURIComponent(id)}/confirm`, {})
+}
+
+export function rejectAppAction(id: string): Promise<AppActionDecisionDTO> {
+  return http.post<AppActionDecisionDTO>(`/connected-apps/actions/${encodeURIComponent(id)}/reject`, {})
 }

@@ -15,6 +15,8 @@ import {
   disconnectApp,
   listConnectedApps,
 } from "@/modules/connected-apps/infrastructure/services/connected-apps-service.adapter"
+import { PendingAppActions } from "./PendingAppActions"
+import { useAppActions } from "./use-app-actions"
 
 type State = { kind: "loading" } | { kind: "ready"; apps: ConnectedApp[] } | { kind: "error"; message: string }
 
@@ -27,6 +29,7 @@ type State = { kind: "loading" } | { kind: "ready"; apps: ConnectedApp[] } | { k
 export function ConnectedAppsCard() {
   const { showAlert, showModal, closeModal } = useAlert()
   const [state, setState] = useState<State>({ kind: "loading" })
+  const appActions = useAppActions()
 
   const load = useCallback(() => {
     listConnectedApps()
@@ -62,6 +65,7 @@ export function ConnectedAppsCard() {
                     : current,
                 )
                 showAlert({ tone: "success", title: `${app.client.name} quedó desconectada` })
+                appActions.reload()
               })
               .catch((error: unknown) => {
                 closeModal()
@@ -90,6 +94,8 @@ export function ConnectedAppsCard() {
           </p>
         </div>
       </div>
+
+      <PendingAppActions state={appActions} />
 
       {state.kind === "loading" ? (
         <div aria-busy="true" aria-label="Cargando apps conectadas" className="flex flex-col gap-3 py-2">
@@ -157,7 +163,7 @@ export function ConnectedAppsCard() {
                 </p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {app.areas.map((area) => (
-                    <Badge key={area.scope} variant="outline" className="border-border font-normal">
+                    <Badge key={area.scope} variant="outline" className="border-border h-auto max-w-full shrink text-left font-normal whitespace-normal">
                       {areaChipLabel(area)}
                     </Badge>
                   ))}
