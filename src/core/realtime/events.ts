@@ -749,11 +749,16 @@ export type AssistantActionPendingEvent = {
   tool: string;
   risk: AssistantActionRisk;
   summary: string;
+  /** `mcp` = la pidió una app conectada (Claude…); va al bloque de apps de /cmo. */
+  door?: "panel" | "mcp";
+  /** Puerta `mcp`: el nombre de la app que la pidió. */
+  origin_label?: string | null;
 };
 
 export type AssistantActionDecidedEvent = {
   action_id: string;
   thread_id: string | null;
+  door?: "panel" | "mcp";
   status: AssistantActionStatus;
 };
 

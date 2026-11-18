@@ -35,6 +35,12 @@ const mockState = {
   newThread: jest.fn(),
   news: [] as never[],
   takeNews: jest.fn(),
+  // Acciones preparadas (F3) y las de apps conectadas: vacías salvo que el caso las pida.
+  actions: {} as Record<string, unknown>,
+  appActionIds: [] as string[],
+  confirmAction: jest.fn(),
+  rejectAction: jest.fn(),
+  confirmAll: jest.fn(),
 };
 
 // El chip «Meta · N %» del briefing sale del slice comercial: aquí no hay meta.

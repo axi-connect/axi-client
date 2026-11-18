@@ -298,6 +298,7 @@ export function AxelChat({
       composer={composer}
       autoScrollDeps={[hasMessages, thread.messages.length, thread.thinking, proposals.length, writing]}
     >
+      {blocked === null ? <AppActions /> : null}
       {blocked !== null ? (
         <CmoBlockedState blocker={blocked} canManage={canManage} />
       ) : hasMessages || thread.thinking ? (
@@ -435,6 +436,55 @@ const MessageActions = memo(function MessageActions({ ids, fresh }: { ids: reado
       onReject={onReject}
       onConfirmAll={confirmAll}
     />
+  );
+});
+
+/**
+ * Lo que pidieron las apps conectadas (Claude por MCP) y quedó esperando
+ * aquí: la app no sabía pedir la confirmación, o la persona la dejó para
+ * después. No son de ninguna conversación, así que van arriba, una tarjeta por
+ * acción (cada una se decide mirándola: no hay «Confirmar todo» entre apps).
+ */
+const AppActions = memo(function AppActions() {
+  const actions = useCmoStore(
+    useShallow((state) =>
+      state.appActionIds.map((id) => state.actions[id]).filter((item): item is UiAction => item !== undefined),
+    ),
+  );
+  const confirmAction = useCmoStore((state) => state.confirmAction);
+  const rejectAction = useCmoStore((state) => state.rejectAction);
+  const confirmAll = useCmoStore((state) => state.confirmAll);
+  const onConfirm = useCallback(
+    (id: string) => {
+      void confirmAction(id);
+    },
+    [confirmAction],
+  );
+  const onReject = useCallback(
+    (id: string) => {
+      void rejectAction(id);
+    },
+    [rejectAction],
+  );
+  if (actions.length === 0) return null;
+  return (
+    <section aria-labelledby="axel-app-actions" className="mt-6 flex flex-col gap-3">
+      <h2
+        id="axel-app-actions"
+        className="text-[11px] font-semibold tracking-[0.08em] text-muted-foreground uppercase"
+      >
+        Pedidas desde tus apps conectadas
+      </h2>
+      {actions.map((action) => (
+        <ActionConfirmCard
+          key={action.id}
+          actions={[action]}
+          onConfirm={onConfirm}
+          onReject={onReject}
+          onConfirmAll={confirmAll}
+        />
+      ))}
+    </section>
   );
 });
 

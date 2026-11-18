@@ -112,6 +112,19 @@ export async function listActions(threadId: string): Promise<AssistantActionDTO[
 }
 
 /**
+ * Las acciones que pidieron las apps conectadas (Claude por MCP) a nombre de
+ * quien consulta y que esa app no le dejó confirmar ahí mismo: no tienen hilo
+ * de Axel, así que /cmo las muestra en su propio bloque.
+ */
+export async function listAppActions(): Promise<AssistantActionDTO[]> {
+  const { data } = await http.get<{ data: AssistantActionDTO[] }>("/assistant/actions", {
+    door: "mcp",
+    mine: "true",
+  });
+  return data;
+}
+
+/**
  * Confirmar NO es idempotente en el sentido de «repetir da igual»: el servidor
  * pasa la acción a `executed` antes de correrla, así que un segundo toque
  * responde `not_pending`. Tampoco se reintenta solo. Y vuelve a autorizar a

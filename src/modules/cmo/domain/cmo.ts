@@ -134,6 +134,15 @@ export interface PendingActionRef {
   tool: string;
   risk: ActionRisk;
   summary: string;
+  /** La app conectada que la pidió; `null`/ausente = el chat de Axel. */
+  origin?: string | null;
+}
+
+/** El nombre que la tarjeta muestra para una acción pedida desde una app conectada. */
+export function actionOrigin(door: "panel" | "mcp" | undefined, label: string | null | undefined): string | null {
+  if (door !== "mcp") return null;
+  const name = label?.trim();
+  return name === undefined || name === "" ? "una app conectada" : name;
 }
 
 /** Una línea del diff de la vista previa: `before` es `null` cuando el valor es nuevo. */
@@ -147,6 +156,10 @@ export interface ActionPreviewLine {
 export interface AssistantActionDTO {
   id: string;
   assistant: string;
+  /** `panel` = el chat de Axel; `mcp` = una app conectada (Claude…). */
+  door: "panel" | "mcp";
+  /** Puerta `mcp`: el nombre de la app que la pidió. */
+  origin_label: string | null;
   thread_id: string | null;
   tool: string;
   risk: ActionRisk;

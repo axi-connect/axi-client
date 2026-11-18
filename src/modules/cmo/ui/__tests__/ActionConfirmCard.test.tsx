@@ -26,6 +26,7 @@ function action(patch: Partial<UiAction> = {}): UiAction {
     text: null,
     busy: null,
     error: null,
+    origin: null,
     ...patch,
   };
 }
@@ -158,6 +159,11 @@ describe("ActionConfirmCard", () => {
       });
       expect(onConfirmAll).toHaveBeenCalledWith(["a1", "a2"]);
       expect(screen.getByRole("button", { name: "Aprobar" })).toBeInTheDocument();
+    });
+
+    it("la pedida desde una app conectada dice desde cuál", () => {
+      renderCard([action({ origin: "Claude" })]);
+      expect(screen.getByText("Pedido desde Claude (app conectada)")).toBeInTheDocument();
     });
 
     it("sin dos R1 pendientes no hay «Confirmar todo»", () => {

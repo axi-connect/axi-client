@@ -29,7 +29,7 @@ import type {
   ProposalDTO,
 } from "@/modules/cmo/domain/cmo";
 import type { ActionPhase } from "@/modules/cmo/domain/action-labels";
-import { CMO_MESSAGE_MAX_CHARS, CMO_MESSAGE_MIN_CHARS, readPendingActions } from "@/modules/cmo/domain/cmo";
+import { actionOrigin, CMO_MESSAGE_MAX_CHARS, CMO_MESSAGE_MIN_CHARS, readPendingActions } from "@/modules/cmo/domain/cmo";
 import {
   approveProposal,
   archiveThread as archiveThreadApi,
@@ -39,6 +39,7 @@ import {
   getProposal,
   getTranscript,
   listActions,
+  listAppActions,
   listProposals,
   listThreads,
   rejectAction as rejectActionApi,
@@ -179,6 +180,8 @@ export interface UiAction {
   busy: "confirm" | "reject" | null;
   /** El último intento no llegó (red, 5xx): la acción sigue pendiente y se puede reintentar. */
   error: string | null;
+  /** La app conectada que la pidió («Claude»); `null` = la preparó Axel en el chat. */
+  origin: string | null;
 }
 
 /** Más novedades sin leer que esto no se cuentan una a una: con cinco ya es «mira el tablero». */
@@ -227,6 +230,12 @@ interface CmoState {
    * hilo, como `settled`. Los mensajes las referencian con `action_ids`.
    */
   actions: Record<string, UiAction>;
+  /**
+   * Las acciones pedidas desde apps conectadas (puerta MCP), más recientes
+   * primero. Viven en `actions` como las demás, pero NO se podan al cambiar de
+   * hilo: no son de ninguna conversación.
+   */
+  appActionIds: string[];
   /**
    * La carga inicial ya decidió con qué hilo se abre (el último, o ninguno).
    * Hasta entonces la vista no sabe si pintar el estado vacío o la
@@ -290,6 +299,8 @@ interface CmoState {
    * sin la lista, las tarjetas de esta sesión siguen con lo que trajo el POST.
    */
   loadActions: (threadId: string) => Promise<void>;
+  /** Las pendientes de las apps conectadas (y relee las que ya se muestran). */
+  loadAppActions: () => Promise<void>;
   /** Confirma (R1) o aprueba (R2) una acción. Ignorado si ya hay una decisión en vuelo. */
   confirmAction: (actionId: string) => Promise<void>;
   rejectAction: (actionId: string) => Promise<void>;
@@ -418,7 +429,10 @@ export const useCmoStore = create<CmoState>((set, get) => {
          trae el estado en crudo («Ya estaba executed.»), así que se relee la
          acción y se pinta su estado real. */
       const threadId = get().thread.id;
-      if (threadId !== null) {
+      if (get().appActionIds.includes(id)) {
+        patchAction(id, { busy: null });
+        await get().loadAppActions();
+      } else if (threadId !== null) {
         patchAction(id, { busy: null });
         await get().loadActions(threadId);
       }
@@ -443,6 +457,7 @@ export const useCmoStore = create<CmoState>((set, get) => {
   settled: {},
   threads: idle(),
   actions: {},
+  appActionIds: [],
   restored: false,
 
   /**
@@ -458,6 +473,7 @@ export const useCmoStore = create<CmoState>((set, get) => {
       proposals: loading(state.proposals),
     }));
 
+    void get().loadAppActions();
     await Promise.all([
       getCmoSettings()
         .then((data) => {
@@ -544,7 +560,7 @@ export const useCmoStore = create<CmoState>((set, get) => {
       live: null,
       late: null,
       settled: {},
-      actions: {},
+      actions: onlyApp(get().actions, get().appActionIds),
       blocker: null,
     });
     try {
@@ -797,7 +813,7 @@ export const useCmoStore = create<CmoState>((set, get) => {
       late: null,
       blocker: null,
       settled: {},
-      actions: {},
+      actions: onlyApp(get().actions, get().appActionIds),
     });
   },
 
@@ -866,6 +882,27 @@ export const useCmoStore = create<CmoState>((set, get) => {
     });
   },
 
+  loadAppActions: async () => {
+    let list: AssistantActionDTO[];
+    try {
+      list = await listAppActions();
+    } catch {
+      // Sin la lista, el bloque no se pinta: el chat y el tablero siguen igual.
+      return;
+    }
+    set((state) => {
+      const known = new Set(state.appActionIds);
+      /* Se muestran las pendientes y las que esta pestaña ya mostraba (para que
+         una recién decidida enseñe su desenlace en vez de desaparecer). */
+      const shown = list.filter((dto) => dto.status === "pending" || known.has(dto.id));
+      const actions = { ...state.actions };
+      for (const dto of shown) actions[dto.id] = mergeAction(actions[dto.id], dto);
+      const ids = shown.map((dto) => dto.id);
+      const kept = state.appActionIds.filter((id) => !ids.includes(id) && id in actions);
+      return { actions, appActionIds: [...ids, ...kept] };
+    });
+  },
+
   confirmAction: async (actionId: string) => {
     const current = get().actions[actionId];
     if (current?.busy !== null || current.phase !== "pending") return;
@@ -902,6 +939,23 @@ export const useCmoStore = create<CmoState>((set, get) => {
    */
   onActionPending: (event) => {
     const state = get();
+    if (event.door === "mcp") {
+      if (!state.appActionIds.includes(event.action_id)) {
+        const ref = {
+          id: event.action_id,
+          tool: event.tool,
+          risk: event.risk,
+          summary: event.summary,
+          origin: actionOrigin(event.door, event.origin_label),
+        };
+        set((current) => ({
+          actions: withRefs(current.actions, [ref]),
+          appActionIds: [event.action_id, ...current.appActionIds],
+        }));
+      }
+      void get().loadAppActions();
+      return;
+    }
     if (event.thread_id === null || event.thread_id !== state.thread.id) return;
     if (event.action_id in state.actions) return;
     const ref = { id: event.action_id, tool: event.tool, risk: event.risk, summary: event.summary };
@@ -925,6 +979,14 @@ export const useCmoStore = create<CmoState>((set, get) => {
    */
   onActionDecided: (event) => {
     const state = get();
+    if (state.appActionIds.includes(event.action_id)) {
+      const app = state.actions[event.action_id];
+      if (app === undefined || app.busy !== null) return;
+      if (event.status === "pending" || app.phase === event.status) return;
+      patchAction(event.action_id, { phase: event.status, text: null, error: null });
+      void get().loadAppActions();
+      return;
+    }
     if (event.thread_id !== null && event.thread_id !== state.thread.id) return;
     const action = state.actions[event.action_id];
     if (action === undefined || action.busy !== null) return;
@@ -1200,7 +1262,18 @@ function withRefs(actions: Record<string, UiAction>, refs: readonly PendingActio
       text: null,
       busy: null,
       error: null,
+      origin: ref.origin ?? null,
     };
+  }
+  return next;
+}
+
+/** Al cambiar de hilo se podan las acciones del hilo viejo; las de las apps conectadas se quedan. */
+function onlyApp(actions: Record<string, UiAction>, appIds: readonly string[]): Record<string, UiAction> {
+  const next: Record<string, UiAction> = {};
+  for (const id of appIds) {
+    const action = actions[id];
+    if (action !== undefined) next[id] = action;
   }
   return next;
 }
@@ -1222,6 +1295,7 @@ function mergeAction(prev: UiAction | undefined, dto: AssistantActionDTO): UiAct
     lines: dto.preview.lines,
     effects: dto.preview.effects,
     expires_at: dto.expires_at,
+    origin: actionOrigin(dto.door, dto.origin_label),
   };
   if (prev !== undefined && prev.busy !== null) {
     return { ...prev, ...base };

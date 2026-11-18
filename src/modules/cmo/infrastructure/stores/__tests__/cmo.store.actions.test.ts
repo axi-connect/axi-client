@@ -21,6 +21,7 @@ jest.mock("@/modules/cmo/infrastructure/services/cmo-service.adapter", () => ({
   getCmoSettings: jest.fn(),
   getLatestBriefing: jest.fn(),
   listActions: jest.fn(),
+  listAppActions: jest.fn(),
   confirmAction: jest.fn(),
   rejectAction: jest.fn(),
 }));
@@ -32,6 +33,7 @@ const api = require("@/modules/cmo/infrastructure/services/cmo-service.adapter")
   getTranscript: jest.Mock;
   listProposals: jest.Mock;
   listActions: jest.Mock;
+  listAppActions: jest.Mock;
   confirmAction: jest.Mock;
   rejectAction: jest.Mock;
 };
@@ -40,6 +42,8 @@ function dto(patch: Partial<AssistantActionDTO> = {}): AssistantActionDTO {
   return {
     id: "a1",
     assistant: "axel",
+    door: "panel",
+    origin_label: null,
     thread_id: "t1",
     tool: "catalog_update_product",
     risk: "write",
@@ -70,6 +74,7 @@ function uiAction(patch: Partial<UiAction> = {}): UiAction {
     text: null,
     busy: null,
     error: null,
+    origin: null,
     ...patch,
   };
 }
@@ -98,8 +103,10 @@ beforeEach(() => {
     blocker: null,
     settled: {},
     actions: {},
+    appActionIds: [],
   });
   api.listProposals.mockResolvedValue([]);
+  api.listAppActions.mockResolvedValue([]);
   api.listThreads.mockResolvedValue([]);
   api.listActions.mockResolvedValue([]);
 });
@@ -359,6 +366,58 @@ describe("cmo.store · eventos en vivo de las acciones", () => {
     useCmoStore.setState({ actions: { a1: uiAction() } });
     useCmoStore.getState().onActionDecided({ action_id: "a1", thread_id: "otro", status: "rejected" });
     expect(useCmoStore.getState().actions.a1?.phase).toBe("pending");
+  });
+});
+
+describe("cmo.store · acciones de apps conectadas (MCP)", () => {
+  const fromClaude = (patch: Partial<AssistantActionDTO> = {}) =>
+    dto({ id: "m1", door: "mcp", origin_label: "Claude", thread_id: null, ...patch });
+
+  it("action_pending de una app entra al bloque de apps con su nombre, aunque no haya hilo", async () => {
+    api.listAppActions.mockResolvedValueOnce([fromClaude()]);
+    useCmoStore.getState().onActionPending({
+      action_id: "m1",
+      thread_id: null,
+      tool: "catalog_update_product",
+      risk: "write",
+      summary: "Subir el precio",
+      door: "mcp",
+      origin_label: "Claude",
+    });
+    expect(useCmoStore.getState().appActionIds).toEqual(["m1"]);
+    expect(useCmoStore.getState().actions.m1).toMatchObject({ origin: "Claude", phase: "pending" });
+    await flush();
+    expect(useCmoStore.getState().actions.m1?.lines).toHaveLength(1);
+    expect(api.listActions).not.toHaveBeenCalled();
+  });
+
+  it("sobreviven al cambio de hilo y muestran su desenlace", async () => {
+    api.listAppActions.mockResolvedValueOnce([fromClaude()]);
+    await useCmoStore.getState().loadAppActions();
+    useCmoStore.getState().newThread();
+    expect(useCmoStore.getState().actions.m1?.origin).toBe("Claude");
+
+    api.confirmAction.mockResolvedValueOnce({ action_id: "m1", outcome: "executed", text: "Hecho." });
+    await useCmoStore.getState().confirmAction("m1");
+    expect(useCmoStore.getState().actions.m1).toMatchObject({ phase: "executed", text: "Hecho." });
+
+    // Una relectura posterior la conserva (ya no está pendiente, pero se mostraba).
+    api.listAppActions.mockResolvedValueOnce([fromClaude({ status: "executed", outcome_text: "Hecho." })]);
+    await useCmoStore.getState().loadAppActions();
+    expect(useCmoStore.getState().appActionIds).toEqual(["m1"]);
+  });
+
+  it("la lista inicial solo trae las pendientes: las ya decididas no aparecen de la nada", async () => {
+    api.listAppActions.mockResolvedValueOnce([fromClaude({ status: "rejected" }), fromClaude({ id: "m2" })]);
+    await useCmoStore.getState().loadAppActions();
+    expect(useCmoStore.getState().appActionIds).toEqual(["m2"]);
+  });
+
+  it("decidida desde Claude: el panel deja de ofrecer los botones", async () => {
+    api.listAppActions.mockResolvedValue([fromClaude()]);
+    await useCmoStore.getState().loadAppActions();
+    useCmoStore.getState().onActionDecided({ action_id: "m1", thread_id: null, door: "mcp", status: "executed" });
+    expect(useCmoStore.getState().actions.m1?.phase).toBe("executed");
   });
 });
 

@@ -11,6 +11,7 @@ import {
   Layers,
   LoaderCircle,
   PencilLine,
+  Plug,
   Send,
   ShieldAlert,
   ShieldCheck,
@@ -231,6 +232,12 @@ function ActionBody({
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             {kicker}
             <h3 className="font-heading text-lg leading-snug font-bold break-words text-pretty">{action.summary}</h3>
+            {action.origin === null ? null : (
+              <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Plug aria-hidden="true" className="size-3.5 flex-none" />
+                <span className="min-w-0 break-words">Pedido desde {action.origin} (app conectada)</span>
+              </span>
+            )}
           </div>
         </div>
       )}
