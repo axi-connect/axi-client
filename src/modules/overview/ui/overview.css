@@ -1,0 +1,298 @@
+/* `/overview` — la presentación comercial (maqueta aprobada: docs/design/mockups/overview-deck/).
+   Subtítulos «dos tamaños» arriba, la UI real abajo, cromo mínimo y la ruta de progreso al pie.
+   Colores: solo las variables `--ov-*` de globals.css (.overview-stage). Sin GSAP: CSS y la isla. */
+
+.ov-deck {
+  --key: clamp(40px, min(6.6vw, 10.5vh), 118px);
+  --lead: calc(var(--key) / 2.55);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  padding: calc(env(safe-area-inset-top, 0px) + 14px) max(16px, env(safe-area-inset-right, 0px))
+    calc(env(safe-area-inset-bottom, 0px) + 12px) max(16px, env(safe-area-inset-left, 0px));
+  color: var(--ov-fg);
+  font-family: var(--font-poppins), system-ui, sans-serif;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  touch-action: pan-y;
+}
+.ov-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(70% 60% at 30% 20%, var(--ov-bg) 0%, transparent 60%),
+    radial-gradient(80% 80% at 70% 90%, var(--ov-bg-mist) 0%, transparent 70%),
+    radial-gradient(60% 50% at 85% 10%, var(--ov-bg-blush) 0%, transparent 70%),
+    var(--ov-bg);
+}
+.ov-deck :focus-visible { outline: 2px solid var(--ov-coral); outline-offset: 3px; border-radius: 10px; }
+
+/* Cromo */
+.ov-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-inline: max(0px, calc(3vw - 16px)); min-width: 0; }
+.ov-tools { display: flex; align-items: center; gap: 6px; }
+.ov-count { font: 500 13px/1 var(--font-poppins), sans-serif; color: var(--ov-muted); font-variant-numeric: tabular-nums; padding-inline: 8px; letter-spacing: 0.02em; }
+.ov-tool {
+  display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 12px; border-radius: 12px;
+  border: 1px solid var(--ov-line); background: var(--ov-surface-soft); color: var(--ov-fg);
+  font: 500 13px/1 var(--font-poppins), sans-serif; cursor: pointer; transition: background 0.15s, transform 0.15s;
+}
+.ov-tool:hover { background: var(--ov-surface); }
+.ov-tool:active { transform: scale(0.97); }
+.ov-tool svg { width: 16px; height: 16px; }
+.ov-tool[aria-pressed="true"] { background: var(--ov-pill); color: var(--ov-on-pill); border-color: var(--ov-pill); }
+.ov-tool kbd { font: 500 11px/1 var(--font-poppins), sans-serif; color: var(--ov-muted); border: 1px solid var(--ov-line); border-radius: 5px; padding: 2px 5px; }
+.ov-tool[aria-pressed="true"] kbd { color: var(--ov-pill-muted); border-color: var(--ov-muted); }
+
+/* Láminas */
+.ov-stage { position: relative; min-height: 0; }
+.ov-slide {
+  position: absolute; inset: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: clamp(14px, 3vh, 34px);
+  padding-block: clamp(10px, 3.4vh, 40px) clamp(8px, 2vh, 22px); opacity: 0; visibility: hidden; pointer-events: none;
+}
+.ov-slide[data-state="active"] { opacity: 1; visibility: visible; pointer-events: auto; }
+.ov-slide[data-state="leaving"] { visibility: visible; animation: ov-ghost 0.3s ease-in forwards; }
+.ov-slide[data-kind="cover"], .ov-slide[data-kind="closing"] { grid-template-rows: minmax(0, 1fr); }
+.ov-slide[data-kind="problem"], .ov-slide[data-kind="pillars"], .ov-slide[data-kind="route"], .ov-slide[data-kind="plans"] {
+  grid-template-rows: auto auto; align-content: center; gap: clamp(28px, 6vh, 72px);
+}
+@keyframes ov-ghost { from { opacity: 1; filter: blur(0); } to { opacity: 0; filter: blur(12px); transform: scale(1.015); } }
+
+/* Subtítulo «dos tamaños» (axi-video/01-conocimiento/guias/subtitulos.md) */
+.ov-sub { display: flex; flex-direction: column; align-items: flex-start; width: fit-content; max-width: 100%; margin-inline: auto; transform-origin: 50% 60%; }
+.ov-lead { font: 500 var(--lead)/1.04 var(--font-inter-tight), sans-serif; letter-spacing: -0.035em; color: var(--ov-ink); text-transform: lowercase; padding-left: 0.04em; }
+.ov-key { font: 800 var(--key)/0.98 var(--font-inter-tight), sans-serif; letter-spacing: -0.06em; word-spacing: 0.07em; color: var(--ov-ink); text-wrap: balance; padding-bottom: 0.08em; }
+.ov-key em { font-style: normal; color: var(--ov-coral); }
+.ov-support { margin: clamp(6px, 1.2vh, 12px) 0 0; font: 400 clamp(14px, 1.25vw, 18px)/1.5 var(--font-poppins), sans-serif; color: var(--ov-muted); max-width: 52ch; }
+.ov-case {
+  display: inline-flex; align-items: center; gap: 6px; margin-bottom: 10px; height: 24px; padding: 0 10px; border-radius: 999px;
+  background: var(--ov-coral-soft); color: var(--ov-coral-ink); font: 600 11px/1 var(--font-poppins), sans-serif; letter-spacing: 0.08em; text-transform: uppercase;
+}
+.ov-case::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--ov-coral); }
+.ov-slide[data-state="active"] .ov-sub { animation: ov-drift 9s linear 0.2s both; }
+.ov-slide[data-state="active"] .ov-lead { animation: ov-lead-in 0.1s ease-out 0.06s both; }
+.ov-slide[data-state="active"] .ov-key { animation: ov-key-in 0.3s var(--ease-out) 0.14s both; }
+.ov-slide[data-state="active"] .ov-support,
+.ov-slide[data-state="active"] .ov-case,
+.ov-slide[data-state="active"] .ov-logos { animation: ov-fade-up 0.5s var(--ease-out) 0.32s both; }
+@keyframes ov-drift { from { transform: scale(1); } to { transform: scale(1.025); } }
+@keyframes ov-lead-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes ov-key-in { from { opacity: 0; filter: blur(16px); transform: scale(1.06); } to { opacity: 1; filter: blur(0); transform: none; } }
+@keyframes ov-fade-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+/* La UI real */
+.ov-media { min-height: 0; container-type: size; display: grid; place-items: center; }
+.ov-screen { position: relative; width: min(100cqw, 160cqh); aspect-ratio: 16 / 10; margin: 0; perspective: 2400px; perspective-origin: 50% 30%; }
+.ov-tilt { position: absolute; inset: 0; transform-style: preserve-3d; }
+.ov-frame {
+  position: absolute; inset: 0; border-radius: clamp(12px, 1.4cqw, 22px); overflow: hidden; background: var(--ov-surface);
+  box-shadow: 0 0 0 1px var(--ov-line), 0 2px 6px var(--ov-shadow-soft), 0 40px 90px -30px var(--ov-shadow);
+}
+.ov-frame video, .ov-frame img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.ov-slide[data-state="active"] .ov-screen[data-format="pantalla"] .ov-tilt { animation: ov-tilt-in 1.7s var(--ease-out) 0.12s both; }
+@keyframes ov-tilt-in {
+  from { transform: translateY(5%) rotateX(17deg) rotateY(-13deg) rotateZ(2deg) scale(0.86); opacity: 0; }
+  18% { opacity: 1; }
+  to { transform: none; opacity: 1; }
+}
+/* Celular: el teléfono ya viene dentro del clip, con su fondo; aquí va sin marco ni inclinación */
+.ov-screen[data-format="celular"] { width: min(100cqw, 80cqh); aspect-ratio: 4 / 5; perspective: none; }
+.ov-screen[data-format="celular"] .ov-frame { background: transparent; box-shadow: none; border-radius: 0; }
+/* Los bordes del clip se funden con el fondo de la lámina (el clip trae el mismo degradado) */
+.ov-screen[data-format="celular"] .ov-frame video,
+.ov-screen[data-format="celular"] .ov-frame img {
+  -webkit-mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent), linear-gradient(to bottom, transparent, black 5%, black 95%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent), linear-gradient(to bottom, transparent, black 5%, black 95%, transparent);
+  mask-composite: intersect;
+}
+.ov-slide[data-state="active"] .ov-screen[data-format="celular"] .ov-frame { animation: ov-fade-up 0.4s var(--ease-out) both; }
+
+/* Logos (solo canales e integraciones) */
+.ov-logos { display: flex; flex-wrap: wrap; gap: 8px; margin: clamp(8px, 1.4vh, 14px) 0 0; padding: 0; list-style: none; }
+.ov-logos li { display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--ov-line); background: var(--ov-surface); font: 500 13px/1 var(--font-poppins), sans-serif; }
+.ov-logos svg { width: 15px; height: 15px; }
+
+/* Portada y cierre */
+.ov-cover { display: grid; place-items: center; align-content: center; gap: clamp(16px, 3vh, 30px); text-align: center; }
+.ov-cover .ov-iso { width: clamp(64px, 9vh, 104px); height: auto; }
+.ov-cover .ov-sub { text-align: left; }
+.ov-para { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 14px; border-radius: 999px; background: var(--ov-surface-soft); border: 1px solid var(--ov-line); font: 500 13px/1 var(--font-poppins), sans-serif; color: var(--ov-muted); max-width: 100%; min-width: 0; white-space: nowrap; }
+.ov-para b { color: var(--ov-fg); font-weight: 600; min-width: 0; overflow: hidden; white-space: nowrap; -webkit-mask-image: linear-gradient(90deg, black 88%, transparent); mask-image: linear-gradient(90deg, black 88%, transparent); }
+.ov-hint { font: 400 13px/1 var(--font-poppins), sans-serif; color: var(--ov-muted); }
+.ov-hint-m { display: none; }
+.ov-cta { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.ov-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 48px; padding: 0 22px; border-radius: 12px;
+  border: 1px solid var(--ov-line); background: var(--ov-surface); color: var(--ov-fg); font: 600 15px/1 var(--font-poppins), sans-serif;
+  text-decoration: none; transition: transform 0.15s, filter 0.15s;
+}
+.ov-btn:active { transform: scale(0.97); }
+.ov-btn svg { width: 17px; height: 17px; }
+.ov-btn[data-variant="primary"] { background: var(--ov-coral); border-color: var(--ov-coral); color: var(--ov-on-pill); box-shadow: 0 10px 30px -10px var(--ov-coral-glow); }
+.ov-btn[data-variant="primary"]:hover { filter: brightness(1.05); }
+
+/* Diagnóstico */
+.ov-diag-wrap { min-height: 0; overflow: auto; padding: 4px 2px; }
+.ov-diag { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 10px; width: min(100%, 980px); margin-inline: auto; align-content: start; }
+.ov-chip {
+  display: flex; align-items: center; gap: 12px; min-height: 58px; padding: 12px 16px; border-radius: 16px; border: 1px solid var(--ov-line);
+  background: var(--ov-surface-soft); color: var(--ov-fg); text-align: left; cursor: pointer; font: 500 15px/1.35 var(--font-poppins), sans-serif;
+  transition: border-color 0.15s, background 0.15s, transform 0.15s;
+}
+.ov-chip:hover { border-color: var(--ov-line-strong); }
+.ov-chip:active { transform: scale(0.98); }
+.ov-box { flex: none; width: 22px; height: 22px; border-radius: 7px; border: 1.5px solid var(--ov-line-strong); display: grid; place-items: center; transition: all 0.15s; }
+.ov-box svg { width: 13px; height: 13px; stroke: var(--ov-on-pill); stroke-width: 3; fill: none; opacity: 0; }
+.ov-chip[aria-pressed="true"] { border-color: var(--ov-coral); background: var(--ov-surface); box-shadow: 0 0 0 3px var(--ov-coral-soft); }
+.ov-chip[aria-pressed="true"] .ov-box { background: var(--ov-coral); border-color: var(--ov-coral); }
+.ov-chip[aria-pressed="true"] .ov-box svg { opacity: 1; }
+.ov-diag-foot { grid-column: 1 / -1; font: 400 13px/1.5 var(--font-poppins), sans-serif; color: var(--ov-muted); text-align: center; margin: 4px 0 0; }
+
+/* Problema, pilares, ruta */
+.ov-tri { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(16px, 3vw, 48px); width: min(100%, 1100px); margin-inline: auto; align-self: start; }
+.ov-tri div { border-top: 1px solid var(--ov-line); padding-top: clamp(14px, 2.4vh, 24px); min-width: 0; }
+.ov-tri b, .ov-pillars b, .ov-route b { display: block; font: 800 clamp(30px, 4.2vw, 64px)/1 var(--font-inter-tight), sans-serif; letter-spacing: -0.055em; color: var(--ov-ink); }
+.ov-tri span, .ov-pillars span, .ov-route span { display: block; margin-top: 10px; font: 400 clamp(14px, 1.2vw, 17px)/1.5 var(--font-poppins), sans-serif; color: var(--ov-muted); max-width: 30ch; }
+.ov-pillars { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: clamp(24px, 5vw, 80px); width: min(100%, 980px); margin-inline: auto; align-self: start; }
+.ov-pillars .ov-iso { width: clamp(140px, 22vw, 300px); height: auto; }
+.ov-pillars ul { list-style: none; margin: 0; padding: 0; display: grid; gap: clamp(14px, 2.6vh, 26px); }
+.ov-pillars li { display: grid; grid-template-columns: 14px 1fr; column-gap: 14px; align-items: baseline; }
+.ov-pillars li i { width: 12px; height: 12px; border-radius: 4px; transform: translateY(-2px); background: var(--ov-coral); }
+.ov-pillars li[data-tone="amber"] i { background: var(--ov-amber); }
+.ov-pillars li[data-tone="violet"] i { background: var(--ov-violet); }
+.ov-pillars b { font-size: clamp(26px, 3vw, 46px); line-height: 1.05; letter-spacing: -0.05em; }
+.ov-pillars span { grid-column: 2; margin-top: 4px; }
+.ov-route { position: relative; width: min(100%, 1040px); margin: 0 auto; padding: 34px 0 0; list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(12px, 2vw, 28px); align-self: start; }
+.ov-route::before, .ov-route::after { content: ""; position: absolute; left: 10px; top: 9px; height: 2px; border-radius: 2px; }
+.ov-route::before { right: 10px; background: var(--ov-line); }
+.ov-route::after { width: calc(100% - 20px); background: linear-gradient(90deg, var(--ov-coral), var(--ov-coral-2)); transform-origin: 0 50%; }
+.ov-slide[data-state="active"] .ov-route::after { animation: ov-grow 1.6s var(--ease-out) 0.4s both; }
+@keyframes ov-grow { from { transform: scaleX(0); } }
+.ov-route li { position: relative; min-width: 0; }
+.ov-route li::before { content: ""; position: absolute; left: 0; top: -34px; width: 20px; height: 20px; border-radius: 50%; background: var(--ov-surface); border: 2px solid var(--ov-coral); box-shadow: 0 0 0 5px var(--ov-bg); }
+.ov-route b { font-size: clamp(30px, 3.8vw, 58px); }
+
+/* Integraciones */
+.ov-hub { position: relative; width: min(100cqw, 170cqh); aspect-ratio: 17 / 10; }
+.ov-wires { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.ov-wire { fill: none; stroke: var(--ov-line-strong); stroke-width: 1.5; }
+.ov-pulse { fill: none; stroke: var(--ov-coral); stroke-width: 2.2; stroke-linecap: round; stroke-dasharray: 18 400; stroke-dashoffset: 418; }
+.ov-slide[data-state="active"] .ov-pulse { animation: ov-pulse 2.6s cubic-bezier(0.5, 0, 0.3, 1) infinite; }
+@keyframes ov-pulse { to { stroke-dashoffset: 0; } }
+.ov-core { position: absolute; left: 50%; top: 50%; width: 18%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 28%; background: var(--ov-surface); display: grid; place-items: center; box-shadow: 0 0 0 1px var(--ov-line), 0 30px 70px -25px var(--ov-coral-glow); }
+.ov-core svg { width: 62%; height: auto; }
+.ov-node { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+.ov-tile {
+  display: flex; align-items: center; justify-content: center; gap: 8px; min-width: clamp(96px, 12cqw, 170px); height: clamp(48px, 7cqh, 64px); padding: 0 16px;
+  border-radius: 16px; background: var(--ov-surface); box-shadow: 0 0 0 1px var(--ov-line), 0 12px 30px -16px var(--ov-shadow-soft);
+  font: 700 clamp(14px, 1.7cqw, 20px)/1 var(--font-poppins), sans-serif; color: var(--ov-fg); letter-spacing: -0.01em;
+}
+.ov-tile svg { width: 1.2em; height: 1.2em; }
+.ov-tile[data-wordmark] { font-family: var(--font-nexa), sans-serif; letter-spacing: 0.02em; }
+.ov-node small { font: 400 12px/1.3 var(--font-poppins), sans-serif; color: var(--ov-muted); }
+
+/* Planes */
+.ov-plans { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(10px, 1.6vw, 20px); width: min(100%, 1040px); margin-inline: auto; align-self: start; }
+.ov-plans--empty { display: block; text-align: center; color: var(--ov-muted); }
+.ov-plans--empty a { color: var(--ov-coral); font-weight: 600; }
+.ov-plan { position: relative; padding: clamp(18px, 2.6vh, 28px); border-radius: 20px; background: var(--ov-surface); box-shadow: 0 0 0 1px var(--ov-line), 0 20px 50px -30px var(--ov-shadow-soft); min-width: 0; }
+.ov-plan[data-anchor] { box-shadow: 0 0 0 2px var(--ov-coral), 0 30px 60px -30px var(--ov-coral-glow); }
+.ov-plan-tag { position: absolute; top: -12px; left: 20px; height: 24px; padding: 0 10px; border-radius: 999px; background: var(--ov-coral); color: var(--ov-on-pill); font: 600 11px/24px var(--font-poppins), sans-serif; letter-spacing: 0.06em; text-transform: uppercase; }
+.ov-plan h3 { margin: 0; font: 600 16px/1.2 var(--font-poppins), sans-serif; }
+.ov-price { margin-top: 12px; font: 700 clamp(30px, 3.4vw, 46px)/1 var(--font-nexa), sans-serif; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--ov-ink); }
+.ov-price small { font: 500 14px/1 var(--font-poppins), sans-serif; color: var(--ov-muted); letter-spacing: 0; margin-left: 4px; }
+.ov-list { display: block; margin-top: 6px; font: 500 13px/1 var(--font-poppins), sans-serif; color: var(--ov-muted); }
+.ov-plan p { margin: 12px 0 0; font: 400 13.5px/1.5 var(--font-poppins), sans-serif; color: var(--ov-muted); }
+.ov-plans-foot { grid-column: 1 / -1; text-align: center; font: 400 12.5px/1.5 var(--font-poppins), sans-serif; color: var(--ov-muted); margin: 0; }
+.ov-plans-foot b { font-weight: 600; color: var(--ov-fg); }
+.ov-live { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--ov-success); margin-right: 6px; transform: translateY(-1px); }
+
+/* Pie: la ruta del recorrido */
+.ov-foot { display: flex; align-items: center; gap: 14px; padding-inline: max(0px, calc(3vw - 16px)); }
+.ov-progress { position: relative; flex: 1; height: 28px; display: flex; align-items: center; min-width: 0; }
+.ov-track, .ov-fill { position: absolute; left: 0; height: 2px; border-radius: 2px; }
+.ov-track { right: 0; background: var(--ov-line); }
+.ov-fill { background: linear-gradient(90deg, var(--ov-coral), var(--ov-coral-2)); transition: width 0.5s var(--ease-out); }
+.ov-dots { position: relative; display: flex; justify-content: space-between; width: 100%; margin: 0; padding: 0; list-style: none; }
+.ov-dot { width: 14px; height: 28px; display: grid; place-items: center; border: 0; background: none; padding: 0; cursor: pointer; }
+.ov-dot::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--ov-dot); transition: all 0.2s; }
+.ov-dot[data-done]::before { background: var(--ov-coral); }
+.ov-dot[aria-current]::before { width: 12px; height: 12px; background: var(--ov-surface); box-shadow: 0 0 0 2.5px var(--ov-coral); }
+.ov-dot[data-marked]::before { box-shadow: 0 0 0 2px var(--ov-surface), 0 0 0 3.5px var(--ov-coral); }
+.ov-nav { display: flex; gap: 6px; }
+.ov-nav button { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--ov-line); background: var(--ov-surface-soft); color: var(--ov-fg); cursor: pointer; display: grid; place-items: center; transition: transform 0.15s, background 0.15s; }
+.ov-nav button:hover { background: var(--ov-surface); }
+.ov-nav button:active { transform: scale(0.94); }
+.ov-nav svg { width: 18px; height: 18px; }
+.ov-nav button:disabled { opacity: 0.35; cursor: default; }
+
+/* Guion del vendedor: isla de tinta */
+.ov-notes {
+  position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 64px); transform: translateX(-50%); width: min(calc(100% - 32px), 760px);
+  background: var(--ov-pill); color: var(--ov-on-pill); border-radius: 24px; padding: 16px 20px 18px; box-shadow: 0 30px 80px -20px var(--ov-shadow); z-index: 20;
+}
+.ov-notes-label { font: 600 10.5px/1 var(--font-poppins), sans-serif; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ov-pill-muted); display: flex; justify-content: space-between; gap: 12px; }
+.ov-notes p { margin: 9px 0 0; font: 400 15px/1.55 var(--font-poppins), sans-serif; }
+
+/* Índice */
+.ov-index {
+  position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; padding: 24px max(16px, env(safe-area-inset-right, 0px)) 24px max(16px, env(safe-area-inset-left, 0px));
+  background: var(--ov-surface-soft); -webkit-backdrop-filter: blur(18px) saturate(1.6); backdrop-filter: blur(18px) saturate(1.6);
+}
+.ov-index-card { width: min(100%, 980px); max-height: 100%; overflow: auto; background: var(--ov-surface); border-radius: 24px; padding: 22px; box-shadow: 0 0 0 1px var(--ov-line), 0 40px 120px -30px var(--ov-shadow); }
+.ov-index-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
+.ov-index-head h2 { margin: 0; font: 700 20px/1 var(--font-nexa), sans-serif; letter-spacing: -0.01em; }
+.ov-index-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); gap: 8px; }
+.ov-ix { display: flex; align-items: center; gap: 10px; text-align: left; padding: 12px; border-radius: 14px; border: 1px solid var(--ov-line); background: var(--ov-surface); color: var(--ov-fg); cursor: pointer; font: 500 14px/1.3 var(--font-poppins), sans-serif; min-width: 0; }
+.ov-ix:hover { border-color: var(--ov-line-strong); }
+.ov-ix-n { flex: none; width: 28px; font: 600 12px/1 var(--font-poppins), sans-serif; color: var(--ov-muted); font-variant-numeric: tabular-nums; }
+.ov-ix-t { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; -webkit-mask-image: linear-gradient(90deg, black 85%, transparent); mask-image: linear-gradient(90deg, black 85%, transparent); }
+.ov-ix-c { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--ov-coral); visibility: hidden; }
+.ov-ix[data-marked] .ov-ix-c { visibility: visible; }
+.ov-ix[aria-current="true"] { border-color: var(--ov-coral); box-shadow: 0 0 0 3px var(--ov-coral-soft); }
+.ov-index-legend { margin: 12px 0 0; font: 400 12.5px/1.5 var(--font-poppins), sans-serif; color: var(--ov-muted); }
+
+/* Celular y tablet vertical: clips 4:5 del teléfono, fondo igual al del clip */
+.ov-deck[data-format="celular"] { --key: clamp(32px, 10.6vw, 70px); }
+.ov-deck[data-format="celular"] .ov-bg { background: linear-gradient(180deg, var(--ov-bg-phone-top) 0%, var(--ov-bg-phone-bottom) 100%); }
+@media (orientation: portrait) and (max-width: 1024px) {
+  .ov-top { padding-inline: 0; }
+  .ov-tool-label, .ov-tool kbd, .ov-tool--full { display: none; }
+  .ov-tool { padding: 0 10px; }
+  .ov-slide { gap: 14px; padding-block: 14px 6px; }
+  .ov-slide[data-kind="problem"], .ov-slide[data-kind="pillars"], .ov-slide[data-kind="route"], .ov-slide[data-kind="plans"] { align-content: start; gap: 22px; }
+  .ov-support { font-size: 14px; }
+  .ov-media { place-items: start center; }
+  .ov-tri { grid-template-columns: 1fr; gap: 14px; }
+  .ov-tri div { padding-top: 12px; }
+  .ov-pillars { grid-template-columns: 1fr; justify-items: center; gap: 22px; }
+  .ov-pillars .ov-iso { width: 120px; }
+  .ov-route { grid-template-columns: 1fr; gap: 26px; padding: 0 0 0 38px; }
+  .ov-route::before { left: 9px; right: auto; top: 6px; bottom: 6px; width: 2px; height: auto; }
+  .ov-route::after { left: 9px; top: 6px; width: 2px; height: calc(100% - 12px); transform-origin: 50% 0; }
+  .ov-slide[data-state="active"] .ov-route::after { animation-name: ov-grow-y; }
+  .ov-route li::before { left: -38px; top: 4px; }
+  .ov-plans { grid-template-columns: 1fr; gap: 14px; }
+  .ov-plan { padding: 16px 18px; }
+  .ov-price { font-size: 32px; }
+  .ov-hub { width: 100cqw; aspect-ratio: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-content: start; }
+  .ov-wires { display: none; }
+  .ov-core { position: relative; left: auto; top: auto; transform: none; grid-column: 1 / -1; justify-self: center; width: 88px; margin-bottom: 8px; }
+  .ov-node { position: static; transform: none; align-items: stretch; text-align: left; }
+  .ov-tile { min-width: 0; width: 100%; height: 52px; justify-content: flex-start; }
+  .ov-node small { padding-left: 4px; }
+  .ov-node:last-child { grid-column: 1 / -1; }
+  .ov-nav { display: none; }
+  .ov-hint-d { display: none; }
+  .ov-hint-m { display: inline; }
+  .ov-notes { bottom: calc(env(safe-area-inset-bottom, 0px) + 50px); }
+}
+@keyframes ov-grow-y { from { transform: scaleY(0); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .ov-deck *, .ov-deck *::before, .ov-deck *::after { animation: none !important; transition: none !important; }
+  .ov-slide[data-state="leaving"] { visibility: hidden; }
+}

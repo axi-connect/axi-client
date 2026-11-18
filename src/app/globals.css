@@ -3241,3 +3241,42 @@ button.assistant-island--s:focus-visible {
     }
   }
 }
+
+/* `/overview` (docs/plans/overview_deck_plan.md §4): la presentación comercial es un medio audiovisual de fondo
+   claro fijo, como los videos de Axi, también con el sistema en oscuro. Sus colores viven aquí porque es el único
+   archivo con hex; overview.css solo usa estas variables. */
+.overview-stage,
+.dark .overview-stage {
+  color-scheme: light;
+  --background: #ffffff;
+  --foreground: #171717;
+  --axi-brand: var(--axi-brand-day);
+  --axi-brand-2: var(--axi-brand-2-day);
+  --ov-bg: #ffffff;
+  --ov-bg-mist: #efe9f7;
+  --ov-bg-blush: #fdf0f1;
+  --ov-bg-phone-top: #fbfafd;
+  --ov-bg-phone-bottom: #f6f3fa;
+  --ov-ink: #0a0a0a;
+  --ov-fg: #171717;
+  --ov-muted: #6b6b70;
+  --ov-line: rgba(23, 23, 23, 0.09);
+  --ov-line-strong: rgba(23, 23, 23, 0.2);
+  --ov-surface: #ffffff;
+  --ov-surface-soft: rgba(255, 255, 255, 0.8);
+  --ov-dot: #d4d4d8;
+  --ov-coral: #e65759;
+  --ov-coral-2: #e02f2f;
+  --ov-coral-soft: #fbe7e8;
+  --ov-coral-ink: #b8383a;
+  --ov-violet: #7c3aed;
+  --ov-amber: #f0a431;
+  --ov-success: #16a34a;
+  --ov-pill: #171717;
+  --ov-on-pill: #ffffff;
+  --ov-pill-muted: #a1a1aa;
+  --ov-pill-accent: #fda4ae;
+  --ov-shadow: rgba(40, 20, 80, 0.32);
+  --ov-shadow-soft: rgba(20, 10, 40, 0.25);
+  --ov-coral-glow: rgba(230, 87, 89, 0.45);
+}

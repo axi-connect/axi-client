@@ -31,6 +31,7 @@ export const INDEXABLE_ROUTES: readonly IndexableRoute[] = [
   { path: "/integraciones", label: "Integraciones", changeFrequency: "monthly", priority: 0.8 },
   { path: "/casos", label: "Casos", changeFrequency: "monthly", priority: 0.7 },
   { path: "/contacto", label: "Agenda tu demo", changeFrequency: "yearly", priority: 0.7 },
+  { path: "/overview", label: "Presentación", changeFrequency: "monthly", priority: 0.6 },
   { path: "/marketplace", label: "Marketplace", changeFrequency: "monthly", priority: 0.4 },
   { path: "/legal/terminos", label: "Términos y condiciones", changeFrequency: "yearly", priority: 0.3 },
   { path: "/legal/privacidad", label: "Política de privacidad", changeFrequency: "yearly", priority: 0.3 },

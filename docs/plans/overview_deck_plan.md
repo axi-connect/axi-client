@@ -97,7 +97,7 @@ guardan en la URL. El vendedor puede mandar el enlace ya marcado después de la 
 | **F0** | Maqueta HTML navegable de todas las láminas, en 390 y 1440, con capturas reales y la cámara aproximada en CSS. Artifact privado + `docs/design/mockups/overview-deck.html` | OK del dueño al guion y al diseño |
 | **F1** | Storyboard de los recorridos (cuadros reales) → capturas que faltan (contactos/pipeline, pedidos, catálogo, Shopify) con `axi-video/04-herramientas/capturas-app` | OK al storyboard |
 | **F2** | Producción en axi-video `03-producciones/2026-11-overview-recorridos/`: los clips 16:9 y 4:5, un render pesado a la vez, con revisión en el Studio | OK a cada clip |
-| **F3** | Código en axi-client: ruta, isla, láminas, medios, precio, OG, `PUBLIC_PATHS`, sitemap. Verja: tsc + eslint acotado + pruebas de la isla. El build lo corre el dueño | Revisión del PR |
+| **F3** ✅ | Código en axi-client: ruta, isla, láminas, medios, precio, OG, `PUBLIC_PATHS`, sitemap. Verja: tsc + eslint acotado + pruebas de la isla. El build lo corre el dueño | Revisión del PR |
 | **F4** | Verificación visual (390 → 1440, datos largos en `?para=`, teclado, deslizar, reducido) y deploy | OK y publicación |
 
 ## 7. Riesgos
@@ -105,3 +105,9 @@ guardan en la URL. El vendedor puede mandar el enlace ya marcado después de la 
 - **D2:** prometer SIESA y pagos que hoy no están en producción.
 - **Peso:** 15 clips × 2 encuadres ≈ 30–45 MB en total, pero cada visitante descarga solo lo que ve, unos 2–4 MB por lámina vista.
 - **Capturas:** el de la campaña tiene el fallo de BigInt documentado en el LEEME de las capturas.
+
+## 8. Estado (18-nov-2026)
+
+- **F0–F2 cerradas.** Maqueta aprobada; 12 recorridos × 2 formatos renderizados en `axi-video/03-producciones/2026-11-overview-recorridos/web/` (celular v2: el teléfono completo como objeto, aprobado por el dueño).
+- **F3:** `src/app/overview/` + `src/modules/overview/` (dominio con pruebas). Los clips se suben a Cloudinary con `axi-video/03-producciones/2026-11-overview-recorridos/herramientas/subir-cloudinary.sh` (solo los MP4; el WebM y el póster salen por URL). Mientras no estén subidos, `OVERVIEW_MEDIA_BASE` sirve los de la producción en local.
+- **Desviaciones de la maqueta:** ninguna en el guion; en celular el clip va sin marco (el teléfono ya está dentro) con los bordes fundidos con el fondo.

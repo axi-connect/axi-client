@@ -23,6 +23,9 @@ export const PUBLIC_PATHS = [
   // Registro autoservicio (docs/plans/onboarding_self_service_plan.md F2): el
   // funnel es público hasta que el alta crea la sesión y manda a /onboarding.
   "/comenzar",
+  // Presentación comercial pública (docs/plans/overview_deck_plan.md): se comparte por WhatsApp a quien no tiene
+  // cuenta. Estática y sin datos de tenants.
+  "/overview",
   // Enlace del correo de verificación (`PUBLIC_APP_URL/verificar-correo?token=`,
   // lo compone el backend): llega gente sin sesión o desde otro dispositivo.
   "/verificar-correo",
