@@ -2,6 +2,7 @@ import Link from 'next/link';
 import LoginForm from "./form"
 import Image from 'next/image';
 import { Suspense } from 'react';
+import { ConnectAppLoginNotice } from '@/modules/connected-apps/ui/ConnectAppLoginNotice';
 
 const logo = "https://res.cloudinary.com/dpfnxj52w/image/upload/v1759341727/icon-app-v1.0_ehhycl.png"
 
@@ -17,6 +18,7 @@ export default function LoginPage() {
       </div>
 
       <Suspense fallback={null}>
+        <ConnectAppLoginNotice />
         <LoginForm />
       </Suspense>
     </div>
