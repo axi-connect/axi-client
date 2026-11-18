@@ -99,3 +99,83 @@ export function readArtifacts(raw: readonly unknown[]): ProposalArtifact[] {
       after: typeof item.after === "string" ? item.after : null,
     }));
 }
+
+// ------------------------------------------------- acciones preparadas (F3)
+
+/*
+ * Acciones que Axel deja PREPARADAS en el chat (F3 «Axel OS», plan §4 del
+ * servidor: `docs/plans/axel_platform_agent_plan.md`). La persona las confirma
+ * o descarta con una tarjeta; nada se escribe sin ese toque.
+ *
+ * Excepción declarada a la regla de este archivo: estos tipos van ESCRITOS A
+ * MANO, 1:1 en snake_case con el contrato del servidor
+ * (`assistant/presentation/dto/assistant_action.dto.ts` y `cmo.dto.ts`),
+ * porque el schema OpenAPI del cliente aún no los trae.
+ * TODO(axel-os F3): al regenerar con `npm run api:types`, pasar a
+ * `Schemas["AssistantActionDto"]`, `Schemas["AssistantActionDecisionDto"]` y
+ * `Schemas["CmoReplyDto"]["pending_actions"][number]`, y borrar `readPendingActions`.
+ */
+
+/** R1 = `write` (interno y reversible, un toque) · R2 = `external` (llega al cliente final o cuesta). */
+export type ActionRisk = "write" | "external";
+export type ActionStatus = "pending" | "executed" | "failed" | "rejected" | "expired";
+export type ActionOutcome =
+  | "executed"
+  | "failed"
+  | "rejected"
+  | "not_pending"
+  | "expired"
+  | "forbidden"
+  | "not_found";
+
+/** Lo que trae `POST /cmo/messages` en `pending_actions`: la referencia, sin el diff. */
+export interface PendingActionRef {
+  id: string;
+  tool: string;
+  risk: ActionRisk;
+  summary: string;
+}
+
+/** Una línea del diff de la vista previa: `before` es `null` cuando el valor es nuevo. */
+export interface ActionPreviewLine {
+  label: string;
+  before: string | null;
+  after: string;
+}
+
+/** `GET /assistant/actions` → `data[number]`. */
+export interface AssistantActionDTO {
+  id: string;
+  assistant: string;
+  thread_id: string | null;
+  tool: string;
+  risk: ActionRisk;
+  status: ActionStatus;
+  preview: {
+    summary: string;
+    lines: ActionPreviewLine[] | null;
+    effects: string[] | null;
+  };
+  /** El resultado si se ejecutó, o el motivo si falló. */
+  outcome_text: string | null;
+  expires_at: string;
+  decided_at: string | null;
+  created_at: string;
+}
+
+/** `POST /assistant/actions/:id/confirm|reject`. */
+export interface ActionDecisionDTO {
+  action_id: string;
+  outcome: ActionOutcome;
+  text: string | null;
+}
+
+/**
+ * Las acciones preparadas de una respuesta de Axel. Tolerante: hasta regenerar
+ * los tipos, `CmoReplyDTO` no declara el campo, y un servidor anterior a F3 no
+ * lo manda.
+ */
+export function readPendingActions(reply: CmoReplyDTO): PendingActionRef[] {
+  const raw = (reply as CmoReplyDTO & { pending_actions?: unknown }).pending_actions;
+  return Array.isArray(raw) ? (raw as PendingActionRef[]) : [];
+}

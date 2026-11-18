@@ -13,24 +13,33 @@ import type {
   CmoTurnStepEvent,
 } from "@/core/realtime/events";
 import type {
+  ActionDecisionDTO,
+  ActionPreviewLine,
+  ActionRisk,
   ApprovalResultDTO,
+  AssistantActionDTO,
   BriefingDTO,
   CmoMessageDTO,
   CmoThreadDTO,
   CmoQuestionDTO,
   CmoSettingsDTO,
+  PendingActionRef,
   ProposalDTO,
 } from "@/modules/cmo/domain/cmo";
-import { CMO_MESSAGE_MAX_CHARS, CMO_MESSAGE_MIN_CHARS } from "@/modules/cmo/domain/cmo";
+import type { ActionPhase } from "@/modules/cmo/domain/action-labels";
+import { CMO_MESSAGE_MAX_CHARS, CMO_MESSAGE_MIN_CHARS, readPendingActions } from "@/modules/cmo/domain/cmo";
 import {
   approveProposal,
   archiveThread as archiveThreadApi,
+  confirmAction as confirmActionApi,
   getCmoSettings,
   getLatestBriefing,
   getProposal,
   getTranscript,
+  listActions,
   listProposals,
   listThreads,
+  rejectAction as rejectActionApi,
   rejectProposal,
   sendMessage,
 } from "@/modules/cmo/infrastructure/services/cmo-service.adapter";
@@ -78,6 +87,13 @@ export interface UiMessage {
    * respuesta con la opción elegida: la posición en el hilo ya lo dice todo.
    */
   question: CmoQuestionDTO | null;
+  /**
+   * Las acciones que Axel dejó preparadas en ESTE turno (F3 «Axel OS»), por id.
+   * Opcional porque casi ningún mensaje las tiene. En un turno de esta sesión
+   * vienen en la respuesta del POST; al recargar el hilo el transcript no las
+   * trae y se anclan por fecha (`anchorActions`).
+   */
+  action_ids?: string[];
   /** true = escrito localmente, todavía no confirmado por el servidor. */
   pending?: boolean;
   /** Mensaje de error si el turno falló: la burbuja lo muestra con reintento. */
@@ -137,6 +153,32 @@ export interface AxelNews {
   proposal_id: string | null;
 }
 
+export type { ActionPhase };
+
+/** Una acción preparada tal como la pinta la tarjeta de confirmación. */
+export interface UiAction {
+  id: string;
+  tool: string;
+  risk: ActionRisk;
+  summary: string;
+  /** El diff antes → después. `null` hasta que llega el detalle, o si no aplica. */
+  lines: ActionPreviewLine[] | null;
+  effects: string[] | null;
+  /** `null` mientras solo se tiene la referencia del POST. */
+  expires_at: string | null;
+  phase: ActionPhase;
+  /** El resultado, el motivo del fallo o el aviso de permisos, tal cual del servidor. */
+  text: string | null;
+  /**
+   * La decisión que está en vuelo. Mientras no es `null` los botones se
+   * deshabilitan, y la fase NO cambia hasta que el servidor responde: marcar
+   * «hecho» antes sería afirmar algo que puede no pasar.
+   */
+  busy: "confirm" | "reject" | null;
+  /** El último intento no llegó (red, 5xx): la acción sigue pendiente y se puede reintentar. */
+  error: string | null;
+}
+
 /** Más novedades sin leer que esto no se cuentan una a una: con cinco ya es «mira el tablero». */
 const MAX_NEWS = 5;
 
@@ -178,6 +220,11 @@ interface CmoState {
   settled: Record<string, ProposalDTO | null>;
   /** Las conversaciones del dueño con Axel, para el conmutador. */
   threads: Section<CmoThreadDTO[]>;
+  /**
+   * Las acciones preparadas del hilo abierto, por id. Se podan al cambiar de
+   * hilo, como `settled`. Los mensajes las referencian con `action_ids`.
+   */
+  actions: Record<string, UiAction>;
   /**
    * La carga inicial ya decidió con qué hilo se abre (el último, o ninguno).
    * Hasta entonces la vista no sabe si pintar el estado vacío o la
@@ -235,6 +282,22 @@ interface CmoState {
   markSeen: () => void;
   /** Resuelve una propuesta del hilo que el tablero ya no lista. Idempotente. */
   resolveSettled: (proposalId: string) => Promise<void>;
+  /**
+   * Trae las acciones del hilo (todas, en cualquier estado) y ancla a su
+   * mensaje las que ningún mensaje referencia todavía. Nunca falla hacia fuera:
+   * sin la lista, las tarjetas de esta sesión siguen con lo que trajo el POST.
+   */
+  loadActions: (threadId: string) => Promise<void>;
+  /** Confirma (R1) o aprueba (R2) una acción. Ignorado si ya hay una decisión en vuelo. */
+  confirmAction: (actionId: string) => Promise<void>;
+  rejectAction: (actionId: string) => Promise<void>;
+  /**
+   * «Confirmar todo» de una tarjeta agrupada: las R1 pendientes, UNA A UNA y en
+   * orden. En paralelo, dos cambios del mismo turno sobre el mismo recurso
+   * competirían; en serie, el segundo ve lo que dejó el primero. Todas se
+   * marcan en vuelo desde el principio para que ningún botón quede vivo.
+   */
+  confirmAll: (actionIds: readonly string[]) => Promise<void>;
   /** La isla ya tomó esta novedad: sale de la lista. */
   takeNews: (id: string) => void;
   /**
@@ -326,6 +389,41 @@ export const useCmoStore = create<CmoState>((set, get) => {
    *  y a los resets entre tests (F10 de la auditoría). */
   const inFlight = new Set<string>();
 
+  const patchAction = (id: string, patch: Partial<UiAction>): void => {
+    set((state) => {
+      const current = state.actions[id];
+      if (current === undefined) return state;
+      return { actions: { ...state.actions, [id]: { ...current, ...patch } } };
+    });
+  };
+
+  /** La llamada en sí, con la acción YA marcada en vuelo por quien llama. */
+  const runDecision = async (id: string, kind: "confirm" | "reject"): Promise<void> => {
+    let decision: ActionDecisionDTO;
+    try {
+      decision = kind === "confirm" ? await confirmActionApi(id) : await rejectActionApi(id);
+    } catch (error) {
+      // No llegó: la acción sigue como estaba y el botón vuelve a servir.
+      patchAction(id, { busy: null, error: errorMessage(error) });
+      return;
+    }
+    if (decision.outcome === "not_pending") {
+      /* Otra pestaña u otra persona la decidió primero. El texto del servidor
+         trae el estado en crudo («Ya estaba executed.»), así que se relee la
+         acción y se pinta su estado real. */
+      const threadId = get().thread.id;
+      if (threadId !== null) {
+        patchAction(id, { busy: null });
+        await get().loadActions(threadId);
+      }
+      if (get().actions[id]?.phase === "pending") {
+        patchAction(id, { busy: null, phase: "expired", text: ALREADY_DECIDED });
+      }
+      return;
+    }
+    patchAction(id, { busy: null, error: null, ...phaseFromDecision(decision) });
+  };
+
   return {
   settings: idle(),
   briefing: idle(),
@@ -338,6 +436,7 @@ export const useCmoStore = create<CmoState>((set, get) => {
   news: [],
   settled: {},
   threads: idle(),
+  actions: {},
   restored: false,
 
   /**
@@ -393,6 +492,7 @@ export const useCmoStore = create<CmoState>((set, get) => {
               thinking: false,
             },
           });
+          void get().loadActions(current.id);
         })
         .catch((error: unknown) => {
           // Sin hilo previo se arranca en blanco: no es un error que reportar en
@@ -438,6 +538,7 @@ export const useCmoStore = create<CmoState>((set, get) => {
       live: null,
       late: null,
       settled: {},
+      actions: {},
       blocker: null,
     });
     try {
@@ -445,6 +546,7 @@ export const useCmoStore = create<CmoState>((set, get) => {
       // Guarda de carrera: si mientras cargaba el dueño abrió otra, esta llega tarde.
       if (get().thread.id !== threadId) return;
       set((state) => ({ thread: { ...state.thread, messages: transcript.map(toUiMessage) } }));
+      void get().loadActions(threadId);
     } catch (error) {
       if (get().thread.id !== threadId) return;
       set((state) => ({
@@ -566,6 +668,8 @@ export const useCmoStore = create<CmoState>((set, get) => {
          sitio en vez de añadir otro — insertarlo dos veces era el riesgo real
          de tener dos caminos hacia el mismo mensaje. */
       const closedByWs = get().live === null;
+      const refs = readPendingActions(reply);
+      const actionIds = refs.map((ref) => ref.id);
       set((state) => {
         const messages = state.thread.messages.map((item) =>
           item.id === optimistic.id ? { ...item, pending: false } : item,
@@ -581,6 +685,7 @@ export const useCmoStore = create<CmoState>((set, get) => {
           // recarga. Al recargar sale del transcript por el mismo campo.
           proposal_id: reply.proposal_id,
           question: reply.question,
+          ...(actionIds.length === 0 ? {} : { action_ids: actionIds }),
         };
         const last = messages.at(-1);
         return {
@@ -597,6 +702,7 @@ export const useCmoStore = create<CmoState>((set, get) => {
                           tool_calls: reply.tool_calls,
                           proposal_id: reply.proposal_id,
                           question: reply.question,
+                          ...(actionIds.length === 0 ? {} : { action_ids: actionIds }),
                         }
                       : item,
                   )
@@ -604,8 +710,11 @@ export const useCmoStore = create<CmoState>((set, get) => {
           },
           // El texto en vivo cumplió su función: la verdad es este cuerpo.
           live: null,
+          // La tarjeta se pinta YA con el resumen del POST; el diff llega con `loadActions`.
+          actions: refs.length === 0 ? state.actions : withRefs(state.actions, refs),
         };
       });
+      if (refs.length > 0) void get().loadActions(reply.thread_id);
       // Una respuesta puede haber creado una propuesta: se recarga el tablero
       // en vez de esperar el WS, que puede no llegar si el socket está caído.
       // La tarjeta del hilo necesita la propuesta COMPLETA (titular, cifra,
@@ -682,6 +791,7 @@ export const useCmoStore = create<CmoState>((set, get) => {
       late: null,
       blocker: null,
       settled: {},
+      actions: {},
     });
   },
 
@@ -729,6 +839,50 @@ export const useCmoStore = create<CmoState>((set, get) => {
     } finally {
       inFlight.delete(proposalId);
     }
+  },
+
+  loadActions: async (threadId: string) => {
+    let list: AssistantActionDTO[];
+    try {
+      list = await listActions(threadId);
+    } catch {
+      return;
+    }
+    // Guarda de carrera: el dueño cambió de hilo mientras llegaba la lista.
+    if (get().thread.id !== threadId) return;
+    set((state) => {
+      const actions = { ...state.actions };
+      for (const dto of list) actions[dto.id] = mergeAction(actions[dto.id], dto);
+      return {
+        actions,
+        thread: { ...state.thread, messages: anchorActions(state.thread.messages, list) },
+      };
+    });
+  },
+
+  confirmAction: async (actionId: string) => {
+    const current = get().actions[actionId];
+    if (current?.busy !== null || current.phase !== "pending") return;
+    patchAction(actionId, { busy: "confirm", error: null });
+    await runDecision(actionId, "confirm");
+  },
+
+  rejectAction: async (actionId: string) => {
+    const current = get().actions[actionId];
+    // Sin permiso para ejecutarla, todavía se puede descartar (pide solo `cmo:chat`).
+    if (current?.busy !== null || (current.phase !== "pending" && current.phase !== "forbidden")) return;
+    patchAction(actionId, { busy: "reject", error: null });
+    await runDecision(actionId, "reject");
+  },
+
+  confirmAll: async (actionIds: readonly string[]) => {
+    const ids = actionIds.filter((id) => {
+      const action = get().actions[id];
+      return action !== undefined && action.busy === null && action.phase === "pending" && action.risk === "write";
+    });
+    if (ids.length === 0) return;
+    for (const id of ids) patchAction(id, { busy: "confirm", error: null });
+    for (const id of ids) await runDecision(id, "confirm");
   },
 
   takeNews: (id) => {
@@ -873,6 +1027,9 @@ export const useCmoStore = create<CmoState>((set, get) => {
         },
       }));
       if (event.proposal_id !== null) void get().reloadProposals();
+      // El cierre por WS no trae las acciones preparadas: se releen del hilo.
+      const threadId = get().thread.id;
+      if (threadId !== null) void get().loadActions(threadId);
       return;
     }
     const live = accept(get(), event);
@@ -952,6 +1109,108 @@ function withoutFailure(message: UiMessage): UiMessage {
   const { failed, ...rest } = message;
   void failed;
   return rest;
+}
+
+/** Lo que se le dice a la persona cuando otra la decidió primero y no se pudo releer. */
+const ALREADY_DECIDED = "Alguien de tu equipo ya decidió esta acción.";
+const FORBIDDEN_FALLBACK = "No tienes permiso para hacer este cambio. Pídeselo a quien administra la cuenta.";
+const NOT_FOUND = "Esta acción ya no está disponible.";
+
+/** La fase y el texto que deja una decisión (salvo `not_pending`, que se relee). */
+function phaseFromDecision(decision: ActionDecisionDTO): Pick<UiAction, "phase" | "text"> {
+  switch (decision.outcome) {
+    case "executed":
+      return { phase: "executed", text: decision.text };
+    case "failed":
+      return { phase: "failed", text: decision.text };
+    case "rejected":
+      return { phase: "rejected", text: null };
+    case "expired":
+      return { phase: "expired", text: null };
+    case "forbidden":
+      return { phase: "forbidden", text: decision.text ?? FORBIDDEN_FALLBACK };
+    case "not_found":
+    case "not_pending":
+      return { phase: "expired", text: NOT_FOUND };
+  }
+}
+
+/** La tarjeta provisional con lo que trae el POST (resumen y riesgo, sin diff). */
+function withRefs(actions: Record<string, UiAction>, refs: readonly PendingActionRef[]): Record<string, UiAction> {
+  const next = { ...actions };
+  for (const ref of refs) {
+    next[ref.id] ??= {
+      id: ref.id,
+      tool: ref.tool,
+      risk: ref.risk,
+      summary: ref.summary,
+      lines: null,
+      effects: null,
+      expires_at: null,
+      phase: "pending",
+      text: null,
+      busy: null,
+      error: null,
+    };
+  }
+  return next;
+}
+
+/**
+ * Funde lo que dice el servidor con lo que la pestaña sabe.
+ *
+ * Dos cosas locales sobreviven a una relectura: una decisión EN VUELO (su
+ * respuesta es la que manda, y pintar el estado viejo haría parpadear la
+ * tarjeta) y el `forbidden` de quien la tocó, que el servidor no guarda porque
+ * para él la acción sigue pendiente.
+ */
+function mergeAction(prev: UiAction | undefined, dto: AssistantActionDTO): UiAction {
+  const base = {
+    id: dto.id,
+    tool: dto.tool,
+    risk: dto.risk,
+    summary: dto.preview.summary,
+    lines: dto.preview.lines,
+    effects: dto.preview.effects,
+    expires_at: dto.expires_at,
+  };
+  if (prev !== undefined && prev.busy !== null) {
+    return { ...prev, ...base };
+  }
+  if (prev?.phase === "forbidden" && dto.status === "pending") {
+    return { ...prev, ...base };
+  }
+  return { ...base, phase: dto.status, text: dto.outcome_text, busy: null, error: prev?.error ?? null };
+}
+
+/**
+ * Ancla a un mensaje las acciones que ninguno referencia todavía (un hilo
+ * recargado: el transcript no las trae). El servidor crea la acción DURANTE el
+ * turno y guarda el mensaje de Axel al cerrarlo, así que su dueño es el primer
+ * mensaje de Axel posterior a la acción; si el reloj no cuadra, el último.
+ */
+export function anchorActions(messages: UiMessage[], actions: readonly AssistantActionDTO[]): UiMessage[] {
+  const anchored = new Set(messages.flatMap((message) => message.action_ids ?? []));
+  const loose = actions
+    .filter((action) => !anchored.has(action.id))
+    .sort((a, b) => Date.parse(a.created_at) - Date.parse(b.created_at));
+  if (loose.length === 0) return messages;
+
+  const axelIndexes = messages.flatMap((message, index) => (message.role === "axel" ? [index] : []));
+  const lastAxel = axelIndexes.at(-1);
+  if (lastAxel === undefined) return messages;
+
+  const extra = new Map<number, string[]>();
+  for (const action of loose) {
+    const at = Date.parse(action.created_at);
+    const owner =
+      axelIndexes.find((index) => Date.parse(messages[index]?.created_at ?? "") >= at) ?? lastAxel;
+    extra.set(owner, [...(extra.get(owner) ?? []), action.id]);
+  }
+  return messages.map((message, index) => {
+    const ids = extra.get(index);
+    return ids === undefined ? message : { ...message, action_ids: [...(message.action_ids ?? []), ...ids] };
+  });
 }
 
 function toUiMessage(message: CmoMessageDTO): UiMessage {

@@ -1,8 +1,11 @@
 import { http } from "@/core/services/http";
 import type { CmoSettingsDTO } from "@/modules/cmo/domain/cmo";
 import {
+  confirmAction,
   getProposal,
+  listActions,
   listProposals,
+  rejectAction,
   saveCmoSettings,
   sendMessage,
 } from "../cmo-service.adapter";
@@ -73,5 +76,17 @@ describe("cmo-service.adapter", () => {
     expect(mocked.post).toHaveBeenCalledWith("/cmo/messages", { message: "hola" }, {
       signal: controller.signal,
     });
+  });
+
+  it("las acciones preparadas viven en /assistant/actions, filtradas por hilo", async () => {
+    mocked.get.mockResolvedValueOnce({ data: [] });
+    await expect(listActions("t1")).resolves.toEqual([]);
+    expect(mocked.get).toHaveBeenCalledWith("/assistant/actions", { thread_id: "t1" });
+
+    mocked.post.mockResolvedValue({ action_id: "a1", outcome: "executed", text: "Hecho." });
+    await confirmAction("a1");
+    expect(mocked.post).toHaveBeenLastCalledWith("/assistant/actions/a1/confirm", {});
+    await rejectAction("a1");
+    expect(mocked.post).toHaveBeenLastCalledWith("/assistant/actions/a1/reject", {});
   });
 });

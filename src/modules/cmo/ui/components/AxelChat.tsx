@@ -2,6 +2,7 @@
 
 import { Fragment, memo, useCallback, useEffect, useMemo, useRef, useState, type Ref } from "react";
 import { BarChart3, BookOpen, Calculator, Check, Flame, Lock, Megaphone, Send } from "lucide-react";
+import { useShallow } from "zustand/react/shallow";
 
 import {
   CMO_MESSAGE_MAX_CHARS,
@@ -15,6 +16,7 @@ import {
   useCmoStore,
   type CmoBlocker,
   type LiveStep,
+  type UiAction,
   type UiMessage,
 } from "@/modules/cmo/infrastructure/stores/cmo.store";
 import {
@@ -34,6 +36,7 @@ import {
   type AssistantActivityChip,
   type AssistantStarter,
 } from "@/shared/components/features/assistant";
+import { ActionConfirmCard } from "./ActionConfirmCard";
 import { AxelHeroAvatar } from "./AxelHeroAvatar";
 import { BriefingHero } from "./BriefingHero";
 import { CmoActions } from "./CmoActions";
@@ -332,6 +335,11 @@ export function AxelChat({
                       askDisabled={thread.thinking}
                     />
                   ) : null}
+                  {/* Lo que Axel dejó preparado en ese turno, para confirmar
+                      o descartar (F3 «Axel OS»): una tarjeta por turno. */}
+                  {message.action_ids !== undefined && message.action_ids.length > 0 ? (
+                    <MessageActions ids={message.action_ids} fresh={fresh} />
+                  ) : null}
                 </Fragment>
               );
             })}
@@ -394,6 +402,41 @@ export function shortLabel(label: string): string {
 
 const LEADING = new Set(["el", "la", "los", "las", "un", "una", "tu", "tus", "su", "sus", "lo"]);
 const TRAILING = new Set(["de", "del", "en", "con", "para", "por", "y", "a", "al", "la", "el", "los", "las"]);
+
+/**
+ * La tarjeta de confirmación de un turno, con su propia suscripción: confirmar
+ * una acción repinta esta tarjeta, no el hilo entero. `useShallow` compara
+ * acción por acción, así que solo cambia cuando cambia una de las suyas.
+ */
+const MessageActions = memo(function MessageActions({ ids, fresh }: { ids: readonly string[]; fresh: boolean }) {
+  const actions = useCmoStore(
+    useShallow((state) => ids.map((id) => state.actions[id]).filter((item): item is UiAction => item !== undefined)),
+  );
+  const confirmAction = useCmoStore((state) => state.confirmAction);
+  const rejectAction = useCmoStore((state) => state.rejectAction);
+  const confirmAll = useCmoStore((state) => state.confirmAll);
+  const onConfirm = useCallback(
+    (id: string) => {
+      void confirmAction(id);
+    },
+    [confirmAction],
+  );
+  const onReject = useCallback(
+    (id: string) => {
+      void rejectAction(id);
+    },
+    [rejectAction],
+  );
+  return (
+    <ActionConfirmCard
+      actions={actions}
+      fresh={fresh}
+      onConfirm={onConfirm}
+      onReject={onReject}
+      onConfirmAll={confirmAll}
+    />
+  );
+});
 
 /** El borrador que se escribe en vivo. Es lo ÚNICO que se repinta por fragmento. */
 function LiveBubble() {

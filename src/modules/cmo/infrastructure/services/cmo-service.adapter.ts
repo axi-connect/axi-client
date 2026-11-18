@@ -1,6 +1,8 @@
 import { http } from "@/core/services/http";
 import type {
+  ActionDecisionDTO,
   ApprovalResultDTO,
+  AssistantActionDTO,
   BriefingDTO,
   CmoMessageDTO,
   CmoReplyDTO,
@@ -92,6 +94,35 @@ export function rejectProposal(
   dto: RejectProposalDTO,
 ): Promise<{ directive_created: boolean }> {
   return http.post<{ directive_created: boolean }>(`/cmo/proposals/${id}/reject`, dto);
+}
+
+// ------------------------------------------------- acciones preparadas (F3)
+
+/**
+ * Las acciones que Axel dejó preparadas en una conversación, en todos sus
+ * estados (el servidor devuelve hasta 50, las más recientes primero). Viven
+ * fuera de `/cmo` (`/assistant/actions`) porque el kit es de cualquier
+ * asistente; el permiso de lectura sigue siendo `cmo:read`.
+ */
+export async function listActions(threadId: string): Promise<AssistantActionDTO[]> {
+  const { data } = await http.get<{ data: AssistantActionDTO[] }>("/assistant/actions", {
+    thread_id: threadId,
+  });
+  return data;
+}
+
+/**
+ * Confirmar NO es idempotente en el sentido de «repetir da igual»: el servidor
+ * pasa la acción a `executed` antes de correrla, así que un segundo toque
+ * responde `not_pending`. Tampoco se reintenta solo. Y vuelve a autorizar a
+ * quien confirma: ver la tarjeta no garantiza poder ejecutarla (`forbidden`).
+ */
+export function confirmAction(id: string): Promise<ActionDecisionDTO> {
+  return http.post<ActionDecisionDTO>(`/assistant/actions/${id}/confirm`, {});
+}
+
+export function rejectAction(id: string): Promise<ActionDecisionDTO> {
+  return http.post<ActionDecisionDTO>(`/assistant/actions/${id}/reject`, {});
 }
 
 // --------------------------------------------------------------- briefings
