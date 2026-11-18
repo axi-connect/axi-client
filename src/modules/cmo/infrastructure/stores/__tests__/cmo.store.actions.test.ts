@@ -269,6 +269,99 @@ describe("cmo.store · acciones preparadas", () => {
   });
 });
 
+describe("cmo.store · eventos en vivo de las acciones", () => {
+  const pendingEvent = {
+    action_id: "a9",
+    thread_id: "t1",
+    tool: "catalog_update_product",
+    risk: "write" as const,
+    summary: "Bajar el precio del sérum",
+  };
+
+  it("action_pending de otra pestaña o de MCP: se agrega bajo el último mensaje de Axel y trae el detalle", async () => {
+    useCmoStore.setState({
+      thread: {
+        id: "t1",
+        thinking: false,
+        messages: [
+          message("m1", "axel", "2026-11-18T12:00:00.000Z"),
+          message("m2", "owner", "2026-11-18T12:01:00.000Z"),
+          message("m3", "axel", "2026-11-18T12:01:30.000Z"),
+        ],
+      },
+    });
+    api.listActions.mockResolvedValueOnce([dto({ id: "a9", created_at: "2026-11-18T12:02:00.000Z" })]);
+
+    useCmoStore.getState().onActionPending(pendingEvent);
+    expect(useCmoStore.getState().actions.a9).toMatchObject({ phase: "pending", summary: "Bajar el precio del sérum" });
+    expect(useCmoStore.getState().thread.messages.find((item) => item.id === "m3")?.action_ids).toEqual(["a9"]);
+    await flush();
+    expect(api.listActions).toHaveBeenCalledWith("t1");
+    // La relectura no la ancla dos veces.
+    const anchoredTo = useCmoStore
+      .getState()
+      .thread.messages.filter((item) => item.action_ids?.includes("a9") === true)
+      .map((item) => item.id);
+    expect(anchoredTo).toEqual(["m3"]);
+    expect(useCmoStore.getState().actions.a9?.lines).not.toBeNull();
+  });
+
+  it("action_pending del turno de ESTA pestaña: se registra pero no se ancla (lo hace la respuesta)", () => {
+    useCmoStore.setState({
+      thread: { id: "t1", thinking: true, messages: [message("m1", "axel", "2026-11-18T12:00:00.000Z")] },
+    });
+    useCmoStore.getState().onActionPending(pendingEvent);
+    expect(useCmoStore.getState().actions.a9).toBeDefined();
+    expect(useCmoStore.getState().thread.messages[0]?.action_ids).toBeUndefined();
+  });
+
+  it("action_pending de otro hilo o de una acción ya conocida no cambia nada", () => {
+    useCmoStore.setState({ actions: { a9: uiAction({ id: "a9", phase: "executed" }) } });
+    useCmoStore.getState().onActionPending({ ...pendingEvent, thread_id: "otro" });
+    useCmoStore.getState().onActionPending(pendingEvent);
+    expect(useCmoStore.getState().actions.a9?.phase).toBe("executed");
+    expect(api.listActions).not.toHaveBeenCalled();
+  });
+
+  it("action_decided en otro lado: la fase cambia YA y el texto se relee", async () => {
+    useCmoStore.setState({ actions: { a1: uiAction() } });
+    api.listActions.mockResolvedValueOnce([dto({ status: "executed", outcome_text: "Hecho desde el celular." })]);
+
+    useCmoStore.getState().onActionDecided({ action_id: "a1", thread_id: "t1", status: "executed" });
+    expect(useCmoStore.getState().actions.a1?.phase).toBe("executed");
+    await flush();
+    expect(api.listActions).toHaveBeenCalledWith("t1");
+    expect(useCmoStore.getState().actions.a1?.text).toBe("Hecho desde el celular.");
+  });
+
+  it("action_decided mientras ESTA pestaña la confirma: no pisa el resultado del POST", async () => {
+    useCmoStore.setState({ actions: { a1: uiAction() } });
+    const call = deferred<unknown>();
+    api.confirmAction.mockReturnValueOnce(call.promise);
+
+    const running = useCmoStore.getState().confirmAction("a1");
+    // El eco del servidor llega antes que la respuesta HTTP.
+    useCmoStore.getState().onActionDecided({ action_id: "a1", thread_id: "t1", status: "executed" });
+    expect(useCmoStore.getState().actions.a1).toMatchObject({ busy: "confirm", phase: "pending" });
+    expect(api.listActions).not.toHaveBeenCalled();
+
+    call.resolve({ action_id: "a1", outcome: "executed", text: "Listo: quedó en $ 95.000." });
+    await running;
+    expect(useCmoStore.getState().actions.a1).toMatchObject({ phase: "executed", text: "Listo: quedó en $ 95.000." });
+
+    // Y el eco tardío, ya pintado, tampoco relee ni borra el texto.
+    useCmoStore.getState().onActionDecided({ action_id: "a1", thread_id: "t1", status: "executed" });
+    expect(useCmoStore.getState().actions.a1?.text).toBe("Listo: quedó en $ 95.000.");
+    expect(api.listActions).not.toHaveBeenCalled();
+  });
+
+  it("action_decided de otro hilo se ignora", () => {
+    useCmoStore.setState({ actions: { a1: uiAction() } });
+    useCmoStore.getState().onActionDecided({ action_id: "a1", thread_id: "otro", status: "rejected" });
+    expect(useCmoStore.getState().actions.a1?.phase).toBe("pending");
+  });
+});
+
 describe("anchorActions", () => {
   it("no toca lo ya anclado y, sin mensaje posterior, usa el último de Axel", () => {
     const messages = [

@@ -67,6 +67,16 @@ export function useCmoSocket() {
     store.getState().onTurnFailed(payload);
   });
 
+  /* Acciones preparadas (F3 «Axel OS»): las que nacen fuera de esta pestaña
+     y las que se deciden en otro lado. */
+  useSocketEvent(socket, "assistant.action_pending", (payload) => {
+    store.getState().onActionPending(payload);
+  });
+
+  useSocketEvent(socket, "assistant.action_decided", (payload) => {
+    store.getState().onActionDecided(payload);
+  });
+
   useEffect(() => {
     if (connected && everConnectedRef.current) {
       void store.getState().load();

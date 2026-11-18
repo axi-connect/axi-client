@@ -30,6 +30,8 @@ const store = {
   onTurnDelta: jest.fn(),
   onTurnCompleted: jest.fn(),
   onTurnFailed: jest.fn(),
+  onActionPending: jest.fn(),
+  onActionDecided: jest.fn(),
   load: jest.fn(),
 };
 
@@ -49,7 +51,7 @@ describe("useCmoSocket", () => {
     jest.clearAllMocks();
   });
 
-  it("enruta los ocho eventos cmo.* a su handler del store", () => {
+  it("enruta los ocho eventos cmo.* y los dos assistant.action_* a su handler del store", () => {
     render(<Probe />);
     const expected: [string, jest.Mock][] = [
       ["cmo.briefing_ready", store.onBriefingReady],
@@ -60,6 +62,8 @@ describe("useCmoSocket", () => {
       ["cmo.turn_delta", store.onTurnDelta],
       ["cmo.turn_completed", store.onTurnCompleted],
       ["cmo.turn_failed", store.onTurnFailed],
+      ["assistant.action_pending", store.onActionPending],
+      ["assistant.action_decided", store.onActionDecided],
     ];
     for (const [event, mock] of expected) {
       const handler = handlers.get(event);

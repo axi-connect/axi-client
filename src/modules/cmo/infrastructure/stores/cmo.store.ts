@@ -3,6 +3,8 @@ import { create } from "zustand";
 import { HttpError } from "@/core/api/problem";
 import { errorMessage } from "@/core/lib/error-messages";
 import type {
+  AssistantActionDecidedEvent,
+  AssistantActionPendingEvent,
   CmoBriefingReadyEvent,
   CmoProposalCreatedEvent,
   CmoProposalDecidedEvent,
@@ -298,6 +300,10 @@ interface CmoState {
    * marcan en vuelo desde el principio para que ningún botón quede vivo.
    */
   confirmAll: (actionIds: readonly string[]) => Promise<void>;
+  /** Una acción nació fuera de esta pestaña (otra pestaña, un cliente MCP). */
+  onActionPending: (event: AssistantActionPendingEvent) => void;
+  /** Una acción se decidió, aquí o en otro lado. */
+  onActionDecided: (event: AssistantActionDecidedEvent) => void;
   /** La isla ya tomó esta novedad: sale de la lista. */
   takeNews: (id: string) => void;
   /**
@@ -885,6 +891,49 @@ export const useCmoStore = create<CmoState>((set, get) => {
     for (const id of ids) await runDecision(id, "confirm");
   },
 
+  /**
+   * Una acción preparada que esta pestaña no conocía, del hilo abierto.
+   *
+   * Si el turno es de ESTA pestaña (en vivo o vencido esperando su cierre), la
+   * respuesta la ancla a su mensaje: aquí solo se registra, porque anclarla
+   * ahora la pegaría al mensaje ANTERIOR. Si no, es de otra pestaña o de MCP,
+   * cuyo mensaje esta pestaña no pinta: va bajo el último mensaje de Axel, y
+   * se pide el detalle (el evento solo trae el resumen).
+   */
+  onActionPending: (event) => {
+    const state = get();
+    if (event.thread_id === null || event.thread_id !== state.thread.id) return;
+    if (event.action_id in state.actions) return;
+    const ref = { id: event.action_id, tool: event.tool, risk: event.risk, summary: event.summary };
+    const ownTurn = state.thread.thinking || state.live !== null || state.late !== null;
+    set((current) => ({
+      actions: withRefs(current.actions, [ref]),
+      thread: ownTurn
+        ? current.thread
+        : { ...current.thread, messages: attachToLastAxel(current.thread.messages, event.action_id) },
+    }));
+    void get().loadActions(event.thread_id);
+  },
+
+  /**
+   * Otra pestaña, otro dispositivo o un cliente MCP decidió una acción.
+   *
+   * Si ESTA pestaña la está decidiendo, no se toca: la respuesta del POST trae
+   * el texto del resultado y es la que manda. Si no, la fase cambia YA (el
+   * botón deja de ofrecerse al instante) y el texto se relee del servidor, que
+   * el evento no lo trae. Un eco de lo que esta pestaña ya pintó no relee.
+   */
+  onActionDecided: (event) => {
+    const state = get();
+    if (event.thread_id !== null && event.thread_id !== state.thread.id) return;
+    const action = state.actions[event.action_id];
+    if (action === undefined || action.busy !== null) return;
+    if (event.status === "pending" || action.phase === event.status) return;
+    patchAction(event.action_id, { phase: event.status, text: null, error: null });
+    const threadId = state.thread.id;
+    if (threadId !== null) void get().loadActions(threadId);
+  },
+
   takeNews: (id) => {
     set((state) => (state.news.some((item) => item.id === id) ? { news: state.news.filter((item) => item.id !== id) } : state));
   },
@@ -1181,6 +1230,15 @@ function mergeAction(prev: UiAction | undefined, dto: AssistantActionDTO): UiAct
     return { ...prev, ...base };
   }
   return { ...base, phase: dto.status, text: dto.outcome_text, busy: null, error: prev?.error ?? null };
+}
+
+/** Cuelga una acción del último mensaje de Axel del hilo (si hay alguno). */
+function attachToLastAxel(messages: UiMessage[], actionId: string): UiMessage[] {
+  const index = messages.findLastIndex((message) => message.role === "axel");
+  if (index === -1) return messages;
+  return messages.map((message, at) =>
+    at === index ? { ...message, action_ids: [...(message.action_ids ?? []), actionId] } : message,
+  );
 }
 
 /**

@@ -726,6 +726,37 @@ export type CmoTurnFailedEvent = CmoTurnEventBase & {
   code: string;
 };
 
+/**
+ * Las acciones que un asistente deja preparadas (F3 «Axel OS»), sala
+ * `user_{id}` de QUIEN las pidió: todas sus pestañas y dispositivos.
+ *
+ * El WS avisa y la tarjeta se ajusta: `pending` cubre una acción nacida fuera
+ * de esta pestaña (otra pestaña, un cliente MCP) y `decided` deja de ofrecer
+ * «Confirmar» al instante cuando se decidió en otro lado. El texto del
+ * resultado NO viaja: se relee de `GET /assistant/actions`.
+ *
+ * Las formas se replican aquí (core no importa de modules, §3.3 regla 7); las
+ * del slice son las de `cmo/domain/cmo.ts`. Sin `company_id`: el servidor las
+ * emite tal cual a la sala del usuario. `thread_id` es `null` en una acción
+ * pedida fuera de una conversación.
+ */
+type AssistantActionRisk = "write" | "external";
+type AssistantActionStatus = "pending" | "executed" | "failed" | "rejected" | "expired";
+
+export type AssistantActionPendingEvent = {
+  action_id: string;
+  thread_id: string | null;
+  tool: string;
+  risk: AssistantActionRisk;
+  summary: string;
+};
+
+export type AssistantActionDecidedEvent = {
+  action_id: string;
+  thread_id: string | null;
+  status: AssistantActionStatus;
+};
+
 /** Cupón aplicado a un pedido (el total del pedido cambia: llega `order.updated`). */
 export type MarketingPromotionRedeemedEvent = {
   company_id: string;
@@ -1153,6 +1184,8 @@ export type InboxServerEvents = {
   "cmo.turn_delta": (payload: CmoTurnDeltaEvent) => void;
   "cmo.turn_completed": (payload: CmoTurnCompletedEvent) => void;
   "cmo.turn_failed": (payload: CmoTurnFailedEvent) => void;
+  "assistant.action_pending": (payload: AssistantActionPendingEvent) => void;
+  "assistant.action_decided": (payload: AssistantActionDecidedEvent) => void;
   "commercial.goal_set": (payload: CommercialGoalSetEvent) => void;
   "commercial.plan_recomputed": (payload: CommercialPlanRecomputedEvent) => void;
   "commercial.pace_updated": (payload: CommercialPaceUpdatedEvent) => void;
