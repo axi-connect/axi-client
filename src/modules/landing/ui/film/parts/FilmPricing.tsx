@@ -192,8 +192,7 @@ function FilmPlanCard({
 
 /**
  * El precio de la película. En anual la cifra grande es el mensual equivalente
- * (once meses pagados repartidos en doce) y la nota da el total del año: las
- * dos cifras salen del mismo `monthlyCop` del catálogo.
+ * (el total del año, con su 15 %, repartido en doce) y la nota da el total.
  */
 function FilmPrice({
   plan,
@@ -213,7 +212,7 @@ function FilmPrice({
   annualBadge: string;
 }) {
   const annual = period === "annual";
-  const yearly = annualTotalCop(monthlyCop);
+  const yearly = annualTotalCop(promotion?.stacksWithAnnual ? monthlyCop : listCop);
   const shown = formatCop(annual ? Math.round(yearly / MONTHS_PER_YEAR) : monthlyCop);
   const note = annual ? FILM_PRICING.annualNote(formatCop(yearly), annualBadge) : FILM_PRICING.monthlyNote;
 
@@ -221,7 +220,7 @@ function FilmPrice({
     <div className="film-price-amount">
       <span className="sr-only">
         {`${shown} pesos colombianos al mes${annual ? `, pagando ${formatCop(yearly)} al año` : ""}${
-          discounted ? `, antes ${formatCop(listCop)}, con el descuento de fundador` : ""
+          discounted ? `, antes ${formatCop(listCop)}, con el descuento ${promotion?.slots === null ? `de ${promotion.name}` : "de fundador"}` : ""
         }.`}
       </span>
       <div aria-hidden="true">
@@ -232,7 +231,9 @@ function FilmPrice({
         </p>
         <p className="film-price-dim film-price-note">{note}</p>
         {discounted && promotion ? (
-          <span className="film-price-founders">{foundersDiscountBadge(discountLabel(promotion))}</span>
+          <span className="film-price-founders">
+            {foundersDiscountBadge(discountLabel(promotion), promotion.slots === null ? promotion.name : null)}
+          </span>
         ) : null}
       </div>
     </div>

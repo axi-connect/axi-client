@@ -8,7 +8,7 @@ import {
 import { PRICE } from "@/modules/landing/ui/content/productos.content";
 
 export interface EsencialPrice {
-  /** Lo que paga hoy: el de fundador mientras la promoción siga abierta. */
+  /** Lo que paga hoy: el de promoción mientras siga abierta. */
   monthlyCop: number;
   /** El de lista, solo cuando difiere del de hoy (se pinta tachado). */
   listCop: number | null;

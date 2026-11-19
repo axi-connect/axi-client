@@ -349,7 +349,7 @@ export function offerSummary(
           ...(volumeLabel === null ? [] : [{ label: "Conversaciones", value: `${volumeLabel} al mes` }]),
           {
             label: "Pago",
-            value: period === "annual" ? "Anual, con 1 mes gratis" : "Mensual",
+            value: period === "annual" ? "Anual, con 15 % de descuento" : "Mensual",
           },
         ],
         afterTrial: price === null ? "Precio a confirmar" : `${formatCop(price)} COP/mes`,

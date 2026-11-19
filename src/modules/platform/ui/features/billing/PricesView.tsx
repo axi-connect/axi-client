@@ -50,7 +50,8 @@ import {
   type BillingPromotion,
 } from "../../../domain/billing";
 import {
-  ANNUAL_MONTHS_BILLED,
+  ANNUAL_DISCOUNT_BPS,
+  annualPeriodCents,
   deriveCells,
   discountedCents,
   overrideKey,
@@ -228,8 +229,11 @@ function CatalogEditor({
 
   const shown = (listCents: number): number => {
     if (mode !== "promo" || promotion === null || promotion.scope === "modules") return listCents;
-    const monthly = period === "annual" ? listCents / ANNUAL_MONTHS_BILLED : listCents;
-    return discountedCents(monthly, promotion.percent_bps, promotion.rounding) * (period === "annual" ? ANNUAL_MONTHS_BILLED : 1);
+    if (period !== "annual") return discountedCents(listCents, promotion.percent_bps, promotion.rounding);
+    if (!promotion.stacks_with_annual) return listCents;
+    // Aproximada: la mensual se reconstruye del anual, que ya perdió el redondeo.
+    const monthly = Math.round(listCents / 12 / (1 - ANNUAL_DISCOUNT_BPS / 10_000));
+    return annualPeriodCents(discountedCents(monthly, promotion.percent_bps, promotion.rounding));
   };
 
   // Componentes, no celdas (hallazgo A2): el servidor deriva las celdas, corre
@@ -298,7 +302,7 @@ function CatalogEditor({
             onValueChange={setPeriod}
             items={[
               { value: "monthly", label: "Mensual" },
-              { value: "annual", label: `Anual · ×${ANNUAL_MONTHS_BILLED}` },
+              { value: "annual", label: `Anual · −${ANNUAL_DISCOUNT_BPS / 100} %` },
             ]}
           />
           <SegmentedControl
@@ -359,7 +363,7 @@ function CatalogEditor({
             <header className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <h2 className="text-[15px] font-semibold">
-                  Celdas · {period === "annual" ? `anual ×${ANNUAL_MONTHS_BILLED}` : "mensual"} · {mode === "promo" && promotion ? promotion.name : "precio de lista"}
+                  Celdas · {period === "annual" ? `anual −${ANNUAL_DISCOUNT_BPS / 100} %` : "mensual"} · {mode === "promo" && promotion ? promotion.name : "precio de lista"}
                 </h2>
                 <p className="text-muted-foreground mt-0.5 text-xs">
                   Filas: tramo. Columnas: paquete. Una celda anulada lleva borde punteado y su motivo queda en la fila.
@@ -588,7 +592,7 @@ function TierRowCells({
           >
             <span className="text-foreground text-[16px] font-semibold tracking-tight tabular-nums">{formatMoney(price)}</span>
             <span className="text-muted-foreground text-[11px]">
-              {interval === "annual" ? `al año · ${ANNUAL_MONTHS_BILLED} de 12 meses` : "al mes"}
+              {interval === "annual" ? `al año · −${ANNUAL_DISCOUNT_BPS / 100} %` : "al mes"}
               {price !== cell.amountCents ? ` · lista ${formatMoney(cell.amountCents)}` : ""}
             </span>
             {margin !== null ? (

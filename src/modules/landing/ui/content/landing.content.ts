@@ -14,11 +14,11 @@
 
 import { formatSalesWhatsApp, salesWhatsAppUrl } from "@/core/config/env";
 import type { Allowance } from "@/core/lib/commercial-units";
-import { ANNUAL_PAID_MONTHS, MONTHS_PER_YEAR } from "@/modules/landing/domain/public-catalog";
+import { MONTHS_PER_YEAR, annualDiscountLabel } from "@/modules/landing/domain/public-catalog";
 
 // Las CIFRAS del precio ya no viven aquí: llegan del catálogo público
 // (`landing/domain/public-catalog.ts`). Este fichero conserva el copy.
-export { ANNUAL_PAID_MONTHS, MONTHS_PER_YEAR };
+export { MONTHS_PER_YEAR };
 
 /* ────────────────────────────── WhatsApp ────────────────────────────── */
 
@@ -301,6 +301,8 @@ export const FOUNDERS = {
    */
   promise:
     "Tu tarifa en pesos queda fija y solo se ajusta con la inflación una vez al año. Acompañamos uno a uno a este primer grupo: por eso es cerrado.",
+  /** Promesa de una promoción sin cupos (Black Friday): misma indexación, sin «grupo cerrado». */
+  openPromise: "Tu tarifa en pesos queda fija y solo se ajusta con la inflación una vez al año.",
   countdownLabel: "Cierra en",
   /** Etiquetas de las fichas de la cuenta atrás. */
   units: {
@@ -311,15 +313,20 @@ export const FOUNDERS = {
   },
 } as const;
 
-/** «−40 % de descuento para las primeras 20 empresas.» — del catálogo, no de una constante. */
-export function foundersHeadline(discountLabel: string, slots: number | null): string {
-  return slots === null
-    ? `${discountLabel} de descuento para las primeras empresas.`
-    : `${discountLabel} de descuento para las primeras ${slots} empresas.`;
+/**
+ * «−40 % de descuento para las primeras 20 empresas.» — del catálogo, no de una
+ * constante. Sin cupos es una promoción abierta (Black Friday), no de fundadores.
+ */
+export function foundersHeadline(discountLabel: string, slots: number | null, stacksWithAnnual = true): string {
+  if (slots !== null) return `${discountLabel} de descuento para las primeras ${slots} empresas.`;
+  return stacksWithAnnual
+    ? `${discountLabel} de descuento en todos los planes.`
+    : `${discountLabel} de descuento en los planes mensuales.`;
 }
 
-export function foundersDiscountBadge(discountLabel: string): string {
-  return `${discountLabel} precio fundador`;
+/** Sello de la tarjeta: «precio fundador» con cupos; con el nombre de la promo si no los tiene. */
+export function foundersDiscountBadge(discountLabel: string, promotionName: string | null = null): string {
+  return promotionName === null ? `${discountLabel} precio fundador` : `${discountLabel} ${promotionName}`;
 }
 
 /* ─────────────────────── §9 Paquetes · los dos ejes ──────────────────── */
@@ -331,12 +338,11 @@ export function foundersDiscountBadge(discountLabel: string): string {
  *
  * Los tramos, las tarifas y la promoción llegan del catálogo público
  * (`GET /public/pricing`); aquí solo queda la periodicidad, que es copy.
- * El beneficio del anual **no es un porcentaje**: son doce meses de servicio
- * y once facturados.
+ * El anual lleva un 15 % de descuento sobre la mensual de lista.
  */
 export const BILLING_PERIODS = [
   { id: "monthly", label: "Mensual", badge: null },
-  { id: "annual", label: "Anual", badge: `${String(MONTHS_PER_YEAR - ANNUAL_PAID_MONTHS)} mes gratis` },
+  { id: "annual", label: "Anual", badge: `${annualDiscountLabel()} de descuento` },
 ] as const;
 
 export type BillingPeriodId = (typeof BILLING_PERIODS)[number]["id"];
