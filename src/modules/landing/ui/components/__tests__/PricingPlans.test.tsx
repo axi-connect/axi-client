@@ -163,18 +163,17 @@ describe("PricingPlans", () => {
     }
   })
 
-  it("el conmutador anual factura once meses y pone el ahorro en pesos", () => {
+  it("el conmutador anual aplica el 15 % y pone el ahorro en pesos", () => {
     render(<PricingPlans catalog={CATALOG} />)
 
     fireEvent.click(screen.getByRole("radio", { name: /anual/i }))
 
     const card = cardOf(FEATURED_PLAN.id)
     const monthly = monthlyOf(FEATURED_PLAN)
-    // La cifra grande NO cambia: el beneficio es un mes gratis, no una tarifa
-    // menor. Sale DOS veces —el precio y el ahorro— porque el mes que se
-    // regala vale exactamente una mensualidad.
-    expect(card.getAllByText(formatCop(monthly))).toHaveLength(2)
+    // La cifra grande NO cambia al conmutar; el anual va en la nota.
+    expect(card.getByText(formatCop(monthly))).toBeInTheDocument()
     expect(card.getByText(/Te ahorras/)).toBeInTheDocument()
+    expect(card.getByText(formatCop(monthly * MONTHS_PER_YEAR - annualTotalCop(monthly)))).toBeInTheDocument()
     expect(card.getByText(formatCop(annualTotalCop(monthly)))).toBeInTheDocument()
     expect(card.getByText(formatCop(monthly * MONTHS_PER_YEAR))).toBeInTheDocument()
     expect(card.getByRole("link")).toHaveAttribute(

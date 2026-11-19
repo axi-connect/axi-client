@@ -181,12 +181,12 @@ function Offer({ view, canPay }: { view: ActivationDTO; canPay: boolean }) {
             <p className="text-muted-foreground mt-2 text-sm">
               {changed
                 ? quote.interval === "annual"
-                  ? "Un mes gratis: pagas 11 y usas 12."
+                  ? "Doce meses con 15 % de descuento."
                   : "Precio de lista vigente."
                 : savings > 0
                   ? `Ahorras ${formatMoney(savings, quote.currency)} ${quote.interval === "annual" ? "al año" : "cada mes"}${promo ? ` con ${quote.promotion_name ?? "la promoción"}` : ""}.`
                   : quote.interval === "annual"
-                    ? "Un mes gratis: pagas 11 y usas 12."
+                    ? "Doce meses con 15 % de descuento."
                     : "Sin permanencia."}
             </p>
           </div>

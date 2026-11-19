@@ -1,5 +1,4 @@
 import {
-  ANNUAL_MONTHS_BILLED,
   deriveCells,
   discountedCents,
   perConversationCop,
@@ -34,11 +33,11 @@ describe("pricing-cells", () => {
     );
   });
 
-  it("el anual factura once meses de doce", () => {
+  it("el anual son doce meses con 15 % de descuento", () => {
     const cells = deriveCells(PACKAGES, TIERS);
     const annual = cells.find((c) => c.planSlug === "escala" && c.tierCode === "t2500" && c.interval === "annual");
-    expect(ANNUAL_MONTHS_BILLED).toBe(11);
-    expect(annual?.amountCents).toBe(759_900_00 * 11);
+    // 759.900 × 0,85 = 645.915 → 645.900.
+    expect(annual?.amountCents).toBe(645_900_00 * 12);
   });
 
   it("un tramo sin tarifa o inactivo no produce celdas", () => {

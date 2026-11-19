@@ -1,5 +1,5 @@
 import {
-  ANNUAL_PAID_MONTHS,
+  ANNUAL_DISCOUNT,
   MONTHS_PER_YEAR,
   annualTotalCop,
   catalogFromApi,
@@ -125,10 +125,10 @@ describe("precio con promoción", () => {
 });
 
 describe("periodicidad", () => {
-  it("el anual factura once meses y regala uno", () => {
-    expect(ANNUAL_PAID_MONTHS).toBe(11);
-    expect(MONTHS_PER_YEAR - ANNUAL_PAID_MONTHS).toBe(1);
-    expect(annualTotalCop(113_900)).toBe(1_252_900);
+  it("el anual son doce meses con 15 % de descuento, al .900 inferior", () => {
+    expect(ANNUAL_DISCOUNT).toBe(0.15);
+    // 449.900 × 0,85 = 382.415 → 381.900 (misma cifra que el servidor).
+    expect(annualTotalCop(449_900)).toBe(381_900 * MONTHS_PER_YEAR);
   });
 
   it("un tramo desconocido cae al tramo por defecto en vez de romper la tarjeta", () => {

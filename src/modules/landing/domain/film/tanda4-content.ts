@@ -13,7 +13,7 @@ export const FILM_PRICING = {
   lead: "Todos los paquetes traen el producto completo. Lo que cambia es cuántas conversaciones atiende Axi al mes.",
   volumeSuffix: "conversaciones al mes",
   monthlyNote: "Facturado cada mes",
-  /** «Pagas $ X al año · 1 mes gratis». */
+  /** «Pagas $ X al año · −15 % de descuento». */
   annualNote: (yearly: string, badge: string) => `Pagas ${yearly} al año · ${badge}`,
   enterpriseFrom: "Desde",
   /** El mismo argumento que cierra `PRICING.microcopy`. */

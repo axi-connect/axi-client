@@ -15,6 +15,8 @@ import { VolumeChips } from "@/modules/landing/ui/components/VolumeChips";
 import { SegmentedControl } from "@/shared/components/ui/segmented";
 import {
   RECOGNITION_METRIC,
+  annualBaseCop,
+  annualDiscountLabel,
   annualTotalCop,
   discountLabel,
   planListCop,
@@ -24,7 +26,6 @@ import {
   type PublicCatalog,
 } from "@/modules/landing/domain/public-catalog";
 import {
-  ANNUAL_PAID_MONTHS,
   BILLING_PERIODS,
   MONTHS_PER_YEAR,
   RECOGNITION,
@@ -268,7 +269,8 @@ function PriceBlock({
 
   const listPrice = formatCop(listCop);
   const finalPrice = formatCop(monthlyCop);
-  const annual = annualTotalCop(monthlyCop);
+  const annualBase = annualBaseCop(catalog, listCop, monthlyCop);
+  const annual = annualTotalCop(annualBase);
   const discounted = offerOpen && monthlyCop < listCop;
   const volumeText = twoAxis ? `${volume.label} conversaciones/mes.` : "";
 
@@ -276,7 +278,7 @@ function PriceBlock({
     <div className="min-h-[9rem]">
       <span className="sr-only">
         {discounted
-          ? `Antes ${listPrice} pesos, ahora ${finalPrice} pesos colombianos al mes con el descuento de fundador${twoAxis ? `, para ${volume.label} conversaciones al mes` : ""}.`
+          ? `Antes ${listPrice} pesos, ahora ${finalPrice} pesos colombianos al mes con el descuento ${catalog.promotion?.slots === null ? `de ${catalog.promotion.name}` : "de fundador"}${twoAxis ? `, para ${volume.label} conversaciones al mes` : ""}.`
           : `${finalPrice} pesos colombianos al mes${twoAxis ? `, para ${volume.label} conversaciones al mes` : ""}.`}
       </span>
 
@@ -288,22 +290,25 @@ function PriceBlock({
         </p>
         {discounted && catalog.promotion ? (
           <Badge variant="warning" className="mt-2.5">
-            {foundersDiscountBadge(discountLabel(catalog.promotion))}
+            {foundersDiscountBadge(
+              discountLabel(catalog.promotion),
+              catalog.promotion.slots === null ? catalog.promotion.name : null,
+            )}
           </Badge>
         ) : null}
 
-        {/* El beneficio del anual NO es una tarifa menor: son doce meses de
-            servicio y once facturados. Por eso la cifra grande no cambia al
-            conmutar —así las tres tarjetas siguen comparándose entre sí— y lo
-            que aparece es el total del año con el ahorro puesto en pesos. */}
+        {/* La cifra grande no cambia al conmutar —así las tres tarjetas siguen
+            comparándose entre sí—: lo que aparece es el total del año con el
+            ahorro puesto en pesos. */}
         <p className="text-muted-foreground mt-2.5 text-xs leading-relaxed">
           {period === "annual" ? (
             <>
               {MONTHS_PER_YEAR} meses por <b className="text-foreground font-medium tabular-nums">{formatCop(annual)}</b>{" "}
-              <s>{formatCop(monthlyCop * MONTHS_PER_YEAR)}</s>
+              <s>{formatCop(annualBase * MONTHS_PER_YEAR)}</s>
               <br />
-              Te ahorras <b className="text-foreground font-medium tabular-nums">{finalPrice}</b>:{" "}
-              {MONTHS_PER_YEAR - ANNUAL_PAID_MONTHS} mes gratis.
+              Te ahorras{" "}
+              <b className="text-foreground font-medium tabular-nums">{formatCop(annualBase * MONTHS_PER_YEAR - annual)}</b>:{" "}
+              {annualDiscountLabel()} de descuento.
             </>
           ) : (
             <>{volumeText} Facturado cada mes, cancelas cuando quieras.</>

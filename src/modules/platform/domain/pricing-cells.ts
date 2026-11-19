@@ -17,8 +17,13 @@
 
 export type CellInterval = "monthly" | "annual";
 
-/** Meses facturados en el anual: doce de servicio, once cobrados (D2). */
-export const ANNUAL_MONTHS_BILLED = 11;
+/** El anual: doce meses a la mensual con 15 % de descuento al .900 (`annual_pricing.ts`). */
+export const ANNUAL_DISCOUNT_BPS = 1_500;
+export const MONTHS_PER_YEAR = 12;
+
+export function annualPeriodCents(monthlyCents: number): number {
+  return discountedCents(monthlyCents, ANNUAL_DISCOUNT_BPS, "floor_900") * MONTHS_PER_YEAR;
+}
 
 export type TierComponent = {
   code: string;
@@ -92,7 +97,7 @@ export function deriveCells(
       cells.push({
         ...base,
         interval: "annual",
-        amountCents: monthly * ANNUAL_MONTHS_BILLED,
+        amountCents: annualPeriodCents(monthly),
       });
     }
   }

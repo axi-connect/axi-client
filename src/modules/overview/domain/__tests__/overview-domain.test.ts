@@ -117,6 +117,29 @@ describe("planes en vivo", () => {
     expect(view?.promotion).toBeNull();
   });
 
+  it("una promoción sin cupos se nombra por su nombre, no como de fundador", () => {
+    const view = plansFromCatalog(
+      catalog({
+        code: "black_friday_2026",
+        name: "Black Friday",
+        discount: 0.25,
+        rounding: "floor_900",
+        scope: "all",
+        slots: null,
+        taken: 0,
+        startsAt: "2026-11-27T05:00:00.000Z",
+        endsAt: "2026-11-28T05:00:00.000Z",
+        indexation: "ipc_annual",
+        indexationFirstYear: null,
+        stacksWithAnnual: false,
+      }),
+      new Date("2026-11-27T15:00:00Z"),
+    );
+    expect(view?.promotion).toBe("−25 % Black Friday");
+    // 369.900 × 0,75 = 277.425 → 276.900.
+    expect(view?.cards.find((c) => c.slug === "crecimiento")?.monthlyCop).toBe(276_900);
+  });
+
   it("sin catálogo no inventa precios", () => {
     expect(plansFromCatalog(null, new Date())).toBeNull();
   });
