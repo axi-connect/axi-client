@@ -284,7 +284,7 @@ export function Plans({ plans }: { plans: PlansView | null }) {
         <span className="ov-live" aria-hidden="true" />
         Precio en vivo al <b>{AS_OF.format(new Date(plans.asOf))}</b>
         {plans.volumeLabel ? ` · con ${plans.volumeLabel} al mes` : ""}
-        {plans.promotion ? ` · ${plans.promotion} de fundador` : ""} · 7 días gratis
+        {plans.promotion ? ` · ${plans.promotion}` : ""} · 7 días gratis
       </p>
     </div>
   );

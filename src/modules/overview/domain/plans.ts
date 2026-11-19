@@ -38,7 +38,7 @@ export type PlansView = {
   readonly cards: readonly PlanCard[];
   /** «1.000 conversaciones», el tramo por defecto del catálogo. */
   readonly volumeLabel: string | null;
-  /** «−40 % de fundador» mientras la promoción esté abierta. */
+  /** «−40 % de fundador» o «−25 % Black Friday» mientras la promoción esté abierta. */
   readonly promotion: string | null;
   /** Fecha del catálogo (ISO), para el «precio en vivo al …». */
   readonly asOf: string;
@@ -60,7 +60,10 @@ export function plansFromCatalog(catalog: PublicCatalog | null, now: Date): Plan
   return {
     cards,
     volumeLabel: volume?.conversations ? `${volume.label} conversaciones` : null,
-    promotion: open && catalog.promotion ? discountLabel(catalog.promotion) : null,
+    promotion:
+      open && catalog.promotion
+        ? `${discountLabel(catalog.promotion)} ${catalog.promotion.slots === null ? catalog.promotion.name : "de fundador"}`
+        : null,
     asOf: catalog.asOf,
   };
 }
