@@ -69,6 +69,8 @@ export const OVERAGE_METRIC_LABELS: Record<OverageMetric, string> = {
   // P3a: el correo y el SMS en frío (el SMS por segmento, que es lo que cobra Twilio).
   emails_sent: "Correos de prospección",
   sms_sent: "SMS de prospección (segmentos)",
+  // F5 «Axel OS»: llamadas de apps conectadas (Claude por MCP); la IA la paga la app.
+  mcp_calls: "Llamadas de apps conectadas (MCP)",
 };
 
 export const OVERAGE_METRICS = Object.keys(

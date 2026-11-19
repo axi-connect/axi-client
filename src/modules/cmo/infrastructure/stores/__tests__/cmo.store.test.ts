@@ -39,6 +39,7 @@ function reply(over: Partial<CmoReplyDTO> = {}): CmoReplyDTO {
     proposal_id: null,
     turn_id: "turn-server",
     question: null,
+    pending_actions: [],
     ...over,
   };
 }

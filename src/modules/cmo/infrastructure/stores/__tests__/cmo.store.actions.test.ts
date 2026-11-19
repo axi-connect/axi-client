@@ -144,7 +144,8 @@ describe("cmo.store · acciones preparadas", () => {
       proposal_id: null,
       turn_id: "turn",
       question: null,
-    } as CmoReplyDTO);
+      pending_actions: [],
+    } satisfies CmoReplyDTO);
     await useCmoStore.getState().ask("¿Cómo vamos?");
     expect(api.listActions).not.toHaveBeenCalled();
     expect(useCmoStore.getState().thread.messages.at(-1)?.action_ids).toBeUndefined();
