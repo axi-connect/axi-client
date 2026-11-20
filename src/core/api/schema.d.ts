@@ -6500,6 +6500,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/outreach/sender/signature": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["OutreachSenderController_updateSignature_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/public/outreach/unsubscribe/{token}": {
         parameters: {
             query?: never;
@@ -20822,8 +20838,30 @@ export interface components {
         OutreachSenderDto: {
             address: string;
             from_name: string;
+            display_name: string;
             paused: boolean;
             pause_reason: string | null;
+            signature: {
+                person_name: string | null;
+                title: string | null;
+                photo_url: string | null;
+                phone: string | null;
+                website: string | null;
+            };
+        };
+        UpdateOutreachSignatureDto: {
+            person_name?: string | null;
+            title?: string | null;
+            photo_url?: string | null;
+            phone?: string | null;
+            website?: string | null;
+        };
+        OutreachSignatureDto: {
+            person_name: string | null;
+            title: string | null;
+            photo_url: string | null;
+            phone: string | null;
+            website: string | null;
         };
         UnsubscribeViewDto: {
             sender_name: string;
@@ -37857,6 +37895,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OutreachSenderDto"];
+                };
+            };
+        };
+    };
+    OutreachSenderController_updateSignature_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateOutreachSignatureDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OutreachSignatureDto"];
                 };
             };
         };
