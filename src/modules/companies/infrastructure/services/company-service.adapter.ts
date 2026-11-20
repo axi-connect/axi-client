@@ -2,8 +2,10 @@ import { http } from "@/core/services/http";
 import type {
   CompanyDTO,
   OutreachSenderDTO,
+  OutreachSignatureDTO,
   ReplaceSchedulesDTO,
   UpdateCompanyDTO,
+  UpdateOutreachSignatureDTO,
 } from "@/modules/companies/domain/company";
 
 /** Adapter HTTP del slice companies → `/companies/me`. */
@@ -24,4 +26,9 @@ export function replaceSchedules(dto: ReplaceSchedulesDTO): Promise<void> {
 /** P3a (D1): desde qué dirección salen los correos de prospección (`GET /outreach/sender`). */
 export function getOutreachSender(): Promise<OutreachSenderDTO> {
   return http.get<OutreachSenderDTO>("/outreach/sender");
+}
+
+/** B2: quién firma los correos de prospección. Reemplaza la firma entera. */
+export function updateOutreachSignature(dto: UpdateOutreachSignatureDTO): Promise<OutreachSignatureDTO> {
+  return http.put<OutreachSignatureDTO>("/outreach/sender/signature", dto);
 }

@@ -59,14 +59,19 @@ export const TEMPLATED_SEQUENCE_MEDIA: readonly SequenceMedium[] = ["email", "sm
 /** Espejo de los límites del servidor (outreach `message_template`). */
 export const MESSAGE_LIMITS = { subject: 150, body: 5_000, sms_body: 600 } as const;
 
-/** Los huecos que el texto admite (espejo de outreach `MESSAGE_TEMPLATE_PLACEHOLDERS`). */
-export const MESSAGE_VARIABLES = ["first_name", "business_name", "job_title", "sender_name"] as const;
+/**
+ * Los huecos que se ofrecen como botón en el editor (subconjunto de outreach
+ * `MESSAGE_TEMPLATE_PLACEHOLDERS`: el servidor también acepta `full_name`,
+ * `sender_person`, `sender_title` y `{{custom_field:código}}`).
+ */
+export const MESSAGE_VARIABLES = ["first_name", "business_name", "job_title", "sender_name", "sender_signature"] as const;
 export type MessageVariable = (typeof MESSAGE_VARIABLES)[number];
 export const MESSAGE_VARIABLE_LABELS: Record<MessageVariable, string> = {
   first_name: "Nombre",
   business_name: "Su empresa",
   job_title: "Su cargo",
   sender_name: "Tu negocio",
+  sender_signature: "Tu firma",
 };
 
 /** Un paso en el editor, antes de tener id. */

@@ -28,3 +28,5 @@ export const WEEKDAY_LABELS = [
  * negocio (`celucambio@axi-connect.co`). No se configura: nace del nombre.
  */
 export type OutreachSenderDTO = Schemas["OutreachSenderDto"];
+export type OutreachSignatureDTO = Schemas["OutreachSignatureDto"];
+export type UpdateOutreachSignatureDTO = Schemas["UpdateOutreachSignatureDto"];
