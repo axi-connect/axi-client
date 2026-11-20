@@ -77,8 +77,16 @@ describe("OutreachSenderCard · quién firma (B2)", () => {
 
     fireEvent.change(screen.getByLabelText("Nombre"), { target: { value: "Cristian Velásquez" } })
     fireEvent.change(screen.getByLabelText("Foto (URL)"), { target: { value: "http://x.co/a.jpg" } })
+    // Mientras se escribe no grita; al salir del campo, sí.
+    expect(screen.queryByText("Debe ser una dirección https://")).not.toBeInTheDocument()
+    fireEvent.blur(screen.getByLabelText("Foto (URL)"))
     expect(screen.getByText("Debe ser una dirección https://")).toBeInTheDocument()
+    fireEvent.click(screen.getByRole("button", { name: "Guardar firma" }))
     expect(screen.getByRole("button", { name: "Guardar firma" })).toBeDisabled()
+    expect(mockPut).not.toHaveBeenCalled()
+
+    // El sitio se escribe como se dice: va con https://.
+    fireEvent.change(screen.getByLabelText("Sitio web"), { target: { value: "axi-connect.co" } })
 
     fireEvent.change(screen.getByLabelText("Foto (URL)"), { target: { value: "https://x.co/a.jpg" } })
     mockPut.mockResolvedValue({})
@@ -93,7 +101,7 @@ describe("OutreachSenderCard · quién firma (B2)", () => {
         title: null,
         photo_url: "https://x.co/a.jpg",
         phone: null,
-        website: null,
+        website: "https://axi-connect.co",
       }),
     )
     expect(await screen.findByText("Cristian Velásquez · Axi Connect")).toBeInTheDocument()
@@ -104,5 +112,26 @@ describe("OutreachSenderCard · quién firma (B2)", () => {
     mockGet.mockRejectedValue(new Error("403"))
     const { container } = render(<OutreachSenderCard />)
     await waitFor(() => expect(container).toBeEmptyDOMElement())
+  })
+
+  it("si guardó pero la recarga falla, no dice que falló: pinta la firma guardada", async () => {
+    mockGet.mockResolvedValueOnce(sender())
+    render(<OutreachSenderCard />)
+    fireEvent.click(await screen.findByRole("button", { name: "Agregar firma" }))
+    fireEvent.change(screen.getByLabelText("Nombre"), { target: { value: "Ana Ruiz" } })
+    mockPut.mockResolvedValue({ ...EMPTY, person_name: "Ana Ruiz" })
+    mockGet.mockRejectedValueOnce(new Error("503"))
+    fireEvent.click(screen.getByRole("button", { name: "Guardar firma" }))
+    expect(await screen.findByText("Ana Ruiz · Axi Connect")).toBeInTheDocument()
+    expect(mockShowAlert).toHaveBeenCalledWith({ tone: "success", title: "Firma guardada" })
+    expect(mockShowAlert).not.toHaveBeenCalledWith(expect.objectContaining({ tone: "error" }))
+  })
+
+  it("sin permiso tampoco se le pide «agrega quién escribe»", async () => {
+    mockHasPermission.mockReturnValue(false)
+    mockGet.mockResolvedValue(sender())
+    render(<OutreachSenderCard />)
+    await screen.findByText("Sin persona: firma el negocio")
+    expect(screen.queryByText(/Agrega quién escribe/)).not.toBeInTheDocument()
   })
 })

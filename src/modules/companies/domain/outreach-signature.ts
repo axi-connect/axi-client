@@ -34,12 +34,19 @@ function isHttps(value: string): boolean {
   }
 }
 
+/** El sitio se escribe como se dice («axi-connect.co»): sin protocolo, va https://. La foto no. */
+export function normalizeWebsite(value: string): string {
+  const trimmed = value.trim()
+  if (trimmed === "" || /^[a-z][a-z0-9+.-]*:/i.test(trimmed)) return trimmed
+  return `https://${trimmed}`
+}
+
 export function validateSignature(form: SignatureForm): SignatureErrors {
   const errors: SignatureErrors = {}
-  for (const key of ["photo_url", "website"] as const) {
-    const value = form[key].trim()
-    if (value !== "" && !isHttps(value)) errors[key] = "Debe ser una dirección https://"
-  }
+  const photo = form.photo_url.trim()
+  if (photo !== "" && !isHttps(photo)) errors.photo_url = "Debe ser una dirección https://"
+  const site = normalizeWebsite(form.website)
+  if (site !== "" && !isHttps(site)) errors.website = "Debe ser una dirección https://"
   return errors
 }
 
@@ -51,8 +58,17 @@ export function signaturePayload(form: SignatureForm): UpdateOutreachSignatureDT
     title: clean(form.title),
     photo_url: clean(form.photo_url),
     phone: clean(form.phone),
-    website: clean(form.website),
+    website: clean(normalizeWebsite(form.website)),
   }
+}
+
+/** La vista del remitente tras guardar, sin volver a pedirla (misma regla que el servidor). */
+export function senderWithSignature<T extends { from_name: string; display_name: string; signature: OutreachSignatureDTO }>(
+  sender: T,
+  signature: OutreachSignatureDTO,
+): T {
+  const display = signature.person_name === null ? sender.from_name : `${signature.person_name} · ${sender.from_name}`
+  return { ...sender, signature, display_name: display }
 }
 
 /** «Cristian Velásquez» → «CV». */

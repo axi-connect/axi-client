@@ -16,6 +16,8 @@ import { Skeleton } from "@/shared/components/ui/skeleton"
 import type { OutreachSenderDTO } from "@/modules/companies/domain/company"
 import {
   formFromSignature,
+  initials,
+  senderWithSignature,
   SIGNATURE_LIMITS,
   signatureLines,
   signaturePayload,
@@ -120,30 +122,44 @@ function SignaturePreview({ sender, onEdit }: { sender: OutreachSenderDTO; onEdi
   const { hasPermission } = useAuthContext()
   const { signature } = sender
   const filled = signature.person_name !== null
+  const canEdit = hasPermission(MANAGE_PERMISSION)
   const lines = signatureLines(signature, sender.from_name)
   return (
     <div className="min-w-0">
       <SignatureHeading />
-      {!filled && (
+      {!filled && canEdit && (
         <Callout tone="info" icon={Info} className="mb-3">
           Un correo en frío firmado por una persona se lee como un correo, no como publicidad. Agrega quién escribe.
         </Callout>
       )}
       <div className="flex items-center gap-3.5 rounded-xl border border-border bg-background p-4">
-        {filled ? (
+        {filled && signature.photo_url !== null ? (
           <Avatar src={signature.photo_url} alt={`Foto de ${lines.name}`} fallback={lines.name} size={52} />
+        ) : filled ? (
+          // Las mismas iniciales que lleva el correo «marca» cuando no hay foto.
+          <span aria-hidden className="grid size-[52px] shrink-0 place-items-center rounded-full bg-primary/15 text-base font-semibold">
+            {initials(lines.name)}
+          </span>
         ) : (
           <span className="grid size-[52px] shrink-0 place-items-center rounded-full bg-muted text-muted-foreground">
             <Building2 aria-hidden className="size-5" />
           </span>
         )}
         <div className="min-w-0 text-sm leading-snug">
-          <p className="truncate font-semibold">{lines.name}</p>
-          <p className="truncate text-muted-foreground">{lines.role ?? "Sin persona: firma el negocio"}</p>
-          {lines.contact !== null && <p className="truncate text-muted-foreground">{lines.contact}</p>}
+          <p className="truncate font-semibold" title={lines.name}>
+            {lines.name}
+          </p>
+          <p className="truncate text-muted-foreground" title={lines.role ?? undefined}>
+            {lines.role ?? "Sin persona: firma el negocio"}
+          </p>
+          {lines.contact !== null && (
+            <p className="truncate text-muted-foreground" title={lines.contact}>
+              {lines.contact}
+            </p>
+          )}
         </div>
       </div>
-      {hasPermission(MANAGE_PERMISSION) && (
+      {canEdit && (
         <div className="mt-3.5 flex justify-end">
           <Button variant="outline" size="sm" onClick={onEdit}>
             {filled ? <Pencil aria-hidden /> : <Plus aria-hidden />}
@@ -180,7 +196,7 @@ const FIELDS: { key: keyof SignatureForm; label: string; placeholder: string; ma
     full: true,
   },
   { key: "phone", label: "Teléfono", placeholder: "+57 300 000 0000", max: SIGNATURE_LIMITS.phone, hint: "Opcional." },
-  { key: "website", label: "Sitio web", placeholder: "https://tunegocio.co", max: SIGNATURE_LIMITS.url },
+  { key: "website", label: "Sitio web", placeholder: "tunegocio.co", max: SIGNATURE_LIMITS.url },
 ]
 
 function SignatureEditor({
@@ -195,17 +211,22 @@ function SignatureEditor({
   const { showAlert } = useAlert()
   const [form, setForm] = useState<SignatureForm>(() => formFromSignature(sender.signature))
   const [saving, setSaving] = useState(false)
+  // El error se enseña al salir del campo o al intentar guardar, no al teclear la «h».
+  const [touched, setTouched] = useState<Partial<Record<keyof SignatureForm, boolean>>>({})
+  const [submitted, setSubmitted] = useState(false)
   const errors: SignatureErrors = validateSignature(form)
   const invalid = Object.keys(errors).length > 0
 
   async function save(event: React.FormEvent) {
     event.preventDefault()
+    setSubmitted(true)
     if (invalid) return
     setSaving(true)
     try {
-      await updateOutreachSignature(signaturePayload(form))
-      onSaved(await getOutreachSender())
+      const saved = await updateOutreachSignature(signaturePayload(form))
       showAlert({ tone: "success", title: "Firma guardada" })
+      // Ya guardó: si la recarga falla, se pinta con la respuesta del PUT.
+      onSaved(await getOutreachSender().catch(() => senderWithSignature(sender, saved)))
     } catch (error) {
       showAlert({ tone: "error", title: errorMessage(error, "No se pudo guardar la firma") })
     } finally {
@@ -219,7 +240,7 @@ function SignatureEditor({
       <div className="grid gap-3 sm:grid-cols-2">
         {FIELDS.map((field) => {
           const id = `signature-${field.key}`
-          const error = errors[field.key]
+          const error = submitted || touched[field.key] === true ? errors[field.key] : undefined
           return (
             <div key={field.key} className={field.full === true ? "grid gap-1.5 sm:col-span-2" : "grid gap-1.5"}>
               <Label htmlFor={id}>{field.label}</Label>
@@ -231,6 +252,7 @@ function SignatureEditor({
                 aria-invalid={error !== undefined}
                 aria-describedby={error !== undefined || field.hint !== undefined ? `${id}-hint` : undefined}
                 onChange={(event) => setForm((prev) => ({ ...prev, [field.key]: event.target.value }))}
+                onBlur={() => setTouched((prev) => ({ ...prev, [field.key]: true }))}
               />
               {(error ?? field.hint) !== undefined && (
                 <p id={`${id}-hint`} className={error === undefined ? "text-xs text-muted-foreground" : "text-xs text-destructive"}>
@@ -245,7 +267,7 @@ function SignatureEditor({
         <Button type="button" variant="ghost" size="sm" onClick={onCancel} disabled={saving}>
           Cancelar
         </Button>
-        <Button type="submit" size="sm" disabled={invalid || saving}>
+        <Button type="submit" size="sm" disabled={(submitted && invalid) || saving}>
           {saving ? "Guardando…" : "Guardar firma"}
         </Button>
       </div>
