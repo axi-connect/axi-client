@@ -31,6 +31,10 @@ export const BULK_SKIP_LABELS: Record<BulkSkipReason, string> = {
   no_channel: "Sin teléfono ni WhatsApp",
   contact_not_found: "El contacto ya no existe",
   error: "No se pudo programar",
+  cold_not_mobile: "Su número no es un celular",
+  cold_already_touched: "Ya recibieron su mensaje en frío",
+  cold_template_required: "Falta una plantilla con botón de baja",
+  cold_quality_paused: "El WhatsApp en frío está en pausa",
 };
 
 /** Qué puede hacer el operador con cada motivo. `null` = nada, es definitivo. */
@@ -40,6 +44,13 @@ export const BULK_SKIP_HINTS: Record<BulkSkipReason, string | null> = {
   no_channel: "No hay a dónde escribirles: complétales el teléfono.",
   contact_not_found: "Se borró entre que lo programaste y que el agente llegó a él.",
   error: "Fallo al crear esa tarea concreta. El resto del lote siguió.",
+  cold_not_mobile: "En frío solo se escribe a celulares: a un fijo no le llega WhatsApp ni SMS.",
+  cold_already_touched:
+    "En frío va un solo mensaje por negocio hasta que responda. Si responde, el seguimiento sigue.",
+  cold_template_required:
+    "Para escribir en frío por WhatsApp crea una plantilla de marketing con botón «No me interesa» y espera la aprobación de Meta.",
+  cold_quality_paused:
+    "Se pausó porque bajó la calidad del número. Reanúdalo en Marketing › Configuración › Política de contacto.",
 };
 
 const HOUR_MS = 3_600_000;

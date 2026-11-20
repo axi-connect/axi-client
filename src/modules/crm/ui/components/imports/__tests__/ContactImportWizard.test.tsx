@@ -162,6 +162,8 @@ describe("ContactImportWizard", () => {
       expect.any(File),
       expect.objectContaining({ on_duplicate: "skip", tag_ids: [] }),
     );
+    // Por defecto nada cambia: sin base legal, el servidor los crea consentidos
+    expect(api.createImport.mock.calls[0][1]).not.toHaveProperty("legal_basis");
 
     await act(async () => {
       await jest.advanceTimersByTimeAsync(2100);

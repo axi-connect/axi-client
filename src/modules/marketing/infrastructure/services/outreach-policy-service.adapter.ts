@@ -15,3 +15,8 @@ export function getOutreachPolicy(): Promise<OutreachPolicyView> {
 export function putOutreachPolicy(policy: OutreachPolicy): Promise<OutreachPolicyView> {
   return http.put<OutreachPolicyView>("/contacts/outreach-policy", policy);
 }
+
+/** Fase B: reanudar a mano el WhatsApp en frío pausado por la calidad del número. */
+export function resumeColdWhatsapp(): Promise<{ resumed: boolean }> {
+  return http.post<{ resumed: boolean }>("/contacts/outreach-policy/cold/whatsapp/resume");
+}

@@ -17,6 +17,7 @@ export function createImport(file: File, options: ImportOptions): Promise<Import
   if (options.lifecycle_stage !== undefined) {
     form.append("lifecycle_stage", options.lifecycle_stage);
   }
+  if (options.legal_basis !== undefined) form.append("legal_basis", options.legal_basis);
   return http.post<ImportJobDTO>("/crm/imports", form);
 }
 

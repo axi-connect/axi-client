@@ -16,6 +16,17 @@ export type OutreachChannelPolicy = OutreachPolicy["channels"][OutreachChannelKe
 export type OutreachMode = OutreachChannelPolicy["mode"];
 export type OutreachHours = OutreachPolicy["hours"];
 export type OutreachTimeRange = OutreachHours["weekdays"];
+export type OutreachColdGuard = OutreachPolicyView["cold_guard"];
+export type ColdPauseReason = NonNullable<OutreachColdGuard["whatsapp_pause"]>["reason"];
+/** Canales donde existe el «frío controlado» (Fase B del piloto de prospección). */
+export type ColdChannelKey = keyof OutreachPolicy["cold"]["daily_cap"];
+
+/** Techo del tope frío del servidor (`COLD_DAILY_CAP_MAX`). */
+export const COLD_DAILY_CAP_MAX = 200;
+
+export function isColdChannel(key: OutreachChannelKey): key is ColdChannelKey {
+  return key === "whatsapp_cloud" || key === "sms";
+}
 
 /** Cómo elige el tenant el modo de un canal. */
 export type ChannelChoice =
@@ -61,7 +72,8 @@ export const OUTREACH_CHANNELS_SHOWN: readonly OutreachChannelMeta[] = [
   {
     key: "sms",
     label: "SMS",
-    description: "Útil como recordatorio, no como apertura. Lleva la forma de darse de baja.",
+    description:
+      "Solo a celulares. Cada SMS termina con «Responde NO o BAJA para no recibir mas» y la respuesta da de baja sola.",
     choice: { kind: "mode" },
     number_at_stake: true,
   },
@@ -69,7 +81,7 @@ export const OUTREACH_CHANNELS_SHOWN: readonly OutreachChannelMeta[] = [
     key: "whatsapp_cloud",
     label: "WhatsApp · plantilla",
     description:
-      "Meta pide consentimiento. Si lo abres a cualquier lead, cada bloqueo baja la calidad de tu número: es el mismo número de tu agente y de tus clientes.",
+      "Meta pide consentimiento. En frío controlado, cada bloqueo baja la calidad de tu número: es el mismo número de tu agente y de tus clientes.",
     choice: { kind: "mode" },
     number_at_stake: true,
   },
@@ -90,10 +102,63 @@ export const OUTREACH_CHANNELS_SHOWN: readonly OutreachChannelMeta[] = [
   },
 ];
 
-export const MODE_OPTIONS: readonly { value: Extract<OutreachMode, "opt_in_only" | "any_lead">; label: string }[] = [
+export type ModeOption = {
+  value: Extract<OutreachMode, "opt_in_only" | "any_lead" | "cold_controlled">;
+  label: string;
+};
+
+export const MODE_OPTIONS: readonly ModeOption[] = [
   { value: "opt_in_only", label: "Solo con opt-in" },
   { value: "any_lead", label: "A cualquier lead" },
 ];
+
+/**
+ * En WhatsApp y SMS no hay «a cualquier lead» a secas: escribir sin permiso
+ * es SIEMPRE frío controlado, con frenos (el servidor lee un `any_lead`
+ * guardado como `cold_controlled`).
+ */
+export const COLD_MODE_OPTIONS: readonly ModeOption[] = [
+  { value: "opt_in_only", label: "Solo con opt-in" },
+  { value: "cold_controlled", label: "Frío controlado" },
+];
+
+export function modeOptionsFor(key: OutreachChannelKey): readonly ModeOption[] {
+  return isColdChannel(key) ? COLD_MODE_OPTIONS : MODE_OPTIONS;
+}
+
+/** El valor que enseña el selector: lo que no es «abierto» se ve como opt-in. */
+export function selectedMode(key: OutreachChannelKey, mode: OutreachMode): ModeOption["value"] {
+  if (isColdChannel(key)) return mode === "cold_controlled" || mode === "any_lead" ? "cold_controlled" : "opt_in_only";
+  return mode === "any_lead" ? "any_lead" : "opt_in_only";
+}
+
+export function isCold(key: OutreachChannelKey, policy: OutreachChannelPolicy): boolean {
+  return isColdChannel(key) && policy.enabled && (policy.mode === "cold_controlled" || policy.mode === "any_lead");
+}
+
+/** Los frenos del frío, en una línea cada uno (lo mismo que aplica el servidor). */
+export function coldBrakes(key: ColdChannelKey, dailyCap: number): string[] {
+  return [
+    "Solo a negocios de dato público o referidos; nunca a quien no sabes de dónde salió",
+    "Solo celulares: nunca fijos",
+    "Nunca a bajas, lista de supresión ni RNE",
+    "Un mensaje en frío por negocio hasta que responda",
+    `Máximo ${dailyCap.toLocaleString("es-CO")} al día en todo el negocio`,
+    key === "whatsapp_cloud"
+      ? "Solo con plantilla de marketing aprobada que tenga botón de baja («No me interesa»)"
+      : "Con «Responde NO o BAJA»: la respuesta da de baja sola",
+    ...(key === "whatsapp_cloud"
+      ? ["Se pausa sola si baja la calidad del número; la reanudas tú"]
+      : []),
+  ];
+}
+
+export const COLD_PAUSE_LABELS: Record<ColdPauseReason, string> = {
+  quality_yellow: "la calidad del número bajó a amarilla",
+  quality_red: "la calidad del número bajó a roja",
+  spam_rate_limit: "Meta frenó el número por posible spam",
+  marketing_limit_errors: "Meta rechazó varias plantillas hoy: señal de bloqueos",
+};
 
 /** ¿Este canal, así configurado, pone en riesgo un número del tenant? */
 /** Nombre del canal de una baja por canal; crudo si no se conoce. */
@@ -102,7 +167,11 @@ export function optOutChannelLabel(channel: string): string {
 }
 
 export function isHighRisk(meta: OutreachChannelMeta, policy: OutreachChannelPolicy): boolean {
-  return meta.number_at_stake && policy.enabled && policy.mode === "any_lead";
+  return (
+    meta.number_at_stake &&
+    policy.enabled &&
+    (policy.mode === "any_lead" || policy.mode === "cold_controlled")
+  );
 }
 
 /** «7:00» a partir de «07:00»: la hora se lee sin el cero de relleno. */
@@ -159,6 +228,12 @@ export function describeChanges(
     (meta) => isHighRisk(meta, after.channels[meta.key]) && !isHighRisk(meta, before.channels[meta.key]),
   );
   if (opened !== undefined) {
+    if (isColdChannel(opened.key)) {
+      return {
+        title: `Activaste ${opened.label} en frío controlado`,
+        detail: `solo celulares, un mensaje por negocio hasta que responda, máximo ${after.cold.daily_cap[opened.key].toLocaleString("es-CO")} al día; el riesgo queda escrito en cada envío`,
+      };
+    }
     return {
       title: `Abriste ${opened.label} a cualquier lead`,
       detail: "el riesgo queda escrito en cada envío",
@@ -171,6 +246,7 @@ export function describeChanges(
     if (a.enabled !== b.enabled || a.mode !== b.mode) count += 1;
   }
   if (JSON.stringify(before.hours) !== JSON.stringify(after.hours)) count += 1;
+  if (JSON.stringify(before.cold) !== JSON.stringify(after.cold)) count += 1;
   if (count === 0) return null;
   return { title: count === 1 ? "Un cambio sin guardar" : `${count} cambios sin guardar` };
 }

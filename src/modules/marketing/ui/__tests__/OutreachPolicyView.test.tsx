@@ -21,6 +21,7 @@ jest.mock("@/core/providers/alert-provider", () => ({
 jest.mock("@/modules/marketing/infrastructure/services/outreach-policy-service.adapter", () => ({
   getOutreachPolicy: jest.fn(),
   putOutreachPolicy: jest.fn(),
+  resumeColdWhatsapp: jest.fn(),
 }));
 jest.mock("@/modules/marketing/infrastructure/services/opt-outs-service.adapter", () => ({
   listOptOuts: jest.fn(() => Promise.resolve({ data: [], meta: { total: 31, page: 1, page_size: 1 } })),
@@ -42,6 +43,7 @@ jest.mock("@/modules/channels/public", () => ({
 const api = require("@/modules/marketing/infrastructure/services/outreach-policy-service.adapter") as {
   getOutreachPolicy: jest.Mock;
   putOutreachPolicy: jest.Mock;
+  resumeColdWhatsapp: jest.Mock;
 };
 
 const FLOOR = { weekdays: { start: "07:00", end: "19:00" }, saturday: { start: "08:00", end: "15:00" } };
@@ -58,12 +60,20 @@ const POLICY: OutreachPolicy = {
     manual: { enabled: true, mode: "any_lead", daily_cap: 1 },
   },
   hours: FLOOR,
+  cold: { daily_cap: { whatsapp_cloud: 20, sms: 20 } },
+};
+const GUARD: View["cold_guard"] = {
+  whatsapp_pause: null,
+  whatsapp_last_quality: null,
+  whatsapp_resumed: null,
+  activated: {},
 };
 const VIEW: View = {
   policy: POLICY,
   defaults: POLICY,
   floor: FLOOR,
   pending_legal_review: ["ley_2300_b2b", "corporate_data_as_consent"],
+  cold_guard: GUARD,
 };
 
 beforeEach(() => jest.clearAllMocks());
@@ -93,20 +103,30 @@ describe("política cargada", () => {
     expect(await screen.findByText("Ventas Medellín")).toBeInTheDocument();
   });
 
-  it("abrir WhatsApp a cualquier lead avisa el riesgo y guarda la política COMPLETA", async () => {
+  it("activar WhatsApp en frío controlado enseña riesgo y frenos, y guarda la política COMPLETA con el tope", async () => {
     const group = screen.getByRole("radiogroup", { name: "Modo de WhatsApp · plantilla" });
-    fireEvent.click(within(group).getByRole("radio", { name: "A cualquier lead" }));
+    expect(within(group).queryByRole("radio", { name: "A cualquier lead" })).not.toBeInTheDocument();
+    fireEvent.click(within(group).getByRole("radio", { name: "Frío controlado" }));
 
     expect(screen.getByText("Riesgo alto para tu número")).toBeInTheDocument();
-    expect(screen.getByText(/Abriste WhatsApp · plantilla a cualquier lead/)).toBeInTheDocument();
+    expect(screen.getByText(/Activaste WhatsApp · plantilla en frío controlado/)).toBeInTheDocument();
+    expect(screen.getByText("Frenos del frío controlado")).toBeInTheDocument();
+    expect(screen.getByText("Solo celulares: nunca fijos")).toBeInTheDocument();
 
+    fireEvent.change(screen.getByLabelText("Mensajes en frío al día"), { target: { value: "12" } });
     fireEvent.click(screen.getByRole("button", { name: "Guardar política" }));
     await waitFor(() => expect(api.putOutreachPolicy).toHaveBeenCalledTimes(1));
     const sent = api.putOutreachPolicy.mock.calls[0][0] as OutreachPolicy;
-    expect(sent.channels.whatsapp_cloud.mode).toBe("any_lead");
+    expect(sent.channels.whatsapp_cloud.mode).toBe("cold_controlled");
+    expect(sent.cold).toEqual({ daily_cap: { whatsapp_cloud: 12, sms: 20 } });
     // Las claves que no se tocaron viajan igual (el PUT reemplaza la sección)
     expect(sent.channels.whatsapp_web).toEqual(POLICY.channels.whatsapp_web);
     expect(sent.hours).toEqual(FLOOR);
+  });
+
+  it("abrir la llamada a cualquier lead sigue igual", () => {
+    const group = screen.getByRole("radiogroup", { name: "Modo de Llamada de la agente" });
+    expect(within(group).getByRole("radio", { name: "A cualquier lead" })).toBeInTheDocument();
   });
 
   it("un horario que abre más que el criterio no llega al servidor", async () => {
@@ -130,4 +150,30 @@ it("si el GET falla no ofrece guardar: dice el error con reintento", async () =>
   render(<OutreachPolicyView />);
   expect(await screen.findByRole("button", { name: "Reintentar" })).toBeInTheDocument();
   expect(screen.queryByText("Canales para iniciar el contacto")).not.toBeInTheDocument();
+});
+
+it("WhatsApp en frío pausado: dice por qué y se reanuda a mano sin perder lo que se edita", async () => {
+  const paused: View = {
+    ...VIEW,
+    policy: {
+      ...POLICY,
+      channels: { ...POLICY.channels, whatsapp_cloud: { enabled: true, mode: "cold_controlled", daily_cap: 1 } },
+    },
+    cold_guard: {
+      ...GUARD,
+      whatsapp_pause: { paused_at: "2026-11-20T15:00:00.000Z", reason: "quality_yellow" },
+      activated: { whatsapp_cloud: { at: "2026-11-19T15:00:00.000Z", by: "u-1" } },
+    },
+  };
+  api.getOutreachPolicy.mockResolvedValueOnce(paused).mockResolvedValueOnce({ ...paused, cold_guard: GUARD });
+  api.resumeColdWhatsapp.mockResolvedValue({ resumed: true });
+  render(<OutreachPolicyView />);
+  expect(await screen.findByText(/en frío está en pausa/)).toBeInTheDocument();
+  expect(screen.getByText(/la calidad del número bajó a amarilla/)).toBeInTheDocument();
+  expect(screen.getByText(/lo activaron el 19 de nov/)).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole("button", { name: "Reanudar" }));
+  await waitFor(() => expect(api.resumeColdWhatsapp).toHaveBeenCalledTimes(1));
+  await waitFor(() => expect(screen.queryByText(/en frío está en pausa/)).not.toBeInTheDocument());
+  expect(showAlert).toHaveBeenCalledWith(expect.objectContaining({ title: "WhatsApp en frío reanudado" }));
 });

@@ -31,6 +31,7 @@ import {
 } from "@/modules/crm/domain/enums";
 import {
   IMPORT_ACCEPT_ATTRIBUTE,
+  IMPORT_LEGAL_BASIS_OPTIONS,
   IMPORT_MAX_ROWS,
   formatFileSize,
   validateImportFile,
@@ -114,6 +115,7 @@ export function ContactImportWizard({
   const [onDuplicate, setOnDuplicate] = useState<ImportOptions["on_duplicate"]>("skip");
   const [tagIds, setTagIds] = useState<string[]>([]);
   const [stage, setStage] = useState<ContactLifecycleStage | null>(null);
+  const [legalBasis, setLegalBasis] = useState<"consented" | "public_business_data">("consented");
   const [tags, setTags] = useState<TagDTO[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const inputId = `crm-import-file-${variant}`;
@@ -173,6 +175,7 @@ export function ContactImportWizard({
         on_duplicate: onDuplicate,
         tag_ids: tagIds,
         lifecycle_stage: stage ?? undefined,
+        ...(legalBasis === "public_business_data" ? { legal_basis: legalBasis } : {}),
       });
       start(created);
       setStep("processing");
@@ -355,6 +358,30 @@ export function ContactImportWizard({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+          <div className="space-y-1.5 sm:col-span-3">
+            <span className="text-xs font-medium text-muted-foreground">De dónde salieron</span>
+            <Select
+              value={legalBasis}
+              onValueChange={(value: string) => setLegalBasis(value as typeof legalBasis)}
+            >
+              <SelectTrigger className="h-9 w-full sm:max-w-sm" aria-label="De dónde salieron">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {IMPORT_LEGAL_BASIS_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {legalBasis === "public_business_data" && (
+              <p className="text-xs text-pretty text-muted-foreground">
+                Entran sin consentimiento: por WhatsApp o SMS solo se les escribe si activas el frío
+                controlado en la política de contacto (solo celulares, un mensaje hasta que respondan).
+              </p>
+            )}
           </div>
         </div>
 

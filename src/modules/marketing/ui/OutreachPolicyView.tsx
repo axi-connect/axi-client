@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Lock, Mail, MessageSquareText, Phone } from "lucide-react";
+import { Lock, Mail, MessageSquareText, Phone, ShieldAlert } from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
 import { cn } from "@/core/lib/utils";
 import { useAlert } from "@/core/providers/alert-provider";
@@ -20,15 +20,23 @@ import {
   type HealthReading,
 } from "@/modules/channels/public";
 import {
+  COLD_DAILY_CAP_MAX,
+  COLD_PAUSE_LABELS,
+  coldBrakes,
   describeChanges,
   formatHour,
+  isCold,
+  isColdChannel,
   isHighRisk,
-  MODE_OPTIONS,
+  modeOptionsFor,
   OUTREACH_CHANNELS_SHOWN,
+  selectedMode,
   validateHours,
+  type ColdChannelKey,
   type HoursErrors,
   type OutreachChannelKey,
   type OutreachChannelMeta,
+  type OutreachColdGuard,
   type OutreachPolicy,
   type OutreachPolicyView as PolicyView,
   type OutreachTimeRange,
@@ -37,6 +45,7 @@ import { listOptOuts } from "@/modules/marketing/infrastructure/services/opt-out
 import {
   getOutreachPolicy,
   putOutreachPolicy,
+  resumeColdWhatsapp,
 } from "@/modules/marketing/infrastructure/services/outreach-policy-service.adapter";
 import { LoadError } from "@/modules/marketing/ui/components/premium";
 
@@ -59,6 +68,7 @@ export function OutreachPolicyView() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [hoursErrors, setHoursErrors] = useState<HoursErrors>({});
   const [saving, setSaving] = useState(false);
+  const [resuming, setResuming] = useState(false);
 
   // Lo que acompaña (bajas, calidad del número) se pide aparte: si falla, la
   // política se puede seguir editando y la ficha dice que no pudo leerlo.
@@ -102,6 +112,33 @@ export function OutreachPolicyView() {
 
   function setHours(patch: Partial<OutreachPolicy["hours"]>) {
     setDraft((prev) => (prev === null ? prev : { ...prev, hours: { ...prev.hours, ...patch } }));
+  }
+
+  function setColdCap(key: ColdChannelKey, value: number) {
+    setDraft((prev) =>
+      prev === null
+        ? prev
+        : { ...prev, cold: { ...prev.cold, daily_cap: { ...prev.cold.daily_cap, [key]: value } } },
+    );
+  }
+
+  async function handleResume() {
+    setResuming(true);
+    try {
+      await resumeColdWhatsapp();
+      const next = await getOutreachPolicy();
+      // Solo el estado del guardia: lo que el dueño esté editando no se pierde
+      setView(next);
+      showAlert({ tone: "success", title: "WhatsApp en frío reanudado" });
+    } catch (err) {
+      showAlert({
+        tone: "error",
+        title: "No se pudo reanudar",
+        description: errorMessage(err, "Inténtalo de nuevo en un momento"),
+      });
+    } finally {
+      setResuming(false);
+    }
   }
 
   async function handleSave() {
@@ -153,7 +190,8 @@ export function OutreachPolicyView() {
               </h3>
               <p className="text-muted-foreground text-sm text-pretty">
                 «A cualquier lead» incluye los que salieron de un mapa o del registro mercantil, sin
-                que te hayan escrito antes.
+                que te hayan escrito antes. En WhatsApp y SMS eso se llama «frío controlado» y siempre
+                lleva frenos.
               </p>
             </header>
             <ul>
@@ -165,6 +203,19 @@ export function OutreachPolicyView() {
                   whatsapp={meta.key === "whatsapp_cloud" ? whatsapp : null}
                   disabled={disabled}
                   onChange={(patch) => setChannel(meta.key, patch)}
+                  cold={
+                    isColdChannel(meta.key)
+                      ? {
+                          channel: meta.key,
+                          daily_cap: draft.cold.daily_cap[meta.key],
+                          guard: view.cold_guard,
+                          canManage,
+                          resuming,
+                          onDailyCap: (value) => setColdCap(meta.key as ColdChannelKey, value),
+                          onResume: () => void handleResume(),
+                        }
+                      : null
+                  }
                 />
               ))}
             </ul>
@@ -239,20 +290,34 @@ function ChannelGlyph({ channel }: { channel: OutreachChannelKey }) {
   );
 }
 
+interface ColdRowProps {
+  channel: ColdChannelKey;
+  daily_cap: number;
+  guard: OutreachColdGuard;
+  canManage: boolean;
+  resuming: boolean;
+  onDailyCap: (value: number) => void;
+  onResume: () => void;
+}
+
 function ChannelRow({
   meta,
   policy,
   whatsapp,
   disabled,
   onChange,
+  cold,
 }: {
   meta: OutreachChannelMeta;
   policy: OutreachPolicy["channels"][OutreachChannelKey];
   whatsapp: ChannelDTO[] | null | "error";
   disabled: boolean;
   onChange: (patch: Partial<OutreachPolicy["channels"][OutreachChannelKey]>) => void;
+  cold: ColdRowProps | null;
 }) {
   const highRisk = isHighRisk(meta, policy);
+  const coldOn = cold !== null && isCold(meta.key, policy);
+  const paused = cold?.channel === "whatsapp_cloud" ? cold.guard.whatsapp_pause : null;
   const quality = whatsapp !== null && whatsapp !== "error" ? worstQuality(whatsapp) : null;
   return (
     <li
@@ -266,9 +331,10 @@ function ChannelRow({
       <div className="flex min-w-0 flex-col gap-1">
         <span className="text-sm font-medium">{meta.label}</span>
         <span className="op-desc text-muted-foreground text-xs text-pretty">{meta.description}</span>
-        {(highRisk || quality !== null) && (
+        {(highRisk || quality !== null || (paused !== null && coldOn)) && (
           <span className="mt-1 flex flex-wrap gap-1.5">
             {highRisk && <StatePill tone="warning">Riesgo alto para tu número</StatePill>}
+            {paused !== null && coldOn && <StatePill tone="destructive">En pausa</StatePill>}
             {quality !== null && (
               <StatePill tone={pillTone(quality)}>Calidad hoy: {quality.label.toLowerCase()}</StatePill>
             )}
@@ -281,8 +347,8 @@ function ChannelRow({
             label={`Modo de ${meta.label}`}
             size="sm"
             surface="inline"
-            value={policy.mode === "any_lead" ? "any_lead" : "opt_in_only"}
-            items={MODE_OPTIONS.map((option) => ({
+            value={selectedMode(meta.key, policy.mode)}
+            items={modeOptionsFor(meta.key).map((option) => ({
               ...option,
               disabled: disabled || !policy.enabled,
             }))}
@@ -299,8 +365,102 @@ function ChannelRow({
         aria-label={`${meta.label}: ${policy.enabled ? "activo" : "apagado"}`}
         onCheckedChange={(enabled) => onChange({ enabled })}
       />
+      {coldOn && cold !== null && <ColdPanel {...cold} label={meta.label} disabled={disabled} />}
     </li>
   );
+}
+
+/**
+ * Fase B · el frío controlado de un canal: sus frenos (los aplica el
+ * servidor, aquí solo se leen), el tope diario del negocio, cuándo se activó
+ * y, en WhatsApp, la pausa por calidad con su «Reanudar».
+ */
+function ColdPanel({
+  channel,
+  label,
+  daily_cap,
+  guard,
+  canManage,
+  resuming,
+  disabled,
+  onDailyCap,
+  onResume,
+}: ColdRowProps & { label: string; disabled: boolean }) {
+  const capId = `op-cold-cap-${channel}`;
+  const activated = guard.activated[channel];
+  const paused = channel === "whatsapp_cloud" ? guard.whatsapp_pause : null;
+  return (
+    <div className="border-border bg-muted/40 col-span-3 col-start-1 flex min-w-0 flex-col gap-3 rounded-2xl border p-4 @2xl:col-span-4">
+      {paused !== null && (
+        <div
+          role="status"
+          className="border-destructive/40 bg-destructive/5 flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-xl border px-3 py-2.5"
+        >
+          <p className="min-w-0 text-sm text-pretty">
+            <span className="font-medium">{label} en frío está en pausa</span>
+            <span className="text-muted-foreground"> · {COLD_PAUSE_LABELS[paused.reason]}. </span>
+            <span className="text-muted-foreground">
+              Revisa la lista y el mensaje antes de reanudar; con el número en amarillo o rojo, Meta
+              puede restringirlo.
+            </span>
+          </p>
+          {canManage && (
+            <Button variant="glass" size="sm" disabled={resuming} onClick={onResume}>
+              {resuming ? "Reanudando…" : "Reanudar"}
+            </Button>
+          )}
+        </div>
+      )}
+      <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
+        <p className="flex min-w-0 items-center gap-2 text-sm font-medium">
+          <ShieldAlert aria-hidden="true" className="size-4 shrink-0" />
+          Frenos del frío controlado
+        </p>
+        <div className="flex items-center gap-2">
+          <label htmlFor={capId} className="text-muted-foreground text-xs">
+            Mensajes en frío al día
+          </label>
+          <input
+            id={capId}
+            type="number"
+            min={0}
+            max={COLD_DAILY_CAP_MAX}
+            step={1}
+            inputMode="numeric"
+            value={daily_cap}
+            disabled={disabled}
+            onChange={(e) => {
+              const value = Math.trunc(Number(e.target.value));
+              if (Number.isFinite(value)) onDailyCap(Math.min(Math.max(value, 0), COLD_DAILY_CAP_MAX));
+            }}
+            className="border-input bg-background focus:border-primary focus:ring-primary/20 h-8 w-20 rounded-md border px-2 text-sm tabular-nums focus:ring-3 focus:outline-none disabled:opacity-60"
+          />
+        </div>
+      </div>
+      <ul className="text-muted-foreground grid min-w-0 gap-1.5 text-xs @2xl:grid-cols-2">
+        {coldBrakes(channel, daily_cap).map((brake) => (
+          <li key={brake} className="flex min-w-0 gap-2 text-pretty">
+            <span aria-hidden="true" className="bg-foreground/50 mt-[6px] size-1 shrink-0 rounded-full" />
+            <span className="min-w-0">{brake}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="text-muted-foreground text-xs text-pretty">
+        Escribir a quien no te dio permiso puede llevar a bloqueos y reportes. Cada envío deja
+        escrito su riesgo
+        {activated === undefined ? "." : `; lo activaron el ${formatDay(activated.at)}.`}
+      </p>
+    </div>
+  );
+}
+
+function formatDay(iso: string): string {
+  return new Intl.DateTimeFormat("es-CO", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "America/Bogota",
+  }).format(new Date(iso));
 }
 
 const QUALITY_ORDER: Record<HealthReading["tone"], number> = { bad: 0, warning: 1, neutral: 2, good: 3 };
@@ -504,7 +664,8 @@ function NeverOpened({ optOutCount }: { optOutCount: number | null | "error" }) 
     { title: "Solicitudes de habeas data", detail: "Ley 1581: quien lo pide no vuelve a recibir nada" },
     {
       title: "Registro de excluidos (RNE)",
-      detail: "la CRC aún no publica cómo consultarlo; en cuanto lo haga, se revisa antes de llamar o enviar SMS",
+      detail:
+        "la CRC aún no publica cómo consultarlo; en cuanto lo haga, se revisa antes de llamar, enviar SMS o escribir en frío por WhatsApp",
     },
   ];
   return (

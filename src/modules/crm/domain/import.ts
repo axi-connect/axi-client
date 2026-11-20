@@ -15,7 +15,19 @@ export type ImportOptions = {
   on_duplicate: "skip" | "update";
   tag_ids: string[];
   lifecycle_stage?: "prospect" | "lead" | "customer" | "other";
+  /**
+   * Con qué derecho se cargan. Sin valor = lo de siempre: quien te dio sus
+   * datos cuenta como consentido. `public_business_data` = una base de
+   * NEGOCIOS de dato público (directorios, mapas): entran sin consentimiento
+   * y solo se les escribe por WhatsApp o SMS en frío controlado, con frenos.
+   */
+  legal_basis?: "public_business_data";
 };
+
+export const IMPORT_LEGAL_BASIS_OPTIONS = [
+  { value: "consented", label: "Me dieron sus datos (consentidos)" },
+  { value: "public_business_data", label: "Base de negocios de dato público" },
+] as const;
 
 export const IMPORT_STATUS_LABELS: Record<ImportJobStatus, string> = {
   pending: "En cola",

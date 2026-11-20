@@ -2772,6 +2772,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/contacts/outreach-policy/cold/whatsapp/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ContactsController_resumeColdWhatsapp_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/contacts/{id}/consent": {
         parameters: {
             query?: never;
@@ -13457,49 +13473,49 @@ export interface components {
                     whatsapp_cloud: {
                         enabled: boolean;
                         /** @enum {string} */
-                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only" | "cold_controlled";
                         daily_cap: number;
                     };
                     whatsapp_web: {
                         enabled: boolean;
                         /** @enum {string} */
-                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only" | "cold_controlled";
                         daily_cap: number;
                     };
                     email: {
                         enabled: boolean;
                         /** @enum {string} */
-                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only" | "cold_controlled";
                         daily_cap: number;
                     };
                     sms: {
                         enabled: boolean;
                         /** @enum {string} */
-                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only" | "cold_controlled";
                         daily_cap: number;
                     };
                     call: {
                         enabled: boolean;
                         /** @enum {string} */
-                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only" | "cold_controlled";
                         daily_cap: number;
                     };
                     instagram_dm: {
                         enabled: boolean;
                         /** @enum {string} */
-                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only" | "cold_controlled";
                         daily_cap: number;
                     };
                     facebook_messenger: {
                         enabled: boolean;
                         /** @enum {string} */
-                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only" | "cold_controlled";
                         daily_cap: number;
                     };
                     manual: {
                         enabled: boolean;
                         /** @enum {string} */
-                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only" | "cold_controlled";
                         daily_cap: number;
                     };
                 };
@@ -13512,6 +13528,12 @@ export interface components {
                         start: string;
                         end: string;
                     } | null;
+                };
+                cold: {
+                    daily_cap: {
+                        whatsapp_cloud: number;
+                        sms: number;
+                    };
                 };
             };
             defaults: {
@@ -13521,49 +13543,49 @@ export interface components {
                     whatsapp_cloud: {
                         enabled: boolean;
                         /** @enum {string} */
-                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only" | "cold_controlled";
                         daily_cap: number;
                     };
                     whatsapp_web: {
                         enabled: boolean;
                         /** @enum {string} */
-                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only" | "cold_controlled";
                         daily_cap: number;
                     };
                     email: {
                         enabled: boolean;
                         /** @enum {string} */
-                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only" | "cold_controlled";
                         daily_cap: number;
                     };
                     sms: {
                         enabled: boolean;
                         /** @enum {string} */
-                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only" | "cold_controlled";
                         daily_cap: number;
                     };
                     call: {
                         enabled: boolean;
                         /** @enum {string} */
-                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only" | "cold_controlled";
                         daily_cap: number;
                     };
                     instagram_dm: {
                         enabled: boolean;
                         /** @enum {string} */
-                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only" | "cold_controlled";
                         daily_cap: number;
                     };
                     facebook_messenger: {
                         enabled: boolean;
                         /** @enum {string} */
-                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only" | "cold_controlled";
                         daily_cap: number;
                     };
                     manual: {
                         enabled: boolean;
                         /** @enum {string} */
-                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                        mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only" | "cold_controlled";
                         daily_cap: number;
                     };
                 };
@@ -13576,6 +13598,12 @@ export interface components {
                         start: string;
                         end: string;
                     } | null;
+                };
+                cold: {
+                    daily_cap: {
+                        whatsapp_cloud: number;
+                        sms: number;
+                    };
                 };
             };
             floor: {
@@ -13589,6 +13617,29 @@ export interface components {
                 } | null;
             };
             pending_legal_review: ("ley_2300_b2b" | "corporate_data_as_consent")[];
+            cold_guard: {
+                whatsapp_pause: {
+                    paused_at: string;
+                    /** @enum {string} */
+                    reason: "quality_yellow" | "quality_red" | "spam_rate_limit" | "marketing_limit_errors";
+                } | null;
+                /** @enum {string|null} */
+                whatsapp_last_quality: "GREEN" | "YELLOW" | "RED" | null;
+                whatsapp_resumed: {
+                    at: string;
+                    by: string | null;
+                } | null;
+                activated: {
+                    whatsapp_cloud?: {
+                        at: string;
+                        by: string | null;
+                    };
+                    sms?: {
+                        at: string;
+                        by: string | null;
+                    };
+                };
+            };
         };
         UpdateOutreachPolicyDto: {
             /** @enum {number} */
@@ -13597,49 +13648,49 @@ export interface components {
                 whatsapp_cloud: {
                     enabled: boolean;
                     /** @enum {string} */
-                    mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                    mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only" | "cold_controlled";
                     daily_cap: number;
                 };
                 whatsapp_web: {
                     enabled: boolean;
                     /** @enum {string} */
-                    mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                    mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only" | "cold_controlled";
                     daily_cap: number;
                 };
                 email: {
                     enabled: boolean;
                     /** @enum {string} */
-                    mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                    mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only" | "cold_controlled";
                     daily_cap: number;
                 };
                 sms: {
                     enabled: boolean;
                     /** @enum {string} */
-                    mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                    mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only" | "cold_controlled";
                     daily_cap: number;
                 };
                 call: {
                     enabled: boolean;
                     /** @enum {string} */
-                    mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                    mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only" | "cold_controlled";
                     daily_cap: number;
                 };
                 instagram_dm: {
                     enabled: boolean;
                     /** @enum {string} */
-                    mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                    mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only" | "cold_controlled";
                     daily_cap: number;
                 };
                 facebook_messenger: {
                     enabled: boolean;
                     /** @enum {string} */
-                    mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                    mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only" | "cold_controlled";
                     daily_cap: number;
                 };
                 manual: {
                     enabled: boolean;
                     /** @enum {string} */
-                    mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only";
+                    mode: "opt_in_only" | "any_lead" | "if_wrote" | "manual_only" | "cold_controlled";
                     daily_cap: number;
                 };
             };
@@ -13653,6 +13704,15 @@ export interface components {
                     end: string;
                 } | null;
             };
+            cold?: {
+                daily_cap: {
+                    whatsapp_cloud: number;
+                    sms: number;
+                };
+            };
+        };
+        ResumeColdResultDto: {
+            resumed: boolean;
         };
         RecordConsentDto: {
             /** @enum {string} */
@@ -20081,7 +20141,7 @@ export interface components {
             needs_opening: number;
             skipped: {
                 /** @enum {string} */
-                reason: "opted_out" | "task_open" | "no_channel" | "contact_not_found" | "error";
+                reason: "opted_out" | "task_open" | "no_channel" | "contact_not_found" | "error" | "cold_not_mobile" | "cold_already_touched" | "cold_template_required" | "cold_quality_paused";
                 count: number;
                 contact_ids: string[];
             }[];
@@ -20156,7 +20216,7 @@ export interface components {
             skipped_count: number;
             skipped: {
                 /** @enum {string} */
-                reason: "opted_out" | "task_open" | "no_channel" | "contact_not_found" | "error";
+                reason: "opted_out" | "task_open" | "no_channel" | "contact_not_found" | "error" | "cold_not_mobile" | "cold_already_touched" | "cold_template_required" | "cold_quality_paused";
                 count: number;
                 contact_ids: string[];
             }[];
@@ -20186,7 +20246,7 @@ export interface components {
             enrolled: number;
             skipped: {
                 /** @enum {string} */
-                reason: "opted_out" | "task_open" | "no_channel" | "contact_not_found" | "error";
+                reason: "opted_out" | "task_open" | "no_channel" | "contact_not_found" | "error" | "cold_not_mobile" | "cold_already_touched" | "cold_template_required" | "cold_quality_paused";
                 count: number;
                 contact_ids: string[];
             }[];
@@ -30876,6 +30936,25 @@ export interface operations {
             };
         };
     };
+    ContactsController_resumeColdWhatsapp_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResumeColdResultDto"];
+                };
+            };
+        };
+    };
     ContactsController_recordConsent_v1: {
         parameters: {
             query?: never;
@@ -33841,6 +33920,11 @@ export interface operations {
                     tag_ids?: string;
                     /** @enum {string} */
                     lifecycle_stage?: "prospect" | "lead" | "customer" | "other";
+                    /**
+                     * @description public_business_data = base de negocios de dato público: nacen sin consentimiento
+                     * @enum {string}
+                     */
+                    legal_basis?: "consented" | "public_business_data";
                 };
             };
         };
