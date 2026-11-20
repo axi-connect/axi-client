@@ -48,6 +48,7 @@ import {
   BULK_SKIP_LABELS,
   bulkFinishesAt,
   bulkPromise,
+  describeColdPace,
   exceedsDailyCap,
   type BulkDTO,
   type BulkPreviewDTO,
@@ -226,6 +227,8 @@ export function BulkFollowUpModal({
   const finishes =
     startsAtIso === "" ? null : bulkFinishesAt(new Date(startsAtIso), perHour, eligible);
   const cap = exceedsDailyCap(eligible, settings.daily_cap);
+  // Fase B: los que salen EN FRÍO por WhatsApp gastan el tope del frío del negocio.
+  const coldPace = preview?.cold_whatsapp == null ? null : describeColdPace(preview.cold_whatsapp);
   const quiet =
     when === undefined
       ? null
@@ -488,6 +491,11 @@ export function BulkFollowUpModal({
                   Tu cupo diario son <strong>{settings.daily_cap}</strong> tareas, así que el lote cruza a{" "}
                   <strong>{cap.days} días</strong>. El agente no se lo salta: lo que sobra sale al día
                   siguiente, no se pierde.
+                </Callout>
+              )}
+              {coldPace !== null && (
+                <Callout tone="warn" icon={TriangleAlert}>
+                  {coldPace}
                 </Callout>
               )}
               {quiet !== null && quiet.quiet && (

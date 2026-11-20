@@ -1,5 +1,8 @@
 import {
   BULK_LIMITS,
+  BULK_SKIP_HINTS,
+  BULK_SKIP_LABELS,
+  describeColdPace,
   bulkDayLoads,
   bulkFinishesAt,
   bulkPromise,
@@ -68,5 +71,22 @@ describe("bulk-follow-up — la promesa", () => {
 
   it("un solo contacto no dice «1 contactos»", () => {
     expect(bulkPromise({ ...base, eligible: 1, medium: "call" })).toContain("llamará a 1 contacto ");
+  });
+});
+
+describe("bulk-follow-up — ritmo del WhatsApp en frío (Fase B)", () => {
+  it("dice cuántos salen hoy y en cuántos días el resto", () => {
+    expect(describeColdPace({ contacts: 50, daily_cap: 20, remaining_today: 5 })).toBe(
+      "50 saldrían en frío por WhatsApp, con un tope de 20 al día en todo el negocio. Hoy salen 5; el resto en los próximos 3 días hábiles.",
+    );
+    expect(describeColdPace({ contacts: 3, daily_cap: 20, remaining_today: 20 })).toMatch(/Salen todos hoy/);
+    expect(describeColdPace({ contacts: 3, daily_cap: 20, remaining_today: null })).toMatch(/No pudimos leer/);
+  });
+
+  it("todo motivo de exclusión del lote tiene rótulo y remedio", () => {
+    for (const reason of ["cold_not_mobile", "cold_already_touched", "cold_template_required", "cold_quality_paused", "rne"] as const) {
+      expect(BULK_SKIP_LABELS[reason]).toBeTruthy();
+      expect(BULK_SKIP_HINTS[reason]).toBeTruthy();
+    }
   });
 });

@@ -26,6 +26,20 @@ const POLICY: Record<string, { label: string; short: string }> = {
   needs_opt_in: { label: OUTREACH_BLOCK_REASON_LABELS.needs_opt_in, short: "Sin autorización previa" },
   channel_disabled: { label: OUTREACH_BLOCK_REASON_LABELS.channel_disabled, short: "Canal apagado" },
   outside_hours: { label: OUTREACH_BLOCK_REASON_LABELS.outside_hours, short: "Fuera de horario hábil" },
+  cold_not_mobile: { label: OUTREACH_BLOCK_REASON_LABELS.cold_not_mobile, short: "No es celular" },
+  cold_already_touched: {
+    label: OUTREACH_BLOCK_REASON_LABELS.cold_already_touched,
+    short: "Ya recibió su mensaje en frío",
+  },
+  cold_daily_cap: { label: OUTREACH_BLOCK_REASON_LABELS.cold_daily_cap, short: "Tope del frío de hoy" },
+  cold_template_required: {
+    label: OUTREACH_BLOCK_REASON_LABELS.cold_template_required,
+    short: "Falta plantilla con baja",
+  },
+  cold_quality_paused: {
+    label: OUTREACH_BLOCK_REASON_LABELS.cold_quality_paused,
+    short: "Frío en pausa",
+  },
   opted_out: { label: "Se dio de baja: no se le contacta", short: "Se dio de baja" },
   daily_cap: { label: "Se llegó al tope diario de tu política; sale en la siguiente franja", short: "Tope diario" },
   no_identity: { label: "No hay a dónde escribirle por los canales del piloto", short: "Sin dato de contacto" },

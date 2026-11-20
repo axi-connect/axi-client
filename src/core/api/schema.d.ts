@@ -20141,7 +20141,7 @@ export interface components {
             needs_opening: number;
             skipped: {
                 /** @enum {string} */
-                reason: "opted_out" | "task_open" | "no_channel" | "contact_not_found" | "error" | "cold_not_mobile" | "cold_already_touched" | "cold_template_required" | "cold_quality_paused";
+                reason: "opted_out" | "task_open" | "no_channel" | "contact_not_found" | "error" | "cold_not_mobile" | "cold_already_touched" | "cold_template_required" | "cold_quality_paused" | "rne";
                 count: number;
                 contact_ids: string[];
             }[];
@@ -20152,6 +20152,11 @@ export interface components {
             within_limit: boolean;
             max: number;
             agent_tasks_enabled: boolean;
+            cold_whatsapp?: {
+                contacts: number;
+                daily_cap: number;
+                remaining_today: number | null;
+            } | null;
         };
         CreateBulkDto: {
             /** @enum {string} */
@@ -20216,7 +20221,7 @@ export interface components {
             skipped_count: number;
             skipped: {
                 /** @enum {string} */
-                reason: "opted_out" | "task_open" | "no_channel" | "contact_not_found" | "error" | "cold_not_mobile" | "cold_already_touched" | "cold_template_required" | "cold_quality_paused";
+                reason: "opted_out" | "task_open" | "no_channel" | "contact_not_found" | "error" | "cold_not_mobile" | "cold_already_touched" | "cold_template_required" | "cold_quality_paused" | "rne";
                 count: number;
                 contact_ids: string[];
             }[];
@@ -20246,7 +20251,7 @@ export interface components {
             enrolled: number;
             skipped: {
                 /** @enum {string} */
-                reason: "opted_out" | "task_open" | "no_channel" | "contact_not_found" | "error" | "cold_not_mobile" | "cold_already_touched" | "cold_template_required" | "cold_quality_paused";
+                reason: "opted_out" | "task_open" | "no_channel" | "contact_not_found" | "error" | "cold_not_mobile" | "cold_already_touched" | "cold_template_required" | "cold_quality_paused" | "rne";
                 count: number;
                 contact_ids: string[];
             }[];

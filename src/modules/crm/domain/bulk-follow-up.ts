@@ -35,6 +35,7 @@ export const BULK_SKIP_LABELS: Record<BulkSkipReason, string> = {
   cold_already_touched: "Ya recibieron su mensaje en frío",
   cold_template_required: "Falta una plantilla con botón de baja",
   cold_quality_paused: "El WhatsApp en frío está en pausa",
+  rne: "Están en el Registro de Números Excluidos",
 };
 
 /** Qué puede hacer el operador con cada motivo. `null` = nada, es definitivo. */
@@ -51,6 +52,7 @@ export const BULK_SKIP_HINTS: Record<BulkSkipReason, string | null> = {
     "Para escribir en frío por WhatsApp crea una plantilla de marketing con botón «No me interesa» y espera la aprobación de Meta.",
   cold_quality_paused:
     "Se pausó porque bajó la calidad del número. Reanúdalo en Marketing › Configuración › Política de contacto.",
+  rne: "Pidieron no recibir publicidad en su celular: en frío no se les escribe.",
 };
 
 const HOUR_MS = 3_600_000;
@@ -125,4 +127,23 @@ export function bulkPromise(input: {
     `${input.agentName} ${verb} ${contacts} desde el ${input.startLabel}, ` +
     `a ${String(input.perHour)} por hora${tail}.`
   );
+}
+
+/**
+ * Fase B: el tope del WhatsApp en frío dicho en días (espejo de `coldPaceLine`
+ * de lote_simular en el servidor). Cada tarea vuelve a pedir su cupo al salir.
+ */
+export function describeColdPace(cold: {
+  contacts: number;
+  daily_cap: number;
+  remaining_today: number | null;
+}): string {
+  const head = `${cold.contacts.toLocaleString("es-CO")} saldrían en frío por WhatsApp, con un tope de ${cold.daily_cap.toLocaleString("es-CO")} al día en todo el negocio.`;
+  if (cold.daily_cap === 0) return `${head} Con el tope en 0 no sale ninguno.`;
+  if (cold.remaining_today === null) return `${head} No pudimos leer cuántos van hoy.`;
+  const today = Math.min(cold.contacts, cold.remaining_today);
+  const rest = cold.contacts - today;
+  if (rest === 0) return `${head} Salen todos hoy.`;
+  const days = Math.ceil(rest / cold.daily_cap);
+  return `${head} Hoy salen ${today.toLocaleString("es-CO")}; el resto en ${days === 1 ? "el próximo día hábil" : `los próximos ${days} días hábiles`}.`;
 }

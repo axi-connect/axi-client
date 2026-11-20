@@ -73,7 +73,7 @@ export const OUTREACH_CHANNELS_SHOWN: readonly OutreachChannelMeta[] = [
     key: "sms",
     label: "SMS",
     description:
-      "Solo a celulares. Cada SMS termina con «Responde NO o BAJA para no recibir mas» y la respuesta da de baja sola.",
+      "Solo a celulares. Cada SMS lleva la forma de darse de baja («Responde BAJA»; en frío, «NO o BAJA») y la respuesta da de baja sola.",
     choice: { kind: "mode" },
     number_at_stake: true,
   },
@@ -141,12 +141,12 @@ export function coldBrakes(key: ColdChannelKey, dailyCap: number): string[] {
   return [
     "Solo a negocios de dato público o referidos; nunca a quien no sabes de dónde salió",
     "Solo celulares: nunca fijos",
-    "Nunca a bajas, lista de supresión ni RNE",
+    "Nunca a bajas ni a la lista de supresión (el RNE se revisará cuando la CRC publique cómo consultarlo)",
     "Un mensaje en frío por negocio hasta que responda",
     `Máximo ${dailyCap.toLocaleString("es-CO")} al día en todo el negocio`,
     key === "whatsapp_cloud"
       ? "Solo con plantilla de marketing aprobada que tenga botón de baja («No me interesa»)"
-      : "Con «Responde NO o BAJA»: la respuesta da de baja sola",
+      : "Con «Responde NO o BAJA»: esa primera respuesta da de baja sola",
     ...(key === "whatsapp_cloud"
       ? ["Se pausa sola si baja la calidad del número; la reanudas tú"]
       : []),
