@@ -130,7 +130,7 @@ export const SEQUENCE_TEMPLATES: readonly {
         objective: "Presentarnos con un dato concreto de su negocio",
         subject: "Una idea para {{business_name}}",
         body:
-          "Hola {{first_name}}:\n\nAyudamos a negocios como {{business_name}} a responder a sus clientes por WhatsApp en segundos, también fuera de horario.\n\n¿Te sirve que te muestre en 15 minutos cómo se vería en tu negocio?\n\n{{sender_name}}",
+          "Hola {{first_name}}:\n\nAyudamos a negocios como {{business_name}} a responder a sus clientes por WhatsApp en segundos, también fuera de horario.\n\n¿Te sirve que te muestre en 15 minutos cómo se vería en tu negocio?\n\n{{sender_signature}}",
       },
       {
         offset_hours: 24,
@@ -145,7 +145,7 @@ export const SEQUENCE_TEMPLATES: readonly {
         objective: "Hacer una pregunta sobre cómo atienden hoy",
         subject: "Una pregunta rápida sobre {{business_name}}",
         body:
-          "Hola {{first_name}}:\n\n¿Cuánto tardan hoy en contestar un WhatsApp de un cliente nuevo? Si te sirve, te muestro en 15 minutos cómo se vería contestar en segundos en {{business_name}}.\n\n{{sender_name}}",
+          "Hola {{first_name}}:\n\n¿Cuánto tardan hoy en contestar un WhatsApp de un cliente nuevo? Si te sirve, te muestro en 15 minutos cómo se vería contestar en segundos en {{business_name}}.\n\n{{sender_signature}}",
       },
       {
         offset_hours: 168,
@@ -166,7 +166,7 @@ export const SEQUENCE_TEMPLATES: readonly {
         objective: "Cerrar con elegancia y dejar la puerta abierta",
         subject: "¿Lo dejamos para más adelante?",
         body:
-          "Hola {{first_name}}:\n\nNo quiero llenarte el correo. Si ahora no es el momento, lo entiendo; te escribo en unos meses. Si te interesa antes, solo responde este correo.\n\n{{sender_name}}",
+          "Hola {{first_name}}:\n\nNo quiero llenarte el correo. Si ahora no es el momento, lo entiendo; te escribo en unos meses. Si te interesa antes, solo responde este correo.\n\n{{sender_signature}}",
       },
     ],
   },
@@ -196,7 +196,7 @@ export const SEQUENCE_TEMPLATES: readonly {
         task_channel: "email",
         objective: "Una idea práctica para el trimestre, sin vender",
         subject: "Una idea para este trimestre, {{first_name}}",
-        body: "Hola {{first_name}}:\n\n[Comparte aquí un dato o una idea útil para negocios como {{business_name}}. Sin pedir nada a cambio.]\n\n{{sender_name}}",
+        body: "Hola {{first_name}}:\n\n[Comparte aquí un dato o una idea útil para negocios como {{business_name}}. Sin pedir nada a cambio.]\n\n{{sender_signature}}",
       },
       { offset_hours: 1440, task_channel: "manual", objective: "Felicitar por un logro o una novedad suya", body: "Hola {{first_name}}, vi [la novedad]. ¡Felicitaciones! [Una línea propia.]" },
       {
@@ -204,7 +204,7 @@ export const SEQUENCE_TEMPLATES: readonly {
         task_channel: "email",
         objective: "Contar otro caso, de otro problema distinto",
         subject: "Otro caso que quizá te suene",
-        body: "Hola {{first_name}}:\n\n[Cuenta un caso REAL de un cliente tuyo, con su permiso: qué problema tenía y qué cambió.]\n\n{{sender_name}}",
+        body: "Hola {{first_name}}:\n\n[Cuenta un caso REAL de un cliente tuyo, con su permiso: qué problema tenía y qué cambió.]\n\n{{sender_signature}}",
       },
       { offset_hours: 2880, task_channel: "sms", objective: "Una pregunta corta sobre su temporada", body: "Hola {{first_name}}, soy de {{sender_name}}. ¿Cómo viene [temporada] para {{business_name}}?" },
       {
@@ -212,7 +212,7 @@ export const SEQUENCE_TEMPLATES: readonly {
         task_channel: "email",
         objective: "Un aprendizaje del año que le sirva, sin vender",
         subject: "Para cerrar el año, {{first_name}}",
-        body: "Hola {{first_name}}:\n\n[Comparte aquí un dato o una idea útil para negocios como {{business_name}}. Sin pedir nada a cambio.]\n\n{{sender_name}}",
+        body: "Hola {{first_name}}:\n\n[Comparte aquí un dato o una idea útil para negocios como {{business_name}}. Sin pedir nada a cambio.]\n\n{{sender_signature}}",
       },
       { offset_hours: 4320, task_channel: "manual", objective: "Recomendar algo útil sin relación con vender", body: "Hola {{first_name}}, me acordé de ustedes con [recurso o contacto útil]. [Por qué les sirve.]" },
       {
@@ -220,7 +220,7 @@ export const SEQUENCE_TEMPLATES: readonly {
         task_channel: "email",
         objective: "Contar qué cambió para un cliente en un año",
         subject: "Un año después, en un negocio como {{business_name}}",
-        body: "Hola {{first_name}}:\n\n[Cuenta un caso REAL de un cliente tuyo, con su permiso: qué problema tenía y qué cambió.]\n\n{{sender_name}}",
+        body: "Hola {{first_name}}:\n\n[Cuenta un caso REAL de un cliente tuyo, con su permiso: qué problema tenía y qué cambió.]\n\n{{sender_signature}}",
       },
       { offset_hours: 5760, task_channel: "sms", objective: "Un saludo de cierre de año, sin pedir nada", body: "Hola {{first_name}}, soy de {{sender_name}}. Que cierren bien el año en {{business_name}}. [Una línea propia.]" },
       {
@@ -228,7 +228,7 @@ export const SEQUENCE_TEMPLATES: readonly {
         task_channel: "email",
         objective: "Compartir algo útil de su sector, sin vender",
         subject: "Algo que te puede servir, {{first_name}}",
-        body: "Hola {{first_name}}:\n\n[Comparte aquí un dato o una idea útil para negocios como {{business_name}}. Sin pedir nada a cambio.]\n\n{{sender_name}}",
+        body: "Hola {{first_name}}:\n\n[Comparte aquí un dato o una idea útil para negocios como {{business_name}}. Sin pedir nada a cambio.]\n\n{{sender_signature}}",
       },
       { offset_hours: 7200, task_channel: "manual", objective: "Comentar o reaccionar a algo que publicaron", body: "Hola {{first_name}}, vi lo que publicaron sobre [tema]. [Un comentario corto y sincero.]" },
       {
@@ -236,7 +236,7 @@ export const SEQUENCE_TEMPLATES: readonly {
         task_channel: "email",
         objective: "Contar un caso de un negocio parecido",
         subject: "Cómo lo resolvió un negocio como {{business_name}}",
-        body: "Hola {{first_name}}:\n\n[Cuenta un caso REAL de un cliente tuyo, con su permiso: qué problema tenía y qué cambió.]\n\n{{sender_name}}",
+        body: "Hola {{first_name}}:\n\n[Cuenta un caso REAL de un cliente tuyo, con su permiso: qué problema tenía y qué cambió.]\n\n{{sender_signature}}",
       },
       { offset_hours: 8640, task_channel: "sms", objective: "Saludo breve y una pregunta abierta", body: "Hola {{first_name}}, soy de {{sender_name}}. ¿Cómo les va con [tema] este mes?" },
     ],
