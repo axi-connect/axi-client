@@ -298,7 +298,7 @@ export function LabelPanel({ kind, companyId, item, pending, onDecide, onDelete 
       </div>
 
       {/* ---- barra de acción: la isla de tinta de esta pantalla */}
-      <Island material="ink" className="mt-auto flex flex-wrap items-center gap-3 rounded-2xl px-4 py-3 [--island-glow-at:10%_0%] [--island-glow-mix:30%]">
+      <Island material="ink" className="mt-auto flex flex-wrap items-center gap-3 rounded-2xl px-4 py-3">
         <span className="min-w-0 basis-full xl:basis-auto xl:flex-1">
           <span className="block text-[11px] opacity-70">Etiqueta esperada</span>
           <span className="block truncate font-mono text-sm" aria-live="polite">

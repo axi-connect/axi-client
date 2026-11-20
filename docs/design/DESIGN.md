@@ -86,7 +86,7 @@ src/app/                       # convenciones de Next (se auto-conectan al <head
 La firma visual de Axi Connect es el **gradiente tricolor** del isotipo:
 
 - **Gradiente completo** (coral → ámbar → violeta): reservado para momentos hero — landing, onboarding, empty states destacados, texto de marca (`.text-brand-gradient`).
-- **Gradiente corto** (coral → violeta): CTA especiales y detalles decorativos (bordes de avatar de IA, barras de progreso de marca).
+- **Gradiente corto** (coral → violeta): CTA especiales y detalles decorativos (bordes de avatar de IA, barras de progreso de marca, el hilo de la isla de tinta).
 - Prohibido usar gradientes de colores ajenos a la paleta (los `from-pink-400`, `from-teal-400`… del antiguo `gradients.ts` ya se retiraron).
 
 ### 3.3 Neutros
@@ -154,9 +154,11 @@ Lenguaje de formas iOS: radios amplios y continuos.
 Las vistas «de un vistazo» (el Resumen de un tenant en `/platform`) se construyen como un
 tablero de iOS: fichas blancas de un solo tema —una etiqueta pequeña, una cifra grande en
 Nexa con su unidad, una línea que dice qué significa— y **una** isla de tinta con lo más
-accionable («Lo próximo»), con un brillo coral detrás. La isla es un material del sistema
-(DESIGN-SYSTEM §9.5.1): **cristal blanco** por defecto, cristal negro o tinta. Las barras de
-acción pegadas abajo van siempre en **tinta**. Nada de tiles de vanidad: cada ficha
+accionable («Lo próximo»). La isla es un material del sistema (DESIGN-SYSTEM §9.5.1):
+**tinta «Firma»** —casi negra, con el hilo coral → violeta de las cintas del isotipo en su
+borde superior (solo violeta si lo propone la IA)—, la misma en las barras de acción pegadas
+abajo. Sin halos ni brillos de color: la isla manda por contraste, no por neón (dueño,
+2026-11-20, mockup `docs/design/mockups/isla-tinta-premium/`). Nada de tiles de vanidad: cada ficha
 dice qué sigue o de dónde sale su cifra. Receta técnica, rejilla y trampas en DESIGN-SYSTEM
 §9.5–§9.8; verificación visual obligatoria en §12. Mockups aprobados:
 `docs/design/mockups/entrega-bienvenida-premium/` y, para el Panel del tenant,

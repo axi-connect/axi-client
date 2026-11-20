@@ -4,13 +4,17 @@ import { InkIsland } from "@/shared/components/features/bento";
 import { Island, ISLAND_DEFAULTS, islandClassName } from "@/shared/components/features/island";
 
 describe("islandClassName", () => {
-  it("sin nada pide, usa ISLAND_DEFAULTS", () => {
-    expect(ISLAND_DEFAULTS).toEqual({ material: "glass", tone: "light", glow: "brand" });
-    expect(islandClassName()).toBe("island island-glass surface-light island-glow-brand");
+  it("sin nada pide, usa ISLAND_DEFAULTS: tinta con el hilo de marca", () => {
+    expect(ISLAND_DEFAULTS).toEqual({ material: "ink", tone: "light", glow: "brand" });
+    expect(islandClassName()).toBe("island island-ink surface-dark island-glow-brand");
+  });
+
+  it("el cristal blanco sigue disponible por llamada", () => {
+    expect(islandClassName({ material: "glass" })).toBe("island island-glass surface-light island-glow-brand");
   });
 
   it("el cristal negro es una superficie oscura", () => {
-    expect(islandClassName({ tone: "dark", glow: "ai" })).toBe("island island-glass surface-dark island-glow-ai");
+    expect(islandClassName({ material: "glass", tone: "dark", glow: "ai" })).toBe("island island-glass surface-dark island-glow-ai");
   });
 
   it("la tinta siempre es oscura, aunque se pida tono claro", () => {
@@ -39,7 +43,7 @@ describe("InkIsland", () => {
   it("es una región con nombre, con el aspecto por defecto", () => {
     render(<InkIsland label="Lo próximo">contenido</InkIsland>);
     const region = screen.getByRole("region", { name: "Lo próximo" });
-    expect(region).toHaveClass("island-glass", "surface-light", "p-6");
+    expect(region).toHaveClass("island-ink", "surface-dark", "island-glow-brand", "p-6");
   });
 
   it("deja elegir otro material por llamada", () => {
