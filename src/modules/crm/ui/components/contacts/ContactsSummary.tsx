@@ -75,7 +75,7 @@ export function ContactsSummary() {
     <div className="@container shrink-0">
       <section
         aria-label="Resumen de contactos"
-        className="sidebar-scroll -mx-4 flex snap-x gap-3 overflow-x-auto overscroll-x-contain scroll-px-4 px-4 pb-2 md:-mx-6 md:scroll-px-6 md:px-6 @min-[56rem]:mx-0 @min-[56rem]:grid @min-[56rem]:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(17rem,20rem)] @min-[56rem]:gap-4 @min-[56rem]:overflow-visible @min-[56rem]:px-0 @min-[56rem]:pb-0"
+        className="sidebar-scroll axi-scroll-fade-x -mx-4 flex snap-x gap-3 overflow-x-auto overscroll-x-contain scroll-px-4 px-4 pb-2 md:-mx-6 md:scroll-px-6 md:px-6 @min-[56rem]:mx-0 @min-[56rem]:grid @min-[56rem]:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(17rem,20rem)] @min-[56rem]:gap-4 @min-[56rem]:overflow-visible @min-[56rem]:px-0 @min-[56rem]:pb-0"
       >
         <BentoTile
           label="Nuevos"

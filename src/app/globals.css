@@ -1070,19 +1070,20 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   html, body { scroll-behavior: auto; }
 }
 
-/* -------- Scroll de marca (DESIGN-SYSTEM §4.3) --------
+/* -------- Scroll de marca «Hilo» (DESIGN-SYSTEM §4.2) --------
    `axi-scroll` va en TODO contenedor con `overflow-*-auto`. `sidebar-scroll`
    es el nombre histórico (sidebars, PlatformShell, diálogos) y queda como
-   alias exacto. Riel transparente, pulgar de 6 px con el degradado de marca
-   que se afirma al pasar el cursor. */
+   alias exacto. Elegido por el dueño el 2026-11-20 (opción 3 del mockup
+   docs/design/mockups/isla-tinta-premium): sin riel; en reposo, un pulgar gris
+   de 4 px que no compite con el contenido; al agarrarlo engorda a 6 px y toma
+   el hilo coral → violeta de la isla Firma. La marca aparece solo al usarlo. */
 
-/* WebKit (Chrome, Edge, Safari) */
+/* WebKit (Chrome, Edge, Safari). La caja mide 12 px y el borde transparente
+   deja el pulgar en 4 px: el área para agarrarlo es más ancha que lo que se ve. */
 .axi-scroll::-webkit-scrollbar,
 .sidebar-scroll::-webkit-scrollbar {
-  width: 6px;
-  /* La barra horizontal (kanban, tiras de tarjetas) se agarra con el cursor:
-     más alta que la vertical. */
-  height: 10px;
+  width: 12px;
+  height: 12px;
 }
 
 .axi-scroll::-webkit-scrollbar-track,
@@ -1094,27 +1095,83 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 
 .axi-scroll::-webkit-scrollbar-thumb,
 .sidebar-scroll::-webkit-scrollbar-thumb {
-  background-image: radial-gradient(circle, var(--axi-brand), transparent);
+  background-color: color-mix(in srgb, var(--foreground) 20%, transparent);
+  border: 4px solid transparent;
   border-radius: 9999px;
-  background-clip: content-box;
+  background-clip: padding-box;
 }
 
-.axi-scroll::-webkit-scrollbar-thumb:hover,
-.sidebar-scroll::-webkit-scrollbar-thumb:hover {
-  background-image: radial-gradient(
-    circle,
-    var(--axi-brand),
-    color-mix(in oklab, var(--axi-brand) 35%, transparent)
-  );
+/* Al agarrarlo: 6 px y el hilo, en la dirección del recorrido. */
+.axi-scroll::-webkit-scrollbar-thumb:vertical:hover,
+.axi-scroll::-webkit-scrollbar-thumb:vertical:active,
+.sidebar-scroll::-webkit-scrollbar-thumb:vertical:hover,
+.sidebar-scroll::-webkit-scrollbar-thumb:vertical:active {
+  border-width: 3px;
+  background-image: linear-gradient(180deg, var(--axi-brand), var(--axi-violet));
+}
+.axi-scroll::-webkit-scrollbar-thumb:horizontal:hover,
+.axi-scroll::-webkit-scrollbar-thumb:horizontal:active,
+.sidebar-scroll::-webkit-scrollbar-thumb:horizontal:hover,
+.sidebar-scroll::-webkit-scrollbar-thumb:horizontal:active {
+  border-width: 3px;
+  background-image: linear-gradient(90deg, var(--axi-brand), var(--axi-violet));
 }
 
-/* Firefox: sin pseudo-elementos, la propiedad estándar. Solo donde no hay
-   ::-webkit-scrollbar — en Chrome `scrollbar-color` anularía el degradado. */
+/* Firefox: sin pseudo-elementos, la propiedad estándar con el gris de reposo.
+   Solo donde no hay ::-webkit-scrollbar: en Chrome `scrollbar-color` anularía
+   los pseudo-elementos. */
 @supports not selector(::-webkit-scrollbar) {
   .axi-scroll,
   .sidebar-scroll {
     scrollbar-width: thin;
-    scrollbar-color: color-mix(in oklab, var(--axi-brand) 55%, transparent) transparent;
+    scrollbar-color: color-mix(in srgb, var(--foreground) 28%, transparent) transparent;
+  }
+}
+
+/* -------- Bordes que se difuminan (`axi-scroll-fade-x`) --------
+   Para las tiras horizontales (kanban, carruseles de fichas, adjuntos): el
+   borde por donde queda contenido se difumina 48 px, así la tira avisa que
+   sigue aunque la barra no se vea (en el celular nunca se ve). Lo mueve el
+   propio scroll (`animation-timeline`), sin JS; donde no hay soporte no hay
+   máscara. No va en tablas: difuminaría la columna fija. La máscara vive en
+   el @keyframes, sin máscara fija fuera de él. */
+@property --scroll-fade-start {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --scroll-fade-end {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@supports (animation-timeline: scroll()) {
+  .axi-scroll-fade-x {
+    animation: axi-scroll-fade-x linear both;
+    animation-timeline: scroll(self inline);
+  }
+  /* Con foco de teclado se quita: el anillo y el borde quedan enteros. */
+  .axi-scroll-fade-x:focus-visible {
+    animation: none;
+  }
+}
+@keyframes axi-scroll-fade-x {
+  0% {
+    --scroll-fade-start: 0px;
+    --scroll-fade-end: 48px;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 var(--scroll-fade-start), #000 calc(100% - var(--scroll-fade-end)), transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0, #000 var(--scroll-fade-start), #000 calc(100% - var(--scroll-fade-end)), transparent 100%);
+  }
+  6%,
+  94% {
+    --scroll-fade-start: 48px;
+    --scroll-fade-end: 48px;
+  }
+  100% {
+    --scroll-fade-start: 48px;
+    --scroll-fade-end: 0px;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 var(--scroll-fade-start), #000 calc(100% - var(--scroll-fade-end)), transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0, #000 var(--scroll-fade-start), #000 calc(100% - var(--scroll-fade-end)), transparent 100%);
   }
 }
 

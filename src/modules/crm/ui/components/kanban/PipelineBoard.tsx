@@ -98,7 +98,7 @@ export function PipelineBoard({
         aria-label="Tablero del pipeline"
         tabIndex={0}
         className={cn(
-          "sidebar-scroll flex h-full min-h-0 snap-x gap-3 overflow-x-auto overflow-y-hidden overscroll-x-contain pb-2 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40 rounded-3xl",
+          "sidebar-scroll axi-scroll-fade-x flex h-full min-h-0 snap-x gap-3 overflow-x-auto overflow-y-hidden overscroll-x-contain pb-2 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40 rounded-3xl",
           selectedId !== null && "lg:scroll-pr-[29rem] lg:pr-[29rem]",
         )}
       >

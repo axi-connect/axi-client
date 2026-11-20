@@ -90,7 +90,7 @@ export function OrdersKanban({ canManage, onCardAction, onDropAction }: OrdersKa
         canManage={canManage}
         onReview={(order) => onCardAction(order, { type: "verify_payment" })}
       />
-      <div className="sidebar-scroll flex min-h-0 flex-1 snap-x gap-3 overflow-x-auto pb-1">
+      <div className="sidebar-scroll axi-scroll-fade-x flex min-h-0 flex-1 snap-x gap-3 overflow-x-auto pb-1">
         {KANBAN_COLUMNS.map((status) => (
           <KanbanColumn
             key={status}

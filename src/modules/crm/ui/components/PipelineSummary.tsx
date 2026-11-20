@@ -66,7 +66,7 @@ export function PipelineSummary({
     <div className="@container shrink-0">
       <section
         aria-label="Resumen del pipeline"
-        className="sidebar-scroll -mx-4 flex snap-x gap-3 overflow-x-auto overscroll-x-contain scroll-px-4 px-4 pb-2 md:-mx-6 md:scroll-px-6 md:px-6 @min-[66rem]:mx-0 @min-[66rem]:grid @min-[66rem]:grid-cols-[repeat(3,minmax(0,1fr))_minmax(17rem,20rem)] @min-[66rem]:gap-4 @min-[66rem]:overflow-visible @min-[66rem]:px-0 @min-[66rem]:pb-0"
+        className="sidebar-scroll axi-scroll-fade-x -mx-4 flex snap-x gap-3 overflow-x-auto overscroll-x-contain scroll-px-4 px-4 pb-2 md:-mx-6 md:scroll-px-6 md:px-6 @min-[66rem]:mx-0 @min-[66rem]:grid @min-[66rem]:grid-cols-[repeat(3,minmax(0,1fr))_minmax(17rem,20rem)] @min-[66rem]:gap-4 @min-[66rem]:overflow-visible @min-[66rem]:px-0 @min-[66rem]:pb-0"
       >
         {stats === null ? (
           <>

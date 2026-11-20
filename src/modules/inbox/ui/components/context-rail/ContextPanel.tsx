@@ -118,7 +118,7 @@ export function ContextPanel({
 
         {/* Celular: el riel no existe; las pestañas de los paneles viven aquí. */}
         {panels.length > 1 && (
-          <nav aria-label="Paneles de contexto" className="sidebar-scroll flex shrink-0 gap-1.5 overflow-x-auto border-b border-border px-3.5 py-2.5 md:hidden">
+          <nav aria-label="Paneles de contexto" className="sidebar-scroll axi-scroll-fade-x flex shrink-0 gap-1.5 overflow-x-auto border-b border-border px-3.5 py-2.5 md:hidden">
             {panels.map((item) => {
               const active = item.id === panel.id;
               return (

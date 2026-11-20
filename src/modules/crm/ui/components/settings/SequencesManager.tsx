@@ -370,7 +370,7 @@ function toDraft(sequence: SequenceDTO): Draft {
 /** El camino de la secuencia: un punto por paso, con su día y su medio. */
 function StepFlow({ steps }: { steps: readonly { offset_hours: number; task_channel: SequenceMedium; objective?: string }[] }) {
   return (
-    <ol className="sidebar-scroll flex min-w-0 gap-0 overflow-x-auto pb-1" aria-label="Pasos">
+    <ol className="sidebar-scroll axi-scroll-fade-x flex min-w-0 gap-0 overflow-x-auto pb-1" aria-label="Pasos">
       {steps.map((step, index) => {
         const Icon = MEDIUM_ICONS[step.task_channel];
         const last = index === steps.length - 1;

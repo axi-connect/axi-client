@@ -147,7 +147,7 @@ export function AttachmentTray({
 }) {
   if (attachments.length === 0) return null
   return (
-    <div className="sidebar-scroll flex gap-2 overflow-x-auto px-3 pt-3 pb-1" role="list" aria-label="Adjuntos por enviar">
+    <div className="sidebar-scroll axi-scroll-fade-x flex gap-2 overflow-x-auto px-3 pt-3 pb-1" role="list" aria-label="Adjuntos por enviar">
       {attachments.map((attachment) => (
         <TrayItem
           key={attachment.local_id}
