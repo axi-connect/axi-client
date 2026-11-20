@@ -33,8 +33,6 @@ K.extra_css = """
 .sig-who{min-width:0;font-size:13.5px;line-height:1.5}
 .sig-who b{display:block;font-size:14.5px;font-weight:600}
 .sig-who span{display:block;color:var(--muted-foreground)}
-.sig-vars{margin-top:12px;font-size:12.5px;color:var(--muted-foreground);display:flex;flex-wrap:wrap;gap:6px 12px}
-.sig-vars code{font-family:var(--font-mono);font-size:12px;background:var(--muted);border-radius:6px;padding:2px 6px;color:var(--foreground)}
 .sig-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}
 .input.err{border-color:var(--axi-destructive)}
 .hint.err{color:var(--axi-destructive)}
@@ -95,12 +93,6 @@ def signature_block(state: str) -> str:
           <div class="sig-actions">{btn("Cancelar", cls="ghost")}{btn("Guardar firma", attrs='disabled' if err else '')}</div>
         </div>"""
     filled = state == "filled"
-    vars_line = (
-        '<div class="sig-vars"><span><code>{{sender_name}}</code> = Cristian Velásquez</span>'
-        '<span><code>{{sender_signature}}</code> = este bloque</span></div>'
-        if filled
-        else '<div class="sig-vars"><span><code>{{sender_name}}</code> = Axi Connect</span></div>'
-    )
     call = (
         ""
         if filled
@@ -115,7 +107,6 @@ def signature_block(state: str) -> str:
           <p class="lead small">La persona que firma tus correos y SMS de prospección.</p>
           {call}
           {preview_card(filled)}
-          {vars_line}
           <div class="sig-actions">{btn("Editar firma" if filled else "Agregar firma", icon="pencil" if filled else "plus", cls="outline")}</div>
         </div>"""
 
@@ -152,7 +143,7 @@ def view_mobile() -> str:
 
 
 VIEWS = [
-    ("con-firma", "1 · Con firma", page("filled"), "La tarjeta «Correo de prospección» de Mi empresa › General gana la mitad «Quién firma»: vista previa de la firma tal como cierra el correo y qué valen las variables. El remitente visible pasa a «Cristian Velásquez · Axi Connect»; la dirección no cambia."),
+    ("con-firma", "1 · Con firma", page("filled"), "La tarjeta «Correo de prospección» de Mi empresa › General gana la mitad «Quién firma»: vista previa de la firma tal como cierra el correo. El remitente visible pasa a «Cristian Velásquez · Axi Connect»; la dirección no cambia."),
     ("editando", "2 · Editando", page("edit"), "«Editar firma» abre el formulario EN la tarjeta (cinco campos, sin modal). Guardar es un PUT de la firma entera; Cancelar vuelve a la vista previa. Mismo permiso que editar la empresa."),
     ("sin-firma", "3 · Sin firma (hoy)", page("empty"), "Así queda un negocio que no ha guardado firma: todo sigue como antes (firma el negocio) y un aviso suave invita a agregar la persona."),
     ("error", "4 · Error", page("error"), "Foto y sitio solo https://. El error va debajo del campo, en rojo (destructivo), y Guardar se apaga hasta corregirlo."),

@@ -253,8 +253,6 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
 .sig-who{min-width:0;font-size:13.5px;line-height:1.5}
 .sig-who b{display:block;font-size:14.5px;font-weight:600}
 .sig-who span{display:block;color:var(--muted-foreground)}
-.sig-vars{margin-top:12px;font-size:12.5px;color:var(--muted-foreground);display:flex;flex-wrap:wrap;gap:6px 12px}
-.sig-vars code{font-family:var(--font-mono);font-size:12px;background:var(--muted);border-radius:6px;padding:2px 6px;color:var(--foreground)}
 .sig-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}
 .input.err{border-color:var(--axi-destructive)}
 .hint.err{color:var(--axi-destructive)}
@@ -269,7 +267,7 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
   <div class="mk-views" role="group" aria-label="Vistas del mockup"><button class="mk-view" data-view="con-firma" aria-pressed="false">1 · Con firma</button><button class="mk-view" data-view="editando" aria-pressed="false">2 · Editando</button><button class="mk-view" data-view="sin-firma" aria-pressed="false">3 · Sin firma (hoy)</button><button class="mk-view" data-view="error" aria-pressed="false">4 · Error</button><button class="mk-view" data-view="movil" aria-pressed="false">5 · Móvil</button><button class="mk-theme" id="theme">Tema</button></div>
   <span class="mk-note" id="mk-note"></span>
 </div>
-<section class="view" data-view="con-firma" data-note="La tarjeta «Correo de prospección» de Mi empresa › General gana la mitad «Quién firma»: vista previa de la firma tal como cierra el correo y qué valen las variables. El remitente visible pasa a «Cristian Velásquez · Axi Connect»; la dirección no cambia." hidden><div class="page">
+<section class="view" data-view="con-firma" data-note="La tarjeta «Correo de prospección» de Mi empresa › General gana la mitad «Quién firma»: vista previa de la firma tal como cierra el correo. El remitente visible pasa a «Cristian Velásquez · Axi Connect»; la dirección no cambia." hidden><div class="page">
     <nav class="crumb" aria-label="Breadcrumb">Ajustes <svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg> <b>Mi empresa</b></nav>
     <div class="header">
       <div><h1>Axi Connect</h1><p class="lead">Datos, sucursales y funciones de tu empresa.</p></div>
@@ -297,7 +295,6 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
           <div class="sig-photo has" aria-hidden="true">CV</div>
           <div class="sig-who"><b>Cristian Velásquez</b><span>Fundador y CTO · Axi Connect</span><span>axi-connect.co · +57 318 013 9091</span></div>
         </div>
-          <div class="sig-vars"><span><code>{{sender_name}}</code> = Cristian Velásquez</span><span><code>{{sender_signature}}</code> = este bloque</span></div>
           <div class="sig-actions"><button class="btn outline" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>Editar firma</button></div>
         </div>
       </div>
@@ -370,7 +367,6 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
           <div class="sig-photo" aria-hidden="true"><svg class="ic " width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg></div>
           <div class="sig-who"><b>Axi Connect</b><span>Sin persona: firma el negocio</span></div>
         </div>
-          <div class="sig-vars"><span><code>{{sender_name}}</code> = Axi Connect</span></div>
           <div class="sig-actions"><button class="btn outline" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Agregar firma</button></div>
         </div>
       </div>
@@ -439,7 +435,6 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
           <div class="sig-photo has" aria-hidden="true">CV</div>
           <div class="sig-who"><b>Cristian Velásquez</b><span>Fundador y CTO · Axi Connect</span><span>axi-connect.co · +57 318 013 9091</span></div>
         </div>
-          <div class="sig-vars"><span><code>{{sender_name}}</code> = Cristian Velásquez</span><span><code>{{sender_signature}}</code> = este bloque</span></div>
           <div class="sig-actions"><button class="btn outline" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>Editar firma</button></div>
         </div>
       </div>
