@@ -6,7 +6,7 @@ import { Building2, Info, Mail, PenLine, Pencil, Plus, TriangleAlert } from "luc
 import { errorMessage } from "@/core/lib/error-messages"
 import { useAlert } from "@/core/providers/alert-provider"
 import { useAuthContext } from "@/core/providers/auth-provider"
-import { FieldList } from "@/shared/components/features/field-list"
+import { CopyButton } from "@/shared/components/features/field-list"
 import { Avatar } from "@/shared/components/ui/avatar"
 import { Button } from "@/shared/components/ui/button"
 import { Callout } from "@/shared/components/ui/callout"
@@ -89,21 +89,29 @@ export function OutreachSenderCard() {
 function SenderBlock({ sender }: { sender: OutreachSenderDTO }) {
   return (
     <div className="min-w-0">
-      <h3 className="mb-1 flex items-center gap-1.5 text-sm font-medium">
+      <h3 className="mb-1 flex items-center gap-1.5 font-sans text-sm font-semibold">
         <Mail aria-hidden className="size-4" /> Sale desde
       </h3>
       <p className="mb-3 text-xs text-pretty text-muted-foreground">
         Tus correos de prospección salen de esta dirección y las respuestas llegan a tu CRM. La dirección no se
         configura.
       </p>
-      <FieldList
-        layout="grid"
-        items={[
-          // En bloque: la dirección ES el dato; truncada en el móvil no se leía.
-          { label: "Dirección", value: <span className="break-all">{sender.address}</span>, copyable: sender.address, block: true },
-          { label: "Lo que ve quien recibe", value: sender.display_name, block: true },
-        ]}
-      />
+      {/* Una columna: la dirección es el dato y no se parte en media columna (auditoría B2). */}
+      <dl className="space-y-3 text-sm">
+        <div className="space-y-0.5">
+          <dt className="text-muted-foreground">Dirección</dt>
+          <dd className="flex min-w-0 items-center gap-1.5">
+            <span className="min-w-0 [overflow-wrap:anywhere]">{sender.address}</span>
+            <CopyButton value={sender.address} label="Dirección" />
+          </dd>
+        </div>
+        <div className="space-y-0.5">
+          <dt className="text-muted-foreground">Lo que ve quien recibe</dt>
+          <dd className="line-clamp-2 [overflow-wrap:anywhere]" title={sender.display_name}>
+            {sender.display_name}
+          </dd>
+        </div>
+      </dl>
       {sender.paused && (
         <p className="mt-3 flex items-start gap-2 text-sm text-pretty">
           <TriangleAlert aria-hidden className="mt-0.5 size-4 shrink-0 text-warning" />
@@ -146,10 +154,14 @@ function SignaturePreview({ sender, onEdit }: { sender: OutreachSenderDTO; onEdi
           </span>
         )}
         <div className="min-w-0 text-sm leading-snug">
-          <p className="truncate font-semibold" title={lines.name}>
+          {/* En móvil no hay hover: dos líneas antes de difuminar; desde sm, una con title. */}
+          <p className="line-clamp-2 font-semibold [overflow-wrap:anywhere] sm:truncate" title={lines.name}>
             {lines.name}
           </p>
-          <p className="truncate text-muted-foreground" title={lines.role ?? undefined}>
+          <p
+            className="line-clamp-2 text-muted-foreground [overflow-wrap:anywhere] sm:truncate"
+            title={lines.role ?? undefined}
+          >
             {lines.role ?? "Sin persona: firma el negocio"}
           </p>
           {lines.contact !== null && (
@@ -174,7 +186,7 @@ function SignaturePreview({ sender, onEdit }: { sender: OutreachSenderDTO; onEdi
 function SignatureHeading() {
   return (
     <>
-      <h3 className="mb-1 flex items-center gap-1.5 text-sm font-medium">
+      <h3 className="mb-1 flex items-center gap-1.5 font-sans text-sm font-semibold">
         <PenLine aria-hidden className="size-4" /> Quién firma
       </h3>
       <p className="mb-3 text-xs text-pretty text-muted-foreground">
@@ -185,8 +197,8 @@ function SignatureHeading() {
 }
 
 const FIELDS: { key: keyof SignatureForm; label: string; placeholder: string; max: number; hint?: string; full?: boolean }[] = [
-  { key: "person_name", label: "Nombre", placeholder: "Cristian Velásquez", max: SIGNATURE_LIMITS.person_name },
-  { key: "title", label: "Cargo", placeholder: "Fundador y CTO", max: SIGNATURE_LIMITS.title },
+  { key: "person_name", label: "Nombre", placeholder: "Tu nombre y apellido", max: SIGNATURE_LIMITS.person_name },
+  { key: "title", label: "Cargo", placeholder: "Tu cargo (p. ej. Gerente comercial)", max: SIGNATURE_LIMITS.title },
   {
     key: "photo_url",
     label: "Foto (URL)",

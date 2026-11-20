@@ -33,7 +33,7 @@ function isEmptyValue(value: React.ReactNode): boolean {
   );
 }
 
-function CopyButton({ value, label }: { value: string; label: React.ReactNode }) {
+export function CopyButton({ value, label }: { value: string; label: React.ReactNode }) {
   const [copied, setCopied] = useState(false);
 
   return (
