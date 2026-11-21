@@ -16410,6 +16410,12 @@ export interface components {
                 body: string;
                 params: string[];
                 topic: string | null;
+                footer: string | null;
+                buttons: {
+                    /** @enum {string} */
+                    type: "quick_reply" | "url" | "phone_number";
+                    text: string;
+                }[];
             } | null;
         };
         SequenceLookDto: {
@@ -24067,6 +24073,7 @@ export interface components {
             leads: number;
             promoted: number;
             enrolled: number;
+            look_changed: boolean;
             skipped: {
                 [key: string]: number;
             };

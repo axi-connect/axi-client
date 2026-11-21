@@ -14,6 +14,7 @@ const mockSequences = [
     id: "seq-1",
     name: "Hoteles boutique",
     is_active: true,
+    active_enrollments: 12,
     steps: [
       { task_channel: "email", offset_hours: 0, message_template: { subject: "reservas directas", body: "Hola" } },
       { task_channel: "message", offset_hours: 24, message_template: null },
@@ -32,6 +33,11 @@ const mockLook = {
     body: "Ayudamos a hoteles como {{1}}.",
     params: ["company_name"],
     topic: null,
+    footer: "Toca «No me interesa» y no te escribimos más.",
+    buttons: [
+      { type: "quick_reply", text: "Quiero probarlo" },
+      { type: "quick_reply", text: "No me interesa" },
+    ],
   },
 }
 const mockImages = [
@@ -72,17 +78,20 @@ describe("WriteToSearchView («Escribirles», B2)", () => {
     render(<WriteToSearchView searchId="s-1" />)
     expect(await screen.findByRole("heading", { name: "Escribirles a 38 negocios" })).toBeInTheDocument()
     expect(await screen.findByRole("radio", { name: /Hoteles/ })).toHaveAttribute("aria-checked", "true")
-    expect(screen.getByText("axi_prospeccion_hoteles_v2")).toBeInTheDocument()
+    expect(screen.getByText("Prospección hoteles · v2")).toBeInTheDocument()
+    expect(screen.getByText(/axi_prospeccion_hoteles_v2 · con imagen por envío/)).toBeInTheDocument()
     expect(screen.getByText("31 con celular")).toBeInTheDocument()
     expect(screen.getByText("Correo «Re:»")).toBeInTheDocument()
-    expect(await screen.findByText("Ayudamos a hoteles como Casa Almendro Hotel.")).toBeInTheDocument()
+    // La burbuja es la de siempre (HsmPreview): el negocio más corto primero y el botón de baja.
+    expect(await screen.findByText("Hotel Nácar", { selector: "mark" })).toBeInTheDocument()
+    expect(screen.getByText("No me interesa")).toBeInTheDocument()
   })
 
   it("inscribir pide confirmar y manda el look elegido", async () => {
     mockEnroll.mockResolvedValue({ leads: 38, promoted: 38, enrolled: 36, skipped: { opted_out: 2 } })
     render(<WriteToSearchView searchId="s-1" />)
     fireEvent.click(await screen.findByRole("button", { name: "Inscribir 38 negocios" }))
-    expect(screen.getByText(/¿Inscribir 38 negocios en «Hoteles boutique»\?/)).toBeInTheDocument()
+    expect(screen.getByText(/también para sus 12 inscritos activos/)).toBeInTheDocument()
     fireEvent.click(screen.getByRole("button", { name: "Sí, inscribir" }))
     await waitFor(() =>
       expect(mockEnroll).toHaveBeenCalledWith("s-1", "seq-1", {
@@ -101,5 +110,15 @@ describe("WriteToSearchView («Escribirles», B2)", () => {
     await screen.findByRole("heading", { name: "Escribirles a 38 negocios" })
     expect(screen.queryByRole("button", { name: /Inscribir/ })).not.toBeInTheDocument()
     expect(screen.queryByRole("button", { name: "Subir" })).not.toBeInTheDocument()
+  })
+
+  it("sin paso de WhatsApp no repite «con celular» ni el aviso", async () => {
+    const original = mockLook.whatsapp
+    ;(mockLook as { whatsapp: unknown }).whatsapp = null
+    render(<WriteToSearchView searchId="s-1" />)
+    expect(await screen.findByText("Esta secuencia no tiene paso de WhatsApp.")).toBeInTheDocument()
+    expect(screen.queryByText("31 con celular")).not.toBeInTheDocument()
+    expect(screen.getByText("Sin paso de WhatsApp.")).toBeInTheDocument()
+    ;(mockLook as { whatsapp: unknown }).whatsapp = original
   })
 })

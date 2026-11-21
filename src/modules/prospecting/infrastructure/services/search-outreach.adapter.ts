@@ -30,6 +30,8 @@ export interface SequenceOption {
   id: string
   name: string
   is_active: boolean
+  /** Quienes la recorren ahora: el look de «Escribirles» también les cambia a ellos. */
+  active_enrollments: number
   steps: {
     task_channel: string
     offset_hours: number
@@ -43,6 +45,7 @@ export async function listSequenceOptions(): Promise<SequenceOption[]> {
       id: string
       name: string
       is_active: boolean
+      active_enrollments: number
       steps: SequenceOption["steps"]
     }[]
   }>("/crm/sequences")
@@ -50,6 +53,7 @@ export async function listSequenceOptions(): Promise<SequenceOption[]> {
     id: sequence.id,
     name: sequence.name,
     is_active: sequence.is_active,
+    active_enrollments: sequence.active_enrollments,
     steps: sequence.steps.map((step) => ({
       task_channel: step.task_channel,
       offset_hours: step.offset_hours,

@@ -22,6 +22,7 @@ import { errorMessage } from "@/core/lib/error-messages"
 import { cn } from "@/core/lib/utils"
 import { useAlert } from "@/core/providers/alert-provider"
 import { useAuthContext } from "@/core/providers/auth-provider"
+import { HsmPreview, type TemplateButton } from "@/modules/marketing/public"
 import { Badge } from "@/shared/components/ui/badge"
 import { Button } from "@/shared/components/ui/button"
 import { Callout } from "@/shared/components/ui/callout"
@@ -36,8 +37,12 @@ import {
   CTA_TARGET_LABELS,
   DEFAULT_CTA,
   initialLook,
+  lookChanged,
+  personalizedName,
   resultText,
-  whatsappBody,
+  sampleOrder,
+  templateDisplayName,
+  whatsappValues,
   type CtaTarget,
   type EmailPreviewDTO,
   type LookState,
@@ -82,6 +87,10 @@ const STEP_LABEL: Record<string, string> = {
  * búsqueda a la secuencia, en UNA pantalla. Cuatro decisiones ya resueltas
  * por el nicho (imagen, WhatsApp, correo, secuencia), la vista previa en vivo
  * de un negocio real de la búsqueda y una sola acción.
+ *
+ * Rejilla: dos columnas solo desde `xl` (a 1024 con la barra lateral la
+ * izquierda quedaba en ~230 px). En una columna el orden es configuración →
+ * vista previa → acción: se ve cómo le llega antes de inscribir.
  */
 export function WriteToSearchView({ searchId }: { searchId: string }) {
   const { showAlert } = useAlert()
@@ -136,7 +145,7 @@ export function WriteToSearchView({ searchId }: { searchId: string }) {
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-5 p-4 md:p-6">
-      <header className="space-y-1">
+      <header className="min-w-0 space-y-1">
         <Link
           href="/marketing/leads/searches"
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
@@ -144,7 +153,7 @@ export function WriteToSearchView({ searchId }: { searchId: string }) {
           <ChevronLeft aria-hidden className="size-4" /> Búsquedas
         </Link>
         {summary === null ? (
-          <Skeleton className="h-8 w-72" />
+          <Skeleton className="h-8 w-72 max-w-full" />
         ) : (
           <>
             <h1 className="font-heading text-2xl font-bold tracking-tight text-balance">
@@ -158,7 +167,7 @@ export function WriteToSearchView({ searchId }: { searchId: string }) {
       </header>
 
       {summary === null || sequences === null ? (
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_420px]">
+        <div className="grid gap-5 xl:grid-cols-[minmax(560px,1fr)_400px]">
           <Skeleton className="h-[520px] w-full rounded-2xl" />
           <Skeleton className="h-[520px] w-full rounded-2xl" />
         </div>
@@ -171,7 +180,7 @@ export function WriteToSearchView({ searchId }: { searchId: string }) {
           y vuelve para escribirles.
         </Callout>
       ) : (
-        <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_420px]">
+        <div className="grid items-start gap-5 xl:grid-cols-[minmax(560px,1fr)_400px]">
           <SetupCard
             summary={summary}
             sequences={sequences}
@@ -183,9 +192,18 @@ export function WriteToSearchView({ searchId }: { searchId: string }) {
             look={look}
             onLook={setLook}
             canWrite={canWrite}
+          />
+          <div className="min-w-0 xl:sticky xl:top-4 xl:row-span-2">
+            <PreviewCard summary={summary} sequence={sequence} lookView={lookView} look={look} canWrite={canWrite} />
+          </div>
+          <ActionBar
+            summary={summary}
+            sequence={sequence}
+            lookView={lookView}
+            look={look}
+            canWrite={canWrite}
             searchId={searchId}
           />
-          <PreviewCard summary={summary} sequence={sequence} lookView={lookView} look={look} canWrite={canWrite} />
         </div>
       )}
     </div>
@@ -206,8 +224,8 @@ function Row({
   children: React.ReactNode
 }) {
   return (
-    <div className="grid gap-3 border-t border-border/60 px-5 py-4 first:border-t-0 md:px-6">
-      <div className="flex flex-wrap items-center justify-between gap-2">
+    <div className="grid min-w-0 gap-3 border-t border-border/60 px-5 py-4 first:border-t-0 md:px-6">
+      <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
         <h2 className="flex items-center gap-2 font-sans text-sm font-semibold">
           <Icon aria-hidden className="size-4" /> {title}
         </h2>
@@ -229,7 +247,6 @@ function SetupCard({
   look,
   onLook,
   canWrite,
-  searchId,
 }: {
   summary: SearchOutreachSummaryDTO
   sequences: SequenceOption[]
@@ -241,14 +258,10 @@ function SetupCard({
   look: LookState | null
   onLook: (look: LookState) => void
   canWrite: boolean
-  searchId: string
 }) {
   const { showAlert } = useAlert()
   const fileRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
-  const [confirming, setConfirming] = useState(false)
-  const [enrolling, setEnrolling] = useState(false)
-  const [result, setResult] = useState<SearchOutreachResultDTO | null>(null)
 
   const update = (patch: Partial<LookState>) => {
     if (look !== null) onLook({ ...look, ...patch })
@@ -258,7 +271,11 @@ function SetupCard({
     setUploading(true)
     try {
       const image = await uploadOutreachImage(file)
-      onImages([...images.filter((entry) => entry.kind === "niche"), image, ...images.filter((entry) => entry.kind === "upload")])
+      onImages([
+        ...images.filter((entry) => entry.kind === "niche"),
+        image,
+        ...images.filter((entry) => entry.kind === "upload"),
+      ])
       update({ image_id: image.id })
     } catch (error) {
       showAlert({ tone: "error", title: errorMessage(error, "No se pudo subir la imagen") })
@@ -267,25 +284,11 @@ function SetupCard({
     }
   }
 
-  async function enroll() {
-    if (sequence === null || look === null) return
-    setEnrolling(true)
-    try {
-      const outcome = await enrollSearch(searchId, sequence.id, look)
-      setResult(outcome)
-      setConfirming(false)
-      showAlert({ tone: "success", title: "Listo", description: resultText(outcome) })
-    } catch (error) {
-      showAlert({ tone: "error", title: errorMessage(error, "No pudimos inscribir los negocios") })
-    } finally {
-      setEnrolling(false)
-    }
-  }
-
   const whatsapp = lookView?.whatsapp ?? null
+  const example = personalizedName(sampleOrder(summary.sample_businesses)[0] ?? "Casa Almendro")
 
   return (
-    <section aria-label="Lo que se va a enviar" className="overflow-hidden rounded-2xl border border-border bg-card">
+    <section aria-label="Lo que se va a enviar" className="min-w-0 rounded-2xl border border-border bg-card">
       <Row icon={ImageIcon} title="Imagen" aside={<span className="text-xs text-muted-foreground">Va en el WhatsApp y en el correo</span>}>
         {look === null ? (
           <Skeleton className="h-24 w-full" />
@@ -347,14 +350,16 @@ function SetupCard({
                 }}
               />
             </div>
-            <label className="flex items-center gap-2.5 text-sm">
+            <label className="flex min-w-0 items-center gap-2.5 text-sm">
               <Switch
                 checked={look.personalize}
                 disabled={!canWrite || look.image_id === null}
                 onCheckedChange={(checked) => update({ personalize: checked })}
               />
-              <span>Con el nombre de cada negocio</span>
-              <span className="hidden text-muted-foreground sm:inline">«Para {summary.sample_businesses[0] ?? "Casa Almendro"}» en la imagen</span>
+              <span className="shrink-0">Con el nombre de cada negocio</span>
+              <span className="hidden min-w-0 truncate text-muted-foreground sm:inline" title={`«Para ${example}»`}>
+                «Para {example}»
+              </span>
             </label>
           </>
         )}
@@ -363,7 +368,11 @@ function SetupCard({
       <Row
         icon={MessageCircle}
         title="WhatsApp"
-        aside={<Badge variant="outline">{summary.with_phone.toLocaleString("es-CO")} con celular</Badge>}
+        aside={
+          whatsapp === null ? undefined : (
+            <Badge variant="outline">{summary.with_phone.toLocaleString("es-CO")} con celular</Badge>
+          )
+        }
       >
         {lookView === null ? (
           <Skeleton className="h-12 w-full" />
@@ -371,13 +380,13 @@ function SetupCard({
           <p className="text-sm text-muted-foreground">Esta secuencia no tiene paso de WhatsApp.</p>
         ) : (
           <>
-            <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border px-3 py-2.5">
+            <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-xl border border-border px-3 py-2.5">
               <div className="min-w-0">
-                <p className="truncate font-mono text-[12.5px]" title={whatsapp.template_name}>
-                  {whatsapp.template_name}
+                <p className="truncate text-sm font-medium" title={templateDisplayName(whatsapp.template_name)}>
+                  {templateDisplayName(whatsapp.template_name)}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  {whatsapp.has_image_header ? "Con imagen por envío" : "Sin encabezado de imagen"}
+                <p className="truncate font-mono text-[11.5px] text-muted-foreground" title={whatsapp.template_name}>
+                  {whatsapp.template_name} · {whatsapp.has_image_header ? "con imagen por envío" : "sin encabezado de imagen"}
                 </p>
               </div>
               <Badge variant={whatsapp.approval_status === "approved" ? "secondary" : "outline"}>
@@ -398,12 +407,14 @@ function SetupCard({
         {look === null ? (
           <Skeleton className="h-10 w-full" />
         ) : (
-          <div className="flex flex-wrap items-end gap-3">
+          <div className="flex min-w-0 flex-wrap items-end gap-3">
             <SegmentedControl
               label="Diseño del correo"
               size="sm"
               value={look.email_design}
-              onValueChange={(value) => update({ email_design: value, cta: value === "brand" ? (look.cta ?? DEFAULT_CTA) : look.cta })}
+              onValueChange={(value) =>
+                update({ email_design: value, cta: value === "brand" ? (look.cta ?? DEFAULT_CTA) : look.cta })
+              }
               items={[
                 { value: "text", label: "Texto" },
                 { value: "brand", label: "Marca" },
@@ -464,7 +475,9 @@ function SetupCard({
         aside={
           <Select value={sequence?.id ?? ""} onValueChange={onSequence}>
             <SelectTrigger className="w-56 max-w-full" aria-label="Secuencia">
-              <SelectValue />
+              <span className="min-w-0 truncate">
+                <SelectValue />
+              </span>
             </SelectTrigger>
             <SelectContent>
               {sequences.map((entry) => (
@@ -483,7 +496,10 @@ function SetupCard({
               const thread = /^\s*re\s*:/i.test(step.message_template?.subject ?? "")
               const Icon = thread ? Reply : (STEP_ICON[step.task_channel] ?? ListOrdered)
               return (
-                <li key={index} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1 text-xs">
+                <li
+                  key={index}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1 text-xs"
+                >
                   <Icon aria-hidden className="size-3.5" />
                   {thread ? "Correo «Re:»" : (STEP_LABEL[step.task_channel] ?? step.task_channel)}
                   <span className="font-medium tabular-nums text-muted-foreground">Día {Math.round(step.offset_hours / 24)}</span>
@@ -494,23 +510,73 @@ function SetupCard({
         )}
         {sequence !== null && !sequence.is_active && (
           <Callout tone="warn" icon={TriangleAlert}>
-            Esta secuencia está en borrador: actívala para poder inscribir.
+            Esta secuencia está en borrador. Actívala para poder inscribir.{" "}
+            <Link href="/crm/settings/sequences" className="font-medium text-foreground underline underline-offset-4">
+              Abrir las secuencias
+            </Link>
           </Callout>
         )}
       </Row>
+    </section>
+  )
+}
 
+/* ───────────────────────────── Acción ───────────────────────────── */
+
+function ActionBar({
+  summary,
+  sequence,
+  lookView,
+  look,
+  canWrite,
+  searchId,
+}: {
+  summary: SearchOutreachSummaryDTO
+  sequence: SequenceOption | null
+  lookView: SequenceLookViewDTO | null
+  look: LookState | null
+  canWrite: boolean
+  searchId: string
+}) {
+  const { showAlert } = useAlert()
+  const [confirming, setConfirming] = useState(false)
+  const [enrolling, setEnrolling] = useState(false)
+  const [result, setResult] = useState<SearchOutreachResultDTO | null>(null)
+  const changed = look !== null && lookChanged(look, lookView)
+  const inFlight = sequence?.active_enrollments ?? 0
+
+  async function enroll() {
+    if (sequence === null || look === null) return
+    setEnrolling(true)
+    try {
+      // Sin cambios no se manda el look: los pasos de la secuencia no se reescriben.
+      const outcome = await enrollSearch(searchId, sequence.id, changed ? look : null)
+      setResult(outcome)
+      setConfirming(false)
+      showAlert({ tone: "success", title: "Listo", description: resultText(outcome) })
+    } catch (error) {
+      showAlert({ tone: "error", title: errorMessage(error, "No pudimos inscribir los negocios") })
+    } finally {
+      setEnrolling(false)
+    }
+  }
+
+  return (
+    <section aria-label="Inscribir" className="grid min-w-0 gap-3 rounded-2xl border border-border bg-secondary/60 px-5 py-3.5 md:px-6">
       {result !== null && (
-        <div className="border-t border-border/60 px-5 py-4 md:px-6">
-          <Callout tone="info" icon={CircleCheck}>
-            {resultText(result)} Los toques salen según tu política de contacto.
-          </Callout>
-        </div>
+        <Callout tone="info" icon={CircleCheck}>
+          {resultText(result)} Los toques salen según tu política de contacto.
+        </Callout>
       )}
-
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-secondary/60 px-5 py-3.5 md:px-6">
-        <p className="max-w-[56ch] text-[13px] text-pretty text-muted-foreground">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="min-w-0 max-w-[60ch] text-[13px] text-pretty text-muted-foreground">
           {confirming
-            ? `¿Inscribir ${summary.leads.toLocaleString("es-CO")} negocios en «${sequence?.name ?? ""}»? La imagen y el diseño se aplican a toda la secuencia.`
+            ? `¿Inscribir ${summary.leads.toLocaleString("es-CO")} negocios en «${sequence?.name ?? ""}»?` +
+              (changed
+                ? inFlight > 0
+                  ? ` La imagen y el diseño cambian para toda la secuencia, también para sus ${inFlight.toLocaleString("es-CO")} inscritos activos.`
+                  : " La imagen y el diseño se aplican a toda la secuencia."
+                : "")
             : "Se detiene si responde. Los toques salen según tu política de contacto y los topes del frío."}
         </p>
         {canWrite && (
@@ -553,6 +619,16 @@ function SetupCard({
 
 /* ───────────────────────────── Vista previa ───────────────────────────── */
 
+function toTemplateButtons(buttons: NonNullable<SequenceLookViewDTO["whatsapp"]>["buttons"]): TemplateButton[] {
+  return buttons.map((button) =>
+    button.type === "url"
+      ? { type: "url", text: button.text, url: "" }
+      : button.type === "phone_number"
+        ? { type: "phone_number", text: button.text, phone_number: "" }
+        : { type: "quick_reply", text: button.text },
+  )
+}
+
 function PreviewCard({
   summary,
   sequence,
@@ -567,14 +643,17 @@ function PreviewCard({
   canWrite: boolean
 }) {
   const { showAlert } = useAlert()
-  const [tab, setTab] = useState<"whatsapp" | "email">(lookView?.whatsapp === null ? "email" : "whatsapp")
-  const [business, setBusiness] = useState<string>(summary.sample_businesses[0] ?? "Negocio de ejemplo")
+  const samples = useMemo(() => sampleOrder(summary.sample_businesses), [summary.sample_businesses])
+  const [tab, setTab] = useState<"whatsapp" | "email">("whatsapp")
+  const [business, setBusiness] = useState<string>(samples[0] ?? "Negocio de ejemplo")
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [email, setEmail] = useState<EmailPreviewDTO | null>(null)
   const [sending, setSending] = useState(false)
 
   const firstEmail = useMemo(
-    () => sequence?.steps.find((step) => step.task_channel === "email" && step.message_template !== null)?.message_template ?? null,
+    () =>
+      sequence?.steps.find((step) => step.task_channel === "email" && step.message_template !== null)?.message_template ??
+      null,
     [sequence],
   )
 
@@ -636,8 +715,8 @@ function PreviewCard({
   const whatsapp = lookView?.whatsapp ?? null
 
   return (
-    <aside aria-label="Vista previa" className="grid gap-3 rounded-2xl border border-border bg-card p-4 lg:sticky lg:top-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
+    <aside aria-label="Vista previa" className="grid min-w-0 gap-3 rounded-2xl border border-border bg-card p-4">
+      <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
         <SegmentedControl
           label="Vista previa"
           size="sm"
@@ -650,10 +729,12 @@ function PreviewCard({
         />
         <Select value={business} onValueChange={setBusiness}>
           <SelectTrigger className="w-48 max-w-full" aria-label="Ver como">
-            <SelectValue />
+            <span className="min-w-0 truncate" title={business}>
+              <SelectValue />
+            </span>
           </SelectTrigger>
           <SelectContent>
-            {(summary.sample_businesses.length === 0 ? ["Negocio de ejemplo"] : summary.sample_businesses).map((name) => (
+            {(samples.length === 0 ? ["Negocio de ejemplo"] : samples).map((name) => (
               <SelectItem key={name} value={name}>
                 {name}
               </SelectItem>
@@ -663,46 +744,39 @@ function PreviewCard({
       </div>
 
       {tab === "whatsapp" ? (
-        <div className="min-h-[420px] rounded-2xl bg-[#efeae2] p-4 dark:bg-[#0b141a]">
-          {whatsapp === null ? (
-            <p className="text-sm text-[#54656f] dark:text-[#8696a0]">Esta secuencia no tiene paso de WhatsApp.</p>
-          ) : (
-            <div className="max-w-[320px] overflow-hidden rounded-[10px] bg-white text-[14px] leading-[1.45] text-[#111b21] shadow-[0_1px_1px_rgba(0,0,0,.08)] dark:bg-[#202c33] dark:text-[#e9edef]">
-              {whatsapp.has_image_header && imageUrl !== null && (
-                // eslint-disable-next-line @next/next/no-img-element -- URL firmada del API
-                <img src={imageUrl} alt="Imagen del encabezado" className="block w-full" />
-              )}
-              <p className="whitespace-pre-line px-2.5 pt-2 pb-1">
-                {whatsappBody(whatsapp.body, whatsapp.params, { business, topic: whatsapp.topic })}
-              </p>
-              <p className="px-2.5 pb-1.5 text-right text-[11px] text-[#667781]">10:02</p>
-            </div>
-          )}
-        </div>
+        whatsapp === null ? (
+          <p className="text-sm text-muted-foreground">Sin paso de WhatsApp.</p>
+        ) : (
+          <HsmPreview
+            header={null}
+            media={whatsapp.has_image_header ? { kind: "image", url: imageUrl } : null}
+            body={whatsapp.body}
+            examples={whatsappValues(whatsapp.params, { business, topic: whatsapp.topic })}
+            footer={whatsapp.footer}
+            buttons={toTemplateButtons(whatsapp.buttons)}
+            className="min-h-[420px]"
+          />
+        )
+      ) : firstEmail === null ? (
+        <p className="text-sm text-muted-foreground">Sin paso de correo.</p>
+      ) : email === null ? (
+        <Skeleton className="h-[460px] w-full rounded-2xl" />
       ) : (
-        <div className="grid gap-2">
-          {firstEmail === null ? (
-            <p className="text-sm text-muted-foreground">Esta secuencia no tiene paso de correo.</p>
-          ) : email === null ? (
-            <Skeleton className="h-[460px] w-full rounded-2xl" />
-          ) : (
-            <>
-              <div className="min-w-0 text-xs text-muted-foreground">
-                <p className="truncate font-medium text-foreground" title={email.sender_name}>
-                  {email.sender_name}
-                </p>
-                <p className="truncate" title={email.subject}>
-                  {email.subject}
-                </p>
-              </div>
-              <iframe
-                title="Vista previa del correo"
-                srcDoc={email.html}
-                sandbox=""
-                className="h-[460px] w-full rounded-xl border border-border bg-white"
-              />
-            </>
-          )}
+        <div className="grid min-w-0 gap-2">
+          <div className="min-w-0 text-xs text-muted-foreground">
+            <p className="truncate font-medium text-foreground" title={email.sender_name}>
+              {email.sender_name}
+            </p>
+            <p className="truncate" title={email.subject}>
+              {email.subject}
+            </p>
+          </div>
+          <iframe
+            title="Vista previa del correo"
+            srcDoc={email.html}
+            sandbox=""
+            className="h-[460px] w-full rounded-xl border border-border bg-white"
+          />
         </div>
       )}
 

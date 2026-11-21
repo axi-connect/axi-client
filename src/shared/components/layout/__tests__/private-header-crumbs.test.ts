@@ -54,4 +54,11 @@ describe("buildCrumbs: la agenda", () => {
   it("dice Agenda › Calendario, no scheduling › calendar", () => {
     expect(buildCrumbs("/scheduling/calendar").map((c) => c.label)).toEqual(["Agenda", "Calendario"]);
   });
+
+  it("B2 · dice Búsquedas › Búsqueda › Escribirles, no searches › Detalle › escribir", () => {
+    expect(
+      buildCrumbs("/marketing/leads/searches/01a2b2b2-0000-7000-8000-0000000000b2/escribir").map((c) => c.label),
+    ).toEqual(["Marketing", "Captación", "Búsquedas", "Búsqueda", "Escribirles"])
+  })
 });
+

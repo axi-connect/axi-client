@@ -48,23 +48,52 @@ export function lookPayload(look: LookState) {
   }
 }
 
-/**
- * El cuerpo de la plantilla de WhatsApp con los datos de un negocio de
- * ejemplo, como lo arma el servidor al enviar (`{{1}}`… en orden).
- */
-export function whatsappBody(
-  body: string,
+/** Los valores de `{{1}}`… para un negocio de ejemplo, como los arma el servidor al enviar. */
+export function whatsappValues(
   params: readonly string[],
   sample: { business: string; topic: string | null },
-): string {
-  const values = params.map((source) => {
+): string[] {
+  return params.map((source) => {
     if (source === "company_name" || source === "custom_field:company_name") return sample.business
     if (source === "first_name" || source === "full_name") return sample.business
     if (source === "topic") return sample.topic ?? "…"
     if (source.startsWith("static:")) return source.slice("static:".length)
     return "…"
   })
+}
+
+/** El cuerpo ya rellenado (para textos y pruebas). */
+export function whatsappBody(
+  body: string,
+  params: readonly string[],
+  sample: { business: string; topic: string | null },
+): string {
+  const values = whatsappValues(params, sample)
   return body.replace(/\{\{\s*(\d+)\s*\}\}/g, (whole, n: string) => values[Number(n) - 1] ?? whole)
+}
+
+/** «axi_prospeccion_hoteles_v2» → «Prospección hoteles · v2» (el técnico va debajo, chico). */
+export function templateDisplayName(name: string): string {
+  const words = name.split("_").filter(Boolean)
+  const version = words.length > 1 && /^v\d+$/i.test(words[words.length - 1] ?? "") ? words.pop() : undefined
+  if (words[0]?.toLowerCase() === "axi" && words.length > 1) words.shift()
+  const text = words.join(" ").replace(/prospeccion/gi, "prospección")
+  const human = text.charAt(0).toUpperCase() + text.slice(1)
+  return version === undefined ? human : `${human} · ${version.toLowerCase()}`
+}
+
+/** El nombre sobre la imagen, cortado por palabras a 40 (como el servidor). */
+export function personalizedName(raw: string): string {
+  const name = raw.trim().replace(/\s+/g, " ")
+  if (name.length <= 40) return name
+  const cut = name.slice(0, 41)
+  const space = cut.lastIndexOf(" ")
+  return space > 0 ? cut.slice(0, space).replace(/[\s,.;:–-]+$/, "") : `${name.slice(0, 39)}…`
+}
+
+/** Para «Ver como»: los nombres cortos primero (se leen enteros y son los típicos). */
+export function sampleOrder(names: readonly string[]): string[] {
+  return [...names].sort((a, b) => a.length - b.length)
 }
 
 /** «Inscribí 36 de 38 negocios. No entraron: 2 se dieron de baja.» */
@@ -88,4 +117,10 @@ export function resultText(result: SearchOutreachResultDTO): string {
 /** El nicho de una imagen de axi, para su etiqueta («nicho:hoteles» → «Hoteles»). */
 export function isNicheImage(id: string): boolean {
   return id.startsWith("nicho:")
+}
+
+/** ¿El look elegido cambia el que la secuencia ya tiene? (sin cambios no se reescribe nada) */
+export function lookChanged(look: LookState, view: SequenceLookViewDTO | null): boolean {
+  const current = initialLook(view, null)
+  return JSON.stringify(lookPayload(look)) !== JSON.stringify(lookPayload(current))
 }

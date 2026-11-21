@@ -43,4 +43,6 @@ export { MarketingHeader } from "./ui/components/MarketingHeader";
 // La bandeja pinta la imagen, el video o el documento de una plantilla enviada.
 export { TemplateMediaHeader } from "./ui/components/TemplateMediaHeader";
 export { SendTemplateButton } from "./ui/components/SendTemplateButton";
+// B2 · «Escribirles» pinta el WhatsApp de la secuencia con la misma burbuja.
+export { HsmPreview } from "./ui/components/HsmPreview";
 export { presetToSearchParams, type PresetAudience } from "./domain/campaign-draft";
