@@ -2,6 +2,7 @@ import {
   defaultRoutineInput,
   hourLabel,
   itemTitle,
+  routineFromSearch,
   scheduleLabel,
   sourceSummary,
   validateRoutine,
@@ -52,3 +53,19 @@ describe("autopilot — antes de guardar", () => {
     expect(validateRoutine(draft)).toEqual([]);
   });
 });
+
+describe("routineFromSearch (B2 · «Automatizar cada semana»)", () => {
+  it("arranca con la fuente y los filtros de la búsqueda y la secuencia elegida", () => {
+    const base = defaultRoutineInput("America/Bogota")
+    const draft = routineFromSearch(
+      base,
+      { label: "Hoteles boutique en Cartagena", source: "google_places", params: { text: "hoteles boutique", city: "Cartagena", limit: 40 } },
+      "seq-1",
+    )
+    expect(draft.name).toBe("Escribirles · Hoteles boutique en Cartagena")
+    expect(draft.source).toEqual({ kind: "google_places", params: { text: "hoteles boutique", city: "Cartagena", limit: 40 } })
+    expect(draft.follow_up).toEqual({ sequence_id: "seq-1" })
+    expect(draft.schedule).toEqual(base.schedule)
+  })
+})
+

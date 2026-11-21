@@ -14,3 +14,10 @@ export { getProspectingStats } from "./infrastructure/services/prospecting-servi
  */
 export type { DiscoveryCategoryDTO, SourceCatalogItemDTO } from "./domain/search";
 export { listSources } from "./infrastructure/services/prospecting-service.adapter";
+
+/**
+ * B2 («Escribirles» → «Automatizar cada semana»): el piloto nuevo arranca con
+ * la fuente y los filtros de una búsqueda ya hecha.
+ */
+export type { SearchDTO } from "./domain/search";
+export { getSearch } from "./infrastructure/services/prospecting-service.adapter";

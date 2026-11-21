@@ -1,6 +1,7 @@
 "use client";
 
-import { LoaderCircle, RotateCw, Trash2, X } from "lucide-react";
+import Link from "next/link";
+import { LoaderCircle, RotateCw, Send, Trash2, X } from "lucide-react";
 
 import { RelativeDate } from "@/shared/components/ui/relative-date";
 import { Button } from "@/shared/components/ui/button";
@@ -43,8 +44,11 @@ export function SearchRun({
   onCancel,
   onDelete,
   deleting = false,
+  canWrite = false,
 }: {
   search: SearchDTO;
+  /** B2 · «Escribirles»: con `crm:automate`, la búsqueda terminada lleva a la secuencia. */
+  canWrite?: boolean;
   onRepeat?: (search: SearchDTO) => void;
   onCancel?: (search: SearchDTO) => void;
   /** Solo con `leads:delete`. Sin el prop, el botón no existe. */
@@ -83,6 +87,17 @@ export function SearchRun({
             >
               <X aria-hidden="true" />
               Detener
+            </Button>
+          )}
+          {!live && canWrite && search.found_count > 0 && (
+            <Button size="sm" className="rounded-full" asChild>
+              <Link
+                href={`/marketing/leads/searches/${search.id}/escribir`}
+                aria-label={`Escribirles a los negocios de «${search.label ?? queryOf(search)}»`}
+              >
+                <Send aria-hidden="true" />
+                Escribirles
+              </Link>
             </Button>
           )}
           {!live && onRepeat !== undefined && (

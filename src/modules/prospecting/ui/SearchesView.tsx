@@ -61,6 +61,8 @@ export function SearchesView() {
   const { hasPermission } = useAuth();
   const canManage = hasPermission("leads:manage");
   const canDelete = hasPermission("leads:delete");
+  // B2 · «Escribirles» inscribe en una secuencia: el mismo permiso que el editor de secuencias.
+  const canWrite = hasPermission("crm:automate");
   const { showAlert, showModal } = useAlert();
   /** Id de la búsqueda cuya previa se está pidiendo. */
   const [previewing, setPreviewing] = useState<string | null>(null);
@@ -348,6 +350,7 @@ export function SearchesView() {
               onCancel={canManage ? (run) => void stop(run) : undefined}
               onDelete={canDelete ? (run) => void askDelete(run) : undefined}
               deleting={previewing === search.id}
+              canWrite={canWrite}
             />
           ))}
         </section>

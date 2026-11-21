@@ -26,11 +26,17 @@ import { getTenantAgents, type AssignableAgent } from "@/modules/agents/public";
 import { useMyCompany } from "@/modules/companies/public";
 import { listSequences, type SequenceDTO } from "@/modules/crm/public";
 import { MarketingHeader } from "@/modules/marketing/ui/components/MarketingHeader";
-import { listSources, type DiscoveryCategoryDTO, type SourceCatalogItemDTO } from "@/modules/prospecting/public";
+import {
+  getSearch,
+  listSources,
+  type DiscoveryCategoryDTO,
+  type SourceCatalogItemDTO,
+} from "@/modules/prospecting/public";
 
 import {
   CONTACT_CHANNEL_OPTIONS,
   defaultRoutineInput,
+  routineFromSearch,
   hourLabel,
   ROUTINE_MODE_META,
   ROUTINE_MODES,
@@ -63,7 +69,14 @@ import { Group, Row, Rows } from "./recorrido/GroupedList";
  * (`POST /autopilot/estimate`) y se dice en la isla y en la barra.
  */
 
-export function RoutineEditorView({ routineId }: { routineId: string | null }) {
+export function RoutineEditorView({
+  routineId,
+  prefill = null,
+}: {
+  routineId: string | null
+  /** B2 · piloto nuevo desde «Escribirles»: la búsqueda y la secuencia elegidas. */
+  prefill?: { search_id: string; sequence_id: string } | null
+}) {
   const router = useRouter();
   const { showAlert } = useAlert();
   const { hasPermission } = useAuth();
@@ -101,6 +114,23 @@ export function RoutineEditorView({ routineId }: { routineId: string | null }) {
     if (routineId === null) {
       if (company === null || company === undefined) return;
       const fresh = defaultRoutineInput(company.timezone ?? "America/Bogota");
+      if (prefill !== null) {
+        getSearch(prefill.search_id)
+          .then((search) => {
+            const draftFromSearch = routineFromSearch(
+              fresh,
+              { label: search.label ?? null, source: search.source, params: search.params as Record<string, unknown> },
+              prefill.sequence_id,
+            );
+            setDraft(draftFromSearch);
+            setInitial(JSON.stringify(fresh));
+          })
+          .catch(() => {
+            setDraft(fresh);
+            setInitial(JSON.stringify(fresh));
+          });
+        return;
+      }
       setDraft(fresh);
       setInitial(JSON.stringify(fresh));
       return;
@@ -115,7 +145,7 @@ export function RoutineEditorView({ routineId }: { routineId: string | null }) {
         if (isAutopilotUnavailable(caught)) setUnavailable(true);
         else showAlert({ tone: "error", title: "No pudimos abrir el piloto", description: errorMessage(caught) });
       });
-  }, [routineId, company, showAlert]);
+  }, [routineId, company, showAlert, prefill]);
 
   // Valores por defecto que dependen de los catálogos, si el borrador es nuevo.
   useEffect(() => {

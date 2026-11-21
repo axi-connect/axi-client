@@ -4308,6 +4308,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/crm/sequences/{sequenceId}/look": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CrmSequencesController_lookOf_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["CrmSequencesController_applyLook_v1"];
+        trace?: never;
+    };
     "/api/v1/crm/sequences/{sequenceId}/enrollments": {
         parameters: {
             query?: never;
@@ -6548,6 +6564,118 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/outreach/images": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["OutreachImagesController_list_v1"];
+        put?: never;
+        post: operations["OutreachImagesController_upload_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/outreach/images/url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["OutreachImagesController_urlOf_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/outreach/images/{imageId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["OutreachImagesController_remove_v1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/outreach/images/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PublicOutreachImagesController_image[0]"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/outreach/images/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PublicOutreachImagesController_image[1]_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/outreach/email/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["OutreachPreviewController_preview_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/outreach/email/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["OutreachPreviewController_test_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/cmo/messages": {
         parameters: {
             query?: never;
@@ -8510,6 +8638,22 @@ export interface paths {
         get: operations["AutopilotController_funnel_v1"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/autopilot/searches/{searchId}/outreach": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["SearchOutreachController_summary_v1"];
+        put?: never;
+        post: operations["SearchOutreachController_enroll_v1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -15792,6 +15936,10 @@ export interface components {
                 channel_template_id: string;
                 params: string[];
                 topic?: string | null;
+                header_image?: {
+                    id: string;
+                    personalize?: boolean | null;
+                } | null;
             } | null;
             /** @enum {string} */
             task_channel?: "message" | "call" | "call_then_message";
@@ -15810,6 +15958,10 @@ export interface components {
                 channel_template_id: string;
                 params: string[];
                 topic?: string | null;
+                header_image?: {
+                    id: string;
+                    personalize?: boolean | null;
+                } | null;
             } | null;
             /** @enum {string} */
             task_channel?: "message" | "call" | "call_then_message";
@@ -16108,10 +16260,25 @@ export interface components {
                         language: string;
                         params: string[];
                         topic: string | null;
+                        header_image?: {
+                            id: string;
+                            personalize: boolean;
+                        };
                     } | null;
                     message_template: {
                         subject: string | null;
                         body: string;
+                        /** @enum {string} */
+                        design?: "text" | "brand";
+                        header_image?: {
+                            id: string;
+                            personalize: boolean;
+                        } | null;
+                        cta?: {
+                            label: string;
+                            /** @enum {string} */
+                            target: "reply" | "whatsapp";
+                        } | null;
                     } | null;
                 }[];
                 active_enrollments: number;
@@ -16149,10 +16316,25 @@ export interface components {
                     language: string;
                     params: string[];
                     topic: string | null;
+                    header_image?: {
+                        id: string;
+                        personalize: boolean;
+                    };
                 } | null;
                 message_template: {
                     subject: string | null;
                     body: string;
+                    /** @enum {string} */
+                    design?: "text" | "brand";
+                    header_image?: {
+                        id: string;
+                        personalize: boolean;
+                    } | null;
+                    cta?: {
+                        label: string;
+                        /** @enum {string} */
+                        target: "reply" | "whatsapp";
+                    } | null;
                 } | null;
             }[];
             active_enrollments: number;
@@ -16187,12 +16369,61 @@ export interface components {
                     channel_template_id: string;
                     params: string[];
                     topic?: string | null;
+                    header_image?: {
+                        id: string;
+                        personalize?: boolean | null;
+                    } | null;
                 } | null;
                 message_template?: {
                     subject?: string | null;
                     body: string;
+                    /** @enum {string|null} */
+                    design?: "text" | "brand" | null;
+                    header_image?: {
+                        id: string;
+                        personalize?: boolean | null;
+                    } | null;
+                    cta?: {
+                        label: string;
+                        /** @enum {string} */
+                        target: "reply" | "whatsapp";
+                    } | null;
                 } | null;
             }[];
+        };
+        SequenceLookViewDto: {
+            image: {
+                id: string;
+                personalize: boolean;
+            } | null;
+            /** @enum {string} */
+            email_design: "text" | "brand";
+            cta: {
+                label: string;
+                /** @enum {string} */
+                target: "reply" | "whatsapp";
+            } | null;
+            whatsapp: {
+                template_name: string;
+                approval_status: string;
+                has_image_header: boolean;
+                body: string;
+                params: string[];
+                topic: string | null;
+            } | null;
+        };
+        SequenceLookDto: {
+            image?: {
+                id: string;
+                personalize?: boolean | null;
+            } | null;
+            /** @enum {string} */
+            email_design: "text" | "brand";
+            cta?: {
+                label: string;
+                /** @enum {string} */
+                target: "reply" | "whatsapp";
+            } | null;
         };
         EnrollmentsListDto: {
             data: {
@@ -20869,6 +21100,60 @@ export interface components {
             channel: "email" | "sms";
             destination_masked: string;
         };
+        OutreachImageListDto: {
+            items: {
+                id: string;
+                label: string;
+                /** @enum {string} */
+                kind: "niche" | "upload";
+                url: string | null;
+            }[];
+        };
+        OutreachImageDto: {
+            id: string;
+            label: string;
+            /** @enum {string} */
+            kind: "niche" | "upload";
+            url: string | null;
+        };
+        OutreachImageUrlRequestDto: {
+            id: string;
+            personalize?: boolean | null;
+            business_name?: string | null;
+        };
+        OutreachImageUrlDto: {
+            url: string | null;
+        };
+        EmailPreviewRequestDto: {
+            template: {
+                subject?: string | null;
+                body: string;
+                /** @enum {string|null} */
+                design?: "text" | "brand" | null;
+                header_image?: {
+                    id: string;
+                    personalize?: boolean | null;
+                } | null;
+                cta?: {
+                    label: string;
+                    /** @enum {string} */
+                    target: "reply" | "whatsapp";
+                } | null;
+            };
+            /** Format: uuid */
+            contact_id?: string | null;
+            sample_business?: string | null;
+        };
+        EmailPreviewDto: {
+            subject: string;
+            html: string;
+            text: string;
+            sender_name: string;
+            sample: boolean;
+        };
+        EmailTestResultDto: {
+            sent_to: string;
+        };
         CmoSendMessageDto: {
             /** @description Lo que el dueño le pregunta o le pide a Axel */
             message: string;
@@ -23749,6 +24034,41 @@ export interface components {
                 credits: number;
                 credits_per_qualified: number | null;
                 credits_per_demo: number | null;
+            };
+        };
+        SearchOutreachSummaryDto: {
+            /** Format: uuid */
+            search_id: string;
+            label: string | null;
+            leads: number;
+            with_email: number;
+            with_phone: number;
+            suggested_image: string | null;
+            sample_businesses: string[];
+        };
+        SearchOutreachEnrollDto: {
+            /** Format: uuid */
+            sequence_id: string;
+            look?: {
+                image?: {
+                    id: string;
+                    personalize?: boolean | null;
+                } | null;
+                /** @enum {string} */
+                email_design: "text" | "brand";
+                cta?: {
+                    label: string;
+                    /** @enum {string} */
+                    target: "reply" | "whatsapp";
+                } | null;
+            } | null;
+        };
+        SearchOutreachResultDto: {
+            leads: number;
+            promoted: number;
+            enrolled: number;
+            skipped: {
+                [key: string]: number;
             };
         };
         NotificationsListDto: {
@@ -34150,6 +34470,52 @@ export interface operations {
             };
         };
     };
+    CrmSequencesController_lookOf_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sequenceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SequenceLookViewDto"];
+                };
+            };
+        };
+    };
+    CrmSequencesController_applyLook_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sequenceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SequenceLookDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SequenceDto"];
+                };
+            };
+        };
+    };
     CrmSequencesController_enrollments_v1: {
         parameters: {
             query?: {
@@ -38006,6 +38372,181 @@ export interface operations {
             };
         };
     };
+    OutreachImagesController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OutreachImageListDto"];
+                };
+            };
+        };
+    };
+    OutreachImagesController_upload_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OutreachImageDto"];
+                };
+            };
+        };
+    };
+    OutreachImagesController_urlOf_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OutreachImageUrlRequestDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OutreachImageUrlDto"];
+                };
+            };
+        };
+    };
+    OutreachImagesController_remove_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                imageId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    "PublicOutreachImagesController_image[0]": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": string;
+                };
+            };
+        };
+    };
+    "PublicOutreachImagesController_image[1]_v1": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": string;
+                };
+            };
+        };
+    };
+    OutreachPreviewController_preview_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmailPreviewRequestDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmailPreviewDto"];
+                };
+            };
+        };
+    };
+    OutreachPreviewController_test_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmailPreviewRequestDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmailTestResultDto"];
+                };
+            };
+        };
+    };
     CmoController_send_v1: {
         parameters: {
             query?: never;
@@ -41289,6 +41830,52 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FunnelViewDto"];
+                };
+            };
+        };
+    };
+    SearchOutreachController_summary_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                searchId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchOutreachSummaryDto"];
+                };
+            };
+        };
+    };
+    SearchOutreachController_enroll_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                searchId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SearchOutreachEnrollDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchOutreachResultDto"];
                 };
             };
         };

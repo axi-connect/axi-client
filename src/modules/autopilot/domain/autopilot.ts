@@ -191,6 +191,25 @@ export function defaultRoutineInput(timezone: string): RoutineInput {
   };
 }
 
+/**
+ * B2 · «Automatizar cada semana» desde «Escribirles»: el piloto nuevo con la
+ * fuente y los filtros de la búsqueda y la secuencia elegida. Lo demás, los
+ * valores prudentes de siempre.
+ */
+export function routineFromSearch(
+  base: RoutineInput,
+  search: { label: string | null; source: string; params: Record<string, unknown> },
+  sequenceId: string,
+): RoutineInput {
+  const name = search.label === null ? "Escribirles" : `Escribirles · ${search.label}`
+  return {
+    ...base,
+    name: name.slice(0, 80),
+    source: { kind: search.source, params: { ...search.params } },
+    follow_up: { sequence_id: sequenceId },
+  }
+}
+
 /** Lo editable de un piloto: lo mismo que se manda al guardar. */
 export function toRoutineInput(routine: Routine): RoutineInput {
   return {
