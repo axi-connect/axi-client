@@ -40,13 +40,14 @@ describe("«Escribirles» (B2)", () => {
     })
   })
 
-  it("el WhatsApp con los datos del negocio de ejemplo", () => {
+  it("el WhatsApp con los mismos valores que arma el servidor al enviar", () => {
     expect(
-      whatsappBody("Ayudamos a hoteles como {{1}} a vender. Sobre {{2}}: {{3}}", ["company_name", "topic", "static:hoy"], {
-        business: "Casa Almendro Hotel",
-        topic: "reservas directas",
-      }),
-    ).toBe("Ayudamos a hoteles como Casa Almendro Hotel a vender. Sobre reservas directas: hoy")
+      whatsappBody(
+        "Hola {{1}}, te escribe {{2}}: ayudamos a hoteles como {{3}}. Sobre {{4}}: {{5}}",
+        ["first_name", "company_name", "full_name", "topic", "static:hoy"],
+        { business: "Casa Almendro Hotel", topic: "reservas directas", sender: "Axi Connect" },
+      ),
+    ).toBe("Hola Casa, te escribe Axi Connect: ayudamos a hoteles como Casa Almendro Hotel. Sobre reservas directas: hoy")
   })
 
   it("el resultado dice cuántos entraron y por qué no los demás", () => {
@@ -65,7 +66,7 @@ describe("«Escribirles» (B2)", () => {
   it("nombres legibles: plantilla, nombre sobre la imagen y «Ver como» de corto a largo", () => {
     expect(templateDisplayName("axi_prospeccion_hoteles_v2")).toBe("Prospección hoteles · v2")
     expect(personalizedName("Glamping Islas del Rosario Eco Lodge & Beach Club Resort")).toBe(
-      "Glamping Islas del Rosario Eco Lodge &",
+      "Glamping Islas del Rosario Eco Lodge",
     )
     expect(sampleOrder(["Hotel Boutique Casa del Mar", "Nácar", "Casa Almendro"])).toEqual([
       "Nácar",

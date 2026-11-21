@@ -48,14 +48,22 @@ export function lookPayload(look: LookState) {
   }
 }
 
-/** Los valores de `{{1}}`… para un negocio de ejemplo, como los arma el servidor al enviar. */
+/**
+ * Los valores de `{{1}}`… como los arma el servidor al enviar
+ * (`renderOpeningComponents`): `company_name` es TU negocio (quien escribe),
+ * `full_name` el del destinatario y `first_name` su primera palabra (un
+ * negocio promovido no tiene nombre de pila).
+ */
 export function whatsappValues(
   params: readonly string[],
-  sample: { business: string; topic: string | null },
+  sample: { business: string; topic: string | null; sender: string },
 ): string[] {
+  const first = sample.business.trim().split(/\s+/)[0] || "Hola"
   return params.map((source) => {
-    if (source === "company_name" || source === "custom_field:company_name") return sample.business
-    if (source === "first_name" || source === "full_name") return sample.business
+    if (source === "company_name") return sample.sender
+    if (source === "full_name") return sample.business
+    if (source === "first_name") return first
+    if (source === "custom_field:company_name") return sample.business
     if (source === "topic") return sample.topic ?? "…"
     if (source.startsWith("static:")) return source.slice("static:".length)
     return "…"
@@ -66,7 +74,7 @@ export function whatsappValues(
 export function whatsappBody(
   body: string,
   params: readonly string[],
-  sample: { business: string; topic: string | null },
+  sample: { business: string; topic: string | null; sender: string },
 ): string {
   const values = whatsappValues(params, sample)
   return body.replace(/\{\{\s*(\d+)\s*\}\}/g, (whole, n: string) => values[Number(n) - 1] ?? whole)
@@ -82,13 +90,18 @@ export function templateDisplayName(name: string): string {
   return version === undefined ? human : `${human} · ${version.toLowerCase()}`
 }
 
-/** El nombre sobre la imagen, cortado por palabras a 40 (como el servidor). */
+const DANGLING = /\s+(?:&|\+|·|-|–|y|e|o|de|del|la|las|el|los|en)$/i
+
+/** El nombre sobre la imagen, cortado por palabras a 40 y sin conectores colgando (como el servidor). */
 export function personalizedName(raw: string): string {
   const name = raw.trim().replace(/\s+/g, " ")
   if (name.length <= 40) return name
   const cut = name.slice(0, 41)
   const space = cut.lastIndexOf(" ")
-  return space > 0 ? cut.slice(0, space).replace(/[\s,.;:–-]+$/, "") : `${name.slice(0, 39)}…`
+  if (space <= 0) return `${name.slice(0, 39)}…`
+  let out = cut.slice(0, space).replace(/[\s,.;:–-]+$/, "")
+  while (DANGLING.test(out)) out = out.replace(DANGLING, "").replace(/[\s,.;:–-]+$/, "")
+  return out
 }
 
 /** Para «Ver como»: los nombres cortos primero (se leen enteros y son los típicos). */

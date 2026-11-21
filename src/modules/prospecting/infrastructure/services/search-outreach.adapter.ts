@@ -107,3 +107,9 @@ export function previewEmail(input: EmailPreviewInput): Promise<EmailPreviewDTO>
 export function sendTestEmail(input: EmailPreviewInput): Promise<{ sent_to: string }> {
   return http.post<{ sent_to: string }>("/outreach/email/test", input)
 }
+
+/** El nombre de TU negocio (la variable `company_name` de las plantillas de WhatsApp). */
+export async function getMyCompanyName(): Promise<string> {
+  const company = await http.get<{ name: string }>("/companies/me")
+  return company.name
+}

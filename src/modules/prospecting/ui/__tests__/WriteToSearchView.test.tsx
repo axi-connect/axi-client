@@ -31,7 +31,7 @@ const mockLook = {
     approval_status: "approved",
     has_image_header: true,
     body: "Ayudamos a hoteles como {{1}}.",
-    params: ["company_name"],
+    params: ["full_name"],
     topic: null,
     footer: "Toca «No me interesa» y no te escribimos más.",
     buttons: [
@@ -48,6 +48,7 @@ const mockEnroll = jest.fn()
 
 jest.mock("@/modules/prospecting/infrastructure/services/search-outreach.adapter", () => ({
   getSearchOutreach: () => Promise.resolve(mockSummary),
+  getMyCompanyName: () => Promise.resolve("Norte Studio"),
   listSequenceOptions: () => Promise.resolve(mockSequences),
   listOutreachImages: () => Promise.resolve(mockImages),
   getSequenceLook: () => Promise.resolve(mockLook),

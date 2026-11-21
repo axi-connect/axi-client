@@ -155,11 +155,11 @@ function SignaturePreview({ sender, onEdit }: { sender: OutreachSenderDTO; onEdi
         )}
         <div className="min-w-0 text-sm leading-snug">
           {/* En móvil no hay hover: dos líneas antes de difuminar; desde sm, una con title. */}
-          <p className="line-clamp-2 font-semibold [overflow-wrap:anywhere] sm:truncate" title={lines.name}>
+          <p className="line-clamp-2 font-semibold [overflow-wrap:anywhere] sm:line-clamp-none sm:truncate" title={lines.name}>
             {lines.name}
           </p>
           <p
-            className="line-clamp-2 text-muted-foreground [overflow-wrap:anywhere] sm:truncate"
+            className="line-clamp-2 text-muted-foreground [overflow-wrap:anywhere] sm:line-clamp-none sm:truncate"
             title={lines.role ?? undefined}
           >
             {lines.role ?? "Sin persona: firma el negocio"}

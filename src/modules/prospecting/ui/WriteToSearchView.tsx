@@ -53,6 +53,7 @@ import {
 } from "../domain/search-outreach"
 import {
   enrollSearch,
+  getMyCompanyName,
   getSearchOutreach,
   getSequenceLook,
   listOutreachImages,
@@ -104,11 +105,18 @@ export function WriteToSearchView({ searchId }: { searchId: string }) {
   const [lookView, setLookView] = useState<SequenceLookViewDTO | null>(null)
   const [look, setLook] = useState<LookState | null>(null)
   const [failed, setFailed] = useState<string | null>(null)
+  const [sender, setSender] = useState("Tu negocio")
+  // «Ver como»: el negocio con que se ve TODO (imagen, WhatsApp, correo y el «Para …» del switch).
+  const [business, setBusiness] = useState<string | null>(null)
 
   useEffect(() => {
+    getMyCompanyName()
+      .then(setSender)
+      .catch(() => undefined)
     Promise.all([getSearchOutreach(searchId), listSequenceOptions(), listOutreachImages()])
       .then(([nextSummary, nextSequences, nextImages]) => {
         setSummary(nextSummary)
+        setBusiness(sampleOrder(nextSummary.sample_businesses)[0] ?? "Negocio de ejemplo")
         setSequences(nextSequences)
         setImages(nextImages)
         setSequenceId(nextSequences.find((sequence) => sequence.is_active)?.id ?? nextSequences[0]?.id ?? null)
@@ -192,9 +200,19 @@ export function WriteToSearchView({ searchId }: { searchId: string }) {
             look={look}
             onLook={setLook}
             canWrite={canWrite}
+            business={business ?? "Negocio de ejemplo"}
           />
           <div className="min-w-0 xl:sticky xl:top-4 xl:row-span-2">
-            <PreviewCard summary={summary} sequence={sequence} lookView={lookView} look={look} canWrite={canWrite} />
+            <PreviewCard
+              summary={summary}
+              sequence={sequence}
+              lookView={lookView}
+              look={look}
+              canWrite={canWrite}
+              business={business ?? "Negocio de ejemplo"}
+              onBusiness={setBusiness}
+              sender={sender}
+            />
           </div>
           <ActionBar
             summary={summary}
@@ -247,6 +265,7 @@ function SetupCard({
   look,
   onLook,
   canWrite,
+  business,
 }: {
   summary: SearchOutreachSummaryDTO
   sequences: SequenceOption[]
@@ -258,6 +277,7 @@ function SetupCard({
   look: LookState | null
   onLook: (look: LookState) => void
   canWrite: boolean
+  business: string
 }) {
   const { showAlert } = useAlert()
   const fileRef = useRef<HTMLInputElement>(null)
@@ -285,7 +305,7 @@ function SetupCard({
   }
 
   const whatsapp = lookView?.whatsapp ?? null
-  const example = personalizedName(sampleOrder(summary.sample_businesses)[0] ?? "Casa Almendro")
+  const example = personalizedName(business)
 
   return (
     <section aria-label="Lo que se va a enviar" className="min-w-0 rounded-2xl border border-border bg-card">
@@ -635,17 +655,22 @@ function PreviewCard({
   lookView,
   look,
   canWrite,
+  business,
+  onBusiness,
+  sender,
 }: {
   summary: SearchOutreachSummaryDTO
   sequence: SequenceOption | null
   lookView: SequenceLookViewDTO | null
   look: LookState | null
   canWrite: boolean
+  business: string
+  onBusiness: (business: string) => void
+  sender: string
 }) {
   const { showAlert } = useAlert()
   const samples = useMemo(() => sampleOrder(summary.sample_businesses), [summary.sample_businesses])
   const [tab, setTab] = useState<"whatsapp" | "email">("whatsapp")
-  const [business, setBusiness] = useState<string>(samples[0] ?? "Negocio de ejemplo")
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [email, setEmail] = useState<EmailPreviewDTO | null>(null)
   const [sending, setSending] = useState(false)
@@ -727,7 +752,7 @@ function PreviewCard({
             { value: "email", label: "Correo", icon: Mail },
           ]}
         />
-        <Select value={business} onValueChange={setBusiness}>
+        <Select value={business} onValueChange={onBusiness}>
           <SelectTrigger className="w-48 max-w-full" aria-label="Ver como">
             <span className="min-w-0 truncate" title={business}>
               <SelectValue />
@@ -751,7 +776,7 @@ function PreviewCard({
             header={null}
             media={whatsapp.has_image_header ? { kind: "image", url: imageUrl } : null}
             body={whatsapp.body}
-            examples={whatsappValues(whatsapp.params, { business, topic: whatsapp.topic })}
+            examples={whatsappValues(whatsapp.params, { business, topic: whatsapp.topic, sender })}
             footer={whatsapp.footer}
             buttons={toTemplateButtons(whatsapp.buttons)}
             className="min-h-[420px]"
