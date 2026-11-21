@@ -155,12 +155,12 @@ function SignaturePreview({ sender, onEdit }: { sender: OutreachSenderDTO; onEdi
         )}
         <div className="min-w-0 text-sm leading-snug">
           {/* En móvil no hay hover: dos líneas antes de difuminar; desde sm, una con title.
-              La base es `truncate` (el que el sistema difumina): `sm:truncate` pintaba «…». */}
-          <p className="truncate font-semibold max-sm:line-clamp-2 max-sm:whitespace-normal max-sm:[overflow-wrap:anywhere]" title={lines.name}>
+              `sm:truncate` difumina igual que `truncate` (globals.css). */}
+          <p className="font-semibold [overflow-wrap:anywhere] max-sm:line-clamp-2 sm:truncate" title={lines.name}>
             {lines.name}
           </p>
           <p
-            className="truncate text-muted-foreground max-sm:line-clamp-2 max-sm:whitespace-normal max-sm:[overflow-wrap:anywhere]"
+            className="text-muted-foreground [overflow-wrap:anywhere] max-sm:line-clamp-2 sm:truncate"
             title={lines.role ?? undefined}
           >
             {lines.role ?? "Sin persona: firma el negocio"}

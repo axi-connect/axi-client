@@ -39,6 +39,7 @@ import {
   initialLook,
   lookChanged,
   personalizedName,
+  previewEmailStep,
   resultText,
   sampleOrder,
   templateDisplayName,
@@ -440,6 +441,11 @@ function SetupCard({
                 { value: "brand", label: "Marca" },
               ]}
             />
+            <p className="basis-full text-xs text-muted-foreground">
+              {look.email_design === "brand"
+                ? "El correo 1 va en texto (llega a Principal); la marca va desde el siguiente."
+                : "Todos los correos van como un correo personal, sin imagen ni botón."}
+            </p>
             {look.email_design === "brand" && (
               <div className="flex min-w-0 flex-1 flex-wrap items-end gap-2">
                 <div className="grid min-w-40 flex-1 gap-1">
@@ -675,27 +681,26 @@ function PreviewCard({
   const [email, setEmail] = useState<EmailPreviewDTO | null>(null)
   const [sending, setSending] = useState(false)
 
-  const firstEmail = useMemo(
-    () =>
-      sequence?.steps.find((step) => step.task_channel === "email" && step.message_template !== null)?.message_template ??
-      null,
-    [sequence],
+  const emailStep = useMemo(
+    () => (sequence === null || look === null ? null : previewEmailStep(sequence.steps, look.email_design)),
+    [sequence, look],
   )
+  const firstEmail = emailStep?.step ?? null
 
   const emailInput = useCallback((): EmailPreviewInput | null => {
-    if (firstEmail === null || look === null) return null
-    const brand = look.email_design === "brand" && !/^\s*re\s*:/i.test(firstEmail.subject ?? "")
+    if (emailStep === null || look === null) return null
+    const { step, brand } = emailStep
     return {
       template: {
-        subject: firstEmail.subject,
-        body: firstEmail.body,
+        subject: step.subject,
+        body: step.body,
         design: brand ? "brand" : "text",
         header_image: brand && look.image_id !== null ? { id: look.image_id, personalize: look.personalize } : null,
         cta: brand ? look.cta : null,
       },
       sample_business: business,
     }
-  }, [firstEmail, look, business])
+  }, [emailStep, look, business])
 
   useEffect(() => {
     if (look === null) return
@@ -793,7 +798,7 @@ function PreviewCard({
               {email.sender_name}
             </p>
             <p className="truncate" title={email.subject}>
-              {email.subject}
+              Correo {emailStep?.position ?? 1} · {email.subject}
             </p>
           </div>
           <iframe

@@ -3,6 +3,7 @@ import {
   lookChanged,
   lookPayload,
   personalizedName,
+  previewEmailStep,
   resultText,
   sampleOrder,
   templateDisplayName,
@@ -73,5 +74,20 @@ describe("«Escribirles» (B2)", () => {
       "Casa Almendro",
       "Hotel Boutique Casa del Mar",
     ])
+  })
+
+  it("la vista previa del correo: con marca, el primero que la lleva (el 1 va en texto)", () => {
+    const steps = [
+      { task_channel: "email", message_template: { subject: "una idea", body: "1" } },
+      { task_channel: "email", message_template: { subject: "Re: una idea", body: "re" } },
+      { task_channel: "email", message_template: { subject: "antes de la temporada", body: "3" } },
+    ]
+    expect(previewEmailStep(steps, "brand")).toEqual({
+      step: { subject: "antes de la temporada", body: "3" },
+      brand: true,
+      position: 2,
+    })
+    expect(previewEmailStep(steps, "text")).toMatchObject({ step: { subject: "una idea" }, brand: false, position: 1 })
+    expect(previewEmailStep(steps.slice(0, 2), "brand")).toMatchObject({ brand: false, position: 1 })
   })
 })

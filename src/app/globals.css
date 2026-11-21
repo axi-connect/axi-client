@@ -3236,6 +3236,37 @@ button.assistant-island--s:focus-visible {
   }
 }
 
+/* Las VARIANTES de truncate son otras clases (`.sm\:truncate`, `[&>span]:truncate`,
+   `*:data-[slot=select-value]:truncate`) que el `.truncate` de arriba no alcanza:
+   pintaban «…» (auditoría B2, 21-nov). Mismo difuminado, sin capa:
+   - `sm:` dentro de su media query: por debajo de sm no pisa un `line-clamp`
+     de móvil (que difumina el último renglón);
+   - las de hijos, en el hijo. Sin desborde no hay scroll, la línea de tiempo
+     está inactiva y no hay máscara: aplicarlo a un hijo que cabe no hace nada. */
+@media (width >= 40rem) {
+  .sm\:truncate {
+    text-overflow: clip;
+    @supports (animation-timeline: scroll()) {
+      animation: truncate-mask-inline linear both;
+      animation-timeline: scroll(self inline);
+      &:focus-visible {
+        animation: none;
+      }
+    }
+  }
+}
+[class*="]:truncate"] > *,
+[class*="]:truncate"] [data-slot="select-value"] {
+  text-overflow: clip;
+  @supports (animation-timeline: scroll()) {
+    animation: truncate-mask-inline linear both;
+    animation-timeline: scroll(self inline);
+    &:focus-visible {
+      animation: none;
+    }
+  }
+}
+
 /* Multilínea: con `-webkit-line-clamp` Chrome pinta «…» justo después de la
    última palabra que cabe, a mitad de renglón, aunque se le pida `clip`. Aquí
    el bloque se limita a N renglones (`max-height: N·1lh`, sin `-webkit-box`:

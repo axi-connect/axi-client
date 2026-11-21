@@ -137,3 +137,23 @@ export function lookChanged(look: LookState, view: SequenceLookViewDTO | null): 
   const current = initialLook(view, null)
   return JSON.stringify(lookPayload(look)) !== JSON.stringify(lookPayload(current))
 }
+
+/**
+ * El correo que enseña la vista previa: con «marca», el primero que la lleva
+ * (el correo 1 va SIEMPRE en texto y los «Re:» son respuesta en el hilo); con
+ * «texto», el correo 1. `brand` dice si ese correo sale con la marca.
+ */
+export function previewEmailStep<T extends { task_channel: string; message_template: { subject: string | null; body: string } | null }>(
+  steps: readonly T[],
+  design: EmailDesign,
+): { step: NonNullable<T["message_template"]>; brand: boolean; position: number } | null {
+  const mails = steps
+    .map((step, index) => ({ step, index }))
+    .filter(
+      ({ step }) => step.task_channel === "email" && step.message_template !== null && !/^\s*re\s*:/i.test(step.message_template.subject ?? ""),
+    )
+  const brand = design === "brand" && mails.length > 1
+  const chosen = brand ? mails[1] : mails[0]
+  if (chosen === undefined || chosen.step.message_template === null) return null
+  return { step: chosen.step.message_template as NonNullable<T["message_template"]>, brand, position: mails.indexOf(chosen) + 1 }
+}
