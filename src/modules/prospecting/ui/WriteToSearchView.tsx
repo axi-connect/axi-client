@@ -443,7 +443,7 @@ function SetupCard({
             />
             <p className="basis-full text-xs text-muted-foreground">
               {look.email_design === "brand"
-                ? "El correo 1 va en texto (llega a Principal); la marca va desde el siguiente."
+                ? "El correo 1 va en texto para que llegue a Principal; la marca va desde el siguiente que no sea «Re:»."
                 : "Todos los correos van como un correo personal, sin imagen ni botón."}
             </p>
             {look.email_design === "brand" && (
@@ -798,7 +798,7 @@ function PreviewCard({
               {email.sender_name}
             </p>
             <p className="truncate" title={email.subject}>
-              Correo {emailStep?.position ?? 1} · {email.subject}
+              Correo del día {emailStep?.day ?? 0} · {email.subject}
             </p>
           </div>
           <iframe

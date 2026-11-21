@@ -3241,8 +3241,9 @@ button.assistant-island--s:focus-visible {
    pintaban «…» (auditoría B2, 21-nov). Mismo difuminado, sin capa:
    - `sm:` dentro de su media query: por debajo de sm no pisa un `line-clamp`
      de móvil (que difumina el último renglón);
-   - las de hijos, en el hijo. Sin desborde no hay scroll, la línea de tiempo
-     está inactiva y no hay máscara: aplicarlo a un hijo que cabe no hace nada. */
+   - las de hijos, en el hijo de TEXTO (span o slot, no íconos: su `animation`
+     sin capa congelaría un `animate-spin`). Sin desborde no hay scroll, la
+     línea de tiempo está inactiva y no hay máscara. */
 @media (width >= 40rem) {
   .sm\:truncate {
     text-overflow: clip;
@@ -3255,7 +3256,8 @@ button.assistant-island--s:focus-visible {
     }
   }
 }
-[class*="]:truncate"] > *,
+[class*="]:truncate"] > span,
+[class*="]:truncate"] > [data-slot],
 [class*="]:truncate"] [data-slot="select-value"] {
   text-overflow: clip;
   @supports (animation-timeline: scroll()) {

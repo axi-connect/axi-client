@@ -86,7 +86,14 @@ describe("«Escribirles» (B2)", () => {
       step: { subject: "antes de la temporada", body: "3" },
       brand: true,
       position: 2,
+      day: 0,
     })
+    expect(
+      previewEmailStep(
+        steps.map((step, i) => ({ ...step, offset_hours: [0, 72, 192][i] })),
+        "brand",
+      )?.day,
+    ).toBe(8)
     expect(previewEmailStep(steps, "text")).toMatchObject({ step: { subject: "una idea" }, brand: false, position: 1 })
     expect(previewEmailStep(steps.slice(0, 2), "brand")).toMatchObject({ brand: false, position: 1 })
   })

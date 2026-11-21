@@ -143,10 +143,12 @@ export function lookChanged(look: LookState, view: SequenceLookViewDTO | null): 
  * (el correo 1 va SIEMPRE en texto y los «Re:» son respuesta en el hilo); con
  * «texto», el correo 1. `brand` dice si ese correo sale con la marca.
  */
-export function previewEmailStep<T extends { task_channel: string; message_template: { subject: string | null; body: string } | null }>(
+export function previewEmailStep<
+  T extends { task_channel: string; offset_hours?: number; message_template: { subject: string | null; body: string } | null },
+>(
   steps: readonly T[],
   design: EmailDesign,
-): { step: NonNullable<T["message_template"]>; brand: boolean; position: number } | null {
+): { step: NonNullable<T["message_template"]>; brand: boolean; position: number; day: number } | null {
   const mails = steps
     .map((step, index) => ({ step, index }))
     .filter(
@@ -155,5 +157,11 @@ export function previewEmailStep<T extends { task_channel: string; message_templ
   const brand = design === "brand" && mails.length > 1
   const chosen = brand ? mails[1] : mails[0]
   if (chosen === undefined || chosen.step.message_template === null) return null
-  return { step: chosen.step.message_template as NonNullable<T["message_template"]>, brand, position: mails.indexOf(chosen) + 1 }
+  return {
+    step: chosen.step.message_template as NonNullable<T["message_template"]>,
+    brand,
+    position: mails.indexOf(chosen) + 1,
+    // El día, como lo dicen las pastillas de la secuencia («Correo · Día 8»).
+    day: Math.round((chosen.step.offset_hours ?? 0) / 24),
+  }
 }
