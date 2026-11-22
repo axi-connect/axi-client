@@ -56,6 +56,7 @@ function field(overrides: Partial<ContactDataField> = {}): ContactDataField {
     conversation_id: "conv-1",
     actor_user_id: null,
     canonical_from: null,
+    from_web: false,
     raw_value: null,
     invalid_reason: null,
     attempts: 0,
@@ -179,6 +180,29 @@ describe("ContactDataPanel (card)", () => {
 
     // Propuesta del agente sobre un campo protegido.
     expect(within(row("Tamaño del equipo")).getByText(/el agente propone «20»/)).toBeInTheDocument();
+  });
+
+  it("un dato leído en la web del negocio dice «De su web» y muestra la frase de la página", async () => {
+    api.getContactData.mockResolvedValue(
+      dto([
+        field({
+          code: "sedes",
+          label: "Número de sedes",
+          type: "number",
+          value: 3,
+          source: "system",
+          from_web: true,
+          raw_value: "con 3 sedes en Bogotá",
+          conversation_id: null,
+        }),
+      ]),
+    );
+    render(<ContactDataPanel contactId="c1" variant="card" />);
+    await screen.findByText("Número de sedes", { selector: "dt" });
+    const sedes = row("Número de sedes");
+    expect(within(sedes).getByText("De su web")).toBeInTheDocument();
+    expect(within(sedes).getByText("«con 3 sedes en Bogotá»")).toBeInTheDocument();
+    expect(within(sedes).queryByText("Sistema")).toBeNull();
   });
 
   it("las acciones existen en la fila pero solo se muestran al pasar el ratón o con foco dentro", async () => {

@@ -24,6 +24,7 @@ function field(code: string, value: string | null, overrides: Partial<ContactDat
     conversation_id: null,
     actor_user_id: null,
     canonical_from: null,
+    from_web: false,
     raw_value: null,
     invalid_reason: null,
     attempts: 0,

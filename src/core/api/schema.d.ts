@@ -16483,6 +16483,7 @@ export interface components {
                 conversation_id: string | null;
                 actor_user_id: string | null;
                 canonical_from: string | null;
+                from_web: boolean;
                 raw_value: string | null;
                 invalid_reason: string | null;
                 attempts: number;
@@ -23456,6 +23457,7 @@ export interface components {
             auto_promote_consented: boolean;
             quarantine_days: number;
             promote_batch_max: number;
+            fill_form_from_web?: boolean;
         };
         IcpDto: {
             /** Format: uuid */

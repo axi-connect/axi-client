@@ -21,3 +21,13 @@ export { listSources } from "./infrastructure/services/prospecting-service.adapt
  */
 export type { SearchDTO } from "./domain/search";
 export { getSearch } from "./infrastructure/services/prospecting-service.adapter";
+
+/**
+ * Enriquecimiento al contacto, Fase 2: «Completar con la web del negocio». Formularios de captura
+ * monta la tarjeta (es su pantalla); el ajuste y la regla de qué datos se leen en una web son de
+ * Captación.
+ */
+export type { FillFormFromWebState } from "./ui/hooks/use-fill-form-from-web";
+export { useFillFormFromWeb } from "./ui/hooks/use-fill-form-from-web";
+export type { FormFieldLike } from "./domain/form-fill";
+export { isWebFillableField, splitWebFillable } from "./domain/form-fill";

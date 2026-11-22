@@ -31,6 +31,7 @@ function field(overrides: Partial<ContactDataField> = {}): ContactDataField {
     conversation_id: "conv-1",
     actor_user_id: null,
     canonical_from: null,
+    from_web: false,
     raw_value: null,
     invalid_reason: null,
     attempts: 0,

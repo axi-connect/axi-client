@@ -10,6 +10,7 @@ import { errorMessage } from "@/core/lib/error-messages";
 import { useIsMobile } from "@/core/hooks/use-mobile";
 import { useAlert } from "@/core/providers/alert-provider";
 import { useAuth } from "@/shared/auth/auth.hooks";
+import { isWebFillableField, useFillFormFromWeb } from "@/modules/prospecting/public";
 import { Button } from "@/shared/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert";
 import { DetailSheet } from "@/shared/components/features/detail-sheet";
@@ -18,6 +19,7 @@ import {
   FLOW_LABELS,
   FORM_FLOWS,
   type FlowForm,
+  type FormFieldType,
   type FormFlow,
   type RecommendedField,
 } from "@/modules/forms/domain/form";
@@ -40,6 +42,7 @@ import { DirtyActionBar } from "./components/DirtyActionBar";
 import { FieldDetailPanel } from "./components/FieldDetailPanel";
 import { FieldMasterList } from "./components/FieldMasterList";
 import { FieldReadOnlyPanel } from "./components/FieldReadOnlyPanel";
+import { FillFromWebCard, WebFillNote } from "./components/FillFromWebCard";
 import { FlowEmptyState } from "./components/FlowEmptyState";
 import { FlowTabs } from "./components/FlowTabs";
 import { FlowToolbar } from "./components/FlowToolbar";
@@ -72,6 +75,8 @@ export function FormsSection() {
   const { showAlert, showModal } = useAlert();
   const { hasPermission, status } = useAuth();
 
+  // Enriquecimiento al contacto, Fase 2: el ajuste es de Captación (guarda al instante).
+  const fillFromWeb = useFillFormFromWeb();
   const canManage = hasPermission("forms:manage");
   const canRead = hasPermission("forms:read");
   const readOnly = !canManage;
@@ -149,17 +154,24 @@ export function FormsSection() {
     return acc;
   }, {} as Record<FormFlow, boolean>);
 
-  // Selección: siempre hay un campo elegido si hay campos. Al cambiar de flujo o
-  // borrar una fila, cae en el vecino más cercano.
+  // Selección: en escritorio siempre hay un campo elegido si hay campos (el panel
+  // de al lado nunca queda vacío). En móvil NO: ahí el detalle es una hoja que
+  // tapa la página, así que elegir solo la abría al entrar y la volvía a abrir
+  // al cerrarla (cerrar = null → se elegía el primero otra vez). En móvil se
+  // abre cuando la persona toca un dato, y se cierra si ese dato desaparece.
   useEffect(() => {
     if (fields.length === 0) {
       setSelectedKey(null);
       return;
     }
-    if (selectedKey === null || !fields.some((field) => field.key === selectedKey)) {
-      setSelectedKey(fields[0].key);
+    const exists = selectedKey !== null && fields.some((field) => field.key === selectedKey);
+    if (exists) return;
+    if (isMobile) {
+      if (selectedKey !== null) setSelectedKey(null);
+      return;
     }
-  }, [fields, selectedKey]);
+    setSelectedKey(fields[0].key);
+  }, [fields, selectedKey, isMobile]);
 
   const selectedIndex = fields.findIndex((field) => field.key === selectedKey);
 
@@ -365,6 +377,19 @@ export function FormsSection() {
 
   if (forms === null) return <FormsEditorSkeleton />;
 
+  const selectedField = selectedIndex >= 0 ? fields[selectedIndex] : undefined;
+  const webNote = (
+    <WebFillNote
+      show={
+        flow === "contact_registration" &&
+        fillFromWeb.status === "ready" &&
+        fillFromWeb.enabled &&
+        selectedField !== undefined &&
+        isWebFillableField(selectedField)
+      }
+    />
+  );
+
   const detailPanel =
     selectedIndex >= 0 ? (
       readOnly ? (
@@ -424,6 +449,20 @@ export function FormsSection() {
         onGoToContactFlow={() => changeFlow("contact_registration")}
       />
 
+      {flow === "contact_registration" && (
+        <FillFromWebCard
+          fields={fields.map((field) => ({
+            key: field.key,
+            code: field.code,
+            label: field.label,
+            type: field.type as FormFieldType,
+          }))}
+          state={fillFromWeb}
+          canEditForm={!readOnly}
+          onAddField={() => handleAdd()}
+        />
+      )}
+
       {fields.length === 0 ? (
         <FlowEmptyState flow={flow} readOnly={readOnly} onAdd={handleAdd} />
       ) : (
@@ -449,10 +488,12 @@ export function FormsSection() {
               title={fields[selectedIndex]?.label.trim() || "Dato"}
               size="lg"
             >
+              {webNote}
               {detailPanel}
             </DetailSheet>
           ) : (
             <div className="rounded-2xl border border-border bg-background p-4 md:p-6" aria-busy={saving}>
+              {webNote}
               {detailPanel}
             </div>
           )}

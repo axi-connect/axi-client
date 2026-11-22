@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Check, CircleCheck, Pencil, Sparkles, type LucideIcon } from "lucide-react";
+import { Check, CircleCheck, Globe, Pencil, Sparkles, type LucideIcon } from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
 import { cn } from "@/core/lib/utils";
 import { useAlert } from "@/core/providers/alert-provider";
@@ -131,6 +131,13 @@ function MetaLine({
       );
     } else if (field.source === "user") {
       push(<span key="who">{actorName ?? FIELD_SOURCE_LABELS.user}</span>);
+    } else if (field.from_web) {
+      // Captación lo leyó en la web del negocio (formulario desde la web, Fase 2)
+      push(
+        <span key="who" className="inline-flex items-center gap-1 font-medium text-accent-violet">
+          <Globe className="size-3" aria-hidden /> De su web
+        </span>,
+      );
     } else if (field.source !== null) {
       push(<span key="who">{FIELD_SOURCE_LABELS[field.source]}</span>);
     }
@@ -172,6 +179,14 @@ function MetaLine({
     );
   }
 
+  // La frase de la página de donde salió, en su propia línea: es la prueba del dato.
+  const webQuote =
+    field.from_web && field.raw_value !== null && field.state !== "missing" ? (
+      <span key="quote" className="basis-full text-pretty text-foreground/80">
+        «{field.raw_value}»
+      </span>
+    ) : null;
+
   if (!field.defined) {
     push(
       <span key="orphan" className="inline-flex flex-wrap items-center gap-x-1.5">
@@ -183,7 +198,7 @@ function MetaLine({
     );
   }
 
-  if (parts.length === 0) return null;
+  if (parts.length === 0 && webQuote === null) return null;
 
   return (
     <div
@@ -199,6 +214,7 @@ function MetaLine({
         </>
       )}
       {parts}
+      {webQuote}
     </div>
   );
 }

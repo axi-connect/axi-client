@@ -43,7 +43,21 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(""),
 }));
 
-jest.mock("@/core/hooks/use-mobile", () => ({ useIsMobile: () => false }));
+let mobile = false;
+jest.mock("@/core/hooks/use-mobile", () => ({ useIsMobile: () => mobile }));
+
+const getProspectingSettings = jest.fn();
+const updateProspectingSettings = jest.fn();
+jest.mock("@/modules/prospecting/infrastructure/services/prospecting-service.adapter", () => ({
+  getProspectingSettings: () => getProspectingSettings(),
+  updateProspectingSettings: (input: unknown) => updateProspectingSettings(input),
+}));
+const PROSPECTING_SETTINGS = {
+  auto_promote_consented: true,
+  quarantine_days: 180,
+  promote_batch_max: 100,
+  fill_form_from_web: false,
+};
 
 const definition = (
   flow: FormDefinitionDTO["flow"],
@@ -67,6 +81,7 @@ const CONTACT_WITH_TWO = definition("contact_registration", {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mobile = false;
   permissions = ["forms:read", "forms:manage"];
   listForms.mockResolvedValue({ data: [] });
   window.history.replaceState(null, "", "/settings/forms");
@@ -650,5 +665,83 @@ describe("permisos", () => {
 
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/dashboard"));
     expect(listForms).not.toHaveBeenCalled();
+  });
+});
+
+describe("completar con la web del negocio (enriquecimiento, Fase 2)", () => {
+  const CONTACT_MIXED = definition("contact_registration", {
+    fields: [
+      { code: "full_name", label: "Nombre completo", type: "text", required: true, position: 0 },
+      { code: "phone", label: "Teléfono", type: "phone", required: true, position: 1 },
+      { code: "sedes", label: "Número de sedes", type: "number", required: false, position: 2 },
+    ],
+  });
+
+  beforeEach(() => {
+    getProspectingSettings.mockResolvedValue(PROSPECTING_SETTINGS);
+    updateProspectingSettings.mockImplementation((input: unknown) => Promise.resolve(input));
+    listForms.mockResolvedValue({ data: [CONTACT_MIXED] });
+  });
+
+  it("sin permiso de Captación la tarjeta no aparece ni se pide el ajuste", async () => {
+    await renderReady();
+    expect(screen.queryByText(/completar con la web del negocio/i)).not.toBeInTheDocument();
+    expect(getProspectingSettings).not.toHaveBeenCalled();
+  });
+
+  it("encenderlo guarda AL INSTANTE la sección entera, sin ensuciar el borrador del formulario", async () => {
+    permissions = ["forms:read", "forms:manage", "leads:read", "leads:manage"];
+    await renderReady();
+    const toggle = await screen.findByRole("switch", { name: /apagado/i });
+    expect(screen.getByText(/1 de tus 3 datos/i)).toBeInTheDocument();
+
+    fireEvent.click(toggle);
+    await waitFor(() =>
+      expect(updateProspectingSettings).toHaveBeenCalledWith({
+        ...PROSPECTING_SETTINGS,
+        fill_form_from_web: true,
+      }),
+    );
+    await screen.findByRole("switch", { name: /encendido/i });
+    expect(showAlert).toHaveBeenCalledWith(expect.objectContaining({ tone: "success" }));
+    // Lo que puede leer y lo que siempre da el cliente, con la regla del servidor
+    expect(screen.getByText(/puede leerlos en su web · 1/i)).toBeInTheDocument();
+    expect(screen.getByText(/siempre los da el cliente · 2/i)).toBeInTheDocument();
+    // No es un cambio del formulario: no aparece «Guardar»
+    expect(screen.queryByRole("button", { name: /^guardar/i })).not.toBeInTheDocument();
+  });
+
+  it("si falla al guardar vuelve a como estaba y lo dice", async () => {
+    permissions = ["forms:read", "forms:manage", "leads:read", "leads:manage"];
+    updateProspectingSettings.mockRejectedValue(new Error("boom"));
+    await renderReady();
+    fireEvent.click(await screen.findByRole("switch", { name: /apagado/i }));
+    await waitFor(() =>
+      expect(showAlert).toHaveBeenCalledWith(expect.objectContaining({ tone: "error" })),
+    );
+    expect(screen.getByRole("switch", { name: /apagado/i })).not.toBeChecked();
+  });
+
+  it("quien solo lee Captación ve el estado pero no lo puede cambiar", async () => {
+    permissions = ["forms:read", "forms:manage", "leads:read"];
+    await renderReady();
+    expect(await screen.findByRole("switch", { name: /apagado/i })).toBeDisabled();
+    expect(screen.getByText(/solo quien administra captación puede cambiarlo/i)).toBeInTheDocument();
+  });
+});
+
+describe("móvil: la hoja del dato", () => {
+  it("no se abre sola al entrar, se abre al tocar un dato y al cerrarla queda cerrada", async () => {
+    mobile = true;
+    listForms.mockResolvedValue({ data: [CONTACT_WITH_TWO] });
+    await renderReady();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /^\d+\s*Teléfono/ }));
+    const sheet = await screen.findByRole("dialog");
+    expect(within(sheet).getByLabelText(/nombre del dato/i)).toHaveValue("Teléfono");
+
+    fireEvent.click(within(sheet).getByRole("button", { name: /cerrar/i }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   });
 });
