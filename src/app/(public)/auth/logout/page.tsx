@@ -1,16 +1,17 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import { useRouter } from "next/navigation"
 import { useAuth } from "@/shared/auth/auth.hooks"
 import { BrandLoader } from "@/shared/components/ui/brand-loader"
 
 /**
  * Fallback de navegación dura a /auth/logout (acceso directo/refresh, sin el
  * modal interceptado): cierra la sesión una sola vez y vuelve al inicio.
+ *
+ * La vuelta es DURA, igual que en el modal: vacía la caché del router y los
+ * stores de la sesión cerrada (hotfix 22-nov-2026).
  */
 export default function LogoutPage() {
-  const router = useRouter()
   const { logout } = useAuth()
   const startedRef = useRef(false)
 
@@ -19,9 +20,9 @@ export default function LogoutPage() {
     startedRef.current = true
     void (async () => {
       await logout()
-      router.replace("/")
+      window.location.replace("/")
     })()
-  }, [logout, router])
+  }, [logout])
 
   return <BrandLoader fullScreen label="Cerrando sesión…" />
 }
