@@ -23,6 +23,7 @@ import { listOrders, type OrderDTO } from "@/modules/orders/public";
 import { subscribeJourneyChanged } from "@/modules/crm/infrastructure/journey-events";
 import { useJourneyRealtime } from "@/modules/crm/infrastructure/realtime/use-journey-realtime";
 import { ContactDataPanel } from "@/modules/crm/ui/components/contact-data/ContactDataPanel";
+import { ContactBusinessCard } from "@/modules/crm/ui/components/contact-detail/ContactBusinessCard";
 import { Contact360Header } from "@/modules/crm/ui/components/contact-detail/Contact360Header";
 import { CallContactButton } from "@/modules/calls/public";
 import { CopilotPanel } from "@/modules/crm/ui/components/contact-detail/CopilotPanel";
@@ -195,7 +196,11 @@ export default function Contact360Page({
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(20rem,24rem)] [&>*]:min-w-0">
         <div className="space-y-4">
           {/* F1: lo que el agente recopiló, con origen y revisión (`docs/modules/crm.md` Parte D). */}
-          <ContactDataPanel contactId={contactId} variant="card" />
+          <ContactDataPanel
+            contactId={contactId}
+            variant="card"
+            hideBusinessProfile={bundle.contact.source === "prospecting"}
+          />
           <ContactTimeline
             contactId={contactId}
             canRevert={canManage}
@@ -204,6 +209,11 @@ export default function Contact360Page({
           />
         </div>
         <div className="space-y-4">
+          {/* Captación · enriquecimiento F1 (mockup crm-contact-business): lo que se sabe del negocio. */}
+          <ContactBusinessCard
+            contactId={contactId}
+            fromProspecting={bundle.contact.source === "prospecting"}
+          />
           <CopilotPanel contactId={contactId} />
           <TagsEditor contactId={contactId} initialTags={bundle.tags} />
           <ContactDealsCard deals={bundle.deals} contact={{ id: contactId, label: contactDisplayName(bundle.contact) }} />

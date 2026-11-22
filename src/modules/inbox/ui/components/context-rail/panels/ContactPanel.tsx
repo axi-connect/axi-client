@@ -11,6 +11,7 @@ import { StatePill } from "@/shared/components/features/bento";
 import {
   CONTACT_STAGE_LABELS,
   CONTACT_STAGE_TONE,
+  ContactBusinessLinks,
   ContactDataPanel,
   ContactFieldList,
   ScorePanel,
@@ -92,7 +93,18 @@ export function ContactPanel({ conversation }: Pick<ContextPanelProps, "conversa
 
         <ContactFieldList contact={contact} profile={profile} tags={tags} ownerName={ownerName} />
 
-        <ContactDataPanel contactId={contact.id} conversationId={conversation.id} variant="rail" />
+        {/* Captación · enriquecimiento F1: abrir la web o las redes del negocio sin salir del chat. */}
+        <ContactBusinessLinks
+          contactId={contact.id}
+          fromProspecting={contact.source === "prospecting"}
+        />
+
+        <ContactDataPanel
+          contactId={contact.id}
+          conversationId={conversation.id}
+          variant="rail"
+          hideBusinessProfile={contact.source === "prospecting"}
+        />
       </div>
 
       <div className="flex shrink-0 flex-col gap-2 border-t border-border p-3.5">

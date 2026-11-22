@@ -6,6 +6,7 @@ import { cn } from "@/core/lib/utils";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import { isBusinessProfileField } from "@/modules/crm/domain/business-profile";
 import { groupByFlow, summarize, type ContactDataDTO } from "@/modules/crm/domain/contact-data";
 import { useContactData } from "@/modules/crm/infrastructure/hooks/use-contact-data";
 import { ContactDataEmpty } from "./ContactDataEmpty";
@@ -83,16 +84,32 @@ function TechnicalFooter({ system }: { system: ContactDataDTO["system"] }) {
  * `conversationId` para la sección «En esta conversación»). Las acciones se
  * gatean con `contacts:manage`; sin él es solo lectura.
  */
+/**
+ * En un contacto que llegó por Captación, lo que «El negocio» ya muestra (web,
+ * redes, categoría, NIT, Maps) no se repite aquí como campos sueltos con nombre
+ * técnico. En los demás, un «instagram» suelto es el que dictó el cliente y se
+ * queda aquí.
+ */
+function ownFields(
+  fields: ContactDataDTO["fields"],
+  hideBusinessProfile: boolean,
+): ContactDataDTO["fields"] {
+  return hideBusinessProfile ? fields.filter((field) => !isBusinessProfileField(field)) : fields;
+}
+
 export function ContactDataPanel({
   contactId,
   conversationId,
   variant,
   className,
+  hideBusinessProfile = false,
 }: {
   contactId: string;
   conversationId?: string;
   variant: ContactDataVariant;
   className?: string;
+  /** El contacto vino de Captación: su perfil de negocio lo pinta «El negocio». */
+  hideBusinessProfile?: boolean;
 }) {
   const titleId = useId();
   const { hasPermission } = useAuth();
@@ -118,13 +135,14 @@ export function ContactDataPanel({
         </Button>
       </div>
     );
-  } else if (data.fields.length === 0) {
+  } else if (ownFields(data.fields, hideBusinessProfile).length === 0) {
     body = <ContactDataEmpty variant={variant} canConfigure={canConfigureForms} />;
   } else {
-    const groups = groupByFlow(data.fields);
+    const fields = ownFields(data.fields, hideBusinessProfile);
+    const groups = groupByFlow(fields);
     body = (
       <>
-        <ContactDataSummary summary={summarize(data.fields)} variant={variant} />
+        <ContactDataSummary summary={summarize(fields)} variant={variant} />
         {groups.map((group) => (
           <ContactDataGroup key={group.flow} label={group.label} variant={variant}>
             <dl className="flex flex-col">

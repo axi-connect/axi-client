@@ -73,6 +73,10 @@ export { scoreProgress, type ScoreProgress } from "./domain/contact-summary";
  */
 export { ContactDataPanel } from "./ui/components/contact-data/ContactDataPanel";
 export {
+  ContactBusinessCard,
+  ContactBusinessLinks,
+} from "./ui/components/contact-detail/ContactBusinessCard";
+export {
   FIELD_SOURCE_LABELS,
   type ContactDataDTO,
   type ContactDataField,
