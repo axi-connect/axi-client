@@ -1,8 +1,9 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
+import Link from "next/link";
 import { FaFacebook, FaInstagram, FaLinkedin, FaTiktok, FaWhatsapp } from "react-icons/fa";
-import { Globe, Hash, Lock, Map, MapPin, Pencil, Store, Tag } from "lucide-react";
+import { ArrowRight, ChevronRight, Globe, Hash, Lock, Map, MapPin, Pencil, Store, Tag } from "lucide-react";
 import { formatShortDate } from "@/core/lib/format";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
@@ -15,6 +16,12 @@ import {
   type BusinessRow,
 } from "@/modules/crm/domain/business-profile";
 import { useContactData } from "@/modules/crm/infrastructure/hooks/use-contact-data";
+import {
+  EmailWay,
+  PhoneWay,
+  getContactBusiness,
+  type ContactBusinessDTO,
+} from "@/modules/prospecting/public";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 
@@ -165,6 +172,65 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
+/** Las iniciales del avatar: «Mariana Restrepo» → «MR». */
+function initials(name: string): string {
+  const words = name.replace(/[^\p{L}\s]/gu, " ").split(/\s+/).filter(Boolean);
+  return `${words[0]?.[0] ?? ""}${words[1]?.[0] ?? ""}`.toUpperCase() || "?";
+}
+
+type Way =
+  | { kind: "email"; way: ContactBusinessDTO["contact_points"]["emails"][number] }
+  | { kind: "phone"; way: ContactBusinessDTO["contact_points"]["phones"][number] };
+
+function WayRow({ item }: { item: Way }) {
+  return item.kind === "phone" ? (
+    <PhoneWay phone={item.way} showPrimary={false} />
+  ) : (
+    <EmailWay email={item.way} showPrimary={false} />
+  );
+}
+
+/**
+ * «Cómo llegarle»: el teléfono y el correo principales a la vista, y los demás
+ * plegados en «Ver los otros N». Lo esencial visible; el detalle, al abrir.
+ */
+function ReachSection({ points }: { points: ContactBusinessDTO["contact_points"] }) {
+  const phones: Way[] = points.phones.map((way) => ({ kind: "phone", way }));
+  const emails: Way[] = points.emails.map((way) => ({ kind: "email", way }));
+  // El servidor los trae con el principal primero.
+  const main = [phones[0], emails[0]].filter((item): item is Way => item !== undefined);
+  const others = [...emails.slice(1), ...phones.slice(1)];
+  if (main.length === 0) return null;
+  return (
+    <div className="mt-3">
+      <h4 className="mb-0.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+        Cómo llegarle
+      </h4>
+      <ul className="flex flex-col">
+        {main.map((item) => (
+          <WayRow key={`${item.kind}:${item.way.value}`} item={item} />
+        ))}
+      </ul>
+      {others.length > 0 && (
+        <details className="group mt-1">
+          <summary className="inline-flex min-h-6 cursor-pointer list-none items-center gap-1.5 rounded-sm text-[12.5px] font-medium text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
+            <ChevronRight
+              className="size-3.5 transition-transform group-open:rotate-90 motion-reduce:transition-none"
+              aria-hidden
+            />
+            {others.length === 1 ? "Ver el otro" : `Ver los otros ${String(others.length)}`}
+          </summary>
+          <ul className="flex flex-col pt-1">
+            {others.map((item) => (
+              <WayRow key={`${item.kind}:${item.way.value}`} item={item} />
+            ))}
+          </ul>
+        </details>
+      )}
+    </div>
+  );
+}
+
 /**
  * «El negocio»: lo que la captación sabe del negocio de este contacto (web,
  * redes, categoría, NIT, ficha de Maps), con abrir, copiar y corregir.
@@ -189,9 +255,30 @@ export function ContactBusinessCard({
   const canManage = hasPermission("contacts:manage");
   const { showAlert } = useAlert();
   const { data, review } = useContactData(contactId);
+  // «Cómo llegarle» sale de captación: solo se pide con su permiso de lectura.
+  // Si falla o no hay permiso, la tarjeta sigue con lo demás.
+  const canReadLeads = hasPermission("leads:read");
+  const [business, setBusiness] = useState<ContactBusinessDTO | null>(null);
+  useEffect(() => {
+    if (!fromProspecting || !canReadLeads) return;
+    let alive = true;
+    getContactBusiness(contactId)
+      .then((result) => {
+        if (alive) setBusiness(result);
+      })
+      .catch(() => {
+        if (alive) setBusiness(null);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [contactId, fromProspecting, canReadLeads]);
+
   if (data === null || !fromProspecting) return null;
   const profile = businessProfileOf(data.fields);
-  if (!hasBusinessProfile(profile)) return null;
+  const points = business?.contact_points ?? { emails: [], phones: [] };
+  const hasWays = points.emails.length > 0 || points.phones.length > 0;
+  if (!hasBusinessProfile(profile) && !hasWays) return null;
 
   const save = async (row: BusinessRow, value: string) => {
     try {
@@ -220,6 +307,42 @@ export function ContactBusinessCard({
       <p className="mt-0.5 text-sm text-pretty text-muted-foreground">
         Lo que encontró la captación. Se completa solo; lo que corrijas se respeta.
       </p>
+      {profile.decisionMaker !== null && (
+        <div className="mt-3">
+          <h4 className="mb-0.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+            Quién decide
+          </h4>
+          <div className="flex items-center gap-3 py-2.5">
+            <span
+              aria-hidden
+              className="grid size-9 shrink-0 place-items-center rounded-full bg-muted text-xs font-semibold text-muted-foreground"
+            >
+              {initials(profile.decisionMaker.name)}
+            </span>
+            <div className="grid min-w-0 flex-1 gap-px">
+              <span className="truncate text-sm font-semibold" title={profile.decisionMaker.name}>
+                {profile.decisionMaker.name}
+              </span>
+              <span className="text-xs text-pretty text-muted-foreground">
+                {[profile.decisionMaker.title, profile.decisionMaker.evidence]
+                  .filter((part) => part !== null)
+                  .join(" · ")}
+              </span>
+            </div>
+            {business !== null && business.lead_id !== null && (
+              <Link
+                href={`/marketing/leads/${business.lead_id}`}
+                aria-label="Abrir su ficha en Captación"
+                className="inline-flex min-h-6 shrink-0 items-center gap-1 rounded-sm text-[13.5px] font-medium underline decoration-border underline-offset-4 hover:decoration-foreground focus-visible:outline-2 focus-visible:outline-ring"
+              >
+                Abrir
+                <ArrowRight className="size-3.5" aria-hidden />
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
+      {hasWays && <ReachSection points={points} />}
       {profile.web.length > 0 && <Section title="En internet">{renderRows(profile.web)}</Section>}
       {profile.ficha.length > 0 && <Section title="Ficha">{renderRows(profile.ficha)}</Section>}
       <div className="mt-3.5 flex gap-1.5 text-xs text-muted-foreground">

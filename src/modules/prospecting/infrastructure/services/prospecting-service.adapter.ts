@@ -29,6 +29,7 @@ import type {
 export type ProspectingSettingsDTO = Schemas["ProspectingSettingsDto"];
 export type SuppressionDTO = Schemas["SuppressionDto"];
 export type LeadIdsDTO = Schemas["LeadIdsDto"];
+export type ContactBusinessDTO = Schemas["ContactBusinessDto"];
 export type DeleteLeadsResultDTO = Schemas["DeleteLeadsResultDto"];
 export type DeleteSearchesResultDTO = Schemas["DeleteSearchesResultDto"];
 export type DeletionPreviewDTO = Schemas["DeletionPreviewDto"];
@@ -76,6 +77,8 @@ export interface ListLeadsParams extends Params {
   kind?: "person" | "business";
   /** P2: la bandeja no enseña los enmascarados; «Nuevos» pide solo esos. */
   masked?: "exclude" | "only" | "include";
+  /** «Con quien decide»: negocios con una persona que decide y es un hecho. */
+  has_decision_maker?: boolean;
 }
 
 /**
@@ -320,6 +323,23 @@ export function findPeopleForLead(leadId: string): Promise<{ queued: string[] }>
 /** P2 · lo mismo en lote, sin gasto: se consulta lo gratis. */
 export function findPeopleForLeads(leadIds: string[]): Promise<{ queued: string[] }> {
   return http.post("/prospecting/leads/people", { lead_ids: leadIds });
+}
+
+/**
+ * Confirmar a una persona de un negocio: «Sí trabaja aquí» (`member`) o «Sí,
+ * es quien decide» (`decision_maker`). Es lo que vuelve hecho una pista del
+ * sitio web. «No es» sigue siendo `discardLead`.
+ */
+export function confirmLeadPerson(
+  personLeadId: string,
+  as: "member" | "decision_maker",
+): Promise<void> {
+  return http.post<void>(`/prospecting/leads/${personLeadId}/confirm-person`, { as });
+}
+
+/** Los correos y teléfonos del negocio del que salió un contacto («Cómo llegarle»). */
+export function getContactBusiness(contactId: string): Promise<ContactBusinessDTO> {
+  return http.get<ContactBusinessDTO>(`/prospecting/contacts/${contactId}/business`);
 }
 
 export function getLeadPeople(leadId: string): Promise<{ items: LeadPersonDTO[] }> {

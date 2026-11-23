@@ -6,10 +6,11 @@ const showAlert = jest.fn();
 jest.mock("@/core/providers/alert-provider", () => ({
   useAlert: () => ({ showAlert, showModal: jest.fn(), closeModal: jest.fn() }),
 }));
-const permissions = { manage: true };
+const permissions = { manage: true, leads: true };
 jest.mock("@/shared/auth/auth.hooks", () => ({
   useAuth: () => ({
-    hasPermission: (code: string) => (code === "contacts:manage" ? permissions.manage : true),
+    hasPermission: (code: string) =>
+      code === "contacts:manage" ? permissions.manage : code === "leads:read" ? permissions.leads : true,
     status: "authenticated",
   }),
 }));
@@ -25,10 +26,19 @@ jest.mock("@/modules/crm/infrastructure/services/tenant-users.cache", () => ({
   getTenantUserNames: jest.fn().mockResolvedValue(new Map()),
 }));
 
+// «Cómo llegarle» pide a captación los correos y teléfonos del negocio. Las
+// filas son las reales (las mismas de la ficha del lead); solo se dobla la red.
+jest.mock("@/modules/prospecting/infrastructure/services/prospecting-service.adapter", () => ({
+  getContactBusiness: jest.fn(),
+}));
+
 /* eslint-disable @typescript-eslint/no-require-imports */
 const api = require("@/modules/crm/infrastructure/services/contacts-service.adapter") as {
   getContactData: jest.Mock;
   reviewContactField: jest.Mock;
+};
+const prospecting = require("@/modules/prospecting/infrastructure/services/prospecting-service.adapter") as {
+  getContactBusiness: jest.Mock;
 };
 /* eslint-enable @typescript-eslint/no-require-imports */
 
@@ -71,11 +81,161 @@ const BUSINESS = [
   field("original_name", "Agencia de viajes en Bogotá Almejatours | Vuelos"),
 ];
 
+const NO_WAYS = { lead_id: null, contact_points: { emails: [], phones: [] } };
+
 beforeEach(() => {
   permissions.manage = true;
+  permissions.leads = true;
   api.getContactData.mockReset();
   api.reviewContactField.mockReset();
   api.getContactData.mockResolvedValue(dto(BUSINESS));
+  prospecting.getContactBusiness.mockReset();
+  prospecting.getContactBusiness.mockResolvedValue(NO_WAYS);
+});
+
+/** Datos ficticios del tenant de pruebas «Norte Studio». */
+const email = (value: string, type: string, primary = false, source: string | null = "site_extractor") => ({
+  value,
+  type,
+  source,
+  source_url: null,
+  primary,
+});
+const phone = (value: string, type: string, whatsapp = false, primary = false) => ({
+  value,
+  type,
+  whatsapp,
+  source: "google_places",
+  source_url: null,
+  primary,
+});
+const DECIDER = [
+  field("quien_decide", "Mariana Restrepo Gil"),
+  field("quien_decide_cargo", "Representante legal y gerente"),
+  field("quien_decide_fuente", "Registro mercantil (RUES)"),
+];
+
+describe("ContactBusinessCard — «Quién decide» y «Cómo llegarle»", () => {
+  it("nombra a quien decide con su cargo y de dónde se sabe, y enlaza a su ficha en Captación", async () => {
+    api.getContactData.mockResolvedValue(dto([...BUSINESS, ...DECIDER]));
+    prospecting.getContactBusiness.mockResolvedValue({ ...NO_WAYS, lead_id: "lead-9" });
+    render(<ContactBusinessCard contactId="c1" fromProspecting />);
+
+    expect(await screen.findByRole("heading", { name: "Quién decide" })).toBeInTheDocument();
+    expect(screen.getByText("Mariana Restrepo Gil")).toBeInTheDocument();
+    expect(screen.getByText("Representante legal y gerente · según el registro mercantil")).toBeInTheDocument();
+    expect(await screen.findByRole("link", { name: "Abrir su ficha en Captación" })).toHaveAttribute(
+      "href",
+      "/marketing/leads/lead-9",
+    );
+    // Las claves no se repiten como texto técnico en ninguna parte de la tarjeta.
+    expect(screen.queryByText(/quien_decide/)).toBeNull();
+  });
+
+  it("UNA PISTA NO SE NOMBRA: una fuente «(sin confirmar)» no pinta «Quién decide»", async () => {
+    api.getContactData.mockResolvedValue(
+      dto([
+        ...BUSINESS,
+        field("quien_decide", "Julián Cárdenas Mora"),
+        field("quien_decide_fuente", "Sitio web del negocio (sin confirmar)"),
+      ]),
+    );
+    render(<ContactBusinessCard contactId="c1" fromProspecting />);
+
+    await screen.findByRole("heading", { name: "El negocio" });
+    expect(screen.queryByRole("heading", { name: "Quién decide" })).toBeNull();
+    expect(screen.queryByText("Julián Cárdenas Mora")).toBeNull();
+  });
+
+  it("confirmada por el equipo, sí se nombra y dice que la confirmó tu equipo", async () => {
+    api.getContactData.mockResolvedValue(
+      dto([
+        ...BUSINESS,
+        field("quien_decide", "Julián Cárdenas Mora"),
+        field("quien_decide_fuente", "Sitio web del negocio, confirmado por tu equipo"),
+      ]),
+    );
+    render(<ContactBusinessCard contactId="c1" fromProspecting />);
+
+    expect(await screen.findByText("Julián Cárdenas Mora")).toBeInTheDocument();
+    expect(screen.getByText("de su sitio web, confirmado por tu equipo")).toBeInTheDocument();
+  });
+
+  it("sin quien decide ni datos de captación, la tarjeta queda como antes (0 datos)", async () => {
+    render(<ContactBusinessCard contactId="c1" fromProspecting />);
+    await screen.findByRole("heading", { name: "El negocio" });
+    await waitFor(() => expect(prospecting.getContactBusiness).toHaveBeenCalledWith("c1"));
+    expect(screen.queryByRole("heading", { name: "Quién decide" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Cómo llegarle" })).toBeNull();
+  });
+
+  it("con UN dato lo enseña sin plegable", async () => {
+    prospecting.getContactBusiness.mockResolvedValue({
+      lead_id: "lead-9",
+      contact_points: { emails: [], phones: [phone("+573105550142", "celular", true, true)] },
+    });
+    render(<ContactBusinessCard contactId="c1" fromProspecting />);
+
+    expect(await screen.findByRole("heading", { name: "Cómo llegarle" })).toBeInTheDocument();
+    expect(screen.getByText("+57 310 555 0142")).toBeInTheDocument();
+    expect(screen.getByText("Tiene WhatsApp")).toBeInTheDocument();
+    expect(screen.queryByText(/Ver los otros|Ver el otro/)).toBeNull();
+  });
+
+  it("con N datos: los dos principales a la vista y «Ver los otros 3» plegado", async () => {
+    prospecting.getContactBusiness.mockResolvedValue({
+      lead_id: "lead-9",
+      contact_points: {
+        emails: [
+          email("mariana.restrepo@casalumbre.example", "con_nombre", true),
+          email("gerencia@casalumbre.example", "de_cargo"),
+          email("info@casalumbre.example", "generico", false, "google_places"),
+        ],
+        phones: [phone("+573105550142", "celular", true, true), phone("+576015550188", "fijo")],
+      },
+    });
+    render(<ContactBusinessCard contactId="c1" fromProspecting />);
+
+    const summary = await screen.findByText("Ver los otros 3");
+    const details = summary.closest("details");
+    expect(details).not.toBeNull();
+    expect(details).not.toHaveAttribute("open");
+    // Los principales están FUERA del plegable; los demás, dentro.
+    expect(details).not.toContainElement(screen.getByText("mariana.restrepo@casalumbre.example"));
+    expect(details).not.toContainElement(screen.getByText("+57 310 555 0142"));
+    expect(details).toContainElement(screen.getByText("gerencia@casalumbre.example"));
+    expect(details).toContainElement(screen.getByText("info@casalumbre.example"));
+    expect(details).toContainElement(screen.getByText("+57 601 555 0188"));
+    expect(screen.getByText("Con nombre")).toBeInTheDocument();
+    expect(screen.getByText("De cargo")).toBeInTheDocument();
+  });
+
+  it("solo con datos de captación (sin web ni redes) la tarjeta también se pinta", async () => {
+    api.getContactData.mockResolvedValue(dto([]));
+    prospecting.getContactBusiness.mockResolvedValue({
+      lead_id: "lead-9",
+      contact_points: { emails: [email("info@aldeaverde.example", "generico", true, null)], phones: [] },
+    });
+    render(<ContactBusinessCard contactId="c1" fromProspecting />);
+
+    expect(await screen.findByRole("heading", { name: "Cómo llegarle" })).toBeInTheDocument();
+    expect(screen.getByText("info@aldeaverde.example")).toBeInTheDocument();
+  });
+
+  it("sin permiso de leer captación no se pide ni se pinta «Cómo llegarle»", async () => {
+    permissions.leads = false;
+    render(<ContactBusinessCard contactId="c1" fromProspecting />);
+    await screen.findByRole("heading", { name: "El negocio" });
+    expect(prospecting.getContactBusiness).not.toHaveBeenCalled();
+    expect(screen.queryByRole("heading", { name: "Cómo llegarle" })).toBeNull();
+  });
+
+  it("si captación falla, lo demás de la tarjeta sigue ahí", async () => {
+    prospecting.getContactBusiness.mockRejectedValue(new Error("caído"));
+    render(<ContactBusinessCard contactId="c1" fromProspecting />);
+    expect(await screen.findByRole("link", { name: "@almejatours" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Cómo llegarle" })).toBeNull();
+  });
 });
 
 describe("ContactBusinessCard", () => {

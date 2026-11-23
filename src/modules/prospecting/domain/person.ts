@@ -129,6 +129,15 @@ export const EVIDENCE_PROVIDER_LABELS: Record<string, string> = {
   site_extractor: "Sitio",
 };
 
+/**
+ * Por qué dudar de una persona, dicho sin tecnicismos. Hoy hay un motivo: se
+ * leyó en el sitio web del negocio y nadie la ha confirmado.
+ */
+export const PERSON_DOUBT_REASONS: Record<NonNullable<LeadPersonDTO["doubt"]>, string> = {
+  from_site:
+    "Sale de su sitio web: puede ser un cliente que dejó un testimonio o un texto de plantilla, no alguien del negocio.",
+};
+
 /** Los tipos de señal, dichos como hecho. */
 export const SIGNAL_KIND_LABELS: Record<string, string> = {
   hiring: "Contratando",

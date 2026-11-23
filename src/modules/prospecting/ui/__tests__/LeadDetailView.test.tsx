@@ -109,6 +109,13 @@ function lead(over: Partial<LeadDetailDTO> = {}): LeadDetailDTO {
     created_at: "2026-09-24T12:00:00Z",
     last_run: null,
     events: [],
+    decision_maker: null,
+    reach: { level: "business", channels: { whatsapp: false, email: true, call: true } },
+    contact_points: {
+      emails: [{ value: "hola@pieldeseda.co", type: "generico", source: "google_places", source_url: null, primary: true }],
+      phones: [{ value: "+57 604 555 0142", type: "fijo", whatsapp: false, source: "google_places", source_url: null, primary: true }],
+    },
+    whatsapp_cold_controlled: false,
     ...over,
   } as LeadDetailDTO;
 }
@@ -185,5 +192,71 @@ describe("cuando no se puede abrir", () => {
     api.getLead.mockResolvedValue(lead());
     fireEvent.click(screen.getByRole("button", { name: "Reintentar" }));
     expect(await screen.findByRole("heading", { level: 1, name: "Spa Piel de Seda" })).toBeInTheDocument();
+  });
+});
+
+describe("prospección decisor: quién decide y WhatsApp según la política", () => {
+  beforeEach(() => {
+    api.getLead.mockResolvedValue(lead());
+  });
+
+  it("la ficha de un negocio abre con «Quién decide»; sin nadie, lo dice", async () => {
+    render(<LeadDetailView leadId="l1" />);
+
+    expect(await screen.findByRole("heading", { level: 2, name: "Quién decide" })).toBeInTheDocument();
+    expect(screen.getByText("Sin identificar")).toBeInTheDocument();
+    expect(screen.getByText("Todavía no sabemos quién decide")).toBeInTheDocument();
+  });
+
+  it("una pista del sitio se enseña «Por confirmar», nunca como confirmada", async () => {
+    api.getLead.mockResolvedValue(
+      lead({
+        decision_maker: {
+          person_id: "p2",
+          name: "Julián Cárdenas Mora",
+          title: null,
+          role: "decides",
+          level: "hypothesis",
+          confirmed_by: null,
+          provider: "site_extractor",
+          evidence_url: null,
+          email: null,
+          phone: null,
+          in_crm: false,
+        },
+      }),
+    );
+    render(<LeadDetailView leadId="l1" />);
+
+    expect(await screen.findByText("Por confirmar")).toBeInTheDocument();
+    expect(screen.getByText("Julián Cárdenas Mora")).toBeInTheDocument();
+    expect(screen.queryByText("Confirmada")).toBeNull();
+    expect(screen.getByRole("button", { name: "Sí, es quien decide" })).toBeInTheDocument();
+  });
+
+  it("todos los correos y teléfonos del negocio, con su cuenta", async () => {
+    render(<LeadDetailView leadId="l1" />);
+
+    expect(await screen.findByRole("heading", { name: "Correos · 1" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Teléfonos · 1" })).toBeInTheDocument();
+  });
+
+  it("con el frío controlado ENCENDIDO en la política, la puerta ya no dice «WhatsApp queda bloqueado»", async () => {
+    api.getLead.mockResolvedValue(lead({ whatsapp_cold_controlled: true }));
+    render(<LeadDetailView leadId="l1" />);
+
+    const gate = within(await screen.findByRole("region", { name: "Promover al CRM" }));
+    expect(gate.getByText("WhatsApp en frío controlado")).toBeInTheDocument();
+    expect(gate.queryByText("WhatsApp queda bloqueado")).toBeNull();
+    // Y la cabecera dice lo mismo: WhatsApp se puede usar.
+    expect(screen.getByRole("button", { name: "WhatsApp: puedes escribirle" })).toBeInTheDocument();
+  });
+
+  it("APAGADO, todo como hoy: bloqueado en la puerta y en la cabecera", async () => {
+    render(<LeadDetailView leadId="l1" />);
+
+    const gate = within(await screen.findByRole("region", { name: "Promover al CRM" }));
+    expect(gate.getByText("WhatsApp queda bloqueado")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "WhatsApp: no permitido" })).toBeInTheDocument();
   });
 });

@@ -60,12 +60,34 @@ export function LeadProvenance({ lead }: { lead: LeadDetailDTO }) {
     return { source: source ?? lead.source, fetchedAt };
   };
 
+  // Una fila por cada correo y cada teléfono, con SU fuente. Un dato de antes
+  // de guardarla (sin `source`) cae a la del campo, como siempre.
+  const points = lead.contact_points;
+  const emails: Field[] =
+    points.emails.length > 0
+      ? points.emails.map((email) => ({
+          label: "Correo",
+          value: email.value,
+          mono: true,
+          ...(email.source === null ? from("email") : { source: email.source }),
+        }))
+      : [{ label: "Correo", value: lead.email, mono: true, ...from("email") }];
+  const phones: Field[] =
+    points.phones.length > 0
+      ? points.phones.map((phone) => ({
+          label: "Teléfono",
+          value: phone.value,
+          mono: true,
+          ...(phone.source === null ? from("phone") : { source: phone.source }),
+        }))
+      : [{ label: "Teléfono", value: lead.phone, mono: true, ...from("phone") }];
+
   const base: Field[] = [
     { label: "Nombre", value: lead.display_name, ...from("display_name") },
     { label: "Razón social", value: lead.legal_name, ...from("legal_name") },
     { label: "NIT", value: lead.tax_id, mono: true, ...from("tax_id") },
-    { label: "Correo", value: lead.email, mono: true, ...from("email") },
-    { label: "Teléfono", value: lead.phone, mono: true, ...from("phone") },
+    ...emails,
+    ...phones,
     { label: "Sitio web", value: lead.website, mono: true, ...from("website") },
     { label: "Dirección", value: lead.address, ...from("address") },
     { label: "Ciudad", value: lead.city, ...from("city") },
@@ -102,7 +124,7 @@ export function LeadProvenance({ lead }: { lead: LeadDetailDTO }) {
         {fields.map((field) => (
           // Ancha: etiqueta · valor · fuente en una fila. Estrecha: la etiqueta arriba y el valor con su fuente debajo.
           <div
-            key={field.label}
+            key={`${field.label}:${field.value ?? ""}`}
             className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 gap-y-1 py-2.5 @md:grid-cols-[7rem_minmax(0,1fr)_auto]"
           >
             <dt className="text-muted-foreground col-span-2 text-xs @md:col-span-1">{field.label}</dt>

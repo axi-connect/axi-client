@@ -7956,6 +7956,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/prospecting/contacts/{contactId}/business": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProspectingController_contactBusiness_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/prospecting/leads/promote": {
         parameters: {
             query?: never;
@@ -8110,6 +8126,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["ProspectingController_discardOne_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/leads/{id}/confirm-person": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProspectingController_confirmPerson_v1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -22989,6 +23021,29 @@ export interface components {
                 promoted_at: string | null;
                 /** Format: date-time */
                 created_at: string;
+                decision_maker: {
+                    /** Format: uuid */
+                    person_id: string | null;
+                    name: string;
+                    title: string | null;
+                    /** @enum {string} */
+                    role: "decides" | "approves";
+                    /** @enum {string} */
+                    level: "fact" | "hypothesis";
+                    /** @enum {string|null} */
+                    confirmed_by: "source" | "person" | null;
+                    provider: string | null;
+                    evidence_url: string | null;
+                } | null;
+                reach: {
+                    /** @enum {string} */
+                    level: "direct" | "role" | "unconfirmed" | "business" | "hard";
+                    channels: {
+                        whatsapp: boolean;
+                        email: boolean;
+                        call: boolean;
+                    };
+                } | null;
             }[];
             meta: {
                 total: number;
@@ -23316,6 +23371,52 @@ export interface components {
             promoted_at: string | null;
             /** Format: date-time */
             created_at: string;
+            decision_maker: {
+                /** Format: uuid */
+                person_id: string | null;
+                name: string;
+                title: string | null;
+                /** @enum {string} */
+                role: "decides" | "approves";
+                /** @enum {string} */
+                level: "fact" | "hypothesis";
+                /** @enum {string|null} */
+                confirmed_by: "source" | "person" | null;
+                provider: string | null;
+                evidence_url: string | null;
+                email: string | null;
+                phone: string | null;
+                in_crm: boolean;
+            } | null;
+            reach: {
+                /** @enum {string} */
+                level: "direct" | "role" | "unconfirmed" | "business" | "hard";
+                channels: {
+                    whatsapp: boolean;
+                    email: boolean;
+                    call: boolean;
+                };
+            } | null;
+            contact_points: {
+                emails: {
+                    value: string;
+                    /** @enum {string} */
+                    type: "con_nombre" | "de_cargo" | "generico" | "gratuito";
+                    source: string | null;
+                    source_url: string | null;
+                    primary: boolean;
+                }[];
+                phones: {
+                    value: string;
+                    /** @enum {string} */
+                    type: "celular" | "fijo" | "desconocido";
+                    whatsapp: boolean;
+                    source: string | null;
+                    source_url: string | null;
+                    primary: boolean;
+                }[];
+            };
+            whatsapp_cold_controlled: boolean;
             last_run: {
                 /** Format: uuid */
                 id: string;
@@ -23355,6 +23456,29 @@ export interface components {
                 /** Format: date-time */
                 created_at: string;
             }[];
+        };
+        ContactBusinessDto: {
+            /** Format: uuid */
+            lead_id: string | null;
+            contact_points: {
+                emails: {
+                    value: string;
+                    /** @enum {string} */
+                    type: "con_nombre" | "de_cargo" | "generico" | "gratuito";
+                    source: string | null;
+                    source_url: string | null;
+                    primary: boolean;
+                }[];
+                phones: {
+                    value: string;
+                    /** @enum {string} */
+                    type: "celular" | "fijo" | "desconocido";
+                    whatsapp: boolean;
+                    source: string | null;
+                    source_url: string | null;
+                    primary: boolean;
+                }[];
+            };
         };
         PromoteLeadsDto: {
             lead_ids: string[];
@@ -23430,6 +23554,11 @@ export interface components {
                 /** @enum {string} */
                 evidence_level: "fact" | "hypothesis";
                 evidence_url: string | null;
+                /** @enum {string|null} */
+                confirmed_by: "source" | "person" | null;
+                /** @enum {string|null} */
+                doubt: "from_site" | null;
+                unattended: boolean;
                 /** Format: date-time */
                 created_at: string;
             }[];
@@ -23456,6 +23585,13 @@ export interface components {
         };
         DiscardLeadDto: {
             reason?: string;
+        };
+        ConfirmPersonDto: {
+            /**
+             * @default member
+             * @enum {string}
+             */
+            as: "member" | "decision_maker";
         };
         DeleteLeadsDto: {
             lead_ids: string[];
@@ -40499,6 +40635,7 @@ export interface operations {
                 search_id?: string;
                 kind?: "person" | "business";
                 masked?: "exclude" | "only" | "include";
+                has_decision_maker?: "true" | "false";
             };
             header?: never;
             path?: never;
@@ -40536,6 +40673,7 @@ export interface operations {
                 search_id?: string;
                 kind?: "person" | "business";
                 masked?: "exclude" | "only" | "include";
+                has_decision_maker?: "true" | "false";
             };
             header?: never;
             path?: never;
@@ -40823,6 +40961,27 @@ export interface operations {
             };
         };
     };
+    ProspectingController_contactBusiness_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contactId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactBusinessDto"];
+                };
+            };
+        };
+    };
     ProspectingController_promote_v1: {
         parameters: {
             query?: never;
@@ -41072,6 +41231,29 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["DiscardLeadDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProspectingController_confirmPerson_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmPersonDto"];
             };
         };
         responses: {

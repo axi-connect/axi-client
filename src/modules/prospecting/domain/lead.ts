@@ -79,6 +79,137 @@ export type LegalBasis = LeadDTO["legal_basis"];
 export type OutreachChannel = LeadDTO["allowed_channels"][number];
 
 /**
+ * Prospección «llegar a quien decide», fase 1 parte 2.
+ *
+ * Quién decide viaja con su NIVEL: `fact` solo si lo afirma una fuente de hecho
+ * (el registro mercantil) o lo confirmó alguien del equipo. Una pista del sitio
+ * web es `hypothesis` y la interfaz la enseña «por confirmar»: la mitad de las
+ * personas que se leen en un sitio resultaron falsas en la medición.
+ */
+export type DecisionMakerDTO = NonNullable<LeadDetailDTO["decision_maker"]>;
+export type RowDecisionMakerDTO = NonNullable<LeadDTO["decision_maker"]>;
+export type ReachDTO = NonNullable<LeadDTO["reach"]>;
+export type ReachLevel = ReachDTO["level"];
+export type ContactPointsDTO = LeadDetailDTO["contact_points"];
+export type EmailWayDTO = ContactPointsDTO["emails"][number];
+export type PhoneWayDTO = ContactPointsDTO["phones"][number];
+
+/** La clase de un correo, como la lee el dueño. */
+export const EMAIL_TYPE_LABELS: Record<EmailWayDTO["type"], string> = {
+  con_nombre: "Con nombre",
+  de_cargo: "De cargo",
+  generico: "Genérico",
+  gratuito: "Gratuito del negocio",
+};
+
+/** La clase de un teléfono. `desconocido` no se inventa un tipo. */
+export const PHONE_TYPE_LABELS: Record<PhoneWayDTO["type"], string> = {
+  celular: "Celular",
+  fijo: "Fijo",
+  desconocido: "Tipo sin confirmar",
+};
+
+/**
+ * De dónde salió un correo o un teléfono, dicho desde el negocio («su sitio
+ * web», no «site_extractor»). Sin fuente guardada no se inventa una.
+ */
+export function waySourceLabel(way: { source: string | null; whatsapp?: boolean }): string | null {
+  if (way.source === null) return null;
+  if (way.whatsapp === true && (way.source === "site_extractor" || way.source === "firecrawl")) {
+    return "Enlace de WhatsApp en su sitio";
+  }
+  if (way.source === "rues") return "Registro mercantil";
+  return PROVIDER_LABELS[way.source] ?? way.source;
+}
+
+/** «+573105550142» → «+57 310 555 0142». Lo que no es colombiano se deja como está. */
+export function readablePhone(value: string): string {
+  const digits = value.replace(/\D/g, "");
+  const mobile = /^57(3\d{2})(\d{3})(\d{4})$/.exec(digits);
+  if (mobile !== null) return `+57 ${mobile[1]} ${mobile[2]} ${mobile[3]}`;
+  const landline = /^57(60\d)(\d{3})(\d{4})$/.exec(digits);
+  if (landline !== null) return `+57 ${landline[1]} ${landline[2]} ${landline[3]}`;
+  return value;
+}
+
+/**
+ * El alcance: qué tan cerca estamos de quien decide. No es el permiso (eso es
+ * «Puedo contactar por») ni la calidad del dato.
+ */
+export const REACH_LEVELS: Record<
+  ReachLevel,
+  { label: string; tone: "success" | "info" | "warning" | "neutral" | "destructive"; hint: string }
+> = {
+  direct: {
+    label: "Directo",
+    tone: "success",
+    hint: "Sabemos quién decide y hay un dato que le llega a esa persona.",
+  },
+  role: {
+    label: "Por su cargo",
+    tone: "info",
+    hint: "Llegamos al cargo de quien decide, no a su dato personal.",
+  },
+  unconfirmed: {
+    label: "Por confirmar",
+    tone: "warning",
+    hint: "Hay un nombre, pero salió de su sitio web y nadie lo ha confirmado.",
+  },
+  business: {
+    label: "Solo el negocio",
+    tone: "neutral",
+    hint: "Tenemos datos generales del negocio, sin saber quién decide.",
+  },
+  hard: {
+    label: "Difícil",
+    tone: "destructive",
+    hint: "Sin correo ni celular: como mucho, un teléfono fijo.",
+  },
+};
+
+/** Los tres canales del alcance, en el orden en que se pintan. */
+export const REACH_CHANNELS = [
+  { key: "whatsapp", row: "reach_whatsapp", label: "WhatsApp" },
+  { key: "email", row: "reach_email", label: "Correo" },
+  { key: "call", row: "reach_call", label: "Llamada" },
+] as const satisfies readonly { key: keyof ReachDTO["channels"]; row: string; label: string }[];
+
+/** «Según el registro mercantil», «Aparece en su sitio web»… la línea bajo el nombre. */
+export function decisionMakerEvidence(decisionMaker: {
+  level: "fact" | "hypothesis";
+  confirmed_by: "source" | "person" | null;
+  provider: string | null;
+}): string {
+  const where =
+    decisionMaker.provider === "rues"
+      ? "el registro mercantil"
+      : decisionMaker.provider === "site_extractor"
+        ? "su sitio web"
+        : decisionMaker.provider === "apollo"
+          ? "Apollo"
+          : null;
+  if (decisionMaker.confirmed_by === "person") {
+    return where === null ? "Lo confirmó tu equipo" : `Salió de ${where} y lo confirmó tu equipo`;
+  }
+  if (decisionMaker.level === "fact") return where === null ? "Dato confirmado" : `Según ${where}`;
+  return where === null ? "Sin confirmar" : `Aparece en ${where}`;
+}
+
+/**
+ * La verificación que EXISTE HOY, que es la del correo principal: la señal
+ * `email_deliverable` del índice de calidad. De los demás correos no se sabe
+ * nada todavía (verificar cada uno antes de enviar es la fase 2), y por eso no
+ * llevan pastilla: «sin verificar» sobre todos sería ruido.
+ */
+export function primaryEmailVerification(signals: unknown): "verified" | "undeliverable" | null {
+  const check = readQualityChecks(signals).find((entry) => entry.key === "email_deliverable");
+  if (check === undefined) return null;
+  if (check.outcome === "pass") return "verified";
+  if (check.outcome === "fail") return "undeliverable";
+  return null;
+}
+
+/**
  * De dónde salió el lead, en el idioma del dueño del negocio. «Meta Lead Ads»
  * no significa nada para quien vende dotación de restaurantes.
  */
@@ -248,6 +379,27 @@ export interface ChannelSubject {
   legal_basis: LegalBasis;
   email: string | null;
   phone: string | null;
+  /**
+   * La política del negocio tiene encendido el frío controlado de WhatsApp.
+   * Solo lo trae la ficha; sin él, el veredicto es el de siempre.
+   */
+  whatsapp_cold_controlled?: boolean;
+}
+
+/** Lo que significa «frío controlado» para quien lee la ficha, en una frase. */
+export const WHATSAPP_COLD_NOTE =
+  "Tu política lo tiene encendido: sale con plantilla aprobada, solo a celulares y dentro del tope del día.";
+
+/**
+ * ¿Se le puede abrir por WhatsApp EN FRÍO? El permiso (`allowed_channels`) sale
+ * solo de la base legal; esto mira además la política del negocio. Con permiso
+ * propio no es frío: devuelve `false` y manda el permiso.
+ */
+export function opensWhatsappCold(lead: {
+  allowed_channels: readonly OutreachChannel[];
+  whatsapp_cold_controlled?: boolean;
+}): boolean {
+  return lead.whatsapp_cold_controlled === true && !lead.allowed_channels.includes("whatsapp");
 }
 
 /**
@@ -267,6 +419,17 @@ export function channelVerdict(
   lead: ChannelSubject,
   channel: OutreachChannel,
 ): ChannelVerdict {
+  if (channel === "whatsapp" && opensWhatsappCold(lead)) {
+    // Sin permiso propio, pero la política del negocio abre en frío controlado:
+    // decir «no permitido» contradice lo que el sistema va a hacer.
+    if (lead.phone === null) {
+      return {
+        state: "no_data",
+        reason: "Tu política permite WhatsApp en frío controlado, pero no tenemos su teléfono.",
+      };
+    }
+    return { state: "usable", reason: `Nunca pidió que lo contactaras. ${WHATSAPP_COLD_NOTE}` };
+  }
   if (!lead.allowed_channels.includes(channel)) {
     return { state: "blocked", reason: whyChannelBlocked(lead.legal_basis, channel) };
   }
@@ -519,6 +682,20 @@ export type LeadRow = {
   kind: "business" | "person";
   /** «Gerente general · decide · La Brasa Parrilla». Vacío en un negocio. */
   person_line: string;
+  /**
+   * Quién decide en el negocio. Aplanado (la fila de la tabla solo lleva
+   * primitivos). `decider_name` null = una persona, o un negocio del que no se
+   * sabe. `decider_level` dice si es un hecho o una pista: la celda pinta «Por
+   * confirmar» con la pista.
+   */
+  decider_name: string | null;
+  decider_title: string | null;
+  decider_level: "fact" | "hypothesis" | null;
+  /** El alcance del negocio. `reach_level` null en una persona. */
+  reach_level: ReachLevel | null;
+  reach_whatsapp: boolean;
+  reach_email: boolean;
+  reach_call: boolean;
 };
 
 export function mapLeadToRow(lead: LeadDTO): LeadRow {
@@ -562,6 +739,13 @@ export function mapLeadToRow(lead: LeadDTO): LeadRow {
             .filter(Boolean)
             .join(" · ")
         : "",
+    decider_name: lead.decision_maker?.name ?? null,
+    decider_title: lead.decision_maker?.title ?? null,
+    decider_level: lead.decision_maker?.level ?? null,
+    reach_level: lead.reach?.level ?? null,
+    reach_whatsapp: lead.reach?.channels.whatsapp ?? false,
+    reach_email: lead.reach?.channels.email ?? false,
+    reach_call: lead.reach?.channels.call ?? false,
   };
 }
 

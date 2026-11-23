@@ -29,10 +29,23 @@ export type BusinessKey =
   | (typeof BUSINESS_WEB_KEYS)[number]
   | (typeof BUSINESS_FICHA_KEYS)[number];
 
+/**
+ * Quién decide en el negocio (prospección decisor, fase 1 parte 2). La
+ * captación las escribe SOLO cuando es un hecho: lo dice el registro mercantil
+ * o lo confirmó alguien del equipo (servidor `prospecting/domain/decision_maker.ts`).
+ * Se enseñan en «El negocio» y no como filas sueltas de «Datos del cliente».
+ */
+export const DECISION_MAKER_KEYS = {
+  name: "quien_decide",
+  title: "quien_decide_cargo",
+  source: "quien_decide_fuente",
+} as const;
+
 const ALL_KEYS: ReadonlySet<string> = new Set<string>([
   ...BUSINESS_WEB_KEYS,
   ...BUSINESS_FICHA_KEYS,
   ORIGINAL_NAME_KEY,
+  ...Object.values(DECISION_MAKER_KEYS),
 ]);
 
 /**
@@ -70,7 +83,17 @@ export interface BusinessRow {
   field: ContactDataField;
 }
 
+/** Quién decide, tal como se lee en «El negocio». */
+export interface BusinessDecisionMaker {
+  name: string;
+  title: string | null;
+  /** «según el registro mercantil», en minúscula, para la línea secundaria. */
+  evidence: string | null;
+}
+
 export interface BusinessProfileView {
+  /** Quién decide; null si no se sabe o si lo guardado no es un hecho. */
+  decisionMaker: BusinessDecisionMaker | null;
   web: BusinessRow[];
   ficha: BusinessRow[];
   originalName: string | null;
@@ -187,6 +210,44 @@ function rowOf(key: BusinessKey, field: ContactDataField): BusinessRow | null {
   };
 }
 
+/** Cómo se cuenta la fuente guardada, en la voz de la ficha. */
+function evidenceOf(source: string | null): string | null {
+  if (source === null) return null;
+  const lower = source.toLowerCase();
+  const confirmed = lower.includes("confirmado por tu equipo");
+  if (lower.includes("registro mercantil")) return "según el registro mercantil";
+  if (lower.includes("sitio web")) {
+    return confirmed ? "de su sitio web, confirmado por tu equipo" : "según su sitio web";
+  }
+  if (confirmed) return "confirmado por tu equipo";
+  return `según ${source}`;
+}
+
+/**
+ * Quién decide, leído de los datos del contacto.
+ *
+ * Guarda de lectura de la misma regla que aplica el servidor al escribir: un
+ * valor marcado «(sin confirmar)» es una pista, y una pista NUNCA se nombra en
+ * el contacto. El servidor ya no escribe ninguno así; esto cubre un dato de
+ * antes o puesto a mano.
+ */
+export function businessDecisionMakerOf(
+  fields: readonly ContactDataField[],
+): BusinessDecisionMaker | null {
+  const byCode = new Map(
+    fields.filter((field) => isBusinessProfileField(field)).map((field) => [field.code, field]),
+  );
+  const read = (code: string): string | null => {
+    const field = byCode.get(code);
+    return field === undefined ? null : text(field.value);
+  };
+  const name = read(DECISION_MAKER_KEYS.name);
+  if (name === null) return null;
+  const source = read(DECISION_MAKER_KEYS.source);
+  if (source !== null && source.toLowerCase().includes("sin confirmar")) return null;
+  return { name, title: read(DECISION_MAKER_KEYS.title), evidence: evidenceOf(source) };
+}
+
 /** Las filas de «El negocio», en el orden del mockup; solo las que tienen dato. */
 export function businessProfileOf(fields: readonly ContactDataField[]): BusinessProfileView {
   const byCode = new Map(
@@ -205,6 +266,7 @@ export function businessProfileOf(fields: readonly ContactDataField[]): Business
     .filter((at): at is string => at !== null)
     .sort();
   return {
+    decisionMaker: businessDecisionMakerOf(fields),
     web: rows(BUSINESS_WEB_KEYS),
     ficha: rows(BUSINESS_FICHA_KEYS),
     originalName: original === undefined ? null : text(original.value),
@@ -213,5 +275,5 @@ export function businessProfileOf(fields: readonly ContactDataField[]): Business
 }
 
 export function hasBusinessProfile(view: BusinessProfileView): boolean {
-  return view.web.length > 0 || view.ficha.length > 0;
+  return view.decisionMaker !== null || view.web.length > 0 || view.ficha.length > 0;
 }

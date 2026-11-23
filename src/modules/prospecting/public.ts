@@ -31,3 +31,12 @@ export type { FillFormFromWebState } from "./ui/hooks/use-fill-form-from-web";
 export { useFillFormFromWeb } from "./ui/hooks/use-fill-form-from-web";
 export type { FormFieldLike } from "./domain/form-fill";
 export { isWebFillableField, splitWebFillable } from "./domain/form-fill";
+
+/**
+ * Prospección decisor, fase 1 parte 2: «Cómo llegarle» del Contacto 360 enseña
+ * los correos y teléfonos del negocio del que salió el contacto, con las mismas
+ * filas que la ficha del lead. Pide `leads:read`: quien llama lo comprueba.
+ */
+export type { ContactBusinessDTO } from "./infrastructure/services/prospecting-service.adapter";
+export { getContactBusiness } from "./infrastructure/services/prospecting-service.adapter";
+export { EmailWay, PhoneWay } from "./ui/components/ContactPointList";

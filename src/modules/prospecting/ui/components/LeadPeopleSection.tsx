@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { LoaderCircle, UsersRound } from "lucide-react";
+import { Check, LoaderCircle, UsersRound, X } from "lucide-react";
 
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
@@ -13,12 +13,14 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import {
   BUYING_ROLE_LABELS,
   EVIDENCE_PROVIDER_LABELS,
+  PERSON_DOUBT_REASONS,
   PROMOTED_WITH_BUSINESS,
   initialsOf,
   type LeadPersonDTO,
   type RevealCosts,
 } from "../../domain/person";
 import {
+  confirmLeadPerson,
   discardLead,
   getLeadPeople,
   promoteLeads,
@@ -46,6 +48,7 @@ export function LeadPeopleSection({
   canPromote,
   onSearch,
   onPeopleChange,
+  onDecisionChange,
 }: {
   leadId: string;
   refreshKey: number;
@@ -55,6 +58,8 @@ export function LeadPeopleSection({
   canPromote: boolean;
   onSearch: () => void;
   onPeopleChange?: (people: LeadPersonDTO[]) => void;
+  /** Se confirmó o se descartó a alguien: «Quién decide» de la ficha puede haber cambiado. */
+  onDecisionChange?: () => void;
 }) {
   const { showAlert } = useAlert();
   const [people, setPeople] = useState<LeadPersonDTO[] | null>(null);
@@ -121,10 +126,29 @@ export function LeadPeopleSection({
 
   async function omit(person: LeadPersonDTO) {
     try {
-      await discardLead(person.id, "Omitida desde la ficha del negocio");
+      await discardLead(
+        person.id,
+        person.doubt === null ? "Omitida desde la ficha del negocio" : "No es de este negocio",
+      );
       await load();
+      onDecisionChange?.();
     } catch (caught) {
       showAlert({ tone: "error", title: "No se pudo omitir", description: errorMessage(caught) });
+    }
+  }
+
+  /** «Sí trabaja aquí»: deja de ser una pista. No dice que sea quien decide. */
+  async function confirm(person: LeadPersonDTO) {
+    setBusyId(person.id);
+    try {
+      await confirmLeadPerson(person.id, "member");
+      showAlert({ tone: "success", title: "Confirmada: trabaja aquí" });
+      await load();
+      onDecisionChange?.();
+    } catch (caught) {
+      showAlert({ tone: "error", title: "No se pudo confirmar", description: errorMessage(caught) });
+    } finally {
+      setBusyId(null);
     }
   }
 
@@ -208,7 +232,11 @@ export function LeadPeopleSection({
                       <span className="min-w-0 truncate font-semibold">
                         {EVIDENCE_PROVIDER_LABELS[person.evidence_provider] ?? person.evidence_provider}
                       </span>
-                      {person.evidence_level === "hypothesis" && <span className="text-muted-foreground">· hipótesis</span>}
+                      {person.confirmed_by === "person" ? (
+                        <span className="text-muted-foreground">· confirmada por tu equipo</span>
+                      ) : (
+                        person.evidence_level === "hypothesis" && <span className="text-muted-foreground">· hipótesis</span>
+                      )}
                       {person.evidence_url !== null && (
                         <a
                           href={person.evidence_url}
@@ -220,6 +248,13 @@ export function LeadPeopleSection({
                         </a>
                       )}
                     </span>
+                  )}
+                  {/* La dudosa: leída en su sitio web y sin confirmar. Se dice por qué, en una línea. */}
+                  {person.doubt !== null && (
+                    <>
+                      <StatePill tone="warning">Dudosa</StatePill>
+                      <p className="text-muted-foreground text-xs text-pretty">{PERSON_DOUBT_REASONS[person.doubt]}</p>
+                    </>
                   )}
                 </div>
                 <div className="ml-auto flex shrink-0 flex-col items-end gap-1.5">
@@ -241,15 +276,28 @@ export function LeadPeopleSection({
                     onReveal={(fields) => void reveal(person, fields)}
                   />
                   {!person.in_crm && (
-                    <div className="flex gap-1">
+                    <div className="flex flex-wrap justify-end gap-1">
                       {canPromote && (person.email !== null || person.phone !== null) && (
                         <Button variant="outline" size="sm" className="rounded-full" onClick={() => void promote([person.id])}>
                           Añadir al CRM
                         </Button>
                       )}
+                      {canManage && person.doubt !== null && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="rounded-full"
+                          disabled={busyId === person.id}
+                          onClick={() => void confirm(person)}
+                        >
+                          <Check aria-hidden className="size-3.5" />
+                          Sí trabaja aquí
+                        </Button>
+                      )}
                       {canManage && (
                         <Button variant="ghost" size="sm" className="rounded-full" onClick={() => void omit(person)}>
-                          Omitir
+                          {person.doubt !== null && <X aria-hidden className="size-3.5" />}
+                          {person.doubt !== null ? "No es" : "Omitir"}
                         </Button>
                       )}
                     </div>

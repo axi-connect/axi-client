@@ -9,6 +9,8 @@ import { Button } from "@/shared/components/ui/button";
 import {
   CHANNEL_LABELS,
   LEGAL_BASIS_LABELS,
+  WHATSAPP_COLD_NOTE,
+  opensWhatsappCold,
   type LeadDetailDTO,
 } from "../../domain/lead";
 import { BUYING_ROLE_LABELS, type BuyingRole } from "../../domain/person";
@@ -28,7 +30,8 @@ interface Requirement {
  * requisitos se listan ANTES —incluido el que no se cumple— en vez de dejar
  * que el usuario descubra el problema con un error después de pulsar.
  *
- * El requisito en rojo no bloquea: informa. «WhatsApp queda bloqueado» no
+ * El requisito en rojo no bloquea: informa. «WhatsApp queda bloqueado» (que
+ * solo se dice con el frío controlado APAGADO en la política del negocio) no
  * impide promover a un negocio sacado de un directorio público; impide
  * escribirle primero por ese canal, que es otra cosa y hay que decirlo aquí,
  * cuando la persona todavía puede cambiar de opinión.
@@ -51,6 +54,7 @@ export function PromotionGate({
 }) {
   const identifiable = lead.phone !== null || lead.email !== null;
   const allowsWhatsapp = lead.allowed_channels.includes("whatsapp");
+  const cold = opensWhatsappCold(lead);
 
   const requirements: Requirement[] = [
     {
@@ -62,16 +66,23 @@ export function PromotionGate({
       met: identifiable,
       title: identifiable ? "Tiene con qué contactarse" : "No tiene teléfono ni correo",
       detail: identifiable
-        ? lead.allowed_channels.map((channel) => CHANNEL_LABELS[channel]).join(" · ")
+        ? [...(cold ? (["whatsapp"] as const) : []), ...lead.allowed_channels]
+            .map((channel) => CHANNEL_LABELS[channel])
+            .join(" · ")
         : "Sin uno de los dos no hay contacto que crear en tu CRM.",
     },
-    {
-      met: allowsWhatsapp,
-      title: allowsWhatsapp ? "Puedes escribirle por WhatsApp" : "WhatsApp queda bloqueado",
-      detail: allowsWhatsapp
-        ? "Dio permiso, así que tu agente puede iniciar la conversación."
-        : "Sin permiso no se puede escribir primero por WhatsApp: Meta suspende el número. Podrás usar correo y llamada.",
-    },
+    // El tercer renglón mira la POLÍTICA además de la base legal: con el frío
+    // controlado encendido el sistema sí le abre por WhatsApp, y decir «queda
+    // bloqueado» contradecía lo que iba a pasar. Apagado, el texto de siempre.
+    cold
+      ? { met: true, title: "WhatsApp en frío controlado", detail: WHATSAPP_COLD_NOTE }
+      : {
+          met: allowsWhatsapp,
+          title: allowsWhatsapp ? "Puedes escribirle por WhatsApp" : "WhatsApp queda bloqueado",
+          detail: allowsWhatsapp
+            ? "Dio permiso, así que tu agente puede iniciar la conversación."
+            : "Sin permiso no se puede escribir primero por WhatsApp: Meta suspende el número. Podrás usar correo y llamada.",
+        },
   ];
 
   return (

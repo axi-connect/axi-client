@@ -141,3 +141,19 @@ describe("countLeadFilters — el contador del botón", () => {
     expect(countLeadFilters({ require_mode: "any" })).toBe(0);
   });
 });
+
+describe("«Con quien decide»", () => {
+  it("viaja como `has_decision_maker=true` y solo cuando está puesto", () => {
+    expect(serializeLeadFilters({ has_decision_maker: true })).toEqual({ has_decision_maker: true });
+    expect(serializeLeadFilters({ has_decision_maker: false })).toEqual({});
+    expect(serializeLeadFilters({})).toEqual({});
+  });
+
+  it("cuenta como un filtro activo y convive con los demás", () => {
+    expect(countLeadFilters({ has_decision_maker: true })).toBe(1);
+    expect(serializeLeadFilters({ has_decision_maker: true, city: "Bogotá" })).toEqual({
+      has_decision_maker: true,
+      city: "Bogotá",
+    });
+  });
+});

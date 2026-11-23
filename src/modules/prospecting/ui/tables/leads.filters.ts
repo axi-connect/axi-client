@@ -48,6 +48,7 @@ import { SOURCE_DOTS } from "./leads.config";
 
 /** Las claves del borrador. Son las del backend, no unas propias. */
 export const LEAD_FILTER_KEYS = {
+  hasDecisionMaker: "has_decision_maker",
   require: "require",
   requireMode: "require_mode",
   minData: "min_data",
@@ -95,6 +96,15 @@ export const LEAD_FILTERS: FilterSchema = {
       modeKey: LEAD_FILTER_KEYS.requireMode,
       modeLabels: { all: "Todos", any: "Al menos uno" },
       options: REQUIRABLE_ORDER.map((field) => option(field, REQUIRABLE_LABELS[field])),
+    },
+    {
+      // También es el atajo «Con quien decide» de la barra de la bandeja.
+      kind: "switch",
+      key: LEAD_FILTER_KEYS.hasDecisionMaker,
+      section: "data",
+      label: "Con quien decide",
+      description:
+        "Negocios donde sabemos quién decide: lo dice el registro mercantil o lo confirmó tu equipo. Un nombre sin confirmar no cuenta.",
     },
     {
       kind: "count",

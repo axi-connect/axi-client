@@ -1,16 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { LoaderCircle } from "lucide-react";
+import { LoaderCircle, Mail, MessageCircle, Phone } from "lucide-react";
 
 import type { Paginated } from "@/core/api/types";
 import { formatShortDate } from "@/core/lib/format";
 import type { ListQuery } from "@/shared/api/query";
 import type { ColumnDef } from "@/shared/components/features/data-table";
+import { StatePill } from "@/shared/components/features/bento";
 import { StatusBadge } from "@/shared/components/features/status-badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/components/ui/tooltip";
 
 import {
   QUALITY_STATUS_MAP,
+  REACH_CHANNELS,
+  REACH_LEVELS,
   SOURCE_LABELS,
   dataCompleteness,
   mapLeadToRow,
@@ -83,7 +87,90 @@ function nameColumn(working: ReadonlySet<string>): ColumnDef<LeadRow> {
   };
 }
 
+const REACH_ICONS = { whatsapp: MessageCircle, email: Mail, call: Phone } as const;
+
+/**
+ * Quién decide en el negocio. Un HECHO se nombra con su cargo; una PISTA (un
+ * nombre leído en su sitio web) se nombra con «Por confirmar» debajo; sin
+ * nadie, «Sin identificar». Nunca vacío: la ausencia también es un dato.
+ */
+function DecisionMakerCell({ row }: { row: LeadRow }) {
+  // Una persona no «tiene» quien decide: la columna es de negocios.
+  if (row.kind === "person") return <span className="text-muted-foreground text-xs">—</span>;
+  if (row.decider_name === null) {
+    return <span className="text-muted-foreground text-[13.5px]">Sin identificar</span>;
+  }
+  const { decider_name: name, decider_title: title, decider_level: level } = row;
+  return (
+    <span className="flex max-w-[11rem] min-w-0 flex-col gap-px">
+      <span className="truncate text-[13.5px] font-medium" title={name}>
+        {name}
+      </span>
+      <span className="text-muted-foreground truncate text-xs" title={title ?? undefined}>
+        {level === "hypothesis" ? "Por confirmar" : (title ?? "Decide")}
+      </span>
+    </span>
+  );
+}
+
+/**
+ * Qué tan cerca estamos de esa persona, y por dónde hay un dato útil. NO es el
+ * permiso: eso sigue en «Puedo contactar por», dos columnas más allá.
+ */
+function ReachCell({ row }: { row: LeadRow }) {
+  if (row.reach_level === null) return <span className="text-muted-foreground text-xs">—</span>;
+  const level = REACH_LEVELS[row.reach_level];
+  const have = REACH_CHANNELS.filter((channel) => row[channel.row]).map((channel) => channel.label);
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          className="focus-visible:ring-ring/50 flex flex-col items-start gap-1.5 rounded-md text-left outline-none focus-visible:ring-[3px]"
+          aria-label={`Alcance: ${level.label}. ${have.length > 0 ? `Hay dato para ${have.join(", ")}` : "Sin datos de contacto"}.`}
+        >
+          <StatePill tone={level.tone}>{level.label}</StatePill>
+          <span aria-hidden className="flex items-center gap-1">
+            {REACH_CHANNELS.map((channel) => {
+              const Icon = REACH_ICONS[channel.key];
+              return (
+                <span
+                  key={channel.key}
+                  className={`grid size-6 place-items-center rounded-md border ${
+                    row[channel.row] ? "border-foreground/30" : "border-border text-foreground/35 border-dashed"
+                  }`}
+                >
+                  <Icon className="size-3" />
+                </span>
+              );
+            })}
+          </span>
+        </button>
+      </TooltipTrigger>
+      <TooltipContent className="max-w-72">
+        <p className="font-medium">{level.label}</p>
+        <p className="text-muted-foreground mt-0.5 text-xs">{level.hint}</p>
+        <p className="text-muted-foreground mt-1 text-xs">
+          {have.length > 0 ? `Hay dato para: ${have.join(", ")}.` : "No hay datos de contacto todavía."}
+        </p>
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
 const BASE_COLUMNS: ColumnDef<LeadRow>[] = [
+  {
+    accessorKey: "decider_name",
+    header: "Quién decide",
+    minWidth: 150,
+    cell: ({ row }) => <DecisionMakerCell row={row.original} />,
+  },
+  {
+    accessorKey: "reach_level",
+    header: "Alcance",
+    minWidth: 130,
+    cell: ({ row }) => <ReachCell row={row.original} />,
+  },
   {
     accessorKey: "source",
     header: "Origen",

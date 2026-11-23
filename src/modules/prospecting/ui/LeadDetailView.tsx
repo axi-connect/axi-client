@@ -26,6 +26,7 @@ import {
   canPromote,
   isRunInFlight,
   leadDisplayName,
+  primaryEmailVerification,
   type EnrichmentRunDTO,
   type LeadDetailDTO,
 } from "../domain/lead";
@@ -38,6 +39,7 @@ import {
   type RevealCosts,
 } from "../domain/person";
 import {
+  confirmLeadPerson,
   discardLead,
   enrichLead,
   findPeopleForLead,
@@ -51,6 +53,7 @@ import {
 import { BulkFollowUpButton } from "@/modules/crm/ui/components/BulkFollowUpButton";
 import { ChannelPermissions } from "./components/ChannelPermissions";
 import { EnrichmentRunCard } from "./components/EnrichmentRunCard";
+import { LeadDecisionMakerCard } from "./components/LeadDecisionMakerCard";
 import { LeadIdentityCard } from "./components/LeadIdentityCard";
 import { LeadPeopleSection } from "./components/LeadPeopleSection";
 import { LeadProvenance } from "./components/LeadProvenance";
@@ -416,6 +419,44 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
     }
   }, [leadId, router, showAlert]);
 
+  /**
+   * «Quién decide»: confirmar la pista, decir «No es» o añadir a la persona al
+   * CRM. Las tres releen la ficha y la lista de personas, que cuentan lo mismo.
+   */
+  const onDecision = useCallback(
+    async (action: "confirm" | "dismiss" | "promote", personId: string) => {
+      setBusy(true);
+      try {
+        if (action === "confirm") {
+          await confirmLeadPerson(personId, "decision_maker");
+          showAlert({ tone: "success", title: "Confirmada: es quien decide" });
+        } else if (action === "dismiss") {
+          await discardLead(personId, "No es quien decide en este negocio");
+          showAlert({ tone: "success", title: "Listo, ya no aparece como quien decide" });
+        } else {
+          const result = await promoteLeads([personId]);
+          const failure = result.failed[0];
+          showAlert(
+            failure === undefined
+              ? { tone: "success", title: "Añadida al CRM" }
+              : { tone: "error", title: "No se pudo añadir al CRM", description: failure.reason },
+          );
+        }
+        await load();
+        setPeopleRefresh((current) => current + 1);
+      } catch (caught) {
+        showAlert({
+          tone: "error",
+          title: "No se pudo guardar el cambio",
+          description: errorMessage(caught, "Intenta de nuevo."),
+        });
+      } finally {
+        setBusy(false);
+      }
+    },
+    [load, showAlert],
+  );
+
   const canManage = hasPermission("leads:manage");
 
   if (lead === null) {
@@ -458,6 +499,7 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
                 // distingue «no te dejan» de «no lo tenemos».
                 email: lead.email,
                 phone: lead.phone,
+                whatsapp_cold_controlled: lead.whatsapp_cold_controlled,
               }}
             />
           </div>
@@ -546,7 +588,23 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)] lg:items-start [&>*]:min-w-0">
         <div className="flex min-w-0 flex-col gap-4">
-          {/* Los datos primero: es lo que se viene a ver. Debajo, de dónde salió cada uno y su historia. */}
+          {/* Quién decide abre la ficha de un negocio: es a quien hay que llegarle. */}
+          {lead.kind === "business" && (
+            <LeadDecisionMakerCard
+              decisionMaker={lead.decision_maker}
+              points={lead.contact_points}
+              emailVerification={primaryEmailVerification(lead.quality_signals)}
+              canManage={canManage}
+              canPromote={hasPermission("leads:promote")}
+              busy={busy}
+              searching={working}
+              onSearch={() => void onFindPeople()}
+              onConfirm={(personId) => void onDecision("confirm", personId)}
+              onDismiss={(personId) => void onDecision("dismiss", personId)}
+              onAddToCrm={(personId) => void onDecision("promote", personId)}
+            />
+          )}
+          {/* Los datos: es lo que se viene a ver. Debajo, de dónde salió cada uno y su historia. */}
           <LeadIdentityCard lead={lead} signals={signals} />
           {lead.kind === "business" && (
             <LeadPeopleSection
@@ -558,6 +616,7 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
               canPromote={hasPermission("leads:promote")}
               onSearch={() => void onFindPeople()}
               onPeopleChange={setPeople}
+              onDecisionChange={() => void load()}
             />
           )}
           <LeadProvenance lead={lead} />

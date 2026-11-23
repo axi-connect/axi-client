@@ -13,10 +13,13 @@ import { nicheByCode } from "@/modules/onboarding/public";
 import {
   SOCIAL_LABELS,
   leadDisplayName,
+  opensWhatsappCold,
+  primaryEmailVerification,
   readSocials,
   type LeadDetailDTO,
 } from "../../domain/lead";
 import { SIGNAL_KIND_LABELS, SIGNAL_LEVEL_LABELS, type LeadSignalDTO } from "../../domain/person";
+import { ContactPointGroups } from "./ContactPointList";
 
 /** El color de marca de cada red. Son de terceros: no cambian con el tema. */
 const BRAND_CLASS: Record<string, string> = {
@@ -80,8 +83,14 @@ export function LeadIdentityCard({
     },
     { label: "Dirección", value: lead.address, copyable: lead.address ?? undefined },
     { label: "NIT", value: mono(lead.tax_id), copyable: lead.tax_id ?? undefined },
-    { label: "Correo", value: mono(lead.email), copyable: lead.email ?? undefined },
-    { label: "Teléfono", value: mono(lead.phone), copyable: lead.phone ?? undefined },
+    // Una PERSONA tiene un correo y un teléfono, como siempre. De un negocio se
+    // enseñan todos, más abajo, en «Correos · N» y «Teléfonos · N».
+    ...(lead.kind === "person"
+      ? [
+          { label: "Correo", value: mono(lead.email), copyable: lead.email ?? undefined },
+          { label: "Teléfono", value: mono(lead.phone), copyable: lead.phone ?? undefined },
+        ]
+      : []),
     {
       label: "Sitio web",
       value:
@@ -101,8 +110,14 @@ export function LeadIdentityCard({
 
   // Un lead sin ningún dato y sin punto en el mapa no merece una tarjeta vacía:
   // lo que necesita es el botón de buscar datos, que está en la cabecera.
+  const points = lead.contact_points;
+  const hasWays = lead.kind === "business" && (points.emails.length > 0 || points.phones.length > 0);
   const empty =
-    items.every((item) => item.value === null) && socials.length === 0 && !hasPoint && signals.length === 0;
+    items.every((item) => item.value === null) &&
+    socials.length === 0 &&
+    !hasPoint &&
+    signals.length === 0 &&
+    !hasWays;
   if (empty) return null;
 
   return (
@@ -128,6 +143,11 @@ export function LeadIdentityCard({
           />
         )}
       </div>
+
+      {/* Todos los correos y teléfonos del negocio, con su tipo y de dónde salió cada uno. */}
+      {hasWays && (
+        <ContactPointGroups points={points} emailVerification={primaryEmailVerification(lead.quality_signals)} />
+      )}
 
       {/* P2 · señales: un hecho con su fuente y su fecha; una hipótesis, marcada como tal. */}
       {signals.length > 0 && (
@@ -185,7 +205,18 @@ export function LeadIdentityCard({
               desobedecerla: el número está publicado, y aun así el canal puede
               estar prohibido. Tener el dato no es tener permiso. */}
           {socials.some((social) => social.network === "whatsapp") &&
-            !lead.allowed_channels.includes("whatsapp") && (
+            !lead.allowed_channels.includes("whatsapp") &&
+            // Lo que se dice aquí tiene que ser lo que hará el envío: con el
+            // frío controlado encendido en la política, WhatsApp sí sale.
+            (opensWhatsappCold(lead) ? (
+              <p className="flex gap-2.5 text-sm text-pretty">
+                <span aria-hidden className="bg-info mt-[0.45em] size-2 shrink-0 rounded-full" />
+                <span>
+                  Nunca pidió que lo contactaras. Por WhatsApp solo sale en frío controlado: una plantilla
+                  aprobada, dentro del tope del día.
+                </span>
+              </p>
+            ) : (
               <p className="flex gap-2.5 text-sm text-pretty">
                 <span aria-hidden className="bg-warning mt-[0.45em] size-2 shrink-0 rounded-full" />
                 <span>
@@ -193,7 +224,7 @@ export function LeadIdentityCard({
                   contactaras. Puedes llamarlo o escribirle un correo.
                 </span>
               </p>
-            )}
+            ))}
         </div>
       )}
     </BentoTile>

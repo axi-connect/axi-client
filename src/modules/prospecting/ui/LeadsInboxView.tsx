@@ -9,6 +9,7 @@ import {
   LoaderCircle,
   Search,
   TriangleAlert,
+  UserRoundCheck,
   UsersRound,
   WandSparkles,
 } from "lucide-react";
@@ -52,6 +53,7 @@ import { CaptureHeader } from "./components/CaptureHeader";
 import { buildLeadColumns, fetchLeads } from "./tables/leads.config";
 import {
   LEAD_FILTERS,
+  LEAD_FILTER_KEYS,
   countLeadFilters,
   serializeLeadFilters,
 } from "./tables/leads.filters";
@@ -624,6 +626,17 @@ export function LeadsInboxView() {
           toolbar={
             <>
               <FilterTrigger count={activeFilters} onClick={() => setPanelOpen(true)} />
+              {/* El atajo del filtro más pedido. Puesto, deja de pintarse aquí: lo enseña su chip, que también lo quita. */}
+              {filters[LEAD_FILTER_KEYS.hasDecisionMaker] !== true && (
+                <button
+                  type="button"
+                  onClick={() => applyFilters({ ...filters, [LEAD_FILTER_KEYS.hasDecisionMaker]: true })}
+                  className="border-border-soft bg-secondary/40 text-muted-foreground hover:bg-secondary hover:text-foreground focus-visible:ring-ring/50 inline-flex h-9 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-[3px]"
+                >
+                  <UserRoundCheck aria-hidden className="size-4" />
+                  Con quien decide
+                </button>
+              )}
               <FilterChips
                 schema={LEAD_FILTERS}
                 values={filters}

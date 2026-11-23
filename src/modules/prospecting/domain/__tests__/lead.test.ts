@@ -59,6 +59,8 @@ const BASE: LeadDTO = {
   last_enriched_at: null,
   promoted_at: null,
   created_at: "2026-08-28T10:00:00.000Z",
+  decision_maker: null,
+  reach: null,
 };
 
 describe("channelVerdict", () => {
