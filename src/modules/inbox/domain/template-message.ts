@@ -112,6 +112,8 @@ export function parseMessageError(error: unknown): MessageFailure | null {
 const META_FAILURE_DETAIL: Record<string, string> = {
   "131042": "Meta no cobró el envío: revisa el método de pago de tu cuenta de WhatsApp Business",
   "131026": "el número no pudo recibir el mensaje (puede que no tenga WhatsApp)",
+  "131053":
+    "Meta no alcanzó a descargar la imagen del mensaje; fue un fallo nuestro, no del número: reenvíalo",
   "131031": "Meta bloqueó temporalmente la cuenta de WhatsApp Business",
   "131047": "pasaron más de 24 h desde su último mensaje: solo se le puede escribir con una plantilla",
   "131048": "Meta limitó los envíos de este número por reportes de spam",
@@ -140,6 +142,7 @@ const PLATFORM_FAILURE_DETAIL: Record<string, string> = {
   "auth/company_suspended": "la cuenta está suspendida: no salen mensajes",
   "conversations/message_not_found": "el contacto no tiene un número de WhatsApp al que escribirle",
   "conversations/handoff_conflict": "un asesor tomó la conversación antes de que saliera",
+  "conversations/header_media_failed": "no se pudo preparar la imagen del mensaje; reenvíalo en unos minutos",
 };
 
 const META_GENERIC = "Meta no la entregó; reenvíala y, si vuelve a fallar, revisa tu cuenta de WhatsApp Business";

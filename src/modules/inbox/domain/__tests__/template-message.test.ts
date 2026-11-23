@@ -90,6 +90,15 @@ describe("parseMessageError + failureCopy", () => {
     expect(failureCopy(null, "131026")).toBe("El número no pudo recibir el mensaje (puede que no tenga WhatsApp).");
   });
 
+  it("la imagen que Meta no alcanzó a bajar (131053) se dice como fallo nuestro, igual que en el servidor", () => {
+    expect(failureCopy(null, "131053")).toBe(
+      "Meta no alcanzó a descargar la imagen del mensaje; fue un fallo nuestro, no del número: reenvíalo.",
+    );
+    expect(failureCopy(null, "conversations/header_media_failed")).toBe(
+      "No se pudo preparar la imagen del mensaje; reenvíalo en unos minutos.",
+    );
+  });
+
   it("un código que no conocemos cae al genérico, nunca al texto en inglés ni al código crudo", () => {
     const copy = failureCopy(parseMessageError({ code: 999999, title: "Something odd" }));
     expect(copy).not.toMatch(/Something odd|999999/);
