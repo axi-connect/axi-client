@@ -1,10 +1,11 @@
 import type { Schemas } from "@/core/api/types";
-import type { FollowUpMedium } from "@/modules/crm/domain/schedule-follow-up";
+import { asCrmCallType, type FollowUpMedium } from "@/modules/crm/domain/schedule-follow-up";
 import type { CrmCallType } from "@/modules/calls/public";
 
 export type SequenceDTO = Schemas["SequenceDto"];
 export type SequenceStepDTO = SequenceDTO["steps"][number];
 export type UpsertSequenceDTO = Schemas["UpsertSequenceDto"];
+type UpsertSequenceStepDTO = UpsertSequenceDTO["steps"][number];
 export type EnrollmentDTO = Schemas["EnrollmentsListDto"]["data"][number];
 export type EnrollmentStopReason = NonNullable<EnrollmentDTO["stop_reason"]>;
 
@@ -85,7 +86,36 @@ export type DraftStep = {
   subject?: string;
   /** Correo y SMS: el texto; manual: el texto listo para copiar (opcional). */
   body?: string;
+  /**
+   * OPACO. La plantilla de WhatsApp del paso, tal como la devolvió el
+   * servidor. El editor no la muestra ni la toca, pero el PUT reemplaza la
+   * secuencia entera: si el borrador no la lleva, guardar la borra.
+   */
+  opening_template?: SequenceStepDTO["opening_template"];
+  /** OPACO, por lo mismo: lo del correo que el editor no muestra (diseño, imagen, botón). */
+  message_extras?: MessageExtras;
 };
+
+/** Todo lo del `message_template` que no es asunto ni cuerpo. */
+export type MessageExtras = Omit<NonNullable<SequenceStepDTO["message_template"]>, "subject" | "body">;
+
+/**
+ * Un paso guardado, en la forma del editor. Lo que el editor no muestra viaja
+ * dentro del borrador sin tocarse; `toUpsertDTO` lo devuelve al guardar.
+ */
+export function toDraftStep(step: SequenceStepDTO): DraftStep {
+  const { subject, body, ...extras } = step.message_template ?? { subject: null, body: "" };
+  return {
+    offset_hours: step.offset_hours,
+    task_channel: step.task_channel,
+    call_type: asCrmCallType(step.call_type),
+    objective: step.objective,
+    subject: subject ?? "",
+    body,
+    ...(step.opening_template === null ? {} : { opening_template: step.opening_template }),
+    ...(Object.keys(extras).length === 0 ? {} : { message_extras: extras }),
+  };
+}
 
 /** Segmentos de SMS que se cobran: 160 caracteres, o 70 si hay tildes o emoji. */
 export function smsSegments(text: string): number {
@@ -362,8 +392,44 @@ export function toUpsertDTO(input: {
         ? { call_type: step.call_type ?? "followup" }
         : {}),
       objective: step.objective.trim(),
-      message_template: messageTemplateOf(step),
+      // Los dos SIEMPRE viajan (null incluido): el paso dice entero lo que
+      // lleva, y no depende de lo que el servidor conserve o adivine.
+      opening_template: openingTemplateOf(step),
+      message_template: withMessageExtras(step, messageTemplateOf(step)),
     })),
+  };
+}
+
+/**
+ * La plantilla de WhatsApp que el paso ya traía, en la forma que acepta el
+ * PUT. Solo en un paso «Mensaje»: si el medio cambió, ya no aplica y no viaja
+ * (el servidor la rechazaría). Decide al GUARDAR, no al cambiar el selector:
+ * quien cambia el medio por error y lo devuelve no pierde nada.
+ */
+export function openingTemplateOf(step: DraftStep): NonNullable<UpsertSequenceStepDTO["opening_template"]> | null {
+  const opening = step.opening_template ?? null;
+  if (step.task_channel !== "message" || opening === null) return null;
+  return {
+    channel_template_id: opening.channel_template_id,
+    params: opening.params,
+    topic: opening.topic ?? null,
+    header_image: opening.header_image ?? null,
+  };
+}
+
+/** Diseño, imagen y botón son solo del correo; en un correo viajan siempre, aunque sea en null. */
+function withMessageExtras(
+  step: DraftStep,
+  template: { subject: string | null; body: string } | null,
+): UpsertSequenceStepDTO["message_template"] {
+  if (template === null || step.task_channel !== "email") return template;
+  const extras = step.message_extras ?? {};
+  return {
+    ...template,
+    ...extras,
+    design: extras.design ?? null,
+    header_image: extras.header_image ?? null,
+    cta: extras.cta ?? null,
   };
 }
 

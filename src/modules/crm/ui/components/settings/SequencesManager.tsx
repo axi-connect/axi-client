@@ -49,6 +49,7 @@ import {
   sequenceStory,
   SEQUENCE_LIMITS,
   SEQUENCE_TEMPLATES,
+  toDraftStep,
   toUpsertDTO,
   validateSequence,
   type DraftStep,
@@ -65,7 +66,6 @@ import {
 } from "@/modules/crm/infrastructure/services/sequences-service.adapter";
 import { useEntitlements } from "@/shared/auth/entitlements.hooks";
 import { CallTypeSelect, CRM_CALL_TYPES } from "@/modules/calls/public";
-import { asCrmCallType } from "@/modules/crm/domain/schedule-follow-up";
 
 const MEDIUM_ICONS: Record<SequenceMedium, React.ComponentType<{ className?: string }>> = {
   message: MessageSquare,
@@ -356,14 +356,7 @@ function toDraft(sequence: SequenceDTO): Draft {
     stop_on_conversion: sequence.stop_on_conversion,
     is_active: sequence.is_active,
     next_sequence_id: sequence.next_sequence_id,
-    steps: sequence.steps.map((step) => ({
-      offset_hours: step.offset_hours,
-      task_channel: step.task_channel,
-      call_type: asCrmCallType(step.call_type),
-      objective: step.objective,
-      subject: step.message_template?.subject ?? "",
-      body: step.message_template?.body ?? "",
-    })),
+    steps: sequence.steps.map(toDraftStep),
   };
 }
 

@@ -4,9 +4,11 @@ import {
   offsetLabel,
   smsSegments,
   SEQUENCE_TEMPLATES,
+  toDraftStep,
   toUpsertDTO,
   validateSequence,
   type DraftStep,
+  type SequenceStepDTO,
   sequenceStory,
   enrollmentDisplayStatus,
 } from "../sequences";
@@ -261,3 +263,151 @@ describe("sequences — marco de la llamada de cada paso (plan de modos §7)", (
   });
 });
 
+
+/**
+ * Hotfix «guardar no borra»: lo que el editor no muestra (la plantilla de
+ * WhatsApp del paso; diseño, imagen y botón del correo) va opaco en el
+ * borrador y vuelve en el PUT. Datos ficticios (tenant «Norte Studio»).
+ */
+describe("sequences — guardar no borra lo que el editor no muestra", () => {
+  const OPENING = {
+    channel_template_id: "0193a000-0000-7000-8000-000000000001",
+    channel_id: "0193a000-0000-7000-8000-0000000000c1",
+    name: "norte_studio_apertura",
+    language: "es",
+    params: ["company_name"],
+    topic: null,
+    header_image: { id: "nicho:estudios", personalize: true },
+  };
+  const OPENING_INPUT = {
+    channel_template_id: OPENING.channel_template_id,
+    params: OPENING.params,
+    topic: null,
+    header_image: OPENING.header_image,
+  };
+  const BRAND_MAIL = {
+    subject: "Una idea para {{business_name}}",
+    body: "Hola {{first_name}}: te cuento cómo lo hacemos en Norte Studio.",
+    design: "brand" as const,
+    header_image: { id: "nicho:estudios", personalize: true },
+    cta: { label: "Quiero verlo", target: "whatsapp" as const },
+  };
+  const stored = (over: Partial<SequenceStepDTO>): SequenceStepDTO => ({
+    id: "0193a000-0000-7000-8000-000000000051",
+    position: 1,
+    offset_hours: 0,
+    task_channel: "message",
+    call_type: null,
+    objective: "Presentarnos y preguntar qué necesita",
+    opening_template: null,
+    message_template: null,
+    ...over,
+  });
+  const WHATSAPP = stored({ opening_template: OPENING });
+  const MAIL = stored({
+    position: 2,
+    offset_hours: 48,
+    task_channel: "email",
+    objective: "Contarle la idea con un caso real",
+    message_template: BRAND_MAIL,
+  });
+  const save = (steps: DraftStep[]) =>
+    toUpsertDTO({
+      name: "Estudios de diseño",
+      description: "",
+      stop_on_reply: true,
+      stop_on_conversion: true,
+      is_active: true,
+      next_sequence_id: null,
+      steps,
+    }).steps;
+
+  it("cargar y guardar sin cambios devuelve lo que se cargó", () => {
+    const [whatsapp, mail] = save([toDraftStep(WHATSAPP), toDraftStep(MAIL)]);
+    expect(whatsapp.opening_template).toEqual(OPENING_INPUT);
+    expect(whatsapp.message_template).toBeNull();
+    expect(mail.opening_template).toBeNull();
+    expect(mail.message_template).toEqual(BRAND_MAIL);
+  });
+
+  it("un correo «marca» sin imagen ni botón guarda sus null tal cual", () => {
+    const bare = { subject: "Hola", body: "Texto", design: "brand" as const, header_image: null, cta: null };
+    const [mail] = save([toDraftStep({ ...MAIL, message_template: bare })]);
+    expect(mail.message_template).toEqual(bare);
+  });
+
+  it("editar asunto o cuerpo conserva diseño, imagen y botón", () => {
+    const draft = { ...toDraftStep(MAIL), subject: "Otro asunto", body: "Otro texto" };
+    expect(save([draft])[0].message_template).toEqual({ ...BRAND_MAIL, subject: "Otro asunto", body: "Otro texto" });
+  });
+
+  it("un paso SIN nada oculto lo dice con null explícito, no con un campo ausente", () => {
+    const plain = stored({ task_channel: "email", message_template: { subject: "Hola", body: "Texto" } });
+    const [mail, whatsapp] = save([toDraftStep(plain), toDraftStep(stored({ offset_hours: 24 }))]);
+    expect(mail.message_template).toEqual({ subject: "Hola", body: "Texto", design: null, header_image: null, cta: null });
+    expect(mail).toHaveProperty("opening_template", null);
+    expect(whatsapp).toHaveProperty("opening_template", null);
+    expect(whatsapp).toHaveProperty("message_template", null);
+  });
+
+  it("un paso nuevo y los de las plantillas nacen sin plantilla ni diseño", () => {
+    const [fresh] = save([step()]);
+    expect(fresh.opening_template).toBeNull();
+    expect(fresh.message_template).toBeNull();
+    const radar = SEQUENCE_TEMPLATES.find((template) => template.key === "radar_b2b");
+    for (const entry of save([...(radar?.steps ?? [])])) {
+      expect(entry.opening_template).toBeNull();
+      if (entry.task_channel === "email") expect(entry.message_template).toMatchObject({ design: null, header_image: null, cta: null });
+    }
+  });
+
+  it("cambiar el MEDIO no arrastra lo que ya no aplica: la plantilla es solo de «Mensaje»", () => {
+    const toMail: DraftStep = { ...toDraftStep(WHATSAPP), task_channel: "email", subject: "Hola", body: "Texto" };
+    const [mail] = save([toMail]);
+    expect(mail.opening_template).toBeNull();
+    expect(mail.message_template).toEqual({ subject: "Hola", body: "Texto", design: null, header_image: null, cta: null });
+    for (const medium of ["call", "call_then_message", "sms", "manual"] as const) {
+      const [moved] = save([{ ...toDraftStep(WHATSAPP), task_channel: medium, body: "Hola" }]);
+      expect(moved.opening_template).toBeNull();
+    }
+  });
+
+  it("cambiar el MEDIO no arrastra lo que ya no aplica: diseño, imagen y botón son solo del correo", () => {
+    const [sms] = save([{ ...toDraftStep(MAIL), task_channel: "sms" }]);
+    expect(sms.message_template).toEqual({ subject: null, body: BRAND_MAIL.body });
+    const [manual] = save([{ ...toDraftStep(MAIL), task_channel: "manual" }]);
+    expect(manual.message_template).toEqual({ subject: null, body: BRAND_MAIL.body });
+    const [whatsapp] = save([{ ...toDraftStep(MAIL), task_channel: "message" }]);
+    expect(whatsapp.message_template).toBeNull();
+    expect(whatsapp.opening_template).toBeNull();
+  });
+
+  it("cambiar el medio y devolverlo antes de guardar no pierde nada", () => {
+    const moved: DraftStep = { ...toDraftStep(WHATSAPP), task_channel: "call" };
+    expect(save([{ ...moved, task_channel: "message" }])[0].opening_template).toEqual(OPENING_INPUT);
+    const mail: DraftStep = { ...toDraftStep(MAIL), task_channel: "sms" };
+    expect(save([{ ...mail, task_channel: "email" }])[0].message_template).toEqual(BRAND_MAIL);
+  });
+
+  it("reordenar o quitar pasos: cada uno se lleva lo suyo, nunca lo del vecino", () => {
+    const other = stored({
+      position: 3,
+      offset_hours: 120,
+      objective: "Proponer una cita concreta esta semana",
+      opening_template: { ...OPENING, channel_template_id: "0193a000-0000-7000-8000-000000000002", header_image: undefined },
+    });
+    const drafts = [toDraftStep(WHATSAPP), toDraftStep(MAIL), toDraftStep(other)];
+    const reordered = save([{ ...drafts[2], offset_hours: 0 }, drafts[1], { ...drafts[0], offset_hours: 120 }]);
+    expect(reordered.map((entry) => entry.opening_template?.channel_template_id ?? null)).toEqual([
+      "0193a000-0000-7000-8000-000000000002",
+      null,
+      OPENING.channel_template_id,
+    ]);
+    expect(reordered[0].opening_template?.header_image).toBeNull();
+    expect(reordered[1].message_template).toEqual(BRAND_MAIL);
+    const removed = save(drafts.filter((_, index) => index !== 0));
+    expect(removed[0].opening_template).toBeNull();
+    expect(removed[0].message_template).toEqual(BRAND_MAIL);
+    expect(removed[1].opening_template?.channel_template_id).toBe("0193a000-0000-7000-8000-000000000002");
+  });
+});
