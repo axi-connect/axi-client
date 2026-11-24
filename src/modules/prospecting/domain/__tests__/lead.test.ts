@@ -78,7 +78,7 @@ describe("channelVerdict", () => {
   it("PERMITIDO PERO SIN EL DATO no es lo mismo que prohibido", () => {
     // El bug que se vio en la primera prueba real: la bandeja pintaba el correo
     // en verde para leads descubiertos en un mapa, que casi nunca traen correo.
-    // La columna se llama «Puedo contactar por» y estaba respondiendo a otra
+    // La columna se llama «Contactar por» y estaba respondiendo a otra
     // pregunta: si la LEY lo permite, no si hay a dónde escribir.
     const sinCorreo = { ...BASE, email: null };
     const veredicto = channelVerdict(sinCorreo, "email");

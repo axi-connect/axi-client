@@ -61,14 +61,15 @@ function nameColumn(working: ReadonlySet<string>): ColumnDef<LeadRow> {
     accessorKey: "name",
     header: "Lead",
     alwaysVisible: true,
-    // El mismo tope que la celda (13rem): la tabla reparte columnas con este número.
-    minWidth: 208,
+    // El mismo tope que la celda (12rem): la tabla reparte columnas con este
+    // número. Si cambia, revisar el de «Calidad del dato», que lo compensa a 768 px.
+    minWidth: 192,
     cell: ({ row }) => (
       // Ancho con tope: un nombre de 100 caracteres se corta con difuminado en
       // vez de empujar «Quién decide» y «Alcance» fuera de la tabla.
       <Link
         href={`/marketing/leads/${row.original.id}`}
-        className="hover:text-brand block max-w-[13rem] min-w-0"
+        className="hover:text-brand block max-w-[12rem] min-w-0"
       >
         <span className="block truncate text-sm font-semibold" title={row.original.name}>
           {row.original.name}
@@ -155,7 +156,7 @@ function DecisionMakerCell({ row }: { row: LeadRow }) {
 
 /**
  * Qué tan cerca estamos de esa persona, y por dónde hay un dato útil. NO es el
- * permiso: eso sigue en «Puedo contactar por», dos columnas más allá.
+ * permiso: eso sigue en «Contactar por», dos columnas más allá.
  */
 function ReachCell({ row }: { row: LeadRow }) {
   if (row.reach_level === null) return <span className="text-muted-foreground text-xs">—</span>;
@@ -202,7 +203,7 @@ function ReachCell({ row }: { row: LeadRow }) {
  * El ORDEN es la prioridad: cuando la tabla no cabe, ceden primero las últimas.
  *
  * 1. «Quién decide» y «Alcance»: a quién hay que llegarle y qué tan cerca estamos.
- * 2. «Calidad del dato» y «Puedo contactar por», contiguas y SEPARADAS a
+ * 2. «Calidad del dato» y «Contactar por», contiguas y SEPARADAS a
  *    propósito: la fila tiene que poder decir «verificado» y «WhatsApp no» al
  *    mismo tiempo. El permiso no cede antes que un dato descriptivo.
  * 3. «Calidad»: el puntaje por el que se ordena la bandeja. Tiene que verse a
@@ -212,9 +213,12 @@ function ReachCell({ row }: { row: LeadRow }) {
  * «Origen» y «Ciudad» ya no son columnas: van como tercera línea de la celda
  * «Lead», a la vista en todos los anchos.
  *
- * Holgura a 1280 px, medida en pantalla (M6 de la 2.ª auditoría): la tabla
- * medía 953 px en un contenedor de 942. La celda del lead bajó a 13rem y la de
- * quien decide a 8.5rem; no debe haber desplazamiento horizontal a ese ancho.
+ * Holgura a 1280 px, medida en pantalla (M6 de la 2.ª y la 3.ª auditoría): la
+ * tabla medía 953 px en un contenedor de 942. La celda del lead bajó a 13rem y
+ * la de quien decide a 8.5rem (quedaban 13 px y un rótulo en 3 renglones);
+ * después la del lead bajó a 12rem y el rótulo pasó a «Contactar por»: 29 px de
+ * holgura medidos por el auditor y ningún rótulo en más de 2 renglones. No
+ * debe haber desplazamiento horizontal a ese ancho.
  *
  * Qué cabe (menú lateral abierto): a 1440 px, todo menos «Descubierto»; a
  * 1280 px, hasta «Calidad»; a 768 px, «Quién decide» y «Alcance»; en el
@@ -237,8 +241,11 @@ const BASE_COLUMNS: ColumnDef<LeadRow>[] = [
   {
     accessorKey: "quality_status",
     header: "Calidad del dato",
-    // 130: a 768 px no cabe (si entrara, empujaría el botón de fin de fila) y a 1280 sí.
-    minWidth: 130,
+    // 146: a 768 px no cabe (si entrara, empujaría el botón de fin de fila) y a
+    // 1280 sí. Es el número con que la tabla REPARTE columnas, no el ancho
+    // pintado. Subió de 130 cuando la celda del lead bajó de 208 a 192 (M6, 3.ª
+    // auditoría): sin esos 16 px, a 768 la suma daba 592 de 606 y la columna entraba.
+    minWidth: 146,
     headerCell: () => <TwoLineHeader>Calidad del dato</TwoLineHeader>,
     cell: ({ row }) => (
       <StatusBadge
@@ -249,10 +256,12 @@ const BASE_COLUMNS: ColumnDef<LeadRow>[] = [
   },
   {
     accessorKey: "allows_whatsapp",
-    header: "Puedo contactar por",
-    // El rótulo va en dos renglones: en uno solo pedía 150 px para tres iconos.
+    header: "Contactar por",
+    // «Contactar por» y no «Puedo contactar por»: el largo quedaba en 3
+    // renglones a 1280 px. Puede partirse en dos: en uno solo pide más ancho
+    // del que necesitan tres iconos.
     minWidth: 124,
-    headerCell: () => <TwoLineHeader>Puedo contactar por</TwoLineHeader>,
+    headerCell: () => <TwoLineHeader>Contactar por</TwoLineHeader>,
     cell: ({ row }) => <ChannelPermissions lead={rowChannelSubject(row.original)} />,
   },
   {

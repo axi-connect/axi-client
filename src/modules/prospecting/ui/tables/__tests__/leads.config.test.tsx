@@ -79,6 +79,21 @@ describe("columnas de la bandeja", () => {
     expect(upToScore).toBeLessThanOrEqual(940 - 40 - 44);
   });
 
+  /*
+    M6 de la 3.ª auditoría: a 1280 quedaban 13 px y «Puedo contactar por» salía
+    en 3 renglones. Rótulo corto y celda del lead de 12rem: 29 px de holgura.
+  */
+  it("M6: la columna del permiso se llama «Contactar por» y la celda del lead mide 12rem (192 px)", () => {
+    const permission = columns.find((column) => column.accessorKey === "allows_whatsapp");
+    expect(permission?.header).toBe("Contactar por");
+    const name = columns.find((column) => column.accessorKey === "name");
+    expect(name?.minWidth).toBe(192);
+    cellOf("name", row());
+    const link = screen.getByRole("link", { name: /./ });
+    expect(link.className).toContain("max-w-[12rem]");
+    expect(link.className).not.toContain("13rem");
+  });
+
   it("a 768 px solo caben «Quién decide» y «Alcance»: una columna más empujaría el botón de fin de fila", () => {
     // ~690 px de tabla, menos 40 del botón y 44 de la casilla.
     const budget = 690 - 40 - 44;
