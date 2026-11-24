@@ -68,7 +68,7 @@ export function TableView<T extends DataRow>({ data, columns, page, pageSize, to
               )
             })}
             {iconColumn && (
-              <TableHead className="w-10 pr-3 pl-0">
+              <TableHead className="bg-muted sticky right-0 w-10 pr-3 pl-0">
                 <span className="sr-only">Ver más</span>
               </TableHead>
             )}

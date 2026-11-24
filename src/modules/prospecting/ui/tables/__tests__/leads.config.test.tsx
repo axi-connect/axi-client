@@ -79,6 +79,15 @@ describe("columnas de la bandeja", () => {
     expect(upToScore).toBeLessThanOrEqual(940 - 40 - 44);
   });
 
+  it("a 768 px solo caben «Quién decide» y «Alcance»: una columna más empujaría el botón de fin de fila", () => {
+    // ~690 px de tabla, menos 40 del botón y 44 de la casilla.
+    const budget = 690 - 40 - 44;
+    const upToReach = columns.slice(0, 3).reduce((sum, column) => sum + (column.minWidth ?? 150), 0);
+    const upToDataQuality = columns.slice(0, 4).reduce((sum, column) => sum + (column.minWidth ?? 150), 0);
+    expect(upToReach).toBeLessThanOrEqual(budget);
+    expect(upToDataQuality).toBeGreaterThan(budget);
+  });
+
   it("en el celular, quién decide y el alcance bajan a una línea bajo el nombre", () => {
     cellOf("name", row());
     const line = screen.getByText("Mariana Restrepo Gil").closest("span.flex");

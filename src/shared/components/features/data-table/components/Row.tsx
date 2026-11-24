@@ -48,7 +48,8 @@ function DataTableRowInner<T extends DataRow>({ row, visibleColumns, collapsedCo
       <TableRow onContextMenu={handleContextMenu}>
         {visibleCells}
         {iconMode && (
-          <TableCell className="w-10 pr-3 pl-0 text-right">
+          // Pegado al borde derecho: si la tabla desplaza a lo ancho, el botón no se pierde.
+          <TableCell className="bg-card sticky right-0 w-10 pr-3 pl-0 text-right">
             <Tooltip>
               <TooltipTrigger asChild>
                 <button

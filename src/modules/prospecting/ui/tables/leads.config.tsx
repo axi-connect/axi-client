@@ -232,7 +232,8 @@ const BASE_COLUMNS: ColumnDef<LeadRow>[] = [
   {
     accessorKey: "quality_status",
     header: "Calidad del dato",
-    minWidth: 116,
+    // 124 y no menos: a 768 px no cabe (si entrara, empujaría el botón de fin de fila) y a 1280 sí.
+    minWidth: 124,
     headerCell: () => <TwoLineHeader>Calidad del dato</TwoLineHeader>,
     cell: ({ row }) => (
       <StatusBadge
