@@ -247,7 +247,9 @@ export function LeadPeopleSection({
                   {/* La dudosa: leída en su sitio web y sin confirmar. Se dice por qué, en una línea. */}
                   {person.doubt !== null && (
                     <>
-                      <StatePill tone="warning">Dudosa</StatePill>
+                      <span className="w-fit">
+                        <StatePill tone="warning">Dudosa</StatePill>
+                      </span>
                       <p className="text-muted-foreground text-xs text-pretty">{PERSON_DOUBT_REASONS[person.doubt]}</p>
                     </>
                   )}

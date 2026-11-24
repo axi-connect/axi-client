@@ -61,16 +61,21 @@ function nameColumn(working: ReadonlySet<string>): ColumnDef<LeadRow> {
     accessorKey: "name",
     header: "Lead",
     alwaysVisible: true,
-    minWidth: 220,
+    // El mismo tope que la celda (17rem): la tabla reparte columnas con este número.
+    minWidth: 272,
     cell: ({ row }) => (
+      // Ancho con tope: un nombre de 100 caracteres se corta con difuminado en
+      // vez de empujar «Quién decide» y «Alcance» fuera de la tabla.
       <Link
         href={`/marketing/leads/${row.original.id}`}
-        className="hover:text-brand block"
+        className="hover:text-brand block max-w-[17rem] min-w-0"
       >
-        <span className="block text-sm font-semibold">{row.original.name}</span>
+        <span className="block truncate text-sm font-semibold" title={row.original.name}>
+          {row.original.name}
+        </span>
         {/* P2: una persona dice su cargo, su papel y su negocio bajo el nombre. */}
         {row.original.person_line.length > 0 && (
-          <span className="text-muted-foreground block text-xs">{row.original.person_line}</span>
+          <span className="text-muted-foreground block truncate text-xs">{row.original.person_line}</span>
         )}
         {working.has(row.original.id) ? (
           <span className="text-info flex items-center gap-1.5 text-xs">
@@ -78,7 +83,7 @@ function nameColumn(working: ReadonlySet<string>): ColumnDef<LeadRow> {
             Buscando datos…
           </span>
         ) : (
-          <span className="text-muted-foreground block text-xs">
+          <span className="text-muted-foreground block truncate text-xs" title={row.original.contact_line || undefined}>
             {row.original.contact_line || "Sin datos de contacto"}
           </span>
         )}
