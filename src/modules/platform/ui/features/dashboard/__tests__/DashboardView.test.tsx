@@ -1,6 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
 import { HttpError } from "@/core/api/problem";
-import { DashboardView } from "../DashboardView";
+import { DashboardView, latestAlertPhrase } from "../DashboardView";
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn() }),
@@ -129,5 +129,11 @@ describe("Inicio de la consola", () => {
     expect(rule).toHaveAttribute("title", "ai_failures_spike");
     expect(within(tile("Empresas recientes")).getByText("Tenant t-1")).toBeInTheDocument();
     expect(within(tile("Empresas recientes")).getAllByText("Activa").length).toBeGreaterThan(0);
+  });
+
+  it("la alerta más reciente se dice como persona, sea hora o fecha", () => {
+    expect(latestAlertPhrase("hace 3 h")).toBe("La más reciente fue hace 3 h");
+    expect(latestAlertPhrase("ayer")).toBe("La más reciente fue ayer");
+    expect(latestAlertPhrase("13 oct")).toBe("La más reciente fue el 13 oct");
   });
 });

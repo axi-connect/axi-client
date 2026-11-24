@@ -32,6 +32,11 @@ import { RecentTenantsCard } from "./RecentTenantsCard";
 
 const TILE = "gap-2 rounded-[20px] p-4 sm:px-[18px]";
 
+/** «La más reciente fue hace 3 h», «… fue ayer»; si `relativeTime` ya da una fecha, «… fue el 13 oct». */
+export function latestAlertPhrase(relative: string): string {
+  return /^\d/.test(relative) ? `La más reciente fue el ${relative}` : `La más reciente fue ${relative}`;
+}
+
 function Say({ children }: { children: React.ReactNode }) {
   return <p className="text-[12.5px] text-muted-foreground text-pretty">{children}</p>;
 }
@@ -122,8 +127,20 @@ export function DashboardView() {
                 <BentoTile
                   label="Alertas activas"
                   className={TILE}
-                  aside={alertsValue ? <StatePill tone="warning">Revisar</StatePill> : undefined}
+                  // En una ficha estrecha (celular) la píldora le quitaría el sitio a la etiqueta: baja al cuerpo.
+                  aside={
+                    alertsValue ? (
+                      <span className="hidden sm:inline-flex">
+                        <StatePill tone="warning">Revisar</StatePill>
+                      </span>
+                    ) : undefined
+                  }
                 >
+                  {alertsValue ? (
+                    <span className="sm:hidden">
+                      <StatePill tone="warning">Revisar</StatePill>
+                    </span>
+                  ) : null}
                   <BentoFigure
                     value={alertsValue === undefined ? "—" : String(alertsValue)}
                     unit={alertsValue === undefined ? undefined : alertsValue === 1 ? "disparada" : "disparadas"}
@@ -133,7 +150,7 @@ export function DashboardView() {
                     {alertsCount.isError && alertsValue === undefined
                       ? "No pudimos contarlas"
                       : alertsValue && lastAlertAt
-                        ? `La más reciente ${relativeTime(lastAlertAt)}`
+                        ? latestAlertPhrase(relativeTime(lastAlertAt))
                         : alertsValue === 0
                           ? "Todo en orden"
                           : "Contando…"}

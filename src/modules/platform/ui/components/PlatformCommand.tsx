@@ -98,11 +98,12 @@ function PlatformCommandDialog() {
         showCloseButton={false}
         // Un buscador se descarta tocando fuera (el diálogo compartido lo impide por defecto).
         onPointerDownOutside={() => setOpen(false)}
-        className="top-[12vh] translate-y-0 gap-0 overflow-hidden rounded-3xl p-0 sm:max-w-xl"
+        // `flex` y no la rejilla del diálogo: una fila larga no puede ensanchar la caja más allá de la pantalla.
+        className="top-[12vh] flex translate-y-0 flex-col gap-0 overflow-hidden rounded-3xl p-0 sm:max-w-xl"
       >
         <DialogTitle className="sr-only">Buscar en la consola</DialogTitle>
         <DialogDescription className="sr-only">Empresas por nombre o NIT, y las vistas de la consola.</DialogDescription>
-        <CommandPrimitive shouldFilter={false} loop className="flex flex-col">
+        <CommandPrimitive shouldFilter={false} loop className="flex min-w-0 flex-col">
           <div className="flex items-center gap-3 border-b border-border px-4">
             <Search aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
             <CommandPrimitive.Input
