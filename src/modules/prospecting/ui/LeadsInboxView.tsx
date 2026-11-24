@@ -592,8 +592,18 @@ export function LeadsInboxView() {
         hasFilters || (searchValue ?? "").length > 0 ? (
           <EmptyState
             icon={Inbox}
-            title="Ningún lead cumple estos filtros"
-            description="Prueba a exigir menos datos, a bajar el índice de calidad o a quitar el texto de búsqueda."
+            title={
+              filters[LEAD_FILTER_KEYS.hasDecisionMaker] === true && activeFilters === 1 && (searchValue ?? "").length === 0
+                ? "Todavía no sabemos quién decide en ningún lead"
+                : "Ningún lead cumple estos filtros"
+            }
+            // Con «Con quien decide» puesto, el consejo de siempre (exigir menos datos) no ayuda: lo
+            // que falta es confirmar a una persona o buscarla.
+            description={
+              filters[LEAD_FILTER_KEYS.hasDecisionMaker] === true
+                ? "«Con quien decide» solo cuenta a quien dice el registro mercantil o confirmó tu equipo. Busca personas en tus leads, confirma a las que estén por confirmar o quita el filtro."
+                : "Prueba a exigir menos datos, a bajar el índice de calidad o a quitar el texto de búsqueda."
+            }
             action={
               <Button variant="outline" onClick={() => { applyFilters(clearAll(LEAD_FILTERS, filters)); setSearch(""); }}>
                 Limpiar filtros

@@ -242,7 +242,8 @@ describe("prospección decisor: quién decide y WhatsApp según la política", (
   });
 
   it("con el frío controlado ENCENDIDO en la política, la puerta ya no dice «WhatsApp queda bloqueado»", async () => {
-    api.getLead.mockResolvedValue(lead({ whatsapp_cold_controlled: true }));
+    // Con un CELULAR: en frío WhatsApp solo sale a celulares.
+    api.getLead.mockResolvedValue(lead({ phone: "+573105550142", whatsapp_cold_controlled: true }));
     render(<LeadDetailView leadId="l1" />);
 
     const gate = within(await screen.findByRole("region", { name: "Promover al CRM" }));
@@ -250,6 +251,16 @@ describe("prospección decisor: quién decide y WhatsApp según la política", (
     expect(gate.queryByText("WhatsApp queda bloqueado")).toBeNull();
     // Y la cabecera dice lo mismo: WhatsApp se puede usar.
     expect(screen.getByRole("button", { name: "WhatsApp: puedes escribirle" })).toBeInTheDocument();
+  });
+
+  it("ENCENDIDO pero el teléfono es un fijo: ni la puerta ni la cabecera prometen WhatsApp", async () => {
+    api.getLead.mockResolvedValue(lead({ whatsapp_cold_controlled: true }));
+    render(<LeadDetailView leadId="l1" />);
+
+    const gate = within(await screen.findByRole("region", { name: "Promover al CRM" }));
+    expect(gate.getByText("WhatsApp en frío: falta un celular")).toBeInTheDocument();
+    expect(gate.queryByText("WhatsApp en frío controlado")).toBeNull();
+    expect(screen.getByRole("button", { name: "WhatsApp: falta el dato" })).toBeInTheDocument();
   });
 
   it("APAGADO, todo como hoy: bloqueado en la puerta y en la cabecera", async () => {

@@ -348,7 +348,7 @@ describe("etiquetas de procedencia", () => {
   it("traduce a quien completó el dato, no solo a quien trajo el lead", () => {
     expect(PROVIDER_LABELS.nominatim).toBe("OpenStreetMap");
     expect(PROVIDER_LABELS.site_extractor).toBe("Su sitio web");
-    expect(PROVIDER_LABELS.rues).toBe("RUES");
+    expect(PROVIDER_LABELS.rues).toBe("Registro mercantil");
   });
 
   it("traduce las claves crudas de attributes", () => {
