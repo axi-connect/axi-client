@@ -1,45 +1,48 @@
 "use client";
 
 /**
- * Shell del panel de plataforma: sidebar propio + header glass + superficie
- * de contenido centrada (mismo patrón visual que el layout privado de
- * tenant) + UX de expiración (banner T−2 min y ReLoginModal superpuestos).
+ * Armazón de la consola (rediseño F1, mockup aprobado): barra lateral en seis
+ * grupos + columna de contenido con UN solo contenedor de scroll. En
+ * escritorio no hay barra superior: la ruta legible va encima del contenido
+ * (`PlatformBreadcrumb`) y cada página trae su encabezado. En el celular y la
+ * tableta (< 1024 px) aparece la barra con el menú y la lupa.
+ *
+ * Se conserva la UX de la sesión: aviso T−2 min pegado arriba y el
+ * `ReLoginModal` global que tapa la vista sin perderla. El buscador (Ctrl K)
+ * se monta una vez para toda la consola.
  */
 import { SidebarInset, SidebarProvider } from "@/shared/components/layout/sidebar/core";
-import { PlatformHeader } from "./PlatformHeader";
+import { PlatformBreadcrumb } from "./PlatformBreadcrumb";
+import { PlatformCommandProvider } from "./PlatformCommand";
 import { PlatformSidebar } from "./PlatformSidebar";
+import { PlatformTopbar } from "./PlatformTopbar";
 import { ReLoginModal } from "./ReLoginModal";
 import { SessionBanner } from "./SessionBanner";
 
 export function PlatformShell({ children }: { children: React.ReactNode }) {
   return (
-    // Marco fijo topado al viewport: el documento nunca scrollea. Mismo
-    // reparto de altura por flex que el shell privado (DESIGN-SYSTEM §4.2):
-    // ninguna vista resta la altura del header.
-    <SidebarProvider className="h-dvh min-h-0 overflow-hidden">
-      <PlatformSidebar />
-      {/* ÚNICO contenedor de scroll de la consola */}
-      <div data-app-scroll className="flex min-h-0 flex-1 flex-col overflow-y-auto sidebar-scroll">
-        {/* Header + banner de sesión pegados como un solo grupo: el contenido
-            pasa por detrás del glass y el banner no calcula el offset. */}
-        <div className="sticky top-0 z-40 shrink-0">
-          <PlatformHeader />
-          <SessionBanner />
-        </div>
-        {/* Una vista de aplicación (`data-app-view`, hoy el simulacro de
-            quality) se topa al viewport con :has() — solo en `app-fit`
-            (escritorio con alto suficiente); el resto sigue documental. */}
-        <SidebarInset className="app-fit:has-[[data-app-view]]:min-h-0">
-          <div className="flex w-full flex-1 flex-col rounded-3xl rounded-b-none bg-gradient-to-br from-muted/50 to-muted app-fit:has-[[data-app-view]]:min-h-0">
-            {/* Centrado estándar del contenido (DESIGN-SYSTEM §4.2): las
-                páginas no añaden padding propio. */}
-            <div className="mx-auto w-full max-w-7xl p-4 md:p-6 app-fit:has-[[data-app-view]]:flex app-fit:has-[[data-app-view]]:min-h-0 app-fit:has-[[data-app-view]]:flex-1 app-fit:has-[[data-app-view]]:flex-col">
+    <PlatformCommandProvider>
+      {/* Marco fijo topado al viewport: el documento nunca scrollea (DESIGN-SYSTEM §4.2). */}
+      <SidebarProvider className="h-dvh min-h-0 overflow-hidden">
+        <PlatformSidebar />
+        {/* ÚNICO contenedor de scroll de la consola */}
+        <div data-app-scroll className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto sidebar-scroll">
+          {/* Barra del celular + aviso de sesión, pegados como un solo grupo. */}
+          <div className="sticky top-0 z-40 shrink-0">
+            <PlatformTopbar />
+            <SessionBanner />
+          </div>
+          {/* Una vista de aplicación (`data-app-view`, hoy el simulacro de
+              quality) se topa al viewport con :has() — solo en `app-fit`. */}
+          <SidebarInset className="min-w-0 app-fit:has-[[data-app-view]]:min-h-0">
+            <div className="mx-auto flex w-full max-w-7xl min-w-0 flex-1 flex-col gap-5 px-4 pt-5 pb-20 md:px-8 md:pt-7 app-fit:has-[[data-app-view]]:min-h-0 app-fit:has-[[data-app-view]]:pb-6">
+              <PlatformBreadcrumb />
               {children}
             </div>
-          </div>
-        </SidebarInset>
-      </div>
-      <ReLoginModal />
-    </SidebarProvider>
+          </SidebarInset>
+        </div>
+        <ReLoginModal />
+      </SidebarProvider>
+    </PlatformCommandProvider>
   );
 }
