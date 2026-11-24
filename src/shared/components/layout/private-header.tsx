@@ -42,6 +42,8 @@ const LABELS: Record<string, string> = {
 	// B2 · «Escribirles» desde una búsqueda (la miga decía «searches › Detalle › escribir»)
 	"searches": "Búsquedas",
 	"escribir": "Escribirles",
+	// Lote 1 · «Seguimiento» de una secuencia (/marketing/leads/seguimiento/:id)
+	"seguimiento": "Seguimiento",
 	"new": "Nueva",
 	// Método comercial: /comercial, /comercial/meta, /comercial/acciones/:id,
 	// /comercial/resultados/:key (Q20: salía «comercial» en minúscula). Las
@@ -102,6 +104,7 @@ const DETAIL_LABELS: Record<string, string> = {
 	"/marketing/autopilot/runs": "Salida",
 	"/marketing/social": "Automatización",
 	"/marketing/leads/searches": "Búsqueda",
+	"/marketing/leads/seguimiento": "Secuencia",
 }
 
 /**

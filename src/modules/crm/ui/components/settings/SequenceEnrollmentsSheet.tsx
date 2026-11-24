@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Info } from "lucide-react";
+import Link from "next/link";
+import { Activity, Info } from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
 import { relativeTime } from "@/core/lib/relative-time";
 import { cn } from "@/core/lib/utils";
@@ -120,6 +121,15 @@ export function SequenceEnrollmentsSheet({
               </li>
             ))}
           </ul>
+        )}
+
+        {sequence !== null && (
+          <Link
+            href={`/marketing/leads/seguimiento/${sequence.id}`}
+            className="inline-flex items-center gap-1.5 text-sm font-medium underline-offset-4 hover:underline"
+          >
+            <Activity aria-hidden className="size-4" /> Ver qué pasó con cada negocio, por canal
+          </Link>
         )}
 
         <p className="flex gap-2.5 rounded-xl border border-border px-3 py-2.5 text-xs text-muted-foreground">

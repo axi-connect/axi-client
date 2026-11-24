@@ -591,7 +591,15 @@ function ActionBar({
     <section aria-label="Inscribir" className="grid min-w-0 gap-3 rounded-2xl border border-border bg-secondary/60 px-5 py-3.5 md:px-6">
       {result !== null && (
         <Callout tone="info" icon={CircleCheck}>
-          {resultText(result)} Los toques salen según tu política de contacto.
+          {resultText(result)} Los toques salen según tu política de contacto.{" "}
+          {sequence !== null && (
+            <Link
+              href={`/marketing/leads/seguimiento/${sequence.id}?search=${searchId}`}
+              className="font-medium text-foreground underline underline-offset-4"
+            >
+              Ver el seguimiento
+            </Link>
+          )}
         </Callout>
       )}
       <div className="flex flex-wrap items-center justify-between gap-3">

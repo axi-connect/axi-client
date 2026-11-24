@@ -60,5 +60,10 @@ describe("buildCrumbs: la agenda", () => {
       buildCrumbs("/marketing/leads/searches/01a2b2b2-0000-7000-8000-0000000000b2/escribir").map((c) => c.label),
     ).toEqual(["Marketing", "Captación", "Búsquedas", "Búsqueda", "Escribirles"])
   })
-});
 
+  it("el seguimiento de una secuencia: «Captación › Seguimiento › Secuencia»", () => {
+    expect(
+      buildCrumbs("/marketing/leads/seguimiento/01a20000-0000-7000-8000-00000000a001").map((c) => c.label),
+    ).toEqual(["Marketing", "Captación", "Seguimiento", "Secuencia"])
+  })
+});

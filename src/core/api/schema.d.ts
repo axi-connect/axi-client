@@ -8660,6 +8660,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/autopilot/sequences/{sequenceId}/tracking": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["SequenceTrackingController_view_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/autopilot/sequences/{sequenceId}/tracking/clear-undelivered": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["SequenceTrackingController_clear_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/notifications": {
         parameters: {
             query?: never;
@@ -24079,6 +24111,97 @@ export interface components {
             skipped: {
                 [key: string]: number;
             };
+        };
+        SequenceTrackingDto: {
+            sequence: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                steps: number;
+            };
+            searches: {
+                /** Format: uuid */
+                id: string;
+                label: string | null;
+                businesses: number;
+            }[];
+            summary: {
+                businesses: number;
+                whatsapp: {
+                    with_channel: number;
+                    sent: number;
+                    delivered: number;
+                    read: number;
+                    replied: number;
+                    failed: number;
+                    failures: {
+                        detail: string;
+                        count: number;
+                    }[];
+                    undelivered_in_chat: number;
+                };
+                email: {
+                    with_channel: number;
+                    sent: number;
+                    delivered: number;
+                    replied: number;
+                    bounced: number;
+                    complained: number;
+                    opened: number;
+                    clicked: number;
+                };
+            };
+            rows: {
+                /** Format: uuid */
+                contact_id: string;
+                name: string;
+                category: string | null;
+                city: string | null;
+                /** Format: uuid */
+                search_id: string | null;
+                replied: boolean;
+                undelivered_in_chat: number;
+                whatsapp: {
+                    /** @enum {string} */
+                    state: "scheduled" | "sent" | "delivered" | "read" | "replied" | "failed" | "skipped";
+                    detail: string | null;
+                    /** Format: date-time */
+                    at: string;
+                    conversation_id: string | null;
+                    undelivered_in_chat: boolean;
+                } | null;
+                email: {
+                    /** @enum {string} */
+                    state: "scheduled" | "sent" | "delivered" | "replied" | "bounced" | "complained" | "failed" | "skipped";
+                    detail: string | null;
+                    /** Format: date-time */
+                    at: string;
+                    subject: string | null;
+                    /** Format: date-time */
+                    opened_at: string | null;
+                    open_count: number;
+                    /** Format: date-time */
+                    clicked_at: string | null;
+                    click_count: number;
+                } | null;
+                sequence: {
+                    /** @enum {string} */
+                    status: "active" | "completed" | "stopped";
+                    stop_reason: string | null;
+                    current_position: number;
+                    steps: number;
+                    next: {
+                        /** @enum {string} */
+                        medium: "message" | "call" | "call_then_message" | "email" | "sms" | "manual";
+                        /** Format: date-time */
+                        at: string;
+                    } | null;
+                };
+            }[];
+        };
+        ClearUndeliveredResultDto: {
+            messages: number;
+            conversations: number;
         };
         NotificationsListDto: {
             data: {
@@ -41885,6 +42008,52 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SearchOutreachResultDto"];
+                };
+            };
+        };
+    };
+    SequenceTrackingController_view_v1: {
+        parameters: {
+            query?: {
+                search_ids?: string[];
+            };
+            header?: never;
+            path: {
+                sequenceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SequenceTrackingDto"];
+                };
+            };
+        };
+    };
+    SequenceTrackingController_clear_v1: {
+        parameters: {
+            query?: {
+                search_ids?: string[];
+            };
+            header?: never;
+            path: {
+                sequenceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClearUndeliveredResultDto"];
                 };
             };
         };
