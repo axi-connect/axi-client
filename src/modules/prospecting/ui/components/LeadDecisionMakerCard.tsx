@@ -71,7 +71,8 @@ export function LeadDecisionMakerCard({
           {canManage && (
             <div className="col-span-2 flex flex-wrap gap-2 min-[520px]:col-start-2">
               <Button
-                variant={searchedBefore ? "outline" : "default"}
+                // Contorno, no el coral: el primario de la ficha ya es «Buscar personas», arriba.
+                variant="outline"
                 size="sm"
                 className="rounded-full"
                 disabled={busy || searching}

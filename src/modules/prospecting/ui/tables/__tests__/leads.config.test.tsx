@@ -86,9 +86,10 @@ describe("columnas de la bandeja", () => {
     expect(screen.getByText(/· Directo/)).toBeInTheDocument();
   });
 
-  it("esa línea dice «(por confirmar)» de una pista y «Sin identificar» si no hay nadie", () => {
+  it("esa línea dice «Por confirmar» de una pista y «Sin identificar» si no hay nadie", () => {
     const { unmount } = cellOf("name", row({ decider_name: "Julián Cárdenas Mora", decider_level: "hypothesis", reach_level: "unconfirmed" }));
-    expect(screen.getByText(/Julián Cárdenas Mora \(por confirmar\)/)).toBeInTheDocument();
+    expect(screen.getByText("Julián Cárdenas Mora")).toBeInTheDocument();
+    expect(screen.getByText(/· Por confirmar/)).toBeInTheDocument();
     unmount();
     cellOf("name", row({ decider_name: null, decider_level: null, reach_level: "business" }));
     expect(screen.getByText("Sin identificar")).toBeInTheDocument();

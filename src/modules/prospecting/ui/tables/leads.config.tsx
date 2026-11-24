@@ -105,8 +105,8 @@ function nameColumn(working: ReadonlySet<string>): ColumnDef<LeadRow> {
             />
             <span className="truncate">
               <span className="text-foreground font-medium">
+                {/* De una pista no hace falta más: su alcance ya dice «Por confirmar». */}
                 {row.original.decider_name ?? "Sin identificar"}
-                {row.original.decider_level === "hypothesis" && " (por confirmar)"}
               </span>
               <span className="text-muted-foreground"> · {REACH_LEVELS[row.original.reach_level].label}</span>
             </span>
@@ -278,7 +278,7 @@ const BASE_COLUMNS: ColumnDef<LeadRow>[] = [
 
 /** Un rótulo de columna largo, partido en dos renglones para no ensanchar la columna. */
 function TwoLineHeader({ children }: { children: string }) {
-  return <span className="block max-w-[5.75rem] leading-tight whitespace-normal">{children}</span>;
+  return <span className="block max-w-[7rem] leading-tight whitespace-normal">{children}</span>;
 }
 
 /**
