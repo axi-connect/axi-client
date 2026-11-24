@@ -1188,6 +1188,102 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/platform/balances": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformBalancesController_list_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/balances/alerts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformBalancesController_listAlerts_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/balances/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformBalancesController_refreshNow_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/balances/{provider}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["PlatformBalancesController_updateSettings_v1"];
+        trace?: never;
+    };
+    "/api/v1/platform/balances/incidents/{id}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformBalancesController_resolveIncident_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/balances/test-mail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformBalancesController_sendTestMail_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/platform/quality/scenarios": {
         parameters: {
             query?: never;
@@ -10953,6 +11049,88 @@ export interface components {
         };
         UpdateChannelCredentialsDto: {
             access_token: string;
+        };
+        ProviderBalancesDto: {
+            /** @enum {string} */
+            worst_level: "ok" | "warning" | "critical" | "unknown";
+            counts: {
+                ok: number;
+                warning: number;
+                critical: number;
+                unknown: number;
+            };
+            checked_at: string | null;
+            providers: {
+                id: string;
+                name: string;
+                use: string;
+                impact: string;
+                /** @enum {string} */
+                level: "ok" | "warning" | "critical" | "unknown";
+                /** @enum {string|null} */
+                probe: "openai_admin" | "twilio" | null;
+                measurable: boolean;
+                balance_usd: number | null;
+                /** @enum {string|null} */
+                balance_source: "exact" | "estimated" | null;
+                runway_days: number | null;
+                spend_7d_usd: number | null;
+                spend_breakdown: {
+                    label: string;
+                    usd: number;
+                }[];
+                last_success_at: string | null;
+                checked_at: string | null;
+                check_error: string | null;
+                loaded_amount_usd: number | null;
+                loaded_at: string | null;
+                thresholds: {
+                    warn_days: number;
+                    warn_usd: number;
+                    critical_days: number;
+                    critical_usd: number;
+                };
+                incident: {
+                    id: string;
+                    /** @enum {string} */
+                    kind: "no_funds" | "auth_invalid";
+                    since: string;
+                    last_seen_at: string;
+                    failure_count: number;
+                    sample: string | null;
+                    notified_at: string | null;
+                    next_reminder_at: string | null;
+                } | null;
+            }[];
+        };
+        ProviderAlertsDto: {
+            /** @enum {string} */
+            level: "ok" | "warning" | "critical" | "unknown";
+            items: {
+                provider: string;
+                name: string;
+                impact: string;
+                /** @enum {string} */
+                level: "warning" | "critical";
+                /** @enum {string} */
+                reason: "no_funds" | "auth_invalid" | "low_balance";
+                since: string | null;
+                balance_usd: number | null;
+            }[];
+        };
+        UpdateProviderBalanceDto: {
+            loaded_amount_usd?: number | null;
+            /** Format: date-time */
+            loaded_at?: string | null;
+            thresholds?: {
+                warn_days?: number;
+                warn_usd?: number;
+                critical_days?: number;
+                critical_usd?: number;
+            };
+        };
+        TestAlertResultDto: {
+            sent: boolean;
         };
         ScenariosPageDto: {
             data: {
@@ -28502,6 +28680,128 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ChannelDto"];
+                };
+            };
+        };
+    };
+    PlatformBalancesController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderBalancesDto"];
+                };
+            };
+        };
+    };
+    PlatformBalancesController_listAlerts_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderAlertsDto"];
+                };
+            };
+        };
+    };
+    PlatformBalancesController_refreshNow_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderBalancesDto"];
+                };
+            };
+        };
+    };
+    PlatformBalancesController_updateSettings_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateProviderBalanceDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderBalancesDto"];
+                };
+            };
+        };
+    };
+    PlatformBalancesController_resolveIncident_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderBalancesDto"];
+                };
+            };
+        };
+    };
+    PlatformBalancesController_sendTestMail_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TestAlertResultDto"];
                 };
             };
         };
