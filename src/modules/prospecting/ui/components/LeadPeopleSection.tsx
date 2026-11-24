@@ -14,8 +14,8 @@ import {
   BUYING_ROLE_LABELS,
   EVIDENCE_PROVIDER_LABELS,
   PERSON_DOUBT_REASONS,
-  PROMOTED_WITH_BUSINESS,
   initialsOf,
+  passesToCrm,
   type LeadPersonDTO,
   type RevealCosts,
 } from "../../domain/person";
@@ -152,12 +152,7 @@ export function LeadPeopleSection({
     }
   }
 
-  const promotable = (people ?? []).filter(
-    (person) =>
-      !person.in_crm &&
-      PROMOTED_WITH_BUSINESS.includes(person.buying_role) &&
-      (person.email !== null || person.phone !== null),
-  );
+  const promotable = (people ?? []).filter(passesToCrm);
 
   return (
     <BentoTile
@@ -277,7 +272,8 @@ export function LeadPeopleSection({
                   />
                   {!person.in_crm && (
                     <div className="flex flex-wrap justify-end gap-1">
-                      {canPromote && (person.email !== null || person.phone !== null) && (
+                      {/* Una dudosa no se añade al CRM hasta confirmarla: el servidor la rechaza. */}
+                      {canPromote && person.doubt === null && (person.email !== null || person.phone !== null) && (
                         <Button variant="outline" size="sm" className="rounded-full" onClick={() => void promote([person.id])}>
                           Añadir al CRM
                         </Button>

@@ -33,7 +33,7 @@ import {
 import {
   BUYING_ROLE_LABELS,
   NO_REVEAL_COSTS,
-  PROMOTED_WITH_BUSINESS,
+  passesToCrm,
   type LeadPersonDTO,
   type LeadSignalDTO,
   type RevealCosts,
@@ -631,12 +631,7 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
               busy={busy}
               onPromote={() => void onPromote()}
               people={people
-                .filter(
-                  (person) =>
-                    !person.in_crm &&
-                    PROMOTED_WITH_BUSINESS.includes(person.buying_role) &&
-                    (person.email !== null || person.phone !== null),
-                )
+                .filter(passesToCrm)
                 .map((person) => ({ name: person.display_name ?? "Sin nombre", role: person.buying_role }))}
             />
           )}

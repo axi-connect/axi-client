@@ -36,6 +36,23 @@ export const BUYING_ROLE_ORDER: readonly BuyingRole[] = [
 export const PROMOTED_WITH_BUSINESS: readonly BuyingRole[] = ["decides", "approves", "recommends"];
 
 /**
+ * ¿Pasa esta persona al CRM (con su negocio o sola)? Decide, aprueba o
+ * recomienda, tiene con qué escribirle, no está ya en el CRM y NO es una pista
+ * sin confirmar: el servidor rechaza a una persona dudosa hasta que alguien
+ * diga «Sí trabaja aquí». Es la misma lista que aplica el servidor.
+ */
+export function passesToCrm(
+  person: Pick<LeadPersonDTO, "in_crm" | "buying_role" | "email" | "phone" | "doubt">,
+): boolean {
+  return (
+    !person.in_crm &&
+    person.doubt === null &&
+    PROMOTED_WITH_BUSINESS.includes(person.buying_role) &&
+    (person.email !== null || person.phone !== null)
+  );
+}
+
+/**
  * Lo que cuesta revelar, tal como lo declara la cuenta de Apollo en la
  * plataforma (el precio vive en datos, no en el código). Es un techo, no una
  * factura: Apollo cobra solo si lo encuentra, y la cifra real la trae el libro.

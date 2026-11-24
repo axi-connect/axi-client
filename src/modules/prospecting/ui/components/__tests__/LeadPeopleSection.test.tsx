@@ -154,6 +154,30 @@ describe("LeadPeopleSection — la persona dudosa del sitio", () => {
     expect(onDecisionChange).not.toHaveBeenCalled();
   });
 
+  it("una dudosa con correo NO ofrece «Añadir al CRM» ni entra en el botón de pasar a todas", async () => {
+    setup([{ ...FROM_SITE, buying_role: "decides", email: "andres@casalumbre.example", has_email: true }]);
+
+    expect(await screen.findByText("Dudosa")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Añadir al CRM" })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Añadir.*al CRM/ })).toBeNull();
+  });
+
+  it("la misma, ya confirmada, sí se puede añadir", async () => {
+    setup([
+      {
+        ...FROM_SITE,
+        buying_role: "decides",
+        email: "andres@casalumbre.example",
+        has_email: true,
+        confirmed_by: "person",
+        doubt: null,
+      },
+    ]);
+
+    expect(await screen.findByRole("button", { name: "Añadir al CRM" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Añadir al CRM a quien decide" })).toBeInTheDocument();
+  });
+
   it("sin permiso de gestionar se ve la duda, pero no los botones", async () => {
     setup([FROM_SITE], { canManage: false });
 

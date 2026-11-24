@@ -1,6 +1,7 @@
 import {
   BUYING_ROLE_LABELS,
   initialsOf,
+  passesToCrm,
   providerPlanOf,
   revealCeiling,
   revealStateOf,
@@ -80,5 +81,24 @@ describe("personas · piezas de la fila", () => {
       "people_and_companies",
     );
     expect(providerPlanOf({ ...base, configured: false })).toBe("none");
+  });
+});
+
+describe("passesToCrm — quién pasa al CRM", () => {
+  const base = { in_crm: false, buying_role: "decides", email: "a@norte.example", phone: null, doubt: null } as const;
+
+  it("pasa quien decide, aprueba o recomienda y tiene con qué escribirle", () => {
+    expect(passesToCrm(base)).toBe(true);
+    expect(passesToCrm({ ...base, buying_role: "recommends", email: null, phone: "+573105550142" })).toBe(true);
+  });
+
+  it("UNA PERSONA DUDOSA (pista del sitio sin confirmar) NO pasa, aunque tenga correo", () => {
+    expect(passesToCrm({ ...base, doubt: "from_site" })).toBe(false);
+  });
+
+  it("tampoco quien ya está, quien solo usa o quien no tiene datos", () => {
+    expect(passesToCrm({ ...base, in_crm: true })).toBe(false);
+    expect(passesToCrm({ ...base, buying_role: "uses" })).toBe(false);
+    expect(passesToCrm({ ...base, email: null })).toBe(false);
   });
 });
