@@ -3260,6 +3260,15 @@ button.assistant-island--s:focus-visible {
 [class*="]:truncate"] > [data-slot],
 [class*="]:truncate"] [data-slot="select-value"] {
   text-overflow: clip;
+  /* El valor de un Select trae además `line-clamp-1` del disparador, que deja
+     puesto un `mask-size` de dos capas (`100% calc(100% - 1lh), 100% 1lh`).
+     La máscara de aquí es de UNA capa: con ese tamaño mide 0 de alto en un
+     renglón y, en cuanto el texto desborda, se borra entero (el canal de
+     «Plantillas de Meta» salía vacío). Una capa, a todo el elemento. */
+  -webkit-mask-size: 100% 100%;
+  -webkit-mask-position: 0 0;
+  mask-size: 100% 100%;
+  mask-position: 0 0;
   @supports (animation-timeline: scroll()) {
     animation: truncate-mask-inline linear both;
     animation-timeline: scroll(self inline);
