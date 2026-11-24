@@ -93,6 +93,9 @@ export function LeadsInboxView() {
   const canDeleteLeads = hasPermission("leads:delete");
   const { showAlert, showModal } = useAlert();
   const statsPromoted = useCaptureStats((state) => state.promoted);
+  // CAP-18: cuántos ya son contactos del CRM. La bandeja no los trae, así que
+  // puede quedar vacía con el embudo lleno, y el vacío tiene que decirlo.
+  const inCrm = useCaptureStats((state) => state.stats?.promoted ?? 0);
   const reloadStats = useCaptureStats((state) => state.reload);
 
   const [filters, setFilters] = useState<FilterValues>({});
@@ -607,6 +610,24 @@ export function LeadsInboxView() {
             action={
               <Button variant="outline" onClick={() => { applyFilters(clearAll(LEAD_FILTERS, filters)); setSearch(""); }}>
                 Limpiar filtros
+              </Button>
+            }
+          />
+        ) : inCrm > 0 ? (
+          /* CAP-18: los promovidos salen de la bandeja. Con ellos en el embudo,
+             «todavía no ha entrado ningún lead» sería mentira. */
+          <EmptyState
+            icon={Inbox}
+            title="No queda ningún lead por revisar"
+            description="Los que promoviste ya son contactos de tu CRM. Para verlos aquí, filtra por el estado «En el CRM»."
+            // La barra de filtros vive dentro de la tabla y la tabla no está: sin
+            // este botón el consejo de arriba no se podría seguir.
+            action={
+              <Button
+                variant="outline"
+                onClick={() => applyFilters({ ...filters, [LEAD_FILTER_KEYS.status]: ["promoted"] })}
+              >
+                Ver los que están en el CRM
               </Button>
             }
           />

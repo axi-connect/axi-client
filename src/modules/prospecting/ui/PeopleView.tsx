@@ -31,6 +31,7 @@ import {
 import {
   BUYING_ROLE_LABELS,
   NO_REVEAL_COSTS,
+  emptyPeopleText,
   revealCandidateOf,
   revealCeiling,
   type BuyingRole,
@@ -336,6 +337,11 @@ export function PeopleView() {
 
   // ─── Pintura ───────────────────────────────────────────────────────────
   const visible = filters.directPhone ? items.filter((row) => row.has_phone) : items;
+  const emptyText = emptyPeopleText({
+    tab,
+    captured: search?.new_count ?? 0,
+    hiddenByFilter: items.length > 0,
+  });
   const selectedRows = visible.filter((row) => selected.has(row.id));
   const ceiling = revealCeiling(
     selectedRows.map((row) => ({
@@ -501,15 +507,8 @@ export function PeopleView() {
               action={<Button onClick={() => void refresh()}>Reintentar</Button>}
             />
           ) : visible.length === 0 ? (
-            <EmptyState
-              icon={UsersRound}
-              title={tab === "new" ? "Nadie cumple estos filtros" : "Aún no has revelado a nadie"}
-              description={
-                tab === "new"
-                  ? "Prueba con cargos parecidos, otra ciudad o sin filtro de tamaño."
-                  : "Cuando reveles a alguien en Nuevos, queda aquí."
-              }
-            />
+            // CAP-18: a quien se guarda en el CRM deja de salir aquí; el vacío dice solo lo que se sabe.
+            <EmptyState icon={UsersRound} {...emptyText} />
           ) : (
             <section
               aria-label="Personas"

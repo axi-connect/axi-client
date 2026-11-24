@@ -55,6 +55,45 @@ export function passesToCrm(
 }
 
 /**
+ * Qué dice Personas cuando no hay filas (CAP-18).
+ *
+ * A quien se guarda en el CRM deja de salir en captación, así que una lista
+ * vacía ya no significa siempre «no hay nadie». Tres casos, y cada uno dice
+ * solo lo que se sabe:
+ * - Guardados vacío: no hay reveladas POR GUARDAR. Antes afirmaba «aún no has
+ *   revelado a nadie», falso en cuanto la primera pasa al CRM.
+ * - Nuevos vacío con una búsqueda que SÍ capturó personas (`captured`): ya no
+ *   están aquí. Decir «nadie cumple estos filtros» mandaba a cambiar filtros
+ *   que habían funcionado.
+ * - Nuevos vacío sin capturas, o con filas que esconde el filtro de celular
+ *   (`hiddenByFilter`): el consejo de siempre.
+ */
+export function emptyPeopleText(input: {
+  tab: "new" | "saved";
+  /** Cuántas personas capturó la búsqueda abierta (0 si no hay búsqueda). */
+  captured: number;
+  /** Hay filas, pero el filtro local las esconde todas. */
+  hiddenByFilter: boolean;
+}): { title: string; description: string } {
+  if (input.tab === "saved") {
+    return {
+      title: "No hay personas reveladas por guardar",
+      description: "Cuando reveles a alguien en Nuevos, queda aquí hasta que lo guardes en el CRM.",
+    };
+  }
+  if (input.captured > 0 && !input.hiddenByFilter) {
+    return {
+      title: "Ya no queda nadie de esta búsqueda por aquí",
+      description: "A quienes guardaste en el CRM los encuentras en tus contactos.",
+    };
+  }
+  return {
+    title: "Nadie cumple estos filtros",
+    description: "Prueba con cargos parecidos, otra ciudad o sin filtro de tamaño.",
+  };
+}
+
+/**
  * Lo que cuesta revelar, tal como lo declara la cuenta de Apollo en la
  * plataforma (el precio vive en datos, no en el código). Es un techo, no una
  * factura: Apollo cobra solo si lo encuentra, y la cifra real la trae el libro.

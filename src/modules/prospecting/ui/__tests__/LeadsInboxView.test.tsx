@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 
 import type { LeadDTO } from "../../domain/lead";
 import { useCaptureStats } from "../../infrastructure/stores/capture-stats.store";
@@ -118,6 +118,18 @@ it("vacía y con promovidos en el embudo: dice que ya están en el CRM, no que n
   expect(await screen.findByText("No queda ningún lead por revisar")).toBeInTheDocument();
   expect(screen.getByText(/filtra por el estado «En el CRM»/)).toBeInTheDocument();
   expect(screen.queryByText("Todavía no ha entrado ningún lead")).not.toBeInTheDocument();
+});
+
+it("desde ese vacío se llega a los promovidos con un toque: pide el estado «En el CRM»", async () => {
+  api.listLeads.mockResolvedValue({ data: [], meta: { total: 0, page: 1, page_size: 25 } });
+  render(<LeadsInboxView />);
+
+  // La barra de filtros vive dentro de la tabla, y sin filas no hay tabla.
+  fireEvent.click(await screen.findByRole("button", { name: "Ver los que están en el CRM" }));
+
+  await waitFor(() =>
+    expect(api.listLeads).toHaveBeenLastCalledWith(expect.objectContaining({ status: "promoted" })),
+  );
 });
 
 it("vacía y sin ningún promovido: sigue diciendo que todavía no ha entrado ninguno", async () => {
