@@ -15,6 +15,22 @@ type RowCollapseProps<T extends DataRow> = {
   collapsedColumns: ColumnDef<T>[]
 }
 
+/** Las columnas que no cupieron, como fichas etiqueta → valor. Lo comparten los dos modos. */
+export function CollapsedFields<T extends DataRow>({ row, collapsedColumns }: RowCollapseProps<T>) {
+  return (
+    <div className="grid grid-cols-1 gap-2 py-2 sm:grid-cols-2">
+      {collapsedColumns.map((col, idx) => (
+        <div key={(col.accessorKey ?? col.id ?? idx) as string} className="rounded-md border border-border-soft bg-background px-3 py-2">
+          <div className="text-xs text-foreground/60">{col.header ?? (col.accessorKey as string)}</div>
+          <div className="text-sm font-medium mt-1">
+            {col.cell ? col.cell({ row: { original: row } }) : formatCell(col.accessorKey ? (row[col.accessorKey] as Parameters<typeof formatCell>[0]) : undefined)}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function RowCollapseInner<T extends DataRow>({ row, collapsedColumns }: RowCollapseProps<T>) {
   const { open, toggle } = useRowCollapse(false)
   const panelId = useId()
@@ -44,16 +60,7 @@ function RowCollapseInner<T extends DataRow>({ row, collapsedColumns }: RowColla
                 transition={fade.fast}
                 className="overflow-hidden"
               >
-                <div className="grid grid-cols-1 gap-2 py-2 sm:grid-cols-2">
-                  {collapsedColumns.map((col, idx) => (
-                    <div key={(col.accessorKey ?? col.id ?? idx) as string} className="rounded-md border border-border-soft bg-background px-3 py-2">
-                      <div className="text-xs text-foreground/60">{col.header ?? (col.accessorKey as string)}</div>
-                      <div className="text-sm font-medium mt-1">
-                        {col.cell ? col.cell({ row: { original: row } }) : formatCell(col.accessorKey ? (row[col.accessorKey] as Parameters<typeof formatCell>[0]) : undefined)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <CollapsedFields row={row} collapsedColumns={collapsedColumns} />
               </motion.div>
             )}
           </AnimatePresence>

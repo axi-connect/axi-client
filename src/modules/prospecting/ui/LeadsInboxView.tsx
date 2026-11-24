@@ -614,6 +614,8 @@ export function LeadsInboxView() {
           columns={columns}
           pagination={{ page, pageSize, total }}
           onPageChange={setPage}
+          // Lo que no cabe se abre con un botón al final de la fila: un renglón «Ver más» bajo cada lead doblaba el alto.
+          collapseMode="icon"
           searchMode="spotlight"
           searchPlaceholder="Buscar"
           onSearchChange={({ value }) => setSearch(value)}

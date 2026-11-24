@@ -81,7 +81,7 @@ export function useMediaQuery(query: string) {
 export function useResponsiveColumns<T extends DataRow>(
   columns: ColumnDef<T>[],
   containerRef: React.RefObject<HTMLDivElement | null>,
-  opts: { minColumnWidth: number }
+  opts: { minColumnWidth: number; reservedWidth?: number }
 ) {
   const [visibleCount, setVisibleCount] = useState<number>(columns.length)
   // Pre-categorizar columnas (evita recomputar por resize)
@@ -106,7 +106,8 @@ export function useResponsiveColumns<T extends DataRow>(
     let rafId: number | null = null
     const compute = () => {
       const minWidth = opts.minColumnWidth
-      const containerWidth = el.clientWidth || 0
+      // `reservedWidth`: lo que ocupa algo que no es una columna (el botón «Ver más» al final de la fila).
+      const containerWidth = Math.max(0, (el.clientWidth || 0) - (opts.reservedWidth ?? 0))
       const consumedWidth = [
         ...categorized.start,
         ...categorized.always,
@@ -142,7 +143,7 @@ export function useResponsiveColumns<T extends DataRow>(
     // Primer cálculo inmediato
     compute()
     return () => observer.disconnect()
-  }, [columns, containerRef, opts.minColumnWidth, categorized])
+  }, [columns, containerRef, opts.minColumnWidth, opts.reservedWidth, categorized])
 
   return useMemo(() => {
     const { start, actions, always, flexible } = categorized

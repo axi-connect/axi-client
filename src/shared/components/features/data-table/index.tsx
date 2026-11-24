@@ -102,6 +102,14 @@ type DataTableProps<T extends DataRow = DataRow> = {
   columns: ColumnDef<T>[];
   // row context menu
   rowContextMenu?: RowContextMenuRenderer<T>;
+  /**
+   * Cómo se llega a las columnas que no caben.
+   * - `row` (por defecto, el de siempre): un renglón «Ver más» bajo CADA fila.
+   * - `icon`: un botón compacto al final de la fila; el panel se abre debajo
+   *   solo en la fila que se pide. Para tablas densas, donde el renglón
+   *   repetido dobla el alto de la tabla.
+   */
+  collapseMode?: "row" | "icon";
   /** A la derecha del buscador: filtros, exportar, lo que la vista necesite. */
   toolbar?: React.ReactNode;
   /** Fila completa bajo la barra. Para los chips de filtros activos. */
@@ -183,6 +191,7 @@ export const DataTable = forwardRef(function DataTableInner<
     onSortChange,
     onSearchChange,
     rowContextMenu,
+    collapseMode = "row",
     preferredSearchFields,
     searchDebounceMs = 350,
     searchTrigger = "debounced",
@@ -532,6 +541,7 @@ export const DataTable = forwardRef(function DataTableInner<
         columns={safeColumns as ColumnDef<T>[]}
         sortBy={sorting?.by as keyof T & string}
         rowContextMenu={rowContextMenu as RowContextMenuRenderer<T> | undefined}
+        collapseMode={collapseMode}
       />
 
       <div className="flex justify-between items-center">

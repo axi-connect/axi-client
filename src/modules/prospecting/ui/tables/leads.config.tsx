@@ -61,14 +61,14 @@ function nameColumn(working: ReadonlySet<string>): ColumnDef<LeadRow> {
     accessorKey: "name",
     header: "Lead",
     alwaysVisible: true,
-    // El mismo tope que la celda (17rem): la tabla reparte columnas con este número.
-    minWidth: 272,
+    // El mismo tope que la celda (14rem): la tabla reparte columnas con este número.
+    minWidth: 224,
     cell: ({ row }) => (
       // Ancho con tope: un nombre de 100 caracteres se corta con difuminado en
       // vez de empujar «Quién decide» y «Alcance» fuera de la tabla.
       <Link
         href={`/marketing/leads/${row.original.id}`}
-        className="hover:text-brand block max-w-[17rem] min-w-0"
+        className="hover:text-brand block max-w-[14rem] min-w-0"
       >
         <span className="block truncate text-sm font-semibold" title={row.original.name}>
           {row.original.name}
@@ -107,7 +107,7 @@ function DecisionMakerCell({ row }: { row: LeadRow }) {
   }
   const { decider_name: name, decider_title: title, decider_level: level } = row;
   return (
-    <span className="flex max-w-[11rem] min-w-0 flex-col gap-px">
+    <span className="flex max-w-[8.5rem] min-w-0 flex-col gap-px">
       <span className="truncate text-[13.5px] font-medium" title={name}>
         {name}
       </span>
@@ -163,39 +163,39 @@ function ReachCell({ row }: { row: LeadRow }) {
   );
 }
 
+/**
+ * El ORDEN es la prioridad: cuando la tabla no cabe, ceden primero las últimas.
+ *
+ * 1. «Quién decide» y «Alcance»: a quién hay que llegarle y qué tan cerca estamos.
+ * 2. «Calidad del dato» y «Puedo contactar por», contiguas y SEPARADAS a
+ *    propósito: la fila tiene que poder decir «verificado» y «WhatsApp no» al
+ *    mismo tiempo. El permiso no cede antes que un dato descriptivo: fundirlo
+ *    o esconderlo es el error que acaba quemando números de WhatsApp.
+ * 3. «Calidad» y «Datos»: el puntaje y cuánto sabemos.
+ * 4. «Origen», «Ciudad» y «Descubierto»: describen el lead, no deciden qué
+ *    hacer con él; son las primeras en pasar a «Ver más».
+ *
+ * Los anchos mínimos son los que la tabla usa para repartir: a 1440 px con el
+ * menú abierto caben hasta «Origen», y «Ciudad» y «Descubierto» quedan tras el
+ * botón de fin de fila.
+ */
 const BASE_COLUMNS: ColumnDef<LeadRow>[] = [
   {
     accessorKey: "decider_name",
     header: "Quién decide",
-    minWidth: 150,
+    minWidth: 144,
     cell: ({ row }) => <DecisionMakerCell row={row.original} />,
   },
   {
     accessorKey: "reach_level",
     header: "Alcance",
-    minWidth: 130,
+    minWidth: 132,
     cell: ({ row }) => <ReachCell row={row.original} />,
   },
   {
-    accessorKey: "source",
-    header: "Origen",
-    cell: ({ row }) => (
-      <span className="text-muted-foreground flex items-center gap-2 text-xs">
-        <span
-          className={`size-2 rounded-sm ${SOURCE_DOTS[row.original.source]}`}
-          aria-hidden
-        />
-        {SOURCE_LABELS[row.original.source]}
-      </span>
-    ),
-  },
-  {
-    // Estas DOS columnas van contiguas y SEPARADAS a propósito: la fila tiene
-    // que poder decir «verificado» y «WhatsApp no» al mismo tiempo. Fusionarlas
-    // en un solo indicador es el error que acaba quemando números de WhatsApp.
     accessorKey: "quality_status",
     header: "Calidad del dato",
-    minWidth: 140,
+    minWidth: 128,
     cell: ({ row }) => (
       <StatusBadge
         status={row.original.quality_status}
@@ -204,9 +204,16 @@ const BASE_COLUMNS: ColumnDef<LeadRow>[] = [
     ),
   },
   {
+    accessorKey: "allows_whatsapp",
+    header: "Puedo contactar por",
+    // Lo que mide su rótulo, que es el más largo de la tabla.
+    minWidth: 148,
+    cell: ({ row }) => <ChannelPermissions lead={rowChannelSubject(row.original)} />,
+  },
+  {
     accessorKey: "quality_score",
     header: "Calidad",
-    minWidth: 130,
+    minWidth: 120,
     cell: ({ row }) => <QualityIndex row={row.original} />,
   },
   {
@@ -216,14 +223,22 @@ const BASE_COLUMNS: ColumnDef<LeadRow>[] = [
     // de conveniencia que hacía que ordenar por «Datos» ordenara por «tiene
     // correo». Ahora es la columna generada que el servidor cuenta.
     sortable: true,
-    minWidth: 92,
+    minWidth: 88,
     cell: ({ row }) => <DataDots row={row.original} />,
   },
   {
-    accessorKey: "allows_whatsapp",
-    header: "Puedo contactar por",
-    minWidth: 120,
-    cell: ({ row }) => <ChannelPermissions lead={rowChannelSubject(row.original)} />,
+    accessorKey: "source",
+    header: "Origen",
+    minWidth: 136,
+    cell: ({ row }) => (
+      <span className="text-muted-foreground flex items-center gap-2 text-xs whitespace-nowrap">
+        <span
+          className={`size-2 rounded-sm ${SOURCE_DOTS[row.original.source]}`}
+          aria-hidden
+        />
+        {SOURCE_LABELS[row.original.source]}
+      </span>
+    ),
   },
   {
     accessorKey: "city",

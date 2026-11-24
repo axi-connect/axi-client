@@ -19,12 +19,18 @@ type TableViewProps<T extends DataRow> = {
   onSortChange?: (by: keyof T & string, dir: "asc" | "desc") => void
   messages: DataTableMessages
   rowContextMenu?: RowContextMenuRenderer<T>
+  collapseMode?: "row" | "icon"
 }
 
-export function TableView<T extends DataRow>({ data, columns, page, pageSize, totalCount, sortBy, sortDir = "asc", onSortChange, messages, rowContextMenu }: TableViewProps<T>) {
+export function TableView<T extends DataRow>({ data, columns, page, pageSize, totalCount, sortBy, sortDir = "asc", onSortChange, messages, rowContextMenu, collapseMode = "row" }: TableViewProps<T>) {
   // const totalPages = Math.max(1, Math.ceil(totalCount / pageSize))
   const containerRef = useRef<HTMLDivElement>(null)
-  const { visibleColumns, collapsedColumns } = useResponsiveColumns<T>(columns, containerRef, { minColumnWidth: 150 })
+  const { visibleColumns, collapsedColumns } = useResponsiveColumns<T>(columns, containerRef, {
+    minColumnWidth: 150,
+    // El botón «Ver más» de fin de fila ocupa sitio: se descuenta antes de repartir columnas.
+    reservedWidth: collapseMode === "icon" ? 40 : 0,
+  })
+  const iconColumn = collapseMode === "icon" && collapsedColumns.length > 0
   return (
     <div ref={containerRef} className="relative w-full">
       <Table>
@@ -61,6 +67,11 @@ export function TableView<T extends DataRow>({ data, columns, page, pageSize, to
                 </TableHead>
               )
             })}
+            {iconColumn && (
+              <TableHead className="w-10 pr-3 pl-0">
+                <span className="sr-only">Ver más</span>
+              </TableHead>
+            )}
           </TableRow>
         </TableHeader>
 
@@ -79,6 +90,7 @@ export function TableView<T extends DataRow>({ data, columns, page, pageSize, to
                 visibleColumns={visibleColumns}
                 collapsedColumns={collapsedColumns}
                 rowContextMenu={rowContextMenu}
+                collapseMode={collapseMode}
               />
             ))
           )}
