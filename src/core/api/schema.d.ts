@@ -23050,6 +23050,9 @@ export interface components {
                     confirmed_by: "source" | "person" | null;
                     provider: string | null;
                     evidence_url: string | null;
+                    member_confirmed: boolean;
+                    /** @enum {string|null} */
+                    doubt: "from_site" | "no_source" | null;
                 } | null;
                 reach: {
                     /** @enum {string} */
@@ -23400,6 +23403,9 @@ export interface components {
                 confirmed_by: "source" | "person" | null;
                 provider: string | null;
                 evidence_url: string | null;
+                member_confirmed: boolean;
+                /** @enum {string|null} */
+                doubt: "from_site" | "no_source" | null;
                 email: string | null;
                 phone: string | null;
                 in_crm: boolean;
