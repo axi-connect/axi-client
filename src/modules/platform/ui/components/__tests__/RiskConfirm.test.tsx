@@ -95,12 +95,13 @@ describe("confirmación por riesgo", () => {
       />,
     );
     fireEvent.click(screen.getByRole("button", { name: "Hacerlo" }));
-    const confirm = screen.getByRole("button", { name: "Suspender" });
-    expect(confirm).toBeDisabled();
+    // Se vuelve a buscar el botón tras cada cambio: el mock de framer-motion remonta el diálogo.
+    const confirm = () => screen.getByRole("button", { name: "Suspender" });
+    expect(confirm()).toBeDisabled();
     fireEvent.change(screen.getByLabelText(/para confirmar/i), { target: { value: "norte studio" } });
-    expect(confirm).toBeDisabled();
+    expect(confirm()).toBeDisabled();
     fireEvent.change(screen.getByLabelText(/para confirmar/i), { target: { value: "Norte Studio" } });
-    expect(confirm).toBeEnabled();
+    expect(confirm()).toBeEnabled();
   });
 
   it("si la acción falla, el diálogo sigue abierto y dice por qué", async () => {
