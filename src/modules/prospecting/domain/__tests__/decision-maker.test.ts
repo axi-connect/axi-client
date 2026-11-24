@@ -170,6 +170,8 @@ describe("mapLeadToRow — quién decide y alcance en la fila", () => {
         confirmed_by: null,
         provider: "site_extractor",
         evidence_url: null,
+        member_confirmed: false,
+        doubt: "from_site",
       },
       reach: { level: "unconfirmed", channels: { whatsapp: false, email: true, call: false } },
     });
