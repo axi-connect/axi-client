@@ -15,12 +15,16 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/components/ui/
  * afecta al primer paint: el contenido del tooltip lo monta Radix solo al
  * abrirlo, así que nunca viaja en el HTML del servidor.
  */
-function useShortcutLabel() {
+export function useIsMac() {
   const [isMac, setIsMac] = useState(false)
   useEffect(() => {
     setIsMac(/mac|iphone|ipad/i.test(navigator.userAgent))
   }, [])
-  return isMac ? "⌘B" : "Ctrl+B"
+  return isMac
+}
+
+function useShortcutLabel() {
+  return useIsMac() ? "⌘B" : "Ctrl+B"
 }
 
 /**

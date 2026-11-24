@@ -22,7 +22,7 @@ import { LoaderCircle, LogOut, Search } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { BrandMark } from "@/shared/components/ui/brand-mark";
 import { ThemeToggle } from "@/shared/components/layout/theme-toggle";
-import { SidebarCollapseButton } from "@/shared/components/layout/sidebar/components/sidebar-collapse-button";
+import { SidebarCollapseButton, useIsMac } from "@/shared/components/layout/sidebar/components/sidebar-collapse-button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/components/ui/tooltip";
 import {
   Sidebar,
@@ -53,7 +53,13 @@ export function compactCount(count: number): string {
   return count > 99 ? "99+" : String(count);
 }
 
-type NavCount = { value: number; attention: boolean; title: string };
+type NavCount = {
+  value: number;
+  attention: boolean;
+  title: string;
+  /** Lo que oye el lector de pantalla tras el nombre del ítem («Empresas, 23 empresas»). */
+  spoken: string;
+};
 
 /** Los contadores del menú. Cada uno sale de una query que la consola ya usa (sin endpoints nuevos). */
 function useNavCounts(): Record<string, NavCount | undefined> {
@@ -64,9 +70,31 @@ function useNavCounts(): Record<string, NavCount | undefined> {
   const tenantsTotal = tenants.data?.meta.total;
   return {
     "/platform/tenants":
-      tenantsTotal !== undefined ? { value: tenantsTotal, attention: false, title: `${String(tenantsTotal)} empresas` } : undefined,
-    "/platform/intake": attention > 0 ? { value: attention, attention: true, title: "Entrevistas que piden atención" } : undefined,
-    "/platform/analytics": alerts.data ? { value: alerts.data, attention: true, title: "Alertas disparadas" } : undefined,
+      tenantsTotal !== undefined
+        ? {
+            value: tenantsTotal,
+            attention: false,
+            title: `${String(tenantsTotal)} empresas`,
+            spoken: tenantsTotal === 1 ? "1 empresa" : `${String(tenantsTotal)} empresas`,
+          }
+        : undefined,
+    "/platform/intake":
+      attention > 0
+        ? {
+            value: attention,
+            attention: true,
+            title: "Entrevistas que piden atención",
+            spoken: attention === 1 ? "1 entrevista pide atención" : `${String(attention)} entrevistas piden atención`,
+          }
+        : undefined,
+    "/platform/analytics": alerts.data
+      ? {
+          value: alerts.data,
+          attention: true,
+          title: "Alertas disparadas",
+          spoken: alerts.data === 1 ? "1 alerta disparada" : `${String(alerts.data)} alertas disparadas`,
+        }
+      : undefined,
   };
 }
 
@@ -87,8 +115,9 @@ function NavTrailing({ count }: { count: NavCount | undefined }) {
       className="ml-auto inline-flex shrink-0 items-center gap-1.5 text-[11.5px] text-muted-foreground tabular-nums group-data-[collapsible=icon]:hidden"
     >
       {count.attention ? <span aria-hidden="true" className="size-1.5 rounded-full bg-warning" /> : null}
-      {compactCount(count.value)}
-      <span className="sr-only">{count.attention ? `, ${count.title.toLowerCase()}` : ""}</span>
+      {/* La cifra visible no se lee pegada al nombre («Empresas23»): se oye la frase. */}
+      <span aria-hidden="true">{compactCount(count.value)}</span>
+      <span className="sr-only">, {count.spoken}</span>
     </span>
   );
 }
@@ -97,6 +126,8 @@ function SearchButton() {
   const { setOpen } = usePlatformCommand();
   const { state, isMobile } = useSidebar();
   const collapsed = state === "collapsed" && !isMobile;
+  // Misma detección que el botón de plegar (⌘B en Mac, Ctrl+B en el resto).
+  const shortcut = useIsMac() ? "⌘K" : "Ctrl K";
   const button = (
     <button
       type="button"
@@ -112,7 +143,7 @@ function SearchButton() {
       {collapsed ? null : (
         <>
           <span className="min-w-0 flex-1 truncate text-left">Buscar</span>
-          <kbd className="shrink-0 rounded-md border border-border px-1.5 font-mono text-[11px] whitespace-nowrap">Ctrl K</kbd>
+          <kbd className="shrink-0 rounded-md border border-border px-1.5 font-mono text-[11px] whitespace-nowrap">{shortcut}</kbd>
         </>
       )}
     </button>
@@ -122,7 +153,7 @@ function SearchButton() {
     <Tooltip>
       <TooltipTrigger asChild>{button}</TooltipTrigger>
       <TooltipContent side="right" sideOffset={6}>
-        Buscar <span className="ml-2 text-muted-foreground">Ctrl K</span>
+        Buscar <span className="ml-2 text-muted-foreground">{shortcut}</span>
       </TooltipContent>
     </Tooltip>
   );
