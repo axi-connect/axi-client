@@ -55,7 +55,7 @@ import { BulkFollowUpButton } from "@/modules/crm/ui/components/BulkFollowUpButt
 import { ChannelPermissions } from "./components/ChannelPermissions";
 import { EnrichmentRunCard } from "./components/EnrichmentRunCard";
 import { LeadDecisionMakerCard } from "./components/LeadDecisionMakerCard";
-import { useNotThem } from "./hooks/use-not-them";
+import { notThemStanding, useNotThem } from "./hooks/use-not-them";
 import { LeadIdentityCard } from "./components/LeadIdentityCard";
 import { LeadPeopleSection } from "./components/LeadPeopleSection";
 import { LeadProvenance } from "./components/LeadProvenance";
@@ -515,9 +515,7 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
               {lead.buying_role !== null && (
                 <span className="font-semibold">{BUYING_ROLE_LABELS[lead.buying_role]}</span>
               )}
-              {lead.decision_maker_confidence !== null && (
-                <span className="text-muted-foreground tabular-nums"> · confianza {lead.decision_maker_confidence}</span>
-              )}{" "}
+              {" "}
               en{" "}
               <Link href={`/marketing/leads/${lead.parent.id}`} className="inline-flex min-h-6 items-center font-medium underline underline-offset-4">
                 {lead.parent.display_name ?? "su negocio"}
@@ -614,7 +612,7 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
                   id: personId,
                   name: decisionMaker.name,
                   decides: true,
-                  fromRegistry: decisionMaker.confirmed_by === "source",
+                  standing: notThemStanding(decisionMaker),
                 });
               }}
               onAddToCrm={(personId) => void onDecision("promote", personId)}

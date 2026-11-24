@@ -47,9 +47,13 @@ describe("WhatsApp según la política del negocio", () => {
     const verdict = channelVerdict({ ...PUBLIC, phone: "+576015550188", whatsapp_cold_controlled: true }, "whatsapp");
     expect(verdict.state).toBe("no_data");
     expect(verdict.reason).toContain("solo sale a celulares");
-    // Con o sin espacios, un celular colombiano sí.
-    for (const phone of ["+573105550142", "+57 310 555 0142", "3105550142"]) {
+    // Con o sin espacios, un celular colombiano con su «+57» sí.
+    for (const phone of ["+573105550142", "+57 310 555 0142", "+57 (310) 555-0142"]) {
       expect(channelVerdict({ ...PUBLIC, phone, whatsapp_cold_controlled: true }, "whatsapp").state).toBe("usable");
+    }
+    // En forma nacional NO: el servidor exige `+573…` y el envío lo rechazaría (D2).
+    for (const phone of ["3105550142", "310 555 0142", "573105550142"]) {
+      expect(channelVerdict({ ...PUBLIC, phone, whatsapp_cold_controlled: true }, "whatsapp").state).toBe("no_data");
     }
   });
 

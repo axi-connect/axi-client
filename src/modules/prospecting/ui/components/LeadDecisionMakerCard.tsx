@@ -118,9 +118,12 @@ export function LeadDecisionMakerCard({
             </p>
           </div>
           <p className="col-span-2 flex gap-2.5 text-[13.5px] text-pretty min-[520px]:col-start-2">
-            <span aria-hidden className="bg-warning mt-[0.5em] size-2 shrink-0 rounded-full" />
+            <span
+              aria-hidden
+              className={`mt-[0.5em] size-2 shrink-0 rounded-full ${decisionMaker.member_confirmed ? "bg-info" : "bg-warning"}`}
+            />
             <span>
-              Puede no trabajar aquí: los sitios traen testimonios y textos de plantilla. Mientras no lo confirmes,{" "}
+              {hintReason(decisionMaker)} Mientras no lo confirmes,{" "}
               <span className="font-semibold">no pasa a tu CRM como quien decide</span>.
             </span>
           </p>
@@ -133,7 +136,8 @@ export function LeadDecisionMakerCard({
                 </Button>
                 <Button variant="ghost" size="sm" className="rounded-full" disabled={busy} onClick={() => onDismiss(personId)}>
                   <X aria-hidden className="size-3.5" />
-                  No es
+                  {/* Si ya se confirmó que trabaja aquí, lo único que cabe decir es que no decide. */}
+                  {decisionMaker.member_confirmed ? "No es quien decide" : "No es"}
                 </Button>
               </>
             )}
@@ -206,8 +210,10 @@ export function LeadDecisionMakerCard({
                 {canManage && (
                   <Button variant="ghost" size="sm" className="rounded-full" disabled={busy} onClick={() => onDismiss(personId)}>
                     <X aria-hidden className="size-3.5" />
-                    {/* De un hecho del registro solo cabe decir que no decide: la persona existe. */}
-                    {decisionMaker.confirmed_by === "source" ? "No es quien decide" : "No es"}
+                    {/* Solo de quien trajo el registro mercantil: un hecho de otra fuente (Apollo) puede no trabajar aquí. */}
+                    {decisionMaker.provider === "rues" && decisionMaker.confirmed_by === "source"
+                      ? "No es quien decide"
+                      : "No es"}
                   </Button>
                 )}
               </>
@@ -217,6 +223,24 @@ export function LeadDecisionMakerCard({
       </div>
     </BentoTile>
   );
+}
+
+/**
+ * Por qué sigue «por confirmar», dicho con el motivo REAL de esa persona:
+ * - el equipo ya confirmó que trabaja aquí: lo único pendiente es si decide;
+ * - salió del sitio web: puede ser un testimonio o un texto de plantilla;
+ * - la halló una búsqueda sin que quedara de dónde.
+ * El mismo `doubt` que usa la lista de personas, para que digan lo mismo.
+ */
+function hintReason(decisionMaker: Pick<DecisionMakerDTO, "member_confirmed" | "doubt">): string {
+  if (decisionMaker.member_confirmed) return "Trabaja aquí; falta confirmar si decide.";
+  if (decisionMaker.doubt === "from_site") {
+    return "Puede no trabajar aquí: los sitios traen testimonios y textos de plantilla.";
+  }
+  if (decisionMaker.doubt === "no_source") {
+    return "La encontramos en una búsqueda, pero no quedó guardado de dónde salió.";
+  }
+  return "Nadie ha confirmado todavía que decide aquí.";
 }
 
 function Avatar({ children }: { children: React.ReactNode }) {

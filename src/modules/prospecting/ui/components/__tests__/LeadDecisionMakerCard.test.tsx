@@ -30,6 +30,8 @@ function decider(overrides: Partial<DecisionMakerDTO> = {}): DecisionMakerDTO {
     email: null,
     phone: null,
     in_crm: false,
+    member_confirmed: false,
+    doubt: null,
     ...overrides,
   };
 }
@@ -99,6 +101,13 @@ describe("LeadDecisionMakerCard", () => {
       expect(handlers.onDismiss).toHaveBeenCalledWith("p-1");
     });
 
+    it("M4 · un hecho de Apollo NO se trata como del registro: se ofrece «No es»", () => {
+      setup(decider({ provider: "apollo", confirmed_by: "source" }));
+      expect(screen.getByRole("button", { name: "No es" })).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "No es quien decide" })).toBeNull();
+      expect(screen.getByText("Según Apollo")).toBeInTheDocument();
+    });
+
     it("de una confirmada por el equipo se ofrece «No es» (quien monta la tarjeta pregunta qué no es)", () => {
       setup(decider({ confirmed_by: "person", provider: "site_extractor" }));
       expect(screen.getByRole("button", { name: "No es" })).toBeInTheDocument();
@@ -126,6 +135,8 @@ describe("LeadDecisionMakerCard", () => {
       confirmed_by: null,
       provider: "site_extractor",
       evidence_url: "https://casalumbre.example/nosotros",
+      member_confirmed: false,
+      doubt: "from_site",
     });
 
     it("NUNCA dice «Confirmada»: dice «Por confirmar» y por qué dudar", () => {
@@ -153,6 +164,29 @@ describe("LeadDecisionMakerCard", () => {
         "href",
         "https://casalumbre.example/nosotros",
       );
+    });
+
+    it("M2 · tras «Sí trabaja aquí» ya no dice «Puede no trabajar aquí»: lo pendiente es si decide", () => {
+      const handlers = setup({ ...HINT, member_confirmed: true, doubt: null });
+      expect(screen.getByText("Por confirmar")).toBeInTheDocument();
+      expect(screen.getByText(/Trabaja aquí; falta confirmar si decide\./)).toBeInTheDocument();
+      expect(screen.queryByText(/Puede no trabajar aquí/)).toBeNull();
+      // Y lo único que cabe negar es que decide.
+      expect(screen.queryByRole("button", { name: "No es" })).toBeNull();
+      fireEvent.click(screen.getByRole("button", { name: "No es quien decide" }));
+      expect(handlers.onDismiss).toHaveBeenCalledWith("p-1");
+      expect(screen.getByRole("button", { name: "Sí, es quien decide" })).toBeInTheDocument();
+    });
+
+    it("M3 · el motivo sale de la duda real: la que no tiene procedencia no «salió del sitio»", () => {
+      setup({ ...HINT, provider: null, evidence_url: null, doubt: "no_source" });
+      expect(screen.getByText(/no quedó guardado de dónde salió/)).toBeInTheDocument();
+      expect(screen.queryByText(/los sitios traen testimonios/)).toBeNull();
+    });
+
+    it("M3 · la del sitio conserva su motivo", () => {
+      setup(HINT);
+      expect(screen.getByText(/los sitios traen testimonios y textos de plantilla/)).toBeInTheDocument();
     });
 
     it("sin permiso de gestionar no hay botones, pero la pista se sigue viendo como pista", () => {

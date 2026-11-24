@@ -386,9 +386,13 @@ export interface ChannelSubject {
   whatsapp_cold_controlled?: boolean;
 }
 
-/** Celular colombiano: +57 3XX XXX XXXX (con o sin espacios ni «+»). */
+/**
+ * Celular colombiano tal como lo exige el envío en frío del servidor
+ * (`+573XXXXXXXXX`): con el «+57». Un número en forma nacional («310 555 0142»)
+ * NO cuenta: el envío lo rechazaría, así que la pantalla no puede darlo por bueno.
+ */
 export function isColombianMobile(phone: string): boolean {
-  return /^(57)?3\d{9}$/.test(phone.replace(/\D/g, ""));
+  return /^\+573\d{9}$/.test(phone.replace(/[\s().-]/g, ""));
 }
 
 /**

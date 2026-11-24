@@ -45,11 +45,14 @@ function DataTableRowInner<T extends DataRow>({ row, visibleColumns, collapsedCo
 
   return (
     <>
-      <TableRow onContextMenu={handleContextMenu}>
+      <TableRow onContextMenu={handleContextMenu} className={iconMode ? "group/row" : undefined}>
         {visibleCells}
         {iconMode && (
           // Pegado al borde derecho: si la tabla desplaza a lo ancho, el botón no se pierde.
-          <TableCell className="bg-card sticky right-0 w-10 pr-3 pl-0 text-right">
+          // Necesita fondo opaco (tapa lo que pasa por debajo), así que COPIA el de la fila:
+          // el mismo tinte al pasar el ratón y al estar seleccionada. Con `bg-card` fijo se
+          // veía como un recuadro aparte, sobre todo en oscuro.
+          <TableCell className="sticky right-0 w-10 bg-card pr-3 pl-0 text-right transition-colors group-hover/row:bg-[color-mix(in_srgb,var(--color-muted)_50%,var(--color-card))] group-data-[state=selected]/row:bg-muted">
             <Tooltip>
               <TooltipTrigger asChild>
                 <button

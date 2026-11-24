@@ -223,6 +223,8 @@ describe("prospección decisor: quién decide y WhatsApp según la política", (
           email: null,
           phone: null,
           in_crm: false,
+          member_confirmed: false,
+          doubt: "from_site",
         },
       }),
     );
@@ -269,5 +271,26 @@ describe("prospección decisor: quién decide y WhatsApp según la política", (
     const gate = within(await screen.findByRole("region", { name: "Promover al CRM" }));
     expect(gate.getByText("WhatsApp queda bloqueado")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "WhatsApp: no permitido" })).toBeInTheDocument();
+  });
+});
+
+describe("ficha de una persona", () => {
+  it("M6 · dice su cargo, su papel y su negocio, sin «confianza N»", async () => {
+    api.getLead.mockResolvedValue(
+      lead({
+        kind: "person",
+        display_name: "Mariana Restrepo Gil",
+        title: "Representante legal",
+        buying_role: "decides",
+        decision_maker_confidence: 95,
+        parent: { id: "l9", display_name: "Hotel Boutique Casa Lumbre", city: "Bogotá" },
+      }),
+    );
+    render(<LeadDetailView leadId="l1" />);
+
+    expect(await screen.findByRole("heading", { level: 1, name: "Mariana Restrepo Gil" })).toBeInTheDocument();
+    expect(screen.getByText("decide")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Hotel Boutique Casa Lumbre" })).toBeInTheDocument();
+    expect(screen.queryByText(/confianza/)).toBeNull();
   });
 });

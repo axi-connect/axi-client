@@ -61,14 +61,14 @@ function nameColumn(working: ReadonlySet<string>): ColumnDef<LeadRow> {
     accessorKey: "name",
     header: "Lead",
     alwaysVisible: true,
-    // El mismo tope que la celda (14rem): la tabla reparte columnas con este número.
-    minWidth: 224,
+    // El mismo tope que la celda (13rem): la tabla reparte columnas con este número.
+    minWidth: 208,
     cell: ({ row }) => (
       // Ancho con tope: un nombre de 100 caracteres se corta con difuminado en
       // vez de empujar «Quién decide» y «Alcance» fuera de la tabla.
       <Link
         href={`/marketing/leads/${row.original.id}`}
-        className="hover:text-brand block max-w-[14rem] min-w-0"
+        className="hover:text-brand block max-w-[13rem] min-w-0"
       >
         <span className="block truncate text-sm font-semibold" title={row.original.name}>
           {row.original.name}
@@ -141,7 +141,7 @@ function DecisionMakerCell({ row }: { row: LeadRow }) {
   }
   const { decider_name: name, decider_title: title, decider_level: level } = row;
   return (
-    <span className="flex max-w-[9rem] min-w-0 flex-col gap-px">
+    <span className="flex max-w-[8.5rem] min-w-0 flex-col gap-px">
       {/* Hasta dos renglones: «Mariana Restrepo Gil» cabe entero; lo que pase de ahí se difumina. */}
       <span className="line-clamp-2 text-[13.5px] leading-snug font-medium whitespace-normal" title={name}>
         {name}
@@ -212,6 +212,10 @@ function ReachCell({ row }: { row: LeadRow }) {
  * «Origen» y «Ciudad» ya no son columnas: van como tercera línea de la celda
  * «Lead», a la vista en todos los anchos.
  *
+ * Holgura a 1280 px, medida en pantalla (M6 de la 2.ª auditoría): la tabla
+ * medía 953 px en un contenedor de 942. La celda del lead bajó a 13rem y la de
+ * quien decide a 8.5rem; no debe haber desplazamiento horizontal a ese ancho.
+ *
  * Qué cabe (menú lateral abierto): a 1440 px, todo menos «Descubierto»; a
  * 1280 px, hasta «Calidad»; a 768 px, «Quién decide» y «Alcance»; en el
  * celular, solo «Lead», con quién decide y el alcance en una línea bajo el nombre.
@@ -220,7 +224,8 @@ const BASE_COLUMNS: ColumnDef<LeadRow>[] = [
   {
     accessorKey: "decider_name",
     header: "Quién decide",
-    minWidth: 144,
+    // 8.5rem de celda más su relleno.
+    minWidth: 152,
     cell: ({ row }) => <DecisionMakerCell row={row.original} />,
   },
   {
@@ -232,8 +237,8 @@ const BASE_COLUMNS: ColumnDef<LeadRow>[] = [
   {
     accessorKey: "quality_status",
     header: "Calidad del dato",
-    // 124 y no menos: a 768 px no cabe (si entrara, empujaría el botón de fin de fila) y a 1280 sí.
-    minWidth: 124,
+    // 130: a 768 px no cabe (si entrara, empujaría el botón de fin de fila) y a 1280 sí.
+    minWidth: 130,
     headerCell: () => <TwoLineHeader>Calidad del dato</TwoLineHeader>,
     cell: ({ row }) => (
       <StatusBadge

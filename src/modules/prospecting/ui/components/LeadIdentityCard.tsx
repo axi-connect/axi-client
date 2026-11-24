@@ -12,6 +12,7 @@ import { nicheByCode } from "@/modules/onboarding/public";
 
 import {
   SOCIAL_LABELS,
+  channelVerdict,
   leadDisplayName,
   opensWhatsappCold,
   primaryEmailVerification,
@@ -208,7 +209,8 @@ export function LeadIdentityCard({
             !lead.allowed_channels.includes("whatsapp") &&
             // Lo que se dice aquí tiene que ser lo que hará el envío: con el
             // frío controlado encendido en la política, WhatsApp sí sale.
-            (opensWhatsappCold(lead) ? (
+            // Y solo si de verdad puede salir (hay un celular): la misma regla de la cabecera.
+            (opensWhatsappCold(lead) && channelVerdict(lead, "whatsapp").state === "usable" ? (
               <p className="flex gap-2.5 text-sm text-pretty">
                 <span aria-hidden className="bg-info mt-[0.45em] size-2 shrink-0 rounded-full" />
                 <span>

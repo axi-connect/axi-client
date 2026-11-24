@@ -302,7 +302,7 @@ export function LeadPeopleSection({
                                 id: person.id,
                                 name: person.display_name ?? "Esta persona",
                                 decides: person.buying_role === "decides" || person.buying_role === "approves",
-                                fromRegistry: false,
+                                standing: "open",
                               })
                             }
                           >
