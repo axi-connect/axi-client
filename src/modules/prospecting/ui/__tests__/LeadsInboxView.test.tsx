@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 
 import type { LeadDTO } from "../../domain/lead";
 import { useCaptureStats } from "../../infrastructure/stores/capture-stats.store";
@@ -116,20 +116,18 @@ it("vacía y con promovidos en el embudo: dice que ya están en el CRM, no que n
   render(<LeadsInboxView />);
 
   expect(await screen.findByText("No queda ningún lead por revisar")).toBeInTheDocument();
-  expect(screen.getByText(/filtra por el estado «En el CRM»/)).toBeInTheDocument();
+  expect(screen.getByText("Los que ya pasaste al CRM los ves en Filtros › Estado › En el CRM.")).toBeInTheDocument();
   expect(screen.queryByText("Todavía no ha entrado ningún lead")).not.toBeInTheDocument();
 });
 
-it("desde ese vacío se llega a los promovidos con un toque: pide el estado «En el CRM»", async () => {
+it("vacía y sin filtros, «Filtros» sigue a la vista: es por donde se llega a «En el CRM», sin botón suelto", async () => {
   api.listLeads.mockResolvedValue({ data: [], meta: { total: 0, page: 1, page_size: 25 } });
   render(<LeadsInboxView />);
+  await screen.findByText("No queda ningún lead por revisar");
 
-  // La barra de filtros vive dentro de la tabla, y sin filas no hay tabla.
-  fireEvent.click(await screen.findByRole("button", { name: "Ver los que están en el CRM" }));
-
-  await waitFor(() =>
-    expect(api.listLeads).toHaveBeenLastCalledWith(expect.objectContaining({ status: "promoted" })),
-  );
+  // La barra vivía solo dentro de la tabla, y sin filas no hay tabla.
+  expect(screen.getByRole("button", { name: /Filtros/ })).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Ver los que están en el CRM" })).not.toBeInTheDocument();
 });
 
 it("vacía y sin ningún promovido: sigue diciendo que todavía no ha entrado ninguno", async () => {
@@ -139,4 +137,5 @@ it("vacía y sin ningún promovido: sigue diciendo que todavía no ha entrado ni
 
   expect(await screen.findByText("Todavía no ha entrado ningún lead")).toBeInTheDocument();
   expect(screen.queryByText("No queda ningún lead por revisar")).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: /Filtros/ })).toBeInTheDocument();
 });
