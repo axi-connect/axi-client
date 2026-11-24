@@ -29,7 +29,7 @@ export const tenantColumns: ColumnDef<TenantListItem>[] = [
     sortable: true,
     searchable: false, // tiene facet propio (valores crudos en inglés)
     minWidth: 130,
-    cell: ({ row }) => <StatusBadge status={row.original.status} />,
+    cell: ({ row }) => <StatusBadge status={row.original.status} subject="tenant" />,
   },
   {
     accessorKey: "country_code",

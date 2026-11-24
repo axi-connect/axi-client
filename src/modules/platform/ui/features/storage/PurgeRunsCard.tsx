@@ -23,7 +23,7 @@ function who(run: PurgeRun): string {
 
 export function PurgeRunsCard({ tenantId }: { tenantId: string }) {
   const query = usePurgeRuns(tenantId);
-  if (query.isError) return <TileFailure label="Historial de depuración" onRetry={() => void query.refetch()} />;
+  if (query.isError) return <TileFailure label="Historial de depuración" error={query.error} onRetry={() => void query.refetch()} />;
   const runs = query.data ?? [];
   return (
     <section

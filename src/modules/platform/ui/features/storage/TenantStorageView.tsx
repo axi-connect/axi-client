@@ -337,7 +337,7 @@ export function TenantStorageView({ tenantId }: { tenantId: string }) {
       </div>
     );
   }
-  if (storage.isError) return <TileFailure label="Almacenamiento" onRetry={() => void storage.refetch()} />;
+  if (storage.isError) return <TileFailure label="Almacenamiento" error={storage.error} onRetry={() => void storage.refetch()} />;
   const data = storage.data;
 
   return (

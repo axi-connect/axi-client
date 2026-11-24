@@ -194,7 +194,7 @@ export function TenantHeader({ tenantId }: { tenantId: string }) {
         <div className="min-w-0 flex-1 space-y-1">
           <div className="flex min-w-0 flex-wrap items-center gap-3">
             <InlineNameEditor tenantId={tenant.id} name={tenant.name} />
-            <StatusBadge status={tenant.status} />
+            <StatusBadge status={tenant.status} subject="tenant" />
           </div>
           <p className="flex flex-wrap items-center gap-x-1.5 text-sm text-muted-foreground [&>span]:whitespace-nowrap">
             <span>

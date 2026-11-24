@@ -6,9 +6,8 @@
  * (el color es estado, no categoría), tendencia y leyenda. Puras de datos.
  */
 import { cn } from "@/core/lib/utils";
-import { BentoTile } from "@/shared/components/features/bento";
-import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import { ProblemAlert } from "../../components/ProblemAlert";
 import { formatBytes, ORIGIN_LABELS, type StorageOrigin } from "../../../domain/storage";
 
 /** Tonos neutros por origen: clientes oscuro, equipo medio, sistema claro. */
@@ -194,16 +193,28 @@ export function Provenance({
   );
 }
 
-export function TileFailure({ label, onRetry, className }: { label: string; onRetry: () => void; className?: string }) {
+/** La ficha que falló: es el `ProblemAlert` único del panel en su forma de ficha (rediseño F1). */
+export function TileFailure({
+  label,
+  onRetry,
+  className,
+  error,
+}: {
+  label: string;
+  onRetry: () => void;
+  className?: string;
+  /** Con el error se dice qué pasó (y su referencia); sin él, el texto de siempre. */
+  error?: unknown;
+}) {
   return (
-    <BentoTile label={label} className={className}>
-      <p className="text-sm text-muted-foreground">No pudimos cargar esta ficha.</p>
-      <div>
-        <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={onRetry}>
-          Reintentar
-        </Button>
-      </div>
-    </BentoTile>
+    <ProblemAlert
+      variant="tile"
+      label={label}
+      error={error}
+      fallbackTitle="No pudimos cargar esta ficha."
+      onRetry={onRetry}
+      className={className}
+    />
   );
 }
 

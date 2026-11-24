@@ -185,7 +185,7 @@ export function RetentionCard({ tenantId, canEdit }: { tenantId: string; canEdit
   const [pending, setPending] = useState<Pending | null>(null);
 
   if (query.isPending) return <TileLoading />;
-  if (query.isError) return <TileFailure label="Retención automática" onRetry={() => void query.refetch()} />;
+  if (query.isError) return <TileFailure label="Retención automática" error={query.error} onRetry={() => void query.refetch()} />;
 
   const rules: Rule[] = query.data.data.map(({ kind, filter, max_age_days, enabled }) => ({
     kind,

@@ -452,7 +452,7 @@ export function StorageOverviewView() {
           <TileLoading />
         </div>
       ) : overview.isError ? (
-        <TileFailure label="Almacenamiento" onRetry={() => void overview.refetch()} />
+        <TileFailure label="Almacenamiento" error={overview.error} onRetry={() => void overview.refetch()} />
       ) : (
         <div className={GRID}>
           <DiskTile
