@@ -58,6 +58,11 @@ const PROMOTE: Record<string, { label: string; short: string }> = {
     label: "No pasó al CRM: no tiene teléfono ni correo",
     short: "Sin teléfono ni correo",
   },
+  // Prospección decisor: una persona leída en el sitio web y sin confirmar.
+  "prospecting/person_unconfirmed": {
+    label: "No pasó al CRM: falta confirmar que la persona trabaja en el negocio",
+    short: "Persona sin confirmar",
+  },
 };
 const PROMOTE_OTHER = { label: "No pasó al CRM", short: "No pasó al CRM" };
 

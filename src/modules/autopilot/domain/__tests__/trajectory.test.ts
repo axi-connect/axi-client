@@ -30,6 +30,9 @@ describe("reasons — el motivo en palabras, nunca la clave", () => {
 
   it("pasar al CRM: «No pasó al CRM: …», también con un código que no conoce", () => {
     expect(reasonLabel("promote_prospecting/lead_not_identifiable")).toBe("No pasó al CRM: no tiene teléfono ni correo");
+    expect(reasonLabel("promote_prospecting/person_unconfirmed")).toBe(
+      "No pasó al CRM: falta confirmar que la persona trabaja en el negocio",
+    );
     expect(reasonLabel("promote_prospecting/otra_cosa")).toBe("No pasó al CRM");
   });
 
