@@ -105,3 +105,26 @@ it("«Nueva búsqueda» lleva a Búsquedas con la hoja abierta", async () => {
   await screen.findByText("Spa Piel de Seda");
   expect(screen.getByRole("link", { name: /Nueva búsqueda/ })).toHaveAttribute("href", "/marketing/leads/searches?new=1");
 });
+
+/*
+  CAP-18 · «los promovidos salen de captación». La bandeja ya no trae a los que
+  son contactos del CRM, así que puede quedar vacía con el embudo lleno: decir
+  «todavía no ha entrado ningún lead» con 96 promovidos arriba sería mentira.
+*/
+it("vacía y con promovidos en el embudo: dice que ya están en el CRM, no que no ha entrado nadie", async () => {
+  api.listLeads.mockResolvedValue({ data: [], meta: { total: 0, page: 1, page_size: 25 } });
+  render(<LeadsInboxView />);
+
+  expect(await screen.findByText("No queda ningún lead por revisar")).toBeInTheDocument();
+  expect(screen.getByText(/filtra por el estado «En el CRM»/)).toBeInTheDocument();
+  expect(screen.queryByText("Todavía no ha entrado ningún lead")).not.toBeInTheDocument();
+});
+
+it("vacía y sin ningún promovido: sigue diciendo que todavía no ha entrado ninguno", async () => {
+  useCaptureStats.setState({ stats: { ...STATS, promoted: 0 } });
+  api.listLeads.mockResolvedValue({ data: [], meta: { total: 0, page: 1, page_size: 25 } });
+  render(<LeadsInboxView />);
+
+  expect(await screen.findByText("Todavía no ha entrado ningún lead")).toBeInTheDocument();
+  expect(screen.queryByText("No queda ningún lead por revisar")).not.toBeInTheDocument();
+});

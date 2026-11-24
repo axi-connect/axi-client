@@ -1,5 +1,6 @@
 import {
   BUYING_ROLE_LABELS,
+  emptyPeopleText,
   initialsOf,
   passesToCrm,
   providerPlanOf,
@@ -104,5 +105,41 @@ describe("passesToCrm — quién pasa al CRM", () => {
     expect(passesToCrm({ ...base, in_crm: true })).toBe(false);
     expect(passesToCrm({ ...base, buying_role: "uses" })).toBe(false);
     expect(passesToCrm({ ...base, email: null })).toBe(false);
+  });
+});
+
+/*
+  CAP-18 · «los promovidos salen de captación». A quien se guarda en el CRM
+  deja de salir en Personas, así que una lista vacía ya no significa siempre
+  «no hay nadie»: los vacíos no pueden decir algo que dejó de ser cierto.
+*/
+describe("emptyPeopleText — qué dice Personas cuando no hay filas", () => {
+  it("Nuevos, y la búsqueda no trajo a nadie: el consejo de siempre", () => {
+    expect(emptyPeopleText({ tab: "new", captured: 0, hiddenByFilter: false })).toEqual({
+      title: "Nadie cumple estos filtros",
+      description: "Prueba con cargos parecidos, otra ciudad o sin filtro de tamaño.",
+    });
+  });
+
+  it("Nuevos, y la búsqueda SÍ trajo personas que ya no salen: no dice que nadie cumple", () => {
+    const text = emptyPeopleText({ tab: "new", captured: 12, hiddenByFilter: false });
+    expect(text.title).not.toBe("Nadie cumple estos filtros");
+    expect(text.title).toBe("Ya no queda nadie de esta búsqueda por aquí");
+    expect(text.description).toContain("CRM");
+  });
+
+  it("Nuevos, con filas que esconde el filtro de celular: sigue siendo cosa del filtro", () => {
+    expect(emptyPeopleText({ tab: "new", captured: 12, hiddenByFilter: true }).title).toBe(
+      "Nadie cumple estos filtros",
+    );
+  });
+
+  it("Guardados no afirma que nunca se reveló a nadie: los que pasaron al CRM ya no están", () => {
+    const text = emptyPeopleText({ tab: "saved", captured: 0, hiddenByFilter: false });
+    expect(text.title).not.toBe("Aún no has revelado a nadie");
+    expect(text.title).toBe("No hay personas reveladas por guardar");
+    expect(text.description).toBe(
+      "Cuando reveles a alguien en Nuevos, queda aquí hasta que lo guardes en el CRM.",
+    );
   });
 });

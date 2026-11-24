@@ -99,6 +99,16 @@ describe("serializeLeadFilters — lo que viaja por el alambre", () => {
     }
   });
 
+  // CAP-18: el servidor ya no trae a los promovidos si nadie los pide. Pedirlos
+  // es marcar «En el CRM» en el filtro de estado, que viaja como siempre.
+  it("«En el CRM» se puede pedir: viaja como `status=promoted`, solo o con otros estados", () => {
+    expect(optionsOf("status")).toContain("promoted");
+    expect(serializeLeadFilters({ status: ["promoted"] }).status).toBe("promoted");
+    expect(serializeLeadFilters({ status: ["qualified", "promoted"] }).status).toBe("qualified,promoted");
+    // Sin marcarlo no viaja nada: ocultarlos es cosa del servidor, no un filtro del cliente.
+    expect(serializeLeadFilters({})).not.toHaveProperty("status");
+  });
+
   it("los datos exigidos viajan con su modo", () => {
     const params = serializeLeadFilters({
       require: ["instagram", "email"],
