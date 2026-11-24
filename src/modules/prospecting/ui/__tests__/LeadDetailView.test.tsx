@@ -245,7 +245,19 @@ describe("prospección decisor: quién decide y WhatsApp según la política", (
 
   it("con el frío controlado ENCENDIDO en la política, la puerta ya no dice «WhatsApp queda bloqueado»", async () => {
     // Con un CELULAR: en frío WhatsApp solo sale a celulares.
-    api.getLead.mockResolvedValue(lead({ phone: "+573105550142", whatsapp_cold_controlled: true }));
+    // Que lo es lo dice el servidor en el tipo del teléfono principal (D2).
+    api.getLead.mockResolvedValue(
+      lead({
+        phone: "+573105550142",
+        whatsapp_cold_controlled: true,
+        contact_points: {
+          emails: [],
+          phones: [
+            { value: "+573105550142", type: "celular", whatsapp: false, source: "google_places", source_url: null, primary: true },
+          ],
+        },
+      }),
+    );
     render(<LeadDetailView leadId="l1" />);
 
     const gate = within(await screen.findByRole("region", { name: "Promover al CRM" }));

@@ -5,6 +5,7 @@ import {
   mapLeadToRow,
   opensWhatsappCold,
   primaryEmailVerification,
+  primaryPhoneIsMobile,
   readablePhone,
   waySourceLabel,
   type ChannelSubject,
@@ -17,7 +18,16 @@ const PUBLIC: ChannelSubject = {
   legal_basis: "public_business_data",
   email: "info@casalumbre.example",
   phone: "+573105550142",
+  contact_points: { phones: [{ type: "celular", primary: true }] },
 };
+
+/** El lead con este teléfono principal, tipado como lo tipa el servidor. */
+const withPhone = (phone: string, type: "celular" | "fijo" | "desconocido"): ChannelSubject => ({
+  ...PUBLIC,
+  phone,
+  whatsapp_cold_controlled: true,
+  contact_points: { phones: [{ type, primary: true }] },
+});
 
 describe("WhatsApp según la política del negocio", () => {
   it("frío APAGADO (o sin dato de la política): WhatsApp sigue bloqueado, como siempre", () => {
@@ -44,17 +54,57 @@ describe("WhatsApp según la política del negocio", () => {
   });
 
   it("frío encendido y el teléfono principal es un FIJO: falta el celular, no se afirma WhatsApp", () => {
-    const verdict = channelVerdict({ ...PUBLIC, phone: "+576015550188", whatsapp_cold_controlled: true }, "whatsapp");
+    const verdict = channelVerdict(withPhone("+576015550188", "fijo"), "whatsapp");
     expect(verdict.state).toBe("no_data");
     expect(verdict.reason).toContain("solo sale a celulares");
-    // Con o sin espacios, un celular colombiano con su «+57» sí.
-    for (const phone of ["+573105550142", "+57 310 555 0142", "+57 (310) 555-0142"]) {
-      expect(channelVerdict({ ...PUBLIC, phone, whatsapp_cold_controlled: true }, "whatsapp").state).toBe("usable");
-    }
-    // En forma nacional NO: el servidor exige `+573…` y el envío lo rechazaría (D2).
-    for (const phone of ["3105550142", "310 555 0142", "573105550142"]) {
-      expect(channelVerdict({ ...PUBLIC, phone, whatsapp_cold_controlled: true }, "whatsapp").state).toBe("no_data");
-    }
+  });
+
+  /*
+    D2 de la 3.ª auditoría: qué es un celular lo dice el servidor
+    (`contact_points.phones[].type`, medido con la regla del envío). El cliente
+    ya no lo mide por su cuenta, así que no puede contradecir al envío.
+  */
+  describe("D2: el celular lo decide el tipo que manda el servidor", () => {
+    it("caso A: «+573085550177» (rango 308) tiene forma de celular, pero el servidor no lo tipa celular: no se promete WhatsApp", () => {
+      const lead = withPhone("+573085550177", "desconocido");
+      const verdict = channelVerdict(lead, "whatsapp");
+      expect(verdict.state).toBe("no_data");
+      expect(verdict.reason).toContain("solo sale a celulares");
+      expect(primaryPhoneIsMobile(lead)).toBe(false);
+    });
+
+    it("caso B: «310 555 0188» en forma nacional, que el servidor tipa celular (al promover queda +57…): el frío sí sale", () => {
+      const lead = withPhone("310 555 0188", "celular");
+      const verdict = channelVerdict(lead, "whatsapp");
+      expect(verdict.state).toBe("usable");
+      expect(verdict.reason).toContain("plantilla aprobada");
+      expect(primaryPhoneIsMobile(lead)).toBe(true);
+    });
+
+    it("manda el teléfono PRINCIPAL: un celular secundario no vuelve usable a un principal fijo", () => {
+      const lead: ChannelSubject = {
+        ...withPhone("+576015550188", "fijo"),
+        contact_points: {
+          phones: [
+            { type: "fijo", primary: true },
+            { type: "celular", primary: false },
+          ],
+        },
+      };
+      expect(channelVerdict(lead, "whatsapp").state).toBe("no_data");
+    });
+
+    it("sin los tipos del servidor (la bandeja no los trae) no se afirma WhatsApp en frío", () => {
+      const bare: ChannelSubject = {
+        allowed_channels: PUBLIC.allowed_channels,
+        legal_basis: PUBLIC.legal_basis,
+        email: PUBLIC.email,
+        phone: "+573105550142",
+        whatsapp_cold_controlled: true,
+      };
+      expect(primaryPhoneIsMobile(bare)).toBe(false);
+      expect(channelVerdict(bare, "whatsapp").state).toBe("no_data");
+    });
   });
 
   it("quien dio permiso no es frío: manda el permiso, con la política como esté", () => {

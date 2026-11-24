@@ -506,6 +506,8 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
                 email: lead.email,
                 phone: lead.phone,
                 whatsapp_cold_controlled: lead.whatsapp_cold_controlled,
+                // Y el tipo de cada teléfono, que es lo que dice si el frío puede salir (D2).
+                contact_points: lead.contact_points,
               }}
             />
           </div>

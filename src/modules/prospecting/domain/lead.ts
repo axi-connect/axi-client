@@ -134,7 +134,7 @@ export function readablePhone(value: string): string {
 
 /**
  * El alcance: qué tan cerca estamos de quien decide. No es el permiso (eso es
- * «Puedo contactar por») ni la calidad del dato.
+ * «Contactar por») ni la calidad del dato.
  */
 export const REACH_LEVELS: Record<
   ReachLevel,
@@ -384,15 +384,28 @@ export interface ChannelSubject {
    * Solo lo trae la ficha; sin él, el veredicto es el de siempre.
    */
   whatsapp_cold_controlled?: boolean;
+  /**
+   * Los teléfonos del lead con el TIPO que les da el servidor. Solo lo trae la
+   * ficha, igual que la política; es lo que dice si el principal es un celular.
+   */
+  contact_points?: { phones: readonly Pick<PhoneWayDTO, "type" | "primary">[] };
 }
 
 /**
- * Celular colombiano tal como lo exige el envío en frío del servidor
- * (`+573XXXXXXXXX`): con el «+57». Un número en forma nacional («310 555 0142»)
- * NO cuenta: el envío lo rechazaría, así que la pantalla no puede darlo por bueno.
+ * ¿El teléfono principal es un celular al que el frío de WhatsApp puede salir?
+ *
+ * LO DICE EL SERVIDOR, no una regla copiada aquí (D2, 3.ª auditoría): el `type`
+ * de `contact_points.phones[]` es el del número como quedará al promover,
+ * medido con la misma regla del envío (`phone.ts`: rangos reales de celular,
+ * sin relleno). Antes el cliente aceptaba cualquier `+573…` (prometía WhatsApp
+ * a un 308 que el envío rechaza) y rechazaba «310 555 0188» (que al promover
+ * queda `+57…` y sí sale).
+ *
+ * Sin `contact_points` (la bandeja no los trae) no se afirma nada.
  */
-export function isColombianMobile(phone: string): boolean {
-  return /^\+573\d{9}$/.test(phone.replace(/[\s().-]/g, ""));
+export function primaryPhoneIsMobile(lead: Pick<ChannelSubject, "contact_points">): boolean {
+  const primary = lead.contact_points?.phones.find((phone) => phone.primary);
+  return primary?.type === "celular";
 }
 
 /**
@@ -428,7 +441,7 @@ export function opensWhatsappCold(lead: {
  * `allowed_channels` sale ÚNICAMENTE de la base legal: dice con qué derecho
  * podríamos escribir, no si tenemos a dónde. Durante un tiempo la bandeja pintó
  * el correo en verde para leads sin correo porque leía solo la primera mitad —
- * la columna se llama «Puedo contactar por» y estaba respondiendo a otra
+ * la columna se llama «Contactar por» y estaba respondiendo a otra
  * pregunta.
  *
  * Son TRES estados y no dos porque cada uno se arregla distinto: lo bloqueado
@@ -448,8 +461,9 @@ export function channelVerdict(
         reason: "Tu política permite WhatsApp en frío controlado, pero no tenemos su teléfono.",
       };
     }
-    // En frío solo sale a celulares: un fijo no recibe WhatsApp.
-    if (!isColombianMobile(lead.phone)) {
+    // En frío solo sale a celulares: un fijo no recibe WhatsApp. Qué es un
+    // celular lo dice el servidor en el tipo del teléfono principal.
+    if (!primaryPhoneIsMobile(lead)) {
       return {
         state: "no_data",
         reason: "Tu política permite WhatsApp en frío controlado, pero solo sale a celulares y su teléfono principal no lo es.",
