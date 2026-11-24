@@ -6,6 +6,9 @@
  * - `auth/invalid_credentials`: mensaje único, sin distinguir campo (spec §3.1).
  * - 429 (throttle 5/min): formulario deshabilitado con countdown.
  * - `?next` validado: solo rutas internas de /platform (anti open-redirect).
+ * - Rediseño F1: los errores de validación se pintan BAJO SU CAMPO (antes el
+ *   `required`/`type=email` del navegador se adelantaba a Zod y sus mensajes
+ *   nunca salían). El formulario va con `noValidate`.
  */
 import { useEffect, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -16,12 +19,12 @@ import { Eye, EyeOff, LoaderCircle } from "lucide-react";
 import { API_ERROR_CODES, isHttpError } from "@/core/api/problem";
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
-import { Form, FormControl, FormField, FormItem } from "@/shared/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/shared/components/ui/form";
 import { usePlatformAuth } from "../../infrastructure/auth/platform-auth.context";
 import { safeInternalNext } from "@/core/lib/safe-next";
 
-const platformLoginSchema = z.object({
-  email: z.string().email("Correo inválido"),
+export const platformLoginSchema = z.object({
+  email: z.string().trim().min(1, "Ingresa tu correo").email("Correo inválido"),
   password: z.string().min(1, "Ingresa tu contraseña"),
 });
 
@@ -100,47 +103,73 @@ export function PlatformLoginForm() {
   const disabled = isPending || cooldown > 0;
 
   return (
-    <div className="space-y-6 rounded-2xl border border-border bg-background p-6 shadow-sm">
+    <div className="rounded-3xl border border-border bg-card p-6 shadow-[var(--shadow-float)] sm:p-7">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5" aria-label="Iniciar sesión en la consola de plataforma">
-          <div>
-            <label htmlFor="platform-email" className="text-sm font-medium">Correo</label>
-            <FormField name="email" control={form.control} render={({ field }) => (
-              <FormItem>
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          noValidate
+          className="flex flex-col gap-5"
+          aria-label="Iniciar sesión en la consola de plataforma"
+        >
+          <FormField name="email" control={form.control} render={({ field }) => (
+            <FormItem className="gap-1.5">
+              <FormLabel htmlFor="platform-email" className="text-[13px] font-medium">Correo</FormLabel>
+              <FormControl>
+                <Input
+                  id="platform-email"
+                  type="email"
+                  inputMode="email"
+                  autoComplete="username"
+                  placeholder="tu@axi-connect.co"
+                  disabled={disabled}
+                  className="h-11 rounded-xl"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage className="text-[13px]" />
+            </FormItem>
+          )} />
+
+          <FormField name="password" control={form.control} render={({ field }) => (
+            <FormItem className="gap-1.5">
+              <FormLabel htmlFor="platform-password" className="text-[13px] font-medium">Contraseña</FormLabel>
+              <div className="relative">
                 <FormControl>
-                  <Input id="platform-email" type="email" required autoComplete="username" placeholder="admin@axi.dev" disabled={disabled} {...field} />
+                  <Input
+                    id="platform-password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="current-password"
+                    placeholder="••••••••"
+                    disabled={disabled}
+                    className="h-11 rounded-xl pr-11"
+                    {...field}
+                  />
                 </FormControl>
-              </FormItem>
-            )} />
-          </div>
-          <div>
-            <label htmlFor="platform-password" className="text-sm font-medium">Contraseña</label>
-            <div className="relative">
-              <FormField name="password" control={form.control} render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Input id="platform-password" type={showPassword ? "text" : "password"} required autoComplete="current-password" placeholder="••••••••" disabled={disabled} {...field} />
-                  </FormControl>
-                </FormItem>
-              )} />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 mt-2 mr-3 flex items-center"
-                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-              >
-                {showPassword ? (
-                  <EyeOff size={20} className="text-muted-foreground" />
-                ) : (
-                  <Eye size={20} className="text-muted-foreground" />
-                )}
-              </button>
-            </div>
-          </div>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-1 my-auto grid size-9 place-items-center rounded-lg text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+                  aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  aria-pressed={showPassword}
+                >
+                  {showPassword ? <EyeOff aria-hidden="true" className="size-4" /> : <Eye aria-hidden="true" className="size-4" />}
+                </button>
+              </div>
+              <FormMessage className="text-[13px]" />
+            </FormItem>
+          )} />
 
-          {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
+          {error && (
+            <p
+              className="flex gap-2 rounded-xl border border-destructive/30 px-3 py-2.5 text-[13px] text-foreground"
+              role="alert"
+            >
+              <span aria-hidden="true" className="mt-1.5 size-1.5 shrink-0 rounded-full bg-destructive" />
+              <span className="min-w-0 [overflow-wrap:anywhere]">{error}</span>
+            </p>
+          )}
 
-          <Button className="w-full" type="submit" disabled={disabled}>
+          <Button className="h-11 w-full rounded-full text-[15px]" type="submit" disabled={disabled}>
             {isPending && <LoaderCircle aria-hidden="true" className="animate-spin" />}
             {cooldown > 0
               ? `Demasiados intentos. Reintenta en ${cooldown} s`
@@ -149,7 +178,7 @@ export function PlatformLoginForm() {
                 : "Iniciar sesión"}
           </Button>
 
-          <p className="text-center text-xs text-muted-foreground">
+          <p className="text-center text-xs text-muted-foreground text-pretty">
             La sesión dura 15 minutos y no se renueva automáticamente.
           </p>
         </form>
