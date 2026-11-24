@@ -8,6 +8,7 @@
 import { ArrowLeft, LoaderCircle, PencilLine } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { countryByCode } from "../../../../../domain/catalogs";
+import { TENANT_STATUS_LABELS } from "../../../../../domain/labels";
 import { ProblemAlert } from "../../../../components/ProblemAlert";
 import type { CompanyStepValues } from "./company-step.config";
 import type { OwnerStepValues } from "./owner-step.config";
@@ -63,7 +64,7 @@ export function ReviewStep({
         <p className="font-medium">{company.name}</p>
         <p className="text-muted-foreground">
           NIT <span className="font-mono tabular-nums">{company.nit}</span> · {country?.name ?? company.country_code} ·{" "}
-          {company.currency} · {company.status === "trial" ? "Trial" : "Activo"}
+          {company.currency} · {TENANT_STATUS_LABELS[company.status ?? "trial"]}
           {company.city ? ` · ${company.city}` : ""}
         </p>
       </ReviewRow>

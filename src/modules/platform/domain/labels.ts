@@ -38,6 +38,13 @@ export const TENANT_STATUS_LABELS: LabelDictionary = {
   suspended: "Suspendida",
 };
 
+/** El mismo estado en plural, para los filtros de una lista de empresas. */
+export const TENANT_STATUS_PLURAL_LABELS: LabelDictionary = {
+  active: "Activas",
+  trial: "En prueba",
+  suspended: "Suspendidas",
+};
+
 /** Por qué una empresa está en su estado (`status_reason`). */
 export const TENANT_STATUS_REASON_LABELS: LabelDictionary = {
   trial_assigned: "Prueba asignada",

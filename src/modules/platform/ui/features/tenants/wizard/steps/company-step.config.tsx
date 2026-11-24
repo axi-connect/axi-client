@@ -18,6 +18,7 @@ import {
 } from "@/shared/components/features/dynamic-form";
 import type { FieldConfig } from "@/shared/components/features/dynamic-form";
 import { COUNTRIES, countryByCode, INDUSTRIES, TIMEZONES } from "../../../../../domain/catalogs";
+import { TENANT_STATUS_LABELS } from "../../../../../domain/labels";
 
 export const companyStepSchema = z.object({
   name: z.string().min(2, "Mínimo 2 caracteres"),
@@ -133,8 +134,8 @@ export function buildCompanyFields(nitError?: string | null): FieldConfig<Compan
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="trial">Trial (recomendado)</SelectItem>
-          <SelectItem value="active">Activo</SelectItem>
+          <SelectItem value="trial">{TENANT_STATUS_LABELS.trial} (recomendado)</SelectItem>
+          <SelectItem value="active">{TENANT_STATUS_LABELS.active}</SelectItem>
         </SelectContent>
       </Select>
     ), { label: "Estado inicial" }),

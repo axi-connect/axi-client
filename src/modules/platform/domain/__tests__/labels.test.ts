@@ -7,6 +7,7 @@ import {
   PROVIDER_CAPABILITY_LABELS,
   TENANT_ROLE_LABELS,
   TENANT_STATUS_LABELS,
+  TENANT_STATUS_PLURAL_LABELS,
   timeZoneLabel,
 } from "../labels";
 import { CAPABILITY_LABELS } from "../prospecting-providers";
@@ -66,5 +67,11 @@ describe("diccionario de rótulos humanos", () => {
     expect(timeZoneLabel("Asia/Tokyo")).toEqual({ label: "Hora de Tokyo", code: "Asia/Tokyo", known: false });
     expect(timeZoneLabel("UTC")).toEqual({ label: "UTC", code: "UTC", known: false });
     expect(timeZoneLabel(null).label).toBe("");
+  });
+
+  it("los filtros de empresas usan el mismo vocabulario que la píldora (nada de «Trial»)", () => {
+    expect(Object.keys(TENANT_STATUS_PLURAL_LABELS).sort()).toEqual(Object.keys(TENANT_STATUS_LABELS).sort());
+    expect(TENANT_STATUS_PLURAL_LABELS.trial).toBe(TENANT_STATUS_LABELS.trial);
+    expect(Object.values({ ...TENANT_STATUS_LABELS, ...TENANT_STATUS_PLURAL_LABELS }).join(" ")).not.toMatch(/Trial/);
   });
 });

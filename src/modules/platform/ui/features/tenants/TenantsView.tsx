@@ -22,6 +22,7 @@ import type { TenantStatus } from "../../../domain/tenant";
 import { useTenantsQuery } from "../../../infrastructure/api/hooks/use-tenants";
 import { EmptyState } from "../../components/EmptyState";
 import { ProblemAlert } from "../../components/ProblemAlert";
+import { TENANT_STATUS_PLURAL_LABELS } from "../../../domain/labels";
 import { tenantColumns } from "./tenants-table.config";
 import {
   countriesIn,
@@ -32,9 +33,8 @@ import {
 
 const STATUS_OPTIONS: { value: TenantStatus | "all"; label: string }[] = [
   { value: "all", label: "Todos los estados" },
-  { value: "active", label: "Activos" },
-  { value: "trial", label: "Trial" },
-  { value: "suspended", label: "Suspendidos" },
+  // Mismo diccionario que la píldora de cada fila (rediseño F1).
+  ...(["active", "trial", "suspended"] as const).map((value) => ({ value, label: TENANT_STATUS_PLURAL_LABELS[value]! })),
 ];
 
 export function TenantsView() {
