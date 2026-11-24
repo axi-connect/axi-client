@@ -242,8 +242,9 @@ export function PlatformSidebar() {
         </div>
       </SidebarFooter>
 
-      {/* El rail es del escritorio; en la hoja del celular quedaba medio fuera de la pantalla. */}
-      <SidebarRail className="max-lg:hidden" />
+      {/* El rail es del escritorio: en la hoja del celular quedaba medio fuera de la pantalla
+          (y una clase no basta: el primitivo lo muestra con `sm:flex`). */}
+      {isMobile ? null : <SidebarRail />}
     </Sidebar>
   );
 }
