@@ -43,6 +43,16 @@ describe("WhatsApp según la política del negocio", () => {
     expect(verdict.state).toBe("no_data");
   });
 
+  it("frío encendido y el teléfono principal es un FIJO: falta el celular, no se afirma WhatsApp", () => {
+    const verdict = channelVerdict({ ...PUBLIC, phone: "+576015550188", whatsapp_cold_controlled: true }, "whatsapp");
+    expect(verdict.state).toBe("no_data");
+    expect(verdict.reason).toContain("solo sale a celulares");
+    // Con o sin espacios, un celular colombiano sí.
+    for (const phone of ["+573105550142", "+57 310 555 0142", "3105550142"]) {
+      expect(channelVerdict({ ...PUBLIC, phone, whatsapp_cold_controlled: true }, "whatsapp").state).toBe("usable");
+    }
+  });
+
   it("quien dio permiso no es frío: manda el permiso, con la política como esté", () => {
     const consented: ChannelSubject = {
       ...PUBLIC,

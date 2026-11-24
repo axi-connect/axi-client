@@ -36,7 +36,13 @@ function decider(overrides: Partial<DecisionMakerDTO> = {}): DecisionMakerDTO {
 
 function setup(
   decisionMaker: DecisionMakerDTO | null,
-  options: { canManage?: boolean; canPromote?: boolean; points?: ContactPointsDTO; searching?: boolean } = {},
+  options: {
+    canManage?: boolean;
+    canPromote?: boolean;
+    points?: ContactPointsDTO;
+    searching?: boolean;
+    searchedBefore?: boolean;
+  } = {},
 ) {
   const handlers = { onSearch: jest.fn(), onConfirm: jest.fn(), onDismiss: jest.fn(), onAddToCrm: jest.fn() };
   render(
@@ -48,6 +54,7 @@ function setup(
       canPromote={options.canPromote ?? true}
       busy={false}
       searching={options.searching ?? false}
+      searchedBefore={options.searchedBefore ?? true}
       {...handlers}
     />,
   );
@@ -85,10 +92,16 @@ describe("LeadDecisionMakerCard", () => {
       expect(handlers.onAddToCrm).toHaveBeenCalledWith("p-1");
     });
 
-    it("«No es» la descarta", () => {
+    it("de un hecho del registro solo se ofrece «No es quien decide» (la persona existe)", () => {
       const handlers = setup(decider());
-      fireEvent.click(screen.getByRole("button", { name: "No es" }));
+      expect(screen.queryByRole("button", { name: "No es" })).toBeNull();
+      fireEvent.click(screen.getByRole("button", { name: "No es quien decide" }));
       expect(handlers.onDismiss).toHaveBeenCalledWith("p-1");
+    });
+
+    it("de una confirmada por el equipo se ofrece «No es» (quien monta la tarjeta pregunta qué no es)", () => {
+      setup(decider({ confirmed_by: "person", provider: "site_extractor" }));
+      expect(screen.getByRole("button", { name: "No es" })).toBeInTheDocument();
     });
 
     it("si ya está en el CRM lo dice y no ofrece acciones", () => {
@@ -150,6 +163,14 @@ describe("LeadDecisionMakerCard", () => {
   });
 
   describe("sin identificar", () => {
+    it("si NUNCA se buscó, lo dice y el botón es «Buscar quién decide»", () => {
+      const handlers = setup(null, { points: NO_POINTS, searchedBefore: false });
+      expect(screen.getByText(/Aún no la hemos buscado/)).toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: "Buscar quién decide" }));
+      expect(handlers.onSearch).toHaveBeenCalledTimes(1);
+      expect(screen.queryByRole("button", { name: "Buscar otra vez" })).toBeNull();
+    });
+
     it("lo dice y ofrece buscar otra vez", () => {
       const handlers = setup(null, { points: NO_POINTS });
       expect(screen.getByText("Sin identificar")).toBeInTheDocument();

@@ -132,6 +132,14 @@ describe("ContactBusinessCard — «Quién decide» y «Cómo llegarle»", () =>
     expect(screen.queryByText(/quien_decide/)).toBeNull();
   });
 
+  it("el pie cuenta el registro mercantil entre las fuentes cuando de ahí sale quien decide", async () => {
+    api.getContactData.mockResolvedValue(
+      dto([...BUSINESS, ...DECIDER.slice(0, 2), field("quien_decide_fuente", "Registro mercantil")]),
+    );
+    render(<ContactBusinessCard contactId="c1" fromProspecting />);
+    expect(await screen.findByText(/Según Google Maps, el registro mercantil y su web/)).toBeInTheDocument();
+  });
+
   it("UNA PISTA NO SE NOMBRA: una fuente «(sin confirmar)» no pinta «Quién decide»", async () => {
     api.getContactData.mockResolvedValue(
       dto([

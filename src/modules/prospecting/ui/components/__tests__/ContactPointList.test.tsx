@@ -84,7 +84,7 @@ describe("ContactPointGroups — «Correos · N» y «Teléfonos · N»", () => 
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("peor caso: un correo de 90 caracteres se corta con difuminado y conserva el valor entero", () => {
+  it("peor caso: un correo de 90 caracteres se parte en renglones y NUNCA pierde el dominio", () => {
     render(
       <ContactPointGroups
         points={{
@@ -95,7 +95,13 @@ describe("ContactPointGroups — «Correos · N» y «Teléfonos · N»", () => 
       />,
     );
     const value = screen.getByTitle(LONG_MAIL);
-    expect(value.className).toContain("truncate");
+    expect(value.className).toContain("break-all");
+    expect(value.className).not.toContain("truncate");
     expect(value.textContent).toBe(LONG_MAIL);
+  });
+
+  it("un teléfono sí se corta con difuminado (no hay dominio que perder)", () => {
+    render(<ContactPointGroups points={POINTS} emailVerification={null} />);
+    expect(screen.getByTitle("+573105550142").className).toContain("truncate");
   });
 });

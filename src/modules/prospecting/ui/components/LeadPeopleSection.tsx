@@ -26,6 +26,7 @@ import {
   promoteLeads,
   revealLeads,
 } from "../../infrastructure/services/prospecting-service.adapter";
+import { useNotThem } from "../hooks/use-not-them";
 import { RevealButtons } from "./RevealButtons";
 
 /**
@@ -124,12 +125,14 @@ export function LeadPeopleSection({
     }
   }
 
+  const askNotThem = useNotThem(() => {
+    void load();
+    onDecisionChange?.();
+  });
+
   async function omit(person: LeadPersonDTO) {
     try {
-      await discardLead(
-        person.id,
-        person.doubt === null ? "Omitida desde la ficha del negocio" : "No es de este negocio",
-      );
+      await discardLead(person.id, "Omitida desde la ficha del negocio");
       await load();
       onDecisionChange?.();
     } catch (caught) {
@@ -215,9 +218,6 @@ export function LeadPeopleSection({
                   <p className="text-muted-foreground text-xs text-pretty">
                     {person.title !== null && <>{person.title} · </>}
                     <span className="text-foreground font-semibold whitespace-nowrap">{BUYING_ROLE_LABELS[person.buying_role]}</span>
-                    {person.decision_maker_confidence !== null && (
-                      <span className="whitespace-nowrap tabular-nums"> · confianza {person.decision_maker_confidence}</span>
-                    )}
                   </p>
                   {person.evidence_provider !== null && (
                     <span
@@ -227,10 +227,8 @@ export function LeadPeopleSection({
                       <span className="min-w-0 truncate font-semibold">
                         {EVIDENCE_PROVIDER_LABELS[person.evidence_provider] ?? person.evidence_provider}
                       </span>
-                      {person.confirmed_by === "person" ? (
+                      {person.confirmed_by === "person" && (
                         <span className="text-muted-foreground">· confirmada por tu equipo</span>
-                      ) : (
-                        person.evidence_level === "hypothesis" && <span className="text-muted-foreground">· hipótesis</span>
                       )}
                       {person.evidence_url !== null && (
                         <a
@@ -244,7 +242,7 @@ export function LeadPeopleSection({
                       )}
                     </span>
                   )}
-                  {/* La dudosa: leída en su sitio web y sin confirmar. Se dice por qué, en una línea. */}
+                  {/* La dudosa: una pista del sitio sin confirmar, o hallada sin que quedara de dónde. Se dice por qué. */}
                   {person.doubt !== null && (
                     <>
                       <span className="w-fit">
@@ -274,8 +272,8 @@ export function LeadPeopleSection({
                   />
                   {!person.in_crm && (
                     <div className="flex flex-wrap justify-end gap-1">
-                      {/* Una dudosa no se añade al CRM hasta confirmarla: el servidor la rechaza. */}
-                      {canPromote && person.doubt === null && (person.email !== null || person.phone !== null) && (
+                      {/* La pista del sitio no se añade al CRM hasta confirmarla: el servidor la rechaza. */}
+                      {canPromote && person.doubt !== "from_site" && (person.email !== null || person.phone !== null) && (
                         <Button variant="outline" size="sm" className="rounded-full" onClick={() => void promote([person.id])}>
                           Añadir al CRM
                         </Button>
@@ -292,12 +290,30 @@ export function LeadPeopleSection({
                           Sí trabaja aquí
                         </Button>
                       )}
-                      {canManage && (
-                        <Button variant="ghost" size="sm" className="rounded-full" onClick={() => void omit(person)}>
-                          {person.doubt !== null && <X aria-hidden className="size-3.5" />}
-                          {person.doubt !== null ? "No es" : "Omitir"}
-                        </Button>
-                      )}
+                      {canManage &&
+                        (person.doubt !== null ? (
+                          // «No es» pregunta antes: quitar a alguien no se hace con un toque.
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="rounded-full"
+                            onClick={() =>
+                              askNotThem({
+                                id: person.id,
+                                name: person.display_name ?? "Esta persona",
+                                decides: person.buying_role === "decides" || person.buying_role === "approves",
+                                fromRegistry: false,
+                              })
+                            }
+                          >
+                            <X aria-hidden className="size-3.5" />
+                            No es
+                          </Button>
+                        ) : (
+                          <Button variant="ghost" size="sm" className="rounded-full" onClick={() => void omit(person)}>
+                            Omitir
+                          </Button>
+                        ))}
                     </div>
                   )}
                 </div>

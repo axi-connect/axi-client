@@ -30,15 +30,17 @@ describe("DataTable — columnas que no caben", () => {
     render(<DataTable<Row> data={ROWS} columns={COLUMNS} />);
 
     expect(screen.getAllByRole("button", { name: "Ver más" })).toHaveLength(2);
-    expect(screen.queryByRole("button", { name: /^Ver más:/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Ver más datos" })).toBeNull();
   });
 
-  it("`icon`: ningún renglón de más; un botón por fila que dice qué guarda", () => {
+  it("`icon`: ningún renglón de más; un botón por fila, con nombre fijo", () => {
     render(<DataTable<Row> data={ROWS} columns={COLUMNS} collapseMode="icon" />);
 
     expect(screen.queryByRole("button", { name: "Ver más" })).toBeNull();
-    const buttons = screen.getAllByRole("button", { name: "Ver más: Ciudad, Origen" });
+    const buttons = screen.getAllByRole("button", { name: "Ver más datos" });
     expect(buttons).toHaveLength(2);
+    // Cerrado no apunta a ningún panel: todavía no existe.
+    expect(buttons[0]).not.toHaveAttribute("aria-controls");
     // Una fila por lead, más la cabecera: nada debajo hasta que se pide.
     expect(screen.getAllByRole("row")).toHaveLength(3);
     expect(screen.queryByText("Bogotá")).toBeNull();
@@ -47,18 +49,20 @@ describe("DataTable — columnas que no caben", () => {
   it("`icon`: el botón abre el detalle SOLO de su fila, y lo vuelve a cerrar", () => {
     render(<DataTable<Row> data={ROWS} columns={COLUMNS} collapseMode="icon" />);
 
-    const [first] = screen.getAllByRole("button", { name: "Ver más: Ciudad, Origen" });
+    const [first] = screen.getAllByRole("button", { name: "Ver más datos" });
     expect(first).toHaveAttribute("aria-expanded", "false");
     fireEvent.click(first);
 
     expect(screen.getByText("Bogotá")).toBeInTheDocument();
     expect(screen.queryByText("Medellín")).toBeNull();
-    const close = screen.getByRole("button", { name: "Ver menos" });
-    expect(close).toHaveAttribute("aria-expanded", "true");
-    expect(document.getElementById(close.getAttribute("aria-controls") ?? "")).not.toBeNull();
+    // El nombre no cambia; el estado lo dice `aria-expanded`, y ahora sí apunta al panel.
+    expect(first).toHaveAccessibleName("Ver más datos");
+    expect(first).toHaveAttribute("aria-expanded", "true");
+    expect(document.getElementById(first.getAttribute("aria-controls") ?? "")).not.toBeNull();
 
-    fireEvent.click(close);
+    fireEvent.click(first);
     expect(screen.queryByText("Bogotá")).toBeNull();
+    expect(first).not.toHaveAttribute("aria-controls");
   });
 
   it("`icon`: si todo cabe no hay botón ni columna de más", () => {

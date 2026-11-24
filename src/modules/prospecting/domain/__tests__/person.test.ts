@@ -96,6 +96,10 @@ describe("passesToCrm — quién pasa al CRM", () => {
     expect(passesToCrm({ ...base, doubt: "from_site" })).toBe(false);
   });
 
+  it("la que no tiene procedencia es dudosa, pero SÍ pasa: el servidor no la frena", () => {
+    expect(passesToCrm({ ...base, doubt: "no_source" })).toBe(true);
+  });
+
   it("tampoco quien ya está, quien solo usa o quien no tiene datos", () => {
     expect(passesToCrm({ ...base, in_crm: true })).toBe(false);
     expect(passesToCrm({ ...base, buying_role: "uses" })).toBe(false);

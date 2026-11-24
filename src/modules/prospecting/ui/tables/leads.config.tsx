@@ -87,10 +87,44 @@ function nameColumn(working: ReadonlySet<string>): ColumnDef<LeadRow> {
             {row.original.contact_line || "Sin datos de contacto"}
           </span>
         )}
+        {/* «Origen · Ciudad» vive aquí, a la vista en TODOS los anchos: antes eran dos columnas que la
+            tabla escondía tras «Ver más» en cuanto faltaba sitio. */}
+        <span className="text-muted-foreground flex min-w-0 items-center gap-1.5 text-xs">
+          <span className={`size-2 shrink-0 rounded-sm ${SOURCE_DOTS[row.original.source]}`} aria-hidden />
+          <span className="truncate">
+            {SOURCE_LABELS[row.original.source]}
+            {row.original.city !== null && ` · ${row.original.city}`}
+          </span>
+        </span>
+        {/* En el celular solo cabe esta columna: quién decide y el alcance bajan aquí, en una línea. */}
+        {row.original.kind === "business" && row.original.reach_level !== null && (
+          <span className="flex min-w-0 items-center gap-1.5 pt-0.5 text-xs sm:hidden">
+            <span
+              aria-hidden
+              className={`size-1.5 shrink-0 rounded-full ${REACH_DOTS[REACH_LEVELS[row.original.reach_level].tone]}`}
+            />
+            <span className="truncate">
+              <span className="text-foreground font-medium">
+                {row.original.decider_name ?? "Sin identificar"}
+                {row.original.decider_level === "hypothesis" && " (por confirmar)"}
+              </span>
+              <span className="text-muted-foreground"> · {REACH_LEVELS[row.original.reach_level].label}</span>
+            </span>
+          </span>
+        )}
       </Link>
     ),
   };
 }
+
+/** El punto de color del alcance en la línea de celular (el mismo de la píldora). */
+const REACH_DOTS: Record<"success" | "info" | "warning" | "neutral" | "destructive", string> = {
+  success: "bg-success",
+  info: "bg-info",
+  warning: "bg-warning",
+  neutral: "bg-muted-foreground",
+  destructive: "bg-destructive",
+};
 
 const REACH_ICONS = { whatsapp: MessageCircle, email: Mail, call: Phone } as const;
 
@@ -107,8 +141,9 @@ function DecisionMakerCell({ row }: { row: LeadRow }) {
   }
   const { decider_name: name, decider_title: title, decider_level: level } = row;
   return (
-    <span className="flex max-w-[8.5rem] min-w-0 flex-col gap-px">
-      <span className="truncate text-[13.5px] font-medium" title={name}>
+    <span className="flex max-w-[9rem] min-w-0 flex-col gap-px">
+      {/* Hasta dos renglones: «Mariana Restrepo Gil» cabe entero; lo que pase de ahí se difumina. */}
+      <span className="line-clamp-2 text-[13.5px] leading-snug font-medium whitespace-normal" title={name}>
         {name}
       </span>
       <span className="text-muted-foreground truncate text-xs" title={title ?? undefined}>
@@ -169,15 +204,17 @@ function ReachCell({ row }: { row: LeadRow }) {
  * 1. «Quién decide» y «Alcance»: a quién hay que llegarle y qué tan cerca estamos.
  * 2. «Calidad del dato» y «Puedo contactar por», contiguas y SEPARADAS a
  *    propósito: la fila tiene que poder decir «verificado» y «WhatsApp no» al
- *    mismo tiempo. El permiso no cede antes que un dato descriptivo: fundirlo
- *    o esconderlo es el error que acaba quemando números de WhatsApp.
- * 3. «Calidad» y «Datos»: el puntaje y cuánto sabemos.
- * 4. «Origen», «Ciudad» y «Descubierto»: describen el lead, no deciden qué
- *    hacer con él; son las primeras en pasar a «Ver más».
+ *    mismo tiempo. El permiso no cede antes que un dato descriptivo.
+ * 3. «Calidad»: el puntaje por el que se ordena la bandeja. Tiene que verse a
+ *    1280 px, y los anchos mínimos están ajustados para eso.
+ * 4. «Datos» y «Descubierto»: las primeras en pasar al botón de fin de fila.
  *
- * Los anchos mínimos son los que la tabla usa para repartir: a 1440 px con el
- * menú abierto caben hasta «Origen», y «Ciudad» y «Descubierto» quedan tras el
- * botón de fin de fila.
+ * «Origen» y «Ciudad» ya no son columnas: van como tercera línea de la celda
+ * «Lead», a la vista en todos los anchos.
+ *
+ * Qué cabe (menú lateral abierto): a 1440 px, todo menos «Descubierto»; a
+ * 1280 px, hasta «Calidad»; a 768 px, «Quién decide» y «Alcance»; en el
+ * celular, solo «Lead», con quién decide y el alcance en una línea bajo el nombre.
  */
 const BASE_COLUMNS: ColumnDef<LeadRow>[] = [
   {
@@ -189,13 +226,14 @@ const BASE_COLUMNS: ColumnDef<LeadRow>[] = [
   {
     accessorKey: "reach_level",
     header: "Alcance",
-    minWidth: 132,
+    minWidth: 118,
     cell: ({ row }) => <ReachCell row={row.original} />,
   },
   {
     accessorKey: "quality_status",
     header: "Calidad del dato",
-    minWidth: 128,
+    minWidth: 116,
+    headerCell: () => <TwoLineHeader>Calidad del dato</TwoLineHeader>,
     cell: ({ row }) => (
       <StatusBadge
         status={row.original.quality_status}
@@ -206,8 +244,9 @@ const BASE_COLUMNS: ColumnDef<LeadRow>[] = [
   {
     accessorKey: "allows_whatsapp",
     header: "Puedo contactar por",
-    // Lo que mide su rótulo, que es el más largo de la tabla.
-    minWidth: 148,
+    // El rótulo va en dos renglones: en uno solo pedía 150 px para tres iconos.
+    minWidth: 124,
+    headerCell: () => <TwoLineHeader>Puedo contactar por</TwoLineHeader>,
     cell: ({ row }) => <ChannelPermissions lead={rowChannelSubject(row.original)} />,
   },
   {
@@ -227,29 +266,6 @@ const BASE_COLUMNS: ColumnDef<LeadRow>[] = [
     cell: ({ row }) => <DataDots row={row.original} />,
   },
   {
-    accessorKey: "source",
-    header: "Origen",
-    minWidth: 136,
-    cell: ({ row }) => (
-      <span className="text-muted-foreground flex items-center gap-2 text-xs whitespace-nowrap">
-        <span
-          className={`size-2 rounded-sm ${SOURCE_DOTS[row.original.source]}`}
-          aria-hidden
-        />
-        {SOURCE_LABELS[row.original.source]}
-      </span>
-    ),
-  },
-  {
-    accessorKey: "city",
-    header: "Ciudad",
-    cell: ({ row }) => (
-      <span className="text-muted-foreground text-xs">
-        {row.original.city ?? "—"}
-      </span>
-    ),
-  },
-  {
     accessorKey: "created_at",
     header: "Descubierto",
     cell: ({ row }) => (
@@ -259,6 +275,11 @@ const BASE_COLUMNS: ColumnDef<LeadRow>[] = [
     ),
   },
 ];
+
+/** Un rótulo de columna largo, partido en dos renglones para no ensanchar la columna. */
+function TwoLineHeader({ children }: { children: string }) {
+  return <span className="block max-w-[5.75rem] leading-tight whitespace-normal">{children}</span>;
+}
 
 /**
  * Cuántos datos clave conocemos. NEUTRO A PROPÓSITO: verde/rojo aquí se leería

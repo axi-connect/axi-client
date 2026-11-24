@@ -20,8 +20,9 @@ import { EmailWay, PhoneWay, WayItem, WayTag } from "./ContactPointList";
  * Tres estados, y la diferencia entre los dos primeros es la regla de todo el
  * proyecto: un HECHO (lo dice el registro mercantil o lo confirmó alguien del
  * equipo) se nombra; una PISTA (un nombre leído en su sitio web) se enseña
- * «por confirmar», con «Sí, es quien decide» y «No es» a un toque. La mitad de
- * las personas que salen de un sitio no trabajan ahí.
+ * «por confirmar», con «Sí, es quien decide» y «No es». La mitad de las personas
+ * que salen de un sitio no trabajan ahí. «No es» no hace nada por sí solo: quien
+ * monta la tarjeta pregunta primero qué no es (`useNotThem`).
  */
 export function LeadDecisionMakerCard({
   decisionMaker,
@@ -31,6 +32,7 @@ export function LeadDecisionMakerCard({
   canPromote,
   busy,
   searching,
+  searchedBefore = true,
   onSearch,
   onConfirm,
   onDismiss,
@@ -44,6 +46,8 @@ export function LeadDecisionMakerCard({
   canPromote: boolean;
   busy: boolean;
   searching: boolean;
+  /** Ya se buscó alguna vez a las personas de este negocio. Si no, «Sin identificar» es «aún no buscamos». */
+  searchedBefore?: boolean;
   onSearch: () => void;
   onConfirm: (personId: string) => void;
   onDismiss: (personId: string) => void;
@@ -59,14 +63,26 @@ export function LeadDecisionMakerCard({
           <div className="min-w-0">
             <p className="text-[17px] leading-tight font-semibold text-pretty">Todavía no sabemos quién decide</p>
             <p className="text-muted-foreground mt-0.5 text-[13px] text-pretty">
-              La buscamos en el registro mercantil y en su sitio web.
+              {searchedBefore
+                ? "La buscamos en el registro mercantil y en su sitio web, y no apareció."
+                : "Aún no la hemos buscado. Miramos el registro mercantil y su sitio web; no gasta créditos."}
             </p>
           </div>
           {canManage && (
             <div className="col-span-2 flex flex-wrap gap-2 min-[520px]:col-start-2">
-              <Button variant="outline" size="sm" className="rounded-full" disabled={busy || searching} onClick={onSearch}>
-                <RefreshCw aria-hidden className="size-3.5" />
-                {searching ? "Buscando…" : "Buscar otra vez"}
+              <Button
+                variant={searchedBefore ? "outline" : "default"}
+                size="sm"
+                className="rounded-full"
+                disabled={busy || searching}
+                onClick={onSearch}
+              >
+                {searchedBefore ? (
+                  <RefreshCw aria-hidden className="size-3.5" />
+                ) : (
+                  <UserRoundSearch aria-hidden className="size-3.5" />
+                )}
+                {searching ? "Buscando…" : searchedBefore ? "Buscar otra vez" : "Buscar quién decide"}
               </Button>
             </div>
           )}
@@ -189,7 +205,8 @@ export function LeadDecisionMakerCard({
                 {canManage && (
                   <Button variant="ghost" size="sm" className="rounded-full" disabled={busy} onClick={() => onDismiss(personId)}>
                     <X aria-hidden className="size-3.5" />
-                    No es
+                    {/* De un hecho del registro solo cabe decir que no decide: la persona existe. */}
+                    {decisionMaker.confirmed_by === "source" ? "No es quien decide" : "No es"}
                   </Button>
                 )}
               </>

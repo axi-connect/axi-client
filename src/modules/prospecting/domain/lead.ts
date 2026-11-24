@@ -281,7 +281,7 @@ export const PROVIDER_LABELS: Record<string, string> = {
   // Quién completó el dato
   nominatim: "OpenStreetMap",
   overpass: "OpenStreetMap",
-  rues: "RUES",
+  rues: "Registro mercantil",
   site_extractor: "Su sitio web",
   firecrawl: "Su sitio web",
   serper: "Buscador web",
@@ -386,6 +386,22 @@ export interface ChannelSubject {
   whatsapp_cold_controlled?: boolean;
 }
 
+/** Celular colombiano: +57 3XX XXX XXXX (con o sin espacios ni «+»). */
+export function isColombianMobile(phone: string): boolean {
+  return /^(57)?3\d{9}$/.test(phone.replace(/\D/g, ""));
+}
+
+/**
+ * ¿Ya se buscó alguna vez a las personas de este negocio? El servidor deja la
+ * marca `people_search` al hacerlo. Sin ella, «Sin identificar» significa «aún
+ * no hemos buscado», y el botón lo dice.
+ */
+export function peopleSearchedBefore(attributes: unknown): boolean {
+  if (typeof attributes !== "object" || attributes === null) return false;
+  const mark = (attributes as Record<string, unknown>).people_search;
+  return typeof mark === "object" && mark !== null;
+}
+
 /** Lo que significa «frío controlado» para quien lee la ficha, en una frase. */
 export const WHATSAPP_COLD_NOTE =
   "Tu política lo tiene encendido: sale con plantilla aprobada, solo a celulares y dentro del tope del día.";
@@ -426,6 +442,13 @@ export function channelVerdict(
       return {
         state: "no_data",
         reason: "Tu política permite WhatsApp en frío controlado, pero no tenemos su teléfono.",
+      };
+    }
+    // En frío solo sale a celulares: un fijo no recibe WhatsApp.
+    if (!isColombianMobile(lead.phone)) {
+      return {
+        state: "no_data",
+        reason: "Tu política permite WhatsApp en frío controlado, pero solo sale a celulares y su teléfono principal no lo es.",
       };
     }
     return { state: "usable", reason: `Nunca pidió que lo contactaras. ${WHATSAPP_COLD_NOTE}` };

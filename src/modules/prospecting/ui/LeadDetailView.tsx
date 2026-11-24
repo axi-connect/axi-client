@@ -26,6 +26,7 @@ import {
   canPromote,
   isRunInFlight,
   leadDisplayName,
+  peopleSearchedBefore,
   primaryEmailVerification,
   type EnrichmentRunDTO,
   type LeadDetailDTO,
@@ -54,6 +55,7 @@ import { BulkFollowUpButton } from "@/modules/crm/ui/components/BulkFollowUpButt
 import { ChannelPermissions } from "./components/ChannelPermissions";
 import { EnrichmentRunCard } from "./components/EnrichmentRunCard";
 import { LeadDecisionMakerCard } from "./components/LeadDecisionMakerCard";
+import { useNotThem } from "./hooks/use-not-them";
 import { LeadIdentityCard } from "./components/LeadIdentityCard";
 import { LeadPeopleSection } from "./components/LeadPeopleSection";
 import { LeadProvenance } from "./components/LeadProvenance";
@@ -420,19 +422,17 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
   }, [leadId, router, showAlert]);
 
   /**
-   * «Quién decide»: confirmar la pista, decir «No es» o añadir a la persona al
-   * CRM. Las tres releen la ficha y la lista de personas, que cuentan lo mismo.
+   * «Quién decide»: confirmar la pista o añadir a la persona al CRM. Las dos
+   * releen la ficha y la lista de personas, que cuentan lo mismo. «No es» va
+   * aparte (`askNotThem`): pregunta primero qué no es.
    */
   const onDecision = useCallback(
-    async (action: "confirm" | "dismiss" | "promote", personId: string) => {
+    async (action: "confirm" | "promote", personId: string) => {
       setBusy(true);
       try {
         if (action === "confirm") {
           await confirmLeadPerson(personId, "decision_maker");
           showAlert({ tone: "success", title: "Confirmada: es quien decide" });
-        } else if (action === "dismiss") {
-          await discardLead(personId, "No es quien decide en este negocio");
-          showAlert({ tone: "success", title: "Listo, ya no aparece como quien decide" });
         } else {
           const result = await promoteLeads([personId]);
           const failure = result.failed[0];
@@ -455,6 +455,12 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
       }
     },
     [load, showAlert],
+  );
+  const askNotThem = useNotThem(
+    useCallback(() => {
+      void load();
+      setPeopleRefresh((current) => current + 1);
+    }, [load]),
   );
 
   const canManage = hasPermission("leads:manage");
@@ -598,9 +604,19 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
               canPromote={hasPermission("leads:promote")}
               busy={busy}
               searching={working}
+              searchedBefore={peopleSearchedBefore(lead.attributes) || people.length > 0}
               onSearch={() => void onFindPeople()}
               onConfirm={(personId) => void onDecision("confirm", personId)}
-              onDismiss={(personId) => void onDecision("dismiss", personId)}
+              onDismiss={(personId) => {
+                const decisionMaker = lead.decision_maker;
+                if (decisionMaker === null) return;
+                askNotThem({
+                  id: personId,
+                  name: decisionMaker.name,
+                  decides: true,
+                  fromRegistry: decisionMaker.confirmed_by === "source",
+                });
+              }}
               onAddToCrm={(personId) => void onDecision("promote", personId)}
             />
           )}

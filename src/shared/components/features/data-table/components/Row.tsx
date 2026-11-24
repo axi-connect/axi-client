@@ -5,6 +5,7 @@ import { CollapsedFields, RowCollapse } from "./RowCollapse"
 import { formatCell } from "../utils/helpers"
 import { ContextMenu } from "@/shared/components/ui/context-menu"
 import { TableCell, TableRow } from "@/shared/components/ui/table"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/components/ui/tooltip"
 import { memo, useId, useMemo, useState, useCallback } from "react"
 import type { ColumnDef, DataRow, RowContextMenuRenderer } from "../types"
 import { cn } from "@/core/lib/utils"
@@ -48,16 +49,25 @@ function DataTableRowInner<T extends DataRow>({ row, visibleColumns, collapsedCo
         {visibleCells}
         {iconMode && (
           <TableCell className="w-10 pr-3 pl-0 text-right">
-            <button
-              type="button"
-              onClick={() => setDetailOpen((open) => !open)}
-              aria-expanded={detailOpen}
-              aria-controls={detailId}
-              aria-label={detailOpen ? "Ver menos" : `Ver más: ${collapsedColumns.map((col) => col.header ?? "").filter(Boolean).join(", ")}`}
-              className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring/50 inline-grid size-7 place-items-center rounded-full outline-none focus-visible:ring-[3px]"
-            >
-              <ChevronDown aria-hidden className={cn("size-4 transition-transform motion-reduce:transition-none", detailOpen && "rotate-180")} />
-            </button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={() => setDetailOpen((open) => !open)}
+                  aria-expanded={detailOpen}
+                  // Solo apunta al panel cuando existe: cerrado no hay nada con ese id.
+                  aria-controls={detailOpen ? detailId : undefined}
+                  // Nombre FIJO: el estado lo dice `aria-expanded`, no un rótulo que cambia.
+                  aria-label="Ver más datos"
+                  className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring/50 inline-grid size-7 place-items-center rounded-full outline-none focus-visible:ring-[3px]"
+                >
+                  <ChevronDown aria-hidden className={cn("size-4 transition-transform motion-reduce:transition-none", detailOpen && "rotate-180")} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {detailOpen ? "Ocultar" : `Ver ${collapsedColumns.map((col) => col.header ?? "").filter(Boolean).join(", ")}`}
+              </TooltipContent>
+            </Tooltip>
           </TableCell>
         )}
       </TableRow>

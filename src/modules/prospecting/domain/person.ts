@@ -38,15 +38,17 @@ export const PROMOTED_WITH_BUSINESS: readonly BuyingRole[] = ["decides", "approv
 /**
  * ¿Pasa esta persona al CRM (con su negocio o sola)? Decide, aprueba o
  * recomienda, tiene con qué escribirle, no está ya en el CRM y NO es una pista
- * sin confirmar: el servidor rechaza a una persona dudosa hasta que alguien
- * diga «Sí trabaja aquí». Es la misma lista que aplica el servidor.
+ * del sitio sin confirmar: a esa el servidor la rechaza hasta que alguien diga
+ * «Sí trabaja aquí». Es la misma lista que aplica el servidor.
  */
 export function passesToCrm(
   person: Pick<LeadPersonDTO, "in_crm" | "buying_role" | "email" | "phone" | "doubt">,
 ): boolean {
   return (
     !person.in_crm &&
-    person.doubt === null &&
+    // Solo la pista del sitio se frena. La que no tiene procedencia es dudosa
+    // pero el servidor la sigue promoviendo, como antes.
+    person.doubt !== "from_site" &&
     PROMOTED_WITH_BUSINESS.includes(person.buying_role) &&
     (person.email !== null || person.phone !== null)
   );
@@ -141,18 +143,19 @@ export function initialsOf(name: string | null): string {
 
 /** Qué fuente atestigua que la persona es del negocio, para la insignia de la fila. */
 export const EVIDENCE_PROVIDER_LABELS: Record<string, string> = {
-  rues: "RUES",
+  rues: "Registro mercantil",
   apollo: "Apollo",
   site_extractor: "Sitio",
 };
 
 /**
- * Por qué dudar de una persona, dicho sin tecnicismos. Hoy hay un motivo: se
- * leyó en el sitio web del negocio y nadie la ha confirmado.
+ * Por qué dudar de una persona, dicho sin tecnicismos: se leyó en el sitio web
+ * del negocio y nadie la ha confirmado, o la halló una búsqueda sin dejar de dónde.
  */
 export const PERSON_DOUBT_REASONS: Record<NonNullable<LeadPersonDTO["doubt"]>, string> = {
   from_site:
     "Sale de su sitio web: puede ser un cliente que dejó un testimonio o un texto de plantilla, no alguien del negocio.",
+  no_source: "La encontramos en una búsqueda, pero no quedó guardado de dónde salió. Confírmala antes de fiarte.",
 };
 
 /** Los tipos de señal, dichos como hecho. */

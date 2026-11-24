@@ -349,7 +349,10 @@ export function ContactBusinessCard({
           <MapPin className="mt-px size-3.5 shrink-0" aria-hidden />
           <div className="min-w-0">
             <p>
-              Según Google Maps y su web · Captación
+              {profile.decisionMaker?.evidence?.includes("registro mercantil") === true
+                ? "Según Google Maps, el registro mercantil y su web"
+                : "Según Google Maps y su web"}{" "}
+              · Captación
               {profile.capturedAt !== null && `, ${formatShortDate(profile.capturedAt)}`}.
             </p>
             {profile.originalName !== null && (

@@ -8148,6 +8148,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/prospecting/leads/{id}/not-decision-maker": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProspectingController_notDecisionMaker_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/prospecting/leads/delete": {
         parameters: {
             query?: never;
@@ -23557,7 +23573,7 @@ export interface components {
                 /** @enum {string|null} */
                 confirmed_by: "source" | "person" | null;
                 /** @enum {string|null} */
-                doubt: "from_site" | null;
+                doubt: "from_site" | "no_source" | null;
                 unattended: boolean;
                 /** Format: date-time */
                 created_at: string;
@@ -41256,6 +41272,25 @@ export interface operations {
                 "application/json": components["schemas"]["ConfirmPersonDto"];
             };
         };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProspectingController_notDecisionMaker_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             204: {
                 headers: {

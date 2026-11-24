@@ -40,6 +40,31 @@ describe("PromotionGate — el renglón de WhatsApp mira la política", () => {
     expect(screen.getByText("WhatsApp · Correo · Llamada o trabajo manual")).toBeInTheDocument();
   });
 
+  it("frío encendido pero SIN teléfono: no promete WhatsApp", () => {
+    render(
+      <PromotionGate lead={lead({ phone: null, whatsapp_cold_controlled: true })} busy={false} onPromote={jest.fn()} />,
+    );
+    expect(screen.queryByText("WhatsApp en frío controlado")).toBeNull();
+    expect(screen.getByText("WhatsApp en frío: falta un celular")).toBeInTheDocument();
+    expect(screen.getByText(/no tenemos su teléfono/)).toBeInTheDocument();
+    // Y no lo cuenta entre los canales con que se le puede contactar.
+    expect(screen.getByText("Correo · Llamada o trabajo manual")).toBeInTheDocument();
+  });
+
+  it("frío encendido y solo un FIJO: tampoco; en frío solo sale a celulares", () => {
+    render(
+      <PromotionGate
+        lead={lead({ phone: "+576015550188", whatsapp_cold_controlled: true })}
+        busy={false}
+        onPromote={jest.fn()}
+      />,
+    );
+    expect(screen.queryByText("WhatsApp en frío controlado")).toBeNull();
+    expect(screen.getByText("WhatsApp en frío: falta un celular")).toBeInTheDocument();
+    expect(screen.getByText(/solo sale a celulares/)).toBeInTheDocument();
+    expect(screen.queryByText(/^WhatsApp · Correo/)).toBeNull();
+  });
+
   it("quien dio permiso no es frío: el texto del permiso, esté la política como esté", () => {
     render(
       <PromotionGate

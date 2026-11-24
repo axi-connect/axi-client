@@ -337,6 +337,14 @@ export function confirmLeadPerson(
   return http.post<void>(`/prospecting/leads/${personLeadId}/confirm-person`, { as });
 }
 
+/**
+ * «No es quien decide»: la persona se queda en el negocio y deja de figurar
+ * como quien decide (también en el contacto). No borra a nadie.
+ */
+export function demoteDecisionMaker(personLeadId: string): Promise<void> {
+  return http.post<void>(`/prospecting/leads/${personLeadId}/not-decision-maker`);
+}
+
 /** Los correos y teléfonos del negocio del que salió un contacto («Cómo llegarle»). */
 export function getContactBusiness(contactId: string): Promise<ContactBusinessDTO> {
   return http.get<ContactBusinessDTO>(`/prospecting/contacts/${contactId}/business`);

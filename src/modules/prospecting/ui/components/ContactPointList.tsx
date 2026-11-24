@@ -38,14 +38,15 @@ export function WayTag({
 
 /**
  * Un correo o un teléfono: el dato, y UNA línea secundaria con su tipo, su
- * estado y de dónde salió. El dato se corta con difuminado; copiar copia el
- * valor entero.
+ * estado y de dónde salió. Un teléfono se corta con difuminado; un correo se
+ * parte en renglones para que nunca pierda el dominio. Copiar copia el valor entero.
  */
 export function WayItem({
   value,
   display,
   copyLabel,
   best = false,
+  wrap = false,
   children,
   source,
 }: {
@@ -54,13 +55,25 @@ export function WayItem({
   display?: string;
   copyLabel: string;
   best?: boolean;
+  /**
+   * El dato se parte en renglones en vez de cortarse. Para los correos: cortado
+   * a 390 px se quedaba sin dominio, que es justo lo que dice de quién es.
+   */
+  wrap?: boolean;
   /** Las etiquetas de la línea secundaria. */
   children: React.ReactNode;
   source: string | null;
 }) {
   return (
     <li className="border-border-soft grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2.5 gap-y-1 border-t py-2.5 first:border-t-0">
-      <span className={cn("truncate font-mono text-[12.5px]", best ? "font-semibold" : "font-medium")} title={value}>
+      <span
+        className={cn(
+          "min-w-0 font-mono text-[12.5px]",
+          wrap ? "break-all" : "truncate",
+          best ? "font-semibold" : "font-medium",
+        )}
+        title={value}
+      >
         {display ?? value}
       </span>
       <CopyButton value={value} label={copyLabel} />
@@ -92,7 +105,7 @@ export function EmailWay({
   showPrimary?: boolean;
 }) {
   return (
-    <WayItem value={email.value} copyLabel="correo" best={email.primary} source={waySourceLabel(email)}>
+    <WayItem value={email.value} copyLabel="correo" best={email.primary} wrap source={waySourceLabel(email)}>
       <WayTag>{EMAIL_TYPE_LABELS[email.type]}</WayTag>
       {email.primary && verification === "verified" && <StatePill tone="success">Buzón verificado</StatePill>}
       {email.primary && verification === "undeliverable" && <StatePill tone="destructive">No recibe correo</StatePill>}

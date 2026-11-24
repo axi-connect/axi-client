@@ -10,6 +10,7 @@ import {
   CHANNEL_LABELS,
   LEGAL_BASIS_LABELS,
   WHATSAPP_COLD_NOTE,
+  channelVerdict,
   opensWhatsappCold,
   type LeadDetailDTO,
 } from "../../domain/lead";
@@ -54,7 +55,11 @@ export function PromotionGate({
 }) {
   const identifiable = lead.phone !== null || lead.email !== null;
   const allowsWhatsapp = lead.allowed_channels.includes("whatsapp");
-  const cold = opensWhatsappCold(lead);
+  // En frío WhatsApp solo se afirma si de verdad puede salir: la política lo
+  // permite Y hay un celular. `channelVerdict` es la misma regla de la cabecera.
+  const coldPolicy = opensWhatsappCold(lead);
+  const whatsapp = channelVerdict(lead, "whatsapp");
+  const cold = coldPolicy && whatsapp.state === "usable";
 
   const requirements: Requirement[] = [
     {
@@ -76,13 +81,20 @@ export function PromotionGate({
     // bloqueado» contradecía lo que iba a pasar. Apagado, el texto de siempre.
     cold
       ? { met: true, title: "WhatsApp en frío controlado", detail: WHATSAPP_COLD_NOTE }
-      : {
+      : coldPolicy
+        ? {
+            // La política lo permite, pero no hay a dónde: no se promete WhatsApp.
+            met: false,
+            title: "WhatsApp en frío: falta un celular",
+            detail: whatsapp.reason ?? "Tu política lo permite, pero solo sale a celulares.",
+          }
+        : {
           met: allowsWhatsapp,
           title: allowsWhatsapp ? "Puedes escribirle por WhatsApp" : "WhatsApp queda bloqueado",
           detail: allowsWhatsapp
             ? "Dio permiso, así que tu agente puede iniciar la conversación."
             : "Sin permiso no se puede escribir primero por WhatsApp: Meta suspende el número. Podrás usar correo y llamada.",
-        },
+          },
   ];
 
   return (
