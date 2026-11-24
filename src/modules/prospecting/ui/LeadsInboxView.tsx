@@ -554,6 +554,37 @@ export function LeadsInboxView() {
     });
   }, [targets.promote.length, doPromote, showModal]);
 
+  /**
+   * La barra de filtros: el botón, el atajo y los chips de lo activo.
+   *
+   * Es UNA sola y se pinta en dos sitios: dentro de la tabla y, cuando la
+   * bandeja está vacía sin filtros, encima del vacío (CAP-18). Los promovidos
+   * ya no salen por defecto y se piden en Filtros › Estado › «En el CRM»: si
+   * la barra desapareciera con la tabla, no habría por dónde pedirlos.
+   */
+  const toolbar = (
+    <>
+      <FilterTrigger count={activeFilters} onClick={() => setPanelOpen(true)} />
+      {/* El atajo del filtro más pedido. Puesto, deja de pintarse aquí: lo enseña su chip, que también lo quita. */}
+      {filters[LEAD_FILTER_KEYS.hasDecisionMaker] !== true && (
+        <button
+          type="button"
+          onClick={() => applyFilters({ ...filters, [LEAD_FILTER_KEYS.hasDecisionMaker]: true })}
+          className="border-border-soft bg-secondary/40 text-muted-foreground hover:bg-secondary hover:text-foreground focus-visible:ring-ring/50 inline-flex h-9 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-[3px]"
+        >
+          <UserRoundCheck aria-hidden className="size-4" />
+          Con quien decide
+        </button>
+      )}
+      <FilterChips
+        schema={LEAD_FILTERS}
+        values={filters}
+        onRemove={(key) => applyFilters(removeFilter(LEAD_FILTERS, filters, key))}
+        onClearAll={() => applyFilters(clearAll(LEAD_FILTERS, filters))}
+      />
+    </>
+  );
+
   return (
     <div className="flex min-w-0 flex-col gap-6">
       <CaptureHeader
@@ -613,30 +644,26 @@ export function LeadsInboxView() {
               </Button>
             }
           />
-        ) : inCrm > 0 ? (
-          /* CAP-18: los promovidos salen de la bandeja. Con ellos en el embudo,
-             «todavía no ha entrado ningún lead» sería mentira. */
-          <EmptyState
-            icon={Inbox}
-            title="No queda ningún lead por revisar"
-            description="Los que promoviste ya son contactos de tu CRM. Para verlos aquí, filtra por el estado «En el CRM»."
-            // La barra de filtros vive dentro de la tabla y la tabla no está: sin
-            // este botón el consejo de arriba no se podría seguir.
-            action={
-              <Button
-                variant="outline"
-                onClick={() => applyFilters({ ...filters, [LEAD_FILTER_KEYS.status]: ["promoted"] })}
-              >
-                Ver los que están en el CRM
-              </Button>
-            }
-          />
         ) : (
-          <EmptyState
-            icon={Inbox}
-            title="Todavía no ha entrado ningún lead"
-            description="Cuando alguien te escriba desde un anuncio o llene un formulario de Facebook o Instagram, aparecerá aquí."
-          />
+          /* CAP-18: sin filas no hay tabla, y la barra vivía dentro de ella. Aquí
+             se pinta suelta para que «Filtros» siga a mano. */
+          <div className="flex min-w-0 flex-col gap-3">
+            <div className="flex flex-wrap items-center gap-2">{toolbar}</div>
+            {inCrm > 0 ? (
+              /* Con promovidos en el embudo, «todavía no ha entrado ningún lead» sería mentira. */
+              <EmptyState
+                icon={Inbox}
+                title="No queda ningún lead por revisar"
+                description="Los que ya pasaste al CRM los ves en Filtros › Estado › En el CRM."
+              />
+            ) : (
+              <EmptyState
+                icon={Inbox}
+                title="Todavía no ha entrado ningún lead"
+                description="Cuando alguien te escriba desde un anuncio o llene un formulario de Facebook o Instagram, aparecerá aquí."
+              />
+            )}
+          </div>
         )
       ) : (
         <section aria-label="Leads" className="border-border bg-card min-w-0 rounded-3xl border px-3 pt-4 pb-3 sm:px-4">
@@ -656,28 +683,7 @@ export function LeadsInboxView() {
           onSearchSelect={(row) => router.push(`/marketing/leads/${row.id}`)}
           search={{ value: searchValue ?? "" }}
           searchActions={searchActions}
-          toolbar={
-            <>
-              <FilterTrigger count={activeFilters} onClick={() => setPanelOpen(true)} />
-              {/* El atajo del filtro más pedido. Puesto, deja de pintarse aquí: lo enseña su chip, que también lo quita. */}
-              {filters[LEAD_FILTER_KEYS.hasDecisionMaker] !== true && (
-                <button
-                  type="button"
-                  onClick={() => applyFilters({ ...filters, [LEAD_FILTER_KEYS.hasDecisionMaker]: true })}
-                  className="border-border-soft bg-secondary/40 text-muted-foreground hover:bg-secondary hover:text-foreground focus-visible:ring-ring/50 inline-flex h-9 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-[3px]"
-                >
-                  <UserRoundCheck aria-hidden className="size-4" />
-                  Con quien decide
-                </button>
-              )}
-              <FilterChips
-                schema={LEAD_FILTERS}
-                values={filters}
-                onRemove={(key) => applyFilters(removeFilter(LEAD_FILTERS, filters, key))}
-                onClearAll={() => applyFilters(clearAll(LEAD_FILTERS, filters))}
-              />
-            </>
-          }
+          toolbar={toolbar}
           selection={
             canPromoteLeads || canManageLeads || canDeleteLeads
               ? {
