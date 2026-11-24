@@ -1,8 +1,9 @@
 /**
  * Hotfix 22-nov-2026 — «Cerrar sesión» reaparecía al volver a entrar.
  *
- * - El slot `@modal` casa con cualquier ruta (catch-all opcional que no pinta
- *   nada): Next ya no conserva el modal en las respuestas de los prefetch.
+ * - El slot `@modal` casa con cualquier ruta (`[...catchAll]` más `page.tsx`
+ *   para `/`, los dos sin pintar nada): Next ya no conserva el modal en las
+ *   respuestas de los prefetch. Nada de catch-all opcional: rompe `next dev`.
  * - Confirmar sale con navegación DURA y no hace además `router.back()`.
  * - Cancelar vuelve atrás UNA vez (antes eran dos: su onClick + el cierre).
  */
@@ -21,7 +22,8 @@ jest.mock("@/shared/auth/auth.hooks", () => ({
   useAuth: () => ({ logout: logoutMock }),
 }))
 
-import ModalSlotCatchAll from "../[[...catchAll]]/page"
+import ModalSlotCatchAll from "../[...catchAll]/page"
+import ModalSlotRoot from "../page"
 import ModalSlotDefault from "../default"
 import LogoutConfirmModal from "../(.)auth/logout/page"
 
@@ -50,10 +52,19 @@ beforeEach(() => {
 describe("slot @modal de la raíz", () => {
   const slot = join(__dirname, "..")
 
-  it("el catch-all opcional casa con cualquier ruta y no pinta nada", () => {
-    expect(existsSync(join(slot, "[[...catchAll]]", "page.tsx"))).toBe(true)
+  it("el catch-all casa con cualquier ruta y no pinta nada", () => {
+    expect(existsSync(join(slot, "[...catchAll]", "page.tsx"))).toBe(true)
     expect(ModalSlotCatchAll()).toBeNull()
     expect(ModalSlotDefault()).toBeNull()
+  })
+
+  it("la raíz `/` tiene su propia página del slot, que no pinta nada", () => {
+    expect(existsSync(join(slot, "page.tsx"))).toBe(true)
+    expect(ModalSlotRoot()).toBeNull()
+  })
+
+  it("no hay catch-all opcional: con `/` en (public) rompe `next dev`", () => {
+    expect(existsSync(join(slot, "[[...catchAll]]"))).toBe(false)
   })
 
   it("la interceptada del logout sigue al lado del catch-all", () => {

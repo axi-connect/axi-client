@@ -11,7 +11,9 @@
  * docs/plans/2026-11-22-hotfix-modal-cerrar-sesion.md). Es el mismo arreglo
  * que `comercial/@sheet/[...catchAll]` (C1).
  *
- * Opcional (`[[...]]`) para cubrir también `/`. La interceptada
+ * No es opcional (`[[...]]`): un catch-all opcional en un slot choca con la
+ * `/` de `(public)` y `next dev` no arranca («same specificity as a optional
+ * catch-all route»). `/` la cubre `@modal/page.tsx`. La interceptada
  * `(.)auth/logout` gana por especificidad.
  */
 export default function ModalSlotCatchAll() {
