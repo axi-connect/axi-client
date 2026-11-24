@@ -26,6 +26,7 @@ import { EmptyState } from "../../components/EmptyState";
 import { PlatformPageHeader } from "../../components/PlatformPageHeader";
 import { ProblemAlert } from "../../components/ProblemAlert";
 import { AgentsHealthSummaryCard } from "./AgentsHealthSummaryCard";
+import { BalancesCard } from "./BalancesCard";
 import { NextUpIsland } from "./NextUpIsland";
 import { RecentAlertsCard } from "./RecentAlertsCard";
 import { RecentTenantsCard } from "./RecentTenantsCard";
@@ -180,6 +181,7 @@ export function DashboardView() {
               <RecentTenantsCard />
             </div>
             <div className="flex min-w-0 flex-col gap-4">
+              <BalancesCard />
               <RecentAlertsCard />
             </div>
           </div>

@@ -16,6 +16,7 @@ import { PlatformBreadcrumb } from "./PlatformBreadcrumb";
 import { PlatformCommandProvider } from "./PlatformCommand";
 import { PlatformSidebar } from "./PlatformSidebar";
 import { PlatformTopbar } from "./PlatformTopbar";
+import { ProviderBalanceBanner } from "./ProviderBalanceBanner";
 import { ReLoginModal } from "./ReLoginModal";
 import { SessionBanner } from "./SessionBanner";
 
@@ -27,10 +28,12 @@ export function PlatformShell({ children }: { children: React.ReactNode }) {
         <PlatformSidebar />
         {/* ÚNICO contenedor de scroll de la consola */}
         <div data-app-scroll className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto sidebar-scroll">
-          {/* Barra del celular + aviso de sesión, pegados como un solo grupo. */}
+          {/* Barra del celular + aviso de sesión + franja de saldos, pegados como un solo grupo. */}
           <div className="sticky top-0 z-40 shrink-0">
             <PlatformTopbar />
             <SessionBanner />
+            {/* Alerta de saldos (24-nov): un proveedor sin saldo se ve en TODO el panel. */}
+            <ProviderBalanceBanner />
           </div>
           {/* Una vista de aplicación (`data-app-view`, hoy el simulacro de
               quality) se topa al viewport con :has() — solo en `app-fit`. */}

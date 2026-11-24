@@ -43,6 +43,37 @@ jest.mock("../../../../infrastructure/api/hooks/use-tenants", () => ({
   }),
 }));
 
+// Saldos de proveedores (alerta de saldos, 24-nov): OpenAI sin saldo y Twilio bajo.
+jest.mock("../../../../infrastructure/api/hooks/use-balances", () => ({
+  useBalancesQuery: () => ({
+    data: {
+      worst_level: "critical",
+      counts: { critical: 1, warning: 1, ok: 3, unknown: 0 },
+      checked_at: "2026-11-24T16:30:00Z",
+      providers: [
+        {
+          id: "openai",
+          name: "OpenAI",
+          level: "critical",
+          balance_usd: 0,
+          runway_days: 0,
+          incident: { kind: "no_funds", since: "2026-11-24T14:45:00Z" },
+        },
+        { id: "twilio", name: "Twilio", level: "warning", balance_usd: 18.4, runway_days: 6, incident: null },
+        { id: "groq", name: "Groq", level: "ok", balance_usd: null, runway_days: null, incident: null },
+        { id: "resend", name: "Resend", level: "ok", balance_usd: null, runway_days: null, incident: null },
+        { id: "voyage", name: "Voyage", level: "ok", balance_usd: null, runway_days: null, incident: null },
+      ],
+    },
+    isPending: false,
+    isSuccess: true,
+    isError: false,
+    error: null,
+    refetch: jest.fn(),
+    dataUpdatedAt: 1,
+  }),
+}));
+
 jest.mock("../../../../infrastructure/api/hooks/use-intake", () => ({
   useIntakeSessionsQuery: () => ({
     data: undefined,
@@ -135,5 +166,19 @@ describe("Inicio de la consola", () => {
     expect(latestAlertPhrase("hace 3 h")).toBe("La más reciente fue hace 3 h");
     expect(latestAlertPhrase("ayer")).toBe("La más reciente fue ayer");
     expect(latestAlertPhrase("13 oct")).toBe("La más reciente fue el 13 oct");
+  });
+
+  it("saldos de proveedores: lo que pide atención primero, con su frase, y cuántos más están bien", () => {
+    render(<DashboardView />);
+    const card = screen.getByRole("heading", { name: "Saldos de proveedores" }).closest("section");
+    if (!card) throw new Error("falta la tarjeta");
+    const scoped = within(card);
+    expect(scoped.getByRole("link", { name: /OpenAI.*Sin saldo desde/ })).toHaveAttribute(
+      "href",
+      "/platform/balances?proveedor=openai",
+    );
+    expect(scoped.getByText(/US\$ 18,40 · 6 días/)).toBeInTheDocument();
+    expect(scoped.getByText("3 proveedores más")).toBeInTheDocument();
+    expect(scoped.getByRole("link", { name: "Ver saldos" })).toHaveAttribute("href", "/platform/balances");
   });
 });

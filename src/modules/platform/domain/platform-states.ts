@@ -47,6 +47,13 @@ export const PLATFORM_STATES: StatusMap = {
   canceled: { label: "Cancelada", tone: "neutral" },
   purged: { label: "Purgada", tone: "neutral" },
   archived: { label: "Archivado", tone: "neutral" },
+  // Saldos de proveedores (alerta de saldos, 24-nov)
+  balance_ok: { label: "Bien", tone: "success" },
+  balance_low: { label: "Bajo", tone: "warning" },
+  balance_critical: { label: "Crítico", tone: "destructive" },
+  balance_unknown: { label: "Sin dato", tone: "neutral" },
+  no_funds: { label: "Sin saldo", tone: "destructive" },
+  auth_invalid: { label: "Llave inválida", tone: "destructive" },
   // Capacidades del agente (quality F5)
   cap_pass: { label: "Aprobada", tone: "success" },
   cap_warn: { label: "En alerta", tone: "warning" },

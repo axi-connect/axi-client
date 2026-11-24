@@ -20,6 +20,7 @@ import {
   ScrollText,
   Split,
   type LucideIcon,
+  Wallet,
 } from "lucide-react";
 
 export const NAV_ICONS: Record<string, LucideIcon> = {
@@ -29,6 +30,7 @@ export const NAV_ICONS: Record<string, LucideIcon> = {
   "circle-dollar-sign": CircleDollarSign,
   "audio-lines": AudioLines,
   receipt: Receipt,
+  wallet: Wallet,
   "scroll-text": ScrollText,
   activity: Activity,
   "flask-conical": FlaskConical,

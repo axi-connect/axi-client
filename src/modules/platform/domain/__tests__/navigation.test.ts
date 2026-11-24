@@ -39,13 +39,14 @@ describe("navegación de platform en seis grupos", () => {
     const byTitle = (title: string) =>
       PLATFORM_NAV_SECTIONS.find((section) => section.title === title)?.items.map((item) => item.label);
     expect(byTitle("Clientes")).toEqual(["Empresas", "Puesta en marcha"]);
-    expect(byTitle("Dinero")).toEqual(["Planes", "Pricing IA", "Facturación"]);
+    // «Saldos» (alerta de saldos, 24-nov) empata con «Planes» en largo: va después por declaración
+    expect(byTitle("Dinero")).toEqual(["Planes", "Saldos", "Pricing IA", "Facturación"]);
     expect(byTitle("Operación")).toEqual(["Llamadas", "Proveedores", "Almacenamiento"]);
     expect(byTitle("IA")).toEqual(["Calidad", "Voces IA", "Decisiones"]);
     expect(byTitle("Control")).toEqual(["Analytics", "Auditoría"]);
   });
 
-  it("los grupos cubren las 14 rutas de la consola sin repetir ninguna (nada se pierde)", () => {
+  it("los grupos cubren las 15 rutas de la consola sin repetir ninguna (nada se pierde)", () => {
     const paths = PLATFORM_NAV.map((item) => item.path);
     expect(new Set(paths).size).toBe(paths.length);
     expect(paths.sort()).toEqual(
@@ -54,6 +55,7 @@ describe("navegación de platform en seis grupos", () => {
         "/platform/ai",
         "/platform/analytics",
         "/platform/audit",
+        "/platform/balances",
         "/platform/billing",
         "/platform/calls",
         "/platform/intake",

@@ -44,10 +44,12 @@ const SECTIONS: readonly PlatformNavSection[] = [
     ],
   },
   {
-    // Lo que cobramos (Planes, Facturación) y lo que nos cuesta la IA (Pricing).
+    // Lo que cobramos (Planes, Facturación), lo que nos cuesta la IA (Pricing) y
+    // lo que queda en cada proveedor que pagamos (Saldos).
     title: "Dinero",
     items: [
       { label: "Planes", path: "/platform/plans", icon: "layers" },
+      { label: "Saldos", path: "/platform/balances", icon: "wallet" },
       { label: "Pricing IA", path: "/platform/pricing", icon: "circle-dollar-sign" },
       { label: "Facturación", path: "/platform/billing", icon: "receipt" },
     ],

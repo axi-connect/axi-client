@@ -196,6 +196,14 @@ export const platformKeys = {
     providers: () => [...platformKeys.prospecting.all, "providers"] as const,
   },
 
+  // Dinero › Saldos (alerta de saldos de proveedores, 24-nov). `alerts` es la
+  // franja de todo el panel: barata, se pide en cada pantalla.
+  balances: {
+    all: ["platform", "balances"] as const,
+    list: () => [...platformKeys.balances.all, "list"] as const,
+    alerts: () => [...platformKeys.balances.all, "alerts"] as const,
+  },
+
   calls: {
     all: ["platform", "calls"] as const,
     accounts: () => [...platformKeys.calls.all, "accounts"] as const,
