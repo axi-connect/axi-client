@@ -6,13 +6,14 @@
  * (`searchConsole`, dominio con tests). Lo abren el botón «Buscar» de la barra
  * lateral, la lupa de la barra del celular y el atajo de teclado.
  */
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Command as CommandPrimitive } from "cmdk";
 import { CornerDownLeft, Search } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/shared/components/ui/dialog";
 import { searchConsole, type CommandHit } from "../../domain/command-search";
 import { useTenantsQuery } from "../../infrastructure/api/hooks/use-tenants";
+import { usePlatformAuth } from "../../infrastructure/auth/platform-auth.context";
 import { NAV_ICONS } from "./nav-icons";
 
 type CommandContextValue = { open: boolean; setOpen: (open: boolean) => void };
@@ -30,20 +31,44 @@ export function isCommandShortcut(event: Pick<KeyboardEvent, "key" | "ctrlKey" |
   return event.key.toLowerCase() === "k" && (event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey;
 }
 
+/**
+ * ¿Se puede abrir el buscador? No mientras el `ReLoginModal` está abierto (sobre
+ * todo con la sesión vencida, que es bloqueante): el buscador no puede taparlo ni
+ * navegar por debajo de él.
+ */
+export function canOpenCommand(auth: { expired: boolean; reloginOpen: boolean }): boolean {
+  return !auth.expired && !auth.reloginOpen;
+}
+
 export function PlatformCommandProvider({ children }: { children: React.ReactNode }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpenState] = useState(false);
+  const { expired, reloginOpen } = usePlatformAuth();
+  const allowed = canOpenCommand({ expired, reloginOpen });
+  const allowedRef = useRef(allowed);
+  useEffect(() => {
+    allowedRef.current = allowed;
+  }, [allowed]);
+
+  const setOpen = useCallback((next: boolean) => {
+    setOpenState(next && allowedRef.current);
+  }, []);
+
+  // Si la sesión vence con el buscador abierto, se cierra: manda el re-login.
+  useEffect(() => {
+    if (!allowed) setOpenState(false);
+  }, [allowed]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (!isCommandShortcut(event)) return;
+      if (!isCommandShortcut(event) || !allowedRef.current) return;
       event.preventDefault();
-      setOpen((current) => !current);
+      setOpenState((current) => !current);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const value = useMemo(() => ({ open, setOpen }), [open]);
+  const value = useMemo(() => ({ open, setOpen }), [open, setOpen]);
   return (
     <CommandContext.Provider value={value}>
       {children}
@@ -61,8 +86,12 @@ function HitItem({ hit, onPick }: { hit: CommandHit; onPick: (hit: CommandHit) =
       className="group flex min-h-10 cursor-pointer items-center gap-3 rounded-xl px-3 py-2 text-sm outline-none data-[selected=true]:bg-accent"
     >
       <Icon aria-hidden="true" className="size-4 shrink-0 text-muted-foreground group-data-[selected=true]:text-brand" />
-      <span className="min-w-0 flex-1 truncate">{hit.label}</span>
-      <span className="max-w-[45%] shrink-0 truncate text-xs text-muted-foreground">{hit.hint}</span>
+      {/* El título usa todo el ancho y se corta con difuminado; la pista (contexto) solo desde
+          640 px: en el celular le quitaba casi la mitad de la fila al título. */}
+      <span className="min-w-0 flex-1 truncate" title={hit.label}>
+        {hit.label}
+      </span>
+      <span className="hidden max-w-[40%] shrink-0 truncate text-xs text-muted-foreground sm:block">{hit.hint}</span>
     </CommandPrimitive.Item>
   );
 }
@@ -103,7 +132,9 @@ function PlatformCommandDialog() {
       >
         <DialogTitle className="sr-only">Buscar en la consola</DialogTitle>
         <DialogDescription className="sr-only">Empresas por nombre o NIT, y las vistas de la consola.</DialogDescription>
-        <CommandPrimitive shouldFilter={false} loop className="flex min-w-0 flex-col">
+        {/* `label`: cmdk enlaza el campo a su propia etiqueta (`aria-labelledby`), que sin esto
+            queda vacía y deja el buscador sin nombre para el lector de pantalla. */}
+        <CommandPrimitive label="Buscar en la consola" shouldFilter={false} loop className="flex min-w-0 flex-col">
           <div className="flex items-center gap-3 border-b border-border px-4">
             <Search aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
             <CommandPrimitive.Input
