@@ -9,6 +9,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronRight } from "lucide-react";
+import { cn } from "@/core/lib/utils";
 import { breadcrumbFor, type Crumb } from "../../domain/navigation";
 import { useTenantQuery } from "../../infrastructure/api/hooks/use-tenants";
 
@@ -22,13 +23,13 @@ function CrumbLabel({ crumb }: { crumb: Crumb }) {
   return crumb.tenantId ? <TenantName id={crumb.tenantId} /> : <>{crumb.label}</>;
 }
 
-export function PlatformBreadcrumb() {
+export function PlatformBreadcrumb({ className }: { className?: string }) {
   const pathname = usePathname() ?? "";
   const crumbs = breadcrumbFor(pathname);
   if (crumbs.length <= 1) return null;
 
   return (
-    <nav aria-label="Ruta" className="min-w-0 text-[13px] text-muted-foreground">
+    <nav aria-label="Ruta" className={cn("min-w-0 text-[13px] text-muted-foreground", className)}>
       <ol className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1">
         {crumbs.map((crumb, index) => (
           <li key={`${index}-${crumb.label}`} className="flex min-w-0 items-center gap-1.5">

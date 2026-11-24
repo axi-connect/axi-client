@@ -17,13 +17,16 @@ export function SessionCountdownChip({ className }: { className?: string }) {
       role="status"
       aria-label={`Sesión restante: ${mmss}`}
       className={cn(
-        "inline-flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground tabular-nums",
+        "inline-flex min-w-0 items-start gap-1.5 text-xs text-muted-foreground tabular-nums",
         warning && "font-medium text-foreground",
         className,
       )}
     >
-      {warning ? <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-warning" /> : null}
-      <span className="min-w-0 truncate">Sesión · {mmss} restantes</span>
+      {warning ? <span aria-hidden="true" className="mt-1.5 size-1.5 shrink-0 rounded-full bg-warning" /> : null}
+      {/* Se parte en dos renglones si no cabe (mockup): la cifra nunca se corta. */}
+      <span className="min-w-0">
+        Sesión · <span className="whitespace-nowrap">{mmss} restantes</span>
+      </span>
     </span>
   );
 }

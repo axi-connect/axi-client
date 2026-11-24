@@ -127,17 +127,18 @@ export function DashboardView() {
                 <BentoTile
                   label="Alertas activas"
                   className={TILE}
-                  // En una ficha estrecha (celular) la píldora le quitaría el sitio a la etiqueta: baja al cuerpo.
+                  // En una ficha estrecha (celular, o cuatro columnas por debajo de 1200 px) la píldora le
+                  // quitaría el sitio a la etiqueta: baja al cuerpo.
                   aside={
                     alertsValue ? (
-                      <span className="hidden sm:inline-flex">
+                      <span className="hidden min-[1200px]:inline-flex">
                         <StatePill tone="warning">Revisar</StatePill>
                       </span>
                     ) : undefined
                   }
                 >
                   {alertsValue ? (
-                    <span className="sm:hidden">
+                    <span className="min-[1200px]:hidden">
                       <StatePill tone="warning">Revisar</StatePill>
                     </span>
                   ) : null}

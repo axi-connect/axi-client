@@ -35,8 +35,10 @@ export function PlatformShell({ children }: { children: React.ReactNode }) {
           {/* Una vista de aplicación (`data-app-view`, hoy el simulacro de
               quality) se topa al viewport con :has() — solo en `app-fit`. */}
           <SidebarInset className="min-w-0 app-fit:has-[[data-app-view]]:min-h-0">
-            <div className="mx-auto flex w-full max-w-7xl min-w-0 flex-1 flex-col gap-5 px-4 pt-5 pb-20 md:px-8 md:pt-7 app-fit:has-[[data-app-view]]:min-h-0 app-fit:has-[[data-app-view]]:pb-6">
-              <PlatformBreadcrumb />
+            {/* Bloque, no flex, como antes: las vistas de F2–F5 se pintan con el mismo
+                flujo que tenían (una vista con un mínimo de contenido ancho no ensancha la columna). */}
+            <div className="mx-auto w-full max-w-7xl min-w-0 px-4 pt-5 pb-20 md:px-8 md:pt-7 app-fit:has-[[data-app-view]]:flex app-fit:has-[[data-app-view]]:min-h-0 app-fit:has-[[data-app-view]]:flex-1 app-fit:has-[[data-app-view]]:flex-col app-fit:has-[[data-app-view]]:pb-6">
+              <PlatformBreadcrumb className="mb-5" />
               {children}
             </div>
           </SidebarInset>
