@@ -139,6 +139,8 @@ export function SequenceTrackingView({ sequenceId }: { sequenceId: string }) {
 
   const summary = view?.summary
   const undelivered = summary?.whatsapp.undelivered_in_chat ?? 0
+  const undeliveredBusinesses = (view?.rows ?? []).filter((row) => row.undelivered_in_chat > 0).length
+  const undeliveredText = `${plural(undelivered, "mensaje", "mensajes")} de ${plural(undeliveredBusinesses, "negocio", "negocios")}`
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-5 p-4 md:p-6">
@@ -190,7 +192,7 @@ export function SequenceTrackingView({ sequenceId }: { sequenceId: string }) {
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           <section aria-label="WhatsApp" className="flex min-w-0 flex-col gap-3 rounded-2xl border border-border bg-background p-4 md:p-5">
-            <ChannelHead icon={MessageCircle} title="WhatsApp" aside={`${String(summary.whatsapp.with_channel)} de ${String(summary.businesses)} con WhatsApp`} />
+            <ChannelHead icon={MessageCircle} title="WhatsApp" aside={`${String(summary.whatsapp.with_channel)} de ${plural(summary.businesses, "negocio", "negocios")} con WhatsApp`} />
             <Tiles
               items={[
                 { value: summary.whatsapp.sent, label: "Salieron" },
@@ -201,15 +203,16 @@ export function SequenceTrackingView({ sequenceId }: { sequenceId: string }) {
             />
             {summary.whatsapp.failures.length > 0 && (
               <div className="flex flex-wrap items-center gap-1.5 text-[12.5px]">
-                <span className="text-muted-foreground">No llegaron {summary.whatsapp.failed}:</span>
+                <span className="text-muted-foreground">
+                  No llegó a {plural(summary.whatsapp.failed, "negocio", "negocios")}:
+                </span>
                 {summary.whatsapp.failures.map((failure) => (
                   <span
                     key={failure.detail}
-                    title={failure.detail}
-                    className="inline-flex h-6 max-w-full min-w-0 items-center gap-1.5 rounded-full border border-border px-2.5"
+                    className="inline-flex max-w-full min-w-0 items-start gap-1.5 rounded-2xl border border-border px-2.5 py-1 leading-snug"
                   >
                     <b className="font-semibold tabular-nums">{failure.count}</b>
-                    <span className="truncate">{sentence(failure.detail)}</span>
+                    <span className="min-w-0 text-pretty">{sentence(failure.detail)}</span>
                   </span>
                 ))}
               </div>
@@ -219,8 +222,9 @@ export function SequenceTrackingView({ sequenceId }: { sequenceId: string }) {
                 <p className="flex min-w-0 items-start gap-1.5 text-[12.5px] text-muted-foreground">
                   <Info aria-hidden className="mt-0.5 size-3.5 shrink-0 text-success" />
                   <span>
-                    Se quitaron del chat {cleared.messages} mensajes que no llegaron y {cleared.conversations} chats que
-                    quedaban vacíos. Aquí siguen contados, con su motivo.
+                    Se quitaron del chat {plural(cleared.messages, "mensaje", "mensajes")} que no llegaron y{" "}
+                    {plural(cleared.conversations, "chat", "chats")} que quedaban vacíos. Aquí siguen contados, con su
+                    motivo.
                   </span>
                 </p>
               ) : undelivered === 0 ? (
@@ -233,13 +237,11 @@ export function SequenceTrackingView({ sequenceId }: { sequenceId: string }) {
                   <p className="flex min-w-0 flex-[1_1_260px] items-start gap-1.5 text-[12.5px] text-muted-foreground">
                     <MessageCircleX aria-hidden className="mt-0.5 size-3.5 shrink-0" />
                     <span>
-                      {undelivered === 1
-                        ? "Uno que no llegó sigue en el chat como «No llegó»."
-                        : `${String(undelivered)} que no llegaron siguen en el chat como «No llegó».`}
+                      {undeliveredText} {undelivered === 1 ? "sigue" : "siguen"} en el chat como «No llegó».
                     </span>
                   </p>
                   <Button size="sm" variant="outline" onClick={() => setConfirming(true)} disabled={confirming}>
-                    <Eraser aria-hidden /> Limpiar del chat ({undelivered})
+                    <Eraser aria-hidden /> Limpiar del chat ({plural(undelivered, "mensaje", "mensajes")})
                   </Button>
                 </>
               )}
@@ -247,14 +249,14 @@ export function SequenceTrackingView({ sequenceId }: { sequenceId: string }) {
           </section>
 
           <section aria-label="Correo" className="flex min-w-0 flex-col gap-3 rounded-2xl border border-border bg-background p-4 md:p-5">
-            <ChannelHead icon={Mail} title="Correo" aside={`${String(summary.email.with_channel)} de ${String(summary.businesses)} con correo`} />
+            <ChannelHead icon={Mail} title="Correo" aside={`${String(summary.email.with_channel)} de ${plural(summary.businesses, "negocio", "negocios")} con correo`} />
             <p className="text-[13px] text-muted-foreground">
               <b className="font-semibold text-foreground">{summary.email.sent}</b> salieron ·{" "}
               <b className="font-semibold text-foreground">{summary.email.delivered}</b> entregados
             </p>
             <Tiles
               items={[
-                { value: summary.email.replied, label: "Respondió", tone: "good" },
+                { value: summary.email.replied, label: "Respondieron", tone: "good" },
                 { value: summary.email.bounced, label: "Rebotaron", tone: "bad" },
                 { value: summary.email.complained, label: "Spam", tone: summary.email.complained > 0 ? "bad" : undefined },
                 {
@@ -281,7 +283,8 @@ export function SequenceTrackingView({ sequenceId }: { sequenceId: string }) {
           className="grid gap-2.5 rounded-2xl border border-border bg-background p-4 shadow-lg md:p-5"
         >
           <h2 className="font-sans text-[15px] font-semibold">
-            ¿Quitamos del chat {undelivered === 1 ? "el WhatsApp que no llegó" : `los ${String(undelivered)} WhatsApp que no llegaron`}?
+            ¿Quitamos del chat {undelivered === 1 ? "el WhatsApp que no llegó" : `los ${String(undelivered)} WhatsApp que no llegaron`}{" "}
+            ({plural(undeliveredBusinesses, "negocio", "negocios")})?
           </h2>
           <ul className="grid list-disc gap-1 pl-5 text-[13.5px] text-muted-foreground">
             <li>Solo los que no se entregaron. Lo que llegó, se leyó o tuvo respuesta no se toca.</li>
@@ -337,6 +340,14 @@ export function SequenceTrackingView({ sequenceId }: { sequenceId: string }) {
         </div>
       </div>
 
+      {view !== null && view.rows.length > 0 && (
+        <p className="-mb-2 text-[12.5px] text-muted-foreground">
+          {rows.length === view.rows.length
+            ? plural(view.rows.length, "negocio", "negocios")
+            : `${rows.length.toLocaleString("es-CO")} de ${plural(view.rows.length, "negocio", "negocios")}`}
+          {filter === "failed" ? " con algún fallo por WhatsApp o por correo" : ""}
+        </p>
+      )}
       {view === null ? (
         <Skeleton className="h-72 w-full rounded-2xl" />
       ) : rows.length === 0 ? (
@@ -371,14 +382,18 @@ function chatHref(row: TrackingRowDTO): string | null {
   return `/workspace/inbox/${cell.conversation_id}`
 }
 
+function plural(count: number, one: string, many: string): string {
+  return `${count.toLocaleString("es-CO")} ${count === 1 ? one : many}`
+}
+
 function ChannelHead({ icon: Icon, title, aside }: { icon: typeof Send; title: string; aside: string }) {
   return (
-    <div className="flex items-center gap-2.5">
+    <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
       <span className="grid size-8 place-items-center rounded-[10px] bg-secondary">
         <Icon aria-hidden className="size-4" />
       </span>
       <h2 className="font-sans text-[15px] font-semibold">{title}</h2>
-      <span className="ml-auto truncate text-[12.5px] text-muted-foreground">{aside}</span>
+      <span className="ml-auto text-[12.5px] text-muted-foreground">{aside}</span>
     </div>
   )
 }

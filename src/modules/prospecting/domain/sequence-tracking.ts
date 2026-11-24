@@ -60,7 +60,8 @@ export const FILTER_LABEL: Record<TrackingFilter, string> = {
   all: "Todos",
   replied: "Respondieron",
   interest: "Con interés",
-  failed: "No llegó",
+  // Por WhatsApp o por correo (rebote, spam): no es el «No llegó» de la tarjeta de WhatsApp
+  failed: "Con fallos",
   ongoing: "En curso",
 }
 
