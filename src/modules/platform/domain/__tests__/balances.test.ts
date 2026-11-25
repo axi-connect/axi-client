@@ -3,11 +3,15 @@ import {
   balanceStateKey,
   balanceText,
   dateInputToIso,
+  endSentence,
+  formatDay,
   formatRunway,
   formatUsd,
   isoToDateInput,
   lastSignal,
+  lastSignalParts,
   parseAmount,
+  spendText,
   type ProviderBalance,
 } from "../balances";
 import { platformState } from "../platform-states";
@@ -77,6 +81,7 @@ describe("saldos de proveedores (dominio)", () => {
   it("dinero y días", () => {
     expect(formatUsd(1234.5)).toBe("US$ 1.234,50");
     expect(formatRunway(null)).toBe("—");
+    expect(formatRunway(0)).toBe("0 días");
     expect(formatRunway(0.4)).toBe("menos de 1 día");
     expect(formatRunway(1.2)).toBe("1 día");
     expect(formatRunway(6.05)).toBe("6 días");
@@ -90,6 +95,20 @@ describe("saldos de proveedores (dominio)", () => {
     );
     expect(lastSignal(row({ last_success_at: "2026-11-24T16:12:00Z" }), now)).toMatch(/^Respondió bien · /);
     expect(lastSignal(row(), now)).toBe("Sin actividad reciente");
+  });
+
+  it("revisión visual: sin «a. m..», fecha de recarga corta, señal en dos partes y gasto no medido como «—»", () => {
+    expect(endSentence("desde las 9:45 a. m.")).toBe("desde las 9:45 a. m.");
+    expect(endSentence("sin saldo")).toBe("sin saldo.");
+    const item = { provider: "openai", name: "OpenAI", impact: "x", level: "critical" as const, reason: "no_funds" as const, since: "2026-11-24T14:45:00Z", balance_usd: null };
+    expect(alertHeadline(item)).not.toMatch(/\.\.$/);
+    expect(formatDay("2026-11-10T17:00:00Z")).toBe("10 nov");
+    const now = new Date("2026-11-24T20:00:00Z");
+    expect(lastSignalParts(row({ last_success_at: "2026-11-24T16:12:00Z" }), now).what).toBe("Respondió bien");
+    expect(lastSignalParts(row(), now)).toEqual({ what: "Sin actividad reciente", when: null });
+    expect(spendText(row({ measurable: false, spend_7d_usd: 0 }))).toBe("—");
+    expect(spendText(row({ measurable: false, spend_7d_usd: 0.42 }))).toBe("US$ 0,42");
+    expect(spendText(row({ spend_7d_usd: 0 }))).toBe("US$ 0,00");
   });
 
   it("la frase de la franja", () => {

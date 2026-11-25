@@ -14,7 +14,16 @@ import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { balanceStateKey, balanceText, formatRunway, formatUsd, formatWhen, lastSignal, type ProviderBalance } from "../../../domain/balances";
+import {
+  balanceStateKey,
+  balanceText,
+  formatRunway,
+  formatWhen,
+  lastSignal,
+  lastSignalParts,
+  spendText,
+  type ProviderBalance,
+} from "../../../domain/balances";
 import { useBalancesQuery, useRefreshBalances } from "../../../infrastructure/api/hooks/use-balances";
 import { EmptyState } from "../../components/EmptyState";
 import { PlatformPageHeader } from "../../components/PlatformPageHeader";
@@ -45,9 +54,21 @@ function ProviderCell({ row }: { row: ProviderBalance }) {
 function BalanceCell({ row }: { row: ProviderBalance }) {
   const { value, note } = balanceText(row);
   return (
-    <span className="flex flex-col">
+    <span className="flex flex-col whitespace-nowrap">
       <span className="font-mono text-sm font-medium tabular-nums">{value}</span>
       <span className="text-xs text-muted-foreground">{note}</span>
+    </span>
+  );
+}
+
+function SignalCell({ row }: { row: ProviderBalance }) {
+  const { what, when } = lastSignalParts(row);
+  return (
+    <span className="flex min-w-0 flex-col text-xs">
+      <span className={cn("whitespace-nowrap", row.incident ? "font-medium text-foreground" : "text-muted-foreground")}>
+        {what}
+      </span>
+      {when ? <span className="truncate text-muted-foreground" title={when}>{when}</span> : null}
     </span>
   );
 }
@@ -64,7 +85,12 @@ const COLUMNS: readonly PlatformColumn<ProviderBalance>[] = [
     id: "runway",
     header: "Alcanza para",
     cell: (row) => (
-      <span className={cn("text-sm", row.level === "critical" || row.level === "warning" ? "font-medium" : "text-muted-foreground")}>
+      <span
+        className={cn(
+          "text-sm whitespace-nowrap",
+          row.level === "critical" || row.level === "warning" ? "font-medium" : "text-muted-foreground",
+        )}
+      >
         {formatRunway(row.runway_days)}
       </span>
     ),
@@ -74,16 +100,14 @@ const COLUMNS: readonly PlatformColumn<ProviderBalance>[] = [
     header: "Gasto 7 días",
     align: "end",
     cell: (row) => (
-      <span className="font-mono text-sm tabular-nums text-muted-foreground">
-        {row.spend_7d_usd === null ? "—" : formatUsd(row.spend_7d_usd)}
-      </span>
+      <span className="font-mono text-sm whitespace-nowrap tabular-nums text-muted-foreground">{spendText(row)}</span>
     ),
   },
   {
     id: "signal",
     header: "Última señal",
-    cell: (row) => <span className="line-clamp-2 text-xs text-muted-foreground">{lastSignal(row)}</span>,
-    cellClassName: "max-w-[16rem]",
+    cell: (row) => <SignalCell row={row} />,
+    cellClassName: "min-w-[11rem] max-w-[14rem]",
   },
 ];
 
@@ -96,7 +120,14 @@ function MobileCard({ row }: { row: ProviderBalance }) {
         <PlatformStatePill status={balanceStateKey(row)} />
       </div>
       <p className="text-xs text-muted-foreground">
-        Saldo <span className="font-mono text-foreground">{value}</span> · alcanza para {formatRunway(row.runway_days)}
+        {row.measurable ? (
+          <>
+            Saldo <span className="font-mono text-foreground">{value}</span> · alcanza para{" "}
+            {formatRunway(row.runway_days)}
+          </>
+        ) : (
+          "Sin consulta de saldo: se vigila por sus respuestas"
+        )}
       </p>
       <p className="text-xs text-muted-foreground">{lastSignal(row)}</p>
     </div>

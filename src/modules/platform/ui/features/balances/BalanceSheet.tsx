@@ -17,6 +17,8 @@ import { Label } from "@/shared/components/ui/label";
 import {
   balanceStateKey,
   dateInputToIso,
+  endSentence,
+  formatDay,
   formatRunway,
   formatUsd,
   formatWhen,
@@ -91,8 +93,8 @@ function IncidentNotice({ provider }: { provider: ProviderBalance }) {
         {what} desde las {formatWhen(incident.since)}
       </p>
       <p className="text-foreground/80 text-pretty">
-        {incident.failure_count} {incident.failure_count === 1 ? "petición rechazada" : "peticiones rechazadas"} · la
-        última a las {formatWhen(incident.last_seen_at)}. Mientras siga así, {provider.impact}.
+        {incident.failure_count} {incident.failure_count === 1 ? "petición rechazada" : "peticiones rechazadas"} ·{" "}
+        {endSentence(`la última a las ${formatWhen(incident.last_seen_at)}`)} Mientras siga así, {provider.impact}.
       </p>
       <p className="text-xs text-muted-foreground">
         {incident.notified_at ? `Correo enviado ${formatWhen(incident.notified_at)}` : "El correo aún no sale"}
@@ -136,11 +138,11 @@ function BalanceFigures({ provider }: { provider: ProviderBalance }) {
     }
     const spent = provider.loaded_amount_usd - provider.balance_usd;
     return (
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(8.5rem,1fr))] gap-2">
         <Figure
           label="Última recarga"
           value={formatUsd(provider.loaded_amount_usd)}
-          note={provider.loaded_at ? formatWhen(provider.loaded_at) : undefined}
+          note={provider.loaded_at ? formatDay(provider.loaded_at) : undefined}
         />
         <Figure label="Gastado desde ahí" value={formatUsd(spent)} note="gasto real" />
         <Figure
@@ -153,7 +155,7 @@ function BalanceFigures({ provider }: { provider: ProviderBalance }) {
     );
   }
   return (
-    <div className="grid grid-cols-2 gap-2">
+    <div className="grid grid-cols-[repeat(auto-fit,minmax(8.5rem,1fr))] gap-2">
       <Figure
         label="Saldo exacto"
         value={provider.balance_usd === null ? "—" : formatUsd(provider.balance_usd)}

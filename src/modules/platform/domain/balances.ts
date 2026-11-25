@@ -37,6 +37,7 @@ export function formatUsd(value: number): string {
 /** «6 días», «1 día», «menos de 1 día»; null → «—». */
 export function formatRunway(days: number | null): string {
   if (days === null) return "—";
+  if (days <= 0) return "0 días";
   if (days < 1) return "menos de 1 día";
   const rounded = Math.round(days);
   return rounded === 1 ? "1 día" : `${String(rounded)} días`;
@@ -69,16 +70,39 @@ export function formatWhen(iso: string, now: Date = new Date()): string {
   return sameDay ? clock : `${DAY.format(at).replace(".", "")}, ${clock}`;
 }
 
+/** «10 nov»: solo la fecha (la recarga no necesita hora). */
+export function formatDay(iso: string): string {
+  return DAY.format(new Date(iso)).replace(/\.$/, "").replace(" de ", " ").replace(".", "");
+}
+
+/** Cierra una frase sin duplicar el punto de «a. m.» / «p. m.». */
+export function endSentence(text: string): string {
+  return text.endsWith(".") ? text : `${text}.`;
+}
+
+/** La última señal en dos partes (qué y cuándo), para que la tabla la parta sin cortarla. */
+export function lastSignalParts(row: ProviderBalance, now: Date = new Date()): { what: string; when: string | null } {
+  if (row.incident) {
+    const what = row.incident.kind === "no_funds" ? "Rechaza: sin saldo" : "Rechaza: llave inválida";
+    return { what, when: formatWhen(row.incident.last_seen_at, now) };
+  }
+  if (row.check_error) return { what: "No se pudo leer el saldo", when: row.check_error };
+  if (row.last_success_at) return { what: "Respondió bien", when: formatWhen(row.last_success_at, now) };
+  if (row.checked_at) return { what: "Consultado", when: formatWhen(row.checked_at, now) };
+  return { what: "Sin actividad reciente", when: null };
+}
+
 /** La última señal de la fila: el rechazo si hay incidente; si no, cuándo respondió bien. */
 export function lastSignal(row: ProviderBalance, now: Date = new Date()): string {
-  if (row.incident) {
-    const what = row.incident.kind === "no_funds" ? "sin saldo" : "llave inválida";
-    return `Rechaza: ${what} · ${formatWhen(row.incident.last_seen_at, now)}`;
-  }
-  if (row.check_error) return `No se pudo leer el saldo · ${row.check_error}`;
-  if (row.last_success_at) return `Respondió bien · ${formatWhen(row.last_success_at, now)}`;
-  if (row.checked_at) return `Consultado · ${formatWhen(row.checked_at, now)}`;
-  return "Sin actividad reciente";
+  const { what, when } = lastSignalParts(row, now);
+  return when === null ? what : `${what} · ${when}`;
+}
+
+/** El gasto de 7 días como se dice: «—» si no se mide (proveedor sin costo registrado). */
+export function spendText(row: Pick<ProviderBalance, "spend_7d_usd" | "measurable">): string {
+  if (row.spend_7d_usd === null) return "—";
+  if (!row.measurable && row.spend_7d_usd === 0) return "—";
+  return formatUsd(row.spend_7d_usd);
 }
 
 /** La frase de la franja y del correo: qué pasó y desde cuándo. */
@@ -86,9 +110,9 @@ export function alertHeadline(item: ProviderAlertItem, now: Date = new Date()): 
   const since = item.since ? ` desde las ${formatWhen(item.since, now)}` : "";
   switch (item.reason) {
     case "no_funds":
-      return `${item.name} se quedó sin saldo${since}.`;
+      return endSentence(`${item.name} se quedó sin saldo${since}`);
     case "auth_invalid":
-      return `${item.name} rechaza la llave de Axi${since}.`;
+      return endSentence(`${item.name} rechaza la llave de Axi${since}`);
     default:
       return item.level === "critical"
         ? `El saldo de ${item.name} está en crítico${item.balance_usd === null ? "" : `: ${formatUsd(item.balance_usd)}`}.`
