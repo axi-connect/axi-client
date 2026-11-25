@@ -11,6 +11,7 @@ import {
 } from "../../../domain/lead";
 import {
   LEAD_FILTERS,
+  asksForAdLeadsOutsideCrm,
   countLeadFilters,
   serializeLeadFilters,
 } from "../leads.filters";
@@ -165,5 +166,18 @@ describe("«Con quien decide»", () => {
       has_decision_maker: true,
       city: "Bogotá",
     });
+  });
+});
+
+describe("asksForAdLeadsOutsideCrm — pedir leads de anuncio sin pedir «En el CRM»", () => {
+  it("el origen de anuncio de WhatsApp o su permiso, sin «En el CRM», da vacío siempre", () => {
+    expect(asksForAdLeadsOutsideCrm({ source: ["ctwa"] })).toBe(true);
+    expect(asksForAdLeadsOutsideCrm({ legal_basis: ["consent_ad"], status: ["new"] })).toBe(true);
+  });
+
+  it("con «En el CRM» marcado, o con otros filtros, el consejo de siempre vale", () => {
+    expect(asksForAdLeadsOutsideCrm({ source: ["ctwa"], status: ["promoted"] })).toBe(false);
+    expect(asksForAdLeadsOutsideCrm({ source: ["google_places"] })).toBe(false);
+    expect(asksForAdLeadsOutsideCrm({})).toBe(false);
   });
 });

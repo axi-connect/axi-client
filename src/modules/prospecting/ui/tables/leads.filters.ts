@@ -210,3 +210,18 @@ export function serializeLeadFilters(values: FilterValues): ListLeadsParams {
 export function countLeadFilters(values: FilterValues): number {
   return countActive(LEAD_FILTERS, values);
 }
+
+/**
+ * CAP-18: quien escribe desde un anuncio de WhatsApp nace como contacto del
+ * CRM y no pasa por la bandeja. Pedir ese origen (o ese permiso) sin pedir
+ * «En el CRM» da vacío siempre, y el consejo de «exige menos datos» no ayuda.
+ */
+export function asksForAdLeadsOutsideCrm(filters: Record<string, unknown>): boolean {
+  const has = (key: string, value: string) => {
+    const picked = filters[key];
+    return Array.isArray(picked) ? picked.includes(value) : picked === value;
+  };
+  const adLeads =
+    has(LEAD_FILTER_KEYS.source, "ctwa") || has(LEAD_FILTER_KEYS.legalBasis, "consent_ad");
+  return adLeads && !has(LEAD_FILTER_KEYS.status, "promoted");
+}

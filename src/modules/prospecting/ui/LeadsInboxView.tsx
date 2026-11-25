@@ -54,6 +54,7 @@ import { buildLeadColumns, fetchLeads } from "./tables/leads.config";
 import {
   LEAD_FILTERS,
   LEAD_FILTER_KEYS,
+  asksForAdLeadsOutsideCrm,
   countLeadFilters,
   serializeLeadFilters,
 } from "./tables/leads.filters";
@@ -634,7 +635,9 @@ export function LeadsInboxView() {
             // Con «Con quien decide» puesto, el consejo de siempre (exigir menos datos) no ayuda: lo
             // que falta es confirmar a una persona o buscarla.
             description={
-              filters[LEAD_FILTER_KEYS.hasDecisionMaker] === true
+              asksForAdLeadsOutsideCrm(filters)
+                ? "Quien te escribe desde un anuncio entra directo a tu CRM. Para verlo, marca también Estado › En el CRM."
+                : filters[LEAD_FILTER_KEYS.hasDecisionMaker] === true
                 ? "«Con quien decide» solo cuenta a quien dice el registro mercantil o confirmó tu equipo. Busca personas en tus leads, confirma a las que estén por confirmar o quita el filtro."
                 : "Prueba a exigir menos datos, a bajar el índice de calidad o a quitar el texto de búsqueda."
             }
@@ -654,13 +657,13 @@ export function LeadsInboxView() {
               <EmptyState
                 icon={Inbox}
                 title="No queda ningún lead por revisar"
-                description="Los que ya pasaste al CRM los ves en Filtros › Estado › En el CRM."
+                description="Los que ya están en tu CRM los ves en Filtros › Estado › En el CRM."
               />
             ) : (
               <EmptyState
                 icon={Inbox}
                 title="Todavía no ha entrado ningún lead"
-                description="Cuando alguien te escriba desde un anuncio o llene un formulario de Facebook o Instagram, aparecerá aquí."
+                description="Aquí llegan los formularios de tus anuncios. Quien te escribe por WhatsApp entra directo a tu CRM."
               />
             )}
           </div>

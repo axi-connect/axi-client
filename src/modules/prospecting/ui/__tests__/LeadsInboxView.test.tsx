@@ -116,7 +116,7 @@ it("vacía y con promovidos en el embudo: dice que ya están en el CRM, no que n
   render(<LeadsInboxView />);
 
   expect(await screen.findByText("No queda ningún lead por revisar")).toBeInTheDocument();
-  expect(screen.getByText("Los que ya pasaste al CRM los ves en Filtros › Estado › En el CRM.")).toBeInTheDocument();
+  expect(screen.getByText("Los que ya están en tu CRM los ves en Filtros › Estado › En el CRM.")).toBeInTheDocument();
   expect(screen.queryByText("Todavía no ha entrado ningún lead")).not.toBeInTheDocument();
 });
 

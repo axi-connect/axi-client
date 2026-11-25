@@ -134,7 +134,7 @@ describe("emptyPeopleText — qué dice Personas cuando no hay filas", () => {
     );
   });
 
-  it("Guardados no afirma que nunca se reveló a nadie: los que pasaron al CRM ya no están", () => {
+  it("«Por guardar» no afirma que nunca se reveló a nadie: los que pasaron al CRM ya no están", () => {
     const text = emptyPeopleText({ tab: "saved", captured: 0, hiddenByFilter: false });
     expect(text.title).not.toBe("Aún no has revelado a nadie");
     expect(text.title).toBe("No hay personas reveladas por guardar");

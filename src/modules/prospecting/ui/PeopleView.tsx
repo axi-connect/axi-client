@@ -110,7 +110,7 @@ function rowOf(lead: LeadDTO): PersonRow {
  * No hay un buscador aparte: cada «Buscar» es una `prospecting_search` de la
  * fuente `apollo_people` en modo navegar (una página por clic), y las personas
  * son leads de la cuarentena colgados de su negocio. «Nuevos» son las de ESTA
- * búsqueda; «Guardados», todas las ya reveladas de cualquier búsqueda.
+ * búsqueda; «Por guardar», las ya reveladas de cualquier búsqueda que aún no están en el CRM.
  */
 export function PeopleView() {
   const router = useRouter();
@@ -485,7 +485,7 @@ export function PeopleView() {
                       ? null
                       : (search.estimated_total ?? total).toLocaleString("es-CO"),
                 },
-                { value: "saved", label: "Guardados" },
+                { value: "saved", label: "Por guardar" },
               ]}
             />
             <p className="text-muted-foreground text-xs">Apollo · buscar no gasta créditos</p>
