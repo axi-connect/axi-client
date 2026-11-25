@@ -45,7 +45,9 @@ function ProviderCell({ row }: { row: ProviderBalance }) {
       </span>
       <span className="flex min-w-0 flex-col">
         <span className="truncate text-sm font-medium">{row.name}</span>
-        <span className="truncate text-xs text-muted-foreground">{row.use}</span>
+        <span className="truncate text-xs text-muted-foreground" title={row.use}>
+          {row.use}
+        </span>
       </span>
     </span>
   );
@@ -74,7 +76,13 @@ function SignalCell({ row }: { row: ProviderBalance }) {
 }
 
 const COLUMNS: readonly PlatformColumn<ProviderBalance>[] = [
-  { id: "provider", header: "Proveedor", cell: (row) => <ProviderCell row={row} /> },
+  {
+    id: "provider",
+    header: "Proveedor",
+    cell: (row) => <ProviderCell row={row} />,
+    // El «para qué» largo (Twilio) no puede empujar la última señal fuera de la tarjeta
+    cellClassName: "max-w-[15rem]",
+  },
   {
     id: "state",
     header: "Estado",
