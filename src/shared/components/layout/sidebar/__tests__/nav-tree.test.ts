@@ -25,7 +25,9 @@ describe("mapNavigation", () => {
   });
 
   it("resuelve el icono SOLO en el nivel 0", () => {
-    const tree = mapNavigation([dto("crm", "/crm", 10, [dto("contacts", "/contacts", 10, [], "contact")], "target")]);
+    const tree = mapNavigation([
+      dto("marketing", "/marketing", 10, [dto("marketing_campaigns", "/marketing/campaigns", 10, [], "megaphone")], "target"),
+    ]);
 
     expect(tree[0].icon).toBeDefined();
     expect(tree[0].children[0].icon).toBeUndefined();
@@ -34,12 +36,12 @@ describe("mapNavigation", () => {
   it("aplica los alias de ruta del frontend", () => {
     const tree = mapNavigation([
       dto("inbox", "/inbox", 10),
-      dto("crm", "/crm", 20, [dto("contacts", "/contacts", 10)]),
+      dto("ai", "/ai-agents", 20),
       dto("catalog", "/catalog", 30),
     ]);
 
     expect(tree[0].url).toBe("/workspace/inbox");
-    expect(tree[1].children[0].url).toBe("/crm/contacts");
+    expect(tree[1].url).toBe("/admin/agents");
     expect(tree[2].url).toBe("/catalog/products");
   });
 
@@ -135,5 +137,72 @@ describe("mapNavigation", () => {
 
     expect(forms?.url).toBe("/settings/forms");
     expect(forms?.depth).toBe(2);
+  });
+
+  /**
+   * PLA-09: «Contactos» sale del menú y CRM queda como una sola entrada que
+   * abre en contactos; «CMO» se lee «Axel» y se recoloca por la regla de
+   * longitud (el más corto primero) que el backend aplicó con el rótulo viejo.
+   */
+  describe("CRM sin «Contactos» y «Axel» (PLA-09)", () => {
+    const named = (code: string, name: string, path: string | null, sort_order: number, children: NavigationNodeDTO[] = []) =>
+      ({ ...dto(code, path, sort_order, children), name });
+
+    it("quita «Contactos»: CRM queda sin hijos, sigue en /crm y el clic va a contactos", () => {
+      const tree = mapNavigation([named("crm", "CRM", "/crm", 10, [named("contacts", "Contactos", "/contacts", 10)])]);
+
+      expect(tree).toHaveLength(1);
+      expect(tree[0].children).toEqual([]);
+      expect(tree[0].url).toBe("/crm");
+      expect(tree[0].href).toBe("/crm/contacts");
+    });
+
+    it("solo CRM lleva destino de clic propio", () => {
+      const tree = mapNavigation([named("inbox", "Inbox", "/inbox", 10)]);
+
+      expect(tree[0].href).toBeUndefined();
+    });
+
+    it("«CMO» se lee «Axel» sin tocar código ni ruta", () => {
+      const [axel] = mapNavigation([named("cmo", "CMO", "/cmo", 10)]);
+
+      expect(axel.title).toBe("Axel");
+      expect(axel.code).toBe("cmo");
+      expect(axel.url).toBe("/cmo");
+    });
+
+    it("recoloca «Axel» por longitud: detrás de CRM (3) y antes de Inbox (5), sin mover el anclado", () => {
+      // El orden real que emite el backend con el rótulo viejo.
+      const tree = mapNavigation([
+        named("dashboard", "Dashboard", "/dashboard", 10),
+        named("cmo", "CMO", "/cmo", 20),
+        named("crm", "CRM", "/crm", 30),
+        named("inbox", "Inbox", "/inbox", 40),
+        named("scheduling", "Agenda", "/scheduling", 50),
+      ]);
+
+      expect(tree.map((item) => item.title)).toEqual(["Dashboard", "CRM", "Axel", "Inbox", "Agenda"]);
+    });
+
+    it("sin hermanos más cortos, «Axel» se queda donde lo puso el backend", () => {
+      // Sin permiso de CRM: no hay nada de 4 letras o menos además del anclado.
+      const tree = mapNavigation([
+        named("dashboard", "Dashboard", "/dashboard", 10),
+        named("cmo", "CMO", "/cmo", 20),
+        named("inbox", "Inbox", "/inbox", 30),
+      ]);
+
+      expect(tree.map((item) => item.title)).toEqual(["Dashboard", "Axel", "Inbox"]);
+    });
+
+    it("si el seed ya siembra «Axel», el orden del backend se respeta tal cual", () => {
+      const tree = mapNavigation([
+        named("dashboard", "Dashboard", "/dashboard", 10),
+        named("crm", "CRM", "/crm", 20),
+        named("cmo", "Axel", "/cmo", 30),
+      ]);
+
+      expect(tree.map((item) => item.title)).toEqual(["Dashboard", "CRM", "Axel"]);
+    });
   });
 });

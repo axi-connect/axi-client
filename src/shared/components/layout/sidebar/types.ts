@@ -24,6 +24,11 @@ export type SidebarNavItem = {
   title: string;
   /** Ausente en los grupos puros: la fila solo despliega, no navega. */
   url?: string;
+  /**
+   * A dónde lleva el clic, si no es `url` (p. ej. CRM → `/crm/contacts`).
+   * `url` sigue siendo la sección: con ella se calcula el ítem activo.
+   */
+  href?: string;
   /** Solo en el nivel 0: en los subniveles la indentación sustituye al icono. */
   icon?: LucideIcon;
   /** 0 = nivel superior. */

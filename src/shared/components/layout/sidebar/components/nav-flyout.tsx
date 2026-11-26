@@ -27,7 +27,7 @@ function FlyoutLink({
 }) {
   return (
     <Link
-      href={item.url ?? "#"}
+      href={item.href ?? item.url ?? "#"}
       onClick={onNavigate}
       aria-current={isActive ? "page" : undefined}
       className={cn(
@@ -101,7 +101,7 @@ export function NavFlyout({
             grupo puro, solo titula el panel. */}
         {item.url ? (
           <Link
-            href={item.url}
+            href={item.href ?? item.url}
             onClick={closeNow}
             className="flex h-8 items-center gap-2 rounded-md px-2 text-sm font-medium transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
           >

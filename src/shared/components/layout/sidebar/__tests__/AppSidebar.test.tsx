@@ -45,12 +45,12 @@ function dto(
 
 /**
  * Árbol de 3 niveles equivalente al del seed:
- *   crm (/crm) → contacts (/contacts)
+ *   marketing (/marketing) → campaigns (/marketing/campaigns)
  *   settings (grupo) → security (grupo) → users, roles
  */
 const NAVIGATION: NavigationNodeDTO[] = [
   dto("dashboard", "/dashboard", 10),
-  dto("crm", "/crm", 20, [dto("contacts", "/contacts", 10)]),
+  dto("marketing", "/marketing", 20, [dto("campaigns", "/marketing/campaigns", 10)]),
   dto("settings", null, 30, [
     dto("security", null, 10, [dto("users", "/settings/users", 10), dto("roles", "/settings/roles", 20)]),
   ]),
@@ -80,22 +80,22 @@ describe("AppSidebar — navegación jerárquica", () => {
   it("los grupos arrancan plegados: los hijos no están en el DOM", () => {
     renderSidebar();
 
-    expect(screen.queryByRole("link", { name: "contacts" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "campaigns" })).not.toBeInTheDocument();
   });
 
   it("el chevron despliega el grupo SIN navegar", () => {
     renderSidebar();
 
-    // La fila de CRM sigue siendo un link a /crm...
-    expect(screen.getByRole("link", { name: "crm" })).toHaveAttribute("href", "/crm");
+    // La fila de Marketing sigue siendo un link a /marketing...
+    expect(screen.getByRole("link", { name: "marketing" })).toHaveAttribute("href", "/marketing");
     // ...y el chevron es un target aparte.
-    const chevron = screen.getByRole("button", { name: "Expandir crm" });
+    const chevron = screen.getByRole("button", { name: "Expandir marketing" });
     expect(chevron).toHaveAttribute("aria-expanded", "false");
 
     fireEvent.click(chevron);
 
-    expect(screen.getByRole("link", { name: "contacts" })).toHaveAttribute("href", "/crm/contacts");
-    expect(screen.getByRole("button", { name: "Contraer crm" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "campaigns" })).toHaveAttribute("href", "/marketing/campaigns");
+    expect(screen.getByRole("button", { name: "Contraer marketing" })).toHaveAttribute(
       "aria-expanded",
       "true",
     );
@@ -124,23 +124,23 @@ describe("AppSidebar — navegación jerárquica", () => {
   });
 
   it("marca activo el ítem más específico en una ruta profunda", async () => {
-    pathname = "/crm/contacts/abc-123";
+    pathname = "/marketing/campaigns/abc-123";
     renderSidebar();
 
     await waitFor(() => {
-      expect(screen.getByRole("link", { name: "contacts" })).toHaveAttribute(
+      expect(screen.getByRole("link", { name: "campaigns" })).toHaveAttribute(
         "aria-current",
         "page",
       );
     });
     // El ancestro NO se marca como página actual.
-    expect(screen.getByRole("link", { name: "crm" })).not.toHaveAttribute("aria-current");
+    expect(screen.getByRole("link", { name: "marketing" })).not.toHaveAttribute("aria-current");
   });
 
   it("respeta los grupos abiertos que llegan de la cookie", () => {
-    renderSidebar(["crm"]);
+    renderSidebar(["marketing"]);
 
-    expect(screen.getByRole("link", { name: "contacts" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "campaigns" })).toBeInTheDocument();
   });
 
   it("persiste en la cookie los grupos abiertos, y solo ellos", () => {
@@ -148,25 +148,25 @@ describe("AppSidebar — navegación jerárquica", () => {
     // crecería con un código por cada página visitada).
     renderSidebar();
 
-    fireEvent.click(screen.getByRole("button", { name: "Expandir crm" }));
+    fireEvent.click(screen.getByRole("button", { name: "Expandir marketing" }));
 
-    expect(document.cookie).toContain("sidebar_nav_open=crm");
+    expect(document.cookie).toContain("sidebar_nav_open=marketing");
     expect(document.cookie).not.toContain("dashboard");
   });
 
   it("al plegar retira el grupo de la cookie", () => {
-    renderSidebar(["crm"]);
+    renderSidebar(["marketing"]);
 
-    fireEvent.click(screen.getByRole("button", { name: "Contraer crm" }));
+    fireEvent.click(screen.getByRole("button", { name: "Contraer marketing" }));
 
     // Se asserta el estado semántico, no el desmontaje: `AnimatePresence`
     // mantiene el submenú montado mientras corre la animación de salida, y en
     // jsdom framer-motion no la completa de forma fiable.
-    expect(screen.getByRole("button", { name: "Expandir crm" })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: "Expandir marketing" })).toHaveAttribute(
       "aria-expanded",
       "false",
     );
-    expect(document.cookie).not.toContain("crm");
+    expect(document.cookie).not.toContain("marketing");
   });
 });
 
@@ -277,18 +277,18 @@ describe("AppSidebar — geometría del chevron", () => {
     // si su contenedor de posición incluye el submenú, la flecha se coloca en la
     // mitad de (fila + hijos) y se sale de su propia fila al desplegar.
     // jsdom no calcula layout, así que se asserta la estructura que lo causaba.
-    renderSidebar(["crm"]);
+    renderSidebar(["marketing"]);
 
-    const chevron = screen.getByRole("button", { name: "Contraer crm" });
+    const chevron = screen.getByRole("button", { name: "Contraer marketing" });
     const sub = document.getElementById(chevron.getAttribute("aria-controls") as string);
     expect(sub).not.toBeNull();
     expect(chevron.parentElement?.contains(sub as HTMLElement)).toBe(false);
   });
 
   it("una hoja dentro de un grupo abierto no tiene ningún chevron", () => {
-    renderSidebar(["crm"]);
+    renderSidebar(["marketing"]);
 
-    const leaf = rowItem(screen.getByRole("link", { name: "contacts" }));
+    const leaf = rowItem(screen.getByRole("link", { name: "campaigns" }));
     expect(within(leaf).queryAllByTestId("nav-chevron")).toHaveLength(0);
   });
 
@@ -334,7 +334,7 @@ describe("AppSidebar — accesibilidad del árbol", () => {
   it("el chevron declara aria-expanded y controla el submenú", () => {
     renderSidebar();
 
-    const chevron = screen.getByRole("button", { name: "Expandir crm" });
+    const chevron = screen.getByRole("button", { name: "Expandir marketing" });
     const controls = chevron.getAttribute("aria-controls");
     expect(controls).toBeTruthy();
 
@@ -342,6 +342,67 @@ describe("AppSidebar — accesibilidad del árbol", () => {
 
     const sub = document.getElementById(controls as string);
     expect(sub).not.toBeNull();
-    expect(within(sub as HTMLElement).getByRole("link", { name: "contacts" })).toBeInTheDocument();
+    expect(within(sub as HTMLElement).getByRole("link", { name: "campaigns" })).toBeInTheDocument();
+  });
+});
+
+/**
+ * PLA-09: el menú real de CRM y del agente de mercadeo, con los nombres del
+ * seed. «Contactos» sale del menú, CRM queda como una sola entrada que abre en
+ * contactos (y sigue resaltada en todo `/crm/...`), y «CMO» se lee «Axel».
+ */
+describe("AppSidebar — CRM sin «Contactos» y «Axel» (PLA-09)", () => {
+  const seeded = (code: string, name: string, path: string | null, sort_order: number, children: NavigationNodeDTO[] = []) =>
+    ({ id: `id-${code}`, code, name, icon: null, path, sort_order, children }) as NavigationNodeDTO;
+
+  const REAL: NavigationNodeDTO[] = [
+    seeded("dashboard", "Dashboard", "/dashboard", 10),
+    seeded("cmo", "CMO", "/cmo", 20),
+    seeded("crm", "CRM", "/crm", 30, [seeded("contacts", "Contactos", "/contacts", 10)]),
+    seeded("inbox", "Inbox", "/inbox", 40),
+  ];
+
+  function renderReal() {
+    return render(
+      <SidebarProvider>
+        <AppSidebar initialItems={REAL} />
+      </SidebarProvider>,
+    );
+  }
+
+  beforeEach(() => {
+    pathname = "/dashboard";
+  });
+
+  it("CRM es una sola entrada que lleva a contactos", () => {
+    renderReal();
+
+    expect(screen.getByRole("link", { name: "CRM" })).toHaveAttribute("href", "/crm/contacts");
+    expect(screen.queryByRole("link", { name: "Contactos" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Expandir CRM" })).not.toBeInTheDocument();
+  });
+
+  it.each(["/crm/contacts", "/crm/contacts/abc-123", "/crm/pipeline"])(
+    "CRM queda activo en %s",
+    async (path) => {
+      pathname = path;
+      renderReal();
+
+      await waitFor(() => {
+        expect(screen.getByRole("link", { name: "CRM" })).toHaveAttribute("aria-current", "page");
+      });
+    },
+  );
+
+  it("el agente de mercadeo se lee «Axel», va a /cmo y queda después de CRM", () => {
+    renderReal();
+
+    const axel = screen.getByRole("link", { name: "Axel" });
+    expect(axel).toHaveAttribute("href", "/cmo");
+    expect(screen.queryByText("CMO")).not.toBeInTheDocument();
+
+    const names = screen.getAllByRole("link").map((link) => link.textContent);
+    expect(names.indexOf("CRM")).toBeLessThan(names.indexOf("Axel"));
+    expect(names.indexOf("Axel")).toBeLessThan(names.indexOf("Inbox"));
   });
 });

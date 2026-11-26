@@ -109,6 +109,43 @@ export const NAV_PATH_ALIASES: Record<string, string> = {
  */
 export const UNIMPLEMENTED_NAV_PATHS = new Set(["/usage", "/settings/audit"]);
 
+/**
+ * Ítems del backend que el menú NO muestra aunque el usuario tenga el permiso
+ * (por `code`, estable entre entornos). La página sigue existiendo y se llega
+ * por su sección; solo sale del menú.
+ *
+ * `contacts` (PLA-09): «Contactos» colgaba de CRM y confundía — el CRM ya lo
+ * lleva como su primera pestaña. CRM queda como una sola entrada que abre ahí
+ * (ver `NAV_ENTRY_HREFS`). Al quitar su único hijo, CRM deja de ser un grupo
+ * plegable sin tocar nada más: `mapNavigation` lo emite sin `children`.
+ */
+export const HIDDEN_NAV_CODES = new Set(["contacts"]);
+
+/**
+ * Rótulos del menú que el frontend corrige sobre el `name` del seed, por
+ * `code`. Solo el texto visible: rutas, permisos y el código siguen igual.
+ *
+ * `cmo` (PLA-09): el ítem se lee «Axel», el nombre del agente de mercadeo, no
+ * el cargo. Si el seed llega a sembrar «Axel», la entrada es identidad y no
+ * estorba. `mapNavigation` recoloca el ítem según la regla de longitud del
+ * menú (el más corto primero), porque el `sort_order` del backend se calculó
+ * con el rótulo viejo.
+ */
+export const NAV_LABEL_OVERRIDES: Record<string, string> = {
+  cmo: "Axel",
+};
+
+/**
+ * Destino del clic cuando difiere de la sección que el ítem representa. La
+ * `url` resuelta sigue mandando para el resaltado (CRM queda activo en todo
+ * `/crm/...`); esto solo cambia a dónde lleva el clic.
+ *
+ * `/crm` (PLA-09): el CRM abre en su pestaña Contactos.
+ */
+export const NAV_ENTRY_HREFS: Record<string, string> = {
+  "/crm": "/crm/contacts",
+};
+
 /** Resuelve el path del backend a la ruta real del frontend (o null si no hay UI). */
 export function resolveNavPath(backendPath: string | null): string | null {
   if (!backendPath) return null;

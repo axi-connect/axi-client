@@ -167,7 +167,7 @@ export default function NavItemNode({ item, activeTrail, openCodes, onToggle }: 
       tooltip={item.depth === 0 && !hasChildren ? item.title : undefined}
       className={rowClassName}
     >
-      <Link href={item.url} aria-current={isActive ? "page" : undefined}>
+      <Link href={item.href ?? item.url} aria-current={isActive ? "page" : undefined}>
         {label}
         <NavLinkSpinner />
       </Link>
