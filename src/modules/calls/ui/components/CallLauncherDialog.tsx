@@ -28,6 +28,13 @@ import { launchCall, placeTestCall } from "@/modules/calls/infrastructure/servic
 
 const DEFAULT_AGENT = "__default__";
 const MODES = ["proactive", "reactive"] as const;
+/**
+ * Disparador que nunca desborda (LLA-04): ancho de su celda, `min-w-0` y el
+ * valor en una línea con el truncado con difuminado de la casa (la variante
+ * `*:data-[slot=select-value]:truncate` de globals.css), nunca «…».
+ */
+const SELECT_TRIGGER_CLASS =
+  "h-9 w-full min-w-0 *:data-[slot=select-value]:block *:data-[slot=select-value]:min-w-0 *:data-[slot=select-value]:truncate";
 
 /** Por qué no salió la llamada (`calls/launch_skipped` → `details.reason`), en palabras. */
 const SKIP_REASONS: Record<string, string> = {
@@ -153,26 +160,35 @@ export function CallLauncherDialog({
   };
 
   const title = target.kind === "contact" ? `Llamar a ${target.name ?? target.phone ?? "este contacto"}` : "Llamar";
+  // El texto completo de cada selector, para el `title` del disparador: el
+  // valor largo se corta con difuminado (LLA-04) y así se lee entero al pasar.
+  const typeLabel = CALL_TYPE_LABELS[fixedType ?? type];
+  const agentLabel = agentId === DEFAULT_AGENT ? "El del número" : agents.find((agent) => agent.id === agentId)?.name;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      {/* LLA-04: columnas `minmax(0,1fr)` (grid-cols-1) y `min-w-0` en cada
+          nivel: sin eso la pista `auto` de la grilla crece hasta el ancho del
+          texto más largo (selector o nombre, con `nowrap`) y todo se desborda. */}
+      <DialogContent className="grid-cols-1 sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
+          <DialogTitle className="break-words">{title}</DialogTitle>
           <DialogDescription>
             Tu agente llama ahora por el mismo camino que cualquier llamada: aviso de grabación, conversación y
             transcripción. Se descuenta de los minutos del plan.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4">
+        <div className="grid min-w-0 grid-cols-1 gap-4">
           {target.kind === "contact" ? (
-            <p className="flex items-center justify-between gap-3 rounded-xl border border-border px-3 py-2.5 text-sm">
-              <span className="min-w-0 truncate font-medium">{target.name ?? "Contacto sin nombre"}</span>
+            <p className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-border px-3 py-2.5 text-sm">
+              <span className="min-w-0 truncate font-medium" title={target.name ?? undefined}>
+                {target.name ?? "Contacto sin nombre"}
+              </span>
               <span className="shrink-0 font-mono text-xs text-muted-foreground">{noPhone ? "sin teléfono" : target.phone}</span>
             </p>
           ) : (
-            <div className="grid gap-1.5">
+            <div className="grid min-w-0 gap-1.5">
               <Label htmlFor="launch-to">Número de destino</Label>
               <Input
                 id="launch-to"
@@ -185,8 +201,8 @@ export function CallLauncherDialog({
             </div>
           )}
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="grid gap-1.5">
+          <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="grid min-w-0 grid-cols-1 gap-1.5">
               <Label htmlFor="launch-type">Tipo de llamada</Label>
               <Select
                 value={fixedType ?? type}
@@ -195,7 +211,8 @@ export function CallLauncherDialog({
               >
                 <SelectTrigger
                   id="launch-type"
-                  className="h-9 w-full"
+                  title={typeLabel}
+                  className={SELECT_TRIGGER_CLASS}
                   aria-describedby={collections === undefined ? undefined : "launch-type-fixed"}
                 >
                   <SelectValue />
@@ -214,10 +231,10 @@ export function CallLauncherDialog({
                 </p>
               )}
             </div>
-            <div className="grid gap-1.5">
+            <div className="grid min-w-0 grid-cols-1 gap-1.5">
               <Label htmlFor="launch-agent">Agente</Label>
               <Select value={agentId} onValueChange={setAgentId}>
-                <SelectTrigger id="launch-agent" className="h-9 w-full">
+                <SelectTrigger id="launch-agent" title={agentLabel} className={SELECT_TRIGGER_CLASS}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -234,7 +251,7 @@ export function CallLauncherDialog({
 
           {collections !== undefined && <AgentKnows summary={collections} name={target.kind === "contact" ? target.name : null} />}
 
-          <div className="grid gap-1.5">
+          <div className="grid min-w-0 gap-1.5">
             <Label htmlFor="launch-objective">Objetivo (opcional)</Label>
             <Input
               id="launch-objective"
@@ -250,9 +267,9 @@ export function CallLauncherDialog({
             </p>
           </div>
 
-          <fieldset className="grid gap-1.5">
+          <fieldset className="grid min-w-0 gap-1.5">
             <legend className="mb-1.5 text-sm font-medium">Modo</legend>
-            <div role="radiogroup" aria-label="Modo de la llamada" className="grid gap-2 sm:grid-cols-2">
+            <div role="radiogroup" aria-label="Modo de la llamada" className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {MODES.map((item) => {
                 const Icon = item === "proactive" ? Megaphone : Ear;
                 const checked = mode === item;

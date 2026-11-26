@@ -114,6 +114,35 @@ describe("CallLauncherDialog (plan de modos §7)", () => {
     expect(keys[2]).not.toBe(keys[1]);
   });
 
+  it("LLA-04: nombre y selectores largos se cortan con difuminado en su celda, con el texto completo a mano", async () => {
+    const LONG = "Distribuidora Comercializadora Internacional de Repuestos y Accesorios Automotrices del Valle S.A.S.";
+    render(
+      <CallLauncherDialog open onOpenChange={jest.fn()} target={{ ...CONTACT, name: LONG }} defaultType="sales_followup" />,
+    );
+    await flush();
+    // El nombre: una línea con el truncado de la casa (difuminado, sin «…»), su
+    // fila puede encogerse y el `title` lleva el nombre entero.
+    const name = screen.getByText(LONG, { selector: "span" });
+    expect(name).toHaveClass("min-w-0", "truncate");
+    expect(name).toHaveAttribute("title", LONG);
+    expect(name.parentElement).toHaveClass("min-w-0");
+
+    // Los dos selectores: la grilla es `minmax(0,1fr)` (apilados en angosto,
+    // lado a lado desde sm) y cada celda y disparador pueden encogerse.
+    const type = screen.getByRole("combobox", { name: "Tipo de llamada" });
+    const agent = screen.getByRole("combobox", { name: "Agente" });
+    for (const trigger of [type, agent]) {
+      expect(trigger).toHaveClass("w-full", "min-w-0", "*:data-[slot=select-value]:truncate");
+      expect(trigger.parentElement).toHaveClass("min-w-0");
+      expect(trigger.parentElement?.parentElement).toHaveClass("min-w-0", "grid-cols-1", "sm:grid-cols-2");
+    }
+    expect(type).toHaveAttribute("title", "Venta y seguimiento comercial");
+    expect(type).toHaveTextContent("Venta y seguimiento comercial");
+    expect(agent).toHaveAttribute("title", "El del número");
+    // Nunca puntos suspensivos puestos a mano.
+    expect(document.body.textContent).not.toContain("…");
+  });
+
   describe("«Llamar para cobrar» (F3)", () => {
     const PLAN = {
       plan_id: "p1",
