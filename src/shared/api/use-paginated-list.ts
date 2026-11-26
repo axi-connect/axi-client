@@ -24,12 +24,19 @@ export type UsePaginatedListOptions<TItem, TSearchField extends string = string>
   searchField?: TSearchField;
   /** Filtros específicos del recurso; cambiarlos reinicia a la página 1. */
   extraParams?: Record<string, unknown>;
+  /**
+   * `false` ⇒ no pide nada todavía (por defecto `true`). Para cuando los
+   * filtros aún no se conocen —p. ej. se están recuperando del navegador—:
+   * pedir sin ellos y luego con ellos deja dos respuestas en carrera, y la
+   * vieja puede llegar después de la buena.
+   */
+  enabled?: boolean;
 };
 
 export function usePaginatedList<TItem, TSearchField extends string = string>(
   options: UsePaginatedListOptions<TItem, TSearchField>,
 ) {
-  const { fetcher, pageSize = 25, searchField, extraParams } = options;
+  const { fetcher, pageSize = 25, searchField, extraParams, enabled = true } = options;
 
   const [items, setItems] = useState<TItem[]>([]);
   const [total, setTotal] = useState<number>(0);
@@ -75,8 +82,8 @@ export function usePaginatedList<TItem, TSearchField extends string = string>(
   }, [fetcher, params]);
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    if (enabled) void refresh();
+  }, [refresh, enabled]);
 
   const canPrev = page > 1;
   const canNext = page * pageSizeState < total;

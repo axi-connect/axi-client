@@ -85,4 +85,15 @@ describe("usePaginatedList", () => {
     expect(result.current.error?.code).toBe("client/network");
     expect(result.current.items).toEqual([]);
   });
+
+  it("con enabled en falso no pide nada hasta que se activa", async () => {
+    const fetcher = jest.fn(async (): Promise<ListResult<Item>> => ({ data: [], meta: { total: 0 } }));
+    const { rerender } = renderHook(({ enabled }) => usePaginatedList<Item>({ fetcher, enabled }), {
+      initialProps: { enabled: false },
+    });
+    expect(fetcher).not.toHaveBeenCalled();
+
+    rerender({ enabled: true });
+    await waitFor(() => expect(fetcher).toHaveBeenCalledTimes(1));
+  });
 });

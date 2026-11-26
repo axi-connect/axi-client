@@ -1,5 +1,6 @@
 import {
   countActive,
+  sanitizeFilterValues,
   serializeFilters,
   type FilterOption,
   type FilterSchema,
@@ -204,6 +205,14 @@ export const LEAD_FILTERS: FilterSchema = {
  */
 export function serializeLeadFilters(values: FilterValues): ListLeadsParams {
   return serializeFilters(LEAD_FILTERS, values) as ListLeadsParams;
+}
+
+/**
+ * Los filtros guardados en el navegador, validados contra el esquema de hoy
+ * (CAP-21): una opción que ya no existe o un filtro que se quitó se descartan.
+ */
+export function sanitizeLeadFilters(raw: unknown): FilterValues | null {
+  return sanitizeFilterValues(LEAD_FILTERS, raw);
 }
 
 /** Cuántos filtros hay puestos, para el contador del botón. */

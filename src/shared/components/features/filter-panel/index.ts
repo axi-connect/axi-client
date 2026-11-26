@@ -1,12 +1,14 @@
 export { FilterPanel, type FilterPanelProps } from "./FilterPanel";
 export { FilterTrigger } from "./FilterTrigger";
 export { FilterChips } from "./FilterChips";
+export { usePersistedFilters, persistedFiltersKey } from "./use-persisted-filters";
 export {
   NO_FILTER_VALUE,
   clearAll,
   countActive,
   describeFilters,
   removeFilter,
+  sanitizeFilterValues,
   serializeFilters,
   type FilterDef,
   type FilterFlagsMode,

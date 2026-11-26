@@ -27,7 +27,9 @@ import {
   FilterPanel,
   FilterTrigger,
   clearAll,
+  persistedFiltersKey,
   removeFilter,
+  usePersistedFilters,
   type FilterValues,
 } from "@/shared/components/features/filter-panel";
 
@@ -56,6 +58,7 @@ import {
   LEAD_FILTER_KEYS,
   asksForAdLeadsOutsideCrm,
   countLeadFilters,
+  sanitizeLeadFilters,
   serializeLeadFilters,
 } from "./tables/leads.filters";
 
@@ -86,9 +89,13 @@ const CONFIRM_ABOVE = 50;
 const POLL_MS = 5_000;
 const POLL_TIMEOUT_MS = 90_000;
 
+/** Sin filtros. Constante para que el valor inicial sea siempre el mismo objeto. */
+const NO_FILTERS: FilterValues = {};
+const hasNoLeadFilters = (values: FilterValues) => countLeadFilters(values) === 0;
+
 export function LeadsInboxView() {
   const router = useRouter();
-  const { hasPermission } = useAuth();
+  const { hasPermission, user, status } = useAuth();
   const canPromoteLeads = hasPermission("leads:promote");
   const canManageLeads = hasPermission("leads:manage");
   const canDeleteLeads = hasPermission("leads:delete");
@@ -99,7 +106,29 @@ export function LeadsInboxView() {
   const inCrm = useCaptureStats((state) => state.stats?.promoted ?? 0);
   const reloadStats = useCaptureStats((state) => state.reload);
 
-  const [filters, setFilters] = useState<FilterValues>({});
+  /*
+   * CAP-21: los filtros sobreviven a cambiar de página, a irse a otra parte y a
+   * recargar. Se guardan en este navegador, por empresa y por usuario; la
+   * página NO se guarda (al volver se empieza en la 1) ni el texto del
+   * buscador. Mientras se leen, la lista no pide nada: pedir sin filtros y
+   * luego con ellos deja dos respuestas en carrera.
+   */
+  const {
+    value: filters,
+    setValue: setFilters,
+    ready: filtersReady,
+  } = usePersistedFilters<FilterValues>({
+    storageKey: persistedFiltersKey({
+      scope: "captacion:filtros",
+      version: 1,
+      companyId: user?.company_id,
+      userId: user?.id,
+    }),
+    pending: status === "loading",
+    initial: NO_FILTERS,
+    sanitize: sanitizeLeadFilters,
+    isEmpty: hasNoLeadFilters,
+  });
   const [panelOpen, setPanelOpen] = useState(false);
   const [previewCount, setPreviewCount] = useState<number | null>(null);
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
@@ -132,6 +161,7 @@ export function LeadsInboxView() {
     pageSize: 25,
     searchField: "q",
     extraParams,
+    enabled: filtersReady,
   });
 
   /**
@@ -153,7 +183,7 @@ export function LeadsInboxView() {
       setSelected(new Set());
       setAllMatching(false);
     },
-    [setPage],
+    [setFilters, setPage],
   );
 
   /**
@@ -609,7 +639,7 @@ export function LeadsInboxView() {
           y los chips de lo activo, que van fuera de la hoja porque el estado no
           se esconde. Un filtro activo invisible es la forma más rápida de que
           alguien no entienda por qué su bandeja trajo cuatro leads. */}
-      {loading && items.length === 0 ? (
+      {(loading || !filtersReady) && items.length === 0 ? (
         <TableSkeleton rows={6} />
       ) : error !== null ? (
         <EmptyState

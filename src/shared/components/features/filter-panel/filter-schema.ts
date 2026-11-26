@@ -347,3 +347,89 @@ export function serializeFilters(
 
   return params;
 }
+
+/* ─────────────────────────── Valores recuperados ─────────────────────────── */
+
+const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
+/** Tope del texto libre recuperado: un filtro de ciudad no mide un párrafo. */
+const MAX_TEXT_LENGTH = 200;
+
+/**
+ * Valida unos filtros que vienen de FUERA del panel (el almacenamiento del
+ * navegador, hoy) contra el esquema VIGENTE.
+ *
+ * Lo guardado puede ser de una versión anterior de la pantalla: una opción que
+ * ya no existe, un filtro que se quitó, un tipo que cambió. Pedirle eso al
+ * servidor da un 400 o, peor, un vacío que se lee como «no hay resultados».
+ * Así que aquí solo sobrevive lo que el esquema de hoy reconoce, valor por
+ * valor, y lo demás se descarta en silencio.
+ *
+ * Devuelve `null` si `raw` ni siquiera es un objeto.
+ */
+export function sanitizeFilterValues(schema: FilterSchema, raw: unknown): FilterValues | null {
+  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const source = raw as Record<string, unknown>;
+  const clean: FilterValues = {};
+
+  const known = <V,>(options: readonly { value: V }[], value: unknown) =>
+    options.find((option) => option.value !== null && String(option.value) === String(value));
+
+  for (const def of schema.filters) {
+    if (def.disabled) continue;
+    const value = source[def.key];
+    if (value === undefined || value === null) continue;
+
+    switch (def.kind) {
+      case "multi":
+      case "flags": {
+        const list = Array.isArray(value) ? value : [value];
+        const picked = list.filter(
+          (item): item is string =>
+            typeof item === "string" && def.options.some((option) => option.value === item),
+        );
+        if (picked.length > 0) clean[def.key] = [...new Set(picked)];
+        if (picked.length > 0 && def.kind === "flags" && def.modeKey) {
+          const mode = source[def.modeKey];
+          if (mode === "any" || mode === "all") clean[def.modeKey] = mode;
+        }
+        break;
+      }
+      case "single":
+        if ((typeof value === "string" || typeof value === "number") && value !== NO_FILTER_VALUE) {
+          const match = known(def.options, value);
+          if (match) clean[def.key] = match.value;
+        }
+        break;
+      case "steps":
+        if (typeof value === "string" || typeof value === "number") {
+          const match = known(def.options, value);
+          // El valor del esquema y no el guardado: conserva su tipo (40 y no "40").
+          if (match && match.value !== null) clean[def.key] = match.value;
+        }
+        break;
+      case "count":
+        if (typeof value === "number" && Number.isInteger(value) && value > 0 && value <= def.max) {
+          clean[def.key] = value;
+        }
+        break;
+      case "switch":
+        if (value === true) clean[def.key] = true;
+        break;
+      case "text":
+        if (typeof value === "string" && value.trim() !== "" && value.length <= MAX_TEXT_LENGTH) {
+          clean[def.key] = value;
+        }
+        break;
+      case "date": {
+        const days = Array.isArray(value) ? value : [value];
+        const valid =
+          days.length <= 2 &&
+          days.every((day) => typeof day === "string" && (day === "" || ISO_DAY.test(day)));
+        if (valid && days.some((day) => day !== "")) clean[def.key] = days as string[];
+        break;
+      }
+    }
+  }
+
+  return clean;
+}
